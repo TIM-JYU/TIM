@@ -31,6 +31,9 @@ export const communicationJS = `
         if (event.data.msg === "start"){
             edit(event.data.fullscreen);
         }
+        if (event.data.msg === "toggleEditorOptions"){
+            toggleOptions();
+        }
     }
 
     // INITDATA

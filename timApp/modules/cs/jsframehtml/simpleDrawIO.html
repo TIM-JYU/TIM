@@ -69,8 +69,15 @@
             // drw = null;
         };
 
-        function edit(fullscreen) {
-            TIMJS.frm = !fullscreen;
+        function edit(elt) {
+
+            if (TIMJS.options && TIMJS.options.fullscreen) {
+                TIMJS.frm = !TIMJS.options.fullscreen;
+            }
+            var fs = document.getElementById('fullscreen');
+            if (fs) {
+                TIMJS.frm = !fs.checked;
+            }
 
             if (drw && !drw.closed) {
                 drw.focus();
@@ -281,14 +288,18 @@
 </head>
 <body>
 <div>
+    <div id="options">
+        <button onclick="edit(this);">Muokkaa</button>
+        Fullscreen <input id="fullscreen" type="checkbox"/>
+    </div>
     <div id="wrapper">
         <div id="diagram"></div>
     </div>
 </div>
 <script>
     //OPTIONS	// TIMJS
-    // var fs = document.getElementById('fullscreen');
-    // fs.checked = TIMJS.options.fullscreen;
+    var fs = document.getElementById('fullscreen');
+    fs.checked = TIMJS.options.fullscreen;
     //ORIGINALDATA
     //JAVASCRIPT
 </script>

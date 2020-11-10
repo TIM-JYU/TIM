@@ -116,7 +116,8 @@ type MessageToFrame =
     | {msg: "getData"}
     | {msg: "getDataSave"}
     | {msg: "close"}
-    | {msg: "start"; fullscreen: boolean};
+    | {msg: "toggleEditorOptions"}
+    | {msg: "start"};
 
 type MessageFromFrame =
     | {
@@ -172,10 +173,6 @@ export interface Iframesettings {
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
             <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen"></p>
             <div *ngIf="isOpen && iframesettings" id="output" class="jsFrameContainer jsframeOutput">
-                <div *ngIf="isDrawio() && this.optionsVisible" id="drawioOptions">
-                    <button (click)="editDrawio()">Muokkaa</button>
-                    Fullscreen <input id="fullscreen" [(ngModel)]="fullscreenChecked" type="checkbox"/>
-                </div>
                 <iframe #frame
                         class='showJsframe jsframeFrame'
                         style='margin-left: auto;
@@ -265,13 +262,8 @@ export class JsframeComponent
         return this.markup.saveButton;
     }
 
-    toggleDrawioEditors(open?: boolean) {
-        if (open != undefined) {
-            this.optionsVisible = open;
-        } else {
-            this.optionsVisible = !this.optionsVisible;
-        }
-        this.c();
+    toggleDrawioEditors() {
+        this.send({msg: "toggleEditorOptions"});
     }
 
     getMenuEntry(): IMenuFunctionEntry {
@@ -312,8 +304,6 @@ export class JsframeComponent
     connectionErrorMessage?: string;
     private prevdata?: JSFrameData;
     private currentData?: JSFrameData;
-    public optionsVisible = true;
-    public fullscreenChecked = false;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -382,9 +372,6 @@ export class JsframeComponent
         }
         // if ( data ) { this.setData(data); }
 
-        if (this.isDrawio() && !this.isTask()) {
-            this.optionsVisible = false;
-        }
         this.updateIframeSettings();
 
         if (this.isPreview()) {
@@ -406,24 +393,19 @@ export class JsframeComponent
                 }
             })();
         }
-        if (this.markup.type?.toLowerCase() == "drawio") {
+        if (this.isDrawio()) {
             const parId = getParId(this.getPar());
             if (parId) {
                 this.viewctrl.addParMenuEntry(this, parId);
+            }
+            if (this.isTask() && !this.getTaskId()) {
+                this.error = "Task-mode on but TaskId is missing!";
             }
         }
     }
 
     isDrawio(): boolean {
         return this.markup.type?.toLowerCase() == "drawio";
-    }
-
-    editDrawio() {
-        if (this.isPreview()) {
-            this.showPreviewError();
-            return;
-        }
-        this.send({msg: "start", fullscreen: this.fullscreenChecked});
     }
 
     private getDataFromMarkup() {
@@ -733,12 +715,6 @@ export class JsframeComponent
             }
             if (d.msg === "datasave") {
                 this.getDataReady(d.data, true);
-            }
-            if (d.msg === "frameInited") {
-                this.toggleDrawioEditors(false);
-            }
-            if (d.msg === "frameClosed") {
-                this.toggleDrawioEditors(true);
             }
         };
         const f = this.getFrame();
