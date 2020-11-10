@@ -6,7 +6,6 @@ import {
     ElementRef,
     Input,
     NgModule,
-    StaticProvider,
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
@@ -364,11 +363,12 @@ export class QstModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(QstModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "timQst", QstComponent);
-export const moduleDefs = [angularJsModule];
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(QstModule)
+        ),
+        "timQst",
+        QstComponent
+    ),
+];

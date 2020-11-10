@@ -25,7 +25,6 @@ import {
     ElementRef,
     NgModule,
     OnDestroy,
-    StaticProvider,
     ViewChild,
 } from "@angular/core";
 import {
@@ -773,11 +772,14 @@ export class JsframeModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(JsframeModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "jsframeRunner", JsframeComponent);
-export const moduleDefs = [angularJsModule];
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                JsframeModule
+            )
+        ),
+        "jsframeRunner",
+        JsframeComponent
+    ),
+];

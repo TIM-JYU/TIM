@@ -4,13 +4,7 @@
 import * as t from "io-ts";
 import {ngStorage} from "ngstorage";
 import {$localStorage} from "tim/util/ngimport";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    NgModule,
-    StaticProvider,
-} from "@angular/core";
+import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -334,11 +328,14 @@ export class ImportDataModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(ImportDataModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "importdataRunner", ImportDataComponent);
-export const moduleDefs = [angularJsModule];
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                ImportDataModule
+            )
+        ),
+        "importdataRunner",
+        ImportDataComponent
+    ),
+];

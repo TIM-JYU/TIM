@@ -49,7 +49,6 @@ import {
     OnDestroy,
     OnInit,
     QueryList,
-    StaticProvider,
     ViewChild,
     ViewChildren,
 } from "@angular/core";
@@ -4636,11 +4635,14 @@ export class TimTableModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(TimTableModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "timTable", TimTableComponent);
-export const moduleDefs = [angularJsModule];
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                TimTableModule
+            )
+        ),
+        "timTable",
+        TimTableComponent
+    ),
+];

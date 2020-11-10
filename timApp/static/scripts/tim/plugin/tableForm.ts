@@ -14,7 +14,6 @@ import {
     Input,
     NgModule,
     OnInit,
-    StaticProvider,
     ViewChild,
 } from "@angular/core";
 
@@ -1646,11 +1645,14 @@ export class TableFormModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(TableFormModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "tableformRunner", TableFormComponent);
-export const moduleDefs = [angularJsModule];
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                TableFormModule
+            )
+        ),
+        "tableformRunner",
+        TableFormComponent
+    ),
+];

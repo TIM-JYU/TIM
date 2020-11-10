@@ -16,7 +16,6 @@ import {
     NgModule,
     OnDestroy,
     OnInit,
-    StaticProvider,
 } from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
@@ -217,11 +216,12 @@ export class PaliModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(PaliModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "paliRunner", PaliComponent);
-export const moduleDefs = [angularJsModule];
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(PaliModule)
+        ),
+        "paliRunner",
+        PaliComponent
+    ),
+];

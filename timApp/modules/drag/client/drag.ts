@@ -14,7 +14,6 @@ import {
     DoBootstrap,
     NgModule,
     OnInit,
-    StaticProvider,
 } from "@angular/core";
 import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ITimComponent} from "../../../static/scripts/tim/document/viewctrl";
@@ -325,11 +324,12 @@ export class DragModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
 }
 
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(DragModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "dragRunner", DragComponent);
-export const moduleDefs = [angularJsModule];
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(DragModule)
+        ),
+        "dragRunner",
+        DragComponent
+    ),
+];

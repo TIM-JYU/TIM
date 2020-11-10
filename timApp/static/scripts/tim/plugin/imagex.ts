@@ -7,7 +7,6 @@ import {
     ElementRef,
     NgModule,
     OnInit,
-    StaticProvider,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -2230,11 +2229,12 @@ export class ImagexModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
-const bootstrapFn = (extraProviders: StaticProvider[]) => {
-    const platformRef = platformBrowserDynamic(extraProviders);
-    return platformRef.bootstrapModule(ImagexModule);
-};
-
-const angularJsModule = createDowngradedModule(bootstrapFn);
-doDowngrade(angularJsModule, "imagexRunner", ImageXComponent);
-export const moduleDefs = [angularJsModule];
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(ImagexModule)
+        ),
+        "imagexRunner",
+        ImageXComponent
+    ),
+];
