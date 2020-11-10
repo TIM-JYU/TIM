@@ -178,7 +178,7 @@ const ShowFileAll = t.type({
                 ></tim-video-link>
             </ng-container>
             <div class="flex" *ngIf="videoOn" style="justify-content: flex-end">
-                <div *ngIf="video" class="margin-5-right">
+                <div *ngIf="videosettings" class="margin-5-right">
                     Speed:
                     <span class="text-smaller">
                         {{playbackRateString}}
