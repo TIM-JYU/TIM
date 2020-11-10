@@ -1099,7 +1099,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         is_template = path.find('/template') >= 0
         is_fullhtml = path.find('/fullhtml') >= 0
         is_gethtml = path.find('/gethtml') >= 0
-        is_html = (path.find('/html') >= 0 or path.find('.html') >= 0) and not is_gethtml
+        is_html = (path.find('/html/') >= 0 or path.find('.html') >= 0) and not is_gethtml
         is_css = path.find('.css') >= 0
         is_js = path.find('.js') >= 0 or path.find('.ts') >= 0
         is_graphviz  = path.find('/graphviz') >= 0
@@ -1125,6 +1125,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if (os.path.isfile(self.path)):
                     do_headers(self, 'application/javascript')
                 return self.wout(file_to_string(self.path))
+            if is_html:
+                p = self.path.split("?")[0]
+                if (os.path.isfile(p)):
+                    do_headers(self, 'text/html')
+                return self.wout(file_to_string(p))
+
         except Exception as e:
             if str(e).find('[Errno 2]') >= 0:
                 self.send_response(404)
