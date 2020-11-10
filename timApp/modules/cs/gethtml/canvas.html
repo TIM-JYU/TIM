@@ -19,6 +19,9 @@
             position: fixed;
             top: 0px;
         }
+        .mycanvas {
+            z-index: -1;
+        }
 
     </style>
     %INCLUDESCRIPTS%
@@ -67,6 +70,10 @@
                 var cons = console;
                 if (wantsConsole) {
                     cons = canvasConsole;
+                }
+                if ( text.startsWith("function paint(") ) {
+                    b = "";
+                    a = "";
                 }
                 var fullcode = "return (" + b + text + a + ")";
                 var paint = new Function(fullcode)();
@@ -137,8 +144,8 @@
 </head>
 <body onresize="resize_canvas()">
 <div id="error" class="error"></div>
-<pre id="myConsole" class="jsconsole"></pre>
 <canvas id="myCanvas" class="mycanvas" width="800" height="1" style="touch-action: none;"></canvas>
+<pre id="myConsole" class="jsconsole"></pre>
 %INCLUDEHTML%
 </body>
 </html>

@@ -667,6 +667,7 @@ const CsMarkupOptional = t.partial({
     jsFiles: t.array(t.string),
     cssFiles: t.array(t.string),
     deleteFiles: t.array(t.string),
+    jsBrowserConsole: t.boolean,
 });
 
 const CsMarkupDefaults = t.type({
@@ -3088,6 +3089,7 @@ ${fhtml}
                 language: "GlowScript 2.1 JavaScript",
             };
         }
+
         channel.port1.postMessage({
             data: {
                 code: this.getCode(),
@@ -3095,7 +3097,9 @@ ${fhtml}
                 input: this.userinput,
                 // TODO: Why would someone _not_ want console?
                 //  There won't be anything visible in UI without it.
-                console: true, // this.type.includes("/c"),
+                // Answer: console means that consolelog goes to same
+                // place than write.  Itherwise it goes to browser console
+                console: !this.attrsall.markup.jsBrowserConsole, // true, // this.type.includes("/c"),
                 ...extra,
             },
             msg: "setData",
