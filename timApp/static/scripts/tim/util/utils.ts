@@ -814,7 +814,7 @@ export function parseIframeopts(iframeopts: string) {
     const parsed = parse(`<div ${iframeopts}></div>`);
     let sandbox = "";
     let allow = "";
-    for (const c of parsed.firstElementChild!.attributes) {
+    for (const c of parsed.firstElementChild?.attributes ?? []) {
         if (c.name === "sandbox") {
             sandbox = c.value;
         }
@@ -822,6 +822,15 @@ export function parseIframeopts(iframeopts: string) {
             allow = c.value;
         }
         // TODO: Handle possible other iframe options.
+    }
+    if (
+        sandbox.includes("allow-scripts") &&
+        sandbox.includes("allow-same-origin")
+    ) {
+        sandbox = sandbox.replace("allow-same-origin", "");
+        console.warn(
+            "Disallowed unsafe sandbox value (allow-scripts allow-same-origin); removed allow-same-origin."
+        );
     }
     return {sandbox, allow};
 }

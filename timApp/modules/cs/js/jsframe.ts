@@ -157,6 +157,14 @@ function unwrapAllC(data: unknown): {c: unknown} {
     return CProp.is(data) ? data : {c: data};
 }
 
+export interface Iframesettings {
+    allow: string | null;
+    sandbox: string;
+    src: SafeResourceUrl;
+    width: number | null;
+    height: number | null;
+}
+
 @Component({
     selector: "jsframe-runner",
     template: `
@@ -222,13 +230,7 @@ export class JsframeComponent
         AfterViewInit,
         OnDestroy,
         ICtrlWithMenuFunctionEntry {
-    iframesettings?: {
-        allow: string;
-        sandbox: string;
-        src: SafeResourceUrl;
-        width: number;
-        height: number;
-    };
+    iframesettings?: Iframesettings;
     private ab?: AnswerBrowserController;
 
     constructor(
@@ -507,13 +509,11 @@ export class JsframeComponent
             src = "data:text/html;base64," + datasrc;
         }
 
-        const iframeopts =
-            this.markup.iframeopts ??
-            "sandbox='allow-scripts allow-same-origin'";
+        const iframeopts = this.markup.iframeopts ?? "sandbox='allow-scripts'";
 
-        const sandbox = parseIframeopts(iframeopts).sandbox;
-        const allow = parseIframeopts(iframeopts).allow;
-        // if (allow) { allow =  'allow="' + allow + '"'; }
+        const opts = parseIframeopts(iframeopts);
+        const sandbox = opts.sandbox;
+        const allow = opts.allow;
         const source = this.domSanitizer.bypassSecurityTrustResourceUrl(src);
         this.iframesettings = {
             allow,

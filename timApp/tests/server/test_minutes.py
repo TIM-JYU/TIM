@@ -168,7 +168,7 @@ class MinutesHandling(BrowserTest):
              '',
              'Esitys\nTodetaan ilmoitusasiat.',
              '%%ALLEKIRJOITUKSET%%'])
-        plugins = ote_html.cssselect('list-video-runner')
+        plugins = ote_html.cssselect('tim-video')
         self.assertEqual(
             {'doclink': 'https://tim.jyu.fi/files/xxx/tutkinnot.pdf',
              'doctext': ')',

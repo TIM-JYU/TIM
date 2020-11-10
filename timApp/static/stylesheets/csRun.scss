@@ -58,18 +58,28 @@ p.stem {
   margin: 0 auto;
 }
 
-.listVideoRunDiv img {
-  display: inline-block;
-  width: 0.8em;
+.listVideoRunDiv, .smallVideoRunDiv {
+  margin-bottom: 0.4em;
+
+  img {
+    display: inline-block;
+    width: 0.8em;
+  }
 }
 
-.smallVideoRunDiv img {
-  display: inline-block;
-  width: 0.8em;
+.listVideoRunDiv .videoInfo {
+  display: list-item;
+  margin-left: 2.5em;
 }
 
-.videoSpeed {
-  font-size: smaller;
+.videoRunDiv .play {
+  display: flex;
+  font-size: 10em;
+  justify-content: center;
+  a {
+    display: block;
+    line-height: 0;
+  }
 }
 
 .taunoOhje {

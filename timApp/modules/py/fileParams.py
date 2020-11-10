@@ -1020,7 +1020,7 @@ def make_lazy(plugin_html: str, query: QueryClass, htmlfunc: Callable[[QueryClas
     """
     if not is_lazy(query):
         return plugin_html
-    lazy_html = htmlfunc(query)
+    lazy_html = tim_sanitize(htmlfunc(query))
     lazy_plugin_html = LAZYSTART + plugin_html + LAZYEND + lazy_html
     return lazy_plugin_html
 

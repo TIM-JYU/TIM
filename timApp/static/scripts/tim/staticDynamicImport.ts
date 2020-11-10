@@ -41,7 +41,7 @@ export function staticDynamicImport(s: string) {
         case "/field/js/build/multisave.js":
             return import("modules/fields/js/multisave");
         case "/svn/js/video.js":
-            return import("modules/svn/js/video");
+            return import("modules/svn/js/video.component");
         case "/field/js/build/rbfield.js":
             return import("modules/fields/js/rbfield");
         case "/field/js/build/cbfield.js":

@@ -86,7 +86,7 @@ I am %%username%%.
 ```
 """)
         d.document.set_settings({'macros': None})
-        r = self.get(d.url, as_tree=True).cssselect('.parContent video-runner')
+        r = self.get(d.url, as_tree=True).cssselect('.parContent tim-video')
         self.assertTrue(r)
 
     def test_invalid_macros(self):
