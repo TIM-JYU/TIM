@@ -16,7 +16,7 @@ module.exports = {
     ],
     "ignorePatterns": [
         "modules/cs/jsav/",
-        "modules/cs/mindsim/",
+        "modules/cs/static/mindsim/",
         "modules/cs/simcir/",
         "modules/jsrunner/server/",
         "static/scripts/tim/environments/environment.prod.ts",
