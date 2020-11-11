@@ -216,7 +216,9 @@ class DrawIO(JSframe):
                 templates = json.loads(templates)
             except json.decoder.JSONDecodeError:
                 pass
-        ma["options"] = {'fullscreen': ma.get("fullscreen", True), 'templates': templates}
+        ma["options"] = {'fullscreen': ma.get("fullscreen", True),
+                         'templates': templates,
+                         'hideOptionsBar': not ma.get("task", True)}
         super().modify_query()
         return
 
