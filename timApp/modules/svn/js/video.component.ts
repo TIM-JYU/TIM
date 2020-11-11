@@ -377,14 +377,14 @@ export class VideoComponent extends AngularPluginBase<
                     file = yembed + file.substring(iy + yname.length);
                 }
             }
+            const src = `${file}${params}`;
             this.iframesettings = {
-                src: this.domSanitizer.bypassSecurityTrustResourceUrl(
-                    `${file}${params}`
-                ),
+                src: this.domSanitizer.bypassSecurityTrustResourceUrl(src),
                 width: this.width ?? null,
                 height: this.height ?? null,
                 sandbox: parseIframeopts(
-                    this.markup.iframeopts ?? 'sandbox="allow-scripts"'
+                    this.markup.iframeopts ?? 'sandbox="allow-scripts"',
+                    src
                 ).sandbox,
                 allow: null,
             };

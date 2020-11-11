@@ -807,7 +807,7 @@ export function truncate(text: string, max: number) {
     return text;
 }
 
-export function parseIframeopts(iframeopts: string) {
+export function parseIframeopts(iframeopts: string, framesrc: string) {
     const parse = Range.prototype.createContextualFragment.bind(
         document.createRange()
     );
@@ -823,9 +823,15 @@ export function parseIframeopts(iframeopts: string) {
         }
         // TODO: Handle possible other iframe options.
     }
+    let canAllowScriptsAndSameOrigin = false;
+    try {
+        const u = new URL(framesrc, location.origin);
+        canAllowScriptsAndSameOrigin = location.origin !== u.origin;
+    } catch {}
     if (
         sandbox.includes("allow-scripts") &&
-        sandbox.includes("allow-same-origin")
+        sandbox.includes("allow-same-origin") &&
+        !canAllowScriptsAndSameOrigin
     ) {
         sandbox = sandbox.replace("allow-same-origin", "");
         console.warn(

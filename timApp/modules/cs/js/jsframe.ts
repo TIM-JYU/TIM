@@ -492,7 +492,7 @@ export class JsframeComponent
 
         const iframeopts = this.markup.iframeopts ?? "sandbox='allow-scripts'";
 
-        const opts = parseIframeopts(iframeopts);
+        const opts = parseIframeopts(iframeopts, src);
         const sandbox = opts.sandbox;
         const allow = opts.allow;
         const source = this.domSanitizer.bypassSecurityTrustResourceUrl(src);
