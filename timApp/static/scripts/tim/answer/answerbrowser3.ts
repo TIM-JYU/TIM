@@ -736,6 +736,9 @@ export class AnswerBrowserController
         let taskOrAnswer: Record<string, string | number>;
         if (this.selectedAnswer) {
             taskOrAnswer = {answer_id: this.selectedAnswer.id};
+            if (this.answerLoader) {
+                this.answerLoader(this.selectedAnswer);
+            }
         } else {
             taskOrAnswer = {task_id: this.taskId.docTask().toString()};
         }
@@ -775,7 +778,7 @@ export class AnswerBrowserController
                 // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
                 // have to be fully reloaded every time.
                 if (this.answerLoader && this.selectedAnswer) {
-                    this.answerLoader(this.selectedAnswer);
+                    // Do nothing; the answerLoader gets called earlier in this method.
                 } else {
                     await loadPlugin(
                         r.result.data.html,

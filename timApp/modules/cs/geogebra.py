@@ -206,7 +206,7 @@ class Geogebra(Language):
         return ["/cs/js/build/geogebra.js"]
 
     def runner_name(self):
-        return "geogebra-runner"
+        return "tim-geogebra"
 
     def can_give_task(self):
         return True
