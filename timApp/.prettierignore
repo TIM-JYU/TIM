@@ -1,5 +1,5 @@
 *.*
 README
-/modules/cs/mindsim
+/modules/cs/static/mindsim
 /modules/cs/MIRToolbox
 !*.ts
