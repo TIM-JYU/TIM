@@ -67,7 +67,7 @@ TIM_SAFE_TAGS = [
     'cs-runner',
     'cs-runner-input',
     'cs-sage-runner',
-    'cs-geogebra-runner',
+    'tim-geogebra',
     'cs-simcir-runner',
     'cs-tauno-runner',
     'cs-tauno-runner-input',

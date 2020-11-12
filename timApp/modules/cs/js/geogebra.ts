@@ -1,45 +1,46 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unsafe-member-access */
-import angular from "angular";
-import * as t from "io-ts";
+﻿import * as t from "io-ts";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+    ViewChild,
+} from "@angular/core";
 import {IAnswer} from "tim/answer/IAnswer";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
-import {PluginBase, pluginBindings} from "tim/plugin/util";
-import {$http, $sce, $timeout} from "tim/util/ngimport";
-import {defaultTimeout, to} from "tim/util/utils";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
+import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {BrowserModule} from "@angular/platform-browser";
+import {HttpClientModule} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {Iframesettings} from "./jsframe";
 
-const geogebraApp = angular.module("geogebraApp", ["ngSanitize"]);
-export const moduleDefs = [geogebraApp];
-
-// this.attrs
 const GeogebraMarkup = t.intersection([
     t.partial({
         beforeOpen: t.string,
-        buttonBottom: t.boolean,
-        correctresponse: t.boolean,
-        generalfeedback: t.boolean,
         showButton: t.string,
-        // srchtml: t.string,
         message: t.string,
         width: t.number,
         height: t.number,
         tool: t.boolean,
+        norun: t.boolean,
     }),
     GenericPluginMarkup,
     t.type({
         open: withDefault(t.boolean, true),
         borders: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
-        // autoplay: withDefault(t.boolean, true),
-        // file: t.string,
-        // open: withDefault(t.boolean, false),
     }),
 ]);
 const GeogebraAll = t.intersection([
     t.partial({
         usercode: t.string,
-        // srchtml: t.string,
         norun: t.boolean,
     }),
     t.type({
@@ -49,16 +50,63 @@ const GeogebraAll = t.intersection([
     }),
 ]);
 
-interface JSFrameWindow extends Window {
-    getData(): string;
-    setData(state: any): void;
+interface GeogebraWindow extends Window {
+    getData?(): {message?: string};
+
+    setData?(state: unknown): void;
 }
 
 interface CustomFrame<T extends Window> extends HTMLIFrameElement {
     contentWindow: T;
 }
 
-class GeogebraController extends PluginBase<
+// noinspection TypeScriptUnresolvedVariable
+@Component({
+    selector: "tim-geogebra",
+    template: `
+        <div [class.csRunDiv]="markup.borders" class="math que geogebra no-popup-menu">
+            <h4 *ngIf="header" [innerHtml]="header"></h4>
+            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
+            <p *ngIf="!isOpen" class="stem" [innerHtml]="markup.beforeOpen"></p>
+
+            <iframe
+                    *ngIf="isOpen && iframesettings"
+                    #frame
+                    class="showGeoGebra"
+                    style="border: none"
+                    [src]="iframesettings.src"
+                    [sandbox]="iframesettings.sandbox"
+                    [style.width.px]="iframesettings.width"
+                    [style.height.px]="iframesettings.height"
+                    [attr.allow]="iframesettings.allow"
+            >
+            </iframe>
+            <p class="csRunMenu">
+                <button *ngIf="!isOpen"
+                        class="timButton btn-sm"
+                        (click)="runShowTask()"
+                        [innerHtml]="showButton()"></button>
+                <button *ngIf="isOpen && !markup.norun"
+                        [disabled]="isRunning"
+                        title="(Ctrl-S)"
+                        (click)="getData()"
+                        class="timButton btn-sm"
+                        [innerHtml]="button"></button>
+                <span class="geogebra message"
+                      *ngIf="message"
+                      [innerHtml]="message"></span>
+                <span class="geogebra message"
+                      *ngIf="console"
+                      [innerHtml]="console"></span>
+            </p>
+            <span class="csRunError"
+                  *ngIf="error"
+                  [innerHtml]="error"></span>
+            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
+        </div>
+    `,
+})
+export class GeogebraComponent extends AngularPluginBase<
     t.TypeOf<typeof GeogebraMarkup>,
     t.TypeOf<typeof GeogebraAll>,
     typeof GeogebraAll
@@ -66,7 +114,7 @@ class GeogebraController extends PluginBase<
     private ab?: AnswerBrowserController;
 
     get english() {
-        return this.attrs.lang === "en";
+        return this.markup.lang === "en";
     }
 
     buttonText() {
@@ -78,45 +126,34 @@ class GeogebraController extends PluginBase<
     }
 
     showButton() {
-        const txt = this.attrs.showButton;
+        const txt = this.markup.showButton;
         if (txt) {
             return txt;
         }
         return this.english ? "Show task" : "Näytä tehtävä";
     }
 
-    public viewctrl!: ViewCtrl;
-    private span: string = "";
-    private error: string = "";
-    private console: string = "";
-    private message: string = "";
-    private userCode: string = "";
-    private geogebraoutput: string = "";
-    private geogebrainputfeedback: string = "";
-    private geogebrapeek: boolean = false;
-    private isRunning: boolean = false;
-    private inputrows: number = 1;
-    private isOpen: boolean = false;
-    private lastInputFieldId: string = "";
-    private lastInputFieldValue: string = "";
-    private lastInputFieldElement: HTMLInputElement | undefined;
-    private button: string = "";
+    private viewctrl!: ViewCtrl;
+    error?: string;
+    console?: string;
+    message?: string;
+    iframesettings?: Iframesettings;
+    isRunning = false;
+    isOpen = false;
+    button: string = "";
+    @ViewChild("frame") private iframe?: ElementRef<
+        CustomFrame<GeogebraWindow>
+    >;
 
-    private timer: NodeJS.Timer | undefined;
-
-    $onInit() {
-        super.$onInit();
+    ngOnInit() {
+        super.ngOnInit();
+        this.viewctrl = vctrlInstance!;
         this.button = this.buttonText();
-        const aa = this.attrsall;
-        this.userCode = aa.usercode ?? "";
-
-        this.message = this.attrs.message ?? "";
-
-        if (this.attrs.open) {
-            this.isOpen = true;
-        }
+        this.message = this.markup.message;
+        this.isOpen = this.markup.open;
         const tid = this.pluginMeta.getTaskId()!;
         const taskId = tid.docTask();
+        this.loadIframe();
         (async () => {
             const ab = await this.viewctrl.getAnswerBrowserAsync(taskId);
             this.ab = ab;
@@ -126,34 +163,25 @@ class GeogebraController extends PluginBase<
         })();
     }
 
-    $onDestroy() {}
-
     runShowTask() {
         this.isOpen = true;
     }
 
     changeAnswer(a: IAnswer) {
-        const frameElem = this.element.find(".jsFrameContainer")[0];
-        const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
-        if (!f.contentWindow.setData) {
-            return;
-        }
-        f.contentWindow.setData(JSON.parse(a.content));
+        this.iframe?.nativeElement.contentWindow.setData?.(
+            JSON.parse(a.content)
+        );
     }
 
-    outputAsHtml() {
-        // if ( !this.attrs.srchtml ) return "";
+    loadIframe() {
         if (this.attrsall.preview) {
-            return "";
+            return;
         } // TODO: replace when preview delay and preview from markup ready
-        $timeout(0);
         const selectedUser = this.viewctrl.selectedUser;
-        // const html:string = this.attrs.srchtml;
-        // const datasrc = btoa(html);
-        let w = this.attrs.width ?? 800;
-        let h = this.attrs.height ?? 450;
+        let w = this.markup.width ?? 800;
+        let h = this.markup.height ?? 450;
 
-        if (this.attrs.tool) {
+        if (this.markup.tool) {
             w = Math.max(w, 1200);
             h = Math.max(w, 1100);
         }
@@ -162,83 +190,63 @@ class GeogebraController extends PluginBase<
             selectedUser,
             this.ab?.selectedAnswer
         );
-        this.geogebraoutput =
-            '<iframe id="jsxFrame-geogebra-div1"\n' +
-            '        class="showGeoGebra geogebraFrame" \n' +
-            '        style="width:calc(' +
-            w +
-            "px + 2px);height:calc(" +
-            h +
-            'px + 2px);border: none;"\n' +
-            '        sandbox="allow-scripts allow-same-origin"\n' +
-            // "        src=\"data:text/html;base64," + datasrc + "\">\n" +
-            // "src=\"https://www.geogebra.org/material/iframe/id/23587/width/1600/height/715/border/888888/rc/false/ai/false/sdz/false/smb/false/stb/false/stbh/true/ld/false/sri/false\"" +
-            // 'src="'+ '/cs/reqs' + '"' +
-            'src="' +
-            url +
-            '"' +
-            "</iframe>";
-        const s = $sce.trustAsHtml(this.geogebraoutput);
-        return s;
+        this.iframesettings = {
+            allow: null,
+            sandbox: "allow-scripts",
+            width: w + 2,
+            height: h + 2,
+            src: this.domSanitizer.bypassSecurityTrustResourceUrl(url),
+        };
     }
 
-    geogebrainputfeedbackAsHtml() {
-        const s = $sce.trustAsHtml(this.geogebrainputfeedback);
-        return s;
-    }
-
-    async runSend(data: any) {
+    async runSend(data: Record<string, unknown>) {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             return;
         }
-        this.geogebrapeek = false;
-        this.error = "";
+        this.error = undefined;
+        this.console = undefined;
         this.isRunning = true;
-        const url = this.pluginMeta.getAnswerUrl();
-        data.type = "geogebra";
         const params = {
-            input: data,
+            input: {...data, type: "geogebra"},
         };
 
-        this.console = "";
-
-        const r = await to(
-            $http<{
-                web: {error?: string; console?: string};
-            }>({method: "PUT", url: url, data: params, timeout: defaultTimeout})
-        );
+        const r = await this.postAnswer<{
+            web: {error?: string; console?: string};
+        }>(params);
         this.isRunning = false;
 
         if (!r.ok) {
-            this.error = r.result.data.error;
+            this.error = r.result.error.error;
             return;
         }
-        if (!r.result.data.web) {
+        if (!r.result.web) {
             this.error = "No web reply from csPlugin!";
             return;
         }
-        if (r.result.data.web.error) {
-            this.error = r.result.data.web.error;
+        if (r.result.web.error) {
+            this.error = r.result.web.error;
             return;
         }
-        if (r.result.data.web.console) {
-            this.console = r.result.data.web.console;
+        if (r.result.web.console) {
+            this.console = r.result.web.console;
             return;
         }
     }
 
-    getData() {
-        const frameElem = this.element.find(".jsFrameContainer")[0];
-        const f = frameElem.firstChild as CustomFrame<JSFrameWindow>;
+    async getData() {
+        if (!this.iframe) {
+            return;
+        }
+        const f = this.iframe.nativeElement;
         if (!f.contentWindow.getData) {
             return;
         }
-        const s: any = f.contentWindow.getData();
+        const s = f.contentWindow.getData();
         if (s.message) {
             this.message = s.message;
         }
-        this.runSend(s);
+        await this.runSend(s);
     }
 
     getDefaultMarkup() {
@@ -248,64 +256,24 @@ class GeogebraController extends PluginBase<
     getAttributeType() {
         return GeogebraAll;
     }
-
-    private stopTimer(): boolean {
-        if (!this.timer) {
-            return false;
-        }
-        clearTimeout(this.timer);
-        this.timer = undefined;
-        return true;
-    }
 }
 
-const common = {
-    bindings: pluginBindings,
-    controller: GeogebraController,
-    require: {
-        viewctrl: "?^timView",
-    },
-};
+@NgModule({
+    declarations: [GeogebraComponent],
+    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+})
+export class GeogebraModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef) {}
+}
 
-/*
-
-*/
-
-geogebraApp.component("geogebraRunner", {
-    ...common,
-    template: `
-<div ng-cloak ng-class="::{'csRunDiv': $ctrl.attrs.borders}"  class="math que geogebra no-popup-menu" >
-    <h4 ng-if="::$ctrl.header" ng-bind-html="::$ctrl.header"></h4>
-    <p ng-if="::$ctrl.stem" class="stem" ng-bind-html="::$ctrl.stem"></p>
-    <p ng-if="!$ctrl.isOpen" class="stem" ng-bind-html="::$ctrl.attrs.beforeOpen"></p>
-
-    <div ng-cloak ng-if="$ctrl.isOpen" id="output" class="jsFrameContainer geogebraOutput" ng-bind-html="::$ctrl.outputAsHtml()">
-    <!--<div ng-cloak id="output" ng-if="::!$ctrl.timWay" class="geogebraOutput" ng-bind-html="$ctrl.output">-->
-    </div>
-    <!-- <div class="peekdiv" id="peek" ng-bind-html="$ctrl.geogebrapeek"></div> -->
-    <p class="csRunMenu">
-        <button ng-if="!$ctrl.isOpen"
-                class="timButton btn-sm"
-                ng-click="$ctrl.runShowTask()"
-                ng-bind-html="$ctrl.showButton()"></button>
-        <button ng-if="$ctrl.isOpen && !$ctrl.attrs.norun"
-                ng-disabled="$ctrl.isRunning"
-                title="(Ctrl-S)"
-                ng-click="$ctrl.getData()"
-                class="timButton btn-sm"
-                ng-bind-html="::$ctrl.button"></button>
-        <span class="geogebra message"
-              ng-if="$ctrl.message"
-              ng-bind-html="$ctrl.message"></span>
-        <span class="geogebra message"
-              ng-if="$ctrl.console"
-              ng-bind-html="$ctrl.console"></span>
-    </p>
-    <span class="csRunError"
-          ng-if="$ctrl.error"
-          ng-style="$ctrl.tinyErrorStyle" ng-bind-html="$ctrl.error"></span>
-
-    <p class="plgfooter" ng-if="::$ctrl.footer" ng-bind-html="::$ctrl.footer"></p>
-</div>
-`,
-});
+export const moduleDefs = [
+    doDowngrade(
+        createDowngradedModule((extraProviders) =>
+            platformBrowserDynamic(extraProviders).bootstrapModule(
+                GeogebraModule
+            )
+        ),
+        "timGeogebra",
+        GeogebraComponent
+    ),
+];
