@@ -192,7 +192,7 @@ export class GeogebraComponent extends AngularPluginBase<
         );
         this.iframesettings = {
             allow: null,
-            sandbox: "allow-scripts",
+            sandbox: "allow-scripts allow-same-origin",
             width: w + 2,
             height: h + 2,
             src: this.domSanitizer.bypassSecurityTrustResourceUrl(url),
