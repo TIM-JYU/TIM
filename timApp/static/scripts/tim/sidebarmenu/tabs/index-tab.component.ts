@@ -14,7 +14,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
     selector: "index-tab",
     template: `
         <ng-template i18n="@@indexTabTitle">Document index</ng-template>
-        <h5 i18n>Index <a href="#" i18n-title title="Go to top" class="pull-right">Go to top</a></h5>
+        <h5 i18n>Index <a (click)="goToTop()" i18n-title title="Go to top" class="pull-right">Go to top</a></h5>
         <ul class="subexp">
             <li *ngFor="let header of displayIndex" [class.no-sub-headings]="!hasSubHeadings(header)">
                 <a class="exptoggle" *ngIf="hasSubHeadings(header)">
@@ -55,6 +55,11 @@ export class IndexTabComponent implements OnInit {
 
     get displayIndex() {
         return this.headerIndexer.headers;
+    }
+
+    goToTop() {
+        // window.scrollTo(window.scrollX, 1);
+        window.scrollTo(0, 1); // Must be y:1, otherwise does no react???
     }
 
     toggleClosed(header: IHeaderDisplayIndexItem) {
