@@ -230,12 +230,13 @@ class AltSignupModel:
 def alt_signup(m: AltSignupModel):
     if not current_app.config['EMAIL_REGISTRATION_ENABLED']:
         raise AccessDenied('Email registration is disabled.')
-    email_or_username = m.email
+    email_or_username = m.email.strip()
     fail = False
     is_email = False
     if not is_valid_email(email_or_username):
         u = User.get_by_name(email_or_username)
         if not u:
+            log_warning(f'Invalid email/username in registration: "{email_or_username}"')
             # Don't return immediately; otherwise it is too easy to analyze timing of the route to deduce success.
             fail = True
             email = 'nobody@example.com'
@@ -376,7 +377,7 @@ def check_password_and_stripped(user: User, password: str) -> bool:
 @login_page.route("/altlogin", methods=['POST'])
 def alt_login():
     save_came_from()
-    email_or_username = request.form['email'].strip()
+    email_or_username = request.form['email']
     password = request.form['password']
     session['adding_user'] = request.form.get('add_user', 'false').lower() == 'true'
 
@@ -421,7 +422,8 @@ def alt_login():
     return finish_login(ready=False)
 
 
-def convert_email_to_lower(email_or_username):
+def convert_email_to_lower(email_or_username: str):
+    email_or_username = email_or_username.strip()
     if is_valid_email(email_or_username):
         return email_or_username.lower()
     return email_or_username

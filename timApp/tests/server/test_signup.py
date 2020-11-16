@@ -195,6 +195,29 @@ class TestSignUp(TimRouteTest):
             json_key='status')
         self.login(force=True, email=email, passw=test_pw)
 
+    def test_signup_whitespace(self):
+        email = 'whitespace@example.com '
+        self.json_post(
+            '/altsignup',
+            {'email': email})
+        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('whitespace@example.com',)])
+        self.json_post(
+            '/checkTempPass',
+            {'email': email, 'token': test_pws[-1]},
+            expect_content={'status': 'ok'},
+        )
+        self.json_post(
+            '/altsignup2',
+            {'realname': 'Testing Signup',
+             'email': email,
+             'token': test_pws[-1],
+             'password': test_pw,
+             'passconfirm': test_pw},
+            expect_contains='registered',
+            json_key='status')
+        self.login(force=True, email=email, passw=test_pw)
+        self.login(force=True, email=email.strip(), passw=test_pw)
+
     def test_login_case_insensitive(self):
         email = 'SomeOneCase2@example.com'
         User.create_with_group(UserInfo(
