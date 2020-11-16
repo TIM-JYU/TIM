@@ -154,7 +154,7 @@ const ShowFileAll = t.type({
                        #video
                        class="showVideo"
                        controls
-                       (metadataloaded)="metadataloaded()"
+                       (loadedmetadata)="metadataloaded()"
                        (timeupdate)="timeupdate()"
                        [style.width.px]="width"
                        [style.height.px]="height"
