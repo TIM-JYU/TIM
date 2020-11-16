@@ -1,5 +1,4 @@
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {saveCurrentScreenPar} from "../document/parhelpers";
 import {genericglobals, Locale} from "../util/globals";
 import {$http, $httpParamSerializer} from "../util/ngimport";
 import {to, ToReturn} from "../util/utils";
@@ -31,7 +30,7 @@ export class UserService {
         return this.group;
     }
 
-    public async logout(user: IUser, logoutFromKorppi = false) {
+    public async logout(user: IUser) {
         const r = await to(
             $http.post<ILoginResponse>("/logout", {user_id: user.id})
         );
@@ -43,13 +42,7 @@ export class UserService {
         this.group = response.data.other_users;
         this.current = response.data.current_user;
         if (!this.isLoggedIn()) {
-            if (logoutFromKorppi) {
-                this.korppiLogout(() => {
-                    window.location.reload();
-                });
-            } else {
-                window.location.reload();
-            }
+            window.location.reload();
         }
     }
 
@@ -69,30 +62,6 @@ export class UserService {
         return "en";
     }
 
-    public korppiLogin(addUser: boolean) {
-        saveCurrentScreenPar();
-        const targetUrl = "/openIDLogin?provider=korppi";
-        const separator = targetUrl.includes("?") ? "&" : "?";
-        const cameFromRaw = "";
-        const anchorRaw = window.location.hash.replace("#", "");
-        const redirectFn = () => {
-            window.location.replace(
-                targetUrl +
-                    separator +
-                    $httpParamSerializer({
-                        came_from: cameFromRaw,
-                        anchor: anchorRaw,
-                        add_user: addUser,
-                    })
-            );
-        };
-        if (addUser) {
-            this.korppiLogout(redirectFn);
-        } else {
-            redirectFn();
-        }
-    }
-
     /**
      * Checks whether the user belongs to a group.
      */
@@ -107,18 +76,6 @@ export class UserService {
 
     public isGroupAdmin() {
         return userBelongsToGroupOrIsAdmin("Group admins");
-    }
-
-    public korppiLogout(redirectFn: () => void) {
-        $http({
-            withCredentials: true,
-            method: "POST",
-            url: "https://korppi.jyu.fi/openid/manage/manage",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            data: $httpParamSerializer({logout: "Logout"}),
-        }).finally(redirectFn);
     }
 
     public async loginWithEmail(

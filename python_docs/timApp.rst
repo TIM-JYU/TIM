@@ -14,7 +14,6 @@ Subpackages
     timApp.folder
     timApp.gamification
     timApp.item
-    timApp.korppi
     timApp.lecture
     timApp.markdown
     timApp.note

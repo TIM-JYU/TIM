@@ -66,7 +66,6 @@ GLOBAL_NOTIFICATION_FILE = '/tmp/global_notification.html'
 GIT_LATEST_COMMIT_TIMESTAMP = subprocess.run(["git", "log", "-1", "--date=format:%d.%m.%Y %H:%M:%S", "--format=%cd"],
                                              stdout=subprocess.PIPE).stdout.decode().strip()
 GIT_BRANCH = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], stdout=subprocess.PIPE).stdout.decode().strip()
-OPENID_IDENTITY_URL = 'https://korppi.jyu.fi/openid'
 
 CELERY_BROKER_URL = 'redis://redis:6379',
 CELERY_RESULT_BACKEND = 'redis://redis:6379'

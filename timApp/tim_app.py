@@ -25,7 +25,6 @@ from timApp.item.block import Block
 from timApp.item.blockassociation import BlockAssociation
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.item.tag import Tag
-from timApp.korppi.openid import KorppiOpenID
 from timApp.lecture.askedjson import AskedJson
 from timApp.lecture.askedquestion import AskedQuestion
 from timApp.lecture.lecture import Lecture
@@ -146,7 +145,6 @@ if app.config['TESTING']:
 db.init_app(app)
 db.app = app
 migrate = Migrate(app, db)
-oid = KorppiOpenID(app, safe_roots=['https://korppi.jyu.fi'])
 
 csrf = CSRFProtect(app)
 

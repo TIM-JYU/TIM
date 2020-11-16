@@ -20,9 +20,7 @@ from timApp.auth.accesshelper import verify_admin, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_id, logged_in
 from timApp.auth.sessioninfo import get_other_users, get_session_users_ids, get_other_users_as_list, \
     get_current_user_object
-from timApp.korppi.openid import KorppiOpenIDResponse
 from timApp.notification.notify import send_email
-from timApp.tim_app import oid, get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
@@ -78,11 +76,6 @@ def login():
                            anchor=request.args.get('anchor'))
 
 
-@login_page.route("/korppiLogin")
-def login_with_korppi():
-    return safe_redirect('/openIDLogin?provider=korppi')
-
-
 def create_or_update_user(
         info: UserInfo,
         group_to_add: Optional[UserGroup]=None,
@@ -120,71 +113,7 @@ def create_or_update_user(
     return user
 
 
-@login_page.route("/openIDLogin")
-@oid.loginhandler
-def login_with_openid():
-    add_user = get_option(request, 'add_user', False)
-    if not logged_in() and add_user:
-        raise AccessDenied('You must be logged in before adding users to session.')
-    if not add_user and logged_in():
-        flash("You're already logged in.")
-        return finish_login()
-    if session.get('adding_user') is None:
-        session['adding_user'] = add_user
-
-    provider = get_option(request, 'provider', None)
-    if provider != 'korppi':
-        return abort(400, 'Unknown OpenID provider. Only korppi is supported so far.')
-    save_came_from()
-    # see possible fields at http://openid.net/specs/openid-simple-registration-extension-1_0.html
-    return oid.try_login(current_app.config['OPENID_IDENTITY_URL'],
-                         ask_for_optional=['email', 'fullname', 'firstname', 'lastname'])
-
-
 username_parse_error = 'Could not parse username from OpenID response.'
-
-
-class KorppiEmailException(Exception):
-    code = 400
-    description = ""
-
-
-@login_page.errorhandler(KorppiEmailException)
-def already_exists(error: KorppiEmailException):
-    return error_generic(error.description, 400, template='korppi_email_error.html')
-
-
-@oid.after_login
-def openid_success_handler(resp: KorppiOpenIDResponse):
-    m = re.fullmatch('https://korppi.jyu.fi/openid/account/([a-z]+)', resp.identity_url)
-    if not m:
-        return abort(400, username_parse_error)
-    username = m.group(1)
-    if not username:
-        return abort(400, username_parse_error)
-    if not resp.email:
-        # Allow existing users to log in even if Korppi didn't give email.
-        u = User.get_by_name(username)
-        if u:
-            log_warning(f'Existing user did not have email in Korppi: {username}')
-            set_user_to_session(u)
-            return finish_login()
-        log_warning(f'New user did not have email in Korppi: {username}')
-        raise KorppiEmailException()
-    if not resp.fullname:
-        return abort(400, 'Missing fullname')
-    if not resp.firstname:
-        return abort(400, 'Missing firstname')
-    if not resp.lastname:
-        return abort(400, 'Missing lastname')
-    fullname = f'{resp.lastname} {resp.firstname}'
-    user = create_or_update_user(
-        UserInfo(email=resp.email, full_name=fullname, username=username, origin=UserOrigin.Korppi),
-        group_to_add=get_home_organization_group(),
-    )
-    db.session.commit()
-    set_user_to_session(user)
-    return finish_login()
 
 
 def set_user_to_session(user: User):
@@ -333,7 +262,7 @@ def alt_signup_after(m: AltSignup2Model):
         success_status = 'updated'
 
         # If the user isn't an email user, don't let them change name
-        # (because it has been provided by other system such as Korppi).
+        # (because it has been provided by other system such as Haka).
         if not user.is_email_user:
             real_name = user.real_name
 
