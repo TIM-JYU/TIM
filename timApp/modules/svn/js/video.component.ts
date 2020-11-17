@@ -17,6 +17,7 @@ import {
 import {parseIframeopts, seconds2Time, valueDefu} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {BrowserModule} from "@angular/platform-browser";
+import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
@@ -179,6 +180,8 @@ const ShowFileAll = t.type({
             </ng-container>
             <div class="flex" *ngIf="videoOn" style="justify-content: flex-end">
                 <div *ngIf="videosettings" class="margin-5-right">
+                    <!--<mat-checkbox class="">Adv</mat-checkbox>-->
+                    <label title="Advanced video controls">Adv <input type="checkbox" [(ngModel)]="advVideo" /></label>
                     Speed:
                     <span class="text-smaller">
                         {{playbackRateString}}
@@ -194,6 +197,15 @@ const ShowFileAll = t.type({
                     <a (click)="zoom(1.4)" title="Zoom in"><i class="glyphicon glyphicon-plus"></i></a>
                 </div>
                 <a (click)="hideVideo()">{{hidetext}}</a>
+            </div>
+            <div *ngIf="advVideo">
+                <span>Jump sec: </span>
+                <a (click)="jump(-10)" title="Jump -10s">-10</a>
+                <a (click)="jump(-2)" title="Jump -2s">-2</a>
+                <a (click)="jump(-1)" title="Jump -1s">-1</a>
+                <a (click)="jump(1)" title="Jump  +1s">+1</a>
+                <a (click)="jump(2)" title="Jump  +2s">+2</a>
+                <a (click)="jump(10)" title="Jump +10s">+10</a>
             </div>
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
         </div>
@@ -257,6 +269,7 @@ export class VideoComponent extends AngularPluginBase<
     iframesettings?: Iframesettings;
     videosettings?: {src: string};
     playbackRateString = "";
+    advVideo: boolean = false;
 
     ngOnInit() {
         super.ngOnInit();
@@ -327,6 +340,14 @@ export class VideoComponent extends AngularPluginBase<
             v.playbackRate *= mult;
         }
         this.playbackRateString = v.playbackRate.toFixed(1);
+    }
+
+    jump(value: number) {
+        if (!this.video) {
+            return;
+        }
+        const v = this.video.nativeElement;
+        v.currentTime += value;
     }
 
     zoom(mult: number) {
@@ -440,7 +461,7 @@ export class VideoComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [VideoComponent, VideoLinkComponent],
-    imports: [BrowserModule, TimUtilityModule, HttpClientModule],
+    imports: [BrowserModule, TimUtilityModule, HttpClientModule, FormsModule],
 })
 export class VideoModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

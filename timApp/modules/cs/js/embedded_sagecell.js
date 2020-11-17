@@ -29325,7 +29325,7 @@ Session.prototype.send_message = function() {
 Session.prototype.execute = function(code) {
     if (this.kernel.opened) {
         console.debug('opened and executing in kernel:', this.timer());
-        var pre;
+        var pre, post;
         //TODO: do this wrapping of code on the server, not in javascript
         //Maybe the system can be sent in metadata in the execute_request message
         this.rawcode = code;
@@ -29334,13 +29334,17 @@ Session.prototype.execute = function(code) {
         } else if (this.language === "html") {
             pre = "html";
         } else if (this.language !== "sage") {
-            pre = "print " + this.language + ".eval";
+            pre = "print(" + this.language + ".eval";
+            post = ")"
         }
         if (this.language === "octave") {
             code = "set(gcf(), 'visible', 'off')\n" + code + "\nif (get(gcf(), 'children'))\n    saveas(gcf(), 'octave.png')\nendif";
         }
         if (pre) {
             code = pre + '("""' + code.replace(/"/g, '\\"') + '""").strip()';
+        }
+        if (post) {
+            code += post
         }
         if (this.language === "octave") {
             code = "octave = Octave(); " + code;
