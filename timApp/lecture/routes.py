@@ -39,7 +39,7 @@ from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, empty_response
-from timApp.util.logger import log_debug
+from timApp.util.logger import log_debug, log_info
 from timApp.util.utils import get_current_time
 
 lecture_routes = Blueprint('lecture',
@@ -150,7 +150,6 @@ def do_get_updates(m: GetUpdatesModel):
     Checks updates in 1 second frequently and answers if there is updates.
 
     """
-    log_debug("get updates")
     client_last_id = m.client_last_id
     current_question_id = m.current_question_id
     current_points_id = m.current_points_id
@@ -223,7 +222,6 @@ def do_get_updates(m: GetUpdatesModel):
 
     lecture_ending = 100
     base_resp = None
-    log_debug(user_name + " before loop")
 
     basic_info = {
         "ms": poll_interval_ms,
@@ -332,39 +330,50 @@ def get_new_question(lecture: Lecture, current_question_id=None, current_points_
             asked_id = question.asked_id
             already_shown = question.has_activity(QuestionActivityKind.Usershown, u)
             already_answered = question.has_activity(QuestionActivityKind.Useranswered, u)
+            s = f'q: {u.name}, r, as={already_shown is not None}, aa={already_answered is not None}, f={force}, aid={asked_id}'
             if already_answered:
                 if force:
+                    log_info(f'{s}, ret=already_answered')
                     return {'type': 'already_answered'}
                 else:
+                    log_info(f'{s}, ret=None')
                     return None
             if (not already_shown or force) or (asked_id != current_question_id):
                 q = get_asked_question(asked_id)
                 answer = q.answers.filter_by(user_id=current_user).first()
                 question.add_activity(QuestionActivityKind.Usershown, u)
                 if answer:
+                    log_info(f'{s}, ret=answer')
                     return {'type': 'answer', 'data': answer}
                 else:
+                    log_info(f'{s}, ret=question')
                     return {
                         'type': 'question',
                         'data': q if lecture.lecturer == current_user else hide_points_and_try_shuffle_question(q, current_user)
                     }
+            log_info(f'{s}, ret=None')
         else:
             question_to_show_points = get_shown_points(lecture)
+            s = ''
             if question_to_show_points:
                 asked_id = question_to_show_points.asked_id
                 already_shown = question_to_show_points.has_activity(QuestionActivityKind.Pointsshown, u)
                 already_closed = question_to_show_points.has_activity(QuestionActivityKind.Pointsclosed, u)
+                s = f'q: {u.name}, nr, as={already_shown is not None}, ac={already_closed is not None}, f={force}, aid={asked_id}'
                 if already_closed:
                     if force:
                         db.session.delete(already_closed)
                     else:
+                        log_info(f'{s}, ret=None')
                         return None
                 if not (already_shown or force) or (asked_id != current_points_id):
                     question = get_asked_question(asked_id)
                     question.add_activity(QuestionActivityKind.Pointsshown, u)
                     answer = question.answers.filter_by(user_id=current_user).first()
                     if answer:
+                        log_info(f'{s}, ret=result')
                         return {'type': 'result', 'data': answer}
+            log_info(s or f'q: {u.name}, nr, f={force}, ret=None')
             return None
 
 
