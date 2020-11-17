@@ -111,7 +111,7 @@ import {LectureWallContentModule} from "./lecture-wall-content.component";
                     </p>
                     <div class="flex cl" [ngResizable]="true"
                          style="width: 400px; height: 300px; position: relative">
-                        {{question.json.json.questionText}}
+                        <span [innerHTML]="question.json.json.questionText"></span>
                         <tim-answer-chart
                                 [question]="question"
                                 [answers]="answerMap[question.asked_id]">
