@@ -28,7 +28,7 @@ import {
     scrollToElement,
     to,
 } from "../util/utils";
-import {IAnswer} from "./IAnswer";
+import {IAnswer, IAnswerWithUsers} from "./IAnswer";
 
 /*
  * TODO: if forceBrowser and formMode, now does not show the browser after refresh in view-mode.
@@ -1431,6 +1431,38 @@ export class AnswerBrowserController
             this.selectedAnswer = this.filteredAnswers[0];
         }
         await this.changeAnswer();
+    }
+
+    async deleteCollab(userId: number) {
+        if (!this.selectedAnswer) {
+            return;
+        }
+        const sa = this.selectedAnswer as IAnswerWithUsers; // TODO fix selectedAnswer type
+        if (sa.users.length === 1) {
+            await showMessageDialog("Cannot delete the only collaborator.");
+            return;
+        }
+        const index = sa.users.findIndex((u) => u.id === userId);
+        if (index < 0) {
+            return;
+        }
+        const user = sa.users[index];
+        if (
+            !window.confirm(
+                `Delete collaborator ${user.real_name ?? "(null)"} (${
+                    user.name
+                })?`
+            )
+        ) {
+            return;
+        }
+        await to(
+            $http.post("/answer/deleteCollaborator", {
+                answer_id: sa.id,
+                user_id: userId,
+            })
+        );
+        sa.users.splice(index, 1);
     }
 
     getPar(): Paragraph {

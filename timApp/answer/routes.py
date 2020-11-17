@@ -113,6 +113,11 @@ class ValidityModel(AnswerIdModel):
     valid: bool
 
 
+@dataclass
+class DeleteCollabModel(AnswerIdModel):
+    user_id: int
+
+
 @answers.route("/answer/saveValidity", methods=['PUT'])
 @use_model(ValidityModel)
 def save_validity(m: ValidityModel):
@@ -139,6 +144,24 @@ def delete_answer(m: AnswerIdModel):
     db.session.commit()
     u = get_current_user_object()
     log_info(f'{u.name} deleted answer {a.id} (of {seq_to_str(unames)}) in task {a.task_id}')
+    return ok_response()
+
+
+@answers.route("/answer/deleteCollaborator", methods=['POST'])
+@use_model(DeleteCollabModel)
+def delete_answer_collab(m: DeleteCollabModel):
+    """Deletes an answer collaborator.
+    """
+    a, doc_id = verify_answer_access(m.answer_id, get_current_user_object().id, require_teacher_if_not_own=True)
+    verify_teacher_access(get_doc_or_abort(doc_id))
+    verify_admin()
+    collab_to_remove = User.get_by_id(m.user_id)
+    if not collab_to_remove:
+        raise RouteException(f'Answer {m.answer_id} does not have collaborator {m.user_id}')
+    a.users_all.remove(collab_to_remove)
+    db.session.commit()
+    u = get_current_user_object()
+    log_info(f'{u.name} deleted collaborator {collab_to_remove.name} from answer {a.id} in task {a.task_id}')
     return ok_response()
 
 

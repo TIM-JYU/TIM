@@ -138,13 +138,12 @@
                                 <input type="checkbox" ng-model="$ctrl.review" ng-change="$ctrl.reviewToggled()">Velps
                             </label>
                             </span>
-                                <span ng-if="$ctrl.showDelete">
-                            <button title="Delete answer"
+                            <button ng-if="$ctrl.showDelete"
+                                    title="Delete answer"
                                     ng-click="$ctrl.deleteAnswer()"
                                     class="timButton btn-xs btn-danger">
                                 <i class="glyphicon glyphicon-trash"></i>
                             </button>
-                                    </span>
                             </div>
                         <span ng-show="$ctrl.selectedAnswer">
                         <div class="flex" ng-show="$ctrl.selectedAnswer.users.length > 1">
@@ -152,7 +151,14 @@
                                 Collaborators:
                                 <ul>
                                     <li ng-repeat="c in $ctrl.selectedAnswer.users"><a
-                                            ng-href="mailto:{{c.email}}">{{ c.real_name }}</a></li>
+                                            ng-href="mailto:{{c.email}}">{{ c.real_name }}</a>
+                                        <button ng-if="$ctrl.showDelete"
+                                                title="Delete collaborator"
+                                                ng-click="$ctrl.deleteCollab(c.id)"
+                                                class="timButton btn-xs btn-danger">
+                                            <i class="glyphicon glyphicon-trash"></i>
+                                        </button>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
