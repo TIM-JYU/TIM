@@ -180,8 +180,7 @@ const ShowFileAll = t.type({
             </ng-container>
             <div class="flex" *ngIf="videoOn" style="justify-content: flex-end">
                 <div *ngIf="videosettings" class="margin-5-right">
-                    <!--<mat-checkbox class="">Adv</mat-checkbox>-->
-                    <label title="Advanced video controls">Adv <input type="checkbox" [(ngModel)]="advVideo" /></label>
+                    <label class="normalLabel" title="Advanced video controls">Adv <input type="checkbox" [(ngModel)]="advVideo" /></label>
                     Speed:
                     <span class="text-smaller">
                         {{playbackRateString}}

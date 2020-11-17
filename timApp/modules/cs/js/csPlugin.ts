@@ -887,6 +887,7 @@ export class CsController extends CsBase implements ITimComponent {
     lastUserargs?: string;
     lastUserinput?: string;
     localcode?: string;
+    keepErros: boolean = false;
     muokattu: boolean;
     noeditor!: boolean;
     oneruntime?: string;
@@ -1315,7 +1316,9 @@ export class CsController extends CsBase implements ITimComponent {
      * Checks whether usercode/args/input differ from previously saved values
      */
     textChanged(): void {
-        this.runError = undefined;
+        if (!this.keepErros) {
+            this.runError = undefined;
+        }
         const nowUnsaved = this.hasUnSavedInput();
         if (!this.edited && nowUnsaved) {
             this.edited = true;
@@ -3338,6 +3341,7 @@ ${fhtml}
     <pre class="unitTestRed" *ngIf="runTestRed">{{comtestError}}</pre>
     <div class="csRunErrorClass" *ngIf="runError">
         <p class="pull-right">
+            <label class="normalLabel" title="Keep erros until next run">Keep <input type="checkbox" [(ngModel)]="keepErros" /></label>
             <tim-close-button (click)="closeError()"></tim-close-button>
         </p>
         <pre class="csRunError" >{{error}}</pre>
