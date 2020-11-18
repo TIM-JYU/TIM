@@ -125,11 +125,9 @@ export class CountdownComponent implements OnInit, OnChanges {
             c.endTime?.currentValue &&
             !c.endTime.currentValue.isSame(c.endTime.previousValue)
         ) {
-            (async () => {
-                if (this.running) {
-                    await this.syncEndDate();
-                }
-            })();
+            if (this.running) {
+                void this.syncEndDate();
+            }
         }
         if (c.autoStart?.currentValue) {
             this.start();
