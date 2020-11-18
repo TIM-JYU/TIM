@@ -490,7 +490,9 @@ export class JsframeComponent
             src = "data:text/html;base64," + datasrc;
         }
 
-        const iframeopts = this.markup.iframeopts ?? "sandbox='allow-scripts'";
+        const iframeopts =
+            this.markup.iframeopts ??
+            "sandbox='allow-scripts allow-same-origin allow-popups'";
 
         const opts = parseIframeopts(iframeopts, src);
         const sandbox = opts.sandbox;

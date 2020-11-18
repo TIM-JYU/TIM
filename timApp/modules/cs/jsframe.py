@@ -205,7 +205,6 @@ class DrawIO(JSframe):
         if not height and ar:
             ma["height"] = ma.get("width", 800) / (ar * 0.95)
         ma["initListener"] = ma.get("initListener", True)
-        ma["iframeopts"] = ma.get("iframeopts", 'sandbox="allow-scripts allow-popups"')
         ma["saveButton"] = ma.get("saveButton", "")
         # TODO: prevent user options if thereis
         templates = ma.get("templates", "")
