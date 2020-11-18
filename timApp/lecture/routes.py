@@ -330,50 +330,50 @@ def get_new_question(lecture: Lecture, current_question_id=None, current_points_
             asked_id = question.asked_id
             already_shown = question.has_activity(QuestionActivityKind.Usershown, u)
             already_answered = question.has_activity(QuestionActivityKind.Useranswered, u)
-            s = f'q: {u.name}, r, as={already_shown is not None}, aa={already_answered is not None}, f={force}, aid={asked_id}'
+            # s = f'q: {u.name}, r, as={already_shown is not None}, aa={already_answered is not None}, f={force}, aid={asked_id}'
             if already_answered:
                 if force:
-                    log_info(f'{s}, ret=already_answered')
+                    # log_info(f'{s}, ret=already_answered')
                     return {'type': 'already_answered'}
                 else:
-                    log_info(f'{s}, ret=None')
+                    # log_info(f'{s}, ret=None')
                     return None
             if (not already_shown or force) or (asked_id != current_question_id):
                 q = get_asked_question(asked_id)
                 answer = q.answers.filter_by(user_id=current_user).first()
                 question.add_activity(QuestionActivityKind.Usershown, u)
                 if answer:
-                    log_info(f'{s}, ret=answer')
+                    # log_info(f'{s}, ret=answer')
                     return {'type': 'answer', 'data': answer}
                 else:
-                    log_info(f'{s}, ret=question')
+                    # log_info(f'{s}, ret=question')
                     return {
                         'type': 'question',
                         'data': q if lecture.lecturer == current_user else hide_points_and_try_shuffle_question(q, current_user)
                     }
-            log_info(f'{s}, ret=None')
+            # log_info(f'{s}, ret=None')
         else:
             question_to_show_points = get_shown_points(lecture)
-            s = ''
+            # s = ''
             if question_to_show_points:
                 asked_id = question_to_show_points.asked_id
                 already_shown = question_to_show_points.has_activity(QuestionActivityKind.Pointsshown, u)
                 already_closed = question_to_show_points.has_activity(QuestionActivityKind.Pointsclosed, u)
-                s = f'q: {u.name}, nr, as={already_shown is not None}, ac={already_closed is not None}, f={force}, aid={asked_id}'
+                # s = f'q: {u.name}, nr, as={already_shown is not None}, ac={already_closed is not None}, f={force}, aid={asked_id}'
                 if already_closed:
                     if force:
                         db.session.delete(already_closed)
                     else:
-                        log_info(f'{s}, ret=None')
+                        # log_info(f'{s}, ret=None')
                         return None
                 if not (already_shown or force) or (asked_id != current_points_id):
                     question = get_asked_question(asked_id)
                     question.add_activity(QuestionActivityKind.Pointsshown, u)
                     answer = question.answers.filter_by(user_id=current_user).first()
                     if answer:
-                        log_info(f'{s}, ret=result')
+                        # log_info(f'{s}, ret=result')
                         return {'type': 'result', 'data': answer}
-            log_info(s or f'q: {u.name}, nr, f={force}, ret=None')
+            # log_info(s or f'q: {u.name}, nr, f={force}, ret=None')
             return None
 
 
