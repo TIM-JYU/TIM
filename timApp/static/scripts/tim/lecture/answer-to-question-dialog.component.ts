@@ -1,7 +1,6 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule, NgZone, OnDestroy, ViewChild} from "@angular/core";
+import {Component, NgModule, NgZone, OnDestroy} from "@angular/core";
 import deepEqual from "deep-equal";
-import {CountdownComponent} from "tim/ui/countdown.component";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule} from "@angular/platform-browser";
@@ -73,7 +72,7 @@ export type IAnswerQuestionResult =
                     <tim-countdown (onTick)="timerTick($event)"
                                    [endTime]="endTime"
                                    [displayUnits]="['s']"
-                                   [autoStart]="false"
+                                   [autoStart]="autoStart"
                                    template="{0} s"
                     ></tim-countdown>
                     <progressbar
@@ -129,7 +128,7 @@ export class AnswerToQuestionDialogComponent
     preview!: IPreviewParams; // ngOnInit
     questionEnded: boolean = false;
     answer?: AnswerTable;
-    @ViewChild(CountdownComponent) private countdownTimer?: CountdownComponent;
+    autoStart = false;
 
     constructor(private http: HttpClient, private zone: NgZone) {
         super();
@@ -141,11 +140,6 @@ export class AnswerToQuestionDialogComponent
         }
         setCurrentQuestion(this);
         this.setData(this.data.qa);
-    }
-
-    ngAfterViewInit() {
-        super.ngAfterViewInit();
-        this.maybeStartTimer();
     }
 
     public getQuestion() {
@@ -305,7 +299,7 @@ export class AnswerToQuestionDialogComponent
         const maxProgressBeforeUpdate = this.progressMax;
         this.updateMaxProgress();
         if (maxProgressBeforeUpdate == null && this.progressMax != null) {
-            this.countdownTimer!.start();
+            this.autoStart = true;
         }
         this.checkChanges();
         // TODO: controller has no option to call /extendQuestion
@@ -360,6 +354,7 @@ export class AnswerToQuestionDialogComponent
                 .add(this.question.json.json.timeLimit, "seconds");
         }
         this.maybeStartTimer();
+        this.checkChanges();
     }
 
     get isLecturer() {
@@ -367,11 +362,11 @@ export class AnswerToQuestionDialogComponent
     }
 
     private maybeStartTimer() {
-        if (!this.gotResult && this.countdownTimer) {
+        if (!this.gotResult) {
             this.barFilled = 0;
             if (this.endTime) {
                 this.updateMaxProgress();
-                this.countdownTimer.start();
+                this.autoStart = true;
             }
         }
     }
@@ -389,6 +384,7 @@ export class AnswerToQuestionDialogComponent
     }
 
     timerTick(remaining: number) {
+        this.autoStart = false;
         const max = this.progressMax!;
         this.barFilled = max - remaining;
         if (this.barFilled >= max) {

@@ -49,7 +49,6 @@ export class CountdownComponent implements OnInit, OnChanges {
     currentCountdown = 0;
     currentEndDate?: moment.Moment;
     locale = Users.getCurrentLanguage();
-    currentInterval?: number;
     timeLeftText?: string;
     lastSync?: moment.Moment;
 
@@ -121,21 +120,34 @@ export class CountdownComponent implements OnInit, OnChanges {
         void this.start();
     }
 
-    ngOnChanges(c: Changes<this, "endTime">) {
+    ngOnChanges(c: Changes<this, "endTime" | "autoStart">) {
         if (
             c.endTime?.currentValue &&
             !c.endTime.currentValue.isSame(c.endTime.previousValue)
         ) {
-            void this.syncEndDate();
+            (async () => {
+                if (this.running) {
+                    await this.syncEndDate();
+                }
+            })();
+        }
+        if (c.autoStart?.currentValue) {
+            this.start();
         }
     }
 
-    start() {
+    /**
+     * Starts the timer.
+     *
+     * This method should remain private. Calling this method from a parent component would most likely result in
+     * incorrect behavior because the endTime binding might not have been updated yet.
+     */
+    private start() {
         void this.startTimer();
     }
 
     private async startTimer() {
-        if (this.currentInterval || this.running) {
+        if (this.running) {
             return;
         }
         this.currentEndDate = await this.getEndDate();
