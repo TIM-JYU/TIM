@@ -241,7 +241,7 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
                                 'expl': 'kenttää ei voi muokata view-näkymässä, tämä lohkon otsikkoon',
                             },
                             {
-                                'data': 'visible="%% False | isview%%" nocache = "true"',
+                                'data': 'visible="%% False | isview%%" nocache="true"',
                                 'text': 'lohko ei näy View-näkymässä',
                                 'expl': 'tällä merkitään lohko, jonka ei haluta näkyvän View-näkymässä',
                             },
