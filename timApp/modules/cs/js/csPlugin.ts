@@ -2320,7 +2320,7 @@ ${fhtml}
 
         let msg = "";
         for (const file of allFiles) {
-            const m = validityCheck(file.content!.replace(/\r/g, ""));
+            const m = validityCheck((file.content ?? "")!.replace(/\r/g, ""));
             if (m) {
                 msg += m + "\n";
             }
