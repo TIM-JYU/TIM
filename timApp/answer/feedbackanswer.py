@@ -8,12 +8,13 @@ from flask import Blueprint, request, abort
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_all_answer_initial_query
 from timApp.auth.accesshelper import verify_teacher_access
-from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.sessioninfo import user_context_with_logged_in
 from timApp.document.docentry import DocEntry, get_documents_in_folder
+from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.plugin import Plugin, find_task_ids
 from timApp.plugin.taskid import TaskId
 from timApp.user.user import User
-from timApp.util.answerutil import task_ids_to_strlist, period_handling
+from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import get_option
 from timApp.util.flask.responsehelper import csv_response
 
@@ -81,6 +82,7 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
     anons = {}
     cnt = 0
 
+    user_ctx = user_context_with_logged_in(None)
     for answer, user in qq:
 
         if prev_user != user:   # Resets if previous is different user.
@@ -97,7 +99,7 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
         # Find type of the plugin.
 
         answer_task_id = answer.task_id
-        p, _ = Plugin.from_task_id(answer_task_id, user=get_current_user_object())
+        p, _ = Plugin.from_task_id(answer_task_id, user_ctx=user_ctx, view_ctx=default_view_ctx)
         ptype = p.type
 
         # Boolean to check whether to filter out current user by name.
@@ -185,13 +187,13 @@ def print_feedback_report(doc_path):
     :return: report in a CSV-form.
     """
 
-    d = DocEntry.find_by_path(doc_path, fallback_to_id=True)    # Return task from URL.
+    d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
 
-    all_id = get_documents_in_folder(d.location)    # Finds all doc in the folder.
+    all_id = get_documents_in_folder(d.location)
 
     verify_teacher_access(d)
-    pars = d.document.get_dereferenced_paragraphs()     # Get dereferenced paragraphs from document.
-    task_ids, _, access_missing = find_task_ids(pars)                # Find task ids from the derefenced paragraphs.
+    pars = d.document.get_dereferenced_paragraphs(default_view_ctx)
+    task_ids, _, access_missing = find_task_ids(pars, default_view_ctx)
 
     if len(access_missing) > 0:
         abort(403, 'Access missing for task_ids: ' + access_missing)
@@ -271,8 +273,8 @@ def print_feedback_report(doc_path):
     elif scope == 'test':
         all_tasks = []
         for did in all_id:
-            did_pars = did.document.get_dereferenced_paragraphs()
-            task_dids, _ , access_missing2 = find_task_ids(did_pars)
+            did_pars = did.document.get_dereferenced_paragraphs(default_view_ctx)
+            task_dids, _ , access_missing2 = find_task_ids(did_pars, default_view_ctx)
             if len(access_missing2) > 0:
                 abort(403, 'Access missing for task_ids: ' + access_missing2)
             all_tasks += task_dids

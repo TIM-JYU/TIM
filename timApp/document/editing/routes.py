@@ -12,7 +12,8 @@ from timApp.admin.associate_old_uploads import upload_regexes
 from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access, get_rights, get_doc_or_abort, \
     verify_teacher_access, verify_manage_access, verify_ownership, verify_seeanswers_access
-from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_current_user_group
+from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_current_user_group, \
+    user_context_with_logged_in
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -26,6 +27,7 @@ from timApp.document.post_process import post_process_pars
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.translation.synchronize_translations import synchronize_translations
 from timApp.document.version import Version
+from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
 from timApp.item.validation import validate_uploaded_document_content
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.notification.notification import NotificationType
@@ -312,7 +314,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: Opti
 
 def mark_as_translated(p: DocParagraph):
     try:
-        deref = p.get_referenced_pars(set_html=False)
+        deref = p.get_referenced_pars()
     except TimDbException:
         deref = None
     if deref:
@@ -379,17 +381,29 @@ def par_response(pars: List[DocParagraph],
                  update_cache=False,
                  edit_request: Optional[EditRequest] = None,
                  edit_result: Optional[DocumentEditResult] = None):
-    current_user = get_current_user_object()
+    user_ctx = user_context_with_logged_in(None)
     doc = docu.document
     new_doc_version = doc.get_version()
+
+    if edit_result:
+        preview = False
+    else:
+        preview = bool(edit_request and edit_request.preview)
+    if edit_request:
+        view_ctx = ViewContext(edit_request.viewname or ViewRoute.View, preview)
+    else:
+        view_ctx = ViewContext(ViewRoute.View, preview)
     if update_cache:
-        changed_pars = DocParagraph.preload_htmls(doc.get_paragraphs(include_preamble=True),
-                                                  doc.get_settings(),
-                                                  persist=update_cache)
+        changed_pars = DocParagraph.preload_htmls(
+            doc.get_paragraphs(include_preamble=True),
+            doc.get_settings(),
+            view_ctx,
+            persist=update_cache,
+        )
     else:
         changed_pars = []
         ctx = None
-        settings = doc.get_settings(current_user)
+        settings = doc.get_settings()
         if edit_request:
             ctx = edit_request.context_par
 
@@ -401,13 +415,7 @@ def par_response(pars: List[DocParagraph],
                 doc.version = edit_request.old_doc_version
             doc.insert_temporary_pars(edit_request.get_pars(), ctx)
 
-        DocParagraph.preload_htmls(pars, settings, context_par=ctx,
-                                   persist=update_cache)
-
-    if edit_result:
-        preview = False
-    else:
-        preview = bool(edit_request and edit_request.preview)
+        DocParagraph.preload_htmls(pars, settings, view_ctx, context_par=ctx, persist=update_cache)
     trdiff = None
     # Do not check for duplicates for preview because the operation is heavy
     if not preview:
@@ -419,7 +427,7 @@ def par_response(pars: List[DocParagraph],
                 bms.add_bookmark(
                     'Last edited',
                     docu.title,
-                    docu.get_relative_url_for_view(edit_request.viewname or 'view'),
+                    docu.get_relative_url_for_view((edit_request.viewname or ViewRoute.View).value),
                     move_to_top=True,
                     limit=current_app.config['LAST_EDITED_BOOKMARK_LIMIT'],
                 ).save_bookmarks()
@@ -429,7 +437,7 @@ def par_response(pars: List[DocParagraph],
             p = pars[0]
             if p.is_translation():
                 try:
-                    deref = p.get_referenced_pars(set_html=False)[0].ref_chain
+                    deref = p.get_referenced_pars()[0].ref_chain
                 except TimDbException:
                     pass
                 else:
@@ -444,10 +452,9 @@ def par_response(pars: List[DocParagraph],
                         else:
                             old_exported = old_par.get_exported_markdown()
                     trdiff = {'old': old_exported, 'new': newest_exported}
+    post_process_result = post_process_pars(doc, pars, user_ctx, view_ctx)
 
-    post_process_result = post_process_pars(doc, pars, current_user, edit_window=preview)
-
-    changed_post_process_result = post_process_pars(doc, changed_pars, current_user, edit_window=preview)
+    changed_post_process_result = post_process_pars(doc, changed_pars, user_ctx, view_ctx)
     original_par = edit_request.original_par if edit_request else None
 
     if spellcheck:
@@ -853,7 +860,7 @@ def set_drawio_base(args: DrawIODataModel):
         par = doc.document_as_current_user.get_paragraph(par_id)
     except TimDbException as e:
         return abort(404, str(e))
-    plug = Plugin.from_paragraph(par)
+    plug = Plugin.from_paragraph(par, default_view_ctx)
     if plug.type != 'csPlugin' or plug.values.get('type', '') != 'drawio':
         return abort(400, "Invalid target")
     plug.values['data'] = data

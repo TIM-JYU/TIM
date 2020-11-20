@@ -45,10 +45,4 @@ class TimJsonEncoder(json.JSONEncoder):
             return o.value
         if is_dataclass(o):
             return {f.name: getattr(o, f.name) for f in fields(o)}
-        from timApp.document.docparagraph import DocParagraph
-        if isinstance(o, DocParagraph):  # currently not used anywhere
-            return {'md': o.get_markdown(),
-                    'html': o.get_html(),
-                    't': o.get_hash(),
-                    'id': o.get_id(),
-                    'attrs': o.get_attrs()}
+        return None

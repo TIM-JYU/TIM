@@ -2,11 +2,11 @@
 Routes related to handling faculty council documents, such as meeting invitations and minutes
 """
 import ast
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 from urllib.parse import urlencode
 
-from dataclasses import dataclass
 from flask import Blueprint, send_file
 from flask import abort
 
@@ -14,6 +14,7 @@ from timApp.auth.accesshelper import verify_manage_access, verify_edit_access, g
 from timApp.document.create_item import create_or_copy_item, create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docsettings import DocSettings
+from timApp.document.viewcontext import default_view_ctx
 from timApp.item.block import BlockType
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile
@@ -41,7 +42,7 @@ def create_minute_extracts(doc):
 
     # figure out the index of the minute, get the value of the 'knro' macro
 
-    macros = d.document.get_settings().get_macroinfo().get_macros()
+    macros = d.document.get_settings().get_macroinfo(default_view_ctx).get_macros()
     minute_number = macros.get("knro")
     if not minute_number:
         return abort(400, "Error creating extracts: the document is not a minute document (no 'knro' macro found)")

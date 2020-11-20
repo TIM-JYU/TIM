@@ -1,14 +1,15 @@
 import json
+
 from flask import request, Response, stream_with_context, abort, Blueprint
 
-from timApp.auth.sessioninfo import get_current_user_object, logged_in
 from timApp.auth.accesshelper import get_doc_or_abort, verify_task_access
 from timApp.auth.accesstype import AccessType
+from timApp.auth.sessioninfo import get_current_user_object, logged_in, user_context_with_logged_in
 from timApp.document.timjsonencoder import TimJsonEncoder
+from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.containerLink import call_plugin_resource, call_plugin_generic
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
-from timApp.plugin.plugintype import PluginType
 from timApp.timdb.exceptions import TimDbException
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response
@@ -68,8 +69,9 @@ def plugin_tid_call(plugintype: str, task_id_ext: str):
             tid,
             AccessType.view,
             TaskIdAccess.ReadWrite,
-            context_user=curr_user,
+            context_user=user_context_with_logged_in(curr_user),
             allow_grace_period=True,
+            view_ctx=default_view_ctx,
         )
         plugin = vr.plugin
     except (PluginException, TimDbException) as e:

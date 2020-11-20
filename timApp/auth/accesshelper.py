@@ -15,6 +15,8 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, dereference_pars
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import ViewContext
 from timApp.folder.folder import Folder
 from timApp.item.item import Item, ItemBase
 from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
@@ -301,10 +303,10 @@ def verify_comment_right(b: ItemOrBlock):
         abort(403)
 
 
-def get_plugin_from_request(doc: Document, task_id: TaskId, u: User) -> Tuple[Document, Plugin]:
+def get_plugin_from_request(doc: Document, task_id: TaskId, u: UserContext, view_ctx: ViewContext) -> Tuple[Document, Plugin]:
     assert doc.doc_id == task_id.doc_id
     orig_doc_id, orig_par_id = get_orig_doc_and_par_id_from_request()
-    plug = find_plugin_from_document(doc, task_id, u)
+    plug = find_plugin_from_document(doc, task_id, u, view_ctx)
     par_id = plug.par.get_id()
     if orig_doc_id is None or orig_par_id is None:
         if not doc.has_paragraph(par_id):
@@ -319,11 +321,11 @@ def get_plugin_from_request(doc: Document, task_id: TaskId, u: User) -> Tuple[Do
         orig_par = orig_doc.get_paragraph(orig_par_id)
     except TimDbException:
         raise PluginException(f'Plugin paragraph not found: {orig_par_id}')
-    pars = dereference_pars([orig_par], context_doc=orig_doc)
+    pars = dereference_pars([orig_par], context_doc=orig_doc, view_ctx=view_ctx)
     ctx_doc = orig_doc if (not orig_doc.get_docinfo().is_original_translation and orig_par.is_translation()) else doc
     for p in pars:
         if p.get_id() == par_id:
-            return ctx_doc, maybe_get_plugin_from_par(p, task_id, u)
+            return ctx_doc, maybe_get_plugin_from_par(p, task_id, u, view_ctx)
     return doc, plug
 
 
@@ -348,12 +350,12 @@ def verify_task_access(
         task_id: TaskId,
         access_type: AccessType,
         required_task_access_level: TaskIdAccess,
-        context_user: Optional[User] = None,
+        context_user: UserContext,
+        view_ctx: ViewContext,
         allow_grace_period: bool = False,
 ) -> TaskAccessVerification:
     assert d.id == task_id.doc_id
-    u = get_current_user_object()
-    doc, found_plugin = get_plugin_from_request(d.document, task_id, context_user or u)
+    doc, found_plugin = get_plugin_from_request(d.document, task_id, context_user, view_ctx)
     access = verify_access(doc.get_docinfo(), access_type, require=False)
     is_expired = False
     if not access:
@@ -364,7 +366,7 @@ def verify_task_access(
 
     if found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly and \
             required_task_access_level == TaskIdAccess.ReadWrite and \
-            not u.has_teacher_access(doc.get_docinfo()):
+            not context_user.logged_user.has_teacher_access(doc.get_docinfo()):
         abort(403, f'This task/field {task_id.task_name} is readonly and thus only writable for teachers.')
     return TaskAccessVerification(
         plugin=found_plugin,

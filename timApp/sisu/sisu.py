@@ -13,7 +13,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
 
-from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.answer.routes import save_fields
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.accesstype import AccessType
@@ -21,8 +20,11 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import apply_template
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.viewcontext import default_view_ctx
 from timApp.item.block import Block, BlockType
 from timApp.item.validation import ItemValidationRule, validate_item_and_create_intermediate_folders, validate_item
+from timApp.modules.py.marshmallow_dataclass import class_schema
+from timApp.modules.py.utils import Missing
 from timApp.notification.notify import send_email
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
@@ -39,7 +41,6 @@ from timApp.util.flask.responsehelper import json_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFieldObj, RequestedGroups
 from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time, fin_timezone
-from timApp.modules.py.utils import Missing
 
 sisu = Blueprint('sisu',
                  __name__,
@@ -277,7 +278,7 @@ def refresh_sisu_grouplist_doc(ug: UserGroup) -> None:
                     if not p.is_plugin():
                         continue
                     try:
-                        plug = Plugin.from_paragraph(p)
+                        plug = Plugin.from_paragraph(p, default_view_ctx)
                     except PluginException:
                         continue
                     if plug.values.get('sisugroups') == ug.external_id.course_id:
@@ -661,6 +662,7 @@ def get_sisu_assessments(
         RequestedGroups(ugs),
         doc,
         teacher,
+        default_view_ctx,
         user_filter=User.name.in_(filter_users) if filter_users else None,
         member_filter_type=membership_filter,
     )

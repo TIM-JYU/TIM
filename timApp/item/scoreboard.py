@@ -6,6 +6,8 @@ from timApp.auth.sessioninfo import get_current_user_object, logged_in
 from timApp.document.docinfo import DocInfo
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import dereference_pars
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.folder import Folder
 from timApp.plugin.plugin import find_task_ids, find_plugin_from_document, TaskNotFoundException
 
@@ -40,11 +42,12 @@ def get_score_infos(
     for d in docs:
         d.document.insert_preamble_pars()
 
+    user_context = UserContext.from_one_user(u)
     for d in docs:
         doc = d.document
         blocks = doc.get_paragraphs()
-        blocks = dereference_pars(blocks, context_doc=doc)
-        task_ids, _, _ = find_task_ids(blocks)
+        blocks = dereference_pars(blocks, context_doc=doc, view_ctx=default_view_ctx)
+        task_ids, _, _ = find_task_ids(blocks, default_view_ctx)
         if not task_ids:
             continue
 
@@ -55,7 +58,7 @@ def get_score_infos(
         point_dict: Dict[str, TaskScoreInfo] = {}
         for task_id in task_ids:
             try:
-                plugin = find_plugin_from_document(doc, task_id, u)
+                plugin = find_plugin_from_document(doc, task_id, user_context, default_view_ctx)
             except TaskNotFoundException:
                 continue
 

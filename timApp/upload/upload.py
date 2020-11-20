@@ -3,11 +3,10 @@ import io
 import json
 import os
 import posixpath
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import List, Optional, Tuple
 from urllib.parse import unquote, urlparse
-
-from dataclasses import dataclass
 
 from flask import Blueprint, request, send_file, Response
 from flask import abort
@@ -16,11 +15,12 @@ from werkzeug.utils import secure_filename
 from timApp.auth.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
     grant_access_to_session_users, get_doc_or_abort, verify_edit_access, AccessDenied
 from timApp.auth.accesstype import AccessType
-from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.sessioninfo import get_current_user_object, user_context_with_logged_in
 from timApp.auth.sessioninfo import logged_in, get_current_user_group_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import import_document
+from timApp.document.viewcontext import default_view_ctx
 from timApp.item.block import Block
 from timApp.item.block import BlockType
 from timApp.item.validation import validate_item_and_create_intermediate_folders, validate_uploaded_document_content
@@ -114,7 +114,14 @@ def pluginupload_file(doc_id: int, task_id: str):
     except PluginException:
         return abort(400)
     tid.doc_id = d.id
-    verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite)
+    verify_task_access(
+        d,
+        tid,
+        AccessType.view,
+        TaskIdAccess.ReadWrite,
+        user_context_with_logged_in(None),
+        default_view_ctx,
+    )
     file = request.files.get('file')
     if file is None:
         abort(400, 'Missing file')

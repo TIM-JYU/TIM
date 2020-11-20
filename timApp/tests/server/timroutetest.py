@@ -872,7 +872,7 @@ class TimRouteTest(TimDbTest):
             },
             "state": state,
             "taskID": basic_task_id,
-            "anonymous": True,
+            "anonymous": False,
             "doLazy": False,
             "preview": False,
             "review": False,

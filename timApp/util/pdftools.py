@@ -15,6 +15,7 @@ from flask import current_app
 import timApp.plugin.plugin
 from timApp.auth.accesshelper import verify_view_access
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.viewcontext import default_view_ctx
 from timApp.timdb.dbaccess import get_files_path
 from timApp.upload.uploadedfile import UploadedFile
 from timApp.util.logger import log_error, log_warning
@@ -399,7 +400,7 @@ def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment
     pdf_list = []
     for par in paragraphs:
         if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
-            par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par)
+            par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par, default_view_ctx)
             par_data = par_plugin.values
             par_file = par_data["file"]
             file_path = parse_tim_url(par_file)

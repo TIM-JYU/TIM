@@ -2,13 +2,15 @@
 Functions related to document partitioning.
 """
 from dataclasses import dataclass
-from flask import json, Request
-
-from timApp.document.docinfo import DocInfo
-from timApp.util.utils import Range
-from lxml import html
 from pathlib import Path
 from typing import Optional, List, Union
+
+from flask import json, Request
+from lxml import html
+
+from timApp.document.docinfo import DocInfo
+from timApp.document.viewcontext import default_view_ctx
+from timApp.util.utils import Range
 
 INCLUDE_IN_PARTS_CLASS_NAME = "includeInParts"  # Preamble pars with this class get inserted to each doc part.
 
@@ -166,10 +168,10 @@ def get_index_with_header_id(doc_info: DocInfo, header_id: str) -> Optional[int]
     :param header_id: HTML header id.
     :return: Index of the corresponding paragraph or None if not found.
     """
-    pars = doc_info.document.get_dereferenced_paragraphs()
+    pars = doc_info.document.get_dereferenced_paragraphs(default_view_ctx)
     for i, par in enumerate(pars):
         if par:
-            par_elements = html.fragment_fromstring(par.get_html(), create_parent=True)
+            par_elements = html.fragment_fromstring(par.get_html(default_view_ctx), create_parent=True)
             for element in par_elements.iterdescendants():
                 html_id = element.attrib.get("id")
                 if html_id and header_id == html_id:

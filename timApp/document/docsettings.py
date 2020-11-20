@@ -1,93 +1,25 @@
-import json
-import re
-from datetime import timedelta
-from typing import Optional, List, Dict, Tuple, Iterable, TypeVar, Any
-
 from dataclasses import dataclass, fields
-from marshmallow import ValidationError
-from marshmallow.fields import Field
-from marshmallow_dataclass import field_for_schema
+from datetime import timedelta
+from typing import Optional, List, Dict, Tuple, Iterable, TypeVar, Any, TYPE_CHECKING, Union
 
 import yaml
-from flask.globals import request, g
+from marshmallow import ValidationError
+from marshmallow.fields import Field
 
+from marshmallow_dataclass import field_for_schema
 from timApp.answer.pointsumrule import PointSumRule
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.randutils import hashfunc
 from timApp.document.specialnames import DEFAULT_PREAMBLE_DOC
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import MathType, DumboOptions, InputFormat
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
-from timApp.util.rndutils import get_rands_as_dict
 
-
-def add_rnd_macros(yaml_vals):
-    if DocSettings.rndmacros_key not in yaml_vals.values:
-        return
-
-    try:
-        rnd_seed = g.user.name
-    except AttributeError or NameError:
-        rnd_seed = None
-    state = None
-    if not yaml_vals.values.get('macros', None):
-        yaml_vals.values["macros"] = {}
-    rndmacros = yaml_vals.values.get(DocSettings.rndmacros_key)
-    if not isinstance(rndmacros, list):
-        rndmacros = [rndmacros]
-    for rndm in rndmacros or {}:
-        if rndm:
-            if isinstance(rndm, str):
-                try:
-                    rndm = json.loads(rndm)
-                except json.JSONDecodeError as e:
-                    raise TimDbException(f'Invalid YAML: {e}')  # TODO don't panic the page, but show the error?
-            if not 'rndnames' in rndm:
-                rndnames = []
-                for rnd_name in rndm:
-                    if rnd_name not in ["seed"]:  # todo put other non rnd names here
-                        rndnames.append(rnd_name)
-                rndm["rndnames"] = ",".join(rndnames)
-            rands, rnd_seed, state = get_rands_as_dict(rndm, rnd_seed, state)
-            for rnd_name in rands or {}:
-                rnd = rands[rnd_name]
-                yaml_vals.values["macros"][rnd_name] = rnd
-
-
-def add_url_macros(yaml_vals):
-    if DocSettings.urlmacros_key not in yaml_vals.values:
-        return
-
-    urlmacros = yaml_vals.values.get(DocSettings.urlmacros_key)
-    for fu in urlmacros:
-        if fu:
-            # request = par.doc.docinfo.request
-
-            # TODO: if already value and urlmacros.get(fu) then old value wins
-            urlvalue = request.args.get(fu, urlmacros.get(fu))
-            if urlvalue:
-                try:
-                    if not yaml_vals.values.get('macros', None):
-                        yaml_vals.values["macros"] = {}
-                    try:
-                        uvalue = float(urlvalue)
-                    except ValueError:
-                        uvalue = None
-                    if uvalue is not None:
-                        maxvalue = yaml_vals.values["macros"].get("MAX" + fu, None)
-                        if maxvalue is not None:
-                            if uvalue > maxvalue:
-                                urlvalue = maxvalue
-                        minvalue = yaml_vals.values["macros"].get("MIN" + fu, None)
-                        if minvalue is not None:
-                            if uvalue < minvalue:
-                                urlvalue = minvalue
-                    urlvalue = DocSettings.urlmacros_tester.sub("", str(urlvalue))
-                    yaml_vals.values["macros"][fu] = urlvalue
-                except TypeError:
-                    pass
-    del yaml_vals.values[DocSettings.urlmacros_key]
+if TYPE_CHECKING:
+    from timApp.document.document import Document
 
 
 @dataclass
@@ -104,6 +36,9 @@ def get_minimal_visibility_settings(item: Optional['Document']):
                                      hide_sidemenu=settings.hide_sidemenu() is not None)
 
 
+UrlMacroMap = Dict[str, Union[int, float, str]]
+
+
 # TODO: Start moving DocSettings keys to this dataclass
 @dataclass
 class DocSettingTypes:
@@ -114,6 +49,10 @@ class DocSettingTypes:
     scoreboard_docs: List[str]
     show_scoreboard: bool
     hideBrowser: bool
+    macros: Dict[str, Any]
+    texmacros: Dict[str, Any]
+    urlmacros: UrlMacroMap
+    rndmacros: Dict[str, str]
 
 
 doc_setting_field_map: Dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
@@ -125,7 +64,6 @@ T = TypeVar('T')
 class DocSettings:
     global_plugin_attrs_key = 'global_plugin_attrs'
     css_key = 'css'
-    macros_key = 'macros'
     globalmacros_key = 'globalmacros'
     doctexmacros_key = 'doctexmacros'
     macro_delimiter_key = 'macro_delimiter'
@@ -160,7 +98,6 @@ class DocSettings:
     memo_minutes_key = 'memo_minutes'
     comments_key = 'comments'
     course_group_key = 'course_group'
-    urlmacros_key = 'urlmacros'
     charmacros_key = 'charmacros'
     postcharmacros_key = 'postcharmacros'
     rndmacros_key = 'rndmacros'
@@ -174,9 +111,6 @@ class DocSettings:
     exam_mode_key = 'exam_mode'
     answer_grace_period_key = 'answer_grace_period'
 
-    urlmacros_tester = re.compile("[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/]+")
-
-
     @classmethod
     def from_paragraph(cls, par: DocParagraph):
         """Constructs DocSettings from the given DocParagraph.
@@ -189,14 +123,6 @@ class DocSettings:
             raise TimDbException(f'Not a settings paragraph: {par.get_id()}')
         try:
             yaml_vals = DocSettings.parse_values(par)
-            # TODO: Comes here at least 6 times with same par? Could this be cached?
-            # TODO: This rnd + URL handling should not be here.
-            try:
-                add_rnd_macros(yaml_vals)  # Make global random numbers for document
-                add_url_macros(yaml_vals)  # Replace some macros with values coming from URL
-            except RuntimeError:
-                pass
-
         except yaml.YAMLError as e:
             raise TimDbException(f'Invalid YAML: {e}')
         else:
@@ -215,8 +141,7 @@ class DocSettings:
     def __init__(self, doc: 'Document', settings_dict: Optional[YamlBlock] = None):
         self.doc = doc
         self.__dict = settings_dict if settings_dict else YamlBlock()
-        self.user = None
-        # self.request = None
+        self.macroinfo_cache = {}
 
     def to_paragraph(self) -> DocParagraph:
         text = '```\n' + self.__dict.to_markdown() + '\n```'
@@ -231,12 +156,29 @@ class DocSettings:
     def css(self):
         return self.__dict.get(self.css_key)
 
-    def get_macroinfo(self, user=None, key=None) -> MacroInfo:
-        if not key:
-            key = self.macros_key
-        return MacroInfo(self.doc, macro_map=self.__dict.get(key, {}),
-                         macro_delimiter=self.get_macro_delimiter(),
-                         user=user, nocache_user=self.user)
+    def get_macroinfo(self, view_ctx: ViewContext, user_ctx: Optional[UserContext] = None) -> MacroInfo:
+        cache_key = (view_ctx, (user_ctx.user.id, user_ctx.logged_user.id) if user_ctx else None)
+        cached = self.macroinfo_cache.get(cache_key)
+        if cached:
+            return cached
+        mi = MacroInfo(
+            view_ctx,
+            self.doc,
+            macro_map=self.get_setting_or_default('macros', {}),
+            macro_delimiter=self.get_macro_delimiter(),
+            user_ctx=user_ctx,
+        )
+        self.macroinfo_cache[cache_key] = mi
+        return mi
+
+    def get_texmacroinfo(self, view_ctx: ViewContext, user_ctx: Optional[UserContext] = None) -> MacroInfo:
+        return MacroInfo(
+            view_ctx,
+            self.doc,
+            macro_map=self.get_setting_or_default('texmacros', {}),
+            macro_delimiter=self.get_macro_delimiter(),
+            user_ctx=user_ctx,
+        )
 
     def get_macro_delimiter(self) -> str:
         return self.__dict.get(self.macro_delimiter_key, '%%')
@@ -416,7 +358,7 @@ class DocSettings:
         return MathType.from_string(self.__dict.get(self.mathtype_key, default))
 
     def get_hash(self):
-        macroinfo = self.get_macroinfo()
+        macroinfo = self.get_macroinfo(default_view_ctx)
         macros = macroinfo.get_macros()
         charmacros = self.get_charmacros() or ""
         macro_delim = macroinfo.get_macro_delimiter()
@@ -484,6 +426,12 @@ class DocSettings:
     def hide_browser(self) -> bool:
         return self.get_setting_or_default('hideBrowser', False)
 
+    def urlmacros(self) -> UrlMacroMap:
+        return self.get_setting_or_default('urlmacros', {})
+
+    def rndmacros(self) -> Dict[str, str]:
+        return self.get_setting_or_default('rndmacros', {})
+
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     result, _ = __resolve_final_settings_impl(pars)
@@ -519,7 +467,7 @@ def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> Tuple[YamlBlo
                 # so that we always get the original markdown.
                 tr_attr = curr.get_attr('r')
                 curr.set_attr('r', None)
-                refs = curr.get_referenced_pars(set_html=False)
+                refs = curr.get_referenced_pars()
                 curr.set_attr('r', tr_attr)
             except InvalidReferenceException:
                 break

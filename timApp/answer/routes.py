@@ -1,7 +1,6 @@
 """Answer-related routes."""
 import json
 import re
-
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -29,12 +28,14 @@ from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, 
     verify_view_access, get_plugin_from_request
 from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
-from timApp.auth.sessioninfo import get_current_user_id, logged_in
+from timApp.auth.sessioninfo import get_current_user_id, logged_in, user_context_with_logged_in
 from timApp.auth.sessioninfo import get_current_user_object, get_session_users, get_current_user_group
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.document.hide_names import hide_names_in_teacher
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.modules.py.marshmallow_dataclass import class_schema
@@ -58,17 +59,16 @@ from timApp.user.user import maxdate
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.answerutil import period_handling
-from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model
+from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model, \
+    get_urlmacros_from_request
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, \
     ALL_ANSWERED_WILDCARD, GetFieldsAccess
 from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time, approximate_real_name
-from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
 from timApp.util.utils import local_timezone
+from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
 from utils import Missing
-
-# TODO: Remove methods in util/answerutil where many "moved" here to avoid circular imports
 
 answers = Blueprint('answers',
                     __name__,
@@ -80,13 +80,18 @@ def save_points(answer_id, user_id):
     answer, _ = verify_answer_access(
         answer_id,
         user_id,
+        default_view_ctx,
         require_teacher_if_not_own=True,
     )
     tid = TaskId.parse(answer.task_id)
     d = get_doc_or_abort(tid.doc_id)
     points, = verify_json_params('points')
     try:
-        plugin, _ = Plugin.from_task_id(answer.task_id, user=get_current_user_object())
+        plugin, _ = Plugin.from_task_id(
+            answer.task_id,
+            user_ctx=user_context_with_logged_in(None),
+            view_ctx=default_view_ctx,
+        )
     except PluginException as e:
         return abort(400, str(e))
     a = Answer.query.get(answer_id)
@@ -121,7 +126,12 @@ class DeleteCollabModel(AnswerIdModel):
 @answers.route("/answer/saveValidity", methods=['PUT'])
 @use_model(ValidityModel)
 def save_validity(m: ValidityModel):
-    a, doc_id = verify_answer_access(m.answer_id, get_current_user_object().id, require_teacher_if_not_own=True)
+    a, doc_id = verify_answer_access(
+        m.answer_id,
+        get_current_user_object().id,
+        default_view_ctx,
+        require_teacher_if_not_own=True,
+    )
     verify_teacher_access(get_doc_or_abort(doc_id))
     a.valid = m.valid
     db.session.commit()
@@ -136,7 +146,12 @@ def delete_answer(m: AnswerIdModel):
     This does not completely delete the answer but only removes user associations from it,
     so it is no longer visible in TIM.
     """
-    a, doc_id = verify_answer_access(m.answer_id, get_current_user_object().id, require_teacher_if_not_own=True)
+    a, doc_id = verify_answer_access(
+        m.answer_id,
+        get_current_user_object().id,
+        default_view_ctx,
+        require_teacher_if_not_own=True,
+    )
     verify_teacher_access(get_doc_or_abort(doc_id))
     verify_admin()
     unames = [u.name for u in a.users_all]
@@ -152,7 +167,12 @@ def delete_answer(m: AnswerIdModel):
 def delete_answer_collab(m: DeleteCollabModel):
     """Deletes an answer collaborator.
     """
-    a, doc_id = verify_answer_access(m.answer_id, get_current_user_object().id, require_teacher_if_not_own=True)
+    a, doc_id = verify_answer_access(
+        m.answer_id,
+        get_current_user_object().id,
+        default_view_ctx,
+        require_teacher_if_not_own=True,
+    )
     verify_teacher_access(get_doc_or_abort(doc_id))
     verify_admin()
     collab_to_remove = User.get_by_id(m.user_id)
@@ -197,11 +217,23 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, answer_id: O
     ctx_user = User.get_by_id(user_id)
     if not ctx_user:
         raise RouteException('User not found')
-    vr = verify_task_access(d, tid, AccessType.view, TaskIdAccess.ReadWrite, context_user=ctx_user)
+    vr = verify_task_access(
+        d,
+        tid,
+        AccessType.view,
+        TaskIdAccess.ReadWrite,
+        context_user=user_context_with_logged_in(ctx_user),
+        view_ctx=default_view_ctx,
+    )
     plugin = vr.plugin
     answer = None
     if answer_id is not None:
-        answer, doc_id = verify_answer_access(answer_id, ctx_user.id, require_teacher_if_not_own=True)
+        answer, doc_id = verify_answer_access(
+            answer_id,
+            ctx_user.id,
+            default_view_ctx,
+            require_teacher_if_not_own=True,
+        )
 
     if plugin.type != plugintype:
         abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
@@ -220,7 +252,7 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, answer_id: O
                         'info': info,
                         'iframehtml': True}
 
-    vals = get_plug_vals(d, tid, get_current_user_object(), users[0])
+    vals = get_plug_vals(d, tid, user_context_with_logged_in(users[0]), default_view_ctx)
     if vals:
         answer_call_data['markup']['fielddata'] = vals.to_json()
 
@@ -542,7 +574,8 @@ def post_answer(plugintype: str, task_id_ext: str):
             tid,
             AccessType.view,
             TaskIdAccess.ReadWrite,
-            context_user=ctx_user,
+            context_user=user_context_with_logged_in(ctx_user),
+            view_ctx=ViewContext(ViewRoute.View, False, urlmacros=get_urlmacros_from_request()),
             allow_grace_period=True,
         )
         plugin = vr.plugin
@@ -845,6 +878,7 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
         requested_groups,
         d,
         get_current_user_object(),
+        default_view_ctx,
         access_option=GetFieldsAccess.from_bool(siw),
         member_filter_type=runner_req.input.includeUsers,
         user_filter=User.name.in_(runner_req.input.userNames) if runner_req.input.userNames else None
@@ -1079,7 +1113,14 @@ def save_fields(
                                                                                        False))):
             return abort(403, f'Missing teacher access for document {dib.id}')
         try:
-            vr = verify_task_access(dib, t_id, AccessType.view, TaskIdAccess.ReadWrite)  # , context_user=ctx_user)
+            vr = verify_task_access(
+                dib,
+                t_id,
+                AccessType.view,
+                TaskIdAccess.ReadWrite,
+                user_context_with_logged_in(None),
+                default_view_ctx,
+            )
             plugin = vr.plugin
         except TaskNotFoundException as e:
             if not allow_missing:
@@ -1123,7 +1164,11 @@ def save_fields(
     for uid in user_map.keys():
         for a in global_answers:
             answer_map[uid][a.task_id] = a
-    cpf = CachedPluginFinder(doc_map=doc_map, curr_user=curr_user)
+    cpf = CachedPluginFinder(
+        doc_map=doc_map,
+        curr_user=UserContext.from_one_user(curr_user),
+        view_ctx=default_view_ctx,
+    )
     for user in save_obj:
         u_id = user['user']
         u = user_map.get(u_id)
@@ -1247,35 +1292,20 @@ def maybe_hide_name(d: DocInfo, u: User):
         u.hide_name = True
 
 
-@answers.route("/infosForTasks", methods=['POST'])
-def get_task_infos():
-    """
-    Returns task infos for given list of tasks
-    :return: {[task_id]: taskInfo}
-    """
-    tasks, = verify_json_params('tasks')
-    doc_map = {}
-    user = get_current_user_object()
-    infolist = {}
-    for task_id in tasks:
-        try:
-            tid = TaskId.parse(task_id)
-            if tid.doc_id not in doc_map:
-                dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
-                doc_map[tid.doc_id] = dib.document
-            plugin = find_plugin_from_document(doc_map[tid.doc_id], tid, user)
-            tim_vars = find_tim_vars(plugin)
-            infolist[task_id] = tim_vars
-        except (TaskNotFoundException, PluginException) as e:
-            return abort(400, str(e))
-    return json_response(infolist)
-
-
 @answers.route("/taskinfo/<task_id>")
 def get_task_info(task_id):
     try:
-        plugin, d = Plugin.from_task_id(task_id, user=get_current_user_object())
-        verify_task_access(d, plugin.task_id, AccessType.view, TaskIdAccess.ReadOnly, allow_grace_period=True)
+        user_ctx = user_context_with_logged_in(None)
+        plugin, d = Plugin.from_task_id(task_id, user_ctx=user_ctx, view_ctx=default_view_ctx)
+        verify_task_access(
+            d,
+            plugin.task_id,
+            AccessType.view,
+            TaskIdAccess.ReadOnly,
+            allow_grace_period=True,
+            context_user=user_ctx,
+            view_ctx=default_view_ctx,
+        )
         tim_vars = find_tim_vars(plugin)
     except PluginException as e:
         return abort(400, str(e))
@@ -1429,7 +1459,7 @@ def get_answers(task_id: str, user_id: int):
     if user is None:
         abort(400, 'Non-existent user')
     try:
-        p = find_plugin_from_document(d.document, tid, user)
+        p = find_plugin_from_document(d.document, tid, user_context_with_logged_in(user), default_view_ctx)
     except TaskNotFoundException:
         p = None
     user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
@@ -1445,8 +1475,8 @@ def get_answers(task_id: str, user_id: int):
 @answers.route("/allDocumentAnswersPlain/<path:doc_path>")
 def get_document_answers(doc_path):
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
-    pars = d.document.get_dereferenced_paragraphs()
-    task_ids, _, _ = find_task_ids(pars)
+    pars = d.document.get_dereferenced_paragraphs(default_view_ctx)
+    task_ids, _, _ = find_task_ids(pars, default_view_ctx)
     return get_all_answers_list_plain(task_ids)
 
 
@@ -1529,17 +1559,18 @@ class FieldInfo:
     graphdata: GraphData
 
 
-def get_plug_vals(doc: DocInfo, tid: TaskId, curr_user: User, user: User) -> Optional[FieldInfo]:
-    d, plug = get_plugin_from_request(doc.document, tid, curr_user)
+def get_plug_vals(doc: DocInfo, tid: TaskId, user_ctx: UserContext, view_ctx: ViewContext) -> Optional[FieldInfo]:
+    d, plug = get_plugin_from_request(doc.document, tid, user_ctx, view_ctx)
     flds = plug.known.fields
     if not flds:
         return None
 
     data, aliases, field_names, _ = get_fields_and_users(
         flds,
-        RequestedGroups([user.personal_group_prop]),
+        RequestedGroups([user_ctx.user.personal_group_prop]),
         doc,
-        curr_user,
+        user_ctx.logged_user,
+        view_ctx,
         add_missing_fields=True,
         access_option=GetFieldsAccess.from_bool(True),
     )
@@ -1566,20 +1597,11 @@ def get_jsframe_data(task_id, user_id):
     user = User.get_by_id(user_id)
     curr_user = get_current_user_object()
     try:
-        vals = get_plug_vals(doc, tid, curr_user, user)
+        vals = get_plug_vals(doc, tid, UserContext(user=user, logged_user=curr_user), default_view_ctx)
         return json_response(vals)
     except Exception as e:
         return abort(400, str(e))
         # return json_response({})
-
-
-@dataclass
-class GetMultiStatesModel:
-    answer_ids: List[int]
-    user_id: int
-
-
-GetMultiStatesSchema = class_schema(GetMultiStatesModel)
 
 
 @dataclass
@@ -1595,49 +1617,6 @@ class GetStateModel:
 GetStateSchema = class_schema(GetStateModel)
 
 
-@answers.route("/getMultiStates")
-@use_args(GetMultiStatesSchema())
-def get_multi_states(args: GetMultiStatesModel):
-    """
-    WIP
-    Queries plugin states for multiple answers
-    :param args: {answer_ids: list of answers, user_id, doc_id}
-    :return: {answerID: {'html': html, 'reviewHtml': None}}
-    """
-    answer_ids, user_id = args.answer_ids, args.user_id
-    user = User.get_by_id(user_id)
-    if user is None:
-        abort(400, 'Non-existent user')
-    answs = Answer.query.filter(Answer.id.in_(answer_ids)).all()
-    response = {}
-    doc_map = {}
-    for ans in answs:
-        tid = TaskId.parse(ans.task_id)
-        if tid.doc_id not in doc_map:
-            dib = get_doc_or_abort(tid.doc_id, f'Document {tid.doc_id} not found')
-            verify_seeanswers_access(dib)
-            doc_map[tid.doc_id] = dib.document
-        try:
-            doc, plug = get_plugin_from_request(doc_map[tid.doc_id], task_id=tid, u=user)
-        except PluginException as e:
-            return abort(400, str(e))
-        except AssertionError:
-            return abort(400, 'answer_id is not associated with doc_id')
-        block = plug.par
-        presult = pluginify(
-            doc,
-            [block],
-            user,
-            custom_answer=ans,
-            pluginwrap=PluginWrap.Nothing,
-            do_lazy=NEVERLAZY,
-        )
-        plug = presult.custom_answer_plugin
-        html = plug.get_final_output()
-        response[ans.id] = {'html': html, 'reviewHtml': None}
-    return json_response(response)
-
-
 @answers.route("/getState")
 @use_args(GetStateSchema())
 def get_state(args: GetStateModel):
@@ -1647,20 +1626,15 @@ def get_state(args: GetStateModel):
     review = args.review
     task_id = args.task_id
     answer = None
-    block = None
-    doc = None
     user = User.get_by_id(user_id)
     if user is None:
         abort(400, 'Non-existent user')
     if answer_id:
         try:
-            answer, doc_id = verify_answer_access(answer_id, user_id, allow_grace_period=True)
+            answer, doc_id = verify_answer_access(answer_id, user_id, default_view_ctx, allow_grace_period=True)
         except PluginException as e:
             return abort(400, str(e))
         doc = Document(doc_id)
-        # if doc_id != d_id and doc_id not in doc.get_referenced_document_ids():
-        #     abort(400, 'Bad document id')
-
         tid = TaskId.parse(answer.task_id)
     elif task_id:
         tid = TaskId.parse(task_id)
@@ -1676,35 +1650,21 @@ def get_state(args: GetStateModel):
     doc.insert_preamble_pars()
     if par_id:
         tid.maybe_set_hint(par_id)
+    user_ctx = user_context_with_logged_in(user)
     try:
-        doc, plug = get_plugin_from_request(doc, task_id=tid, u=user)
+        doc, plug = get_plugin_from_request(doc, task_id=tid, u=user_ctx, view_ctx=default_view_ctx)
     except PluginException as e:
         return abort(400, str(e))
     block = plug.par
 
-    presult = pluginify(
-        doc,
-        [block],
-        user,
-        custom_answer=answer,
-        task_id=task_id,
-        pluginwrap=PluginWrap.Nothing,
-        do_lazy=NEVERLAZY,
-    )
+    presult = pluginify(doc, [block], user_ctx, default_view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
+                        pluginwrap=PluginWrap.Nothing)
     plug = presult.custom_answer_plugin
     html = plug.get_final_output()
     if review:
         block.final_dict = None
-        presult2 = pluginify(
-            doc,
-            [block],
-            user,
-            custom_answer=answer,
-            task_id=task_id,
-            review=review,
-            pluginwrap=PluginWrap.Nothing,
-            do_lazy=NEVERLAZY,
-        )
+        presult2 = pluginify(doc, [block], user_ctx, default_view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
+                             review=review, pluginwrap=PluginWrap.Nothing)
         rplug = presult2.custom_answer_plugin
         rhtml = rplug.get_final_output()
         return json_response({'html': html, 'reviewHtml': rhtml})
@@ -1715,6 +1675,7 @@ def get_state(args: GetStateModel):
 def verify_answer_access(
         answer_id: int,
         user_id: int,
+        view_ctx: ViewContext,
         require_teacher_if_not_own=False,
         required_task_access_level: TaskIdAccess = TaskIdAccess.ReadOnly,
         allow_grace_period: bool = False,
@@ -1730,17 +1691,25 @@ def verify_answer_access(
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
 
-    if verify_teacher_access(d,
-                             require=False):  # TODO: tarkista onko oikein tämä!!! Muuten tuli virhe toisten vastauksia hakiessa.
+    if verify_teacher_access(d, require=False):
         return answer, tid.doc_id
 
+    user_ctx = user_context_with_logged_in(None)
     if user_id != get_current_user_id() or not logged_in():
         if require_teacher_if_not_own:
-            verify_task_access(d, tid, AccessType.teacher, required_task_access_level)
+            verify_task_access(d, tid, AccessType.teacher, required_task_access_level, user_ctx, view_ctx)
         else:
-            verify_task_access(d, tid, AccessType.see_answers, required_task_access_level)
+            verify_task_access(d, tid, AccessType.see_answers, required_task_access_level, user_ctx, view_ctx)
     else:
-        verify_task_access(d, tid, AccessType.view, required_task_access_level, allow_grace_period=allow_grace_period)
+        verify_task_access(
+            d,
+            tid,
+            AccessType.view,
+            required_task_access_level,
+            allow_grace_period=allow_grace_period,
+            context_user=user_ctx,
+            view_ctx=view_ctx,
+        )
         if not any(a.id == user_id for a in answer.users_all):
             abort(403, "You don't have access to this answer.")
     return answer, tid.doc_id

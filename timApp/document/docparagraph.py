@@ -18,6 +18,7 @@ from timApp.document.documentwriter import DocumentWriter
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import random_id, hashfunc
+from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.markdown.dumboclient import DumboOptions, MathType, InputFormat
 from timApp.markdown.htmlSanitize import sanitize_html, strip_div
 from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macros, format_heading
@@ -167,7 +168,7 @@ class DocParagraph:
         return par
 
     def no_macros(self):
-        nm =  self.attrs.get('nomacros', None)
+        nm = self.attrs.get('nomacros', None)
         if nm is not None:
             nm = nm.lower()
             return nm != 'false'
@@ -247,9 +248,12 @@ class DocParagraph:
         """Returns the internal data dictionary."""
         return self.__data
 
-    def _make_final_dict(self, from_preview: bool = True, output_md: bool = False):
+    def get_final_dict(self, view_ctx: ViewContext, use_md: bool = False):
         """Prepares the internal __htmldata dictionary that contains all the information required for embedding the
-        paragraph in HTML."""
+        paragraph in HTML.
+        """
+        if self.final_dict:
+            return self.final_dict
         self._cache_props()
 
         if self.original:
@@ -267,11 +271,11 @@ class DocParagraph:
             self.final_dict['attrs_str'] = self.get_attrs_str()
             self.final_dict['doc_id'] = self.doc.doc_id
 
-        if output_md:
+        if use_md:
             self.final_dict['md'] = self.get_markdown()
         else:
             try:
-                self.final_dict['html'] = self.get_html(from_preview=from_preview)
+                self.final_dict['html'] = self.get_html(view_ctx, no_persist=True)
 
             except Exception as e:
                 self.final_dict['html'] = get_error_html(e)
@@ -293,19 +297,13 @@ class DocParagraph:
         self.final_dict['is_question'] = self.is_question()
         self.final_dict['is_setting'] = self.is_setting()
         self.final_dict['style'] = None
+        return self.final_dict
 
     def _cache_props(self):
         """Caches some boolean properties about this paragraph in internal attributes."""
 
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
         self.__is_setting = 'settings' in self.get_attrs()
-
-    def get_final_dict(self, use_md: bool = False) -> Dict:
-        """Returns a dictionary that contains the finalized values of the paragraph."""
-        if self.final_dict:
-            return self.final_dict
-        self._make_final_dict(output_md=use_md)
-        return self.final_dict
 
     def get_doc_id(self) -> int:
         """Returns the Document id to which this paragraph is attached."""
@@ -335,8 +333,9 @@ class DocParagraph:
         """Determines whether the given paragraph is same as this paragraph content-wise."""
         return self.get_hash() == par.get_hash() and self.get_attrs() == par.get_attrs()
 
-    def is_same_as_html(self, par: 'DocParagraph'):
-        return self.is_same_as(par) and self.get_html(from_preview=True) == par.get_html(from_preview=True)
+    def is_same_as_html(self, par: 'DocParagraph', view_ctx: ViewContext):
+        return self.is_same_as(par) and self.get_html(view_ctx, no_persist=True) == par.get_html(view_ctx,
+                                                                                                 no_persist=True)
 
     def get_hash(self) -> str:
         """Returns the hash of this paragraph."""
@@ -379,8 +378,11 @@ class DocParagraph:
     def get_nocache(self):
         return self.nocache
 
-    def get_expanded_markdown(self, macroinfo: Optional[MacroInfo]=None,
-                              ignore_errors: bool = False) -> str:
+    def get_expanded_markdown(
+            self,
+            macroinfo: MacroInfo,
+            ignore_errors: bool = False,
+    ) -> str:
         """Returns the macro-processed markdown for this paragraph.
 
         :param macroinfo: The MacroInfo to use. If None, the MacroInfo is taken from the document that has the
@@ -393,9 +395,7 @@ class DocParagraph:
         if self.get_nomacros():
             return md
         settings = self.doc.get_settings()
-        if macroinfo is None:
-            macroinfo = settings.get_macroinfo()
-        macros = macroinfo.get_macros(nocache=self.get_nocache())
+        macros = macroinfo.get_macros()
 
         try:
             if self.insert_rnds(md + macros.get("username", "")):  # TODO: RND_SEED: check what seed should be used, is this used to plugins?
@@ -403,7 +403,13 @@ class DocParagraph:
         except Exception as err:
             # raise Exception('Error in rnd: ' + str(err)) from err
             pass  # TODO: show exception to user!
-        return expand_macros(md, macros, settings, macroinfo.get_macro_delimiter(), ignore_errors=ignore_errors)
+        return expand_macros(
+            md,
+            macros,
+            settings,
+            ignore_errors=ignore_errors,
+            env=macroinfo.jinja_env,
+        )
 
     def get_title(self) -> Optional[str]:
         """Attempts heuristically to return a title for this paragraph.
@@ -425,7 +431,7 @@ class DocParagraph:
             # todo: same for area reference
             data = []
             try:
-                ref_pars = self.get_referenced_pars(set_html=False)
+                ref_pars = self.get_referenced_pars()
             except InvalidReferenceException:
                 pass
             else:
@@ -450,14 +456,8 @@ class DocParagraph:
             return f'<div class="pluginError">Invalid settings: {e}</div>'
         return se.from_string('<pre>{{yml}}</pre>').render(yml=self.get_markdown())
 
-    def get_html(self, from_preview: bool = True) -> str:
+    def get_html(self, view_ctx: ViewContext, no_persist: bool = True) -> str:
         """Returns the html for the paragraph.
-
-        :param from_preview: Whether this is called from a preview window or not.
-                             If True, previous paragraphs are preloaded too and the result is not cached.
-                             Safer, but slower. Set explicitly False if you know what you're doing.
-        :return: html string
-
         """
         if self.html is not None:
             return self.html
@@ -466,13 +466,16 @@ class DocParagraph:
         if self.is_setting():
             return self._set_html(self.__get_setting_html())
 
-        context_par = self.doc.get_previous_par(self, get_last_if_no_prev=False) if from_preview else None
+        context_par = self.doc.get_previous_par(self, get_last_if_no_prev=False) if no_persist else None
 
         preload_pars = self.doc.get_paragraphs() if self.doc.preload_option == PreloadOption.all else [self]
-        DocParagraph.preload_htmls(preload_pars,
-                                   self.doc.get_settings(),
-                                   context_par=context_par,
-                                   persist=not from_preview)
+        DocParagraph.preload_htmls(
+            preload_pars,
+            self.doc.get_settings(),
+            view_ctx,
+            context_par=context_par,
+            persist=not no_persist,
+        )
 
         # This DocParagraph instance is not necessarily the same as what self.doc contains. In that case, we copy the
         # HTML from the doc's equivalent paragraph.
@@ -482,11 +485,18 @@ class DocParagraph:
         return self.html
 
     @classmethod
-    def preload_htmls(cls, pars: List['DocParagraph'], settings,
-                      clear_cache: bool = False, context_par: Optional['DocParagraph'] = None,
-                      persist: Optional[bool] = True):
+    def preload_htmls(
+            cls,
+            pars: List['DocParagraph'],
+            settings,
+            view_ctx: ViewContext,
+            clear_cache: bool = False,
+            context_par: Optional['DocParagraph'] = None,
+            persist: Optional[bool] = True,
+    ):
         """Loads the HTML for each paragraph in the given list.
 
+        :param view_ctx:
         :param context_par: The context paragraph. Required only for previewing for now.
         :param persist: Whether the result of preloading should be saved to disk.
         :param clear_cache: Whether all caches should be refreshed.
@@ -550,15 +560,19 @@ class DocParagraph:
                 if not p.is_translation():
                     return p
                 try:
-                    return p.get_referenced_pars(set_html=False)[0]
+                    return p.get_referenced_pars()[0]
                 except InvalidReferenceException as e:
                     p.was_invalid = True
                     p._set_html(get_error_html(e))
                     return p
-            htmls = par_list_to_html_list([deref_tr_par(par) for par, _, _, _, _ in unloaded_pars],
-                                          auto_macros=({'h': auto_macros['h'], 'headings': hs}
-                                                       for _, _, auto_macros, hs, _ in unloaded_pars),
-                                          settings=settings)
+            htmls = par_list_to_html_list(
+                [deref_tr_par(par) for par, _, _, _, _ in unloaded_pars],
+                settings=settings,
+                view_ctx=view_ctx,
+                auto_macros=({'h': auto_macros['h'], 'headings': hs}
+                             for _, _, auto_macros, hs, _ in
+                             unloaded_pars),
+            )
             for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
                 # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
                 # so they are comparable after stripping div. We want to avoid calling sanitize_html unnecessarily.
@@ -594,10 +608,9 @@ class DocParagraph:
         cumulative_headings = []
         unloaded_pars = []
         dyn = 0
-        l = 0
-        macroinfo = settings.get_macroinfo()
+        macroinfo = settings.get_macroinfo(default_view_ctx)
         macros = macroinfo.get_macros()
-        macro_delim = macroinfo.get_macro_delimiter()
+        env = macroinfo.jinja_env
         settings_hash = settings.get_hash()
         for par in pars:
             if par.is_dynamic():
@@ -608,7 +621,7 @@ class DocParagraph:
             cached = par.__data.get('h')
             try:
                 auto_number_start = settings.auto_number_start()
-                auto_macros = par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache,
+                auto_macros = par.get_auto_macro_values(macros, env, auto_macro_cache, heading_cache,
                                                         auto_number_start)
             except RecursionError:
                 raise TimDbException(
@@ -636,7 +649,6 @@ class DocParagraph:
                     cached_html = cached.get(auto_macro_hash)
                     if cached_html is not None:
                         par.html = cached_html
-                        l += 1
                         continue
                     else:
                         try:
@@ -663,7 +675,14 @@ class DocParagraph:
                 curr_classes.append(class_name)
                 self.set_attr('classes', curr_classes)
 
-    def get_auto_macro_values(self, macros, macro_delim, auto_macro_cache, heading_cache, auto_number_start):
+    def get_auto_macro_values(
+            self,
+            macros,
+            env: SandboxedEnvironment,
+            auto_macro_cache,
+            heading_cache,
+            auto_number_start,
+    ):
         """Returns the auto macros values for the current paragraph. Auto macros include things like current
         heading/table/figure numbers.
 
@@ -673,7 +692,7 @@ class DocParagraph:
         :param auto_macro_cache: The cache object from which to retrieve and store the auto macro data.
         :param auto_number_start: first heading start number
         :return: Auto macro values as a dict.
-        :param macro_delim: Delimiter for macros.
+        :param env: Environment for macros.
         :return: A dict(str, dict(int,int)) containing the auto macro information.
 
         """
@@ -689,14 +708,14 @@ class DocParagraph:
             prev_par_auto_values = {'h': {1: autonumber_start, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
             heading_cache[self.get_id()] = []
         else:
-            prev_par_auto_values = prev_par.get_auto_macro_values(macros, macro_delim, auto_macro_cache, heading_cache,
+            prev_par_auto_values = prev_par.get_auto_macro_values(macros, env, auto_macro_cache, heading_cache,
                                                                   auto_number_start)
 
         # If the paragraph is a translation but it has not been translated (empty markdown), we use the md from the original.
         deref = None
         if prev_par is not None and prev_par.is_translation():
             try:
-                deref = prev_par.get_referenced_pars(set_html=False)[0]
+                deref = prev_par.get_referenced_pars()[0]
             except InvalidReferenceException:
                 # In case of an invalid reference, just skip this one.
                 deref = None
@@ -710,7 +729,7 @@ class DocParagraph:
             md_expanded = deref.get_markdown()
         if not prev_par.get_nomacros():
             # TODO: RND_SEED should we fill the rands also?
-            md_expanded = expand_macros(md_expanded, macros, self.doc.get_settings(), macro_delim)
+            md_expanded = expand_macros(md_expanded, macros, self.doc.get_settings(), env)
         blocks = DocumentParser(md_expanded, options=DocumentParserOptions.break_on_empty_lines()).get_blocks()
         deltas = copy(prev_par_auto_values['h'])
         title_ids = []
@@ -923,12 +942,12 @@ class DocParagraph:
     def __repr__(self):
         return self.__data.__repr__()
 
-    def get_referenced_pars(self, set_html: bool = True) -> List['DocParagraph']:
-        cached = self.ref_pars.get(set_html)
+    def get_referenced_pars(self, view_ctx: Optional[ViewContext] = None) -> List['DocParagraph']:
+        cached = self.ref_pars.get(view_ctx)
         if cached is not None:
             return cached
-        pars = [create_final_par(p, set_html=set_html) for p in self.get_referenced_pars_impl()]
-        self.ref_pars[set_html] = pars
+        pars = [create_final_par(p, view_ctx) for p in self.get_referenced_pars_impl()]
+        self.ref_pars[view_ctx] = pars
         return pars
 
     def get_referenced_pars_impl(self, visited_pars: Optional[List[Tuple[int, str]]] = None) -> List['DocParagraph']:
@@ -1120,7 +1139,7 @@ def create_reference(doc: DocumentType, doc_id: int, par_id: str, r: Optional[st
     return par
 
 
-def create_final_par(reached_par: DocParagraph, set_html: bool) -> DocParagraph:
+def create_final_par(reached_par: DocParagraph, view_ctx: Optional[ViewContext]) -> DocParagraph:
     """Creates the finalized dereferenced paragraph based on a chain of references."""
     last_ref = reached_par.prev_deref
     if last_ref.is_translation() and last_ref.get_markdown():
@@ -1180,13 +1199,13 @@ def create_final_par(reached_par: DocParagraph, set_html: bool) -> DocParagraph:
 
     final_par.ref_chain = reached_par
 
-    if set_html:
-        html = last_ref.get_html(from_preview=False) if last_ref.is_translation(
-        ) else reached_par.get_html(from_preview=False)
+    if view_ctx:
+        html = last_ref.get_html(view_ctx, no_persist=False) if last_ref.is_translation(
+        ) else reached_par.get_html(view_ctx, no_persist=False)
 
         # if html is empty, use the source
         if html == '':
-            html = reached_par.get_html(from_preview=False)
+            html = reached_par.get_html(view_ctx, no_persist=False)
         final_par._set_html(html)
     return final_par
 

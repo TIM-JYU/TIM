@@ -10,6 +10,7 @@ from timApp.document.documents import import_document_from_file
 from timApp.document.documentwriter import DocumentWriter
 from timApp.document.exceptions import DocExistsError
 from timApp.document.randutils import random_paragraph
+from timApp.document.viewcontext import default_view_ctx
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.usergroup import UserGroup
@@ -146,10 +147,10 @@ class DocumentTest(TimDbTest):
         d = self.create_doc().document
 
         par1 = d.add_paragraph('just text')
-        self.assertEqual('<p>just text</p>', par1.get_html())
+        self.assertEqual('<p>just text</p>', par1.get_html(default_view_ctx))
 
         par1 = d.add_paragraph('# Heading')
-        self.assertEqual('<h1 id="heading">Heading</h1>', par1.get_html())
+        self.assertEqual('<h1 id="heading">Heading</h1>', par1.get_html(default_view_ctx))
 
     def test_modify(self):
         d = self.create_doc().document
@@ -236,7 +237,8 @@ class DocumentTest(TimDbTest):
                               'macro_delimiter': '%%'}, d.get_settings().get_dict())
 
         # User-specific macros should be preserved
-        self.assertEqual('<p>this is testvalue and year is 2015 and user is %%username%% and</p>', macro_par.get_html())
+        self.assertEqual('<p>this is testvalue and year is 2015 and user is %%username%% and</p>',
+                         macro_par.get_html(default_view_ctx))
         d = Document(d.doc_id)  # Make a new instance of the document to test cache invalidation
         d.modify_paragraph(settings_par.get_id(),
                            '```\n'
@@ -249,7 +251,7 @@ class DocumentTest(TimDbTest):
 
         macro_par = d.get_paragraph(macro_par.get_id())
         self.assertEqual('<p>this is anothervalue and year is 2016 and user is %%username%% and</p>',
-                         macro_par.get_html())
+                         macro_par.get_html(default_view_ctx))
 
     def test_macro_expansion_from_reference(self):
         d1 = self.create_doc().document
@@ -257,27 +259,30 @@ class DocumentTest(TimDbTest):
         par1 = d1.add_paragraph('d1: %%first%% %%second%% %%third%%')
         d2 = self.create_doc().document
         d2.set_settings({'macros': {'first': '3', 'second': '4', 'third': '5'}})
-        self.assertEqual('d1: 1 2 ', par1.get_expanded_markdown())
+        mi1 = d1.get_settings().get_macroinfo(default_view_ctx)
+        mi2 = d2.get_settings().get_macroinfo(default_view_ctx)
+        self.assertEqual('d1: 1 2 ', par1.get_expanded_markdown(mi1))
         ref_par1 = par1.create_reference(d2)
         d2.add_paragraph_obj(ref_par1)
         deref1 = ref_par1.get_referenced_pars()[0]
-        self.assertEqual('d1: 1 2 ', deref1.get_expanded_markdown())
+        self.assertEqual('d1: 1 2 ', deref1.get_expanded_markdown(mi1))
         par2 = d2.add_paragraph('d2: %%first%% %%second%% %%third%%')
-        self.assertEqual('d2: 3 4 5', par2.get_expanded_markdown())
+        self.assertEqual('d2: 3 4 5', par2.get_expanded_markdown(mi2))
         ref_par2 = par2.create_reference(d1)
         d1.add_paragraph_obj(ref_par2)
         deref2 = ref_par2.get_referenced_pars()[0]
-        self.assertEqual('d2: 3 4 5', deref2.get_expanded_markdown())
+        self.assertEqual('d2: 3 4 5', deref2.get_expanded_markdown(mi2))
 
-        self.assertEqual('d1: 3 4 5', deref1.get_expanded_markdown(d2.get_settings().get_macroinfo()))
-        self.assertEqual('d1: 1 2 ', deref1.get_expanded_markdown(d1.get_settings().get_macroinfo()))
-        self.assertEqual('d2: 1 2 ', deref2.get_expanded_markdown(d1.get_settings().get_macroinfo()))
-        self.assertEqual('d2: 3 4 5', deref2.get_expanded_markdown(d2.get_settings().get_macroinfo()))
+        self.assertEqual('d1: 3 4 5', deref1.get_expanded_markdown(d2.get_settings().get_macroinfo(default_view_ctx)))
+        self.assertEqual('d1: 1 2 ', deref1.get_expanded_markdown(d1.get_settings().get_macroinfo(default_view_ctx)))
+        self.assertEqual('d2: 1 2 ', deref2.get_expanded_markdown(d1.get_settings().get_macroinfo(default_view_ctx)))
+        self.assertEqual('d2: 3 4 5', deref2.get_expanded_markdown(d2.get_settings().get_macroinfo(default_view_ctx)))
 
     def test_predefined_macros(self):
         d = self.create_doc().document
         p = d.add_paragraph('document id is %%docid%%')
-        self.assertEqual(f'document id is {d.doc_id}', p.get_expanded_markdown())
+        self.assertEqual(f'document id is {d.doc_id}',
+                         p.get_expanded_markdown(d.get_settings().get_macroinfo(default_view_ctx)))
 
     def test_import(self):
         import_document_from_file(f'{EXAMPLE_DOCS_PATH}/mmcq_example.md',
@@ -326,7 +331,7 @@ class DocumentTest(TimDbTest):
             d.add_paragraph(f'# Header {i}')
         ver_orig = d.get_doc_version()
         pars = d.get_paragraphs()
-        self.assertListEqual([], list(ver_orig.parwise_diff(d, check_html=True)))
+        self.assertListEqual([], list(ver_orig.parwise_diff(d, default_view_ctx)))
         new = d.insert_paragraph('# Header new', insert_before_id=pars[1].get_id())
         self.assertListEqual([{'type': 'insert', 'after_id': pars[0].get_id(), 'content': [new]}],
                              list(ver_orig.parwise_diff(d)))
@@ -334,7 +339,7 @@ class DocumentTest(TimDbTest):
         # heading numbering changes should be detected
         self.assertListEqual([{'type': 'insert', 'after_id': pars[0].get_id(), 'content': [new]}]
                              + [{'type': 'change', 'id': par.get_id(), 'content': [par]} for par in pars[1:]],
-                             list(ver_orig.parwise_diff(d, check_html=True)))
+                             list(ver_orig.parwise_diff(d, default_view_ctx)))
 
     def test_clear_document(self):
         d = self.create_doc().document

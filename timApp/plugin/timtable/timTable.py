@@ -3,22 +3,25 @@ import json
 import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 from xml.sax.saxutils import quoteattr
+
 from flask import Blueprint
 from flask import abort
 from flask import request
+
 from timApp.auth.accesshelper import verify_edit_access
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.docentry import DocEntry
 from timApp.document.document import Document
+from timApp.document.viewcontext import default_view_ctx
+from timApp.markdown.dumboclient import call_dumbo, DumboOptions
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.save_plugin import save_plugin
 from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
+from timApp.plugin.timtable.timTableLatex import convert_table
 from timApp.tim_app import csrf
+from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response
-from timApp.document.docentry import DocEntry
-from timApp.markdown.dumboclient import call_dumbo, DumboOptions
-from timApp.plugin.timtable.timTableLatex import convert_table
-from timApp.timdb.sqa import db
 
 timTable_plugin = Blueprint('timTable_plugin',
                             __name__,
@@ -218,7 +221,7 @@ def tim_table_get_cell_data():
         abort(404)
     verify_edit_access(doc)
     par = doc.document.get_paragraph(args['parId'])
-    plug = Plugin.from_paragraph(par)
+    plug = Plugin.from_paragraph(par, default_view_ctx)
     yaml = plug.values
     cell_cnt = None
     if is_datablock(yaml):
@@ -833,7 +836,7 @@ def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
     par = d.document_as_current_user.get_paragraph(par_id)
     if par.is_reference():
         abort(400, "This table is referenced from another document")
-    return d, Plugin.from_paragraph(par)
+    return d, Plugin.from_paragraph(par, default_view_ctx)
 
 
 def is_datablock(yaml: Dict[str, Any]) -> bool:

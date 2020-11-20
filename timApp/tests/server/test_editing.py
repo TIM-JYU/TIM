@@ -3,6 +3,7 @@ from lxml.html import HtmlElement
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
@@ -368,7 +369,7 @@ table:
         ver2 = d.document.get_version()
         self.assertNotEqual(ver1, ver2)
         par = d.document.get_paragraphs()[0]
-        p = Plugin.from_paragraph(par)
+        p = Plugin.from_paragraph(par, default_view_ctx)
         self.assertEqual(
             {'table': {'countCol': 1,
                        'countRow': 1,

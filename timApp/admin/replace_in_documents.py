@@ -11,6 +11,7 @@ from timApp.admin.search_in_documents import create_basic_search_argparser, sear
 from timApp.admin.util import process_items, DryrunnableOnly, BasicArguments, get_url_for_match
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.viewcontext import default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.timdb.exceptions import TimDbException
 
@@ -108,13 +109,14 @@ def perform_replace(
         repl: Union[None, ReplacementResult, AttrModification] = None
         old_md = None
         new_md = None
+        mi = r.par.doc.get_settings().get_macroinfo(default_view_ctx)
         if args.to is not None:
             repl = ReplacementResult(search_result=r, replacement=args.to)
             old_md = r.par.get_markdown()
             new_md = repl.get_new_markdown()
             if r.par.is_yaml():
                 try:
-                    yb = YamlBlock.from_markdown(r.par.get_expanded_markdown())
+                    yb = YamlBlock.from_markdown(r.par.get_expanded_markdown(mi))
                 except YAMLError:
                     repl.error = f'YAML is invalid before replacement, so not doing anything'
                 except TimDbException as e:
@@ -123,7 +125,7 @@ def perform_replace(
                     try:
                         p_temp = r.par.clone()
                         p_temp.set_markdown(new_md)
-                        yb_new = YamlBlock.from_markdown(p_temp.get_expanded_markdown())
+                        yb_new = YamlBlock.from_markdown(p_temp.get_expanded_markdown(mi))
                     except YAMLError:
                         repl.error = 'YAML would be invalid after replacement, so not doing anything'
             yield repl

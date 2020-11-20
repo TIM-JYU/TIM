@@ -16,15 +16,16 @@ from flask import request
 
 from timApp.auth import sessioninfo
 from timApp.auth.accesshelper import verify_view_access
-from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError, TEX_MACROS_KEY, \
-    DEFAULT_PRINTING_FOLDER
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import default_view_ctx
+from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTeXError
+from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
+from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import verify_json_params, get_option
 from timApp.util.flask.responsehelper import json_response, add_no_cache_headers
-from timApp.document.docinfo import DocInfo
-from timApp.document.docentry import DocEntry
-from timApp.printing.printeddoc import PrintedDoc
-from timApp.timdb.sqa import db
 
 TEXPRINTTEMPLATE_KEY = "texprinttemplate"
 DEFAULT_PRINT_TEMPLATE_NAME = "templates/printing/runko"
@@ -48,9 +49,6 @@ def pull_doc_path(endpoint, values):
         doc_path = values['doc_path']
         if doc_path is None:
             abort(400)
-        # dot = doc_path.rfind('.') # change last . to -
-        #if dot >= 0:
-        #    doc_path = doc_path[:dot] + '-' + doc_path[dot + 1:]
         g.doc_path = doc_path
         g.doc_entry = DocEntry.find_by_path(doc_path)
         if not g.doc_entry:
@@ -58,20 +56,22 @@ def pull_doc_path(endpoint, values):
         verify_view_access(g.doc_entry)
 
 
-def template_by_name(template_name, isdef = False):
+def template_by_name(template_name: str, isdef: bool = False):
     template_doc = DocEntry.find_by_path(template_name)
     if template_doc is None:
         return None, 0, "Template not found: " + template_name, False
     return template_doc, template_doc.id, None, isdef
 
-def get_doc_template_name(doc):
-    texmacros = doc.document.get_settings().get_macroinfo(key=TEX_MACROS_KEY).get_macros()
+
+def get_doc_template_name(doc: DocInfo) -> Optional[str]:
+    texmacros = doc.document.get_settings().get_texmacroinfo(default_view_ctx).get_macros()
     if not texmacros:
         return None
     template_name = texmacros.get(TEXPRINTTEMPLATE_KEY)
     return template_name
 
-def get_template_doc(doc, template_doc_id):
+
+def get_template_doc(doc: DocInfo, template_doc_id):
     template_name = get_doc_template_name(doc)
     if template_name:
         return template_by_name(template_name, True)
@@ -147,12 +147,15 @@ def print_document(doc_path):
         abort(400, "The template doc was not found.")
 
     try:
-        create_printed_doc(doc_entry=doc,
-                           file_type=print_type,
-                           template_doc=template_doc,
-                           temp=True,
-                           plugins_user_print=plugins_user_print,
-                           urlroot = 'http://localhost:5000/print/')  # request.url_root + 'print/')
+        create_printed_doc(
+            doc_entry=doc,
+            template_doc=template_doc,
+            file_type=print_type,
+            temp=True,
+            user_ctx=UserContext.from_one_user(g.user),
+            plugins_user_print=plugins_user_print,
+            urlroot='http://localhost:5000/print/',
+        )  # request.url_root + 'print/')
     except LaTeXError as err:
         try:
             print("Error occurred: " + str(err))
@@ -225,12 +228,15 @@ def get_printed_document(doc_path):
 
     if cached is None:
         try:
-            create_printed_doc(doc_entry=doc,
-                               file_type=print_type,
-                               template_doc=template_doc,
-                               temp=True,
-                               plugins_user_print=plugins_user_print,
-                               urlroot='http://localhost:5000/print/')  # request.url_root+'print/')
+            create_printed_doc(
+                doc_entry=doc,
+                template_doc=template_doc,
+                file_type=print_type,
+                temp=True,
+                user_ctx=UserContext.from_one_user(g.user),
+                plugins_user_print=plugins_user_print,
+                urlroot='http://localhost:5000/print/',
+            )  # request.url_root+'print/')
         except PrintingError as err:
             return abort(400, str(err))
         except LaTeXError as err:
@@ -362,15 +368,19 @@ def check_print_cache(doc_entry: DocEntry,
     # return printer.get_printed_document_path_from_db(file_type=file_type)
 
 
-def create_printed_doc(doc_entry: DocEntry,
-                       template_doc: Optional[DocInfo],
-                       file_type: PrintFormat,
-                       temp: bool,
-                       plugins_user_print: bool = False,
-                       urlroot = '') -> str:
+def create_printed_doc(
+        doc_entry: DocEntry,
+        template_doc: Optional[DocInfo],
+        file_type: PrintFormat,
+        temp: bool,
+        user_ctx: UserContext,
+        plugins_user_print: bool = False,
+        urlroot: str = '',
+) -> str:
     """
     Adds a marking for a printed document to the db
 
+    :param user_ctx: The user context.
     :param doc_entry: Document that is being printed
     :param template_doc: printing template used
     :param file_type: File type for the document
@@ -391,7 +401,7 @@ def create_printed_doc(doc_entry: DocEntry,
     folder: Path = path.parent
     folder.mkdir(parents=True, exist_ok=True)
     try:
-        printer.write_to_format(target_format=file_type, path=path, plugins_user_print=plugins_user_print)
+        printer.write_to_format(user_ctx, target_format=file_type, path=path, plugins_user_print=plugins_user_print)
         pdferror = None
     except LaTeXError as err:
         pdferror = err.value

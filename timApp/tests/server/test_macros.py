@@ -1,6 +1,8 @@
 """Server tests for macros."""
 from timApp.auth.accesstype import AccessType
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import default_view_ctx
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.plugin.plugin import Plugin
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID
@@ -27,7 +29,7 @@ class MacroTest(TimRouteTest):
 {% endfor %}
 {% for x in sarakkeet %} %%'-'*sarakeleveys%% {% endfor %}
             """
-        table_html = md_to_html(table_text, sanitize=True, macros={'rivi': 'kerros'}, macro_delimiter='%%')
+        table_html = md_to_html(table_text, sanitize=True, macros={'rivi': 'kerros'})
 
         self.new_par(doc, table_text, json_key='texts', expect_contains=table_html)
         self.get(f'/view/{doc.doc_id}', expect_contains=table_html)
@@ -35,7 +37,7 @@ class MacroTest(TimRouteTest):
     def test_user_macros(self):
         self.login_test1()
         d = self.create_doc(initial_par=r"""
-Username is %%username%% and real name is %%realname%% and email is %%useremail%%
+Username is %%username%% and real name is %%realname%% and email is %%useremail%% and logged name is %%loggedUsername%%
 
 #-
 Percents: \%\%
@@ -51,19 +53,19 @@ header: %%username%% and %%realname%%
         db.session.commit()
 
         pars = self.get(d.url, as_tree=True).cssselect('.parContent')
-        self.assertEqual('Username is testuser1 and real name is Test user 1 and email is test1@example.com',
+        self.assertEqual('Username is testuser1 and real name is Test user 1 and email is test1@example.com and logged name is testuser1',
                          pars[0].text_content().strip())
         self.assertEqual('Percents: %%',
                          pars[1].text_content().strip())
         self.assertEqual("Syntax error in template: unexpected ‘end of template’",
                          pars[2].text_content().strip())
-        p, _ = Plugin.from_task_id(f'{d.id}.test', User.query.get(TEST_USER_1_ID))
+        p, _ = Plugin.from_task_id(f'{d.id}.test', UserContext.from_one_user(User.query.get(TEST_USER_1_ID)), default_view_ctx)
         self.assertEqual('testuser1 and Test user 1', p.values['header'])
         self.login_test2()
-        self.assertEqual('Username is testuser2 and real name is Test user 2 and email is test2@example.com',
+        self.assertEqual('Username is testuser2 and real name is Test user 2 and email is test2@example.com and logged name is testuser2',
                          self.get(f'/view/{d.id}', as_tree=True).cssselect('.parContent')[
                              0].text_content().strip())
-        p, _ = Plugin.from_task_id(f'{d.id}.test', User.query.get(TEST_USER_2_ID))
+        p, _ = Plugin.from_task_id(f'{d.id}.test', UserContext.from_one_user(User.query.get(TEST_USER_2_ID)), default_view_ctx)
         self.assertEqual('testuser2 and Test user 2', p.values['header'])
 
     def test_user_nocache(self):

@@ -11,6 +11,7 @@ from common_schemas import TextfieldStateModel
 from pluginserver_flask import GenericHtmlModel, \
     create_blueprint, GenericAnswerModel, PluginAnswerWeb, PluginAnswerResp, PluginReqs
 from timApp.document.docentry import DocEntry
+from timApp.document.viewcontext import default_view_ctx
 from timApp.modules.fields.textfield import TextfieldMarkupModel
 from timApp.plugin.taskid import TaskId
 from timApp.tim_app import csrf
@@ -118,6 +119,7 @@ def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: st
         RequestedGroups.from_name_list(groups),
         d,
         curr_user,
+        default_view_ctx,
         access_option=GetFieldsAccess.AllowAlwaysNonTeacher,
     )
 

@@ -1,7 +1,8 @@
 from lxml import html
 
-from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.document.docinfo import DocInfo
+from timApp.document.viewcontext import default_view_ctx
+from timApp.tests.server.timroutetest import TimRouteTest
 
 
 class IndexTest(TimRouteTest):
@@ -24,7 +25,7 @@ Lorem ipsum.
                            [{'id': 'heading-level-2', 'level': 2, 'text': 'Heading level 2'},
                             {'id': 'heading-level-3', 'level': 3, 'text': 'Heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': 'Second heading level 1'},
-                           [])], doc.get_index())
+                           [])], doc.get_index(default_view_ctx))
         doc = self.create_doc(initial_par="""
 # Heading level 1
 Lorem ipsum.
@@ -53,7 +54,7 @@ Lorem ipsum.
                             {'id': 'second-heading-level-2', 'level': 2, 'text': '1.2. Second heading level 2'},
                             {'id': 'heading-level-3', 'level': 3, 'text': '1.2.1 Heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': '2. Second heading level 1'},
-                           [])], doc.get_index())
+                           [])], doc.get_index(default_view_ctx))
 
         doc.set_settings({'auto_number_headings': False})
         self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': 'Heading level 1'}, []),
@@ -62,7 +63,7 @@ Lorem ipsum.
                             {'id': 'second-heading-level-2', 'level': 2, 'text': 'Second heading level 2'},
                             {'id': 'heading-level-3', 'level': 3, 'text': 'Heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': 'Second heading level 1'},
-                           [])], doc.get_index())
+                           [])], doc.get_index(default_view_ctx))
 
         doc.set_settings({'auto_number_headings': True,
                           'heading_format': {2: '{', 3: '{', 4: '{', 5: '{', 6: '{'}})
@@ -72,7 +73,7 @@ Lorem ipsum.
                             {'id': 'second-heading-level-2', 'level': 2, 'text': '[ERROR] Second heading level 2'},
                             {'id': 'heading-level-3', 'level': 3, 'text': '[ERROR] Heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': '2. Second heading level 1'},
-                           [])], doc.get_index())
+                           [])], doc.get_index(default_view_ctx))
 
     def test_index_many_headings_per_par(self):
         self.login_test1()
@@ -95,14 +96,14 @@ Lorem ipsum.
                             {'id': 'unnumbered', 'level': 2, 'text': 'Unnumbered'},
                             {'id': 'heading-level-3', 'level': 3, 'text': 'Heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': 'Second heading level 1'},
-                           [])], doc.get_index())
+                           [])], doc.get_index(default_view_ctx))
 
     def test_index_numeric_headings(self):
         self.login_test1()
         d = self.create_doc(initial_par=['# 1', '# 2', '# 3'])
-        self.assertEqual(d.document.get_index(), [({'id': 'section', 'level': 1, 'text': '1'}, []),
-                                                  ({'id': 'section-1', 'level': 1, 'text': '2'}, []),
-                                                  ({'id': 'section-2', 'level': 1, 'text': '3'}, [])])
+        self.assertEqual(d.document.get_index(default_view_ctx), [({'id': 'section', 'level': 1, 'text': '1'}, []),
+                                                                  ({'id': 'section-1', 'level': 1, 'text': '2'}, []),
+                                                                  ({'id': 'section-2', 'level': 1, 'text': '3'}, [])])
 
     def test_index_skip_level(self):
         self.login_test1()
@@ -125,7 +126,7 @@ Lorem ipsum.
                             {'id': 'unnumbered', 'level': 2, 'text': 'Unnumbered'},
                             {'id': 'second-heading-level-3', 'level': 3, 'text': 'Second heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': 'Second heading level 1'},
-                           [])], doc.get_index())
+                           [])], doc.get_index(default_view_ctx))
         ins_pos = doc.get_paragraphs()[0].get_id()
         doc.set_settings({'auto_number_headings': True})
         self.assertEqual([({'id': 'heading-level-1', 'level': 1, 'text': '1. Heading level 1'},
@@ -133,7 +134,7 @@ Lorem ipsum.
                             {'id': 'unnumbered', 'level': 2, 'text': 'Unnumbered'},
                             {'id': 'second-heading-level-3', 'level': 3, 'text': '1.0.2 Second heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': '2. Second heading level 1'},
-                           [])], doc.get_index())
+                           [])], doc.get_index(default_view_ctx))
         self.new_par(doc, """# New heading""", ins_pos)
         self.assertEqual([({'id': 'new-heading', 'level': 1, 'text': '1. New heading'}, []),
                           ({'id': 'heading-level-1', 'level': 1, 'text': '2. Heading level 1'},
@@ -141,7 +142,7 @@ Lorem ipsum.
                             {'id': 'unnumbered', 'level': 2, 'text': 'Unnumbered'},
                             {'id': 'second-heading-level-3', 'level': 3, 'text': '2.0.2 Second heading level 3'}]),
                           ({'id': 'second-heading-level-1', 'level': 1, 'text': '3. Second heading level 1'},
-                           [])], doc.get_index())
+                           [])], doc.get_index(default_view_ctx))
 
     def test_index_duplicate_headings(self):
         self.login_test1()
@@ -151,7 +152,7 @@ Lorem ipsum.
 # Same
         """).document
         self.assertEqual([({'id': 'same', 'level': 1, 'text': 'Same'}, []),
-                          ({'id': 'same-1', 'level': 1, 'text': 'Same'}, [])], doc.get_index())
+                          ({'id': 'same-1', 'level': 1, 'text': 'Same'}, [])], doc.get_index(default_view_ctx))
 
         doc = self.create_doc(initial_par="""
 # Same
@@ -165,7 +166,7 @@ Lorem ipsum.
         self.assertEqual([({'id': 'same', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-1', 'level': 1, 'text': 'Same'}, []),
                           ({'id': 'same-1-1', 'level': 1, 'text': 'Same'}, []),
-                          ({'id': 'same-3', 'level': 1, 'text': 'Same'}, [])], doc.get_index())
+                          ({'id': 'same-3', 'level': 1, 'text': 'Same'}, [])], doc.get_index(default_view_ctx))
 
     def test_heading_preview(self):
         self.login_test1()
@@ -268,7 +269,7 @@ Lorem ipsum.
         """)
         self.assertEqual(
             [({'id': 'test-test', 'level': 1, 'text': 'test (test)'}, [])],
-            d.document.get_index(),
+            d.document.get_index(default_view_ctx),
         )
 
     def test_autonumber_link_only_heading(self):

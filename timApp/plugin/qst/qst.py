@@ -17,11 +17,13 @@ from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericAnswerModel, GenericHtmlModel, render_validationerror
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import default_view_ctx
 from timApp.lecture.askedjson import normalize_question_json
 from timApp.lecture.question_utils import qst_set_array_order, qst_pick_expls, qst_rand_array, qst_handle_randomization, \
     calculate_points_from_json_answer, create_points_table, qst_filter_markup_points
 from timApp.markdown.dumboclient import DumboOptions
-from timApp.plugin.containerLink import convert_md, get_plugin
+from timApp.plugin.containerLink import convert_md
 from timApp.plugin.containerLink import prepare_for_dumbo_attr_list_recursive, get_plugin_regex_obj
 from timApp.plugin.plugin import Plugin, PluginException
 from timApp.plugin.plugin import get_num_value
@@ -827,7 +829,11 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
     d.document.insert_preamble_pars()
     par = d.document.get_paragraph(par_id)
     try:
-        plugin_values = Plugin.from_paragraph(par, user=get_current_user_object()).values
+        plugin_values = Plugin.from_paragraph(
+            par,
+            default_view_ctx,
+            user=UserContext.from_one_user(get_current_user_object()),
+        ).values
     except PluginException:
         return abort(400, f'Paragraph is not a plugin: {par_id}')
     plugindata = {'markup': plugin_values}

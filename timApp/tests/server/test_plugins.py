@@ -1,4 +1,4 @@
-import base64
+import io
 import io
 import json
 import re
@@ -15,10 +15,12 @@ from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_points_by_rule
 from timApp.answer.pointsumrule import PointSumRule, PointType
 from timApp.auth.accesstype import AccessType
-from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.sessioninfo import user_context_with_logged_in
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.randutils import random_id
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.plugin import Plugin, find_plugin_from_document
 from timApp.plugin.taskid import TaskId
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_1_NAME, TEST_USER_1_USERNAME, \
@@ -51,7 +53,7 @@ class PluginTest(TimRouteTest):
         task_id = f'{doc.id}.{task_name}'
         tid = TaskId.parse(task_id)
         u = self.test_user_1
-        plug = find_plugin_from_document(doc.document, tid, u)
+        plug = find_plugin_from_document(doc.document, tid, UserContext.from_one_user(u), default_view_ctx)
         par_id = plug.par.get_id()
         task_id_ext = task_id + '.' + par_id
         task_id_ext_wrong = task_id + '.' + par_id + 'x'
@@ -489,7 +491,7 @@ type: upload
         self.check_save_points(TEST_USER_1_ID, answer_id2, 1, 403, err)
 
         self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 400, cannot_give_custom)
-        p, _ = Plugin.from_task_id(task_id, user=get_current_user_object())
+        p, _ = Plugin.from_task_id(task_id, user_ctx=user_context_with_logged_in(None), view_ctx=default_view_ctx)
         p.set_value('pointsRule', {'allowUserMin': 0, 'allowUserMax': 5}).save()
         self.check_save_points(TEST_USER_2_ID, answer_id2, 6, 400, {'error': 'Points must be in range [0,5]'})
         self.check_save_points(TEST_USER_2_ID, answer_id2, 1, 200, self.ok_resp)
@@ -702,7 +704,7 @@ type: upload
     def test_interval(self):
         self.login_test1()
         d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md')
-        p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
+        p = Plugin.from_paragraph(d.document.get_paragraphs()[0], default_view_ctx)
         p.set_value('answerLimit', None)
 
         p.set_value('starttime', '2000-01-01 00:00:00')
@@ -742,7 +744,7 @@ choices:
     text: ""
 ```
 """)
-        p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
+        p = Plugin.from_paragraph(d.document.get_paragraphs()[0], default_view_ctx)
         resp = self.post_answer(p.type, p.task_id.doc_task, [])
         self.assertEqual(resp['error'], 'The deadline for submitting answers has passed.')
         self.get(d.url_relative)
@@ -888,8 +890,8 @@ choices:
     text: ""
 ```
         """)
-        p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
-        p2 = Plugin.from_paragraph(d.document.get_paragraphs()[1])
+        p = Plugin.from_paragraph(d.document.get_paragraphs()[0], default_view_ctx)
+        p2 = Plugin.from_paragraph(d.document.get_paragraphs()[1], default_view_ctx)
         self.post_answer(p.type, p.task_id.doc_task, [True, False, False])
         self.post_answer(p.type, p.task_id.doc_task, [True, True, False])
         self.assertEqual(2, Answer.query.filter_by(task_id=p.task_id.doc_task).count())
@@ -1489,7 +1491,7 @@ a: b
                 'userMax': 0.5,
                 'userMin': 0.1,
             })
-        p = Plugin.from_paragraph(d.document.get_paragraphs()[0])
+        p = Plugin.from_paragraph(d.document.get_paragraphs()[0], default_view_ctx)
         self.assertEqual(0.1, p.points_rule().allowUserMin)
         self.assertEqual(0.5, p.points_rule().allowUserMax)
         self.assertEqual(0.3, p.points_rule().multiplier)
@@ -1511,7 +1513,7 @@ a: b
         self.paste(target, par_after=DocParagraph.help_par(), as_ref=True)
         self.paste(target, par_after=DocParagraph.help_par(), as_ref=False)
 
-        p = Plugin.from_paragraph(target.document.get_paragraphs()[1])
+        p = Plugin.from_paragraph(target.document.get_paragraphs()[1], default_view_ctx)
 
         self.get(f'/taskinfo/{p.task_id.doc_task}', expect_status=200)
 

@@ -1,25 +1,30 @@
 """Common functions for use with routes."""
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Dict, DefaultDict, Tuple
-from dataclasses import dataclass
 
 import pytz
 from flask import flash
+from jinja2.sandbox import SandboxedEnvironment
 
-from timApp.auth.accesshelper import has_ownership, has_edit_access, has_teacher_access
-from timApp.document.docentry import DocEntry
-from timApp.document.hide_names import hide_names_in_teacher
-from timApp.note.notes import get_notes, UserNoteAndUser
-from timApp.document.docparagraph import DocParagraph
-from timApp.document.document import Document
-from timApp.readmark.readmarkcollection import ReadMarkCollection
-from timApp.markdown.markdownconverter import expand_macros, create_environment
-from timApp.plugin.pluginControl import pluginify
+from timApp.auth.accesshelper import has_edit_access, has_teacher_access
 from timApp.auth.sessioninfo import get_session_usergroup_ids, get_current_user_object
-from timApp.user.user import User, check_rights
+from timApp.document.docentry import DocEntry
+from timApp.document.docparagraph import DocParagraph
+from timApp.document.docsettings import DocSettings
+from timApp.document.document import Document
+from timApp.document.hide_names import hide_names_in_teacher
+from timApp.document.macroinfo import get_user_specific_macros
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import ViewContext
+from timApp.markdown.markdownconverter import expand_macros
+from timApp.note.notes import get_notes, UserNoteAndUser
+from timApp.plugin.pluginControl import pluginify
 from timApp.readmark.readings import get_common_readings, get_read_expiry_condition, has_anything_read
+from timApp.readmark.readmarkcollection import ReadMarkCollection
 from timApp.readmark.readparagraph import ReadParagraph
+from timApp.user.user import User, check_rights
 from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
 
@@ -33,45 +38,44 @@ class PostProcessResult:
 
 
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??
-def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=False, edit_window=False,
-                      load_plugin_states=True) -> PostProcessResult:
+def post_process_pars(
+        doc: Document,
+        pars: List[DocParagraph],
+        user_ctx: UserContext,
+        view_ctx: ViewContext,
+        sanitize: bool = True,
+        do_lazy: bool = False,
+        load_plugin_states: bool = True,
+) -> PostProcessResult:
     taketime("start pluginify")
-    presult = pluginify(
-        doc,
-        pars,
-        user,
-        sanitize=sanitize,
-        do_lazy=do_lazy,
-        edit_window=edit_window,
-        load_states=load_plugin_states,
-    )
+    presult = pluginify(doc, pars, user_ctx, view_ctx, sanitize=sanitize, do_lazy=do_lazy, load_states=load_plugin_states)
     final_pars = presult.pars
     taketime("end pluginify")
     should_mark_all_read = False
     settings = doc.get_settings()
-    macroinfo = settings.get_macroinfo()
-    user_macros = macroinfo.get_user_specific_macros(user)
-    macros = macroinfo.get_macros_with_user_specific(user)
+    macroinfo = settings.get_macroinfo(view_ctx, user_ctx)
+    user_macros = get_user_specific_macros(user_ctx)
+    macros = macroinfo.get_macros()
     delimiter = macroinfo.get_macro_delimiter()
     doc_nomacros = settings.nomacros()
+
     # Process user-specific macros.
-    # We define the environment here because it stays the same for each paragraph. This improves performance.
-    env = create_environment(delimiter)
+    env = macroinfo.jinja_env
     for p in final_pars:  # update only user specific, because others are done in a cache pahes
         if not p.is_plugin() and not p.is_setting():  # TODO: Think if plugins still needs to expand macros?
             # p.insert_rnds(0)
             no_macros = DocParagraph.is_no_macros(p.get_attrs(), doc_nomacros)
             if not no_macros:
-                f_dict = p.get_final_dict()
-                f_dict['html'] = expand_macros(f_dict['html'], user_macros, settings, delimiter, env=env,
+                f_dict = p.get_final_dict(view_ctx)
+                f_dict['html'] = expand_macros(f_dict['html'], user_macros, settings, env=env,
                                                ignore_errors=True)
 
     # taketime("macros done")
 
-    if edit_window:
+    if view_ctx.preview:
         # Skip readings and notes
         return PostProcessResult(
-            texts=process_areas(settings, final_pars, macros, delimiter, env),
+            texts=process_areas(settings, final_pars, macros, delimiter, env, view_ctx),
             js_paths=presult.js_paths,
             css_paths=presult.css_paths,
             should_mark_all_read=should_mark_all_read
@@ -80,7 +84,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     if settings.show_authors():
         authors = doc.get_changelog(-1).get_authorinfo(pars)
         for p in final_pars:
-            f_dict = p.get_final_dict()
+            f_dict = p.get_final_dict(view_ctx)
             f_dict['authorinfo'] = authors.get(f_dict['id'])
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
     pars_dict: DefaultDict[Tuple[str, int], List[dict]] = defaultdict(list)
@@ -89,11 +93,11 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     if not has_edit_access(docinfo):
         for p in final_pars:
             if p.is_question():
-                d = p.get_final_dict()
+                d = p.get_final_dict(view_ctx)
                 d['html'] = ' '
                 d['cls'] = 'hidden'
             if p.is_setting():
-                d = p.get_final_dict()
+                d = p.get_final_dict(view_ctx)
                 d['html'] = ' '
     else:
         ids = doc.get_par_ids()
@@ -103,11 +107,11 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         if not show_settings_yaml:
             for p in final_pars:
                 if p.is_setting():
-                    d = p.get_final_dict()
+                    d = p.get_final_dict(view_ctx)
                     d['html'] = ' '
 
     for p in final_pars:
-        d = p.get_final_dict()
+        d = p.get_final_dict(view_ctx)
         if p.original and not p.original.is_translation():
             key = d.get('ref_id'), d.get('ref_doc_id')
             pars_dict[key].append(d)
@@ -116,7 +120,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         pars_dict[key].append(d)
 
     for p in final_pars:
-        d = p.get_final_dict()
+        d = p.get_final_dict(view_ctx)
         d['status'] = ReadMarkCollection()
         d['notes'] = []
     # taketime("pars done")
@@ -129,7 +133,7 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
         usergroup_ids = get_session_usergroup_ids()
 
         # If we're in exam mode and we're visiting the page for the first time, mark everything read
-        if should_auto_read(doc, usergroup_ids, user):
+        if should_auto_read(doc, usergroup_ids, user_ctx.user):
             should_mark_all_read = True
             readings = []
         else:
@@ -175,20 +179,27 @@ def post_process_pars(doc: Document, pars, user: User, sanitize=True, do_lazy=Fa
     # taketime("notes mixed")
 
     return PostProcessResult(
-        texts=process_areas(settings, final_pars, macros, delimiter, env),
+        texts=process_areas(settings, final_pars, macros, delimiter, env, view_ctx),
         js_paths=presult.js_paths,
         css_paths=presult.css_paths,
         should_mark_all_read=should_mark_all_read
     )
 
 
-def process_areas(settings, pars: List[DocParagraph], macros, delimiter, env) -> List[Dict]:
-    class Area:
+@dataclass
+class Area:
+    index: int
+    attrs: Dict
 
-        def __init__(self, index, area_attrs):
-            self.index = index
-            self.attrs = area_attrs
 
+def process_areas(
+        settings: DocSettings,
+        pars: List[DocParagraph],
+        macros,
+        delimiter,
+        env: SandboxedEnvironment,
+        view_ctx: ViewContext,
+) -> List[Dict]:
     now = pytz.utc.localize(datetime.now())
     min_time = pytz.utc.localize(datetime.min)
     max_time = pytz.utc.localize(datetime.max)
@@ -206,7 +217,7 @@ def process_areas(settings, pars: List[DocParagraph], macros, delimiter, env) ->
         return 0
 
     for p in pars:
-        html_par = p.get_final_dict()
+        html_par = p.get_final_dict(view_ctx)
         new_areas = current_areas.copy()
         cur_area = None
         area_start = p.get_attr('area')
@@ -264,7 +275,7 @@ def process_areas(settings, pars: List[DocParagraph], macros, delimiter, env) ->
                         vis = True
                     else:
                         if str(vis).find(delimiter) >= 0:
-                            vis = expand_macros(vis, macros, settings, delimiter, env=env, ignore_errors=True)
+                            vis = expand_macros(vis, macros, settings, env=env, ignore_errors=True)
                         vis = get_boolean(vis, True)
                         cur_area.attrs['visible'] = vis
                     if vis:
@@ -278,8 +289,9 @@ def process_areas(settings, pars: List[DocParagraph], macros, delimiter, env) ->
                                 if alttext is None:
                                     alttext = "This area can only be viewed from <STARTTIME> to <ENDTIME>"
                                 alttext = alttext.replace('<STARTTIME>', str(starttime)).replace('<ENDTIME>', str(endtime))
-                                new_pars.append(DocParagraph.create(doc=Document(html_par['doc_id']), par_id=html_par['id'],
-                                                                    md=alttext).get_final_dict())
+                                new_pars.append(
+                                    DocParagraph.create(doc=Document(html_par['doc_id']), par_id=html_par['id'],
+                                                        md=alttext).get_final_dict(view_ctx))
 
         else:
             # Just a normal paragraph
@@ -289,7 +301,7 @@ def process_areas(settings, pars: List[DocParagraph], macros, delimiter, env) ->
                 pass
             else:
                 if str(vis).find(delimiter) >= 0:
-                    vis = expand_macros(vis, macros, settings, delimiter, env=env, ignore_errors=True)
+                    vis = expand_macros(vis, macros, settings, env=env, ignore_errors=True)
                 vis = get_boolean(vis, True)
                 if not vis:  #  TODO: if in preview, put this always True
                     access = False  # TODO: this should be added as some kind of small par that is visible in edit-mode

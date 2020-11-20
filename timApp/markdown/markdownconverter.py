@@ -1,33 +1,31 @@
 """Provides functions for converting markdown-formatted text to HTML."""
-import re
+from __future__ import annotations
 
 import datetime
+from dataclasses import dataclass
 from datetime import date
-from typing import Optional, Dict
+from typing import Optional, Dict, TYPE_CHECKING, List, Iterable
 
-from flask import g
 from jinja2 import TemplateSyntaxError
 from jinja2.sandbox import SandboxedEnvironment
 from lxml import html, etree
 
+from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.markdown.htmlSanitize import sanitize_html
 from timApp.util.utils import get_error_html, title_to_id
 from timApp.util.utils import widen_fields
 
+if TYPE_CHECKING:
+    from timApp.user.user import User
+    from timApp.document.docparagraph import DocParagraph
+    from timApp.document.docsettings import DocSettings
 
-# noinspection PyUnusedLocal
-def has_macros(text: str, macros, macro_delimiter: Optional[str] = None):
-    return macro_delimiter and (macro_delimiter in text or '{!!!' in text or '{%' in text)
 
+def has_macros(text: str, env: SandboxedEnvironment):
+    return env.variable_start_string in text or env.comment_start_string in text or env.block_start_string in text
 
-def expand_macros_regex(text: str, macros, macro_delimiter=None):
-    if not has_macros(text, macros, macro_delimiter):
-        return text
-    return re.sub(f'{re.escape(macro_delimiter)}([a-zA-Z]+){re.escape(macro_delimiter)}',
-                  lambda match: macros.get(match.group(1), 'UNKNOWN MACRO: ' + match.group(1)),
-                  text)
 
 # ------------------------ Jinja filters -------------------------------------------------------------------
 # Ks. https://tim.jyu.fi/view/tim/ohjeita/satunnaistus#timfiltterit
@@ -142,9 +140,11 @@ def Pz(i):
     return ""
 
 
+@dataclass
 class Belongs:
-    def __init__(self, user):
-        self.user = user
+    user: User
+
+    def __post_init__(self):
         self.cache = {}
 
     def belongs_to_group(self, groupname: str):
@@ -154,24 +154,6 @@ class Belongs:
         b = any(gr.name == groupname for gr in self.user.groups)
         self.cache[groupname] = b
         return b
-
-
-def isview(ret_val, mode=None):
-    if not mode:
-        try:
-            v = g.viewmode  # True if in View
-        except:
-            return True  # not ret_val  # like in preview
-        if v:
-            return ret_val
-        return not ret_val
-    try:
-        r = g.route
-        if re.match(mode, r):
-            return ret_val
-        return not ret_val
-    except:
-        return False
 
 
 def week_to_date(week_nr, daynr=1, year=None, fmt=None):
@@ -297,23 +279,20 @@ def preinc(v, delta=1):
 # ------------------------ Jinja filters end ---------------------------------------------------------------
 
 
-def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str] = None,
-                  env=None, ignore_errors: bool = False):
+def expand_macros(
+        text: str,
+        macros,
+        settings: Optional[DocSettings],
+        env: SandboxedEnvironment,
+        ignore_errors: bool = False,
+):
     # return text  # comment out when want to take time if this slows things
     charmacros = settings.get_charmacros() if settings else None
     if charmacros:
         for cm_key, cm_value in charmacros.items():
             text = text.replace(cm_key, cm_value)
-    if not has_macros(text, macros, macro_delimiter):
+    if not has_macros(text, env):
         return text
-    if env is None:
-        # noinspection PyBroadException
-        try:
-            env = g.env
-        except:
-            pass
-        if env is None:
-            env = create_environment(macro_delimiter)
     try:
         globalmacros = settings.get_globalmacros() if settings else None
         if globalmacros:
@@ -335,9 +314,6 @@ def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str] = 
                 local_macros_yaml = text[beg+len(startstr):end]
                 local_macros = YamlBlock.from_markdown(local_macros_yaml).values
                 macros = {**macros, **local_macros}
-        guser = g.get("user")
-        if guser:
-            macros.update({'loggedUsername': guser.name})
         conv = env.from_string(text).render(macros)
         return conv
     except TemplateSyntaxError as e:
@@ -350,7 +326,25 @@ def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str] = 
         return text
 
 
-def create_environment(macro_delimiter: str):
+tim_filters = {
+    'Pz': Pz,
+    'gfields': genfields,
+    'gfrange': gfrange,
+    'srange': srange,
+    'w2date': week_to_date,
+    'm2w': month_to_week,
+    'w2text': week_to_text,
+    'fmtdate': fmt_date,
+    'preinc': preinc,
+    'postinc': postinc,
+}
+
+
+def create_environment(
+        macro_delimiter: str,
+        user: Optional['User'],
+        view_ctx: ViewContext,
+) -> SandboxedEnvironment:
     env = SandboxedEnvironment(
         variable_start_string=macro_delimiter,
         variable_end_string=macro_delimiter,
@@ -361,42 +355,32 @@ def create_environment(macro_delimiter: str):
         lstrip_blocks=True,
         trim_blocks=True,
     )
-    env.filters['Pz'] = Pz
-    env.filters['gfields'] = genfields
-    env.filters['gfrange'] = gfrange
-    env.filters['srange'] = srange
-    env.filters['isview'] = isview
-    env.filters['w2date'] = week_to_date
-    env.filters['m2w'] = month_to_week
-    env.filters['w2text'] = week_to_text
-    env.filters['fmtdate'] = fmt_date
-    env.filters['preinc'] = preinc
-    env.filters['postinc'] = postinc
+    env.filters.update(tim_filters)
+    env.filters['isview'] = view_ctx.isview
 
-    # During some markdown tests, there is no request context and therefore no g object.
-    try:
-        env.filters['belongs'] = Belongs(g.user).belongs_to_group
-        g.env = env
-    except (RuntimeError, AttributeError):
-        pass
+    if user:
+        env.filters['belongs'] = Belongs(user).belongs_to_group
     return env
 
 
 def md_to_html(text: str,
                sanitize: bool = True,
-               macros: Optional[Dict[str, object]] = None,
-               macro_delimiter: Optional[str] = None) -> str:
+               macros: Optional[Dict[str, object]] = None) -> str:
     """Converts the specified markdown text to HTML.
 
     :param macros: The macros to use.
-    :param macro_delimiter: The macro delimiter.
     :param sanitize: Whether the HTML should be sanitized. Default is True.
     :param text: The text to be converted.
     :return: A HTML string.
 
     """
 
-    text = expand_macros(text, macros, None, macro_delimiter)  # TODO should provide doc instead of None
+    text = expand_macros(
+        text,
+        macros,
+        settings=None,
+        env=create_environment('%%', user=None, view_ctx=default_view_ctx),
+    )
 
     raw = call_dumbo([text])
 
@@ -406,30 +390,27 @@ def md_to_html(text: str,
         return raw[0]
 
 
-def par_list_to_html_list(pars,
-                          settings,
-                          auto_macros=None
-                          ):
+def par_list_to_html_list(
+        pars: List[DocParagraph],
+        settings: DocSettings,
+        view_ctx: ViewContext,
+        auto_macros: Optional[Iterable[dict]] = None,
+):
     """Converts the specified list of DocParagraphs to an HTML list.
 
+    :param view_ctx:
     :return: A list of HTML strings.
-    :type auto_macros: list(dict)
-    :type settings: DocSettings
     :param settings: The document settings.
     :param auto_macros: Currently a list(dict) containing the heading information ('h': dict(int,int) of heading counts
            and 'headings': dict(str,int) of so-far used headings and their counts).
-    :type pars: list[DocParagraph]
     :param pars: The list of DocParagraphs to be converted.
 
     """
 
-    macroinfo = settings.get_macroinfo()
+    macroinfo = settings.get_macroinfo(view_ctx)
     # User-specific macros (such as %%username%% and %%realname%%) cannot be replaced here because the result will go
     # to global cache. We will replace them later (in post_process_pars).
     macroinfo.preserve_user_macros = True
-    # if settings.nomacros():
-    #    texts = [p.get_markdown() for p in pars]
-    # else:
     dumbo_opts = settings.get_dumbo_options()
     texts = [p.get_expanded_markdown(macroinfo) if not p.has_dumbo_options() else {
         'content': p.get_expanded_markdown(macroinfo),

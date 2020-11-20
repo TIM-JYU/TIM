@@ -19,6 +19,8 @@ from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_answers_query
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.document.docinfo import DocInfo
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import ViewContext
 from timApp.plugin.plugin import find_task_ids, CachedPluginFinder
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
@@ -137,6 +139,7 @@ def get_fields_and_users(
         requested_groups: RequestedGroups,
         d: DocInfo,
         current_user: User,
+        view_ctx: ViewContext,
         autoalias: bool = False,
         add_missing_fields: bool = False,
         access_option: GetFieldsAccess = GetFieldsAccess.RequireTeacher,
@@ -145,6 +148,7 @@ def get_fields_and_users(
 ) -> Tuple[List[UserFieldObj], Dict[str, str], List[str], Optional[List[UserGroup]]]:
     """
     Return fielddata, aliases, field_names
+    :param view_ctx: The view context.
     :param user_filter: Additional filter to use.
     :param member_filter_type: Whether to use all, current or deleted users in groups.
     :param u_fields: list of fields to be used
@@ -154,7 +158,6 @@ def get_fields_and_users(
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
     :param add_missing_fields: return estimated field even if it wasn't given previously
     :param access_option: can be used also for non techers if othre rights matches
-    :param user_groups: user groups to always include in the result. NOTE: this bypasses view access checks!
     :return: fielddata, aliases, field_names
     """
     allow_non_teacher = False
@@ -248,7 +251,7 @@ def get_fields_and_users(
             abort(403, "Sorry, you don't have permission to use this resource.")
         doc_map[did] = dib
 
-    cpf = CachedPluginFinder(doc_map=doc_map, curr_user=current_user)
+    cpf = CachedPluginFinder(doc_map=doc_map, curr_user=UserContext.from_one_user(current_user), view_ctx=view_ctx)
     if add_missing_fields:
         for task in tasks_without_fields:
             plug = cpf.find(task)
@@ -268,11 +271,14 @@ def get_fields_and_users(
     if user_filter is not None:
         group_filter = group_filter & user_filter
     join_relation = member_filter_relation_map[member_filter_type]
-    tally_field_values = get_tally_field_values(d,
-                                                doc_map,
-                                                group_filter if not requested_groups.include_all_answered else None,
-                                                join_relation,
-                                                tally_fields)
+    tally_field_values = get_tally_field_values(
+        d,
+        doc_map,
+        group_filter if not requested_groups.include_all_answered else None,
+        join_relation,
+        tally_fields,
+        view_ctx,
+    )
     sub = []
     # For some reason, with 7 or more fields, executing the following query is very slow in PostgreSQL 9.5.
     # That's why we split the list of task ids in chunks of size 6 and merge the results.
@@ -409,6 +415,7 @@ def get_tally_field_values(
         group_filter,
         join_relation,
         tally_fields: List[Tuple[TallyField, Optional[str]]],
+        view_ctx: ViewContext,
 ):
     tally_field_values: DefaultDict[int, List[Tuple[float, str]]] = defaultdict(list)
     task_id_cache = {}
@@ -420,8 +427,8 @@ def get_tally_field_values(
         tids = task_id_cache.get(doc.doc_id)
         if tids is None:
             doc.insert_preamble_pars()
-            pars = doc.get_dereferenced_paragraphs()
-            tids = find_task_ids(pars, check_access=False)[0]
+            pars = doc.get_dereferenced_paragraphs(view_ctx)
+            tids = find_task_ids(pars, view_ctx, check_access=False)[0]
             task_id_cache[doc.doc_id] = tids
         ans_filter = true()
         if g.datetime_start:

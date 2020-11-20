@@ -1,8 +1,9 @@
 from textwrap import dedent
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from flask import session, g, request, current_app
 
+from timApp.document.usercontext import UserContext
 from timApp.user.user import User
 
 
@@ -28,6 +29,11 @@ def get_current_user_object() -> User:
             ./up.sh""").strip())
         g.user = u
     return g.user
+
+
+def user_context_with_logged_in(u: Optional[User]) -> UserContext:
+    curr = get_current_user_object()
+    return UserContext(user=u or curr, logged_user=curr)
 
 
 def get_other_users() -> Dict[str, Dict[str, str]]:

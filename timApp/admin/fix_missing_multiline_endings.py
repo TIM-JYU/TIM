@@ -3,18 +3,20 @@ This script adds any missing ones.
 """
 from yaml import YAMLError
 
-from timApp.document.yamlblock import YamlBlock, BlockEndMissingError, get_code_block_str
 from timApp.admin.util import DryrunnableArguments, enum_pars, process_items, create_argparser, get_url_for_match, \
     print_match
 from timApp.document.docinfo import DocInfo
+from timApp.document.viewcontext import default_view_ctx
+from timApp.document.yamlblock import YamlBlock, BlockEndMissingError, get_code_block_str
 
 
 def fix_multiline_endings(doc: DocInfo, args: DryrunnableArguments) -> int:
     found = 0
     for d, p in enum_pars(doc):
         if (p.is_setting() and not p.is_reference()) or p.is_plugin():
+            mi = doc.document.get_settings().get_macroinfo(default_view_ctx)
             try:
-                YamlBlock.from_markdown(p.get_expanded_markdown())
+                YamlBlock.from_markdown(p.get_expanded_markdown(mi))
             except BlockEndMissingError as e:
                 new_md = p.get_markdown().rstrip()
                 cb = get_code_block_str(new_md)
@@ -28,7 +30,7 @@ def fix_multiline_endings(doc: DocInfo, args: DryrunnableArguments) -> int:
                 new_md += '\n' + e.end_str + '\n' + cb
                 p.set_markdown(new_md)
                 try:
-                    YamlBlock.from_markdown(p.get_expanded_markdown())
+                    YamlBlock.from_markdown(p.get_expanded_markdown(mi))
                 except YAMLError:
                     print(f'Unable to fix YAML for {get_url_for_match(args, d, p)}')
                     continue

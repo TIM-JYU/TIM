@@ -229,7 +229,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
     notifications_alt = db.relationship('Notification')
 
-    groups = db.relationship(
+    groups: List[UserGroup] = db.relationship(
         UserGroup,
         UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,

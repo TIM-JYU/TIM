@@ -10,7 +10,7 @@ def fix_settings_references(d: DocInfo, args: DryrunnableArguments) -> int:
     for _, p in enum_pars(d):
         if p.is_reference() and not p.is_translation():
             try:
-                ref = p.get_referenced_pars(set_html=False)[0]
+                ref = p.get_referenced_pars()[0]
             except InvalidReferenceException:
                 continue
             else:

@@ -7,6 +7,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.exceptions import ValidationException
 from timApp.document.version import Version
+from timApp.document.viewcontext import ViewRoute, viewroute_from_str
 from timApp.util.flask.requesthelper import verify_json_params
 
 
@@ -21,7 +22,7 @@ class EditRequest:
     preview: bool = False
     forced_classes: List[str] = field(default_factory=list)
     mark_translated: Optional[bool] = None
-    viewname: Optional[str] = None
+    viewname: Optional[ViewRoute] = None
     old_doc_version: Version = field(init=False)
     editor_pars: Optional[List[DocParagraph]] = field(init=False)
     original_par: Optional[DocParagraph] = field(init=False)
@@ -96,7 +97,7 @@ class EditRequest:
             preview=preview,
             forced_classes=forced_classes or [],
             mark_translated=mark_translated,
-            viewname=view,
+            viewname=viewroute_from_str(view) if view else None,
         )
 
 

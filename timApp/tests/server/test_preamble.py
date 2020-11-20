@@ -191,8 +191,10 @@ class PreambleTest3(PreambleTestBase):
         p2tpars[1].save()
         with patch.object(DocParagraph, 'get', wraps=DocParagraph.get) as m:  # type: Mock
             e = self.get(dt.url, as_tree=True)
-        self.assertEqual(m.call_count, sum(map(len, (x.document.get_par_ids() for x in (
-            p1, p2, p3, p1t, p2t, d, dt)))) + 1)  # + 1 because of bookmark document
+
+        # + 1 because of bookmark document
+        expected_count = sum(map(len, (x.document.get_par_ids() for x in (p1, p2, p3, p1t, p2t, d, dt)))) + 1
+        self.assertEqual(expected_count, m.call_count)
 
         self.assert_content(e, ['makro a on kissa',
                                 'makro b on mouse',

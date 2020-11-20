@@ -15,11 +15,10 @@ from flask import session
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
-from timApp.auth.accesshelper import verify_ownership, get_doc_or_abort
+from timApp.auth.accesshelper import verify_ownership, get_doc_or_abort, has_ownership
 from timApp.auth.login import log_in_as_anonymous
 from timApp.auth.sessioninfo import get_current_user_id, logged_in, get_current_user_object
 from timApp.document.docentry import DocEntry
-from timApp.document.post_process import has_ownership
 from timApp.document.randutils import hashfunc
 from timApp.lecture.askedjson import get_asked_json_by_hash, AskedJson
 from timApp.lecture.askedquestion import AskedQuestion, get_asked_question, user_activity_lock

@@ -8,7 +8,7 @@ from typing import List, Optional, Any, Dict, Union
 import requests
 from flask import current_app
 
-from timApp.document.document import Document
+from timApp.document.docsettings import DocSettings
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.markdown.dumboclient import call_dumbo, DumboOptions
 from timApp.plugin.plugin import Plugin, AUTOMD
@@ -164,11 +164,11 @@ def do_request(
 plugin_request_fn = do_request
 
 
-def render_plugin(doc: Document, plugin: Plugin, output_format: PluginOutputFormat) -> str:
+def render_plugin(docsettings: DocSettings, plugin: Plugin, output_format: PluginOutputFormat) -> str:
     plugin_data = plugin.render_json()
-    if doc.get_settings().plugin_md():
+    if docsettings.plugin_md():
         convert_md([plugin_data],
-                   options=plugin.par.get_dumbo_options(base_opts=doc.get_settings().get_dumbo_options()),
+                   options=plugin.par.get_dumbo_options(base_opts=docsettings.get_dumbo_options()),
                    outtype='md' if output_format == PluginOutputFormat.HTML else 'latex')
     return call_plugin_generic(plugin.type,
                                'post',
@@ -273,10 +273,10 @@ def convert_tex_mock(plugin_data: Union[dict, list]) -> None:
         dict_to_dumbo(pm)
 
 
-def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
+def render_plugin_multi(docsettings: DocSettings, plugin: str, plugin_data: List[Plugin],
                         plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML,
                         default_auto_md: bool = False) -> str:
-    opts = doc.get_settings().get_dumbo_options()
+    opts = docsettings.get_dumbo_options()
     plugin_dumbo_opts = [p.par.get_dumbo_options(base_opts=opts) for p in plugin_data]
     plugin_dicts = [p.render_json() for p in plugin_data]
     plugin_reg = get_plugin(plugin)
@@ -297,7 +297,7 @@ def render_plugin_multi(doc: Document, plugin: str, plugin_data: List[Plugin],
             else:
                 raise PluginException("automd for non-inner plugins not implemented yet") # TODO implement
 
-    if doc.get_settings().plugin_md():
+    if docsettings.plugin_md():
         convert_md(plugin_dicts,
                    options=opts,
                    plugin_opts=plugin_dumbo_opts,

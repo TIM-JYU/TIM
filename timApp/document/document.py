@@ -26,21 +26,14 @@ from timApp.document.exceptions import DocExistsError, ValidationException
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.validationresult import ValidationResult
 from timApp.document.version import Version
+from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.timdb.exceptions import TimDbException, PreambleException, InvalidReferenceException
 from timApp.timtypes import DocInfoType
 from timApp.util.utils import get_error_html, trim_markdown, cache_folder_path
 
 if TYPE_CHECKING:
-    from timApp.user.user import User
     from timApp.document.docinfo import DocInfo
-
-viewmode_routes = {
-    'view',
-    'lecture',
-    'slide',
-    'velp',
-}
 
 
 def get_duplicate_id_msg(conflicting_ids):
@@ -76,7 +69,7 @@ class Document:
         # Cache for the original document.
         self.source_doc: Optional['Document'] = None
         # Cache for document settings.
-        self.settings: Optional[DocSettings] = None
+        self.settings_cache: Optional[DocSettings] = None
         # The corresponding DocInfo object.
         self.docinfo: DocInfoType = None
         # Cache for own settings; see get_own_settings
@@ -91,11 +84,6 @@ class Document:
         self.par_map = None
         # List of preamble pars if they have been inserted
         self.preamble_pars = None
-
-        self.route = ''
-
-    def is_viewmode(self):
-        return self.route in viewmode_routes
 
     @classmethod
     def get_documents_dir(cls) -> Path:
@@ -246,7 +234,7 @@ class Document:
                     self.insert_paragraph_obj(new_par, insert_after_id=last_settings_par.get_id())
 
     def get_tasks(self) -> Generator[DocParagraph, None, None]:
-        for p in self.get_dereferenced_paragraphs():
+        for p in self.get_dereferenced_paragraphs(default_view_ctx):
             if p.is_task():
                 yield p
 
@@ -260,20 +248,18 @@ class Document:
             self.own_settings = resolve_settings_for_pars(self.get_settings_pars())
         return self.own_settings
 
-    def get_settings(self, user: Optional['User']=None, use_preamble=True) -> DocSettings:
-        if self.settings is not None:
-            self.settings.user = user
-            return self.settings
+    def get_settings(self) -> DocSettings:
+        cached = self.settings_cache
+        if cached:
+            return cached
         settings_block = self.get_own_settings()
         final_settings = YamlBlock()
-        if use_preamble:
-            preambles = self.get_docinfo().get_preamble_docs()
-            for p in preambles:
-                final_settings = final_settings.merge_with(resolve_settings_for_pars(p.document.get_settings_pars()))
+        preambles = self.get_docinfo().get_preamble_docs()
+        for p in preambles:
+            final_settings = final_settings.merge_with(resolve_settings_for_pars(p.document.get_settings_pars()))
         final_settings = final_settings.merge_with(settings_block)
         settings = DocSettings(self, settings_dict=final_settings)
-        settings.user = user
-        self.settings = settings
+        self.settings_cache = settings
         return settings
 
     def create(self, ignore_exists: bool = False):
@@ -438,7 +424,7 @@ class Document:
         self.par_ids = None
         self.par_hashes = None
         self.source_doc = None
-        self.settings = None
+        self.settings_cache = {}
         self.own_settings = None
         self.single_par_cache = {}
         self.ref_doc_cache = {}
@@ -452,7 +438,7 @@ class Document:
         for p in pars:
             if p.is_reference():
                 try:
-                    referenced_pars = p.get_referenced_pars(set_html=False)
+                    referenced_pars = p.get_referenced_pars()
                 except TimDbException:
                     pass
                 else:
@@ -687,7 +673,7 @@ class Document:
         self.__update_metadata([p], old_ver, new_ver)
         return p
 
-    def parwise_diff(self, other_doc: 'Document', check_html: bool=False):
+    def parwise_diff(self, other_doc: 'Document', view_ctx: Optional[ViewContext] = None):
         if self.get_version() == other_doc.get_version():
             return
         old_pars = self.get_paragraphs()
@@ -696,9 +682,9 @@ class Document:
         new_ids = [par.get_id() for par in new_pars]
         s = SequenceMatcher(None, old_ids, new_ids)
         opcodes = s.get_opcodes()
-        if check_html:
-            DocParagraph.preload_htmls(old_pars, self.get_settings(), persist=False)
-            DocParagraph.preload_htmls(new_pars, other_doc.get_settings(), persist=False)
+        if view_ctx:
+            DocParagraph.preload_htmls(old_pars, self.get_settings(), view_ctx, persist=False)
+            DocParagraph.preload_htmls(new_pars, other_doc.get_settings(), view_ctx, persist=False)
         for tag, i1, i2, j1, j2 in opcodes:
             if tag == 'insert':
                 yield {'type': tag, 'after_id': old_ids[i2 - 1] if i2 > 0 else None, 'content': new_pars[j1:j2]}
@@ -711,7 +697,7 @@ class Document:
                     if not old.is_same_as(new):
                         yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
                     # Skip references because they have not been dereferenced and no HTML is available.
-                    elif check_html and not old.is_reference() and not old.is_same_as_html(new):
+                    elif view_ctx and not old.is_reference() and not old.is_same_as_html(new, view_ctx):
                         yield {'type': 'change', 'id': old.get_id(), 'content': [new]}
 
     def update_section(self, text: str, par_id_first: str, par_id_last: str) -> Tuple[str, str, DocumentEditResult]:
@@ -834,13 +820,13 @@ class Document:
             before_i += 1
         return before_i
 
-    def get_index(self) -> List[Tuple]:
+    def get_index(self, view_ctx: ViewContext) -> List[Tuple]:
         pars = [par for par in DocParagraphIter(self)]
-        DocParagraph.preload_htmls(pars, self.get_settings())
-        pars = dereference_pars(pars, context_doc=self)
+        DocParagraph.preload_htmls(pars, self.get_settings(), view_ctx)
+        pars = dereference_pars(pars, context_doc=self, view_ctx=view_ctx)
 
         # Skip plugins
-        html_list = [par.get_html(from_preview=False) for par in pars if not par.is_dynamic()]
+        html_list = [par.get_html(view_ctx, no_persist=False) for par in pars if not par.is_dynamic()]
         return get_index_from_html_list(html_list)
 
     def get_changelog(self, max_entries: int = 100) -> Changelog:
@@ -914,7 +900,7 @@ class Document:
         for p in source:
             if p.is_reference():
                 try:
-                    referenced_pars = p.get_referenced_pars(set_html=False)
+                    referenced_pars = p.get_referenced_pars()
                 except TimDbException:
                     pass
                 else:
@@ -955,8 +941,8 @@ class Document:
             self.insert_preamble_pars()
         return self.par_cache
 
-    def get_dereferenced_paragraphs(self) -> List[DocParagraph]:
-        return dereference_pars(self.get_paragraphs(), context_doc=self)
+    def get_dereferenced_paragraphs(self, view_ctx: ViewContext) -> List[DocParagraph]:
+        return dereference_pars(self.get_paragraphs(), context_doc=self, view_ctx=view_ctx)
 
     def get_closest_paragraph_title(self, par_id: Optional[str]):
         last_title = None
@@ -1094,7 +1080,7 @@ class Document:
         self.par_ids = None
         self.par_hashes = None
         self.source_doc = None
-        self.settings = None
+        self.settings_cache = {}
         self.ref_doc_cache = {}
         self.single_par_cache = {}
 
@@ -1218,9 +1204,10 @@ def get_index_from_html_list(html_table) -> List[Tuple]:
     return index
 
 
-def dereference_pars(pars: Iterable[DocParagraph], context_doc: Document) -> List[DocParagraph]:
+def dereference_pars(pars: Iterable[DocParagraph], context_doc: Document, view_ctx: Optional[ViewContext]) -> List[DocParagraph]:
     """Resolves references in the given paragraphs.
 
+    :param view_ctx:
     :param pars: The DocParagraphs to be processed.
     :param context_doc: The document being processing.
 
@@ -1230,7 +1217,7 @@ def dereference_pars(pars: Iterable[DocParagraph], context_doc: Document) -> Lis
     for par in pars:
         if par.is_reference():
             try:
-                new_pars += par.get_referenced_pars()
+                new_pars += par.get_referenced_pars(view_ctx)
             except TimDbException as e:
                 err_par = DocParagraph.create(
                     par.doc,

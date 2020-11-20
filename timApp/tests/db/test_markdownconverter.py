@@ -3,14 +3,15 @@ import unittest
 
 import timApp.markdown.dumboclient
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.viewcontext import default_view_ctx
 from timApp.markdown.markdownconverter import md_to_html, par_list_to_html_list
 from timApp.tests.db.timdbtest import TimDbTest
 
 
 class MarkdownConverterTest(TimDbTest):
 
-    def check_conversion(self, html, md, macros=None, delimiter=None):
-        self.assertEqual(html, md_to_html(md, sanitize=True, macros=macros, macro_delimiter=delimiter))
+    def check_conversion(self, html, md, macros=None):
+        self.assertEqual(html, md_to_html(md, sanitize=True, macros=macros))
 
     def test_markdown(self):
         cases = [('', ''),
@@ -28,14 +29,14 @@ class MarkdownConverterTest(TimDbTest):
         d = self.create_doc()
         self.assertListEqual([html for html, _ in cases],
                              par_list_to_html_list([DocParagraph.create(d.document, md=md) for _, md in cases],
-                                                   settings=d.document.get_settings()))
+                                                   settings=d.document.get_settings(), view_ctx=default_view_ctx))
 
         macrotests = [('<p>hello world!</p>',
                        'hello %%somemacro%%!',
                        {'somemacro': 'world'})]
 
         for html, md, macros in macrotests:
-            self.check_conversion(html, md, macros, delimiter='%%')
+            self.check_conversion(html, md, macros)
 
     def test_rst(self):
         d = self.create_doc(initial_par="""
@@ -46,7 +47,7 @@ input_format: markdown
         """)
         p = d.document.get_paragraphs()[1]
         self.assertEqual(['<p><img src="images/hi.png" alt="image" /></p>'],
-                         par_list_to_html_list([p], settings=d.document.get_settings()))
+                         par_list_to_html_list([p], settings=d.document.get_settings(), view_ctx=default_view_ctx))
 
         d = self.create_doc(initial_par="""
 #- {settings=""}
@@ -59,7 +60,7 @@ input_format: rst
         p = d.document.get_paragraphs()[1:]
         self.assertEqual(['<p><img src="images/hi.png" alt="image" /></p>',
                           '<p>.. image:: images/hi.png</p>'],
-                         par_list_to_html_list(p, settings=d.document.get_settings()))
+                         par_list_to_html_list(p, settings=d.document.get_settings(), view_ctx=default_view_ctx))
 
     def test_invalid_inputformat(self):
         d = self.create_doc(initial_par="""
@@ -67,7 +68,7 @@ input_format: rst
 .. image:: images/hi.png""")
         p = d.document.get_paragraphs()[0]
         self.assertEqual(['<p>.. image:: images/hi.png</p>'],
-                         par_list_to_html_list([p], settings=d.document.get_settings()))
+                         par_list_to_html_list([p], settings=d.document.get_settings(), view_ctx=default_view_ctx))
 
     def test_bracketed_spans(self):
         self.assertEqual('<p><span class="testing">test</span></p>', md_to_html('[test]{.testing}'),
@@ -77,7 +78,7 @@ input_format: rst
     def test_unsafe_not_allowed(self):
         self.assertEqual("""
 <p><span class="error">Syntax error in template: access to attribute &#8216;<strong>class</strong>&#8217; of &#8216;str&#8217; object is unsafe.</span></p>
-        """.strip(), md_to_html("""%%''.__class__.__mro__%%""", macro_delimiter='%%', macros={}))
+        """.strip(), md_to_html("""%%''.__class__.__mro__%%""", macros={}))
 
     def test_markup_md_conversion(self):
         self.assertEqual({'test1': 'value1', 'test2': '<em>value2</em>'}, timApp.markdown.dumboclient.call_dumbo(

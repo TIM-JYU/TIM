@@ -3,6 +3,7 @@ from lxml import html
 from timApp.answer.answer import Answer
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
 
@@ -29,7 +30,7 @@ choices:
             """)
         d.document.insert_preamble_pars()
         par = d.document.get_paragraphs()[0]
-        plug = Plugin.from_paragraph(par)
+        plug = Plugin.from_paragraph(par, default_view_ctx)
         self.assertEqual(f'{d.id}.t', plug.task_id.doc_task)
         resp = self.post_answer(plug.type, plug.task_id.extended, [True])
         a: Answer = Answer.query.get(resp['savedNew'])
@@ -77,7 +78,7 @@ choices:
         p = self.create_preamble_for(d)
         p.document.add_paragraph_obj(plugin_doc.document.get_paragraphs()[0].create_reference(p.document))
         plugin_par = plugin_doc.document.get_paragraphs()[0]
-        plug = Plugin.from_paragraph(plugin_par)
+        plug = Plugin.from_paragraph(plugin_par, default_view_ctx)
         d.document.insert_preamble_pars()
         # The plugin is a reference, so it exists only in the original document.
         self.post_answer(plug.type, f'{d.id}.t', [True],

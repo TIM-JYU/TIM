@@ -2,16 +2,14 @@
 import html
 import time
 import traceback
+from dataclasses import dataclass
 from typing import Tuple, Optional, List, Union
 
 import attr
-from dataclasses import dataclass
-
 import sass
 from flask import Blueprint, render_template, make_response, abort
 from flask import current_app
 from flask import flash
-from flask import g
 from flask import redirect
 from flask import request
 from flask import session
@@ -24,16 +22,18 @@ from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, 
     get_rights, has_edit_access, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
-from timApp.lecture.lectureutils import get_current_lecture_info
+from timApp.auth.sessioninfo import get_session_usergroup_ids
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings, get_minimal_visibility_settings
-from timApp.document.document import get_index_from_html_list, dereference_pars, Document, viewmode_routes
-from timApp.document.post_process import post_process_pars
+from timApp.document.document import get_index_from_html_list, dereference_pars, Document
 from timApp.document.hide_names import hide_names_in_teacher
+from timApp.document.post_process import post_process_pars
 from timApp.document.preloadoption import PreloadOption
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import default_view_ctx, viewroute_from_str
 from timApp.folder.folder import Folder
 from timApp.folder.folder_view import try_return_folder
 from timApp.item.block import BlockType
@@ -46,27 +46,26 @@ from timApp.item.scoreboard import get_score_infos_if_enabled
 from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
 from timApp.markdown.htmlSanitize import sanitize_html
-from timApp.markdown.markdownconverter import create_environment
 from timApp.plugin.plugin import find_task_ids
 from timApp.plugin.pluginControl import get_all_reqs
+from timApp.readmark.readings import mark_all_read
 from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException, PreambleException
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
+from timApp.user.settings.theme import Theme, theme_exists
+from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
 from timApp.user.user import User, check_rights
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
 from timApp.user.userutils import DeletedUserException
-from timApp.util.flask.requesthelper import verify_json_params, use_model
-from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules, add_no_cache_headers
+from timApp.util.flask.requesthelper import verify_json_params, use_model, view_ctx_with_urlmacros
+from timApp.util.flask.responsehelper import add_no_cache_headers
+from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
 from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
-from timApp.readmark.readings import mark_all_read
-from timApp.auth.sessioninfo import get_session_usergroup_ids
-from timApp.user.settings.theme import Theme, theme_exists
-from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
 
 DEFAULT_RELEVANCE = 10
 
@@ -307,8 +306,6 @@ def view(item_path, template_name, route="view"):
         return goto_view(item_path, m)
 
     usergroup = m.group
-    g.viewmode = route in viewmode_routes
-    g.route = route
 
     if has_special_chars(item_path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
@@ -323,7 +320,6 @@ def view(item_path, template_name, route="view"):
     doc_info.request = request
 
     edit_mode = m.edit if has_edit_access(doc_info) else None
-    create_environment("%%")  # TODO get macroinf
 
     if m.hide_names is not None:
         session['hide_names'] = m.hide_names
@@ -388,20 +384,17 @@ def view(item_path, template_name, route="view"):
         _, view_range = get_document(doc_info, view_range or r_view_range)
 
     doc = doc_info.document
-    g.doc = doc
-
-    doc.route = route
 
     clear_cache = m.nocache
     hide_answers = m.noanswers
 
     teacher_or_see_answers = route in ('teacher', 'answers')
-    current_user = get_current_user_object() if logged_in() else None
+    current_user = get_current_user_object()
 
-    if current_user and current_user.is_deleted:
+    if current_user.is_deleted:
         raise DeletedUserException()
 
-    doc_settings = doc.get_settings(current_user)
+    doc_settings = doc.get_settings()
 
     # Used later to get partitioning with preambles included correct.
     # Includes either only special class preambles, or all of them if b=0.
@@ -416,28 +409,29 @@ def view(item_path, template_name, route="view"):
             xs = preamble_pars + xs
             preamble_count = len(preamble_pars)
 
+    view_ctx = view_ctx_with_urlmacros(viewroute_from_str(route))
     # Preload htmls here to make dereferencing faster
     try:
-        DocParagraph.preload_htmls(xs, doc_settings, clear_cache)
+        DocParagraph.preload_htmls(xs, doc_settings, view_ctx, clear_cache)
     except TimDbException as e:
         log_error(f'Document {doc_info.id} exception:\n{traceback.format_exc(chain=False)}')
         abort(500, str(e))
     src_doc = doc.get_source_document()
     if src_doc is not None:
-        DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), clear_cache)
+        DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), view_ctx, clear_cache)
 
     rights = doc_info.rights
     word_list = (doc_info.document.get_word_list()
-                 if rights['editable'] and current_user and current_user.get_prefs().use_document_word_list
+                 if rights['editable'] and current_user.get_prefs().use_document_word_list
                  else [])
     # We need to deference paragraphs at this point already to get the correct task ids
-    xs = dereference_pars(xs, context_doc=doc)
+    xs = dereference_pars(xs, context_doc=doc, view_ctx=view_ctx)
     total_points = None
     tasks_done = None
     task_groups = None
     show_task_info = False
     user_list = []
-    task_ids, plugin_count, no_accesses = find_task_ids(xs, check_access=teacher_or_see_answers)
+    task_ids, plugin_count, no_accesses = find_task_ids(xs, view_ctx, check_access=teacher_or_see_answers)
     if teacher_or_see_answers and no_accesses:
         flash('You do not have full access to the following tasks: ' + ', '.join([t.doc_task for t in no_accesses]))
     points_sum_rule = doc_settings.point_sum_rule()
@@ -520,7 +514,11 @@ def view(item_path, template_name, route="view"):
     post_process_result = post_process_pars(
         doc,
         xs,
-        current_list_user or current_user,
+        UserContext(
+            user=current_list_user or current_user,
+            logged_user=current_user,
+        ),
+        view_ctx,
         sanitize=False,
         do_lazy=do_lazy,
         load_plugin_states=not hide_answers,
@@ -536,7 +534,7 @@ def view(item_path, template_name, route="view"):
 
     if hide_names_in_teacher(doc_info) or should_hide_names:
         for entry in user_list:
-            if not current_user or entry['user'].id != current_user.id:
+            if entry['user'].id != current_user.id:
                 entry['user'].hide_name = True
 
     show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']
@@ -606,7 +604,7 @@ def view(item_path, template_name, route="view"):
     override_theme = None
     if document_themes:
         # If the user themes are not overridden, they are merged with document themes
-        user_themes = current_user.get_prefs().themes if current_user else []
+        user_themes = current_user.get_prefs().themes
         if user_themes and not doc_settings.override_user_themes():
             document_themes = list(set().union(document_themes, user_themes))
         override_theme = generate_theme(document_themes, get_default_scss_gen_dir())
@@ -736,7 +734,8 @@ def check_updated_pars(doc_id, major, minor):
     if global_live_updates == 0:  # To stop all live updates
         live_updates = 0
     # taketime("after liveupdates")
-    diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, check_html=True))  # TODO cache this, about <5 ms
+    view_ctx = default_view_ctx
+    diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, view_ctx))  # TODO cache this, about <5 ms
     # taketime("after diffs")
     rights = get_rights(doc)  # about 30-40 ms # TODO: this is the slowest part
     # taketime("after rights")
@@ -745,8 +744,8 @@ def check_updated_pars(doc_id, major, minor):
             post_process_result = post_process_pars(
                 d,
                 diff['content'],
-                get_current_user_object(),
-                edit_window=False,
+                UserContext.from_one_user(get_current_user_object()),
+                view_ctx,
             )
             diff['content'] = {
                 'texts': render_template('partials/paragraphs.html',

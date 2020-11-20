@@ -21,6 +21,8 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import dereference_pars, Document
 from timApp.document.macroinfo import MacroInfo
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import ViewContext
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.markdown.htmlSanitize import sanitize_html
@@ -33,7 +35,6 @@ from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
-from timApp.user.user import User
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFieldsAccess
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex, Range
@@ -123,7 +124,8 @@ class PluginPlacement:
             load_states: bool,
             macroinfo: MacroInfo,
             plugin_opts: PluginRenderOptions,
-            user: User,
+            user_ctx: UserContext,
+            view_ctx: ViewContext,
             settings: DocSettings,
             answer_map: AnswerMap,
             custom_answer: Optional[Answer],
@@ -140,7 +142,7 @@ class PluginPlacement:
         if rnd_seed is None:
             rnd_seed = get_simple_hash_from_par_and_user(
                 block,
-                user,
+                user_ctx,
             )  # TODO: RND_SEED: get users seed for this plugin
             new_seed = True
 
@@ -161,17 +163,17 @@ class PluginPlacement:
         elif plugin_name:
             # We want the expanded markdown here, so can't call Plugin.from_paragraph[_macros] directly.
             macros = macroinfo.get_macros()
-            macro_delimiter = macroinfo.get_macro_delimiter()
-            md = expand_macros_for_plugin(block, macros, macro_delimiter)
+            md = expand_macros_for_plugin(block, macros, macroinfo.jinja_env)
             p_range = 0, len(md)
             try:
                 vals = load_markup_from_yaml(md, settings.global_plugin_attrs(), block.get_attr('plugin'))
-                if plugin_name in WANT_FIELDS and 'fields' in vals and user:
+                if plugin_name in WANT_FIELDS and 'fields' in vals and user_ctx:
                     data, aliases, field_names, _ = get_fields_and_users(
                         vals['fields'],
-                        RequestedGroups([user.get_personal_group()]),
+                        RequestedGroups([user_ctx.user.get_personal_group()]),
                         block.doc.docinfo,
                         get_current_user_object(),
+                        view_ctx,
                         add_missing_fields=True,
                         access_option=GetFieldsAccess.from_bool(True),  # TODO: the user selected from User list
                     )
@@ -309,12 +311,12 @@ class PluginifyResult:
 
 def pluginify(doc: Document,
               pars: List[DocParagraph],
-              user: Optional[User],
+              user_ctx: UserContext,
+              view_ctx: ViewContext,
               custom_answer: Optional[Answer] = None,
               task_id: Optional[TaskId] = None,
               sanitize=True,
               do_lazy=False,
-              edit_window=False,
               load_states=True,
               review=False,
               pluginwrap=PluginWrap.Full,
@@ -326,15 +328,15 @@ def pluginify(doc: Document,
     "Pluginifies" the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
 
+    :param view_ctx: The view context.
     :param doc Document / DocumentVersion object.
     :param pars: A list of DocParagraphs to be processed.
-    :param user: The current user object.
+    :param user_ctx: The user context.
     :param custom_answer: Optional answer that will used as the state for the plugin instead of answer database.
     :param task_id: Optional taskId for plugin which will load it's current state (returned as custom_answer_plugin)
     If custom_answer or task_id is specified, the expression len(blocks) MUST be 1.
     :param sanitize: Whether the blocks should be sanitized before processing.
     :param do_lazy Whether to use lazy versions of the plugins.
-    :param edit_window Whether the method is called from the edit window or not.
     :param output_format: Desired output format (html/md) for plugins
     :param user_print: Whether the plugins should output the original values or user's input (when exporting markdown).
     :param target_format: for MD-print what exact format to use
@@ -343,10 +345,9 @@ def pluginify(doc: Document,
     """
 
     taketime("answ", "start")
-    current_user = get_current_user_object()
     if dereference:
-        pars = dereference_pars(pars, context_doc=doc)
-    if not edit_window and has_edit_access(doc.get_docinfo()):
+        pars = dereference_pars(pars, context_doc=doc, view_ctx=view_ctx)
+    if not view_ctx.preview and has_edit_access(doc.get_docinfo()):
         for p in pars:
             if p.is_translation_out_of_date():
                 p.add_class('troutofdate')
@@ -358,7 +359,7 @@ def pluginify(doc: Document,
     md_out = (output_format == PluginOutputFormat.MD)
     html_out = False if md_out else (output_format == PluginOutputFormat.HTML)
 
-    html_pars = [par.get_final_dict(use_md=md_out) for par in pars]
+    html_pars = [par.get_final_dict(view_ctx, use_md=md_out) for par in pars]
 
     if custom_answer is not None or task_id is not None:
         if len(pars) != 1:
@@ -369,20 +370,19 @@ def pluginify(doc: Document,
     plugin_opts = PluginRenderOptions(
         do_lazy=do_lazy,
         user_print=user_print,
-        preview=edit_window,
+        preview=view_ctx.preview,
         target_format=target_format,
         output_format=output_format,
-        user=user,
+        user_ctx=user_ctx,
         review=review,
         wraptype=pluginwrap,
-        viewmode=doc.is_viewmode(),
-        current_user=current_user,
+        viewmode=view_ctx.viewmode,
     )
 
-    if load_states and custom_answer is None and user is not None:
+    if load_states and custom_answer is None and user_ctx.user.logged_in:
         # TODO: could this return also the plugins, then there is no need for other iteration
-        task_ids, _, _ = find_task_ids(pars, check_access=user != current_user)
-        get_answers(user, task_ids, answer_map)
+        task_ids, _, _ = find_task_ids(pars, view_ctx, check_access=user_ctx.is_different)
+        get_answers(user_ctx.user, task_ids, answer_map)
         # TODO: RND_SEED get all users rand_seeds for this doc's tasks. New table?
 
     placements = {}
@@ -392,7 +392,7 @@ def pluginify(doc: Document,
         is_gamified = block.get_attr('gamification')
         is_gamified = not not is_gamified
         settings = block.doc.get_settings()
-        macroinfo = settings.get_macroinfo(user=user)
+        macroinfo = settings.get_macroinfo(view_ctx, user_ctx=user_ctx)
 
         if is_gamified:
             md = block.get_expanded_markdown(macroinfo=macroinfo)
@@ -407,17 +407,10 @@ def pluginify(doc: Document,
                                                       md + \
                                                       '</pre></div>'
 
-        pplace = PluginPlacement.from_par(
-            block=block,
-            plugin_opts=plugin_opts,
-            answer_map=answer_map,
-            load_states=load_states,
-            macroinfo=macroinfo,
-            settings=settings,
-            user=user,
-            custom_answer=custom_answer,
-            output_format=output_format,
-        )
+        pplace = PluginPlacement.from_par(block=block, load_states=load_states, macroinfo=macroinfo,
+                                          plugin_opts=plugin_opts, user_ctx=user_ctx, view_ctx=view_ctx, settings=settings,
+                                          answer_map=answer_map, custom_answer=custom_answer,
+                                          output_format=output_format)
         if pplace:
             placements[idx] = pplace
             for r, p in pplace.plugins.items():
@@ -438,9 +431,6 @@ def pluginify(doc: Document,
     js_paths = []
     css_paths = []
 
-    if not user:
-        user = current_user
-
     # TODO: Get plugin values before 1st answer query and loop for special cases
     #  (these tasks could have been omitted from 1st answer query)
     glb_task_ids = []
@@ -456,7 +446,7 @@ def pluginify(doc: Document,
             if plugin.task_id.is_global:
                 glb_task_ids.append(plugin.task_id)
                 glb_plugins_to_change.append(plugin)
-            elif plugin.known.useCurrentUser and (user.id != current_user.id):
+            elif plugin.known.useCurrentUser and user_ctx.is_different:
                 curruser_task_ids.append(plugin.task_id)
                 curruser_plugins_to_change.append(plugin)
     if glb_task_ids:
@@ -470,9 +460,9 @@ def pluginify(doc: Document,
     if curruser_task_ids:
         for tid in curruser_task_ids:
             answer_map.pop(tid.doc_task, None)
-        get_answers(current_user, curruser_task_ids, answer_map)
+        get_answers(user_ctx.logged_user, curruser_task_ids, answer_map)
         for p in curruser_plugins_to_change:
-            p.options = p.options._replace(user=current_user)
+            p.options.user_ctx = UserContext.from_one_user(user_ctx.logged_user)
             a = answer_map.get(p.task_id.doc_task, None)
             if not a:
                 p.answer = None
@@ -483,7 +473,7 @@ def pluginify(doc: Document,
             # p.options.__setattr__("user", current_user)
 
     taketime("glb/ucu", "done")
-
+    settings = doc.get_settings()
     for plugin_name, plugin_block_map in plugins.items():
         taketime("plg", plugin_name)
         try:
@@ -530,7 +520,7 @@ def pluginify(doc: Document,
             try:
                 # taketime("plg m", plugin_name)
                 response = render_plugin_multi(
-                    doc,
+                    settings,
                     plugin_name,
                     list(plugin_block_map.values()),
                     plugin_output_format=output_format,
@@ -563,7 +553,7 @@ def pluginify(doc: Document,
                     placements[idx].set_error(r, err_msg_md)
                 else:
                     try:
-                        html = render_plugin(doc=doc,
+                        html = render_plugin(docsettings=settings,
                                              plugin=plugin,
                                              output_format=output_format)
                     except PluginException as e:

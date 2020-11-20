@@ -1,5 +1,6 @@
 from typing import List, Dict, Optional
 
+from timApp.document.docsettings import DocSettings
 from timApp.user.user import User
 
 
@@ -85,7 +86,9 @@ class Bookmarks:
 
     def get_bookmarks(self):
         with self.bookmark_document.get_lock():
-            return self.bookmark_document.get_settings(use_preamble=False).get_bookmarks()
+            # Note: get_own_settings is intentional, so not get_settings.
+            settings = self.bookmark_document.get_own_settings()
+            return DocSettings(self.bookmark_document, settings).get_bookmarks()
 
     def save_bookmarks(self):
         self._set_bookmarks(self.bookmark_data)

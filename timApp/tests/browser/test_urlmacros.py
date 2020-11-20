@@ -9,7 +9,7 @@ class UrlMacroTest(BrowserTest):
         self.login_browser_quick_test1()
         self.login_test1()
         d = self.create_doc(initial_par="""
-#- {#p}
+#- {#p nocache=true}
 Macro is: %%m%%.
 
 ``` {#t plugin="csPlugin"}
@@ -48,3 +48,13 @@ print("Hello World")
         self.wait_until_present('.console')
         e = self.find_element('.console')
         self.assertEqual(console_text, e.text)
+
+    def test_numeric_urlmacro_default(self):
+        self.login_test1()
+        d = self.create_doc(
+            initial_par="""
+%%m1%% %%m2%%
+        """,
+            settings={'urlmacros': {'m1': 123, 'm2': 234.5}},
+        )
+        self.assert_content(self.get(d.url, as_tree=True), ['', '123 234.5'])

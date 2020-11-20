@@ -6,7 +6,6 @@ as well as adding comments to the annotations. The module also retrieves the ann
 :version: 1.0.0
 
 """
-import json
 import re
 from dataclasses import dataclass, field
 from typing import Optional, List, Tuple
@@ -18,6 +17,7 @@ from timApp.auth.accesshelper import verify_logged_in, has_teacher_access, \
     get_doc_or_abort, verify_view_access, AccessDenied, verify_teacher_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
+from timApp.document.viewcontext import default_view_ctx
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, use_model
@@ -59,11 +59,16 @@ def add_annotation(m: AddAnnotationModel) -> Response:
     annotator = get_current_user_object()
     latest_velp_version = get_latest_velp_version(m.velp_id)
     if not latest_velp_version:
-        raise RouteException("f'Velp with id {m.velp_id} not found.'")
+        raise RouteException(f"Velp with id {m.velp_id} not found.")
     velp_version_id = latest_velp_version.version_id
 
     if m.answer_id:
-        _, ans_doc_id = verify_answer_access(m.answer_id, get_current_user_object().id, require_teacher_if_not_own=True)
+        _, ans_doc_id = verify_answer_access(
+            m.answer_id,
+            get_current_user_object().id,
+            default_view_ctx,
+            require_teacher_if_not_own=True,
+        )
         if m.doc_id != ans_doc_id:
             raise RouteException("Answer id does not match the requested document.")
 

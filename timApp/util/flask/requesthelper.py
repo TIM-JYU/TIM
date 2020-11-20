@@ -4,7 +4,7 @@ import pprint
 import time
 import warnings
 from dataclasses import is_dataclass, dataclass
-from typing import Optional, Type, TypeVar, Callable, Any, List
+from typing import Optional, Type, TypeVar, Callable, Any, List, Tuple
 
 from flask import Request, current_app, g, Response
 from flask import request, abort
@@ -15,6 +15,7 @@ from werkzeug.wrappers import BaseRequest
 
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.modules.py.utils import DurationSchema
 from timApp.timdb.exceptions import InvalidReferenceException
@@ -59,7 +60,7 @@ def verify_json_params(*args: str, require: bool=True, default: Any=None, error_
 def get_referenced_pars_from_req(par: DocParagraph) -> List[DocParagraph]:
     if par.is_reference() and not par.is_translation():
         try:
-            return [ref_par for ref_par in par.get_referenced_pars(set_html=False)]
+            return [ref_par for ref_par in par.get_referenced_pars()]
         except InvalidReferenceException as e:
             abort(404, str(e))
     else:
@@ -186,3 +187,16 @@ def use_model(m: Type[ModelType]) -> Callable[[Callable[[ModelType], Response]],
     if not is_dataclass(m):
         raise Exception('use_model requires a dataclass')
     return use_args(class_schema(m, base_schema=DurationSchema)())
+
+
+def get_urlmacros_from_request() -> Tuple[Tuple[str, str], ...]:
+    urlmacros = tuple((key, val) for key, val in request.args.items())
+    return urlmacros
+
+
+def view_ctx_with_urlmacros(route: ViewRoute) -> ViewContext:
+    return ViewContext(
+        route,
+        False,
+        urlmacros=get_urlmacros_from_request(),
+    )

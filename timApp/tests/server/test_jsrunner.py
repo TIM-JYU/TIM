@@ -7,12 +7,12 @@ import requests
 from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import DocInfo
+from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.plugin import Plugin
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
-from timApp.util.utils import EXAMPLE_DOCS_PATH
 
 
 class JsRunnerTestBase(TimRouteTest):
@@ -745,7 +745,7 @@ tools.print(tools.getLeaveDate());
             expect_content={'web': {'errors': [], 'outdata': {}, 'output': 'undefined\n1262304000\n'}},
         )
         p = d.document.get_paragraphs()[0]
-        plug = Plugin.from_paragraph(p)
+        plug = Plugin.from_paragraph(p, default_view_ctx)
         plug.values['selectIncludeUsers'] = False
         plug.save()
         self.do_jsrun(

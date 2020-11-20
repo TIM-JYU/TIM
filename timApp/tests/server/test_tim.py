@@ -6,10 +6,10 @@ from lxml.cssselect import CSSSelector
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.document import Document
+from timApp.document.viewcontext import default_view_ctx
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.note.notes import get_notes
 from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
-from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
 from timApp.user.user import Consent, User
 
@@ -254,7 +254,7 @@ class TimTest(TimRouteTest):
         doc = self.create_doc(initial_par="Test").document
         self.get(f'/view/{doc.doc_id}')
         self.get(f'/view/{doc.doc_id}', query_string={'nocache': 'true'})
-        doc.get_index()
+        doc.get_index(default_view_ctx)
 
     def test_document_intermediate_folders(self):
         self.login_test1()

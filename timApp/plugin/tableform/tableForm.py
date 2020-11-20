@@ -19,6 +19,8 @@ from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.timjsonencoder import TimJsonEncoder
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
@@ -30,7 +32,7 @@ from timApp.sisu.sisu import get_potential_groups
 from timApp.tim_app import csrf
 from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import RouteException, use_model
+from timApp.util.flask.requesthelper import RouteException, use_model, view_ctx_with_urlmacros
 from timApp.util.flask.responsehelper import csv_string, json_response, text_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, GetFieldsAccess
 from timApp.util.utils import fin_timezone
@@ -210,6 +212,7 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
                     value_or_default(self.markup.groups, []),
                     d,
                     user,
+                    ViewContext(ViewRoute.View if self.viewmode else ViewRoute.Teacher, self.preview),
                     value_or_default(self.markup.removeDocIds, True),
                     value_or_default(self.markup.showInView, False),
                     group_filter_type=self.markup.includeUsers,
@@ -371,11 +374,13 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
     doc = get_doc_or_abort(docid)
     if not isinstance(remove_doc_ids, bool):
         remove_doc_ids = True
+    view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
     r = tableform_get_fields(
         fields,
         groups,
         doc,
         curr_user,
+        view_ctx,
         remove_doc_ids,
         allow_non_teacher=True,
         user_filter=user_filter,
@@ -464,8 +469,9 @@ def fetch_rows(m: FetchTableDataModel) -> Response:
     assert tid.doc_id is not None
     doc = get_doc_or_abort(tid.doc_id)
     doc.document.insert_preamble_pars()
+    view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
     try:
-        plug = find_plugin_from_document(doc.document, tid, curr_user)
+        plug = find_plugin_from_document(doc.document, tid, UserContext.from_one_user(curr_user), view_ctx)
     except TaskNotFoundException:
         return abort(404, f'Table not found: {tid}')
     markup = load_tableform_markup(plug)
@@ -481,6 +487,7 @@ def fetch_rows(m: FetchTableDataModel) -> Response:
         groups,
         doc,
         curr_user,
+        view_ctx,
         value_or_default(markup.removeDocIds, True),
         value_or_default(markup.showInView, False),
         group_filter_type=include_users,
@@ -512,11 +519,13 @@ def fetch_rows_preview(m: FetchTableDataModelPreview) -> Response:
     # whoever can open the plugin in preview should have that right
     if not curr_user.has_edit_access(doc):
         return abort(403, f'Missing edit access for document {doc.id}')
+    view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
     r = tableform_get_fields(
         m.fields,
         m.groups,
         doc,
         curr_user,
+        view_ctx,
         m.removeDocIds,
         allow_non_teacher=True
         #  TODO: group_filter_type = plug.values.get("includeUsers"),
@@ -540,8 +549,9 @@ def update_fields(m: UpdateFieldsModel) -> Response:
     assert tid.doc_id is not None
     doc = get_doc_or_abort(tid.doc_id)
     curr_user = get_current_user_object()
+    view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
     try:
-        plug = find_plugin_from_document(doc.document, tid, curr_user)
+        plug = find_plugin_from_document(doc.document, tid, UserContext.from_one_user(curr_user), view_ctx)
     except TaskNotFoundException:
         return abort(404, f'Table not found: {tid}')
     markup = load_tableform_markup(plug)
@@ -553,6 +563,7 @@ def update_fields(m: UpdateFieldsModel) -> Response:
         RequestedGroups.from_name_list(groupnames),
         doc,
         curr_user,
+        view_ctx,
         value_or_default(markup.removeDocIds, True),
         add_missing_fields=True,
         access_option=GetFieldsAccess.from_bool(value_or_default(markup.showInView, False)),
@@ -587,6 +598,7 @@ def tableform_get_fields(
         groupnames: List[str],
         doc: DocInfo,
         curr_user: User,
+        view_ctx: ViewContext,
         remove_doc_ids: bool,
         allow_non_teacher: bool,
         group_filter_type: MembershipFilter = MembershipFilter.Current,
@@ -598,6 +610,7 @@ def tableform_get_fields(
             RequestedGroups.from_name_list(groupnames),
             doc,
             curr_user,
+            view_ctx,
             remove_doc_ids,
             add_missing_fields=True,
             access_option=GetFieldsAccess.from_bool(allow_non_teacher),

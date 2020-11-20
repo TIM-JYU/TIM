@@ -6,6 +6,7 @@ from typing import Optional
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
+from timApp.document.viewcontext import default_view_ctx
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.exceptions import TimDbException
 
@@ -78,7 +79,7 @@ class RefTest(TimDbTest):
         self.assertEqual(1, len(rendered_pars))
         self.assertEqual(self.src_par.get_id(), rendered_pars[0].get_id())
         self.assertEqual(self.src_par.get_markdown(), rendered_pars[0].get_markdown())
-        self.assertEqual(self.src_par.get_html(), rendered_pars[0].get_html())
+        self.assertEqual(self.src_par.get_html(default_view_ctx), rendered_pars[0].get_html(default_view_ctx))
         self.assertEqual(self.src_par.get_attrs(), rendered_pars[0].get_attrs())
 
     def test_translation(self):
@@ -92,7 +93,7 @@ class RefTest(TimDbTest):
         self.assertEqual(1, len(rendered_pars))
         self.assertEqual(self.src_par.get_id(), rendered_pars[0].get_id())
         self.assertEqual(ref_par.get_markdown(), rendered_pars[0].get_markdown())
-        self.assertEqual(ref_par.get_html(), rendered_pars[0].get_html())
+        self.assertEqual(ref_par.get_html(default_view_ctx), rendered_pars[0].get_html(default_view_ctx))
         self.assertEqual(self.dict_merge(self.src_par.get_attrs(), ref_attrs), rendered_pars[0].get_attrs())
 
     def test_circular(self):
@@ -106,6 +107,7 @@ class RefTest(TimDbTest):
         self.src_doc.modify_paragraph_obj(self.src_par.get_id(), self.src_par)
 
         self.ref_doc.clear_mem_cache()
+        ref_par.ref_pars = {}
         self.assertRaises(TimDbException, ref_par.get_referenced_pars)
         self.assertRaises(TimDbException, self.src_par.get_referenced_pars)
 
@@ -128,7 +130,7 @@ class RefTest(TimDbTest):
         self.assertEqual(1, len(rendered_pars))
         self.assertEqual(self.src_par.get_id(), rendered_pars[0].get_id())
         self.assertEqual(self.src_par.get_markdown(), rendered_pars[0].get_markdown())
-        self.assertEqual(self.src_par.get_html(), rendered_pars[0].get_html())
+        self.assertEqual(self.src_par.get_html(default_view_ctx), rendered_pars[0].get_html(default_view_ctx))
         self.assertEqual(self.src_par.get_attrs(), rendered_pars[0].get_attrs())
 
         # Declare some new attributes
