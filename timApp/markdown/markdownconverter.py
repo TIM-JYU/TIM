@@ -174,14 +174,15 @@ def isview(ret_val, mode=None):
         return False
 
 
-def week_to_date(week_nr, daynr=1, year=None):
+def week_to_date(week_nr, daynr=1, year=None, fmt=None):
     """
     date object for week
     see: timApp/tests/unit/test_datefilters.py
     :param week_nr:  week number to get the date object
     :param daynr: day of week to get date
     :param year: year to get date
-    :return: date object
+    :param fmt: extended format string
+    :return: date object or formated string
     """
     if week_nr <= 0:
         week_nr = date.today().isocalendar()[1]
@@ -192,7 +193,12 @@ def week_to_date(week_nr, daynr=1, year=None):
         year = date.today().year
     else:
         year = int(year)
-    return date.fromisocalendar(year, week_nr, daynr)
+    d = date.fromisocalendar(year, week_nr, daynr)
+    if fmt == None:
+        return d
+    return fmt_date(d, fmt)
+
+
 
 
 def month_to_week(month, daynr=1, year=None):
@@ -217,7 +223,7 @@ def month_to_week(month, daynr=1, year=None):
     return d.isocalendar()[1]
 
 
-def fmt_date(d, fmt):
+def fmt_date(d, fmt=""):
     """
     Format date using extended %d1 and %m1 for one number values
     see: timApp/tests/unit/test_datefilters.py
@@ -227,6 +233,8 @@ def fmt_date(d, fmt):
     """
     ds = "" + str(d.day)
     ms = "" + str(d.month)
+    if fmt == "":
+        return str(ds) + "." + str(ms)
     fmt = fmt.replace("%d1", ds).replace("%m1", ms)
     return d.strftime(fmt)
 
@@ -273,6 +281,17 @@ def week_to_text(week_nr, year=None, fmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", fi
                 s += days[beg:end]
             break
     return s
+
+
+def postinc(v, delta=1):
+    old = v[0]
+    v[0] += delta
+    return old
+
+
+def preinc(v, delta=1):
+    v[0] += delta
+    return v[0]
 
 
 # ------------------------ Jinja filters end ---------------------------------------------------------------
@@ -350,6 +369,9 @@ def create_environment(macro_delimiter: str):
     env.filters['w2date'] = week_to_date
     env.filters['m2w'] = month_to_week
     env.filters['w2text'] = week_to_text
+    env.filters['fmtdate'] = fmt_date
+    env.filters['preinc'] = preinc
+    env.filters['postinc'] = postinc
 
     # During some markdown tests, there is no request context and therefore no g object.
     try:

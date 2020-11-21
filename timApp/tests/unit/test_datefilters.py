@@ -1,7 +1,8 @@
 from unittest import TestCase
 from datetime import date, datetime
 
-from timApp.markdown.markdownconverter import week_to_date, week_to_text, month_to_week, fmt_date
+from timApp.markdown.markdownconverter \
+    import week_to_date, week_to_text, month_to_week, fmt_date, preinc, postinc
 
 
 class TestWeekToDate(TestCase):
@@ -25,6 +26,12 @@ class TestWeekToDate(TestCase):
         self.assertEqual(e, r, "Not same in default case")
 
 
+    def test_w2date_format(self):
+        r = str(week_to_date(2, 1, 2020, ""))
+        e = "6.1"
+        self.assertEqual(e, r, "Not same in format case")
+
+
 class TestMonthToWeek(TestCase):
     def test_m2w_normal(self):
         r = month_to_week(3, 2, 2020)
@@ -35,9 +42,41 @@ class TestMonthToWeek(TestCase):
 class TestFormatDate(TestCase):
     def test_fmt_date_normal(self):
         d = datetime(2020, 2, 5)
-        r = fmt_date(d, "%d1.%m1")
-        e = "5.2"
+        r = fmt_date(d, "%d.%m")
+        e = "05.02"
         self.assertEqual(e, r, "Not same in normal case")
+
+    def test_fmt_date_default(self):
+        d = datetime(2020, 2, 5)
+        r = fmt_date(d)
+        e = "5.2"
+        self.assertEqual(e, r, "Not same in default case")
+
+
+class TestInc(TestCase):
+    def test_pre_inc1(self):
+        t = [3]
+        r = preinc(t)
+        self.assertEqual(4, r, "Not same in r inc 1 case")
+        self.assertEqual(4, t[0], "Not same t in inc 1 case")
+
+    def test_pre_inc2(self):
+        t = [3]
+        r = preinc(t,2)
+        self.assertEqual(5, r, "Not same in r inc 2 case")
+        self.assertEqual(5, t[0], "Not same t in inc 2 case")
+
+    def test_post_inc1(self):
+        t = [3]
+        r = postinc(t)
+        self.assertEqual(3, r, "Not same in r inc 1 case")
+        self.assertEqual(4, t[0], "Not same t in inc 1 case")
+
+    def test_post_inc2(self):
+        t = [3]
+        r = postinc(t,2)
+        self.assertEqual(3, r, "Not same in r inc 2 case")
+        self.assertEqual(5, t[0], "Not same t in inc 2 case")
 
 
 class TestWeekToText(TestCase):
