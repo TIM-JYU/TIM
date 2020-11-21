@@ -40,7 +40,7 @@ def expand_macros_regex(text: str, macros, macro_delimiter=None):
 def genfields(flds, attrs='', stemfield='stem'):
     """
     Generates fields from namelist like ['se1', 'd1', 'd2=demo2']
-    See usescases from: \tim\timApp\tests\server\test_genfields.py
+    See usescases from: /tim/timApp/tests/server/test_genfields.py
     :param flds: list of fields, maybe with aliases to show in stem
     :param attrs: possible list of attributes
     :param stemfield: field to use to show filed ste, like sten, header or inputstem
@@ -52,15 +52,16 @@ def genfields(flds, attrs='', stemfield='stem'):
         attrs = ", " + attrs
     for fld in flds:
         parts = fld.split("=")
-        id = parts[0].strip()
+        fid = parts[0].strip()
         if len(parts) > 1:
             text = parts[1].strip()
         else:
-            parts = id.split(":")
+            parts = fid.split(":")
             text = parts[0]
-        s = f"{{#{id} {stemfield}: '{text}'{attrs}#}}"
+        s = f"{{#{fid} {stemfield}: '{text}'{attrs}#}}"
         res += s
     return res
+
 
 def gfrange(s, i1, i2, attrs='', stemfield='stem'):
     flds = s.split(";", 1)
@@ -83,9 +84,9 @@ def gfrange(s, i1, i2, attrs='', stemfield='stem'):
     s2 = s[i:]
     f1 = ""
     f2 = ""
-    if ( s1.find("{") < 0):
+    if s1.find("{") < 0:
         f1 = "{0}"
-    if ( s2.find("{") < 0):
+    if s2.find("{") < 0:
         f2 = "{0}"
     s = s1 + f1 + s2
     if ie >= 0:
@@ -230,7 +231,7 @@ def fmt_date(d, fmt):
     return d.strftime(fmt)
 
 
-def week_to_text(week_nr, year=None, fmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", first_day =1):
+def week_to_text(week_nr, year=None, fmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", first_day=1):
     """
     Convert week to clendar header format
     see: timApp/tests/unit/test_datefilters.py
@@ -252,8 +253,11 @@ def week_to_text(week_nr, year=None, fmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", fi
     s = ""
     beg = 0
     daynr = first_day
+    first_empty = False
     while True:
         end = days.find("|", beg)
+        if end == 0:
+            first_empty = True
         if end < 0:
             s += days[beg:]
             break
@@ -262,6 +266,11 @@ def week_to_text(week_nr, year=None, fmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", fi
         beg = end + 1
         daynr += 1
         if daynr > 7:
+            if first_empty: # starts with separator, we need the last
+                end = days.find("|", beg)
+                if end < 0:
+                    end = 10000
+                s += days[beg:end]
             break
     return s
 
@@ -273,7 +282,7 @@ def expand_macros(text: str, macros, settings, macro_delimiter: Optional[str] = 
                   env=None, ignore_errors: bool = False):
     # return text  # comment out when want to take time if this slows things
     charmacros = settings.get_charmacros() if settings else None
-    if (charmacros):
+    if charmacros:
         for cm_key, cm_value in charmacros.items():
             text = text.replace(cm_key, cm_value)
     if not has_macros(text, macros, macro_delimiter):

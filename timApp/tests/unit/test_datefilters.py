@@ -65,3 +65,18 @@ class TestWeekToText(TestCase):
         r = week_to_text(53, 2020, days="ma|ti|ke|to|pe|la|su|")
         e = "ma 28.12|ti 29.12|ke 30.12|to 31.12|pe 1.1|la 2.1|su 3.1|"
         self.assertEqual(e, r, "Not same in end of year case")
+
+    def test_w2text_end_of_year2(self):
+        r = week_to_text(53, 2020, "|%d ", "|ma|ti|ke|to|pe|la|su")
+        e = "|28 ma|29 ti|30 ke|31 to|01 pe|02 la|03 su"
+        self.assertEqual(e, r, "Not same in end of year2 case")
+
+    def test_w2text_too_many(self):
+        r = week_to_text(53, 2020, " %d1|", "pe|la|su|ma|ti|", 5)
+        e = "pe 1|la 2|su 3|"
+        self.assertEqual(e, r, "Not same in too many case")
+
+    def test_w2text_too_many2(self):
+        r = week_to_text(53, 2020, "|%d ", "|pe|la|su|ma|ti|", 5)
+        e = "|01 pe|02 la|03 su"
+        self.assertEqual(e, r, "Not same in too many2 case")
