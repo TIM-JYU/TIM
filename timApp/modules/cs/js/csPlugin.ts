@@ -2613,11 +2613,17 @@ ${fhtml}
             // sagecell.deleteSagecell(cs.sagecellInfo);
             // cs.sagecellInfo = null;
         }
-        const types = this.type.split("/");
         let languages = sagecell.allLanguages;
+        /*
+        const types = this.type.split("/");
         if (types.length > 1) {
             languages = types.slice(1);
         }
+        */
+        if (this.attrsall.markup.languages) {
+            languages = this.attrsall.markup.languages.split("/");
+        }
+
         // if ( cs.sagecellInfo ) {
         if (this.sageInput && this.sageOutput) {
             const outputLocation = $(this.sageOutput);
