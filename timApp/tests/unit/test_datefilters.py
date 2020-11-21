@@ -1,29 +1,67 @@
 from unittest import TestCase
-from timApp.markdown.markdownconverter import srange
+from datetime import date, datetime
 
-class TestSRange(TestCase):
+from timApp.markdown.markdownconverter import week_to_date, week_to_text, month_to_week, fmt_date
 
-    def test_srange_normal(self):
-         r = srange("d{0} ", 1, 3)
-         e = "d1 d2 d3 "
-         self.assertEqual(e, r, "Not same in normal case")
 
-    def test_srange_step(self):
-         r = srange("d{0} ", 1, 5, 2)
-         e = "d1 d3 d5 "
-         self.assertEqual(e, r, "Not same step")
+class TestWeekToDate(TestCase):
 
-    def test_srange_plus(self):
-        r = srange("d{0}-{1} ", 1, 3, 1, 10)
-        e = "d1-11 d2-12 d3-13 "
-        self.assertEqual(e, r, "Not same add")
+    def test_w2date_normal(self):
+        r = str(week_to_date(2, 1, 2020))
+        e = "2020-01-06"
+        self.assertEqual(e, r, "Not same in normal case")
 
-    def test_srange_mul(self):
-        r = srange("d{0}-{1} ", 1, 3, 1, 0, 3)
-        e = "d1-3 d2-6 d3-9 "
-        self.assertEqual(e, r, "Not same mul")
+    def test_w2date_sunday(self):
+        r = str(week_to_date(2, 7, 2020))
+        e = "2020-01-12"
+        self.assertEqual(e, r, "Not same in sunday case")
 
-    def test_srange_mul_add(self):
-        r = srange("d{0}-{1}-{2} ", 1, 3, 1, 0, 3, 2, 5)
-        e = "d1-3-7 d2-6-12 d3-9-17 "
-        self.assertEqual(e, r, "Not same mul")
+    def test_w2date_default(self):
+        r = str(week_to_date(0))
+        t = date.today()
+        w = t.isocalendar()[1]
+
+        e = str(date.fromisocalendar(t.year, w, 1))
+        self.assertEqual(e, r, "Not same in default case")
+
+
+class TestMonthToWeek(TestCase):
+    def test_m2w_normal(self):
+        r = month_to_week(3, 2, 2020)
+        e = 10
+        self.assertEqual(e, r, "Not same in normal case")
+
+
+class TestFormatDate(TestCase):
+    def test_fmt_date_normal(self):
+        d = datetime(2020, 2, 5)
+        r = fmt_date(d, "%d1.%m1")
+        e = "5.2"
+        self.assertEqual(e, r, "Not same in normal case")
+
+
+class TestWeekToText(TestCase):
+    def test_w2text_normal(self):
+        r = week_to_text(2, 2020)
+        e = "ma 6.1|ti 7.1|ke 8.1|to 9.1|pe 10.1|"
+        self.assertEqual(e, r, "Not same in normal case")
+
+    def test_w2text_shorter(self):
+        r = week_to_text(2, 2020, " %d ")
+        e = "ma 06 ti 07 ke 08 to 09 pe 10 "
+        self.assertEqual(e, r, "Not same in %d case case")
+
+    def test_w2text_just3(self):
+        r = week_to_text(2, 2020, " %d ", "wed|fri|sat|", 3)
+        e = "wed 08 fri 09 sat 10 "
+        self.assertEqual(e, r, "Not same in just 3 case")
+
+    def test_w2text_just_dates(self):
+        r = week_to_text(2, 2020, "%d ", "|||", 3)
+        e = "08 09 10 "
+        self.assertEqual(e, r, "Not same in just dates case")
+
+    def test_w2text_end_of_year(self):
+        r = week_to_text(53, 2020, days="ma|ti|ke|to|pe|la|su|")
+        e = "ma 28.12|ti 29.12|ke 30.12|to 31.12|pe 1.1|la 2.1|su 3.1|"
+        self.assertEqual(e, r, "Not same in end of year case")
