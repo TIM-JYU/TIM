@@ -158,10 +158,10 @@ const ShowFileAll = t.type({
              (keydown.control.arrowRight)="jump(10, $event)"
              (keydown.shift.control.arrowLeft)="jump(-60, $event)"
              (keydown.shift.control.arrowRight)="jump(60, $event)"
-             (keydown.h)="jump(-1, $event)"
-             (keydown.j)="jump(1, $event)"
-             (keydown.g)="jump(-10, $event)"
-             (keydown.k)="jump(10, $event)"
+             (keydown.f)="jump(-10, $event)"
+             (keydown.g)="jump(-1, $event)"
+             (keydown.h)="jump(1, $event)"
+             (keydown.je)="jump(10, $event)"
         >
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <p *ngIf="header" [innerHtml]="header"></p>
@@ -247,12 +247,12 @@ const ShowFileAll = t.type({
             </div>
             <div *ngIf="advVideo">
                 <span>Jump sec: </span>
-                <a (click)="jump(-10)" title="Jump -10s (ctrl <-)">-10</a>
+                <a (click)="jump(-10)" title="Jump -10s (ctrl <- or f)">-10</a>
                 <a (click)="jump(-2)" title="Jump -2s">-2</a>
-                <a (click)="jump(-1)" title="Jump -1s (<-)">-1</a>
-                <a (click)="jump(1)" title="Jump  +1s (->)">+1</a>
+                <a (click)="jump(-1)" title="Jump -1s (<- or g)">-1</a>
+                <a (click)="jump(1)" title="Jump  +1s (-> or h)">+1</a>
                 <a (click)="jump(2)" title="Jump  +2s">+2</a>
-                <a (click)="jump(10)" title="Jump +10s (ctrl ->)">+10</a>
+                <a (click)="jump(10)" title="Jump +10s (ctrl -> or j)">+10</a>
                 <span>&nbsp;&nbsp;</span>
                 <a (click)="markStart()" title="Mark start (s)">Start: </a>
                 <a (click)="jumpTo(0)" [innerHtml]="startTime" title="Jump to start time"> </a>
