@@ -251,7 +251,15 @@ a .glyphicon {
     .bgreadmodified  { background: #ffff00c0; }
     .obs         { border: 1.00pt solid #000000; padding: 0.1em; background: #e6e6e6;}
     /* .note .answer TODO: do we dare to use pure .answer?  Otherwise it is not visible in preview */
-    .answer { color: blue; }
+    .answer      { color: blue; }
+    .smaller     { font-size: smaller; }
+    .small       { font-size: small; }
+    .x-small     { font-size: x-small; }
+    .xx-small    { font-size: xx-small; }
+    .larger      { font-size: larger; }
+    .large       { font-size: large; }
+    .x-large     { font-size: x-large; }
+    .xx-large    { font-size: xx-large; }
     img.smallimage {
         display: inline;
     }
