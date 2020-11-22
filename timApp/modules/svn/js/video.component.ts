@@ -424,7 +424,7 @@ export class VideoComponent extends AngularPluginBase<
         this.origSize = name;
     }
 
-    speed(mult: number, $event: KeyboardEvent | undefined = undefined) {
+    speed(mult: number, $event: Event | undefined = undefined) {
         if (!this.video) {
             return;
         }
@@ -446,7 +446,7 @@ export class VideoComponent extends AngularPluginBase<
 
     markTime(
         nr: number,
-        $event: KeyboardEvent | undefined = undefined
+        $event: Event | undefined = undefined
     ): string | undefined {
         if (!this.video) {
             return undefined;
@@ -459,7 +459,7 @@ export class VideoComponent extends AngularPluginBase<
         return time02String(v.currentTime);
     }
 
-    markStart($event: KeyboardEvent | undefined = undefined) {
+    markStart($event: Event | undefined = undefined) {
         const mt = this.markTime(0, $event);
         if (mt == undefined) {
             return;
@@ -467,7 +467,7 @@ export class VideoComponent extends AngularPluginBase<
         this.startTime = mt;
     }
 
-    markEnd($event: KeyboardEvent | undefined = undefined) {
+    markEnd($event: Event | undefined = undefined) {
         const mt = this.markTime(1, $event);
         if (mt == undefined) {
             return;
@@ -475,7 +475,7 @@ export class VideoComponent extends AngularPluginBase<
         this.endTime = mt;
     }
 
-    copyStartEnd($event: KeyboardEvent | undefined = undefined) {
+    copyStartEnd($event: Event | undefined = undefined) {
         if ($event) {
             $event.preventDefault();
         }
@@ -484,7 +484,7 @@ export class VideoComponent extends AngularPluginBase<
         copyToClipboard(s);
     }
 
-    jumpTo(value: number, $event: KeyboardEvent | undefined = undefined) {
+    jumpTo(value: number, $event: Event | undefined = undefined) {
         if (!this.video) {
             return;
         }
@@ -495,7 +495,7 @@ export class VideoComponent extends AngularPluginBase<
         v.currentTime = this.bookmarks[value];
     }
 
-    jump(value: number, $event: KeyboardEvent | undefined = undefined) {
+    jump(value: number, $event: Event | undefined = undefined) {
         if (!this.video) {
             return;
         }
@@ -506,7 +506,7 @@ export class VideoComponent extends AngularPluginBase<
         v.currentTime += value;
     }
 
-    zoom(mult: number, $event: KeyboardEvent | undefined = undefined) {
+    zoom(mult: number, $event: Event | undefined = undefined) {
         if ($event) {
             $event.preventDefault();
         }
