@@ -14,6 +14,8 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
+import {copyToClipboard} from "tim/util/utils";
+
 import {parseIframeopts, seconds2Time, valueDefu} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {BrowserModule} from "@angular/platform-browser";
@@ -24,6 +26,11 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
 import {Iframesettings} from "../../cs/js/jsframe";
+import {
+    getKeyCode,
+    KEY_LEFT,
+    KEY_RIGHT,
+} from "../../../static/scripts/tim/util/keycodes";
 import {VideoLinkComponent} from "./video-link.component";
 
 function toSeconds(value: string | number | undefined): number | undefined {
@@ -63,6 +70,26 @@ function time2String(time: number) {
         ms = minutes + "m";
     }
     const ss = seconds + "s";
+    return hs + ms + ss;
+}
+
+function time02String(time: number) {
+    const {hours, minutes, seconds} = seconds2Time(time);
+    let hs = "";
+    let ms = "";
+    if (hours) {
+        hs = hours + ":";
+    }
+    if (hours || minutes) {
+        ms = minutes + ":";
+        if (minutes < 10) {
+            ms = "0" + ms;
+        }
+    }
+    let ss = "" + seconds;
+    if (seconds < 10) {
+        ss = "0" + ss;
+    }
     return hs + ms + ss;
 }
 
@@ -114,7 +141,28 @@ const ShowFileAll = t.type({
 @Component({
     selector: "tim-video",
     template: `
-        <div [class]="videoClass">
+        <div [class]="videoClass" 
+             tabindex="0"
+             (keydown.-)="speed(1.0/1.2, $event)"
+             (keydown.1)="speed(0, $event)"
+             (keydown.+)="speed(1.2/1.0, $event)"
+             (keydown.x)="zoom(1.0/1.4, $event)"
+             (keydown.r)="zoom(0, $event)"
+             (keydown.z)="zoom(1.4/1.0, $event)"
+             (keydown.s)="markStart($event)"
+             (keydown.e)="markEnd($event)"
+             (keydown.c)="copyStartEnd($event)"
+             (keydown.arrowLeft)="jump(-1, $event)"
+             (keydown.arrowRight)="jump(1, $event)"
+             (keydown.control.arrowLeft)="jump(-10, $event)"
+             (keydown.control.arrowRight)="jump(10, $event)"
+             (keydown.shift.control.arrowLeft)="jump(-60, $event)"
+             (keydown.shift.control.arrowRight)="jump(60, $event)"
+             (keydown.h)="jump(-1, $event)"
+             (keydown.j)="jump(1, $event)"
+             (keydown.g)="jump(-10, $event)"
+             (keydown.k)="jump(10, $event)"
+        >
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <p *ngIf="header" [innerHtml]="header"></p>
             <p *ngIf="stem && isNormalSize" class="stem" [innerHtml]="stem"></p>
@@ -185,26 +233,34 @@ const ShowFileAll = t.type({
                     <span class="text-smaller">
                         {{playbackRateString}}
                     </span>
-                    <a (click)="speed(1.0/1.2)" title="Slower speed"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
-                    <a (click)="speed(0)" title="Normal speed">1x</a>&ngsp;
-                    <a (click)="speed(1.2)" title="Faster speed"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
+                    <a (click)="speed(1.0/1.2)" title="Slower speed (-)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
+                    <a (click)="speed(0)" title="Normal speed (1)">1x</a>&ngsp;
+                    <a (click)="speed(1.2)" title="Faster speed (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
                 </div>
                 <div class="margin-5-right">
                     Zoom:
-                    <a (click)="zoom(1.0/1.4)" title="Zoom out"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
-                    <a (click)="zoom(0)" title="Normal zoom">R</a>&ngsp;
-                    <a (click)="zoom(1.4)" title="Zoom in"><i class="glyphicon glyphicon-plus"></i></a>
+                    <a (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
+                    <a (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
+                    <a (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
                 </div>
                 <a (click)="hideVideo()">{{hidetext}}</a>
             </div>
             <div *ngIf="advVideo">
                 <span>Jump sec: </span>
-                <a (click)="jump(-10)" title="Jump -10s">-10</a>
+                <a (click)="jump(-10)" title="Jump -10s (ctrl <-)">-10</a>
                 <a (click)="jump(-2)" title="Jump -2s">-2</a>
-                <a (click)="jump(-1)" title="Jump -1s">-1</a>
-                <a (click)="jump(1)" title="Jump  +1s">+1</a>
+                <a (click)="jump(-1)" title="Jump -1s (<-)">-1</a>
+                <a (click)="jump(1)" title="Jump  +1s (->)">+1</a>
                 <a (click)="jump(2)" title="Jump  +2s">+2</a>
-                <a (click)="jump(10)" title="Jump +10s">+10</a>
+                <a (click)="jump(10)" title="Jump +10s (ctrl ->)">+10</a>
+                <span>&nbsp;&nbsp;</span>
+                <a (click)="markStart()" title="Mark start (s)">Start: </a>
+                <a (click)="jumpTo(0)" [innerHtml]="startTime" title="Jump to start time"> </a>
+                <span>&nbsp;&nbsp;</span>
+                <a (click)="markEnd()" title="Mark end (e)">End: </a>
+                <a (click)="jumpTo(1)" [innerHtml]="endTime" title="Jump to end time"> </a>
+                <span>&nbsp;&nbsp;</span>
+                <a (click)="copyStartEnd()" title="Copy start/end to clipboard (c)">Copy</a>
             </div>
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
         </div>
@@ -275,6 +331,13 @@ export class VideoComponent extends AngularPluginBase<
         this.vctrl = vctrlInstance;
         this.start = toSeconds(this.markup.start);
         this.end = toSeconds(this.markup.end);
+        this.bookmarks[0] = this.start ?? 0;
+        this.bookmarks[1] = this.end ?? 10000;
+        this.startTime = time02String(this.bookmarks[0]);
+        this.endTime = time02String(this.bookmarks[1]);
+        if (!this.end) {
+            this.endTime = "to end";
+        }
         this.width = this.markup.width;
         this.height = this.markup.height;
         if (this.start != null && this.end != null) {
@@ -295,9 +358,42 @@ export class VideoComponent extends AngularPluginBase<
     }
 
     hideVideo() {
+        this.removeEventListeners();
         this.videoOn = false;
         this.span = "";
     }
+
+    eventListenersActive: boolean = false;
+
+    private removeEventListeners() {
+        if (!this.eventListenersActive) {
+            return;
+        }
+        this.eventListenersActive = false;
+        document.removeEventListener("keydown", this.keyDownVideo);
+        // document.removeEventListener("click", this.onClick);
+    }
+
+    private addEventListeners() {
+        return;
+        if (this.eventListenersActive) {
+            return;
+        }
+        this.eventListenersActive = true;
+        document.addEventListener("keydown", this.keyDownVideo);
+        // document.addEventListener("click", this.onClick);
+    }
+
+    private keyDownVideo = (ev: KeyboardEvent) => {
+        const keyCode = getKeyCode(ev);
+        if (keyCode === KEY_LEFT) {
+            ev.preventDefault();
+            this.jump(-10);
+        } else if (keyCode === KEY_RIGHT) {
+            ev.preventDefault();
+            this.jump(10);
+        }
+    };
 
     getCurrentZoom() {
         const origw = localStorage[this.origSize + ".width"];
@@ -328,9 +424,12 @@ export class VideoComponent extends AngularPluginBase<
         this.origSize = name;
     }
 
-    speed(mult: number) {
+    speed(mult: number, $event: KeyboardEvent | undefined = undefined) {
         if (!this.video) {
             return;
+        }
+        if ($event) {
+            $event.preventDefault();
         }
         const v = this.video.nativeElement;
         if (mult === 0) {
@@ -341,15 +440,76 @@ export class VideoComponent extends AngularPluginBase<
         this.playbackRateString = v.playbackRate.toFixed(1);
     }
 
-    jump(value: number) {
+    bookmarks: number[] = [0, 0];
+    startTime: string = "";
+    endTime: string = "";
+
+    markTime(
+        nr: number,
+        $event: KeyboardEvent | undefined = undefined
+    ): string | undefined {
+        if (!this.video) {
+            return undefined;
+        }
+        if ($event) {
+            $event.preventDefault();
+        }
+        const v = this.video.nativeElement;
+        this.bookmarks[nr] = v.currentTime;
+        return time02String(v.currentTime);
+    }
+
+    markStart($event: KeyboardEvent | undefined = undefined) {
+        const mt = this.markTime(0, $event);
+        if (mt == undefined) {
+            return;
+        }
+        this.startTime = mt;
+    }
+
+    markEnd($event: KeyboardEvent | undefined = undefined) {
+        const mt = this.markTime(1, $event);
+        if (mt == undefined) {
+            return;
+        }
+        this.endTime = mt;
+    }
+
+    copyStartEnd($event: KeyboardEvent | undefined = undefined) {
+        if ($event) {
+            $event.preventDefault();
+        }
+        const s =
+            "start: " + this.startTime + "\n" + "end: " + this.endTime + "\n";
+        copyToClipboard(s);
+    }
+
+    jumpTo(value: number, $event: KeyboardEvent | undefined = undefined) {
         if (!this.video) {
             return;
+        }
+        if ($event) {
+            $event.preventDefault();
+        }
+        const v = this.video.nativeElement;
+        v.currentTime = this.bookmarks[value];
+    }
+
+    jump(value: number, $event: KeyboardEvent | undefined = undefined) {
+        if (!this.video) {
+            return;
+        }
+        if ($event) {
+            $event.preventDefault();
         }
         const v = this.video.nativeElement;
         v.currentTime += value;
     }
 
-    zoom(mult: number) {
+    zoom(mult: number, $event: KeyboardEvent | undefined = undefined) {
+        if ($event) {
+            $event.preventDefault();
+        }
         if (mult === 0) {
             this.width = this.origWidth;
             this.height = this.origHeight;
@@ -373,6 +533,7 @@ export class VideoComponent extends AngularPluginBase<
             return;
         }
         this.getCurrentZoom();
+        this.addEventListeners();
 
         this.span = this.limits;
         const moniviestin = this.markup.file.includes("m3.jyu.fi");
