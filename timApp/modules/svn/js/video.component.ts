@@ -161,7 +161,7 @@ const ShowFileAll = t.type({
              (keydown.f)="jump(-10, $event)"
              (keydown.g)="jump(-1, $event)"
              (keydown.h)="jump(1, $event)"
-             (keydown.je)="jump(10, $event)"
+             (keydown.j)="jump(10, $event)"
         >
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <p *ngIf="header" [innerHtml]="header"></p>
