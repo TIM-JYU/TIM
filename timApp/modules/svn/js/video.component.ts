@@ -245,7 +245,7 @@ const ShowFileAll = t.type({
                 </div>
                 <a (click)="hideVideo()">{{hidetext}}</a>
             </div>
-            <div *ngIf="advVideo">
+            <div *ngIf="advVideo && videoOn">
                 <span>Jump sec: </span>
                 <a (click)="jump(-10)" title="Jump -10s (ctrl <- or f)">-10</a>
                 <a (click)="jump(-2)" title="Jump -2s">-2</a>
