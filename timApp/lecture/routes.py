@@ -39,7 +39,7 @@ from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, empty_response
-from timApp.util.logger import log_debug, log_info
+from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time
 
 lecture_routes = Blueprint('lecture',
@@ -311,6 +311,10 @@ def hide_points_and_try_shuffle_question(question: AskedQuestion, user_id: int):
     return q_copy
 
 
+def q_log(s: str):
+    log_info(s)
+
+
 def get_new_question(lecture: Lecture, current_question_id=None, current_points_id=None, force=False):
     """
     :param current_points_id: TODO: what is this?
@@ -330,50 +334,50 @@ def get_new_question(lecture: Lecture, current_question_id=None, current_points_
             asked_id = question.asked_id
             already_shown = question.has_activity(QuestionActivityKind.Usershown, u)
             already_answered = question.has_activity(QuestionActivityKind.Useranswered, u)
-            # s = f'q: {u.name}, r, as={already_shown is not None}, aa={already_answered is not None}, f={force}, aid={asked_id}'
+            s = f'q: {u.name}, r, as={already_shown is not None}, aa={already_answered is not None}, f={force}, aid={asked_id}'
             if already_answered:
                 if force:
-                    # log_info(f'{s}, ret=already_answered')
+                    q_log(f'{s}, ret=already_answered')
                     return {'type': 'already_answered'}
                 else:
-                    # log_info(f'{s}, ret=None')
+                    q_log(f'{s}, ret=None')
                     return None
             if (not already_shown or force) or (asked_id != current_question_id):
                 q = get_asked_question(asked_id)
                 answer = q.answers.filter_by(user_id=current_user).first()
                 question.add_activity(QuestionActivityKind.Usershown, u)
                 if answer:
-                    # log_info(f'{s}, ret=answer')
+                    q_log(f'{s}, ret=answer')
                     return {'type': 'answer', 'data': answer}
                 else:
-                    # log_info(f'{s}, ret=question')
+                    q_log(f'{s}, ret=question')
                     return {
                         'type': 'question',
                         'data': q if lecture.lecturer == current_user else hide_points_and_try_shuffle_question(q, current_user)
                     }
-            # log_info(f'{s}, ret=None')
+            q_log(f'{s}, ret=None')
         else:
             question_to_show_points = get_shown_points(lecture)
-            # s = ''
+            s = ''
             if question_to_show_points:
                 asked_id = question_to_show_points.asked_id
                 already_shown = question_to_show_points.has_activity(QuestionActivityKind.Pointsshown, u)
                 already_closed = question_to_show_points.has_activity(QuestionActivityKind.Pointsclosed, u)
-                # s = f'q: {u.name}, nr, as={already_shown is not None}, ac={already_closed is not None}, f={force}, aid={asked_id}'
+                s = f'q: {u.name}, nr, as={already_shown is not None}, ac={already_closed is not None}, f={force}, aid={asked_id}'
                 if already_closed:
                     if force:
                         db.session.delete(already_closed)
                     else:
-                        # log_info(f'{s}, ret=None')
+                        q_log(f'{s}, ret=None')
                         return None
                 if not (already_shown or force) or (asked_id != current_points_id):
                     question = get_asked_question(asked_id)
                     question.add_activity(QuestionActivityKind.Pointsshown, u)
                     answer = question.answers.filter_by(user_id=current_user).first()
                     if answer:
-                        # log_info(f'{s}, ret=result')
+                        q_log(f'{s}, ret=result')
                         return {'type': 'result', 'data': answer}
-            # log_info(s or f'q: {u.name}, nr, f={force}, ret=None')
+            q_log(s or f'q: {u.name}, nr, f={force}, ret=None')
             return None
 
 
