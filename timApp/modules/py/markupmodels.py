@@ -77,6 +77,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
     pointsText: Union[str, None, Missing] = missing
     postprogram: Union[str, Missing] = missing
     postoutput: Union[str, Missing] = missing
+    readonly: Union[bool, Missing] = missing
     showPoints: Union[bool, None, Missing] = missing
     starttime: Union[PluginDateTime, datetime, None, Missing] = missing
     showInView: Union[bool, Missing] = missing
@@ -146,6 +147,7 @@ class GenericMarkupModel(KnownMarkupFields):
     footer: Union[str, Missing] = missing
     forceBrowser: Union[bool, Missing, None] = missing
     globalField: Union[bool, Missing, None] = missing
+    readonly: Union[bool, Missing, None] = missing
     lang: Union[str, None, Missing] = missing
     resetText: Union[str, Missing, None] = missing
     connectionErrorMessage: Union[str, Missing] = missing

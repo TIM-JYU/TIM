@@ -28,6 +28,7 @@ export const GenericPluginMarkup = t.partial({
     disableUnchanged: t.boolean,
     footer: t.string,
     header: nullable(t.string),
+    readonly: t.boolean,
     form: t.boolean,
     lazy: t.boolean,
     resetText: nullable(t.string),

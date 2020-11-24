@@ -260,7 +260,10 @@ export abstract class PluginBase<
      * Returns if this plugin is readonly for the current user.
      */
     get readonly(): boolean {
-        return this.attrsall.access === "readonly";
+        return (
+            this.attrsall.access === "readonly" ||
+            (this.attrs.readonly ?? false)
+        );
     }
 
     get undoButton() {
