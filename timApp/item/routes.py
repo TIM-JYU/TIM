@@ -58,7 +58,7 @@ from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGrou
 from timApp.user.users import get_rights_holders_all
 from timApp.user.userutils import DeletedUserException
 from timApp.util.flask.requesthelper import verify_json_params, use_model
-from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
+from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules, add_no_cache_headers
 from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
@@ -611,7 +611,7 @@ def view(item_path, template_name, route="view"):
             document_themes = list(set().union(document_themes, user_themes))
         override_theme = generate_theme(document_themes, get_default_scss_gen_dir())
 
-    return render_template(
+    rendered_html = render_template(
         template_name,
         access=access,
         hide_links=should_hide_links(doc_settings, rights),
@@ -657,6 +657,9 @@ def view(item_path, template_name, route="view"):
         override_theme=override_theme,
         current_list_user=current_list_user
     )
+    r = make_response(rendered_html)
+    add_no_cache_headers(r)
+    return r
 
 
 def redirect_to_login(item: Optional[Document]):
