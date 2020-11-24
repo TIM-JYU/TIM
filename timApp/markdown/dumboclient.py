@@ -33,6 +33,7 @@ class InputFormat(Enum):
     MarkdownStrict = 'markdown_strict'
     MediaWiki = 'mediawiki'
     RST = 'rst'
+    LaTeX = 'latex'
 
     @staticmethod
     def from_string(s: str):
