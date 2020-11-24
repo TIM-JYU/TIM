@@ -68,7 +68,7 @@ def no_cache_json_response(data: Any, date_conversion: bool = False) -> Response
 
 
 def add_no_cache_headers(response: Response):
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    response.headers['Cache-Control'] = 'no-store, must-revalidate'
     return response
 
 
