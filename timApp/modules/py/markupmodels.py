@@ -77,7 +77,6 @@ class KnownMarkupFields(HiddenFieldsMixin):
     pointsText: Union[str, None, Missing] = missing
     postprogram: Union[str, Missing] = missing
     postoutput: Union[str, Missing] = missing
-    readonly: Union[bool, Missing] = missing
     showPoints: Union[bool, None, Missing] = missing
     starttime: Union[PluginDateTime, datetime, None, Missing] = missing
     showInView: Union[bool, Missing] = missing
