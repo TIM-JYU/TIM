@@ -59,7 +59,7 @@ class DocParagraph:
         self.ref_pars = {}
         self.__rands = None   # random number macros for this pg
         self.__rnd_seed = 0
-        self.attrs = None
+        self.attrs: Optional[Dict[str, str]] = None
         self.nomacros = False
         self.nocache = False
         self.ref_chain = None
