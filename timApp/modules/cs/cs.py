@@ -1215,7 +1215,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if uploaded_file and uploaded_type:
                 save["uploadedFile"] = uploaded_file
                 save["uploadedType"] = uploaded_type
-            usercode = get_json_param(query.jso, "state", "usercode", None)
+            usercode = get_json_param(query.jso, "input", "usercode", None)
             if isinstance(usercode, str):
                 query.query["usercode"] = [usercode]
 
@@ -1346,7 +1346,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             for file in language.sourcefiles:
                 if filesaveattribute:
                     attrnames = filesaveattribute.split(',')
-                    usercode = ""
+                    usercode = ""  # TODO: Should this be a local variable?
                     for aname in attrnames:
                         usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
                     file.content = usercode
@@ -1375,7 +1375,8 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     file.content = language.before_save(language.before_code + file.content)
                     slines = file.content
 
-            usercode = language.sourcefiles[0].content # for single file compatibility # TODO: make unnecessary
+            # usercode = language.sourcefiles[0].content # for single file compatibility # TODO: make unnecessary
+            # previous does not work, because it returns more than pure usercode
 
             # Write the program to the file =======================================================
             if not nofilesave:
