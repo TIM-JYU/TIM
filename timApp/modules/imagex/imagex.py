@@ -167,7 +167,8 @@ class ImagexServer(tim_server.TimServer):
         # get default values for targets. If values arent told for targets get them from here or from previous
         # target.
         # If all tries have been used just return.
-        max_tries = int(get_param(query, "answerLimit", 1000000))
+        max_infinity = 1000000
+        max_tries = int(get_param(query, "answerLimit", max_infinity))
         tries = int(get_json_param(query.jso, "info", "earlier_answers", 0))
 
         # Targets dict
@@ -231,7 +232,7 @@ class ImagexServer(tim_server.TimServer):
             self.wout(sresult)
             return
 
-        if finalanswer and finalanswerquery and tries >= max_tries:
+        if finalanswer and finalanswerquery and (tries >= max_tries or max_tries == max_infinity):
             print("--final answer--")
             obj = {}
             answertable = []
@@ -247,7 +248,7 @@ class ImagexServer(tim_server.TimServer):
 
             answer['rightanswers'] = answertable
             answer['studentanswers'] = gottenpoints
-            print(answer)
+            # print(answer)
         tries = tries + 1
         free_hand_data = get_json_param(query.jso, "input", "freeHandData", None)
 
@@ -264,7 +265,7 @@ class ImagexServer(tim_server.TimServer):
         web["result"] = out
         web["error"] = err
         web["answer"] = answer
-        print(web)
+        # print(web)
         sresult = json.dumps(result)
         # Write results to site.
         self.wout(sresult)

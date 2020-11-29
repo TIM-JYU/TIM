@@ -1687,7 +1687,7 @@ interface IAnswerResponse {
                     </span>
                 <span [hidden]="!(finalanswer && userHasAnswered)">
                 &nbsp;&nbsp;
-                <button 
+                <button class="timButton"
                         [disabled]="isRunning"
                         (click)="showAnswer()">
                     Show correct answer
@@ -2064,6 +2064,7 @@ export class ImageXComponent
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to(
             $http<{
+                error?: string;
                 web: {
                     error?: string;
                     result: string;
@@ -2075,6 +2076,9 @@ export class ImageXComponent
         this.isRunning = false;
         if (r.ok) {
             const data = r.result.data;
+            if (data.error?.includes("exceeded")) {
+                data.error = "";
+            }
             this.error = data.web.error;
             this.result = data.web.result;
             this.tries = data.web.tries;
@@ -2211,7 +2215,13 @@ export class ImageXComponent
     }
 
     get finalanswer() {
-        return this.max_tries && this.tries >= this.max_tries;
+        // must have finalanswer-attribute
+        // if limit exeeded or in no limit case at least one answer
+        return (
+            this.markup.finalanswer &&
+            ((this.max_tries && this.tries >= this.max_tries) ||
+                (!this.max_tries && this.tries > 0))
+        );
     }
 }
 
