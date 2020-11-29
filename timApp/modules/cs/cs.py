@@ -1323,6 +1323,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             fhandler = FileHandler(query, save)
             submitted_files = fhandler.get_files(s)
 
+            # code ahead needs the unmodified usercode, so take it here
+            # TODO: refactor to not need this
+            usercode = get_json_param(query.jso, "input", "usercode", None)
+            if usercode is None:
+                usercode = submitted_files[0].content
+
             # TODO: get_param is potentially unsafe as the client can change its value
             # get_json_param from markup would be better, but all language and test
             # languages change the type on client side
@@ -1337,49 +1343,20 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 raise Exception(f"Give task not allowed for {ttype}")
 
 
-            nofilesave = get_param(query, 'nofilesave', language.nofilesave)
-            if not nofilesave:
-                mkdirs(language.prgpath)
             filesaveattribute = get_param(query, "filesaveattribute", None)
-            errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
-            warncondition = get_json_param(query.jso, "markup", "warncondition", False)
-            for file in language.sourcefiles:
-                if filesaveattribute:
-                    attrnames = filesaveattribute.split(',')
-                    usercode = ""  # TODO: Should this be a local variable?
-                    for aname in attrnames:
-                        usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
-                    file.content = usercode
-
-                if file.content is None:
-                    continue
-
-                if is_doc:
-                    file.content = replace_code(query.cut_errors, file.content)
-
-                if not file.content.startswith("File not found"):
-                    if errorcondition and re.search(errorcondition, file.content, flags=re.S):
-                        errormessage = get_json_param(query.jso, "markup", "errormessage",
-                                                    "Not allowed to use: " + errorcondition)
-                        return write_json_error(self.wfile, errormessage, result)
-
-                    if warncondition and re.search(warncondition, file.content, flags=re.S):
-                        warnmessage = "\n" + get_json_param(query.jso, "markup", "warnmessage",
-                                                            "Not recomended to use: " + warncondition)
-
-                    # print(os.path.dirname(language.sourcefilename))
-                    # print("Write file: " + language.sourcefilename)
-                    if file.content == "":
-                        file.content = "\n"
-
-                    file.content = language.before_save(language.before_code + file.content)
-                    slines = file.content
-
-            # usercode = language.sourcefiles[0].content # for single file compatibility # TODO: make unnecessary
-            # previous does not work, because it returns more than pure usercode
+            if filesaveattribute:
+                if len(language.sourcefiles) > 1:
+                    raise Exception("Cannot have multiple files with filesaveattribute") # TODO
+                attrnames = filesaveattribute.split(',')
+                usercode = ""
+                for aname in attrnames:
+                    usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
+                language.sourcefiles[0].content = usercode
 
             # Write the program to the file =======================================================
+            nofilesave = get_param(query, 'nofilesave', False)
             if not nofilesave:
+                mkdirs(language.prgpath)
                 fhandler.save_files(language.sourcefiles, language)
 
             save_extra_files(query, extra_files, language.prgpath)
@@ -1561,6 +1538,33 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             retdata = {}
 
             pwddir = ""
+
+            errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
+            warncondition = get_json_param(query.jso, "markup", "warncondition", False)
+            for file in language.sourcefiles:
+                if file.content is None:
+                    continue
+
+                if is_doc:
+                    file.content = replace_code(query.cut_errors, file.content)
+
+                if not file.content.startswith("File not found"):
+                    if errorcondition and re.search(errorcondition, file.content, flags=re.S):
+                        errormessage = get_json_param(query.jso, "markup", "errormessage",
+                                                    "Not allowed to use: " + errorcondition)
+                        return write_json_error(self.wfile, errormessage, result)
+
+                    if warncondition and re.search(warncondition, file.content, flags=re.S):
+                        warnmessage = "\n" + get_json_param(query.jso, "markup", "warnmessage",
+                                                            "Not recomended to use: " + warncondition)
+
+                    # print(os.path.dirname(language.sourcefilename))
+                    # print("Write file: " + language.sourcefilename)
+                    if file.content == "":
+                        file.content = "\n"
+
+                    file.content = language.before_save(language.before_code + file.content)
+                    slines = file.content
 
             t1startrun = time.time()
 
