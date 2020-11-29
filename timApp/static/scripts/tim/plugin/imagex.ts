@@ -1702,7 +1702,7 @@ interface IAnswerResponse {
                         href="" (click)="initCode()">{{resetText}}</a>
                     </span>
                 &nbsp;&nbsp;
-                <draw-toolbar [drawSettings]="drawSettings" [undo]="passUndo"
+                <draw-toolbar *ngIf="isFreeHandInUse" [drawSettings]="drawSettings" [undo]="passUndo"
                               [drawVisibleOptions]="drawVisibleOptions"></draw-toolbar>
             </p>
             <div [hidden]="!preview"><span><span [ngStyle]="{'background-color': previewColor}"
