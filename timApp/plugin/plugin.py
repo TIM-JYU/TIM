@@ -14,7 +14,6 @@ from marshmallow import missing, ValidationError
 from markupmodels import PointsRule, KnownMarkupFields
 from marshmallow_dataclass import class_schema
 from timApp.answer.answer import Answer
-from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
@@ -737,14 +736,16 @@ def finalize_inline_yaml(p_yaml: Optional[str]):
 def find_task_ids(
         blocks: List[DocParagraph],
         view_ctx: ViewContext,
+        user_ctx: UserContext,
         check_access=True,
 ) -> Tuple[List[TaskId], int, List[TaskId]]:
     """Finds all task plugins from the given list of paragraphs and returns their ids.
+    :param user_ctx:
     """
     task_ids = []
     plugin_count = 0
     access_missing = []
-    curr_user = get_current_user_object()
+    curr_user = user_ctx.logged_user
 
     def handle_taskid(t: TaskId):
         if not t.doc_id:

@@ -15,7 +15,6 @@ from sqlalchemy import func
 from timApp.answer.answer import Answer
 from timApp.answer.answers import valid_answers_query, valid_taskid_filter
 from timApp.auth.accesshelper import has_edit_access, verify_view_access
-from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
@@ -172,7 +171,7 @@ class PluginPlacement:
                         vals['fields'],
                         RequestedGroups([user_ctx.user.get_personal_group()]),
                         block.doc.docinfo,
-                        get_current_user_object(),
+                        user_ctx.logged_user,
                         view_ctx,
                         add_missing_fields=True,
                         access_option=GetFieldsAccess.from_bool(True),  # TODO: the user selected from User list
@@ -381,7 +380,7 @@ def pluginify(doc: Document,
 
     if load_states and custom_answer is None and user_ctx.user.logged_in:
         # TODO: could this return also the plugins, then there is no need for other iteration
-        task_ids, _, _ = find_task_ids(pars, view_ctx, check_access=user_ctx.is_different)
+        task_ids, _, _ = find_task_ids(pars, view_ctx, user_ctx, check_access=user_ctx.is_different)
         get_answers(user_ctx.user, task_ids, answer_map)
         # TODO: RND_SEED get all users rand_seeds for this doc's tasks. New table?
 

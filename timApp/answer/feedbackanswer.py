@@ -193,7 +193,8 @@ def print_feedback_report(doc_path):
 
     verify_teacher_access(d)
     pars = d.document.get_dereferenced_paragraphs(default_view_ctx)
-    task_ids, _, access_missing = find_task_ids(pars, default_view_ctx)
+    user_ctx = user_context_with_logged_in(None)
+    task_ids, _, access_missing = find_task_ids(pars, default_view_ctx, user_ctx)
 
     if len(access_missing) > 0:
         abort(403, 'Access missing for task_ids: ' + access_missing)
@@ -274,7 +275,7 @@ def print_feedback_report(doc_path):
         all_tasks = []
         for did in all_id:
             did_pars = did.document.get_dereferenced_paragraphs(default_view_ctx)
-            task_dids, _ , access_missing2 = find_task_ids(did_pars, default_view_ctx)
+            task_dids, _ , access_missing2 = find_task_ids(did_pars, default_view_ctx, user_ctx)
             if len(access_missing2) > 0:
                 abort(403, 'Access missing for task_ids: ' + access_missing2)
             all_tasks += task_dids

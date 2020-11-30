@@ -1,13 +1,12 @@
 """Routes for document view."""
 import html
 import time
-import traceback
 from dataclasses import dataclass
-from typing import Tuple, Optional, List, Union
+from typing import Tuple, Optional, List, Union, Any
 
 import attr
 import sass
-from flask import Blueprint, render_template, make_response, abort
+from flask import Blueprint, render_template, make_response, abort, Response
 from flask import current_app
 from flask import flash
 from flask import redirect
@@ -19,7 +18,7 @@ from marshmallow import ValidationError
 from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_rights, has_edit_access, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
+    get_rights, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
 from timApp.auth.sessioninfo import get_session_usergroup_ids
@@ -29,11 +28,11 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings, get_minimal_visibility_settings
 from timApp.document.document import get_index_from_html_list, dereference_pars, Document
-from timApp.document.hide_names import hide_names_in_teacher
+from timApp.document.hide_names import is_hide_names, force_hide_names
 from timApp.document.post_process import post_process_pars
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import default_view_ctx, viewroute_from_str
+from timApp.document.viewcontext import default_view_ctx, ViewRoute, ViewContext
 from timApp.folder.folder import Folder
 from timApp.folder.folder_view import try_return_folder
 from timApp.item.block import BlockType
@@ -50,7 +49,7 @@ from timApp.plugin.plugin import find_task_ids
 from timApp.plugin.pluginControl import get_all_reqs
 from timApp.readmark.readings import mark_all_read
 from timApp.tim_app import app
-from timApp.timdb.exceptions import TimDbException, PreambleException
+from timApp.timdb.exceptions import PreambleException
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
 from timApp.user.settings.theme import Theme, theme_exists
@@ -62,7 +61,6 @@ from timApp.user.userutils import DeletedUserException
 from timApp.util.flask.requesthelper import verify_json_params, use_model, view_ctx_with_urlmacros
 from timApp.util.flask.responsehelper import add_no_cache_headers
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
-from timApp.util.logger import log_error
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
@@ -75,6 +73,7 @@ view_page = Blueprint('view_page',
 
 DocumentSlice = Tuple[List[DocParagraph], IndexedViewRange]
 ViewRange = Union[RequestedViewRange, IndexedViewRange]
+FlaskViewResult = Union[Response, Tuple[Any, int]]
 
 
 def get_partial_document(doc: Document, view_range: ViewRange) -> DocumentSlice:
@@ -141,7 +140,6 @@ class ViewModel:
     wait_max: int = 0
     direct_link_timer: int = 15
 
-
     def __post_init__(self):
         if self.b and self.e:
             if type(self.b) != type(self.e):
@@ -153,44 +151,42 @@ class ViewModel:
 ViewModelSchema = class_schema(ViewModel)()
 
 
-@view_page.route("/show_slide/<path:doc_name>")
-def show_slide(doc_name):
-    html = view(doc_name, 'show_slide.html')
-    return html
+@view_page.route("/show_slide/<path:doc_path>")
+def show_slide(doc_path):
+    return view(doc_path, ViewRoute.ShowSlide)
 
 
-@view_page.route("/view/<path:doc_name>")
-def view_document(doc_name):
+@view_page.route("/view/<path:doc_path>")
+def view_document(doc_path):
     taketime("route view begin")
-    ret = view(doc_name, 'view_html.html')
+    ret = view(doc_path, ViewRoute.View)
     taketime("route view end")
     return ret
 
 
-@view_page.route("/teacher/<path:doc_name>")
-def teacher_view(doc_name):
-    return view(doc_name, 'view_html.html', route="teacher")
+@view_page.route("/teacher/<path:doc_path>")
+def teacher_view(doc_path):
+    return view(doc_path, ViewRoute.Teacher)
 
 
-@view_page.route("/velp/<path:doc_name>")
-def velp_view(doc_name):
-    return view(doc_name, 'view_html.html', route="velp")
+@view_page.route("/velp/<path:doc_path>")
+def velp_view(doc_path):
+    return view(doc_path, ViewRoute.Velp)
 
 
-@view_page.route("/answers/<path:doc_name>")
-def see_answers_view(doc_name):
-    return view(doc_name, 'view_html.html', route="answers")
+@view_page.route("/answers/<path:doc_path>")
+def see_answers_view(doc_path):
+    return view(doc_path, ViewRoute.Answers)
 
 
-@view_page.route("/lecture/<path:doc_name>")
-def lecture_view(doc_name):
-    return view(doc_name, 'view_html.html', route="lecture")
+@view_page.route("/lecture/<path:doc_path>")
+def lecture_view(doc_path):
+    return view(doc_path, ViewRoute.Lecture)
 
 
-@view_page.route("/slide/<path:doc_name>")
-def slide_document(doc_name):
-    html = view(doc_name, 'view_html.html', route="slide")
-    return html
+@view_page.route("/slide/<path:doc_path>")
+def slide_view(doc_path):
+    return view(doc_path, ViewRoute.Slide)
 
 
 @view_page.route("/par_info/<int:doc_id>/<par_id>")
@@ -298,14 +294,12 @@ def goto_view(item_path, model: ViewModel):
                            direct_link_timer=model.direct_link_timer)
 
 
-def view(item_path, template_name, route="view"):
+def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
     taketime("view begin", zero=True)
     m: ViewModel = ViewModelSchema.load(request.args, unknown='EXCLUDE')
 
     if m.goto:
         return goto_view(item_path, m)
-
-    usergroup = m.group
 
     if has_special_chars(item_path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
@@ -317,48 +311,62 @@ def view(item_path, template_name, route="view"):
     if doc_info is None:
         return try_return_folder(item_path)
 
-    doc_info.request = request
-
-    edit_mode = m.edit if has_edit_access(doc_info) else None
-
     if m.hide_names is not None:
         session['hide_names'] = m.hide_names
 
     should_hide_names = False
 
-    if route == 'teacher':
-        if not verify_teacher_access(doc_info, require=False, check_duration=True):
-            if verify_view_access(doc_info):
-                flash("Did someone give you a wrong link? Showing normal view instead of teacher view.")
-                return redirect(f'/view/{item_path}')
-
-    if route == 'answers':
-        if not verify_seeanswers_access(doc_info, require=False, check_duration=True):
-            if verify_view_access(doc_info):
-                flash("Did someone give you a wrong link? Showing normal view instead of see answers view.")
-                return redirect(f'/view/{item_path}')
-        if not verify_teacher_access(doc_info, require=False, check_duration=True):
+    if route == ViewRoute.Teacher:
+        if not verify_teacher_access(doc_info, require=False):
+            verify_view_access(doc_info)
+            return redirect(f'/view/{item_path}')
+    elif route == ViewRoute.Answers:
+        if not verify_seeanswers_access(doc_info, require=False):
+            verify_view_access(doc_info)
+            return redirect(f'/view/{item_path}')
+        if not verify_teacher_access(doc_info, require=False):
             should_hide_names = True
 
     access = verify_view_access(doc_info, require=False, check_duration=True)
     if not access:
         if not logged_in():
-            return redirect_to_login(doc_info.document)
+            return render_login(doc_info.document)
         else:
-            abort(403)
+            raise AccessDenied()
 
+    if m.login and not logged_in():
+        return render_login(doc_info.document)
+
+    current_user = get_current_user_object()
+
+    if current_user.is_deleted:
+        raise DeletedUserException()
+
+    view_ctx = view_ctx_with_urlmacros(route, hide_names_requested=should_hide_names or is_hide_names())
+
+    rendered_html = render_doc_view(doc_info, m, view_ctx, current_user, access)
+
+    r = make_response(rendered_html)
+    add_no_cache_headers(r)
+    return r
+
+
+def render_doc_view(
+        doc_info: DocInfo,
+        m: ViewModel,
+        view_ctx: ViewContext,
+        current_user: User,
+        access: BlockAccess,
+):
     # Check for incorrect group tags.
     linked_groups = []
-    if verify_manage_access(doc_info, require=False):
+    if current_user.has_manage_access(doc_info):
         linked_groups, group_tags = get_linked_groups(doc_info)
         if group_tags:
             names = set(ug.ug.name for ug in linked_groups)
             missing = set(group_tags) - names
             if missing:
                 flash(f'Document has incorrect group tags: {seq_to_str(list(missing))}')
-
-    if m.login and not logged_in():
-        return redirect_to_login(doc_info.document)
 
     piece_size = get_piece_size_from_cookie(request)
     areas = None
@@ -388,12 +396,6 @@ def view(item_path, template_name, route="view"):
     clear_cache = m.nocache
     hide_answers = m.noanswers
 
-    teacher_or_see_answers = route in ('teacher', 'answers')
-    current_user = get_current_user_object()
-
-    if current_user.is_deleted:
-        raise DeletedUserException()
-
     doc_settings = doc.get_settings()
 
     # Used later to get partitioning with preambles included correct.
@@ -409,13 +411,8 @@ def view(item_path, template_name, route="view"):
             xs = preamble_pars + xs
             preamble_count = len(preamble_pars)
 
-    view_ctx = view_ctx_with_urlmacros(viewroute_from_str(route))
     # Preload htmls here to make dereferencing faster
-    try:
-        DocParagraph.preload_htmls(xs, doc_settings, view_ctx, clear_cache)
-    except TimDbException as e:
-        log_error(f'Document {doc_info.id} exception:\n{traceback.format_exc(chain=False)}')
-        abort(500, str(e))
+    DocParagraph.preload_htmls(xs, doc_settings, view_ctx, clear_cache)
     src_doc = doc.get_source_document()
     if src_doc is not None:
         DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), view_ctx, clear_cache)
@@ -432,7 +429,13 @@ def view(item_path, template_name, route="view"):
     show_task_info = False
     breaklines = False
     user_list = []
-    task_ids, plugin_count, no_accesses = find_task_ids(xs, view_ctx, check_access=teacher_or_see_answers)
+    teacher_or_see_answers = view_ctx.route.teacher_or_see_answers
+    task_ids, plugin_count, no_accesses = find_task_ids(
+        xs,
+        view_ctx,
+        UserContext.from_one_user(current_user),
+        check_access=teacher_or_see_answers,
+    )
     if teacher_or_see_answers and no_accesses:
         flash('You do not have full access to the following tasks: ' + ', '.join([t.doc_task for t in no_accesses]))
     points_sum_rule = doc_settings.point_sum_rule()
@@ -442,6 +445,7 @@ def view(item_path, template_name, route="view"):
         total_tasks = len(task_ids)
     if points_sum_rule and points_sum_rule.scoreboard_error:
         flash(f'Error in point_sum_rule scoreboard: {points_sum_rule.scoreboard_error}')
+    usergroup = m.group
     if teacher_or_see_answers:
         user_list = None
         ug = None
@@ -456,7 +460,7 @@ def view(item_path, template_name, route="view"):
             if not ug:
                 flash(f'User group {usergroup} not found')
             else:
-                if not verify_group_view_access(ug, require=False):
+                if not verify_group_view_access(ug, require=False, user=current_user):
                     if not ug.is_personal_group:
                         flash(f"You don't have access to group '{ug.name}'.")
                         ug = None
@@ -469,7 +473,7 @@ def view(item_path, template_name, route="view"):
             user_list = add_missing_users_from_group(user_list, ug)
         elif ug and not user_list and not can_add_missing:
             flash(f"You don't have access to group '{ug.name}'.")
-    elif doc_settings.show_task_summary() and logged_in():
+    elif doc_settings.show_task_summary() and current_user.logged_in:
         info = get_points_by_rule(points_sum_rule, task_ids, [current_user.id], force_user=current_user)
         if info:
             total_points = info[0]['total_points']
@@ -483,7 +487,7 @@ def view(item_path, template_name, route="view"):
 
     no_question_auto_numbering = None
 
-    if route == 'lecture' and has_edit_access(doc_info):
+    if view_ctx.route == ViewRoute.Lecture and current_user.has_edit_access(doc_info):
         no_question_auto_numbering = doc_settings.auto_number_questions()
 
     current_list_user: Optional[User] = None
@@ -507,7 +511,7 @@ def view(item_path, template_name, route="view"):
     slide_background_url = None
     slide_background_color = None
 
-    is_slide = template_name == 'show_slide.html'
+    is_slide = view_ctx.route == ViewRoute.ShowSlide
     if is_slide:
         slide_background_url = doc_settings.get_slide_background_url()
         slide_background_color = doc_settings.get_slide_background_color()
@@ -516,13 +520,14 @@ def view(item_path, template_name, route="view"):
         do_lazy = m.lazy if m.lazy is not None else doc_settings.lazy(
             default=plugin_count >= current_app.config['PLUGIN_COUNT_LAZY_LIMIT'])
 
+    user_ctx = UserContext(
+        user=current_list_user or current_user,
+        logged_user=current_user,
+    )
     post_process_result = post_process_pars(
         doc,
         xs,
-        UserContext(
-            user=current_list_user or current_user,
-            logged_user=current_user,
-        ),
+        user_ctx,
         view_ctx,
         sanitize=False,
         do_lazy=do_lazy,
@@ -537,7 +542,7 @@ def view(item_path, template_name, route="view"):
     if view_range.is_restricted and contents_have_changed:
         post_process_result.texts = partition_texts(post_process_result.texts, view_range, preamble_count)
 
-    if hide_names_in_teacher(doc_info) or should_hide_names:
+    if force_hide_names(current_user, doc_info) or view_ctx.hide_names_requested:
         for entry in user_list:
             if entry['user'].id != current_user.id:
                 entry['user'].hide_name = True
@@ -545,7 +550,7 @@ def view(item_path, template_name, route="view"):
     show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']
     taketime("view to render")
 
-    score_infos = get_score_infos_if_enabled(doc_info, doc_settings)
+    score_infos = get_score_infos_if_enabled(doc_info, doc_settings, user_ctx)
 
     reqs = get_all_reqs()  # This is cached so only first time after restart takes time
     taketime("reqs done")
@@ -615,7 +620,7 @@ def view(item_path, template_name, route="view"):
         override_theme = generate_theme(document_themes, get_default_scss_gen_dir())
 
     rendered_html = render_template(
-        template_name,
+        'show_slide.html' if is_slide else 'view_html.html',
         access=access,
         hide_links=should_hide_links(doc_settings, rights),
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
@@ -623,8 +628,8 @@ def view(item_path, template_name, route="view"):
         hide_sidemenu=should_hide_sidemenu(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
         exam_mode=is_exam_mode(doc_settings, rights),
-        route=route,
-        edit_mode=edit_mode,
+        route=view_ctx.route.value,
+        edit_mode=(m.edit if current_user.has_edit_access(doc_info) else None),
         item=doc_info,
         text=post_process_result.texts,
         headers=index,
@@ -661,12 +666,10 @@ def view(item_path, template_name, route="view"):
         override_theme=override_theme,
         current_list_user=current_list_user
     )
-    r = make_response(rendered_html)
-    add_no_cache_headers(r)
-    return r
+    return rendered_html
 
 
-def redirect_to_login(item: Optional[Document]):
+def render_login(item: Optional[Document]) -> FlaskViewResult:
     view_settings = get_minimal_visibility_settings(item)
     session['came_from'] = request.url
     session['anchor'] = request.args.get('anchor', '')

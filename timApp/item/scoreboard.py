@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import List, Dict, Optional
 
 from timApp.answer.pointsumrule import PointCountMethod
-from timApp.auth.sessioninfo import get_current_user_object, logged_in
 from timApp.document.docinfo import DocInfo
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import dereference_pars
@@ -31,9 +30,10 @@ class DocScoreInfo:
 def get_score_infos(
         folder: Folder,
         doc_paths: List[str],
+        user_ctx: UserContext,
 ) -> List[DocScoreInfo]:
     total_table = {}
-    u = get_current_user_object()
+    u = user_ctx.logged_user
     docs = folder.get_all_documents(
         relative_paths=doc_paths,
         filter_user=u,
@@ -47,7 +47,7 @@ def get_score_infos(
         doc = d.document
         blocks = doc.get_paragraphs()
         blocks = dereference_pars(blocks, context_doc=doc, view_ctx=default_view_ctx)
-        task_ids, _, _ = find_task_ids(blocks, default_view_ctx)
+        task_ids, _, _ = find_task_ids(blocks, default_view_ctx, user_ctx)
         if not task_ids:
             continue
 
@@ -124,11 +124,15 @@ def get_score_infos(
     return list(total_table.values())
 
 
-def get_score_infos_if_enabled(doc_info: DocInfo, doc_settings: DocSettings) -> Optional[List[DocScoreInfo]]:
+def get_score_infos_if_enabled(
+        doc_info: DocInfo,
+        doc_settings: DocSettings,
+        user_ctx: UserContext,
+) -> Optional[List[DocScoreInfo]]:
     score_infos = None
-    if logged_in() and doc_settings.show_scoreboard():
+    if user_ctx.logged_user.logged_in and doc_settings.show_scoreboard():
         scoreboard_docs = doc_settings.scoreboard_docs()
         if not scoreboard_docs:
             scoreboard_docs.append(doc_info.short_name)
-        score_infos = get_score_infos(doc_info.parent, scoreboard_docs)
+        score_infos = get_score_infos(doc_info.parent, scoreboard_docs, user_ctx)
     return score_infos

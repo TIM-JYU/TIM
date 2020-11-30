@@ -18,6 +18,7 @@ from werkzeug.exceptions import abort
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_answers_query
 from timApp.auth.accesshelper import get_doc_or_abort
+from timApp.auth.sessioninfo import user_context_with_logged_in
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
@@ -420,6 +421,7 @@ def get_tally_field_values(
     tally_field_values: DefaultDict[int, List[Tuple[float, str]]] = defaultdict(list)
     task_id_cache = {}
     field_groups = itertools.groupby(tally_fields, key=lambda f: f[0].grouping_key)
+    user_ctx = user_context_with_logged_in(None)
     for _, x in field_groups:
         fs = list(x)
         g = fs[0][0]
@@ -428,7 +430,7 @@ def get_tally_field_values(
         if tids is None:
             doc.insert_preamble_pars()
             pars = doc.get_dereferenced_paragraphs(view_ctx)
-            tids = find_task_ids(pars, view_ctx, check_access=False)[0]
+            tids = find_task_ids(pars, view_ctx, user_ctx, check_access=False)[0]
             task_id_cache[doc.doc_id] = tids
         ans_filter = true()
         if g.datetime_start:

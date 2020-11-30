@@ -4,6 +4,7 @@ from timApp.auth.accesshelper import verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import get_templates_for_folder, apply_template, create_document
 from timApp.document.specialnames import FORCED_TEMPLATE_NAME
+from timApp.document.viewcontext import ViewRoute
 from timApp.folder.folder import Folder
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import get_option
@@ -28,7 +29,7 @@ def try_return_folder(item_name):
                 item = create_document(item_name, item_name[ind + 1:])
                 apply_template(item, template_item.path)
                 db.session.commit()
-                return view(item_name, 'view_html.html')
+                return view(item_name, ViewRoute.View)
 
         return render_template('create_new.html',
                                show_create_new=get_current_user_object().can_write_to_folder(f),

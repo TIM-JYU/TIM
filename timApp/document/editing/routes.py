@@ -23,6 +23,7 @@ from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
 from timApp.document.editing.proofread import proofread_pars, process_spelling_errors
 from timApp.document.exceptions import ValidationException, ValidationWarning
+from timApp.document.hide_names import is_hide_names
 from timApp.document.post_process import post_process_pars
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.translation.synchronize_translations import synchronize_translations
@@ -390,9 +391,9 @@ def par_response(pars: List[DocParagraph],
     else:
         preview = bool(edit_request and edit_request.preview)
     if edit_request:
-        view_ctx = ViewContext(edit_request.viewname or ViewRoute.View, preview)
+        view_ctx = ViewContext(edit_request.viewname or ViewRoute.View, preview, hide_names_requested=is_hide_names())
     else:
-        view_ctx = ViewContext(ViewRoute.View, preview)
+        view_ctx = ViewContext(ViewRoute.View, preview, hide_names_requested=is_hide_names())
     if update_cache:
         changed_pars = DocParagraph.preload_htmls(
             doc.get_paragraphs(include_preamble=True),

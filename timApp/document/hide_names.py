@@ -15,12 +15,17 @@ def hide_names_in_teacher(d: DocInfo, context_user: Optional[User] = None) -> bo
     force hiding.
     """
     u = get_current_user_object()
+    force_hide = force_hide_names(u, d, context_user)
+    return is_hide_names() or force_hide
+
+
+def force_hide_names(current_user: User, d: DocInfo, context_user: Optional[User] = None) -> bool:
     force_hide = False
-    if context_user and context_user.id == u.id:
+    if context_user and context_user.id == current_user.id:
         pass
     else:
-        force_hide = not u.has_teacher_access(d)
-    return is_hide_names() or force_hide
+        force_hide = not current_user.has_teacher_access(d)
+    return force_hide
 
 
 def is_hide_names() -> bool:

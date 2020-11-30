@@ -8,13 +8,12 @@ import pytz
 from flask import flash
 from jinja2.sandbox import SandboxedEnvironment
 
-from timApp.auth.accesshelper import has_edit_access, has_teacher_access
-from timApp.auth.sessioninfo import get_session_usergroup_ids, get_current_user_object
+from timApp.auth.sessioninfo import get_session_usergroup_ids
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document
-from timApp.document.hide_names import hide_names_in_teacher, is_hide_names
+from timApp.document.hide_names import force_hide_names
 from timApp.document.macroinfo import get_user_specific_macros
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
@@ -82,7 +81,7 @@ def post_process_pars(
         )
 
     if settings.show_authors():
-        hide_authors = is_hide_names()
+        hide_authors = view_ctx.hide_names_requested
         authors = doc.get_changelog(-1).get_authorinfo(pars)
         if hide_authors:
             for ainfo in authors.values():
@@ -96,7 +95,8 @@ def post_process_pars(
     pars_dict: DefaultDict[Tuple[str, int], List[dict]] = defaultdict(list)
 
     docinfo = doc.get_docinfo()
-    if not has_edit_access(docinfo):
+    curr_user = user_ctx.logged_user
+    if not curr_user.has_edit_access(docinfo):
         for p in final_pars:
             if p.is_question():
                 d = p.get_final_dict(view_ctx)
@@ -131,7 +131,6 @@ def post_process_pars(
         d['notes'] = []
     # taketime("pars done")
 
-    curr_user = get_current_user_object()
     group = curr_user.get_personal_group().id
     if curr_user.logged_in:
         # taketime("readings begin")
@@ -161,7 +160,7 @@ def post_process_pars(
     notes = get_notes(group, doc)
     # taketime("notes picked")
 
-    should_hide_names = hide_names_in_teacher(docinfo)
+    should_hide_names = view_ctx.hide_names_requested or force_hide_names(curr_user, docinfo)
     comment_docs = {docinfo.id: docinfo}
     teacher_access_cache = {}
     for n, u in notes:
@@ -172,7 +171,7 @@ def post_process_pars(
                 comment_docs[n.doc_id] = DocEntry.find_by_id(n.doc_id)
             has_teacher = teacher_access_cache.get(n.doc_id)
             if has_teacher is None:
-                has_teacher = bool(has_teacher_access(comment_docs[n.doc_id]))
+                has_teacher = bool(curr_user.has_teacher_access(comment_docs[n.doc_id]))
                 teacher_access_cache[n.doc_id] = has_teacher
             editable = n.usergroup_id == group or has_teacher
             private = n.access == 'justme'

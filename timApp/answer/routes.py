@@ -1476,7 +1476,7 @@ def get_answers(task_id: str, user_id: int):
 def get_document_answers(doc_path):
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
     pars = d.document.get_dereferenced_paragraphs(default_view_ctx)
-    task_ids, _, _ = find_task_ids(pars, default_view_ctx)
+    task_ids, _, _ = find_task_ids(pars, default_view_ctx, user_context_with_logged_in(None))
     return get_all_answers_list_plain(task_ids)
 
 

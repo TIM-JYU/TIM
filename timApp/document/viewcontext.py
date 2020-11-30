@@ -7,15 +7,24 @@ from typing import Tuple, Any, Optional
 class ViewRoute(Enum):
     Answers = 'answers'
     Lecture = 'lecture'
+    ShowSlide = 'show_slide'
     Slide = 'slide'
     Teacher = 'teacher'
     Velp = 'velp'
     View = 'view'
     Unknown = 'unknown'
 
+    @property
+    def teacher_or_see_answers(self) -> bool:
+        return self in teacher_or_see_answers
+
+
+teacher_or_see_answers = {ViewRoute.Teacher, ViewRoute.Answers}
+
 
 viewmode_routes = {
     ViewRoute.Lecture,
+    ViewRoute.ShowSlide,
     ViewRoute.Slide,
     ViewRoute.Velp,
     ViewRoute.View,
@@ -26,6 +35,7 @@ viewmode_routes = {
 class ViewContext:
     route: ViewRoute
     preview: bool
+    hide_names_requested: bool = False
     urlmacros: Tuple[Tuple[str, str], ...] = ()
 
     @property
