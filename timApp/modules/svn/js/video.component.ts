@@ -564,7 +564,10 @@ export class VideoComponent extends AngularPluginBase<
                 width: this.width ?? null,
                 height: this.height ?? null,
                 sandbox: parseIframeopts(
-                    this.markup.iframeopts ?? 'sandbox="allow-scripts"',
+                    this.markup.iframeopts ??
+                        // Some GeoGebra instances use showVideo plugin.
+                        // The allow-same-origin is needed for GeoGebra on iPad.
+                        'sandbox="allow-scripts allow-same-origin"',
                     src
                 ).sandbox,
                 allow: null,
