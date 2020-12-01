@@ -14,7 +14,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document
-from timApp.document.hide_names import hide_names_in_teacher
+from timApp.document.hide_names import hide_names_in_teacher, is_hide_names
 from timApp.document.macroinfo import get_user_specific_macros
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
@@ -82,7 +82,13 @@ def post_process_pars(
         )
 
     if settings.show_authors():
+        hide_authors = is_hide_names()
         authors = doc.get_changelog(-1).get_authorinfo(pars)
+        if hide_authors:
+            for ainfo in authors.values():
+                for a in ainfo.authors:
+                    if isinstance(a, User):
+                        a.hide_name = True
         for p in final_pars:
             f_dict = p.get_final_dict(view_ctx)
             f_dict['authorinfo'] = authors.get(f_dict['id'])

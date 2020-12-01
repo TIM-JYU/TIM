@@ -307,7 +307,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     @property
     def pretty_full_name(self):
         """Returns the user's full name."""
-
+        if self.is_name_hidden:
+            return f'User {self.id}'
         if self.given_name and self.last_name:
             return f'{self.given_name} {self.last_name}'
         if self.real_name is None:
@@ -665,8 +666,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return self.answers.options(joinedload(Answer.users_all)).order_by(Answer.id.desc()).filter_by(task_id=task_id)
 
     @property
+    def is_name_hidden(self):
+        return getattr(self, 'hide_name', False)
+
+    @property
     def basic_info_dict(self):
-        if not getattr(self, 'hide_name', False):
+        if not self.is_name_hidden:
             return {
                 'id': self.id,
                 'name': self.name,
