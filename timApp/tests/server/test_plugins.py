@@ -508,19 +508,49 @@ type: upload
 
     def test_point_sum_rule(self):
         def get_pts(rule):
-            pts = OrderedDict([('1st', {'task_sum': 6.0, 'velp_sum': 7.0, 'total_sum': 13.0},),
-                               ('2nd', {'task_sum': 1.0, 'velp_sum': 5.0, 'total_sum': 6.0},),
-                               ('3rd', {'task_sum': 4.0, 'velp_sum': 4.0, 'total_sum': 8.0},)])
-            pts2 = OrderedDict([('1st', {'task_sum': 3.0, 'velp_sum': 7.0, 'total_sum': 10.0},),
-                                ('2nd', {'task_sum': 8.0, 'velp_sum': 5.0, 'total_sum': 13.0},),
-                                ('3rd', {'task_sum': 5.0, 'velp_sum': 4.0, 'total_sum': 9.0},)])
+            pts = OrderedDict([('1st', {
+                                'link': False,
+                                'linktext': 'link',
+                                'text': '1st: 13.0',
+                                'task_sum': 6.0, 'velp_sum': 7.0, 'total_sum': 13.0},),
+                               ('2nd', {
+                                'link': False,
+                                'linktext': 'link',
+                                'text': '2nd: 6.0',
+                                'task_sum': 1.0, 'velp_sum': 5.0, 'total_sum': 6.0},),
+                               ('3rd', {
+                                   'link': False,
+                                   'linktext': 'link',
+                                   'text': '3rd: 8.0',
+                                   'task_sum': 4.0, 'velp_sum': 4.0, 'total_sum': 8.0},)])
+            pts2 = OrderedDict([('1st', {
+                                  'link': False,
+                                  'linktext': 'link',
+                                  'text': '1st: 10.0',
+                                  'task_sum': 3.0, 'velp_sum': 7.0, 'total_sum': 10.0},),
+                                ('2nd', {
+                                  'link': False,
+                                  'linktext': 'link',
+                                  'text': '2nd: 13.0',
+                                  'task_sum': 8.0, 'velp_sum': 5.0, 'total_sum': 13.0},),
+                                ('3rd', {
+                                  'link': False,
+                                  'linktext': 'link',
+                                  'text': '3rd: 9.0',
+                                  'task_sum': 5.0, 'velp_sum': 4.0, 'total_sum': 9.0},)])
             for k, _ in pts.items():
                 for n, t in zip(('task_sum', 'velp_sum'), (PointType.task, PointType.velp)):
                     if t in rule.groups[k].point_types:
                         pass
                     else:
+                        sum1 = "{0:.1f}".format(pts[k]['total_sum'])
+                        sum2 = "{0:.1f}".format(pts2[k]['total_sum'])
                         pts[k]['total_sum'] -= pts[k][n]
                         pts2[k]['total_sum'] -= pts2[k][n]
+                        nsum1 = "{0:.1f}".format(pts[k]['total_sum'])
+                        nsum2 = "{0:.1f}".format(pts2[k]['total_sum'])
+                        pts[k]['text'] = pts[k]['text'].replace(sum1, nsum1)
+                        pts2[k]['text'] = pts2[k]['text'].replace(sum2, nsum2)
                         pts[k][n] = 0
                         pts2[k][n] = 0
             return pts, pts2
@@ -622,7 +652,9 @@ type: upload
         ]
 
         for (g1, g2, g3), count_type, count, (tasksum1, velpsum1, sum1), (tasksum2, velpsum2, sum2) in cases:
-            rule_dict = {'groups': {'1st': g1, '2nd': g2, '3rd': g3},
+            rule_dict = {'breaklines': False,
+                         'force': False,
+                         'groups': {'1st': g1, '2nd': g2, '3rd': g3},
                          'count': {count_type: count}}
             rule = PointSumRule(rule_dict)
             points = get_points_by_rule(
@@ -647,14 +679,20 @@ type: upload
                 PointSumRule({'groups': {'1st': g1, '2nd': g2, '3rd': g3},
                  'count': {count_type: count}}),
                 task_ids, [TEST_USER_1_ID, TEST_USER_2_ID], flatten=True)
-            self.assertEqual([{'groups': pts,
+            self.assertEqual([{
+                               'breaklines': False,
+                               'force': False,
+                               'groups': pts,
                                'task_count': 3,
                                'task_points': tasksum1,
                                'velp_points': velpsum1,
                                'total_points': sum1,
                                'velped_task_count': 3,
                                'user': self.test_user_1},
-                              {'groups': pts2,
+                              {
+                               'breaklines': False,
+                               'force': False,
+                               'groups': pts2,
                                'task_count': 3,
                                'task_points': tasksum2,
                                'velp_points': velpsum2,

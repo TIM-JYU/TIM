@@ -462,7 +462,12 @@ def get_points_by_rule(points_rule: Optional[PointSumRule],
                     task_sum = gr.get('task_sum', 0)
                     velp_sum = gr.get('velp_sum', 0)
                     total_sum = gr.get('total_sum', 0)
-                    linktext = rg.linktext or rule.linktext
+                    try:
+                        linktext = rg.linktext or rule.linktext
+                        link = rg.link
+                    except:
+                        linktext = ""
+                        link = False
                     try:
                         text = expl.format(groupname,
                                             float(total_sum),
@@ -476,7 +481,7 @@ def get_points_by_rule(points_rule: Optional[PointSumRule],
                         'velp_sum': velp_sum,
                         'total_sum': total_sum,
                         'text': text,
-                        'link': rg.link,
+                        'link': link,
                         'linktext': linktext
                     }
             result_list.append(row)

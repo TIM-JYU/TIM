@@ -32,7 +32,9 @@ class Group:
             self.point_types = {PointType.task, PointType.velp}
             self.min_points = 0
             self.max_points = 1e100
-            self.expl = "{0}: {1:.2f}"
+            self.expl = "{0}: {1:.1f}"
+            self.link = False
+            self.linktext = None
         elif isinstance(data, dict):
             match_re = data.get('match', name)
             # match can be a single regex or a list of regexes
@@ -51,7 +53,7 @@ class Group:
             self.min_points = data.get("min_points", 0)
             self.max_points = data.get("max_points", 1e100)
             self.expl = data.get("expl", "{0}: {1:.1f}")
-            self.link = data.get("link", "")
+            self.link = data.get("link", False)
             self.linktext = data.get("linktext", None)
 
     def check_match(self, task_id: str):
