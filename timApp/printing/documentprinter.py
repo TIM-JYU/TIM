@@ -94,7 +94,7 @@ def get_tex_settings_and_macros(d: Document, user_ctx: UserContext):
     pdoc_macros = pdoc_macroinfo.get_macros()
     pdoc_macro_env = create_environment(
         pdoc_macro_delimiter,
-        user_ctx.user,
+        user_ctx,
         default_view_ctx,
     )
     pdoc_macros.update(settings.get_texmacroinfo(default_view_ctx).get_macros())

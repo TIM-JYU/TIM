@@ -65,7 +65,7 @@ class MacroInfo:
 
     @cached_property
     def jinja_env(self) -> SandboxedEnvironment:
-        return create_environment(self.macro_delimiter, self.user_ctx.user if self.user_ctx else None, self.view_ctx)
+        return create_environment(self.macro_delimiter, self.user_ctx, self.view_ctx)
 
     def get_macros_preserving_user(self) -> Dict[str, object]:
         """Gets the macros and defines user-specific variables in such a way that the macro replacement for user

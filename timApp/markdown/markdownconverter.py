@@ -10,6 +10,7 @@ from jinja2 import TemplateSyntaxError
 from jinja2.sandbox import SandboxedEnvironment
 from lxml import html, etree
 
+from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
@@ -18,7 +19,6 @@ from timApp.util.utils import get_error_html, title_to_id
 from timApp.util.utils import widen_fields
 
 if TYPE_CHECKING:
-    from timApp.user.user import User
     from timApp.document.docparagraph import DocParagraph
     from timApp.document.docsettings import DocSettings
 
@@ -142,7 +142,7 @@ def Pz(i):
 
 @dataclass
 class Belongs:
-    user: User
+    user_ctx: UserContext
 
     def __post_init__(self):
         self.cache = {}
@@ -151,7 +151,7 @@ class Belongs:
         b = self.cache.get(groupname, None)
         if b is not None:
             return b
-        b = any(gr.name == groupname for gr in self.user.groups)
+        b = any(gr.name == groupname for gr in self.user_ctx.logged_user.groups)
         self.cache[groupname] = b
         return b
 
@@ -342,7 +342,7 @@ tim_filters = {
 
 def create_environment(
         macro_delimiter: str,
-        user: Optional['User'],
+        user_ctx: Optional[UserContext],
         view_ctx: ViewContext,
 ) -> SandboxedEnvironment:
     env = SandboxedEnvironment(
@@ -358,8 +358,8 @@ def create_environment(
     env.filters.update(tim_filters)
     env.filters['isview'] = view_ctx.isview
 
-    if user:
-        env.filters['belongs'] = Belongs(user).belongs_to_group
+    if user_ctx:
+        env.filters['belongs'] = Belongs(user_ctx).belongs_to_group
     return env
 
 
@@ -379,7 +379,7 @@ def md_to_html(text: str,
         text,
         macros,
         settings=None,
-        env=create_environment('%%', user=None, view_ctx=default_view_ctx),
+        env=create_environment('%%', user_ctx=None, view_ctx=default_view_ctx),
     )
 
     raw = call_dumbo([text])
