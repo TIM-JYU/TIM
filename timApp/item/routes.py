@@ -430,6 +430,7 @@ def view(item_path, template_name, route="view"):
     tasks_done = None
     task_groups = None
     show_task_info = False
+    breaklines = False
     user_list = []
     task_ids, plugin_count, no_accesses = find_task_ids(xs, view_ctx, check_access=teacher_or_see_answers)
     if teacher_or_see_answers and no_accesses:
@@ -474,7 +475,8 @@ def view(item_path, template_name, route="view"):
             total_points = info[0]['total_points']
             tasks_done = info[0]['task_count']
             task_groups = info[0].get('groups')
-            show_task_info = tasks_done > 0 or total_points != 0
+            breaklines = info[0].get('breaklines')
+            show_task_info = tasks_done > 0 or total_points != 0 or info[0]['force']
 
     no_question_auto_numbering = None
 
@@ -644,7 +646,8 @@ def view(item_path, template_name, route="view"):
                    'tasks_done': tasks_done,
                    'total_tasks': total_tasks,
                    'show': show_task_info,
-                   'groups': task_groups},
+                   'groups': task_groups,
+                   'breaklines': breaklines},
         doc_settings=doc_settings,
         word_list=word_list,
         memo_minutes=doc_settings.memo_minutes(),

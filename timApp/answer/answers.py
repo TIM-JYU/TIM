@@ -425,12 +425,25 @@ def get_points_by_rule(points_rule: Optional[PointSumRule],
     if flatten:
         result_list = []
         hide_list = points_rule.hide
+        if (points_rule.force and not result.items()): # fake result
+            fake_groups = {}
+            fake_groups['task_sum'] = 0
+            fake_groups['velp_sum'] = 0
+            fake_groups['total_sum'] = 0
+            fake_groups['groups'] = {}
+            result[0] = fake_groups
         for user_id, task_groups in result.items():
-            first_group = next(v for _, v in task_groups['groups'].items())
+            first_group = {'tasks': [{}]}
+            try:  # TODO: tämä koska en osannut täyttää fake_groups oikein
+                first_group = next(v for _, v in task_groups['groups'].items())
+            except:
+                pass
             row = first_group['tasks'][0]
             row['total_points'] = task_groups['total_sum']
             row['task_points'] = task_groups['task_sum']
             row['velp_points'] = task_groups['velp_sum']
+            row['breaklines'] = points_rule.breaklines
+            row['force'] = points_rule.force
             if points_rule.count_all: # note:  tasks_done = info[0]['task_count']
                 row['task_count'] = task_counts.get(user_id, 0)
             else:
@@ -441,13 +454,31 @@ def get_points_by_rule(points_rule: Optional[PointSumRule],
             rulegroups = rule.groups.items()
             if points_rule.sort:
                 rulegroups =  sorted(rulegroups)
-            for groupname, _ in rulegroups:
+            for groupname, rg in rulegroups:
                     if hide_list and groupname in hide_list:
                         continue
-                    row['groups'][groupname] = {'task_sum': task_groups['groups'].get(groupname, {}).get('task_sum', 0),
-                                            'velp_sum': task_groups['groups'].get(groupname, {}).get('velp_sum', 0),
-                                            'total_sum': task_groups['groups'].get(groupname, {}).get('total_sum',
-                                                                                                      0)}
+                    gr = task_groups['groups'].get(groupname, {})
+                    expl = rg.expl
+                    task_sum = gr.get('task_sum', 0)
+                    velp_sum = gr.get('velp_sum', 0)
+                    total_sum = gr.get('total_sum', 0)
+                    linktext = rg.linktext or rule.linktext
+                    try:
+                        text = expl.format(groupname,
+                                            float(total_sum),
+                                            float(task_sum),
+                                            float(velp_sum)
+                                           )
+                    except:
+                        text = groupname + ": " + str(total_sum)
+                    row['groups'][groupname] = {
+                        'task_sum': task_sum,
+                        'velp_sum': velp_sum,
+                        'total_sum': total_sum,
+                        'text': text,
+                        'link': rg.link,
+                        'linktext': linktext
+                    }
             result_list.append(row)
         return result_list
     return result
