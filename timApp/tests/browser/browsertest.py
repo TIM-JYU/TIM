@@ -43,11 +43,11 @@ options = webdriver.ChromeOptions()
 options.headless = True
 options.add_argument('--window-size=1024x768')
 
-global_drv = webdriver.Remote(command_executor='http://chrome:4444/wd/hub',
-                              desired_capabilities=options.to_capabilities())
-global_drv.implicitly_wait(10)
-global_drv.set_page_load_timeout(20)
-global_drv.set_script_timeout(20)
+# global_drv = webdriver.Remote(command_executor='http://chrome:4444/wd/hub',
+#                               desired_capabilities=options.to_capabilities())
+# global_drv.implicitly_wait(10)
+# global_drv.set_page_load_timeout(20)
+# global_drv.set_script_timeout(20)
 
 
 class BrowserTest(TimLiveServer, TimRouteTest):
@@ -60,9 +60,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def get_screenshot_tolerance(self) -> float:
         return 5
 
-    @property
-    def drv(self):
-        return global_drv
+    # @property
+    # def drv(self):
+    #     return global_drv
 
     def setUp(self):
         TimLiveServer.setUp(self)
@@ -71,12 +71,14 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         # options.set_headless()
         # options.add_argument('--window-size=1024x768')
         RemoteConnection.set_timeout(15)  # according to experience, 10 is too low
-        # try:
-        #     self.drv = webdriver.Remote(command_executor=self.app.config['SELENIUM_REMOTE_URL'] + ':4444/wd/hub',
-        #                                 desired_capabilities=options.to_capabilities())
-        # except socket.timeout:
-        #     self.skipTest('socket timeout occurred when trying to initialize webdriver')
-        # self.drv.implicitly_wait(10)
+        try:
+            self.drv = webdriver.Remote(command_executor=self.app.config['SELENIUM_REMOTE_URL'] + ':4444/wd/hub',
+                                        desired_capabilities=options.to_capabilities())
+        except socket.timeout:
+            self.skipTest('socket timeout occurred when trying to initialize webdriver')
+        self.drv.implicitly_wait(10)
+        self.drv.set_page_load_timeout(20)
+        self.drv.set_script_timeout(20)
         self.wait = WebDriverWait(self.drv, 15)
 
     def login_browser_as(self, email: str, password: str, name: str):
@@ -284,7 +286,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def tearDown(self):
         TimLiveServer.tearDown(self)
         try:
-            #self.drv.quit()
+            self.drv.quit()
             pass
         except socket.timeout:
             pass
