@@ -45,7 +45,7 @@ print("Hello World")
         self.goto_document(d, query=query)
         runbutton = self.find_element_avoid_staleness('#t button')
         runbutton.click()
-        self.wait_until_present('.console')
+        self.wait_until_present_and_vis('.console')
         e = self.find_element('.console')
         self.assertEqual(console_text, e.text)
 

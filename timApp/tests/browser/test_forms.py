@@ -9,10 +9,10 @@ class FormTest(BrowserTest):
         """ Save and show answers in browser according to global field and useCurrentUser logic"""
 
         def wait_fields_loaded():
-            self.wait_until_present('#a .textfieldNoSaveDiv input')
-            self.wait_until_present('#GLO_b .textfieldNoSaveDiv input')
-            self.wait_until_present('#c .textfieldNoSaveDiv input')
-            self.wait_until_present('#save div')
+            self.wait_until_present_and_vis('#a .textfieldNoSaveDiv input')
+            self.wait_until_present_and_vis('#GLO_b .textfieldNoSaveDiv input')
+            self.wait_until_present_and_vis('#c .textfieldNoSaveDiv input')
+            self.wait_until_present_and_vis('#save div')
 
         def send_inputs(ans: str):
             field = self.find_element_and_move_to('#a .textfieldNoSaveDiv input')
@@ -24,7 +24,7 @@ class FormTest(BrowserTest):
             multisave = self.find_element_avoid_staleness('#save tim-multisave')
             runbutton = multisave.find_element_by_css_selector('button')
             runbutton.click()
-            self.wait_until_present('p.savedtext')
+            self.wait_until_present_and_vis('p.savedtext')
 
         def check_field_content(field: str, ans: str):
             ele = self.find_element('#' + field + ' .textfieldNoSaveDiv input')

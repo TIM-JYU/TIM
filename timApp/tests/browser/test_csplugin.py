@@ -17,7 +17,7 @@ type: python
         })
         self.goto_document(dt)
 
-        self.wait_until_present('#py textarea')
+        self.wait_until_present_and_vis('#py textarea')
         textarea = self.find_element_and_move_to('#py textarea')
         # sleep(0.5)
         textarea.send_keys('print("Hello world!")')
@@ -26,8 +26,8 @@ type: python
         self.assert_same_screenshot(par, ['csplugin/python_before_answer'])
         runbutton = par.find_element_by_css_selector('button')
         runbutton.click()
-        self.wait_until_present('.console')
-        self.wait_until_present('answerbrowser')
+        self.wait_until_present_and_vis('.console')
+        self.wait_until_present_and_vis('answerbrowser')
         self.assert_same_screenshot(par, 'csplugin/python_after_answer', attempts=2)
 
         # post a second answer because otherwise clicking previous answer does not do anything
@@ -49,14 +49,14 @@ type: python
 
     def make_text_and_answer(self, d):
         self.goto_document(d)
-        self.wait_until_present('#text textarea')
+        self.wait_until_present_and_vis('#text textarea')
         textarea = self.find_element_and_move_to('#text textarea')
         textarea.send_keys('print("Hello world!")')
         self.get_uninteractable_element().click()
         par = self.find_element_avoid_staleness('#text > tim-plugin-loader > div')
         runbutton = par.find_element_by_css_selector('button')
         runbutton.click()
-        self.wait_until_present('answerbrowser')
+        self.wait_until_present_and_vis('answerbrowser')
         self.wait_until_hidden('tim-loading')
         return textarea, runbutton
 

@@ -56,7 +56,7 @@ class ParEditorTest(BrowserTest):
         self.assert_same_screenshot(pareditor, 'pareditor/textarea_hello_world', move_to_element=True)
         change_editor_button.click()
         self.wait_for_editor_load()
-        self.wait_until_present('.ace_content')
+        self.wait_until_present_and_vis('.ace_content')
         # after deleting the '!', the screenshot should be the same
         ActionChains(self.drv).send_keys(Keys.PAGE_DOWN, Keys.BACKSPACE).perform()
         self.wait_for_preview_to_finish()
@@ -78,7 +78,7 @@ class ParEditorTest(BrowserTest):
         sleep(0.1)
         self.find_element_avoid_staleness('.addBottom', click=True)
         self.wait_for_editor_load()
-        self.wait_until_present('.ace_content')
+        self.wait_until_present_and_vis('.ace_content')
 
     def test_autocomplete(self):
         self.login_browser_quick_test1()

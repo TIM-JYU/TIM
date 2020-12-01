@@ -300,9 +300,12 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         self.wait.until(ec.invisibility_of_element_located((By.CSS_SELECTOR, selector)))
         self.drv.implicitly_wait(10)
 
+    def wait_until_present_and_vis(self, selector):
+        self.wait_until_present(selector)
+        self.wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, selector)))
+
     def wait_until_present(self, selector):
         self.wait.until(ec.presence_of_element_located((By.CSS_SELECTOR, selector)))
-        self.wait.until(ec.visibility_of_element_located((By.CSS_SELECTOR, selector)))
 
     def wait_until_text_present(self, selector: str, text: str):
         self.wait.until(ec.text_to_be_present_in_element((By.CSS_SELECTOR, selector), text))

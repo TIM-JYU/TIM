@@ -22,24 +22,24 @@ autosave: false
         # Test Case 1 - expected success in both fields after Save-button click and page refresh
 
         self.goto_document(d)
-        self.wait_until_present('#t1 input')
+        self.wait_until_present_and_vis('#t1 input')
         field = self.find_element_and_move_to('#t1 input')
         field.send_keys('Aku Ankka')
-        self.wait_until_present('#t2 input')
+        self.wait_until_present_and_vis('#t2 input')
         input2 = self.find_element_and_move_to('#t2 input')
         input2.send_keys('2.75')
         self.get_uninteractable_element().click()
         par = self.find_element_avoid_staleness('#pars')
         multisave = self.find_element_avoid_staleness('#t3 tim-multisave')
-        self.wait_until_present('#t3 div') # wait for ng-if to finish
+        self.wait_until_present_and_vis('#t3 div') # wait for ng-if to finish
         self.assert_same_screenshot(par, ['textfield/fields_before_answer'])
         runbutton = multisave.find_element_by_css_selector('button')
         runbutton.click()
-        self.wait_until_present('p.savedtext')
+        self.wait_until_present_and_vis('p.savedtext')
         self.refresh()
 
-        self.wait_until_present('#t1 input')
-        self.wait_until_present('#t2 input')
+        self.wait_until_present_and_vis('#t1 input')
+        self.wait_until_present_and_vis('#t2 input')
         par = self.find_element_avoid_staleness('#pars')
         self.assert_same_screenshot(par, ['textfield/fields_after_answer'])
 
@@ -51,11 +51,11 @@ autosave: false
         return
 
         self.goto_document(d)
-        self.wait_until_present('#t1 input')
+        self.wait_until_present_and_vis('#t1 input')
         field = self.find_element_and_move_to('#t1 input')
         field.clear()
         field.send_keys(' ')
-        self.wait_until_present('#t2 input')
+        self.wait_until_present_and_vis('#t2 input')
         input2 = self.find_element_and_move_to('#t2 input')
         input2.clear()
         input2.send_keys(' ')
@@ -64,7 +64,7 @@ autosave: false
         runbutton = multisave.find_element_by_css_selector('button')
         runbutton.click()
         self.goto_document(d)
-        self.wait_until_present('#t1 input')
-        self.wait_until_present('#t2 input')
+        self.wait_until_present_and_vis('#t1 input')
+        self.wait_until_present_and_vis('#t2 input')
         par = self.find_element_avoid_staleness('#pars')
         self.assert_same_screenshot(par, ['textfield/fields_after_answer_switch'])
