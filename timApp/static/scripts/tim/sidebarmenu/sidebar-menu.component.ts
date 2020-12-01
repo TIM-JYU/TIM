@@ -34,6 +34,8 @@ const MENU_BUTTON_ICONS: Record<MenuState, string> = {
     [MenuState.Max]: "",
 };
 
+const sizeBreakpoint = "md";
+
 @Component({
     selector: "tim-sidebar-menu",
     template: `
@@ -62,7 +64,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     private currentTab?: string;
     private settings: ISettings = genericglobals().userPrefs;
     private currentMenuState: MenuState = MenuState.Open;
-    private isSm = isScreenSizeOrLower("sm");
+    private isSm = isScreenSizeOrLower(sizeBreakpoint);
     private lastNonSmState = this.lastVisState;
     @ViewChild("tabs") private tabs!: TabsetComponent;
     hide: IVisibilityVars = getVisibilityVars();
@@ -121,11 +123,11 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     onResize(): void {
-        if (!this.isSm && isScreenSizeOrLower("sm")) {
+        if (!this.isSm && isScreenSizeOrLower(sizeBreakpoint)) {
             this.isSm = true;
             this.lastNonSmState = this.currentMenuState;
             this.setVisibleState(MenuState.Closed, {tabs: true});
-        } else if (this.isSm && !isScreenSizeOrLower("sm")) {
+        } else if (this.isSm && !isScreenSizeOrLower(sizeBreakpoint)) {
             this.isSm = false;
             this.setVisibleState(this.lastNonSmState, {tabs: true});
         }
@@ -163,7 +165,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     ngAfterViewInit() {
         let initialViewState = this.lastVisState;
         const someTabSelected = this.trySetCurrentTabToDefault();
-        if (isScreenSizeOrLower("sm")) {
+        if (isScreenSizeOrLower(sizeBreakpoint)) {
             initialViewState = MenuState.Closed;
         } else if (!someTabSelected) {
             initialViewState = MenuState.Icons;
@@ -253,7 +255,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     private get nextState() {
-        return isScreenSizeOrLower("sm")
+        return isScreenSizeOrLower(sizeBreakpoint)
             ? this.nextMobileState
             : this.nextDesktopState;
     }

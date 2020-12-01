@@ -105,6 +105,9 @@ a .glyphicon {
         min-width: $paragraph-preferred-width;
     }
     max-width: $paragraph-preferred-width;
+    @media (max-width: $screen-md-max) and (min-width: $screen-md-min) {
+        margin-left: 2em;
+    }
     .smalltext .parContent {
         font-size: small;
     }
@@ -517,6 +520,7 @@ p.caption {
     padding-left: 2em;
     padding-right: 2em;
     min-width: inherit;
+    margin-left: auto;
 }
 
 .timButton, .editorButton {
