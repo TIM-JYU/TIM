@@ -75,6 +75,19 @@ def clear_all(doc: DocInfo, dry_run: bool) -> None:
     commit_if_not_dry(dry_run)
 
 
+@answer_cli.command()
+@click.argument('doc', type=TimDocumentType())
+@click.option('--dry-run/--no-dry-run', default=True)
+@click.option('--task', '-t', multiple=True)
+def clear(doc: DocInfo, dry_run: bool, task: List[str]) -> None:
+    tasks_to_delete = [f'{doc.id}.{t}' for t in task]
+    ids = Answer.query.filter(Answer.task_id.in_(tasks_to_delete)).with_entities(Answer.id).all()
+    cnt = len(ids)
+    delete_answers_with_ids(ids)
+    click.echo(f'Total {cnt}')
+    commit_if_not_dry(dry_run)
+
+
 def delete_answers_with_ids(ids: List[int]) -> AnswerDeleteResult:
     if not isinstance(ids, list):
         raise TypeError('ids should be a list of answer ids')
