@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Generator, List, Optional
+from typing import Generator, List, Optional, Tuple
 
 from flask import Blueprint, render_template
 from flask import abort
@@ -20,7 +20,7 @@ from timApp.auth.sessioninfo import get_current_user_group_object
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
-from timApp.document.docinfo import move_document, find_free_name
+from timApp.document.docinfo import move_document, find_free_name, DocInfo
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType, Block
@@ -212,11 +212,52 @@ def log_right(s: str):
     log_info(f'RIGHTS: {u.name} {s}')
 
 
+def get_group_and_doc(doc_id: int, username: str) -> Tuple[UserGroup, DocInfo]:
+    i = get_item_or_abort(doc_id)
+    verify_permission_edit_access(i, AccessType.view)
+    g = UserGroup.get_by_name(username)
+    if not g:
+        raise RouteException('User not found')
+    return g, i
+
+
+@manage_page.route("/permissions/expire/<int:doc_id>/<username>")
+def expire_permission_url(doc_id: int, username: str):
+    g, i = get_group_and_doc(doc_id, username)
+    ba: Optional[BlockAccess] = BlockAccess.query.filter_by(
+        type=AccessType.view.value,
+        block_id=i.id,
+        usergroup_id=g.id,
+    ).first()
+    if not ba:
+        raise RouteException('Right not found.')
+    if ba.expired:
+        raise RouteException('Right is already expired.')
+    ba.accessible_to = get_current_time()
+    if ba.duration:
+        ba.duration = None
+        ba.duration_from = None
+        ba.duration_to = None
+    db.session.commit()
+    return ok_response()
+
+
+@manage_page.route("/permissions/confirm/<int:doc_id>/<username>")
+def confirm_permission_url(doc_id: int, username: str):
+    g, i = get_group_and_doc(doc_id, username)
+    m = PermissionRemoveModel(id=doc_id, type=AccessType.view, group=g.id)
+    return do_confirm_permission(m, i)
+
+
 @manage_page.route("/permissions/confirm", methods=["PUT"])
 @use_model(PermissionRemoveModel)
 def confirm_permission(m: PermissionRemoveModel):
     i = get_item_or_abort(m.id)
     verify_permission_edit_access(i, m.type)
+    return do_confirm_permission(m, i)
+
+
+def do_confirm_permission(m: PermissionRemoveModel, i: DocInfo):
     ba: Optional[BlockAccess] = BlockAccess.query.filter_by(
         type=m.type.value,
         block_id=m.id,
