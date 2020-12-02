@@ -24,6 +24,7 @@
             You cannot unlock this item anymore (deadline expired {{ access.duration_to | timreldatetime }}).
         {% elif access.duration_future %}
             You can unlock this item in {{ access.duration_from | timreldatetime }}.
+            Please refresh this page after that time.
         {% elif access.expired %}
             Your access to this item has expired {{ access.accessible_to | timreldatetime }}.
         {% elif access.future %}
