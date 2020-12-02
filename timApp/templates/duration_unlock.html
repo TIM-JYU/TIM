@@ -19,6 +19,7 @@
             After you click Unlock, your access to this {{ item_type }} will be removed in under {{ access.duration_now | timtimedelta }}.
         {% elif access.require_confirm %}
             You can unlock this item only after your permission is confirmed.
+            Please refresh this page after a while (e.g. 20 seconds) to recheck your confirmation.
         {% elif access.duration_expired %}
             You cannot unlock this item anymore (deadline expired {{ access.duration_to | timreldatetime }}).
         {% elif access.duration_future %}
