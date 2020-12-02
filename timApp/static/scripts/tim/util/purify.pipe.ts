@@ -13,7 +13,7 @@ export class PurifyPipe implements PipeTransform {
             return value;
         }
         return this.sanitizer.bypassSecurityTrustHtml(
-            DOMPurify.sanitize(value)
+            DOMPurify.sanitize(value, {ADD_ATTR: ["target"]})
         );
     }
 }
