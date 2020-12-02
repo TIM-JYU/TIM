@@ -222,7 +222,7 @@ def doc_access_info(doc_name):
     return json_response({
         'can_access': can_access,
         'right': view_access
-    })
+    }, date_conversion=True)
 
 
 @dataclass
