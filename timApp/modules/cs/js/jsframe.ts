@@ -286,12 +286,9 @@ export class JsframeComponent
     }
 
     public viewctrl!: ViewCtrl;
-    private span: string = "";
     error: string = "";
     console: string = "";
     message: string = "";
-    private userCode: string = "";
-    private jsframepeek: boolean = false;
     isRunning: boolean = false;
     isOpen: boolean = false;
     button: string = "";
@@ -300,15 +297,9 @@ export class JsframeComponent
     private prevdata?: JSFrameData;
     private currentData?: JSFrameData;
 
-    private timer: NodeJS.Timer | undefined;
-
     private initData: string = "";
     private userName?: string;
 
-    private saveResponse: {saved: boolean; message: string | undefined} = {
-        saved: false,
-        message: undefined,
-    };
     private channel?: MessageChannel;
     @ViewChild("frame") private frame?: ElementRef<HTMLIFrameElement>;
     private iframeload!: TimDefer<void>;
@@ -335,7 +326,6 @@ export class JsframeComponent
         this.button = this.buttonText();
         const aa = this.attrsall;
         this.userName = aa.user_id;
-        this.userCode = aa.usercode ?? "";
 
         this.message = this.markup.message ?? "";
 
@@ -505,12 +495,14 @@ export class JsframeComponent
 
     async runSend(data: unknown) {
         this.connectionErrorMessage = undefined;
+        const saveResponse = {
+            saved: false,
+            message: undefined,
+        };
         if (this.pluginMeta.isPreview()) {
-            this.saveResponse.saved = false;
             this.showPreviewError();
-            return this.saveResponse;
+            return saveResponse;
         }
-        this.jsframepeek = false;
         this.error = "";
         this.isRunning = true;
         let url = "";
@@ -518,9 +510,8 @@ export class JsframeComponent
         if (this.isTask()) {
             if (!this.getTaskId()) {
                 this.error = "Task-mode on but TaskId is missing!";
-                this.saveResponse.saved = false;
                 this.c();
-                return this.saveResponse;
+                return saveResponse;
             }
             url = this.pluginMeta.getAnswerUrl();
             params = {
@@ -553,22 +544,19 @@ export class JsframeComponent
                 this.error ??
                 this.attrsall.markup.connectionErrorMessage ??
                 defaultErrorMessage;
-            this.saveResponse.saved = false;
             this.c();
-            return this.saveResponse;
+            return saveResponse;
         }
         if (this.isTask()) {
             if (!r.result.data.web) {
                 this.error = "No web reply from csPlugin!";
-                this.saveResponse.saved = false;
                 this.c();
-                return this.saveResponse;
+                return saveResponse;
             }
             if (r.result.data.web.error) {
                 this.error = r.result.data.web.error;
-                this.saveResponse.saved = false;
                 this.c();
-                return this.saveResponse;
+                return saveResponse;
             }
         }
         this.edited = false;
@@ -576,13 +564,10 @@ export class JsframeComponent
         this.prevdata = unwrapAllC(data);
         if (this.isTask() && r.result.data.web.console) {
             this.console = r.result.data.web.console;
-            this.saveResponse.saved = true;
-            this.c();
-            return this.saveResponse;
         }
-        this.saveResponse.saved = true;
+        saveResponse.saved = true;
         this.c();
-        return this.saveResponse;
+        return saveResponse;
     }
 
     getData(msg: MessageGet = "getData") {
@@ -721,15 +706,6 @@ export class JsframeComponent
 
     getAttributeType() {
         return JsframeAll;
-    }
-
-    private stopTimer(): boolean {
-        if (!this.timer) {
-            return false;
-        }
-        clearTimeout(this.timer);
-        this.timer = undefined;
-        return true;
     }
 
     iframeloaded() {
