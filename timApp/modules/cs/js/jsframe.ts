@@ -17,14 +17,12 @@ import {
 } from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {
-    AfterViewInit,
     ApplicationRef,
     ChangeDetectorRef,
     Component,
     DoBootstrap,
     ElementRef,
     NgModule,
-    OnDestroy,
     ViewChild,
 } from "@angular/core";
 import {
@@ -40,6 +38,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 import {getParId} from "tim/document/parhelpers";
+import {TimDefer} from "tim/util/timdefer";
 import {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
@@ -183,6 +182,7 @@ export interface Iframesettings {
                         [src]="iframesettings.src"
                         [sandbox]="iframesettings.sandbox"
                         [attr.allow]="iframesettings.allow"
+                        (load)="iframeloaded()"
                 >
                 </iframe>
             </div>
@@ -220,12 +220,7 @@ export class JsframeComponent
         t.TypeOf<typeof JsframeAll>,
         typeof JsframeAll
     >
-    implements
-        ITimComponent,
-        IUserChanged,
-        AfterViewInit,
-        OnDestroy,
-        ICtrlWithMenuFunctionEntry {
+    implements ITimComponent, IUserChanged, ICtrlWithMenuFunctionEntry {
     iframesettings?: Iframesettings;
     private ab?: AnswerBrowserController;
 
@@ -316,6 +311,7 @@ export class JsframeComponent
     };
     private channel?: MessageChannel;
     @ViewChild("frame") private frame?: ElementRef<HTMLIFrameElement>;
+    private iframeload!: TimDefer<void>;
 
     b64EncodeUnicode(str: string, codeUTF: boolean) {
         // first we use encodeURIComponent to get percent-encoded UTF-8,
@@ -412,16 +408,6 @@ export class JsframeComponent
         return unwrapAllC(this.markup.c ?? this.markup.data);
     }
 
-    ngAfterViewInit() {
-        if (this.markup.initListener && !this.attrsall.preview) {
-            this.getFrame().addEventListener("load", () => {
-                this.addListener();
-            });
-        }
-    }
-
-    ngOnDestroy() {}
-
     async userChanged(user: IUser) {
         if (user.name == this.userName) {
             return;
@@ -505,6 +491,7 @@ export class JsframeComponent
             width: w,
             height: h,
         };
+        this.iframeload = new TimDefer<void>();
     }
 
     isTask(): boolean {
@@ -693,15 +680,19 @@ export class JsframeComponent
         return this.edited; // TODO: compare datas
     }
 
-    send(obj: MessageToFrame) {
-        const c = this.addListener();
+    async send(obj: MessageToFrame) {
+        const c = await this.addListener();
         c.port1.postMessage(obj);
     }
 
-    addListener() {
+    async addListener() {
         if (this.channel) {
             return this.channel;
         }
+
+        // Before posting the init message, we need to be sure the iframe has been loaded.
+        await this.iframeload.promise;
+
         this.channel = new MessageChannel();
         this.channel.port1.onmessage = (event: MessageEvent) => {
             const d = event.data as MessageFromFrame;
@@ -739,6 +730,13 @@ export class JsframeComponent
         clearTimeout(this.timer);
         this.timer = undefined;
         return true;
+    }
+
+    iframeloaded() {
+        this.iframeload.resolve();
+        if (this.markup.initListener && !this.attrsall.preview) {
+            this.addListener();
+        }
     }
 }
 
