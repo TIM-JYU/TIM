@@ -326,7 +326,6 @@ class DocumentPrinter:
             if ftop:
                 top_level = ftop
 
-            os.environ["texdocid"] = str(self._doc_entry.document.doc_id)
             from_format = 'markdown'
             if self.texplain:
                 from_format = 'latex'
