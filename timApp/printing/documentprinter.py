@@ -102,7 +102,7 @@ def get_tex_settings_and_macros(d: Document, user_ctx: UserContext):
 
 
 class DocumentPrinter:
-    def __init__(self, doc_entry: DocEntry, template_to_use: Optional[DocInfo], urlroot: str):
+    def __init__(self, doc_entry: DocInfo, template_to_use: Optional[DocInfo], urlroot: str):
         self._doc_entry = doc_entry
         self._template_to_use = template_to_use
         self._content = None
@@ -357,7 +357,7 @@ class DocumentPrinter:
                                 '--atx-headers',
                                 '--metadata=pagetitle:""',
                                 # '--verbose',  # this gives non UTF8 results sometimes
-                                '-Mtexdocid=' + str(self._doc_entry.document.doc_id),
+                                '-Mtexdocid=' + str(self._doc_entry.id),
                                 ],
                     filters=filters,
                     texfiles=texfiles,

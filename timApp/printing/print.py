@@ -112,7 +112,7 @@ def print_document(doc_path):
     if file_type.lower() not in [f.value for f in PrintFormat]:
         abort(400, "The supplied parameter 'fileType' is invalid.")
 
-    doc = g.doc_entry
+    doc: DocInfo = g.doc_entry
     template_doc, template_doc_id, template_error, template_doc_def = get_template_doc(doc, template_doc_id)
     if template_error:
         return abort(400, template_error)
@@ -120,7 +120,7 @@ def print_document(doc_path):
     print_type = PrintFormat[file_type.upper()]
 
     if remove_old_images:
-        remove_images(doc.document.doc_id)
+        remove_images(doc.id)
 
     existing_doc = check_print_cache(doc_entry=doc, template=template_doc, file_type=print_type,
                                      plugins_user_print=plugins_user_print)
@@ -334,7 +334,7 @@ def get_mimetype_for_format(file_type: PrintFormat) -> str:
         return 'text/plain'
 
 
-def check_print_cache(doc_entry: DocEntry,
+def check_print_cache(doc_entry: DocInfo,
                       template: DocInfo,
                       file_type: PrintFormat,
                       plugins_user_print: bool = False) -> Optional[str]:
@@ -369,7 +369,7 @@ def check_print_cache(doc_entry: DocEntry,
 
 
 def create_printed_doc(
-        doc_entry: DocEntry,
+        doc_entry: DocInfo,
         template_doc: Optional[DocInfo],
         file_type: PrintFormat,
         temp: bool,
@@ -408,7 +408,7 @@ def create_printed_doc(
     except PrintingError as err:
         raise PrintingError(str(err))
 
-    p_doc = PrintedDoc(doc_id=doc_entry.document.doc_id,
+    p_doc = PrintedDoc(doc_id=doc_entry.id,
                        template_doc_id=printer.get_template_id(),
                        version=printer.hash_doc_print(plugins_user_print=plugins_user_print),
                        path_to_file=path.as_posix(),
