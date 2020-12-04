@@ -584,7 +584,7 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
     # we need to add the pypandoc/files dir to the PATH
     new_env = os.environ.copy()
     files_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "files")
-    new_env["PATH"] = new_env.get("PATH", "") + os.pathsep + files_path
+    new_env["PATH"] = new_env.get("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin") + os.pathsep + files_path
     string_input = input_type == 'string'
     new_env['TIM_HOST'] = current_app.config['TIM_HOST']
 
