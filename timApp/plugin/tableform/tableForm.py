@@ -283,6 +283,7 @@ def reqs() -> PluginReqs:
 ``` {#tableForm_table plugin="tableForm"}    
 # showInView: true # Add attribute  to show the plugin in normal view
 groups: 
+ # - "*"          # show all users who have some value on any of fields
  - Group Name     # Use Group Name here
 fields:
  - d1=demo1       # List your fields here, = for alias
@@ -299,6 +300,9 @@ emails: false     # Show email column
 #buttonText: Tallenna    # Name your save button here
 cbColumn: true    # show checkboxes
 nrColumn: true    # show numbers
+# maxRows: 40em   # Hiw long is the table
+# maxCols: fit-content # width of the table
+# maxWidth: 30em  # max for column
 filterRow: true   # show filters 
 singleLine: true  # show every line as a single line
 emailUsersButtonText: "Lähetä sähköpostia valituille" # if one wants to send email 
@@ -307,12 +311,14 @@ anonNames: false  # To show or hide user (and full) names in report, true or fal
 reportButton: "Raportti"
 userListButtonText: "Käyttäjälista"
 showToolbar: true # toolbar for editing the table
+# hiddenColumns: [0,1] # which colums are hidden
+
 # forceUpdateButtonText: "Virkistä" # button for refreshing the table
 #dataView:        # uncomment this if table is big or want to use special properties
-#   tableWidth: 90vw
-#   virtual:
+#  tableWidth: 90vw
+#  virtual:
 #    enabled: true  # toggles virtual mode on or off; default true
-#   fixedColumns: 1 # how many not scrolling columns in left
+#  fixedColumns: 1 # how many not scrolling columns in left
 ```"""]
     editor_tabs: List[EditorTab] = [
         {
