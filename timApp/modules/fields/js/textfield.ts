@@ -295,9 +295,12 @@ class TextfieldController
         if (this.attrs.showname) {
             return true;
         }
+        const ros = this.attrs.readOnlyStyle;
+        if (ros === "htmlalways") {
+            return true;
+        }
         return (
-            this.attrs.readOnlyStyle == "plaintext" &&
-            window.location.pathname.startsWith("/view/")
+            ros === "plaintext" && window.location.pathname.startsWith("/view/")
         );
     }
 

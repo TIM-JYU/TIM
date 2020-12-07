@@ -321,9 +321,12 @@ class NumericfieldController
      * Unused method warning is suppressed, as the method is only called in template.
      */
     isPlainText() {
+        const ros = this.attrs.readOnlyStyle;
+        if (ros === "htmlalways") {
+            return true;
+        }
         return (
-            this.attrs.readOnlyStyle == "plaintext" &&
-            window.location.pathname.startsWith("/view/")
+            ros === "plaintext" && window.location.pathname.startsWith("/view/")
         );
     }
 
