@@ -105,8 +105,8 @@ class NumericfieldController
      * null is used in jsrunner scripts to specify missing value
      * @param c input to inspect
      */
-    isAllowedNull(c: string | null | number): boolean {
-        return c == null || c == "";
+    isAllowedNull(c: string | null | number): c is null | "" {
+        return c === null || c === "";
     }
 
     getDefaultMarkup() {
@@ -213,7 +213,7 @@ class NumericfieldController
         if (!FieldDataWithStyles.is(content)) {
             this.resetField();
         } else {
-            if (content.c == null || this.isAllowedNull(content.c)) {
+            if (this.isAllowedNull(content.c)) {
                 this.numericvalue = undefined;
             } else {
                 const parsed = this.getDouble(content.c);
