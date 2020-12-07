@@ -22,6 +22,7 @@ from timApp.user.user import Consent, User
 from timApp.user.usergroup import UserGroup
 from timApp.util.answerutil import task_ids_to_strlist
 from timApp.util.flask.requesthelper import RouteException
+from timApp.util.logger import log_warning
 from timApp.velp.annotation_model import Annotation
 
 
@@ -94,6 +95,7 @@ def save_answer(
     content_str = json.dumps(content)
     content_len = len(content_str)
     if max_content_len and content_len > max_content_len:
+        log_warning(f'Task {task_id.doc_task}: too large answer ({content_len})')
         raise TooLargeAnswerException(f'Answer is too large (size is {content_len} but maximum is {max_content_len}).')
     if tags is None:
         tags = []
