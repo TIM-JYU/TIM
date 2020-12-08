@@ -464,19 +464,22 @@ def view(item_path, template_name, route="view"):
                         can_add_missing = False
                 if ug:
                     user_list = [u.id for u in ug.users]
-        user_list = get_points_by_rule(points_sum_rule, task_ids, user_list, flatten=True)
+        user_list = get_points_by_rule(points_sum_rule, task_ids, user_list)
         if ug and can_add_missing:
             user_list = add_missing_users_from_group(user_list, ug)
         elif ug and not user_list and not can_add_missing:
             flash(f"You don't have access to group '{ug.name}'.")
     elif doc_settings.show_task_summary() and logged_in():
-        info = get_points_by_rule(points_sum_rule, task_ids, [current_user.id], flatten=True)
+        info = get_points_by_rule(points_sum_rule, task_ids, [current_user.id], force_user=current_user)
         if info:
             total_points = info[0]['total_points']
             tasks_done = info[0]['task_count']
             task_groups = info[0].get('groups')
-            breaklines = info[0].get('breaklines')
-            show_task_info = tasks_done > 0 or total_points != 0 or info[0]['force']
+            breaklines = False
+            show_task_info = tasks_done > 0 or total_points != 0
+            if points_sum_rule:
+                breaklines = points_sum_rule.breaklines
+                show_task_info = show_task_info or points_sum_rule.force
 
     no_question_auto_numbering = None
 

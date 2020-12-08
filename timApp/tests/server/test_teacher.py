@@ -48,6 +48,6 @@ class TeacherTest(TimRouteTest):
                        'id': TEST_USER_2_ID,
                        'name': 'testuser2',
                        'real_name': 'Test user 2'},
-              'velp_points': 0.0,
+              'velp_points': None,
               'velped_task_count': 0}],
         )

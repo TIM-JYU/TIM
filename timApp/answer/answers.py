@@ -3,8 +3,8 @@ import json
 from collections import defaultdict, OrderedDict
 from dataclasses import dataclass
 from datetime import datetime
-from operator import itemgetter
-from typing import List, Optional, Dict, Tuple, Iterable, Any
+from typing import List, Optional, Dict, Tuple, Iterable, Any, Generator, TypeVar, SupportsRound, DefaultDict, Union, \
+    TypedDict, MappingView, ItemsView
 
 from bs4 import UnicodeDammit
 from sqlalchemy import func, Numeric, Float, true
@@ -13,7 +13,7 @@ from sqlalchemy.orm import selectinload, defaultload, Query
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
-from timApp.answer.pointsumrule import PointSumRule, PointType
+from timApp.answer.pointsumrule import PointSumRule, PointType, Group
 from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
@@ -50,7 +50,7 @@ def get_latest_answers_query(task_id: TaskId, users: List[User]) -> Query:
     return q
 
 
-def is_redundant_answer(content: str, existing_answers: ExistingAnswersInfo, ptype: Optional[PluginType], valid: bool):
+def is_redundant_answer(content: str, existing_answers: ExistingAnswersInfo, ptype: Optional[PluginType], valid: bool) -> bool:
     la = existing_answers.latest_answer
     is_redundant = la and (la.content == content and la.valid == valid)
     if is_redundant:
@@ -71,12 +71,12 @@ def save_answer(
         points: Optional[float],
         tags: Optional[List[str]] = None,
         valid: bool = True,
-        points_given_by=None,
-        force_save=False,
-        saver: User = None,
+        points_given_by: Optional[int]=None,
+        force_save: bool = False,
+        saver: Optional[User] = None,
         plugintype: Optional[PluginType] = None,
         max_content_len: Optional[int] = None,
-):
+) -> Optional[int]:
     """Saves an answer to the database.
 
     :param max_content_len: Maximum length for answer content.
@@ -134,7 +134,7 @@ def get_all_answers(task_ids: List[TaskId],
                     period_from: datetime,
                     period_to: datetime,
                     data_format: str,
-                    consent: Optional[Consent]) -> List[str]:
+                    consent: Optional[Consent]) -> Union[List[str], List[Dict]]:
     """Gets all answers to the specified tasks.
 
     :param data_format: The data format to use, currently supports "text" and "json".
@@ -181,6 +181,7 @@ def get_all_answers(task_ids: List[TaskId],
         q = q.order_by(Answer.task_id, User.name, Answer.answered_on)
     q = q.with_entities(Answer, User, sub.c.count)
     result = []
+    result_json = []
 
     lf = "\n"
     if print_opt == "answersnoline":
@@ -194,10 +195,10 @@ def get_all_answers(task_ids: List[TaskId],
         if points == "None":
             points = ""
         name = u.name
-        n = str(int(n))  # n may be a boolean, so convert to int (0/1) first
+        ns = str(int(n))  # n may be a boolean, so convert to int (0/1) first
         if hide_names:
             name = "user" + str(cnt)
-        header = name + "; " + a.task_id + "; " + str(a.answered_on) + "; " + n + "; " + points
+        header = name + "; " + a.task_id + "; " + str(a.answered_on) + "; " + ns + "; " + points
         line = json.loads(a.content)
         answ = json.dumps(line, ensure_ascii=False)
         if isinstance(line, dict):  # maybe csPlugin?
@@ -242,13 +243,21 @@ def get_all_answers(task_ids: List[TaskId],
 
             result.append(res)
         elif data_format == 'json':
-            result.append(dict(user=u, answer=a, count=int(n), resolved_content=answ))
+            result_json.append(dict(user=u, answer=a, count=int(n), resolved_content=answ))
         else:
             raise RouteException(f'Unknown data format option: {data_format}')
-    return result
+    if data_format == 'text':
+        return result
+    else:
+        return result_json
 
 
-def get_all_answer_initial_query(period_from, period_to, task_ids, valid) -> Query:
+def get_all_answer_initial_query(
+        period_from: datetime,
+        period_to: datetime,
+        task_ids: List[TaskId],
+        valid: str,
+) -> Query:
     q = (Answer
          .query
          .filter((period_from <= Answer.answered_on) & (Answer.answered_on < period_to))
@@ -279,18 +288,32 @@ basic_tally_fields = [
 ]
 
 
-def valid_answers_query(task_ids: List[TaskId]):
+def valid_answers_query(task_ids: List[TaskId]) -> Query:
     return (Answer.query
             .filter(valid_taskid_filter(task_ids)))
 
 
-def valid_taskid_filter(task_ids: List[TaskId]):
+def valid_taskid_filter(task_ids: List[TaskId]) -> Query:
     return Answer.task_id.in_(task_ids_to_strlist(task_ids)) & (Answer.valid == True)
 
 
-def get_users_for_tasks(task_ids: List[TaskId], user_ids: Optional[List[int]] = None, group_by_user=True,
-                        group_by_doc=False,
-                        answer_filter=None) -> List[Dict[str, Any]]:
+class UserTaskEntry(TypedDict):
+    user: User
+    task_count: int
+    velped_task_count: int
+    total_points: Optional[float]
+    task_points: Optional[float]
+    velp_points: Optional[float]
+    task_id: str
+
+
+def get_users_for_tasks(
+        task_ids: List[TaskId],
+        user_ids: Optional[List[int]] = None,
+        group_by_user: bool = True,
+        group_by_doc: bool = False,
+        answer_filter: Optional[Any] = None,
+) -> List[UserTaskEntry]:
     if not task_ids:
         return []
 
@@ -336,7 +359,7 @@ def get_users_for_tasks(task_ids: List[TaskId], user_ids: Optional[List[int]] = 
     main = main.options(selectinload(User.groups))
 
     task_sum = func.round(func.sum(tmp.c.points).cast(Numeric), 4).cast(Float).label('task_points')
-    velp_sum = func.round(func.coalesce(func.sum(tmp.c.velp_points).cast(Numeric), 0), 4).cast(Float).label(
+    velp_sum = func.round(func.sum(tmp.c.velp_points).cast(Numeric), 4).cast(Float).label(
         'velp_points')
 
     main = main.with_entities(
@@ -344,154 +367,237 @@ def get_users_for_tasks(task_ids: List[TaskId], user_ids: Optional[List[int]] = 
         func.count(tmp.c.task_id).label('task_count'),
         task_sum,
         velp_sum,
-        func.round((task_sum + velp_sum).cast(Numeric), 4).cast(Float).label('total_points'),
+        # TODO: The following does not work because PostgreSQL evaluates a+b==null if a==null or b==null
+        #  We want a+b to be null only if BOTH are null. For now, the summing is done in Python.
+        # func.round((task_sum + velp_sum).cast(Numeric), 4).cast(Float).label('total_points'),
         func.count(tmp.c.annotation_answer_id).label('velped_task_count'),
         *cols,
     ).order_by(User.real_name)
 
-    def g():
+    def g() -> Generator[UserTaskEntry, None, None]:
         for r in main:
             d = r._asdict()
             d['user'] = d.pop('User')
+            task = d['task_points']
+            velp = d['velp_points']
+            if task is not None and velp is not None:
+                tot = task + velp
+            elif task is not None:
+                tot = task
+            else:
+                tot = velp
+            d['total_points'] = tot
             yield d
 
     result = list(g())
     return result
 
 
-def get_points_by_rule(points_rule: Optional[PointSumRule],
-                       task_ids: List[TaskId],
-                       user_ids: Optional[List[int]] = None,
-                       flatten: bool = False,
-                       answer_filter=None,
-                       ):
-    """Computes the point sum from given tasks accoring to the given point rule.
+T = TypeVar('T', bound=SupportsRound[Any])
 
+
+def sum_and_round(generator: Generator[T, None, None], digits: int = 2) -> Optional[T]:
+    list_to_sum = list(generator)
+    if not list_to_sum:
+        return None
+    return round(sum(list_to_sum), digits)  # type: ignore
+
+
+def round_if_not_none(num: Optional[T], digits: int = 2) -> Optional[T]:
+    if num is None:
+        return None
+    return round(num, digits)
+
+
+class SumFields(TypedDict):
+    task_sum: Optional[float]
+    velp_sum: Optional[float]
+    total_sum: Optional[float]
+
+
+class UserPointGroup(SumFields):
+    tasks: List[UserTaskEntry]
+    velped_task_count: int
+
+
+class UserPointInfo(SumFields):
+    groups: DefaultDict[str, UserPointGroup]
+
+
+class ResultGroup(SumFields):
+    text: str
+    link: bool
+    linktext: str
+
+
+class UserPoints(TypedDict):
+    total_points: Optional[float]
+    task_points: Optional[float]
+    velp_points: Optional[float]
+    task_count: int
+    velped_task_count: int
+    groups: Dict[str, ResultGroup]
+    user: User
+
+
+def get_points_by_rule(
+        rule: Optional[PointSumRule],
+        task_ids: List[TaskId],
+        user_ids: Optional[List[int]] = None,
+        answer_filter: Optional[Any] = None,
+        force_user: Optional[User] = None,
+) -> Union[List[UserPoints], List[UserTaskEntry]]:  # TODO: Would be better to return always same kind of list.
+    """Computes the point sum from given tasks according to the given point rule.
+
+    :param force_user: Whether to force at least one result user if the result would be empty otherwise.
     :param answer_filter: Optional additional filter for answers.
-    :param points_rule: The points rule.
+    :param rule: The points rule.
     :param task_ids: The list of task ids to consider.
     :param user_ids: The list of users for which to compute the sum.
-    :param flatten: Whether to return the result as a list of dicts (True) or as a deep dict (False).
     :return: The computed result.
 
     """
-    if not points_rule:
+    if not rule:
         return get_users_for_tasks(task_ids, user_ids, answer_filter=answer_filter)
     tasks_users = get_users_for_tasks(task_ids, user_ids, group_by_user=False, answer_filter=answer_filter)
-    rule = points_rule
-    result = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
-    task_counts = {}
+    result: DefaultDict[int, UserPointInfo] = (
+        defaultdict(lambda: {
+            'groups': defaultdict(lambda: {
+                'tasks': [],
+                'task_sum': None,
+                'velp_sum': None,
+                'total_sum': None,
+                'velped_task_count': 0,
+            }),
+            'task_sum': None,
+            'velp_sum': None,
+            'total_sum': None,
+        })
+    )
+    task_counts: Dict[int, int] = {}
+    user_map = {}
+    if not tasks_users and rule.force and force_user:
+        for t in task_ids:
+            tasks_users.append(UserTaskEntry(
+                user=force_user,
+                task_count=0,
+                velped_task_count=0,
+                velp_points=None,
+                total_points=None,
+                task_points=None,
+                task_id=t.doc_task,
+            ))
     for tu in tasks_users:
-        uid = tu['user'].id
-        if points_rule.count_all:  # TODO: would this info allready been somewhere cheaper?
+        u = tu['user']
+        uid = u.id
+        user_map[uid] = u
+        if rule.count_all:  # TODO: would this info already been somewhere cheaper?
             c = task_counts.get(uid, 0)
             c += 1
             task_counts[uid] = c
-        for group in rule.find_groups(tu['task_id']):
-            result[uid]['groups'][group]['tasks'].append(tu)
+        for grp in rule.find_groups(tu['task_id']):
+            result[uid]['groups'][grp]['tasks'].append(tu)
     for user_id, task_groups in result.items():
         groups = task_groups['groups']
         groupsums = []
         for groupname, group in groups.items():
-            group['task_sum'] = 0
-            group['velp_sum'] = 0
+            task_sum = None
+            velp_sum = None
             gr = rule.groups[groupname]
             if PointType.task in gr.point_types:
-                group['task_sum'] = round(sum(t['task_points']
-                                              for t in group['tasks'] if t['task_points'] is not None), 2)
+                task_sum = sum_and_round(t['task_points'] for t in group['tasks'] if t['task_points'] is not None)
             if PointType.velp in rule.groups[groupname].point_types:
-                group['velp_sum'] = round(sum(t['velp_points']
-                                              for t in group['tasks'] if t['velp_points'] is not None), 2)
+                velp_sum = sum_and_round(t['velp_points'] for t in group['tasks'] if t['velp_points'] is not None)
             group['velped_task_count'] = sum(1 for t in group['tasks'] if t['velped_task_count'] > 0)
-            total_sum = group['task_sum'] + group['velp_sum']
-            group['total_sum'] = min(max(total_sum, gr.min_points), gr.max_points)
-            groupsums.append((group['task_sum'], group['velp_sum'], group['total_sum']))
-        if rule.count_type == 'best':
-            groupsums = sorted(groupsums, reverse=True, key=itemgetter(2))
+            if task_sum is not None and velp_sum is not None:
+                total_sum: Optional[float] = task_sum + velp_sum
+            elif task_sum is not None:
+                total_sum = task_sum
+            elif velp_sum is not None:
+                total_sum = velp_sum
+            else:
+                total_sum = None
+            total_sum = min(max(total_sum, gr.min_points), gr.max_points) if total_sum is not None else None
+            group['task_sum'] = task_sum
+            group['velp_sum'] = velp_sum
+            group['total_sum'] = total_sum
+            groupsums.append((task_sum, velp_sum, total_sum))
+        groupsums = sorted(groupsums, reverse=rule.count_type == 'best', key=lambda x: (x[2] is not None, x[2]))
+        if rule.total:
+            s = groupsums[0]  # TODO: find indesies from total, total is a list of names to count
+            task_groups['task_sum'] = round_if_not_none(s[0])
+            task_groups['velp_sum'] = round_if_not_none(s[1])
+            task_groups['total_sum'] = round_if_not_none(s[2])
         else:
-            groupsums = sorted(groupsums, key=itemgetter(2))
-        try:
-            if points_rule.total:
-                s = groupsums[0]  # TODO: find indesies from total, total is a list of names to count
-                task_groups['task_sum'] = round(s[0], 2)
-                task_groups['velp_sum'] = round(s[1], 2)
-                task_groups['total_sum'] = round(s[2], 2)
-            else:
-                task_groups['task_sum'] = round(sum(s[0] for s in groupsums[0:rule.count_amount]), 2)
-                task_groups['velp_sum'] = round(sum(s[1] for s in groupsums[0:rule.count_amount]), 2)
-                task_groups['total_sum'] = round(sum(s[2] for s in groupsums[0:rule.count_amount]), 2)
-        except TypeError:
-            task_groups['task_sum'] = 0
-            task_groups['velp_sum'] = 0
-            task_groups['total_sum'] = 0
-    if flatten:
-        result_list = []
-        hide_list = points_rule.hide
-        if (points_rule.force and not result.items()): # fake result
-            fake_groups = {}
-            fake_groups['task_sum'] = 0
-            fake_groups['velp_sum'] = 0
-            fake_groups['total_sum'] = 0
-            fake_groups['groups'] = {}
-            result[0] = fake_groups
-        for user_id, task_groups in result.items():
-            first_group = {'tasks': [{}]}
-            try:  # TODO: tämä koska en osannut täyttää fake_groups oikein
-                first_group = next(v for _, v in task_groups['groups'].items())
-            except:
-                pass
-            row = first_group['tasks'][0]
-            row['total_points'] = task_groups['total_sum']
-            row['task_points'] = task_groups['task_sum']
-            row['velp_points'] = task_groups['velp_sum']
-            row['breaklines'] = points_rule.breaklines
-            row['force'] = points_rule.force
-            if points_rule.count_all: # note:  tasks_done = info[0]['task_count']
-                row['task_count'] = task_counts.get(user_id, 0)
-            else:
-                row['task_count'] = len(task_groups['groups'])
-            row['velped_task_count'] = sum(1 for t in task_groups['groups'].values() if t['velped_task_count'] > 0)
-            row.pop('task_id', None)
-            row['groups'] = OrderedDict()
+            task_groups['task_sum'] = sum_and_round(s[0] for s in groupsums[0:rule.count_amount] if s[0] is not None)
+            task_groups['velp_sum'] = sum_and_round(s[1] for s in groupsums[0:rule.count_amount] if s[1] is not None)
+            task_groups['total_sum'] = sum_and_round(s[2] for s in groupsums[0:rule.count_amount] if s[2] is not None)
+    return flatten_points_result(rule, result, task_counts, user_map)
+
+
+def flatten_points_result(
+        rule: PointSumRule,
+        result: DefaultDict[int, UserPointInfo],
+        task_counts: Dict[int, int],
+        user_map: Dict[int, User],
+) -> List[UserPoints]:
+    result_list = []
+    hide_list = rule.hide
+    for user_id, task_groups in result.items():
+        row = UserPoints(
+            total_points=task_groups['total_sum'],
+            task_points=task_groups['task_sum'],
+            velp_points=task_groups['velp_sum'],
+            task_count=task_counts.get(user_id, 0) if rule.count_all else sum(1 for t in task_groups['groups'].values() if sum(x['task_count'] for x in t['tasks']) > 0),
+            velped_task_count=sum(1 for t in task_groups['groups'].values() if t['velped_task_count'] > 0),
+            groups=OrderedDict(),
+            user=user_map[user_id],
+        )
+
+        if rule.sort:
+            rulegroups: Union[ItemsView[str, Group], List[Tuple[str, Group]]] = sorted(rule.groups.items())
+        else:
             rulegroups = rule.groups.items()
-            if points_rule.sort:
-                rulegroups =  sorted(rulegroups)
-            for groupname, rg in rulegroups:
-                    if hide_list and groupname in hide_list:
-                        continue
-                    gr = task_groups['groups'].get(groupname, {})
-                    expl = rg.expl
-                    task_sum = gr.get('task_sum', 0)
-                    velp_sum = gr.get('velp_sum', 0)
-                    total_sum = gr.get('total_sum', 0)
-                    try:
-                        linktext = rg.linktext or rule.linktext
-                        link = rg.link
-                    except:
-                        linktext = ""
-                        link = False
-                    try:
-                        text = expl.format(groupname,
-                                            float(total_sum),
-                                            float(task_sum),
-                                            float(velp_sum)
-                                           )
-                    except:
-                        text = groupname + ": " + str(total_sum)
-                    row['groups'][groupname] = {
-                        'task_sum': task_sum,
-                        'velp_sum': velp_sum,
-                        'total_sum': total_sum,
-                        'text': text,
-                        'link': link,
-                        'linktext': linktext
-                    }
-            result_list.append(row)
-        return result_list
-    return result
+        for groupname, rg in rulegroups:
+            if hide_list and groupname in hide_list:
+                continue
+            gr = task_groups['groups'].get(groupname)
+            if gr:
+                task_sum = gr['task_sum']
+                velp_sum = gr['velp_sum']
+                total_sum = gr['total_sum']
+            else:
+                task_sum = None
+                velp_sum = None
+                total_sum = None
+            try:
+                linktext = rg.linktext or rule.linktext
+                link = rg.link
+            except:
+                linktext = ""
+                link = False
+            try:
+                text = rg.expl.format(
+                    groupname,
+                    float(total_sum if total_sum is not None else 0),
+                    float(task_sum if task_sum is not None else 0),
+                    float(velp_sum if velp_sum is not None else 0),
+                )
+            except:
+                text = groupname + ": " + str(total_sum)
+            row['groups'][groupname] = {
+                'task_sum': task_sum,
+                'velp_sum': velp_sum,
+                'total_sum': total_sum,
+                'text': text,
+                'link': link,
+                'linktext': linktext
+            }
+        result_list.append(row)
+    return result_list
 
 
-def add_missing_users_from_group(result: List, usergroup: UserGroup):
+def add_missing_users_from_group(result: List, usergroup: UserGroup) -> List:
     users = set(usergroup.users)
     existing_users = set()
     for d in result:

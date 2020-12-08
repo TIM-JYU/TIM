@@ -437,13 +437,12 @@ def get_tally_field_values(
             ans_filter = ans_filter & (Answer.answered_on < g.datetime_end)
         psr = doc.get_settings().point_sum_rule()
         pts = get_points_by_rule(
-            points_rule=psr,
+            rule=psr,
             task_ids=tids,
             user_ids=User.query.join(UserGroup, join_relation)
                 .filter(group_filter)
                 .with_entities(User.id)
                 .subquery() if group_filter is not None else None,
-            flatten=True,
             answer_filter=ans_filter,
         )
 
@@ -453,8 +452,8 @@ def get_tally_field_values(
                 abort(400, f'Unknown tally field: {field.field}. '
                            f'Valid tally fields are: {seq_to_str(known_tally_fields)}.')
         for r in pts:
-            u: User = r.pop('user')
-            groups = r.pop('groups', None)
+            u = r['user']
+            groups = r.get('groups', None)
             for field, alias in fs:
                 # The value can be None if the user has not done any tasks with points, so we use another sentinel.
                 value = r.get(field.field, missing)

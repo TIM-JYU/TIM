@@ -1,7 +1,7 @@
 import enum
 import re
 from dataclasses import dataclass, field
-from typing import Dict, Union, List, Generator
+from typing import Dict, Union, List, Generator, Optional
 
 from marshmallow import ValidationError
 
@@ -30,11 +30,11 @@ class Group:
         if isinstance(data, str):
             self.matchers = {data}
             self.point_types = {PointType.task, PointType.velp}
-            self.min_points = 0
-            self.max_points = 1e100
-            self.expl = "{0}: {1:.1f}"
-            self.link = False
-            self.linktext = None
+            self.min_points: float = 0
+            self.max_points: float = 1e100
+            self.expl: str = "{0}: {1:.1f}"
+            self.link: bool = False
+            self.linktext: Optional[str] = None
         elif isinstance(data, dict):
             match_re = data.get('match', name)
             # match can be a single regex or a list of regexes
@@ -56,20 +56,33 @@ class Group:
             self.link = data.get("link", False)
             self.linktext = data.get("linktext", None)
 
-    def check_match(self, task_id: str):
+    def check_match(self, task_id: str) -> bool:
         try:
             return any(re.fullmatch(regex, task_id.split('.')[1]) is not None for regex in self.matchers)
         except re.error:
             return False
 
 
-@dataclass
+@dataclass(frozen=True)
 class ScoreboardOptions:
     groups: List[str] = field(default_factory=list)
     point_count_method: PointCountMethod = PointCountMethod.latest
 
 
-ScoreboardOptionsSchema = class_schema(ScoreboardOptions)
+@dataclass(frozen=True)
+class CountModel:
+    best: Optional[int] = None
+    worst: Optional[int] = None
+
+
+# TODO: Add all pointsumrule fields under this.
+@dataclass(frozen=True)
+class PointSumRuleModel:
+    count: CountModel = CountModel(best=9999)
+    scoreboard: ScoreboardOptions = ScoreboardOptions()
+
+
+PointSumRuleSchema = class_schema(PointSumRuleModel)
 
 
 class PointSumRule:
@@ -79,19 +92,19 @@ class PointSumRule:
             self.groups = dict((k, Group(k, v)) for k, v in data['groups'].items())
         except (AttributeError, KeyError):
             self.groups = {}
-        try:
-            self.count_type, self.count_amount = next(data['count'].items().__iter__())
-        except (StopIteration, KeyError):
-            self.count_type, self.count_amount = 'best', 9999
 
         self.scoreboard_error = None
         try:
-            scoreboard = ScoreboardOptionsSchema().load(data.get('scoreboard', {}))
+            pr: PointSumRuleModel = PointSumRuleSchema().load(data, unknown='EXCLUDE')
         except ValidationError as e:
             self.scoreboard_error = e
-            scoreboard = ScoreboardOptions()
+            pr = PointSumRuleModel()
+        if pr.count.best is not None:
+            self.count_type, self.count_amount = 'best', pr.count.best
+        elif pr.count.worst is not None:
+            self.count_type, self.count_amount = 'worst', pr.count.worst
 
-        self.scoreboard = scoreboard
+        self.scoreboard = pr.scoreboard
         self.total = data.get('total', None)
         self.hide = data.get('hide', None)
         self.sort = data.get('sort', True)

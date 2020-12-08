@@ -551,8 +551,8 @@ type: upload
                         nsum2 = "{0:.1f}".format(pts2[k]['total_sum'])
                         pts[k]['text'] = pts[k]['text'].replace(sum1, nsum1)
                         pts2[k]['text'] = pts2[k]['text'].replace(sum2, nsum2)
-                        pts[k][n] = 0
-                        pts2[k][n] = 0
+                        pts[k][n] = None
+                        pts2[k][n] = None
             return pts, pts2
 
         self.login_test1()
@@ -614,92 +614,71 @@ type: upload
                              {'match': 't3.*', 'type': 'tv'})
 
         cases = [
-            (groups_type_t, 'best', 0, (0, 0, 0), (0, 0, 0)),
-            (groups_type_t, 'best', 1, (6, 0, 6), (8, 0, 8)),
-            (groups_type_t, 'best', 2, (10, 0, 10), (13, 0, 13)),
-            (groups_type_t, 'best', 3, (11, 0, 11), (16, 0, 16)),
-            (groups_type_t, 'worst', 0, (0, 0, 0), (0, 0, 0)),
-            (groups_type_t, 'worst', 1, (1, 0, 1), (3, 0, 3)),
-            (groups_type_t, 'worst', 2, (5, 0, 5), (8, 0, 8)),
-            (groups_type_t, 'worst', 3, (11, 0, 11), (16, 0, 16)),
+            (groups_type_t, 'best', 0, (None, None, None), (None, None, None)),
+            (groups_type_t, 'best', 1, (6, None, 6), (8, None, 8)),
+            (groups_type_t, 'best', 2, (10, None, 10), (13, None, 13)),
+            (groups_type_t, 'best', 3, (11, None, 11), (16, None, 16)),
+            (groups_type_t, 'worst', 0, (None, None, None), (None, None, None)),
+            (groups_type_t, 'worst', 1, (1, None, 1), (3, None, 3)),
+            (groups_type_t, 'worst', 2, (5, None, 5), (8, None, 8)),
+            (groups_type_t, 'worst', 3, (11, None, 11), (16, None, 16)),
 
-            (groups_default, 'best', 0, (0, 0, 0), (0, 0, 0)),
+            (groups_default, 'best', 0, (None, None, None), (None, None, None)),
             (groups_default, 'best', 1, (6, 7, 13), (8, 5, 13)),
             (groups_default, 'best', 2, (10, 11, 21), (11, 12, 23)),
             (groups_default, 'best', 3, (11, 16, 27), (16, 16, 32)),
-            (groups_default, 'worst', 0, (0, 0, 0), (0, 0, 0)),
+            (groups_default, 'worst', 0, (None, None, None), (None, None, None)),
             (groups_default, 'worst', 1, (1, 5, 6), (5, 4, 9)),
             (groups_default, 'worst', 2, (5, 9, 14), (8, 11, 19)),
             (groups_default, 'worst', 3, (11, 16, 27), (16, 16, 32)),
 
-            (groups_type_v, 'best', 0, (0, 0, 0), (0, 0, 0)),
-            (groups_type_v, 'best', 1, (0, 7, 7), (0, 7, 7)),
-            (groups_type_v, 'best', 2, (0, 12, 12), (0, 12, 12)),
-            (groups_type_v, 'best', 3, (0, 16, 16), (0, 16, 16)),
-            (groups_type_v, 'worst', 0, (0, 0, 0), (0, 0, 0)),
-            (groups_type_v, 'worst', 1, (0, 4, 4), (0, 4, 4)),
-            (groups_type_v, 'worst', 2, (0, 9, 9), (0, 9, 9)),
-            (groups_type_v, 'worst', 3, (0, 16, 16), (0, 16, 16)),
+            (groups_type_v, 'best', 0, (None, None, None), (None, None, None)),
+            (groups_type_v, 'best', 1, (None, 7, 7), (None, 7, 7)),
+            (groups_type_v, 'best', 2, (None, 12, 12), (None, 12, 12)),
+            (groups_type_v, 'best', 3, (None, 16, 16), (None, 16, 16)),
+            (groups_type_v, 'worst', 0, (None, None, None), (None, None, None)),
+            (groups_type_v, 'worst', 1, (None, 4, 4), (None, 4, 4)),
+            (groups_type_v, 'worst', 2, (None, 9, 9), (None, 9, 9)),
+            (groups_type_v, 'worst', 3, (None, 16, 16), (None, 16, 16)),
 
-            (groups_type_mixed, 'best', 0, (0, 0, 0), (0, 0, 0)),
+            (groups_type_mixed, 'best', 0, (None, None, None), (None, None, None)),
             (groups_type_mixed, 'best', 1, (4, 4, 8), (5, 4, 9)),
             (groups_type_mixed, 'best', 2, (10, 4, 14), (5, 9, 14)),
             (groups_type_mixed, 'best', 3, (10, 9, 19), (8, 9, 17)),
-            (groups_type_mixed, 'worst', 0, (0, 0, 0), (0, 0, 0)),
-            (groups_type_mixed, 'worst', 1, (0, 5, 5), (3, 0, 3)),
+            (groups_type_mixed, 'worst', 0, (None, None, None), (None, None, None)),
+            (groups_type_mixed, 'worst', 1, (None, 5, 5), (3, None, 3)),
             (groups_type_mixed, 'worst', 2, (6, 5, 11), (3, 5, 8)),
             (groups_type_mixed, 'worst', 3, (10, 9, 19), (8, 9, 17)),
         ]
 
         for (g1, g2, g3), count_type, count, (tasksum1, velpsum1, sum1), (tasksum2, velpsum2, sum2) in cases:
-            rule_dict = {'breaklines': False,
-                         'force': False,
-                         'groups': {'1st': g1, '2nd': g2, '3rd': g3},
-                         'count': {count_type: count}}
+            rule_dict = {
+                'groups': {'1st': g1, '2nd': g2, '3rd': g3},
+                'count': {count_type: count},
+            }
             rule = PointSumRule(rule_dict)
-            points = get_points_by_rule(
-                rule,
-                task_ids, [TEST_USER_1_ID, TEST_USER_2_ID])
-            self.assertEqual(tasksum1, points[TEST_USER_1_ID]['task_sum'])
-            self.assertEqual(tasksum2, points[TEST_USER_2_ID]['task_sum'])
-            self.assertEqual(velpsum1, points[TEST_USER_1_ID]['velp_sum'])
-            self.assertEqual(velpsum2, points[TEST_USER_2_ID]['velp_sum'])
             pts, pts2 = get_pts(rule)
-            for k, _ in pts.items():
-                for n, t in zip(('task_sum', 'velp_sum'), (PointType.task, PointType.velp)):
-                    if t in rule.groups[k].point_types:
-                        self.assertEqual(pts[k][n], points[TEST_USER_1_ID]['groups'][k][n])
-                        self.assertEqual(pts2[k][n], points[TEST_USER_2_ID]['groups'][k][n])
-                    else:
-                        self.assertEqual(0, points[TEST_USER_1_ID]['groups'][k][n])
-                        self.assertEqual(0, points[TEST_USER_2_ID]['groups'][k][n])
-                self.assertEqual(pts[k]['total_sum'], points[TEST_USER_1_ID]['groups'][k]['total_sum'])
-                self.assertEqual(pts2[k]['total_sum'], points[TEST_USER_2_ID]['groups'][k]['total_sum'])
             points = get_points_by_rule(
                 PointSumRule({'groups': {'1st': g1, '2nd': g2, '3rd': g3},
-                 'count': {count_type: count}}),
-                task_ids, [TEST_USER_1_ID, TEST_USER_2_ID], flatten=True)
+                              'count': {count_type: count}}),
+                task_ids, [TEST_USER_1_ID, TEST_USER_2_ID])
             self.assertEqual([{
-                               'breaklines': False,
-                               'force': False,
-                               'groups': pts,
-                               'task_count': 3,
-                               'task_points': tasksum1,
-                               'velp_points': velpsum1,
-                               'total_points': sum1,
-                               'velped_task_count': 3,
-                               'user': self.test_user_1},
-                              {
-                               'breaklines': False,
-                               'force': False,
-                               'groups': pts2,
-                               'task_count': 3,
-                               'task_points': tasksum2,
-                               'velp_points': velpsum2,
-                               'total_points': sum2,
-                               'velped_task_count': 3,
-                               'user': self.test_user_2
-                               }], points)
+                'groups': pts,
+                'task_count': 3,
+                'task_points': tasksum1,
+                'velp_points': velpsum1,
+                'total_points': sum1,
+                'velped_task_count': 3,
+                'user': self.test_user_1},
+                {
+                    'groups': pts2,
+                    'task_count': 3,
+                    'task_points': tasksum2,
+                    'velp_points': velpsum2,
+                    'total_points': sum2,
+                    'velped_task_count': 3,
+                    'user': self.test_user_2
+                }], points)
 
         rule_dict = {'groups': {'1st': groups_type_t[0], '2nd': groups_type_t[1], '3rd': groups_type_t[2]},
                      'count': {'best': 2}}
