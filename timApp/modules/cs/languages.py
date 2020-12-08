@@ -1085,6 +1085,11 @@ class Glowscript(JS):
     pass
 
 
+class Wiz(JS):
+    ttype = "viz"
+    pass
+
+
 class Processing(JS):
     ttype = "processing"
     pass

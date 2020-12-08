@@ -81,6 +81,7 @@
     "tslib": "^2.0.1",
     "type-zoo": "^3.4.1",
     "typescript-json-serializer": "^2.4.0",
+    "viz.js": "^2.1.2",
     "zone.js": "~0.11.1"
   },
   "devDependencies": {
@@ -110,6 +111,7 @@
     "@types/reveal": "^3.3.33",
     "@types/sanitize-html": "^1.27.0",
     "@types/ui-grid": "^0.0.43",
+    "@types/viz.js": "^2.1.0",
     "@typescript-eslint/eslint-plugin": "^4.1.0",
     "@typescript-eslint/parser": "^4.1.0",
     "eslint": "^7.8.1",

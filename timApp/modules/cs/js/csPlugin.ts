@@ -143,6 +143,7 @@ const csJSTypes = [
     "html",
     "processing",
     "wescheme",
+    "viz",
 ];
 
 async function loadSimcir() {
@@ -200,6 +201,7 @@ class LanguageTypes {
         "upload",
         "extcheck",
         "gitreg",
+        "viz",
     ];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
@@ -248,6 +250,7 @@ class LanguageTypes {
         "text",
         "c_cpp",
         "text",
+        "grahviz",
     ];
 
     // What are known test types (be careful not to include partial word):
@@ -652,6 +655,7 @@ const CsMarkupOptional = t.partial({
     uploadstem: t.string,
     userargs: t.union([t.string, t.number]),
     userinput: t.union([t.string, t.number]),
+    useSameFrame: t.boolean,
     variables: t.string,
     width: t.union([t.number, t.string]),
     wrap: t.Integer,
@@ -3053,18 +3057,20 @@ ${fhtml}
             html = this.markup.html ?? html;
             html = encodeURI(html);
             const fh = this.getfullhtmlext(this.getCode());
-            this.iframesettings = {
-                id: v.vid,
-                width: v.width,
-                height: v.height,
-                src: this.domSanitizer.bypassSecurityTrustResourceUrl(
-                    fh
-                        ? getIFrameDataUrl(fh)
-                        : `${fsrc}?scripts=${
-                              this.markup.scripts ?? scripts
-                          }&html=${html}`
-                ),
-            };
+            if (!this.loadedIframe || !this.markup.useSameFrame) {
+                this.iframesettings = {
+                    id: v.vid,
+                    width: v.width,
+                    height: v.height,
+                    src: this.domSanitizer.bypassSecurityTrustResourceUrl(
+                        fh
+                            ? getIFrameDataUrl(fh)
+                            : `${fsrc}?scripts=${
+                                  this.markup.scripts ?? scripts
+                              }&html=${html}`
+                    ),
+                };
+            }
         }
         const text = this.usercode;
         if (
