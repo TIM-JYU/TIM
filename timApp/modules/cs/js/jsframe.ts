@@ -182,7 +182,7 @@ export interface Iframesettings {
                         [src]="iframesettings.src"
                         [sandbox]="iframesettings.sandbox"
                         [attr.allow]="iframesettings.allow"
-                        (load)="iframeloaded()"
+                        (load)="iframeloaded($event)"
                 >
                 </iframe>
             </div>
@@ -708,7 +708,13 @@ export class JsframeComponent
         return JsframeAll;
     }
 
-    iframeloaded() {
+    iframeloaded(e: Event) {
+        const fr = e.target as HTMLIFrameElement;
+        // onIframeLoad gets called twice on chrome, on the first time src is empty
+        if (fr.src == "") {
+            return;
+        }
+
         this.iframeload.resolve();
         if (this.markup.initListener && !this.attrsall.preview) {
             this.addListener();
