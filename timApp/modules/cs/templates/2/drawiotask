@@ -1,7 +1,8 @@
 DrawIO tehtävä
 DrawIO:lla piirrettävä tehtävä
 ``` {#PLUGINNAMEHERE plugin="csPlugin"}
-path: user
-task: true
 type: drawio
+path: user
+saveButton: Tallenna
+task: true
 ```

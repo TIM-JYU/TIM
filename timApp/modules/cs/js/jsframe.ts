@@ -637,7 +637,7 @@ export class JsframeComponent
 
     setData<T extends JSFrameData>(data: T, save = false, keepHeight = false) {
         if (this.iframesettings && !keepHeight) {
-            this.iframesettings.height = 900;
+            // this.iframesettings.height = 900;
         }
         if (save) {
             this.runSend(data);
