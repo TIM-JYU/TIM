@@ -1750,7 +1750,16 @@ ${fhtml}
             b = b.replace("$charbuttons$", charButtons);
             b = b.trim();
             b = b.replace("$space$", " ");
-            return b.split("\n");
+            const btns = b.split("\n");
+            for (let i = 0; i < btns.length; i++) {
+                let s = btns[i];
+                if (s.length < 1) continue;
+                if (s.startsWith('"') || s.startsWith("'")) {
+                    s = s.replace(new RegExp(s[0], "g"), "");
+                    btns[i] = s;
+                }
+            }
+            return btns;
         }
         return [];
     }
