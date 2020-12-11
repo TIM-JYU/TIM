@@ -12,6 +12,7 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {GraphVizComponent} from "tim/plugin/graph-viz/graph-viz.component";
 import {CsRunnerComponent} from "./csPlugin";
 import {CsTextComponent} from "./text";
 import {CsConsoleComponent} from "./console";
@@ -35,6 +36,7 @@ import {EditorModule} from "./editor/module";
         CustomOutputDirective,
         GitRegComponent,
         CsErrorComponent,
+        GraphVizComponent,
     ],
     exports: [
         CsRunnerComponent,

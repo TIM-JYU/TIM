@@ -143,7 +143,6 @@ const csJSTypes = [
     "html",
     "processing",
     "wescheme",
-    "viz",
 ];
 
 async function loadSimcir() {
@@ -250,7 +249,7 @@ class LanguageTypes {
         "text",
         "c_cpp",
         "text",
-        "grahviz",
+        "text",
     ];
 
     // What are known test types (be careful not to include partial word):
@@ -880,6 +879,7 @@ export class CsController extends CsBase implements ITimComponent {
     fetchError?: string;
     fileError?: string;
     fileProgress?: number;
+    fullCode?: string;
     htmlresult: string;
     iframeClientHeight: number;
     imgURL: string;
@@ -920,6 +920,7 @@ export class CsController extends CsBase implements ITimComponent {
     uploadUrl?: string;
     userargs_: string = "";
     userinput_: string = "";
+    isViz?: boolean;
     viewCode!: boolean;
     wavURL: string = "";
     wrap!: {n: number; auto: boolean};
@@ -1905,6 +1906,7 @@ ${fhtml}
             this.usercode = this.attrsall.usercode ?? this.byCode ?? "";
         }
         this.initSaved();
+        this.isViz = this.type.startsWith("viz");
         this.vctrl.addTimComponent(this);
         // if (this.isText) {
         //     this.preventSave = true;
@@ -1985,6 +1987,7 @@ ${fhtml}
 
     anyChanged() {
         this.textChanged();
+        this.fullCode = this.getCode();
         if (this.runned && this.markup.autoupdate) {
             if (this.autoupdateHandle) {
                 window.clearTimeout(this.autoupdateHandle);
@@ -3406,6 +3409,7 @@ ${fhtml}
         <div *ngIf="mdHtml" [innerHTML]="mdHtml | purify">
         </div>
     </div>
+    <tim-graph-viz *ngIf="isViz" [vizcmd]="fullCode"></tim-graph-viz>
     <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
     <video *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
             height="40"></video>
