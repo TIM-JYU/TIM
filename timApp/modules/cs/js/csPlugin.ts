@@ -879,7 +879,7 @@ export class CsController extends CsBase implements ITimComponent {
     fetchError?: string;
     fileError?: string;
     fileProgress?: number;
-    fullCode?: string;
+    fullCode: string = "";
     htmlresult: string;
     iframeClientHeight: number;
     imgURL: string;
