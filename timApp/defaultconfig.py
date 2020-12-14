@@ -89,6 +89,7 @@ MIN_PASSWORD_LENGTH = 10
 PROXY_WHITELIST = [
     'korppi.jyu.fi',
     'plus.cs.aalto.fi',
+    'gitlab.com',
 ]
 
 # Whitelist of /getproxy domains that don't require login.

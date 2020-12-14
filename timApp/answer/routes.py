@@ -2,8 +2,11 @@
 import json
 import re
 from collections import defaultdict
+
+import requests
 from dataclasses import dataclass, field
 from datetime import datetime
+from requests.exceptions import MissingSchema, InvalidURL
 from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict
 
 from flask import Blueprint, session, current_app
@@ -700,17 +703,49 @@ def post_answer(plugintype: str, task_id_ext: str):
         except (TypeError, KeyError):
             pass
 
-        postprogram_name = "postprogram"
-        postprogram = plugin.values.get("postprogram", None)
-        if not postprogram:
-            postprogram = plugin.values.get("-postprogram", None)
-            postprogram_name = "-postprogram"
-        if not postprogram:
-            postprogram = plugin.values.get("postProgram", None)  # old name
-            postprogram_name = "postProgram"
-        if not postprogram:
-            postprogram_name = ""
+        def get_name_and_val(name1, name2=""):
+            """
+            Try with name1, -name1 amnd name2
+            return working name and value or "", None
+            """
+            name = name1
+            val = plugin.values.get(name, None)
+            if val:
+                return name, val
+
+            name = "-" + name1
+            val = plugin.values.get(name, None)
+            if val:
+                return name, val
+
+            if name2:
+                name = name2
+                val = plugin.values.get(name, None)  # old name
+            if val:
+                return name, val
+
+            name = ""
+            return name, val
+
+        postprogram_name, postprogram = \
+            get_name_and_val("postprogram", "postProgram")
+
+        postlibraries_name, postlibraries = get_name_and_val("postlibraries")
+
         postoutput = plugin.values.get("postoutput", 'feedback')
+
+        def get_from_url(url):
+            try:
+                r = requests.get(url)
+            except Exception as ex:
+                raise RouteException(str(ex) + " " + url)
+            return r.content.decode("utf-8")
+
+        if postprogram and postlibraries:
+            libs = ""
+            for lib in postlibraries:
+                libs += get_from_url(lib)
+            postprogram = libs + postprogram
 
         def set_postoutput(result, output, postoutput):
             if not postoutput or not output:

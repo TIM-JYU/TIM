@@ -242,6 +242,7 @@ class GetProxyModel:
     url: str
     auth_token: Optional[str] = None
     raw: bool = False
+    mimetype: Optional[str] = None
 
 
 @app.route("/getproxy")
@@ -264,10 +265,13 @@ def getproxy(m: GetProxyModel):
     except (MissingSchema, InvalidURL):
         raise RouteException('Invalid URL')
     if m.raw:
+        mimetype = r.headers['Content-Type']
+        if m.mimetype:
+            mimetype = m.mimetype
         return Response(
             r.content,
             status=r.status_code,
-            mimetype=r.headers['Content-Type'],
+            mimetype=mimetype,
             headers={'Content-Security-Policy': 'sandbox allow-scripts'}
         )
 
