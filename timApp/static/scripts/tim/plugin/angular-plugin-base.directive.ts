@@ -115,6 +115,17 @@ export abstract class AngularPluginBase<
         );
     }
 
+    protected httpGetText(
+        url: string,
+        params?: Record<string, string | string[]>
+    ) {
+        return to2(
+            this.http
+                .get(url, {params: params, responseType: "text"})
+                .toPromise()
+        );
+    }
+
     protected httpPost<U>(url: string, body: unknown) {
         return to2(this.http.post<U>(url, body).toPromise());
     }

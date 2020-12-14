@@ -625,6 +625,7 @@ const CsMarkupOptional = t.partial({
     file: t.string,
     filename: t.string,
     fullhtml: t.string,
+    fullhtmlurl: t.string,
     git: GitMarkup,
     gitDefaults: GitDefaultsMarkup,
     height: t.union([t.number, t.string]),
@@ -1494,12 +1495,44 @@ export class CsController extends CsBase implements ITimComponent {
         );
     }
 
-    get fullhtml() {
-        const r = this.markup.fullhtml;
+    async getFileFromUrl(url: string) {
+        // const response = await fetch(url);
+        // const data = await response.blob();
+        // const html: string = data;
+        // return html;
+        const result = await this.httpGet<string>(url);
+        if (result.ok) {
+            return result.result;
+        }
+    }
+
+    // `await` can only be used in an async body, but showing it here for simplicity.
+    // const file = await getFileFromUrl('https://example.com/image.jpg', 'example.jpg');
+
+    fullhtmlCache?: string;
+
+    async getFullhtml(): Promise<string | undefined> {
+        if (this.fullhtmlCache) return this.fullhtmlCache;
+        let r = this.markup.fullhtml;
         if ((!r && this.type.includes("html")) || this.isProcessing) {
             return "REPLACEBYCODE";
         }
-        return r;
+
+        if (r) return r;
+
+        if (!r) r = this.markup.fullhtmlurl;
+        if (!r) return r;
+
+        const result = await this.httpGetText(r);
+        if (result.ok) {
+            const html = result.result;
+            this.fullhtmlCache = html;
+            return html;
+        } else {
+            const html = "Same origin error " + r;
+            this.fullhtmlCache = html;
+            return html;
+        }
     }
 
     get borders() {
@@ -1550,8 +1583,8 @@ export class CsController extends CsBase implements ITimComponent {
         return this.markup.footer;
     }
 
-    getfullhtmlext(text: string) {
-        const fh = this.fullhtml;
+    async getfullhtmlext(text: string) {
+        const fh = await this.getFullhtml();
         if (!fh) {
             return undefined;
         }
@@ -3041,7 +3074,8 @@ ${fhtml}
             this.result = truthTable(this.userargs);
             return;
         }
-        if (!this.iframesettings || this.fullhtml) {
+        const fullhtml = await this.getFullhtml();
+        if (!this.iframesettings || fullhtml) {
             // create an iframe on first time
             let html = "";
             let scripts = "";
@@ -3068,19 +3102,25 @@ ${fhtml}
             const v = this.getVid(dw, dh);
             html = this.markup.html ?? html;
             html = encodeURI(html);
-            const fh = this.getfullhtmlext(this.getCode());
+            const fh = await this.getfullhtmlext(this.getCode());
             if (!this.loadedIframe || !this.markup.useSameFrame) {
+                let src = this.domSanitizer.bypassSecurityTrustResourceUrl(
+                    fh
+                        ? getIFrameDataUrl(fh)
+                        : `${fsrc}?scripts=${
+                              this.markup.scripts ?? scripts
+                          }&html=${html}`
+                );
+                if (fullhtml?.startsWith("http")) {
+                    src = this.domSanitizer.bypassSecurityTrustResourceUrl(
+                        fullhtml
+                    );
+                }
                 this.iframesettings = {
                     id: v.vid,
                     width: v.width,
                     height: v.height,
-                    src: this.domSanitizer.bypassSecurityTrustResourceUrl(
-                        fh
-                            ? getIFrameDataUrl(fh)
-                            : `${fsrc}?scripts=${
-                                  this.markup.scripts ?? scripts
-                              }&html=${html}`
-                    ),
+                    src: src,
                 };
             }
         }
