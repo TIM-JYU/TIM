@@ -74,7 +74,8 @@
               "object.assign",
               "which-typed-array",
               "object-is",
-              "ngx-bootstrap-datetime-popup"
+              "ngx-bootstrap-datetime-popup",
+              "viz.js/full.render.js"
             ],
             "i18nMissingTranslation": "error",
             "outputPath": "static/scripts/build",
@@ -121,7 +122,6 @@
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
-              "extractCss": true,
               "namedChunks": false,
               "extractLicenses": true,
               "vendorChunk": false,

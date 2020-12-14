@@ -5,14 +5,6 @@
 # You can see what browsers were selected by your queries by running:
 #   npx browserslist
 
-> 0.5%
-last 2 versions
-Firefox ESR
-not dead
-not IE 9-11
-not OperaMini all
-not OperaMobile <= 46
-not kaios <= 2.5
-not Baidu <= 7.12
-not UCAndroid <= 12.12
-not QQAndroid <= 1.2
+> 0.5% and supports es6-module
+last 2 versions and supports es6-module
+Firefox ESR and supports es6-module

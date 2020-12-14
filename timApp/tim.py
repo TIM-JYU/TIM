@@ -176,7 +176,9 @@ def get_angularscripts(index_file: str, locale: Optional[str]=None):
             n.append(s)
             if locale:
                 s['src'] += f'?l={locale}'  # The parameter is only needed for cache busting (for Chrome).
+
         # Only production config has extractCss enabled, so this will be None for a non-prod build.
+        # TODO: this is possibly always True after upgrading to Angular 11.
         if style:
             n.append(style)
         return dict(angularscripts=str(n))
