@@ -3,6 +3,9 @@
 {% block head %}
     {{ super() }}
     <script>
+        ANGULARMODULES = {{ (jsMods or [])|tojson }};
+        JSMODULES = {{ (js or [])|tojson }};
+
         var accessTypes = {{access_types|tojson}};
         var orgs = {{orgs|tojson}};
     </script>

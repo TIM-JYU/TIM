@@ -53,6 +53,7 @@ class DocSettingTypes:
     texmacros: Dict[str, Any]
     urlmacros: UrlMacroMap
     rndmacros: Dict[str, str]
+    cache: bool
 
 
 doc_setting_field_map: Dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
@@ -431,6 +432,9 @@ class DocSettings:
 
     def rndmacros(self) -> Dict[str, str]:
         return self.get_setting_or_default('rndmacros', {})
+
+    def is_cached(self):
+        return self.get_setting_or_default('cache', False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

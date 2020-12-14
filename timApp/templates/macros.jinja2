@@ -1,0 +1,11 @@
+{% macro scss(name) -%}
+    {% assets depends=(
+"stylesheets/*.scss",
+"stylesheets/**/*.scss",
+),
+ filters="libsass",
+ output="{}.css".format(name),
+  name|string + ".scss" %}
+        <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {% endassets %}
+{%- endmacro %}

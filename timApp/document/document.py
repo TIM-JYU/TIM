@@ -85,6 +85,10 @@ class Document:
         # List of preamble pars if they have been inserted
         self.preamble_pars = None
 
+    @property
+    def id(self):
+        return self.doc_id
+
     @classmethod
     def get_documents_dir(cls) -> Path:
         from timApp.timdb.dbaccess import get_files_path

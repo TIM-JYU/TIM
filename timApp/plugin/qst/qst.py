@@ -1,7 +1,7 @@
 """Routes for qst (question) plugin."""
 import json
 import re
-from dataclasses import dataclass, fields, asdict
+from dataclasses import dataclass, asdict
 from typing import Dict, Optional, List, Union, Any
 from xml.sax.saxutils import quoteattr
 
@@ -31,6 +31,7 @@ from timApp.plugin.plugin import get_value
 from timApp.tim_app import csrf
 from timApp.util.flask.requesthelper import verify_json_params, use_model
 from timApp.util.flask.responsehelper import json_response
+from timApp.util.utils import get_dataclass_field_names
 from utils import Missing
 
 qst_plugin = Blueprint('qst_plugin',
@@ -607,7 +608,8 @@ qst_own_attributes = {
     'tag',
 }
 
-generic_attribute_names = set(f.name for f in fields(GenericMarkupModel))
+generic_attribute_names = get_dataclass_field_names(GenericMarkupModel)
+
 
 common = generic_attribute_names & qst_own_attributes
 if common:

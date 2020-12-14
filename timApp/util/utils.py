@@ -3,9 +3,10 @@ import json
 import os
 import re
 import shutil
+from dataclasses import fields
 from datetime import datetime, timezone
 from pathlib import Path, PurePath, PurePosixPath
-from typing import List, Optional, Tuple, Union, Dict, Any, Sequence, Callable, Type
+from typing import List, Optional, Tuple, Union, Dict, Any, Sequence, Callable, Type, Set
 
 import base64
 import dateutil.parser
@@ -325,3 +326,7 @@ def approximate_real_name(email: str) -> str:
     nameparts = email.split('@')[0].split('.')
     approx_name = f'{nameparts[-1].title()} {nameparts[0].title()}'
     return approx_name
+
+
+def get_dataclass_field_names(d: Any) -> Set[str]:
+    return set(f.name for f in fields(d))

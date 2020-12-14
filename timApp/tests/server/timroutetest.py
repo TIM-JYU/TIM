@@ -830,6 +830,13 @@ class TimRouteTest(TimDbTest):
                                             'docId': par.doc.doc_id,
                                             'par': par.get_id()}, **kwargs)
 
+    def edit_comment(self, note_id, public, text, **kwargs):
+        return self.json_post('/editNote',
+                              {'text': text,
+                               'id': note_id,
+                               'access': 'everyone' if public else 'justme',
+                               }, **kwargs)
+
     def post_preview(self, d: DocInfo, text: str, spellcheck=False, par_next=None, par=None, **kwargs):
         data = {'text': text}
         if par_next:

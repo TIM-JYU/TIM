@@ -30,6 +30,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
 from timApp.auth.sessioninfo import get_current_user_id, logged_in, user_context_with_logged_in
 from timApp.auth.sessioninfo import get_current_user_object, get_session_users, get_current_user_group
+from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
@@ -838,6 +839,10 @@ def post_answer(plugintype: str, task_id_ext: str):
                 upload.answer_id = result['savedNew']
 
     db.session.commit()
+
+    for u in users:
+        clear_doc_cache(d, u)
+
     try:
         if postprogram_name:
             result['web']['markup'].pop(postprogram_name)  # TODO: stdy why someone puts markup here

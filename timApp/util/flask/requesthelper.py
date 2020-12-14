@@ -189,8 +189,11 @@ def use_model(m: Type[ModelType]) -> Callable[[Callable[[ModelType], Response]],
     return use_args(class_schema(m, base_schema=DurationSchema)())
 
 
+never_urlmacros = {'unlock', 'nocache'}
+
+
 def get_urlmacros_from_request() -> Tuple[Tuple[str, str], ...]:
-    urlmacros = tuple((key, val) for key, val in request.args.items())
+    urlmacros = tuple((key, val) for key, val in request.args.items() if key not in never_urlmacros)
     return urlmacros
 
 

@@ -1,12 +1,4 @@
-{% macro scss(name) -%}
-    {% assets
-depends=(
-"stylesheets/*.scss",
-"stylesheets/**/*.scss",
-), filters="libsass", output="{}.css".format(name), name|string + ".scss" %}
-        <link rel="stylesheet" href="{{ ASSET_URL }}">
-    {% endassets %}
-{%- endmacro %}
+{% import 'macros.jinja2' as m -%}
 
 {% set is_lecture_info = request.endpoint == 'lecture.show_lecture_info' %}
 {% set show_lecture_menu = lecture_info.in_lecture or lecture_mode or is_lecture_info %}
@@ -49,8 +41,8 @@ depends=(
         <script>
             var homeOrganization = {{ config.HOME_ORGANIZATION|tojson }};
             var IS_TESTING = {{ config.TESTING|tojson }};
-            var ANGULARMODULES = {{ (jsMods or [])|tojson }};
-            var JSMODULES = {{ (js or [])|tojson }};
+            var ANGULARMODULES = [];
+            var JSMODULES = [];
 
             {% if show_lecture_menu %}JSMODULES.push("lectureMenu");{% endif %}
             {% if is_lecture_info %}JSMODULES.push("lectureInfo");{% endif %}
@@ -89,15 +81,9 @@ depends=(
             config.hosts = {{config.HOSTS|tojson}};
         </script>
         {{ angularscripts|safe }}
-        {% block stylesheet %}
-            {{ scss(config.SASS_GEN_PATH / (override_theme|default(prefs.css_combined, true))) }}
-        {% endblock %}
-
-        {% block customcss %}
-            <style type="text/css">
-                {{ prefs.custom_css }}
-            </style>
-        {% endblock %}
+        {% if not override_theme %}
+            {{ m.scss(config.SASS_GEN_PATH / prefs.css_combined) }}
+        {% endif %}
 
         <script type="text/x-mathjax-config">
             MathJax.Hub.Config({
@@ -106,8 +92,11 @@ depends=(
         </script>
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
+    <style type="text/css">
+        {{ prefs.custom_css }}
+    </style>
 </head>
-<body class="{% if show_unpublished_bg %}bg-unpublished{% endif %}">
+<body>
 {% block body %}
 {% if request.user_agent.browser == 'msie' %}
 <div style="text-align: center; border: 2px solid red; padding: 1em;">

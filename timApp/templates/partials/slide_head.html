@@ -1,0 +1,11 @@
+{% extends 'partials/doc_head.html' %}
+
+{% block content %}
+{{ super() }}
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<script>
+    var background_url = {{ (slide_background_url or None)|tojson }};
+    var background_color = {{ (slide_background_color or None)|tojson }};
+</script>
+{% endblock %}

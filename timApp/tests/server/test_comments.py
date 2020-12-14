@@ -190,12 +190,7 @@ class CommentTest(NotifyTestBase):
                           expect_content='Only private comments can be posted on this document.',
                           )
         c = self.post_comment(par, public=False, text='test')
-        self.json_post('/editNote', {'id': get_note_id_from_json(c),
-                                     'text': 'edited',
-                                     'access': 'everyone',
-                                     'docId': d.id,
-                                     'par': par.get_id()},
-                       expect_status=403)
+        self.edit_comment(get_note_id_from_json(c), True, 'edited', expect_status=403)
 
     def test_comment_at_area_start(self):
         self.login_test1()

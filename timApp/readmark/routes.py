@@ -9,22 +9,23 @@ from sqlalchemy.exc import IntegrityError
 from marshmallow_dataclass import class_schema
 from timApp.auth.accesshelper import verify_read_marking_right, get_doc_or_abort, verify_teacher_access, \
     verify_manage_access
-from timApp.auth.sessioninfo import get_session_usergroup_ids
+from timApp.auth.sessioninfo import get_session_usergroup_ids, get_session_users_objs
+from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
 from timApp.document.hide_names import hide_names_in_teacher
 from timApp.readmark.readings import mark_read, mark_all_read, get_common_readings, remove_all_read_marks, \
     get_read_usergroups_count
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.readmark.readparagraphtype import ReadParagraphType
+from timApp.sisu.sisu import IncorrectSettings
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import verify_json_params, get_referenced_pars_from_req, get_option, \
+from timApp.util.flask.requesthelper import get_option, \
     get_consent_opt, RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response, csv_response
 from timApp.util.utils import seq_to_str, split_by_semicolon
-from timApp.sisu.sisu import IncorrectSettings
 
 readings = Blueprint('readings',
                      __name__,
@@ -106,6 +107,7 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
             except TimDbException:
                 raise RouteException('Non-existent paragraph')
 
+    docs = {}
     for group_id in get_session_usergroup_ids():
         for p in pars:
             if unread:
@@ -121,10 +123,14 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
                 db.session.delete(rp)
             else:
                 mark_read(group_id, p.doc, p, paragraph_type)
+            docs[p.doc.id] = p.doc
     try:
         db.session.commit()
     except IntegrityError:
         abort(400, 'Paragraph was already marked read')
+    for d in docs.values():
+        for u in get_session_users_objs():
+            clear_doc_cache(d, u)
     if unread:
         latest_readings = get_common_readings(
             get_session_usergroup_ids(),

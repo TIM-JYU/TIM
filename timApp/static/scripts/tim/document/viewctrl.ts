@@ -547,6 +547,9 @@ export class ViewCtrl implements IController {
 
     $onInit() {
         setViewCtrl(this);
+        if (documentglobals().show_unpublished_bg) {
+            document.body.classList.add("bg-unpublished");
+        }
         this.scope.$watchGroup(
             [
                 () => this.lectureCtrl.lectureSettings.lectureMode,

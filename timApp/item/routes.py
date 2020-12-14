@@ -13,26 +13,28 @@ from flask import redirect
 from flask import request
 from flask import session
 from markupsafe import Markup
-from marshmallow import ValidationError
 
-from marshmallow_dataclass import class_schema
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
 from timApp.auth.sessioninfo import get_session_usergroup_ids
+from timApp.document.caching import check_doc_cache, get_doc_cache_key, set_doc_cache, refresh_doc_expire
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.docrenderresult import DocRenderResult
 from timApp.document.docsettings import DocSettings, get_minimal_visibility_settings
 from timApp.document.document import get_index_from_html_list, dereference_pars, Document
+from timApp.document.docviewparams import DocViewParams, ViewModelSchema
 from timApp.document.hide_names import is_hide_names, force_hide_names
 from timApp.document.post_process import post_process_pars
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx, ViewRoute, ViewContext
+from timApp.document.viewparams import ViewParams, ViewParamsSchema
 from timApp.folder.folder import Folder
 from timApp.folder.folder_view import try_return_folder
 from timApp.item.block import BlockType
@@ -120,35 +122,6 @@ def get_document(doc_info: DocInfo, view_range: ViewRange) -> DocumentSlice:
     doc = doc_info.document
     doc.preload_option = PreloadOption.all
     return get_partial_document(doc, view_range)
-
-
-@dataclass
-class ViewModel:
-    b: Union[int, str, None] = None
-    e: Union[int, str, None] = None
-    size: Union[int, None] = None
-    edit: Optional[str] = None
-    group: Optional[str] = None
-    hide_names: Optional[bool] = None
-    lazy: Optional[bool] = None
-    login: bool = False
-    noanswers: bool = False
-    nocache: bool = False
-    pars_only: bool = False
-    preamble: bool = False
-    goto: Optional[str] = None
-    wait_max: int = 0
-    direct_link_timer: int = 15
-
-    def __post_init__(self):
-        if self.b and self.e:
-            if type(self.b) != type(self.e):
-                raise ValidationError('b and e must be of same type (int or string).')
-        if self.e is not None and self.size is not None:
-            raise ValidationError('Cannot provide e and size parameters at the same time.')
-
-
-ViewModelSchema = class_schema(ViewModel)()
 
 
 @view_page.route("/show_slide/<path:doc_path>")
@@ -286,7 +259,7 @@ def get_module_ids(js_paths: List[str]):
         yield jsfile.lstrip('/').rstrip('.js')
 
 
-def goto_view(item_path, model: ViewModel):
+def goto_view(item_path, model: ViewParams):
     return render_template('goto_view.html',
                            item_path=item_path,
                            display_text=model.goto,
@@ -296,10 +269,11 @@ def goto_view(item_path, model: ViewModel):
 
 def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
     taketime("view begin", zero=True)
-    m: ViewModel = ViewModelSchema.load(request.args, unknown='EXCLUDE')
+    m: DocViewParams = ViewModelSchema.load(request.args, unknown='EXCLUDE')
+    vp: ViewParams = ViewParamsSchema.load(request.args, unknown='EXCLUDE')
 
-    if m.goto:
-        return goto_view(item_path, m)
+    if vp.goto:
+        return goto_view(item_path, vp)
 
     if has_special_chars(item_path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
@@ -334,7 +308,7 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
         else:
             raise AccessDenied()
 
-    if m.login and not logged_in():
+    if vp.login and not logged_in():
         return render_login(doc_info.document)
 
     current_user = get_current_user_object()
@@ -344,20 +318,39 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
 
     view_ctx = view_ctx_with_urlmacros(route, hide_names_requested=should_hide_names or is_hide_names())
 
-    rendered_html = render_doc_view(doc_info, m, view_ctx, current_user, access)
+    cr = check_doc_cache(doc_info, current_user, view_ctx, m, vp.nocache)
 
-    r = make_response(rendered_html)
+    if not cr.doc:
+        result = render_doc_view(doc_info, m, view_ctx, current_user, access, vp.nocache)
+        if result.allowed_to_cache:
+            cache_key = get_doc_cache_key(doc_info, current_user, view_ctx, m)
+            set_doc_cache(cache_key, result)
+    else:
+        refresh_doc_expire(cr.key)
+        result = cr.doc
+
+    final_html = render_template(
+        'show_slide.html' if view_ctx.route == ViewRoute.ShowSlide else 'view_html.html',
+        access=access,
+        doc_content=result.content_html,
+        doc_head=result.head_html,
+        item=doc_info,
+        route=view_ctx.route.value,
+        override_theme=result.override_theme,
+    )
+    r = make_response(final_html)
     add_no_cache_headers(r)
     return r
 
 
 def render_doc_view(
         doc_info: DocInfo,
-        m: ViewModel,
+        m: DocViewParams,
         view_ctx: ViewContext,
         current_user: User,
         access: BlockAccess,
-):
+        clear_cache: bool,
+) -> DocRenderResult:
     # Check for incorrect group tags.
     linked_groups = []
     if current_user.has_manage_access(doc_info):
@@ -393,7 +386,6 @@ def render_doc_view(
 
     doc = doc_info.document
 
-    clear_cache = m.nocache
     hide_answers = m.noanswers
 
     doc_settings = doc.get_settings()
@@ -619,8 +611,8 @@ def render_doc_view(
             document_themes = list(set().union(document_themes, user_themes))
         override_theme = generate_theme(document_themes, get_default_scss_gen_dir())
 
-    rendered_html = render_template(
-        'show_slide.html' if is_slide else 'view_html.html',
+    templates_to_render = ['slide_head.html', 'slide_content.html'] if is_slide else ['doc_head.html', 'doc_content.html']
+    tmpl_params = dict(
         access=access,
         hide_links=should_hide_links(doc_settings, rights),
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
@@ -664,9 +656,17 @@ def render_doc_view(
         nav_ranges=nav_ranges,
         should_mark_all_read=post_process_result.should_mark_all_read,
         override_theme=override_theme,
-        current_list_user=current_list_user
+        current_list_user=current_list_user,
     )
-    return rendered_html
+    head, content = (
+        render_template('partials/' + tmpl, **tmpl_params) for tmpl in templates_to_render
+    )
+    return DocRenderResult(
+        head_html=head,
+        content_html=content,
+        allowed_to_cache=doc_settings.is_cached(),
+        override_theme=override_theme,
+    )
 
 
 def render_login(item: Optional[Document]) -> FlaskViewResult:

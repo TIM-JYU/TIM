@@ -39,4 +39,5 @@ export interface IDocSettings {
     save_teacher?: boolean;
     show_scoreboard?: boolean;
     exam_mode?: string;
+    cache?: boolean;
 }

@@ -101,11 +101,7 @@ class TimTest(TimRouteTest):
         self.get(f'/view/{doc_name}', expect_contains=comment_of_test1_html)
         edited_comment = 'was edited!'
         edited_comment_html = md_to_html(edited_comment)
-        json = self.json_post('/editNote', {'id': note_id,
-                                            'text': edited_comment,
-                                            'access': 'everyone',
-                                            'docId': doc_id,
-                                            'par': first_id})
+        json = self.edit_comment(note_id, True, edited_comment)
         self.assertTrue(edited_comment_html in json['texts'])
         self.assertFalse(comment_of_test1_html in json['texts'])
 

@@ -44,6 +44,10 @@ class UserNote(db.Model):
     usergroup = db.relationship('UserGroup', back_populates='notes')
     block = db.relationship('Block')
 
+    @property
+    def is_public(self) -> bool:
+        return self.access == 'everyone'
+
     def to_json(self):
         tr = self.block.translation
         d = tr if tr else self.block.docentries[0]

@@ -2,7 +2,7 @@ import {IPromise} from "angular";
 import $ from "jquery";
 import moment from "moment";
 import {getActiveDocument} from "tim/document/activedocument";
-import {genericglobals} from "tim/util/globals";
+import {documentglobals, genericglobals} from "tim/util/globals";
 import {
     diffDialog,
     setDiffDialog,
@@ -67,6 +67,15 @@ export async function markParRead(par: JQuery, readingType: ReadingType) {
     if (
         par.parents(".previewcontent").length > 0 ||
         par.parents(".csrunPreview").length > 0
+    ) {
+        return;
+    }
+
+    // If the document has cache enabled, other readingtypes would invalidate the cache very often,
+    // so we won't post other types of readmarks.
+    if (
+        documentglobals().docSettings.cache &&
+        readingType !== ReadingType.ClickRed
     ) {
         return;
     }

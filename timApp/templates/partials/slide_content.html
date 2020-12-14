@@ -1,0 +1,28 @@
+<section>
+    {# Because of Jinja2 scoping rules, we need to use a single-element array #}
+    {% set prev_is_empty = [True] %}
+    {% set sectionchange = '</section><section>'|safe %}
+    {% for t in text %}
+        {% if 'settings' in t.attrs %}
+            {# do nothing #}
+        {% elif t.md.startswith('---') and t.md.endswith('---') %}
+            {% if not prev_is_empty[0] %}
+                {{ sectionchange }}
+                {% set _ = prev_is_empty.append(prev_is_empty.pop() or True) %}
+            {% endif %}
+        {% else %}
+            {% if (t.html.startswith("<h1") or
+                   t.html.startswith("<h2") or
+                   t.html.startswith("<h3")) and not prev_is_empty[0] %}
+                {{ sectionchange }}
+            {% endif %}
+            <div class="{{ t.cls }}"
+                 id="{{ t.id }}"
+                 t="{{ t.t }}"
+                 attrs="{{ t.attrs_str }}">
+                {{ t.html|safe }}
+            </div>
+            {% set _ = prev_is_empty.append(prev_is_empty.pop() and False) %}
+        {% endif %}
+    {% endfor %}
+</section>

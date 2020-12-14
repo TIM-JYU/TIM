@@ -13,7 +13,9 @@ from timApp.auth.accesshelper import verify_comment_right, verify_logged_in, has
     AccessDenied, verify_teacher_access
 from timApp.auth.accesshelper import verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.document.editing.routes import par_response
 from timApp.folder.folder import Folder
@@ -26,6 +28,7 @@ from timApp.notification.notify import notify_doc_watchers
 from timApp.notification.pending_notification import PendingNotification
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
+from timApp.user.user import User
 from timApp.util.flask.requesthelper import get_referenced_pars_from_req, verify_json_params, RouteException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.utils import get_current_time
@@ -166,6 +169,13 @@ def check_note_access_ok(is_public: bool, doc: Document):
         return abort(403, 'Only private comments can be posted on this document.')
 
 
+def clear_doc_cache_after_comment(docinfo: DocInfo, user: User, is_public: bool):
+    if is_public:
+        clear_doc_cache(docinfo, user=None)
+    else:
+        clear_doc_cache(docinfo, user)
+
+
 @notes.route("/postNote", methods=['POST'])
 def post_note():
     note_text, access, doc_id, par_id = verify_json_params('text', 'access', 'docId', 'par')
@@ -185,7 +195,8 @@ def post_note():
         return abort(404, str(e))
 
     par = get_referenced_pars_from_req(par)[0]
-    n = UserNote(usergroup=get_current_user_object().get_personal_group(),
+    curr_user = get_current_user_object()
+    n = UserNote(usergroup=curr_user.get_personal_group(),
                  doc_id=par.get_doc_id(),
                  par_id=par.get_id(),
                  par_hash=par.get_hash(),
@@ -197,6 +208,7 @@ def post_note():
 
     if is_public:
         notify_doc_watchers(docinfo, note_text, NotificationType.CommentAdded, par)
+    clear_doc_cache_after_comment(docinfo, curr_user, is_public)
     return par_response([doc.get_paragraph(par_id)],
                         docinfo)
 
@@ -228,12 +240,14 @@ def edit_note():
         abort(403, "Sorry, you don't have permission to edit this note.")
     n.content = note_text
     n.html = md_to_html(note_text)
+    was_public = n.is_public
     n.access = access
     n.tags = tagstostr(tags)
     n.modified = get_current_time()
 
-    if access == "everyone":
+    if n.is_public:
         notify_doc_watchers(d, note_text, NotificationType.CommentModified, par)
+    clear_doc_cache_after_comment(d, get_current_user_object(), is_public or was_public)
     doc = d.document
     return par_response([doc.get_paragraph(par_id)],
                         d)
@@ -252,8 +266,10 @@ def delete_note():
     except TimDbException:
         return abort(400, 'Cannot delete the note because the paragraph has been deleted.')
     db.session.delete(note)
-    if note.access == "everyone":
+    is_public = note.is_public
+    if is_public:
         notify_doc_watchers(d, note.content, NotificationType.CommentDeleted, par)
+    clear_doc_cache_after_comment(d, get_current_user_object(), is_public)
     doc = d.document
     return par_response([doc.get_paragraph(paragraph_id)],
                         d)

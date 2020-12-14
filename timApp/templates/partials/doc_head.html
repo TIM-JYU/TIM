@@ -1,0 +1,62 @@
+{% import 'macros.jinja2' as m -%}
+
+{% set teacher_mode = route in ("teacher", "answers") %}
+{% if doc_settings.show_velps() %}
+  {% set velp_mode = route in ("teacher", "answers", "velp") %}
+{% else %}
+  {% set velp_mode = route in ("velp") %}
+{% endif %}
+{% set lecture_mode = route == "lecture" %}
+
+{% block content %}
+
+{% if override_theme %}
+    {{ m.scss(config.SASS_GEN_PATH / override_theme) }}
+{% endif %}
+
+{% for cssFile in cssFiles %}
+    <link rel="stylesheet" href="{{ cssFile }}">
+{% endfor %}
+
+{{ (doc_css | safe ) if doc_css }}
+
+<script class="global-vars">
+    ANGULARMODULES = {{ (jsMods or [])|tojson }};
+    JSMODULES = {{ (js or [])|tojson }};
+
+    var noBrowser = {{ no_browser|tojson }};
+    var showIndex = {{(headers|length > 0)|tojson}};
+    var reqs = {{reqs|tojson}};
+    var startIndex = {{start_index|tojson}};
+    var teacherMode = {{teacher_mode|tojson}};
+    var velpMode = {{velp_mode|tojson}};
+    var group = {{group|tojson}};
+    var lectureMode = {{lecture_mode|tojson}};
+    {% if teacher_mode %}
+        var users = {{plugin_users|tojson}};
+    {% else %}
+        var users = [];
+    {% endif %}
+    var noQuestionAutoNumbering = {{ no_question_auto_numbering|tojson}};
+    var liveUpdates = {{ live_updates|tojson}};
+    var docVersion = {{ version|tojson }};
+    var wordList = {{ word_list|tojson }};
+    var readExpiry = {{ doc_settings.read_expiry()|tojson }};
+    var memoMinutes = {{memo_minutes|tojson}};
+    var docSettings = {{ doc_settings.get_dict().values|tojson }};  //TODO: show only for edit right
+    var index = {{ headers|tojson }};
+    var hideLinks = {{ hide_links|tojson }};
+    var hideTopButtons = {{ hide_top_buttons|tojson }};
+    var parsOnly = {{ pars_only|tojson }};
+    var translations = {{ translations|tojson }};
+    var current_view_range = {{ current_view_range|tojson }};
+    var nav_ranges = {{ nav_ranges|tojson }};
+    var exam_mode = {{ exam_mode|tojson }};
+    var hide_sidemenu = {{ hide_sidemenu|tojson }};
+    var score_infos = {{ score_infos|tojson }};
+    var current_list_user = {{ current_list_user|tojson }};
+    var show_unpublished_bg = {{ show_unpublished_bg|tojson }};
+    var editMode = {{ edit_mode|tojson }};
+    var linked_groups = {{linked_groups|tojson}};
+</script>
+{% endblock %}

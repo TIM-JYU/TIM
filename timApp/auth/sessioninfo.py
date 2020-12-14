@@ -48,8 +48,8 @@ def get_session_users():
     return [get_current_user()] + get_other_users_as_list()
 
 
-def get_session_users_objs():
-    return [User.get_by_id(u['id']) for u in get_session_users()]
+def get_session_users_objs() -> List[User]:
+    return User.query.filter(User.id.in_([u['id'] for u in get_session_users()])).all()
 
 
 def get_session_users_ids():

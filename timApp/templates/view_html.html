@@ -1,69 +1,14 @@
-{% extends "document.html" %}
-
+{% extends "item.html" %}
 {% set teacher_mode = route in ("teacher", "answers") %}
-{% if doc_settings.show_velps() %}
-  {% set velp_mode = route in ("teacher", "answers", "velp") %}
-{% else %}
-  {% set velp_mode = route in ("velp") %}
-{% endif %}
-{% set lecture_mode = route == "lecture" %}
-{% set slide_mode = route == "slide" %}
-
-{% set par_edit_mode = edit_mode == "par" %}
-{% set area_edit_mode = edit_mode == "area" %}
-
 {% block title %}{{ item.title }}{% endblock %}
-
-{# The custom style should be the last style element, so don't render it in base.html #}
-{% block customcss %}{% endblock %}
 
 {% block head %}
     {{ super() }}
 
-    {% for cssFile in cssFiles %}
-        <link rel="stylesheet" href="{{ cssFile }}">
-    {% endfor %}
-
     {# without this, lazy loading embedded_sagecell won't work because it doesn't know URL root #}
     <link property="sagecell-root" href="https://sagecell.sagemath.org/"/>
 
-    {% block viewhtml_customcss %}
-        {% include 'partials/doc_customcss.html' %}
-    {% endblock %}
-
-    <script class="global-vars">
-        var noBrowser = {{ no_browser|tojson }};
-        var showIndex = {{(headers|length > 0)|tojson}};
-        var reqs = {{reqs|tojson}};
-        var startIndex = {{start_index|tojson}};
-        var teacherMode = {{teacher_mode|tojson}};
-        var velpMode = {{velp_mode|tojson}};
-        var group = {{group|tojson}};
-        var lectureMode = {{lecture_mode|tojson}};
-        {% if teacher_mode %}
-            var users = {{plugin_users|tojson}};
-        {% else %}
-            var users = [];
-        {% endif %}
-        var noQuestionAutoNumbering = {{ no_question_auto_numbering|tojson}};
-        var liveUpdates = {{ live_updates|tojson}};
-        var docVersion = {{ version|tojson }};
-        var wordList = {{ word_list|tojson }};
-        var readExpiry = {{ doc_settings.read_expiry()|tojson }};
-        var memoMinutes = {{memo_minutes|tojson}};
-        var docSettings = {{ doc_settings.get_dict().values|tojson }};  //TODO: show only for edit right
-        var index = {{ headers|tojson }};
-        var hideLinks = {{ hide_links|tojson }};
-        var hideTopButtons = {{ hide_top_buttons|tojson }};
-        var parsOnly = {{ pars_only|tojson }};
-        var translations = {{ translations|tojson }};
-        var current_view_range = {{ current_view_range|tojson }};
-        var nav_ranges = {{ nav_ranges|tojson }};
-        var exam_mode = {{ exam_mode|tojson }};
-        var hide_sidemenu = {{ hide_sidemenu|tojson }};
-        var score_infos = {{ score_infos|tojson }};
-        var current_list_user = {{ current_list_user|tojson }};
-    </script>
+    {{ doc_head|safe }}
 {% endblock %}
 
 {% set col_1_lg = 2 %}
@@ -86,67 +31,19 @@
     {% endif %}
 
     {% if teacher_mode %}
-        <div  save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed click="true"  caption="{{ plugin_users|length }} users with answers ">
+        <div save="%%PAGEID%%studentList" class="userFixed" tim-draggable-fixed click="true" caption="{{ '{{ $ctrl.users.length }}' }} users with answers">
             <tim-user-list class="draggable-content" on-user-change="$ctrl.changeUser($USER, $UPDATEALL)" users="$ctrl.users"></tim-user-list>
         </div>
     {% endif %}
 {% endblock %}
 
+{# NOTE: Keep the below HTML static (i.e. don't put more variables there, other than the "doc_content"). #}
+
 {% block content %}
     <form name="ignore_me">
         <input type="hidden" id="page_is_dirty" name="page_is_dirty" value="0" />
     </form>
-    {% set dtm = doc_settings.get_doctexmacros() %}
-    {% if dtm %}
-    <p style="visibility: hidden;"><span class="math inline">\({{dtm}}\)</span></p>
-    {% endif %}
-    <div class="paragraphs" ng-click="$ctrl.notesHandler.setNotePadge($event)" >
-        <tim-view-range-navigation></tim-view-range-navigation>
-        {% if task_info and task_info.show %}
-            <div class="taskSummary">
-                <span> 
-                <strong>Task Summary</strong> 
-                Total points: {{ task_info.total_points }}&nbsp;
-                    {%- if task_info.groups %}
-                        {%- if task_info.breaklines %}
-                            <br>
-                            {%- for k, v in task_info.groups.items() -%}
-                                {{ v.text }}{%- if v.link %} <a href="{{ v.link}}">{{ v.linktext }}</a>{%- endif -%}<br>
-                            {%- endfor -%}
-                        {%- else -%}
-                            ({%- for k, v in task_info.groups.items() -%}
-                                {{ v.text }}{% if not loop.last %}, {% endif %}
-                            {%- endfor -%}),&nbsp;
-                        {%- endif -%}
-                    {%- endif -%}
-                total tasks: {{ task_info.tasks_done }}&nbsp;/&nbsp;{{ task_info.total_tasks }}
-                </span>
-                <span style="font-size: x-small;" ng-click="reload()">Refresh (F5) to recount</span>
-            </div>
-            <div class="taskSmallSummary"><p>{{ task_info.total_points }} p</p></div>
-        {% endif %}
-        {% if slide_mode %}
-            <div class="paragraphs">
-                <iframe id="slideFrame" src="/show_slide/{{ item.path }}" allowfullscreen></iframe>
-                <a id="showSlidesLink" href="/show_slide/{{ item.path }}">Show slides only</a>
-            </div>
-        {% else %}
-            <div id="pars">
-                {% include 'partials/paragraphs.html' %}
-                <div ng-cloak class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
-                     ng-class="{'height-35': $ctrl.editing}">
-                    {% set btntext = doc_settings.add_par_button_text() %}
-                    {% if btntext and not nav_ranges %}
-                        <button class="addBottom timButton">{{ btntext }}</button>
-                    {% endif %}
-                </div>
-
-            </div>
-            <velp-selection ng-if="$ctrl.showVelpSelection()">
-            </velp-selection>
-        {% endif %}
-        <tim-view-range-navigation></tim-view-range-navigation>
-    </div>
+    {{ doc_content|safe }}
     <tim-template-list ng-if="$ctrl.item.rights.editable" ng-show="$ctrl.isEmptyDocument()" [doc]="$ctrl.item"></tim-template-list>
     <bootstrap-panel ng-if="$ctrl.item.rights.manage" ng-show="$ctrl.isEmptyDocument()"
                      title="Review document permissions"
