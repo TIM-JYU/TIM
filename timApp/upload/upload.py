@@ -30,7 +30,7 @@ from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import PluginUpload, PluginUploadInfo, UploadedFile, get_mimetype
 from timApp.util.flask.requesthelper import use_model, RouteException
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, add_csp_header
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
     PdfError, stamp_pdfs, create_tex_file, stamp_model_default_path, compress_pdf_if_not_already, CompressionError
 
@@ -41,10 +41,7 @@ upload = Blueprint('upload',
 
 @upload.after_request
 def set_csp(resp: Response):
-    # Chrome refuses to render PDFs with "CSP: sandbox" header
-    if resp.mimetype != 'application/pdf':
-        resp.headers['Content-Security-Policy'] = "sandbox"
-        resp.headers['X-Content-Security-Policy'] = "sandbox"  # For IE
+    add_csp_header(resp)
     return resp
 
 

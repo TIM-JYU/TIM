@@ -72,6 +72,11 @@ def add_no_cache_headers(response: Response):
     return response
 
 
+def add_csp_header(response: Response, value: str = 'sandbox'):
+    response.headers['Content-Security-Policy'] = value
+    return response
+
+
 def ok_response() -> Response:
     return json_response({'status': 'ok'})
 

@@ -70,7 +70,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_request_message, use_model, RouteException
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, add_csp_header
 from timApp.util.flask.search import search_routes
 from timApp.util.logger import log_info, log_debug
 from timApp.util.utils import get_current_time
@@ -270,12 +270,13 @@ def getproxy(m: GetProxyModel):
         mimetype = r.headers['Content-Type']
         if m.mimetype:
             mimetype = m.mimetype
-        return Response(
+        resp = Response(
             r.content,
             status=r.status_code,
             mimetype=mimetype,
-            headers={'Content-Security-Policy': 'sandbox allow-scripts'}
         )
+        add_csp_header(resp, 'sandbox allow-scripts')
+        return resp
 
     return json_response({'data': r.text, 'status_code': r.status_code})
 
