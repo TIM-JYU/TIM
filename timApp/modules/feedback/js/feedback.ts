@@ -14,7 +14,7 @@ import {
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {documentglobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
-import {to} from "tim/util/utils";
+import {injectStyle, to} from "tim/util/utils";
 import {EditMode} from "tim/document/popup-menu-dialog.component";
 
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
@@ -148,7 +148,7 @@ class FeedbackController
     private forceSave = false;
     private partArray: string[] = [];
 
-    async $onInit() {
+    $onInit() {
         super.$onInit();
         this.addToCtrl();
         this.setPluginWords();
@@ -182,13 +182,13 @@ class FeedbackController
             this.showAnswers = true;
         }
         if (!this.showAnswers) {
-            await import("style-loader!../css/hideanswerbrowser.css" as string);
+            injectStyle("/static/stylesheets/hideanswerbrowser.css");
         }
         if (
             !this.vctrl.item.rights.editable ||
             !this.vctrl.item.rights.teacher
         ) {
-            await import("style-loader!../css/viewhide.css" as string);
+            injectStyle("/static/stylesheets/viewhide.css");
             this.vctrl.actionsDisabled = true;
         }
         this.showDocument();

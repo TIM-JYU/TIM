@@ -14,7 +14,6 @@ import {
     JsrunnerAll,
     JsrunnerMarkup,
 } from "../../shared/jsrunnertypes";
-import "style-loader!../stylesheets/jsrunner.css";
 import {jsrunnerApp} from "./jsrunnerapp";
 import * as jsrunnererror from "./jsrunnererror";
 
