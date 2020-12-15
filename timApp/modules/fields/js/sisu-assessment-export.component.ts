@@ -449,12 +449,6 @@ export class SisuAssessmentExportComponent {
         localeService.use("fi");
     }
 
-    ngOnInit() {
-        import(
-            "style-loader!node_modules/ngx-bootstrap/datepicker/bs-datepicker.css" as string
-        );
-    }
-
     async callSendGrades(opts: ISendGradeOptions) {
         if (!this.destCourse) {
             return;
