@@ -90,16 +90,7 @@
                 "input": "./node_modules/bootstrap-sass/assets/fonts/bootstrap",
                 "output": "/bootstrap-fonts/"
               },
-              {
-                "glob": "**/*",
-                "input": "./node_modules/reveal.js/plugin/notes",
-                "output": "/reveal/notes/"
-              },
-              {
-                "glob": "**/*",
-                "input": "./node_modules/reveal.js/plugin/zoom-js",
-                "output": "/reveal/zoom-js/"
-              }
+              "node_modules/reveal.js/dist/reveal.css"
             ],
             "styles": [
               "node_modules/angular-ui-grid/ui-grid.min.css",

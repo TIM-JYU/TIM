@@ -1,5 +1,5 @@
 import $ from "jquery";
-import {getURLParameter, IOkResponse, to} from "tim/util/utils";
+import {getURLParameter, injectStyle, IOkResponse, to} from "tim/util/utils";
 import {IDocument, IItem} from "../item/IItem";
 import {documentglobals, slideglobals} from "../util/globals";
 import {$http, $log, $timeout} from "../util/ngimport";
@@ -134,10 +134,8 @@ export async function initSlideView(d: IDocument) {
     const bgUrl = w.background_url;
     const bgColor = w.background_color;
     const hasManage = d.rights.manage;
-    const revealIgnored = import(
-        "style-loader!reveal.js/dist/reveal.css" as string
-    );
-    const jyuIgnored = import("style-loader!./jyu.css" as string);
+    injectStyle("/static/scripts/build/node_modules/reveal.js/dist/reveal.css");
+    injectStyle("/static/scripts/tim/document/jyu.css");
     const rv = (await import("reveal.js")).default;
     if (getURLParameter("controls") == null && hasManage) {
         refresh(rv);
