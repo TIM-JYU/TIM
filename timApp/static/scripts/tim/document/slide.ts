@@ -134,7 +134,14 @@ export async function initSlideView(d: IDocument) {
     const bgUrl = w.background_url;
     const bgColor = w.background_color;
     const hasManage = d.rights.manage;
-    injectStyle("/static/scripts/build/node_modules/reveal.js/dist/reveal.css");
+
+    // TODO: Only one of these two will load successfully,
+    //  but we don't know if we're running locally or in production, so we try both.
+    injectStyle("/static/scripts/build/node_modules/reveal.js/dist/reveal.css"); // local
+    injectStyle(
+        "/static/scripts/build/en-US/node_modules/reveal.js/dist/reveal.css"
+    ); // production
+
     injectStyle("/static/scripts/tim/document/jyu.css");
     const rv = (await import("reveal.js")).default;
     if (getURLParameter("controls") == null && hasManage) {
