@@ -51,7 +51,6 @@
               "typescript-json-serializer",
               "tinycolor2",
               "fp-ts/lib/Either",
-              "style-loader!./timMenu.css",
               "style-loader!./jyu.css",
               "style-loader!../css/hideanswerbrowser.css",
               "style-loader!../css/viewhide.css",
