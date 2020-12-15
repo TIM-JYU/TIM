@@ -720,7 +720,7 @@ class TimRouteTest(TimDbTest):
 
     def assert_js_variable(self, element: HtmlElement, variable_name: str, expect_content: Any):
         """
-        Check a JavaScript variable from view_html.html.
+        Check a JavaScript variable from view_html.jinja2.
         :param element: HTML-tree.
         :param variable_name: Variable name as it's in the <script>.
         :param expect_content: Expected content.

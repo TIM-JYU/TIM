@@ -128,6 +128,10 @@ app = Flask(__name__)
 
 app.jinja_env.auto_reload = True  # uncomment this to autoreload templates
 
+# The autoescape setting needs to be forced because the template file extension used in TIM is jinja2.
+# The more accurate file extension helps IDEs recognize the file type better.
+app.jinja_env.autoescape = True
+
 app.jinja_env.trim_blocks = True
 app.jinja_env.lstrip_blocks = True
 app.config.from_pyfile('defaultconfig.py', silent=False)

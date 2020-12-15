@@ -41,7 +41,7 @@ def show() -> str:
 
     try:
         limit = 50
-        return render_template('settings.html',
+        return render_template('settings.jinja2',
                                css_files=available_css_files,
                                notification_limit=limit,
                                notifications=get_current_user_notifications(limit=limit))

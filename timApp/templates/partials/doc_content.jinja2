@@ -35,7 +35,7 @@
     </div>
     {% else %}
     <div id="pars">
-        {% include 'partials/paragraphs.html' %}
+        {% include 'partials/paragraphs.jinja2' %}
         <div ng-cloak class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
              ng-class="{'height-35': $ctrl.editing}">
             {% set btntext = doc_settings.add_par_button_text() %}

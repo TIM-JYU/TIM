@@ -446,7 +446,7 @@ export class ViewCtrl implements IController {
         return p.startsWith("/slidefff/") || p.startsWith("/show_slide/");
     }
 
-    // noinspection JSUnusedGlobalSymbols (used in view_html.html)
+    // noinspection JSUnusedGlobalSymbols (used in view_html.jinja2)
     showVelpSelection() {
         return (
             (this.reviewCtrl.velpMode ||

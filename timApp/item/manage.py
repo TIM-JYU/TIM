@@ -61,7 +61,7 @@ def manage(path):
         item.changelog_length = get_option(request, 'history', 100)
 
     return render_template(
-        'manage.html',
+        'manage.jinja2',
         route='manage',
         translations=item.translations if not is_folder else None,
         item=item,

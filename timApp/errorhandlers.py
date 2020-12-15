@@ -59,7 +59,7 @@ def register_errorhandlers(app: Flask):
 
     @app.errorhandler(DumboHTMLException)
     def handle_dumbo_html_exception(error: DumboHTMLException):
-        return error_generic(error.description, 400, template='dumbo_html_error.html')
+        return error_generic(error.description, 400, template='dumbo_html_error.jinja2')
 
     @app.errorhandler(ItemLockedException)
     def handle_item_locked(error: ItemLockedException):
@@ -72,7 +72,7 @@ def register_errorhandlers(app: Flask):
             abort(404)
         view_settings = get_minimal_visibility_settings(item.document if not is_folder else None)
         return render_template(
-            'duration_unlock.html',
+            'duration_unlock.jinja2',
             item=item,
             item_type='folder' if is_folder else 'document',
             access=error.access,

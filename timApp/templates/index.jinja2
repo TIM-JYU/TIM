@@ -1,4 +1,4 @@
-{% extends "folder.html" %}
+{% extends "folder.jinja2" %}
 {% block title %}{{'{} {}'.format(item.title, '({})'.format(item.location) if item.location else '')}}{% endblock %}
 {% block head %}
     {{ super() }}

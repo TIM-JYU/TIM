@@ -239,7 +239,7 @@ def items_route(args: GetItemsModel):
 @view_page.route("/view")
 def index_page():
     save_last_page()
-    return render_template('index.html',
+    return render_template('index.jinja2',
                            items=get_items(''),
                            item=Folder.get_root())
 
@@ -260,7 +260,7 @@ def get_module_ids(js_paths: List[str]):
 
 
 def goto_view(item_path, model: ViewParams):
-    return render_template('goto_view.html',
+    return render_template('goto_view.jinja2',
                            item_path=item_path,
                            display_text=model.goto,
                            wait_max=model.wait_max,
@@ -330,7 +330,7 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
         result = cr.doc
 
     final_html = render_template(
-        'show_slide.html' if view_ctx.route == ViewRoute.ShowSlide else 'view_html.html',
+        'show_slide.jinja2' if view_ctx.route == ViewRoute.ShowSlide else 'view_html.jinja2',
         access=access,
         doc_content=result.content_html,
         doc_head=result.head_html,
@@ -611,7 +611,7 @@ def render_doc_view(
             document_themes = list(set().union(document_themes, user_themes))
         override_theme = generate_theme(document_themes, get_default_scss_gen_dir())
 
-    templates_to_render = ['slide_head.html', 'slide_content.html'] if is_slide else ['doc_head.html', 'doc_content.html']
+    templates_to_render = ['slide_head.jinja2', 'slide_content.jinja2'] if is_slide else ['doc_head.jinja2', 'doc_content.jinja2']
     tmpl_params = dict(
         access=access,
         hide_links=should_hide_links(doc_settings, rights),
@@ -673,7 +673,7 @@ def render_login(item: Optional[Document]) -> FlaskViewResult:
     view_settings = get_minimal_visibility_settings(item)
     session['came_from'] = request.url
     session['anchor'] = request.args.get('anchor', '')
-    return render_template('loginpage.html',
+    return render_template('loginpage.jinja2',
                            came_from=request.full_path,
                            anchor=session['anchor'],
                            view_settings=view_settings), 403
@@ -757,7 +757,7 @@ def check_updated_pars(doc_id, major, minor):
                 view_ctx,
             )
             diff['content'] = {
-                'texts': render_template('partials/paragraphs.html',
+                'texts': render_template('partials/paragraphs.jinja2',
                                          text=post_process_result.texts,
                                          item={'rights': rights},
                                          preview=False),

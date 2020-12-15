@@ -514,7 +514,7 @@ def show_lecture_info(lecture_id):
         raise RouteException('Lecture not found')
 
     doc = DocEntry.find_by_id(lecture.doc_id)
-    return render_template("lectureInfo.html",
+    return render_template("lectureInfo.jinja2",
                            item=doc,
                            lecture=lecture,
                            translations=doc.translations)

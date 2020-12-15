@@ -463,14 +463,14 @@ def par_response(pars: List[DocParagraph],
         for p, r in zip(post_process_result.texts, proofed_text):
             p['html'] = r.new_html
 
-    r = json_response({'texts': render_template('partials/paragraphs.html',
+    r = json_response({'texts': render_template('partials/paragraphs.jinja2',
                                                 text=post_process_result.texts,
                                                 item={'rights': get_rights(doc.get_docinfo())},
                                                 preview=preview),
                        'js': post_process_result.js_paths,
                        'css': post_process_result.css_paths,
                        'trdiff': trdiff,
-                       'changed_pars': {p['id']: render_template('partials/paragraphs.html',
+                       'changed_pars': {p['id']: render_template('partials/paragraphs.jinja2',
                                                                  text=[p],
                                                                  item={'rights': get_rights(doc.get_docinfo())}) for p
                                         in

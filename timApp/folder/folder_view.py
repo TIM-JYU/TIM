@@ -31,14 +31,14 @@ def try_return_folder(item_name):
                 db.session.commit()
                 return view(item_name, ViewRoute.View)
 
-        return render_template('create_new.html',
+        return render_template('create_new.jinja2',
                                show_create_new=get_current_user_object().can_write_to_folder(f),
                                new_item=item_name,
                                found_item=f,
                                forced_template=template_to_find if template_item else None), 404
     verify_view_access(f)
     return render_template(
-        'index.html',
+        'index.jinja2',
         item=f,
         items=get_items(item_name),
     )

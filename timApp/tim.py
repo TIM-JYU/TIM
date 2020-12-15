@@ -321,7 +321,7 @@ def update_user_course_bookmarks():
 def start_page():
     update_user_course_bookmarks()
     return render_template(
-        'start.html',
+        'start.jinja2',
     )
 
 
