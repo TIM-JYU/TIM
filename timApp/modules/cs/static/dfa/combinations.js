@@ -20,6 +20,8 @@ class Combinations {
         this.end = false;
     }
 
+    static noMore = "";
+
     /*
     setCharAt(str, index, chr) {
         if (index > str.length - 1) return str;
@@ -47,11 +49,11 @@ class Combinations {
 
         function nextN() {
             let s = combi.state;
-            let si = s.length - 1;
+            let si = s.length - 1; // last index
             while (si >= 0) {
                 let c = s[si];
                 let ci = chars.indexOf(c);
-                if (ci < 0) return ""; // something wrong
+                if (ci < 0) return Combinations.noNore; // something wrong
                 if (ci < chars.length - 1) {
                     c = chars[ci + 1];
                     // s = setCharAt(s, si, c);
@@ -65,7 +67,7 @@ class Combinations {
             }
             combi.end = true;
             combi.state = undefined;
-            return "";
+            return Combinations.noNore;
         }
 
         function nextFull() {
@@ -74,11 +76,11 @@ class Combinations {
             s = nextN(s);
             if (s) return s;
             len++;
-            if (len > combi.n) return "";
+            if (len > combi.n) return Combinations.noNore;
             return first(len);
         }
 
-        if ( this.end ) return "";
+        if ( this.end ) return Combinations.noNore;
 
         if (!this.state) {
             if (this.full) return first(1);
@@ -86,5 +88,12 @@ class Combinations {
         }
         if (this.full) return nextFull();
         return nextN()
+    }
+
+
+    current() {
+        if (this.state) return this.state;
+        if (this.end) return Combinations.noNore;
+        return next();
     }
 }

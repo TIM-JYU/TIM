@@ -745,7 +745,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             libs = ""
             for lib in postlibraries:
                 libs += get_from_url(lib)
-            postprogram = libs + postprogram
+            postprogram = libs + "\n//=== END LIBRARIES ===\n" + postprogram
 
         def set_postoutput(result, output, postoutput):
             if not postoutput or not output:
