@@ -205,7 +205,7 @@ const ShowFileAll = t.type({
                         [src]="iframesettings.src"
                         [style.width.px]="width"
                         [style.height.px]="height"
-                        [attr.sandbox]="iframesettings.sandbox"
+                        [sandbox]="iframesettings.sandbox"
                         [attr.allow]="iframesettings.allow"
                 >
                 </iframe>
@@ -570,7 +570,10 @@ export class VideoComponent extends AngularPluginBase<
                 }
             }
             const src = `${file}${params}`;
-            this.isPdf = src.includes(".pdf"); // TODO: hack for Mac Safari see https://gitlab.com/tim-jyu/tim/-/issues/2114
+            this.isPdf =
+                src.includes(".pdf") && // TODO: hack for Mac Safari see https://gitlab.com/tim-jyu/tim/-/issues/2114
+                navigator.userAgent.includes("Safari") &&
+                !navigator.userAgent.includes("Chrome");
             this.iframesettings = {
                 src: this.domSanitizer.bypassSecurityTrustResourceUrl(src),
                 width: this.width ?? null,
