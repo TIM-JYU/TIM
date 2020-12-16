@@ -686,6 +686,50 @@ export function posToRelative(e: Element, p: MouseOrTouch | TouchEvent) {
 
 let copyHelperElement: HTMLTextAreaElement | undefined;
 
+enum BrowserKind {
+    Chrome,
+    Safari,
+    IE,
+    Firefox,
+    Unknown,
+}
+
+function getBrowserKind() {
+    const userAgent = navigator.userAgent.toLowerCase();
+    if (userAgent.includes("chrome")) {
+        return BrowserKind.Chrome;
+    } else if (userAgent.includes("safari")) {
+        return BrowserKind.Safari;
+    } else if (userAgent.includes("msie")) {
+        return BrowserKind.IE;
+    } else if (userAgent.includes("firefox")) {
+        return BrowserKind.Firefox;
+    }
+    if (userAgent.includes("trident/")) {
+        return BrowserKind.IE;
+    }
+    return BrowserKind.Unknown;
+}
+
+export function isIOS() {
+    return navigator.userAgent.match(/ipad|ipod|iphone/i);
+}
+
+export function isSafari() {
+    return (
+        navigator.userAgent.includes("Safari") &&
+        !navigator.userAgent.includes("Chrome")
+    );
+}
+
+export function isFirefox() {
+    return getBrowserKind() == BrowserKind.Firefox;
+}
+
+export function isIE() {
+    return getBrowserKind() == BrowserKind.IE;
+}
+
 export function getClipboardHelper(): HTMLTextAreaElement {
     let e1 = copyHelperElement; // prevent extra creating and deleting
     if (e1) {
@@ -706,8 +750,7 @@ export function getClipboardHelper(): HTMLTextAreaElement {
 export function copyToClipboard(s: string) {
     const e1 = getClipboardHelper();
     e1.value = s;
-    const isIOS = navigator.userAgent.match(/ipad|ipod|iphone/i);
-    if (isIOS) {
+    if (isIOS()) {
         // e1.contentEditable = true;
         e1.readOnly = true;
         const range = document.createRange();
@@ -755,45 +798,12 @@ export function createValidator(
     };
 }
 
-export function isFirefox() {
-    return getBrowserKind() == BrowserKind.Firefox;
-}
-
-export function isIE() {
-    return getBrowserKind() == BrowserKind.IE;
-}
-
 /**
  * On Firefox, we need max-content in timTable to get rid of the horizontal scrollbar.
  * On the other hand, max-content does not work well in Chrome because it makes some columns too wide.
  */
 export function maxContentOrFitContent() {
     return isFirefox() ? "max-content" : "fit-content";
-}
-
-enum BrowserKind {
-    Chrome,
-    Safari,
-    IE,
-    Firefox,
-    Unknown,
-}
-
-function getBrowserKind() {
-    const userAgent = navigator.userAgent.toLowerCase();
-    if (userAgent.includes("chrome")) {
-        return BrowserKind.Chrome;
-    } else if (userAgent.includes("safari")) {
-        return BrowserKind.Safari;
-    } else if (userAgent.includes("msie")) {
-        return BrowserKind.IE;
-    } else if (userAgent.includes("firefox")) {
-        return BrowserKind.Firefox;
-    }
-    if (userAgent.includes("trident/")) {
-        return BrowserKind.IE;
-    }
-    return BrowserKind.Unknown;
 }
 
 export function log(s: string) {

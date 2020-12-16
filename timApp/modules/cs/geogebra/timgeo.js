@@ -1,7 +1,6 @@
 let timgeo = {
 copyArea: function(e1) {
-   const isIOS = navigator.userAgent.match(/ipad|ipod|iphone/i);
-   if (isIOS) {
+   if (isIOS()) {
        e1.contentEditable = true;
        e1.readOnly = true;
        let range = document.createRange();

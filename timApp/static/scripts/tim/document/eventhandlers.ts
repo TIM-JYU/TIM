@@ -1,7 +1,7 @@
 import $ from "jquery";
 import {KEY_ENTER} from "../util/keycodes";
 import {$document, $log} from "../util/ngimport";
-import {Coords, dist, isTouchEvent} from "../util/utils";
+import {Coords, dist, isTouchEvent, isIOS} from "../util/utils";
 import {EDITOR_CLASS_DOT} from "./parhelpers";
 
 function fixPageCoords(e: JQuery.MouseEventBase) {
@@ -75,8 +75,7 @@ export function onClick(
         downEvent = undefined;
     });
     // it is wrong to register both events at the same time; see https://stackoverflow.com/questions/8503453
-    const isIOS = /iphone|ipad/gi.test(navigator.appVersion);
-    const eventName = isIOS ? "touchend" : "mouseup";
+    const eventName = isIOS() ? "touchend" : "mouseup";
     $document.on(eventName, className, (e) => {
         if (downEvent?.originalEvent) {
             func($(e.currentTarget), {

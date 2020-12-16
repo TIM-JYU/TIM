@@ -16,7 +16,12 @@ import {
 } from "tim/plugin/attributes";
 import {copyToClipboard} from "tim/util/utils";
 
-import {parseIframeopts, seconds2Time, valueDefu} from "tim/util/utils";
+import {
+    parseIframeopts,
+    seconds2Time,
+    valueDefu,
+    isSafari,
+} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
@@ -572,8 +577,7 @@ export class VideoComponent extends AngularPluginBase<
             const src = `${file}${params}`;
             this.isPdf =
                 src.includes(".pdf") && // TODO: hack for Mac Safari see https://gitlab.com/tim-jyu/tim/-/issues/2114
-                navigator.userAgent.includes("Safari") &&
-                !navigator.userAgent.includes("Chrome");
+                isSafari();
             this.iframesettings = {
                 src: this.domSanitizer.bypassSecurityTrustResourceUrl(src),
                 width: this.width ?? null,
