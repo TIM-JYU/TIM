@@ -188,14 +188,24 @@ const ShowFileAll = t.type({
             </div>
 
             <ng-container *ngIf="videoOn">
-                <iframe *ngIf="iframesettings"
+                <iframe *ngIf="iframesettings && isPdf"
                         class="showVideo"
                         frameborder="0"
                         allowfullscreen
                         [src]="iframesettings.src"
-                        [sandbox]="iframesettings.sandbox"
                         [style.width.px]="width"
                         [style.height.px]="height"
+                        [attr.allow]="iframesettings.allow"
+                >
+                </iframe>
+                <iframe *ngIf="iframesettings && !isPdf"
+                        class="showVideo"
+                        frameborder="0"
+                        allowfullscreen
+                        [src]="iframesettings.src"
+                        [style.width.px]="width"
+                        [style.height.px]="height"
+                        [attr.sandbox]="iframesettings.sandbox"
                         [attr.allow]="iframesettings.allow"
                 >
                 </iframe>
@@ -322,6 +332,7 @@ export class VideoComponent extends AngularPluginBase<
     height?: number;
     private vctrl?: ViewCtrl;
     iframesettings?: Iframesettings;
+    isPdf = false;
     videosettings?: {src: string};
     playbackRateString = "";
     advVideo: boolean = false;
@@ -559,6 +570,7 @@ export class VideoComponent extends AngularPluginBase<
                 }
             }
             const src = `${file}${params}`;
+            this.isPdf = src.includes(".pdf"); // TODO: hack for Mac Safari see https://gitlab.com/tim-jyu/tim/-/issues/2114
             this.iframesettings = {
                 src: this.domSanitizer.bypassSecurityTrustResourceUrl(src),
                 width: this.width ?? null,
