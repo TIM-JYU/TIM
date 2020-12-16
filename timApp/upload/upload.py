@@ -41,7 +41,8 @@ upload = Blueprint('upload',
 
 @upload.after_request
 def set_csp(resp: Response):
-    add_csp_header(resp)
+    if resp.mimetype != 'application/pdf': # Mac Safari needs this if
+        add_csp_header(resp)
     return resp
 
 
