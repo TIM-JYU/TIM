@@ -344,8 +344,13 @@ export class OutputContainerComponent implements IOutputContainer {
         if (data.title) {
             this.title = data.title;
         }
-        if ((data.angular ? 1 : 0) + (data.html ? 1 : 0) + (data.text ? 1 : 0) > 1) {
-            this.error("Only one of angular, text or html can be defined at once");
+        if (
+            (data.angular ? 1 : 0) + (data.html ? 1 : 0) + (data.text ? 1 : 0) >
+            1
+        ) {
+            this.error(
+                "Only one of angular, text or html can be defined at once"
+            );
             this.hide = false;
             return;
         }
