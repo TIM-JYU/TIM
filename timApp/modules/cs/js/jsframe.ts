@@ -462,7 +462,10 @@ export class JsframeComponent
             html = html.replace("// INITDATA", this.initData);
             // const datasrc = btoa(html);
             const type = this.attrsall.markup.type;
-            const datasrc = this.b64EncodeUnicode(html, type == "drawio");
+            const datasrc = this.b64EncodeUnicode(
+                html,
+                type == "drawio" || type == "jsframe"
+            );
             src = "data:text/html;base64," + datasrc;
         }
 

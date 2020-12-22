@@ -41,12 +41,14 @@ export const communicationJS = `
     `;
 
 export function getIFrameDataUrl(html: string, initdata?: string) {
-    return (
-        "data:text/html;base64," +
-        btoa(
-            html
-                .replace("</body>", communicationJS + "\n</body>")
-                .replace("// INITDATA", initdata ?? "")
-        )
-    );
+    let s = html
+        .replace("</body>", communicationJS + "\n</body>")
+        .replace("// INITDATA", initdata ?? "");
+    s = encodeURIComponent(s).replace(/%([0-9A-F]{2})/g, function toSolidBytes(
+        match,
+        p1
+    ) {
+        return String.fromCharCode(parseInt("0x" + p1, 16));
+    });
+    return "data:text/html;base64," + btoa(s);
 }
