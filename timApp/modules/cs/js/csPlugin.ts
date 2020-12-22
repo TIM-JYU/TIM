@@ -1529,6 +1529,7 @@ export class CsController extends CsBase implements ITimComponent {
             this.fullhtmlCache = html;
             return html;
         } else {
+            // TODO get the real error
             const html = "Same origin error " + r;
             this.fullhtmlCache = html;
             return html;
