@@ -633,6 +633,7 @@ const CsMarkupOptional = t.partial({
     html: t.string,
     indices: t.string,
     inputplaceholder: t.string,
+    jsparams: t.any, // TODO: needs to be something unknown
     languages: t.string, // not used in any plugin? // TODO: should be used to give set of languages that can be used
     mode: t.string,
     noeditor: t.boolean,
@@ -1506,6 +1507,12 @@ export class CsController extends CsBase implements ITimComponent {
         }
     }
 
+    handleHTML(s: string): string {
+        const regex = /<!-- DELETEBEGIN -->(.|\n)*?<!-- DELETEEND -->/gm;
+        s = s.replace(regex, "");
+        return s;
+    }
+
     // `await` can only be used in an async body, but showing it here for simplicity.
     // const file = await getFileFromUrl('https://example.com/image.jpg', 'example.jpg');
 
@@ -1518,14 +1525,19 @@ export class CsController extends CsBase implements ITimComponent {
             return "REPLACEBYCODE";
         }
 
-        if (r) return r;
+        if (r) {
+            return this.handleHTML(r);
+        }
 
-        if (!r) r = this.markup.fullhtmlurl;
-        if (!r) return r;
+        r = this.markup.fullhtmlurl;
+        if (!r) {
+            return r;
+        }
 
         const result = await this.httpGetText(r);
         if (result.ok) {
-            const html = result.result;
+            let html = result.result;
+            html = this.handleHTML(html);
             this.fullhtmlCache = html;
             return html;
         } else {
@@ -3163,6 +3175,7 @@ ${fhtml}
                 code: this.getCode(),
                 args: this.userargs,
                 input: this.userinput,
+                params: this.markup.jsparams,
                 // TODO: Why would someone _not_ want console?
                 //  There won't be anything visible in UI without it.
                 // Answer: console means that consolelog goes to same
