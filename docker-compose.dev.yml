@@ -55,7 +55,7 @@ services:
   << : *common-root
   command: ${JSRUNNER_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
-   - "49971:22"
+   - "49991:22"
  drag:
   << : *common-root
   command: ${DRAG_DEV_COMMAND:-/usr/sbin/sshd -D}
