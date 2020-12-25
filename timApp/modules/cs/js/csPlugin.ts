@@ -1393,7 +1393,12 @@ export class CsController extends CsBase implements ITimComponent {
     }
 
     get program() {
-        return this.attrsall.program ?? this.markup.program;
+        const prg = this.attrsall.program ?? this.markup.program;
+        // IF just replace by code, then no need fo show full code
+        if (prg?.trim() === "REPLACEBYCODE") {
+            return "";
+        }
+        return prg;
     }
 
     get hideText() {
@@ -3331,7 +3336,7 @@ ${fhtml}
                     [placeholder]="argsplaceholder"></span>
     </div>
     <cs-count-board *ngIf="count" [options]="count"></cs-count-board>
-    <p class="csRunSnippets" *ngIf="buttons">
+    <p class="csRunSnippets" *ngIf="buttons && !noeditor">
         <button *ngFor="let item of buttons" (click)="addText(item)">{{addTextHtml(item)}}</button>
         &nbsp;&nbsp;
     </p>
