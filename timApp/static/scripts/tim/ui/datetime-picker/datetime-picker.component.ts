@@ -26,13 +26,16 @@ const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
             <input class="form-control"
                    [placeholder]="placeholder"
                    (focus)="onFocus($event)"
+                   (blur)="onBlur($event)"
                    (mouseup)="onFocus($event)"
                    [ngModel]="timeStr"
-                   (ngModelChange)="timeStrModelChanged($event)"/>
-            <!--<datetime-popup [value]="time || currDate"
+                   (ngModelChange)="timeStrModelChanged($event)"
+                   />
+            <!--       />
+            <datetime-popup [value]="time || currDate"
                             (valueChange)="popupChanged($event)"
                             [(showPopup)]="showPicker"></datetime-popup>-->
-            <span>Päivämäärä toistaiseksi käsin muodossa 12.1.2021 vaikka se onkin hankala kirjoittaa!</span>
+            <span>Päivämäärä toistaiseksi käsin muodossa 12.1.2021</span>
             <span class="input-group-addon" (click)="showPicker = true">
                 <i class="glyphicon glyphicon-calendar" aria-hidden="true"></i>
             </span>
@@ -53,7 +56,7 @@ export class DatetimePickerComponent implements OnInit, OnChanges {
     }
 
     ngOnChanges(c: SimpleChanges) {
-        if (c.time) {
+        if (c.time && !this.timeStr) {
             this.updatetimeStr();
         }
     }
@@ -75,7 +78,13 @@ export class DatetimePickerComponent implements OnInit, OnChanges {
         this.timeChange.emit(this.time);
     }
 
-    onFocus(event: FocusEvent) {}
+    onFocus(event: FocusEvent) {
+        this.updatetimeStr();
+    }
+
+    onBlur(event: FocusEvent) {
+        this.updatetimeStr();
+    }
 }
 
 @NgModule({
