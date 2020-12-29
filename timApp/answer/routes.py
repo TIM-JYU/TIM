@@ -744,8 +744,20 @@ def post_answer(plugintype: str, task_id_ext: str):
         if postprogram and postlibraries:
             libs = ""
             for lib in postlibraries:
-                libs += get_from_url(lib)
-            postprogram = libs + "\n//=== END LIBRARIES ===\n" + postprogram
+                try:
+                    content = get_from_url(lib)
+                    if content.startswith('{"error"'):
+                        web["error"] += lib + "\n" + content
+                        postprogram = ""
+                        break
+                    libs += content
+                except Exception as ex:
+                    web["error"] += lib + "\n" + str(ex)
+                    postprogram = ""
+            if postprogram:
+                postprogram = libs + \
+                              "\n//=== END LIBRARIES ===\n" + \
+                              postprogram
 
         def set_postoutput(result, output, postoutput):
             if not postoutput or not output:

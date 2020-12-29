@@ -3384,7 +3384,7 @@ ${fhtml}
             <a href="#" *ngIf="!nocode && (file || program)"
                     (click)="showCode(); $event.preventDefault()">{{showCodeLink}}</a>&nbsp;&nbsp;
             <a href="#" *ngIf="editor && editor.modified"
-                    (click)="initCode(); $event.preventDefault()">{{resetText}}</a>
+                    (click)="initCode(); $event.preventDefault()">{{resetText}} </a>
             <a href="#" *ngIf="toggleEditor"
                     (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
             <a href="#" *ngIf="!noeditor && editor && editor.nextModeText"
