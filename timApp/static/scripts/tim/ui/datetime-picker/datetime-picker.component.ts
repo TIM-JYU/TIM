@@ -29,9 +29,10 @@ const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
                    (mouseup)="onFocus($event)"
                    [ngModel]="timeStr"
                    (ngModelChange)="timeStrModelChanged($event)"/>
-            <datetime-popup [value]="time || currDate"
+            <!--<datetime-popup [value]="time || currDate"
                             (valueChange)="popupChanged($event)"
-                            [(showPopup)]="showPicker"></datetime-popup>
+                            [(showPopup)]="showPicker"></datetime-popup>-->
+            <span>Päivämäärä toistaiseksi käsin muodossa 12.1.2021 vaikka se onkin hankala kirjoittaa!</span>
             <span class="input-group-addon" (click)="showPicker = true">
                 <i class="glyphicon glyphicon-calendar" aria-hidden="true"></i>
             </span>
