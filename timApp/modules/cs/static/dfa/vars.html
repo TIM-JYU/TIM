@@ -1,10 +1,103 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="fi">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <style>
+        .buttondiv {
+            margin-left: 2em;
+            position: absolute;
+            bottom: 0;
+        }
+
+        .buttondiv button {
+            font-size: x-large
+        }
+
+        .hidden {
+            visibility: hidden;
+        }
+
+        .coord {
+            font-size: xx-small;
+        }
+
+        pre.step {
+            margin: 0.2em;
+        }
+
+        pre.current {
+            background-color: yellow;
+        }
+    </style>
+    <title>Muuttujat</title>
 </head>
 <body>
-$END$
+<div><span id="error" style="color: red;"></span></div>
+<div id="codediv"></div>
+<div id="buttondiv" class="buttondiv hidden">
+    <button onclick="jumpToStart()" title="reset">|&lt;</button>
+    <button onclick="animateBack()" title="animate back to start">&lt;&lt;&lt;</button>
+    <button onclick="animateBack(1)" title="animate one step back">&lt;&lt;</button>
+    <button onclick="stepBack()" title="back minor step">&lt;</button>
+    <button onclick="stepFwd()" title="do minor step">&gt;</button>
+    <button onclick="animateFwd(1)" title="animate one step">&gt;&gt;</button>
+    <button onclick="animateFwd()" title="animate to end">&gt;&gt;&gt;</button>
+    <button onclick="jumpToEnd()" title="run to end">&gt;|</button>
+</div>
+<div id="svgdiv"></div>
+<div><span id="coord" class="coord"></span></div>
+<!--<script src="http://localhost:63342/components/variables.js"></script>-->
+<script src="https::/tim.jyu.fi/csstatic/dfa/vars.js"></script>
+<!-- DELETEBEGIN -->
+<!--
+Ref lista
+Ref aku
+Ref ankka
+List $1 R 3
+New $2 "Aku"
+New $3 "Ankka"
+lista -> $1
+aku -> $2
+aku -> $3
+ankka -> $3
+$1[0] -> $2
+$1[1] -> $3
+$1[-1] -> $3
+$2[1] -> $3
+$1[2] -> $2
+$1[2] -> $3
+value a = 3
+V a = 4
+kettu
+a = 2
+a -> $2
+$1[0] -> aku
+aku[0] -> aku
+
+v a 5
+r b
+n $1 kissa
+l $2 v 5
+a $3 r 3
+l $4 r 6
+l $5 v a,b,c,d
+l $6 r $1, $2
+-->
+<script>
+    const code = `
+ref susi -> new $1 Susi
+r luvut -> l $2 v 1,2,3,4
+ref l2 -> A $3 v 1,2,3,4
+ref l4 -> l $4 r $1,$2,$3,$3
+$4.count = 3
+`;
+    setData({
+        code: code, args: "1001", params:
+            {mode: "static", errorlevel: 3, xanimate: "commands"}
+    });
+    // console.log(visual.dfa.accepts("1001"));
+</script>
+<!-- DELETEEND -->
 </body>
+
 </html>

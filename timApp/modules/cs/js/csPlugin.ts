@@ -67,6 +67,8 @@ Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.
 
 let taunoNr = 0;
 
+const globalFileUrlCache: {[i: string]: string} = {};
+
 // ==============================================================
 // Global object to store every plugin that wants to
 // know when pwd changes.  plugin must implement (or scope)
@@ -1539,10 +1541,14 @@ export class CsController extends CsBase implements ITimComponent {
             return r;
         }
 
+        if (globalFileUrlCache[r]) {
+            return globalFileUrlCache[r];
+        }
         const result = await this.httpGetText(r);
         if (result.ok) {
             let html = result.result;
             html = this.handleHTML(html);
+            globalFileUrlCache[r] = html;
             this.fullhtmlCache = html;
             return html;
         } else {
