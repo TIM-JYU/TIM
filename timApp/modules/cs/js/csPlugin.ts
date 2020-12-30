@@ -1977,6 +1977,7 @@ ${fhtml}
         // if (this.isText) {
         //     this.preventSave = true;
         // }
+        this.fullCode = this.getCode();
     }
     async ngAfterViewInit() {
         this.preview = this.element.find(".csrunPreview");
