@@ -1090,6 +1090,11 @@ class Wiz(JS):
     pass
 
 
+class Vars(JS):
+    ttype = "vars"
+    pass
+
+
 class Processing(JS):
     ttype = "processing"
     pass

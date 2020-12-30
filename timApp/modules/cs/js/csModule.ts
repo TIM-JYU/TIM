@@ -13,6 +13,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {PurifyModule} from "tim/util/purify.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {GraphVizComponent} from "tim/plugin/graph-viz/graph-viz.component";
+import {VariablesComponent} from "tim/plugin/variables/variables.component";
 import {CsRunnerComponent} from "./csPlugin";
 import {CsTextComponent} from "./text";
 import {CsConsoleComponent} from "./console";
@@ -37,6 +38,7 @@ import {EditorModule} from "./editor/module";
         GitRegComponent,
         CsErrorComponent,
         GraphVizComponent,
+        VariablesComponent,
     ],
     exports: [
         CsRunnerComponent,

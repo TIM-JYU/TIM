@@ -91,6 +91,7 @@ PROXY_WHITELIST = [
     'plus.cs.aalto.fi',
     'gitlab.com',
     'gitlab.jyu.fi',
+    'tim.jyu.fi',
 ]
 
 # Whitelist of /getproxy domains that don't require login.

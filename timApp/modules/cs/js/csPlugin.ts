@@ -194,7 +194,6 @@ class LanguageTypes {
         "html",
         "processing",
         "rust",
-        "r",
         "wescheme",
         "ping",
         "kotlin",
@@ -203,6 +202,8 @@ class LanguageTypes {
         "extcheck",
         "gitreg",
         "viz",
+        "vars",
+        "r",
     ];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
@@ -243,7 +244,6 @@ class LanguageTypes {
         "html",
         "javascript",
         "text",
-        "r",
         "scheme",
         "text",
         "kotlin",
@@ -252,6 +252,8 @@ class LanguageTypes {
         "c_cpp",
         "text",
         "text",
+        "text",
+        "r",
     ];
 
     // What are known test types (be careful not to include partial word):
@@ -635,7 +637,7 @@ const CsMarkupOptional = t.partial({
     html: t.string,
     indices: t.string,
     inputplaceholder: t.string,
-    jsparams: t.any, // TODO: needs to be something unknown
+    jsparams: t.unknown, // TODO: needs to be something unknown
     languages: t.string, // not used in any plugin? // TODO: should be used to give set of languages that can be used
     mode: t.string,
     noeditor: t.boolean,
@@ -884,12 +886,14 @@ export class CsController extends CsBase implements ITimComponent {
     fileError?: string;
     fileProgress?: number;
     fullCode: string = "";
+    height?: string | number;
     htmlresult: string;
     iframeClientHeight: number;
     imgURL: string;
     indent!: number;
     initUserCode: boolean = false;
     isRunning: boolean = false;
+    jsparams?: unknown;
     lastJS: string;
     lastMD: string;
     lastUserargs?: string;
@@ -925,6 +929,7 @@ export class CsController extends CsBase implements ITimComponent {
     userargs_: string = "";
     userinput_: string = "";
     isViz?: boolean;
+    isVars?: boolean;
     viewCode!: boolean;
     wavURL: string = "";
     wrap!: {n: number; auto: boolean};
@@ -1964,7 +1969,10 @@ ${fhtml}
         }
         this.initSaved();
         this.isViz = this.type.startsWith("viz");
+        this.isVars = this.type.startsWith("vars");
         this.vctrl.addTimComponent(this);
+        this.height = this.markup.height;
+        this.jsparams = this.markup.jsparams;
         // if (this.isText) {
         //     this.preventSave = true;
         // }
@@ -3475,6 +3483,10 @@ ${fhtml}
         </div>
     </div>
     <tim-graph-viz *ngIf="isViz" [vizcmd]="fullCode"></tim-graph-viz>
+    <tim-variables *ngIf="isVars" [usercode]="fullCode"
+                   [jsparams]="jsparams"
+                   [height]="height"
+    ></tim-variables> <!-- TODO: why direct markup.jsparam does not work -->
     <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
     <video *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
             height="40"></video>

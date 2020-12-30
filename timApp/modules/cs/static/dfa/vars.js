@@ -1781,13 +1781,6 @@
         if (!variablesDiv) variablesDiv = document.getElementById('variablesDiv');
         if (!variablesDiv) {
             variablesDiv = ensureElement(document.body, "variablesDiv");
-            /*
-            variablesDiv = document.createElement("div");
-            variablesDiv.id = "variablesDiv";
-            variablesDiv.classList.add("variablesDiv");
-            document.body.appendChild(variablesDiv);
-
-             */
         }
         elements.codediv = ensureElement(variablesDiv, 'codediv');
         elements.errspan = ensureElement(variablesDiv, 'errorspan', 'varerror', 'span');
@@ -1803,12 +1796,22 @@
         let elements = getElements(data.params);
         let variableRelations = new VariableRelations(data.code,
                                 data.params, knownCommands);
-
-        let visual = new VisualSVGVariableRelations(variableRelations, data.args,
+        let newCall = true;
+        let visual = elements.svgdiv.visual; // is it allreadu created?
+        if (!visual)
+            visual = new VisualSVGVariableRelations(variableRelations,
+                     data.args,
                      elements);
+        else { // yes it was.  Just init it
+            visual.variableRelations = variableRelations;
+            visual.elements = elements;
+            visual.clearError();
+            newCall = false;
+        }
+        elements.svgdiv.visual = visual;  // to find next time
         let step1 = visual.maxStep()+1;
         if (data.params && data.params.animate) {
-            new Animation(visual, elements.buttondiv);
+            if ( newCall ) new Animation(visual, elements.buttondiv);
             step1 = 0;
         }
         let step = variableRelations.runUntil(step1);

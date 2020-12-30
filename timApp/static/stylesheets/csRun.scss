@@ -613,4 +613,45 @@ file-select {
             background-color: transparent;
         }
     }
+
+
+}
+
+.variablesDiv {
+  overflow: auto;
+}
+
+.variablesDiv .buttondiv {
+    margin-left: 2em;
+    position: absolute;
+    bottom: 0;
+}
+
+.variablesDiv .buttondiv button {
+    font-size: large;
+    margin: 0.1em;
+}
+
+.variablesDiv .hidden {
+    visibility: hidden;
+}
+
+.variablesDiv .coord {
+    font-size: xx-small;
+}
+
+.variablesDiv .varerror {
+    color: red;
+}
+
+.variablesDiv pre.step {
+    /* all: unset; */
+    margin: 0.2em;
+    padding: 0;
+    border: unset;
+}
+
+.variablesDiv pre.current {
+    background-color: yellow;
+    height: 50%;
 }
