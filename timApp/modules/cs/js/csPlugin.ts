@@ -1682,7 +1682,8 @@ ${fhtml}
         if (
             this.type.includes("text") ||
             this.isSimcir ||
-            this.markup.justSave
+            this.markup.justSave ||
+            this.isVars
         ) {
             return this.english ? "Save" : "Tallenna";
         }

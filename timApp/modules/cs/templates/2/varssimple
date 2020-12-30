@@ -1,0 +1,7 @@
+Muuttujat yksinkertainen
+Yksinkertainen muuttujien piirto
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
+type: vars
+fullprogram: |!!
+!!
+```

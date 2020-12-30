@@ -1,0 +1,28 @@
+Muuttujat parametreilla
+Muuttujien piirto, jossa valmiina paramtereja
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
+type: vars
+#height: 400
+jsparams:
+  mode: static
+  errorlevel: 3
+  # animate: commands
+buttons: |!!
+"Ref "
+"Array $"
+"List $"
+"New "
+"Value "
+" -> "
+$
+[
+]
+{
+}
+=
+!!
+
+
+fullprogram: |!!
+!!
+```
