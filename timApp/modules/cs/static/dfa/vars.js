@@ -1755,6 +1755,7 @@
         if (type) {
             let innerelem =  document.createElement(type);
             divelem.appendChild(innerelem);
+            divelem.classList.add(cls);
             elem = innerelem;
         } else {
             elem = divelem;

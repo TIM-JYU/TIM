@@ -642,12 +642,13 @@ file-select {
 
 .variablesDiv .varerror {
     font-size: small;
+    line-height: 1.2em;
     color: red;
 }
 
 .variablesDiv pre.step {
     /* all: unset; */
-    margin: 0.2em;
+    margin: 0.1em;
     padding: 0;
     border: unset;
 }
