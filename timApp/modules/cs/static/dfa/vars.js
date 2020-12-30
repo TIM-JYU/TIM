@@ -1,55 +1,6 @@
-    let svgdiv = document.getElementById('svgdiv');
-    svgdiv.addEventListener("click", svgclick);
-    let buttondiv = document.getElementById('buttondiv');
-    let codediv = document.getElementById('codediv');
-    let errspan = document.getElementById('error');
-    let coordspan = document.getElementById('coord');
-
-    function getElementPos(el) {
-        let lx = 0, ly = 0
-        for (;
-            el != null;
-            lx += el.offsetLeft, ly += el.offsetTop, el = el.offsetParent) {
-        }
-        return {x: lx, y: ly};
-    }
-
-    function svgclick(e) {
-        let d = getElementPos(svgdiv);
-        let x = e.clientX - d.x;
-        let y = e.clientY - d.y;
-        // errspan.innerText = `${x},${y} ${e.clientX},${e.clientY} ${e.pageX},${e.pageY} ${d.x},${d.y}`;
-        coordspan.innerText = `${x},${y}`;
-    }
-
-    function drawSVG(svg) {
-        svgdiv.innerHTML = svg;
-        // errspan.innerText = "";
-        // errspan.innerText = error.message;
-    }
-
-    function addError(err) {
-        errspan.innerText += err;
-    }
-
-    function addCode(code) {
-        codediv.innerHTML += code;
-    }
-
-    function clearError() {
-        errspan.innerText = "";
-    }
-
-    function encodeHTML(s) {
-        if (!s) return "";
-        return s.replace(/[\u00A0-\u9999<>&]/gim, function (i) {
-            return '&#' + i.charCodeAt(0) + ';';
-        });
-    }
-
+    // ------------------ Variables BEGIN -----------------------------------
     let nullRef = undefined;
 
-    // ------------------ Variables BEGIN -----------------------------------
     // Start non visual part of variables
     /*!
      * base Class for any program object, so variable or command
@@ -59,7 +10,7 @@
         }
 
         run() {
-            return "Not poissble to run baseclass";
+            return "Not possible to run baseclass";
         }
     }
 
@@ -1202,7 +1153,7 @@
                     }
                 }
             }
-            return [lastlinenr, nr];
+            return nr;
         }
 
         isLastPhase(phase) {
@@ -1320,7 +1271,7 @@
         }
     }
 
-    svgArrayVariableMixin = {
+    const svgArrayVariableMixin = {
         toSVG(x, y, w, h, dx, dy) {
             // draw array as variables side by side
             // and indesies over it. If there is over/under indexing
@@ -1374,13 +1325,64 @@
 
 
     /*!
-     * Class for SCG representation of Variables
+     * Class for SVG representation of Variables
      */
     class VisualSVGVariableRelations {
-        constructor(variableRelations, args) {
+        getElementPos(el) {
+            let lx = 0, ly = 0
+            for (;
+                el != null;
+                lx += el.offsetLeft, ly += el.offsetTop, el = el.offsetParent) {
+            }
+            return {x: lx, y: ly};
+        }
+
+        svgclick(e) {
+            if (!this.elements.coordspan) return;
+            let d = this.getElementPos(this.elements.svgdiv);
+            let x = e.clientX - d.x;
+            let y = e.clientY - d.y;
+            // errspan.innerText = `${x},${y} ${e.clientX},${e.clientY}` +
+            //                     `${e.pageX},${e.pageY} ${d.x},${d.y}`;
+            this.elements.coordspan.innerText = `${x},${y}`;
+        }
+
+        drawSVG(svg) {
+            this.elements.svgdiv.innerHTML = svg;
+            // errspan.innerText = "";
+            // errspan.innerText = error.message;
+        }
+
+        addError(err) {
+            if (this.elements.errspan)
+                this.elements.errspan.innerText += err;
+        }
+
+        addCode(code) {
+            if (this.elements.codediv)
+                this.elements.codediv.innerHTML += code;
+        }
+
+        clearError() {
+            if (this.elements.errspan)
+                this.elements.errspan.innerText = "";
+        }
+
+        encodeHTML(s) {
+            if (!s) return "";
+            return s.replace(/[\u00A0-\u9999<>&]/gim, function (i) {
+                return '&#' + i.charCodeAt(0) + ';';
+            });
+        }
+
+        constructor(variableRelations, args, elements) {
+            this.elements = elements;
+            this.clearError();
             this.variableRelations = variableRelations;
             this.args = args; // not yet used
             this.svg = undefined;
+            if ( this.elements.svgdiv )
+                this.elements.svgdiv.addEventListener("click", (e) => this.svgclick(e));
         }
 
         box(id, w, h, dx, dy) {
@@ -1513,19 +1515,22 @@
             let xheap = 253;
 
             let linenr = 1;
-            codediv.innerHTML = "";
-            let [prev, next] = this.getPrevNextStepNumbers(this.stepnumber);
-            for (let code of this.variableRelations.allCodeList) {
-                let ns = String(linenr).padStart(2, '0');
-                let curr = "";
-                let text = encodeHTML(code.code);
-                if ( text === "CODE: END" || text === "END") {
-                    ns = "  "; text = "";
+            if (this.elements.codediv) {
+                this.elements.codediv.innerHTML = "";
+                let [prev, next] = this.getPrevNextStepNumbers(this.stepnumber);
+                for (let code of this.variableRelations.allCodeList) {
+                    let ns = String(linenr).padStart(2, '0');
+                    let curr = "";
+                    let text = this.encodeHTML(code.code);
+                    if (text === "CODE: END" || text === "END") {
+                        ns = "  ";
+                        text = "";
+                    }
+                    if (prev <= code.stepnumber && code.stepnumber <= next)
+                        curr = "current";
+                    this.addCode(`<pre class="step ${curr}">${ns} ${text}</pre>`);
+                    linenr++;
                 }
-                if (prev <= code.stepnumber && code.stepnumber <= next)
-                    curr = "current";
-                addCode(`<pre class="step ${curr}">${ns} ${text}</pre>`);
-                linenr++;
             }
 
             for (let phase of this.variableRelations.phaseList) {
@@ -1587,17 +1592,17 @@
          * \fn draw()
          */
         draw() {
-            drawSVG(this.svg);
+            this.drawSVG(this.svg);
             if (this.variableRelations.errors) {
-                addError(this.variableRelations.errors);
+                this.addError(this.variableRelations.errors);
             }
         }
 
 
         update() {
             // clear errors an rerun to the current step
-            clearError();
-            let [linenr, step] = this.variableRelations.runUntil(this.step);
+            this.clearError();
+            let step = this.variableRelations.runUntil(this.step);
             this.stepnumber = step;
             this.step = step;
             this.makeSVG();
@@ -1609,7 +1614,7 @@
         }
 
         reset() {
-            this.stopTimer();
+            this.stopAnimate();
             this.step = 0;
         }
 
@@ -1623,7 +1628,7 @@
             return this.step > 0;
         }
 
-        stopTimer() {
+        stopAnimate() {
             clearInterval(this.timer);
         }
 
@@ -1632,21 +1637,21 @@
             // in every intervall.  Stop if condtion until
             // reached.
             let visual = this;
-            this.stopTimer();
+            this.stopAnimate();
             this.timer = setInterval(function () {
                 if (until()) {
-                    visual.stopTimer();
+                    visual.stopAnimate();
                     return;
                 }
                 if (!moveOneStepToDirection()) {
-                    visual.stopTimer();
+                    visual.stopAnimate();
                 }
                 visual.update();
             }, 500)
         }
 
         animate(n, move, until) {
-            clearInterval(this.timer);
+            this.stopAnimate();
             let visual = this;
             if (n === undefined) {
                 this.startAnimate(move, until)
@@ -1674,55 +1679,144 @@
 
     } // Visual
 
-    let visual = null;
 
-    function jumpToStart() {
-        visual.reset();
-        visual.update();
+    class Animation {
+        constructor(visual, buttonDiv) {
+            this.visual = visual;
+            this.buttonDiv = buttonDiv;
+            this.createButtons();
+        }
+
+        jumpToStart() {
+            this.visual.stopAnimate();
+            this.visual.reset();
+            this.visual.update();
+        }
+
+        stepFwd() {
+            this.visual.stopAnimate();
+            this.visual.step++;
+            this.visual.update();
+        }
+
+        stepBack() {
+            this.visual.stopAnimate();
+            this.visual.step--;
+            this.visual.update();
+        }
+
+
+        animateFwd(n) {
+            this.visual.animate(n, () => this.visual.forward(),
+                      () => this.visual.step >= this.visual.maxStep());
+        }
+
+
+        animateBack(n) {
+            this.visual.animate(n, () => this.visual.backward(),
+                      () => this.visual.step <= 0);
+        }
+
+
+        jumpToEnd() {
+            this.visual.stopAnimate();
+            this.visual.step = this.visual.maxStep();
+            this.visual.update();
+        }
+
+        createButton(jump, text, title) {
+            let button = document.createElement("button");
+            button.innerText = text;
+            button.onclick = jump;
+            button.title = title;
+            this.buttonDiv.appendChild(button);
+        }
+
+        createButtons() {
+            if (!this.buttonDiv) return;
+            if (this.buttonDiv.hasChildNodes()) return;
+            this.createButton(() => this.jumpToStart() , "|<", "reset");
+            this.createButton(() => this.animateBack() , "<<<", "animate back to start");
+            this.createButton(() => this.animateBack(1), "<<" , "animate one step back");
+            this.createButton(() => this.stepBack()    , "<"  , "back minor step");
+            this.createButton(() => this.stepFwd()     , ">"  , "do minor step");
+            this.createButton(() => this.animateFwd(1) , ">>" , "animate one step");
+            this.createButton(() => this.animateFwd()  , ">>>", "animate to end");
+            this.createButton(() => this.jumpToEnd()   , ">|",  "run to end");
+            this.buttonDiv.classList.remove("hidden");
+        }
     }
 
-    function stepFwd() {
-        visual.stopTimer();
-        visual.step++;
-        visual.update();
-    }
-
-    function stepBack() {
-        visual.stopTimer();
-        visual.step--;
-        visual.update();
-    }
-
-
-    function animateFwd(n) {
-        visual.animate(n, () => visual.forward(), () => visual.step >= visual.maxStep());
-    }
-
-
-    function animateBack(n) {
-        visual.animate(n, () => visual.backward(), () => visual.step <= 0);
+    function ensureElement(parent, id, cls, type) {
+        let elem = parent.querySelector(`#${id}`)
+        if ( elem ) return elem;
+        if ( !cls) cls = id;
+        let divelem = document.createElement("div");
+        if (type) {
+            let innerelem =  document.createElement(type);
+            divelem.appendChild(innerelem);
+            elem = innerelem;
+        } else {
+            elem = divelem;
+        }
+        elem.id = id;
+        elem.classList.add(cls);
+        parent.appendChild(divelem);
+        return elem;
     }
 
 
-    function jumpToEnd() {
-        visual.stopTimer();
-        visual.step = visual.maxStep();
-        visual.update();
+    function getElements(params) {
+        let elements = undefined;
+        let variablesDiv = undefined;
+        let getButtons = false;
+        if (params) {
+            elements = params.elements;
+            variablesDiv = params.variablesDiv;
+            getButtons = params.animate;
+        }
+        if (elements) return elements;
+
+        elements = {};
+        if (!variablesDiv) variablesDiv = document.getElementById('variablesDiv');
+        if (!variablesDiv) {
+            variablesDiv = ensureElement(document.body, "variablesDiv");
+            /*
+            variablesDiv = document.createElement("div");
+            variablesDiv.id = "variablesDiv";
+            variablesDiv.classList.add("variablesDiv");
+            document.body.appendChild(variablesDiv);
+
+             */
+        }
+        elements.codediv = ensureElement(variablesDiv, 'codediv');
+        elements.errspan = ensureElement(variablesDiv, 'errorspan', 'varerror', 'span');
+        elements.svgdiv = ensureElement(variablesDiv, 'svgdiv');
+        if ( getButtons )
+            elements.buttondiv = ensureElement(variablesDiv, 'buttondiv');
+        elements.coordspan = ensureElement(variablesDiv, 'coord');
+        return elements;
     }
 
 
     function setData(data) {
-        clearError();
-        let variableRelations = new VariableRelations(data.code, data.params, knownCommands);
-        visual = new VisualSVGVariableRelations(variableRelations, data.args);
+        let elements = getElements(data.params);
+        let variableRelations = new VariableRelations(data.code,
+                                data.params, knownCommands);
+
+        let visual = new VisualSVGVariableRelations(variableRelations, data.args,
+                     elements);
         let step1 = visual.maxStep()+1;
         if (data.params && data.params.animate) {
-            buttondiv.classList.remove("hidden");
+            new Animation(visual, elements.buttondiv);
             step1 = 0;
         }
-        let [linenr, step] = variableRelations.runUntil(step1);
+        let step = variableRelations.runUntil(step1);
         visual.stepnumber = step;
         visual.step = step;
         visual.makeSVG();
         visual.draw();
     }
+
+    // export default setData;
+    export {setData};
