@@ -97,7 +97,9 @@ TIM_SAFE_TAGS = [
     'tim-self-expire',
     'tim-mark-all-as-read',
     'tim-add-member',
-    'tim-goto-link',
+    'tim-goto-link'
+    'tim-graph-viz',
+    'tim-variables',
 ]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
@@ -149,6 +151,13 @@ TIM_SAFE_ATTRS = frozenset([
     'unauthorized-text',
     'unsaved-changes-text',
     'wait-text',
+
+    # viz and vars:
+    'usercode',
+    'vizcmd',
+    'height',
+    'jsparams',
+
 ])
 
 c = Cleaner(
