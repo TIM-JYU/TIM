@@ -1442,7 +1442,7 @@
             let opt = options;
             if (opt) opt = Object.assign({}, def, opt);
             else opt = def;
-            this.svg += `<text x="${opt.x}" y="${opt.y}" fill="${opt.color}" font-family="{$opt.font}" font-weight="${opt.weight}" font-size="${opt.size}px" text-anchor="${opt.align}" alignment-baseline="${opt.base}">${s}</text>\n`;
+            this.svg += `<text x="${opt.x}" y="${opt.y}" fill="${opt.color}" font-family="${opt.font}" font-weight="${opt.weight}" font-size="${opt.size}px" text-anchor="${opt.align}" alignment-baseline="${opt.base}">${s}</text>\n`;
             if (options && options.y) return 0; // no y move if set pos
             return opt.size * 1.2;
         }
@@ -1537,7 +1537,10 @@
 
                 yheap = ystack;
 
-                this.drawSVGText(phase.phaseNumber, {color: "red", size: 16, weight: "bold"}, 0, ystack - h);
+                this.drawSVGText(phase.phaseNumber,
+                    {color: "red", size: 16,
+                     font: "Helvetica",
+                     weight: "bold"}, 0, ystack - h);
 
                 // draw possible header texts
                 ystack = this.drawSVGTexts(phase.texts[0], 20, ystack, h);
