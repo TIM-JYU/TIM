@@ -2,7 +2,7 @@
     let nullRef = undefined;
 
     function removePairs(s, start, end) {
-        if (s === "") return "";
+        if (s === undefined || s === "") return "";
         s = s.replace(/\\0/g, "␀").replace(/\0/g, "␀");
         let i = start.indexOf(s[0]);
         if (end===undefined) end = start;
