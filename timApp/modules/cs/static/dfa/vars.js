@@ -1,6 +1,83 @@
     // ------------------ Variables BEGIN -----------------------------------
     let nullRef = undefined;
 
+    function removePairs(s, start, end) {
+        if (s === "") return "";
+        s = s.replace(/\\0/g, "␀").replace(/\0/g, "␀");
+        let i = start.indexOf(s[0]);
+        if (end===undefined) end = start;
+        if (i >= 0) { // eat parenthes away
+            // s[0] = ' ';
+            let first = 1;
+            let paren = end[i];
+            let last = s.length-1;
+            if ( s[last] === paren ) last--;
+            s = s.substring(first,last+1);
+        }
+        return s;
+    }
+
+    function removeQuotes(s) {
+        return removePairs(s, "\"'`´");
+    }
+
+    function varsLineToArray(vals) {
+        // converts a line with multiple inputs to array
+        // split is done by , and ; and multiple ,, creates
+        // empty inputs.  Space is also a separator, but
+        // multiple spaces does not generate many inputs.
+        // Examples:
+        //    kissa istuu => ['kissa', 'istuu']
+        //    kissa,, istuu => ['kissa', '', 'istuu']
+        //    "kissa,, istuu" => ['kissa,, istuu']
+        //    12 "Aku Ankka" Mummo => ['12', 'Aku Ankka', 'Mummo']
+        let s = vals.trim();
+        s = removePairs(s, "[{(<", "]})>");
+        let separators = ",;"
+        let quotes = "'\"\`";
+        let piece = undefined;
+        let insideQuotes = undefined;
+        let result = [];
+        let afterSpace = false;
+        for (let c of s) {
+            let wasAfterSpace = afterSpace;
+            afterSpace = false;
+            if (insideQuotes) {
+                if (c === insideQuotes) {
+                    insideQuotes = undefined;
+                    continue;
+                }
+                piece += c;
+                continue;
+            }
+            if (quotes.includes(c)) {
+                if (piece === undefined) piece = "";
+                insideQuotes = c;
+                continue;
+            }
+            if (separators.includes(c)) {
+                if (piece === undefined) {
+                    if (wasAfterSpace)  continue;
+                    piece = "";
+                }
+                result.push(piece);
+                piece = undefined;
+                continue;
+            }
+            if (c === " ") {
+                if (piece === undefined) continue;
+                result.push(piece);
+                piece = undefined;
+                afterSpace = true;
+                continue;
+            }
+            if (piece === undefined) piece = "";
+            piece += c;
+        }
+        if (piece !== undefined) result.push(piece);
+        return result;
+    }
+
     // Start non visual part of variables
     /*!
      * base Class for any program object, so variable or command
@@ -110,7 +187,7 @@
         constructor(name, value, ref) {
             super();
             this.name = name;
-            this.value = value;
+            this.init(value);
             this.refs = [];
             if (ref) this.refs.push(ref);
             this.error = "";  // errors for this variable
@@ -181,6 +258,7 @@
         assign(value, variables) {
             // assigns value to any variable, but if not value variable,
             // gives an error. In static mode only one initialization is allowed.
+            value = removeQuotes(value);
             let error = "";
             if (this.value !== undefined &&
                 variables.isStaticMode() && !this.allowInit) {
@@ -203,6 +281,7 @@
         }
 
         init(value) {
+            if (value) value = removeQuotes(value);
             this.value = value;
             this.allowInit = false;
         }
@@ -279,6 +358,13 @@
 
 
     class ValueVariable extends Variable {
+        constructor(name, value, ref) {
+            super(name, value, ref);
+        }
+    }
+
+
+    class CharVariable extends Variable {
         constructor(name, value, ref) {
             super(name, value, ref);
         }
@@ -370,10 +456,11 @@
             let nref = undefined;
             let init = undefined;
             let cls;
-            if (type === "R")
-                cls = RefecenceVariable;
-            else
-                cls = ValueVariable;
+            switch (type) {
+                case "R": cls = RefecenceVariable; break;
+                case "C": cls = CharVariable; break;
+                default: cls = ValueVariable;
+            }
             if (this.kind === "[" && type === "R") nref = nullRef;
             if (this.kind === "[" && type === "V") init = "0";
             for (let i = 0; i < len; i++) {
@@ -443,7 +530,7 @@
             let name = r[4];
             let type = r[5].toUpperCase();
             let len = r[6];
-            if (!"RV".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla R tai V! `
+            if (!"CRV".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla C, R tai V! `
 
             return [new CreateVariable(
                 () => new ArrayVariable(name, undefined, kind, type, len), name)];
@@ -455,7 +542,13 @@
         // Creates initilized array or list
 
         constructor(name, value, kind, type, vals) {
-            let valsarr = vals.split(",");
+            // let s = vals.replace(/  */g, " ").replace(/ *[,;] */g, ",");
+            let valsarr;
+            if (type === "C") { // char array
+                valsarr = removeQuotes(vals);
+            } else {
+                valsarr = varsLineToArray(vals);
+            }
             super(name, value, kind, type, valsarr.length);
             this.valsarr = valsarr;
         }
@@ -469,7 +562,7 @@
                 return this.handleError(error, variables);
             }
             if (this.isList()) this.count = len;
-            if (this.type === "V") {
+            if ("VC".includes(this.type) ) {
                 for (let i = 0; i < len; i++) {
                     let v = this.vars[i];
                     v.init(valsarr[i].trim());
@@ -504,7 +597,7 @@
         //    []$3 r $1,$2
         //    L $3 r [$1,$2,$[1]]
         static isMy(s) {
-            let re = /^([Aa](rray)?|[Ll](ist)?|\[]) *(\$[^ ]+) *([\S]+) *[{[]?([$\d., \w]+)[}\]]?$/;
+            let re = /^([Aa](rray)?|[Ll](ist)?|\[]) *(\$[^ ]+) *([\S]+) *(.*)?$/;
             let r = re.exec(s);
             if (!r) { // try if format L $3 r [$1,$2,$[1]]
                 re = /^([Aa](rray)?|[Ll](ist)?|\[]) *(\$[^ ]+) *([\S]+) *[{]?([$[\]\d., \w]+)[}]?$/;
@@ -516,10 +609,7 @@
             let name = r[4];
             let type = r[5].toUpperCase();
             let vals = r[6];
-            if (vals.startsWith("[")) {
-                vals = vals.substring(1,vals.length-1);
-            }
-            if (!"RV".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla R tai V! `
+            if (!"RVC".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla C, R tai V! `
 
             return [new CreateInitializedArrayVariable( () =>
                 new InitializedArrayVariable(name, undefined, kind, type, vals), name)];
