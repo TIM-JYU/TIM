@@ -31,6 +31,7 @@
         //    kissa,, istuu => ['kissa', '', 'istuu']
         //    "kissa,, istuu" => ['kissa,, istuu']
         //    12 "Aku Ankka" Mummo => ['12', 'Aku Ankka', 'Mummo']
+        if (!vals) return "";
         let s = vals.trim();
         s = removePairs(s, "[{(<", "]})>");
         let separators = ",;"
@@ -557,8 +558,10 @@
             let error = "";
             let len = this.vars.length;
             let valsarr = this.valsarr;
+            let kindstr = "Taulukolle";
+            if (this.isList()) kindstr = "Listalle";
             if (!valsarr) {
-                error += `${this.name} ei ole alustustietoja! `
+                error += `${kindstr} ${this.name} ei ole alustustietoja! `
                 return this.handleError(error, variables);
             }
             if (this.isList()) this.count = len;
@@ -1401,7 +1404,8 @@
 
         left() {
             // left coordinate for array
-            if (!this.vars) return {x: this.x, y: this.y};
+            if (!this.vars || this.vars.length === 0)
+                return {x: this.x, y: this.y};
             let v = this.vars[0];
             // return {x: v.x - v.width / 2, y: v.y};
             return v.left();
@@ -1596,7 +1600,7 @@
                 this.lineends() +
                 '</defs>\n';
 
-            let width = 500;
+            let width = 750; // TODO: count max
 
             let ystack = 30;
             let xstack = 110;
