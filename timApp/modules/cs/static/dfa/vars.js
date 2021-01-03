@@ -113,6 +113,11 @@
     function varsStringToJson(s) {
         // tries fix missing quotes and parenthes
         // does not work if object inside object
+        // {x 4, y 2} => {"x": 4, "y": 2}
+        // x: 4, y: 2 => {"x": 4, "y": 2}
+        // x=4, y=2 => {"x": 4, "y": 2}
+        // x: 3, s: kissa => {"x": 3, y: "kissa"}
+        // x: 3, array: [1,2]  => problems
         function checkValue(v) {
             if (v === "null") return v;
             if (!isNaN(parseFloat(v))) return v;
@@ -145,8 +150,12 @@
         let pairs = varsLineToArray(s, ",");
         let sep = "";
         for (let pair of pairs) {
+            pair = pair.trim();
             let [key, value] = splitOne(pair, ":");
-            value = checkValue(value);
+            if (key.includes("=")) [key, value] = splitOne(pair, "=");
+            else if (key.includes(" ")) [key, value] = splitOne(pair, " ");
+            key = key.trim();
+            value = checkValue(value.trim());
             res += sep + `"${key}": ${value}`;
             sep = ", ";
         }
@@ -161,6 +170,7 @@
      */
     class PrgObject {
         constructor() {
+            this.createError = undefined;
         }
 
         run() {
@@ -254,7 +264,8 @@
             try {
                 let v = this.create(variables);
                 this.createdVar = v;
-                return this.add(variables, v);
+                return v.handleError(v.createError, variables) +
+                    this.add(variables, v);
             } catch (e) {
                 return e;
             }
@@ -275,11 +286,11 @@
         constructor(name, value, ref, rank) {
             super();
             this.name = name;
+            this.error = "";  // errors for this variable
             this.init(value);
             this.rank = rank;
             this.refs = [];
             if (ref) this.refs.push(ref);
-            this.error = "";  // errors for this variable
             this.allowInit = true;
             this.count = undefined; // no error only for lists
             this.countError = false;
@@ -366,13 +377,31 @@
                 this.value = value;
                 this.allowInit = false;
             }
+            error += this.checkValueAssign();
             return this.handleError(error, variables);
         }
+
+        checkValueAssign() {
+            if (!this.isValue()) return "";
+            if (this.value === undefined) return "";
+            let n = parseFloat(this.value);
+            if (!isNaN(n)) return "";  // OK numbers
+            if (this.value === "true") return "";  // mimic booleans
+            if (this.value === "false") return "";
+            if (this.value.length <= 1) return ""; // OK one char
+            return `Arvomuuttujaan ${this.name} ei saa sijoittaa jonoa ${this.value}! `;
+        }
+
 
         init(value) {
             if (value) value = removeQuotes(value);
             this.value = value;
             this.allowInit = false;
+            this.createError = this.checkValueAssign();
+        }
+
+        isValue() {
+            return false;
         }
 
         isObject() {
@@ -454,12 +483,16 @@
         constructor(name, value, ref, rank) {
             super(name, value, ref, rank);
         }
+
+        isValue() {
+            return true;
+        }
     }
 
 
-    class CharVariable extends Variable {
-        constructor(name, value, ref) {
-            super(name, value, ref);
+    class CharVariable extends ValueVariable {
+        constructor(name, value, ref, rank) {
+            super(name, value, ref, rank);
         }
     }
 
@@ -561,7 +594,9 @@
             for (let i = 0; i < len; i++) {
                 let v = new cls(`${name}[${i}]`, init, nref);
                 this.vars.push(v);
+                v.parent = this;
             }
+            if (len>0) this.vars[len-1].isLast = true; // TODO change if items added later
             this.over[0] = new cls(`${name}.under`, undefined);
             this.over[1] = new cls(`${name}.over`, undefined);
         }
@@ -617,7 +652,7 @@
         //    [] $1 R 3     // inits nullRef
         //    Array $2 V 5
         static isMy(s) {
-            let re = /^([Aa](rray)?|[Ll](ist)?|\[]) *(\$[^ ]+) +([@\S]+) *([0-9]+)$/;
+            let re = /^([Aa](rray)?|[Ll](ist)?|\[]) *(\$[^ ]+) +([@\S]+) +([0-9]+)$/;
             let r = re.exec(s);
             if (!r) return undefined;
             let kind = "[";
@@ -662,7 +697,9 @@
             for (let i = 0; i < len; i++) {
                 let v = new cls(`${name}[${i}]`, init, nref);
                 this.vars.push(v);
+                v.parent = this;
             }
+            if (len) this.vars[len-1].isLast = true; // TODO: change if more items added later
         }
 
         isRef() { // TODO pitääkö (???) olla false int taulukoille
@@ -707,11 +744,16 @@
                 let v = this.vars[i];
                 let to = valsarr[i].trim();
                 let [name, index2] = Command.nameAndIndex(to);
-                let objTo = variables.findVar(name);
+                let objTo = undefined;
+                if ("AR".includes(this.type))
+                    objTo = variables.findVar(name);
                 if (!objTo) {
+                    if (this.type === "R")
+                        error += v.handleError(`${this.name} ei saa alustaa arvolla!`, variables);
                     v.init(to);
                     continue;
                 }
+                v.init(undefined);  // remove old value
                 error += v.addRef(objTo, index2, variables, true);
             }
             return this.handleError(error, variables);
@@ -752,7 +794,7 @@
     class InitializedArrayVariable extends ArrayVariable {
         // Creates initilized array or list
 
-        constructor(name, value, kind, type, dir, vals, rank) {
+        constructor(name, value, kind, type, dir, len, vals, rank) {
             // let s = vals.replace(/  */g, " ").replace(/ *[,;] */g, ",");
             let valsarr;
             if (type === "C") { // char array
@@ -760,17 +802,19 @@
             } else {
                 valsarr = varsLineToArray(vals);
             }
-            super(name, value, kind, type, dir, valsarr.length, rank);
+            if (len === undefined || len < valsarr.length)
+                len = valsarr.length;
+            super(name, value, kind, type, dir, len, rank);
             this.valsarr = valsarr;
         }
 
         initByVals(variables) {
             let error = "";
-            let len = this.vars.length;
             let valsarr = this.valsarr;
+            let len = valsarr.length;
             let kindstr = "Taulukolle";
             if (this.isList()) kindstr = "Listalle";
-            if (!valsarr) {
+            if (!valsarr && len <= 0 && this.vars.length <= 0) {
                 error += `${kindstr} ${this.name} ei ole alustustietoja! `
                 return this.handleError(error, variables);
             }
@@ -820,14 +864,19 @@
             let kind = "[";
             if (r[1].toUpperCase().startsWith("L")) kind = "L";
             let name = r[4];
-            let td = (r[5]+"  ").toUpperCase();
-            let type = td[0]
-            let dir = td[1];
             let vals = r[6];
+            // Check type, dir and len, see https://regex101.com/r/QePOJe/latest
+            re = /^(.)([VH])?([\d]+)?/gm;
+            let td = r[5].toUpperCase();
+            r = re.exec(td);
+            if (!r) throw `${name} tyypin kohdalla vikaa. Oikeita esim V VH V10 VV9`;
+            let type = r[1];
+            let dir = r[2] || 0;
+            let len = parseInt(r[3] || "-1");
             if (!"RVC".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla C, R tai V! `
 
             return [new CreateInitializedArrayVariable( () =>
-                new InitializedArrayVariable(name, undefined, kind, type, dir, vals, 1), name)];
+                new InitializedArrayVariable(name, undefined, kind, type, dir, len, vals, 1), name)];
         }
 
         run(variables) {
@@ -1315,14 +1364,27 @@
             this.variableRelations.svgs.push(svg);
         }
 
+        moveName(obj, from, to) {
+            let obf = obj[from];
+            if (obf === undefined) return;
+            obj[to] = obf;
+            delete obj[from];
+        }
+
         setGraphAttributes(ga) {
-            this.graphAttributes = ga;  // TODO: join previous
-            if (ga.rank) {
-                if (ga.rank < 0 ) this.defaultRank = undefined;
-                else this.defaultRank = ga.rank;
+            if (ga) { // handle aliases
+                this.moveName(ga, "r", "rank");
+                this.moveName(ga, "rd", "rankdir");
             }
-            else if (ga.rank === null ) {
-                this.defaultRank = undefined;
+
+            this.graphAttributes = ga;  // TODO: join previous
+            if (ga.rank !== undefined) {
+                if (ga.rank < 0 || ga.rank === "" ||
+                    ga.rank === null || ga.rank === "null") {
+                    this.defaultRank = undefined;
+                    ga.rank = undefined;
+                }
+                else this.defaultRank = ga.rank;
             }
         }
 
@@ -1588,14 +1650,15 @@
 
 
     class SVGUtils {
-        static box(id, w, h, dx, dy, x, y) {
+        static box(id, w, h, dx, dy, x, y, fill) {
             // draw one svg 3D box
             if (x === undefined) x = 0;
             if (y === undefined) y = 0;
+            if (fill === undefined) fill = "#fff";
             return `
 <g id="${id}" transform="translate(${x -w / 2.0} ${y -h / 2.0})">
     <path d="M 0 0 L 0 ${h} L ${w} ${h} L ${w + dx} ${h - dy} L ${w + dx} ${-dy} L ${dx} ${-dy} L 0 0 Z"
-       fill="#ffffff" stroke="#000000" stroke-miterlimit="10"  pointer-events="all"/>
+       fill=${fill} stroke="#000000" stroke-miterlimit="10"  pointer-events="all"/>
     <path d="M ${w} 0 L ${w + dx} ${-dy} L ${w + dx} ${h - dy} L ${w} ${h} Z"
        fill-opacity="0.15" fill="#000000" stroke="none"  pointer-events="all"/>
     <path d="M 0 0 L ${dx} ${-dy} L ${w + dx} ${-dy} L ${w} 0 Z"
@@ -1667,7 +1730,8 @@
             let svg = "";
             if (!texts) return [svg, y];
             for (let text of texts) {
-                let dy = SVGUtils.drawSVGText(text.text, text.options, x, y - h);
+                let [s1, dy] = SVGUtils.drawSVGText(text.text, text.options, x, y - h);
+                svg += s1;
                 y += dy;
             }
             return [svg, y];
@@ -1677,7 +1741,7 @@
     const svgTextMixin = {
         showCount() { return ""; },
 
-        toSVG(x, y, w, h) {
+        toSVG(x, y, w) {
             let svg = "";
             let [s1,dy] = SVGUtils.drawSVGText(this.text,
                     this.textOptions, x,  y);
@@ -1685,7 +1749,7 @@
             this.x = x;
             this.y = y;
             this.width = w;
-            this.height = h;
+            this.height = dy;
             if (dy === 0) this.height = 0;
             return svg;
         }
@@ -1750,10 +1814,12 @@
             if (!nobox && dx > 0 && dy > 0) {
                 svg += `<use xlink:href="#rbox${size}" x="${x}" y="${y}" />\n`;
             }
-            if (dx === 0 && dy === 0) {
-                svg += SVGUtils.box(this.name, w, h, 0, 0, x, y+h/10)
+            if (dx === 0 && dy === 0) { // f.ex ref boxes inside struct
+                let fill = undefined;
+                if (this.error) fill = "red";
+                svg += SVGUtils.box(this.name, w, h, 0, 0, x, y, fill)
             }
-            if (this.error) svg += `<use xlink:href="#ebox" x="${x}" y="${y}" />\n`;
+            else if (this.error) svg += `<use xlink:href="#ebox" x="${x}" y="${y}" />\n`;
 
             if (val) {
                 let opt = SVGUtils.joinOptions(this.textOptions,
@@ -1819,6 +1885,10 @@
                 if (this.error) stroke = "red";
                 if (ref === nullRef) {
                     if (this.isVertical) continue; // todo draw better
+                    if (this.parent &&
+                        this.parent.isStruct() &&
+                        this.parent.vertical &&
+                        !this.isLast) continue;
                     let x2 = this.x;
                     let y2 = this.y + 22; //this.height;
                     svg += `<line x1="${this.x}" y1="${this.y}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="1"  marker-end="url(#nullarrow)" marker-start="url(#startarrow)" />`;
@@ -1876,6 +1946,7 @@
                 yv = y + endi*h;
                 vertical = true;
             }
+            this.vertical = vertical;
 
             for (let i=starti; 0<=i && i<=endi; i += mi) {
                 let v = this.vars[i];
@@ -1944,6 +2015,8 @@
             let n = this.vars.length;
             let ymul = 0.55;
             let fh = (n)*h*ymul + (22-ymul*h);  // 22 is def box height
+
+            // Defs for horizontal struct
             let mx = 1;
             let my = 0;
             let starti = 0;
@@ -1956,11 +2029,11 @@
             let vertical = false;
             this.height = nh*h;
             this.width = (n)*bw;
-            let ey = 0;
+            let ey = 0; // extra y for refs inside struct
             let xv = x - this.width/2 + bw/4;
             let yv = y + (nh-1)*h/2;
 
-            if (this.dir !== "H") { // vertical
+            if (this.dir !== "H") { // vertical stacking
                 yv =y + (n-1)*h*ymul;
                 xv = x -w/2;
                 indexx = -nw*w*0.7;
@@ -1968,14 +2041,15 @@
                 mx = 0;
                 my = -1;
                 starti = endi;
-                mi = -1;
+                mi = -1;  // move i direction
                 this.width = w*nw;
                 this.height = (n)*h*ymul + (22-ymul*h);  // 22 is def box height
                 // yv = y + endi*h;
                 vertical = true;
                 fh = this.height;
-                ey = 4;
+                ey = 5;
             }
+            this.vertical = vertical;
             fh = this.height;
 
             svg += SVGUtils.box(this.name, this.width, fh, dx, dy, x, y+fh/2-h/2.0)
@@ -1983,7 +2057,7 @@
             for (let i=starti; 0<=i && i<=endi; i += mi) {
                 let v = this.vars[i];
                 v.textOptions = {size: 10};
-                if (v.isRef()) {
+                if (v.isRef()) {  // draw a ref a bit lower, smaller and without shadow
                     svg += v.toSVG(xv, yv+ey, w, h * ymul *0.8, 0, 0, true, 1, 2);
                 } else {
                     svg += v.toSVG(xv, yv, w, h * ymul, dx, dy, true, 1, 2);
@@ -2146,7 +2220,7 @@
             let h = 22;
             let dx = 8;
             let dy = 8;
-            let s1 = ""; // helper fro text calls
+            let s1 = ""; // helper for text calls
             let y1 = 0;  // helper for text calls
 
             this.svg = '<defs>' +
@@ -2255,9 +2329,14 @@
                     if (rank.h) gopts.h = rank.h;
 
                     let svg = v.toSVG(rank.x, rank.y, w, h, dx, dy);
-                    let xadd = rank.dir ? v.width + 30 : 0;
+                    let xextra = 40;
+                    let yextra = 25;
+                    if (v.text) { // tekstin tapauksessa ei ylm lisää
+                        xextra = yextra = 0;
+                    }
+                    let xadd = rank.dir ? v.width + xextra : 0;
 
-                    let yadd = (rank.dir || !v.height)? 0 : v.height + 25;
+                    let yadd = (rank.dir || !v.height)? 0 : v.height + yextra;
                     rank.x = v.x + xadd;
                     rank.y = v.y + yadd;  // TODO: add last element height
                     this.svg += svg;
@@ -2272,8 +2351,9 @@
 
 
                 // draw possible footer texts
-                [,y1] = SVGUtils.drawSVGTexts(phase.texts[1], 20, maxs.y + 10, h);
+                [s1,y1] = SVGUtils.drawSVGTexts(phase.texts[1], 20, maxs.y + 10, h);
                 maxs.y = Math.max(maxs.y, y1);
+                this.svg += s1;
 
                 // Draw a line between phases
                 if (!this.variableRelations.isLastPhase(phase) && phase.hasVars()) {
@@ -2537,11 +2617,9 @@
     }
 
 // TODO: hor struct
-// struct size
 // auto width
 // struct names
 // svg draw callback
-// floating texts
 
-    export { setData };
+    export { setData, varsStringToJson };
     // export default setData;

@@ -67,6 +67,16 @@ e -> $4
 r f@2->$4
 */
     const code = `
+a $1 v5 
+a $2 v4
+a $3 v3
+g r 0
+r t 
+a $4 rv $1 $2 $3
+t -> $4
+  
+`;
+    const code2 = `
 g x: 250, y: 320, w:3
 s $j1 V 1 "Ankka Aku" Ankkalinna 12345 ...
 s $j2 V 2 "Susi Sepe" Takametsä 12555 ...
@@ -105,9 +115,9 @@ t {"align": start, sx: 70, sy: -20} harrastukset
 g x: 630, y: 40, w: 3, h:2
 s $naytto AH $kerho
 t {align: end, sx: -50, sy: -100} Naytto naytto
-SVG <path d="M 730 130 Q 630 130 580 120 Q 530 110 500 85 Q 470 60 460 40 Q 450 20 450 15 Q 450 10 450 10" fill="none" stroke="#000000" stroke-miterlimit="10" stroke-dasharray="3 3" pointer-events="stroke"></path>
+SVG <path d="M 730 130 Q 630 130 570 120 Q 470 105 450 0" fill="none" stroke="#099" stroke-dasharray="3 3"></path>
 `;
     setData({
         code: code, args: "1001", params:
-            {mode: "static", errorlevel: 3, xanimate: "commands"}
+            {mode: "step", errorlevel: 3, xanimate: "commands"}
     });
