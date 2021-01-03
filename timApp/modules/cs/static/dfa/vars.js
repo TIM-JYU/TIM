@@ -264,6 +264,11 @@
             try {
                 let v = this.create(variables);
                 this.createdVar = v;
+                if (v.vars) { // add child vars to flat map
+                    for (let cv of v.vars) {
+                        variables.addFlat(cv);
+                    }
+                }
                 return v.handleError(v.createError, variables) +
                     this.add(variables, v);
             } catch (e) {
@@ -389,6 +394,7 @@
             if (this.value === "true") return "";  // mimic booleans
             if (this.value === "false") return "";
             if (this.value.length <= 1) return ""; // OK one char
+            if (this.isString()) return "";  // ok to string
             return `Arvomuuttujaan ${this.name} ei saa sijoittaa jonoa ${this.value}! `;
         }
 
@@ -425,15 +431,23 @@
         }
 
         setCount(n, variables) {
+            // Count is a special property to mimic C# list count
             // allowed only for lists
+            let error = "";
             this.count = n;
-            if (this.isList()) return "";
-            let error = `${this.name} ei ole lista, joten ei ole count-ominaisuutta`;
+            if (isNaN(parseInt(""+n))) error = `Kokonaislukuun ei saa sijoittaa ${n}! `;
+
+            if (this.isList()) return error;
+            error += `${this.name} ei ole lista, joten ei ole count-ominaisuutta`;
             return this.handleCountError(error, variables);
         }
 
         checkCount(variables) {
             return ""; // error allready given when set
+        }
+
+        isString() {
+            return false;
         }
 
         run() {
@@ -490,6 +504,17 @@
     }
 
 
+    class StringVariable extends ValueVariable {
+        constructor(name, value, ref, rank) {
+            super(name, value, ref, rank);
+        }
+
+        isString() {
+            return true;
+        }
+    }
+
+
     class CharVariable extends ValueVariable {
         constructor(name, value, ref, rank) {
             super(name, value, ref, rank);
@@ -502,7 +527,7 @@
         // see: https://regex101.com/r/uaLk9H/latest
         // syntax: V summa <- -3.5
         static isMy(s) {
-            let re = /^[Vv](al|alue)? +([.$@\w\d]+) *(<-|=|:=|) *([^\n]+|)$/;
+            let re = /^[Vv](al|alue)? +([.+\-$@\w\d]+) *(<-|=|:=|) *([^\n]+|)$/;
             let r = re.exec(s);
             if (!r) return undefined;
             let name = r[2];
@@ -531,7 +556,7 @@
         // see: https://regex101.com/r/8rghQV/latest
         // syntax: Ref luvut
         static isMy(s) {
-            let re = /^[Rr](ef|eference)? +([@.\w\d]+)$/;
+            let re = /^[Rr](ef|eference)? +([@.+\-\w\d]+)$/;
             let r = re.exec(s);
             if (!r) return undefined;
             return [new CreateVariable(
@@ -557,7 +582,7 @@
         // see: https://regex101.com/r/uaQrJu/latest
         // syntax: New $2 Aku
         static isMy(s) {
-            let re = /^[Nn][ew]{0,2} +(\$[@\S]+) +([^\n]*)$/;
+            let re = /^[Nn][ew]{0,2} +(\$[@+\-\S]+) +([^\n]*)$/;
             let r = re.exec(s);
             if (!r) return undefined;
             let name = r[1];
@@ -599,6 +624,8 @@
             if (len>0) this.vars[len-1].isLast = true; // TODO change if items added later
             this.over[0] = new cls(`${name}.under`, undefined);
             this.over[1] = new cls(`${name}.over`, undefined);
+            this.over[0].denynames = true;
+            this.over[1].denynames = true;
         }
 
         isRef() { // TODO pitääkö (???) olla false int taulukoille
@@ -652,7 +679,7 @@
         //    [] $1 R 3     // inits nullRef
         //    Array $2 V 5
         static isMy(s) {
-            let re = /^([Aa](rray)?|[Ll](ist)?|\[]) *(\$[^ ]+) +([@\S]+) +([0-9]+)$/;
+            let re = /^([Aa](rray)?|[Ll](ist)?|\[]) *([^ ]+) +([@\S]+) +([0-9]+)$/;
             let r = re.exec(s);
             if (!r) return undefined;
             let kind = "[";
@@ -675,9 +702,10 @@
         // value ei not used in this case
         // kind is [ for Array and L for List (ArrayList in Java)
         // type is R for referneces and V for values.
-        constructor(name, value, kind, type, dir, len, rank) {
+        constructor(name, value, kind, sclass, type, dir, len, rank) {
             super(name, value, undefined, rank);
             this.kind = kind;
+            this.sclass = sclass;
             this.type = type;
             this.dir = dir;
             if (this.isList()) this.count = 0;
@@ -686,16 +714,31 @@
             let nref = undefined;
             let init = undefined;
             let cls;
-            switch (type) {
-                case "R": cls = RefecenceVariable; break;
-                case "C": cls = CharVariable; break;
-                case "A": cls = Variable; break;
-                default: cls = ValueVariable;
+            function getCls(type) {
+                nref = undefined;
+                init = undefined;
+                switch (type.toUpperCase()) {
+                    case "R": cls = RefecenceVariable; nref = nullRef; break;
+                    case "C": cls = CharVariable; init = "0"; break;
+                    case "S": cls = StringVariable; init = ""; break;
+                    case "A": cls = Variable; init = ""; break;
+                    default: cls = ValueVariable;
+                }
+                return cls;
             }
-            if (this.kind === "[" && type === "R") nref = nullRef;
-            if (this.kind === "[" && type === "V") init = "0";
+
+            let tnames = [];
+            let types = [];
+            if (this.sclass) {
+                tnames = Object.keys(sclass);
+                types = Object.values(sclass);
+                len = tnames.length;
+            }
+            cls = getCls(this.type);
             for (let i = 0; i < len; i++) {
-                let v = new cls(`${name}[${i}]`, init, nref);
+                if (this.sclass) cls = getCls(types[i]);
+                let v = new cls(`${this.name}.${tnames[i]}`, init, nref);
+                v.name2 = `${name}[${i}]`;
                 this.vars.push(v);
                 v.parent = this;
             }
@@ -724,10 +767,10 @@
     class InitializedStructVariable extends StructVariable {
         // Creates initilized array or list
 
-        constructor(name, value, kind, type, dir, vals, rank) {
+        constructor(name, value, kind, sclass, type, dir, vals, rank) {
             // let s = vals.replace(/  */g, " ").replace(/ *[,;] */g, ",");
             let valsarr = varsLineToArray(vals);
-            super(name, value, kind, type, dir, valsarr.length, rank);
+            super(name, value, kind, sclass, type, dir, valsarr.length, rank);
             this.valsarr = valsarr;
         }
 
@@ -742,6 +785,7 @@
             }
             for (let i = 0; i < len; i++) {
                 let v = this.vars[i];
+                if (!valsarr[i]) break;
                 let to = valsarr[i].trim();
                 let [name, index2] = Command.nameAndIndex(to);
                 let objTo = undefined;
@@ -763,24 +807,32 @@
 
     class CreateInitializedStructVariable extends CreateArrayVariable {
         // Creates initilized struct
-        // see: https://regex101.com/r/M5XNtV/1
+        // see: https://regex101.com/r/nfot3D/latest
         // syntax:
         //    Struct $2 v a,b,d,d
-        static isMy(s) {
-            let re = /^([Ss](truct)?) +([^ ]+) +([@\S]+) *(.*)?$/;
+        //    s.People $2 a a,b,d,d
+        static isMy(s, variables) {
+            let re = /^([Ss](truct)?(\.([\S]+))?) +([^ ]+) +([@\S]+) *(.*)?$/;
             let r = re.exec(s);
             if (!r) return undefined;
             let kind = "[";
-            let name = r[3];
-            let td = (r[4]+"  ").toUpperCase();
+            let stclass = r[4];
+            let sclass = undefined;
+            if (stclass) {
+                sclass = variables.findClass(stclass);
+                if (!sclass) throw `Luokkaa ${stclass} ei löydy! `;
+            }
+            let name = r[5];
+            let vals = r[7];
+            let td = (r[6]+"  ").toUpperCase();
             let type = td[0]
             let dir = td[1];
-            let vals = r[5];
             if (!"ARVC".includes(type)) throw `${name} väärä tyyppi tietueelle.  Pitää olla A, C, R tai V! `
 
             return [new CreateInitializedStructVariable( () =>
-                new InitializedStructVariable(name, undefined, kind, type, dir, vals, 1), name)];
+                new InitializedStructVariable(name, undefined, kind, sclass, type, dir, vals, 1), name, sclass)];
         }
+
 
         run(variables) {
             let error = super.run(variables);
@@ -854,10 +906,10 @@
         //    []$3 r $1,$2
         //    L $3 r [$1,$2,$[1]]
         static isMy(s) {
-            let re = /^([Aa](rray)?|[Ll](ist)?|\[]) *(\$[^ ]+) +([@\S]+) *(.*)?$/;
+            let re = /^([Aa](rray)?|[Ll](ist)?|\[]) *([^ ]+) +([@\S]+) *(.*)?$/;
             let r = re.exec(s);
             if (!r) { // try if format L $3 r [$1,$2,$[1]]
-                re = /^([Aa](rray)?|[Ll](ist)?|\[]) *(\$[^ ]+) *([@\S]+) *[{]?([$[\]\d., \w]+)[}]?$/;
+                re = /^([Aa](rray)?|[Ll](ist)?|\[]) *([^ ]+) *([@\S]+) *[{]?([$[\]\d., \w]+)[}]?$/;
                 r = re.exec(s);
                 if (!r) return undefined;
             }
@@ -893,7 +945,7 @@
         // see: https://regex101.com/r/KTT0RB/latest
         // syntax: lista -> $1
         static isMy(s) {
-            let re = /^([$.\w\d]+) *-> *(\$?(.\d|\w)+)(\[(-?\d+)])?$/;
+            let re = /^([$.[\]\w\d]+) *-> *(\$?(.\d|\w)+)(\[(-?\d+)])?$/;
             let r = re.exec(s);
             if (!r) return undefined;
             return [new ReferenceTo(r[1], r[2], r[5])];
@@ -953,7 +1005,7 @@
         // syntax: ref aku -> a $1 v 3
         // syntax: ref aku -> a $1 v 1,2,34
         static isMy(s) {
-            let re = /^[Rr](ef|eference)? +([$.@\w\d]+) *-> *(.*)$/;
+            let re = /^[Rr](ef|eference)? +([-+$.@\w\d]+) *-> *(.*)$/;
             let r = re.exec(s);
             if (!r) return undefined;
 
@@ -984,7 +1036,7 @@
         // see: https://regex101.com/r/bPn7zX/latest
         // syntax: a = 5
         static isMy(s) {
-            let re = /^([$.\w\d]+) *(<-|=|:=) *(.*)$/;
+            let re = /^([$[\].\w\d]+) *(<-|=|:=) *(.*)$/;
             let r = re.exec(s);
             if (!r) return undefined;
             return [new AssignTo(r[1], r[3])];
@@ -1100,6 +1152,35 @@
         }
     }
 
+
+    class CreateClass extends Command {
+        // Creates a class for new structures
+        // see: https://regex101.com/r/wWtcI5/1/
+        // syntax: class id: v, name: s, address: s
+        static isMy(s, variables) {
+            let re = /^class ([\S]*) (.*)$/gm;
+            let r = re.exec(s);
+            if (!r) return undefined;
+            let name = r[1];
+            let defination = r[2];
+            let defsList = varsStringToJson(defination);
+            let error = variables.addClass(name, defsList);
+            if (error) throw error;
+            return [new CreateClass(name, defination)];
+        }
+
+        constructor(name, defination) {
+            super();
+            this.name = name;
+            this.defination = defination;
+        }
+
+        run(variables) {
+            return "";
+        }
+
+    }
+
     class SetCount extends Command {
         // Set's count for list.  Error for other types
         // see: https://regex101.com/r/sPeXxR/latest
@@ -1107,7 +1188,7 @@
         //  c.count=4
         //  $4.Count <- 19
         static isMy(s) {
-            let re = /^([$._\d\w]+)\.[Cc]ount *(=|:=|<-) *(\d+)$/gm;
+            let re = /^([$._\d\w]+)\.[Cc]ount *(=|:=|<-) *(\S+)$/gm;
             let r = re.exec(s);
             if (!r) return undefined;
             let arrayName = r[1];
@@ -1123,6 +1204,13 @@
 
         run(variables) {
             let array = variables.findVar(this.arrayName);
+
+            let varTo = variables.findVar(this.arrayName+".count");
+            if (varTo) {
+                return varTo.assign(this.count, variables);
+            }
+
+
             if (!array) return `Taulukkoa ${this.arrayName} ei löydy! `;
             // Only list accepts this
             return array.setCount(this.count, variables);
@@ -1312,17 +1400,18 @@
 
 
     const knownCommands = [
+        CreateClass,
         CreateValueVariable,
         CreateRefecenceVariable,
         CreateObjectVariable,
         CreateArrayVariable,
         ReferenceTo,
-        ArrayReferenceTo,
+        // ArrayReferenceTo,
+        CreateInitializedStructVariable,
         SetCount,
         AssignTo,
-        ArrayAssignTo,
+        // ArrayAssignTo,
         CreateInitializedArrayVariable,
-        CreateInitializedStructVariable,
         CreateReferenceAndObject,
         AddPhaseText,
         SetPhaseNr,
@@ -1349,6 +1438,8 @@
             this.variableRelations = variableRelations;
             this.varsmap = {};
             this.vars = [];
+            this.flatvarsmap = {};
+            this.flatvars = [];
             this.phaseNumber = phaseNumber;
             this.texts = [[], []];
             this.autoNumber = 1;
@@ -1396,10 +1487,49 @@
             return this.variableRelations.isShowErrors();
         }
 
+        addFlat(variable) {
+            let name = this.cleanName(variable.name, variable);
+            this.flatvarsmap[name] = variable;
+            this.flatvars.push(variable);
+            if (variable.name2) {
+                this.flatvarsmap[this.cleanName(variable.name2)] = variable;
+            }
+        }
+
+        cleanName(s, variable) {
+            // clear $-+ from name and if variable then
+            // change force and deny attributes
+            if (!s || s.length === 0) return "";
+            let force = false;
+            let deny = false;
+            while (true) {
+                let f = s[0];
+                if (!"+-$".includes(f)) break;
+                if ( variable !== undefined) {
+                    if (s[0] == '$') deny = true;
+                    if (s[0] == '+') force = true;
+                    if (s[0] == '-') deny = true;
+                }
+                s =  s.substring(1);
+            }
+            if ( variable !== undefined) {
+                if ( force ) {
+                    variable.denynames = false;
+                    variable.forcenames = true;
+                } else if (deny) {
+                    variable.denynames = true;
+                    variable.forcenames = false;
+                }
+                if (!variable.denynames && !variable.parent) variable.forcenames = true;
+                variable.name = s;
+            }
+            return s;
+        }
+
         add(variable) {
             this.vars.push(variable);
             if (!variable.name) {
-                variable.name = "$$" + this.autoNumber++;
+                variable.name = "$a$" + this.autoNumber++;
             }
             let i = variable.name.indexOf("@");
             if (i > 0) {
@@ -1412,15 +1542,25 @@
                 }
             }
             if (variable.rank !== undefined) this.lastRank = variable.rank;
-            this.varsmap[variable.name] = variable;
             variable.graphAttributes = this.graphAttributes;
             this.graphAttributes = undefined; // TODO: clear only ontimers
+            this.addFlat(variable); // cleans the name
+            this.varsmap[variable.name] = variable;
         }
 
         findVar(name) {
+            name = this.cleanName(name);
             [name,] = name.split("@");
             if (name === "null") return nullRef;
-            return this.varsmap[name];
+            return this.flatvarsmap[name];
+        }
+
+        addClass(name, defList) {
+            return this.variableRelations.addClass(name, defList);
+        }
+
+        findClass(name) {
+            return this.variableRelations.findClass(name);
         }
 
         hasTexts() {
@@ -1512,6 +1652,7 @@
          *   errors: list of errors during run
          */
         constructor(s, params, knownCommands) {
+            this.classes = {};
             this.createErrors = "";
             this.mode = "static";
             this.errorlevel = 3;
@@ -1532,6 +1673,17 @@
             this.maxStepnumber = 0;
             this.init();
             if (s) this.addCommands(s, knownCommands);
+        }
+
+        addClass(name, defList) {
+            let exists = this.findClass(name);
+            this.classes[name] = defList;
+            if (exists) return `Luokka ${name} on jo olemassa`;
+            return ""
+        }
+
+        findClass(name) {
+            return this.classes[name];
         }
 
         isAnimateCode() {
@@ -1814,7 +1966,7 @@
             if (!nobox && dx > 0 && dy > 0) {
                 svg += `<use xlink:href="#rbox${size}" x="${x}" y="${y}" />\n`;
             }
-            if (dx === 0 && dy === 0) { // f.ex ref boxes inside struct
+            if ((dx === 0 && dy === 0) || (nobox && this.error)) { // f.ex ref boxes inside struct
                 let fill = undefined;
                 if (this.error) fill = "red";
                 svg += SVGUtils.box(this.name, w, h, 0, 0, x, y, fill)
@@ -1828,13 +1980,12 @@
                 svg += svg1;
             }
 
-                // `<text x="${x}" y="${y}" fill="#000000" font-family="Helvetica" font-size="12px" text-anchor="middle" alignment-baseline="middle">${val}</text>\n`;
-            if (this.name && !this.name.startsWith('$')) {
+            // draw variabel names if needed
+            if (this.name && this.forcenames && !this.denynames) {
                 let opt = SVGUtils.joinOptions(this.nameOptions,
                     {align: "end", font: "Helvetica", size: "12px"});
                 let [svg1, ] = SVGUtils.drawSVGText(this.name, opt, this.left().x-20, y);
                 svg += svg1;
-                // svg += `<text x="${x - 52}" y="${y}" fill="#000000" font-family="Helvetica" font-size="12px" text-anchor="middle" alignment-baseline="middle">${this.name}</text>\n`;
             }
             svg += this.showCount(dy)
             let left = this.left();
@@ -1853,7 +2004,7 @@
         },
 
         closest(p) {
-            // find closest snapopoint to p
+            // find closest snappoint to p
             let dmin = 1000000;
             let result = this.left();
             for (let i=0; i<this.snappoints.length; i++) {
