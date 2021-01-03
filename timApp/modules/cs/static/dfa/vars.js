@@ -322,7 +322,7 @@
             return "";
         }
 
-        addRef(objTo, index2, variables, force) {
+        addRef(objTo, variables, force) {
             // adds ref to any variable, but it is error
             // if more than one ref or if not ref varible.
             // In static mode it is not allowed to change the
@@ -335,17 +335,7 @@
                 return this.vars[0].handleError(error + arref.run(variables), variables);
             }
             let isRef = this.isRef() || force;  // Was originally ref?
-            if (index2 !== undefined) {
-                if (objTo.isArray()) {
-                    if (index2 < 0 || index2 >= objTo.vars.length) {
-                        error += `${index2} on laiton indeksi. `;
-                    } else {
-                        objTo = objTo.vars[index2];
-                    }
-                } else {
-                    error += `${objTo.name} ei ole taulukko! `;
-                }
-            }
+
             if (variables.isStepMode() ||
                 this.refs.length > 0 && this.refs[0] === nullRef) {
                 // step modessa viite korvaa
@@ -461,7 +451,7 @@
             super("null", undefined, undefined);
         }
 
-        addRef(objTo, index2, variables) {
+        addRef(objTo, variables) {
             return this.handleError("null arvolla ei voi viitata", variables);
         }
 
@@ -670,33 +660,6 @@
     }
 
 
-    class CreateArrayVariable extends CreateVariable {
-        // Creates array or list (compare Java's ArrayList) for refs or values
-        // see: https://regex101.com/r/u9L3lj/latest
-        // syntax:
-        //    Array $1 R 3
-        //    List $1 R 3
-        //    [] $1 R 3     // inits nullRef
-        //    Array $2 V 5
-        static isMy(s) {
-            let re = /^([Aa](rray)?|[Ll](ist)?|\[]) *([^ ]+) +([@\S]+) +([0-9]+)$/;
-            let r = re.exec(s);
-            if (!r) return undefined;
-            let kind = "[";
-            if (r[1].toUpperCase().startsWith("L")) kind = "L";
-            let name = r[4];
-            let td = (r[5]+"  ").toUpperCase();
-            let type = td[0];
-            let dir = td[1];
-            let len = r[6];
-            if (!"CRV".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla C, R tai V! `
-
-            return [new CreateVariable(
-                () => new ArrayVariable(name, undefined, kind, type, dir, len, 1), name)];
-        }
-    }
-
-
     class StructVariable extends ObjectVariable {
         // Creates array or list for refs or values
         // value ei not used in this case
@@ -736,9 +699,16 @@
             }
             cls = getCls(this.type);
             for (let i = 0; i < len; i++) {
+                let name1 = `${name}[${i}]`;
+                let name2 = "";
+                if (tnames[i] !== undefined) {
+                    name2 = name1;
+                    name1 = `${this.name}.${tnames[i]}`
+                }
                 if (this.sclass) cls = getCls(types[i]);
-                let v = new cls(`${this.name}.${tnames[i]}`, init, nref);
-                v.name2 = `${name}[${i}]`;
+                let v = new cls(name1, init, nref);
+                if (name2)
+                    v.name2 = `${name}[${i}]`;
                 this.vars.push(v);
                 v.parent = this;
             }
@@ -779,33 +749,35 @@
             let len = this.vars.length;
             let valsarr = this.valsarr;
             let kindstr = "Tietueelle";
-            if (!valsarr) {
+            if (!valsarr && !this.sclass) {
                 error += `${kindstr} ${this.name} ei ole alustustietoja! `
                 return this.handleError(error, variables);
             }
             for (let i = 0; i < len; i++) {
                 let v = this.vars[i];
-                if (!valsarr[i]) break;
+                if (valsarr[i] === undefined) break;
                 let to = valsarr[i].trim();
-                let [name, index2] = Command.nameAndIndex(to);
+                let name = to;
                 let objTo = undefined;
                 if ("AR".includes(this.type))
                     objTo = variables.findVar(name);
                 if (!objTo) {
                     if (this.type === "R")
-                        error += v.handleError(`${this.name} ei saa alustaa arvolla!`, variables);
-                    v.init(to);
+                        error += v.handleError(`${this.name} ei saa alustaa arvolla ${to}! `, variables);
+                    if (v.isRef())
+                        error += v.handleError(`${v.name} ei saa alustaa arvolla ${to}! `, variables);
+                    if (to) v.init(to);
                     continue;
                 }
                 v.init(undefined);  // remove old value
-                error += v.addRef(objTo, index2, variables, true);
+                error += v.addRef(objTo, variables, true);
             }
             return this.handleError(error, variables);
         }
     }
 
 
-    class CreateInitializedStructVariable extends CreateArrayVariable {
+    class CreateInitializedStructVariable extends CreateVariable {
         // Creates initilized struct
         // see: https://regex101.com/r/nfot3D/latest
         // syntax:
@@ -881,14 +853,13 @@
             if (this.type === "R") {
                 for (let i = 0; i < len; i++) {
                     let v = this.vars[i];
-                    let to = valsarr[i].trim();
-                    let [name, index2] = Command.nameAndIndex(to);
+                    let name = valsarr[i].trim();
                     let objTo = variables.findVar(name);
                     if (!objTo) {
                         error += v.handleError(`Oliota ${name} ei löydy! `, variables)
                         continue;
                     }
-                    error += v.addRef(objTo, index2, variables);
+                    error += v.addRef(objTo, variables);
                 }
             }
             return this.handleError(error, variables);
@@ -896,7 +867,7 @@
     }
 
 
-    class CreateInitializedArrayVariable extends CreateArrayVariable {
+    class CreateInitializedArrayVariable extends CreateVariable {
         // Creates initilized array or list
         // see: https://regex101.com/r/Hre5iQ/latest
         //      https://regex101.com/r/ZepJ1V/latest
@@ -909,7 +880,7 @@
             let re = /^([Aa](rray)?|[Ll](ist)?|\[]) *([^ ]+) +([@\S]+) *(.*)?$/;
             let r = re.exec(s);
             if (!r) { // try if format L $3 r [$1,$2,$[1]]
-                re = /^([Aa](rray)?|[Ll](ist)?|\[]) *([^ ]+) *([@\S]+) *[{]?([$[\]\d., \w]+)[}]?$/;
+                re = /^([Aa](rray)?|[Ll](ist)?|\[]) +([^ ]+) *([@\S]+) *[{]?([$[\]\d., \w]+)[}]?$/;
                 r = re.exec(s);
                 if (!r) return undefined;
             }
@@ -925,6 +896,9 @@
             let type = r[1];
             let dir = r[2] || 0;
             let len = parseInt(r[3] || "-1");
+            let valsl = parseInt(vals); // is only on number
+            if (""+valsl !== vals) valsl = NaN;
+            if (len < 0 && !isNaN(valsl)) { vals = ""; len = valsl; }
             if (!"RVC".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla C, R tai V! `
 
             return [new CreateInitializedArrayVariable( () =>
@@ -945,18 +919,16 @@
         // see: https://regex101.com/r/KTT0RB/latest
         // syntax: lista -> $1
         static isMy(s) {
-            let re = /^([$.[\]\w\d]+) *-> *(\$?(.\d|\w)+)(\[(-?\d+)])?$/;
+            let re = /^([\S*]+) *-> *(\S+)$/;
             let r = re.exec(s);
             if (!r) return undefined;
             return [new ReferenceTo(r[1], r[2], r[5])];
         }
 
-        constructor(from, to, index2) {
-            // index2 is for syntax lista -> $2[1]
+        constructor(from, to) {
             super();
             this.from = from;
             this.to = to;
-            this.index2 = index2;
         }
 
         run(variables) {
@@ -964,7 +936,7 @@
             if (!refFrom) return `Viitemuuttujaa ${this.from} ei löydy!`;
             let objTo = variables.findVar(this.to);
             if (!objTo) return `Oliota ${this.to} ei löydy!`;
-            return refFrom.addRef(objTo, this.index2, variables);
+            return refFrom.addRef(objTo, variables);
         }
     }
 
@@ -993,7 +965,7 @@
 
     const combinedRefCommands = [
         CreateObjectVariable,
-        CreateArrayVariable,
+        // CreateArrayVariable,
         CreateInitializedArrayVariable,
         CreateFindVariable,
     ];
@@ -1061,108 +1033,17 @@
         }
     }
 
-    class ArrayAssignTo extends AssignTo {
-        // Assign value to array by index
-        // see: https://regex101.com/r/Bwygiw/2/
-        // syntax: $3[2] = 5
-        static isMy(s) {
-            let re = /^(\$?[\w\d]+)\[(-?\d+)] *(=|:=|<-) *([^\n]*)$/;
-            let r = re.exec(s);
-            if (!r) return undefined;
-            return [new ArrayAssignTo(r[1], r[2], r[4])];
-        }
-
-        constructor(to, index, value) {
-            super(to, value);
-            this.index = index;
-        }
-
-        run(variables) {
-            let error = "";
-            let array = variables.findVar(this.to);
-            let varTo;
-            if (!array) return `Taulukkoa ${this.to} ei löydy!`;
-            if (!array.isArray()) {
-                error += `${this.to} ei ole taulukko! `;
-                varTo = array;
-            } else {
-                if (this.index < 0) {
-                    error += `Indeksi negatiivinen ${this.index}! `;
-                    varTo = array.over[0];
-                    if (variables.isMarkErrors())
-                        varTo.error = error;
-                } else if (array.vars.length <= this.index) {
-                    error += `Liian iso indeksi ${this.index}! `;
-                    varTo = array.over[1];
-                    if (variables.isMarkErrors())
-                        varTo.error = error;
-                } else varTo = array.vars[this.index];
-            }
-            return error + varTo.assign(this.value, variables);
-        }
-    }
-
-    class ArrayReferenceTo extends Command {
-        // Assigs array reference by index
-        // see: https://regex101.com/r/fUD9yw/latest
-        // syntax: $1[0] -> $2
-        static isMy(s) {
-            let re = /^(\$?[\w\d]+)\[(-?\d+)] *-> *(\$?[\w\d]+)(\[(-?\d+)])?$/gm;
-            let r = re.exec(s);
-            if (!r) return undefined;
-            let arrayName = r[1];
-            let index = r[2];
-            let to = r[3]
-            let index2 = r[5]
-            return [new ArrayReferenceTo(arrayName, index, to, index2)];
-        }
-
-        constructor(arrayName, index, to, index2) {
-            super();
-            this.arrayName = arrayName;
-            this.index = parseInt(index);
-            this.to = to;
-            this.index2 = index2;  // index in to variable
-        }
-
-        run(variables) {
-            let error = "";
-            let array = variables.findVar(this.arrayName);
-            if (!array) return `Taulukkoa ${this.arrayName} ei löydy!`;
-            let objTo = variables.findVar(this.to);
-            if (!objTo) return `Kohdetta ${this.to} ei löydy!`;
-            if (!(array.isArray() || array.isStruct())) {
-                const refTo = new ReferenceTo(this.arrayName, this.to, this.index2);
-                if (variables.isMarkErrors())
-                    error += `${this.arrayName} ei ole taulukko! `
-                // even it is not an array, put value to the varibale and mark error.
-                return error + refTo.run(variables);
-            }
-            let refFrom;
-            // if wrong index, put value to extra places
-            if (this.index < 0) {
-                error += `Indeksi negatiivinen ${this.index}!`;
-                refFrom = array.over[0];
-            } else if (array.vars.length <= this.index) {
-                error += `Liian iso indeksi ${this.index}!`;
-                refFrom = array.over[1];
-            } else refFrom = array.vars[this.index];
-            error += refFrom.addRef(objTo, this.index2, variables);
-            return refFrom.handleError(error, variables);
-        }
-    }
-
 
     class CreateClass extends Command {
         // Creates a class for new structures
         // see: https://regex101.com/r/wWtcI5/1/
         // syntax: class id: v, name: s, address: s
         static isMy(s, variables) {
-            let re = /^class ([\S]*) (.*)$/gm;
+            let re = /^class ([^: ]*)(: *| +)(.*)$/gm;
             let r = re.exec(s);
             if (!r) return undefined;
             let name = r[1];
-            let defination = r[2];
+            let defination = r[3];
             let defsList = varsStringToJson(defination);
             let error = variables.addClass(name, defsList);
             if (error) throw error;
@@ -1401,18 +1282,15 @@
 
     const knownCommands = [
         CreateClass,
+        ReferenceTo,
         CreateValueVariable,
         CreateRefecenceVariable,
         CreateObjectVariable,
-        CreateArrayVariable,
-        ReferenceTo,
-        // ArrayReferenceTo,
         CreateInitializedStructVariable,
         SetCount,
         AssignTo,
-        // ArrayAssignTo,
-        CreateInitializedArrayVariable,
         CreateReferenceAndObject,
+        CreateInitializedArrayVariable,
         AddPhaseText,
         SetPhaseNr,
         SetGraphAttributes,
@@ -1506,9 +1384,9 @@
                 let f = s[0];
                 if (!"+-$".includes(f)) break;
                 if ( variable !== undefined) {
-                    if (s[0] == '$') deny = true;
-                    if (s[0] == '+') force = true;
-                    if (s[0] == '-') deny = true;
+                    if (s[0] === '$') deny = true;
+                    if (s[0] === '+') force = true;
+                    if (s[0] === '-') deny = true;
                 }
                 s =  s.substring(1);
             }
@@ -1904,6 +1782,10 @@
             this.height = dy;
             if (dy === 0) this.height = 0;
             return svg;
+        },
+
+        right() {
+            return {x: this.x + this.width/2, y: this.y };
         }
     }
 
@@ -1980,11 +1862,27 @@
                 svg += svg1;
             }
 
+            let textx = this.left().x - 20;
+            let texty = y;
+            let textalign = "end";
+            let textsize = "12px";
+            let text = this.name;
+            if (this.parent && this.parent.dir === "H") {
+                textx = x;
+                texty = y - this.parent.height;
+                textalign = "middle";
+                textsize = "10px";
+            }
+            if (this.parent) {
+                text = text.replace(this.parent.name + ".", "");
+                textsize = "10px";
+            }
+
             // draw variabel names if needed
             if (this.name && this.forcenames && !this.denynames) {
                 let opt = SVGUtils.joinOptions(this.nameOptions,
-                    {align: "end", font: "Helvetica", size: "12px"});
-                let [svg1, ] = SVGUtils.drawSVGText(this.name, opt, this.left().x-20, y);
+                    {align: textalign, font: "Helvetica", size: textsize});
+                let [svg1, ] = SVGUtils.drawSVGText(text, opt, textx, texty);
                 svg += svg1;
             }
             svg += this.showCount(dy)
@@ -2001,6 +1899,11 @@
         left() {
             // left coordinate for variable
             return {x: this.x - this.width / 2, y: this.y};
+        },
+
+        right() {
+            // left coordinate for variable
+            return {x: this.x + this.width / 2, y: this.y};
         },
 
         closest(p) {
@@ -2142,6 +2045,15 @@
             // return {x: v.x - v.width / 2, y: v.y};
             return v.left();
         },
+
+        right() {
+            // left coordinate for array
+            if (!this.vars || this.vars.length === 0)
+                return {x: this.x, y: this.y};
+            let v = this.vars[0];
+            // return {x: v.x - v.width / 2, y: v.y};
+            return v.right();
+        },
     }
 
     const svgStructVariableMixin = {
@@ -2225,6 +2137,8 @@
             */
             this.leftx = this.x - this.width/2;
             this.lefty = this.y + fh/2-h/2;
+            this.rightx = this.x + this.width/2;
+            this.righty = this.y + fh/2-h/2;
 
             let left = this.left();
             this.snappoints = [
@@ -2259,6 +2173,10 @@
             return {x: v.x - this.width / 2, y: v.y};
             // return v.left();
              */
+        },
+
+        right() {
+            return {x: this.rightx, y: this.righty};
         },
     }
 
@@ -2392,7 +2310,11 @@
 
             let ranks = [ ]; // 0 = stack, 1 = heap
             for (let i=0; i<10; i++) {
-                ranks.push({x: rankBeginx + i*rankDx, y: rankBeginy, dir: 0});
+                ranks.push({x: rankBeginx + i*rankDx,
+                            y: rankBeginy,
+                            ax: rankBeginx + i*rankDx,
+                            ay: rankBeginy,
+                            dir: 0});
             }
 
             function getRank(ranks, rank, r) {
@@ -2419,6 +2341,7 @@
             }
 
             let maxs = {x: 0, y: rankBeginy};
+            let maxx = 0;
 
             let linenr = 1;
             if (this.elements.codediv) {
@@ -2466,11 +2389,21 @@
                         if (gopts.rankdir !== undefined) {
                             rank.dir = gopts.rankdir;
                         }
-                        if (gopts.snap) {
-                            rank.snappoints = gopts.snap;
+                        if (gopts.snap !== undefined) {
+                            let snap = ""+gopts.snap;
+                            if (snap==="a") rank.snappoints = undefined;
+                            else {
+                                let jsnap = [];
+                                for (let c of snap) jsnap.push(parseInt(c));
+                                rank.snappoints = jsnap;
+                            }
                         }
-                        if (gopts.w) rank.w = gopts.w;
-                        if (gopts.h) rank.h = gopts.h;
+                        if (gopts.w !== undefined) rank.w = gopts.w;
+                        if (gopts.h !== undefined) rank.h = gopts.h;
+                        if (gopts.ax !== undefined) rank.ax = gopts.ax;
+                        if (gopts.ay !== undefined) rank.ay = gopts.ay;
+                        if (gopts.rx !== undefined) rank.x = rank.ax + gopts.rx;
+                        if (gopts.ry !== undefined) rank.y = rank.ay + gopts.ry;
                     } else {
                         v.graphAttributes = {};
                         gopts = v.graphAttributes;
@@ -2492,6 +2425,7 @@
                     rank.y = v.y + yadd;  // TODO: add last element height
                     this.svg += svg;
                     maxs = getRankMaxs(ranks, maxs);
+                    maxx = Math.max(maxx, v.right().x);
                 }
 
                 for (let v of phase.vars) { // reference arrows
@@ -2520,7 +2454,8 @@
 
             this.svg += `</svg>`;
 
-            let width = Math.max(maxs.x, 100);
+            // TODO: find width correctly
+            let width = maxx+50; // Math.max(maxs.x, 100);
             let height = Math.max(maxs.y, 100);
 
             // add svg size info

@@ -74,55 +74,48 @@ a $4 rv $1 $2 $3
 t -> $4
 */
     const code = `
-list +l vh8 1,2,3
-class Jasen id: v, nimi: s, katuosoite: s, postinumero: v, jasenet: R
-s.Jasen j1 V 1 "Ankka Aku" Ankkalinna 12345  
-$j1.id = 7
-$j1.id = 8
-$j1.id = 9
-`;
-    const code2 = `
-g x: 250, y: 320, w:3
-s $j1 V 1 "Ankka Aku" Ankkalinna 12345 ...
-s $j2 V 2 "Susi Sepe" Takametsä 12555 ...
-s $j3 V 4 "Ponteva Veli" Takametsä 12355 ...
+class Naytto: kerho R
+class Kerho: jasenet R, harrastukset R
+class Jasenet: kokonimi S, tiedostonNimi S, maxLkm V, lkm V, alkiot R
+class Jasen: tunnusNro V, nimi S, osoite S, postinumero V, _ S
+class Harrastukset: _ S, tiedostonNimi S, maxLkm V, lkm V, alkiot R
+class Harrastus: tunnusNro V, jasenNro V, ala S, aloitusvuosi V, tuntiaViikossa V
+
+g rank 1, ax: 100, ay: 200, w:3, rx: 150, ry: 120
+s.Jasen j1 V 1 "Ankka Aku" Ankkalinna 12345 ...
+s.Jasen j2 V 2 "Susi Sepe" Takametsä 12555 ...
+s.Jasen j3 V 4 "Ponteva Veli" Takametsä 12355 ...
 t {"align": middle} Jasen
-g x: 100, y: 360, w:2 
-a $alkiot RV 8
-$alkiot[0] -> $j1
-$alkiot[1] -> $j2
-$alkiot[2] -> $j3
-g x: 130, y: 200, w: 3
-s $jasenet V "Kelmien kerho" nimet.dat 8 3 $alkiot
-g x: 380, y: 360, w : 2
-a $alkioth RV 10
-g x: 360, y: 200, w: 3
-s $harrastukset V "" harrastukset.dat 10 6 $alkioth
-g x: 600, y: 210, w: 3
-s $h1 v 1 kalastus 1955 20
-s $h2 v 1 "laiskottelu" 1950 20
-s $h3 v 2 "kelmien kerho" 1962 2
-s $h4 v 1 "työn pakoilu" 1962 40
-s $h5 v 2 "possujen jah." 1954 20
-s $h6 v 4 "susiansojen..." 1956 15
-$alkioth[0] -> $h1
-$alkioth[1] -> $h2
-$alkioth[2] -> $h3
-$alkioth[3] -> $h4
-$alkioth[4] -> $h5
-$alkioth[5] -> $h6
+g rx: 0, ry: 160, w:2 
+a +alkiot RV8 j1 j2 j3
+g rx: 30, ry: 0, w: 3
+s.Jasenet +jasenet A "Kelmien kerho" nimet.dat 8 3 $alkiot
+
+g rank 2, ax: 360, ay: 200, w: 3, rx: 240, ry: 10, snap: 0
+s.Harrastus h1 v 1 1 kalastus 1955 20
+s.Harrastus h2 v 2 1 "laiskottelu" 1950 20
+s.Harrastus h3 v 3 2 "kelmien kerho" 1962 2
+s.Harrastus h4 v 4 1 "työn pakoilu" 1962 40
+s.Harrastus h5 v 5 2 "possujen jah." 1954 20
+s.Harrastus h6 v 7 4 "susiansojen..." 1956 15
 t {"align": middle} Harrastus
-g x: 250, y: 40, h:2, w: 2
-s $kerho RH $jasenet $harrastukset
-t {"align": middle, sy: -100} Kerho
+g rx: 20, ry: 160, w : 2, snap: a
+a alkioth RV10 h1 h2 h3 h4 h5 h6
+g rx: 0, ry: 0, w: 3
+s.Harrastukset harrastukset A "" harrastukset.dat 10 6 $alkioth
+
+g rank 3, ax: 250, ay: 60, h:2, w: 2, rx: 0, ry: 0
+s.Kerho +kerho RH jasenet harrastukset
+t {"align": middle, sy: -120} Kerho
 t {"align": end, sx: -70, sy: -20} jasenet
 t {"align": start, sx: 70, sy: -20} harrastukset
-g x: 630, y: 40, w: 3, h:2
-s $naytto AH $kerho
-t {align: end, sx: -50, sy: -100} Naytto naytto
-SVG <path d="M 730 130 Q 630 130 570 120 Q 470 105 450 0" fill="none" stroke="#099" stroke-dasharray="3 3"></path>
+g rx: 380, ry: 0, w: 3, h:2
+s.Naytto +naytto RH kerho
+t {sx: -130, sy: -100} Naytto naytto
+#t {align: end, sx: -70, sy: -40} kerho
+SVG <path d="M 730 130 Q 450 125 450 0" fill="none" stroke="#000" stroke-dasharray="3 3"></path>
 `;
     setData({
         code: code, args: "1001", params:
-            {mode: "step", errorlevel: 3, xanimate: "code"}
+            {mode: "static", errorlevel: 3, xanimate: "code"}
     });
