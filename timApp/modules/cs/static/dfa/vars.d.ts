@@ -1,6 +1,6 @@
 // vars.d.ts
 export interface SetData {
-    data: string;
+    code: string;
     params: unknown;
     args: string;
 }

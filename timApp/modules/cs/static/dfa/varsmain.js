@@ -73,7 +73,7 @@ r t
 a $4 rv $1 $2 $3
 t -> $4
 */
-    const code = `
+const code = `
 class Naytto: kerho R
 class Kerho: jasenet R, harrastukset R
 class Jasenet: kokonimi S, tiedostonNimi S, maxLkm V, lkm V, alkiot R
@@ -115,7 +115,8 @@ t {sx: -130, sy: -100} Naytto naytto
 #t {align: end, sx: -70, sy: -40} kerho
 SVG <path d="M 730 130 Q 450 125 450 0" fill="none" stroke="#000" stroke-dasharray="3 3"></path>
 `;
-    setData({
-        code: code, args: "1001", params:
-            {mode: "static", errorlevel: 3, xanimate: "code"}
-    });
+
+setData({
+    code: code, args: "1001", params:
+        {mode: "static", errorlevel: 3, xanimate: "code"}
+});

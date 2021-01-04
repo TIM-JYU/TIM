@@ -1,27 +1,48 @@
-import {Component, Input, OnInit, ElementRef} from "@angular/core";
+import {
+    Component,
+    Input,
+    OnInit,
+    ElementRef,
+    ChangeDetectorRef,
+    ViewChild,
+    AfterViewInit,
+} from "@angular/core";
+import DOMPurify from "dompurify";
 import {Changes} from "../../util/angularchanges";
+import {TimDefer} from "../../util/timdefer";
 
 @Component({
     selector: "tim-variables",
     template: `
-<div class="variablesDiv" id="variablesDiv">
+<div class="variablesDiv" #variablesDiv>
     
 </div>        
     `,
     styleUrls: ["./variables.component.scss"],
 })
-export class VariablesComponent implements OnInit {
+export class VariablesComponent implements OnInit, AfterViewInit {
     error?: string;
     svg?: string;
+    viewInitReady = new TimDefer();
     @Input() usercode!: string;
     @Input() height?: string | number;
     @Input() jsparams?: unknown;
-    varfunctions?: unknown;
+    varfunctions?: typeof import("../../../../../modules/cs/static/dfa/vars.js");
+    @ViewChild("variablesDiv") private variablesDiv!: ElementRef<HTMLElement>;
 
-    constructor(private elementRef: ElementRef) {}
+    constructor(
+        private elementRef: ElementRef,
+        private cdr: ChangeDetectorRef
+    ) {
+        // this.cdr.detach(); //
+    }
 
     async ngOnInit() {
         await this.loadVariables();
+    }
+
+    ngAfterViewInit(): void {
+        this.viewInitReady.resolve();
     }
 
     async loadVariables() {
@@ -34,23 +55,29 @@ export class VariablesComponent implements OnInit {
         );
     }
 
+    setSVG(svg: string, svgdiv: HTMLElement, _height: number) {
+        svgdiv.innerHTML = DOMPurify.sanitize(svg, {ADD_TAGS: ["use"]});
+        // svgdiv.innerHTML = svg;
+    }
+
     async ngOnChanges(changedObject: Changes<this, "usercode">) {
+        // if (!this.variablesDiv) return;
         await this.loadVariables();
-        const root = this.elementRef.nativeElement;
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        const variablesDiv = root.querySelector("#variablesDiv");
-        let params: unknown = {variablesDiv: variablesDiv};
-        if (this.jsparams) {
-            params = this.jsparams;
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            params.variablesDiv = variablesDiv;
-        }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        if (this.height) variablesDiv.style.height = this.height + "px";
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const setData = this.varfunctions.setData;
+        await this.viewInitReady.promise;
+        // noinspection JSUnusedGlobalSymbols
+        const params = {
+            variablesDiv: this.variablesDiv.nativeElement,
+            setSVGCallback: (
+                svg: string,
+                svgDiv: HTMLElement,
+                height: number
+            ) => this.setSVG(svg, svgDiv, height),
+            params: this.jsparams,
+        };
+
+        if (this.height)
+            this.variablesDiv.nativeElement.style.height = this.height + "px";
+        const setData = this.varfunctions!.setData;
         const data = {
             code: changedObject.usercode!.currentValue,
             params: params,
