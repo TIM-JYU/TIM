@@ -2455,7 +2455,7 @@
             this.svg += `</svg>`;
 
             // TODO: find width correctly
-            let width = maxx+50; // Math.max(maxs.x, 100);
+            let width = Math.max(maxx+50, 750); // Math.max(maxs.x, 100);
             let height = Math.max(maxs.y, 100);
 
             // add svg size info
