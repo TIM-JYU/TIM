@@ -3485,7 +3485,7 @@ ${fhtml}
         </div>
     </div>
     <tim-graph-viz *ngIf="isViz" [vizcmd]="fullCode"></tim-graph-viz>
-    <tim-variables *ngIf="isVars" [usercode]="fullCode"
+    <tim-variables *ngIf="isVars" [code]="fullCode"
                    [jsparams]="jsparams"
                    [height]="height"
     ></tim-variables> <!-- TODO: why direct markup.jsparam does not work -->

@@ -3,7 +3,7 @@ import {
     Input,
     OnInit,
     ElementRef,
-    ChangeDetectorRef,
+    // ChangeDetectorRef,
     ViewChild,
     AfterViewInit,
 } from "@angular/core";
@@ -24,16 +24,14 @@ export class VariablesComponent implements OnInit, AfterViewInit {
     error?: string;
     svg?: string;
     viewInitReady = new TimDefer();
-    @Input() usercode!: string;
+    @Input() code!: string;
     @Input() height?: string | number;
-    @Input() jsparams?: unknown;
+    @Input() jsparams?: Record<string, unknown>;
     varfunctions?: typeof import("../../../../../modules/cs/static/dfa/vars.js");
     @ViewChild("variablesDiv") private variablesDiv!: ElementRef<HTMLElement>;
 
-    constructor(
-        private elementRef: ElementRef,
-        private cdr: ChangeDetectorRef
-    ) {
+    constructor() {
+        //  private cdr: ChangeDetectorRef // private elementRef: ElementRef,
         // this.cdr.detach(); //
     }
 
@@ -60,12 +58,12 @@ export class VariablesComponent implements OnInit, AfterViewInit {
         // svgdiv.innerHTML = svg;
     }
 
-    async ngOnChanges(changedObject: Changes<this, "usercode">) {
+    async ngOnChanges(changedObject: Changes<this, "code">) {
         // if (!this.variablesDiv) return;
         await this.loadVariables();
         await this.viewInitReady.promise;
         // noinspection JSUnusedGlobalSymbols
-        const params = {
+        let params = {
             variablesDiv: this.variablesDiv.nativeElement,
             setSVGCallback: (
                 svg: string,
@@ -75,11 +73,15 @@ export class VariablesComponent implements OnInit, AfterViewInit {
             params: this.jsparams,
         };
 
+        if (this.jsparams) {
+            params = {...params, ...this.jsparams};
+        }
+
         if (this.height)
             this.variablesDiv.nativeElement.style.height = this.height + "px";
         const setData = this.varfunctions!.setData;
         const data = {
-            code: changedObject.usercode!.currentValue,
+            code: changedObject.code!.currentValue,
             params: params,
             args: "",
         };

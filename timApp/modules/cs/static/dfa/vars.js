@@ -995,6 +995,7 @@ class CreateFindVariable extends Command {
     constructor(name) {
         super();
         this.name = name;
+        this.noAnimate = true;
     }
 
     run(variables) {
@@ -1095,6 +1096,7 @@ class CreateClass extends Command {
         super();
         this.name = name;
         this.defination = defination;
+        this.noAnimate = true;
     }
 
     run(variables) {
@@ -1161,6 +1163,7 @@ class SetPhaseNr extends Command {
             options = varsStringToJson(options);
         }
         this.options = options;
+        this.noAnimate = true;
     }
 
     run(variables) {
@@ -1257,6 +1260,7 @@ class SetGraphAttributes extends Command {
     constructor(graphAttributes) {
         super();
         this.graphAttributes = graphAttributes;
+        this.noAnimate = true;
     }
 
     run(variables) {
@@ -2548,14 +2552,23 @@ class VisualSVGVariableRelations {
         this.step = 0;
     }
 
+    move(dir) {
+        let cmd;
+        do {
+            this.step += dir;
+            if (this.step <=  0) return false;
+            if (this.step >=  this.maxStep()) return false;
+            cmd = this.variableRelations.commands[this.step];
+        } while (cmd.noAnimate);
+        return true;
+    }
+
     forward() {
-        this.step++;
-        return this.step < this.maxStep();
+        return this.move(1);
     }
 
     backward() {
-        this.step--;
-        return this.step > 0;
+       return this.move(-1);
     }
 
     stopAnimate() {
@@ -2597,6 +2610,7 @@ class VisualSVGVariableRelations {
             if (!cmd2) return false;
             if (cmd2.code === undefined) return false;
             if (cmd2 === cmd1) return false;
+            if (cmd2.noAnimate) return false;
             const code = cmd2.code.trim();
             if (code === "") return false;
             if (code.startsWith("///")) return true;
@@ -2625,13 +2639,13 @@ class Animation {
 
     stepFwd() {
         this.visual.stopAnimate();
-        this.visual.step++;
+        this.visual.forward();
         this.visual.update();
     }
 
     stepBack() {
         this.visual.stopAnimate();
-        this.visual.step--;
+        this.visual.backward();
         this.visual.update();
     }
 
