@@ -549,6 +549,17 @@ class RefecenceVariable extends ValueVariable {
     }
 }
 
+class SimpleRefecenceVariable extends RefecenceVariable {
+    // Creates a reference variable
+    constructor(name, value, ref, rank) {
+        super(name, value, ref, rank);
+    }
+
+    isRef() {
+        return true;
+    }
+}
+
 
 class CreateRefecenceVariable extends CreateVariable {
     // Creates a reference variable
@@ -708,6 +719,10 @@ class StructVariable extends ObjectVariable {
             switch (type.toUpperCase()) {
                 case "R":
                     cls = RefecenceVariable;
+                    nref = nullRef;
+                    break;
+                case "SR":
+                    cls = SimpleRefecenceVariable;
                     nref = nullRef;
                     break;
                 case "C":
@@ -2002,6 +2017,65 @@ const svgVariableMixin = {
     }
 }
 
+const svgSimpleReferenceVariableMixin = {
+    toSVG(x, y, w, h, dx, dy, nobox, align, forcedw) {
+        // draw variable as a box, it's name and content
+        // if in error state, draw red box also
+        // align 1 aligns from left
+        let svg = "";
+        if (this.graphAttributes) {
+            if (this.graphAttributes.x) x = this.graphAttributes.x;
+            if (this.graphAttributes.y) y = this.graphAttributes.y;
+            if (this.graphAttributes.sx) x += this.graphAttributes.sx;
+            if (this.graphAttributes.sy) y += this.graphAttributes.sy;
+            //  if (this.graphAttributes.h) hfactor = this.graphAttributes.h;
+        }
+        this.x = x;
+        this.y = y;
+        this.width = w;
+        this.height = h;
+
+        let textx = this.left().x - 20;
+        let texty = y;
+        let textalign = "end";
+        let textsize = "12px";
+        let text = this.name;
+        if (this.parent && this.parent.dir === "H") {
+            textx = x;
+            texty = y - this.parent.height;
+            textalign = "middle";
+            textsize = "10px";
+        }
+        if (this.parent) {
+            text = text.replace(this.parent.name + ".", "");
+            textsize = "10px";
+        }
+
+        // draw variabel names if needed
+        if (this.name && this.forcenames && !this.denynames) {
+            let opt = SVGUtils.joinOptions(this.nameOptions,
+                {align: textalign, font: "Helvetica", size: textsize});
+            let [svg1,] = SVGUtils.drawSVGText(text, opt, textx, texty);
+            svg += svg1;
+        }
+        let left = this.left();
+        this.snappoints = [
+            {x: x, y: y},
+        ];
+        return svg;
+    },
+
+    left() {
+        // left coordinate for variable
+        return {x: this.x, y: this.y};
+    },
+
+    right() {
+        // left coordinate for variable
+        return {x: this.x, y: this.y};
+    },
+}
+
 const svgArrayVariableMixin = {
     toSVG(x, y, w, h, dx, dy) {
         // draw array as variables side by side
@@ -2228,6 +2302,7 @@ const svgStructVariableMixin = {
 // Add visual methods to variable and array varaible
 Object.assign(TextObject.prototype, svgTextMixin);
 Object.assign(Variable.prototype, svgVariableMixin);
+Object.assign(SimpleRefecenceVariable.prototype, svgSimpleReferenceVariableMixin);
 Object.assign(ArrayVariable.prototype, svgArrayVariableMixin);
 Object.assign(StructVariable.prototype, svgStructVariableMixin);
 

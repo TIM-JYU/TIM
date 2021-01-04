@@ -74,32 +74,33 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-class Jasenet kokonimi S, tiedostonNimi S, maxLkm V, lkm V, alkiot R
-class Jasen id V, nimi S, osoite S, postinumero V, _ S
-code: /// Luodaan jäsenet
-g r: 0,x: 130, y: 0, w: 3
-s.Jasenet jasenet A "Kelmien kerho" nimet.dat 8 0 null
-code: /// Luodaan taulukko
-g r: 1,x: 100, y: 160, w:2 
-a alkiot RV8 
-jasenet.alkiot -> $alkiot
-code: /// luodaan 1. jäsen
-g r:2, x: 250, y: 120, w:3
-s.Jasen $j1 A 1 "Ankka Aku" Ankkalinna 12345 ...
-$alkiot[0] -> j1
-$jasenet.lkm = 1
-code: /// luodaan 2. jäsen
-s.Jasen j2 A 2 "Susi Sepe" Takametsä 12555 ...
-$alkiot[1] -> j2
-$jasenet.lkm = 2
-code: /// luodaan 3. jäsen
-s.Jasen j3 A 4 "Ponteva Veli" Takametsä 12355 ...
-alkiot[2] -> j3
-jasenet.lkm = 3
-t {"align": middle} Jasen
+class Item: car SR, cdr SR
+ref root
+g w 0.8
+s.Item +cons0 AH
+g y: 100, w: 0.8
+s.Item cons1 AH
+g sx: -20, y: 170
+n $one 1
+g r 2, x: 370,  y: 100, w: 0.8
+s.Item cons2 AH
+g sx: -20, y: 170
+n $two 2
+g r 3, x: 470
+n $four 4
+g y: 170, snap 1
+n $three 3
+
+root -> cons0
+cons0.car -> cons1
+cons0.cdr -> four
+cons1.car -> one
+cons1.cdr -> cons2
+cons2.car -> two
+cons2.cdr -> three
 `;
 
 setData({
     code: code, args: "1001", params:
-        {mode: "static", errorlevel: 3, animate: "commands"}
+        {mode: "static", errorlevel: 3, xanimate: "commands"}
 });
