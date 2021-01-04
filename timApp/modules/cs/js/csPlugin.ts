@@ -637,7 +637,7 @@ const CsMarkupOptional = t.partial({
     html: t.string,
     indices: t.string,
     inputplaceholder: t.string,
-    jsparams: t.unknown, // TODO: needs to be something unknown
+    jsparams: t.record(t.string, t.unknown),
     languages: t.string, // not used in any plugin? // TODO: should be used to give set of languages that can be used
     mode: t.string,
     noeditor: t.boolean,
@@ -893,7 +893,7 @@ export class CsController extends CsBase implements ITimComponent {
     indent!: number;
     initUserCode: boolean = false;
     isRunning: boolean = false;
-    jsparams?: unknown;
+    jsparams?: Record<string, unknown>;
     lastJS: string;
     lastMD: string;
     lastUserargs?: string;
