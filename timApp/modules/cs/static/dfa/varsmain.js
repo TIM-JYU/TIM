@@ -74,21 +74,21 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
+g w: 0.6, rdx: 80, rdy: 60
 class Item: car SR, cdr SR
 ref root
-g w 0.8
 s.Item +cons0 AH
-g y: 100, w: 0.8
 s.Item cons1 AH
-g sx: -20, y: 170
 n $one 1
-g r 2, x: 370,  y: 100, w: 0.8
+
+g r 2
+null
 s.Item cons2 AH
-g sx: -20, y: 170
 n $two 2
-g r 3, x: 470
+
+g r 3
 n $four 4
-g y: 170, snap 1
+null
 n $three 3
 
 root -> cons0

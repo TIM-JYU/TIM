@@ -263,8 +263,10 @@ class CreateVariable extends Command {
 
     add(variables, variable) {
         let error = "";
-        let v = variables.findVar(variable.name);
-        if (v) error = `Nimi ${v.name} on jo käytössä`;
+        if (variable.name !== "null") {
+            let v = variables.findVar(variable.name);
+            if (v) error = `Nimi ${v.name} on jo käytössä`;
+        }
         variables.add(variable);
         return error;
     }
@@ -485,7 +487,7 @@ class NullVariable extends Variable {
     }
 
     handleError(error, variables) {
-        return error;
+        return error || "";
     }
 }
 
@@ -571,6 +573,20 @@ class CreateRefecenceVariable extends CreateVariable {
         if (!r) return undefined;
         return [new CreateVariable(
             () => new RefecenceVariable(r[2], undefined, nullRef, 0))];
+    }
+}
+
+
+class CreateNullVariable extends CreateVariable {
+    // Creates a reference variable
+    // see: https://regex101.com/r/8rghQV/latest
+    // syntax: Ref luvut
+    static isMy(s) {
+        let re = /^null$/;
+        let r = re.exec(s);
+        if (!r) return undefined;
+        return [new CreateVariable(
+            () => new NullVariable("", undefined, undefined, 0))];
     }
 }
 
@@ -746,8 +762,8 @@ class StructVariable extends ObjectVariable {
         let tnames = [];
         let types = [];
         if (this.sclass) {
-            tnames = Object.keys(sclass);
-            types = Object.values(sclass);
+            tnames = Object.keys(sclass.defList);
+            types = Object.values(sclass.defList);
             len = tnames.length;
         }
         cls = getCls(this.type);
@@ -1344,6 +1360,7 @@ const knownCommands = [
     CreateClass,
     ReferenceTo,
     CreateValueVariable,
+    CreateNullVariable,
     CreateRefecenceVariable,
     CreateObjectVariable,
     CreateInitializedStructVariable,
@@ -1404,9 +1421,11 @@ class PhaseVariables {
         if (ga) { // handle aliases
             this.moveName(ga, "r", "rank");
             this.moveName(ga, "rd", "rankdir");
+            if ( ga.rdx !== undefined ) this.variableRelations.rankMoveDx = ga.rdx;
+            if ( ga.rdy !== undefined ) this.variableRelations.rankMoveDy = ga.rdy;
         }
 
-        this.graphAttributes = ga;  // TODO: join previous
+        this.graphAttributes = {...this.graphAttributes, ...ga};  // TODO: join previous
         if (ga.rank !== undefined) {
             if (ga.rank < 0 || ga.rank === "" ||
                 ga.rank === null || ga.rank === "null") {
@@ -1414,6 +1433,7 @@ class PhaseVariables {
                 ga.rank = undefined;
             } else this.defaultRank = ga.rank;
         }
+
     }
 
     isMarkErrors() {
@@ -1481,6 +1501,12 @@ class PhaseVariables {
         if (variable.rank !== undefined) this.lastRank = variable.rank;
         variable.graphAttributes = this.graphAttributes;
         this.graphAttributes = undefined; // TODO: clear only ontimers
+        if (variable.sclass) {
+            if (variable.sclass.graphAttributes) {
+                variable.graphAttributes = {...variable.graphAttributes,
+                  ...variable.sclass.graphAttributes};
+            }
+        }
         this.addFlat(variable); // cleans the name
         this.varsmap[variable.name] = variable;
     }
@@ -1493,7 +1519,11 @@ class PhaseVariables {
     }
 
     addClass(name, defList) {
-        return this.variableRelations.addClass(name, defList);
+        let cls = {name: name,
+                   defList: defList,
+                   graphAttributes: this.graphAttributes};
+        this.graphAttributes = undefined; // TODO: clear only ontimers
+        return this.variableRelations.addClass(name, cls);
     }
 
     findClass(name) {
@@ -1612,9 +1642,9 @@ class VariableRelations {
         if (s) this.addCommands(s, knownCommands);
     }
 
-    addClass(name, defList) {
+    addClass(name, cls) {
         let exists = this.findClass(name);
-        this.classes[name] = defList;
+        this.classes[name] = cls;
         if (exists) return `Luokka ${name} on jo olemassa`;
         return ""
     }
@@ -1696,6 +1726,9 @@ class VariableRelations {
                 }
 
                 this.addCreatedCommands(cmds, line);
+                if (cmds[0].constructor === SetGraphAttributes ) {
+                    cmds[0].run(this.currentPhase);
+                }
             } catch (e) {
                 this.addError(`${this.linenumber}: ${e}`);
             }
@@ -2017,6 +2050,41 @@ const svgVariableMixin = {
     }
 }
 
+const svgNullVariableMixin = {
+    toSVG(x, y, w, h, dx, dy, nobox, align, forcedw) {
+        // draw variable as a box, it's name and content
+        // if in error state, draw red box also
+        // align 1 aligns from left
+        let svg = "";
+        if (this.graphAttributes) {
+            if (this.graphAttributes.x) x = this.graphAttributes.x;
+            if (this.graphAttributes.y) y = this.graphAttributes.y;
+            if (this.graphAttributes.sx) x += this.graphAttributes.sx;
+            if (this.graphAttributes.sy) y += this.graphAttributes.sy;
+            //  if (this.graphAttributes.h) hfactor = this.graphAttributes.h;
+        }
+        this.x = x;
+        this.y = y;
+        this.width =  w;
+        this.height = h;
+
+        this.snappoints = [
+            {x: x, y: y},
+        ];
+        return svg;
+    },
+
+    left() {
+        // left coordinate for variable
+        return {x: this.x, y: this.y};
+    },
+
+    right() {
+        // left coordinate for variable
+        return {x: this.x, y: this.y};
+    },
+}
+
 const svgSimpleReferenceVariableMixin = {
     toSVG(x, y, w, h, dx, dy, nobox, align, forcedw) {
         // draw variable as a box, it's name and content
@@ -2032,7 +2100,7 @@ const svgSimpleReferenceVariableMixin = {
         }
         this.x = x;
         this.y = y;
-        this.width = w;
+        this.width = 20; // h; // w;
         this.height = h;
 
         let textx = this.left().x - 20;
@@ -2302,6 +2370,7 @@ const svgStructVariableMixin = {
 // Add visual methods to variable and array varaible
 Object.assign(TextObject.prototype, svgTextMixin);
 Object.assign(Variable.prototype, svgVariableMixin);
+Object.assign(NullVariable.prototype, svgNullVariableMixin);
 Object.assign(SimpleRefecenceVariable.prototype, svgSimpleReferenceVariableMixin);
 Object.assign(ArrayVariable.prototype, svgArrayVariableMixin);
 Object.assign(StructVariable.prototype, svgStructVariableMixin);
@@ -2431,7 +2500,8 @@ class VisualSVGVariableRelations {
 
 
         let rankBeginx = 110;
-        let rankDx = 143;
+        let rankDx = this.variableRelations.rankMoveDx || 143;
+        let rankDy = this.variableRelations.rankMoveDy;
         let rankBeginy = 30;
 
         let ranks = []; // 0 = stack, 1 = heap
@@ -2552,6 +2622,9 @@ class VisualSVGVariableRelations {
 
                 let yadd = (rank.dir || !v.height) ? 0 : v.height + yextra;
                 rank.x = v.x + xadd;
+
+                if (xadd != 0 && rankDx !== undefined) xadd = rankDx;
+                if (yadd != 0 && rankDy !== undefined) yadd = rankDy;
                 rank.y = v.y + yadd;  // TODO: add last element height
                 this.svg += svg;
                 maxs = getRankMaxs(ranks, maxs);
