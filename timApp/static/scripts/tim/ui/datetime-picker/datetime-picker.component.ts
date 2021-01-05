@@ -12,10 +12,7 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import moment from "moment";
-import {DatetimePopupModule} from "ngx-bootstrap-datetime-popup";
-import {DatepickerModule} from "ngx-bootstrap/datepicker";
-import {BsDropdownModule} from "ngx-bootstrap/dropdown";
-import {TimepickerModule} from "ngx-bootstrap/timepicker";
+import {DatetimePopupModule} from "vendor/ngx-bootstrap-datetime-popup/ngx-bootstrap-datetime-popup.module";
 
 const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
 
@@ -28,14 +25,11 @@ const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
                    (focus)="onFocus($event)"
                    (blur)="onBlur($event)"
                    (mouseup)="onFocus($event)"
-                   [ngModel]="timeStr"
-                   (ngModelChange)="timeStrModelChanged($event)"
-                   />
-            <!--       />
+                   [(ngModel)]="timeStr"
+            />
             <datetime-popup [value]="time || currDate"
                             (valueChange)="popupChanged($event)"
-                            [(showPopup)]="showPicker"></datetime-popup>-->
-            <span>Päivämäärä toistaiseksi käsin muodossa 12.1.2021</span>
+                            [(showPopup)]="showPicker"></datetime-popup>
             <span class="input-group-addon" (click)="showPicker = true">
                 <i class="glyphicon glyphicon-calendar" aria-hidden="true"></i>
             </span>
@@ -46,7 +40,7 @@ const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
 export class DatetimePickerComponent implements OnInit, OnChanges {
     showPicker = false;
     timeStr!: string;
-    @Input() time!: Date | undefined;
+    @Input() time: Date | undefined;
     @Input() placeholder?: string = "";
     @Output() timeChange = new EventEmitter<Date | undefined>();
     currDate = new Date();
@@ -56,14 +50,9 @@ export class DatetimePickerComponent implements OnInit, OnChanges {
     }
 
     ngOnChanges(c: SimpleChanges) {
-        if (c.time && !this.timeStr) {
+        if (c.time) {
             this.updatetimeStr();
         }
-    }
-
-    timeStrModelChanged(s: string) {
-        this.time = s ? moment(s, datetimeFormat).toDate() : undefined;
-        this.timeChange.emit(this.time);
     }
 
     updatetimeStr() {
@@ -78,12 +67,12 @@ export class DatetimePickerComponent implements OnInit, OnChanges {
         this.timeChange.emit(this.time);
     }
 
-    onFocus(event: FocusEvent) {
-        this.updatetimeStr();
-    }
+    onFocus(event: FocusEvent) {}
 
     onBlur(event: FocusEvent) {
-        this.updatetimeStr();
+        const s = this.timeStr;
+        this.time = s ? moment(s, datetimeFormat).toDate() : undefined;
+        this.timeChange.emit(this.time);
     }
 }
 
@@ -92,9 +81,6 @@ export class DatetimePickerComponent implements OnInit, OnChanges {
     imports: [
         BrowserModule,
         NoopAnimationsModule,
-        BsDropdownModule.forRoot(),
-        DatepickerModule.forRoot(),
-        TimepickerModule.forRoot(),
         DatetimePopupModule,
         FormsModule,
     ],

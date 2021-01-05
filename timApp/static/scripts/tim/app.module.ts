@@ -35,6 +35,7 @@ import {TemplateListComponent} from "tim/document/editing/template-list.componen
 import {ConsentChoiceComponent} from "tim/ui/consent-choice.component";
 import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
+import {TimepickerActions} from "ngx-bootstrap/timepicker";
 
 @NgModule({
     declarations: [
@@ -81,6 +82,7 @@ import {HelpParContent} from "tim/document/editing/help-par-content.component";
             useClass: TimeStampToMomentConverter,
             multi: true,
         },
+        TimepickerActions,
     ],
 })
 export class AppModule implements DoBootstrap {
