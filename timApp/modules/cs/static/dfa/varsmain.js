@@ -74,16 +74,64 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-g w: 0.6, rdx: 80, rdy: 60
-class Item: car SR, cdr SR
+    g w:3, h:2, dir:1
+class Naytto: kerho R
+    g w:2, h:2, dir:1
+class Kerho: jasenet R, harrastukset R
+    g w:3
+class Jasenet: kokonimi S, tiedostonNimi S, maxLkm V, lkm V, alkiot R
+    g w:3
+class Jasen: tunnusNro V, nimi S, osoite S, postinumero V, _ S
+    g w:3
+class Harrastukset: "": S, tiedostonNimi S, maxLkm V, lkm V, alkiot R
+    g w:3
+class Harrastus: tunnusNro V, jasenNro V, ala S, aloitusvuosi V, tuntiaViikossa V
+
+g rank 1, ax: 100, ay: 200, g rx: 150, ry: 120
+s.Jasen j1 V 1 "Ankka Aku" Ankkalinna 12345 ...
+s.Jasen j2 V 2 "Susi Sepe" Takametsä 12555 ...
+s.Jasen j3 V 4 "Ponteva Veli" Takametsä 12355 ...
+t {"align": middle} $class
+g rx: 0, ry: 160, w:2 
+a +alkiot RV8 j1 j2 j3
+g rx: 30, ry: 0
+s.Jasenet +jasenet A "Kelmien kerho" nimet.dat 8 3 alkiot
+
+g rank 2, ax: 360, ay: 200, rx: 240, ry: 10, snap: 0
+s.Harrastus h1 v 1 1 kalastus 1955 20
+s.Harrastus h2 v 2 1 "laiskottelu" 1950 20
+s.Harrastus h3 v 3 2 "kelmien kerho" 1962 2
+s.Harrastus h4 v 4 1 "työn pakoilu" 1962 40
+s.Harrastus h5 v 5 2 "possujen jah." 1954 20
+s.Harrastus h6 v 7 4 "susiansojen..." 1956 15
+t {"align": middle} Harrastus
+g rx: 20, ry: 160, w : 2, snap: a
+a alkioth:alkiot RV10 h1 h2 h3 h4 h5 h6
+g rx: 0, ry: 0
+s.Harrastukset harrastukset A "" harrastukset.dat 10 6 alkioth
+
+g rank 3, ax: 250, ay: 60, rx: 0, ry: 0
+s.Kerho +kerho R jasenet harrastukset
+t {"align": middle, sy: -120 }  $class
+t {"align": end, sx: -70, sy: -20} jasenet
+t {"align": start, sx: 70, sy: -20} harrastukset
+g rx: 380, ry: 0, 
+s.Naytto +*naytto R kerho
+t {"align": middle, sx: -60, sy: -110 } $class
+SVG <path d="M 730 130 Q 450 125 450 0" fill="none" stroke="#000" stroke-dasharray="3 3"></path>
+`;
+const code2 = `
+g rgdx: 80, rgdy: 60
+g w: 0.5, xdir: 1
+class Item: car V, cdr R
 ref root
-s.Item +cons0 AH
-s.Item cons1 AH
+s.Item +cons0 A ,,7
+s.Item cons1 A
 n $one 1
 
 g r 2
 null
-s.Item cons2 AH
+s.Item cons2 A
 n $two 2
 
 g r 3
@@ -92,7 +140,7 @@ null
 n $three 3
 
 root -> cons0
-cons0.car -> cons1
+#cons0.car -> cons1
 cons0.cdr -> four
 cons1.car -> one
 cons1.cdr -> cons2
