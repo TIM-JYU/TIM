@@ -326,6 +326,10 @@ def expand_macros(
         return text
 
 
+def belongs_placeholder(s):
+    return get_error_html('The belongs filter requires nocache=true attribute.')
+
+
 tim_filters = {
     'Pz': Pz,
     'gfields': genfields,
@@ -337,6 +341,7 @@ tim_filters = {
     'fmtdate': fmt_date,
     'preinc': preinc,
     'postinc': postinc,
+    'belongs': belongs_placeholder,
 }
 
 

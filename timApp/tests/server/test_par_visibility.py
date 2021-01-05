@@ -49,3 +49,17 @@ only teacher
         self.assert_content(self.get(d.get_url_for_view('answers'), as_tree=True), ['only teacher'])
         self.assert_content(self.get(d.get_url_for_view('teacher'), as_tree=True), ['only teacher'])
         self.assert_content(self.get(d.url, as_tree=True), [])  # make sure the teacher route is not cached incorrectly
+
+    def test_belongs_in_text(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {nocache=true}
+I am testuser1: %%'testuser1'|belongs%%
+
+#-
+I am testuser1: %%'testuser1'|belongs%%
+        """)
+        self.assert_content(self.get(d.url, as_tree=True), [
+            'I am testuser1: True',
+            "I am testuser1: The belongs filter requires nocache=true attribute.",
+        ])
