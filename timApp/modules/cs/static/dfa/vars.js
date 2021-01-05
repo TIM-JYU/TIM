@@ -1938,6 +1938,9 @@ const svgTextMixin = {
         return svg;
     },
 
+    left() {
+        return {x: this.x - this.width / 2, y: this.y};
+    },
     right() {
         return {x: this.x + this.width / 2, y: this.y};
     }
