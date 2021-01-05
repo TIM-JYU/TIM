@@ -2651,6 +2651,7 @@ class VisualSVGVariableRelations {
 
         let maxs = {x: 0, y: rankBeginy};
         let maxx = 0;
+        let maxy = 0;
         let lastObj = undefined;
 
         let linenr = 1;
@@ -2740,14 +2741,15 @@ class VisualSVGVariableRelations {
                 let xadd = rank.dir ? v.width + xextra : 0;
 
                 let yadd = (rank.dir || !v.height) ? 0 : v.height + yextra;
-                rank.x = v.x + xadd;
 
                 if (xadd !== 0 && rank.dx !== undefined) xadd = rank.dx;
                 if (yadd !== 0 && rank.dy !== undefined) yadd = rank.dy;
                 rank.y = v.y + yadd;  // TODO: add last element height
+                rank.x = v.x + xadd;
                 this.svg += svg;
                 maxs = getRankMaxs(ranks, maxs);
                 maxx = Math.max(maxx, v.right().x);
+                maxy = Math.max(maxy, v.left().y + v.height);
             }
 
             for (let v of phase.vars) { // reference arrows
@@ -2778,7 +2780,7 @@ class VisualSVGVariableRelations {
 
         // TODO: find width correctly
         let width = Math.max(maxx + 50, 750); // Math.max(maxs.x, 100);
-        let height = Math.max(maxs.y, 100);
+        let height = Math.max(maxs.y, 100, maxy);
 
         // add svg size info
         this.svg = `<svg width="${width}px" height="${height}px"
