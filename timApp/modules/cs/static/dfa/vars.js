@@ -2780,7 +2780,7 @@ class VisualSVGVariableRelations {
 
         // TODO: find width correctly
         let width = Math.max(maxx + 50, 750); // Math.max(maxs.x, 100);
-        let height = Math.max(maxs.y, 100, maxy);
+        let height = Math.max(maxs.y, 100, maxy) + 20;
 
         // add svg size info
         this.svg = `<svg width="${width}px" height="${height}px"
