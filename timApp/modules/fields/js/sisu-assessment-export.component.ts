@@ -206,7 +206,7 @@ class AssessmentTableModel implements DataModelProvider {
             case 4:
                 return "Compl. date";
             case 5:
-                return "Credits";
+                return "Credit";
             case 6:
                 return "Old c";
             case 7:
