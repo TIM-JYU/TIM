@@ -1641,7 +1641,6 @@ class PhaseVariables {
             // }
             s = s.substring(1);
         }
-        s = dollar + s;
         if (variable !== undefined) {
             if (force) {
                 variable.denynames = false;
@@ -1657,7 +1656,7 @@ class PhaseVariables {
                 variable.name = s;
             if ( forceParentName ) variable.forceParentName = true;
             else if ( denyParentName && !force) variable.denyParentName = true;
-            variable.label = variable.name;
+            variable.label = dollar+variable.name;
             if (variable.label.endsWith(".")) variable.label = variable.label.slice(0,-1);
             if (variable.label.endsWith(",")) variable.label = variable.label.slice(0,-1);
         }
