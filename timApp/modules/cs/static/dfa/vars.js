@@ -189,6 +189,10 @@ class PrgObject {
     isRef() {
         return false;
     }
+
+    solveLazy(variables) {
+        return "";
+    }
 }
 
 
@@ -240,9 +244,10 @@ class Command extends PrgObject {
         return "Run is missing";
     }
 
-    prerun(varibles) { // this is run already in parse-round
+    prerun() { // this is run already in parse-round
         return ""; // this has nothing to do normally
     }
+
 }
 
 class TextObject extends PrgObject {
@@ -366,6 +371,30 @@ class Variable extends PrgObject {
         return this.handleError(error, variables);
     }
 
+    addRefByName(refname, variables, force) {
+        let objTo = variables.findVar(refname);
+        if (!objTo) {
+            if (variables.isAllowLazy()) {
+                this.lazy = refname;
+                this.lazyForce = force;
+                return "";
+            }
+            return `Oliota ${refname} ei löydy!`;
+        }
+        return this.addRef(objTo, variables, force);
+    }
+
+    solveLazy(variables) {
+        if (!this.lazy) return "";
+        let objTo = variables.findVar(this.lazy);
+        if (!objTo) {
+            return `Oliota ${this.lazy} ei löydy!`;
+        }
+        this.lazy = undefined;
+        return this.addRef(objTo, variables, this.lazyForce);
+    }
+
+
     assign(value, variables) {
         // assigns value to any variable, but if not value variable,
         // gives an error. In static mode only one initialization is allowed.
@@ -378,7 +407,7 @@ class Variable extends PrgObject {
         let notnull = true;
         if (this.isRef()) {
             if (value === "null") {
-                error += this.addRef(nullRef, undefined, variables);
+                error += this.addRef(nullRef, variables);
                 notnull = false;
             } else {
                 error += `${this.name} on viitemuuttuja. Ei saa sijoittaa arvoa! `;
@@ -463,8 +492,10 @@ class Variable extends PrgObject {
 
 class NullVariable extends Variable {
     // Null varible for un assigned refs or null ref
-    constructor() {
+    constructor(vals) {
         super("null", undefined, undefined);
+        this.rank = undefined;
+        this.vals = vals;
     }
 
     addRef(objTo, variables) {
@@ -587,11 +618,11 @@ class CreateNullVariable extends CreateVariable {
     // see: https://regex101.com/r/8rghQV/latest
     // syntax: Ref luvut
     static isMy(s) {
-        let re = /^null$/;
+        let re = /^null ?(.*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         return [new CreateVariable(
-            () => new NullVariable("", undefined, undefined, 0))];
+            () => new NullVariable(r[1]))];
     }
 }
 
@@ -613,7 +644,7 @@ class CreateObjectVariable extends Variable {
     // see: https://regex101.com/r/uaQrJu/latest
     // syntax: New $2 Aku
     static isMy(s) {
-        let re = /^[Nn][ew]{0,2} +(\$[@+\-\S]+) +([^\n]*)$/;
+        let re = /^[Nn][ew]{0,2} +([+\-\*]*\$[@+\-\S]+) +([^\n]*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         let name = r[1];
@@ -652,10 +683,14 @@ class ArrayVariable extends ObjectVariable {
             default:
                 cls = ValueVariable;
         }
+        if (name.endsWith(".")) name = name.slice(0, -1);
+        // if (name.endsWith(",")) name = name.slice(0, -1);
         if (this.kind === "[" && type === "R") nref = nullRef;
         if (this.kind === "[" && type === "V") init = "0";
         for (let i = 0; i < len; i++) {
-            let v = new cls(`${name}[${i}]`, init, nref);
+            let vn = `${name}[${i}]`;
+            vn = vn.replace("],[", ","); // for jagged arrays
+            let v = new cls(vn, init, nref);
             this.vars.push(v);
             v.parent = this;
         }
@@ -837,11 +872,17 @@ class InitializedStructVariable extends StructVariable {
             if ("AR".includes(this.type))
                 objTo = variables.findVar(name);
             if (!objTo) {
+                /*
                 if (this.type === "R")
                     error += v.handleError(`${this.name} ei saa alustaa arvolla ${to}! `, variables);
                 if (v.isRef())
                     error += v.handleError(`${v.name} ei saa alustaa arvolla ${to}! `, variables);
                 if (to) v.init(to);
+                 */
+                if (this.type === "R" || v.isRef() )
+                    error += v.addRefByName(name, variables, true);
+                else
+                    if (to) v.init(to);
                 continue;
             }
             v.init(undefined);  // remove old value
@@ -929,12 +970,15 @@ class InitializedArrayVariable extends ArrayVariable {
             for (let i = 0; i < len; i++) {
                 let v = this.vars[i];
                 let name = valsarr[i].trim();
+                /*
                 let objTo = variables.findVar(name);
                 if (!objTo) {
                     error += v.handleError(`Oliota ${name} ei löydy! `, variables)
                     continue;
                 }
                 error += v.addRef(objTo, variables);
+                 */
+                error += v.addRefByName(name, variables);
             }
         }
         return this.handleError(error, variables);
@@ -991,16 +1035,106 @@ class CreateInitializedArrayVariable extends CreateVariable {
     }
 }
 
+function addVarsCommandLines(cmds, cls, line) {
+    const cms = cls.isMy(line);
+    for (let c of cms)
+        if (c.line === undefined) c.line = line;
+    return cmds.concat(cms);
+}
+
+
+class CreateInitialized2DArrayVariable extends CreateVariable {
+    // Creates initilized array or list
+    // see: https://regex101.com/r/u2asVs/1
+    // syntax:
+    //    A $1 V2x3 {3,4,5}
+    //    [,] $2 r2x4 a
+    //    [][] $2 r2x4 a
+    static isMy(s) {
+        let re = /^([Jj]?[Aa](rray)? |\[]\[]|\[,]) *([^ ]+) +([@\S]+[\d]+[xX][\d]+) *(.*)?$/;
+        let r = re.exec(s);
+        if (!r) return undefined;
+        let jagged = false;
+        let akind = r[1].toUpperCase();
+        if (akind==="[][]") jagged = true;
+        if (akind.startsWith("J")) jagged = true;
+        let name = r[3];
+        let vals = r[5];
+        // Check type, dir and len, see https://regex101.com/r/ZHKeDJ/2
+        re = /^(.)?([\d]+)[xX]([\d]+)$/gm;
+        let td = r[4].toUpperCase();
+        r = re.exec(td);
+        if (!r) throw `${name} tyypin ja koon kohdalla vikaa. Oikeita esim V R V3x5`;
+        let type = r[1];
+        let leny = parseInt(r[2] || "-1");
+        let lenx = parseInt(r[3] || "-1");
+        if (!"RVCL".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla C, R tai V! `
+        let valsa = [];
+        if (vals) valsa = vals.split("|");
+        let firstcmd = `g {"push": 1, "dy":0, "rdy":22, "rd":0}`;
+        let cls = CreateInitializedArrayVariable;
+        let sep = ",";
+        if (jagged) {
+            firstcmd = `g {"push": 1, "dy":0, "dx":75, "rdy":30, "rd":0, "xsnap": 0 }`;
+            cls = ReferenceTo;
+            sep = "."
+        }
+        let cmds = [];
+        cmds = addVarsCommandLines(cmds, CreateNullVariable,`null 0`);
+        cmds[0].name = name;
+        cmds = addVarsCommandLines(cmds, SetGraphAttributes,firstcmd);
+        cmds = addVarsCommandLines(cmds, CreateInitializedArrayVariable,`Array ${name} RV${leny}`);
+        cmds = addVarsCommandLines(cmds, SetGraphAttributes,`g {"rev":1}`);
+
+        let printcmd = ""
+
+        for (let iy = 0; iy < leny; iy++) {
+            let val = valsa[iy] || "";
+            let ref = "";
+            if (jagged) ref = `${name}[${iy}] -> `;
+            let cmd = `${ref}Array ${printcmd}${name}[${iy}]${sep} ${type}${lenx} ${val}`;
+            cmds = addVarsCommandLines(cmds, cls, cmd);
+            printcmd = "-";
+        }
+        cmds = addVarsCommandLines(cmds, SetGraphAttributes,`g {"pop":1}`);
+        cmds = addVarsCommandLines(cmds, CreateNullVariable,`null 0`);
+        return cmds;
+    }
+
+    run(variables) {
+        let error = super.run(variables);
+        let array = this.createdVar;
+        if (!array) return `${this.name} ${error} ei voitu luoda! `;
+        return array.initByVals(variables);
+    }
+}
+
 
 class ReferenceTo extends Command {
     // Set ref variable to refecence object
     // see: https://regex101.com/r/KTT0RB/latest
     // syntax: lista -> $1
     static isMy(s) {
-        let re = /^([\S*]+) *-> *(\S+)$/;
+        let re = /^([\S*]+) *-> *(.+)$/;
         let r = re.exec(s);
         if (!r) return undefined;
-        return [new ReferenceTo(r[1], r[2], r[5])];
+        // return [new ReferenceTo(r[1], r[2])];
+
+        let cmds = undefined;
+        for (let cmdCls of combinedRefCommands) {
+            cmds = cmdCls.isMy(r[2]);
+            if (cmds) break;
+        }
+        if (!cmds) return undefined;
+        let name = r[1];
+        let cmd = cmds[0];
+        let rname = cmd.name;
+        cmd.line = r[2];
+
+        let refToCmd = new ReferenceTo(name, rname);
+        refToCmd.line = name + " -> " + rname;
+
+        return [cmd, refToCmd];
     }
 
     constructor(from, to) {
@@ -1012,9 +1146,7 @@ class ReferenceTo extends Command {
     run(variables) {
         let refFrom = variables.findVar(this.from)
         if (!refFrom) return `Viitemuuttujaa ${this.from} ei löydy!`;
-        let objTo = variables.findVar(this.to);
-        if (!objTo) return `Oliota ${this.to} ei löydy!`;
-        return refFrom.addRef(objTo, variables);
+        return refFrom.addRefByName(this.to, variables);
     }
 }
 
@@ -1045,6 +1177,7 @@ class CreateFindVariable extends Command {
 const combinedRefCommands = [
     CreateObjectVariable,
     // CreateArrayVariable,
+    CreateInitialized2DArrayVariable,
     CreateInitializedArrayVariable,
     CreateFindVariable,
 ];
@@ -1056,7 +1189,7 @@ class CreateReferenceAndObject extends CreateRefecenceVariable {
     // syntax: ref aku -> a $1 v 3
     // syntax: ref aku -> a $1 v 1,2,34
     static isMy(s) {
-        let re = /^[Rr](ef|eference)? +([-+$.@\w\d]+) *-> *(.*)$/;
+        let re = /^[Rr](ef|eference)? +([:\-+$.@\w\d]+) *-> *(.*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
 
@@ -1077,8 +1210,11 @@ class CreateReferenceAndObject extends CreateRefecenceVariable {
 
         let refToCmd = new ReferenceTo(name, rname);
         refToCmd.line = name + " -> " + rname;
-
-        return [refCmd, cmd, refToCmd];
+        let retcmds = [refCmd];
+        retcmds = retcmds.concat(cmds);
+        retcmds.push(refToCmd);
+        return retcmds;
+        // return [refCmd, cmd, refToCmd];
     }
 }
 
@@ -1087,7 +1223,7 @@ class AssignTo extends Command {
     // see: https://regex101.com/r/bPn7zX/latest
     // syntax: a = 5
     static isMy(s) {
-        let re = /^([$[\].\w\d]+) *(<-|=|:=) *(.*)$/;
+        let re = /^([$[\].,\w\d]+) *(<-|=|:=) *(.*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         return [new AssignTo(r[1], r[3])];
@@ -1220,8 +1356,7 @@ class SetPhaseNr extends Command {
         //  phase is used, so create new phase with that number
         let rel = variables.variableRelations;
         let phase = new PhaseVariables(rel, this.phaseNumber);
-        rel.currentPhase = phase;
-        rel.phaseList.push(phase);
+        rel.changePhase(phase);
         if (this.text)
             phase.addText(this.text, 0, this.options);
         return "";
@@ -1384,6 +1519,7 @@ const knownCommands = [
     SetCount,
     AssignTo,
     CreateReferenceAndObject,
+    CreateInitialized2DArrayVariable,
     CreateInitializedArrayVariable,
     AddPhaseText,
     SetPhaseNr,
@@ -1465,6 +1601,11 @@ class PhaseVariables {
         return this.variableRelations.isShowErrors();
     }
 
+    isAllowLazy() {
+        return this.variableRelations.allowLazy;
+    }
+
+
     addFlat(variable) {
         let name = this.cleanName(variable.name, variable);
         this.flatvarsmap[name] = variable;
@@ -1481,23 +1622,26 @@ class PhaseVariables {
         let force = false;
         let deny = false;
         let forceParentName = false;
+        let denyParentName = false;
         let label = undefined;
         let i = s.indexOf(":");
         if (i>=0) {
             label = s.substring(i+1);
             s = s.substring(0,i);
         }
+        let dollar = "";
         while (true) {
             let f = s[0];
             if (!"*+-$".includes(f)) break;
-            if (variable !== undefined) {
-                if (s[0] === '$') deny = true;
+            // if (variable !== undefined) {
+                if (s[0] === '$') { denyParentName = true; dollar = "$"; }
                 if (s[0] === '+') force = true;
                 if (s[0] === '-') deny = true;
                 if (s[0] === '*') forceParentName = true;
-            }
+            // }
             s = s.substring(1);
         }
+        s = dollar + s;
         if (variable !== undefined) {
             if (force) {
                 variable.denynames = false;
@@ -1512,6 +1656,10 @@ class PhaseVariables {
             else
                 variable.name = s;
             if ( forceParentName ) variable.forceParentName = true;
+            else if ( denyParentName && !force) variable.denyParentName = true;
+            variable.label = variable.name;
+            if (variable.label.endsWith(".")) variable.label = variable.label.slice(0,-1);
+            if (variable.label.endsWith(",")) variable.label = variable.label.slice(0,-1);
         }
         return s;
     }
@@ -1548,7 +1696,12 @@ class PhaseVariables {
         name = this.cleanName(name);
         [name,] = name.split("@");
         if (name === "null") return nullRef;
-        return this.flatvarsmap[name];
+        let ret = this.flatvarsmap[name];
+        if (!ret) {
+           if (name.endsWith(",")) ret = this.flatvarsmap[name.replace(",", ".")];
+           if (name.endsWith(".")) ret = this.flatvarsmap[name.replace(".", ",")];
+        }
+        return ret;
     }
 
     addClass(name, defList) {
@@ -1599,6 +1752,13 @@ class PhaseVariables {
 
     isStepMode() {
         return this.variableRelations.isStepMode();
+    }
+
+    solveLazy() {
+        for (let v of this.flatvars) {
+            let error = v.solveLazy(this);
+            if (error) this.variableRelations.addError(error);
+        }
     }
 
 }
@@ -1657,7 +1817,9 @@ class VariableRelations {
         this.mode = "static";
         this.errorlevel = 3;
         this.animate = 0;
+        this.allowLazy = false;
         if (params) {
+            if (params.allowLazy !== undefined) this.allowLazy = params.allowLazy;
             if (params.mode) this.mode = params.mode;
             if (params.errorlevel !== undefined)
                 this.errorlevel = params.errorlevel;
@@ -1674,6 +1836,13 @@ class VariableRelations {
         this.init();
         if (s) this.addCommands(s, knownCommands);
     }
+
+    changePhase(phase) {
+        // this.currentPhase.solveLazy();
+        this.currentPhase = phase;
+        this.phaseList.push(phase);
+    }
+
 
     addClass(name, cls) {
         let exists = this.findClass(name);
@@ -1768,6 +1937,7 @@ class VariableRelations {
                 this.addError(`${this.linenumber}: ${e}`);
             }
         }
+        // this.currentPhase.solveLazy();
         if (this.animate > 0) // add extra END line to show "program" ended
             this.addCreatedCommands(CodeCommand.isMy("CODE: END", this.currentPhase));
         if (!this.isShowErrors()) this.createErrors = "";
@@ -1791,9 +1961,10 @@ class VariableRelations {
         if (nr >= this.commands.length) { // all runned, check counts
             for (let phase of this.phaseList) {
                 for (let v of phase.vars) {
-                    let error = v.checkCount(phase)
+                    let error = v.checkCount(phase);
                     if (error && this.isShowErrors()) this.addError(`${error}`);
                 }
+                phase.solveLazy();
             }
         }
         return nr;
@@ -1901,7 +2072,7 @@ class SVGUtils {
         if (!(obj.name && obj.forceParentName)) return "";
         let textalign = "end";
         let textsize = 12;
-        let text = obj.name;
+        let text = obj.label;
         let textx = obj.left().x - 15;
         let texty = obj.y - 20;
         let opt = SVGUtils.joinOptions(obj.nameOptions,
@@ -1911,7 +2082,19 @@ class SVGUtils {
     }
 
 
+    static debug(sl, dir, p, d, color) {
+        if (dir === 0 || dir === 2) {
+            let [sv, ] = SVGUtils.drawSVGText(p.y, {}, d, p.y);
+            sl.push(sv);
+            sl.push(`<line x1="${d + 30}" y1="${p.y}" x2="${1000}" y2="${p.y}" stroke="${color}" stroke-width="0.5"  />`);
+        }
 
+        if (dir === 1 || dir === 2) {
+            let [sv, ] = SVGUtils.drawSVGText(p.x, {}, p.x, d);
+            sl.push(sv);
+            sl.push(`<line x1="${p.x}" y1="${d + 15}" x2="${p.x}" y2="${1000}" stroke="${color}" stroke-width="0.5"  />`);
+        }
+    }
 }
 
 const svgTextMixin = {
@@ -2025,7 +2208,7 @@ const svgVariableMixin = {
         let texty = y;
         let textalign = "end";
         let textsize = "12px";
-        let text = this.name;
+        let text = this.label;
         if (this.parent && !this.parent.vertical) {
             textx = x;
             texty = y - this.parent.height - 3;
@@ -2038,7 +2221,7 @@ const svgVariableMixin = {
         }
 
         // draw variable names if needed
-        if (this.name && this.forcenames && !this.denynames) {
+        if (text && this.forcenames && !this.denynames && !this.denyParentName) {
             let opt = SVGUtils.joinOptions(this.nameOptions,
                 {align: textalign, font: "Helvetica", size: textsize});
             let [svg1,] = SVGUtils.drawSVGText(text, opt, textx, texty);
@@ -2131,8 +2314,13 @@ const svgNullVariableMixin = {
         }
         this.x = x;
         this.y = y;
-        this.width =  w;
+        this.width = w;
         this.height = h;
+        if ( this.vals === "0") {
+            this.noMove = true;
+            // this.width = 0;
+            // this.height = 0;
+        }
 
         this.snappoints = [
             {x: x, y: y},
@@ -2223,7 +2411,7 @@ const svgArrayVariableMixin = {
             if (this.graphAttributes.sx) x += this.graphAttributes.sx;
             if (this.graphAttributes.sy) y += this.graphAttributes.sy;
             if (this.graphAttributes.w) nw = this.graphAttributes.w;
-            if (this.graphAttributes.dir) dir = this.graphAttributes.dir;
+            if (this.graphAttributes.dir !== undefined ) dir = this.graphAttributes.dir;
             // if (this.graphAttributes.h) hfactor = this.graphAttributes.h;
         }
         if (this.dir !== undefined && this.dir > " ") dir = this.dir;
@@ -2263,6 +2451,7 @@ const svgArrayVariableMixin = {
             vertical = true;
         }
         this.vertical = vertical;
+        let lastrx = xv;
 
         for (let i = starti; 0 <= i && i <= endi; i += mi) {
             let v = this.vars[i];
@@ -2270,11 +2459,13 @@ const svgArrayVariableMixin = {
             svg += v.toSVG(xv, yv, w, h, dx, dy, false, 1, nw);
             xv += mx * v.width;
             yv += my * v.height;
+            lastrx = Math.max(lastrx, v.right().x);
             this.snappoints = this.snappoints.concat(v.snappoints);
         }
+        this.rightx = lastrx;
         for (let i = 0; i < this.vars.length; i++) {
             let v = this.vars[i];
-            if (v.forcenames) continue; // do no tprint i's if name printed
+            if (v.forcenames || v.denynames) continue; // do no tprint i's if name printed
             let opt = SVGUtils.joinOptions(this.indexOptions,
                 {align: "end", font: "Helvetica", size: 8});
             [svg1, y1] = SVGUtils.drawSVGText(`${i}`, opt,
@@ -2283,11 +2474,31 @@ const svgArrayVariableMixin = {
             // svg += `<text x="${v.x + indexx}" y="${v.y + indexy}" fill="#000000" font-family="Helvetica" font-size="8px" text-anchor="middle" alignment-baseline="middle">${i}</text>\n`;
         }
 
+
         svg += SVGUtils.drawParentName(this);
         svg += this.over[0].toSVG(x - w, y, w, h, dx, dy, true);
         svg += this.over[1].toSVG(xv, y, w, h, dx, dy, true);
         this.width = xv - x;
         svg += this.showCount(dy);
+        let midx = (this.rightx + this.left().x)/2;
+        if (vertical) {
+            let v1 = this.vars[0];
+            let v2 = this.vars[this.vars.length-1];
+            this.snappoints = [
+                v1.snappoints[0],
+                v1.snappoints[1],
+                v1.snappoints[2],
+                v2.snappoints[3]
+            ]
+
+        } else {
+            this.snappoints = [
+                this.left(),
+                {x: midx, y: this.y - this.height / 2 - dy / 2},
+                {x: this.right().x + dx / 2, y: this.y},
+                {x: midx, y: this.y + this.height / 2},
+            ]
+        }
         return svg;
     },
 
@@ -2316,9 +2527,9 @@ const svgArrayVariableMixin = {
         // left coordinate for array
         if (!this.vars || this.vars.length === 0)
             return {x: this.x, y: this.y};
-        let v = this.vars[0];
+        // let v = this.vars[0];
         // return {x: v.x - v.width / 2, y: v.y};
-        return v.right();
+        return {x: this.rightx, y: this.y};
     },
 }
 
@@ -2552,6 +2763,7 @@ class VisualSVGVariableRelations {
         this.variableRelations = variableRelations;
         this.args = args; // not yet used
         this.svg = undefined;
+        this.svglist = [];
         if (this.elements.svgdiv)
             this.elements.svgdiv.addEventListener("click", (e) => this.svgclick(e));
     }
@@ -2587,6 +2799,7 @@ class VisualSVGVariableRelations {
         return result;
     }
 
+
     /*!
      * Converts variableRelations variables to string SVG notation
      * \fn makeSVG()
@@ -2600,7 +2813,8 @@ class VisualSVGVariableRelations {
         let s1 = ""; // helper for text calls
         let y1 = 0;  // helper for text calls
 
-        this.svg = '<defs>' +
+        this.svglist = [];
+        this.svglist.push( '<defs>' +
             SVGUtils.box("rbox1", w, h, dx, dy) +
             SVGUtils.box("rbox2", 2 * w, h, dx, dy) +
             SVGUtils.box("rbox3", 3 * w, h, dx, dy) +
@@ -2609,12 +2823,25 @@ class VisualSVGVariableRelations {
             SVGUtils.box("rbox6", 6 * w, h, dx, dy) +
             SVGUtils.ebox("ebox", w, h, dx, dy, "red") +
             SVGUtils.lineends() +
-            '</defs>\n';
+            '</defs>\n');
 
 
         let rankBeginx = 110;
         let rankDx = this.variableRelations.rankGlobalMoveDx || 143;
         let rankBeginy = 30;
+
+        const rankStack = [];
+        function pushRank(rank) {
+            rankStack.push(JSON.stringify(rank));
+        }
+
+        function popRank(rank) { // default if no on in stack
+            if (rankStack.length === 0) return rank;
+            const r = rankStack.pop();
+            const res = JSON.parse(r);
+            ranks[currentRank] = res;
+            return res;
+        }
 
         let ranks = []; // 0 = stack, 1 = heap
         for (let i = 0; i < 10; i++) {
@@ -2626,11 +2853,14 @@ class VisualSVGVariableRelations {
                 dir: 0,
                 dx: this.variableRelations.rankGlobalMoveDx,
                 dy: this.variableRelations.rankGlobalMoveDy,
+                max: {x : 0,y : 0},
             });
         }
 
+        let currentRank = 0;
         function getRank(ranks, rank, r) {
             if (r === undefined || r < 0) return rank;
+            currentRank = r;
             let result = ranks[r];
             if (result !== undefined) return result;
             result = {x: rankBeginx, y: rankBeginy, dir: 0};
@@ -2687,11 +2917,11 @@ class VisualSVGVariableRelations {
                     font: "Helvetica",
                     weight: "bold"
                 }, 0, rank.y - h);
-            this.svg += s1;
+            this.svglist.push(s1);
 
             // draw possible header texts
             [s1, y1] = SVGUtils.drawSVGTexts(phase.texts[0], 20, rank.y, h);
-            this.svg += s1;
+            this.svglist.push(s1);
             for (let r of ranks) r.y = y1;
 
             for (let v of phase.vars) { // stack vars (local normal vars)
@@ -2699,6 +2929,13 @@ class VisualSVGVariableRelations {
 
                 let gopts = v.graphAttributes;
                 if (gopts) {
+                    if (gopts.pop !== undefined) {
+                        let rm = rank.max;
+                        rank = popRank(rank);
+                        countRankPosPop(rank, rm);
+                    }
+                    if (gopts.push !== undefined)
+                        pushRank(rank);
                     if (gopts.rank !== undefined) {
                         rank = getRank(ranks, rank, gopts.rank);
                     }
@@ -2722,6 +2959,8 @@ class VisualSVGVariableRelations {
                     if (gopts.ry !== undefined) rank.y = rank.ay + gopts.ry;
                     if (gopts.rdx !== undefined) rank.dx = gopts.rdx;
                     if (gopts.rdy !== undefined) rank.dy = gopts.rdy;
+                    if (gopts.rev !== undefined) rank.reversePos =
+                        gopts.rev === 1 ? this.svglist.length : 0;
                 } else {
                     v.graphAttributes = {};
                     gopts = v.graphAttributes;
@@ -2731,64 +2970,110 @@ class VisualSVGVariableRelations {
                 if (rank.h) gopts.h = rank.h;
 
                 if (v.text) v.lastObj = lastObj;
+                // Here we draw the object
+                //const p = {x: rank.x, y: rank.y, w: w, h: h, dx: dx, dy: dy};
                 let svg = v.toSVG(rank.x, rank.y, w, h, dx, dy);
 
+                function countRankPosPop(rank, rm) {
+                    // for rank pop top return correct place
+                    let vw = rm.x - rank.x;
+                    let vh = rm.y - rank.y;
 
-                let xextra = 40;
-                let yextra = 25;
-                if (v.text) { // tekstin tapauksessa ei ylm lisää
-                    xextra = yextra = 0;
-                } else {
-                    lastObj = v;
+                    let xextra = 40 + w/2;
+                    let yextra = 25 + h/2;
+
+                    let xadd = rank.dir ? vw + xextra : 0;
+                    let yadd = (rank.dir || !vh) ? 0 : vh + yextra;
+
+                    if (xadd !== 0 && rank.dx !== undefined) xadd = rank.dx;
+                    if (yadd !== 0 && rank.dy !== undefined) yadd = rank.dy;
+
+                    rank.y += yadd;
+                    rank.x += xadd;
                 }
-                let xadd = rank.dir ? v.width + xextra : 0;
 
-                let yadd = (rank.dir || !v.height) ? 0 : v.height + yextra;
+                function countRankPos(rank, v) {
+                    let xextra = 40;
+                    let yextra = 25;
 
-                if (xadd !== 0 && rank.dx !== undefined) xadd = rank.dx;
-                if (yadd !== 0 && rank.dy !== undefined) yadd = rank.dy;
-                rank.y = v.y + yadd;  // TODO: add last element height
-                rank.x = v.x + xadd;
-                this.svg += svg;
+                    if (v.text) { // tekstin tapauksessa ei ylm lisää
+                        xextra = yextra = 0;
+                    } else {
+                        lastObj = v;
+                    }
+
+                    let xadd = rank.dir ? v.width + xextra : 0;
+                    let yadd = (rank.dir || !v.height) ? 0 : v.height + yextra;
+
+                    if (xadd !== 0 && rank.dx !== undefined) xadd = rank.dx;
+                    if (yadd !== 0 && rank.dy !== undefined) yadd = rank.dy;
+
+                    if (gopts.dx !== undefined) xadd = gopts.dx;
+                    if (gopts.dy !== undefined) yadd = gopts.dy;
+
+                    if (v.noMove) {  // mosty for null variable
+                        xadd = 0;
+                        yadd = 0;
+                    }
+                    rank.y = v.y + yadd;  // TODO: add last element height
+                    rank.x = v.x + xadd;
+                }
+
+                countRankPos(rank, v);
+
+                if (rank.reversePos)
+                    this.svglist.splice(rank.reversePos, 0, svg);
+                else
+                    this.svglist.push(svg);
+
                 maxs = getRankMaxs(ranks, maxs);
                 maxx = Math.max(maxx, v.right().x);
                 maxy = Math.max(maxy, v.left().y + v.height);
+                rank.max.x = Math.max(rank.max.x, v.right().x);
+                rank.max.y = Math.max(rank.max.y, v.left().y + v.height/2);
+
+                // SVGUtils.debug(this.svglist, 2, rank, 40, "green");
+                // SVGUtils.debug(this.svglist, 2, rank.max, 5, "red");
             }
 
             for (let v of phase.vars) { // reference arrows
                 if (!v.isRef()) continue;
                 let svg = v.refToSVG();
-                this.svg += svg;
+                this.svglist.push(svg);
             }
 
 
             // draw possible footer texts
             [s1, y1] = SVGUtils.drawSVGTexts(phase.texts[1], 20, maxs.y + 10, h);
             maxs.y = Math.max(maxs.y, y1);
-            this.svg += s1;
+            this.svglist.push(s1);
 
             // Draw a line between phases
             if (!this.variableRelations.isLastPhase(phase) && phase.hasVars()) {
                 let stroke = "#C0C0C0";
-                this.svg += `<line x1="${0}" y1="${maxs.y}" x2="${maxs.x}" y2="${maxs.y}" stroke="${stroke}" stroke-width="2"  />`;
+                this.svglist.push(`<line x1="${0}" y1="${maxs.y}" x2="${maxs.x}" y2="${maxs.y}" stroke="${stroke}" stroke-width="2"  />`);
                 maxs.y += 2 * h;
             }
         }
 
         for (let sv of this.variableRelations.svgs) {
-            this.svg += sv + "\n";
+            this.svglist.push(sv + "\n");
         }
 
-        this.svg += `</svg>`;
-
         // TODO: find width correctly
-        let width = Math.max(maxx + 50, 750); // Math.max(maxs.x, 100);
-        let height = Math.max(maxs.y, 100, maxy) + 20;
+        let width = Math.max(maxx + 20, 100); // Math.max(maxs.x, 100);
+        let height = Math.max(maxs.y,100, maxy ) ;
+
+        // SVGUtils.debug(this.svglist, 2, {x:width-1, y: height-1}, 5, "blue");
+
+        this.svglist.push(`</svg>`);
+
 
         // add svg size info
         this.svg = `<svg width="${width}px" height="${height}px"
-                         viewBox="-0.5 -0.5 ${width} ${height}" >\n`
-            + this.svg;
+                         viewBox="-0.5 -0.5 ${width} ${height}" >\n`;
+        for (let svg of this.svglist)
+            this.svg += svg;
 
     }
 

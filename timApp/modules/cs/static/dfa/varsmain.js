@@ -74,29 +74,9 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-g w: 0.6, rgdx: 80, rgdy: 60, rd: 1, dir: 1
-class Item: car SR, cdr SR
-ref root
-s.Item cons0 A
-s.Item cons1 A
-s.Item cons2 A
-s.Item cons3 A
-g rank: 2, rd: 1, y: 90, x: 180
-n $one 1
-n $two 2
-n $three 3
-n $four 4
-
-root -> cons0
-cons0.car -> one
-cons0.cdr -> cons1
-cons1.car -> two
-cons1.cdr -> cons2
-cons2.car -> three
-cons2.cdr -> cons3
-cons3.car -> four
+ref a -> n *$1 kissa
 `;
 setData({
     code: code, args: "1001", params:
-        {mode: "static", errorlevel: 3, xanimate: "commands"}
+        {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true}
 });
