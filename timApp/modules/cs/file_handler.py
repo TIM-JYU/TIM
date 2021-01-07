@@ -132,7 +132,7 @@ class UploadByCodeSource(FileSource):
 
     @classinstancemethod
     def load(cls, self, file: File) -> List[File]:
-        return [self.file]
+        return [file]
 
     @classinstancemethod
     def copy(cls, self, destination_path: str) -> None:

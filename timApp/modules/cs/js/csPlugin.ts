@@ -2296,10 +2296,8 @@ ${fhtml}
         const fileSelectFiles: IFileSubmission[] =
             this.fileSelect?.loadedFiles
                 .toArray()
-                .filter(
-                    (f) =>
-                        this.uploadByCodeFiles.find((f2) => f2.path == f.path)
-                            ?.show
+                .filter((f) =>
+                    this.uploadByCodeFiles.find((f2) => f2.path == f.path)
                 )
                 .map((f) => ({source: "uploadByCode", ...f})) ?? [];
         const uploadedFiles: IFileSubmission[] = this.uploadedFiles
