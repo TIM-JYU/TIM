@@ -2,13 +2,11 @@
 import json
 import re
 from collections import defaultdict
-
-import requests
 from dataclasses import dataclass, field
 from datetime import datetime
-from requests.exceptions import MissingSchema, InvalidURL
 from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict
 
+import requests
 from flask import Blueprint, session, current_app
 from flask import Response
 from flask import abort
@@ -44,6 +42,7 @@ from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.notification.notify import multi_send_email
+from timApp.peerreview.peerreview_utils import has_review_access, get_reviews_for_user
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.importdata.importData import MissingUser
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
@@ -54,7 +53,6 @@ from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId, TaskIdAccess
-from timApp.peerreview.peerreview_utils import check_review_access, get_reviews_for_user
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
@@ -63,7 +61,6 @@ from timApp.user.user import User, UserInfo
 from timApp.user.user import maxdate
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
-from timApp.user.users import get_user_for_id
 from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model, \
     get_urlmacros_from_request
@@ -1510,12 +1507,9 @@ def get_answers(task_id: str, user_id: int):
         abort(400, 'Non-existent user')
     if user_id != get_current_user_id():
         if not verify_seeanswers_access(d, require=False):
-            if d.document.get_settings().get('peer_review_enabled', False):
-                if not check_review_access(d.document, get_current_user_id(), tid, user):
-                    raise AccessDenied(f"User does not have access rights to resource.")
-            else:
-                raise AccessDenied(f"User does not have access rights to resource.")
-        
+            if not has_review_access(d, get_current_user_object(), tid, user):
+                raise AccessDenied()
+
     elif d.document.get_settings().get('need_view_for_answers', False):
         verify_view_access(d)
     try:
@@ -1696,8 +1690,7 @@ def get_state(args: GetStateModel):
         tid = TaskId.parse(answer.task_id)
         d = get_doc_or_abort(tid.doc_id)
         doc_id = d.id
-        peer_review_enabled = d.document.get_settings().get('peer_review_enabled', False)
-        if not peer_review_enabled or not check_review_access(d.document, get_current_user_id(), tid, user):
+        if not has_review_access(d, get_current_user_object(), tid, user):
             try:
                 answer, doc_id = verify_answer_access(answer_id, user_id, default_view_ctx, allow_grace_period=True)
             except PluginException as e:
@@ -1779,7 +1772,7 @@ def verify_answer_access(
             view_ctx=view_ctx,
         )
         if not any(a.id == user_id for a in answer.users_all):
-            abort(403, "You don't have access to this answer.")
+            raise AccessDenied("You don't have access to this answer.")
     return answer, tid.doc_id
 
 
@@ -1788,35 +1781,24 @@ def get_task_users(task_id):
     tid = TaskId.parse(task_id)
     d = get_doc_or_abort(tid.doc_id)
     if not verify_seeanswers_access(d, require=False):
-        if d.document.get_settings().get('peer_review_enabled', False):
-            if not check_review_access(d.document, get_current_user_id(), tid, None):
-                raise AccessDenied(f"User does not have access rights to resource.")
-            else:
-                reviews = get_reviews_for_user(d.document, get_current_user_id()).all()
-                user_list = []
-                for review in reviews:
-                    users = get_user_for_id(review.reviewable_id)
-                    if users:
-                        user_list.append(users[0])
-                for u in user_list:
-                    if hide_names_in_teacher(d):
-                        maybe_hide_name(d,u)
-                return json_response(user_list)
-        else:
-            raise AccessDenied(f"User does not have access rights to resource.")
-
-    usergroup = request.args.get('group')
-    q = (
-        User.query
-            .options(lazyload(User.groups))
-            .join(Answer, User.answers)
-            .filter_by(task_id=task_id)
-            .join(UserGroup, User.groups)
-            .order_by(User.real_name.asc())
-    )
-    if usergroup is not None:
-        q = q.filter(UserGroup.name.in_([usergroup]))
-    users = q.all()
+        curr_user = get_current_user_object()
+        if not has_review_access(d, curr_user, tid, None):
+            raise AccessDenied()
+        reviews = get_reviews_for_user(d, curr_user)
+        users = list(r.reviewable for r in reviews if r.task_name == tid.task_name)
+    else:
+        usergroup = request.args.get('group')
+        q = (
+            User.query
+                .options(lazyload(User.groups))
+                .join(Answer, User.answers)
+                .filter_by(task_id=task_id)
+                .join(UserGroup, User.groups)
+                .order_by(User.real_name.asc())
+        )
+        if usergroup is not None:
+            q = q.filter(UserGroup.name.in_([usergroup]))
+        users = q.all()
     if hide_names_in_teacher(d):
         for user in users:
             maybe_hide_name(d, user)

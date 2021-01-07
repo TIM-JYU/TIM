@@ -36,6 +36,9 @@ class PeerReview(db.Model):
     __table_args__ = (db.UniqueConstraint('answer_id', 'block_id', 'reviewer_id', 'reviewable_id'),
                       db.UniqueConstraint('task_name', 'block_id', 'reviewer_id', 'reviewable_id'))
 
+    reviewer = db.relationship('User', foreign_keys=[reviewer_id])
+    reviewable = db.relationship('User', foreign_keys=[reviewable_id])
+
     @property
     def to_json(self) -> Dict[str, Any]:
         return {

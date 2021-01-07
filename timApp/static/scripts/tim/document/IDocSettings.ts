@@ -40,4 +40,5 @@ export interface IDocSettings {
     show_scoreboard?: boolean;
     exam_mode?: string;
     cache?: boolean;
+    peer_review?: boolean;
 }

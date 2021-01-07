@@ -12,12 +12,14 @@ from typing import Optional, List, Tuple
 
 from flask import Blueprint, Response
 
+from timApp.answer.answer import Answer
 from timApp.answer.routes import verify_answer_access
 from timApp.auth.accesshelper import verify_logged_in, has_teacher_access, \
     get_doc_or_abort, verify_view_access, AccessDenied, verify_teacher_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
+from timApp.peerreview.peerreview_utils import has_review_access
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, use_model
@@ -63,14 +65,22 @@ def add_annotation(m: AddAnnotationModel) -> Response:
     velp_version_id = latest_velp_version.version_id
 
     if m.answer_id:
-        _, ans_doc_id = verify_answer_access(
-            m.answer_id,
-            get_current_user_object().id,
-            default_view_ctx,
-            require_teacher_if_not_own=True,
-        )
-        if m.doc_id != ans_doc_id:
-            raise RouteException("Answer id does not match the requested document.")
+        try:
+            _, ans_doc_id = verify_answer_access(
+                m.answer_id,
+                get_current_user_object().id,
+                default_view_ctx,
+                require_teacher_if_not_own=True,
+            )
+        except AccessDenied:
+            a: Answer = Answer.query.get(m.answer_id)
+            if a.has_many_collaborators:
+                raise RouteException('Reviewing answers with multiple collaborators not supported yet')
+            if not has_review_access(d, annotator, a.parsed_task_id, a.users_all[0]):
+                raise AccessDenied()
+        else:
+            if m.doc_id != ans_doc_id:
+                raise RouteException("Answer id does not match the requested document.")
 
     ann = Annotation(
         velp_version_id=velp_version_id,

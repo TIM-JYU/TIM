@@ -20,7 +20,7 @@ class ViewRoute(Enum):
         return self in teacher_or_see_answers
 
 
-teacher_or_see_answers = {ViewRoute.Teacher, ViewRoute.Answers}
+teacher_or_see_answers = {ViewRoute.Teacher, ViewRoute.Answers, ViewRoute.Review}
 
 
 viewmode_routes = {

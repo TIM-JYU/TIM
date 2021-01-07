@@ -59,13 +59,7 @@ class Answer(db.Model):
 
     @property
     def task_name(self) -> str:
-        return TaskId.parse(
-            self.task_id,
-            require_doc_id=True,
-            allow_block_hint=False,
-            allow_custom_field=False,
-            allow_type=False,
-        ).task_name
+        return self.parsed_task_id.task_name
 
     def to_json(self):
         return {
@@ -78,3 +72,17 @@ class Answer(db.Model):
             'last_points_modifier': self.last_points_modifier,
             **include_if_loaded('users_all', self, 'users'),
         }
+
+    @property
+    def parsed_task_id(self) -> TaskId:
+        return TaskId.parse(
+            self.task_id,
+            require_doc_id=True,
+            allow_block_hint=False,
+            allow_custom_field=False,
+            allow_type=False,
+        )
+
+    @property
+    def has_many_collaborators(self) -> bool:
+        return len(self.users_all) > 1

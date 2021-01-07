@@ -15,7 +15,6 @@ from flask import session
 from markupsafe import Markup
 
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
-from timApp.peerreview.peerreview_utils import generate_review_groups, get_reviews_for_user, check_review_grouping
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_rights, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
@@ -48,6 +47,8 @@ from timApp.item.scoreboard import get_score_infos_if_enabled
 from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
 from timApp.markdown.htmlSanitize import sanitize_html
+from timApp.peerreview.peerreview_utils import generate_review_groups, get_reviews_for_user, check_review_grouping, \
+    PeerReviewException, is_peerreview_enabled
 from timApp.plugin.plugin import find_task_ids
 from timApp.plugin.pluginControl import get_all_reqs
 from timApp.readmark.readings import mark_all_read
@@ -307,7 +308,7 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
         if not verify_teacher_access(doc_info, require=False):
             should_hide_names = True
     elif route == ViewRoute.Review:
-        if not verify_seeanswers_access(doc_info, require=False): # TODO: [Kuvio] Modify student rights to hide review tab correctly
+        if not is_peerreview_enabled(doc_info):
             verify_view_access(doc_info)
             return redirect(f'/view/{item_path}')
         if not verify_teacher_access(doc_info, require=False):
@@ -541,11 +542,13 @@ def render_doc_view(
 
     if view_ctx.route == ViewRoute.Review:
         user_list = []
-        peer_review_enabled = doc_settings.get("peer_review_enabled", False)
-        if peer_review_enabled:
-            if not check_review_grouping(doc):
-                generate_review_groups(doc, post_process_result.plugins)
-            reviews = get_reviews_for_user(doc, current_user.id).all()
+        if is_peerreview_enabled(doc_info):
+            if not check_review_grouping(doc_info):
+                try:
+                    generate_review_groups(doc_info, post_process_result.plugins)
+                except PeerReviewException as e:
+                    flash(str(e))
+            reviews = get_reviews_for_user(doc_info, current_user)
             for review in reviews:
                 user_list.append(review.reviewable_id)
             user_list = get_points_by_rule(points_sum_rule, task_ids, user_list)

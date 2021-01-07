@@ -50,7 +50,7 @@ def get_latest_answers_query(task_id: TaskId, users: List[User]) -> Query:
     return q
 
 
-def get_latest_valid_answers_query(task_id: TaskId, users: List[User]):
+def get_latest_valid_answers_query(task_id: TaskId, users: List[User]) -> Query:
     sq = (Answer.query
         .filter_by(task_id=task_id.doc_task, valid=True)
         .join(User, Answer.users)

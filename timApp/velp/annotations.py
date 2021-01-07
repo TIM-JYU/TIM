@@ -15,6 +15,8 @@ from sqlalchemy.orm import joinedload, contains_eager, Query
 
 from timApp.answer.answer import Answer
 from timApp.document.docinfo import DocInfo
+from timApp.peerreview.peerreview import PeerReview
+from timApp.peerreview.peerreview_utils import get_reviews_for_user_query, is_peerreview_enabled
 from timApp.user.user import User
 from timApp.velp.annotation_model import Annotation
 from timApp.velp.velp_models import VelpContent, VelpVersion, Velp, AnnotationComment
@@ -42,6 +44,8 @@ def get_annotations_with_comments_in_document(user: User, d: DocInfo) -> List[An
     answer_filter = true()
     if not user.has_seeanswers_access(d):
         answer_filter = (User.id == user.id) | (User.id == None)
+        if is_peerreview_enabled(d):
+            answer_filter |= User.id.in_(get_reviews_for_user_query(d, user).with_entities(PeerReview.reviewable_id).subquery())
     anns = (set_annotation_query_opts(Annotation.query
         .filter_by(document_id=d.id)
         .filter((Annotation.valid_until == None) | (Annotation.valid_until >= func.current_timestamp()))

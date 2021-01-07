@@ -1,23 +1,26 @@
 """"""
+from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, Dict
+from typing import List, Optional, DefaultDict
 
-from sqlalchemy.orm import Query
+from sqlalchemy.orm import joinedload, Query
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, get_latest_valid_answers_query
-from timApp.document.document import Document
+from timApp.document.docinfo import DocInfo
+from timApp.peerreview.peerreview import PeerReview
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.taskid import TaskId
-from timApp.peerreview.peerreview import PeerReview
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 
-ERRORMESSAGE_PAIRS = "Won't work, not enough users to form pairs"
-ERRORMESSAGE_COUNTLOW = "Won't work, review count too low."
+
+class PeerReviewException(Exception):
+    pass
+
 
 # Generate reviews groups for list
-def generate_review_groups(doc: Document, tasks: List[Plugin]) -> None:
+def generate_review_groups(doc: DocInfo, tasks: List[Plugin]) -> None:
     task_ids = []
 
     for task in tasks:
@@ -28,34 +31,28 @@ def generate_review_groups(doc: Document, tasks: List[Plugin]) -> None:
 
     users = []
     for user in points:
-        users.append(user.get("user"))
+        users.append(user['user'])
 
-    settings = doc.get_settings()
-    review_count: int = settings.get("peer_review_count", 1)
+    settings = doc.document.get_settings()
+    review_count = settings.peer_review_count()
 
     # TODO: [Kuvio] get timestamps from doc settings
     start_time_reviews = datetime.now()
     end_time_reviews = datetime.now()
 
-    # Dictionary containing review pairs, 
+    # Dictionary containing review pairs,
     # has reviewer user ID as key and value is list containing reviewable user IDs
-    pairing: Dict[int, List[int]] = {}
+    pairing: DefaultDict[int, List[int]] = defaultdict(list)
 
-    # TODO: [Kuvio] Implement proper handling
     if len(users) < 2:
-        print(ERRORMESSAGE_PAIRS)
+        raise PeerReviewException(f'Not enough users to form pairs ({len(users)} but at least 2 users needed)')
 
-    # TODO: [Kuvio] Implement proper handling
-    if review_count == 0:
-        print(ERRORMESSAGE_COUNTLOW)
+    if review_count <= 0:
+        raise PeerReviewException(f'peer_review_count setting is too low ({review_count})')
 
     # Decreases review count if it exceeds available user count
-    if review_count > len(users):
+    if review_count >= len(users):
         review_count = len(users) - 1
-
-    # Initializes pair lists for each user
-    for x in range(0, len(users)):
-        pairing[users[x].id] = []
 
     for idx, user in enumerate(users):
         pairings_left = review_count + 1
@@ -88,9 +85,9 @@ def generate_review_groups(doc: Document, tasks: List[Plugin]) -> None:
                     filtered_answers.append(answer)
                     excluded_users.append(answer.users_all[0])
 
-        for reviewer in pairing.keys():
+        for reviewer, reviewables in pairing.items():
             for a in filtered_answers:
-                if a.users_all[0].id in pairing[reviewer]:
+                if a.users_all[0].id in reviewables:
                     save_review(a, t, doc, reviewer, start_time_reviews, end_time_reviews, False)
 
     db.session.commit()
@@ -98,7 +95,7 @@ def generate_review_groups(doc: Document, tasks: List[Plugin]) -> None:
 
 def save_review(answer: Answer,
                 task_id: TaskId,
-                doc: Document,
+                doc: DocInfo,
                 reviewer_id: int,
                 start_time: datetime,
                 end_time: datetime,
@@ -117,7 +114,7 @@ def save_review(answer: Answer,
     review = PeerReview(
         answer_id=answer.id,
         task_name=task_id.task_name,
-        block_id=doc.doc_id,
+        block_id=doc.id,
         reviewer_id=reviewer_id,
         reviewable_id=answer.users_all[0].id,
         start_time=start_time,
@@ -129,25 +126,32 @@ def save_review(answer: Answer,
     return review
 
 
-def get_reviews_for_user(d: Document, user: int) -> Query:
-    q = PeerReview.query.filter_by(block_id=d.doc_id, reviewer_id=user).with_entities(PeerReview)
-    return q
+def get_reviews_for_user(d: DocInfo, user: User) -> List[PeerReview]:
+    q = get_reviews_for_user_query(d, user).options(joinedload(PeerReview.reviewable))
+    return q.all()
 
 
-def check_review_access(doc: Document, current_user: int, task_id: TaskId, reviewable_user: Optional[User]) -> bool:
-    if reviewable_user is None:
-        reviews = PeerReview.query.filter_by(block_id=doc.doc_id, reviewer_id=current_user, task_name=task_id.task_name).with_entities(PeerReview).all()
-    else:
-        reviews = PeerReview.query.filter_by(block_id=doc.doc_id, reviewer_id=current_user, task_name=task_id.task_name, reviewable_id=reviewable_user.id).with_entities(PeerReview).all()
-    if reviews:
-        return True
-    else:
+def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
+    return PeerReview.query.filter_by(block_id=d.id, reviewer_id=user.id)
+
+
+def has_review_access(doc: DocInfo, reviewer_user: User, task_id: TaskId, reviewable_user: Optional[User]) -> bool:
+    if not is_peerreview_enabled(doc):
         return False
+    q = PeerReview.query.filter_by(
+        block_id=doc.id,
+        reviewer_id=reviewer_user.id,
+        task_name=task_id.task_name,
+    )
+    if reviewable_user is not None:
+        q = q.filter_by(reviewable_id=reviewable_user.id)
+    return bool(q.first())
 
 
-def check_review_grouping(doc: Document) -> bool:
-    grouping_list = PeerReview.query.filter_by(block_id=doc.doc_id).with_entities(PeerReview).all()
-    if grouping_list:
-        return True
-    else:
-        return False
+def check_review_grouping(doc: DocInfo) -> bool:
+    q = PeerReview.query.filter_by(block_id=doc.id)
+    return bool(q.first())
+
+
+def is_peerreview_enabled(doc: DocInfo) -> bool:
+    return doc.document.get_settings().peer_review()

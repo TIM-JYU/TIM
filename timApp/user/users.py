@@ -96,7 +96,3 @@ def create_anonymous_user(name: str, real_name: str) -> User:
     u, _ = User.create_with_group(UserInfo(username=name + str(abs(next_id)), full_name=real_name), uid=next_id)
     db.session.add(u)
     return u
-
-def get_user_for_id(user_id: int):
-    q = User.query.filter_by(id=user_id).with_entities(User)
-    return q

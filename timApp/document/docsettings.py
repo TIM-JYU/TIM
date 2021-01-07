@@ -54,6 +54,8 @@ class DocSettingTypes:
     urlmacros: UrlMacroMap
     rndmacros: Dict[str, str]
     cache: bool
+    peer_review: bool
+    peer_review_count: int
 
 
 doc_setting_field_map: Dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
@@ -435,6 +437,12 @@ class DocSettings:
 
     def is_cached(self):
         return self.get_setting_or_default('cache', False)
+
+    def peer_review(self) -> bool:
+        return self.get_setting_or_default('peer_review', False)
+
+    def peer_review_count(self) -> int:
+        return self.get_setting_or_default('peer_review_count', 1)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
