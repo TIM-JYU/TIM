@@ -17,6 +17,8 @@ def get_lib_and_options(query):
         raise ValueError("No git markup attribute present with git")
 
     defaults = get_json_param(query.jso, "markup", "gitDefaults", {})
+    if "url" not in defaults or not defaults["url"]:
+        raise ValueError("git url not specified in gitDefaults")
     settings: Settings = Settings.load(defaults)
 
     info = RemoteInfo.parse_url(settings.url, settings)
