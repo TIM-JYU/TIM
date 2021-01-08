@@ -8,7 +8,6 @@ from xml.sax.saxutils import quoteattr
 import yaml
 from flask import Blueprint, render_template_string
 from flask import Response
-from flask import abort
 from flask import request
 from marshmallow import missing, EXCLUDE, ValidationError
 
@@ -29,7 +28,7 @@ from timApp.plugin.plugin import Plugin, PluginException
 from timApp.plugin.plugin import get_num_value
 from timApp.plugin.plugin import get_value
 from timApp.tim_app import csrf
-from timApp.util.flask.requesthelper import verify_json_params, use_model
+from timApp.util.flask.requesthelper import verify_json_params, use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.utils import get_dataclass_field_names
 from utils import Missing
@@ -413,7 +412,7 @@ def not_found(path):
     """This 404 route is required because qst plugin is in the same process - otherwise calling a non-existent qst route
     results in a weird request loop, at least when running locally.
     """
-    return abort(404)
+    raise NotExist()
 
 
 def set_explanation(markup):
@@ -837,7 +836,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
             user=UserContext.from_one_user(get_current_user_object()),
         ).values
     except PluginException:
-        return abort(400, f'Paragraph is not a plugin: {par_id}')
+        raise RouteException(f'Paragraph is not a plugin: {par_id}')
     plugindata = {'markup': plugin_values}
     markup = plugindata.get('markup')
     if markup.get("choices", None):

@@ -1,6 +1,6 @@
 import json
 
-from flask import request, Response, stream_with_context, abort, Blueprint
+from flask import request, Response, stream_with_context, Blueprint
 
 from timApp.auth.accesshelper import get_doc_or_abort, verify_task_access
 from timApp.auth.accesstype import AccessType
@@ -11,7 +11,7 @@ from timApp.plugin.containerLink import call_plugin_resource, call_plugin_generi
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 
 plugin_bp = Blueprint('plugin',
@@ -32,7 +32,7 @@ def plugin_call(plugin, filename):
         resp = call_plugin_resource(plugin, filename, request.args)
         return return_resource_response(resp)
     except PluginException as e:
-        abort(404, str(e))
+        raise NotExist(str(e))
 
 
 @plugin_bp.route("/echoRequest/<path:filename>")
@@ -51,7 +51,7 @@ def view_template(plugin, template, index):
         resp = call_plugin_resource(plugin, "template?file=" + template + "&idx=" + index)
         return return_resource_response(resp)
     except PluginException:
-        abort(404)
+        raise NotExist()
 
 
 @plugin_bp.route("/plugin/<plugintype>/<task_id_ext>/fetchExternal", methods=['PUT', 'POST'])

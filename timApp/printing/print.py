@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Optional
 
 from flask import Blueprint, send_file
-from flask import abort
 from flask import current_app
 from flask import g
 from flask import make_response
@@ -24,7 +23,7 @@ from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTe
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.sqa import db
-from timApp.util.flask.requesthelper import verify_json_params, get_option
+from timApp.util.flask.requesthelper import verify_json_params, get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, add_no_cache_headers, add_csp_header
 
 TEXPRINTTEMPLATE_KEY = "texprinttemplate"
@@ -48,11 +47,11 @@ def pull_doc_path(endpoint, values):
     if current_app.url_map.is_endpoint_expecting(endpoint, 'doc_path'):
         doc_path = values['doc_path']
         if doc_path is None:
-            abort(400)
+            raise RouteException()
         g.doc_path = doc_path
         g.doc_entry = DocEntry.find_by_path(doc_path)
         if not g.doc_entry:
-            abort(404, 'Document not found')
+            raise NotExist('Document not found')
         verify_view_access(g.doc_entry)
 
 
@@ -110,12 +109,12 @@ def print_document(doc_path):
         file_type = 'pdf'
 
     if file_type.lower() not in [f.value for f in PrintFormat]:
-        abort(400, "The supplied parameter 'fileType' is invalid.")
+        raise RouteException("The supplied parameter 'fileType' is invalid.")
 
     doc: DocInfo = g.doc_entry
     template_doc, template_doc_id, template_error, template_doc_def = get_template_doc(doc, template_doc_id)
     if template_error:
-        return abort(400, template_error)
+        raise RouteException(template_error)
 
     print_type = PrintFormat[file_type.upper()]
 
@@ -144,7 +143,7 @@ def print_document(doc_path):
         return json_response({'success': True, 'url': print_access_url}, status_code=200)
 
     if template_doc is None:
-        abort(400, "The template doc was not found.")
+        raise RouteException("The template doc was not found.")
 
     try:
         create_printed_doc(
@@ -172,14 +171,14 @@ def print_document(doc_path):
                                  status_code=201)
         except Exception as err:
             print("General error occurred: " + str(err))
-            abort(400, str(err))  # TODO: maybe there's a better error code?
-        # abort(400, str(err))
+            raise RouteException(str(err))  # TODO: maybe there's a better error code?
+        # raise RouteException(str(err))
     except PrintingError as err:
         print("Printing occurred: " + str(err))
-        abort(400, str(err))  # TODO: maybe there's a better error code?
+        raise RouteException(str(err))  # TODO: maybe there's a better error code?
     except Exception as err:
         print("General error occurred: " + str(err))
-        abort(400, str(err))  # TODO: maybe there's a better error code?
+        raise RouteException(str(err))  # TODO: maybe there's a better error code?
 
     # print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
     db.session.commit()
@@ -203,7 +202,7 @@ def get_printed_document(doc_path):
     line = request.args.get('line')
 
     if file_type.lower() not in (f.value for f in PrintFormat):
-        abort(400, "The supplied query parameter 'file_type' was invalid.")
+        raise RouteException("The supplied query parameter 'file_type' was invalid.")
 
     print_type = PrintFormat(file_type)
     template_doc = None
@@ -211,7 +210,7 @@ def get_printed_document(doc_path):
     if print_type != PrintFormat.PLAIN and print_type != PrintFormat.RST:
         template_doc, template_doc_id, template_error, _ = get_template_doc(doc, template_doc_id)
         if template_error:
-            return abort(400, template_error)
+            raise RouteException(template_error)
 
     cached = check_print_cache(doc_entry=doc,
                                template=template_doc,
@@ -238,11 +237,11 @@ def get_printed_document(doc_path):
                 urlroot='http://localhost:5000/print/',
             )  # request.url_root+'print/')
         except PrintingError as err:
-            return abort(400, str(err))
+            raise RouteException(str(err))
         except LaTeXError as err:
             pdferror = err.value
         except Exception as err:
-            return abort(400, str(err))
+            raise RouteException(str(err))
 
     cached = check_print_cache(doc_entry=doc,
                                template=template_doc,

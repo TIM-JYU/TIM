@@ -13,11 +13,10 @@ import dateutil.parser
 from marshmallow import missing
 from sqlalchemy import func, true
 from sqlalchemy.orm import lazyload, joinedload
-from werkzeug.exceptions import abort
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_answers_query
-from timApp.auth.accesshelper import get_doc_or_abort
+from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.sessioninfo import user_context_with_logged_in
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
@@ -28,6 +27,7 @@ from timApp.plugin.taskid import TaskId
 from timApp.user.groups import verify_group_view_access
 from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
 
 ALL_ANSWERED_WILDCARD = '*'
@@ -171,7 +171,7 @@ def get_fields_and_users(
     for group in requested_groups.groups:
         if needs_group_access_check and group.name != current_user.name:
             if not verify_group_view_access(group, current_user, require=False):
-                # return abort(403, f'Missing view access for group {group.name}')
+                # raise AccessDenied(f'Missing view access for group {group.name}')
                 continue  # TODO: study how to give just warning from missing access, extra return string?
         ugroups.append(group)
 
@@ -188,7 +188,7 @@ def get_fields_and_users(
     try:
         u_fields = widen_fields(u_fields)
     except Exception as e:
-        return abort(400, f"Problem with field names: {u_fields}\n{e}")
+        raise RouteException(f"Problem with field names: {u_fields}\n{e}")
 
     tasks_without_fields = []
     tally_fields: List[Tuple[TallyField, Optional[str]]] = []
@@ -204,9 +204,9 @@ def get_fields_and_users(
         if a:
             a = a.strip()
         if rest:
-            return abort(400, f'Invalid alias: {field}')
+            raise RouteException(f'Invalid alias: {field}')
         if a == '':
-            return abort(400, f'Alias cannot be empty: {field}')
+            raise RouteException(f'Alias cannot be empty: {field}')
         try:
             task_id = TaskId.parse(
                 t,
@@ -219,9 +219,9 @@ def get_fields_and_users(
             tally_field = TallyField.try_parse(t, d)
             if not tally_field:
                 if t.startswith('tally:'):
-                    return abort(400, f'Invalid tally field format: {t}')
+                    raise RouteException(f'Invalid tally field format: {t}')
                 else:
-                    return abort(400, str(e))
+                    raise RouteException(str(e))
             else:
                 did = tally_field.effective_doc_id
                 tally_fields.append((tally_field, a))
@@ -239,17 +239,17 @@ def get_fields_and_users(
         if a:
             alias_map[alias_map_value] = a
             if a in jsrunner_alias_map:
-                abort(400, f'Duplicate alias {a} in fields attribute')
+                raise RouteException(f'Duplicate alias {a} in fields attribute')
             jsrunner_alias_map[a] = alias_map_value
 
         if did in doc_map:
             continue
         dib = get_doc_or_abort(did, f'Document {did} not found')
         if not (current_user.has_teacher_access(dib) or allow_non_teacher):
-            abort(403, f'Missing teacher access for document {dib.id}')
+            raise AccessDenied(f'Missing teacher access for document {dib.id}')
         elif dib.document.get_settings().get('need_view_for_answers', False) \
                 and not current_user.has_view_access(dib):
-            abort(403, "Sorry, you don't have permission to use this resource.")
+            raise AccessDenied("Sorry, you don't have permission to use this resource.")
         doc_map[did] = dib
 
     cpf = CachedPluginFinder(doc_map=doc_map, curr_user=UserContext.from_one_user(current_user), view_ctx=view_ctx)
@@ -451,7 +451,7 @@ def get_tally_field_values(
         known_tally_fields = list(itertools.chain(basic_tally_fields, psr.groups if psr else []))
         for field, _ in fs:
             if field.field not in known_tally_fields:
-                abort(400, f'Unknown tally field: {field.field}. '
+                raise RouteException(f'Unknown tally field: {field.field}. '
                            f'Valid tally fields are: {seq_to_str(known_tally_fields)}.')
         for r in pts:
             u = r['user']

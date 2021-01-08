@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from xml.sax.saxutils import quoteattr
 
 from flask import Blueprint
-from flask import abort
 from flask import request
 
 from timApp.auth.accesshelper import verify_edit_access
@@ -20,7 +19,7 @@ from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.plugin.timtable.timTableLatex import convert_table
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
-from timApp.util.flask.requesthelper import verify_json_params, get_option
+from timApp.util.flask.requesthelper import verify_json_params, get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 
 timTable_plugin = Blueprint('timTable_plugin',
@@ -215,10 +214,10 @@ def tim_table_get_cell_data():
     args = request.args
     doc_id = get_option(request, 'docId', None, cast=int)
     if not doc_id:
-        abort(400)
+        raise RouteException()
     doc = DocEntry.find_by_id(doc_id)
     if not doc:
-        abort(404)
+        raise NotExist()
     verify_edit_access(doc)
     par = doc.document.get_paragraph(args['parId'])
     plug = Plugin.from_paragraph(par, default_view_ctx)
@@ -310,11 +309,11 @@ def add_row(plug: Plugin, row_id: int):
         if len(rows) == 0:
             plug.values[TABLE][ROWS] = rows
     except KeyError:
-        return abort(400)
+        raise RouteException()
     if row_id < 0:
         row_id = len(rows)
     elif len(rows) < row_id: # fill rows to match needed len
-        # return abort(400)
+        # raise RouteException()
         if len(rows) == 0:
             copy_row = make_empty_row()
         else:
@@ -393,7 +392,7 @@ def tim_table_add_datablock_row():
         rows = [{'row' : []}]
         # plug.values[TABLE][ROWS] = rows
     if not rows:
-        return abort(400)
+        raise RouteException()
     row = rows[-1][ROW]
     max_row = len(rows)
     max_col = 0
@@ -448,10 +447,10 @@ def tim_table_add_column():
             rows = [make_empty_row()]
             plug.values[TABLE][ROWS] = rows
     except KeyError:
-        return abort(400)
+        raise RouteException()
 
     if is_in_datainput_mode(plug):
-        return abort(400)
+        raise RouteException()
 
     if col_id >= row_len or col_id < 0:
         # Add a column to the end of each row, regardless of their length
@@ -462,7 +461,7 @@ def tim_table_add_column():
                     row_len = col_id
                 fill_row(current_row, row_len)
             except KeyError:
-                return abort(400)
+                raise RouteException()
             last_cell = current_row[-1]
             if is_primitive(last_cell):
                 current_row.append({CELL: ""})
@@ -477,7 +476,7 @@ def tim_table_add_column():
             try:
                 current_row = row[ROW]
             except KeyError:
-                return abort(400)
+                raise RouteException()
             fill_row(current_row, row_len)
             idx = col_id - 1
             if idx < 0:
@@ -511,7 +510,7 @@ def tim_table_add_datablock_column():
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
 
     if not is_in_datainput_mode(plug):
-        return abort(400)
+        raise RouteException()
 
     if not is_datablock(plug.values):
         create_datablock(plug.values[TABLE])
@@ -548,14 +547,14 @@ def get_column_counts(plug: Plugin, row_len: int) -> Tuple[Dict[int, int], List[
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
-        # return abort(400)
+        # raise RouteException()
         rows = []
     max_row = len(rows)-1
     for i in range(0, len(rows)):
         try:
             current_row = rows[i][ROW]
         except KeyError:
-            return abort(400)
+            raise RouteException()
         column_counts[i] = len(current_row)
 
     datablock_entries = []
@@ -584,10 +583,10 @@ def tim_table_remove_row():
         try:
             rows = plug.values[TABLE][ROWS]
         except KeyError:
-            return abort(400)
+            raise RouteException()
 
         if len(rows) <= row_id:
-            return abort(400)
+            raise RouteException()
         rows.pop(row_id)
 
     if is_datablock(plug.values):
@@ -619,13 +618,13 @@ def tim_table_remove_column():
         try:
             rows = plug.values[TABLE][ROWS]
         except KeyError:
-            return abort(400)
+            raise RouteException()
 
         for row in rows:
             try:
                 current_row = row[ROW]
             except KeyError:
-                return abort(400)
+                raise RouteException()
             if len(current_row) <= col_id:
                 continue # continue instead of erroring out, some rows might have colspan in
                          # their cells while we can still remove the column from other rows
@@ -722,21 +721,21 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
             try:
                 rows = plug.values[TABLE][ROWS]
             except KeyError:
-                # return abort(400)
+                # raise RouteException()
                 rows = []
                 plug.values[TABLE][ROWS] = rows
 
             if len(rows) <= row_id:
                 if attribute == "CLEAR":
                     continue
-                # return abort(400)
+                # raise RouteException()
                 for ir in range(len(rows), row_id+1):
                     rows.append({ ROW: []})
             row = rows[row_id]
             try:
                 row_data = row[ROW]
             except KeyError:
-                return abort(400)
+                raise RouteException()
             if row_data == None:
                 row_data = []
                 rows[row_id] = { ROW: row_data}
@@ -750,7 +749,7 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
             if len(row_data) <= col_id:
                 if attribute == "CLEAR":
                     continue
-                # return abort(400)
+                # raise RouteException()
                 for ic in range(len(row_data), col_id+1):
                     row_data.append('')
 
@@ -791,7 +790,7 @@ def set_value_to_table(plug, row_id, col_id, value):
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
-        # return abort(400)
+        # raise RouteException()
         rows = []
         plug.values[TABLE][ROWS] = rows
 
@@ -802,7 +801,7 @@ def set_value_to_table(plug, row_id, col_id, value):
     try:
         row_data = row[ROW]
     except KeyError:
-        return abort(400)
+        raise RouteException()
     if row_data == None:
         row_data = []
         rows[row_id] = {ROW: row_data}
@@ -831,11 +830,11 @@ def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
     """
     d = DocEntry.find_by_id(doc_id)
     if not d:
-        abort(404)
+        raise NotExist()
     verify_edit_access(d)
     par = d.document_as_current_user.get_paragraph(par_id)
     if par.is_reference():
-        abort(400, "This table is referenced from another document")
+        raise RouteException("This table is referenced from another document")
     return d, Plugin.from_paragraph(par, default_view_ctx)
 
 

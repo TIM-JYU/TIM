@@ -6,7 +6,6 @@ from enum import Enum
 from typing import Generator, List, Optional, Tuple
 
 from flask import Blueprint, render_template
-from flask import abort
 from flask import redirect
 from flask import request
 from isodate import Duration
@@ -32,7 +31,7 @@ from timApp.user.user import User, ItemOrBlock
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import remove_default_access, get_default_rights_holders, get_rights_holders, remove_access
 from timApp.user.userutils import grant_access, grant_default_access
-from timApp.util.flask.requesthelper import verify_json_params, get_option, use_model, RouteException
+from timApp.util.flask.requesthelper import verify_json_params, get_option, use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
 from timApp.util.logger import log_info
 from timApp.util.utils import remove_path_special_chars, split_location, join_location, get_current_time, \
@@ -51,7 +50,7 @@ def manage(path):
     if item is None:
         item = Folder.find_by_path(path, fallback_to_id=True)
         if item is None:
-            abort(404)
+            raise NotExist()
 
     verify_view_access(item)
 
@@ -128,7 +127,7 @@ class TimeOpt:
         try:
             return self.duration.totimedelta(start=datetime.min)
         except (OverflowError, ValueError):
-            abort(400, 'Duration is too long.')
+            raise RouteException('Duration is too long.')
 
 
 class EditOption(Enum):
@@ -280,7 +279,7 @@ def edit_permissions(m: PermissionMassEditModel):
     groups = m.group_objects
     nonexistent = set(m.groups) - set(g.name for g in groups)
     if nonexistent:
-        return abort(400, f'Non-existent groups: {nonexistent}')
+        raise RouteException(f'Non-existent groups: {nonexistent}')
     items = Block.query.filter(Block.id.in_(m.ids)
                                & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])).order_by(Block.id).all()
     a = None
@@ -318,7 +317,7 @@ def add_perm(
 ) -> List[BlockAccess]:
     if get_current_user_object().get_personal_folder().id == item.id:
         if p.type == AccessType.owner:
-            abort(403, 'You cannot add owners to your personal folder.')
+            raise AccessDenied('You cannot add owners to your personal folder.')
     opt = p.time.effective_opt
     accs = []
     for group in p.group_objects:
@@ -380,7 +379,7 @@ def check_ownership_loss(had_ownership, item):
     db.session.flush()
     db.session.refresh(item)
     if had_ownership and not has_ownership(item):
-        abort(403, 'You cannot remove ownership from yourself.')
+        raise AccessDenied('You cannot remove ownership from yourself.')
 
 
 @manage_page.route("/alias/<int:doc_id>", methods=["GET"])
@@ -413,20 +412,20 @@ def change_alias(alias):
 
     doc = DocEntry.find_by_path(alias, try_translation=False)
     if doc is None:
-        return abort(404, 'The document does not exist!')
+        raise NotExist('The document does not exist!')
 
     verify_manage_access(doc)
 
     if alias != new_alias:
         src_f = Folder.find_first_existing(alias)
         if not get_current_user_object().can_write_to_folder(src_f):
-            return abort(403, "You don't have permission to write to the source folder.")
+            raise AccessDenied("You don't have permission to write to the source folder.")
         validate_item_and_create_intermediate_folders(new_alias, BlockType.Document, get_current_user_group_object())
 
     doc.name = new_alias
     doc.public = is_public
     if all(not a.public for a in doc.aliases):
-        abort(400, 'This is the only visible name for this document, so you cannot make it invisible.')
+        raise RouteException('This is the only visible name for this document, so you cannot make it invisible.')
     db.session.commit()
     return ok_response()
 
@@ -437,16 +436,16 @@ def remove_alias(alias):
 
     doc = DocEntry.find_by_path(alias, try_translation=False)
     if doc is None:
-        return abort(404, 'The document does not exist!')
+        raise NotExist('The document does not exist!')
 
     verify_manage_access(doc)
 
     if len(doc.aliases) <= 1:
-        return abort(403, "You can't delete the only name the document has.")
+        raise AccessDenied("You can't delete the only name the document has.")
 
     f = Folder.find_first_existing(alias)
     if not get_current_user_object().can_write_to_folder(f):
-        return abort(403, "You don't have permission to write to that folder.")
+        raise AccessDenied("You don't have permission to write to that folder.")
 
     db.session.delete(doc)
     db.session.commit()
@@ -459,7 +458,7 @@ def rename_folder(item_id):
 
     d = DocEntry.find_by_id(item_id)
     if d:
-        return abort(403, 'Rename route is no longer supported for documents.')
+        raise AccessDenied('Rename route is no longer supported for documents.')
 
     f = get_folder_or_abort(item_id)
     verify_manage_access(f)
@@ -469,10 +468,10 @@ def rename_folder(item_id):
 
     if parent_f is None:
         # Maybe do a recursive create with permission checks here later?
-        return abort(403, "The location does not exist.")
+        raise AccessDenied("The location does not exist.")
 
     if parent_f.id == item_id:
-        return abort(403, "A folder cannot contain itself.")
+        raise AccessDenied("A folder cannot contain itself.")
 
     validate_item(new_name, BlockType.Folder)
 
@@ -529,7 +528,7 @@ def remove_default_doc_permission(m: DefaultPermissionRemoveModel):
     verify_permission_edit_access(f, m.type)
     ug = UserGroup.query.get(m.group)
     if not ug:
-        abort(404, 'Usergroup not found')
+        raise NotExist('Usergroup not found')
     remove_default_access(ug, f, m.type, BlockType.from_str(m.item_type.name))
     db.session.commit()
     return ok_response()
@@ -574,10 +573,10 @@ def delete_folder(folder_id):
     f = get_folder_or_abort(folder_id)
     verify_ownership(f)
     if f.location == 'users':
-        return abort(403, 'Personal folders cannot be deleted.')
+        raise AccessDenied('Personal folders cannot be deleted.')
     trash = get_trash_folder()
     if f.location == trash.path:
-        abort(400, 'Folder is already deleted.')
+        raise RouteException('Folder is already deleted.')
     trash_path = find_free_name(trash, f)
     f.rename_path(trash_path)
     db.session.commit()
@@ -600,7 +599,7 @@ def get_copy_folder_params(folder_id):
     dest, exclude = verify_json_params('destination', 'exclude')
     compiled = get_pattern(exclude)
     if path_includes(dest, f.path):
-        return abort(403, 'Cannot copy folder inside of itself.')
+        raise AccessDenied('Cannot copy folder inside of itself.')
     return f, dest, compiled
 
 
@@ -624,7 +623,7 @@ def get_pattern(exclude: str):
     try:
         return re.compile(exclude)
     except:
-        abort(400, f'Wrong pattern format: {exclude}')
+        raise RouteException(f'Wrong pattern format: {exclude}')
 
 
 @manage_page.route("/copy/<int:folder_id>/preview", methods=["POST"])

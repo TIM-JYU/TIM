@@ -9,7 +9,6 @@ from typing import List, Optional, Tuple
 from urllib.parse import unquote, urlparse
 
 from flask import Blueprint, request, send_file, Response
-from flask import abort
 from werkzeug.utils import secure_filename
 
 from timApp.auth.accesshelper import verify_view_access, verify_seeanswers_access, verify_task_access, \
@@ -29,7 +28,7 @@ from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import PluginUpload, PluginUploadInfo, UploadedFile, get_mimetype
-from timApp.util.flask.requesthelper import use_model, RouteException
+from timApp.util.flask.requesthelper import use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, add_csp_header
 from timApp.util.pdftools import StampDataInvalidError, default_stamp_format, AttachmentStampData, \
     PdfError, stamp_pdfs, create_tex_file, stamp_model_default_path, compress_pdf_if_not_already, CompressionError
@@ -110,7 +109,7 @@ def pluginupload_file(doc_id: int, task_id: str):
     try:
         tid = TaskId.parse(task_id, require_doc_id=False, allow_block_hint=False)
     except PluginException:
-        return abort(400)
+        raise RouteException()
     tid.doc_id = d.id
     verify_task_access(
         d,
@@ -122,7 +121,7 @@ def pluginupload_file(doc_id: int, task_id: str):
     )
     file = request.files.get('file')
     if file is None:
-        abort(400, 'Missing file')
+        raise RouteException('Missing file')
     content = file.read()
     u = get_current_user_object()
     f = UploadedFile.save_new(
@@ -155,16 +154,16 @@ def pluginupload_file(doc_id: int, task_id: str):
 @upload.route('/upload/', methods=['POST'])
 def upload_file():
     if not logged_in():
-        abort(403, 'You have to be logged in to upload a file.')
+        raise AccessDenied('You have to be logged in to upload a file.')
     file = request.files.get('file')
     if file is None:
-        abort(400, 'Missing file')
+        raise RouteException('Missing file')
     folder = request.form.get('folder')
     if folder is not None:
         return upload_document(folder, file)
     doc_id = request.form.get('doc_id')
     if not doc_id:
-        abort(400, 'Missing doc_id')
+        raise RouteException('Missing doc_id')
     d = DocEntry.find_by_id(int(doc_id))
     verify_edit_access(d)
     try:
@@ -191,7 +190,7 @@ def upload_file():
                 return upload_and_stamp_attachment(d, file, stamp_data, stamp_format, custom_stamp_model)
             # If attachment isn't a pdf, gives an error too (since it's in 'showPdf' plugin)
             except PdfError as e:
-                abort(400, str(e))
+                raise RouteException(str(e))
 
 
 @dataclass
@@ -233,10 +232,10 @@ def restamp_attachments(args: RestampModel):
         try:
             stamp_data.file = attachment_folder / attachment_path.parts[-2] / attachment_path.parts[-1].replace("_stamped","")
         except IndexError:
-            abort(400, f'Invalid attachment url: "{attachment_path}"')
+            raise RouteException(f'Invalid attachment url: "{attachment_path}"')
         file = UploadedFile.find_by_id(attachment_path.parts[-2])
         if not file:
-            abort(400, f'Attachment not found: "{attachment_path}"')
+            raise RouteException(f'Attachment not found: "{attachment_path}"')
 
         verify_edit_access(file, check_parents=True)
         stamp_data_list.append(stamp_data)
@@ -317,7 +316,7 @@ def save_file_and_grant_access(d: DocInfo, content, file, block_type: BlockType)
 def get_file(file_id, file_filename):
     f = UploadedFile.get_by_id_and_filename(file_id, file_filename)
     if not f:
-        abort(404, 'File not found')
+        raise NotExist('File not found')
     verify_view_access(f, check_parents=True)
     file_path = f.filesystem_path.as_posix()
     return send_file(file_path, mimetype=get_mimetype(file_path))
@@ -327,10 +326,10 @@ def get_file(file_id, file_filename):
 def get_image(image_id, image_filename):
     f = UploadedFile.find_by_id(image_id)
     if not f:
-        abort(404, 'Image not found')
+        raise NotExist('Image not found')
     verify_view_access(f, check_parents=True)
     if image_filename != f.filename:
-        abort(404, 'Image not found')
+        raise NotExist('Image not found')
     img_data = f.data
     imgtype = imghdr.what(None, h=img_data)
     f = io.BytesIO(img_data)

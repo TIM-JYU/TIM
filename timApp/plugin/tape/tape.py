@@ -1,9 +1,8 @@
-import copy
 import json
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict
 from xml.sax.saxutils import quoteattr
+
 from flask import Blueprint, Response
-from flask import abort
 from flask import request
 
 from timApp.tim_app import csrf

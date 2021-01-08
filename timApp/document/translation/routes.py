@@ -1,9 +1,10 @@
 import re
 
-from flask import request, abort, Blueprint
+from flask import request, Blueprint
 from sqlalchemy.exc import IntegrityError
 
-from timApp.auth.accesshelper import get_doc_or_abort, verify_view_access, verify_manage_access, has_manage_access
+from timApp.auth.accesshelper import get_doc_or_abort, verify_view_access, verify_manage_access, has_manage_access, \
+    AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import create_document_and_block
 from timApp.document.documents import add_reference_pars
@@ -11,7 +12,7 @@ from timApp.document.translation.translation import Translation
 from timApp.item.block import copy_default_rights, BlockType
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
-from timApp.util.flask.requesthelper import verify_json_params
+from timApp.util.flask.requesthelper import verify_json_params, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 
 
@@ -32,7 +33,7 @@ def create_translation_route(tr_doc_id, language):
 
     verify_view_access(doc)
     if not valid_language_id(language):
-        abort(404, 'Invalid language identifier')
+        raise NotExist('Invalid language identifier')
     if doc.has_translation(language):
         raise ItemAlreadyExistsException('Translation for this language already exists')
     verify_manage_access(doc.src_doc)
@@ -55,10 +56,10 @@ def create_translation_route(tr_doc_id, language):
 def update_translation(doc_id):
     (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=True)
     if not valid_language_id(lang_id):
-        abort(403, 'Invalid language identifier')
+        raise AccessDenied('Invalid language identifier')
     doc = get_doc_or_abort(doc_id)
     if not has_manage_access(doc) and not has_manage_access(doc):
-        abort(403, "You need manage access of either this or the translated document")
+        raise AccessDenied("You need manage access of either this or the translated document")
     doc.lang_id = lang_id
     doc.title = doc_title
     try:

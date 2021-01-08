@@ -1,6 +1,6 @@
 import traceback
 
-from flask import request, abort, render_template, session, flash, Flask, redirect, current_app
+from flask import request, render_template, session, flash, Flask, redirect
 from markupsafe import Markup
 from marshmallow import ValidationError
 
@@ -8,8 +8,8 @@ from timApp.answer.answers import TooLargeAnswerException
 from timApp.auth.accesshelper import AccessDenied, ItemLockedException
 from timApp.auth.login import logout
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.docsettings import get_minimal_visibility_settings
 from timApp.document.docentry import DocEntry
+from timApp.document.docsettings import get_minimal_visibility_settings
 from timApp.folder.folder import Folder
 from timApp.markdown.dumboclient import DumboHTMLException
 from timApp.notification.notify import send_email
@@ -18,7 +18,7 @@ from timApp.sisu.sisu import IncorrectSettings, SisuError
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
 from timApp.user.userutils import NoSuchUserException, DeletedUserException
-from timApp.util.flask.requesthelper import JSONException, get_request_message, RouteException
+from timApp.util.flask.requesthelper import JSONException, get_request_message, RouteException, NotExist
 from timApp.util.flask.responsehelper import error_generic
 from timApp.util.logger import log_error
 from timApp.util.utils import get_current_time
@@ -28,6 +28,10 @@ def register_errorhandlers(app: Flask):
     @app.errorhandler(AccessDenied)
     def handle_access_denied(error):
         return error_generic(str(error), 403)
+
+    @app.errorhandler(NotExist)
+    def handle_access_denied(error):
+        return error_generic(error.description, 404)
 
     @app.errorhandler(PluginException)
     def handle_plugin_exception(error):
@@ -69,7 +73,7 @@ def register_errorhandlers(app: Flask):
             is_folder = True
             item = Folder.get_by_id(error.access.block_id)
         if not item:
-            abort(404)
+            raise NotExist()
         view_settings = get_minimal_visibility_settings(item.document if not is_folder else None)
         return render_template(
             'duration_unlock.jinja2',

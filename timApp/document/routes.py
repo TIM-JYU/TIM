@@ -1,17 +1,18 @@
+from dataclasses import dataclass
 from typing import Optional
 
-from dataclasses import dataclass
-from flask import Response, abort, request, Blueprint
+from flask import Response, request, Blueprint
 from webargs.flaskparser import use_args
 
-from timApp.auth.accesshelper import get_doc_or_abort, verify_edit_access, can_see_par_source, verify_copy_access
+from timApp.auth.accesshelper import get_doc_or_abort, verify_edit_access, can_see_par_source, verify_copy_access, \
+    AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.documentversion import DocumentVersion
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.timdb.exceptions import TimDbException
-from timApp.util.flask.requesthelper import get_option
+from timApp.util.flask.requesthelper import get_option, NotExist
 from timApp.util.flask.responsehelper import json_response
 
 doc_bp = Blueprint('document',
@@ -40,7 +41,7 @@ def download_document_version(doc_id, major, minor):
     verify_edit_access(d)
     doc = DocumentVersion(doc_id, (major, minor))
     if not doc.exists():
-        abort(404, "This document version does not exist.")
+        raise NotExist("This document version does not exist.")
     return return_doc_content(doc)
 
 
@@ -51,9 +52,9 @@ def diff_document(doc_id, major1, minor1, major2, minor2):
     doc1 = DocumentVersion(doc_id, (major1, minor1))
     doc2 = DocumentVersion(doc_id, (major2, minor2))
     if not doc1.exists():
-        abort(404, f"The document version {(major1, minor1)} does not exist.")
+        raise NotExist(f"The document version {(major1, minor1)} does not exist.")
     if not doc2.exists():
-        abort(404, f"The document version {(major2, minor2)} does not exist.")
+        raise NotExist(f"The document version {(major2, minor2)} does not exist.")
     return Response(DocumentVersion.get_diff(doc1, doc2), mimetype="text/html")
 
 
@@ -95,19 +96,19 @@ def get_block_2(args: GetBlockModel):
         try:
             section = d.document.export_section(area_start, area_end)
         except TimDbException as e:
-            return abort(404, 'Area not found. It may have been deleted.')
+            raise NotExist('Area not found. It may have been deleted.')
         return json_response({"text": section})
     else:
         try:
             p = d.document.get_paragraph(args.par_id)
             if not can_see_par_source(get_current_user_object(), p):
-                abort(403)
+                raise AccessDenied()
             if args.par_hash:
                 par = DocParagraph.get(d.document, args.par_id, args.par_hash or p.get_hash())
             else:
                 par = p
         except TimDbException as e:
-            return abort(404, 'Paragraph not found. It may have been deleted.')
+            raise NotExist('Paragraph not found. It may have been deleted.')
         if args.use_exported:
             return json_response({"text": par.get_exported_markdown()})
         else:

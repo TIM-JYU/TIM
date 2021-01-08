@@ -1,8 +1,8 @@
+from dataclasses import dataclass
 from operator import attrgetter
 from typing import Tuple, List, Dict, Any, Optional
 
-from dataclasses import dataclass
-from flask import Blueprint, abort
+from flask import Blueprint
 
 from timApp.auth.accesshelper import verify_admin, check_admin_access, AccessDenied
 from timApp.auth.accesstype import AccessType
@@ -16,7 +16,7 @@ from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS, SPECIAL_USERNAMES
 from timApp.user.user import User, view_access_set, edit_access_set
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import load_data_from_req, RouteException
+from timApp.util.flask.requesthelper import load_data_from_req, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.utils import remove_path_special_chars, get_current_time
 
@@ -67,7 +67,7 @@ def show_usergroups(username):
     verify_admin()
     u = User.get_by_name(username)
     if not u:
-        abort(404, USER_NOT_FOUND)
+        raise NotExist(USER_NOT_FOUND)
     return json_response(u.get_groups(include_special=False).order_by(UserGroup.name).all())
 
 
@@ -77,7 +77,7 @@ def belongs(username, groupname):
     verify_group_view_access(ug)
     u = User.get_by_name(username)
     if not u:
-        abort(404, USER_NOT_FOUND)
+        raise NotExist(USER_NOT_FOUND)
     return json_response({'status': ug in u.groups})
 
 
@@ -111,7 +111,7 @@ def create_group(groupname: str):
     """
     verify_groupadmin(action=f'Creating group {groupname}')
     if UserGroup.get_by_name(groupname):
-        abort(400, 'User group already exists.')
+        raise RouteException('User group already exists.')
     _, doc = do_create_group(groupname)
     db.session.commit()
     return json_response(doc)
@@ -170,7 +170,7 @@ def validate_groupname(groupname: str):
         has_letters = has_letters or c.isalpha()
         has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace() or c in '-_')
     if not has_digits or not has_letters or has_non_alnum:
-        abort(400, 'Usergroup must contain at least one digit and one letter and must not have special chars: "' +
+        raise RouteException('Usergroup must contain at least one digit and one letter and must not have special chars: "' +
               groupname + '"')
 
 
@@ -227,7 +227,7 @@ def add_member(groupname):
     nm: NamesModel = load_data_from_req(NamesModelSchema)
     existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, nm.names)
     if set(nm.names) & SPECIAL_USERNAMES:
-        abort(400, 'Cannot add special users.')
+        raise RouteException('Cannot add special users.')
     already_exists = set(u.name for u in group.users) & set(usernames)
     added = []
     curr = get_current_user_object()
@@ -256,7 +256,7 @@ def remove_member(groupname):
             does_not_belong.append(u.name)
             continue
         if ensure_manually_added and group.current_memberships[u.id].adder == su:
-            abort(400, 'Cannot remove not-manually-added users from Sisu groups.')
+            raise RouteException('Cannot remove not-manually-added users from Sisu groups.')
         group.current_memberships[u.id].set_expired()
         removed.append(u.name)
     db.session.commit()

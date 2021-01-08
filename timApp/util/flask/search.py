@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Match, Union, Tuple
 
 from flask import Blueprint, json
-from flask import abort
 from flask import request
 from sqlalchemy.orm import joinedload, lazyload, defaultload
 
@@ -25,7 +24,7 @@ from timApp.item.block import Block
 from timApp.item.routes import get_document_relevance
 from timApp.item.tag import Tag
 from timApp.timdb.dbaccess import get_files_path
-from timApp.util.flask.requesthelper import get_option, use_model
+from timApp.util.flask.requesthelper import get_option, use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
 from timApp.util.utils import get_error_message, cache_folder_path
@@ -367,9 +366,9 @@ def validate_query(query: str, search_whole_words: bool) -> None:
     """
     if len(query.strip()) < MIN_QUERY_LENGTH and not search_whole_words:
         if query.strip().lower() not in WHITE_LIST:
-            abort(400, f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
+            raise RouteException(f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
     if len(query.strip()) < MIN_WHOLE_WORDS_QUERY_LENGTH and search_whole_words:
-        abort(400, f'Whole word search text must be at least {MIN_WHOLE_WORDS_QUERY_LENGTH} character(s) '
+        raise RouteException(f'Whole word search text must be at least {MIN_WHOLE_WORDS_QUERY_LENGTH} character(s) '
                    f'long with whitespace stripped.')
 
 
@@ -577,7 +576,7 @@ def title_search():
     if not docs:
         if not folder:
             folder = "root"
-        abort(400, f"Folder '{folder}' not found or not accessible")
+        raise RouteException(f"Folder '{folder}' not found or not accessible")
 
     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
 
@@ -674,7 +673,7 @@ def tag_search():
                 })
                 log_search_error(error, query, current_doc, tag=current_tag)
     except Exception as e:
-        abort(400, get_error_message(e))
+        raise RouteException(get_error_message(e))
     else:
         try:
             return json_response({'results': results,
@@ -683,9 +682,9 @@ def tag_search():
                                   'errors': error_list
                                   })
         except MemoryError:
-            abort(400, "MemoryError: results too large")
+            raise RouteException("MemoryError: results too large")
         except Exception as e:
-            abort(400, f"Error encountered while formatting JSON-response: {e}")
+            raise RouteException(f"Error encountered while formatting JSON-response: {e}")
 
 
 def compile_regex(query: str, regex: bool, case_sensitive: bool, search_whole_words: bool):
@@ -710,10 +709,10 @@ def compile_regex(query: str, regex: bool, case_sensitive: bool, search_whole_wo
     try:
         term_regex = re.compile(term, flags)
     except sre_constants.error as e:
-        abort(400, f"Invalid regex: {str(e)}")
+        raise RouteException(f"Invalid regex: {str(e)}")
     else:
         if not term_regex:
-            abort(400, f"Regex compiling failed")
+            raise RouteException(f"Regex compiling failed")
         return term_regex
 
 
@@ -830,9 +829,9 @@ def search():
     timeout = get_option(request, 'timeout', default=120, cast=int)
 
     if search_content and not content_search_file_path.exists():
-        abort(404, f"Combined content file '{content_search_file_path}' not found, unable to perform content search!")
+        raise NotExist(f"Combined content file '{content_search_file_path}' not found, unable to perform content search!")
     if search_titles and not title_search_file_path.exists():
-        abort(404, f"Combined title file '{title_search_file_path}' not found, unable to perform title search!")
+        raise NotExist(f"Combined title file '{title_search_file_path}' not found, unable to perform title search!")
 
     start_time = time.time()
 
@@ -870,7 +869,7 @@ def search():
             content_output_str = s.communicate()[0].decode('utf-8').strip()
             content_output = content_output_str.splitlines()
         except Exception as e:
-            abort(400, get_error_message(e))
+            raise RouteException(get_error_message(e))
 
     if search_titles:
         try:
@@ -879,7 +878,7 @@ def search():
             title_output_str = s.communicate()[0].decode('utf-8').strip()
             title_output = title_output_str.splitlines()
         except Exception as e:
-            abort(400, get_error_message(e))
+            raise RouteException(get_error_message(e))
 
     if not content_output and not title_output:
         return json_response({'title_result_count': title_result_count,

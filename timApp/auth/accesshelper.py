@@ -5,7 +5,6 @@ from typing import Optional, Tuple, List
 from flask import flash
 from flask import request, g
 from sqlalchemy import inspect
-from werkzeug.exceptions import abort
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -27,35 +26,35 @@ from timApp.timdb.sqa import db
 from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
-from timApp.util.flask.requesthelper import get_option
+from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
 from timApp.util.utils import get_current_time
 
 
 def get_doc_or_abort(doc_id: int, msg: Optional[str] = None) -> DocInfo:
     d = DocEntry.find_by_id(doc_id)
     if not d:
-        abort(404, msg or 'Document not found')
+        raise NotExist(msg or 'Document not found')
     return d
 
 
 def get_item_or_abort(item_id: int):
     i = Item.find_by_id(item_id)
     if not i:
-        abort(404, 'Item not found')
+        raise NotExist('Item not found')
     return i
 
 
 def get_folder_or_abort(folder_id: int):
     f = Folder.get_by_id(folder_id)
     if not f:
-        abort(404, 'Folder not found')
+        raise NotExist('Folder not found')
     return f
 
 
 def verify_admin(require: bool=True, user: Optional[User]=None) -> bool:
     if not check_admin_access(user=user):
         if require:
-            abort(403, 'This action requires administrative rights.')
+            raise AccessDenied('This action requires administrative rights.')
         return False
     return True
 
@@ -181,7 +180,7 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
                     msg, next_doc = None, None
                 raise ItemLockedException(ba, msg, next_doc)
     if require:
-        abort(403, message or "Sorry, you don't have permission to use this resource.")
+        raise AccessDenied(message or "Sorry, you don't have permission to use this resource.")
     return None
 
 
@@ -286,7 +285,7 @@ def get_rights(d: ItemBase):
 
 def verify_logged_in() -> None:
     if not logged_in():
-        abort(403, "You have to be logged in to perform this action.")
+        raise AccessDenied("You have to be logged in to perform this action.")
 
 
 def verify_ownership(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
@@ -295,12 +294,12 @@ def verify_ownership(b: ItemOrBlock, require=True, message=None, check_duration=
 
 def verify_read_marking_right(b: ItemOrBlock):
     if not has_read_marking_right(b):
-        abort(403)
+        raise AccessDenied()
 
 
 def verify_comment_right(b: ItemOrBlock):
     if not has_comment_right(b):
-        abort(403)
+        raise AccessDenied()
 
 
 def get_plugin_from_request(doc: Document, task_id: TaskId, u: UserContext, view_ctx: ViewContext) -> Tuple[Document, Plugin]:
@@ -310,7 +309,7 @@ def get_plugin_from_request(doc: Document, task_id: TaskId, u: UserContext, view
     par_id = plug.par.get_id()
     if orig_doc_id is None or orig_par_id is None:
         if not doc.has_paragraph(par_id):
-            return abort(400, 'Plugin not found')
+            raise RouteException('Plugin not found')
         return doc, plug
     if orig_doc_id != doc.doc_id:
         orig_doc = Document(orig_doc_id)
@@ -367,7 +366,7 @@ def verify_task_access(
     if found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly and \
             required_task_access_level == TaskIdAccess.ReadWrite and \
             not context_user.logged_user.has_teacher_access(doc.get_docinfo()):
-        abort(403, f'This task/field {task_id.task_name} is readonly and thus only writable for teachers.')
+        raise AccessDenied(f'This task/field {task_id.task_name} is readonly and thus only writable for teachers.')
     return TaskAccessVerification(
         plugin=found_plugin,
         access=access,

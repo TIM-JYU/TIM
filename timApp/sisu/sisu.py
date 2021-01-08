@@ -5,7 +5,7 @@ from textwrap import dedent
 from typing import List, Optional, Dict, Union, Any, Generator
 
 import requests
-from flask import Blueprint, abort, current_app, request, Response
+from flask import Blueprint, current_app, request, Response
 from marshmallow import validates, ValidationError
 from marshmallow.utils import _Missing, missing
 from sqlalchemy import any_, true
@@ -36,7 +36,7 @@ from timApp.user.groups import validate_groupname, update_group_doc_settings, ad
     verify_group_view_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup, get_sisu_groups_by_filter
-from timApp.util.flask.requesthelper import use_model
+from timApp.util.flask.requesthelper import use_model, RouteException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFieldObj, RequestedGroups
 from timApp.util.logger import log_warning
@@ -124,7 +124,7 @@ def create_groups_route(args: List[GroupCreateModel]) -> Response:
     requested_external_ids = set(a.externalId for a in args)
     not_allowed = requested_external_ids - allowed_external_ids
     if not_allowed:
-        return abort(403, f"You don't have access to all the requested groups: {seq_to_str(sorted(list(not_allowed)))}")
+        raise AccessDenied(f"You don't have access to all the requested groups: {seq_to_str(sorted(list(not_allowed)))}")
 
     # Now, create the admin documents for groups that don't yet exist.
     # Rights to already existing documents need to be updated too.
@@ -146,7 +146,7 @@ def create_groups_route(args: List[GroupCreateModel]) -> Response:
         p = parse_sisu_group_display_name(g.display_name)
         name_no_special = remove_path_special_chars(name)
         if not p:
-            return abort(400, f'Failed to parse Sisu group display name: {g.display_name}')
+            raise RouteException(f'Failed to parse Sisu group display name: {g.display_name}')
         expected_location = p.group_doc_root
         if g.admin_doc:
             doc = g.admin_doc.docentries[0]
@@ -182,7 +182,7 @@ def create_groups_route(args: List[GroupCreateModel]) -> Response:
             db.session.flush()
         except IntegrityError:
             db.session.rollback()
-            return abort(400, f"The group name '{name}' already exists.")
+            raise RouteException(f"The group name '{name}' already exists.")
         update_group_doc_settings(doc, name, extra_macros={'sisugroup': r})
         groups = get_sisu_group_rights(g)
         docblock.add_rights(groups, AccessType.owner)

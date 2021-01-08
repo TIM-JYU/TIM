@@ -1,13 +1,14 @@
 import json
-
 from dataclasses import dataclass, asdict
-from flask import request, abort, Blueprint
+
+from flask import request, Blueprint
 from webargs.flaskparser import use_args
 
 from timApp.auth.accesshelper import get_doc_or_abort, verify_manage_access
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.slide.slidestatus import SlideStatus
 from timApp.timdb.sqa import db
+from timApp.util.flask.requesthelper import NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 
 slide_bp = Blueprint('slide',
@@ -18,7 +19,7 @@ slide_bp = Blueprint('slide',
 @slide_bp.route("/getslidestatus")
 def getslidestatus():
     if 'doc_id' not in request.args:
-        abort(404, "Missing doc id")
+        raise NotExist("Missing doc id")
     doc_id = int(request.args['doc_id'])
     status: SlideStatus = SlideStatus.query.filter_by(doc_id=doc_id).first()
     if status:

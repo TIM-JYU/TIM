@@ -8,7 +8,7 @@ import bs4
 import requests
 from bs4 import BeautifulSoup
 from flask import Response, send_file
-from flask import g, abort
+from flask import g
 from flask import redirect
 from flask import render_template
 from flask import request
@@ -27,7 +27,6 @@ from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
 from timApp.auth.login import login_page
 from timApp.auth.saml import saml
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, logged_in
-from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.bookmark.routes import bookmarks, add_to_course_bookmark
 from timApp.defaultconfig import SECRET_KEY
@@ -41,14 +40,15 @@ from timApp.document.minutes.routes import minutes_blueprint
 from timApp.document.routes import doc_bp
 from timApp.document.translation.routes import tr_bp
 from timApp.errorhandlers import register_errorhandlers
-from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.gamification.generateMap import generateMap
 from timApp.item.block import Block
 from timApp.item.manage import manage_page
 from timApp.item.routes import view_page
 from timApp.item.routes_tags import tags_blueprint
 from timApp.item.tag import Tag, GROUP_TAG_PREFIX
+from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.lecture.routes import lecture_routes
+from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
 from timApp.notification.notify import notify
 from timApp.plugin.importdata.importData import importData_plugin
@@ -69,7 +69,7 @@ from timApp.user.settings.settings import settings_page
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
-from timApp.util.flask.requesthelper import get_request_message, use_model, RouteException
+from timApp.util.flask.requesthelper import get_request_message, use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, add_csp_header
 from timApp.util.flask.search import search_routes
 from timApp.util.logger import log_info, log_debug
@@ -226,7 +226,7 @@ def get_js_file(path: str):
             return send_file(f, conditional=True)
         except FileNotFoundError:
             pass
-    return abort(404, 'File not found')
+    raise NotExist('File not found')
 
 
 @app.route('/empty')
@@ -291,7 +291,7 @@ def get_templates():
     current_path = request.args.get('item_path', '')
     d = DocEntry.find_by_path(current_path)
     if not d:
-        abort(404)
+        raise NotExist()
     verify_edit_access(d)
     templates = get_templates_for_folder(d.parent)
     return json_response(templates, date_conversion=True)

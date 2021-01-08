@@ -8,7 +8,6 @@ from typing import List, Optional
 import dateutil.parser
 from flask import Blueprint, render_template, g
 from flask import Response
-from flask import abort
 from flask import current_app
 from flask import request
 from flask import session
@@ -36,7 +35,7 @@ from timApp.lecture.useractivity import Useractivity
 from timApp.plugin.qst.qst import get_question_data_from_document
 from timApp.timdb.sqa import db, tim_main_execute
 from timApp.user.user import User
-from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model, RouteException
+from timApp.util.flask.requesthelper import get_option, verify_json_params, use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, empty_response
 from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time
@@ -610,7 +609,7 @@ def create_lecture():
     else:
         lecture = Lecture.find_by_id(lecture_id)
         if not lecture:
-            return abort(404)
+            raise NotExist()
     lecture.start_time = start_time
     lecture.end_time = end_time
     lecture.password = password
@@ -708,7 +707,7 @@ def get_lecture_from_request(check_access=True, lecture_id: Optional[int] = None
     else:
         lecture = Lecture.find_by_id(lecture_id)
     if not lecture:
-        abort(404, 'Lecture not found')
+        raise NotExist('Lecture not found')
     if check_access:
         verify_is_lecturer(lecture)
     return lecture
@@ -776,7 +775,7 @@ def extend_question():
     extend = int(request.args.get('extend'))
     q = get_asked_question(asked_id)
     if not q:
-        return abort(404)
+        raise NotExist()
     rq: Runningquestion = q.running_question
     if not q.is_running:
         raise RouteException('Question is not running')
@@ -845,7 +844,7 @@ def ask_question():
     elif asked_id:
         question = get_asked_question(asked_id)
         if not question:
-            abort(404, 'Asked question not found.')
+            raise NotExist('Asked question not found.')
         question.asked_time = get_current_time()
         lecture = question.lecture
     else:
@@ -871,7 +870,7 @@ def show_points(m: ShowAnswerPointsModel):
     asked_id = m.asked_id
     q = get_asked_question(asked_id)
     if not q:
-        return abort(404)
+        raise NotExist()
 
     stop_showing_points(lecture)
     sp = Showpoints(asked_question=q)
@@ -947,7 +946,7 @@ def get_question_answer_by_id():
         raise RouteException('missing argument(s)')
     ans = LectureAnswer.get_by_id(answer_id)
     if not ans:
-        abort(404, 'Answer not found')
+        raise NotExist('Answer not found')
     verify_is_lecturer(ans.asked_question.lecture)
     return json_response(ans, date_conversion=True)
 
@@ -959,7 +958,7 @@ def stop_question(m: AskedIdModel):
     asked_id = m.asked_id
     aq = get_asked_question(asked_id)
     if not aq:
-        return abort(404, 'Asked question not found')
+        raise NotExist('Asked question not found')
     lecture = get_current_lecture_or_abort()
     verify_is_lecturer(lecture)
     if not aq.is_running:
@@ -981,7 +980,7 @@ def get_lecture_answers():
     question = get_asked_question(asked_id)
     verify_is_lecturer(question.lecture)
     if not question:
-        return abort(404, "Asked question not found")
+        raise NotExist("Asked question not found")
     after = get_option(request, 'after', default=question.asked_time, cast=dateutil.parser.parse)
 
     lecture_answers = question.answers.filter(LectureAnswer.answered_on > after).order_by(LectureAnswer.answered_on.asc()).all()
@@ -1051,7 +1050,7 @@ def close_points():
 
     q = get_asked_question(asked_id)
     if not q:
-        return abort(404)
+        raise NotExist()
 
     points = get_shown_points(lecture)
     if points:

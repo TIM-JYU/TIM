@@ -8,7 +8,6 @@ from typing import List
 from urllib.parse import urlencode
 
 from flask import Blueprint, send_file
-from flask import abort
 
 from timApp.auth.accesshelper import verify_manage_access, verify_edit_access, get_doc_or_abort
 from timApp.document.create_item import create_or_copy_item, create_document
@@ -18,7 +17,7 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.item.block import BlockType
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile
-from timApp.util.flask.requesthelper import verify_json_params, use_model
+from timApp.util.flask.requesthelper import verify_json_params, use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import safe_redirect, json_response
 from timApp.util.pdftools import merged_file_folder, merge_pdfs, get_attachments_from_pars
 from timApp.util.utils import get_error_message
@@ -37,7 +36,7 @@ def create_minute_extracts(doc):
     """
     d = DocEntry.find_by_path(doc)
     if not d:
-        abort(404)
+        raise NotExist()
     verify_manage_access(d)
 
     # figure out the index of the minute, get the value of the 'knro' macro
@@ -45,10 +44,10 @@ def create_minute_extracts(doc):
     macros = d.document.get_settings().get_macroinfo(default_view_ctx).get_macros()
     minute_number = macros.get("knro")
     if not minute_number:
-        return abort(400, "Error creating extracts: the document is not a minute document (no 'knro' macro found)")
+        raise RouteException("Error creating extracts: the document is not a minute document (no 'knro' macro found)")
 
     if not isinstance(minute_number, int):
-        return abort(400, "Error creating extracts: the value of the 'knro' macro is not a valid integer")
+        raise RouteException("Error creating extracts: the value of the 'knro' macro is not a valid integer")
 
     paragraphs = d.document.get_paragraphs()
 
@@ -81,19 +80,19 @@ def create_minute_extracts(doc):
             if comma_position == -1:
                 continue
                 # sometimes there's intentionally a macro without the extract index
-                # abort(400, f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
+                # raise RouteException(f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
 
             new_extract_index = 0
             try:
                 new_extract_index = int(ast.literal_eval(markdown[macro_position + len(markdown_to_find):comma_position]))
             except ValueError:
-                abort(400, f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
+                raise RouteException(f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
 
             if current_extract_index > -1:
                 # if we were in another extract's paragraph before, save the previous extract's paragraphs into the dict
                 # don't allow duplicate extract numbers
                 if current_extract_index in extract_dict:
-                    return abort(400, f"Error creating extracts: the same extract entry ({current_extract_index}) " +
+                    raise RouteException(f"Error creating extracts: the same extract entry ({current_extract_index}) " +
                                  "cannot exist multiple times in the document.")
                 extract_dict[current_extract_index] = (current_extract_title, current_paragraphs)
                 current_extract_title = ""
@@ -121,12 +120,12 @@ def create_minute_extracts(doc):
     # if so, add the last extract to the dict
     if current_extract_index > -1:
         if current_extract_index in extract_dict:
-            return abort(400, f"Error creating extracts: the same extract entry ({current_extract_index}) cannot " +
+            raise RouteException(f"Error creating extracts: the same extract entry ({current_extract_index}) cannot " +
                          "exist multiple times in the document.")
         extract_dict[current_extract_index] = (current_extract_title, current_paragraphs)
 
     if not extract_dict:
-        return abort(400, "The document has no extract macros!")
+        raise RouteException("The document has no extract macros!")
 
     base_path = f"{d.location}/otteet/kokous{minute_number}/"
 
@@ -176,7 +175,7 @@ def create_minutes_route():
 
     d = DocEntry.find_by_id(copy_id)
     if not d:
-        abort(404)
+        raise NotExist()
 
     verify_manage_access(d)
 
@@ -224,14 +223,14 @@ def get_attachment_list(doc):
     try:
         d = DocEntry.find_by_path(doc)
         if not d:
-            abort(400)
+            raise RouteException()
         verify_edit_access(d)
 
         paragraphs = d.document.get_paragraphs(d)
         attachments = get_attachments_from_pars(paragraphs)
 
     except Exception as err:
-        abort(400, get_error_message(err))
+        raise RouteException(get_error_message(err))
     else:
         return json_response(attachments)
 
@@ -262,7 +261,7 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
             if file:
                 pdf_files.append(file)
             else:
-                abort(404, f"Missing file: {pdf}")
+                raise NotExist(f"Missing file: {pdf}")
 
         # Create folders when necessary.
         merged_file_folder.mkdir(exist_ok=True)
@@ -274,7 +273,7 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
         file_name = f"{d.short_name}_{hash('|'.join(sorted(pdf_urls)))}_merged.pdf"
         merge_pdfs(pdf_files, destination_folder / file_name)
     except Exception as err:
-        abort(400, get_error_message(err))
+        raise RouteException(get_error_message(err))
     else:
         params = urlencode({'doc_id': doc_id, 'urls': pdf_urls}, doseq=True)
         return json_response({'success': True, 'url': f"/minutes/openMergedAttachment?{params}"}, status_code=201)
@@ -289,7 +288,7 @@ def open_merged_file(args: MergeAttachmentsModel):
     :return: Opens the file in the browser.
     """
     if not args.urls:
-        abort(404, 'File not found')
+        raise NotExist('File not found')
     pdf_urls = args.urls
     doc_id = args.doc_id
     d = get_doc_or_abort(doc_id)
@@ -299,6 +298,6 @@ def open_merged_file(args: MergeAttachmentsModel):
     f = merged_file_folder / str(doc_id) / Path(merged_file_name)
     if not f.exists():
         # TODO: Create the file here, if user has edit-access.
-        abort(404, 'File not found! ')
+        raise NotExist('File not found! ')
     verify_edit_access(d)
     return send_file(f.absolute().as_posix(), mimetype="application/pdf")

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from typing import Dict, Any, Optional
 
 from flask import Blueprint, render_template, session, flash, Response
-from flask import abort
 from flask import request
 from jinja2 import TemplateNotFound
 
@@ -22,7 +21,7 @@ from timApp.user.consentchange import ConsentChange
 from timApp.user.preferences import Preferences
 from timApp.user.settings.theme import get_available_themes
 from timApp.user.user import User, Consent
-from timApp.util.flask.requesthelper import get_option, verify_json_params, RouteException, use_model
+from timApp.util.flask.requesthelper import get_option, verify_json_params, RouteException, use_model, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 
 settings_page = Blueprint('settings_page',
@@ -46,7 +45,7 @@ def show() -> str:
                                notification_limit=limit,
                                notifications=get_current_user_notifications(limit=limit))
     except TemplateNotFound:
-        abort(404)
+        raise NotExist()
 
 
 @settings_page.route('/get')
@@ -60,7 +59,7 @@ def save_settings() -> Response:
         j = request.get_json()
         get_current_user_object().set_prefs(Preferences.from_json(j))
     except TypeError:
-        abort(400, f'Invalid settings: {j}')
+        raise RouteException(f'Invalid settings: {j}')
     db.session.commit()
     show()  # Regenerate CSS
     return json_response(get_current_user_object().get_prefs())
@@ -127,7 +126,7 @@ def get_info_route(username: Optional[str]=None) -> Response:
         verify_admin()
         u = User.get_by_name(username)
         if not u:
-            abort(404, 'User not found')
+            raise NotExist('User not found')
     else:
         u = get_current_user_object()
     include_doc_content = get_option(request, 'content', False)
@@ -141,7 +140,7 @@ def update_consent() -> Response:
     try:
         consent = Consent(v)
     except ValueError:
-        return abort(400, 'Invalid consent value.')
+        raise RouteException('Invalid consent value.')
     if u.consent != consent:
         u.consent = consent
         u.consents.append(ConsentChange(consent=consent))

@@ -1,7 +1,5 @@
 from typing import List, Generator, Tuple, Union, Optional
 
-from werkzeug.exceptions import abort
-
 from timApp.auth.accesshelper import grant_access_to_session_users, reset_request_access_cache, get_doc_or_abort, \
     verify_edit_access
 from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group_object
@@ -18,6 +16,7 @@ from timApp.item.validation import validate_item_and_create_intermediate_folders
 from timApp.tim_app import app
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import DOC_DEFAULT_RIGHT_NAME, FOLDER_DEFAULT_RIGHT_NAME
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.utils import split_location
 
 
@@ -137,7 +136,7 @@ def create_or_copy_item(
         d = d.src_doc
         vr = d.document.validate()
         if vr.issues:
-            abort(400, f'The following errors must be fixed before copying:\n{vr}')
+            raise RouteException(f'The following errors must be fixed before copying:\n{vr}')
     item = do_create_item(item_path, item_type, item_title)
     if isinstance(item, DocInfo):
         if d:

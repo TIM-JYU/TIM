@@ -9,7 +9,6 @@ from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict,
 import requests
 from flask import Blueprint, session, current_app
 from flask import Response
-from flask import abort
 from flask import request
 from marshmallow import validates_schema, ValidationError
 from marshmallow.utils import missing
@@ -63,7 +62,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model, \
-    get_urlmacros_from_request
+    get_urlmacros_from_request, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, \
     ALL_ANSWERED_WILDCARD, GetFieldsAccess
@@ -96,16 +95,16 @@ def save_points(answer_id, user_id):
             view_ctx=default_view_ctx,
         )
     except PluginException as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
     a = Answer.query.get(answer_id)
     try:
         points = points_to_float(points)
     except ValueError:
-        abort(400, 'Invalid points format.')
+        raise RouteException('Invalid points format.')
     try:
         a.points = plugin.validate_points(points) if not has_teacher_access(d) else points
     except PluginException as e:
-        abort(400, str(e))
+        raise RouteException(str(e))
     a.last_points_modifier = get_current_user_group()
     db.session.commit()
     return ok_response()
@@ -213,7 +212,7 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, answer_id: O
     try:
         tid = TaskId.parse(task_id_ext)
     except PluginException as e:
-        return abort(400, f'Task id error: {e}')
+        raise RouteException(f'Task id error: {e}')
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
 
@@ -239,7 +238,7 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, answer_id: O
         )
 
     if plugin.type != plugintype:
-        abort(400, f'Plugin type mismatch: {plugin.type} != {plugintype}')
+        raise RouteException(f'Plugin type mismatch: {plugin.type} != {plugintype}')
 
     users = [ctx_user]
 
@@ -342,7 +341,7 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
     tasks, user_id = args.tasks, args.user
     user = User.get_by_id(user_id)
     if user is None:
-        abort(400, 'Non-existent user')
+        raise RouteException('Non-existent user')
     verify_logged_in()
     try:
         doc_map = {}
@@ -365,7 +364,7 @@ def get_answers_for_tasks(args: UserAnswersForTasksModel):
             get_globals_for_tasks(gtids, answer_map)
         return json_response({"answers": answer_map, "userId": user_id})
     except Exception as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
 
 
 @dataclass
@@ -457,7 +456,7 @@ def send_email(args: SendEmailModel):
     rcpts, msg, subject, bccme = args.rcpts, args.msg, args.subject, args.bccme
     curr_user = get_current_user_object()
     if curr_user not in UserGroup.get_teachers_group().users and curr_user not in get_home_organization_group().users:
-        abort(403, "Sorry, you don't have permission to use this resource.")
+        raise AccessDenied("Sorry, you don't have permission to use this resource.")
     curr_user = get_current_user_object()
     if bccme:
         bcc = curr_user.email
@@ -977,7 +976,7 @@ def handle_points_ref(answerdata: AnswerData, curr_user: User, d: DocInfo, ptype
         try:
             given_points = float(given_points)
         except ValueError:
-            return abort(400, 'Points must be a number.')
+            raise RouteException('Points must be a number.')
     a = curr_user.answers.filter_by(task_id=tid.doc_task).order_by(Answer.id.desc()).first()
     if a:
         a.points = given_points
@@ -1147,9 +1146,9 @@ def save_fields(
             try:
                 id_num = TaskId.parse(tid, require_doc_id=False, allow_block_hint=False, allow_custom_field=True)
             except PluginException:
-                return abort(400, f'Invalid task name: {tid.split(".")[1]}')
+                raise RouteException(f'Invalid task name: {tid.split(".")[1]}')
             if not id_num.doc_id:
-                return abort(400, f'Doc id missing: {tid}')
+                raise RouteException(f'Doc id missing: {tid}')
             if id_num.doc_id not in doc_map:
                 doc_map[id_num.doc_id] = get_doc_or_abort(id_num.doc_id)
     task_content_name_map = {}
@@ -1162,7 +1161,7 @@ def save_fields(
         if not (curr_user.has_teacher_access(dib) or (allow_non_teacher and t_id.doc_id == current_doc.id) or (
                 curr_user.has_view_access(dib) and dib.document.get_own_settings().get("allow_external_jsrunner",
                                                                                        False))):
-            return abort(403, f'Missing teacher access for document {dib.id}')
+            raise AccessDenied(f'Missing teacher access for document {dib.id}')
         try:
             vr = verify_task_access(
                 dib,
@@ -1178,10 +1177,10 @@ def save_fields(
                 if ignore_missing:
                     ignore_fields[t_id.doc_task] = True
                     continue
-                return abort(400, str(e))
+                raise RouteException(str(e))
             plugin = PluginType('textfield')  # assuming textfield type for fields that are not in the document
         except (PluginException, TimDbException) as e:
-            return abort(400, str(e))
+            raise RouteException(str(e))
 
         # TODO this 'if' seems unnecessary
         if t_id.task_name in ('grade', 'credit', 'completionDate'):
@@ -1191,7 +1190,7 @@ def save_fields(
         if t_id.field and t_id.field != "points" and t_id.field != "styles":
             if plugin.type == "numericfield" or plugin.type == "textfield":
                 if t_id.field != plugin.get_content_field_name():
-                    return abort(400, f'Error saving to {task}: {t_id.field} is not an accepted field.')
+                    raise RouteException(f'Error saving to {task}: {t_id.field} is not an accepted field.')
             task_content_name_map[task] = t_id.field
         else:
             task_content_name_map[task] = plugin.get_content_field_name()
@@ -1224,7 +1223,7 @@ def save_fields(
         u_id = user['user']
         u = user_map.get(u_id)
         if not u:
-            return abort(400, f'User id {u_id} not found')
+            raise RouteException(f'User id {u_id} not found')
         user_fields = user['fields']
         task_map: DefaultDict[str, Dict[str, Any]] = defaultdict(dict)
         for key, value in user_fields.items():
@@ -1359,7 +1358,7 @@ def get_task_info(task_id):
         )
         tim_vars = find_tim_vars(plugin)
     except PluginException as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
     return json_response(tim_vars)
 
 
@@ -1500,11 +1499,11 @@ def get_answers(task_id: str, user_id: int):
     try:
         tid = TaskId.parse(task_id)
     except PluginException as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
     d = get_doc_or_abort(tid.doc_id)
     user = User.get_by_id(user_id)
     if user is None:
-        abort(400, 'Non-existent user')
+        raise RouteException('Non-existent user')
     if user_id != get_current_user_id():
         if not verify_seeanswers_access(d, require=False):
             if not has_review_access(d, get_current_user_object(), tid, user):
@@ -1654,7 +1653,7 @@ def get_jsframe_data(task_id, user_id):
         vals = get_plug_vals(doc, tid, UserContext(user=user, logged_user=curr_user), default_view_ctx)
         return json_response(vals)
     except Exception as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
         # return json_response({})
 
 
@@ -1682,7 +1681,7 @@ def get_state(args: GetStateModel):
     answer = None
     user = User.get_by_id(user_id)
     if user is None:
-        abort(400, 'Non-existent user')
+        raise RouteException('Non-existent user')
     if answer_id:
         answer = Answer.query.get(answer_id)
         if not answer:
@@ -1694,7 +1693,7 @@ def get_state(args: GetStateModel):
             try:
                 answer, doc_id = verify_answer_access(answer_id, user_id, default_view_ctx, allow_grace_period=True)
             except PluginException as e:
-                return abort(400, str(e))
+                raise RouteException(str(e))
         doc = Document(doc_id)
         tid = TaskId.parse(answer.task_id)
     elif task_id:
@@ -1706,7 +1705,7 @@ def get_state(args: GetStateModel):
             verify_view_access(d)
         doc = d.document
     else:
-        return abort(400, "Missing answer ID or task ID")
+        raise RouteException("Missing answer ID or task ID")
 
     doc.insert_preamble_pars()
     if par_id:
@@ -1715,7 +1714,7 @@ def get_state(args: GetStateModel):
     try:
         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user_ctx, view_ctx=default_view_ctx)
     except PluginException as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
     block = plug.par
 
     presult = pluginify(doc, [block], user_ctx, default_view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
@@ -1743,7 +1742,7 @@ def verify_answer_access(
 ) -> Tuple[Answer, int]:
     answer: Answer = Answer.query.get(answer_id)
     if answer is None:
-        abort(400, 'Non-existent answer')
+        raise RouteException('Non-existent answer')
     tid = TaskId.parse(answer.task_id)
 
     if tid.is_global:
@@ -1809,15 +1808,15 @@ def get_task_users(task_id):
 def rename_answers(old_name: str, new_name: str, doc_path: str):
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
     if not d:
-        abort(404)
+        raise NotExist()
     verify_manage_access(d)
     force = get_option(request, 'force', False)
     for n in (old_name, new_name):
         if not re.fullmatch('[a-zA-Z0-9_-]+', n):
-            abort(400, f'Invalid task name: {n}')
+            raise RouteException(f'Invalid task name: {n}')
     conflicts = Answer.query.filter_by(task_id=f'{d.id}.{new_name}').count()
     if conflicts > 0 and not force:
-        abort(400, f'The new name conflicts with {conflicts} other answers with the same task name.')
+        raise RouteException(f'The new name conflicts with {conflicts} other answers with the same task name.')
     answers_to_rename = Answer.query.filter_by(task_id=f'{d.id}.{old_name}').all()
     for a in answers_to_rename:
         a.task_id = f'{d.id}.{new_name}'

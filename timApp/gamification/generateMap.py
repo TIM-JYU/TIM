@@ -1,11 +1,12 @@
 import json
 from copy import deepcopy
 
-from flask import Blueprint, abort
+from flask import Blueprint
 from flask import request
 
 from timApp.gamification import gamificationdata
 from timApp.gamification.gamificationdata import GamificationException
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response
 
 generateMap = Blueprint('generateMap', __name__, url_prefix='')
@@ -17,7 +18,7 @@ def generate_map():
     try:
         coursedata = gamificationdata.gamify(request.get_json())
     except GamificationException as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
     # Get lectures from json
     lecturejson = coursedata['lectures']
     # Get demos from json

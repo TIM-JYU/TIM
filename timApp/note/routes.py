@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Optional
 
 from flask import Blueprint
-from flask import abort
 from flask import request
 from sqlalchemy import true
 from sqlalchemy.orm import joinedload
@@ -29,7 +28,7 @@ from timApp.notification.pending_notification import PendingNotification
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.util.flask.requesthelper import get_referenced_pars_from_req, verify_json_params, RouteException
+from timApp.util.flask.requesthelper import get_referenced_pars_from_req, verify_json_params, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.utils import get_current_time
 
@@ -49,7 +48,7 @@ def has_note_edit_access(n: UserNote):
 def get_comment_and_check_exists(note_id: int):
     note = get_comment_by_id(note_id)
     if not note:
-        return abort(404, 'Comment not found. It may have been deleted.')
+        raise NotExist('Comment not found. It may have been deleted.')
     return note
 
 
@@ -57,7 +56,7 @@ def get_comment_and_check_exists(note_id: int):
 def get_note(note_id):
     note = get_comment_and_check_exists(note_id)
     if not has_note_edit_access(note):
-        return abort(403)
+        raise AccessDenied()
     return json_response({'text': note.content, 'extraData': note}, date_conversion=True)
 
 
@@ -166,7 +165,7 @@ def get_notes(item_path):
 
 def check_note_access_ok(is_public: bool, doc: Document):
     if is_public and doc.get_settings().comments() == 'private':
-        return abort(403, 'Only private comments can be posted on this document.')
+        raise AccessDenied('Only private comments can be posted on this document.')
 
 
 def clear_doc_cache_after_comment(docinfo: DocInfo, user: User, is_public: bool):
@@ -192,7 +191,7 @@ def post_note():
     try:
         par = doc.get_paragraph(par_id)
     except TimDbException as e:
-        return abort(404, str(e))
+        raise NotExist(str(e))
 
     par = get_referenced_pars_from_req(par)[0]
     curr_user = get_current_user_object()
@@ -229,7 +228,7 @@ def edit_note():
     try:
         par = d.document.get_paragraph(par_id)
     except TimDbException as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
 
     sent_tags = jsondata.get('tags', {})
     tags = []
@@ -237,7 +236,7 @@ def edit_note():
         if sent_tags.get(tag):
             tags.append(tag)
     if not has_note_edit_access(n):
-        abort(403, "Sorry, you don't have permission to edit this note.")
+        raise AccessDenied("Sorry, you don't have permission to edit this note.")
     n.content = note_text
     n.html = md_to_html(note_text)
     was_public = n.is_public
@@ -259,12 +258,12 @@ def delete_note():
     note = get_comment_and_check_exists(note_id)
     d = get_doc_or_abort(doc_id)
     if not has_note_edit_access(note):
-        abort(403, "Sorry, you don't have permission to remove this note.")
+        raise AccessDenied("Sorry, you don't have permission to remove this note.")
     par_id = note.par_id
     try:
         par = d.document.get_paragraph(par_id)
     except TimDbException:
-        return abort(400, 'Cannot delete the note because the paragraph has been deleted.')
+        raise RouteException('Cannot delete the note because the paragraph has been deleted.')
     db.session.delete(note)
     is_public = note.is_public
     if is_public:

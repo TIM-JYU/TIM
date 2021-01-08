@@ -6,7 +6,7 @@ from typing import Tuple, Optional, List, Union, Any
 
 import attr
 import sass
-from flask import Blueprint, render_template, make_response, abort, Response
+from flask import Blueprint, render_template, make_response, Response
 from flask import current_app
 from flask import flash
 from flask import redirect
@@ -62,7 +62,8 @@ from timApp.user.user import User, check_rights
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
 from timApp.user.userutils import DeletedUserException
-from timApp.util.flask.requesthelper import verify_json_params, use_model, view_ctx_with_urlmacros
+from timApp.util.flask.requesthelper import verify_json_params, use_model, view_ctx_with_urlmacros, RouteException, \
+    NotExist
 from timApp.util.flask.responsehelper import add_no_cache_headers
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
 from timApp.util.timtiming import taketime
@@ -186,7 +187,7 @@ def par_info(doc_id, par_id):
 def doc_access_info(doc_name):
     doc_info = DocEntry.find_by_path(doc_name, fallback_to_id=True)
     if not doc_info:
-        return abort(404)
+        raise NotExist()
 
     can_access = False
     try:
@@ -229,9 +230,9 @@ def items_route(args: GetItemsModel):
     elif args.folder_id is not None:
         f = Folder.get_by_id(args.folder_id)
     else:
-        return abort(400)
+        raise RouteException()
     if not f:
-        return abort(404, 'Folder not found.')
+        raise NotExist('Folder not found.')
     if not f.is_root():
         verify_view_access(f)
 
@@ -847,7 +848,7 @@ def create_item_direct(m: CreateItemModel):
 def get_item(item_id: int):
     i = Item.find_by_id(item_id)
     if not i:
-        abort(404, 'Item not found')
+        raise NotExist('Item not found')
     verify_view_access(i)
     return json_response(i)
 
@@ -863,7 +864,7 @@ def set_blockrelevance(item_id: int):
 
     i = Item.find_by_id(item_id)
     if not i:
-        abort(404, 'Item not found')
+        raise NotExist('Item not found')
     verify_manage_access(i)
 
     # TODO: Use dataclass.
@@ -875,7 +876,7 @@ def set_blockrelevance(item_id: int):
             db.session.delete(blockrelevance)
         except Exception as e:
             db.session.rollback()
-            abort(400, f"Changing block relevance failed: {get_error_message(e)}")
+            raise RouteException(f"Changing block relevance failed: {get_error_message(e)}")
     blockrelevance = BlockRelevance(relevance=relevance_value)
 
     try:
@@ -883,7 +884,7 @@ def set_blockrelevance(item_id: int):
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        abort(400, f"Setting block relevance failed: {get_error_message(e)}: {str(e)}")
+        raise RouteException(f"Setting block relevance failed: {get_error_message(e)}: {str(e)}")
     return ok_response()
 
 
@@ -897,7 +898,7 @@ def reset_blockrelevance(item_id: int):
 
     i = Item.find_by_id(item_id)
     if not i:
-        abort(404, 'Item not found')
+        raise NotExist('Item not found')
     verify_manage_access(i)
     blockrelevance = i.relevance
     if blockrelevance:
@@ -906,7 +907,7 @@ def reset_blockrelevance(item_id: int):
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            abort(400, f"Resetting block relevance failed: {get_error_message(e)}")
+            raise RouteException(f"Resetting block relevance failed: {get_error_message(e)}")
     return ok_response()
 
 
@@ -920,7 +921,7 @@ def get_relevance_route(item_id: int):
     """
     i = Item.find_by_id(item_id)
     if not i:
-        abort(404, 'Item not found')
+        raise NotExist('Item not found')
     verify_view_access(i)
 
     default = False
@@ -1005,7 +1006,7 @@ def set_piece_size(args: SetViewRangeModel):
     """
     piece_size = args.pieceSize
     if not piece_size or piece_size < 1:
-        return abort(400, "Invalid piece size")
+        raise RouteException("Invalid piece size")
     resp = make_response()
     resp.set_cookie(
         key="r",
@@ -1021,7 +1022,7 @@ def get_viewrange(doc_id: int, index: int, forwards: int):
     taketime("route view begin")
     current_set_size = get_piece_size_from_cookie(request)
     if not current_set_size:
-        return abort(400, "Piece size not found!")
+        raise RouteException("Piece size not found!")
     doc_info = get_doc_or_abort(doc_id)
     verify_view_access(doc_info)
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=forwards > 0)
@@ -1038,11 +1039,11 @@ def get_viewrange_with_header_id(doc_id: int, header_id: str):
     """
     current_set_size = get_piece_size_from_cookie(request)
     if not current_set_size:
-        return abort(404, "Partitioning piece size not found")
+        raise NotExist("Partitioning piece size not found")
     doc_info = get_doc_or_abort(doc_id)
     verify_view_access(doc_info)
     index = get_index_with_header_id(doc_info, header_id)
     if index is None:
-        return abort(404, f"Header '{header_id}' not found in the document '{doc_info.short_name}'!")
+        raise NotExist(f"Header '{header_id}' not found in the document '{doc_info.short_name}'!")
     view_range = decide_view_range(doc_info, current_set_size, index, forwards=True)
     return json_response(view_range)

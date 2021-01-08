@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Tuple, Optional
 
-from flask import Blueprint, abort, request
+from flask import Blueprint, request
 from flask import current_app, Response
 from sqlalchemy import func, distinct, true
 from sqlalchemy.exc import IntegrityError
@@ -23,7 +23,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import get_option, \
-    get_consent_opt, RouteException
+    get_consent_opt, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, csv_response
 from timApp.util.utils import seq_to_str, split_by_semicolon
 
@@ -127,7 +127,7 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
     try:
         db.session.commit()
     except IntegrityError:
-        abort(400, 'Paragraph was already marked read')
+        raise RouteException('Paragraph was already marked read')
     for d in docs.values():
         for u in get_session_users_objs():
             clear_doc_cache(d, u)
@@ -171,7 +171,7 @@ def mark_all_unread(doc_id: int):
 def get_statistics(doc_path):
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
     if not d:
-        abort(404)
+        raise NotExist()
     verify_teacher_access(d)
     sort_opt = get_option(request, 'sort', 'username')
     group_opt = get_option(request, 'groups', None)
@@ -205,7 +205,7 @@ def get_statistics(doc_path):
     sort_col_map = dict(zip(column_names, [UserGroup.name] + cols))
     col_to_sort = sort_col_map.get(sort_opt)
     if col_to_sort is None:
-        abort(400, f'Invalid sort option. Possible values are {seq_to_str(column_names)}.')
+        raise RouteException(f'Invalid sort option. Possible values are {seq_to_str(column_names)}.')
     q = (UserGroup.query.join(ReadParagraph)
          .filter_by(doc_id=d.id)
          .filter(extra_condition)

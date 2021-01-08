@@ -3,11 +3,10 @@ import random
 import re
 import string
 import urllib.parse
+from dataclasses import dataclass
 from typing import Optional
 
-from dataclasses import dataclass
 from flask import Blueprint, render_template
-from flask import abort
 from flask import current_app
 from flask import flash
 from flask import redirect
@@ -29,8 +28,8 @@ from timApp.user.user import User, UserOrigin, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import create_anonymous_user
 from timApp.user.userutils import create_password_hash, check_password_hash
-from timApp.util.flask.requesthelper import verify_json_params, get_option, is_xhr, use_model, RouteException
-from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response, error_generic
+from timApp.util.flask.requesthelper import verify_json_params, is_xhr, use_model, RouteException, NotExist
+from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response
 from timApp.util.logger import log_error, log_warning, log_info
 from timApp.util.utils import is_valid_email
 
@@ -207,7 +206,7 @@ def alt_signup(m: AltSignupModel):
         return ok_response()
     except Exception as e:
         log_error(f'Could not send login email (user: {email}, password: {password}, exception: {str(e)})')
-        return abort(400, f'Could not send the email, please try again later. The error was: {str(e)}')
+        raise RouteException(f'Could not send the email, please try again later. The error was: {str(e)}')
 
 
 def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
@@ -218,7 +217,7 @@ def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
             nu = NewUser.query.get(u.email)
     if not (nu and nu.check_password(oldpass)):
         log_warning(f'Wrong temp password for "{email_or_username}": "{oldpass}"')
-        return abort(400, 'WrongTempPassword')
+        raise RouteException('WrongTempPassword')
     return nu
 
 
@@ -235,11 +234,11 @@ class AltSignup2Model:
 @use_model(AltSignup2Model)
 def alt_signup_after(m: AltSignup2Model):
     if m.password != m.passconfirm:
-        return abort(400, 'PasswordsNotMatch')
+        raise RouteException('PasswordsNotMatch')
 
     min_pass_len = current_app.config['MIN_PASSWORD_LENGTH']
     if len(m.password) < min_pass_len:
-        return abort(400, f'PasswordTooShort')
+        raise RouteException(f'PasswordTooShort')
 
     save_came_from()
     email_or_username = convert_email_to_lower(m.email)
@@ -255,7 +254,7 @@ def alt_signup_after(m: AltSignup2Model):
         u2 = User.get_by_name(username)
 
         if u2 is not None and u2.id != user_id:
-            return abort(400, 'UserAlreadyExists')
+            raise RouteException('UserAlreadyExists')
 
         # Use the existing user name; don't replace it with email
         username = user.name
@@ -269,7 +268,7 @@ def alt_signup_after(m: AltSignup2Model):
         user.update_info(UserInfo(username=username, full_name=real_name, email=email, password=m.password))
     else:
         if User.get_by_name(username) is not None:
-            return abort(400, 'UserAlreadyExists')
+            raise RouteException('UserAlreadyExists')
         success_status = 'registered'
         user, _ = User.create_with_group(
             UserInfo(
@@ -345,7 +344,7 @@ def alt_login():
     if is_possibly_home_org_account(email_or_username) and current_app.config['HAKA_ENABLED']:
         error_msg = 'EmailOrPasswordNotMatchUseHaka'
     if is_xhr(request):
-        return abort(403, error_msg)
+        raise AccessDenied(error_msg)
     else:
         flash(error_msg, 'loginmsg')
     return finish_login(ready=False)
@@ -392,7 +391,7 @@ def quick_login(username):
     verify_admin()
     user = User.get_by_name(username)
     if user is None:
-        abort(404, 'User not found.')
+        raise NotExist('User not found.')
     session['user_id'] = user.id
     flash(f"Logged in as: {username}")
     return redirect(url_for('view_page.index_page'))

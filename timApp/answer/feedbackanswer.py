@@ -3,11 +3,11 @@ import json
 from datetime import datetime
 from typing import List, Tuple, Iterable
 
-from flask import Blueprint, request, abort
+from flask import Blueprint, request
 
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_all_answer_initial_query
-from timApp.auth.accesshelper import verify_teacher_access
+from timApp.auth.accesshelper import verify_teacher_access, AccessDenied
 from timApp.auth.sessioninfo import user_context_with_logged_in
 from timApp.document.docentry import DocEntry, get_documents_in_folder
 from timApp.document.viewcontext import default_view_ctx
@@ -197,7 +197,7 @@ def print_feedback_report(doc_path):
     task_ids, _, access_missing = find_task_ids(pars, default_view_ctx, user_ctx)
 
     if len(access_missing) > 0:
-        abort(403, 'Access missing for task_ids: ' + access_missing)
+        raise AccessDenied('Access missing for task_ids: ' + access_missing)
 
     name = get_option(request, 'name', 'both')
     hidename = False
@@ -277,7 +277,7 @@ def print_feedback_report(doc_path):
             did_pars = did.document.get_dereferenced_paragraphs(default_view_ctx)
             task_dids, _ , access_missing2 = find_task_ids(did_pars, default_view_ctx, user_ctx)
             if len(access_missing2) > 0:
-                abort(403, 'Access missing for task_ids: ' + access_missing2)
+                raise AccessDenied('Access missing for task_ids: ' + access_missing2)
             all_tasks += task_dids
         answers += get_all_feedback_answers(all_tasks,
                                                 hidename,

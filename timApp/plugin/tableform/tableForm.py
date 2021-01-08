@@ -6,7 +6,7 @@ import json
 from dataclasses import dataclass, asdict, field
 from typing import Union, List, Optional, Dict, Any, TypedDict, Type, Sequence
 
-from flask import render_template_string, abort, Response
+from flask import render_template_string, Response
 from marshmallow.utils import missing
 from sqlalchemy.orm import joinedload
 from webargs.flaskparser import use_args
@@ -15,7 +15,7 @@ from markupmodels import GenericMarkupModel
 from marshmallow_dataclass import class_schema
 from pluginserver_flask import GenericHtmlModel, \
     GenericAnswerModel, create_blueprint, value_or_default, PluginAnswerResp, PluginAnswerWeb, PluginReqs, EditorTab
-from timApp.auth.accesshelper import get_doc_or_abort
+from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.timjsonencoder import TimJsonEncoder
@@ -32,7 +32,7 @@ from timApp.sisu.sisu import get_potential_groups
 from timApp.tim_app import csrf
 from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import RouteException, use_model, view_ctx_with_urlmacros
+from timApp.util.flask.requesthelper import RouteException, use_model, view_ctx_with_urlmacros, NotExist
 from timApp.util.flask.responsehelper import csv_string, json_response, text_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, GetFieldsAccess
 from timApp.util.utils import fin_timezone
@@ -402,7 +402,7 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
     tmp: Sequence[Union[str, float, None]] = r['fields']
     data[0] = data[0] + list(tmp)
     if len(filter_fields) != len(filter_values):
-        abort(400, "Filter targets and filter values do not match")
+        raise RouteException("Filter targets and filter values do not match")
     # TODO: Check if filters could be easily integrated to original query in get_fields_and_users
     regs = {}
     # TODO: Create ComparatorFilters
@@ -412,7 +412,7 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
             if reg:
                 regs[f] = reg
     except IndexError:
-        abort(400, "Too many filters")
+        raise RouteException("Too many filters")
 
     for rowkey, row in sorted(r['rows'].items()):
         row_data: List[Union[str, float, None]] = []
@@ -479,7 +479,7 @@ def fetch_rows(m: FetchTableDataModel) -> Response:
     try:
         plug = find_plugin_from_document(doc.document, tid, UserContext.from_one_user(curr_user), view_ctx)
     except TaskNotFoundException:
-        return abort(404, f'Table not found: {tid}')
+        raise NotExist(f'Table not found: {tid}')
     markup = load_tableform_markup(plug)
     include_users = markup.includeUsers
     fields = markup.fields
@@ -524,7 +524,7 @@ def fetch_rows_preview(m: FetchTableDataModelPreview) -> Response:
     # With this route we can't be certain about showInView so we just check for edit access
     # whoever can open the plugin in preview should have that right
     if not curr_user.has_edit_access(doc):
-        return abort(403, f'Missing edit access for document {doc.id}')
+        raise AccessDenied(f'Missing edit access for document {doc.id}')
     view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
     r = tableform_get_fields(
         m.fields,
@@ -559,7 +559,7 @@ def update_fields(m: UpdateFieldsModel) -> Response:
     try:
         plug = find_plugin_from_document(doc.document, tid, UserContext.from_one_user(curr_user), view_ctx)
     except TaskNotFoundException:
-        return abort(404, f'Table not found: {tid}')
+        raise NotExist(f'Table not found: {tid}')
     markup = load_tableform_markup(plug)
     groupnames = markup.groups
     if not isinstance(groupnames, list):

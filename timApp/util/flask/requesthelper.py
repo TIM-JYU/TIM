@@ -7,7 +7,7 @@ from dataclasses import is_dataclass, dataclass
 from typing import Optional, Type, TypeVar, Callable, Any, List, Tuple
 
 from flask import Request, current_app, g, Response
-from flask import request, abort
+from flask import request
 from marshmallow import ValidationError, Schema
 from webargs.flaskparser import use_args
 from werkzeug.exceptions import HTTPException
@@ -50,7 +50,7 @@ def verify_json_params(*args: str, require: bool=True, default: Any=None, error_
         elif not require:
             val = default
         else:
-            abort(400, err or f'Missing required parameter in request: {arg}')
+            raise RouteException(err or f'Missing required parameter in request: {arg}')
             return []
 
         result.append(val)
@@ -62,7 +62,7 @@ def get_referenced_pars_from_req(par: DocParagraph) -> List[DocParagraph]:
         try:
             return [ref_par for ref_par in par.get_referenced_pars()]
         except InvalidReferenceException as e:
-            abort(404, str(e))
+            raise NotExist(str(e))
     else:
         return [par]
 
@@ -117,7 +117,7 @@ def get_consent_opt() -> Optional[Consent]:
     elif consent_opt == 'any':
         consent = None
     else:
-        return abort(400, 'Invalid consent option. Must be "true", "false" or "any".')
+        raise RouteException('Invalid consent option. Must be "true", "false" or "any".')
     return consent
 
 
@@ -162,6 +162,10 @@ def get_request_message(status_code: Optional[int]=None, include_body: bool=Fals
 
 class RouteException(HTTPException):
     code = 400
+
+
+class NotExist(HTTPException):
+    code = 404
 
 
 @dataclass

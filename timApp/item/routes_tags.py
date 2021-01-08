@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import List
 
 from flask import Blueprint
-from flask import abort
 from flask import request
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -22,7 +21,7 @@ from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import verify_json_params, get_option
+from timApp.util.flask.requesthelper import verify_json_params, get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import ok_response, json_response
 
 tags_blueprint = Blueprint('tags',
@@ -40,7 +39,7 @@ def add_tag(doc):
 
     d = DocEntry.find_by_path(doc)
     if not d:
-        abort(404)
+        raise NotExist()
     verify_manage_access(d)
     add_tags_from_request(d)
     return commit_and_ok()
@@ -51,7 +50,7 @@ def commit_and_ok():
         db.session.commit()
     except (IntegrityError, FlushError):
         db.session.rollback()
-        abort(400, "Tag name is already in use.")
+        raise RouteException("Tag name is already in use.")
     return ok_response()
 
 
@@ -79,12 +78,12 @@ def check_tag_access(tag: Tag, check_group=True):
     if tag.type != TagType.Regular:
         ug = UserGroup.get_by_name(TEACHERS_GROUPNAME)
         if ug not in get_current_user_object().groups and not check_admin_access():
-            abort(400, f"Managing this tag requires admin or {TEACHERS_GROUPNAME} rights.")
+            raise RouteException(f"Managing this tag requires admin or {TEACHERS_GROUPNAME} rights.")
     groupname = tag.get_group_name()
     if groupname and check_group:
         ug = UserGroup.get_by_name(groupname)
         if not ug:
-            abort(404, f'Usergroup "{groupname}" not found.')
+            raise NotExist(f'Usergroup "{groupname}" not found.')
         verify_group_view_access(ug)
 
 
@@ -92,7 +91,7 @@ def check_tag_access(tag: Tag, check_group=True):
 def set_group_tags(doc):
     d = DocEntry.find_by_path(doc)
     if not d:
-        abort(404)
+        raise NotExist()
     verify_manage_access(d)
     tags: List[Tag] = d.block.tags
     tags_to_remove = [t for t in tags
@@ -120,7 +119,7 @@ def edit_tag(doc):
     """
     d = DocEntry.find_by_path(doc)
     if not d:
-        abort(404)
+        raise NotExist()
     verify_manage_access(d)
 
     new_tag_dict, = verify_json_params('newTag')
@@ -140,7 +139,7 @@ def edit_tag(doc):
     old_tag = Tag.query.filter_by(block_id=d.id, name=old_tag_name, type=old_tag_type).first()
 
     if not old_tag:
-        abort(400, "Tag to edit not found.")
+        raise RouteException("Tag to edit not found.")
     check_tag_access(old_tag)
     check_tag_access(new_tag)
     try:
@@ -148,7 +147,7 @@ def edit_tag(doc):
         d.block.tags.append(new_tag)
         db.session.commit()
     except (IntegrityError, FlushError):
-        abort(400, "Tag editing failed! New tag name may already be in use")
+        raise RouteException("Tag editing failed! New tag name may already be in use")
     return ok_response()
 
 
@@ -161,7 +160,7 @@ def remove_tag(doc):
     """
     d = DocEntry.find_by_path(doc)
     if not d:
-        abort(404)
+        raise NotExist()
     verify_manage_access(d)
 
     tag_dict, = verify_json_params('tagObject')
@@ -171,13 +170,13 @@ def remove_tag(doc):
     tag_obj = Tag.query.filter_by(block_id=d.id, name=tag_name, type=tag_type).first()
 
     if not tag_obj:
-        abort(400, "Tag not found.")
+        raise RouteException("Tag not found.")
     check_tag_access(tag_obj)
     try:
         db.session.delete(tag_obj)
         db.session.commit()
     except (IntegrityError, UnmappedInstanceError):
-        abort(400, "Tag removal failed.")
+        raise RouteException("Tag removal failed.")
     return ok_response()
 
 
@@ -190,7 +189,7 @@ def get_tags(doc):
     """
     d = DocEntry.find_by_path(doc)
     if not d:
-        abort(404)
+        raise NotExist()
     verify_view_access(d)
     tags = d.block.tags
     return json_response(tags, date_conversion=True)
@@ -265,5 +264,5 @@ def get_tagged_document_by_id(doc_id):
                          custom_filter=DocEntry.id.in_([doc_id]),
                          query_options=joinedload(DocEntry._block).joinedload(Block.tags))
     if not docs:
-        abort(404, "Document not found or not accessible!")
+        raise NotExist("Document not found or not accessible!")
     return json_response(docs[0], date_conversion=True)

@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from flask import Blueprint, render_template
-from flask import abort
 from flask import current_app
 from flask import request
 
@@ -41,7 +40,7 @@ from timApp.timdb.dbaccess import get_timdb
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile
-from timApp.util.flask.requesthelper import verify_json_params, use_model
+from timApp.util.flask.requesthelper import verify_json_params, use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.utils import get_error_html
 
@@ -69,26 +68,26 @@ def update_document(doc_id):
     elif 'template_name' in request.get_json():
         template = DocEntry.find_by_path(request.get_json()['template_name'])
         if not template:
-            abort(404, 'Template not found')
+            raise NotExist('Template not found')
         verify_view_access(template)
         content = template.document.export_markdown()
         if content == '':
-            return abort(400, 'The selected template is empty.')
+            raise RouteException('The selected template is empty.')
         existing_pars = docentry.document_as_current_user.get_paragraphs()
         if existing_pars:
-            abort(400, 'Cannot load a template because the document is not empty.')
+            raise RouteException('Cannot load a template because the document is not empty.')
         original = ''
         strict_validation = True
     else:
         request_json = request.get_json()
         if 'fulltext' not in request_json:
-            return abort(400, 'Malformed request - fulltext missing.')
+            raise RouteException('Malformed request - fulltext missing.')
         content = request_json['fulltext']
         original = request_json['original']
         strict_validation = not request_json.get('ignore_warnings', False)
 
     if original is None:
-        abort(400, 'Missing parameter: original')
+        raise RouteException('Missing parameter: original')
     if content is None:
         return json_response({'message': 'Failed to convert the file to UTF-8.'}, 400)
     doc = docentry.document_as_current_user
@@ -119,7 +118,7 @@ def update_document(doc_id):
     except ValidationWarning as e:
         return json_response({'error': str(e), 'is_warning': True}, status_code=400)
     except (TimDbException, ValidationException) as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
     pars = doc.get_paragraphs()
     return manage_response(docentry, pars, timdb, ver_before)
 
@@ -249,7 +248,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: Opti
     try:
         editor_pars = edit_request.get_pars(skip_access_check=True)
     except ValidationException as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
 
     editor_pars = check_and_rename_pluginnamehere(editor_pars, doc)
 
@@ -261,12 +260,12 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: Opti
             new_start, new_end, edit_result = doc.update_section(md, area_start, area_end)
             pars = doc.get_section(new_start, new_end)
         except (ValidationException, TimDbException) as e:
-            return abort(400, str(e))
+            raise RouteException(str(e))
     else:
         try:
             original_par = doc.get_paragraph(par_id)
         except TimDbException as e:
-            return abort(404, str(e))
+            raise NotExist(str(e))
         edit_result = DocumentEditResult()
         pars = []
         pars_to_add = editor_pars[1:]
@@ -280,7 +279,7 @@ def modify_paragraph_common(doc_id: int, md: str, par_id: str, par_next_id: Opti
             if p.is_translation():
                 deref = mark_as_translated(p)
                 if not deref:
-                    return abort(400, 'Paragraph is not a translation.')
+                    raise RouteException('Paragraph is not a translation.')
         else:
             p.set_attr('rt', None)
 
@@ -326,7 +325,7 @@ def mark_as_translated(p: DocParagraph):
 def abort_if_duplicate_ids(doc: Document, pars_to_add: List[DocParagraph]):
     conflicting_ids = set(p.get_id() for p in pars_to_add) & set(doc.get_par_ids())
     if conflicting_ids:
-        abort(400, get_duplicate_id_msg(conflicting_ids))
+        raise RouteException(get_duplicate_id_msg(conflicting_ids))
 
 
 @edit_page.route("/preview/<int:doc_id>", methods=['POST'])
@@ -680,13 +679,13 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: Optional[str]):
     verify_edit_access(docinfo)
     doc = docinfo.document_as_current_user
     if par_next_id and not doc.has_paragraph(par_next_id):
-        abort(400, doc.get_par_not_found_msg(par_next_id))
+        raise RouteException(doc.get_par_not_found_msg(par_next_id))
     edit_result = DocumentEditResult()
     edit_request = EditRequest.from_request(doc, md)
     try:
         editor_pars = edit_request.get_pars()
     except ValidationException as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
 
     abort_if_duplicate_ids(doc, editor_pars)
 
@@ -729,7 +728,7 @@ def delete_paragraph(doc_id):
     if area_end and area_start:
         for p in (area_start, area_end):
             if not doc.has_paragraph(p):
-                abort(400, f'Paragraph {p} does not exist')
+                raise RouteException(f'Paragraph {p} does not exist')
         md = doc.export_section(area_start, area_end)
         curr_section = doc.get_section(area_start, area_end)
         for p in curr_section:
@@ -738,7 +737,7 @@ def delete_paragraph(doc_id):
     else:
         par_id, = verify_json_params('par')
         if not doc.has_paragraph(par_id):
-            abort(400, f'Paragraph {par_id} does not exist')
+            raise RouteException(f'Paragraph {par_id} does not exist')
         par = doc.get_paragraph(par_id)
         verify_par_edit_access(par)
         md = par.get_markdown()
@@ -777,7 +776,7 @@ def name_area(doc_id, area_name):
     docentry = get_doc_or_abort(doc_id)
     verify_edit_access(docentry)
     if not area_name or ' ' in area_name or '´' in area_name:
-        abort(400, 'Invalid area name')
+        raise RouteException('Invalid area name')
 
     doc = docentry.document_as_current_user
     area_attrs = {'area': area_name}
@@ -811,7 +810,7 @@ def unwrap_area(doc_id, area_name):
     docentry = get_doc_or_abort(doc_id)
     verify_edit_access(docentry)
     if not area_name or ' ' in area_name or '´' in area_name:
-        abort(400, 'Invalid area name')
+        raise RouteException('Invalid area name')
 
     try:
         doc = docentry.document_as_current_user
@@ -826,7 +825,7 @@ def unwrap_area(doc_id, area_name):
         doc.delete_paragraph(area_end.get_id())
 
     except TimDbException as e:
-        abort(400, str(e))
+        raise RouteException(str(e))
 
     return ok_response()
 
@@ -860,10 +859,10 @@ def set_drawio_base(args: DrawIODataModel):
     try:
         par = doc.document_as_current_user.get_paragraph(par_id)
     except TimDbException as e:
-        return abort(404, str(e))
+        raise NotExist(str(e))
     plug = Plugin.from_paragraph(par, default_view_ctx)
     if plug.type != 'csPlugin' or plug.values.get('type', '') != 'drawio':
-        return abort(400, "Invalid target")
+        raise RouteException("Invalid target")
     plug.values['data'] = data
     save_plugin(plug, max_attr_width=float("inf"))
     return ok_response()

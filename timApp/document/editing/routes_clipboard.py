@@ -1,12 +1,12 @@
 """Routes for the clipboard."""
 from dataclasses import dataclass
+
 from flask import Blueprint, request
-from flask import abort
 from flask import current_app
 from flask import g
 
-from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort
-from timApp.auth.accesshelper import verify_view_access, verify_edit_access, has_teacher_access
+from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, AccessDenied
+from timApp.auth.accesshelper import verify_view_access, verify_edit_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
@@ -18,10 +18,9 @@ from timApp.document.translation.synchronize_translations import synchronize_tra
 from timApp.note.notes import move_notes
 from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
-from timApp.readmark.readings import copy_readings
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
-from timApp.util.flask.requesthelper import verify_json_params, get_option
+from timApp.util.flask.requesthelper import verify_json_params, get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 
 clipboard = Blueprint('clipboard',
@@ -43,11 +42,11 @@ def pull_doc_id(endpoint, values):
     if current_app.url_map.is_endpoint_expecting(endpoint, 'doc_id'):
         doc_id = values['doc_id']
         if doc_id is None:
-            abort(400)
+            raise RouteException()
         wd.doc_id = doc_id
         wd.docentry = get_doc_or_abort(doc_id)
         if not wd.docentry:
-            abort(404)
+            raise NotExist()
 
 
 @clipboard.route('/clipboard/cut/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
@@ -65,7 +64,7 @@ def cut_to_clipboard(doc_id, from_par, to_par):
             verify_par_edit_access(p)
         pars = clip.cut_pars(doc, from_par, to_par, area_name)
     except TimDbException as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
     wd.docentry.update_last_modified()
     db.session.commit()
     synchronize_translations(wd.docentry, DocumentEditResult(deleted=pars))
@@ -87,7 +86,7 @@ def copy_to_clipboard(doc_id, from_par, to_par):
     try:
         clip.copy_pars(doc, from_par, to_par, area_name, ref_doc, disable_ref=False)
     except TimDbException as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
 
     return ok_response()
 
@@ -106,11 +105,11 @@ def paste_from_clipboard(doc_id):
     was_cut = meta.get('last_action') == 'cut'
 
     if meta.get('empty', True):
-        abort(400, 'The clipboard is empty.')
+        raise RouteException('The clipboard is empty.')
     if not as_ref and meta.get('disable_content'):
-        abort(403, 'The contents of the clipboard cannot be pasted as content.')
+        raise AccessDenied('The contents of the clipboard cannot be pasted as content.')
     if as_ref and meta.get('disable_ref'):
-        abort(400, 'The contents of the clipboard cannot be pasted as a reference.')
+        raise RouteException('The contents of the clipboard cannot be pasted as a reference.')
 
     try:
         if par_before and not par_after:
@@ -118,9 +117,9 @@ def paste_from_clipboard(doc_id):
         elif not par_before and par_after:
             pars = clip.paste_after(doc, par_after, as_ref)
         else:
-            return abort(400, 'Missing required parameter in request: par_before or par_after (not both)')
+            raise RouteException('Missing required parameter in request: par_before or par_after (not both)')
     except TimDbException as e:
-        return abort(400, str(e))
+        raise RouteException(str(e))
 
     src_doc = None
     parrefs = clip.read(as_ref=True, force_parrefs=True)
@@ -180,7 +179,7 @@ def show_clipboard():
 
     doc_id = get_option(request, 'doc_id', default=None, cast=int)
     if doc_id is None:
-        return abort(400, 'doc_id missing')
+        raise RouteException('doc_id missing')
     d = get_doc_or_abort(doc_id)
     verify_view_access(d)
     doc = d.document

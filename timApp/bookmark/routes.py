@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from flask import Blueprint, abort, request
+from flask import Blueprint, request
 from flask import current_app
 from flask import g
 
@@ -12,7 +12,7 @@ from timApp.document.course.validate import CourseException, verify_valid_course
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
-from timApp.util.flask.requesthelper import use_model
+from timApp.util.flask.requesthelper import use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 
 bookmarks = Blueprint('bookmarks',
@@ -63,14 +63,14 @@ class AddCourseModel:
 def add_course_bookmark(m: AddCourseModel):
     d = DocEntry.find_by_path(m.path)
     if not d:
-        abort(404, 'Course not found')
+        raise NotExist('Course not found')
     verify_view_access(d)
     added_to_group = False
     try:
         ug = verify_valid_course(m.path)
     except CourseException as e:
         if m.require_group:
-            abort(400, str(e))
+            raise RouteException(str(e))
     else:
         u = get_current_user_object()
         u.add_to_group(ug, added_by=u)

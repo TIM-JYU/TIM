@@ -9,7 +9,7 @@ from pprint import pprint
 from typing import List, Optional, Set, Tuple
 
 import click
-from flask import abort, current_app
+from flask import current_app
 from flask.cli import AppGroup
 from sqlalchemy import func
 
@@ -22,7 +22,7 @@ from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniq
 from timApp.user.user import User, UserInfo, deleted_user_suffix
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import check_password_hash
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.utils import approximate_real_name
 
 
@@ -119,21 +119,21 @@ def find_and_merge_users(primary: str, secondary: str) -> MergeResult:
     u_prim = User.get_by_name(primary)
     u_sec = User.get_by_name(secondary)
     if not u_prim:
-        return abort(404, f'User {primary} not found')
+        raise NotExist(f'User {primary} not found')
     if not u_sec:
-        return abort(404, f'User {secondary} not found')
+        raise NotExist(f'User {secondary} not found')
     return do_merge_users(u_prim, u_sec)
 
 
 def do_merge_users(u_prim: User, u_sec: User) -> MergeResult:
     if u_prim.is_special:
-        return abort(400, f'User {u_prim.name} is a special user')
+        raise RouteException(f'User {u_prim.name} is a special user')
     if u_sec.is_special:
-        return abort(400, f'User {u_sec.name} is a special user')
+        raise RouteException(f'User {u_sec.name} is a special user')
     if u_prim == u_sec:
-        return abort(400, 'Users cannot be the same')
+        raise RouteException('Users cannot be the same')
     if not has_anything_in_common(u_prim, u_sec):
-        return abort(400, f'Users {u_prim.name} and {u_sec.name} do not appear to be duplicates. '
+        raise RouteException(f'Users {u_prim.name} and {u_sec.name} do not appear to be duplicates. '
                           f'Merging not allowed to prevent accidental errors.')
     moved_data = MergeResult(u_prim, u_sec)
     for a in ('owned_lectures', 'lectureanswers', 'messages', 'answers', 'annotations', 'velps'):
