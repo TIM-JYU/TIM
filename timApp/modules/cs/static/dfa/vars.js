@@ -604,7 +604,7 @@ class CreateRefecenceVariable extends CreateVariable {
     // see: https://regex101.com/r/8rghQV/latest
     // syntax: Ref luvut
     static isMy(s) {
-        let re = /^[Rr](ef|eference)? +([:@.+\-\w\d]+)$/;
+        let re = /^[Rr](ef|eference)? +([!:@.+\-\w\d]+)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         return [new CreateVariable(
@@ -644,7 +644,7 @@ class CreateObjectVariable extends Variable {
     // see: https://regex101.com/r/uaQrJu/latest
     // syntax: New $2 Aku
     static isMy(s) {
-        let re = /^[Nn][ew]{0,2} +([+\-\*]*\$[@+\-\S]+) +([^\n]*)$/;
+        let re = /^[Nn][ew]{0,2} +([!+\-\*]*\$[@+\-\S]+) +([^\n]*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         let name = r[1];
@@ -1189,7 +1189,7 @@ class CreateReferenceAndObject extends CreateRefecenceVariable {
     // syntax: ref aku -> a $1 v 3
     // syntax: ref aku -> a $1 v 1,2,34
     static isMy(s) {
-        let re = /^[Rr](ef|eference)? +([:\-+$.@\w\d]+) *-> *(.*)$/;
+        let re = /^[Rr](ef|eference)? +([!:\-+$.@\w\d]+) *-> *(.*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
 
@@ -1623,6 +1623,7 @@ class PhaseVariables {
         let deny = false;
         let forceParentName = false;
         let denyParentName = false;
+        let denyBox = false;
         let label = undefined;
         let i = s.indexOf(":");
         if (i>=0) {
@@ -1632,12 +1633,13 @@ class PhaseVariables {
         let dollar = "";
         while (true) {
             let f = s[0];
-            if (!"*+-$".includes(f)) break;
+            if (!"*+-$!".includes(f)) break;
             // if (variable !== undefined) {
                 if (s[0] === '$') { denyParentName = true; dollar = "$"; }
                 if (s[0] === '+') force = true;
                 if (s[0] === '-') deny = true;
                 if (s[0] === '*') forceParentName = true;
+                if (s[0] === '!') denyBox = true;
             // }
             s = s.substring(1);
         }
@@ -1654,6 +1656,7 @@ class PhaseVariables {
                 variable.name = label;
             else
                 variable.name = s;
+            if ( denyBox ) variable.denyBox = true;
             if ( forceParentName ) variable.forceParentName = true;
             else if ( denyParentName && !force) variable.denyParentName = true;
             variable.label = dollar+variable.name;
@@ -2158,6 +2161,7 @@ const svgVariableMixin = {
             if (this.graphAttributes.sy) y += this.graphAttributes.sy;
             //  if (this.graphAttributes.h) hfactor = this.graphAttributes.h;
         }
+        if (this.denyBox) nobox = true;
         this.x = x;
         this.y = y;
         this.width = w;
