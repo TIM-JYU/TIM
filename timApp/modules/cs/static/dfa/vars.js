@@ -1622,7 +1622,7 @@ class PhaseVariables {
         let force = false;
         let deny = false;
         let forceParentName = false;
-        let denyParentName = false;
+        let denyDollarName = false;
         let denyBox = false;
         let label = undefined;
         let i = s.indexOf(":");
@@ -1635,7 +1635,7 @@ class PhaseVariables {
             let f = s[0];
             if (!"*+-$!".includes(f)) break;
             // if (variable !== undefined) {
-                if (s[0] === '$') { denyParentName = true; dollar = "$"; }
+                if (s[0] === '$') { denyDollarName = true; dollar = "$"; }
                 if (s[0] === '+') force = true;
                 if (s[0] === '-') deny = true;
                 if (s[0] === '*') forceParentName = true;
@@ -1658,7 +1658,7 @@ class PhaseVariables {
                 variable.name = s;
             if ( denyBox ) variable.denyBox = true;
             if ( forceParentName ) variable.forceParentName = true;
-            else if ( denyParentName && !force) variable.denyParentName = true;
+            else if ( denyDollarName && !force) variable.denyDollarName = true;
             variable.label = dollar+variable.name;
             if (variable.label.endsWith(".")) variable.label = variable.label.slice(0,-1);
             if (variable.label.endsWith(",")) variable.label = variable.label.slice(0,-1);
@@ -2084,7 +2084,9 @@ class SVGUtils {
     }
 
 
-    static debug(sl, dir, p, d, color) {
+    static debug(sl, opt, cmd, dir, p, d, color) {
+        if (!opt || !opt.debug) return;
+        if (!opt.debug.includes(cmd)) return;
         if (dir === 0 || dir === 2) {
             let [sv, ] = SVGUtils.drawSVGText(p.y, {}, d, p.y);
             sl.push(sv);
@@ -2098,6 +2100,7 @@ class SVGUtils {
         }
     }
 }
+
 
 const svgTextMixin = {
     showCount() {
@@ -2224,7 +2227,7 @@ const svgVariableMixin = {
         }
 
         // draw variable names if needed
-        if (text && this.forcenames && !this.denynames && !this.denyParentName) {
+        if (text && this.forcenames && !this.denynames && !this.denyDollarName) {
             let opt = SVGUtils.joinOptions(this.nameOptions,
                 {align: textalign, font: "Helvetica", size: textsize});
             let [svg1,] = SVGUtils.drawSVGText(text, opt, textx, texty);
@@ -2626,7 +2629,8 @@ const svgStructVariableMixin = {
             }
         }
 
-        svg += SVGUtils.box(this.name, this.width, fh, dx, dy, x, y + fh / 2 - h / 2.0)
+        if (!this.denyBox)
+            svg += SVGUtils.box(this.name, this.width, fh, dx, dy, x, y + fh / 2 - h / 2.0)
         // svg += this.vars[0].toSVG(xv, y, w, h, dx, dy, false, 1 );
         for (let i = starti; 0 <= i && i <= endi; i += mi) {
             let v = this.vars[i];
@@ -2909,6 +2913,8 @@ class VisualSVGVariableRelations {
             }
         }
 
+        let gopts;
+
         for (let phase of this.variableRelations.phaseList) {
 
             for (let r of ranks) r.y = maxs.y;
@@ -2930,7 +2936,7 @@ class VisualSVGVariableRelations {
             for (let v of phase.vars) { // stack vars (local normal vars)
                 rank = getRank(ranks, rank, v.rank);
 
-                let gopts = v.graphAttributes;
+                gopts = v.graphAttributes;
                 if (gopts) {
                     if (gopts.pop !== undefined) {
                         let rm = rank.max;
@@ -3024,6 +3030,7 @@ class VisualSVGVariableRelations {
 
                 countRankPos(rank, v);
 
+
                 if (rank.reversePos)
                     this.svglist.splice(rank.reversePos, 0, svg);
                 else
@@ -3035,8 +3042,8 @@ class VisualSVGVariableRelations {
                 rank.max.x = Math.max(rank.max.x, v.right().x);
                 rank.max.y = Math.max(rank.max.y, v.left().y + v.height/2);
 
-                // SVGUtils.debug(this.svglist, 2, rank, 40, "green");
-                // SVGUtils.debug(this.svglist, 2, rank.max, 5, "red");
+                SVGUtils.debug(this.svglist, gopts, "c", 2, v, 40, "green");
+                SVGUtils.debug(this.svglist, gopts, "r", 2, rank.max, 5, "red");
             }
 
             for (let v of phase.vars) { // reference arrows
@@ -3067,7 +3074,7 @@ class VisualSVGVariableRelations {
         let width = Math.max(maxx + 20, 100); // Math.max(maxs.x, 100);
         let height = Math.max(maxs.y,100, maxy ) ;
 
-        // SVGUtils.debug(this.svglist, 2, {x:width-1, y: height-1}, 5, "blue");
+        SVGUtils.debug(this.svglist, gopts, "m", 2, {x:width-1, y: height-1}, 5, "blue");
 
         this.svglist.push(`</svg>`);
 

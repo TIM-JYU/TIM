@@ -74,7 +74,9 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-ref -!a -> n !$1 kissa
+g y: 100
+g debug: crm
+ref a
 `;
 setData({
     code: code, args: "1001", params:
