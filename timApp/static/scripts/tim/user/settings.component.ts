@@ -173,7 +173,7 @@ export class SaveButtonComponent {
             </bootstrap-panel>
 
             <bootstrap-panel title="Other settings">
-                <div class="checkbox"><label>
+                <div class="checkbox" id="othersettings"><label>
                     <input type="checkbox" name="auto_mark_all_read" [(ngModel)]="settings.auto_mark_all_read"
                            [disabled]="saving"> Automatically mark document as read when opening it for the first time
                 </label></div>
