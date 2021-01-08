@@ -499,7 +499,7 @@ def get_points_by_rule(
                 task_points=None,
                 task_id=t.doc_task,
             ))
-    rule_groups = list(rule.groups)
+    rule_groups = dict(rule.groups)
     for tu in tasks_users:
         u = tu['user']
         uid = u.id
@@ -513,7 +513,7 @@ def get_points_by_rule(
         if not group_names and rule.include_groupless:
             gname = TaskId.parse(tu['task_id']).task_name
             group_names = [gname]
-            rule_groups.append(Group(gname, gname))
+            rule_groups[gname] = Group(gname, gname)
 
         for grp in group_names:
             result[uid]['groups'][grp]['tasks'].append(tu)
