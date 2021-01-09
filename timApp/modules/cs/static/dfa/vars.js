@@ -644,7 +644,7 @@ class CreateObjectVariable extends Variable {
     // see: https://regex101.com/r/uaQrJu/latest
     // syntax: New $2 Aku
     static isMy(s) {
-        let re = /^[Nn][ew]{0,2} +([!+\-\*]*\$[@+\-\S]+) +([^\n]*)$/;
+        let re = /^[Nn][ew]{0,2} +([!+\-\*\$]*[@+\-\S]+) +([^\n]*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         let name = r[1];
@@ -2852,18 +2852,25 @@ class VisualSVGVariableRelations {
             return res;
         }
 
-        let ranks = []; // 0 = stack, 1 = heap
-        for (let i = 0; i < 10; i++) {
-            ranks.push({
-                x: rankBeginx + i * rankDx,
+        const modelRank = {
+                x: rankBeginx,
                 y: rankBeginy,
-                ax: rankBeginx + i * rankDx,
+                ax: rankBeginx,
                 ay: rankBeginy,
                 dir: 0,
                 dx: this.variableRelations.rankGlobalMoveDx,
                 dy: this.variableRelations.rankGlobalMoveDy,
                 max: {x : 0,y : 0},
-            });
+            };
+
+        const modelRankS = JSON.stringify(modelRank);
+
+        let ranks = []; // 0 = stack, 1 = heap
+        for (let i = 0; i < 10; i++) {
+            let r = JSON.parse(modelRankS);
+            r.x += i * rankDx;
+            r.ax += i * rankDx;
+            ranks.push(r);
         }
 
         let currentRank = 0;
@@ -2872,10 +2879,9 @@ class VisualSVGVariableRelations {
             currentRank = r;
             let result = ranks[r];
             if (result !== undefined) return result;
-            result = {x: rankBeginx, y: rankBeginy, dir: 0};
+            result = JSON.parse(modelRankS)
             ranks[r] = result;
             return result;
-
         }
 
 
