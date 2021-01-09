@@ -121,7 +121,8 @@ function varsStringToJson(s) {
     // x: 3, array: [1,2]  => problems
     function checkValue(v) {
         if (v === "null") return v;
-        if (!isNaN(parseFloat(v))) return v;
+        let vf = parseFloat(v);
+        if (v === ""+vf) return vf;
         if (v === "") return '""';
         if (v.startsWith("{")) return v; // TODO should be better
         return '"' + v + '"';
@@ -644,7 +645,7 @@ class CreateObjectVariable extends Variable {
     // see: https://regex101.com/r/uaQrJu/latest
     // syntax: New $2 Aku
     static isMy(s) {
-        let re = /^[Nn][ew]{0,2} +([!+\-\*\$]*[@+\-\S]+) +([^\n]*)$/;
+        let re = /^[Nn][ew]{0,2} +([!+\-*$]*[@+\-\S]+) +([^\n]*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         let name = r[1];
@@ -1457,6 +1458,42 @@ class SetGraphAttributes extends Command {
 
 }
 
+class SetNamedGraphAttributes extends Command {
+    // Add text SVG command
+    // see: https://regex101.com/r/LViQAy/latest
+    // syntax:
+    //  gn $1 {x: 10, y:20}
+    static isMy(s) {
+        let re = /^[Gg][Nn] ([^ \n]+):? * ([^\n]*)$/gm;
+        let r = re.exec(s);
+        if (!r) return undefined;
+        return [new SetNamedGraphAttributes(r[1], r[2])];
+    }
+
+    constructor(name, graphAttributes) {
+        super();
+        this.name = name;
+        this.graphAttributes = graphAttributes;
+        this.noAnimate = true;
+    }
+
+    run(variables) {
+        try {
+            let ga = varsStringToJson(this.graphAttributes);
+            variables.setNamedGraphAttributes(this.name, ga);
+            return "";
+        } catch (e) {
+            return e;
+        }
+    }
+
+    prerun(variables) { // to use variables already for classes
+        return "";
+    }
+
+}
+
+
 
 class CodeCommand extends Command {
     // Add a CODE: -line
@@ -1524,6 +1561,7 @@ const knownCommands = [
     AddPhaseText,
     SetPhaseNr,
     SetGraphAttributes,
+    SetNamedGraphAttributes,
     CodeCommand,
     AddSVG,
     UnknownCommand,
@@ -1553,6 +1591,7 @@ class PhaseVariables {
         this.autoNumber = 1;
         this.lastRank = 0;
         this.defaultRank = undefined;
+        this.namedGraphAttributes = {};
     }
 
     addText(s, pos, options) {
@@ -1572,6 +1611,13 @@ class PhaseVariables {
 
     clearAttributes() {
         this.graphAttributes = undefined; // TODO: clear only ontimers
+    }
+
+    setNamedGraphAttributes(name, ga) {
+        this.moveName(ga, "r", "rank");
+        this.moveName(ga, "rd", "rankdir");
+        name = this.cleanName(name);
+        this.namedGraphAttributes[name] = ga;
     }
 
     setGraphAttributes(ga) {
@@ -2462,7 +2508,16 @@ const svgArrayVariableMixin = {
         for (let i = starti; 0 <= i && i <= endi; i += mi) {
             let v = this.vars[i];
             if (vertical) v.isVertical = true;
-            svg += v.toSVG(xv, yv, w, h, dx, dy, false, 1, nw);
+            let xvl = xv;
+            let yvl = yv;
+            if ( this.phase ) {
+                let gn = this.phase.namedGraphAttributes[v.name];
+                if (gn) {
+                    if (gn.tsx) xvl = xv + gn.tsx;
+                    if (gn.tsy) yvl = yv + gn.tsy;
+                }
+            }
+            svg += v.toSVG(xvl, yvl, w, h, dx, dy, false, 1, nw);
             xv += mx * v.width;
             yv += my * v.height;
             lastrx = Math.max(lastrx, v.right().x);
@@ -2722,14 +2777,14 @@ class VisualSVGVariableRelations {
 
     svgclick(e) {
         if (!this.elements.coordspan) return;
-        let d = this.getElementPos(this.elements.svgdiv);
+        // let d = this.getElementPos(this.elements.svgdiv);
         // let x = e.clientX; // - d.x;
         // let y = e.clientY; // - d.y;
         let x = e.offsetX;
         let y = e.offsetY; // - d.y;
         // errspan.innerText = `${x},${y} ${e.clientX},${e.clientY}` +
         //                     `${e.pageX},${e.pageY} ${d.x},${d.y}`;
-        this.elements.coordspan.innerText = `x:${x},y:${y}`;
+        this.elements.coordspan.innerText = `tx:${x},ty:${y}`;
     }
 
     setSVG(svg, svgDiv) {
@@ -2942,7 +2997,15 @@ class VisualSVGVariableRelations {
             for (let r of ranks) r.y = y1;
 
             for (let v of phase.vars) { // stack vars (local normal vars)
+                // join named attributes before in place attributes
+                let gn = phase.namedGraphAttributes[v.name];
+                if (gn !== undefined) {
+                    v.graphAttributes = {...gn, ... v.graphAttributes};
+                    let r = v.graphAttributes.rank;
+                    if ( r !== undefined) v.rank = r;
+                }
                 rank = getRank(ranks, rank, v.rank);
+                let oldp = {x: rank.x, y: rank.y};
 
                 gopts = v.graphAttributes;
                 if (gopts) {
@@ -2956,6 +3019,13 @@ class VisualSVGVariableRelations {
                     if (gopts.rank !== undefined) {
                         rank = getRank(ranks, rank, gopts.rank);
                     }
+                    if (gopts.tx !== undefined) gopts.x = gopts.tx;
+                    if (gopts.ty !== undefined) gopts.y = gopts.ty;
+                    if (gopts.tsx !== undefined) gopts.sx = gopts.tsx;
+                    if (gopts.tsy !== undefined) gopts.sy = gopts.tsy;
+                    if (gopts.trx !== undefined) gopts.rx = gopts.trx;
+                    if (gopts.try !== undefined) gopts.ry = gopts.try;
+
                     if (gopts.rankdir !== undefined) {
                         rank.dir = gopts.rankdir;
                     }
@@ -2963,15 +3033,19 @@ class VisualSVGVariableRelations {
                         let snap = "" + gopts.snap;
                         if (snap === "a") rank.snappoints = undefined;
                         else {
+                            if (!Array.isArray(snap)) snap = snap.split(/[ ,]+/);
                             let jsnap = [];
                             for (let c of snap) jsnap.push(parseInt(c));
                             rank.snappoints = jsnap;
                         }
                     }
+                    oldp = {x: rank.x, y: rank.y};
+
                     if (gopts.w !== undefined) rank.w = gopts.w;
                     if (gopts.h !== undefined) rank.h = gopts.h;
                     if (gopts.ax !== undefined) rank.ax = gopts.ax;
                     if (gopts.ay !== undefined) rank.ay = gopts.ay;
+
                     if (gopts.rx !== undefined) rank.x = rank.ax + gopts.rx;
                     if (gopts.ry !== undefined) rank.y = rank.ay + gopts.ry;
                     if (gopts.rdx !== undefined) rank.dx = gopts.rdx;
@@ -2987,9 +3061,14 @@ class VisualSVGVariableRelations {
                 if (rank.h) gopts.h = rank.h;
 
                 if (v.text) v.lastObj = lastObj;
+                v.phase = phase;
                 // Here we draw the object
                 //const p = {x: rank.x, y: rank.y, w: w, h: h, dx: dx, dy: dy};
                 let svg = v.toSVG(rank.x, rank.y, w, h, dx, dy);
+
+                // in rdx or rdy case use old x or y
+                if (gopts.trx !== undefined) rank.x = oldp.x;
+                if (gopts.try !== undefined) rank.y = oldp.y;
 
                 function countRankPosPop(rank, rm) {
                     // for rank pop top return correct place
@@ -3032,8 +3111,10 @@ class VisualSVGVariableRelations {
                         xadd = 0;
                         yadd = 0;
                     }
-                    rank.y = v.y + yadd;  // TODO: add last element height
-                    rank.x = v.x + xadd;
+                    if (gopts.ty === undefined && gopts.tsy === undefined && gopts.try === undefined)
+                        rank.y = v.y + yadd;  // TODO: add last element height
+                    if (gopts.tx === undefined && gopts.tsx === undefined && gopts.trx === undefined)
+                        rank.x = v.x + xadd;
                 }
 
                 countRankPos(rank, v);
@@ -3309,7 +3390,7 @@ function getElements(params) {
         elements.buttondiv = ensureElement(variablesDiv, 'buttondiv');
     elements.coordspan = ensureElement(variablesDiv, 'coord');
     elements.coordspan.contenteditable = true;
-    elements.coordspan.onclick = (e) => {
+    elements.coordspan.onclick = () => {
         // elements.coordspan.selectAll();
         let range = document.createRange();
         range.selectNodeContents(elements.coordspan);

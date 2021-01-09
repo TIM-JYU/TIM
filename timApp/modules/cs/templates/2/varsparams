@@ -2,10 +2,13 @@ Muuttujat parametreilla
 Muuttujien piirto, jossa valmiina paramtereja
 ``` {#PLUGINNAMEHERE plugin="csPlugin"}
 type: vars
-#height: 400
+# height: 400
+# toggleEditor: true
+# noeditor: true
 jsparams:
   mode: static
   errorlevel: 3
+  # allowLazy: true
   # animate: commands
 buttons: |!!
 "Ref "
@@ -21,7 +24,6 @@ $
 }
 =
 !!
-
 
 fullprogram: |!!
 !!
