@@ -2723,11 +2723,13 @@ class VisualSVGVariableRelations {
     svgclick(e) {
         if (!this.elements.coordspan) return;
         let d = this.getElementPos(this.elements.svgdiv);
-        let x = e.clientX - d.x;
-        let y = e.clientY - d.y;
+        // let x = e.clientX; // - d.x;
+        // let y = e.clientY; // - d.y;
+        let x = e.offsetX;
+        let y = e.offsetY; // - d.y;
         // errspan.innerText = `${x},${y} ${e.clientX},${e.clientY}` +
         //                     `${e.pageX},${e.pageY} ${d.x},${d.y}`;
-        this.elements.coordspan.innerText = `${x},${y}`;
+        this.elements.coordspan.innerText = `x:${x},y:${y}`;
     }
 
     setSVG(svg, svgDiv) {
@@ -3300,6 +3302,16 @@ function getElements(params) {
     if (getButtons)
         elements.buttondiv = ensureElement(variablesDiv, 'buttondiv');
     elements.coordspan = ensureElement(variablesDiv, 'coord');
+    elements.coordspan.contenteditable = true;
+    elements.coordspan.onclick = (e) => {
+        // elements.coordspan.selectAll();
+        let range = document.createRange();
+        range.selectNodeContents(elements.coordspan);
+        let sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        document.execCommand("copy");
+    }
     return elements;
 }
 
