@@ -681,6 +681,9 @@ class ArrayVariable extends ObjectVariable {
             case "A":
                 cls = Variable;
                 break;
+            case "S":
+                cls = StringVariable;
+                break;
             default:
                 cls = ValueVariable;
         }
@@ -883,7 +886,10 @@ class InitializedStructVariable extends StructVariable {
                 if (this.type === "R" || v.isRef() )
                     error += v.addRefByName(name, variables, true);
                 else
-                    if (to) v.init(to);
+                    if (to) {
+                        v.init(to);
+                        error += v.createError;
+                    }
                 continue;
             }
             v.init(undefined);  // remove old value
@@ -916,7 +922,7 @@ class CreateInitializedStructVariable extends CreateVariable {
         let td = (r[6] + "  ").toUpperCase();
         let type = td[0]
         let dir = td[1];
-        if (!"ARVC".includes(type)) throw `${name} väärä tyyppi tietueelle.  Pitää olla A, C, R tai V! `
+        if (!"ARVCS".includes(type)) throw `${name} väärä tyyppi tietueelle.  Pitää olla A, C, R tai V! `
 
         return [new CreateInitializedStructVariable(() =>
             new InitializedStructVariable(name, undefined, kind, sclass, type, dir, vals, 1), name, sclass)];
@@ -960,12 +966,13 @@ class InitializedArrayVariable extends ArrayVariable {
             return this.handleError(error, variables);
         }
         if (this.isList()) this.count = len;
-        if ("VC".includes(this.type)) {
+        if ("VCS".includes(this.type)) {
             for (let i = 0; i < len; i++) {
                 let v = this.vars[i];
                 v.init(valsarr[i].trim());
+                error += v.createError;
             }
-            return;
+            return this.handleError(error, variables);
         }
         if (this.type === "R") {
             for (let i = 0; i < len; i++) {
@@ -1022,7 +1029,7 @@ class CreateInitializedArrayVariable extends CreateVariable {
             vals = "";
             len = valsl;
         }
-        if (!"RVC".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla C, R tai V! `
+        if (!"RVCS".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla C, R, S tai V! `
 
         return [new CreateInitializedArrayVariable(() =>
             new InitializedArrayVariable(name, undefined, kind, type, dir, len, vals, 1), name)];
@@ -1069,7 +1076,7 @@ class CreateInitialized2DArrayVariable extends CreateVariable {
         let type = r[1];
         let leny = parseInt(r[2] || "-1");
         let lenx = parseInt(r[3] || "-1");
-        if (!"RVCL".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla C, R tai V! `
+        if (!"SRVCL".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla C, R, S tai V! `
         let valsa = [];
         if (vals) valsa = vals.split("|");
         let firstcmd = `g {"push": 1, "dy":0, "rdy":22, "rd":0}`;
@@ -2455,7 +2462,7 @@ const svgArrayVariableMixin = {
         // draw array as variables side by side
         // and indesies over it. If there is over/under indexing
         // draw those before and after array
-        let nw = 1;
+        let nw = undefined;
         let dir = undefined;
         if (this.graphAttributes) {
             if (this.graphAttributes.x) x = this.graphAttributes.x;
@@ -2492,6 +2499,8 @@ const svgArrayVariableMixin = {
         let mi = 1;
 
         if (vertical) { // vertical
+            if (nw === undefined ) nw = 1;
+            // TODO: find nw?
             indexx = -nw * w * 0.7;
             indexy = 0;
             mx = 0;

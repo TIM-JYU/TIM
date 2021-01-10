@@ -74,16 +74,9 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-code: 5x4 taulukko
-a t v5x5
-a p v4
-ref r
-gn r tx:551,ty:120
-code: vedetään 2,2 palikka esiin
-gn t[2,2] tsy: 5, tsx: -5
-gn p[2] tsy: 5, tsx -5
+a t sv3 kissana kana
 `;
 setData({
     code: code, args: "1001", params:
-        {mode: "static", errorlevel: 3, animate: "code", allowLazy: true}
+        {mode: "static", errorlevel: 3, xanimate: "code", allowLazy: true}
 });
