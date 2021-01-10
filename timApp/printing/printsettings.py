@@ -9,3 +9,4 @@ class PrintFormat(Enum):
     HTML = 'html'
     PLAIN = 'plain'
     RST = 'rst'
+    ICS = 'ics'

@@ -207,7 +207,12 @@ def get_printed_document(doc_path):
     print_type = PrintFormat(file_type)
     template_doc = None
     template_doc_id = get_option(request, 'template_doc_id', -1)
-    if print_type != PrintFormat.PLAIN and print_type != PrintFormat.RST:
+    orginal_print_type = print_type
+    if (print_type == PrintFormat.ICS):
+        print_type = PrintFormat.PLAIN
+    if print_type != PrintFormat.PLAIN and \
+            print_type != PrintFormat.RST and \
+            print_type != PrintFormat.ICS:
         template_doc, template_doc_id, template_error, _ = get_template_doc(doc, template_doc_id)
         if template_error:
             raise RouteException(template_error)
@@ -277,7 +282,7 @@ def get_printed_document(doc_path):
         add_csp_header(response)
         return response
 
-    mime = get_mimetype_for_format(print_type)
+    mime = get_mimetype_for_format(orginal_print_type)
 
     if not line:
         response = make_response(send_file(filename_or_fp=cached, mimetype=mime))
@@ -332,6 +337,8 @@ def get_mimetype_for_format(file_type: PrintFormat) -> str:
         return 'application/pdf'
     elif file_type == PrintFormat.HTML:
         return 'text/html'
+    elif file_type == PrintFormat.ICS:
+        return 'text/calendar'
     else:
         return 'text/plain'
 
