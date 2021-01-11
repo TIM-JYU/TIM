@@ -6,6 +6,7 @@ import {
 } from "tim/document/editing/showRenameDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as snv from "tim/ui/shortNameValidator";
+import * as tem from "tim/ui/formErrorMessage";
 import {IChangelogEntry, IManageResponse} from "../document/editing/edittypes";
 import * as copyFolder from "../folder/copyFolder";
 import {IGroup} from "../user/IUser";
@@ -23,7 +24,7 @@ import {
     getItemTypeName,
 } from "./IItem";
 
-markAsUsed(copyFolder, snv);
+markAsUsed(copyFolder, snv, tem);
 
 export interface IAlias {
     name: string;

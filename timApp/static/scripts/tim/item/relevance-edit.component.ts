@@ -30,7 +30,7 @@ export interface IRelevanceResponse {
     selector: "tim-relevance-edit",
     template: `
         <p>View and set relevance value denoting item priority in search results</p>
-        <div class="input-group">
+        <div class="form-group form-inline">
             <input class="form-control" [(ngModel)]="relevance"
                    type="number"
                    title="Enter a new relevance value"

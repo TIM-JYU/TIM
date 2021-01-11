@@ -1,12 +1,13 @@
 import {IController, IScope} from "angular";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as snv from "tim/ui/shortNameValidator";
+import * as tem from "tim/ui/formErrorMessage";
 import {timApp} from "../app";
 import {IFolder, IItem} from "../item/IItem";
 import {$http} from "../util/ngimport";
 import {Binding, markAsUsed, to} from "../util/utils";
 
-markAsUsed(snv);
+markAsUsed(snv, tem);
 
 type PreviewList = Array<{from: string; to: string}>;
 

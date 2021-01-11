@@ -55,6 +55,7 @@ import {TemplateListComponent} from "tim/document/editing/template-list.componen
 import * as selfExpire from "tim/item/selfExpire";
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
 import {DurationPickerComponent} from "tim/ui/duration-picker.component";
+import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -116,6 +117,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timViewRangeNavigation", ViewRangeNavigationComponent);
     doDowngrade(dg, "timHelpParContent", HelpParContent);
     doDowngrade(dg, "timDurationPicker", DurationPickerComponent);
+    doDowngrade(dg, "timRelevanceEdit", RelevanceEditComponent);
     return dg;
 }
 

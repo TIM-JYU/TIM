@@ -87,7 +87,7 @@
 </div>
 
 <bootstrap-panel title="Relevance" ng-if="$ctrl.item.rights.editable">
-        <relevance-edit item="$ctrl.item"></relevance-edit>
+        <tim-relevance-edit [item]="$ctrl.item"></tim-relevance-edit>
 </bootstrap-panel>
 
 <div ng-if="!$ctrl.item.isFolder">
