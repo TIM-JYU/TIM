@@ -17,6 +17,7 @@ import {
     SafeResourceUrl,
 } from "@angular/platform-browser";
 import {
+    DrawOptions,
     DrawToolbarModule,
     DrawType,
     IDrawOptions,
@@ -32,6 +33,7 @@ import {
     MouseOrTouch,
     numOrStringToNumber,
     posToRelative,
+    TimStorage,
     touchEventToTouch,
 } from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
@@ -247,15 +249,17 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     // identifier e.g for associating specific canvas with specific answer review
     public id: number = 0;
 
+    private optionsStorage = new TimStorage("drawCanvasOptions", DrawOptions);
+
     constructor(
         el: ElementRef<HTMLElement>,
         private domSanitizer: DomSanitizer
     ) {}
 
     ngOnInit() {
-        const prevSettings = window.localStorage.getItem("drawCanvasOptions");
+        const prevSettings = this.optionsStorage.get();
         if (prevSettings) {
-            this.drawOptions = JSON.parse(prevSettings) as IDrawOptions;
+            this.drawOptions = prevSettings;
         } else {
             this.drawOptions = {...this.drawOptions, ...this.options};
         }
@@ -315,10 +319,7 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     saveSettings() {
-        window.localStorage.setItem(
-            "drawCanvasOptions",
-            JSON.stringify(this.drawOptions)
-        );
+        this.optionsStorage.set(this.drawOptions);
     }
 
     /**

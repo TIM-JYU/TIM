@@ -12,7 +12,6 @@ import uibootstrap from "angular-ui-bootstrap";
 import humanizeDuration from "humanize-duration";
 import moment, {Moment} from "moment";
 import ngFileUpload from "ng-file-upload";
-import ngStorage from "ngstorage";
 import {convertDateStringsToMoments, markAsUsed} from "tim/util/utils";
 import {KEY_ENTER, KEY_S} from "./util/keycodes";
 import {injectProviders, injectServices} from "./util/ngimport";
@@ -21,19 +20,12 @@ moment.updateLocale("en", {
     week: {dow: 1, doy: 4}, // set Monday as the first day of the week
 });
 
-markAsUsed(
-    ngMessages,
-    aedatetimepicker,
-    ngSanitize,
-    uibootstrap,
-    ngFileUpload,
-    ngStorage
-);
+markAsUsed(ngMessages, aedatetimepicker, ngSanitize, uibootstrap, ngFileUpload);
 
 // timApp's Angular modules:
 // base: 'ngMessages', 'ae-datetimepicker', 'ngSanitize', 'ui.bootstrap'
 // item: 'ngFileUpload'
-// view_html: 'ngStorage' + plugin modules
+// view_html: plugin modules
 // teacher mode: 'ui.grid', 'ui.grid.cellNav', 'ui.grid.selection', 'ui.grid.exporter', 'ui.grid.autoResize'
 export const timApp = angular.module("timApp", [
     "ngMessages",
@@ -41,7 +33,6 @@ export const timApp = angular.module("timApp", [
     "ngSanitize",
     "ui.bootstrap",
     "ngFileUpload",
-    "ngStorage",
 ]);
 
 interface IDelegate {

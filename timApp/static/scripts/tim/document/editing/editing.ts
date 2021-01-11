@@ -15,6 +15,7 @@ import {
     getViewName,
     isMobileDevice,
     markPageDirty,
+    TimStorage,
     to,
 } from "tim/util/utils";
 import {openEditor} from "tim/editor/pareditorOpen";
@@ -25,6 +26,7 @@ import {
     showRenameDialog,
 } from "tim/document/editing/showRenameDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import * as t from "io-ts";
 import {onClick} from "../eventhandlers";
 import {
     canEditPar,
@@ -235,9 +237,8 @@ export class EditingHandler {
                 desc: "Mark as translated",
             });
         }
-        for (const t of tagKeys) {
-            const x = window.localStorage.getItem(t) ?? false;
-            tags[t] = x === "true";
+        for (const k of tagKeys) {
+            tags[k] = new TimStorage(k, t.boolean).get() ?? false;
         }
 
         const extraData: IExtraData = {

@@ -2,14 +2,14 @@
  * A search box component.
  */
 
-import {ngStorage} from "ngstorage";
 import {Component, Input, OnDestroy, OnInit} from "@angular/core";
 import {showSearchResultDialog} from "tim/search/showSearchResultDialog";
+import * as t from "io-ts";
 import {DocumentOrFolder, IItem, ITag, ITaggedItem} from "../item/IItem";
 import {relevanceSuggestions} from "../item/relevance-edit.component";
 import {someglobals} from "../util/globals";
-import {$http, $localStorage} from "../util/ngimport";
-import {to} from "../util/utils";
+import {$http} from "../util/ngimport";
+import {TimStorage, to} from "../util/utils";
 import {SearchResultsDialogComponent} from "./search-results-dialog.component";
 
 /**
@@ -220,30 +220,21 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
     errorMessage: string | undefined; // Message displayed only in search panel.
     loading = false; // Display loading icon.
     private item?: DocumentOrFolder = someglobals().curr_item;
-    private storage: ngStorage.StorageService & {
-        maxDocResultsStorage: null | string;
-        relevanceThresholdStorage: null | string;
-        searchWordStorage: null | string;
-        optionsStorage: null | boolean[];
-    };
+    private storage = new TimStorage(
+        "searchOpts",
+        t.partial({
+            maxDocResults: t.number,
+            options: t.array(t.boolean),
+            optionsValue: t.number,
+            relevanceThreshold: t.number,
+            searchWord: t.string,
+        })
+    );
     folderSuggestions: string[] = []; // A list of folder path suggestions.
     private resultsDialog: SearchResultsDialogComponent | undefined; // The most recent search result dialog.
     maxDocResults = 1000;
     private timeWarningLimit = 20; // Gives a warning about long search time if over this.
     private timeout = 120; // Default timeout for search.
-
-    /**
-     * SearchBox constructor.
-     */
-    constructor() {
-        this.storage = $localStorage.$default({
-            maxDocResultsStorage: null,
-            optionsStorage: null,
-            optionsValueStorage: null,
-            relevanceThresholdStorage: null,
-            searchWordStorage: null,
-        });
-    }
 
     ngOnInit() {
         this.loadLocalStorage();
@@ -343,48 +334,41 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
      * Saves options and search word to local storage.
      */
     private updateLocalStorage() {
-        if (this.query.trim().length > 0) {
-            this.storage.searchWordStorage = this.query;
-        }
-        if (this.relevanceThreshold != null) {
-            this.storage.relevanceThresholdStorage = this.relevanceThreshold.toString();
-        }
-        if (this.maxDocResults != null) {
-            this.storage.maxDocResultsStorage = this.maxDocResults.toString();
-        }
-        this.storage.optionsStorage = [];
-        this.storage.optionsStorage = [
-            this.advancedSearch,
-            this.caseSensitive,
-            this.createNewWindow,
-            this.ignorePlugins,
-            this.regex,
-            this.searchTitles,
-            this.searchWholeWords,
-            this.searchTags,
-            this.searchOwned,
-            this.searchContent,
-            this.searchPaths,
-        ];
+        this.storage.set({
+            maxDocResults: this.maxDocResults,
+            options: [
+                this.advancedSearch,
+                this.caseSensitive,
+                this.createNewWindow,
+                this.ignorePlugins,
+                this.regex,
+                this.searchTitles,
+                this.searchWholeWords,
+                this.searchTags,
+                this.searchOwned,
+                this.searchContent,
+                this.searchPaths,
+            ],
+            relevanceThreshold: this.relevanceThreshold,
+            searchWord: this.query,
+        });
     }
 
     /**
      * Fetches options and search word from local storage, if existent.
      */
     private loadLocalStorage() {
-        if (this.storage.searchWordStorage) {
-            this.query = this.storage.searchWordStorage;
+        const storage = this.storage.get();
+        if (storage?.searchWord) {
+            this.query = storage?.searchWord;
         }
-        if (this.storage.relevanceThresholdStorage != null) {
-            this.relevanceThreshold = +this.storage.relevanceThresholdStorage;
+        if (storage?.relevanceThreshold) {
+            this.relevanceThreshold = storage?.relevanceThreshold;
         }
-        if (this.storage.maxDocResultsStorage != null) {
-            this.maxDocResults = +this.storage.maxDocResultsStorage;
+        if (storage?.maxDocResults) {
+            this.maxDocResults = storage?.maxDocResults;
         }
-        if (
-            this.storage.optionsStorage &&
-            this.storage.optionsStorage.length > 10
-        ) {
+        if (storage?.options && storage?.options.length > 10) {
             [
                 this.advancedSearch,
                 this.caseSensitive,
@@ -397,7 +381,7 @@ export class SearchBoxComponent implements OnInit, OnDestroy {
                 this.searchOwned,
                 this.searchContent,
                 this.searchPaths,
-            ] = this.storage.optionsStorage;
+            ] = storage?.options;
         }
     }
 

@@ -2,8 +2,6 @@
  * Defines the client-side implementation of data import plugin.
  */
 import * as t from "io-ts";
-import {ngStorage} from "ngstorage";
-import {$localStorage} from "tim/util/ngimport";
 import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
@@ -12,6 +10,7 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {IUser} from "../user/IUser";
+import {TimStorage} from "../util/utils";
 import {GenericPluginMarkup, Info, nullable, withDefault} from "./attributes";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 
@@ -187,10 +186,10 @@ export class ImportDataComponent extends AngularPluginBase<
     urlToken: string = "";
     fetchingData = false;
     createMissingUsers = false;
-    private storage!: ngStorage.StorageService & {
-        importToken: null | string;
-        importUrl: null | string;
-    };
+    private storage = new TimStorage(
+        "importData",
+        t.type({importToken: t.string, importUrl: t.string})
+    );
 
     getDefaultMarkup() {
         return {};
@@ -205,13 +204,10 @@ export class ImportDataComponent extends AngularPluginBase<
         this.isOpen = this.markup.open;
         const aa = this.attrsall;
         const state = aa.state;
-        this.storage = $localStorage.$default({
-            importUrl: null,
-            importToken: null,
-        });
         this.separator = state?.separator ?? this.markup.separator;
-        this.url = state?.url ?? this.storage.importUrl ?? this.markup.url;
-        this.urlToken = this.storage.importToken ?? "";
+        const stored = this.storage.get();
+        this.url = state?.url ?? stored?.importUrl ?? this.markup.url;
+        this.urlToken = stored?.importToken ?? "";
         this.fields = (state?.fields ?? this.markup.fields ?? []).join("\n");
     }
 
@@ -249,8 +245,7 @@ export class ImportDataComponent extends AngularPluginBase<
             this.error = r.result.data;
             return;
         }
-        this.storage.importToken = this.urlToken;
-        this.storage.importUrl = this.url;
+        this.storage.set({importToken: this.urlToken, importUrl: this.url});
         this.importText = r.result.data;
     }
 

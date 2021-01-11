@@ -5,7 +5,8 @@ import {Overwrite} from "type-zoo";
 import {Changes} from "tim/util/angularchanges";
 import {BrowserModule} from "@angular/platform-browser";
 import {ChartsModule} from "ng2-charts";
-import {clone, truncate} from "../util/utils";
+import * as t from "io-ts";
+import {clone, TimStorage, truncate} from "../util/utils";
 import {
     IAskedQuestion,
     IQuestionAnswer,
@@ -120,20 +121,6 @@ function qstShortText(s: string): string {
     }
 }
 
-function timGetLSIntValue(key: string, def: number): number {
-    const valStr = window.localStorage.getItem(key);
-    if (valStr == null) {
-        return def;
-    }
-    let val = parseInt(valStr.toString(), 10);
-    if (isNaN(val)) {
-        val = def;
-    }
-    return val;
-}
-
-let qstChartIndex = timGetLSIntValue("qstChartIndex", 0);
-
 type AnswerList = (IQuestionAnswer | IQuestionAnswerPlain)[];
 
 function* enumAnswers(answers: AnswerList): Iterable<[number, string[]]> {
@@ -193,7 +180,8 @@ interface ChartConfig {
 })
 export class AnswerChartComponent implements OnChanges {
     isText = false;
-    chartIndex = qstChartIndex;
+    private chartIndexStorage = new TimStorage("answerChart", t.number);
+    chartIndex = this.chartIndexStorage.get() ?? 0;
     @Input() question?: IAskedQuestion;
     @Input() answers?: AnswerList;
     private chartConfig?: ChartConfig;
@@ -457,13 +445,13 @@ export class AnswerChartComponent implements OnChanges {
     }
 
     toggle() {
-        qstChartIndex = timGetLSIntValue("qstChartIndex", 0);
+        let qstChartIndex = this.chartIndexStorage.get() ?? 0;
         if (qstChartIndex != this.chartIndex) {
             qstChartIndex = this.chartIndex;
         }
         qstChartIndex = (qstChartIndex + 1) % this.chartTypes.length;
         this.chartIndex = qstChartIndex;
-        window.localStorage.setItem("qstChartIndex", qstChartIndex.toString());
+        this.chartIndexStorage.set(qstChartIndex);
     }
 
     update() {

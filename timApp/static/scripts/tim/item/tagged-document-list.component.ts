@@ -5,9 +5,8 @@
  */
 import {HttpClient} from "@angular/common/http";
 import {Component, Input} from "@angular/core";
-import {ngStorage} from "ngstorage";
-import {to2} from "tim/util/utils";
-import {$localStorage} from "../util/ngimport";
+import {TimStorage, to2} from "tim/util/utils";
+import * as t from "io-ts";
 import {ITag, ITaggedItem, tagStyleClass} from "./IItem";
 
 @Component({
@@ -48,15 +47,9 @@ export class TaggedDocumentListComponent {
     docList: ITaggedItem[] = [];
     allUniqueTags: string[] = [];
     tagToolTip: string = "";
-    private storage: ngStorage.StorageService & {
-        tagFilterStorage: null | string;
-    };
+    private storage = new TimStorage("tagFilter", t.string);
 
-    constructor(private http: HttpClient) {
-        this.storage = $localStorage.$default({
-            tagFilterStorage: null,
-        });
-    }
+    constructor(private http: HttpClient) {}
 
     async ngOnInit() {
         if (this.enableSearch) {
@@ -65,8 +58,9 @@ export class TaggedDocumentListComponent {
             this.tagToolTip = "Document has tag ";
         }
 
-        if (this.enableSearch && this.storage.tagFilterStorage) {
-            this.tagFilter = this.storage.tagFilterStorage;
+        const stored = this.storage.get();
+        if (this.enableSearch && stored) {
+            this.tagFilter = stored;
         } else {
             this.tagFilter = "";
         }
@@ -75,7 +69,7 @@ export class TaggedDocumentListComponent {
     }
 
     $onDestroy() {
-        this.storage.tagFilterStorage = this.tagFilter;
+        this.storage.set(this.tagFilter);
     }
 
     private async getAllTags() {

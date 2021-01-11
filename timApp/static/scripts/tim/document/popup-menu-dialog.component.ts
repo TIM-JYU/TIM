@@ -157,11 +157,12 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
     }
 
     getChecked(fDesc: string) {
-        if (fDesc == null || this.vctrl.$storage.defaultAction == null) {
+        const stored = this.vctrl.defaultActionStorage.get();
+        if (fDesc == null || stored == null) {
             return "";
         }
 
-        return fDesc === this.vctrl.$storage.defaultAction ? "checked" : "";
+        return fDesc === stored ? "checked" : "";
     }
 
     getInputTitle(f: IMenuFunctionEntry) {
@@ -177,10 +178,10 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
             this.vctrl.defaultAction.desc === f.desc
         ) {
             this.vctrl.defaultAction = undefined;
-            this.vctrl.$storage.defaultAction = null;
+            this.vctrl.defaultActionStorage.set(null);
         } else {
             this.vctrl.defaultAction = f;
-            this.vctrl.$storage.defaultAction = f.desc;
+            this.vctrl.defaultActionStorage.set(f.desc);
         }
     }
 

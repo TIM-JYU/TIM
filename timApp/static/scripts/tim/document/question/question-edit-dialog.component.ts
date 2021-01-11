@@ -11,7 +11,7 @@ import {
     makePreview,
     minimizeJson,
 } from "tim/document/question/answer-sheet.component";
-import {getStorage, setStorage, to, to2} from "tim/util/utils";
+import {TimStorage, to, to2} from "tim/util/utils";
 import {
     KEY_DOWN,
     KEY_ENTER,
@@ -266,6 +266,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
     defaultPoints?: number;
     randomization = false;
     randomizedRows?: number;
+    private timeLimit = new TimStorage("timelimit", t.number);
 
     constructor(private http: HttpClient) {
         super();
@@ -325,8 +326,8 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
 
     private setTime() {
         this.ui = {durationType: "seconds", durationAmount: 30};
-        const timeLimit = getStorage("timelimit") || 30;
-        if (t.number.is(timeLimit) && timeLimit > 0) {
+        const timeLimit = this.timeLimit.get() ?? 30;
+        if (timeLimit > 0) {
             this.ui.durationAmount = timeLimit;
         }
     }
@@ -1039,7 +1040,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
             return;
         }
 
-        setStorage("timelimit", questionjson.timeLimit ?? 30);
+        this.timeLimit.set(questionjson.timeLimit ?? 30);
 
         if (isAskedQuestion(p)) {
             await this.updatePoints(p);

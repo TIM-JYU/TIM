@@ -15,7 +15,7 @@ import {
     IViewRange,
     toggleViewRange,
 } from "tim/document/viewRangeInfo";
-import {getStorage, IOkResponse, to2} from "tim/util/utils";
+import {getTypedStorage, IOkResponse, to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {getActiveDocument} from "tim/document/activedocument";
 import {ITemplateParams} from "tim/printing/print-dialog.component";
@@ -36,6 +36,7 @@ import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {showMergePdfDialog} from "tim/document/minutes/showMergePdfDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import * as t from "io-ts";
 
 const DEFAULT_PIECE_SIZE = 20;
 
@@ -285,7 +286,10 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        await toggleViewRange(this.item.id, this.pieceSize);
+        await toggleViewRange(
+            this.item.id,
+            getTypedStorage("pieceSize", t.number) ?? DEFAULT_PIECE_SIZE
+        );
         this.currentViewRange = getCurrentViewRange();
         this.updateIsFullRange();
     }
@@ -578,14 +582,5 @@ export class SettingsTabComponent implements OnInit {
     private loadViewRangeSettings() {
         this.currentViewRange = getCurrentViewRange();
         this.updateIsFullRange();
-    }
-
-    private get pieceSize() {
-        // TODO: change name when porting viewRangeEditDialog
-        const val = getStorage("ngStorage-pieceSize");
-        if (!val || typeof val != "number") {
-            return DEFAULT_PIECE_SIZE;
-        }
-        return val;
     }
 }

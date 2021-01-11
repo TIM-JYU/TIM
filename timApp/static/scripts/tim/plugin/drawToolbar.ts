@@ -12,6 +12,7 @@ import {
 } from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
+import * as t from "io-ts";
 
 export interface IDrawVisibleOptions {
     // Interface to define which options should be visible in the drawing toolbar
@@ -27,15 +28,6 @@ export interface IDrawVisibleOptions {
     opacity?: boolean;
 }
 
-export interface IDrawOptions {
-    enabled: boolean;
-    drawType: DrawType;
-    w: number;
-    color: string;
-    fill: boolean;
-    opacity: number;
-}
-
 export enum DrawType {
     Freehand,
     Line,
@@ -43,6 +35,25 @@ export enum DrawType {
     Ellipse,
 }
 
+const DrawTypeCodec = t.keyof({
+    [DrawType.Freehand]: null,
+    [DrawType.Line]: null,
+    [DrawType.Rectangle]: null,
+    [DrawType.Ellipse]: null,
+});
+
+export const DrawOptions = t.type({
+    color: t.string,
+    drawType: DrawTypeCodec,
+    enabled: t.boolean,
+    fill: t.boolean,
+    opacity: t.number,
+    w: t.number,
+});
+
+export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
+
+// noinspection TypeScriptUnresolvedVariable
 @Component({
     selector: "draw-toolbar",
     template: `

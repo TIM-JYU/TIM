@@ -1,6 +1,5 @@
 // idea from https://github.com/bcherny/ngimport
 import * as angular from "angular";
-import {ngStorage} from "ngstorage";
 
 // These MUST be initialized to non-undefined values. Otherwise lazy loading plugins won't work if the plugin imports
 // and uses some of these.
@@ -20,7 +19,6 @@ export let $injector: angular.auto.IInjectorService = (null as unknown) as angul
 export let $interpolate: angular.IInterpolateService = (null as unknown) as angular.IInterpolateService;
 export let $interval: angular.IIntervalService = (null as unknown) as angular.IIntervalService;
 export let $locale: angular.ILocaleService = (null as unknown) as angular.ILocaleService;
-export let $localStorage: ngStorage.StorageService = (null as unknown) as ngStorage.StorageService;
 export let $location: angular.ILocationService = (null as unknown) as angular.ILocationService;
 export let $log: angular.ILogService = (null as unknown) as angular.ILogService;
 export let $logProvider: angular.ILogProvider = (null as unknown) as angular.ILogProvider;
@@ -71,7 +69,6 @@ export function injectServices($i: angular.auto.IInjectorService) {
     $interpolate = $i.get("$interpolate");
     $interval = $i.get("$interval");
     $locale = $i.get("$locale");
-    $localStorage = $i.get("$localStorage");
     $location = $i.get("$location");
     $log = $i.get("$log");
     $parse = $i.get("$parse");

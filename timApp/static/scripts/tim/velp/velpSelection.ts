@@ -1,7 +1,14 @@
 import {IController, IFormController} from "angular";
 import * as t from "io-ts";
 import {timApp} from "tim/app";
-import {Binding, clone, markAsUsed, Require, to} from "tim/util/utils";
+import {
+    Binding,
+    clone,
+    markAsUsed,
+    Require,
+    TimStorage,
+    to,
+} from "tim/util/utils";
 import * as velpSummary from "tim/velp/velp-summary.component";
 import {colorPalette, VelpWindowController} from "tim/velp/velpWindow";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -56,9 +63,6 @@ export class VelpSelectionController implements IController {
     private order!: string; // $onInit
     private selectedLabels: number[] = [];
     private advancedOn: boolean = false;
-    private velpOrderingKey!: string; // $onInit
-    private velpLabelsKey!: string; // $onInit
-    private advancedOnKey!: string; // $onInit
     private defaultVelpGroup: IVelpGroupUI;
     private labelAdded: boolean = false;
     public vctrl!: Require<ViewCtrl>;
@@ -69,7 +73,12 @@ export class VelpSelectionController implements IController {
     >;
     private newVelpCtrl?: VelpWindowController;
 
-    // Data
+    private storage!: {
+        velpOrdering: TimStorage<string>;
+        velpLabels: TimStorage<number[]>;
+        advancedOn: TimStorage<boolean>;
+    };
+
     constructor() {
         this.labels = [];
         this.velpGroups = [];
@@ -150,23 +159,19 @@ export class VelpSelectionController implements IController {
         this.rctrl.velps = [];
         // Dictionaries for easier searching: Velp ids? Label ids? Annotation ids?
         const docId = this.docId;
-        this.velpOrderingKey = "velpOrdering_" + docId;
-        this.velpLabelsKey = "velpLabels_" + docId;
-        this.advancedOnKey = "advancedOn"; // TODO: should this be document specific?
+        this.storage = {
+            velpOrdering: new TimStorage("velpOrdering_" + docId, t.string),
+            velpLabels: new TimStorage(
+                "velpLabels_" + docId,
+                t.array(t.number)
+            ),
+            advancedOn: new TimStorage("advancedOn" + docId, t.boolean), // TODO: should this be document specific?
+        };
 
         // Values to store in localstorage:
-        this.order = this.getValuesFromLocalStorage(
-            this.velpOrderingKey,
-            "content"
-        );
-        const lbls = JSON.parse(
-            this.getValuesFromLocalStorage(this.velpLabelsKey, "[]")
-        );
-        this.selectedLabels = t.array(t.number).is(lbls) ? lbls : [];
-        const adv = JSON.parse(
-            this.getValuesFromLocalStorage(this.advancedOnKey, "false")
-        );
-        this.advancedOn = t.boolean.is(adv) ? adv : false;
+        this.order = this.storage.velpOrdering.get() ?? "content";
+        this.selectedLabels = this.storage.velpLabels.get() ?? [];
+        this.advancedOn = this.storage.advancedOn.get() ?? false;
 
         this.onInit({$API: this});
 
@@ -309,30 +314,12 @@ export class VelpSelectionController implements IController {
 
     // Methods
 
-    /**
-     * Gets values from local storage.
-     * If values are not found, returns given default value.
-     * @param key - Key in localstorage
-     * @param defaultValue - default value to return if key is not found
-     * @returns {*}
-     */
-    getValuesFromLocalStorage(key: string, defaultValue: string): string {
-        const item = window.localStorage.getItem(key);
-        if (item == null) {
-            return defaultValue;
-        }
-        return item;
-    }
-
     changeOrdering(order: string) {
-        window.localStorage.setItem(this.velpOrderingKey, order);
+        this.storage.velpOrdering.set(order);
     }
 
     changeSelectedLabels() {
-        window.localStorage.setItem(
-            this.velpLabelsKey,
-            JSON.stringify(this.selectedLabels)
-        );
+        this.storage.velpLabels.set(this.selectedLabels);
     }
 
     /**
@@ -369,7 +356,7 @@ export class VelpSelectionController implements IController {
     }
 
     setAdvancedOnlocalStorage(value: boolean) {
-        window.localStorage.setItem(this.advancedOnKey, value.toString());
+        this.storage.advancedOn.set(value);
     }
 
     /**

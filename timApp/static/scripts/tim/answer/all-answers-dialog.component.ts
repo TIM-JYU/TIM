@@ -8,47 +8,26 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import * as t from "io-ts";
-import {either} from "fp-ts/Either";
-import {maybeUndefined} from "tim/plugin/attributes";
+import {CommonDialogOptions} from "tim/answer/commondialogoptions";
 import {$httpParamSerializer} from "../util/ngimport";
 import {ReadonlyMoment, TimStorage, to2} from "../util/utils";
 
-// from https://github.com/gcanti/io-ts/blob/master/index.md#custom-types
-const DateFromString = new t.Type<Date, string, unknown>(
-    "DateFromString",
-    (u): u is Date => u instanceof Date,
-    (u, c) =>
-        either.chain(t.string.validate(u, c), (s) => {
-            const d = new Date(s);
-            return isNaN(d.getTime()) ? t.failure(u, c) : t.success(d);
+const AnswersDialogOptions = t.intersection([
+    t.type({
+        print: t.keyof({
+            all: null,
+            header: null,
+            answers: null,
+            answersnoline: null,
+            korppi: null,
         }),
-    (a) => a.toISOString()
-);
-
-const AnswersDialogOptions = t.type({
-    period: t.keyof({
-        whenever: null,
-        day: null,
-        week: null,
-        month: null,
-        other: null,
+        sort: t.string,
+        age: t.string,
+        consent: t.string,
+        format: t.keyof({text: null, json: null}),
     }),
-    print: t.keyof({
-        all: null,
-        header: null,
-        answers: null,
-        answersnoline: null,
-        korppi: null,
-    }),
-    age: t.string,
-    valid: t.string,
-    name: t.string,
-    sort: t.string,
-    consent: t.string,
-    format: t.keyof({text: null, json: null}),
-    periodFrom: maybeUndefined(DateFromString),
-    periodTo: maybeUndefined(DateFromString),
-});
+    CommonDialogOptions,
+]);
 
 interface IOptions extends t.TypeOf<typeof AnswersDialogOptions> {}
 

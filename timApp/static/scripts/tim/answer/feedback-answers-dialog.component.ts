@@ -1,26 +1,27 @@
-import moment, {Moment} from "moment";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
-import {ngStorage} from "ngstorage";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
-import {$httpParamSerializer, $localStorage} from "../util/ngimport";
+import {CommonDialogOptions} from "tim/answer/commondialogoptions";
+import * as t from "io-ts";
+import {TimStorage} from "tim/util/utils";
+import {$httpParamSerializer} from "../util/ngimport";
 import {IUser} from "../user/IUser";
 
-interface IFBOptions<T> {
-    period: "whenever" | "day" | "week" | "month";
-    valid: string;
-    name: string;
-    periodFrom: T;
-    periodTo: T;
-    scope: string;
-    answers: string;
-    format: string;
-    users: string;
-    decimal: string;
-}
+const AnswersDialogOptions = t.intersection([
+    t.type({
+        scope: t.string,
+        answers: t.string,
+        format: t.string,
+        users: t.string,
+        decimal: t.string,
+    }),
+    CommonDialogOptions,
+]);
+
+interface IFBOptions extends t.TypeOf<typeof AnswersDialogOptions> {}
 
 export interface IFeedbackAnswersParams {
     identifier: string;
@@ -29,6 +30,7 @@ export interface IFeedbackAnswersParams {
     allTasks: boolean;
 }
 
+// noinspection TypeScriptUnresolvedVariable
 @Component({
     selector: "tim-feedback-answers-dialog",
     template: `
@@ -218,10 +220,11 @@ export class FeedbackAnswersDialogComponent extends AngularDialogComponent<
     void
 > {
     protected dialogName = "FeedbackAnswers";
-    options!: IFBOptions<Moment>;
-    private storage?: ngStorage.StorageService & {
-        feedbackAnswersOptions: IFBOptions<number | null>;
-    };
+    options!: IFBOptions;
+    private storage = new TimStorage(
+        "feedbackAnswersOptions",
+        AnswersDialogOptions
+    );
     private showSort: boolean = false;
 
     getTitle() {
@@ -231,30 +234,17 @@ export class FeedbackAnswersDialogComponent extends AngularDialogComponent<
     ngOnInit() {
         const options = this.data;
         this.showSort = options.allTasks;
-        const defs = {
+        this.options = this.storage.get() ?? {
             period: "whenever",
             valid: "1",
             name: "both",
-            periodFrom: null,
-            periodTo: null,
+            periodFrom: new Date(),
+            periodTo: new Date(),
             scope: "task",
             answers: "all",
             format: "semicolon",
             users: "",
             decimal: "point",
-        } as const;
-        this.storage = $localStorage.$default({
-            feedbackAnswersOptions: defs,
-        });
-
-        this.options = {
-            ...this.storage.feedbackAnswersOptions,
-            periodFrom: moment(
-                this.storage.feedbackAnswersOptions.periodFrom ?? Date.now()
-            ),
-            periodTo: moment(
-                this.storage.feedbackAnswersOptions.periodFrom ?? Date.now()
-            ),
         };
 
         this.options.users = "";
@@ -267,18 +257,9 @@ export class FeedbackAnswersDialogComponent extends AngularDialogComponent<
         if (!this.options || !this.storage) {
             return;
         }
-        const toSerialize: IFBOptions<Date | null> = {
-            ...this.options,
-            periodFrom: this.options.periodFrom.toDate(),
-            periodTo: this.options.periodTo.toDate(),
-        };
-        this.storage.feedbackAnswersOptions = {
-            ...this.options,
-            periodFrom: this.options.periodFrom.valueOf(),
-            periodTo: this.options.periodTo.valueOf(),
-        };
+        this.storage.set(this.options);
         window.open(
-            this.data.url + "?" + $httpParamSerializer(toSerialize),
+            this.data.url + "?" + $httpParamSerializer(this.options),
             "_blank"
         );
         this.close();

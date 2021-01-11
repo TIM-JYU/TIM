@@ -4,13 +4,13 @@
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
-import {ngStorage} from "ngstorage";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
+import * as t from "io-ts";
 import {IItem} from "../item/IItem";
-import {$localStorage} from "../util/ngimport";
 import {TimUtilityModule} from "../ui/tim-utility.module";
+import {TimStorage} from "../util/utils";
 import {
     getCurrentPartitionURLParams,
     getPieceSize,
@@ -60,22 +60,12 @@ export class ViewRangeEditDialogComponent extends AngularDialogComponent<
     protected dialogName = "viewRangeEdit";
     private item!: IItem;
     partitionDocumentsSetting: boolean = false;
-    viewRangeSetting: number = 20;
     errorMessage?: string;
-    private storage: ngStorage.StorageService & {
-        pieceSize: null | number;
-    };
-
-    constructor() {
-        super();
-        this.storage = $localStorage.$default({
-            pieceSize: null,
-        });
-    }
+    private storage = new TimStorage("pieceSize", t.number);
+    viewRangeSetting: number = this.storage.get() ?? 20;
 
     ngOnInit() {
         this.item = this.data;
-        this.loadValues();
         (async () => {
             const cookie = await getPieceSize();
             if (cookie) {
@@ -85,19 +75,10 @@ export class ViewRangeEditDialogComponent extends AngularDialogComponent<
     }
 
     /**
-     * Fetches options from local storage, if existent.
-     */
-    public loadValues() {
-        if (this.storage.pieceSize != null) {
-            this.viewRangeSetting = +this.storage.pieceSize;
-        }
-    }
-
-    /**
      * Save new values to local storage.
      */
     private saveValues() {
-        this.storage.pieceSize = this.viewRangeSetting;
+        this.storage.set(this.viewRangeSetting);
     }
 
     getTitle() {

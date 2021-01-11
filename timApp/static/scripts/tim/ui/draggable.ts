@@ -4,18 +4,18 @@ import {timApp} from "tim/app";
 import {timLogTime} from "tim/util/timTiming";
 import {TimDefer} from "tim/util/timdefer";
 import {Pos} from "tim/ui/pos";
+import {nullable} from "tim/plugin/attributes";
 import {$compile} from "../util/ngimport";
 import {
     Binding,
     getOutOffsetFully,
     getOutOffsetVisible,
     getPageXY,
-    getStorage,
     getViewPortSize,
     IBounds,
     ISize,
     isMobileDevice,
-    setStorage,
+    TimStorage,
 } from "../util/utils";
 
 function getPixels(s: string) {
@@ -101,10 +101,21 @@ export type ResizeCallback = (p: IResizeCallbackParams) => void;
 
 type IModalInstanceService = angular.ui.bootstrap.IModalInstanceService;
 
+const PosType = t.partial({
+    left: t.string,
+    right: t.string,
+    top: t.string,
+    bottom: t.string,
+});
+const SizeType = t.type({
+    width: nullable(t.string),
+    height: nullable(t.string),
+});
+
 export class DraggableController implements IController {
     static $inject = ["$scope", "$element"];
 
-    private posKey?: string;
+    private posKey = "draggable";
     private areaMinimized: boolean = false;
     private areaHeight: number = 0;
     private areaWidth: number = 0;
@@ -140,6 +151,10 @@ export class DraggableController implements IController {
     private captionCb?: () => string;
     private dragEnabled = true;
     private draggable?: boolean;
+    private posStorage!: TimStorage<t.TypeOf<typeof PosType>>;
+    private sizeStorage!: TimStorage<t.TypeOf<typeof SizeType>>;
+    private minStorage!: TimStorage<boolean>;
+    private detachStorage!: TimStorage<boolean>;
 
     constructor(private scope: IScope, private element: JQLite) {}
 
@@ -155,6 +170,10 @@ export class DraggableController implements IController {
             const pageId = window.location.pathname.split("/")[1];
             this.posKey = this.save.replace("%%PAGEID%%", pageId);
         }
+        this.posStorage = new TimStorage(this.posKey, PosType);
+        this.sizeStorage = new TimStorage(this.posKey + "Size", SizeType);
+        this.minStorage = new TimStorage(this.posKey + "min", t.boolean);
+        this.detachStorage = new TimStorage(this.posKey + "detach", t.boolean);
     }
 
     private setVisibility(v: "visible" | "hidden" | "inherit") {
@@ -194,7 +213,7 @@ export class DraggableController implements IController {
             this.element.css("visibility", "visible");
             this.restoreSizeAndPosition(VisibilityFix.Partial);
         }
-        setStorage(this.posKey + "detach", this.canDrag());
+        this.detachStorage.set(this.canDrag());
     }
 
     private async makeModalPositionAbsolute() {
@@ -284,10 +303,10 @@ export class DraggableController implements IController {
         if (this.posKey) {
             this.getSetDirs();
             await this.restoreSizeAndPosition(vf);
-            if (getStorage(this.posKey + "min") && !this.forceMaximized) {
+            if (this.minStorage.get() && !this.forceMaximized) {
                 this.toggleMinimize();
             }
-            if (getStorage(this.posKey + "detach")) {
+            if (this.detachStorage.get()) {
                 this.toggleDetach();
             }
         }
@@ -304,9 +323,8 @@ export class DraggableController implements IController {
         if (!this.posKey) {
             return;
         }
-        const SizeType = t.partial({width: t.string, height: t.string});
-        const oldSize = getStorage(this.posKey + "Size");
-        if (SizeType.is(oldSize) && this.canDrag()) {
+        const oldSize = this.sizeStorage.get();
+        if (oldSize && this.canDrag()) {
             const vps = getViewPortSize();
             if (oldSize.width) {
                 this.element.css(
@@ -321,19 +339,13 @@ export class DraggableController implements IController {
                 );
             }
         }
-        const PosType = t.partial({
-            left: t.string,
-            right: t.string,
-            top: t.string,
-            bottom: t.string,
-        });
-        const oldPos = getStorage(this.posKey);
+        const oldPos = this.posStorage.get();
         // it doesn't make sense to restore Y position if the dialog has absolute position (instead of fixed)
         if (await this.modalHasAbsolutePosition()) {
             const off = this.element.offset() ?? {left: 20};
             this.element.offset({top: window.pageYOffset, left: off.left});
         }
-        if (PosType.is(oldPos)) {
+        if (oldPos) {
             if (oldPos.left && this.setLeft) {
                 this.element.css("left", oldPos.left);
             }
@@ -392,7 +404,7 @@ export class DraggableController implements IController {
 
             base.css("visibility", "hidden");
             this.element.css("min-height", "0");
-            setStorage(this.posKey + "min", true);
+            this.minStorage.set(true);
         } else {
             base.css("visibility", "");
             this.element.css("min-height", "");
@@ -404,7 +416,7 @@ export class DraggableController implements IController {
                 this.element.height(this.areaHeight);
             }
             this.element.width(this.areaWidth);
-            setStorage(this.posKey + "min", false);
+            this.minStorage.set(false);
         }
     }
 
@@ -545,7 +557,7 @@ export class DraggableController implements IController {
         this.ensureVisibleInViewport();
         if (this.posKey) {
             const css = this.element.css(["top", "bottom", "left", "right"]);
-            setStorage(this.posKey, css);
+            this.posStorage.set(css);
 
             timLogTime("pos:" + css.left + "," + css.top, "drag");
         }
@@ -662,7 +674,7 @@ export class DraggableController implements IController {
 
         const size = await this.getSize();
         if (this.posKey) {
-            setStorage(this.posKey + "Size", size);
+            this.sizeStorage.set(size);
         }
         if (this.resizeCallback) {
             this.resizeCallback({

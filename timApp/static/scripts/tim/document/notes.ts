@@ -5,12 +5,13 @@ import {openEditor} from "tim/editor/pareditorOpen";
 import {getCurrentEditor} from "tim/editor/editorScope";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import * as t from "io-ts";
 import {IPluginInfoResponse} from "../editor/parCompiler";
 import {PareditorController} from "../editor/pareditor";
 import {IModalInstance} from "../ui/dialog";
 import {documentglobals} from "../util/globals";
 import {$compile, $http} from "../util/ngimport";
-import {isMobileDevice, to} from "../util/utils";
+import {isMobileDevice, TimStorage, to} from "../util/utils";
 import {
     EditPosition,
     EditType,
@@ -102,7 +103,8 @@ export class NotesHandler {
             caption = "Add comment";
             url = "/postNote";
             data = {
-                access: this.viewctrl.$storage.noteAccess,
+                access:
+                    new TimStorage("noteAccess", t.string).get() ?? "everyone",
                 tags: {
                     markread: false,
                 },

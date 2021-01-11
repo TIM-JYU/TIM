@@ -9,13 +9,7 @@ import {
 } from "@angular/core";
 import {DialogFrame} from "tim/ui/angulardialog/dialog-frame.component";
 import {TimDefer} from "tim/util/timdefer";
-import {
-    getStorage,
-    getViewPortSize,
-    ISize,
-    setStorage,
-    timeout,
-} from "tim/util/utils";
+import {getViewPortSize, ISize, timeout, TimStorage} from "tim/util/utils";
 import * as t from "io-ts";
 import {Subscription} from "rxjs";
 import {Pos} from "tim/ui/pos";
@@ -48,6 +42,8 @@ function getCurrentSize(el: Element) {
     };
 }
 
+const TwoTuple = t.tuple([t.number, t.number]);
+
 @Directive()
 export abstract class AngularDialogComponent<Params, Result>
     implements AfterViewInit {
@@ -63,6 +59,8 @@ export abstract class AngularDialogComponent<Params, Result>
     private sub?: Subscription;
     protected xOrigin?: number;
     private bodyObserver?: MutationObserver;
+    private sizeStorage?: TimStorage<[number, number]>;
+    private posStorage?: TimStorage<[number, number]>;
 
     @HostListener("keydown.esc", ["$event"])
     escPressed(e: KeyboardEvent) {
@@ -72,6 +70,17 @@ export abstract class AngularDialogComponent<Params, Result>
 
     get result() {
         return this.resultDefer.promise;
+    }
+
+    getSizeStorage() {
+        return (this.sizeStorage ??= new TimStorage(
+            this.getSizeKey(),
+            TwoTuple
+        ));
+    }
+
+    getPosStorage() {
+        return (this.posStorage ??= new TimStorage(this.getPosKey(), TwoTuple));
     }
 
     isClosed() {
@@ -106,19 +115,18 @@ export abstract class AngularDialogComponent<Params, Result>
         this.sub = this.frame.sizeOrPosChanged.subscribe(() => {
             this.savePosSize();
         });
-        const TwoTuple = t.tuple([t.number, t.number]);
         let sizehint = null;
         if (this.dialogOptions?.resetSize) {
             this.frame.resizable.resetSize();
         } else {
-            const savedSize = getStorage(this.getSizeKey());
-            if (TwoTuple.is(savedSize)) {
+            const savedSize = this.getSizeStorage().get();
+            if (savedSize) {
                 sizehint = {width: savedSize[0], height: savedSize[1]};
                 this.frame.resizable.getSize().set(sizehint);
             }
         }
-        const savedPos = getStorage(this.getPosKey());
-        if (TwoTuple.is(savedPos)) {
+        const savedPos = this.getPosStorage().get();
+        if (savedPos) {
             this.frame.setPos({x: savedPos[0], y: savedPos[1]});
         }
 
@@ -200,12 +208,12 @@ export abstract class AngularDialogComponent<Params, Result>
 
         // Height can sometimes be zero, at least when the dialog is minimized.
         if (height > 0) {
-            setStorage(this.getSizeKey(), [width, height]);
+            this.getSizeStorage().set([width, height]);
         }
 
         try {
             const {x, y} = this.frame.resizable.getPos();
-            setStorage(this.getPosKey(), [x, y]);
+            this.getPosStorage().set([x, y]);
         } catch {
             console.warn("resizable.getPos threw an error");
         }

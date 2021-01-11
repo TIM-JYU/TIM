@@ -9,10 +9,11 @@ import {TabDirective, TabsetComponent} from "ngx-bootstrap/tabs";
 import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
 import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
-import {getStorage, isScreenSizeOrLower, setStorage} from "tim/util/utils";
+import {isScreenSizeOrLower, TimStorage} from "tim/util/utils";
 import {ISettings} from "tim/user/settings.component";
 import {genericglobals} from "tim/util/globals";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
+import * as t from "io-ts";
 
 enum MenuState {
     Open,
@@ -61,6 +62,14 @@ const sizeBreakpoint = "md";
     `,
 })
 export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
+    private lastUsedTabStorage = new TimStorage(
+        "sideBarMenu_lastUsedTab",
+        t.string
+    );
+    private lastVisStateStorage = new TimStorage(
+        "sideBarMenu_lastVisState",
+        t.number
+    );
     private currentTab?: string;
     private settings: ISettings = genericglobals().userPrefs;
     private currentMenuState: MenuState = MenuState.Open;
@@ -87,8 +96,8 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         if (!this.settings.remember_last_sidebar_menu_tab) {
             return "";
         }
-        const val = getStorage("sideBarMenu_lastUsedTab");
-        if (typeof val != "string") {
+        const val = this.lastUsedTabStorage.get();
+        if (val === undefined) {
             return "";
         }
         return val;
@@ -98,15 +107,15 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         if (!this.settings.remember_last_sidebar_menu_tab) {
             return;
         }
-        setStorage("sideBarMenu_lastUsedTab", value);
+        this.lastUsedTabStorage.set(value);
     }
 
     get lastVisState(): MenuState {
         if (!this.settings.remember_last_sidebar_menu_state) {
             return MenuState.Open;
         }
-        const val = getStorage("sideBarMenu_lastVisState");
-        if (typeof val != "number" || val < 0 || val >= MenuState.Max) {
+        const val = this.lastVisStateStorage.get();
+        if (val === undefined || val < 0 || val >= MenuState.Max) {
             return MenuState.Open;
         }
         return val;
@@ -119,7 +128,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         if (value < 0 || value >= MenuState.Max) {
             value = MenuState.Open;
         }
-        setStorage("sideBarMenu_lastVisState", value);
+        this.lastVisStateStorage.set(value);
     }
 
     onResize(): void {
@@ -225,11 +234,13 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
         // if it's selected by default. In turn this won't cause lazy loading to occur
         // To fix this, mark all tabs inactive and then search for tab to activate, which will always trigger
         // selectTab event.
-        this.tabs.tabs.forEach((t) => (t.active = false));
+        this.tabs.tabs.forEach((tab) => (tab.active = false));
         if (this.currentMenuState != MenuState.Open) {
             return;
         }
-        const activeTab = this.tabs.tabs.find((t) => t.id == this.currentTab);
+        const activeTab = this.tabs.tabs.find(
+            (tab) => tab.id == this.currentTab
+        );
         if (activeTab) {
             activeTab.active = true;
         }
@@ -261,6 +272,8 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
     }
 
     private updateTabsVisible() {
-        this.tabsVisible = this.menuTabs.some((t) => this.tabsVisTable[t.id]);
+        this.tabsVisible = this.menuTabs.some(
+            (tab) => this.tabsVisTable[tab.id]
+        );
     }
 }

@@ -3,7 +3,7 @@ import * as t from "io-ts";
 import $ from "jquery";
 import rangyinputs from "rangyinputs";
 import {setCurrentEditor} from "tim/editor/editorScope";
-import {markAsUsed, to} from "tim/util/utils";
+import {markAsUsed, TimStorage, to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
 import {showRestampDialog} from "tim/editor/showRestampDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -17,14 +17,7 @@ import {
 import {ViewCtrl} from "../document/viewctrl";
 import {registerDialogComponentForModule} from "../ui/dialog";
 import {documentglobals, genericglobals} from "../util/globals";
-import {
-    $compile,
-    $http,
-    $injector,
-    $localStorage,
-    $timeout,
-    $upload,
-} from "../util/ngimport";
+import {$compile, $http, $injector, $timeout, $upload} from "../util/ngimport";
 import {AceParEditor} from "./AceParEditor";
 import {EditorType, SelectionRange} from "./BaseParEditor";
 import {IPluginInfoResponse, ParCompiler} from "./parCompiler";
@@ -220,7 +213,17 @@ export class PareditorController extends DialogController<
     private proeditor!: boolean; // $onInit
     private saving: boolean = false;
     private scrollPos?: number;
-    private storage: Storage;
+    private storage!: {
+        noteAccess: TimStorage<string>;
+        acebehaviours: TimStorage<boolean>;
+        acewrap: TimStorage<boolean>;
+        autocomplete: TimStorage<boolean>;
+        proeditor: TimStorage<boolean>;
+        spellcheck: TimStorage<boolean>;
+        editortab: TimStorage<string>;
+        wrap: TimStorage<string>;
+        oldMode: TimStorage<string>;
+    };
     private touchDevice: boolean;
     private autocomplete!: boolean; // $onInit
     private citeText!: string; // $onInit
@@ -239,7 +242,6 @@ export class PareditorController extends DialogController<
 
     constructor(protected element: JQLite, protected scope: IScope) {
         super(element, scope);
-        this.storage = localStorage;
 
         if (navigator.userAgent.match(/Trident/i)) {
             this.isIE = true;
@@ -842,18 +844,28 @@ ${backTicks}
 
     $onInit() {
         super.$onInit();
+        this.storage = {
+            acebehaviours: new TimStorage("acebehaviours", t.boolean),
+            acewrap: new TimStorage("acewrap", t.boolean),
+            autocomplete: new TimStorage("autocomplete", t.boolean),
+            editortab: new TimStorage("editortab", t.string),
+            noteAccess: new TimStorage("noteAccess", t.string),
+            oldMode: new TimStorage("oldMode", t.string),
+            proeditor: new TimStorage("proeditor", t.boolean),
+            spellcheck: new TimStorage("spellcheck", t.boolean),
+            wrap: new TimStorage("wrap", t.string),
+        };
         setCurrentEditor(this);
-        this.spellcheck = this.getLocalBool("spellcheck", false);
-        this.autocomplete = this.getLocalBool("autocomplete", false);
+        this.spellcheck = this.storage.spellcheck.get() ?? false;
+        this.autocomplete = this.storage.autocomplete.get() ?? false;
         const saveTag = this.getSaveTag();
-        this.proeditor = this.getLocalBool(
-            "proeditor",
-            saveTag === "par" || saveTag === TIM_TABLE_CELL
-        );
-        this.activeTab = this.getLocalValue("editortab") ?? "navigation";
+        this.proeditor =
+            this.storage.proeditor.get() ??
+            (saveTag === "par" || saveTag === TIM_TABLE_CELL);
+        this.activeTab = this.storage.editortab.get() ?? "navigation";
         this.lastTab = this.activeTab;
         this.citeText = this.getCiteText();
-        const sn = this.getLocalValue("wrap");
+        const sn = this.storage.wrap.get();
         let n = parseInt(sn ?? "-90", 10);
         if (isNaN(n)) {
             n = -90;
@@ -878,9 +890,8 @@ ${backTicks}
             this.refreshEditorSize();
         });
         const oldMode =
-            window.localStorage.getItem(
-                "oldMode" + this.getOptions().localSaveTag
-            ) ?? (this.getOptions().touchDevice ? "text" : "ace");
+            this.storage.oldMode.get() ??
+            (this.getOptions().touchDevice ? "text" : "ace");
         (async () => {
             await this.changeEditor(oldMode);
         })();
@@ -940,18 +951,6 @@ ${backTicks}
 
     selectAllText(evt: Event) {
         (evt.target as HTMLInputElement).select();
-    }
-
-    getLocalBool(name: string, def: boolean): boolean {
-        const val = this.storage.getItem(name + this.getSaveTag());
-        if (!val) {
-            return def;
-        }
-        return val === "true";
-    }
-
-    setLocalValue(name: string, val: string) {
-        window.localStorage.setItem(name + this.getSaveTag(), val);
     }
 
     initCustomTabs() {
@@ -1722,11 +1721,11 @@ ${backTicks}
             };
             */
             neweditor.setBehavioursEnabled(
-                this.getLocalBool("acebehaviours", false)
+                this.storage.acebehaviours.get() ?? false
             );
             neweditor
                 .getSession()
-                .setUseWrapMode(this.getLocalBool("acewrap", false));
+                .setUseWrapMode(this.storage.acewrap.get() ?? false);
             neweditor.setOptions({maxLines: 28});
             this.editor.setEditorText(text);
             this.refreshEditorSize();
@@ -1848,10 +1847,6 @@ ${backTicks}
         return this.getOptions().localSaveTag;
     }
 
-    private getLocalValue(val: string) {
-        return this.storage.getItem(val + this.getSaveTag());
-    }
-
     private async focusEditor() {
         await $timeout();
         const s = $(window).scrollTop();
@@ -1861,14 +1856,15 @@ ${backTicks}
     }
 
     private saveOptions() {
-        this.setLocalValue("spellcheck", this.spellcheck.toString());
-        this.setLocalValue("editortab", this.activeTab ?? "navigation");
-        this.setLocalValue("autocomplete", this.autocomplete.toString());
+        this.storage.spellcheck.set(this.spellcheck);
+        this.storage.editortab.set(this.activeTab ?? "navigation");
+        this.storage.autocomplete.set(this.autocomplete);
         const ace = this.isAce();
-        this.setLocalValue("oldMode", ace ? "ace" : "text");
-        this.setLocalValue("wrap", "" + this.wrapValue());
-        if (this.getExtraData().access != null) {
-            $localStorage.noteAccess = this.getExtraData().access;
+        this.storage.oldMode.set(ace ? "ace" : "text");
+        this.storage.wrap.set("" + this.wrapValue());
+        const acc = this.getExtraData().access;
+        if (acc != null) {
+            this.storage.noteAccess.set(acc);
         }
         const tags = this.getExtraData().tags;
         const tagKeys = ["markread", "marktranslated"] as const;
@@ -1878,16 +1874,10 @@ ${backTicks}
                 window.localStorage.setItem(key, v.toString());
             }
         }
-        this.setLocalValue("proeditor", this.proeditor.toString());
+        this.storage.proeditor.set(this.proeditor);
         if (ace) {
-            this.setLocalValue(
-                "acewrap",
-                ace.editor.getSession().getUseWrapMode().toString()
-            );
-            this.setLocalValue(
-                "acebehaviours",
-                ace.editor.getBehavioursEnabled().toString()
-            ); // some of these are in editor and some in session?
+            this.storage.acewrap.set(ace.editor.getSession().getUseWrapMode());
+            this.storage.acebehaviours.set(ace.editor.getBehavioursEnabled()); // some of these are in editor and some in session?
         }
     }
 

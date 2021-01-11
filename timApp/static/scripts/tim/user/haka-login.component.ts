@@ -1,7 +1,8 @@
 import {Component, Input, OnChanges, SimpleChanges} from "@angular/core";
 import {Users} from "tim/user/userService";
+import * as t from "io-ts";
 import {$http, $httpParamSerializer} from "../util/ngimport";
-import {getStorage, setStorage, to} from "../util/utils";
+import {TimStorage, to} from "../util/utils";
 
 function redirectTo(url: string) {
     window.location.href = url;
@@ -91,15 +92,15 @@ export class HakaLoginComponent implements OnChanges {
     @Input() idps: IDiscoveryFeedEntry[] = [];
     @Input() homeOrg?: string;
     @Input() addingUser?: boolean;
+    private lastIdp = new TimStorage("lastIdp", t.string);
 
     ngOnChanges(changes: SimpleChanges) {
         if (changes.idps) {
-            const last = getStorage("lastIdp");
-            if (typeof last === "string") {
-                const found = this.idps.find((idp) => idp.entityID === last);
-                if (found) {
-                    this.selectedIdp = found;
-                }
+            const last = this.lastIdp.get();
+            if (last) {
+                this.selectedIdp = this.idps.find(
+                    (idp) => idp.entityID === last
+                );
             }
             if (!this.selectedIdp && this.homeOrg) {
                 this.selectedIdp = findIdPByScope(this.idps, this.homeOrg);
@@ -115,7 +116,7 @@ export class HakaLoginComponent implements OnChanges {
         if (!this.selectedIdp) {
             return;
         }
-        setStorage("lastIdp", this.selectedIdp.entityID);
+        this.lastIdp.set(this.selectedIdp.entityID);
 
         ssoLogin(this.selectedIdp.entityID, this.addingUser);
     }

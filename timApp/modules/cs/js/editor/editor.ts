@@ -1,13 +1,15 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "wrap_", "modes_", "fileIndex_", "files_", "modeIndex_", "mayAddFiles_"] }] */
 import {
-    ViewChild,
+    ChangeDetectorRef,
     Component,
+    EventEmitter,
     Input,
     Output,
-    EventEmitter,
-    ChangeDetectorRef,
+    ViewChild,
 } from "@angular/core";
 
+import {TimStorage} from "tim/util/utils";
+import * as t from "io-ts";
 import {IFile} from "../util/file-select";
 import {getInt} from "../util/util";
 import {NormalEditorComponent} from "./normal";
@@ -205,6 +207,7 @@ export class EditorComponent implements IMultiEditor {
     addTabActive: boolean = false;
     private loadedFile?: IFile;
     filenameInput: string = "";
+    private editorIndexStorage = new TimStorage("editorIndex", t.number);
 
     constructor(private cdr: ChangeDetectorRef) {
         this.showOtherEditor(
@@ -498,11 +501,10 @@ export class EditorComponent implements IMultiEditor {
     }
 
     get savedEditorMode(): ModeID | null {
-        let emode: ModeID | null = null;
+        let emode: ModeID | null;
         // TODO: change editorIndex into a list of priority?
-        const emodestr = localStorage.getItem("editorIndex"); // TODO: change to editorMode?
-        if (emodestr !== null) {
-            emode = parseInt(emodestr, 10);
+        emode = this.editorIndexStorage.get() ?? null; // TODO: change to editorMode?
+        if (emode !== null) {
             if (emode == -1) {
                 emode = null;
             }
@@ -513,7 +515,7 @@ export class EditorComponent implements IMultiEditor {
         if (mode === null) {
             return;
         }
-        localStorage.setItem("editorIndex", mode.toString());
+        this.editorIndexStorage.set(mode);
     }
 
     set placeholder(str: string | undefined) {

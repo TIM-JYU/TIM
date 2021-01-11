@@ -1,6 +1,5 @@
 import {IController, IPromise, IScope} from "angular";
 import $ from "jquery";
-import ngs, {ngStorage} from "ngstorage";
 import {timApp} from "tim/app";
 import {setActiveDocument} from "tim/document/activedocument";
 import {AreaHandler} from "tim/document/areas";
@@ -22,6 +21,7 @@ import {
     isPageDirty,
     markAsUsed,
     markPageNotDirty,
+    TimStorage,
     to,
     UnknownRecord,
 } from "tim/util/utils";
@@ -31,6 +31,7 @@ import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {diffDialog} from "tim/document/showDiffDialog";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import * as t from "io-ts";
 import {
     AnswerBrowserController,
     PluginLoaderCtrl,
@@ -42,6 +43,7 @@ import {LectureController} from "../lecture/lectureController";
 import {
     IGenericPluginMarkup,
     IGenericPluginTopLevelFields,
+    nullable,
 } from "../plugin/attributes";
 import {TableFormComponent} from "../plugin/tableForm";
 import {DocIdDotName, TaskId} from "../plugin/taskid";
@@ -51,14 +53,7 @@ import {IUser, IUserListEntry} from "../user/IUser";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {documentglobals} from "../util/globals";
-import {
-    $compile,
-    $filter,
-    $http,
-    $interval,
-    $localStorage,
-    $timeout,
-} from "../util/ngimport";
+import {$compile, $filter, $http, $interval, $timeout} from "../util/ngimport";
 import {AnnotationComponent} from "../velp/annotation.component";
 import {ReviewController} from "../velp/reviewController";
 import {EditingHandler} from "./editing/editing";
@@ -71,7 +66,7 @@ import {initSlideView} from "./slide";
 import {ViewRangeInfo} from "./viewRangeInfo";
 import {ICtrlWithMenuFunctionEntry, IMenuFunctionEntry} from "./viewutils";
 
-markAsUsed(ngs, interceptor, ParRefController);
+markAsUsed(interceptor, ParRefController);
 
 export interface IChangeListener {
     informAboutChanges: (
@@ -207,10 +202,10 @@ export class ViewCtrl implements IController {
     private document: Document;
     public selectedUser: IUser;
     public editing: boolean = false;
-    public $storage: ngStorage.StorageService & {
-        defaultAction: string | null;
-        noteAccess: string;
-    };
+    public defaultActionStorage = new TimStorage(
+        "defAction",
+        nullable(t.string)
+    );
     private liveUpdates: number;
     private oldWidth: number;
     public defaultAction: IMenuFunctionEntry | undefined;
@@ -350,11 +345,6 @@ export class ViewCtrl implements IController {
             }
         });
 
-        this.$storage = $localStorage.$default({
-            defaultAction: "Close menu",
-            noteAccess: "everyone",
-        });
-
         dg.allowMove = false;
         this.oldWidth = $(window).width() ?? 500;
         if (isPageDirty()) {
@@ -375,7 +365,10 @@ export class ViewCtrl implements IController {
         try {
             const found = $filter("filter")(
                 this.editingHandler.getEditorFunctions(),
-                {desc: this.$storage.defaultAction, show: true},
+                {
+                    desc: this.defaultActionStorage.get() ?? "Close menu",
+                    show: true,
+                },
                 true
             );
             if (found.length) {
@@ -766,9 +759,9 @@ export class ViewCtrl implements IController {
         const arr = this.timComponentTags.get(tag);
         if (arr) {
             for (const name of arr) {
-                const t = this.getTimComponentByName(name);
-                if (t) {
-                    returnList.push(t);
+                const component = this.getTimComponentByName(name);
+                if (component) {
+                    returnList.push(component);
                 }
             }
         }
@@ -832,8 +825,8 @@ export class ViewCtrl implements IController {
      */
     public checkUnSavedTimComponents(userChange?: boolean): boolean {
         let unsavedTimComponents = false;
-        for (const t of this.timComponents.values()) {
-            if (t.isUnSaved(userChange)) {
+        for (const component of this.timComponents.values()) {
+            if (component.isUnSaved(userChange)) {
                 unsavedTimComponents = true;
                 break;
             }
@@ -961,8 +954,8 @@ export class ViewCtrl implements IController {
             DocIdDotName,
             AnswerBrowserController
         >();
-        for (const t of taskids) {
-            const loader = this.getPluginLoader(t);
+        for (const tid of taskids) {
+            const loader = this.getPluginLoader(tid);
             if (!loader) {
                 continue;
             }
@@ -970,7 +963,7 @@ export class ViewCtrl implements IController {
             // No need to await before calling next load
             loader.loadPlugin();
             await loader.abLoad.promise;
-            const fab = this.getFormAnswerBrowser(t);
+            const fab = this.getFormAnswerBrowser(tid);
             if (fab) {
                 if (!fab.isUseCurrentUser()) {
                     formAbMap.set(fab.taskId.docTask(), fab);
@@ -978,7 +971,7 @@ export class ViewCtrl implements IController {
                     currentUserFormAbs.set(fab.taskId.docTask(), fab);
                 }
             } else {
-                const ab = this.getAnswerBrowser(t);
+                const ab = this.getAnswerBrowser(tid);
                 if (ab) {
                     regularAbMap.set(ab.taskId.docTaskField(), ab);
                 }
