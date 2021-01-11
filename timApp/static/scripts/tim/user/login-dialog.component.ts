@@ -2,8 +2,6 @@
  * Dialog for log in and sign up.
  */
 
-import * as focusMe from "tim/ui/focusMe";
-import * as onEnter from "tim/ui/onEnter";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, ElementRef, NgModule, ViewChild} from "@angular/core";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
@@ -14,14 +12,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {saveCurrentScreenPar} from "../document/parhelpers";
 import {genericglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
-import {
-    capitalizeFirstLetter,
-    IOkResponse,
-    markAsUsed,
-    to,
-    ToReturn,
-} from "../util/utils";
-import * as hakaLogin from "./haka-login.component";
+import {capitalizeFirstLetter, IOkResponse, to, ToReturn} from "../util/utils";
 import {
     HakaLoginComponent,
     IDiscoveryFeedEntry,
@@ -39,8 +30,6 @@ export interface ILoginParams {
     showSignup: boolean;
     addingToSession: boolean;
 }
-
-markAsUsed(focusMe, onEnter, hakaLogin);
 
 const orgNames: Record<string, string | undefined> = {
     "aalto.fi": "Aalto",

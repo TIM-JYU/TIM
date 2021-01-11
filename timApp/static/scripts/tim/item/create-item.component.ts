@@ -1,14 +1,10 @@
-import * as formErrorMessage from "tim/ui/formErrorMessage";
 import {AlertSeverity} from "tim/ui/formErrorMessage";
-import * as shortNameValidator from "tim/ui/shortNameValidator";
-import {getURLParameter, markAsUsed} from "tim/util/utils";
+import {getURLParameter} from "tim/util/utils";
 import {Component, Input, OnInit} from "@angular/core";
 import {$http} from "../util/ngimport";
 import {slugify} from "../util/slugify";
 import {to} from "../util/utils";
 import {ITaggedItem, TagType} from "./IItem";
-
-markAsUsed(formErrorMessage, shortNameValidator);
 
 @Component({
     selector: "create-item",
