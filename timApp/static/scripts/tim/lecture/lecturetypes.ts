@@ -187,7 +187,6 @@ export interface ILectureResponse {
     lecture: ILecture;
     students: ILecturePerson[];
     lecturers: ILecturePerson[];
-    useWall: boolean;
     useQuestions: boolean;
     correctPassword?: boolean;
 }

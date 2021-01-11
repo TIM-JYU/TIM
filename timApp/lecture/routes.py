@@ -152,7 +152,6 @@ def do_get_updates(m: GetUpdatesModel):
     current_question_id = m.current_question_id
     current_points_id = m.current_points_id
     use_wall = m.use_wall
-    session['use_wall'] = use_wall
     use_questions = m.use_questions
     session['use_questions'] = use_questions
 
@@ -419,11 +418,10 @@ def send_message(m: SendMessageModel):
 
 
 def get_lecture_session_data():
-    for k in ('use_wall', 'use_questions'):
+    for k in ('use_questions', ):
         if session.get(k) is None:
             session[k] = True
     return {
-        'useWall': session['use_wall'],
         'useQuestions': session['use_questions'],
     }
 

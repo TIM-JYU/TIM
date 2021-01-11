@@ -71,7 +71,6 @@ class LectureTest(TimRouteTest):
                               'lecturers': [],  # TODO This is probably wrong, should have one element
                               'students': [],
                               'useQuestions': True,
-                              'useWall': True,
                               'lecture': {
                                   'lecture_code': lecture_code,
                                   'lecture_id': lecture_id,

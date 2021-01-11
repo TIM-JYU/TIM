@@ -11,7 +11,14 @@
  */
 
 import ifvisible from "ifvisible.js";
-import {clone, getURLParameter, setStorage, to, truncate} from "tim/util/utils";
+import {
+    clone,
+    getURLParameter,
+    setStorage,
+    TimStorage,
+    to,
+    truncate,
+} from "tim/util/utils";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {
     showLectureDialog,
@@ -28,6 +35,7 @@ import {
     QUESTION_STORAGE,
 } from "tim/lecture/currentQuestion";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import * as t from "io-ts";
 import {ViewCtrl} from "../document/viewctrl";
 import {Users} from "../user/userService";
 import {someglobals} from "../util/globals";
@@ -72,6 +80,10 @@ const AUTOJOIN_CODE = "autojoin";
 
 let lectureControllerInstance: LectureController | undefined;
 
+const StoredSettings = t.partial({
+    useWall: t.boolean,
+});
+
 export class LectureController {
     public isLecturer: boolean;
     public lecture: ILecture | undefined;
@@ -94,6 +106,7 @@ export class LectureController {
     lastQuestion: IAskedQuestion | undefined;
     private wallInstancePromise?: Promise<LectureWallDialogComponent>;
     private lectureMenu?: LectureMenuComponent;
+    private storedSettings = new TimStorage("lecture", StoredSettings);
 
     constructor(vctrl: ViewCtrl | undefined) {
         this.viewctrl = vctrl;
@@ -153,6 +166,7 @@ export class LectureController {
         if (!this.lecture) {
             return;
         }
+        this.storeLectureSettings();
         if (
             this.lectureSettings.useWall &&
             !this.wallInstance &&
@@ -163,9 +177,14 @@ export class LectureController {
             this.wallInstancePromise = undefined;
             await to(this.wallInstance.result);
             this.lectureSettings.useWall = false;
+            this.storeLectureSettings();
         } else if (!this.lectureSettings.useWall) {
             this.closeLectureWallIfOpen();
         }
+    }
+
+    private storeLectureSettings() {
+        this.storedSettings.set({useWall: this.lectureSettings.useWall});
     }
 
     private closeLectureWallIfOpen() {
@@ -393,7 +412,8 @@ export class LectureController {
 
         this.wallName = truncate("Wall - " + response.lecture.lecture_code, 30);
         this.lectureSettings.inLecture = true;
-        this.lectureSettings.useWall = response.useWall;
+        this.lectureSettings.useWall =
+            this.storedSettings.get()?.useWall ?? true;
         this.lectureSettings.useQuestions = response.useQuestions;
 
         if (this.isLecturer) {
@@ -550,8 +570,6 @@ export class LectureController {
                 await $timeout(5000);
                 continue;
             }
-
-            void this.refreshWall();
 
             // By checking "hidden" we avoid the idle timeout (default 60 seconds).
             if (!ifvisible.now("hidden")) {
