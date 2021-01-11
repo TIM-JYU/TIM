@@ -1,5 +1,6 @@
 {% import 'macros.jinja2' as m -%}
 
+{% set lecture_mode = route == "lecture" %}
 {% set is_lecture_info = request.endpoint == 'lecture.show_lecture_info' %}
 {% set show_lecture_menu = lecture_info.in_lecture or lecture_mode or is_lecture_info %}
 

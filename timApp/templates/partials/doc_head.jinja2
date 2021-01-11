@@ -21,8 +21,8 @@
 {{ (doc_css | safe ) if doc_css }}
 
 <script class="global-vars">
-    ANGULARMODULES = {{ (jsMods or [])|tojson }};
-    JSMODULES = {{ (js or [])|tojson }};
+    ANGULARMODULES.push(...{{ (jsMods or [])|tojson }});
+    JSMODULES.push(...{{ (js or [])|tojson }});
 
     var noBrowser = {{ no_browser|tojson }};
     var showIndex = {{(headers|length > 0)|tojson}};
