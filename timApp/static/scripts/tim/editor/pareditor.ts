@@ -844,21 +844,21 @@ ${backTicks}
 
     $onInit() {
         super.$onInit();
+        const saveTag = this.getSaveTag();
         this.storage = {
-            acebehaviours: new TimStorage("acebehaviours", t.boolean),
-            acewrap: new TimStorage("acewrap", t.boolean),
-            autocomplete: new TimStorage("autocomplete", t.boolean),
-            editortab: new TimStorage("editortab", t.string),
-            noteAccess: new TimStorage("noteAccess", t.string),
-            oldMode: new TimStorage("oldMode", t.string),
-            proeditor: new TimStorage("proeditor", t.boolean),
-            spellcheck: new TimStorage("spellcheck", t.boolean),
-            wrap: new TimStorage("wrap", t.string),
+            acebehaviours: new TimStorage("acebehaviours" + saveTag, t.boolean),
+            acewrap: new TimStorage("acewrap" + saveTag, t.boolean),
+            autocomplete: new TimStorage("autocomplete" + saveTag, t.boolean),
+            editortab: new TimStorage("editortab" + saveTag, t.string),
+            noteAccess: new TimStorage("noteAccess", t.string), // No saveTag here.
+            oldMode: new TimStorage("oldMode" + saveTag, t.string),
+            proeditor: new TimStorage("proeditor" + saveTag, t.boolean),
+            spellcheck: new TimStorage("spellcheck" + saveTag, t.boolean),
+            wrap: new TimStorage("wrap" + saveTag, t.string),
         };
         setCurrentEditor(this);
         this.spellcheck = this.storage.spellcheck.get() ?? false;
         this.autocomplete = this.storage.autocomplete.get() ?? false;
-        const saveTag = this.getSaveTag();
         this.proeditor =
             this.storage.proeditor.get() ??
             (saveTag === "par" || saveTag === TIM_TABLE_CELL);
