@@ -61,6 +61,7 @@ class GitReg(Language):
 
     def __init__(self, query, code = None):
         super().__init__(query, code)
+        self.sourcefiles = []
 
         self.lib, self.options = get_lib_and_options(query)
 
