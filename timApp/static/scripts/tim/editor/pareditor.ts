@@ -444,9 +444,90 @@ ${backTicks}
                         name: "<s>Z</s>",
                     },
                     {
-                        title: "Add any style",
-                        func: () => this.editor!.styleClicked("Teksti", "red"),
-                        name: "Style",
+                        title: "Color",
+                        items: [
+                            {
+                                title: "Red text",
+                                func: () =>
+                                    this.editor!.styleClicked("Teksti", "red"),
+                                name: "Red",
+                            },
+                            {
+                                title: "Blue text",
+                                func: () =>
+                                    this.editor!.styleClicked("Teksti", "blue"),
+                                name: "Blue",
+                            },
+                            {
+                                title: "Green text",
+                                func: () =>
+                                    this.editor!.styleClicked("Teksti", "lime"),
+                                name: "Green",
+                            },
+                            {
+                                title: "Red background",
+                                func: () =>
+                                    this.editor!.styleClicked(
+                                        "Teksti",
+                                        "bgred"
+                                    ),
+                                name: "Red",
+                            },
+                            {
+                                title: "Blue background",
+                                func: () =>
+                                    this.editor!.styleClicked(
+                                        "Teksti",
+                                        "bgblue"
+                                    ),
+                                name: "Blue bg",
+                            },
+                            {
+                                title: "Green background",
+                                func: () =>
+                                    this.editor!.styleClicked(
+                                        "Teksti",
+                                        "bglime"
+                                    ),
+                                name: "Green bg",
+                            },
+                            {
+                                title: "Yellow background",
+                                func: () =>
+                                    this.editor!.styleClicked(
+                                        "Teksti",
+                                        "bgyellow"
+                                    ),
+                                name: "Yellow bg",
+                            },
+                            {
+                                title: "Button",
+                                func: () =>
+                                    this.editor!.styleClicked(
+                                        "Teksti",
+                                        "button"
+                                    ),
+                                name: "Button",
+                            },
+                            {
+                                title: "Tim button",
+                                func: () =>
+                                    this.editor!.styleClicked(
+                                        "Teksti",
+                                        "timButton"
+                                    ),
+                                name: "Tim button",
+                            },
+                            {
+                                title: "Answer text",
+                                func: () =>
+                                    this.editor!.styleClicked(
+                                        "Teksti",
+                                        "answer"
+                                    ),
+                                name: "Answer",
+                            },
+                        ],
                     },
                     {
                         title: "Code (Ctrl-O)",
@@ -672,8 +753,8 @@ ${backTicks}
                         name: "TeX equation",
                     },
                     {
-                        title: "",
-                        func: () => this.editor!.surroundClicked("$$", "$$"),
+                        title: "Insert aligned TeX block (Alt-Ctrl-B)",
+                        func: () => this.editor!.texBlockInsertClicked(),
                         name: "TeX block",
                     },
                     {

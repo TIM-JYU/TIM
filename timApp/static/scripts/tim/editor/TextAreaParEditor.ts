@@ -37,6 +37,9 @@ export class TextAreaParEditor extends BaseParEditor {
                 if (e.keyCode === KEY_S) {
                     this.callbacks.saveClicked();
                     e.preventDefault();
+                } else if (e.altKey && e.keyCode === KEY_B) {
+                    this.texBlockInsertClicked();
+                    e.preventDefault();
                 } else if (e.keyCode === KEY_B) {
                     this.surroundClicked("**", "**");
                     e.preventDefault();
@@ -283,6 +286,14 @@ export class TextAreaParEditor extends BaseParEditor {
     @focusAfter
     outdentClicked() {
         this.indent(true);
+    }
+
+    @focusAfter
+    texBlockInsertClicked() {
+        this.surroundClicked(
+            "$$\n\\begin{aligned}\n",
+            "\n\\end{aligned}\n$$\n"
+        );
     }
 
     @focusAfter

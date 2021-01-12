@@ -108,6 +108,16 @@ export class AceParEditor extends BaseParEditor {
             },
         });
         this.editor.commands.addCommand({
+            name: "texBlockInsert",
+            bindKey: {
+                win: "Ctrl-Alt-B",
+                mac: "Command-Alt-B",
+            },
+            exec: () => {
+                this.texBlockInsertClicked();
+            },
+        });
+        this.editor.commands.addCommand({
             name: "h1",
             bindKey: {
                 win: "Ctrl-1",
@@ -613,6 +623,16 @@ export class AceParEditor extends BaseParEditor {
     @focusAfter
     texBlockClicked() {
         this.snippetManager.insertSnippet(this.editor, "$$${0:$SELECTION}$$");
+    }
+
+    @focusAfter
+    texBlockInsertClicked() {
+        this.snippetManager.insertSnippet(
+            this.editor,
+            "$$\n\\begin{aligned}\n" +
+                "${0:$SELECTION}\n" +
+                "\\end{aligned}\n$$"
+        );
     }
 
     @focusAfter
