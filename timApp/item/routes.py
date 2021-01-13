@@ -474,8 +474,7 @@ def render_doc_view(
                         can_add_missing = False
                 if ug:
                     user_list = [u.id for u in ug.users]
-        if view_ctx.route != ViewRoute.Review:
-            user_list = get_points_by_rule(points_sum_rule, task_ids, user_list)
+        user_list = get_points_by_rule(points_sum_rule, task_ids, user_list)
         if ug and can_add_missing:
             user_list = add_missing_users_from_group(user_list, ug)
         elif ug and not user_list and not can_add_missing:
@@ -541,7 +540,7 @@ def render_doc_view(
         load_plugin_states=not hide_answers,
     )
 
-    if view_ctx.route == ViewRoute.Review:
+    if view_ctx.route.is_review:
         user_list = []
         if is_peerreview_enabled(doc_info):
             if not check_review_grouping(doc_info):

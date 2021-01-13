@@ -19,8 +19,12 @@ class ViewRoute(Enum):
     def teacher_or_see_answers(self) -> bool:
         return self in teacher_or_see_answers
 
+    @property
+    def is_review(self) -> bool:
+        return self == ViewRoute.Review
 
-teacher_or_see_answers = {ViewRoute.Teacher, ViewRoute.Answers, ViewRoute.Review}
+
+teacher_or_see_answers = {ViewRoute.Teacher, ViewRoute.Answers}
 
 
 viewmode_routes = {
