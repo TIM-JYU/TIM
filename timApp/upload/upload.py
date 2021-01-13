@@ -5,7 +5,7 @@ import os
 import posixpath
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from urllib.parse import unquote, urlparse
 
 from flask import Blueprint, request, send_file, Response
@@ -195,7 +195,7 @@ def upload_file():
 
 @dataclass
 class AttachmentModel:
-    issueNumber: int
+    issueNumber: Union[int, str]
     attachmentLetter: str
     uploadUrl: str
     upToDate: Optional[bool] = None
