@@ -1,8 +1,8 @@
 image: tmaier/docker-compose:latest
 
-#variables:
-#  DOCKER_HOST: tcp://docker:2376
-#  DOCKER_TLS_CERTDIR: "/certs"
+variables:
+  DOCKER_HOST: tcp://docker:2376
+  DOCKER_TLS_CERTDIR: "/certs"
 
 .setup: &setup
   - docker info
