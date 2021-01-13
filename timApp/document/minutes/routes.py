@@ -53,7 +53,7 @@ def create_minute_extracts(doc):
 
     extract_dict = dict()
     current_paragraphs = []
-    current_extract_index = -1
+    current_extract_index = None
     current_extract_title = ""
 
     # we build a dict of the extracts first before creating any new files
@@ -82,13 +82,12 @@ def create_minute_extracts(doc):
                 # sometimes there's intentionally a macro without the extract index
                 # raise RouteException(f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
 
-            new_extract_index = 0
             try:
-                new_extract_index = int(ast.literal_eval(markdown[macro_position + len(markdown_to_find):comma_position]))
+                new_extract_index: Union[int, str] = ast.literal_eval(markdown[macro_position + len(markdown_to_find):comma_position])
             except ValueError:
                 raise RouteException(f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
 
-            if current_extract_index > -1:
+            if current_extract_index is not None:
                 # if we were in another extract's paragraph before, save the previous extract's paragraphs into the dict
                 # don't allow duplicate extract numbers
                 if current_extract_index in extract_dict:
@@ -100,7 +99,7 @@ def create_minute_extracts(doc):
 
             current_extract_index = new_extract_index
 
-        if current_extract_index > -1:
+        if current_extract_index is not None:
             # if the macro doesn't exist in the current paragraph but it existed in some previous paragraph,
             # we're in a paragraph related to an extract -> add the paragraph to the extract's list of paragraphs
             current_paragraphs.append(par)
@@ -118,7 +117,7 @@ def create_minute_extracts(doc):
 
     # after the loop has ended, check if we're still within an extract
     # if so, add the last extract to the dict
-    if current_extract_index > -1:
+    if current_extract_index is not None:
         if current_extract_index in extract_dict:
             raise RouteException(f"Error creating extracts: the same extract entry ({current_extract_index}) cannot " +
                          "exist multiple times in the document.")
