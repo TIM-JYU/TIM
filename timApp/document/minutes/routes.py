@@ -4,14 +4,15 @@ Routes related to handling faculty council documents, such as meeting invitation
 import ast
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Union
 from urllib.parse import urlencode
 
-from flask import Blueprint, send_file
+from flask import Blueprint, send_file, Response
 
 from timApp.auth.accesshelper import verify_manage_access, verify_edit_access, get_doc_or_abort
 from timApp.document.create_item import create_or_copy_item, create_document
 from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.docsettings import DocSettings
 from timApp.document.viewcontext import default_view_ctx
 from timApp.item.block import BlockType
@@ -28,7 +29,7 @@ minutes_blueprint = Blueprint('minutes',
 
 
 @minutes_blueprint.route('/createMinuteExtracts/<path:doc>')
-def create_minute_extracts(doc):
+def create_minute_extracts(doc: str) -> Response:
     """
     A route for creating extracts of faculty council minutes.
     :param doc:
@@ -164,7 +165,7 @@ PÖYTÄKIRJANOTE - Lista {extract_number} -  {extract_title}
 
 
 @minutes_blueprint.route("/createMinutes", methods=["POST"])
-def create_minutes_route():
+def create_minutes_route() -> Response:
     """
     Creates a base document for minutes from an IT faculty council meeting invitation.
     :return: A web response for the new document.
@@ -191,7 +192,7 @@ def create_minutes_route():
     return json_response(item)
 
 
-def create_or_get_and_wipe_document(path: str, title: str):
+def create_or_get_and_wipe_document(path: str, title: str) -> DocInfo:
     """ Creates a document to the given path and returns the DocEntry.
     If a document already exists in the given path, the already existing document is wiped clean and then its DocEntry
     is returned.
@@ -212,7 +213,7 @@ def create_or_get_and_wipe_document(path: str, title: str):
 
 
 @minutes_blueprint.route('/checkAttachments/<path:doc>', methods=['GET'])
-def get_attachment_list(doc):
+def get_attachment_list(doc: str) -> Response:
     """
     Gets the list of all attachments in the document, their macro-types, possible errors,
     and whether they are selected by default.
@@ -242,7 +243,7 @@ class MergeAttachmentsModel:
 
 @minutes_blueprint.route('/mergeAttachments', methods=['POST'])
 @use_model(MergeAttachmentsModel)
-def merge_selected_attachments(args: MergeAttachmentsModel):
+def merge_selected_attachments(args: MergeAttachmentsModel) -> Response:
     """
     A route for merging a list of urls.
     :param args Doc id and list of pdf paths.
@@ -280,7 +281,7 @@ def merge_selected_attachments(args: MergeAttachmentsModel):
 
 @minutes_blueprint.route('/openMergedAttachment')
 @use_model(MergeAttachmentsModel)
-def open_merged_file(args: MergeAttachmentsModel):
+def open_merged_file(args: MergeAttachmentsModel) -> Response:
     """
     Open a merged file.
     :param args Doc id and list of pdf urls used in the merge.
