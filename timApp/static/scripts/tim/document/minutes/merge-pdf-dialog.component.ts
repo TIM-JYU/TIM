@@ -53,7 +53,7 @@ export interface IAttachment {
                                     <label>
                                         <input type="checkbox"
                                                [(ngModel)]="x.selected"
-                                               [disabled]="x.error">&ngsp;
+                                               [disabled]="!!x.error">&ngsp;
                                         <a [href]="x.url" target="_blank">{{getFileName(x.url)}}</a>
                                     </label>
                                     &ngsp;
