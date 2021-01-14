@@ -284,6 +284,11 @@ def checkout(path: str, sub_path = ".", do_fetch=True, remote="origin", branch="
         response = subprocess.run(["git", "-C", path, "fetch"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
         if response.returncode != 0:
             raise Exception(f"Git fetch: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
+
+    response = subprocess.run(["git", "-C", path, "rm", "-rf", sub_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+    if response.returncode != 0:
+        raise Exception(f"Git rm: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
+
     response = subprocess.run(["git", "-C", path, "checkout", *options, checkout_branch, "--", sub_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
     if response.returncode != 0:
         raise Exception(f"Git checkout: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
