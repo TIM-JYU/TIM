@@ -117,6 +117,7 @@ class EditorSource(FileSource):
         if max_files is not None and len(paths) > max_files:
             raise PermissionError(f"Too many files submitted. Maximum is {max_files}")
 
+        paths = [file.path for file in files]
         for path in cls.must_paths:
             if path not in paths:
                 raise ValueError(f"Couldn't find file {path} in submitted files")
@@ -152,7 +153,7 @@ class UploadByCodeSource(FileSource):
 
     @classmethod
     def verify(cls, files):
-        paths = [file.path for file in files if file.source == "uploadByCode"]
+        paths = [file.path for file in files]
         for path in cls.must_paths:
             if path not in paths:
                 raise ValueError(f"Couldn't find file {path} in submitted files")
