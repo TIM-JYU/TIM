@@ -2,11 +2,11 @@
 import html
 import time
 from dataclasses import dataclass
-from typing import Tuple, Optional, List, Union, Any
+from typing import Tuple, Optional, List, Union, Any, ValuesView
 
 import attr
 import sass
-from flask import Blueprint, render_template, make_response, Response
+from flask import Blueprint, render_template, make_response, Response, stream_with_context
 from flask import current_app
 from flask import flash
 from flask import redirect
@@ -20,7 +20,7 @@ from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, 
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
 from timApp.auth.sessioninfo import get_session_usergroup_ids
-from timApp.document.caching import check_doc_cache, get_doc_cache_key, set_doc_cache, refresh_doc_expire
+from timApp.document.caching import check_doc_cache, set_doc_cache, refresh_doc_expire
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
@@ -252,6 +252,46 @@ def index_page():
                            item=Folder.get_root())
 
 
+@view_page.route("/generateCache/<path:doc_path>")
+def gen_cache(doc_path: str):
+    """Pre-generates document cache for the users with non-expired rights.
+
+    Useful for exam documents to reduce server load at the beginning of the exam.
+    """
+
+    doc_info = DocEntry.find_by_path(doc_path, fallback_to_id=True)
+    if not doc_info:
+        raise NotExist('Document not found')
+    verify_manage_access(doc_info)
+    s = doc_info.document.get_settings()
+    if not s.is_cached():
+        raise RouteException('Document does not have caching enabled.')
+    accesses: ValuesView[BlockAccess] = doc_info.block.accesses.values()
+    group_ids = set(a.usergroup_id for a in accesses if not a.expired)
+    users = User.query.join(UserGroup, User.groups).filter(UserGroup.id.in_(group_ids)).with_entities(User).all()
+    view_ctx = default_view_ctx
+    m = DocViewParams()
+    vp = ViewParams()
+    total = len(users)
+    digits = len(str(total))
+    def generate():
+        for i, u in enumerate(users):
+            yield f'{i + 1:>{digits}}/{total} {u.name}: '
+            cr = check_doc_cache(doc_info, u, view_ctx, m, vp.nocache)
+            if cr.doc:
+                yield f'already cached'
+            else:
+                dr = render_doc_view(doc_info, m, view_ctx, u, False)
+                if dr.allowed_to_cache:
+                    set_doc_cache(cr.key, dr)
+                    yield 'ok'
+                else:
+                    yield 'not allowed to cache (one or more plugins had errors)'
+            yield '\n'
+
+    return Response(stream_with_context(generate()), mimetype='text/plain')
+
+
 debug_time = time.time()
 
 
@@ -335,10 +375,9 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
     cr = check_doc_cache(doc_info, current_user, view_ctx, m, vp.nocache)
 
     if not cr.doc:
-        result = render_doc_view(doc_info, m, view_ctx, current_user, access, vp.nocache)
+        result = render_doc_view(doc_info, m, view_ctx, current_user, vp.nocache)
         if result.allowed_to_cache:
-            cache_key = get_doc_cache_key(doc_info, current_user, view_ctx, m)
-            set_doc_cache(cache_key, result)
+            set_doc_cache(cr.key, result)
     else:
         refresh_doc_expire(cr.key)
         result = cr.doc
@@ -362,7 +401,6 @@ def render_doc_view(
         m: DocViewParams,
         view_ctx: ViewContext,
         current_user: User,
-        access: BlockAccess,
         clear_cache: bool,
 ) -> DocRenderResult:
     # Check for incorrect group tags.
@@ -641,7 +679,6 @@ def render_doc_view(
 
     templates_to_render = ['slide_head.jinja2', 'slide_content.jinja2'] if is_slide else ['doc_head.jinja2', 'doc_content.jinja2']
     tmpl_params = dict(
-        access=access,
         hide_links=should_hide_links(doc_settings, rights),
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
         pars_only=m.pars_only or should_hide_paragraphs(doc_settings, rights),
@@ -692,7 +729,7 @@ def render_doc_view(
     return DocRenderResult(
         head_html=head,
         content_html=content,
-        allowed_to_cache=doc_settings.is_cached(),
+        allowed_to_cache=doc_settings.is_cached() and not post_process_result.has_plugin_errors,
         override_theme=override_theme,
     )
 

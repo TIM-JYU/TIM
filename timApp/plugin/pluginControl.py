@@ -307,6 +307,7 @@ class PluginifyResult:
     css_paths: List[str]
     custom_answer_plugin: Optional[Plugin]
     all_plugins: List[Plugin]
+    has_errors: bool
 
 
 def pluginify(doc: Document,
@@ -388,6 +389,7 @@ def pluginify(doc: Document,
     placements = {}
     dumbo_opts = OrderedDict()
     custom_answer_plugin = None
+    has_errors = False
     for idx, block in enumerate(pars):
         is_gamified = block.get_attr('gamification')
         is_gamified = not not is_gamified
@@ -401,6 +403,7 @@ def pluginify(doc: Document,
                 runner = 'gamification-map'
                 html_pars[idx][output_format.value] = f'<{runner} data={quoteattr(json.dumps(gd))}></{runner}>'
             except yaml.YAMLError as e:
+                has_errors = True
                 html_pars[idx][output_format.value] = '<div class="error"><p>Gamification error:</p><pre>' + \
                                                       str(e) + \
                                                       '</pre><p>From block:</p><pre>' + \
@@ -487,6 +490,7 @@ def pluginify(doc: Document,
 
             resp = plugin_reqs(plugin_name)
         except PluginException as e:
+            has_errors = True
             for idx, r in plugin_block_map.keys():
                 placements[idx].set_error(r, str(e))
             continue
@@ -498,6 +502,7 @@ def pluginify(doc: Document,
                 reqs['multihtml'] = True
                 reqs['multimd'] = True
         except ValueError as e:
+            has_errors = True
             for idx, r in plugin_block_map.keys():
                 placements[idx].set_error(r, f'Failed to parse JSON from plugin reqs route: {e}')
             continue
@@ -533,12 +538,14 @@ def pluginify(doc: Document,
                     default_auto_md=default_auto_md)
                 taketime("plg e", plugin_name)
             except PluginException as e:
+                has_errors = True
                 for idx, r in plugin_block_map.keys():
                     placements[idx].set_error(r, str(e))
                 continue
             try:
                 plugin_htmls = json.loads(response)
             except ValueError as e:
+                has_errors = True
                 for idx, r in plugin_block_map.keys():
                     placements[idx].set_error(r, f'Failed to parse plugin response from multihtml route: {e}')
                 continue
@@ -563,6 +570,7 @@ def pluginify(doc: Document,
                                              plugin=plugin,
                                              output_format=output_format)
                     except PluginException as e:
+                        has_errors = True
                         placements[idx].set_error(r, str(e))
                         continue
                     placements[idx].set_output(r, html)
@@ -598,6 +606,7 @@ def pluginify(doc: Document,
         css_paths=css_paths,
         custom_answer_plugin=custom_answer_plugin,
         all_plugins=all_plugins,
+        has_errors=has_errors,
     )
 
 

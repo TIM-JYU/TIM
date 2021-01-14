@@ -69,3 +69,24 @@ class CachingTest(TimRouteTest):
         with patch.object(routes, render_doc_view.__name__, wraps=render_doc_view) as m:  # type: Mock
             self.get(d.url, query_string=query)
         return m
+
+    def test_cache_pregenerate(self):
+        self.login_test1()
+        d = self.create_doc(initial_par='test')
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.get(
+            f'/generateCache/{d.path}',
+            expect_status=400,
+            expect_content='Document does not have caching enabled.',
+        )
+        d.document.set_settings({'cache': True})
+        self.get(f'/generateCache/{d.path}', expect_content="""
+1/2 testuser1: ok
+2/2 testuser2: ok
+        """.strip() + '\n')
+        self.get(f'/generateCache/{d.path}', expect_content="""
+1/2 testuser1: already cached
+2/2 testuser2: already cached
+                """.strip() + '\n')
+        self.check_is_cached(d)

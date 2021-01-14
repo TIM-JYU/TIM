@@ -35,6 +35,14 @@
 
 {$CADDY_DOMAINS} {
 	import common
+	@nobuffering {
+		query caddy_nobuffering=1
+	}
+	handle @nobuffering {
+		reverse_proxy * http://tim:5000 {
+			flush_interval -1
+		}
+	}
 	handle {
 		reverse_proxy * http://tim:5000
 	}

@@ -208,6 +208,11 @@ const DEFAULT_PIECE_SIZE = 20;
                 <a href="/view/groups" i18n>Browse existing groups</a>
             </ng-container>
         </ng-container>
+        
+        <ng-container *ngIf="docSettings?.cache && item?.rights?.manage">
+            <h5 i18n>Cache</h5>
+            <a href="/generateCache/{{ item?.path }}?caddy_nobuffering=1" target="_blank" i18n>Refresh cache</a>
+        </ng-container>
 
         <ng-template i18n="@@markAllReadFail">Could not mark the document as read.</ng-template>
         <ng-template i18n="@@markAllTranslatedConfirm">

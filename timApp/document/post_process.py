@@ -36,6 +36,7 @@ class PostProcessResult:
     css_paths: List[str]
     should_mark_all_read: bool
     plugins: List[Plugin]
+    has_plugin_errors: bool
 
 
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??
@@ -81,6 +82,7 @@ def post_process_pars(
             css_paths=presult.css_paths,
             should_mark_all_read=should_mark_all_read,
             plugins=presult.all_plugins,
+            has_plugin_errors=presult.has_errors,
         )
 
     if settings.show_authors():
@@ -192,6 +194,7 @@ def post_process_pars(
         css_paths=presult.css_paths,
         should_mark_all_read=should_mark_all_read,
         plugins=presult.all_plugins,
+        has_plugin_errors=presult.has_errors,
     )
 
 
