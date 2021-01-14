@@ -5,7 +5,7 @@
 }
 
 (common) {
-    encode gzip
+	encode gzip
 
 	handle_path /static/* {
 		import static
