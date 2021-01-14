@@ -119,10 +119,3 @@ services:
    - /dev/shm:/dev/shm
   restart: unless-stopped
   read_only: true
- nginx:
-  image: timimages/local_nginx_dev:compose
-  build:
-   args:
-    MAIN_CONFIG: tim_dev.conf
-  ports:
-   - "0.0.0.0:${NGINX_PORT:?}:80"

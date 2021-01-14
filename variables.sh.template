@@ -10,8 +10,9 @@ echo variables.sh: Fill in appropriate variable values and comment this line. ; 
 # Some debugging tools may not work well with HTTPS.
 export TIM_HOST=http://localhost
 
-# Domain(s) for Caddy server (separate with comma and space); not used locally.
-export CADDY_DOMAINS='localhost'
+# Domain(s) for Caddy server (separate with comma and space).
+# In production, remove the "http://" to get automatic HTTPS.
+export CADDY_DOMAINS='http://localhost'
 
 # Extra configuration to add to Caddyfile.
 export CADDY_EXTRA_CONFIG='
@@ -65,13 +66,6 @@ export CONFIG_FILE=''
 
 # Location of log directory; will be mapped for TIM container at /service/tim_logs.
 export LOG_DIR=${DIR}/tim_logs
-
-# NGINX_PORT is used for development only, based on whether HTTPS is enabled.
-if [[ $TIM_HOST == https* ]]; then
-  export NGINX_PORT=81
-else
-  export NGINX_PORT=80
-fi
 
 # To print the concrete values of these variables, you can use:
 # env - bash -c ". ./variables.sh && env | grep -Ev '^(_|PWD|SHLVL)='"

@@ -40,6 +40,7 @@ services:
    - /tmp
    - /var/cache
    - /var/log
+   - /run/gunicorn
  timagent:
   image: timimages/timagent
   build:
@@ -127,6 +128,7 @@ services:
   working_dir: /pali
   environment:
     PYTHONPATH: /pali:/py
+    DEV: ${IS_DEVELOPMENT:?}
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
@@ -185,22 +187,6 @@ services:
   read_only: true
   tmpfs:
    - /tmp
- nginx:
-  image: timimages/local_nginx:compose
-  build:
-   context: ./local_nginx
-  depends_on:
-   - tim
-   - jsrunner
-  volumes:
-   - ./timApp/modules/cs/static:/csstatic:ro
-   - ./timApp/modules/cs/generated:/csgenerated:ro
-   - ./timApp/static:/static:ro
-  restart: unless-stopped
-  read_only: true
-  tmpfs:
-   - /var/cache/nginx
-   - /run
  dumbo:
   image: timimages/dumbo:${TIM_IMAGE_TAG:?}
   build:
@@ -270,8 +256,31 @@ services:
    - ./oiko:/service:ro
   tmpfs:
    - /tmp
+ caddy:
+  image: caddy:2.3.0
+  command: caddy run --config /etc/caddy/Caddyfile
+  read_only: true
+  volumes:
+   - caddy_data:/data
+   - caddy_config:/config
+   - ./Caddyfile:/etc/caddy/Caddyfile:ro
+   - ./timApp/static:/tim/timApp/static:ro
+   - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
+   - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
+  ports:
+   - "80:80"
+   - "443:443"
+  depends_on:
+   - tim
+   - jsrunner
+  environment:
+   CADDY_DOMAINS: ${CADDY_DOMAINS:?}
+   CADDY_EXTRA_CONFIG: ${CADDY_EXTRA_CONFIG:?}
+  restart: unless-stopped
 volumes:
  data11:
  cache:
+ caddy_data:
+ caddy_config:
 networks:
  db:

@@ -23,11 +23,6 @@ services:
    - /tmp
    - /var/log/supervisor
   read_only: true
- nginx:
-  image: timimages/local_nginx_dev:compose
-  build:
-   args:
-    MAIN_CONFIG: tim_dev.conf
  tests:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
   command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"
@@ -38,7 +33,7 @@ services:
    PYTHONPATH: /service:/service/timApp/modules/py
    GITLAB_CI: ${GITLAB_CI:-false}
   depends_on:
-   - nginx
+   - caddy
   tmpfs:
    - /tmp
    - /tim_files

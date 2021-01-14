@@ -32,13 +32,15 @@ def throw_ex(m: ExceptionRouteModel) -> Response:
     raise Exception('This route throws an exception intentionally for testing purposes.')
 
 
+gunicorn_pid_path = '/var/run/gunicorn/gunicorn.pid'
+
+
 @admin_bp.route('/restart')
 def restart_server() -> Response:
     """Restarts the server by sending HUP signal to Gunicorn."""
     verify_admin()
-    pid_path = '/var/run/gunicorn.pid'
-    if os.path.exists(pid_path):
-        os.system(f'kill -HUP $(cat {pid_path})')
+    if os.path.exists(gunicorn_pid_path):
+        os.system(f'kill -HUP $(cat {gunicorn_pid_path})')
         flash('Restart signal was sent to Gunicorn.')
     else:
         flash('Gunicorn PID file was not found. TIM was probably not started with Gunicorn.')

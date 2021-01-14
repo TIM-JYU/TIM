@@ -67,7 +67,6 @@ from timApp.upload.upload import upload
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.ReverseProxied import ReverseProxied
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import get_request_message, use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, add_csp_header
@@ -127,8 +126,6 @@ if app.config['BOOKMARKS_ENABLED']:
 for bp in blueprints:
     app.register_blueprint(bp)
 
-
-app.wsgi_app = ReverseProxied(app.wsgi_app)
 
 assets = Environment(app)
 
@@ -339,7 +336,7 @@ def preprocess_request():
 def should_log_request():
     p = request.path
     if p.startswith('/static/'):
-        return False
+        raise Exception('static files should be served by Caddy, not Flask')
     if p == '/favicon.ico':
         return False
     return True

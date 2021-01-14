@@ -172,8 +172,11 @@ cols: 20
         "js": ["js/build/pali.js"],
         "multihtml": True,
     }
-    if os.environ.get('SHOW_TEMPLATES', "True") != "False":
+
+    # Show pali templates only in development mode.
+    if os.environ.get('DEV') == "true":
         result['editor_tabs'] = editor_tabs
+
     return result
 
 

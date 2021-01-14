@@ -6,6 +6,7 @@ import sys
 from types import FrameType
 
 import timApp.tim
+from timApp.admin.routes import gunicorn_pid_path
 from timApp.tim_app import app
 from timApp.timdb.init import initialize_database
 from timApp.util.logger import log_info
@@ -31,7 +32,7 @@ if __name__ == '__main__':
         timApp.tim.start_app()
     elif sys.argv[1] == '--with-gunicorn':
         log_info(f'Starting with gunicorn. CPUs available: {multiprocessing.cpu_count()}')
-        p = subprocess.Popen(["gunicorn", "-p", "/var/run/gunicorn.pid", "--config", "gunicornconf.py", "tim:init_app()"])
+        p = subprocess.Popen(["gunicorn", "-p", gunicorn_pid_path, "--config", "gunicornconf.py", "tim:init_app()"])
         p.wait()
     else:
         raise Exception('Unknown command line argument: ' + sys.argv[1])

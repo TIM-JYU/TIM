@@ -105,7 +105,7 @@ def is_testing() -> bool:
 
 
 def is_localhost() -> bool:
-    return current_app.config['TIM_HOST'] in ('http://localhost', 'http://nginx')
+    return current_app.config['TIM_HOST'] in ('http://localhost', 'http://caddy')
 
 
 def get_consent_opt() -> Optional[Consent]:

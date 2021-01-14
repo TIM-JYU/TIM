@@ -8,7 +8,6 @@ variables:
   - docker info
   - docker-compose --version
   - apk add --update bash git
-  - cp docker-compose.prod.yml.template docker-compose.prod.yml
   - cp variables.sh.template variables.sh
   - chmod +x variables.sh
   - sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh

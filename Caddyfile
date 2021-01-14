@@ -1,5 +1,59 @@
+(static) {
+	file_server * {
+		root /tim/timApp/static
+	}
+}
+
+(common) {
+	handle_path /static/* {
+		import static
+	}
+	handle_path /csgenerated/* {
+		file_server * {
+			root /tim/timApp/modules/cs/generated
+		}
+	}
+	handle_path /csstatic/* {
+		file_server * {
+			root /tim/timApp/modules/cs/static
+		}
+	}
+	handle /cs/* {
+		reverse_proxy * http://csplugin:5000
+	}
+	handle /svn/* {
+		reverse_proxy * http://showfile:5000
+	}
+	handle_path /stackserver/* {
+		reverse_proxy * http://stack-api-server
+	}
+	handle_errors {
+		rewrite * /html/updating.html
+		import static
+	}
+}
+
 {$CADDY_DOMAINS} {
-  reverse_proxy http://nginx
+	import common
+	handle {
+		reverse_proxy * http://tim:5000
+	}
+}
+
+# For running tests (from IDE).
+http://caddy:81 {
+	import common
+	handle {
+		reverse_proxy * http://tim:5001
+	}
+}
+
+# For running tests (from command line).
+http://caddy:82 {
+	import common
+	handle {
+		reverse_proxy * http://tests:5001
+	}
 }
 
 {$CADDY_EXTRA_CONFIG}

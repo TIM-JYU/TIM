@@ -11,13 +11,6 @@ if [ ! -f "${DIR}/variables.sh" ]; then
   MISSING_FILES=1
 fi
 
-if [ ! -f "${DIR}/docker-compose.prod.yml" ]; then
-  echo "The file docker-compose.prod.yml does not exist, copying template.
-If there will be multiple TIM instances on this host, delete the 'caddy' section from that file."
-  cp docker-compose.prod.yml.template docker-compose.prod.yml
-  MISSING_FILES=1
-fi
-
 if [ "${MISSING_FILES}" == 1 ]; then
   exit 1
 fi
@@ -38,5 +31,5 @@ if [ "$IS_TESTING" = true ]; then
 elif [ "$IS_DEVELOPMENT" = true ]; then
   docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.dev.yml" "$@"
 else
-  docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.prod.yml" "$@"
+  docker-compose -f "${DIR}/docker-compose.yml" "$@"
 fi
