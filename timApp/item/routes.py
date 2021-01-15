@@ -618,7 +618,7 @@ def render_doc_view(
     if is_slide:
         post_process_result.js_paths.append('tim/document/slide')
     angular_module_names = []
-    if teacher_or_see_answers:
+    if teacher_or_see_answers or view_ctx.route.is_review:
         post_process_result.js_paths.append('angular-ui-grid')
         angular_module_names += get_grid_modules()
     taketime("before render")
