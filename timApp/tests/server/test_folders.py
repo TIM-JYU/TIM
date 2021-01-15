@@ -8,7 +8,7 @@ from timApp.item.block import BlockType
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.user.userutils import grant_access, get_default_right_document
+from timApp.user.userutils import grant_access, get_default_right_document, get_or_create_default_right_document
 
 
 class FolderTest(TimRouteTest):
@@ -397,7 +397,7 @@ class FolderCopyTest(TimRouteTest):
         self.login_test1()
         self.create_doc(self.get_personal_item_path('r/a'))
         f = Folder.find_by_path(self.get_personal_item_path('r'))
-        dr = get_default_right_document(f, BlockType.Folder, create_if_not_exist=True)
+        dr = get_or_create_default_right_document(f, BlockType.Folder)
         grant_access(self.test_user_1.get_personal_group(), dr, AccessType.owner)
         db.session.commit()
         # Ensure this won't throw an exception.

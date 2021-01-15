@@ -14,7 +14,7 @@ from timApp.user.special_group_names import ANONYMOUS_USERNAME, ANONYMOUS_GROUPN
     LOGGED_IN_USERNAME, ADMIN_GROUPNAME, TEACHERS_GROUPNAME, GROUPADMIN_GROUPNAME
 from timApp.user.user import User, UserInfo, ItemOrBlock
 from timApp.user.usergroup import UserGroup
-from timApp.user.userutils import get_default_right_document
+from timApp.user.userutils import get_default_right_document, get_or_create_default_right_document
 
 
 def remove_access(group, i: ItemOrBlock, access_type: AccessType):
@@ -60,7 +60,7 @@ def get_default_rights_holders(folder: Folder, object_type: BlockType) -> Rights
 
 
 def remove_default_access(group, folder: Folder, access_type: AccessType, object_type: BlockType):
-    doc = get_default_right_document(folder, object_type, create_if_not_exist=True)
+    doc = get_or_create_default_right_document(folder, object_type)
     remove_access(group, doc, access_type)
 
 

@@ -1,11 +1,12 @@
 import hashlib
 from datetime import datetime, timedelta
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict
 
 import bcrypt
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
+from timApp.document.docinfo import DocInfo
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.folder.folder import Folder
 from timApp.item.block import BlockType, Block
@@ -25,14 +26,14 @@ KORPPI_GROUP_ID = None
 DOC_DEFAULT_RIGHT_NAME = 'DefaultDocumentRights'
 FOLDER_DEFAULT_RIGHT_NAME = 'DefaultFolderRights'
 
-access_type_map = {}
+access_type_map: Dict[str, int] = {}
 
 default_right_paths = {BlockType.Document: f'{TEMPLATE_FOLDER_NAME}/{DOC_DEFAULT_RIGHT_NAME}',
                        BlockType.Folder: f'{TEMPLATE_FOLDER_NAME}/{FOLDER_DEFAULT_RIGHT_NAME}'}
 
 
 class NoSuchUserException(TimDbException):
-    def __init__(self, user_id):
+    def __init__(self, user_id: int) -> None:
         super().__init__(f'No such user: {user_id}')
         self.user_id = user_id
 
@@ -46,6 +47,7 @@ def get_anon_group_id() -> int:
     if ANON_GROUP_ID is not None:
         return ANON_GROUP_ID
     ANON_GROUP_ID = get_usergroup_by_name(ANONYMOUS_GROUPNAME)
+    assert ANON_GROUP_ID is not None
     return ANON_GROUP_ID
 
 
@@ -54,10 +56,11 @@ def get_anon_user_id() -> int:
     if ANON_USER_ID is not None:
         return ANON_USER_ID
     ANON_USER_ID = get_user_id_by_name(ANONYMOUS_USERNAME)
+    assert ANON_USER_ID is not None
     return ANON_USER_ID
 
 
-def get_access_type_id(access_type):
+def get_access_type_id(access_type: str) -> int:
     if not access_type_map:
         result = AccessTypeModel.query.all()
         for row in result:
@@ -65,7 +68,7 @@ def get_access_type_id(access_type):
     return access_type_map[access_type]
 
 
-def grant_access(group,
+def grant_access(group: UserGroup,
                  block: Union[ItemBase, Block],
                  access_type: AccessType,
                  accessible_from: Optional[datetime] = None,
@@ -141,7 +144,20 @@ def get_user_id_by_name(name: str) -> Optional[int]:
     return None
 
 
-def get_default_right_document(folder: Folder, object_type: BlockType, create_if_not_exist=False):
+def get_or_create_default_right_document(
+        folder: Folder,
+        object_type: BlockType,
+) -> DocInfo:
+    d = get_default_right_document(folder, object_type, create_if_not_exist=True)
+    assert d is not None
+    return d
+
+
+def get_default_right_document(
+        folder: Folder,
+        object_type: BlockType,
+        create_if_not_exist: bool = False,
+) -> Optional[DocInfo]:
     right_doc_path = default_right_paths.get(object_type)
     if right_doc_path is None:
         raise TimDbException(f'Unsupported object type: {object_type}')
@@ -162,7 +178,7 @@ def grant_default_access(groups: List[UserGroup],
                          duration_from: Optional[datetime] = None,
                          duration_to: Optional[datetime] = None,
                          duration: Optional[timedelta] = None) -> List[BlockAccess]:
-    doc = get_default_right_document(folder, object_type, create_if_not_exist=True)
+    doc = get_or_create_default_right_document(folder, object_type)
     accesses = []
     for group in groups:
         accesses.append(grant_access(group,

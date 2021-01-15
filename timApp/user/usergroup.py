@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 import attr
 from sqlalchemy.orm import joinedload
@@ -86,7 +86,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         back_populates='usergroup',
         lazy='dynamic',
     )
-    accesses_alt: Dict[str, BlockAccess] = db.relationship(
+    accesses_alt: Dict[Tuple[int, int], BlockAccess] = db.relationship(
         'BlockAccess',
         collection_class=attribute_mapped_collection('group_collection_key'),
         cascade='all, delete-orphan',
