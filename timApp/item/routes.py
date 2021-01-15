@@ -268,14 +268,22 @@ def gen_cache(doc_path: str):
         raise RouteException('Document does not have caching enabled.')
     accesses: ValuesView[BlockAccess] = doc_info.block.accesses.values()
     group_ids = set(a.usergroup_id for a in accesses if not a.expired)
-    users = User.query.join(UserGroup, User.groups).filter(UserGroup.id.in_(group_ids)).with_entities(User).all()
+    users: List[Tuple[User, UserGroup]] = (
+        User.query
+            .join(UserGroup, User.groups)
+            .filter(UserGroup.id.in_(group_ids))
+            .with_entities(User, UserGroup).all()
+    )
+    groups_that_need_access_check = set(g for u, g in users if u.get_personal_group() != g)
+    for g in groups_that_need_access_check:
+        verify_group_view_access(g)
     view_ctx = default_view_ctx
     m = DocViewParams()
     vp = ViewParams()
     total = len(users)
     digits = len(str(total))
     def generate():
-        for i, u in enumerate(users):
+        for i, (u, _) in enumerate(users):
             yield f'{i + 1:>{digits}}/{total} {u.name}: '
             cr = check_doc_cache(doc_info, u, view_ctx, m, vp.nocache)
             if cr.doc:

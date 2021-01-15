@@ -27,14 +27,19 @@ groups = Blueprint('groups',
 USER_NOT_FOUND = 'User not found'
 
 
-def verify_groupadmin(require: bool=True, user: Optional[User]=None, action: Optional[str]=None):
+def verify_groupadmin(
+        require: bool=True,
+        user: Optional[User]=None,
+        action: Optional[str]=None,
+        msg: Optional[str]=None,
+):
     curr_user = user
     if curr_user is None:
         curr_user = get_current_user_object()
     if not check_admin_access(user=user):
         if not UserGroup.get_groupadmin_group() in curr_user.groups:
             if require:
-                msg = 'This action requires group administrator rights.'
+                msg = msg or 'This action requires group administrator rights.'
                 if action:
                     msg = action + ': ' + msg
                 raise AccessDenied(msg)
@@ -182,11 +187,12 @@ def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
     if u.get_personal_group() == ug:
         return True
     b = ug.admin_doc
+    no_access_msg = f'No access for group {ug.name}'
     if not b:
-        return verify_groupadmin(require=require, user=u)
+        return verify_groupadmin(require=require, user=u, msg=no_access_msg)
     else:
         if not u.has_some_access(b, access_set):
-            return verify_groupadmin(require=require, user=u)
+            return verify_groupadmin(require=require, user=u, msg=no_access_msg)
         return True
 
 

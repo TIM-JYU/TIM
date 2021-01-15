@@ -2,10 +2,13 @@
 from unittest.mock import patch, Mock
 
 from timApp.auth.accesstype import AccessType
+from timApp.document.docentry import DocEntry
 from timApp.item.routes import render_doc_view
 from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
 from timApp.item import routes
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
+from timApp.user.userutils import grant_access
 
 
 class CachingTest(TimRouteTest):
@@ -90,3 +93,15 @@ class CachingTest(TimRouteTest):
 2/2 testuser2: already cached
                 """.strip() + '\n')
         self.check_is_cached(d)
+
+        ug = UserGroup.create('testgroup1')
+        self.test_user_3.add_to_group(ug, added_by=None)
+        grant_access(ug, d, AccessType.view)
+        db.session.commit()
+        d = DocEntry.find_by_id(d.id)
+        db.session.refresh(d)
+        self.get(
+            f'/generateCache/{d.path}',
+            expect_status=403,
+            expect_content='No access for group testgroup1'
+        )
