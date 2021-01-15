@@ -106,6 +106,9 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     # For groups created from SCIM API
     external_id: ScimUserGroup = db.relationship('ScimUserGroup', lazy='select', uselist=False)
 
+    def __repr__(self):
+        return f'<UserGroup(id={self.id}, name={self.name})>'
+
     @property
     def scim_created(self):
         return self.created
