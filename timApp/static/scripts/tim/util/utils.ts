@@ -485,7 +485,7 @@ export function isMobileDevice() {
 const MEDIA_SIZES = {
     xs: 768,
     sm: 992,
-    md: 1200,
+    md: 1281, // Note: this has been customized. Bootstrap default is 1200.
 };
 
 export function isScreenSizeOrLower(size: keyof typeof MEDIA_SIZES) {

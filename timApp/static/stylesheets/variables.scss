@@ -54,7 +54,9 @@ $parselect-color: lightgray;
 $left-side-columns: 2;
 $right-side-columns: 3;
 
-// Bootstrap variable overrides:
+// Bootstrap variable overrides
+// See https://getbootstrap.com/docs/3.4/customize/ for default values
+$screen-lg-min: 1281px;
 $gray-base: #000;
 $gray: lighten($gray-base, 33.5%);
 $brand-primary: $basic-color;
