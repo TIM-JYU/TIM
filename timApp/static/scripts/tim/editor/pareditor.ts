@@ -842,6 +842,23 @@ ${backTicks}
                             this.editor!.insertTemplate("math_type: svg\n"),
                         name: "Math SVG",
                     },
+                    {
+                        title: "Insert new editor tempates",
+                        func: () =>
+                            this.editor!.insertTemplate(
+                                `editor_templates:
+    editor_tabs:
+     - text: VISIBLE TEXT FOR NEW TAB
+       items:
+          - text: VISIBLE TEXT FOR NEW MENU ITEM
+            items:
+              - data: TEXT THAT COMES FROM SUBMENU
+                text: VISIBLE TEXT FOR SUBMENU (optional)
+                expl: EXPLANATION FOR ITEM (optional)
+`
+                            ),
+                        name: "Editor templates",
+                    },
                 ],
                 name: "Settings",
                 show: () => this.getOptions().showSettings,
