@@ -220,9 +220,9 @@ type MatrixElement = string | number;
                     <th *ngFor="let h of processed.headers" [innerHtml]="fixText(h.text) | purify"></th>
                     <th *ngIf="canShowExpl()"></th>
                 </tr>
-                <tr *ngFor="let row of processed.rows; let rowi = index">
-                    <td *ngIf="isMatrix()" [innerHtml]="fixText(row.text) | purify"></td>
-                    <td *ngFor="let col of row.columns; let coli = index;">
+                <tr *ngFor="let row of processed.rows; let rowi = index" [ngClass]="getTableRowClass()">
+                    <td *ngIf="isMatrix()" [innerHtml]="fixText(row.text) | purify" class="qst-row_text"></td>
+                    <td *ngFor="let col of row.columns; let coli = index;" class="qst-td">
                         <label>
                             <input *ngIf="isRadio()"
                                    [ngClass]="getInputClass(rowi, coli)"
@@ -363,7 +363,11 @@ export class AnswerSheetComponent implements OnChanges {
         if (!this.questiondata) {
             return false;
         }
-        return this.questiondata.showExplanations && this.expl != null;
+        return (
+            this.questiondata.showExplanations &&
+            this.expl != null &&
+            Object.keys(this.expl).length !== 0
+        );
     }
 
     getExpl(rowIndex: number): string | null {
@@ -398,6 +402,11 @@ export class AnswerSheetComponent implements OnChanges {
             totalBorderless = false;
         }
         return totalBorderless ? "total-borderless" : "";
+    }
+
+    getTableRowClass(): string {
+        if (this.isMatrix()) return "qst-tr qst-matrix";
+        return "qst-tr";
     }
 
     hasHeaders(): boolean {
