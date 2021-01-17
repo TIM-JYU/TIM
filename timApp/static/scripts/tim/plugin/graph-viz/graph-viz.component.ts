@@ -14,6 +14,7 @@ export class GraphVizComponent implements OnInit {
     error?: string;
     svg?: string;
     @Input() vizcmd!: string;
+    @Input() jsparams?: Record<string, unknown>;
     viz?: Viz;
 
     constructor() {}
@@ -35,10 +36,13 @@ export class GraphVizComponent implements OnInit {
 
     async ngOnChanges(changedObject: Changes<this, "vizcmd">) {
         const viz = await this.loadViz();
+        let params = {format: "svg"};
+        if (this.jsparams) {
+            params = {...params, ...this.jsparams};
+        }
+
         const result = await to2<string, {message: string}>(
-            viz.renderString(changedObject.vizcmd!.currentValue, {
-                format: "svg",
-            })
+            viz.renderString(changedObject.vizcmd!.currentValue, params)
         );
         if (result.ok) {
             this.svg = result.result;

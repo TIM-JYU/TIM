@@ -3484,7 +3484,7 @@ ${fhtml}
         <div *ngIf="mdHtml" [innerHTML]="mdHtml | purify">
         </div>
     </div>
-    <tim-graph-viz *ngIf="isViz" [vizcmd]="fullCode"></tim-graph-viz>
+    <tim-graph-viz *ngIf="isViz" [vizcmd]="fullCode" [jsparams]="jsparams"></tim-graph-viz>
     <tim-variables *ngIf="isVars" [code]="fullCode"
                    [jsparams]="jsparams"
                    [height]="height"
