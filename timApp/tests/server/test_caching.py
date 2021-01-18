@@ -105,3 +105,8 @@ class CachingTest(TimRouteTest):
             expect_status=403,
             expect_content='No access for group testgroup1'
         )
+
+        # When running all server tests in IDE (PyCharm), the tests start failing in test_clipboard with
+        # sqlalchemy.orm.exc.FlushError in initialize_database. Refreshing the test client prevents it.
+        # The line self.test_user_3.add_to_group seems to trigger the error.
+        self.refresh_client()

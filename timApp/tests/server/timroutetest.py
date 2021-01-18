@@ -947,6 +947,14 @@ class TimRouteTest(TimDbTest):
         db.session.add(a)
         return a
 
+    def refresh_client(self):
+        """Refreshes the Flask TestClient instance by emulating "with" statement exit and entrance.
+        This method shouldn't have to be called very often, but it appears to be necessary in
+        rare cases (see test_caching).
+        """
+        self.client.__exit__(None, None, None)
+        self.client.__enter__()
+
 
 class TimPluginFix(TimRouteTest):
     """Unused class. This was a test whether local plugins could be made to work without BrowserTest class.
