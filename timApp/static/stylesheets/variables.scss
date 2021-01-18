@@ -42,7 +42,7 @@ $link-visited-color: #5242CE;
 $paragraph-preferred-width: 57.4em;
 $inline-code-size: 110%;
 $block-code-size: 115%;
-$pre-overflow: auto;
+$pre-overflow: visible; // TODO: Default is supposed to be "auto", but it breaks velp annotations in pre blocks.
 $pre-left-border: 4px solid $basic-color;
 $pre-background: white;
 $container-xs-padding: 0.2em;
