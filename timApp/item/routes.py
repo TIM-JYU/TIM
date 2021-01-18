@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Tuple, Optional, List, Union, Any, ValuesView
 
 import attr
+import filelock
 import sass
 from flask import Blueprint, render_template, make_response, Response, stream_with_context
 from flask import current_app
@@ -297,7 +298,15 @@ def gen_cache(doc_path: str):
                     yield 'not allowed to cache (one or more plugins had errors)'
             yield '\n'
 
-    return Response(stream_with_context(generate()), mimetype='text/plain')
+    def generate_with_lock():
+        try:
+            with filelock.FileLock(f'/tmp/generateCache_{doc_info.id}', timeout=0):
+                for r in generate():
+                    yield r
+        except filelock.Timeout:
+            yield 'Cache generation for this document is already in progress.\n'
+
+    return Response(stream_with_context(generate_with_lock()), mimetype='text/plain')
 
 
 debug_time = time.time()
