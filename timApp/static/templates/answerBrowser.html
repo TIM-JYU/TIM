@@ -64,6 +64,10 @@
                         (<a title="Link to currently selected answer without other document content"
                             target="_blank"
                             ng-href="{{ $ctrl.getAnswerLink(true) }}">only</a>)
+                         <a ng-if="$ctrl.peerReviewEnabled && !$ctrl.isPeerReview"
+                            title="Link to peer review"
+                            ng-click="$event.preventDefault()"
+                            ng-href="{{ $ctrl.getReviewLink() }}">Review</a>
                     </span>
                     </div>
                 </div>

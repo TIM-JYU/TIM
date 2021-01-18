@@ -433,6 +433,8 @@ export class AnswerBrowserController
     private showDelete = false;
     private formMode = false;
     private showBrowseAnswers = true;
+    private isPeerReview = false;
+    private peerReviewEnabled = false;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -464,7 +466,10 @@ export class AnswerBrowserController
         if (this.loader.hideBrowser || this.formMode) {
             this.hidden = true;
         }
-        if (!this.viewctrl.item.rights.teacher && getViewName() == "review") {
+        const isPeerReview = getViewName() == "review";
+        this.isPeerReview = isPeerReview;
+        this.peerReviewEnabled = this.viewctrl.docSettings.peer_review ?? false;
+        if (!this.viewctrl.item.rights.teacher && isPeerReview) {
             this.showBrowseAnswers = false;
         }
 
@@ -1040,7 +1045,6 @@ export class AnswerBrowserController
         });
     }
 
-    // noinspection UnnecessaryLocalVariableJS
     getAnswerLink(single = false) {
         if (!this.user || !this.selectedAnswer) {
             return undefined;
@@ -1051,28 +1055,31 @@ export class AnswerBrowserController
         } // TODO: think other routes also?
         const par = this.getPar();
         const parId = getParId(par);
-        // const currBegin = getRangeBeginParam() ?? 0;
         const params = getUrlParams();
         const group = params.get("group"); // TODO: should we save other params also?
         const rangeParams = single
             ? {
                   b: parId,
                   size: 1,
-                  group: group,
               }
             : {};
-        // noinspection UnnecessaryLocalVariableJS
-        const link = `/${newroute}/${
-            this.viewctrl.item.path
-        }?${$httpParamSerializer({
+        return `/${newroute}/${this.viewctrl.item.path}?${$httpParamSerializer({
             answerNumber:
                 this.answers.length -
                 this.findSelectedAnswerIndexFromUnFiltered(),
             task: this.getTaskName(),
             user: this.user.name,
+            group: group,
             ...rangeParams,
         })}`;
-        return link;
+    }
+
+    getReviewLink() {
+        return `/review/${this.viewctrl.item.path}?${$httpParamSerializer({
+            b: getParId(this.getPar()),
+            size: 1,
+            group: getUrlParams().get("group"),
+        })}`;
     }
 
     updateAnswerFromURL() {
