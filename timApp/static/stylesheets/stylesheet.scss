@@ -769,6 +769,9 @@ a.timButton {
             }
         }
     }
+    &.noscroll pre {
+        overflow: visible;
+    }
 }
 
 tim-par-ref {
