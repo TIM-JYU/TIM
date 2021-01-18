@@ -14,6 +14,7 @@ import {
     Binding,
     copyToClipboard,
     getURLParameter,
+    getViewName,
     Require,
 } from "../util/utils";
 
@@ -140,7 +141,8 @@ export class UserListController implements IController {
                 sortingAlgorithm: numericSort,
             },
         ]);
-        this.instantUpdate = this.viewctrl.docSettings.form_mode ?? false;
+        const formMode = this.viewctrl.docSettings.form_mode ?? false;
+        this.instantUpdate = formMode || getViewName() === "review";
 
         this.gridOptions = {
             exporterMenuPdf: false,
