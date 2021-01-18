@@ -19,6 +19,10 @@ import {IItem} from "./IItem";
 
 markAsUsed(focusMe);
 
+interface IGroupWithAdminDocPath extends IGroup {
+    admin_doc_path: string | null;
+}
+
 export interface IRight {
     type: number;
     duration_to: Moment | null;
@@ -26,7 +30,7 @@ export interface IRight {
     duration: null | Duration;
     accessible_to: Moment;
     accessible_from: Moment;
-    usergroup: IGroup;
+    usergroup: IGroupWithAdminDocPath;
     require_confirm?: boolean;
 }
 

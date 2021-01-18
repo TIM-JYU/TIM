@@ -49,8 +49,10 @@
     <ul>
         <li ng-class="{lastEdited: right === $ctrl.lastEdited}" ng-repeat="right in filtered = ($ctrl.grouprights | filter: {type: type.id}:true | filter: $ctrl.obsoleteFilterFn | orderBy: ['usergroup.personal_user.real_name', 'usergroup.name'])">
             <span class="flex align-center">
-            <span class="name" ng-if="!$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></span>
-            <s ng-if="$ctrl.isObsolete(right)" ng-bind="$ctrl.getGroupDesc(right)"></s>
+            <span class="name" ng-class="{obsolete: $ctrl.isObsolete(right)}">
+                <span ng-if="!right.usergroup.admin_doc_path">{{ $ctrl.getGroupDesc(right) }}</span>
+                <a ng-if="right.usergroup.admin_doc_path" href="/view/{{ right.usergroup.admin_doc_path }}">{{ $ctrl.getGroupDesc(right) }}</a>
+            </span>
             <a title="Send email to this user" ng-if="right.usergroup.personal_user" href="mailto:{{right.usergroup.personal_user.email}}"><i class="glyphicon glyphicon-envelope"></i><span class="sr-only">Send email to the user</span></a>
             <span class="label label-success"
                   uib-tooltip="{{ right.accessible_from | timdate }}"

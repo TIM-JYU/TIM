@@ -35,6 +35,8 @@ def get_rights_holders_all(block_ids: List[int], order_by=None):
     result: List[Tuple[BlockAccess, UserGroup, Optional[User]]] = (BlockAccess.query
               .options(
         joinedload(BlockAccess.usergroup)
+            .joinedload(UserGroup.admin_doc)
+            .joinedload(Block.docentries)
     )
               .options(joinedload(BlockAccess.atype))
               .filter(BlockAccess.block_id.in_(block_ids))

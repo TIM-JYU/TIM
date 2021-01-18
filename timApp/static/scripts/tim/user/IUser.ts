@@ -32,10 +32,6 @@ export interface IGroup {
     personal_user?: IUser;
 }
 
-export interface IManagedGroup extends IGroup {
-    admin_doc: IDocument;
-}
-
 export interface IGroupWithSisuPath extends IGroup {
     sisugroup_path: string | null;
     admin_doc?: IDocument;

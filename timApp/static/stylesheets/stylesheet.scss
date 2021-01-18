@@ -1411,3 +1411,9 @@ td-ngx-text-diff .view-source {
 .normalLabel {
     font-weight: normal;
 }
+
+tim-rights-editor {
+    span.obsolete {
+        text-decoration: line-through;
+    }
+}

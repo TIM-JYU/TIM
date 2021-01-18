@@ -1,4 +1,6 @@
-from typing import List, Dict, Tuple
+from __future__ import annotations
+
+from typing import List, Dict, Tuple, TYPE_CHECKING
 
 import attr
 from sqlalchemy.orm import joinedload
@@ -7,12 +9,15 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from timApp.auth.auth_models import BlockAccess
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
-from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists
+from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LOGGED_IN_GROUPNAME, \
     ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME, SPECIAL_GROUPS
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember, membership_current
+
+if TYPE_CHECKING:
+    from timApp.item.block import Block
 
 # Prefix is no longer needed because scimusergroup determines the Sisu (SCIM) groups.
 SISU_GROUP_PREFIX = ''
@@ -96,7 +101,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     notes = db.relationship('UserNote', back_populates='usergroup', lazy='dynamic')
     notes_alt = db.relationship('UserNote')
 
-    admin_doc = db.relationship(
+    admin_doc: Block = db.relationship(
         'Block',
         secondary=UserGroupDoc.__table__,
         lazy='select',
@@ -142,6 +147,8 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
             'name': self.name,
             **include_if_exists('personal_user', self),
         }
+        if is_attribute_loaded('admin_doc', self) and self.admin_doc and self.admin_doc.docentries:
+            r['admin_doc_path'] = self.admin_doc.docentries[0].path
         return r
 
     @property
