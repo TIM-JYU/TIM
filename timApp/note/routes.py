@@ -8,8 +8,8 @@ from sqlalchemy import true
 from sqlalchemy.orm import joinedload
 
 from marshmallow_dataclass import class_schema
-from timApp.auth.accesshelper import verify_comment_right, verify_logged_in, has_ownership, get_doc_or_abort, \
-    AccessDenied, verify_teacher_access
+from timApp.auth.accesshelper import verify_comment_right, verify_logged_in, get_doc_or_abort, \
+    AccessDenied, verify_teacher_access, has_manage_access
 from timApp.auth.accesshelper import verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.caching import clear_doc_cache
@@ -42,7 +42,7 @@ KNOWN_TAGS = ['difficult', 'unclear']
 def has_note_edit_access(n: UserNote):
     d = get_doc_or_abort(n.doc_id)
     g = get_current_user_object().get_personal_group()
-    return n.usergroup == g or has_ownership(d)
+    return n.usergroup == g or has_manage_access(d)
 
 
 def get_comment_and_check_exists(note_id: int):
