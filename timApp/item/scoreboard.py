@@ -9,7 +9,7 @@ from timApp.document.document import dereference_pars
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.folder import Folder
-from timApp.plugin.plugin import find_task_ids, find_plugin_from_document, TaskNotFoundException
+from timApp.plugin.plugin import Plugin, find_task_ids, TaskNotFoundException
 
 
 @dataclass
@@ -32,6 +32,7 @@ def get_score_infos(
         folder: Folder,
         doc_paths: List[str],
         user_ctx: UserContext,
+        lang_id: Optional[str] = None,
 ) -> List[DocScoreInfo]:
     total_table = OrderedDict()
     u = user_ctx.logged_user
@@ -44,6 +45,9 @@ def get_score_infos(
         rel_path = folder.relative_path(d)
         return doc_paths.index(rel_path)
     docs.sort(key=doc_sorter)
+
+    if lang_id:
+        docs = [next((t for t in d.translations if t.lang_id == lang_id), d) for d in docs]
 
     for d in docs:
         d.document.insert_preamble_pars()
@@ -64,7 +68,7 @@ def get_score_infos(
         point_dict: Dict[str, TaskScoreInfo] = {}
         for task_id in task_ids:
             try:
-                plugin = find_plugin_from_document(doc, task_id, user_context, default_view_ctx)
+                plugin, _ = Plugin.from_task_id(task_id.doc_task, user_ctx, default_view_ctx)
             except TaskNotFoundException:
                 continue
 
@@ -134,11 +138,12 @@ def get_score_infos_if_enabled(
         doc_info: DocInfo,
         doc_settings: DocSettings,
         user_ctx: UserContext,
+        lang_id: Optional[str] = None,
 ) -> Optional[List[DocScoreInfo]]:
     score_infos = None
     if user_ctx.logged_user.logged_in and doc_settings.show_scoreboard():
         scoreboard_docs = doc_settings.scoreboard_docs()
         if not scoreboard_docs:
             scoreboard_docs.append(doc_info.short_name)
-        score_infos = get_score_infos(doc_info.parent, scoreboard_docs, user_ctx)
+        score_infos = get_score_infos(doc_info.parent, scoreboard_docs, user_ctx, lang_id)
     return score_infos

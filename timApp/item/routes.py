@@ -713,7 +713,7 @@ def render_doc_view(
     show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']
     taketime("view to render")
 
-    score_infos = get_score_infos_if_enabled(doc_info, doc_settings, user_ctx)
+    score_infos = get_score_infos_if_enabled(doc_info, doc_settings, user_ctx, doc_info.lang_id)
 
     reqs = get_all_reqs()  # This is cached so only first time after restart takes time
     taketime("reqs done")
