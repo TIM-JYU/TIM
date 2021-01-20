@@ -74,9 +74,22 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-a t sv3 kissana kana
+g rank 0
+ref tp:t
+array t rv3
+g rank 1
+jarray +t[0]. v5x4 6 3 2 9 | 0 44 0 22 | 0  0 55 | 33 | 0 0 81
+g rx: 75
+jarray t[1]. v5x4
+g rx: 150
+jarray t[2]. v5x4
+t[0] -> t[0].
+t[1] -> t[1].
+t[2] -> t[2].
+tp -> t
+t[1][3][2] = 77
 `;
 setData({
     code: code, args: "1001", params:
-        {mode: "static", errorlevel: 3, xanimate: "code", allowLazy: true}
+        {mode: "static", errorlevel: 3, animate: "commands", allowLazy: true}
 });

@@ -687,7 +687,7 @@ class ArrayVariable extends ObjectVariable {
             default:
                 cls = ValueVariable;
         }
-        if (name.endsWith(".")) name = name.slice(0, -1);
+        // if (name.endsWith(".")) name = name.slice(0, -1);
         // if (name.endsWith(",")) name = name.slice(0, -1);
         if (this.kind === "[" && type === "R") nref = nullRef;
         if (this.kind === "[" && type === "V") init = "0";
@@ -1141,7 +1141,8 @@ class ReferenceTo extends Command {
 
         let refToCmd = new ReferenceTo(name, rname);
         refToCmd.line = name + " -> " + rname;
-
+        if ( cmd.constructor.name === "CreateFindVariable")
+            return [refToCmd]; // in dummy case no extra needed
         return [cmd, refToCmd];
     }
 
@@ -1715,6 +1716,7 @@ class PhaseVariables {
             variable.label = dollar+variable.name;
             if (variable.label.endsWith(".")) variable.label = variable.label.slice(0,-1);
             if (variable.label.endsWith(",")) variable.label = variable.label.slice(0,-1);
+            variable.label = variable.label.replaceAll("].[","][");
         }
         return s;
     }
@@ -1753,8 +1755,12 @@ class PhaseVariables {
         if (name === "null") return nullRef;
         let ret = this.flatvarsmap[name];
         if (!ret) {
-           if (name.endsWith(",")) ret = this.flatvarsmap[name.replace(",", ".")];
-           if (name.endsWith(".")) ret = this.flatvarsmap[name.replace(".", ",")];
+           name = name.replaceAll("][","].[");
+           if (name.endsWith(",")) name = name.replace(",", ".");
+           else if (name.endsWith(".")) name = name.replace(".", ",");
+           ret = this.flatvarsmap[name];
+           // if (name.endsWith(",")) ret = this.flatvarsmap[name.replace(",", ".")];
+           // if (name.endsWith(".")) ret = this.flatvarsmap[name.replace(".", ",")];
         }
         return ret;
     }
@@ -2277,6 +2283,9 @@ const svgVariableMixin = {
         if (this.parent) {
             text = text.replace(this.parent.name + ".", "");
             textsize = "10px";
+        }
+        if ( this.label && this.label.startsWith("$")) {
+            texty -= 9;
         }
 
         // draw variable names if needed
