@@ -365,10 +365,10 @@ class Variable extends PrgObject {
             else this.refs[0] = objTo;
         } else {
             this.refs.push(objTo);
-            if (this.refs.length > 1) error += `Muuttujasta ${this.name} ei voi lähteä montaa viitettä! `;
+            if (this.refs.length > 1) error += `Muuttujasta ${this.label} ei voi lähteä montaa viitettä! `;
         }
-        if (!isRef) error += `Muuttuja ${this.name} ei ole viitemuuttuja!  `;
-        if (!objTo.isObject()) error += `Muuttuja ${objTo.name} ei ole olio!  `;
+        if (!isRef) error += `Muuttuja ${this.label} ei ole viitemuuttuja!  `;
+        if (!objTo.isObject()) error += `Muuttuja ${objTo.label} ei ole olio!  `;
         return this.handleError(error, variables);
     }
 
@@ -411,7 +411,7 @@ class Variable extends PrgObject {
                 error += this.addRef(nullRef, variables);
                 notnull = false;
             } else {
-                error += `${this.name} on viitemuuttuja. Ei saa sijoittaa arvoa! `;
+                error += `${this.label} on viitemuuttuja. Ei saa sijoittaa arvoa! `;
             }
         }
         if (notnull) {
@@ -431,7 +431,7 @@ class Variable extends PrgObject {
         if (this.value === "false") return "";
         if (this.value.length <= 1) return ""; // OK one char
         if (this.isString()) return "";  // ok to string
-        return `Arvomuuttujaan ${this.name} ei saa sijoittaa jonoa ${this.value}! `;
+        return `Arvomuuttujaan ${this.label} ei saa sijoittaa jonoa ${this.value}! `;
     }
 
 
@@ -723,9 +723,9 @@ class ArrayVariable extends ObjectVariable {
         let deferr = `viitteitä lopun jälkeen (count väärin)`;
         let alustamattomia = " alustamattomia viitteitä "
         if (this.count < 0)
-            return this.handleCountError(`${this.name}.count ei saa olla negatiivinen`);
+            return this.handleCountError(`${this.label}.count ei saa olla negatiivinen`);
         if (this.count > this.vars.length)
-            return this.handleCountError(`${this.name}.count on liian iso`, variables);
+            return this.handleCountError(`${this.label}.count on liian iso`, variables);
         // Is all refs in used part initialized?
         for (let i = 0; i < this.count; i++) {
             let v = this.vars[i];
@@ -749,7 +749,7 @@ class ArrayVariable extends ObjectVariable {
                 }
             }
         }
-        if (error !== "") error = `${this.name}: ` + error;
+        if (error !== "") error = `${this.label}: ` + error;
         return this.handleCountError(error, variables);
     }
 }
@@ -2102,6 +2102,18 @@ function compareValsAndRefs(code1, code2, params) {
     vars1.runUntil();
     vars2.runUntil();
     return vars1.compareValsAndRefs(vars2);
+}
+
+
+function compareWithUserCode(data, code, params) {
+     let fp = data.answer_call_data.markup.fullprogram;
+     let code2 = data.save_object.usercode;
+     if (fp.includes("BYCODEBEGIN")) {
+         let reg = /\/\/ BYCODEBEGIN(.|[\r\n])*BYCODEEND/;
+         code2 = fp.replace(reg, code2);
+         code = fp.replace(reg, code);
+     }
+     return compareValsAndRefs(code, code2, params);
 }
 
 // ------------------ Variables END -----------------------------------
@@ -3541,5 +3553,5 @@ function setData(data) {
 // struct names
 // svg draw callback
 
-export {setData, varsStringToJson, VariableRelations, compareValsAndRefs};
+export {setData, varsStringToJson, VariableRelations, compareValsAndRefs, compareWithUserCode};
 // export default setData;
