@@ -212,7 +212,3 @@ class UserTest(TimDbTest):
             self.assertEqual(fn1('Someone'), fn2('Someone'))
             self.assertEqual(fn1(''), fn2(''))
             self.assertEqual(fn1(None), fn2(None))
-
-
-if __name__ == '__main__':
-    unittest.main()

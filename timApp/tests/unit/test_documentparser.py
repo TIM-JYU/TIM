@@ -269,7 +269,3 @@ test
             self.assertEqual(expected + '\n\n```\n```\n', exported)
             new_result = DocumentParser(exported).get_blocks()
             self.assertListEqual(result, new_result)
-
-
-if __name__ == '__main__':
-    unittest.main()

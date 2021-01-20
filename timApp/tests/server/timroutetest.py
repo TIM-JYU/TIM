@@ -988,10 +988,6 @@ class TimPluginFix(TimRouteTest):
         containerLink.plugin_request_fn = do_request
 
 
-if __name__ == '__main__':
-    unittest.main()
-
-
 def get_note_id_from_json(json):
     note_id = int(re.search(r'note-id="(\d+)"', json['texts']).groups()[0])
     return note_id

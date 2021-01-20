@@ -88,7 +88,3 @@ input_format: rst
             timApp.markdown.dumboclient.call_dumbo(
                 [{'test1': 'value1', 'test2': 'md:*value2*'}, {'test3': 'value3', 'test4': 'md:**value4**'}],
                 path='/mdkeys'))
-
-
-if __name__ == '__main__':
-    unittest.main()

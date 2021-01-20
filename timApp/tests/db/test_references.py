@@ -303,7 +303,3 @@ class RefTest(TimDbTest):
         deref = ref.get_referenced_pars()[0]
         self.assertEqual({'blue', 'white', 'orange'}, set(deref.get_classes()))
         self.assertEqual(3, len(deref.get_classes()))
-
-
-if __name__ == '__main__':
-    unittest.main()

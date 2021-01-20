@@ -70,6 +70,3 @@ class AttributeParserTest(unittest.TestCase):
     def test_brace(self):
         self.check_valid(r'# Hey {Hey {math_type=svg math_preamble="\\usetikzlibrary{shapes}"}',
                          {'math_type': 'svg', 'math_preamble': r'\usetikzlibrary{shapes}'}, 11)
-
-if __name__ == '__main__':
-    unittest.main()

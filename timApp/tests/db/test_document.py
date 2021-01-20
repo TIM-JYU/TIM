@@ -396,7 +396,3 @@ a: 1
         self.assertEqual({'x': 2, 'source_document': 10}, s2.get_dict())
         self.assertIsNone(src1)
         self.assertEqual(10, src2.doc_id)
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -392,7 +392,3 @@ class TimTest(TimRouteTest):
         with patch.object(User, User.get_by_id.__name__, wraps=User.get_by_id) as m:  # type: Mock
             self.get(f'/js/x.js', expect_status=404)
         m.assert_not_called()
-
-
-if __name__ == '__main__':
-    unittest.main()
