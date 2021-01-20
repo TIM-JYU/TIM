@@ -1141,7 +1141,7 @@ class ReferenceTo extends Command {
 
         let refToCmd = new ReferenceTo(name, rname);
         refToCmd.line = name + " -> " + rname;
-        if ( cmd.constructor.name === "CreateFindVariable")
+        if ( cmd instanceof CreateFindVariable)
             return [refToCmd]; // in dummy case no extra needed
         return [cmd, refToCmd];
     }

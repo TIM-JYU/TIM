@@ -74,29 +74,11 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-phase 1
-Ref susi
-New $1 Susi
-susi -> $1
-
-phase 2
-Ref susi
-New $1 Susi
-susi -> $1
-Ref isosusi
-isosusi -> $1
-gn $1 tsy: 20
-
-phase 3
-Ref susi
-New $1 Susi
-susi -> $1
-Ref isosusi
-New $2 SUSI
-isosusi -> $2
-gn $1 x: 400
+Ref lista
+List *$1 R3
+lista -> $1
 `;
 setData({
     code: code, args: "1001", params:
-        {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true}
+        {mode: "static", errorlevel: 3, animate: "commands", allowLazy: true}
 });
