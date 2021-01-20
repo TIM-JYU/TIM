@@ -128,8 +128,6 @@ all_models = (
 sys.setrecursionlimit(10000)
 app = Flask(__name__)
 
-app.jinja_env.auto_reload = True  # uncomment this to autoreload templates
-
 # The autoescape setting needs to be forced because the template file extension used in TIM is jinja2.
 # The more accurate file extension helps IDEs recognize the file type better.
 app.jinja_env.autoescape = True
