@@ -2110,8 +2110,9 @@ function compareWithUserCode(data, code, params) {
      let code2 = data.save_object.usercode;
      if (fp.includes("BYCODEBEGIN")) {
          let reg = /\/\/ BYCODEBEGIN(.|[\r\n])*BYCODEEND/;
-         code2 = fp.replace(reg, code2);
-         code = fp.replace(reg, code);
+         fp = fp.replace(reg, "BYCODE")
+         code2 = fp.replace("BYCODE", code2);
+         code = fp.replace("BYCODE", code);
      }
      return compareValsAndRefs(code, code2, params);
 }

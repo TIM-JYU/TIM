@@ -1,4 +1,4 @@
-import {setData, varsStringToJson, VariableRelations, compareValsAndRefs} from './vars.js';
+import {setData, varsStringToJson, VariableRelations, compareValsAndRefs, compareWithUserCode} from './vars.js';
 /*
 Ref lista
 Ref aku
@@ -75,7 +75,7 @@ t -> $4
 */
 const code = `
 Ref lista
-List *$1 R3
+l $1 V3 2 3 4
 lista -> $1
 `;
 setData({
@@ -85,8 +85,12 @@ setData({
 
 const code2 = `
 Ref lista
-List +$1 R3
+List *$1 V3
 lista -> $1
+$1[0] = 2
+$1[1] = 3
+$1[2] = 4
+$1.count = 3
 `;
 
 // let vars1 =  new VariableRelations(code, {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true});
@@ -95,3 +99,29 @@ lista -> $1
 // vars2.runUntil();
 let diff = compareValsAndRefs(code, code2);
 console.log(diff);
+// BYCODEBEGIN
+// BYCODEEND
+
+let data = {answer_call_data: {markup: {fullprogram:
+`
+Ref lista
+List *$1 R3
+lista -> $1
+`
+}}, save_object: { usercode:
+`
+Ref lista
+List *$1 V3
+lista -> $1
+$1[0] = 2
+$1[1] = 3
+$1[2] = 4
+$1.count = 3
+`
+}};
+let tcode =
+`
+Ref lista -> l $1 V3 2 3 4
+`;
+let diff2 = compareWithUserCode(data, tcode);
+console.log(diff2);

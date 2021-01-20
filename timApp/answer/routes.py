@@ -741,6 +741,8 @@ def post_answer(plugintype: str, task_id_ext: str):
 
         if postprogram and postlibraries:
             libs = ""
+            postlibraries_edit = plugin.values.get("postlibrariesEdit", {})
+            libnr = 0
             for lib in postlibraries:
                 try:
                     content = get_from_url(lib)
@@ -748,10 +750,18 @@ def post_answer(plugintype: str, task_id_ext: str):
                         web["error"] += lib + "\n" + content
                         postprogram = ""
                         break
+                    libedit = postlibraries_edit.get(libnr, None)
+                    if libedit:
+                        libdel = libedit.get("deleteAfter", None)
+                        if libdel:
+                            delpos = content.find(libdel)
+                            if delpos >= 0:
+                                content = content[0:delpos]
                     libs += content
                 except Exception as ex:
                     web["error"] += lib + "\n" + str(ex)
                     postprogram = ""
+                libnr += 1
             if postprogram:
                 postprogram = libs + \
                               "\n//=== END LIBRARIES ===\n" + \
@@ -805,7 +815,9 @@ def post_answer(plugintype: str, task_id_ext: str):
                     points_given_by = get_current_user_group()
 
             if postprogram:
-                data = {'points': points,
+                data = {
+                        'answer_call_data': answer_call_data,
+                        'points': points,
                         'save_object': save_object,
                         'tags': tags,
                         'is_valid': is_valid,
@@ -862,7 +874,8 @@ def post_answer(plugintype: str, task_id_ext: str):
         else:
             result['savedNew'] = None
             if postprogram:
-                data = {'points': points,
+                data = {'answer_call_data': answer_call_data,
+                        'points': points,
                         'save_object': save_object,
                         'tags': tags,
                         'is_valid': True,
