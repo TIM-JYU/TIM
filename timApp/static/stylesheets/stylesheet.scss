@@ -861,7 +861,7 @@ input[type="file"] {
     border: none;
 }
 
-input:focus.unsaved {
+input.unsaved, input:focus.unsaved {
     border-right-color: gold;
     border-right-width: thick;
 }
