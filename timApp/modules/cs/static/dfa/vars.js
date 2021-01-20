@@ -1141,7 +1141,8 @@ class ReferenceTo extends Command {
 
         let refToCmd = new ReferenceTo(name, rname);
         refToCmd.line = name + " -> " + rname;
-        if ( cmd instanceof CreateFindVariable)
+        // if ( cmd instanceof CreateFindVariable)
+        if (cmd.runDoesNotDoAnything)
             return [refToCmd]; // in dummy case no extra needed
         return [cmd, refToCmd];
     }
@@ -1174,6 +1175,7 @@ class CreateFindVariable extends Command {
         super();
         this.name = name;
         this.noAnimate = true;
+        this.runDoesNotDoAnything = true;
     }
 
     run(variables) {
@@ -1879,7 +1881,8 @@ class VariableRelations {
      *         - var 3
      *   errors: list of errors during run
      */
-    constructor(s, params, knownCommands) {
+    constructor(s, params, knownCmds) {
+        if (knownCmds === undefined) knownCmds = knownCommands;
         this.classes = {};
         this.createErrors = "";
         this.mode = "static";
@@ -1902,7 +1905,7 @@ class VariableRelations {
         this.minStepnumber = 1000000;
         this.maxStepnumber = 0;
         this.init();
-        if (s) this.addCommands(s, knownCommands);
+        if (s) this.addCommands(s, knownCmds);
     }
 
     changePhase(phase) {
@@ -2018,7 +2021,7 @@ class VariableRelations {
         this.init();
         let nr = 0;
         let lastlinenr = 0;
-        if (n === undefined) n = this.maxStep();
+        if (n === undefined) n = this.maxStep()+1;
         for (let cmd of this.commands) {
             if (nr >= n) break;
             let error = cmd.run(this.currentPhase);
@@ -2041,7 +2044,66 @@ class VariableRelations {
     isLastPhase(phase) {
         return phase === this.phaseList[this.phaseList.length - 1];
     }
+
+
+    /*!
+     * Compare model (this) to student (vars2) and
+     * return diffs
+     */
+    compareValsAndRefs(vars2) {
+        let diffs = "";
+        let p2i = 0;
+        for (let p of this.phaseList) {
+            let p2 = vars2.phaseList[p2i++];
+            if (p2 === undefined) {
+                diffs += "Puuttuu vaihe " + p2i + "\n";
+                break;
+            }
+            for (let v of p.flatvars) {
+                let name = v.label;
+                let v2 = p2.findVar(name);
+                if (v2 === undefined) {
+                    diffs += "Puuttuu muuttuja " + name + "\n";
+                    continue;
+                }
+                if (v.value !== v2.value) {
+                    diffs += "Muuttujalla " + name + " eri arvo " + v.value + " != " + v2.value + "\n";
+                    continue;
+                }
+                if (v.count !== v2.count) {
+                    diffs += "Muuttujalla " + name + ".count eri arvo " + v.count + " != " + v2.count + "\n";
+                    continue;
+                }
+                if (v.refs.length !== v2.refs.length) {
+                    diffs += "Viitteellä " + name + " eri määrä viitteittä " + v.refs.length + " != " + v2.refs.length + "\n";
+                    continue;
+                }
+                if (v.refs.length === 0) continue;
+                let r = v.refs[0];
+                let r2 = v2.refs[0];
+                if (r.name !== r2.name) {
+                    diffs += "Viite " + name + " viittaa eri paikkaan " + r.label + " != " + r2.label + "\n";
+                }
+            }
+        }
+        return vars2.errors + diffs;
+    }
+
+
 } // VariableRelations
+
+
+/*!
+ * Compare two results and return dirrerences
+ */
+function compareValsAndRefs(code1, code2, params) {
+    let vars1 =  new VariableRelations(code1, params);
+    let vars2 =  new VariableRelations(code2, params);
+    vars1.runUntil();
+    vars2.runUntil();
+    return vars1.compareValsAndRefs(vars2);
+}
+
 // ------------------ Variables END -----------------------------------
 
 
@@ -3479,5 +3541,5 @@ function setData(data) {
 // struct names
 // svg draw callback
 
-export {setData, varsStringToJson};
+export {setData, varsStringToJson, VariableRelations, compareValsAndRefs};
 // export default setData;

@@ -1,4 +1,4 @@
-import { setData } from './vars.js';
+import {setData, varsStringToJson, VariableRelations, compareValsAndRefs} from './vars.js';
 /*
 Ref lista
 Ref aku
@@ -80,5 +80,18 @@ lista -> $1
 `;
 setData({
     code: code, args: "1001", params:
-        {mode: "static", errorlevel: 3, animate: "commands", allowLazy: true}
+        {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true}
 });
+
+const code2 = `
+Ref lista
+List +$1 R3
+lista -> $1
+`;
+
+// let vars1 =  new VariableRelations(code, {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true});
+// let vars2 =  new VariableRelations(code2, {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true});
+// vars1.runUntil();
+// vars2.runUntil();
+let diff = compareValsAndRefs(code, code2);
+console.log(diff);
