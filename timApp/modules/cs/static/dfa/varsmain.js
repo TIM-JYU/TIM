@@ -74,9 +74,7 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-Ref lista
-l $1 V3 2 3 4
-lista -> $1
+Ref susi -> New $1 Susi
 `;
 setData({
     code: code, args: "1001", params:
@@ -84,13 +82,10 @@ setData({
 });
 
 const code2 = `
-Ref lista
-List *$1 V3
-lista -> $1
-$1[0] = 2
-$1[1] = 3
-$1[2] = 4
-$1.count = 3
+Ref susi
+New $1 Susi
+susi -> $1
+Ref isosusi
 `;
 
 // let vars1 =  new VariableRelations(code, {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true});

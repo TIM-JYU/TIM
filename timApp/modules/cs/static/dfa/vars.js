@@ -2085,6 +2085,9 @@ class VariableRelations {
                     diffs += "Viite " + name + " viittaa eri paikkaan " + r.label + " != " + r2.label + "\n";
                 }
             }
+            if (p.flatvars.length < p2.flatvars.length) {
+                diffs += "Liikaa muuttujia " + (p2.flatvars.length-p.flatvars.length)  + "kpl \n";
+            }
         }
         return vars2.errors + diffs;
     }
