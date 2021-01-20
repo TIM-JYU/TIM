@@ -41,7 +41,7 @@ from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.modules.py.marshmallow_dataclass import class_schema
 from timApp.notification.notify import multi_send_email
-from timApp.peerreview.peerreview_utils import has_review_access, get_reviews_for_user
+from timApp.peerreview.peerreview_utils import has_review_access, get_reviews_for_user, is_peerreview_enabled
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.importdata.importData import MissingUser
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
@@ -1506,8 +1506,13 @@ def get_answers(task_id: str, user_id: int):
         raise RouteException('Non-existent user')
     if user_id != get_current_user_id():
         if not verify_seeanswers_access(d, require=False):
-            if not has_review_access(d, get_current_user_object(), tid, user):
+            if not is_peerreview_enabled(d):
                 raise AccessDenied()
+            if not has_review_access(d, get_current_user_object(), tid, user):
+                if has_review_access(d, get_current_user_object(), None, user):
+                    return json_response([])
+                else:
+                    raise AccessDenied()
 
     elif d.document.get_settings().get('need_view_for_answers', False):
         verify_view_access(d)
@@ -1781,9 +1786,11 @@ def get_task_users(task_id):
     d = get_doc_or_abort(tid.doc_id)
     if not verify_seeanswers_access(d, require=False):
         curr_user = get_current_user_object()
-        if not has_review_access(d, curr_user, tid, None):
+        if not is_peerreview_enabled(d):
             raise AccessDenied()
         reviews = get_reviews_for_user(d, curr_user)
+        if not reviews:
+            raise AccessDenied()
         users = list(r.reviewable for r in reviews if r.task_name == tid.task_name)
     else:
         usergroup = request.args.get('group')

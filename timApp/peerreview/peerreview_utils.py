@@ -135,14 +135,15 @@ def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
     return PeerReview.query.filter_by(block_id=d.id, reviewer_id=user.id)
 
 
-def has_review_access(doc: DocInfo, reviewer_user: User, task_id: TaskId, reviewable_user: Optional[User]) -> bool:
+def has_review_access(doc: DocInfo, reviewer_user: User, task_id: Optional[TaskId], reviewable_user: Optional[User]) -> bool:
     if not is_peerreview_enabled(doc):
         return False
     q = PeerReview.query.filter_by(
         block_id=doc.id,
         reviewer_id=reviewer_user.id,
-        task_name=task_id.task_name,
     )
+    if task_id is not None:
+        q = q.filter_by(task_name=task_id.task_name)
     if reviewable_user is not None:
         q = q.filter_by(reviewable_id=reviewable_user.id)
     return bool(q.first())
