@@ -2070,8 +2070,8 @@ class VariableRelations {
                     diffs += "Muuttujalla " + name + " eri arvo " + v.value + " != " + v2.value + "\n";
                     continue;
                 }
-                if (v.count !== v2.count) {
-                    diffs += "Muuttujalla " + name + ".count eri arvo " + v.count + " != " + v2.count + "\n";
+                if (""+v.count !== ""+v2.count) {
+                    diffs += "Määrälaskurilla " + name + ".count eri arvo " + v.count + " != " + v2.count + "\n";
                     continue;
                 }
                 if (v.refs.length !== v2.refs.length) {
