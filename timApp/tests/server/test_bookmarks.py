@@ -115,21 +115,22 @@ class BookmarkTest2(BookmarkTestBase):
         db.session.commit()
         self.get('/')
         ug = UserGroup(name='ohj1opiskelijat', display_name='asd asd')
-        self.test_user_1.groups.append(ug)
+        tu1 = self.test_user_1
+        tu1.groups.append(ug)
         ug.external_id = ScimUserGroup(external_id='jy-CUR-4668-students')
         ug = UserGroup(name='ohj2opiskelijat', display_name='asd asd')
-        self.test_user_1.groups.append(ug)
+        tu1.groups.append(ug)
         ug.external_id = ScimUserGroup(external_id='jy-CUR-4669-students')
         db.session.commit()
         self.get('/')
-        b = Bookmarks(self.test_user_1)
+        b = Bookmarks(tu1)
         self.assertEqual(
             {'editable': True,
              'items': [{'link': d2.url_relative, 'name': d2.title},
                        {'link': d.url_relative, 'name': d.title}],
              'name': 'My courses'}, b.as_dict()[1])
         self.get('/')
-        b = Bookmarks(self.test_user_1)
+        b = Bookmarks(tu1)
         self.assertEqual(
             {'editable': True,
              'items': [{'link': d2.url_relative, 'name': d2.title},

@@ -19,6 +19,7 @@ def get_current_user_object() -> User:
             if curr_id != 0:
                 curr_id = 0
                 session['user_id'] = curr_id
+                session['user_name'] = 'Anonymous'
                 u = User.get_by_id(curr_id)
         if not u:
             raise Exception(dedent(f"""
@@ -63,6 +64,15 @@ def get_session_usergroup_ids():
 def get_current_user_id() -> int:
     uid = session.get('user_id')
     return uid if uid is not None else 0
+
+
+def get_current_user_name() -> str:
+    name = session.get('user_name')
+    if not name:
+        u = get_current_user_object()
+        session['user_name'] = u.name
+        name = u.name
+    return name
 
 
 def get_current_user_group():

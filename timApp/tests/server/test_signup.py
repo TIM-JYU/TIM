@@ -4,7 +4,7 @@ from unittest import mock
 from dataclasses import dataclass
 from flask import session
 
-from timApp.auth.login import test_pws, create_or_update_user
+from timApp.auth.login import test_pws, create_or_update_user, set_single_user_to_session
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
@@ -376,7 +376,7 @@ class TestSignUp(TimRouteTest):
             group_to_add=get_home_organization_group(),
         )
         db.session.commit()
-        session['user_id'] = u.id
+        set_single_user_to_session(u)
 
     def test_korppi_info_change(self):
         """TIM can handle cases where some information about the user changes in Korppi."""

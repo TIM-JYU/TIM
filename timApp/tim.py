@@ -189,10 +189,12 @@ KNOWN_LANGUAGES = [
 
 def get_locale():
     header_lang = request.accept_languages.best_match(KNOWN_LANGUAGES, default='en-US')
-    if not logged_in():
-        return header_lang
-    u = get_current_user_object()
-    lng = u.get_prefs().language
+    lng = request.cookies.get('lang')
+    if not lng:
+        if not logged_in():
+            return header_lang
+        u = get_current_user_object()
+        lng = u.get_prefs().language
     if lng in KNOWN_LANGUAGES:
         return lng
     return header_lang
@@ -389,6 +391,8 @@ def after_request(resp: Response):
         samesite=app.config['SESSION_COOKIE_SAMESITE'],
         secure=app.config['SESSION_COOKIE_SECURE'],
     )
+    if not request.cookies.get('lang'):
+        resp.set_cookie('lang', get_locale())
     return resp
 
 

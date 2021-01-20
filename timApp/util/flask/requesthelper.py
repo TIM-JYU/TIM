@@ -13,7 +13,7 @@ from webargs.flaskparser import use_args
 from werkzeug.exceptions import HTTPException
 from werkzeug.wrappers import BaseRequest
 
-from timApp.auth.sessioninfo import get_current_user_object, logged_in
+from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_current_user_name
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.modules.py.marshmallow_dataclass import class_schema
@@ -136,11 +136,7 @@ class UA:
 
 
 def get_request_message(status_code: Optional[int]=None, include_body: bool=False) -> str:
-    # Optimization: don't try to access database if not logged in.
-    if not logged_in():
-        name = 'Anonymous'
-    else:
-        name = get_current_user_object().name
+    name = get_current_user_name()
     if current_app.config['LOG_HOST']:
         url_or_path = request.url
     else:

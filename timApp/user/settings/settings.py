@@ -78,7 +78,9 @@ def save_language_route(m: LangModel) -> Response:
     prefs.language = m.lang
     u.set_prefs(prefs)
     db.session.commit()
-    return ok_response()
+    r = ok_response()
+    r.set_cookie('lang', m.lang)
+    return r
 
 
 @settings_page.route('/get/<name>')

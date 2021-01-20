@@ -6,8 +6,12 @@ class BrokenDbTest(TimRouteTest):
     def test_broken_db(self):
         db.drop_all()
         db.create_all()
+
+        # Expire all because otherwise User.query.get(0) would still return anonymous user.
+        db.session.expire_all()
+
         with self.assertRaises(Exception) as e:
-            self.get('/ping')
+            self.get('/')
         self.assertEqual("""
 Database has no users; you need to re-initialize it:
 ./dc stop -t 0 tim celery postgresql

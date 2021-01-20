@@ -125,8 +125,17 @@ def set_user_to_session(user: User):
         other_users[str(user.id)] = user.to_json()
         session['other_users'] = other_users
     else:
-        session['user_id'] = user.id
-        session.pop('other_users', None)
+        set_single_user_to_session(user)
+
+
+def set_single_user_to_session(user: User):
+    session['user_id'] = user.id
+
+    # We also store user name to session because we don't want to have to access the database every request
+    # just to get the user name. Otherwise we would have to access the database for logging the request.
+    session['user_name'] = user.name
+
+    session.pop('other_users', None)
 
 
 """Sent passwords are stored here when running tests."""
@@ -280,12 +289,11 @@ def alt_signup_after(m: AltSignup2Model):
             )
         )
         db.session.flush()
-        user_id = user.id
 
     db.session.delete(nu)
     db.session.commit()
 
-    session['user_id'] = user_id
+    set_user_to_session(user)
     return json_response({'status': success_status})
 
 
@@ -392,7 +400,7 @@ def quick_login(username):
     user = User.get_by_name(username)
     if user is None:
         raise NotExist('User not found.')
-    session['user_id'] = user.id
+    set_single_user_to_session(user)
     flash(f"Logged in as: {username}")
     return redirect(url_for('view_page.index_page'))
 
