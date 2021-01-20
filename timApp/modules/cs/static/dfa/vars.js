@@ -1724,7 +1724,7 @@ class PhaseVariables {
             variable.label = dollar+variable.name;
             if (variable.label.endsWith(".")) variable.label = variable.label.slice(0,-1);
             if (variable.label.endsWith(",")) variable.label = variable.label.slice(0,-1);
-            variable.label = variable.label.replaceAll("].[","][");
+            variable.label = variable.label.replace(/]\.\[/g,"][");
         }
         return s;
     }
@@ -1763,7 +1763,7 @@ class PhaseVariables {
         if (name === "null") return nullRef;
         let ret = this.flatvarsmap[name];
         if (!ret) {
-           name = name.replaceAll("][","].[");
+           name = name.replace(/]\[/g,"].[");
            if (name.endsWith(",")) name = name.replace(",", ".");
            else if (name.endsWith(".")) name = name.replace(".", ",");
            ret = this.flatvarsmap[name];
