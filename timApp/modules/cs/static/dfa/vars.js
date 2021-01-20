@@ -1470,17 +1470,20 @@ class SetNamedGraphAttributes extends Command {
     // Add text SVG command
     // see: https://regex101.com/r/LViQAy/latest
     // syntax:
-    //  gn $1 {x: 10, y:20}
+    //  gn $1 {tx: 10, ty:20}
+    //  ggn $1 {tx: 10, ty:20}
     static isMy(s) {
-        let re = /^[Gg][Nn] ([^ \n]+):? * ([^\n]*)$/gm;
+        let re = /^([Gg]?)[Gg][Nn] ([^ \n]+):? * ([^\n]*)$/gm;
         let r = re.exec(s);
         if (!r) return undefined;
-        return [new SetNamedGraphAttributes(r[1], r[2])];
+        let global = r[1] !== "";
+        return [new SetNamedGraphAttributes(r[2], r[3], global)];
     }
 
-    constructor(name, graphAttributes) {
+    constructor(name, graphAttributes, global) {
         super();
         this.name = name;
+        this.global = global;
         this.graphAttributes = graphAttributes;
         this.noAnimate = true;
     }
@@ -1488,7 +1491,7 @@ class SetNamedGraphAttributes extends Command {
     run(variables) {
         try {
             let ga = varsStringToJson(this.graphAttributes);
-            variables.setNamedGraphAttributes(this.name, ga);
+            variables.setNamedGraphAttributes(this.name, ga, this.global);
             return "";
         } catch (e) {
             return e;
@@ -1621,11 +1624,14 @@ class PhaseVariables {
         this.graphAttributes = undefined; // TODO: clear only ontimers
     }
 
-    setNamedGraphAttributes(name, ga) {
+    setNamedGraphAttributes(name, ga, global=false) {
         this.moveName(ga, "r", "rank");
         this.moveName(ga, "rd", "rankdir");
         name = this.cleanName(name);
-        this.namedGraphAttributes[name] = ga;
+        if (global)
+            this.variableRelations.globalNamedGraphAttributes[name] = ga;
+        else
+            this.namedGraphAttributes[name] = ga;
     }
 
     setGraphAttributes(ga) {
@@ -1840,6 +1846,7 @@ class VariableRelations {
         this.currentPhase = this.phaseList[0];
         this.errors = this.createErrors;
         this.svgs = [];
+        this.globalNamedGraphAttributes = {};
     }
 
     /*!
@@ -2528,6 +2535,13 @@ const svgArrayVariableMixin = {
             if (vertical) v.isVertical = true;
             let xvl = xv;
             let yvl = yv;
+            if ( this.phase && this.phase.variableRelations.globalNamedGraphAttributes ) {
+                let gn = this.phase.variableRelations.globalNamedGraphAttributes[v.name];
+                if (gn) {
+                    if (gn.tsx) xvl = xv + gn.tsx;
+                    if (gn.tsy) yvl = yv + gn.tsy;
+                }
+            }
             if ( this.phase ) {
                 let gn = this.phase.namedGraphAttributes[v.name];
                 if (gn) {
@@ -3016,7 +3030,13 @@ class VisualSVGVariableRelations {
 
             for (let v of phase.vars) { // stack vars (local normal vars)
                 // join named attributes before in place attributes
-                let gn = phase.namedGraphAttributes[v.name];
+                let gn = phase.variableRelations.globalNamedGraphAttributes[v.name];
+                if (gn !== undefined) {
+                    v.graphAttributes = {...gn, ... v.graphAttributes};
+                    let r = v.graphAttributes.rank;
+                    if ( r !== undefined) v.rank = r;
+                }
+                gn = phase.namedGraphAttributes[v.name];
                 if (gn !== undefined) {
                     v.graphAttributes = {...gn, ... v.graphAttributes};
                     let r = v.graphAttributes.rank;
