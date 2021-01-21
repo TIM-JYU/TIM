@@ -314,7 +314,7 @@ export class FileSelectComponent {
                     if (mapping.upload) {
                         continue;
                     }
-                    const promise = new Promise((resolve) => {
+                    const promise = new Promise<void>((resolve) => {
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             const f = {

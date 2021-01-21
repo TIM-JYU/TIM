@@ -663,7 +663,7 @@ export function isTouchEvent(
         | JQuery.MouseEventBase
         | JQuery.TouchEventBase
 ): e is TouchEvent {
-    return (window as ExtendedWindow).TouchEvent && e instanceof TouchEvent;
+    return !!(window as ExtendedWindow).TouchEvent && e instanceof TouchEvent;
 }
 
 export function posToRelative(e: Element, p: MouseOrTouch | TouchEvent) {

@@ -146,7 +146,7 @@ export class DraggableController implements IController {
     private parentDraggable?: DraggableController;
     private forceMaximized?: Binding<boolean, "<">;
     private modal?: IModalInstanceService;
-    private layoutReady = new TimDefer();
+    private layoutReady = new TimDefer<void>();
     private resizeCallback?: ResizeCallback;
     private captionCb?: () => string;
     private dragEnabled = true;

@@ -56,7 +56,7 @@ export function clamp(val: number, min: number, max: number): number {
 }
 
 export async function runMultiFrame(iter: Generator) {
-    const p = new TimDefer();
+    const p = new TimDefer<void>();
     const cb = () => {
         const result = iter.next();
         if (!result.done) {

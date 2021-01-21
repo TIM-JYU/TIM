@@ -23,7 +23,7 @@ import {TimDefer} from "../../util/timdefer";
 export class VariablesComponent implements OnInit, AfterViewInit {
     error?: string;
     svg?: string;
-    viewInitReady = new TimDefer();
+    viewInitReady = new TimDefer<void>();
     @Input() code!: string;
     @Input() height?: string | number;
     @Input() jsparams?: Record<string, unknown>;
