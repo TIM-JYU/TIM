@@ -408,7 +408,7 @@ export class EditorComponent implements IMultiEditor {
             path: f.path,
             content: f.content,
         }));
-        if (out) {
+        if (out.length > 0) {
             out[this.fileIndex].content = this.content;
         }
         return out;
