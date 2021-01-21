@@ -495,6 +495,7 @@ class NullVariable extends Variable {
     // Null varible for un assigned refs or null ref
     constructor(vals) {
         super("null", undefined, undefined);
+        this.label = "null";
         this.rank = undefined;
         this.vals = vals;
     }
@@ -1705,6 +1706,7 @@ class PhaseVariables {
             // }
             s = s.substring(1);
         }
+        s = dollar + s;
         if (variable !== undefined) {
             if (force) {
                 variable.denynames = false;
@@ -1715,13 +1717,14 @@ class PhaseVariables {
             }
             if (!variable.denynames && !variable.parent) variable.forcenames = true;
             if (label !== undefined)
-                variable.name = label;
+                variable.label = label;
             else
-                variable.name = s;
+                variable.label = s;
+            variable.name = s;
             if ( denyBox ) variable.denyBox = true;
             if ( forceParentName ) variable.forceParentName = true;
             else if ( denyDollarName && !force) variable.denyDollarName = true;
-            variable.label = dollar+variable.name;
+            variable.label = variable.label;
             if (variable.label.endsWith(".")) variable.label = variable.label.slice(0,-1);
             if (variable.label.endsWith(",")) variable.label = variable.label.slice(0,-1);
             variable.label = variable.label.replace(/]\.\[/g,"][");
@@ -2059,13 +2062,19 @@ class VariableRelations {
                 diffs += "Puuttuu vaihe " + p2i + "\n";
                 break;
             }
+            let p2vars = {};
+            for (let v2 of p2.flatvars) {
+                p2vars[v2.name] = v2;
+            }
+
             for (let v of p.flatvars) {
                 let name = v.label;
-                let v2 = p2.findVar(name);
+                let v2 = p2.findVar(v.name);
                 if (v2 === undefined) {
                     diffs += "Puuttuu muuttuja " + name + "\n";
                     continue;
                 }
+                delete p2vars[v.name];
                 if (v.value !== v2.value) {
                     diffs += "Muuttujalla " + name + " eri arvo " + v.value + " != " + v2.value + "\n";
                     continue;
@@ -2085,9 +2094,13 @@ class VariableRelations {
                     diffs += "Viite " + name + " viittaa eri paikkaan " + r.label + " != " + r2.label + "\n";
                 }
             }
-            if (p.flatvars.length < p2.flatvars.length) {
-                diffs += "Liikaa muuttujia " + (p2.flatvars.length-p.flatvars.length)  + "kpl \n";
+            let extra = "";
+            for (let [_, v2] of Object.entries(p2vars)) {
+                extra += " " + v2.label;
             }
+            if (extra != "")
+                diffs += "Liikaa muuttujia:" + extra + "\n";
+
         }
         return vars2.errors + diffs;
     }
@@ -3559,3 +3572,6 @@ function setData(data) {
 
 export {setData, varsStringToJson, VariableRelations, compareValsAndRefs, compareWithUserCode};
 // export default setData;
+
+// TODO: null viitteestä parempi ilmoitus kuin undefined
+// TODO: virheilmoitukseen mitkä muuttujat ovat liikaa

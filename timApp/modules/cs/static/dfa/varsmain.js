@@ -74,7 +74,7 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-Ref susi -> New $1 Susi
+Ref susi:s -> New $1 Susi
 `;
 setData({
     code: code, args: "1001", params:
@@ -85,38 +85,71 @@ const code2 = `
 Ref susi
 New $1 Susi
 susi -> $1
-Ref isosusi
+#Ref isosusi
 `;
 
 // let vars1 =  new VariableRelations(code, {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true});
 // let vars2 =  new VariableRelations(code2, {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true});
 // vars1.runUntil();
 // vars2.runUntil();
-let diff = compareValsAndRefs(code, code2);
+let diff =  compareValsAndRefs(code, code2);
 console.log(diff);
 // BYCODEBEGIN
 // BYCODEEND
 
 let data = {answer_call_data: {markup: {fullprogram:
 `
-Ref lista
-List *$1 R3
-lista -> $1
+jarray t1 v5x4 6 3 2 9 | 0 44 0 22 | 0  0 55 | 33 | 0 0 81
+ref tp1:t1 -> t1
+jarray t v5x4
+ref tp:t -> t
+// BYCODEBEGIN
+t[0][3] = 9
+// BYCODEEND
 `
 }}, save_object: { usercode:
 `
-Ref lista
-List *$1 V3
-lista -> $1
-$1[0] = 2
-$1[1] = 3
-$1[2] = 4
-$1.count = 3
+t[0][3] = 91
+t[0][2] = 2
+t[0][1] = 3
+t[0][0] = 6
+
+t[1][3] = 22
+t[1][1] = 44
+
+t[2][2] = 55
+
+t[3][0] = 33
+
+t[4][2] = 81
 `
 }};
 let tcode =
 `
-Ref lista -> l $1 V3 2 3 4
+t[0][0] = 6
+t[0][1] = 3
+t[0][2] = 2
+t[0][3] = 9
+
+t[1][0] = 0
+t[1][1] = 44
+t[1][2] = 0
+t[1][3] = 22
+
+t[2][0] = 0
+t[2][1] = 0
+t[2][2] = 55
+t[2][3] = 0
+
+t[3][0] = 33
+t[3][1] = 0
+t[3][2] = 0
+t[3][3] = 0
+
+t[4][0] = 0
+t[4][1] = 0
+t[4][2] = 81
+t[4][3] = 0
 `;
 let diff2 = compareWithUserCode(data, tcode);
 console.log(diff2);
