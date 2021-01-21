@@ -696,6 +696,7 @@ export class EditorComponent implements IMultiEditor {
     closeFile(index: number) {
         const file = this.files[index];
         this.removeFileByIndex(index);
+        this.cdr.detectChanges();
         this.fileCloseEmitter.emit({file: file, index: index});
     }
 
