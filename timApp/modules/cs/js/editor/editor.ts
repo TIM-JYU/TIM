@@ -338,7 +338,7 @@ export class EditorComponent implements IMultiEditor {
         return this.addTabActive ? this.files.length : this.fileIndex;
     }
     set tabIndex(index: number) {
-        this.addTabActive = index == this.files.length;
+        this.addTabActive = this.canAddFile && index == this.files.length;
         if (!this.addTabActive) {
             this.setFileIndex(index);
         }
@@ -657,6 +657,7 @@ export class EditorComponent implements IMultiEditor {
         } else {
             this.files[index] = file;
         }
+        this.addTabActive = false;
     }
 
     findFile(path: string): number {
@@ -682,7 +683,7 @@ export class EditorComponent implements IMultiEditor {
         this.files.splice(index, 1);
         this.fileIndex_ = nindex;
         if (this.files.length == 0) {
-            this.addTabActive = true;
+            this.addTabActive = this.canAddFile;
         }
     }
 
