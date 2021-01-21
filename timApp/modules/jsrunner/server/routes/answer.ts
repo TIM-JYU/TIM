@@ -24,7 +24,7 @@ const router = express.Router();
 // https://github.com/acornjs/acorn/tree/master/acorn#interface
 function compileProgram(code: string): string {
     try {
-        const ret = parse(code);
+        const ret = parse(code, {ecmaVersion: 2020});
         // eslint-disable-next-line @typescript-eslint/no-base-to-string
         return ret.toString();
     } catch (e) {

@@ -11,14 +11,14 @@
     "lintfix": "eslint --format codeframe --ext ts . --fix"
   },
   "dependencies": {
-    "acorn": "^8.0.1",
+    "acorn": "^8.0.4",
     "cookie-parser": "~1.4.5",
-    "debug": "~4.1.1",
+    "debug": "~4.3.1",
     "express": "~4.17.1",
-    "fp-ts": "^2.8.2",
+    "fp-ts": "^2.9.3",
     "http-errors": "~1.8.0",
-    "io-ts": "^2.2.10",
-    "isolated-vm": "^3.3.5",
+    "io-ts": "^2.2.13",
+    "isolated-vm": "^3.3.9",
     "jade": "~1.11.0",
     "morgan": "~1.10.0"
   },
@@ -27,19 +27,19 @@
     "@types/cookie-parser": "^1.4.2",
     "@types/debug": "^4.1.5",
     "@types/http-errors": "^1.8.0",
-    "@types/morgan": "^1.9.1",
-    "@typescript-eslint/eslint-plugin": "^4.1.0",
-    "@typescript-eslint/parser": "^4.1.0",
-    "eslint": "^7.8.1",
-    "eslint-plugin-import": "^2.22.0",
+    "@types/morgan": "^1.9.2",
+    "@typescript-eslint/eslint-plugin": "^4.14.0",
+    "@typescript-eslint/parser": "^4.14.0",
+    "eslint": "^7.18.0",
+    "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-prefer-arrow": "^1.2.2",
-    "rollup": "^2.26.11",
+    "rollup": "^2.37.1",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-typescript": "^1.0.1",
-    "ts-node": "^9.0.0",
+    "ts-node": "^9.1.1",
     "tsconfig-paths": "^3.9.0",
-    "tslib": "^2.0.1",
-    "typescript": "^4.0.2"
+    "tslib": "^2.1.0",
+    "typescript": "^4.1.3"
   }
 }
