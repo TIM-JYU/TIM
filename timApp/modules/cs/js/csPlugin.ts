@@ -2159,6 +2159,13 @@ ${fhtml}
         }
     }
 
+    onFileClose(data: {file: EditorFile; index: number}) {
+        if (data.file.source != "uploadByCode") {
+            return;
+        }
+        this.fileSelect?.removeFile(data.file.path);
+    }
+
     onUploadResponse(resp: unknown) {
         if (!resp) {
             return;
@@ -3407,6 +3414,7 @@ ${fhtml}
                     [parsonsNotordermatters]="parsonsnotordermatters"
                     [parsonsStyleWords]="markup['style-words']"
                     [parsonsWords]="words"
+                    (close)="onFileClose($event)"
                     (content)="onContentChange($event)">
             </cs-editor>
             <div class="csRunChanged" *ngIf="runChanged && !hide.changed"></div>

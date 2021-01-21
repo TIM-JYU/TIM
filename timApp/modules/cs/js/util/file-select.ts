@@ -423,6 +423,10 @@ export class FileSelectManagerComponent {
         this.updateFileInfo();
     }
 
+    removeFile(path: string) {
+        this.loadedFiles.removeByKey(path);
+    }
+
     updateFileInfo() {
         const self = this;
         let nfileInfo: typeof self.fileInfo = [];

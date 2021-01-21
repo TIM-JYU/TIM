@@ -84,6 +84,7 @@ interface IRunResult {
                             [parsonsNotordermatters]="markup.parsonsnotordermatters"
                             [parsonsStyleWords]="markup['style-words']"
                             [parsonsWords]="markup.words"
+                            (close)="onFileClose($event)"
                             (content)="onContentChange($event)">
                     </cs-editor>
                     <div class="csRunChanged" *ngIf="usercode !== byCode && !hide.changed"></div>
