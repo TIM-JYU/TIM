@@ -54,6 +54,7 @@ export interface IEditor {
 export interface IEditorFile {
     path: string;
     content: string;
+    source?: string;
 }
 
 export interface IMultiEditor extends IEditor {
@@ -81,20 +82,24 @@ export class EditorFile {
     languageMode?: string;
     canClose: boolean;
     canRename: boolean; // TODO: implement renaming
+    canModify: boolean;
     placeholder?: string;
+    source?: string = undefined;
 
     constructor(
         path?: string,
         base?: string,
         languageMode?: string,
         canClose?: boolean,
-        canRename?: boolean
+        canRename?: boolean,
+        canModify?: boolean
     ) {
         this.path = path ?? "";
         this.base = base ?? "";
         this.languageMode = languageMode;
         this.canClose = !!canClose;
         this.canRename = !!canRename;
+        this.canModify = canModify === undefined || canModify;
     }
 
     get content() {
@@ -134,7 +139,7 @@ export class JSParsonsEditorComponent implements IEditor {
                     [minRows]="minRows_"
                     [maxRows]="maxRows_"
                     [placeholder]="file && file.placeholder ? file.placeholder : ''"
-                    [disabled]="disabled">
+                    [disabled]="isDisabled">
             </cs-normal-editor>
             <cs-parsons-editor *ngIf="mode == Mode.Parsons"
                     [shuffle]="parsonsShuffle"
@@ -383,6 +388,10 @@ export class EditorComponent implements IMultiEditor {
         this.cdr.detectChanges();
     }
 
+    get isDisabled(): boolean {
+        return this.disabled || !this.file?.canModify;
+    }
+
     get mayAddFiles() {
         return this.mayAddFiles_;
     }
@@ -394,7 +403,11 @@ export class EditorComponent implements IMultiEditor {
     }
 
     get allFiles(): IEditorFile[] {
-        const out = this.files.map((f) => ({path: f.path, content: f.content}));
+        const out = this.files.map((f) => ({
+            source: f.source,
+            path: f.path,
+            content: f.content,
+        }));
         if (out) {
             out[this.fileIndex].content = this.content;
         }
@@ -419,7 +432,7 @@ export class EditorComponent implements IMultiEditor {
     }
 
     get modified(): boolean {
-        return this.content != this.base;
+        return !this.isDisabled && this.content != this.base;
     }
 
     get editor(): IEditor | undefined {
@@ -500,6 +513,9 @@ export class EditorComponent implements IMultiEditor {
     }
 
     get mode(): ModeID {
+        if (this.isDisabled) {
+            return Mode.Normal;
+        }
         if (this.modeIndex == -1 || this.modeIndex >= this.modes.length) {
             return -1;
         }
@@ -545,7 +561,7 @@ export class EditorComponent implements IMultiEditor {
     }
 
     get showTabs() {
-        return this.files.length > 1 || this.canAddFile; // TODO: show when upload is also available. TODO: show always?
+        return this.files.length > 1 || this.canAddFile || this.file?.canClose; // TODO: show when upload is also available. TODO: show always?
     }
 
     get canAddFile() {

@@ -475,6 +475,7 @@ const EditorMarkupFields = t.intersection([
         path: t.string,
         canClose: withDefault(t.boolean, false),
         canRename: withDefault(t.boolean, false),
+        canModify: withDefault(t.boolean, true),
     }),
     t.partial({
         mode: t.string,
@@ -1026,7 +1027,8 @@ export class CsController extends CsBase implements ITimComponent {
                         base,
                         f.mode ?? defaultMode,
                         f.canClose,
-                        f.canRename
+                        f.canRename,
+                        f.canModify
                     );
                     files.push(file);
                     file.placeholder = f.placeholder ?? this.placeholder;
@@ -1048,6 +1050,15 @@ export class CsController extends CsBase implements ITimComponent {
                                             file.path
                                 ) as IUploadByCodeMarkup)?.show
                             ) {
+                                if (this.editor.findFile(file.path)) {
+                                    const f = this.createUploadByCodeEditorFile(
+                                        file.path,
+                                        file.content
+                                    );
+                                    if (f) {
+                                        files.push(f);
+                                    }
+                                }
                                 include = true;
                             }
                         } else if (
@@ -2089,22 +2100,58 @@ ${fhtml}
         }
     }
 
+    createUploadByCodeEditorFile(
+        path: string,
+        content?: string | null
+    ): EditorFile | undefined {
+        if (this.markup.files) {
+            const markupfile = listify(this.markup.files).find(
+                (f) =>
+                    f.source == "uploadByCode" &&
+                    (f as IUploadByCodeMarkup).path == path
+            ) as IUploadByCodeMarkup | undefined;
+            if (markupfile) {
+                const defaultMode =
+                    this.markup.mode ?? languageTypes.getAceModeType(this.type);
+                const f = new EditorFile(
+                    markupfile.path,
+                    content ?? undefined,
+                    markupfile.mode ?? defaultMode,
+                    markupfile.canClose,
+                    markupfile.canRename,
+                    markupfile.canModify
+                );
+                f.source = markupfile.source;
+                return f;
+            }
+        }
+        return undefined;
+    }
+
     onFileLoad(file: IFile) {
         let bycodefile = this.uploadByCodeFiles.find(
             (f) => f.path == file.path
         );
-        if (bycodefile) {
-            if (bycodefile.show && this.editor) {
-                this.editor.setFileContent(file.path, file.content);
-                this.editor.activeFile = file.path;
-            }
-        } else if (
-            this.uploadByCodeFiles.length == 1 ||
-            this.markup.uploadbycode
+        if (
+            !bycodefile &&
+            (this.uploadByCodeFiles.length == 1 || this.markup.uploadbycode)
         ) {
             bycodefile = this.uploadByCodeFiles[0];
-            if (bycodefile.show) {
-                this.editor?.setFileContent(bycodefile.path, file.content);
+        }
+
+        if (bycodefile) {
+            if (bycodefile.show && this.editor) {
+                if (this.editor.findFile(file.path) == -1) {
+                    const f = this.createUploadByCodeEditorFile(
+                        bycodefile.path,
+                        file.content
+                    );
+                    if (f) {
+                        this.editor.addFile(f);
+                    }
+                }
+                this.editor.setFileContent(bycodefile.path, file.content);
+                this.editor.activeFile = file.path;
             }
         }
         if (this.markup.uploadautosave) {
@@ -2299,7 +2346,9 @@ ${fhtml}
         };
 
         const editorFiles: IFileSubmission[] =
-            this.editor?.allFiles.map((f) => ({source: "editor", ...f})) ?? [];
+            this.editor?.allFiles
+                .filter((f) => f.source != "uploadByCode")
+                .map((f) => ({...f, source: "editor"})) ?? [];
         const fileSelectFiles: IFileSubmission[] =
             this.fileSelect?.loadedFiles
                 .toArray()
