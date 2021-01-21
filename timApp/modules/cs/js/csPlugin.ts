@@ -2375,8 +2375,17 @@ ${fhtml}
         let allFiles: IFileSubmission[] = editorFiles
             .concat(fileSelectFiles)
             .concat(externalFiles);
-        if (allFiles.length == 0 && !this.noeditor) {
-            allFiles = [{source: "editor", path: "", content: this.usercode}];
+        if (allFiles.length == 0) {
+            if (!this.markup.files) {
+                allFiles = [
+                    {source: "editor", path: "", content: this.usercode},
+                ];
+            } else {
+                this.error = "No files to submit";
+                this.runError = this.error;
+                this.isRunning = false;
+                return;
+            }
         }
 
         let msg = "";
