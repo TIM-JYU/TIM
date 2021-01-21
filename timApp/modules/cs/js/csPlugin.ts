@@ -1163,6 +1163,13 @@ export class CsController extends CsBase implements ITimComponent {
             }
         }
 
+        if (this.attrsall.submittedFiles) {
+            const uploadByCodeFiles = this.attrsall.submittedFiles.filter(
+                (p) => p.source == "uploadByCode"
+            );
+            this.fileSelect?.loadFiles(...uploadByCodeFiles);
+        }
+
         component.allowMultiple = this.markup.allowMultipleFiles;
         component.multipleElements = this.markup.multipleUploadElements;
         component.files = files;

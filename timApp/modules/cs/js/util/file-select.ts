@@ -470,6 +470,20 @@ export class FileSelectManagerComponent {
         }
     }
 
+    loadFiles(
+        ...files: {path: string; content?: string | null; realName?: string}[]
+    ) {
+        for (const file of files) {
+            if (file.content != undefined) {
+                this.onFileLoad({
+                    path: file.path,
+                    content: file.content,
+                    realName: file.realName ?? file.path,
+                });
+            }
+        }
+    }
+
     onFileLoad(file: IFile) {
         this.loadedFiles.push(file);
         this.fileEmitter.emit(file);
