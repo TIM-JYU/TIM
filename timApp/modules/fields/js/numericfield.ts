@@ -83,7 +83,7 @@ class NumericfieldController
         message: undefined,
     };
     private preventedAutosave = false;
-    private styles: {[index: string]: string} = {};
+    private styles: Record<string, string> = {};
     private saveCalledExternally = false;
 
     getDouble(s: string | number): number {
@@ -335,7 +335,7 @@ class NumericfieldController
      * For now only backgroundColor is supported
      * See TODOs at textfield
      */
-    applyStyling(styles: {[index: string]: string}) {
+    applyStyling(styles: Record<string, string>) {
         if (Object.keys(styles).length == 0) {
             this.styles = {};
             return;

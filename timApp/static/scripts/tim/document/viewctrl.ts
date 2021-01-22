@@ -92,7 +92,7 @@ export interface ITimComponent {
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
     resetChanges: () => void;
-    setAnswer: (content: {[index: string]: unknown}) => ISetAnswerResult;
+    setAnswer: (content: Record<string, unknown>) => ISetAnswerResult;
     setData?(data: unknown, save: boolean): void;
 }
 
@@ -998,7 +998,7 @@ export class ViewCtrl implements IController {
     ) {
         const r = await to(
             $http.post<{
-                answers: {[index: string]: IAnswer | undefined};
+                answers: Record<string, IAnswer | undefined>;
                 userId: number;
             }>("/userAnswersForTasks", {
                 tasks: Array.from(formAnswerBrowsers.keys()),
@@ -1071,7 +1071,7 @@ export class ViewCtrl implements IController {
 
     async beginUpdate() {
         const response = await to(
-            $http.get<{changed_pars: {[id: string]: string}}>(
+            $http.get<{changed_pars: Record<string, string>}>(
                 "/getUpdatedPars/" + this.docId
             )
         );

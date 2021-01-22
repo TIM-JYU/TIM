@@ -558,7 +558,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
         const oldRows = 1;
         const oldCols = 1;
 
-        const constHeaders: {[key: string]: string[] | undefined} = {
+        const constHeaders: Record<string, string[] | undefined> = {
             "true-false": ["True", "False"],
             likert: ["1", "2", "3", "4", "5"],
         };

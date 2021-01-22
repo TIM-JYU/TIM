@@ -423,7 +423,7 @@ class StatCounter {
         }
     }
 
-    getStat(): {[hname: string]: number} {
+    getStat(): Record<string, number> {
         let sd = 0;
         const dd = this.ex2 - (this.ex * this.ex) / this.n;
         if (this.n > 1) {
@@ -441,7 +441,7 @@ class StatCounter {
 }
 
 class Stats extends WithGtools {
-    private counters: {[fieldname: string]: StatCounter} = {};
+    private counters: Record<string, StatCounter> = {};
     readonly fields: string[] = [];
     readonly aliases: string[] = [];
     readonly autoadd: boolean;
@@ -529,8 +529,8 @@ class Stats extends WithGtools {
         }
     }
 
-    getData(): {[name: string]: INumbersObject} {
-        const result: {[name: string]: INumbersObject} = {};
+    getData(): Record<string, INumbersObject> {
+        const result: Record<string, INumbersObject> = {};
         for (const [name, sc] of Object.entries(this.counters)) {
             result[name] = sc.getStat();
         }
@@ -805,10 +805,10 @@ export class ToolsBase {
 
 export class GTools extends ToolsBase {
     public outdata: Record<string, unknown> = {};
-    public fitters: {[fieldname: string]: LineFitter} = {};
-    public dists: {[fieldname: string]: Distribution} = {};
-    public xys: {[fieldname: string]: XY} = {};
-    public stats: {[name: string]: Stats} = {};
+    public fitters: Record<string, LineFitter> = {};
+    public dists: Record<string, Distribution> = {};
+    public xys: Record<string, XY> = {};
+    public stats: Record<string, Stats> = {};
 
     public tools: Tools;
 
@@ -901,7 +901,7 @@ export class GTools extends ToolsBase {
         this.stats.GLOBAL.addOf(...fieldNames);
     }
 
-    getStatData(): {[name: string]: INumbersObject} {
+    getStatData(): Record<string, INumbersObject> {
         return this.stats.GLOBAL.getData();
     }
 

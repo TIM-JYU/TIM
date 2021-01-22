@@ -24,12 +24,12 @@ export function getParId(
     return par.attr("id");
 }
 
-export function getParAttributes(par: Paragraph): {[attr: string]: string} {
+export function getParAttributes(par: Paragraph): Record<string, string> {
     const attrs = par.attr("attrs");
     if (!attrs) {
         return {};
     }
-    return JSON.parse(attrs) as {[attr: string]: string};
+    return JSON.parse(attrs) as Record<string, string>;
 }
 
 export function getAreaId($area: Paragraph) {

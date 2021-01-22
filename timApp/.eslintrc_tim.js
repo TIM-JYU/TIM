@@ -116,6 +116,7 @@ module.exports = {
                 minimumDescriptionLength: 0,
             }
         ],
+        "@typescript-eslint/consistent-indexed-object-style": "error",
         "arrow-body-style": "off",
         "arrow-parens": [
             "error",

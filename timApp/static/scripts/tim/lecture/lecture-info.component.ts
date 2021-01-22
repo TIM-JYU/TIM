@@ -148,7 +148,7 @@ export class LectureInfoComponent {
     questions: IAskedQuestion[] = [];
     selectedUser: IUser | undefined;
     showAll = false;
-    answerMap: {[index: number]: IQuestionAnswerPlain[]} = {};
+    answerMap: Record<number, IQuestionAnswerPlain[]> = {};
     messages: ILectureMessage[] = [];
 
     constructor(private http: HttpClient, private zone: NgZone) {

@@ -17,7 +17,7 @@ export async function compileWithViewctrl(
     html: string | Element | JQuery<HTMLElement>,
     scope: IScope,
     view: ViewCtrl | undefined,
-    extraCtrls: {[name: string]: {instance: unknown}} = {}
+    extraCtrls: Record<string, {instance: unknown}> = {}
 ) {
     const result = $compile(html)(
         scope,

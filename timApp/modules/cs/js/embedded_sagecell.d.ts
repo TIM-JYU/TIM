@@ -18,7 +18,7 @@ export interface CellInfo {
 
 interface Sage {
     allLanguages: string[];
-    templates: {[name: string]: {editor: string; hide: string[]}};
+    templates: Record<string, {editor: string; hide: string[]}>;
 
     makeSagecell(args: unknown): CellInfo;
 

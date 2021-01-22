@@ -59,7 +59,7 @@ type StackResult =
       };
 
 interface IStackData {
-    answer: {[name: string]: string};
+    answer: Record<string, string>;
     prefix: string;
     seed?: number;
     verifyvar: string;
@@ -131,13 +131,13 @@ class StackController extends PluginBase<
     }
 
     processNodes(
-        res: {[name: string]: string},
+        res: Record<string, string>,
         nodes:
             | HTMLCollectionOf<HTMLInputElement>
             | HTMLCollectionOf<HTMLTextAreaElement>
             | HTMLCollectionOf<HTMLSelectElement>,
         id: string
-    ): {[name: string]: string} {
+    ): Record<string, string> {
         for (const element of nodes) {
             if (
                 element.name.startsWith(STACK_VARIABLE_PREFIX) &&
@@ -174,7 +174,7 @@ class StackController extends PluginBase<
         const inputs = parent.getElementsByTagName("input");
         const textareas = parent.getElementsByTagName("textarea");
         const selects = parent.getElementsByTagName("select");
-        let res: {[name: string]: string} = {};
+        let res: Record<string, string> = {};
         if (!this.timWay) {
             res = this.processNodes(res, inputs, id);
             res = this.processNodes(res, textareas, id);

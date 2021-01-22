@@ -5,9 +5,7 @@ import {IGenericPluginMarkup} from "../plugin/attributes";
 import {DurationChoice} from "../ui/duration-picker.component";
 import {IUser} from "../user/IUser";
 
-export interface IExplCollection {
-    [idString: string]: string;
-}
+export type IExplCollection = Record<string, string>;
 
 export interface IQuestionMarkup extends IAskedJsonJson, IGenericPluginMarkup {}
 

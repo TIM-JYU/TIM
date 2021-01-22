@@ -206,7 +206,7 @@ export abstract class PluginBaseCommon {
      * ok: true if content was succesfully parsed
      * message: for replying with possible errors
      */
-    setAnswer(content: {[index: string]: unknown}): ISetAnswerResult {
+    setAnswer(content: Record<string, unknown>): ISetAnswerResult {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 

@@ -390,14 +390,14 @@ export class FileSelectManagerComponent {
         boolean
     > = new EventEmitter();
 
-    private fileSelects: {[key: string]: FileSelectComponent} = {};
+    private fileSelects: Record<string, FileSelectComponent> = {};
 
     loadedFiles = new Set((e: IFile) => e.path);
 
     multipleElements_: boolean = true;
     files_: IFileSpecification[] = [];
 
-    private idToFile: {[key: string]: [number, string | undefined]} = {}; // contains (index, path)-tuples
+    private idToFile: Record<string, [number, string | undefined]> = {}; // contains (index, path)-tuples
     fileInfo: {
         stem: string;
         id: string;

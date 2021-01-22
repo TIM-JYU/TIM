@@ -286,7 +286,7 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
         (async () => {
             const r = await to2(
                 this.http
-                    .get<{last_answer_fetch: {[index: string]: string}}>(
+                    .get<{last_answer_fetch: Record<string, string>}>(
                         "/settings/get/last_answer_fetch"
                     )
                     .toPromise()

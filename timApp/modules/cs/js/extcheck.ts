@@ -24,7 +24,7 @@ interface IAngularComponent {
 }
 
 interface IAngularModule {
-    components: {[key: string]: IAngularComponent};
+    components: Record<string, IAngularComponent>;
     entry: string;
 }
 
@@ -263,7 +263,7 @@ export class CustomOutputBase {
         </ng-container>`,
 })
 export class OutputContainerComponent implements IOutputContainer {
-    private static components: {[key: string]: Type<unknown>};
+    private static components: Record<string, Type<unknown>>;
     static addComponent(name: string, type: Type<unknown>): Type<unknown> {
         if (!this.components.hasOwnProperty(name)) {
             this.components[name] = type;

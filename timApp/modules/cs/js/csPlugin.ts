@@ -67,7 +67,7 @@ Sagea varten ks: https://github.com/sagemath/sagecell/blob/master/doc/embedding.
 
 let taunoNr = 0;
 
-const globalFileUrlCache: {[i: string]: string} = {};
+const globalFileUrlCache: Record<string, string> = {};
 
 // ==============================================================
 // Global object to store every plugin that wants to
@@ -94,7 +94,7 @@ interface ICsSimcirData {
 
 class CWPD {
     pwdHolders: IPwd[] = [];
-    currentPWD: {[i: string]: string} = {};
+    currentPWD: Record<string, string> = {};
 
     constructor() {}
 
@@ -262,7 +262,7 @@ class LanguageTypes {
     unitTestTypes = ["junit", "unit"];
 
     // If test type is comtest, how to change it for specific languages
-    impTestTypes: {[i: string]: string | undefined} = {
+    impTestTypes: Record<string, string | undefined> = {
         cs: "comtest",
         console: "comtest",
         cc: "ccomtest",
@@ -271,7 +271,7 @@ class LanguageTypes {
         "c++": "ccomtest",
     };
     // If test type is unit, how to change it for specific languages
-    impUnitTestTypes: {[i: string]: string | undefined} = {
+    impUnitTestTypes: Record<string, string | undefined> = {
         cs: "nunit",
         console: "nunit",
         cc: "cunit",
@@ -1267,7 +1267,7 @@ export class CsController extends CsBase implements ITimComponent {
         // return getFormBehavior(this.markup.form, FormModeOption.Undecided);
     }
 
-    setAnswer(content: {[index: string]: unknown}): ISetAnswerResult {
+    setAnswer(content: Record<string, unknown>): ISetAnswerResult {
         this.error = undefined;
         let message;
         let ok = true;

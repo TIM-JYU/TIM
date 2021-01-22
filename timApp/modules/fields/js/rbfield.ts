@@ -152,7 +152,7 @@ class RbfieldController
         return getFormBehavior(this.attrs.form, FormModeOption.IsForm);
     }
 
-    setAnswer(content: {[index: string]: unknown}): ISetAnswerResult {
+    setAnswer(content: Record<string, unknown>): ISetAnswerResult {
         this.errormessage = undefined;
         let message;
         let ok = true;

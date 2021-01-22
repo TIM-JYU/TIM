@@ -94,9 +94,7 @@ export interface IStatData {
     sd: number;
 }
 
-export interface INumbersObject {
-    [hname: string]: number;
-}
+export type INumbersObject = Record<string, number>;
 
 export type AnswerReturn = AnswerReturnSuccess | AnswerReturnError;
 export type AnswerReturnBrowser =

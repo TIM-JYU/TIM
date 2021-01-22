@@ -64,7 +64,7 @@ export class GamificationMapCtrl implements IController {
     private alpha: number = 0.2; // Alpha value for the building frames.
     private showAll: boolean = false; // Show all building frames.
     private tiles: ITile[] = []; // Array of tile objects on the map.
-    private images: {[index: number]: HTMLImageElement} = {};
+    private images: Record<number, HTMLImageElement> = {};
 
     // Positions for tiles used in the building frames
     private tileFrameSet!: ITileSet;
@@ -551,9 +551,9 @@ export class GamificationMapCtrl implements IController {
      * @param callback Callback function.
      */
     private loadImages(
-        callback: (images: {[index: number]: HTMLImageElement}) => void
+        callback: (images: Record<number, HTMLImageElement>) => void
     ) {
-        const images: {[index: number]: HTMLImageElement} = {};
+        const images: Record<number, HTMLImageElement> = {};
         let loadedImages = 0;
         const onload = () => {
             if (++loadedImages >= this.sources.length) {
@@ -857,7 +857,7 @@ export class GamificationMapCtrl implements IController {
         }
     }
 
-    private callback(images: {[index: number]: HTMLImageElement}) {
+    private callback(images: Record<number, HTMLImageElement>) {
         this.images = images;
         // Find tilesets and spreadsheets needed for drawing a frame
         for (let j = 0; j < this.json.tilesets.length; j++) {

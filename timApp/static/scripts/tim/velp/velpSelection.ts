@@ -1088,7 +1088,7 @@ export class VelpSelectionController implements IController {
  */
 timApp.filter("filterByLabels", () => {
     return (velps?: IVelp[], labels?: ILabelUI[], advancedOn?: boolean) => {
-        const selectedVelps: {[index: number]: [IVelp, number]} = {};
+        const selectedVelps: Record<number, [IVelp, number]> = {};
         const selectedLabels = [];
 
         if (!advancedOn) {

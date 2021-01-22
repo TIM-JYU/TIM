@@ -81,9 +81,7 @@ timApp.config([
         }
 
         // disable IE ajax request caching; from https://stackoverflow.com/a/19771501
-        const hdrs = $httpProvider.defaults.headers.get as {
-            [s: string]: string;
-        };
+        const hdrs = $httpProvider.defaults.headers.get as Record<string, string>;
         hdrs["If-Modified-Since"] = "Mon, 26 Jul 1997 05:00:00 GMT";
         hdrs["Cache-Control"] = "no-cache";
         hdrs.Pragma = "no-cache";

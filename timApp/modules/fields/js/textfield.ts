@@ -89,7 +89,7 @@ class TextfieldController
         message: undefined,
     };
     private preventedAutosave = false;
-    private styles: {[index: string]: string} = {};
+    private styles: Record<string, string> = {};
     private saveCalledExternally = false;
 
     getDefaultMarkup() {
@@ -162,7 +162,7 @@ class TextfieldController
     // TODO: Use answer content as arg or entire IAnswer?
     // TODO: get rid of any (styles can arrive as object)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setAnswer(content: {[index: string]: any}): ISetAnswerResult {
+    setAnswer(content: Record<string, any>): ISetAnswerResult {
         this.errormessage = undefined;
         let message;
         let ok = true;
@@ -319,7 +319,7 @@ class TextfieldController
      *  Could also define (and import) generic tim-wide inputstyles
      * TODO: Could also just apply given styles as they are
      */
-    applyStyling(styles: {[index: string]: string}) {
+    applyStyling(styles: Record<string, string>) {
         if (!styles || Object.keys(styles).length == 0) {
             this.styles = {};
             return;

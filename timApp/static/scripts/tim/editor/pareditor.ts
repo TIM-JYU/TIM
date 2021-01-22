@@ -1052,11 +1052,8 @@ ${backTicks}
     }
 
     initCustomTabs() {
-        const tabs: {
-            [tab: string]:
-                | {[menuName: string]: IEditorMenuItem[] | undefined}
-                | undefined;
-        } = {};
+        const tabs: Record<string, | Record<string, IEditorMenuItem[] | undefined>
+                | undefined> = {};
         for (const [plugin, d] of Object.entries(documentglobals().reqs)) {
             const data = d;
             let currTabs: ReadonlyArray<[string, MenuNameAndItems]>;

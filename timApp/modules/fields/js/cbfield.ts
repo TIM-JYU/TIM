@@ -142,7 +142,7 @@ class CbfieldController
     }
 
     // TODO: Use answer content as arg or entire IAnswer?
-    setAnswer(content: {[index: string]: unknown}): ISetAnswerResult {
+    setAnswer(content: Record<string, unknown>): ISetAnswerResult {
         this.errormessage = undefined;
         let message;
         let ok = true;

@@ -185,6 +185,4 @@ export type ILabelUI = ILabel & IUIFields;
 export type IVelpUI = IVelp & IUIFields;
 export type IVelpGroupUI = IVelpGroup & IUIFields;
 
-export interface IVelpGroupCollection {
-    [index: string]: Array<{id: number; selected?: boolean}>;
-}
+export type IVelpGroupCollection = Record<string, Array<{id: number; selected?: boolean}>>;

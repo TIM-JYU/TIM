@@ -30,7 +30,7 @@ abstract class SetBase<T> implements Iterable<T> {
 }
 
 export class Set<T> extends SetBase<T> {
-    private items: {[key: string]: T} = {};
+    private items: Record<string, T> = {};
 
     getByKey(key: string): T | undefined {
         return this.items[key];
@@ -62,7 +62,7 @@ export class Set<T> extends SetBase<T> {
 }
 
 export class OrderedSet<T> extends SetBase<T> {
-    private indices: {[key: string]: number} = {};
+    private indices: Record<string, number> = {};
     private items: T[] = [];
 
     getByIndex(index: number): T | undefined {

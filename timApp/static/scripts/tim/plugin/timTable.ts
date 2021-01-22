@@ -327,9 +327,9 @@ export interface ITable {
     // extends ITableStyles
     countRow?: number;
     countCol?: number;
-    defrows?: {[index: string]: string};
-    defcols?: {[index: string]: string};
-    defcells?: {[index: string]: string};
+    defrows?: Record<string, string>;
+    defcols?: Record<string, string>;
+    defcells?: Record<string, string>;
     defcolsrange?: Rng[];
     defrowsrange?: Rng[];
     defcellsrange?: Rng[];
@@ -359,9 +359,7 @@ export interface ISelectedCells {
     srow2: number; // screen index for last selected row
 }
 
-export interface ICellDataEntity {
-    [key: string]: CellEntity;
-}
+export type ICellDataEntity = Record<string, CellEntity>;
 
 const CellTypeR = t.union([t.string, t.number, t.boolean, t.null]);
 export type CellType = t.TypeOf<typeof CellTypeR>;
@@ -374,10 +372,7 @@ export interface IRow {
     [key: string]: unknown;
 }
 
-export interface IColumn {
-    // extends IColumnStyles
-    [key: string]: unknown;
-}
+export type IColumn = Record<string, unknown>;
 
 export interface ICellCoord {
     row: number;
@@ -3075,7 +3070,7 @@ export class TimTableComponent
      * @param {number} coli The index of the column
      */
     private stylingForCellOfColumn(coli: number) {
-        const styles: {[index: string]: string} = {};
+        const styles: Record<string, string> = {};
         const table = this.data.table;
 
         if (!table.columns) {
@@ -3235,7 +3230,7 @@ export class TimTableComponent
         }
         */
 
-        const styles: {[index: string]: string} = {};
+        const styles: Record<string, string> = {};
 
         const def = this.data.table.defcols;
         if (def) {
@@ -3270,7 +3265,7 @@ export class TimTableComponent
         if (cached) {
             return cached;
         }
-        const styles: {[index: string]: string} = {};
+        const styles: Record<string, string> = {};
 
         const def = this.data.table.defrows;
         if (def) {
@@ -3304,7 +3299,7 @@ export class TimTableComponent
      * @returns {{[p: string]: string}}
      */
     stylingForTable(tab: ITable) {
-        const styles: {[index: string]: string} = {};
+        const styles: Record<string, string> = {};
         this.applyStyle(styles, tab, tableStyles);
         return styles;
     }
@@ -4483,7 +4478,7 @@ export class TimTableComponent
         );
     }
 
-    setAnswer(_content: {[index: string]: unknown}): ISetAnswerResult {
+    setAnswer(_content: Record<string, unknown>): ISetAnswerResult {
         return {ok: false, message: "Plugin doesn't support setAnswer"};
     }
 

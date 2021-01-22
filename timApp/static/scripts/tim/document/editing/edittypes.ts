@@ -4,7 +4,7 @@ export interface IParResponse {
     texts: string;
     js: string[];
     css: string[];
-    changed_pars: {[id: string]: string};
+    changed_pars: Record<string, string>;
     version: [number, number];
     duplicates?: Duplicate[];
     original_par?: {md: string; attrs: unknown};

@@ -78,7 +78,7 @@ export class GitRegComponent extends CsController {
         }
         this.isRunning = true;
 
-        const data: {[key: string]: string | undefined} = {};
+        const data: Record<string, string | undefined> = {};
 
         for (const field of this.askFields) {
             data[field] = ((event.target as HTMLFormElement)[field] as
@@ -87,7 +87,7 @@ export class GitRegComponent extends CsController {
         }
 
         const params: IRunRequest & {
-            input: {gitRegFields: {[key: string]: string | undefined}};
+            input: {gitRegFields: Record<string, string | undefined>};
         } = {
             input: {
                 gitRegFields: data,

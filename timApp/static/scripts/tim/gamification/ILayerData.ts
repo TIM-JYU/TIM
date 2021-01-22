@@ -1,3 +1,1 @@
-export interface ILayerData {
-    [index: string]: number;
-}
+export type ILayerData = Record<string, number>;

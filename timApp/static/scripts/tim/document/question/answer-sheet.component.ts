@@ -41,14 +41,14 @@ import {PurifyModule} from "tim/util/purify.module";
 
 export function getPointsTable(
     markupPoints?: string
-): Array<{[points: string]: string}> {
+): Array<Record<string, string>> {
     // Format of markupPoints: 1:1.1;2:1.2;3:1.3||2:3.2
-    const pointsTable: Array<{[points: string]: string}> = [];
+    const pointsTable: Array<Record<string, string>> = [];
     if (markupPoints && markupPoints !== "") {
         const points = markupPoints.split("|");
         for (const p of points) {
             const rowPoints = p.split(";");
-            const rowPointsDict: {[points: string]: string} = {};
+            const rowPointsDict: Record<string, string> = {};
             for (const rp of rowPoints) {
                 if (rp !== "") {
                     const colPoints = rp.split(":", 2);
@@ -271,7 +271,7 @@ export class AnswerSheetComponent implements OnChanges {
     processed!: IProcessedHeaders; // TODO decide if undefined should be valid
     answerMatrix: MatrixElement[][] = [];
     private expl?: IExplCollection;
-    private pointsTable: Array<{[p: string]: string}> = [];
+    private pointsTable: Array<Record<string, string>> = [];
     private defaultPoints?: number;
     userpoints?: number;
     disabled = false;

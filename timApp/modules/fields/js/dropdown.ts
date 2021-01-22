@@ -218,7 +218,7 @@ class DropdownController
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setAnswer(content: {[index: string]: any}): ISetAnswerResult {
+    setAnswer(content: Record<string, any>): ISetAnswerResult {
         this.error = undefined;
         let message;
         let ok = true;

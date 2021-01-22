@@ -55,13 +55,9 @@ interface GoalLine {
     userSelection: string;
 }
 
-interface Word {
-    [lang: string]: string;
-}
+type Word = Record<string, string>;
 
-interface Words {
-    [name: string]: Word;
-}
+type Words = Record<string, Word>;
 
 const goalTableWords: Words = {
     btnText: {fi: "Tallenna", en: "Save"},
@@ -180,7 +176,7 @@ class GoalTableController
     }
 
     private getJSContent() {
-        const c: {[id: string]: string} = {};
+        const c: Record<string, string> = {};
         const def: string = "" + this.initgoal;
         for (const row of this.rows) {
             const u = row.userSelection;
@@ -294,7 +290,7 @@ class GoalTableController
 
     // noinspection JSMethodCanBeStatic,JSUnusedLocalSymbols
     private cellStyle(row: GoalLine, h: string) {
-        const styles: {[index: string]: string} = {};
+        const styles: Record<string, string> = {};
         const userSelection: string = row.userSelection;
         if (row.goal <= userSelection && userSelection === h) {
             styles["background-color"] = "#00ff00";
@@ -308,7 +304,7 @@ class GoalTableController
 
     // noinspection JSMethodCanBeStatic,JSUnusedLocalSymbols
     private cellTDStyle(row: GoalLine, h: string) {
-        const styles: {[index: string]: string} = {};
+        const styles: Record<string, string> = {};
         if (row.goal === h) {
             styles["background-color"] = "#ffff00";
         }
