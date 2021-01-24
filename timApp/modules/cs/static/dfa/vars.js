@@ -566,7 +566,7 @@ class CreateValueVariable extends CreateVariable {
     // see: https://regex101.com/r/uaLk9H/latest
     // syntax: V summa <- -3.5
     static isMy(s) {
-        let re = /^[Vv](al|alue)? +([.:+\-$@\w\d]+) *(<-|=|:=|) *([^\n]+|)$/;
+        let re = /^[Vv](al|alue)? +((?:[!@.+\-\w\d]+):?(?:(?:[^="\n]+)|"[^"\n]+")?) *(<-|=|:=|) *([^\n]+|)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         let name = r[2];
@@ -603,14 +603,14 @@ class SimpleRefecenceVariable extends RefecenceVariable {
 
 class CreateRefecenceVariable extends CreateVariable {
     // Creates a reference variable
-    // see: https://regex101.com/r/8rghQV/latest
+    // see: https://regex101.com/r/RSTA4z/latest
     // syntax: Ref luvut
     static isMy(s) {
-        let re = /^[Rr](ef|eference)? +([!:@.+\-\w\d]+)$/;
+        let re = /^[Rr](?:ef|eference)? +((?:[!@.+\-\w\d]+):?(?:(?:[^>"\n]+)|"[^"\n]+")?)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         return [new CreateVariable(
-            () => new RefecenceVariable(r[2], undefined, nullRef, 0))];
+            () => new RefecenceVariable(r[1], undefined, nullRef, 0))];
     }
 }
 
@@ -1060,18 +1060,18 @@ class CreateInitialized2DArrayVariable extends CreateVariable {
     //    [,] $2 r2x4 a
     //    [][] $2 r2x4 a
     static isMy(s) {
-        let re = /^([Jj]?[Aa](rray)? |\[]\[]|\[,]) *([^ ]+) +([@\S]+[\d]+[xX][\d]+) *(.*)?$/;
+        let re = /^([Jj]?(?:agged)?[Aa](?:rray)? |\[]\[]|\[,]) *([^ ]+) +([@\S]+[\d]+[xX][\d]+) *(.*)?$/;
         let r = re.exec(s);
         if (!r) return undefined;
         let jagged = false;
         let akind = r[1].toUpperCase();
         if (akind==="[][]") jagged = true;
         if (akind.startsWith("J")) jagged = true;
-        let name = r[3];
-        let vals = r[5];
+        let name = r[2];
+        let vals = r[4];
         // Check type, dir and len, see https://regex101.com/r/ZHKeDJ/2
         re = /^(.)?([\d]+)[xX]([\d]+)$/gm;
-        let td = r[4].toUpperCase();
+        let td = r[3].toUpperCase();
         r = re.exec(td);
         if (!r) throw `${name} tyypin ja koon kohdalla vikaa. Oikeita esim V R V3x5`;
         let type = r[1];
@@ -1080,7 +1080,7 @@ class CreateInitialized2DArrayVariable extends CreateVariable {
         if (!"SRVCL".includes(type)) throw `${name} väärä tyyppi taulukolle.  Pitää olla C, R, S tai V! `
         let valsa = [];
         if (vals) valsa = vals.split("|");
-        let firstcmd = `g {"push": 1, "dy":0, "rdy":22, "rd":0}`;
+        let firstcmd = `g {"push": 1, "dy":0, "rdy":22, "rd":0, "rev:0"}`;
         let cls = CreateInitializedArrayVariable;
         let sep = ",";
         if (jagged) {
@@ -1436,7 +1436,7 @@ class AddSVG extends Command {
 
 
 class SetGraphAttributes extends Command {
-    // Add text SVG command
+    // Add Garåh command to control positions etc
     // see: https://regex101.com/r/q6YJDq/latest
     // syntax:
     //  Graph {x: 10, y:20}
@@ -1468,6 +1468,42 @@ class SetGraphAttributes extends Command {
     }
 
 }
+
+class SetRankDefaults extends Command {
+    // Add rand defaults
+    // see: https://regex101.com/r/Hq4mv3/latest
+    // syntax:
+    //  Rank 0 dx: 10
+    //  Rank global dy: 30
+    static isMy(s) {
+        let re = /^[Rr]ank * ([\S]*) * ([^\n]*)$/gm;
+        let r = re.exec(s);
+        if (!r) return undefined;
+        return [new SetRankDefaults(r[1], r[2])];
+    }
+
+    constructor(name, graphAttributes) {
+        super();
+        this.name = name;
+        this.graphAttributes = graphAttributes;
+        this.noAnimate = true;
+    }
+
+    run(variables) {
+        try {
+            let ga = varsStringToJson(this.graphAttributes);
+            variables.setRankDefaults(this.name, ga);
+            return "";
+        } catch (e) {
+            return e;
+        }
+    }
+
+    prerun(variables) { // to use variables already for classes
+        this.run(variables);
+    }
+}
+
 
 class SetNamedGraphAttributes extends Command {
     // Add text SVG command
@@ -1575,6 +1611,7 @@ const knownCommands = [
     AddPhaseText,
     SetPhaseNr,
     SetGraphAttributes,
+    SetRankDefaults,
     SetNamedGraphAttributes,
     CodeCommand,
     AddSVG,
@@ -1641,8 +1678,6 @@ class PhaseVariables {
         if (ga) { // handle aliases
             this.moveName(ga, "r", "rank");
             this.moveName(ga, "rd", "rankdir");
-            if ( ga.rgdx !== undefined ) this.variableRelations.rankGlobalMoveDx = ga.rgdx;
-            if ( ga.rgdy !== undefined ) this.variableRelations.rankGlobalMoveDy = ga.rgdy;
         }
 
         this.graphAttributes = {...this.graphAttributes, ...ga};  // TODO: join previous
@@ -1654,6 +1689,13 @@ class PhaseVariables {
             } else this.defaultRank = ga.rank;
         }
 
+    }
+
+    setRankDefaults(name, ga) {
+        if (this.variableRelations.rankDefaults[name] === undefined )
+            this.variableRelations.rankDefaults[name] = {};
+        this.variableRelations.rankDefaults[name] =
+            {...this.variableRelations.rankDefaults[name], ...ga};
     }
 
     isMarkErrors() {
@@ -1690,7 +1732,7 @@ class PhaseVariables {
         let label = undefined;
         let i = s.indexOf(":");
         if (i>=0) {
-            label = s.substring(i+1);
+            label = s.substring(i+1).replace(/"/g,'');
             s = s.substring(0,i);
         }
         let dollar = "";
@@ -1724,7 +1766,7 @@ class PhaseVariables {
             if ( denyBox ) variable.denyBox = true;
             if ( forceParentName ) variable.forceParentName = true;
             else if ( denyDollarName && !force) variable.denyDollarName = true;
-            variable.label = variable.label;
+            // variable.label = variable.label;
             if (variable.label.endsWith(".")) variable.label = variable.label.slice(0,-1);
             if (variable.label.endsWith(",")) variable.label = variable.label.slice(0,-1);
             variable.label = variable.label.replace(/]\.\[/g,"][");
@@ -1852,6 +1894,7 @@ class VariableRelations {
         this.errors = this.createErrors;
         this.svgs = [];
         this.globalNamedGraphAttributes = {};
+        this.rankDefaults = {global: {}};
     }
 
     /*!
@@ -1909,6 +1952,12 @@ class VariableRelations {
         this.maxStepnumber = 0;
         this.init();
         if (s) this.addCommands(s, knownCmds);
+    }
+
+    getRankDefault(name, defaults) {
+        let result = this.rankDefaults[name];
+        if (result === undefined) result = {};
+        return {...defaults, ...result};
     }
 
     changePhase(phase) {
@@ -2095,10 +2144,10 @@ class VariableRelations {
                 }
             }
             let extra = "";
-            for (let [_, v2] of Object.entries(p2vars)) {
+            for (let [, v2] of Object.entries(p2vars)) {
                 extra += " " + v2.label;
             }
-            if (extra != "")
+            if (extra !== "")
                 diffs += "Liikaa muuttujia:" + extra + "\n";
 
         }
@@ -2241,7 +2290,11 @@ class SVGUtils {
     }
 
 
-    static debug(sl, opt, cmd, dir, p, d, color) {
+    static debug(sl, opt, rank, cmd, dir, p, d, color) {
+        if (rank && rank.debug) {
+            if (!opt) opt = {"debug": rank.debug};
+            else if (!opt.debug) opt.debug = rank.debug;
+        }
         if (!opt || !opt.debug) return;
         if (!opt.debug.includes(cmd)) return;
         if (dir === 0 || dir === 2) {
@@ -2255,6 +2308,14 @@ class SVGUtils {
             sl.push(sv);
             sl.push(`<line x1="${p.x}" y1="${d + 15}" x2="${p.x}" y2="${1000}" stroke="${color}" stroke-width="0.5"  />`);
         }
+    }
+
+
+    static grval(obj, name, def) {
+        if (obj.graphAttributes === undefined) return def;
+        let val = obj.graphAttributes[name];
+        if (val === undefined) return def;
+        return val;
     }
 }
 
@@ -2280,16 +2341,31 @@ const svgTextMixin = {
         this.width = w;
         this.height = dy;
         if (dy === 0) this.height = 0;
+        this.topy = y - this.height/2;
+        this.bottomy = y + this.height/2;
         return svg;
     },
 
     left() {
         return {x: this.x - this.width / 2, y: this.y};
     },
+
     right() {
         return {x: this.x + this.width / 2, y: this.y};
-    }
+    },
+
+    top() {
+        // left coordinate for variable
+        return {x: this.x, y: this.topy};
+    },
+
+    bottom() {
+        // left coordinate for variable
+        return {x: this.x, y: this.bottomy};
+    },
 }
+
+
 
 /*
  * Mixins for drawing as SVG
@@ -2314,20 +2390,23 @@ const svgVariableMixin = {
         // draw variable as a box, it's name and content
         // if in error state, draw red box also
         // align 1 aligns from left
+        let forcedh = undefined;
         if (this.graphAttributes) {
             if (this.graphAttributes.x) x = this.graphAttributes.x;
             if (this.graphAttributes.y) y = this.graphAttributes.y;
             if (this.graphAttributes.sx) x += this.graphAttributes.sx;
             if (this.graphAttributes.sy) y += this.graphAttributes.sy;
+            // if (this.graphAttributes.w) w = this.graphAttributes.w;
+            // if (this.graphAttributes.w) h = this.graphAttributes.h;
+            forcedw = SVGUtils.grval(this,"w", forcedw)
+            forcedh = SVGUtils.grval(this,"h", undefined)
             //  if (this.graphAttributes.h) hfactor = this.graphAttributes.h;
         }
         if (this.denyBox) nobox = true;
-        this.x = x;
-        this.y = y;
         this.width = w;
         this.height = h;
-        let size = "1";
         let val = this.value;
+        let size = "1";
         if (val !== undefined) { // TODO: should we draw "" string???
             val = "" + val;
             if (val.length > 4) {
@@ -2339,17 +2418,31 @@ const svgVariableMixin = {
                 this.width = 4 * w;
             }
         }
+        this.x = x;
+        this.y = y;
         if (forcedw) {
             size = "" + forcedw;
             this.width = forcedw * w;
         }
+        if (forcedh) {
+            this.height = forcedh * h;
+        }
         if (align === 1 && this.width > w) {
             this.x += (this.width - w) / 2;
-            x = this.x;
         }
         let svg = "";
+        this.y += this.height/2;
+        x = this.x;
+        y = this.y;
         if (!nobox && dx > 0 && dy > 0) {
-            svg += `<use href="#rbox${size}" x="${x}" y="${y}" />\n`;
+            if (forcedh === undefined && forcedw === undefined)
+                svg += `<use href="#rbox${size}" x="${x}" y="${y}" />\n`;
+            else {
+                let fill = undefined;
+                // this.height = forcedh * h;
+                svg += SVGUtils.box(this.name, this.width, this.height, dx, dy, x, y, fill)
+            }
+
         }
         if ((dx === 0 && dy === 0) || (nobox && this.error)) { // f.ex ref boxes inside struct
             let fill = undefined;
@@ -2359,6 +2452,13 @@ const svgVariableMixin = {
             svg += `<use href="#ebox" x="${x}" y="${y}" />\n`;
         }
 
+        let sref = SVGUtils.grval(this, "sref", 0);
+        if (!val && sref === 1 && this.refs.length > 0) {
+            val = this.refs[0].label;
+            this.sref = true;
+        }
+        let namelabel = SVGUtils.grval(this, "namelabel", 2);
+
         if (val) {
             let opt = SVGUtils.joinOptions(this.textOptions,
                 {align: "middle", font: "Helvetica", size: "12px"});
@@ -2366,15 +2466,20 @@ const svgVariableMixin = {
             svg += svg1;
         }
 
-        let textx = this.left().x - 20;
+        let npx = SVGUtils.grval(this, "ndx", -20);
+        let textx = this.left().x + npx;
         if ( this.parent ) textx = this.parent.left().x - 10;
-        let texty = y;
+        let texty = y + SVGUtils.grval(this, "ndy", 0);
         let textalign = "end";
         let textsize = "12px";
         let text = this.label;
+        if (namelabel===3) text = this.name + "  " + this.label;
+        if (namelabel===1) text = this.name;
+        if (namelabel===0) text = "";
         if (this.parent && !this.parent.vertical) {
             textx = x;
-            texty = y - this.parent.height - 3;
+            texty = y - this.parent.height + 5; //
+            if (this.parent.isArray()) texty -= 8;// - 3;
             textalign = "middle";
             textsize = "10px";
         }
@@ -2385,6 +2490,13 @@ const svgVariableMixin = {
         if ( this.label && this.label.startsWith("$")) {
             texty -= 9;
         }
+
+        let np = SVGUtils.grval(this,"np", 0)
+        if (np === 2) { // nameposition
+            textalign = "left";
+            textx = this.right().x - npx;
+        }
+
 
         // draw variable names if needed
         if (text && this.forcenames && !this.denynames && !this.denyDollarName) {
@@ -2412,6 +2524,16 @@ const svgVariableMixin = {
     right() {
         // left coordinate for variable
         return {x: this.x + this.width / 2, y: this.y};
+    },
+
+    top() {
+        // left coordinate for variable
+        return {x: this.x, y: this.y - this.height/2};
+    },
+
+    bottom() {
+        // left coordinate for variable
+        return {x: this.x, y: this.y + this.height/2};
     },
 
     closest(p) {
@@ -2446,7 +2568,7 @@ const svgVariableMixin = {
             let stroke = "#000";
             if (this.error) stroke = "red";
             if (ref === nullRef) {
-                if (this.isVertical) continue; // todo draw better
+                if (this.isVertical || this.nonull) continue; // todo draw better
                 if (this.parent &&
                     this.parent.isStruct() &&
                     this.parent.vertical &&
@@ -2457,9 +2579,11 @@ const svgVariableMixin = {
                 continue;
             }
             let p = ref.closest(this);
+            let x1 = this.x;
+            if (this.sref) { x1 += 0.4*this.width}
             let x2 = p.x;
             let y2 = p.y;
-            svg += `<line x1="${this.x}" y1="${this.y}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="1"  marker-end="url(#endarrow)" marker-start="url(#startarrow)" />`;
+            svg += `<line x1="${x1}" y1="${this.y}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="1"  marker-end="url(#endarrow)" marker-start="url(#startarrow)" />`;
         }
         return svg;
     }
@@ -2503,6 +2627,14 @@ const svgNullVariableMixin = {
         // left coordinate for variable
         return {x: this.x, y: this.y};
     },
+    top() {
+        // left coordinate for variable
+        return {x: this.x, y: this.y - this.height/2};
+    },
+    bottom() {
+        // left coordinate for variable
+        return {x: this.x, y: this.y + this.height/2};
+    },
 }
 
 const svgSimpleReferenceVariableMixin = {
@@ -2519,7 +2651,7 @@ const svgSimpleReferenceVariableMixin = {
             //  if (this.graphAttributes.h) hfactor = this.graphAttributes.h;
         }
         this.x = x;
-        this.y = y;
+        this.y = y + h/2;
         this.width =  20; // h; // w;
         this.height = h;
 
@@ -2562,6 +2694,15 @@ const svgSimpleReferenceVariableMixin = {
         // left coordinate for variable
         return {x: this.x, y: this.y};
     },
+    top() {
+        // left coordinate for variable
+        return {x: this.x, y: this.y - this.height/2};
+    },
+
+    bottom() {
+        // left coordinate for variable
+        return {x: this.x, y: this.y + this.height/2};
+    },
 }
 
 const svgArrayVariableMixin = {
@@ -2580,6 +2721,7 @@ const svgArrayVariableMixin = {
             if (this.graphAttributes.dir !== undefined ) dir = this.graphAttributes.dir;
             // if (this.graphAttributes.h) hfactor = this.graphAttributes.h;
         }
+        this.topy = y;
         if (this.dir !== undefined && this.dir > " ") dir = this.dir;
         if (dir === undefined) dir = 1;
         let vertical = false;
@@ -2620,6 +2762,7 @@ const svgArrayVariableMixin = {
         }
         this.vertical = vertical;
         let lastrx = xv;
+        let lastry = yv;
 
         for (let i = starti; 0 <= i && i <= endi; i += mi) {
             let v = this.vars[i];
@@ -2644,9 +2787,11 @@ const svgArrayVariableMixin = {
             xv += mx * v.width;
             yv += my * v.height;
             lastrx = Math.max(lastrx, v.right().x);
+            lastry = Math.max(lastry, v.bottom().y);
             this.snappoints = this.snappoints.concat(v.snappoints);
         }
         this.rightx = lastrx;
+        this.bottomy = lastry;
         for (let i = 0; i < this.vars.length; i++) {
             let v = this.vars[i];
             if (v.forcenames || v.denynames) continue; // do no tprint i's if name printed
@@ -2658,7 +2803,7 @@ const svgArrayVariableMixin = {
             // svg += `<text x="${v.x + indexx}" y="${v.y + indexy}" fill="#000000" font-family="Helvetica" font-size="8px" text-anchor="middle" alignment-baseline="middle">${i}</text>\n`;
         }
 
-
+        if ( this.vars.length ) this.y = this.vars[0].y;
         svg += SVGUtils.drawParentName(this);
         svg += this.over[0].toSVG(x - w, y, w, h, dx, dy, true);
         svg += this.over[1].toSVG(xv, y, w, h, dx, dy, true);
@@ -2715,6 +2860,16 @@ const svgArrayVariableMixin = {
         // return {x: v.x - v.width / 2, y: v.y};
         return {x: this.rightx, y: this.y};
     },
+    top() {
+        // left coordinate for variable
+        return {x: this.x, y: this.topy};
+    },
+
+    bottom() {
+        // left coordinate for variable
+        return {x: this.x, y: this.bottomy};
+    },
+
 }
 
 const svgStructVariableMixin = {
@@ -2743,8 +2898,10 @@ const svgStructVariableMixin = {
         if ('hH'.includes(dir) || dir === 1) vertical = false;
         if (nw === undefined) nw = vertical ? 2 : 1;
 
+        let origy = y;
         this.x = x;
-        this.y = y;
+        this.y = y + h/2;
+        y = this.y;
         let svg = "";
         this.snappoints = [];
         let n = this.vars.length;
@@ -2765,14 +2922,14 @@ const svgStructVariableMixin = {
         this.width = n * nw * w;
         let ey = 0; // extra y for refs inside struct
         let xv = x - 0.5*(n-1)*bw;
-        let yv = y + (nh - 1) * h / 2;
+        let yv = origy + (nh - 1) * h / 2;
         let clientw = bw;
         let forcedw = undefined;
         let textalign = 0;
 
         if (vertical) { // vertical stacking
             this.width = (n) * bw;
-            yv = y + (n - 1) * h * ymul;
+            yv = origy +h/4 + (n - 1) * h * ymul;
             xv = x; //  - w / 2;
             indexx = -nw * w * 0.7;
             indexy = 0;
@@ -2781,7 +2938,8 @@ const svgStructVariableMixin = {
             starti = endi;
             mi = -1;  // move i direction
             this.width = w * nw;
-            this.height = (n) * h * ymul + (22 - ymul * h);  // 22 is def box height
+            this.height = Math.max((n) * h * ymul + (22 - ymul * h), this.height);
+            // 22 is def box height
             // yv = y + endi*h;
             fh = this.height;
             ey = 0;
@@ -2794,7 +2952,8 @@ const svgStructVariableMixin = {
         this.leftx = this.x - this.width / 2;
         this.lefty = this.y + fh / 2 - h / 2;
         this.rightx = this.x + this.width / 2;
-        this.righty = this.y + fh / 2 - h / 2;
+        // this.righty = this.y + fh / 2 - h / 2;
+        this.righty = origy + this.height;
         let refsn = 0;
         let lastRefi = -1;
         if ( vertical ) {  // vertical last ref is drawn a bit lower if only ref
@@ -2807,6 +2966,9 @@ const svgStructVariableMixin = {
             }
         }
 
+        let maxx = x;
+        let maxy = y;
+
         if (!this.denyBox)
             svg += SVGUtils.box(this.name, this.width, fh, dx, dy, x, y + fh / 2 - h / 2.0)
         // svg += this.vars[0].toSVG(xv, y, w, h, dx, dy, false, 1 );
@@ -2815,16 +2977,20 @@ const svgStructVariableMixin = {
             v.textOptions = {size: 10};
             if (v.isRef()) {
                 let refw = Math.min(clientw, w);
-                let dropy = 0;
+                let dropy = h/4;
                 if (i === lastRefi) dropy = ey;
                 // draw a ref a bit lower, smaller and without shadow
                 svg += v.toSVG(xv, yv + dropy, refw, h * ymul * 0.8, 0, 0, true, textalign, forcedw);
             } else {
-                svg += v.toSVG(xv, yv, clientw, h * ymul, dx, dy, true, textalign, forcedw);
+                let dropy = h/4;
+                if (vertical) dropy = 0;
+                svg += v.toSVG(xv, yv+ dropy, clientw, h * ymul, dx, dy, true, textalign, forcedw);
             }
             xv += mx * bw; // v.width;
             yv += my * v.height;
             this.snappoints = this.snappoints.concat(v.snappoints);
+            maxx = Math.max(v.right().x, maxx);
+            maxy = Math.max(v.bottom().y, maxy);
         }
 
         svg += SVGUtils.drawParentName(this);
@@ -2835,14 +3001,18 @@ const svgStructVariableMixin = {
             svg += `<text x="${v.x + dx}" y="${v.y - h / 2 - dy - 4}" fill="#000000" font-family="Helvetica" font-size="8px" text-anchor="middle" alignment-baseline="middle">${i}</text>\n`;
         }
         */
-
         let left = this.left();
+        this.bottomy =  this.righty;
+        this.rightx =  maxx;
+        this.topy = left.y - fh / 2;
+
         this.snappoints = [
             {x: left.x, y: left.y},
             {x: this.x, y: left.y - fh / 2 - dy / 2},
             {x: left.x + this.width + dx / 2, y: left.y - dy / 2},
-            {x: this.x, y: left.y + fh / 2}, // because def box is 22 height
+            {x: this.x, y: this.bottomy}, // because def box is 22 height
         ];
+
 
         svg += this.showCount(dy);
         return svg;
@@ -2873,6 +3043,16 @@ const svgStructVariableMixin = {
 
     right() {
         return {x: this.rightx, y: this.righty};
+    },
+
+    top() {
+        // left coordinate for variable
+        return {x: this.x, y: this.topy};
+    },
+
+    bottom() {
+        // left coordinate for variable
+        return {x: this.x, y: this.bottomy};
     },
 }
 
@@ -2999,6 +3179,7 @@ class VisualSVGVariableRelations {
         let dy = 8;
         let s1 = ""; // helper for text calls
         let y1 = 0;  // helper for text calls
+        let variableRelations = this.variableRelations;
 
         this.svglist = [];
         this.svglist.push( '<defs>' +
@@ -3013,10 +3194,6 @@ class VisualSVGVariableRelations {
             '</defs>\n');
 
 
-        let rankBeginx = 110;
-        let rankDx = this.variableRelations.rankGlobalMoveDx || 143;
-        let rankBeginy = 30;
-
         const rankStack = [];
         function pushRank(rank) {
             rankStack.push(JSON.stringify(rank));
@@ -3030,22 +3207,35 @@ class VisualSVGVariableRelations {
             return res;
         }
 
-        const modelRank = {
+        let rankBeginx = 110;
+        let rankBeginy = 30;
+        let maxs = {x: 0, y: rankBeginy};
+        let maxx = 0;
+        let maxy = 0;
+
+        let modelRank = {
                 x: rankBeginx,
                 y: rankBeginy,
                 ax: rankBeginx,
                 ay: rankBeginy,
                 dir: 0,
-                dx: this.variableRelations.rankGlobalMoveDx,
-                dy: this.variableRelations.rankGlobalMoveDy,
+                dx: undefined,
+                dy: undefined,
+                ndx : -20,
+                ndy : 0,
                 max: {x : 0,y : 0},
+                xextra: 40,
+                yextra: 25,
             };
+
+        modelRank = variableRelations.getRankDefault("global", modelRank);
+        let rankDx = modelRank.dx || 143;
 
         const modelRankS = JSON.stringify(modelRank);
 
         let ranks = []; // 0 = stack, 1 = heap
         for (let i = 0; i < 10; i++) {
-            let r = JSON.parse(modelRankS);
+            let r = variableRelations.getRankDefault(i, JSON.parse(modelRankS));
             r.x += i * rankDx;
             r.ax += i * rankDx;
             ranks.push(r);
@@ -3057,7 +3247,7 @@ class VisualSVGVariableRelations {
             currentRank = r;
             let result = ranks[r];
             if (result !== undefined) return result;
-            result = JSON.parse(modelRankS)
+            result = variableRelations.getRankDefault(r, JSON.parse(modelRankS));
             ranks[r] = result;
             return result;
         }
@@ -3075,9 +3265,6 @@ class VisualSVGVariableRelations {
             return result;
         }
 
-        let maxs = {x: 0, y: rankBeginy};
-        let maxx = 0;
-        let maxy = 0;
         let lastObj = undefined;
 
         let linenr = 1;
@@ -3100,10 +3287,13 @@ class VisualSVGVariableRelations {
         }
 
         let gopts;
+        let firstPhase = true;
 
-        for (let phase of this.variableRelations.phaseList) {
+        for (let phase of variableRelations.phaseList) {
 
-            for (let r of ranks) r.y = maxs.y;
+            if (!firstPhase)
+                for (let r of ranks) r.y = maxs.y;
+            else firstPhase = false;
 
             let rank = ranks[0];
             [s1,] = SVGUtils.drawSVGText(phase.phaseNumber,
@@ -3117,7 +3307,7 @@ class VisualSVGVariableRelations {
             // draw possible header texts
             [s1, y1] = SVGUtils.drawSVGTexts(phase.texts[0], 20, rank.y, h);
             this.svglist.push(s1);
-            for (let r of ranks) r.y = y1;
+            for (let r of ranks) r.y = Math.max(y1, r.y);
 
             for (let v of phase.vars) { // stack vars (local normal vars)
                 // join named attributes before in place attributes
@@ -3131,12 +3321,13 @@ class VisualSVGVariableRelations {
                 if (gn !== undefined) {
                     v.graphAttributes = {...gn, ... v.graphAttributes};
                     let r = v.graphAttributes.rank;
-                    if ( r !== undefined) v.rank = r;
+                    if ( r !== undefined && r !== -1) v.rank = r;
                 }
                 rank = getRank(ranks, rank, v.rank);
                 let oldp = {x: rank.x, y: rank.y};
 
                 gopts = v.graphAttributes;
+
                 if (gopts) {
                     if (gopts.pop !== undefined) {
                         let rm = rank.max;
@@ -3154,6 +3345,10 @@ class VisualSVGVariableRelations {
                     if (gopts.tsy !== undefined) gopts.sy = gopts.tsy;
                     if (gopts.trx !== undefined) gopts.rx = gopts.trx;
                     if (gopts.try !== undefined) gopts.ry = gopts.try;
+                    if (gopts.rndx !== undefined) rank.rndx = gopts.rndx;
+                    if (gopts.rndy !== undefined) rank.rndy = gopts.rndy;
+                    if (gopts.xextra !== undefined) rank.xextra = gopts.xextra;
+                    if (gopts.yextra !== undefined) rank.yextra = gopts.yextra;
 
                     if (gopts.rankdir !== undefined) {
                         rank.dir = gopts.rankdir;
@@ -3170,8 +3365,8 @@ class VisualSVGVariableRelations {
                     }
                     oldp = {x: rank.x, y: rank.y};
 
-                    if (gopts.w !== undefined) rank.w = gopts.w;
-                    if (gopts.h !== undefined) rank.h = gopts.h;
+                    //if (gopts.w !== undefined) rank.w = gopts.w;
+                    //if (gopts.h !== undefined) rank.h = gopts.h;
                     if (gopts.ax !== undefined) rank.ax = gopts.ax;
                     if (gopts.ay !== undefined) rank.ay = gopts.ay;
 
@@ -3179,15 +3374,28 @@ class VisualSVGVariableRelations {
                     if (gopts.ry !== undefined) rank.y = rank.ay + gopts.ry;
                     if (gopts.rdx !== undefined) rank.dx = gopts.rdx;
                     if (gopts.rdy !== undefined) rank.dy = gopts.rdy;
-                    if (gopts.rev !== undefined) rank.reversePos =
-                        gopts.rev === 1 ? this.svglist.length : 0;
+                    if (gopts.rev === undefined) gopts.rev = rank.rev;
                 } else {
                     v.graphAttributes = {};
                     gopts = v.graphAttributes;
+                    gopts.rev = rank.rev;
+                    // gopts.dir = rank.dir;
                 }
+                if (gopts.rev !== undefined && gopts.rev === 0)
+                    rank.reversePos = undefined;
+                if (gopts.rev !== undefined && rank.reversePos === undefined)
+                    rank.reversePos = gopts.rev === 1 ? this.svglist.length : undefined;
+
+                if (gopts.np === undefined) gopts.np = rank.np;
+                if (gopts.sref === undefined) gopts.sref = rank.sref;
+                if (gopts.namelabel === undefined) gopts.namelabel = rank.namelabel;
+                if (gopts.nonull === undefined) gopts.nonull = rank.nonull;
+                v.nonull = gopts.nonull;
+                if (gopts.ndx === undefined && rank.ndx !== undefined) gopts.ndx = rank.ndx;
+                if (gopts.ndy === undefined && rank.ndy !== undefined) gopts.ndy = rank.ndy;
                 if (rank.snappoints) v.useSnapPoints = rank.snappoints;
-                if (rank.w) gopts.w = rank.w;
-                if (rank.h) gopts.h = rank.h;
+                if (rank.w && gopts.w === undefined) gopts.w = rank.w;
+                if (rank.h && gopts.h === undefined) gopts.h = rank.h;
 
                 if (v.text) v.lastObj = lastObj;
                 v.phase = phase;
@@ -3204,8 +3412,8 @@ class VisualSVGVariableRelations {
                     let vw = rm.x - rank.x;
                     let vh = rm.y - rank.y;
 
-                    let xextra = 40 + w/2;
-                    let yextra = 25 + h/2;
+                    let xextra = rank.xextra + w/2;
+                    let yextra = rank.yextra + h/2;
 
                     let xadd = rank.dir ? vw + xextra : 0;
                     let yadd = (rank.dir || !vh) ? 0 : vh + yextra;
@@ -3218,8 +3426,8 @@ class VisualSVGVariableRelations {
                 }
 
                 function countRankPos(rank, v) {
-                    let xextra = 40;
-                    let yextra = 25;
+                    let xextra = rank.xextra;
+                    let yextra = rank.yextra;
 
                     if (v.text) { // tekstin tapauksessa ei ylm lisää
                         xextra = yextra = 0;
@@ -3228,7 +3436,8 @@ class VisualSVGVariableRelations {
                     }
 
                     let xadd = rank.dir ? v.width + xextra : 0;
-                    let yadd = (rank.dir || !v.height) ? 0 : v.height + yextra;
+                    // let yadd = (rank.dir || !v.height) ? 0 : v.height/2 + yextra;
+                    let yadd = (rank.dir || !v.height) ? 0 : v.bottom().y - rank.y + yextra;
 
                     if (xadd !== 0 && rank.dx !== undefined) xadd = rank.dx;
                     if (yadd !== 0 && rank.dy !== undefined) yadd = rank.dy;
@@ -3241,7 +3450,7 @@ class VisualSVGVariableRelations {
                         yadd = 0;
                     }
                     if (gopts.ty === undefined && gopts.tsy === undefined && gopts.try === undefined)
-                        rank.y = v.y + yadd;  // TODO: add last element height
+                        rank.y += yadd;  // TODO: add last element height
                     if (gopts.tx === undefined && gopts.tsx === undefined && gopts.trx === undefined)
                         rank.x = v.x + xadd;
                 }
@@ -3258,10 +3467,10 @@ class VisualSVGVariableRelations {
                 maxx = Math.max(maxx, v.right().x);
                 maxy = Math.max(maxy, v.left().y + v.height);
                 rank.max.x = Math.max(rank.max.x, v.right().x);
-                rank.max.y = Math.max(rank.max.y, v.left().y + v.height/2);
+                rank.max.y = Math.max(rank.max.y, v.bottom().y);
 
-                SVGUtils.debug(this.svglist, gopts, "c", 2, v, 40, "green");
-                SVGUtils.debug(this.svglist, gopts, "r", 2, rank.max, 5, "red");
+                SVGUtils.debug(this.svglist, gopts, rank,"c", 2, v, 40, "green");
+                SVGUtils.debug(this.svglist, gopts, rank,"r", 2, rank.max, 5, "red");
             }
 
             for (let v of phase.vars) { // reference arrows
@@ -3289,10 +3498,12 @@ class VisualSVGVariableRelations {
         }
 
         // TODO: find width correctly
-        let width = Math.max(maxx + 20, 100); // Math.max(maxs.x, 100);
-        let height = Math.max(maxs.y,100, maxy ) ;
+        let svgw =  modelRank.svgw || 0;
+        let svgh =  modelRank.svgh || 0;
+        let width = Math.max(maxx + 20, 100, svgw); // Math.max(maxs.x, 100);
+        let height = Math.max(maxs.y,100, maxy, svgh ) ;
 
-        SVGUtils.debug(this.svglist, gopts, "m", 2, {x:width-1, y: height-1}, 5, "blue");
+        SVGUtils.debug(this.svglist, gopts, modelRank,"m", 2, {x:width-1, y: height-1}, 5, "blue");
 
         this.svglist.push(`</svg>`);
 
@@ -3574,4 +3785,3 @@ export {setData, varsStringToJson, VariableRelations, compareValsAndRefs, compar
 // export default setData;
 
 // TODO: null viitteestä parempi ilmoitus kuin undefined
-// TODO: virheilmoitukseen mitkä muuttujat ovat liikaa

@@ -74,11 +74,46 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-Ref susi:s -> New $1 Susi
+rank global svgw: 400
+rank 0 y:40, x:120, yextra: 0, rev: 1, w: 2, sref: 1, namelabel: 3, nonull: 1
+rank 1 y:40, x:150, yextra: 0, rev: 1, w: 3, np: 2
+gn 8010: h: 2 
+gn 8040: h: 2
+text {x:30, y:10} Kutsupino muuttujien osalta
+text {x:240, y:10} Kekomuisti (heap)
+code: String s1 = "eka";
+ref s1:100
+new 8010 eka
+s1 -> 8010
+
+code: String s2 = new String("eka");
+ref s2:104
+new 8040 toka
+s2 -> 8040
+
+code: int i1 = 11;
+val i1:108
+i1=11
+
+code: int i2 = 10 + 1;
+val i2:112
+i2=11
+
+code: Integer io1 = new Integer(3);
+ref io1:116
+new 8070 3
+io1->8070
+
+code: Integer io2 = new Integer(3);
+ref io2:120
+new 8080 3
+io2->8080
+new 8090 ""
+
 `;
 setData({
     code: code, args: "1001", params:
-        {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true}
+        {mode: "static", errorlevel: 0, animate: "code", allowLazy: true}
 });
 
 const code2 = `
