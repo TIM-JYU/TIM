@@ -71,7 +71,8 @@ def check_doc_cache(
 def get_doc_cache_key(doc: DocInfo, user: User, view_ctx: ViewContext, m: DocViewParams) -> str:
     # We can't use builtin hash(...) here because the hash value changes between restarts.
     h = hashlib.shake_256()
-    h.update(bytes(doc.document.get_version()))
+    for part in doc.document.get_version():
+        h.update(part.to_bytes(4, 'little', signed=True))
     h.update(dataclass_to_bytearray(m))
     h.update(dataclass_to_bytearray(view_ctx))
     return f'timdoc-{doc.id}-{user.id}-{h.hexdigest(10)}'
