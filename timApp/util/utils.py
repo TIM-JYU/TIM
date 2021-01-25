@@ -352,7 +352,7 @@ def append_to_bytearray(b: bytearray, v: Any) -> None:
     elif isinstance(v, bool):
         b.append(v)
     elif isinstance(v, int):
-        b.extend(struct.pack(">q", v))
+        b.extend(v.to_bytes(4, 'little', signed=True))
     elif isinstance(v, float):
         b.extend(struct.pack("f", v))
     elif isinstance(v, tuple):
