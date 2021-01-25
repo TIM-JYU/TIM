@@ -3,8 +3,10 @@ import json
 import os
 import re
 import shutil
-from dataclasses import fields
+import struct
+from dataclasses import fields, asdict
 from datetime import datetime, timezone
+from enum import Enum
 from pathlib import Path, PurePath, PurePosixPath
 from typing import List, Optional, Tuple, Union, Dict, Any, Sequence, Callable, Type, Set
 
@@ -330,3 +332,33 @@ def approximate_real_name(email: str) -> str:
 
 def get_dataclass_field_names(d: Any) -> Set[str]:
     return set(f.name for f in fields(d))
+
+
+def dataclass_to_bytearray(x: Any) -> bytearray:
+    b = bytearray()
+    for k, v in asdict(x).items():
+        b.extend(k.encode())
+        b.append(0)
+        append_to_bytearray(b, v)
+        b.append(0)
+    return b
+
+
+def append_to_bytearray(b: bytearray, v: Any) -> None:
+    if v is None:
+        pass
+    elif isinstance(v, str):
+        b.extend(v.encode())
+    elif isinstance(v, bool):
+        b.append(v)
+    elif isinstance(v, int):
+        b.extend(struct.pack(">q", v))
+    elif isinstance(v, float):
+        b.extend(struct.pack("f", v))
+    elif isinstance(v, tuple):
+        for m in v:
+            append_to_bytearray(b, m)
+    elif isinstance(v, Enum):
+        append_to_bytearray(b, v.value)
+    else:
+        raise Exception(f'Unhandled type: {type(v)}')

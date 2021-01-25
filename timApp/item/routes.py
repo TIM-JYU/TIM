@@ -281,10 +281,11 @@ def gen_cache(doc_path: str):
     view_ctx = default_view_ctx
     m = DocViewParams()
     vp = ViewParams()
-    total = len(users)
+    users_uniq = list(sorted(set(u for u, _ in users), key=lambda u: u.name))
+    total = len(users_uniq)
     digits = len(str(total))
     def generate():
-        for i, (u, _) in enumerate(users):
+        for i, u in enumerate(users_uniq):
             yield f'{i + 1:>{digits}}/{total} {u.name}: '
             cr = check_doc_cache(doc_info, u, view_ctx, m, vp.nocache)
             if cr.doc:

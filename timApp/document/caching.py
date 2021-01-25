@@ -1,3 +1,4 @@
+import hashlib
 import json
 from dataclasses import dataclass
 from typing import Optional, Union
@@ -12,6 +13,7 @@ from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.document.docviewparams import DocViewParams
 from timApp.user.user import User
 from timApp.util.flask.responsehelper import to_json_str
+from timApp.util.utils import dataclass_to_bytearray
 
 rclient = redis.Redis(host='redis')
 
@@ -67,7 +69,12 @@ def check_doc_cache(
 
 
 def get_doc_cache_key(doc: DocInfo, user: User, view_ctx: ViewContext, m: DocViewParams) -> str:
-    return f'timdoc-{doc.id}-{user.id}-{hash((doc.document.get_version(), m, view_ctx))}'
+    # We can't use builtin hash(...) here because the hash value changes between restarts.
+    h = hashlib.shake_256()
+    h.update(bytes(doc.document.get_version()))
+    h.update(dataclass_to_bytearray(m))
+    h.update(dataclass_to_bytearray(view_ctx))
+    return f'timdoc-{doc.id}-{user.id}-{h.hexdigest(10)}'
 
 
 def clear_doc_cache(doc: DocInfoOrDocument, user: Optional[User]) -> None:

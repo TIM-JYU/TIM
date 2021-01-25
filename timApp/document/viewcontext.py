@@ -36,7 +36,7 @@ viewmode_routes = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=True)
 class ViewContext:
     route: ViewRoute
     preview: bool

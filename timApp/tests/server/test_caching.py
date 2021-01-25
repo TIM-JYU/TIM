@@ -2,6 +2,7 @@
 from unittest.mock import patch, Mock
 
 from timApp.auth.accesstype import AccessType
+from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
 from timApp.item.routes import render_doc_view
 from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
@@ -17,6 +18,7 @@ class CachingTest(TimRouteTest):
         d = self.create_doc(initial_par='#- {plugin=textfield #t}')
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
+        clear_doc_cache(d, None)
         self.check_not_cached(d)
         self.check_not_cached(d)  # cache is disabled by default
         d.document.set_settings({'cache': True})
@@ -78,6 +80,7 @@ class CachingTest(TimRouteTest):
         d = self.create_doc(initial_par='test')
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
+        clear_doc_cache(d, None)
         self.get(
             f'/generateCache/{d.path}',
             expect_status=400,

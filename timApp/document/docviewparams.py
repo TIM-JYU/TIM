@@ -6,7 +6,7 @@ from marshmallow import ValidationError
 from marshmallow_dataclass import class_schema
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=True)
 class DocViewParams:
     """View route parameters that affect document rendering."""
     b: Union[int, str, None] = None
