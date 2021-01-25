@@ -13,6 +13,7 @@ import {ParCompiler} from "tim/editor/parCompiler";
 import {
     AnswerFieldType,
     AnswerTable,
+    RowCodec,
     IAskedJsonJson,
     IExplCollection,
     IHeader,
@@ -138,8 +139,10 @@ export function fixQuestionJson(json: IUnprocessedHeaders): IProcessedHeaders {
                 text: r,
                 type: "question",
             });
-        } else {
+        } else if (RowCodec.is(r)) {
             fixed.rows.push(r);
+        } else {
+            console.warn("Skipping invalid row:", r);
         }
     }
 

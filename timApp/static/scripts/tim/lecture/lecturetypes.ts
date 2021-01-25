@@ -1,5 +1,6 @@
 import moment, {Moment} from "moment";
 import {ReadonlyMoment} from "tim/util/utils";
+import * as t from "io-ts";
 import {IItem} from "../item/IItem";
 import {IGenericPluginMarkup} from "../plugin/attributes";
 import {DurationChoice} from "../ui/duration-picker.component";
@@ -56,6 +57,13 @@ export type AnswerFieldType =
     | "text"
     | "inputText"; // TODO matrix seems wrong
 
+export const RowCodec = t.type({
+    text: t.string,
+    type: t.string,
+    id: t.number,
+    columns: t.array(t.type({id: t.number})),
+});
+
 export interface IHeader {
     text: string;
     type: string;
@@ -72,7 +80,7 @@ export interface IRow extends IHeader {
 
 export interface IUnprocessedHeaders {
     headers: Array<IHeader | string>;
-    rows: Array<IRow | string>;
+    rows: Array<IRow | string | Record<string, never>>;
 }
 
 export interface IProcessedHeaders {
