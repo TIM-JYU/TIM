@@ -5,9 +5,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo variables.sh: Fill in appropriate variable values and comment this line. ; exit 1
 
 # Hostname for the TIM instance.
-# For local development, you can enable HTTPS by changing http -> https and installing a server in the host machine
-# that proxies to localhost port 81.
-# Some debugging tools may not work well with HTTPS.
 export TIM_HOST=http://localhost
 
 # Domain(s) for Caddy server (separate with comma and space).
