@@ -117,6 +117,8 @@ module.exports = {
             }
         ],
         "@typescript-eslint/consistent-indexed-object-style": "error",
+        "@typescript-eslint/no-confusing-void-expression": ["off", {"ignoreArrowShorthand": true}], // TODO enable
+        "@typescript-eslint/non-nullable-type-assertion-style": "off", // TODO enable (buggy right now)
         "arrow-body-style": "off",
         "arrow-parens": [
             "error",
