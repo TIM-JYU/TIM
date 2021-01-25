@@ -1955,9 +1955,12 @@ class VariableRelations {
     }
 
     getRankDefault(name, defaults) {
+        /*
         let result = this.rankDefaults[name];
         if (result === undefined) result = {};
         return {...defaults, ...result};
+         */
+        return {...defaults, ...this.rankDefaults[name]};
     }
 
     changePhase(phase) {
