@@ -11,8 +11,11 @@ echo variables.sh: Fill in appropriate variable values and comment this line. ; 
 export TIM_HOST=http://localhost
 
 # Domain(s) for Caddy server (separate with comma and space).
-# In production, remove the "http://" to get automatic HTTPS.
-export CADDY_DOMAINS='http://localhost'
+# By default, Caddy domain has no host so that IPs work too (in addition to localhost).
+# This is important when connecting to local TIM with other devices such as a mobile phone.
+# For production, replace with your server domain:
+# export CADDY_DOMAINS='domain.com'
+export CADDY_DOMAINS='http://'
 
 # Extra configuration to add to Caddyfile.
 export CADDY_EXTRA_CONFIG='
