@@ -164,15 +164,17 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     if savestate and cmnds.endswith('.sh'): # source works only for shell scripts
         source = 'source '
     # tehdään komentojono jossa suuntaukset
-    cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n" + extra + source + cmnds + \
-            " 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
     compile_cmnds = None
     if compile_commandline:
+        cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n{ " + extra + source + cmnds + \
+                "; } 1>>" + "~/" + stdoutf + " 2>>" + "~/" + stderrf + s_in + "\n"
         compile_cmnds = "#!/usr/bin/env bash\n(" + compile_commandline + \
                 ") 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + "\n"
         codecs.open(compf, "w", "utf-8").write(compile_cmnds)  # kirjoitetaan kääntämisskripti
         os.chmod(compf, 0o777)
     else:
+        cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n{ " + extra + source + cmnds + \
+                "; } 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
         try:
             os.remove(compf)
         except:
