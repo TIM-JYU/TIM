@@ -1353,6 +1353,33 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
                 language.sourcefiles[0].content = usercode
 
+            errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
+            warncondition = get_json_param(query.jso, "markup", "warncondition", False)
+            for file in language.sourcefiles:
+                if file.content is None:
+                    continue
+
+                if is_doc:
+                    file.content = replace_code(query.cut_errors, file.content)
+
+                if not file.content.startswith("File not found"):
+                    if errorcondition and re.search(errorcondition, file.content, flags=re.S):
+                        errormessage = get_json_param(query.jso, "markup", "errormessage",
+                                                    "Not allowed to use: " + errorcondition)
+                        return write_json_error(self.wfile, errormessage, result)
+
+                    if warncondition and re.search(warncondition, file.content, flags=re.S):
+                        warnmessage = "\n" + get_json_param(query.jso, "markup", "warnmessage",
+                                                            "Not recomended to use: " + warncondition)
+
+                    # print(os.path.dirname(language.sourcefilename))
+                    # print("Write file: " + language.sourcefilename)
+                    if file.content == "":
+                        file.content = "\n"
+
+                    file.content = language.before_save(language.before_code + file.content)
+                    slines = file.content
+
             # Write the program to the file =======================================================
             nofilesave = get_param(query, 'nofilesave', False)
             if not nofilesave:
@@ -1538,33 +1565,6 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             retdata = {}
 
             pwddir = ""
-
-            errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
-            warncondition = get_json_param(query.jso, "markup", "warncondition", False)
-            for file in language.sourcefiles:
-                if file.content is None:
-                    continue
-
-                if is_doc:
-                    file.content = replace_code(query.cut_errors, file.content)
-
-                if not file.content.startswith("File not found"):
-                    if errorcondition and re.search(errorcondition, file.content, flags=re.S):
-                        errormessage = get_json_param(query.jso, "markup", "errormessage",
-                                                    "Not allowed to use: " + errorcondition)
-                        return write_json_error(self.wfile, errormessage, result)
-
-                    if warncondition and re.search(warncondition, file.content, flags=re.S):
-                        warnmessage = "\n" + get_json_param(query.jso, "markup", "warnmessage",
-                                                            "Not recomended to use: " + warncondition)
-
-                    # print(os.path.dirname(language.sourcefilename))
-                    # print("Write file: " + language.sourcefilename)
-                    if file.content == "":
-                        file.content = "\n"
-
-                    file.content = language.before_save(language.before_code + file.content)
-                    slines = file.content
 
             t1startrun = time.time()
 
