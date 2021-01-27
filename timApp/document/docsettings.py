@@ -383,7 +383,7 @@ class DocSettings:
     def memo_minutes(self) -> bool:
         return self.__dict.get(self.memo_minutes_key, '')
 
-    def comments(self):
+    def comments(self) -> str:
         return self.__dict.get(self.comments_key)
 
     def sisu_require_manual_enroll(self):

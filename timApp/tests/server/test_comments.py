@@ -89,10 +89,10 @@ class CommentTest(NotifyTestBase):
         return comments
 
     def test_invalid_comment_delete_request(self):
-        self.json_post('/deleteNote', {}, expect_status=400)
+        self.json_post('/deleteNote', {}, expect_status=422)
 
     def test_invalid_comment_post_request(self):
-        self.json_post('/postNote', {}, expect_status=400)
+        self.json_post('/postNote', {}, expect_status=422)
 
     def test_nonexistent_note(self):
         self.get('/note/999',

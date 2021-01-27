@@ -5,6 +5,7 @@ from typing import Optional
 
 from sqlalchemy import true, and_
 
+from timApp.document.docinfo import DocInfo
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.timdb.exceptions import ItemAlreadyExistsException
@@ -214,7 +215,7 @@ class Folder(db.Model, Item):
             custom_filter: Any=None,
             query_options: Any=None,
             filter_user: Optional[User]=None,
-    ) -> List[DocEntry]:
+    ) -> List[DocInfo]:
         if relative_paths is not None:
             include_subdirs = True
             paths = [join_location(self.get_full_path(), path) for path in relative_paths]

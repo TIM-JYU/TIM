@@ -1,7 +1,7 @@
 """Routes for the clipboard."""
 from dataclasses import dataclass
+from typing import Optional
 
-from flask import Blueprint, request
 from flask import current_app
 from flask import g
 
@@ -20,12 +20,15 @@ from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
-from timApp.util.flask.requesthelper import verify_json_params, get_option, RouteException, NotExist
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
 
-clipboard = Blueprint('clipboard',
-                      __name__,
-                      url_prefix='')  # TODO: Better URL prefix.
+clipboard = TypedBlueprint(
+    'clipboard',
+    __name__,
+    url_prefix='',  # TODO: Better URL prefix.
+)
 
 
 @dataclass
@@ -50,11 +53,9 @@ def pull_doc_id(endpoint, values):
 
 
 @clipboard.route('/clipboard/cut/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
-def cut_to_clipboard(doc_id, from_par, to_par):
+def cut_to_clipboard(doc_id, from_par, to_par, area_name: Optional[str] = None):
     verify_logged_in()
     verify_edit_access(wd.docentry)
-
-    (area_name,) = verify_json_params('area_name', require=False)
 
     doc: Document = wd.docentry.document_as_current_user
     version_before = doc.get_version()
@@ -74,11 +75,16 @@ def cut_to_clipboard(doc_id, from_par, to_par):
 
 
 @clipboard.route('/clipboard/copy/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
-def copy_to_clipboard(doc_id, from_par, to_par):
+def copy_to_clipboard(
+        doc_id,
+        from_par,
+        to_par,
+        area_name: Optional[str] = None,
+        ref_doc_id: Optional[int] = None,
+):
     verify_logged_in()
     verify_view_access(wd.docentry)
 
-    (area_name, ref_doc_id) = verify_json_params('area_name', 'ref_doc_id', require=False)
     ref_doc = Document(ref_doc_id) if ref_doc_id is not None and ref_doc_id != doc_id else None
 
     doc = wd.docentry.document_as_current_user
@@ -92,11 +98,14 @@ def copy_to_clipboard(doc_id, from_par, to_par):
 
 
 @clipboard.route('/clipboard/paste/<int:doc_id>', methods=['POST'])
-def paste_from_clipboard(doc_id):
+def paste_from_clipboard(
+        doc_id,
+        par_before: Optional[str] = None,
+        par_after: Optional[str] = None,
+        as_ref: bool = False,
+):
     verify_logged_in()
     verify_edit_access(wd.docentry)
-
-    (par_before, par_after, as_ref) = verify_json_params('par_before', 'par_after', 'as_ref', require=False, default='')
 
     doc = wd.docentry.document_as_current_user
     version_before = doc.get_version()
@@ -174,12 +183,9 @@ def delete_from_source(doc_id):
 
 
 @clipboard.route('/clipboard', methods=['GET'])
-def show_clipboard():
+def show_clipboard(doc_id: int):
     verify_logged_in()
 
-    doc_id = get_option(request, 'doc_id', default=None, cast=int)
-    if doc_id is None:
-        raise RouteException('doc_id missing')
     d = get_doc_or_abort(doc_id)
     verify_view_access(d)
     doc = d.document

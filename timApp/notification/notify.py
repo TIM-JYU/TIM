@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 from threading import Thread
 from typing import Optional, List, DefaultDict, Set
 
-from flask import Blueprint, current_app, Flask
+from flask import current_app, Flask
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import verify_logged_in, verify_view_access, get_item_or_abort
@@ -22,14 +22,17 @@ from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.util.flask.requesthelper import verify_json_params, is_testing, is_localhost
+from timApp.util.flask.requesthelper import is_testing, is_localhost
 from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_error
 from timApp.util.utils import get_current_time, seq_to_str
 
-notify = Blueprint('notify',
-                   __name__,
-                   url_prefix='/notify')
+notify = TypedBlueprint(
+    'notify',
+    __name__,
+    url_prefix='/notify',
+)
 
 sent_mails_in_testing = []
 
@@ -44,16 +47,19 @@ def get_notify_settings(doc_id):
 
 
 @notify.route('/<int:doc_id>', methods=['POST'])
-def set_notify_settings(doc_id):
+def set_notify_settings(
+        doc_id: int,
+        email_comment_modify: bool,
+        email_comment_add: bool,
+        email_doc_modify: bool,
+):
     verify_logged_in()
     i = get_item_or_abort(doc_id)
     verify_view_access(i)
-    comment_modify, comment_add, doc_modify = verify_json_params('email_comment_modify', 'email_comment_add',
-                                                                 'email_doc_modify')
     get_current_user_object().set_notify_settings(i,
-                                                  comment_modify=comment_modify,
-                                                  comment_add=comment_add,
-                                                  doc_modify=doc_modify)
+                                                  comment_modify=email_comment_modify,
+                                                  comment_add=email_comment_add,
+                                                  doc_modify=email_doc_modify)
     db.session.commit()
     return ok_response()
 
