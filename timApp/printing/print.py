@@ -23,6 +23,7 @@ from timApp.printing.documentprinter import DocumentPrinter, PrintingError, LaTe
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.sqa import db
+from timApp.upload.upload import add_csp_if_not_pdf
 from timApp.util.flask.requesthelper import verify_json_params, get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, add_no_cache_headers, add_csp_header
 
@@ -286,7 +287,7 @@ def get_printed_document(doc_path):
 
     if not line:
         response = make_response(send_file(filename_or_fp=cached, mimetype=mime))
-        add_csp_header(response, 'sandbox allow-scripts')
+        add_csp_if_not_pdf(response, mime, 'sandbox allow-scripts')
     else:  # show LaTeX with line numbers
         styles = "p.red { color: red; }\n"
         styles += ".program {font-family: monospace; line-height: 1.0; }\n" + \

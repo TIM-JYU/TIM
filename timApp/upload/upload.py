@@ -40,9 +40,17 @@ upload = Blueprint('upload',
 
 @upload.after_request
 def set_csp(resp: Response):
-    if resp.mimetype != 'application/pdf': # Mac Safari needs this if
-        add_csp_header(resp)
+    mime = resp.mimetype
+    add_csp_if_not_pdf(resp, mime)
     return resp
+
+
+def add_csp_if_not_pdf(resp: Response, mime: str, value: str = 'sandbox'):
+    # The following platforms refuse to display PDFs in sandbox:
+    # * Mac Safari
+    # * Windows Chrome since January 2021
+    if mime != 'application/pdf':
+        add_csp_header(resp, value)
 
 
 def allowed_file(filename):
