@@ -17,13 +17,20 @@ class CachingTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc(initial_par='#- {plugin=textfield #t}')
         self.test_user_2.grant_access(d, AccessType.view)
+        self.test_user_3.grant_access(d, AccessType.view)
         db.session.commit()
         clear_doc_cache(d, None)
+        self.login_test3()
         self.check_not_cached(d)
         self.check_not_cached(d)  # cache is disabled by default
         d.document.set_settings({'cache': True})
         self.check_not_cached(d)  # was not in cache, added to cache
+        last = self.last_get
         self.check_is_cached(d)  # was in cache, fetched from cache
+
+        # Cached result should be the same as not cached.
+        self.assertEqual(last, self.last_get)
+
         self.check_is_cached(d)  # still in cache
         self.check_is_cached(d, {'unlock': True})  # value of unlock shouldn't affect caching
         self.check_not_cached(d, {'nocache': True})  # nocache should clear the cache
@@ -38,7 +45,7 @@ class CachingTest(TimRouteTest):
         self.login_test2()
         self.check_not_cached_and_then_cached(d)
 
-        self.login_test1()
+        self.login_test3()
         c = self.post_comment(par, public=False, text='test')
         nid = get_note_id_from_json(c)
         self.check_not_cached_and_then_cached(d)
@@ -46,14 +53,14 @@ class CachingTest(TimRouteTest):
         self.login_test2()
         self.check_is_cached(d)
 
-        self.login_test1()
+        self.login_test3()
         self.edit_comment(nid, True, 'test2')
         self.check_not_cached_and_then_cached(d)
 
         self.login_test2()
         self.check_not_cached_and_then_cached(d)
 
-        self.login_test1()
+        self.login_test3()
         self.edit_comment(nid, False, 'test2')
         self.check_not_cached_and_then_cached(d)
 
@@ -72,7 +79,7 @@ class CachingTest(TimRouteTest):
 
     def get_with_patch(self, d, query=None):
         with patch.object(routes, render_doc_view.__name__, wraps=render_doc_view) as m:  # type: Mock
-            self.get(d.url, query_string=query)
+            self.last_get = self.get(d.url, query_string=query)
         return m
 
     def test_cache_pregenerate(self):
