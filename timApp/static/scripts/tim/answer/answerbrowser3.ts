@@ -468,6 +468,7 @@ export class AnswerBrowserController
         }
         const isPeerReview = getViewName() == "review";
         this.isPeerReview = isPeerReview;
+        this.review = isPeerReview;
         this.peerReviewEnabled = this.viewctrl.docSettings.peer_review ?? false;
         if (!this.viewctrl.item.rights.teacher && isPeerReview) {
             this.showBrowseAnswers = false;
@@ -517,7 +518,6 @@ export class AnswerBrowserController
         this.filteredAnswers = [];
         this.anyInvalid = false;
         this.giveCustomPoints = false;
-        this.review = false;
         this.shouldFocus = false;
         this.alerts = [];
         this.feedback = "";
