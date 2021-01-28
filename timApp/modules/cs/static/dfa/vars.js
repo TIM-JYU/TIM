@@ -3770,7 +3770,8 @@ function setData(data) {
     let step1 = visual.maxStep() + 1;
     if ( params.animate) {
         if (newCall) new Animation(visual, elements.buttondiv);
-        step1 = 0;
+        //step1 = params.firstStep ?? 0;
+        step1 = params.firstStep ? params.firstStep : 0;
     }
     let step = variableRelations.runUntil(step1);
     visual.stepnumber = step;
@@ -3788,3 +3789,5 @@ export {setData, varsStringToJson, VariableRelations, compareValsAndRefs, compar
 // export default setData;
 
 // TODO: null viitteestä parempi ilmoitus kuin undefined
+// TODO: A pois s.Jasen
+
