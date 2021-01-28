@@ -21,11 +21,6 @@ allowed_cache_routes = {
     ViewRoute.View,
 }
 
-# Parameters that shouldn't affect caching.
-ignore_url_params = {
-    'unlock',
-}
-
 DEFAULT_EXPIRE_SECS = 3600 * 24 * 7
 
 
