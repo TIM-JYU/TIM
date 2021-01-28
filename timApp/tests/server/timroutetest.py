@@ -4,7 +4,6 @@ import io
 import json
 import re
 import socket
-import unittest
 import warnings
 from base64 import b64encode
 from functools import lru_cache
@@ -27,7 +26,7 @@ from timApp.document.document import Document
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
-from timApp.item.routes import create_item_direct, CreateItemModel
+from timApp.item.routes import create_item_direct
 from timApp.plugin import containerLink
 from timApp.plugin.containerLink import do_request
 from timApp.readmark.readparagraphtype import ReadParagraphType
@@ -691,14 +690,14 @@ class TimRouteTest(TimDbTest):
             self.assertEqual(path, resp['path'])
             de = DocEntry.find_by_path(path)
         else:
-            de = create_item_direct(CreateItemModel(
+            de = create_item_direct(
                 item_path=path,
                 item_type='document',
                 item_title=title,
                 copy=copy_from,
                 template=template,
                 cite=cite,
-            ))
+            )
             # TODO this isn't really correct but gives equivalent behavior compared to the True branch.
             #  The modifier should be corrected to be the current user in the True branch after
             #  calling DocEntry.find_by_path. After that, some tests need to be corrected.

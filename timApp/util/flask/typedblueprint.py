@@ -26,6 +26,8 @@ def use_typed_params(num_path_params: int = 0) -> Callable:
         params = OrderedDict(sig.parameters)
         for i in range(0, num_path_params):
             params.popitem(last=False)
+        if not params:
+            return func
         class_attrs = {k: v.default for k, v in params.items() if v.default is not Signature.empty}
         anns = {
             k: v.annotation for k, v in params.items() if v.annotation is not Signature.empty

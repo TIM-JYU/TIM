@@ -1,16 +1,15 @@
 """Routes for document view."""
 import html
 import time
-from dataclasses import dataclass
 from typing import Tuple, Optional, List, Union, Any, ValuesView
 
 import attr
 import filelock
 import sass
-from flask import Blueprint, render_template, make_response, Response, stream_with_context
 from flask import current_app
 from flask import flash
 from flask import redirect
+from flask import render_template, make_response, Response, stream_with_context
 from flask import request
 from flask import session
 from markupsafe import Markup
@@ -63,19 +62,22 @@ from timApp.user.user import User, check_rights
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
 from timApp.user.userutils import DeletedUserException
-from timApp.util.flask.requesthelper import verify_json_params, use_model, view_ctx_with_urlmacros, RouteException, \
+from timApp.util.flask.requesthelper import view_ctx_with_urlmacros, RouteException, \
     NotExist
 from timApp.util.flask.responsehelper import add_no_cache_headers
 from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
+from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_message, cache_folder_path
 from timApp.util.utils import remove_path_special_chars, seq_to_str
 
 DEFAULT_RELEVANCE = 10
 
-view_page = Blueprint('view_page',
-                      __name__,
-                      url_prefix='')
+view_page = TypedBlueprint(
+    'view_page',
+    __name__,
+    url_prefix='',
+)
 
 DocumentSlice = Tuple[List[DocParagraph], IndexedViewRange]
 ViewRange = Union[RequestedViewRange, IndexedViewRange]
@@ -203,14 +205,6 @@ def doc_access_info(doc_name):
     }, date_conversion=True)
 
 
-@dataclass
-class GetItemsModel:
-    folder: Optional[str] = None
-    folder_id: Optional[int] = None
-    recursive: bool = False
-    include_rights: bool = False
-
-
 @attr.s(auto_attribs=True)
 class ItemWithRights:
     i: Item
@@ -224,12 +218,16 @@ class ItemWithRights:
 
 
 @view_page.route("/getItems")
-@use_model(GetItemsModel)
-def items_route(args: GetItemsModel):
-    if args.folder is not None:
-        f = Folder.find_by_path(args.folder)
-    elif args.folder_id is not None:
-        f = Folder.get_by_id(args.folder_id)
+def items_route(
+        folder: Optional[str] = None,
+        folder_id: Optional[int] = None,
+        recursive: bool = False,
+        include_rights: bool = False,
+):
+    if folder is not None:
+        f = Folder.find_by_path(folder)
+    elif folder_id is not None:
+        f = Folder.get_by_id(folder_id)
     else:
         raise RouteException()
     if not f:
@@ -237,8 +235,8 @@ def items_route(args: GetItemsModel):
     if not f.is_root():
         verify_view_access(f)
 
-    items = get_items(f.path, recurse=args.recursive)
-    if args.include_rights:
+    items = get_items(f.path, recurse=recursive)
+    if include_rights:
         u = get_current_user_object()
         rights = get_rights_holders_all([i.id for i in items if u.has_manage_access(i)], order_by=BlockAccess.type)
         items = [ItemWithRights(i, rights[i.id]) for i in items]
@@ -863,28 +861,39 @@ def index_redirect():
     return redirect('/view')
 
 
-@dataclass
-class CreateItemModel:
-    item_path: str
-    item_type: str
-    item_title: str
-    cite: Optional[int] = None
-    copy: Optional[int] = None
-    template: Optional[str] = None
-    use_template: bool = True
-
-
 @view_page.route("/createItem", methods=["POST"])
-@use_model(CreateItemModel)
-def create_item_route(m: CreateItemModel):
+def create_item_route(
+        item_path: str,
+        item_type: str,
+        item_title: str,
+        cite: Optional[int] = None,
+        copy: Optional[int] = None,
+        template: Optional[str] = None,
+        use_template: bool = True,
+):
     if not app.config['ALLOW_CREATE_DOCUMENTS'] and not get_current_user_object().is_admin:
         raise AccessDenied('Creating items is disabled.')
-    return json_response(create_item_direct(m))
+    return json_response(create_item_direct(
+        item_path,
+        item_type,
+        item_title,
+        cite,
+        copy,
+        template,
+        use_template,
+    ))
 
 
-def create_item_direct(m: CreateItemModel):
-    item_path, item_type, item_title = m.item_path, m.item_type, m.item_title
-    cite_id, copy_id, template_name, use_template = m.cite, m.copy, m.template, m.use_template
+def create_item_direct(
+        item_path: str,
+        item_type: str,
+        item_title: str,
+        cite: Optional[int] = None,
+        copy: Optional[int] = None,
+        template: Optional[str] = None,
+        use_template: bool = True,
+):
+    cite_id, copy_id, template_name = cite, copy, template
 
     if use_template is None:
         use_template = True
@@ -908,21 +917,20 @@ def get_item(item_id: int):
 
 
 @view_page.route('/items/relevance/set/<int:item_id>', methods=["POST"])
-def set_blockrelevance(item_id: int):
+def set_blockrelevance(item_id: int, value: int):
     """
     Add block relevance or edit if it already exists for the block.
+    :param value: The relevance value.
     :param item_id: Item id.
     :return: Ok response.
     """
-    # TODO: Using the route with just an URL string (requires browser plugin).
 
     i = Item.find_by_id(item_id)
     if not i:
         raise NotExist('Item not found')
     verify_manage_access(i)
 
-    # TODO: Use dataclass.
-    relevance_value, = verify_json_params('value')
+    relevance_value = value
     # If block has existing relevance, delete it before adding the new one.
     blockrelevance = i.relevance
     if blockrelevance:
@@ -1046,19 +1054,12 @@ def unset_piece_size():
     return resp
 
 
-@dataclass
-class SetViewRangeModel:
-    pieceSize: int
-
-
 @view_page.route('/viewrange/set/piecesize', methods=["POST"])
-@use_model(SetViewRangeModel)
-def set_piece_size(args: SetViewRangeModel):
+def set_piece_size(pieceSize: int):
     """
     Add cookie for user defined view range (if isn't set, doc won't be partitioned).
-    :return: Response.
     """
-    piece_size = args.pieceSize
+    piece_size = pieceSize
     if not piece_size or piece_size < 1:
         raise RouteException("Invalid piece size")
     resp = make_response()
