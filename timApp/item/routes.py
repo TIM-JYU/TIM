@@ -252,10 +252,19 @@ def index_page():
 
 
 @view_page.route("/generateCache/<path:doc_path>")
-def gen_cache(doc_path: str):
+def gen_cache(
+        doc_path: str,
+        same_for_all: bool = False,
+        force: bool = False,
+):
     """Pre-generates document cache for the users with non-expired rights.
 
     Useful for exam documents to reduce server load at the beginning of the exam.
+
+    :param doc_path: Path of the document for which to generate the cache.
+    :param same_for_all: Whether to use same cache for all users.
+     This speeds up cache generation significantly.
+    :param force: Whether to force cache generation even if the existing cache seems up-to-date.
     """
 
     doc_info = DocEntry.find_by_path(doc_path, fallback_to_id=True)
@@ -283,13 +292,18 @@ def gen_cache(doc_path: str):
     total = len(users_uniq)
     digits = len(str(total))
     def generate():
+        first_cache = None
         for i, u in enumerate(users_uniq):
             yield f'{i + 1:>{digits}}/{total} {u.name}: '
             cr = check_doc_cache(doc_info, u, view_ctx, m, vp.nocache)
-            if cr.doc:
+            if cr.doc and not force:
                 yield f'already cached'
             else:
-                dr = render_doc_view(doc_info, m, view_ctx, u, False)
+                if first_cache is None or not same_for_all:
+                    dr = render_doc_view(doc_info, m, view_ctx, u, False)
+                    first_cache = dr
+                else:
+                    dr = first_cache
                 if dr.allowed_to_cache:
                     set_doc_cache(cr.key, dr)
                     yield 'ok'
