@@ -37,7 +37,7 @@ Adding new language to csPlugin:
 cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 filename_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 
-JAVAFX_VERSION = '14'
+JAVAFX_VERSION = '15.0.1'
 
 
 def sanitize_filename(s):

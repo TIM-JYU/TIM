@@ -145,9 +145,9 @@ RUN         cd  /tmp && \
             ${APT_CLEANUP}
 
 # JavaFX for OpenJDK
-RUN wget https://download2.gluonhq.com/openjfx/14/openjfx-14_linux-x64_bin-sdk.zip && \
-    unzip openjfx-14_linux-x64_bin-sdk.zip && \
-    rm openjfx-14_linux-x64_bin-sdk.zip
+RUN wget https://download2.gluonhq.com/openjfx/15.0.1/openjfx-15.0.1_linux-x64_bin-sdk.zip && \
+    unzip openjfx-15.0.1_linux-x64_bin-sdk.zip && \
+    rm openjfx-15.0.1_linux-x64_bin-sdk.zip
 
 # Rust (nightly)
 ENV CARGO_HOME=/cargo
@@ -181,10 +181,10 @@ RUN python3.8 -m pip install requests --upgrade && bash -c "${APT_CLEANUP}"
 # git
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
-RUN wget -q https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14%2B36/OpenJDK14U-jdk_x64_linux_hotspot_14_36.tar.gz && \
- tar -xf OpenJDK14U-jdk_x64_linux_hotspot_14_36.tar.gz && \
- rm OpenJDK14U-jdk_x64_linux_hotspot_14_36.tar.gz
-ENV PATH=$PWD/jdk-14+36/bin:$PATH
+RUN wget -q https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz && \
+ tar -xf OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz && \
+ rm OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz
+ENV PATH=$PWD/jdk-15.0.2+7/bin:$PATH
 RUN java -version
 # RUN bash -c "${APT_INSTALL} uuid-runtime && ${APT_CLEANUP}"
 # RUN uuidgen > /etc/machine-id
