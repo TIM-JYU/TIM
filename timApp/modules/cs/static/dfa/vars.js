@@ -903,26 +903,39 @@ class InitializedStructVariable extends StructVariable {
 
 class CreateInitializedStructVariable extends CreateVariable {
     // Creates initilized struct
-    // see: https://regex101.com/r/nfot3D/latest
+    // see: https://regex101.com/r/hN8WJy/latest   named class
+    // see: https://regex101.com/r/Tbvab7/latest   ad hoc struct
     // syntax:
     //    Struct $2 v a,b,d,d
-    //    s.People $2 a a,b,d,d
+    //    s.People $2 a,b,d,d
     static isMy(s, variables) {
-        let re = /^([Ss](truct)?(\.([\S]+))?) +([^ ]+) +([@\S]+) *(.*)?$/;
-        let r = re.exec(s);
-        if (!r) return undefined;
         let kind = "[";
-        let stclass = r[4];
+        let stclass = undefined;
+        let name = undefined;
+        let dir = ' ';
+        let type = 'A';
+
+        let re1 = /^(?:[Ss](?:truct)?\.([\S]+))? +([^ ]+) *(.*)?$/;
+        let re2 = /^(?:[Ss](?:truct)?) +([^ ]+) +([@\S]+) *(.*)?$/;
+        let r = re1.exec(s);
+        if (r) { // is named class
+            stclass = r[1];
+            name = r[2];
+            type = 'A';
+        } else { // is ad hoc class
+            r = re2.exec(s);
+            if (!r) return undefined;
+            name = r[1];
+            let td = (r[2] + "  ").toUpperCase();
+            type = td[0]
+            dir = td[1];
+        }
         let sclass = undefined;
         if (stclass) {
             sclass = variables.findClass(stclass);
             if (!sclass) throw `Luokkaa ${stclass} ei löydy! `;
         }
-        let name = r[5];
-        let vals = r[7];
-        let td = (r[6] + "  ").toUpperCase();
-        let type = td[0]
-        let dir = td[1];
+        let vals = r[3];
         if (!"ARVCS".includes(type)) throw `${name} väärä tyyppi tietueelle.  Pitää olla A, C, R tai V! `
 
         return [new CreateInitializedStructVariable(() =>
@@ -1191,6 +1204,7 @@ const combinedRefCommands = [
     // CreateArrayVariable,
     CreateInitialized2DArrayVariable,
     CreateInitializedArrayVariable,
+    CreateInitializedStructVariable,
     CreateFindVariable,
 ];
 
@@ -1200,7 +1214,7 @@ class CreateReferenceAndObject extends CreateRefecenceVariable {
     // syntax: ref aku -> new $1 Aku
     // syntax: ref aku -> a $1 v 3
     // syntax: ref aku -> a $1 v 1,2,34
-    static isMy(s) {
+    static isMy(s, variables) {
         let re = /^[Rr](ef|eference)? +([!:\-+$.@\w\d]+) *-> *(.*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
@@ -1208,7 +1222,7 @@ class CreateReferenceAndObject extends CreateRefecenceVariable {
         let name = r[2];
         let cmds = undefined;
         for (let cmdCls of combinedRefCommands) {
-            cmds = cmdCls.isMy(r[3]);
+            cmds = cmdCls.isMy(r[3], variables);
             if (cmds) break;
         }
         if (!cmds) return undefined;
@@ -1248,15 +1262,35 @@ class AssignTo extends Command {
         this.value = value;
     }
 
+    findRefVar(variables, name) {
+        let varTo = variables.findVar(name);
+        if (!varTo) {
+            if (variables.isCodeMode()) {
+                let re = /^(.*)([.\[].*)$/;
+                let r = re.exec(name);
+                if (!r) return [name, varTo];
+                let refvar = variables.findVar(r[1]);
+                if (refvar && refvar.isRef()) {
+                    name = refvar.refs[0].name + r[2];
+                    varTo = variables.findVar(name);
+                }
+            }
+        }
+        return [name, varTo];
+    }
+
     run(variables) {
         let error = "";
-        let varTo = variables.findVar(this.to);
-        if (!varTo) return `Muuttujaa ${this.to} ei löydy!`;
+        let [to, varTo] = this.findRefVar(variables,this.to);
+        if (!varTo)
+            return `Muuttujaa ${to} ei löydy!`;
         if (varTo.isArray()) {
-            error += `${this.to} on taulukko. Ei saa sijoittaa koko taulukkoon! `;
+            error += `${to} on taulukko. Ei saa sijoittaa koko taulukkoon! `;
             varTo = varTo.vars[0];
         }
-        return error + varTo.assign(this.value, variables);
+        let [value, valueVar] = this.findRefVar(variables, this.value);
+        if (valueVar) value = valueVar.value;
+        return error + varTo.assign(value, variables);
     }
 }
 
@@ -1868,6 +1902,10 @@ class PhaseVariables {
         return this.variableRelations.isStepMode();
     }
 
+    isCodeMode() {
+        return this.variableRelations.isCodeMode();
+    }
+
     solveLazy() {
         for (let v of this.flatvars) {
             let error = v.solveLazy(this);
@@ -1995,6 +2033,10 @@ class VariableRelations {
 
     isStepMode() {
         return this.mode === "step";
+    }
+
+    isCodeMode() {
+        return this.mode === "code";
     }
 
     isMarkErrors() {
@@ -2395,10 +2437,10 @@ const svgVariableMixin = {
         // align 1 aligns from left
         let forcedh = undefined;
         if (this.graphAttributes) {
-            if (this.graphAttributes.x) x = this.graphAttributes.x;
-            if (this.graphAttributes.y) y = this.graphAttributes.y;
-            if (this.graphAttributes.sx) x += this.graphAttributes.sx;
-            if (this.graphAttributes.sy) y += this.graphAttributes.sy;
+            x = SVGUtils.grval(this,"x", x);
+            y = SVGUtils.grval(this,"y", y);
+            x += SVGUtils.grval(this,"sx", 0);
+            y += SVGUtils.grval(this,"sy", 0);
             // if (this.graphAttributes.w) w = this.graphAttributes.w;
             // if (this.graphAttributes.w) h = this.graphAttributes.h;
             forcedw = SVGUtils.grval(this,"w", forcedw)
@@ -2482,7 +2524,8 @@ const svgVariableMixin = {
         if (this.parent && !this.parent.vertical) {
             textx = x;
             texty = y - this.parent.height + 5; //
-            if (this.parent.isArray()) texty -= 8;// - 3;
+            if (this.texty) texty = this.texty;
+            else if (this.parent.isArray()) texty -= 8;// - 3;
             textalign = "middle";
             textsize = "10px";
         }
@@ -2490,7 +2533,7 @@ const svgVariableMixin = {
             text = text.replace(this.parent.name + ".", "");
             textsize = "10px";
         }
-        if ( this.label && this.label.startsWith("$")) {
+        else if ( this.label && this.label.startsWith("$")) {
             texty -= 9;
         }
 
@@ -2599,10 +2642,10 @@ const svgNullVariableMixin = {
         // align 1 aligns from left
         let svg = "";
         if (this.graphAttributes) {
-            if (this.graphAttributes.x) x = this.graphAttributes.x;
-            if (this.graphAttributes.y) y = this.graphAttributes.y;
-            if (this.graphAttributes.sx) x += this.graphAttributes.sx;
-            if (this.graphAttributes.sy) y += this.graphAttributes.sy;
+            x = SVGUtils.grval(this,"x", x);
+            y = SVGUtils.grval(this,"y", y);
+            x += SVGUtils.grval(this,"sx", 0);
+            y += SVGUtils.grval(this,"sy", 0);
             //  if (this.graphAttributes.h) hfactor = this.graphAttributes.h;
         }
         this.x = x;
@@ -2647,10 +2690,10 @@ const svgSimpleReferenceVariableMixin = {
         // align 1 aligns from left
         let svg = "";
         if (this.graphAttributes) {
-            if (this.graphAttributes.x) x = this.graphAttributes.x;
-            if (this.graphAttributes.y) y = this.graphAttributes.y;
-            if (this.graphAttributes.sx) x += this.graphAttributes.sx;
-            if (this.graphAttributes.sy) y += this.graphAttributes.sy;
+            x = SVGUtils.grval(this,"x", x);
+            y = SVGUtils.grval(this,"y", y);
+            x += SVGUtils.grval(this,"sx", 0);
+            y += SVGUtils.grval(this,"sy", 0);
             //  if (this.graphAttributes.h) hfactor = this.graphAttributes.h;
         }
         this.x = x;
@@ -2667,6 +2710,7 @@ const svgSimpleReferenceVariableMixin = {
         if (this.parent && !this.parent.vertical) {
             textx = x;
             texty = y - this.parent.height - 3;
+            if ( this.texty ) texty = this.texty;
             textalign = "middle";
             textsize = "10px";
         }
@@ -2716,12 +2760,12 @@ const svgArrayVariableMixin = {
         let nw = undefined;
         let dir = undefined;
         if (this.graphAttributes) {
-            if (this.graphAttributes.x) x = this.graphAttributes.x;
-            if (this.graphAttributes.y) y = this.graphAttributes.y;
-            if (this.graphAttributes.sx) x += this.graphAttributes.sx;
-            if (this.graphAttributes.sy) y += this.graphAttributes.sy;
-            if (this.graphAttributes.w) nw = this.graphAttributes.w;
-            if (this.graphAttributes.dir !== undefined ) dir = this.graphAttributes.dir;
+            x = SVGUtils.grval(this,"x", x);
+            y = SVGUtils.grval(this,"y", y);
+            x += SVGUtils.grval(this,"sx", 0);
+            y += SVGUtils.grval(this,"sy", 0);
+            nw = SVGUtils.grval(this,"w", nw);
+            dir = SVGUtils.grval(this,"dir", dir);
             // if (this.graphAttributes.h) hfactor = this.graphAttributes.h;
         }
         this.topy = y;
@@ -2877,9 +2921,7 @@ const svgArrayVariableMixin = {
 
 const svgStructVariableMixin = {
     toSVG(x, y, w, h, dx, dy) {
-        // draw array as variables side by side
-        // and indesies over it. If there is over/under indexing
-        // draw those before and after array
+        // draw struct as emty boxes side by side
         let nh = 1;
         let nw = undefined;
         let dir = 0;
@@ -2888,13 +2930,13 @@ const svgStructVariableMixin = {
             if (ca.dir) dir = ca.dir;
         }
         if (this.graphAttributes) {
-            if (this.graphAttributes.x) x = this.graphAttributes.x;
-            if (this.graphAttributes.y) y = this.graphAttributes.y;
-            if (this.graphAttributes.sx) x += this.graphAttributes.sx;
-            if (this.graphAttributes.sy) y += this.graphAttributes.sy;
-            if (this.graphAttributes.w) nw = this.graphAttributes.w;
-            if (this.graphAttributes.h) nh = this.graphAttributes.h;
-            if (this.graphAttributes.dir) dir = this.graphAttributes.dir;
+            x = SVGUtils.grval(this,"x", x);
+            y = SVGUtils.grval(this,"y", y);
+            x += SVGUtils.grval(this,"sx", 0);
+            y += SVGUtils.grval(this,"sy", 0);
+            nw = SVGUtils.grval(this,"w", nw);
+            nh = SVGUtils.grval(this,"h", nh);
+            dir = SVGUtils.grval(this,"dir", dir);
         }
         if (this.dir !== undefined && this.dir > " ") dir = this.dir;
         let vertical = true;
@@ -2969,6 +3011,7 @@ const svgStructVariableMixin = {
             }
         }
 
+        let hortexty = origy - dy - 22/2 + 5; // suggest texty for dir === 1
         let maxx = x;
         let maxy = y;
 
@@ -2982,11 +3025,13 @@ const svgStructVariableMixin = {
                 let refw = Math.min(clientw, w);
                 let dropy = h/4;
                 if (i === lastRefi) dropy = ey;
+                if (!vertical) v.texty = hortexty;
                 // draw a ref a bit lower, smaller and without shadow
                 svg += v.toSVG(xv, yv + dropy, refw, h * ymul * 0.8, 0, 0, true, textalign, forcedw);
             } else {
                 let dropy = h/4;
                 if (vertical) dropy = 0;
+                else v.texty = hortexty;
                 svg += v.toSVG(xv, yv+ dropy, clientw, h * ymul, dx, dy, true, textalign, forcedw);
             }
             xv += mx * bw; // v.width;

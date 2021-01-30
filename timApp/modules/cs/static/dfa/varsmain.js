@@ -74,49 +74,20 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-rank global svgw: 400
-rank 0 y:40, x:120, yextra: 0, rev: 1, w: 2, sref: 1, namelabel: 3, nonull: 1
-rank 1 y:40, x:150, yextra: 0, rev: 1, w: 3, np: 2
-gn 8010: h: 2 
-gn 8040: h: 2
-text {x:30, y:10} Kutsupino muuttujien osalta
-text {x:240, y:10} Kekomuisti (heap)
-code: String s1 = "eka";
-ref s1:100
-new 8010 eka
-s1 -> 8010
-
-code: String s2 = new String("eka");
-ref s2:104
-new 8040 toka
-s2 -> 8040
-
-code: int i1 = 11;
-val i1:108
-i1=11
-
-code: int i2 = 10 + 1;
-val i2:112
-i2=11
-
-code: Integer io1 = new Integer(3);
-ref io1:116
-new 8070 3
-io1->8070
-
-code: Integer io2 = new Integer(3);
-ref io2:120
-new 8080 3
-io2->8080
-new 8090 ""
-
+g dir: 1, w: 0.7
+class Aika: h v, m v
+ref a1 -> s.Aika *+1040 12 15
+ref a2
+s.Aika +*$3 13 18
+#ref a3 -> s.Aika +$4 12 15
 `;
 setData({
     code: code, args: "1001", params:
-        {mode: "static", errorlevel: 0, animate: "code", allowLazy: true}
+        {mode: "code", errorlevel: 3, xanimate: "code", allowLazy: false}
 });
 
-const code2 = `
+if (false) {
+    const code2 = `
 Ref susi
 New $1 Susi
 susi -> $1
@@ -127,13 +98,16 @@ susi -> $1
 // let vars2 =  new VariableRelations(code2, {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true});
 // vars1.runUntil();
 // vars2.runUntil();
-let diff =  compareValsAndRefs(code, code2);
-console.log(diff);
+    let diff = compareValsAndRefs(code, code2);
+    console.log(diff);
 // BYCODEBEGIN
 // BYCODEEND
 
-let data = {answer_call_data: {markup: {fullprogram:
-`
+    let data = {
+        answer_call_data: {
+            markup: {
+                fullprogram:
+                    `
 jarray t1 v5x4 6 3 2 9 | 0 44 0 22 | 0  0 55 | 33 | 0 0 81
 ref tp1:t1 -> t1
 jarray t v5x4
@@ -142,8 +116,10 @@ ref tp:t -> t
 t[0][3] = 9
 // BYCODEEND
 `
-}}, save_object: { usercode:
-`
+            }
+        }, save_object: {
+            usercode:
+                `
 t[0][3] = 91
 t[0][2] = 2
 t[0][1] = 3
@@ -158,9 +134,10 @@ t[3][0] = 33
 
 t[4][2] = 81
 `
-}};
-let tcode =
-`
+        }
+    };
+    let tcode =
+        `
 t[0][0] = 6
 t[0][1] = 3
 t[0][2] = 2
@@ -186,5 +163,6 @@ t[4][1] = 0
 t[4][2] = 81
 t[4][3] = 0
 `;
-let diff2 = compareWithUserCode(data, tcode);
-console.log(diff2);
+    let diff2 = compareWithUserCode(data, tcode);
+    console.log(diff2);
+}
