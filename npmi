@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [ ! -d "timApp/modules/cs/jsav" ]; then
+  echo "ERROR: JSAV submodule is missing! Did you run \`git submodule update --init\` before running this?"
+  exit 1
+fi
+
 set -e
 
 # When building JSAV, don't use simply "npm install" because it also installs testing-related stuff such as PhantomJS.
