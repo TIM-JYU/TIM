@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if [ ! -d "timApp/modules/cs/jsav" ]; then
+if [ ! -f "timApp/modules/cs/jsav/.git" ]; then
   echo "ERROR: JSAV submodule is missing! Did you run \`git submodule update --init\` before running this?"
   exit 1
 fi
