@@ -82,6 +82,7 @@ ref root
 s.Item item1 1
 s.Item item2 2
 s.Item item3 3
+g firstStep
 s.Item item4 4
 s.Item item5 5
 gn item4: sx: 100
@@ -99,7 +100,7 @@ s.Item i3 8
 `;
 setData({
     code: code, args: "1001", params:
-        {mode: "step,code", errorlevel: 3, xanimate: "code", allowLazy: false}
+        {mode: "step,code", errorlevel: 3, animate: "commands", allowLazy: false}
 });
 
 if (false) {

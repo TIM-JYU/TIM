@@ -2188,6 +2188,19 @@ class VariableRelations {
     }
 
 
+    findFirstStep() {
+        // Returns next step nro of g firstStep command
+        let nr = 0;
+        let lastlinenr = 0;
+        for (let cmd of this.commands) {
+            if (cmd.graphAttributes && cmd.graphAttributes.includes("firstStep"))
+                return nr+1;
+            nr++;
+        }
+        return 0;
+    }
+
+
     /*!
      * Compare model (this) to student (vars2) and
      * return diffs
@@ -3372,7 +3385,7 @@ class VisualSVGVariableRelations {
             this.elements.codediv.innerHTML = "";
             let [prev, next] = this.getPrevNextStepNumbers(this.stepnumber);
             for (let code of this.variableRelations.allCodeList) {
-                if (linenr >= this.firstStep) {
+                if (linenr >= this.firstStep+1) {
                     let ns = String(linenr).padStart(2, '0');
                     let curr = "";
                     let text = this.encodeHTML(code.code);
@@ -3870,6 +3883,8 @@ function setData(data) {
         if (newCall) new Animation(visual, elements.buttondiv);
         //step1 = params.firstStep ?? 0;
         step1 = params.firstStep ? params.firstStep : 0;
+        if (step1 === 0)
+            step1 = visual.variableRelations.findFirstStep();
         visual.firstStep = step1;
     }
     let step = variableRelations.runUntil(step1);
