@@ -75,32 +75,41 @@ t -> $4
 */
 const code = `
 rank 1: rd 1, ax=120, ay=100, rd: 1, dx: 100
-rank 0: rd: 1
-g w:1, r:0
+rank 0, rd: 1
+g w:1, r:0, snap: 0 1
 class Item: value V, next SR
 ref root
 s.Item item1 1
 s.Item item2 2
 s.Item item3 3
-g firstStep
 s.Item item4 4
-s.Item item5 5
-gn item4: sx: 100
+
 root -> item1
 item1.next -> item2
 item2.next -> item3
 item3.next -> item4
-root.next.value = 6
-root.next.next.next.value=root.value
-g rank 1
+g firstStep, r 1, sx: 100
+CODE: // Uusi apuviite
 ref p
+CODE: /// Alkuun
 p = root
-ref p2
-s.Item i3 8
+CODE: /// Eteenpäin, etsitään 3
+p = p.next
+CODE: // Eteenpäin kunnes p.value == 3
+p = p.next
+CODE: /// Luodaan uusi alkio
+ref uusi -> s.Item item5 5
+gn item5: r 1
+CODE: /// Ja tämän perään 3:n seuraava
+uusi.next = p.next
+CODE: /// Tämän 3:n perään
+p.next = uusi
+gn item4: sx: 80
+gn item5: sx: -15, sy: -70
 `;
 setData({
     code: code, args: "1001", params:
-        {mode: "step,code", errorlevel: 3, animate: "commands", allowLazy: false}
+        {mode: "step,code", errorlevel: 3, xanimate: "commands", allowLazy: false}
 });
 
 if (false) {

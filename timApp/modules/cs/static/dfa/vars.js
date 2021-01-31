@@ -1743,9 +1743,10 @@ class PhaseVariables {
         this.moveName(ga, "rd", "rankdir");
         name = this.cleanName(name);
         if (global)
-            this.variableRelations.globalNamedGraphAttributes[name] = ga;
+            this.variableRelations.globalNamedGraphAttributes[name] =
+                {...this.variableRelations.globalNamedGraphAttributes[name], ...ga};
         else
-            this.namedGraphAttributes[name] = ga;
+            this.namedGraphAttributes[name] = {...this.namedGraphAttributes[name], ...ga};
     }
 
     setGraphAttributes(ga) {
