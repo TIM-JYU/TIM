@@ -233,6 +233,46 @@ class Command extends PrgObject {
         super();
     }
 
+    findVarForAssign(variables, name, refvalue) {
+        // in mode code solve things like a.b a.next.next
+        let varTo = variables.findVar(name);
+        if (varTo && varTo.isRef() && variables.isCodeMode() && varTo.refs.length > 0) {
+            if ( refvalue ) return [name, varTo];  // p1 = p2;
+            let refvar = varTo.refs[0];
+            return [refvar.name, refvar];
+        }
+        while (!varTo && variables.isCodeMode()) {
+            // see https://regex101.com/r/PXDieklatest
+            let re = /^([^.\[]*)([.\[].*)$/;
+            let r = re.exec(name);
+            if (!r) return [name, varTo];
+            let refvar = variables.findVar(r[1]);
+            let newname = r[1];
+            let rest = r[2];
+            if (refvar && refvar.isRef() && refvar.refs.length > 0) {
+                // if ( refvalue ) return [name, refvar];  // p1 = p2;
+                newname = refvar.refs[0].name;
+                name = newname + rest;
+                varTo = variables.findVar(name);
+            }
+            if (!varTo && newname) { // tyr yo solve refs like p4.a.b.a.h
+                // see https://regex101.com/r/abLJSw/latest
+                let re2 = /^([.\[][^.\[]*)([.\[].*)$/;
+                r = re2.exec(rest);
+                if (!r) return [name, varTo];
+                name = newname + r[1];
+                refvar = variables.findVar(name);
+                if (!refvar) break;
+                if (refvar && refvar.isRef() && refvar.refs.length > 0) {
+                    // if ( refvalue ) return [name, refvar];  // p1 = p2;
+                    name = refvar.refs[0].name + r[2];
+                    varTo = variables.findVar(name);
+                }
+            }
+        }
+        return [name, varTo];
+    }
+
     /*!
      * Runs the command and may use PhaseVariable object (variables).
      * Mostly variables is needed to find other variables
@@ -358,7 +398,7 @@ class Variable extends PrgObject {
         }
         let isRef = this.isRef() || force;  // Was originally ref?
 
-        if (variables.isStepMode() ||
+        if (!variables.isStaticMode() ||
             this.refs.length > 0 && this.refs[0] === nullRef) {
             // step modessa viite korvaa
             if (this.refs.length === 0) this.refs.push(objTo);
@@ -517,7 +557,7 @@ class NullVariable extends Variable {
     }
 
     isRef() {
-        return false;
+        return true;
     }
 
     setCount(n, variables) {
@@ -569,8 +609,8 @@ class CreateValueVariable extends CreateVariable {
         let re = /^[Vv](al|alue)? +((?:[!@.+\-\w\d]+):?(?:(?:[^="\n]+)|"[^"\n]+")?) *(<-|=|:=|) *([^\n]+|)$/;
         let r = re.exec(s);
         if (!r) return undefined;
-        let name = r[2];
-        let value = r[4];
+        let name = r[2].trim();
+        let value = r[4].trim();
         if (!r[3] && value === "") value = undefined;
         return [new CreateVariable(
             () => new ValueVariable(name, value, undefined, 0))];
@@ -1262,33 +1302,27 @@ class AssignTo extends Command {
         this.value = value;
     }
 
-    findRefVar(variables, name) {
-        let varTo = variables.findVar(name);
-        if (!varTo) {
-            if (variables.isCodeMode()) {
-                let re = /^(.*)([.\[].*)$/;
-                let r = re.exec(name);
-                if (!r) return [name, varTo];
-                let refvar = variables.findVar(r[1]);
-                if (refvar && refvar.isRef()) {
-                    name = refvar.refs[0].name + r[2];
-                    varTo = variables.findVar(name);
-                }
-            }
-        }
-        return [name, varTo];
-    }
-
     run(variables) {
         let error = "";
-        let [to, varTo] = this.findRefVar(variables,this.to);
+        let refvalue = undefined;
+        if (variables.isCodeMode()) { // check for ref1 = ref2
+            // refvalue = variables.findVar(this.value);
+            refvalue = this.findVarForAssign(variables,this.value, true)[1];
+            if ( !(refvalue && refvalue.isRef())) refvalue = undefined;
+        }
+        let [to, varTo] = this.findVarForAssign(variables,this.to, refvalue);
         if (!varTo)
             return `Muuttujaa ${to} ei löydy!`;
         if (varTo.isArray()) {
             error += `${to} on taulukko. Ei saa sijoittaa koko taulukkoon! `;
             varTo = varTo.vars[0];
         }
-        let [value, valueVar] = this.findRefVar(variables, this.value);
+        if (refvalue && varTo.isRef()) {
+            if ( refvalue.refs.length > 0)
+                refvalue = refvalue.refs[0];
+            return error + varTo.addRef(refvalue, variables);
+        }
+        let [value, valueVar] = this.findVarForAssign(variables, this.value);
         if (valueVar) value = valueVar.value;
         return error + varTo.assign(value, variables);
     }
@@ -1297,10 +1331,10 @@ class AssignTo extends Command {
 
 class CreateClass extends Command {
     // Creates a class for new structures
-    // see: https://regex101.com/r/wWtcI5/1/
+    // see: https://regex101.com/r/wWtcI5/latest/
     // syntax: class id: v, name: s, address: s
     static isMy(s) {
-        let re = /^class ([^: ]*)(: *| +)(.*)$/gm;
+        let re = /^[Cc]lass ([^: ]*)(: *| +)(.*)$/gm;
         let r = re.exec(s);
         if (!r) return undefined;
         let name = r[1];
@@ -1354,7 +1388,10 @@ class SetCount extends Command {
     run(variables) {
         let array = variables.findVar(this.arrayName);
 
-        let varTo = variables.findVar(this.arrayName + ".count");
+        let varTo = this.findVarForAssign(variables, this.arrayName + ".count")[1];
+
+        // next is just for case when there is self made count attribute
+        // let varTo = variables.findVar(this.arrayName + ".count");
         if (varTo) {
             return varTo.assign(this.count, variables);
         }
@@ -1362,6 +1399,9 @@ class SetCount extends Command {
 
         if (!array) return `Taulukkoa ${this.arrayName} ei löydy! `;
         // Only list accepts this
+        if (variables.isCodeMode() && !array.isArray() && array.isRef()) {
+            array = array.refs[0];
+        }
         return array.setCount(this.count, variables);
     }
 }
@@ -1510,7 +1550,7 @@ class SetRankDefaults extends Command {
     //  Rank 0 dx: 10
     //  Rank global dy: 30
     static isMy(s) {
-        let re = /^[Rr]ank * ([\S]*) * ([^\n]*)$/gm;
+        let re = /^[Rr]ank * ([^ ,:]*)[ ,:]+([^\n]*)$/gm;
         let r = re.exec(s);
         if (!r) return undefined;
         return [new SetRankDefaults(r[1], r[2])];
@@ -1726,6 +1766,7 @@ class PhaseVariables {
     }
 
     setRankDefaults(name, ga) {
+        this.moveName(ga, "rd", "rankdir");
         if (this.variableRelations.rankDefaults[name] === undefined )
             this.variableRelations.rankDefaults[name] = {};
         this.variableRelations.rankDefaults[name] =
@@ -1826,12 +1867,14 @@ class PhaseVariables {
         if (variable.rank !== undefined) this.lastRank = variable.rank;
         variable.graphAttributes = this.graphAttributes;
         this.clearAttributes();
+        /*
         if (variable.sclass) {
             if (variable.sclass.graphAttributes) {
                 variable.graphAttributes = {...variable.graphAttributes,
                   ...variable.sclass.graphAttributes};
             }
         }
+        */
         this.addFlat(variable); // cleans the name
         this.varsmap[variable.name] = variable;
     }
@@ -1941,7 +1984,8 @@ class VariableRelations {
      * \param string s variables as a string representation
      * \param object params
      *     - mode: "step" allow change ref value
-     *             "static" adda extra wrong ref when new ref assign
+     *             "static" add extra wrong ref when new ref assign
+     *             "code"  allow code like substitutions like p.n = 5
      *     - errorlevel: 0 = no errors show
      *                   1 = no textual error but wrong refs red
      *                   2 = just textual errors
@@ -1981,7 +2025,8 @@ class VariableRelations {
             if (params.animate === "code") this.animate = 1;
             if (params.animate === "commands") this.animate = 2;
         }
-        if (this.animate > 0) this.mode = "step";
+        if (this.animate > 0)
+            this.mode = "step" + this.isCodeMode() ? ",code" : "";
         this.errorlevel = Math.max(0, Math.min(this.errorlevel, 3));
         this.commands = [];
         this.allCodeList = [];
@@ -2028,15 +2073,15 @@ class VariableRelations {
     }
 
     isStaticMode() {
-        return this.mode === "static";
+        return this.mode.includes("static");
     }
 
     isStepMode() {
-        return this.mode === "step";
+        return this.mode.includes("step");
     }
 
     isCodeMode() {
-        return this.mode === "code";
+        return this.mode.includes("code");
     }
 
     isMarkErrors() {
@@ -3279,13 +3324,16 @@ class VisualSVGVariableRelations {
         modelRank = variableRelations.getRankDefault("global", modelRank);
         let rankDx = modelRank.dx || 143;
 
-        const modelRankS = JSON.stringify(modelRank);
+        // const modelRankS = JSON.stringify(modelRank);
 
         let ranks = []; // 0 = stack, 1 = heap
         for (let i = 0; i < 10; i++) {
-            let r = variableRelations.getRankDefault(i, JSON.parse(modelRankS));
-            r.x += i * rankDx;
-            r.ax += i * rankDx;
+            let rv = variableRelations.getRankDefault(i);
+            let r = variableRelations.getRankDefault(i, modelRank);
+            if (rv.ax === undefined) r.ax += i * rankDx;
+            if (rv.x === undefined) r.x = r.ax;
+            if (rv.y === undefined) r.y = r.ay;
+            if (rv.dir === undefined) r.dir = r.rankdir;
             ranks.push(r);
         }
 
@@ -3295,7 +3343,11 @@ class VisualSVGVariableRelations {
             currentRank = r;
             let result = ranks[r];
             if (result !== undefined) return result;
-            result = variableRelations.getRankDefault(r, JSON.parse(modelRankS));
+            let rv = variableRelations.getRankDefault(r);
+            result = variableRelations.getRankDefault(r, modelRank);
+            if (rv.x === undefined) result.x = result.ax;
+            if (rv.y === undefined) result.y = result.ay;
+            if (rv.dir === undefined) result.dir = result.rankdir;
             ranks[r] = result;
             return result;
         }
@@ -3320,16 +3372,18 @@ class VisualSVGVariableRelations {
             this.elements.codediv.innerHTML = "";
             let [prev, next] = this.getPrevNextStepNumbers(this.stepnumber);
             for (let code of this.variableRelations.allCodeList) {
-                let ns = String(linenr).padStart(2, '0');
-                let curr = "";
-                let text = this.encodeHTML(code.code);
-                if (text === "CODE: END" || text === "END") {
-                    ns = "  ";
-                    text = "";
+                if (linenr >= this.firstStep) {
+                    let ns = String(linenr).padStart(2, '0');
+                    let curr = "";
+                    let text = this.encodeHTML(code.code);
+                    if (text === "CODE: END" || text === "END") {
+                        ns = "  ";
+                        text = "";
+                    }
+                    if (prev <= code.stepnumber && code.stepnumber <= next)
+                        curr = "current";
+                    this.addCode(`<pre class="step ${curr}">${ns} ${text}</pre>`);
                 }
-                if (prev <= code.stepnumber && code.stepnumber <= next)
-                    curr = "current";
-                this.addCode(`<pre class="step ${curr}">${ns} ${text}</pre>`);
                 linenr++;
             }
         }
@@ -3359,18 +3413,16 @@ class VisualSVGVariableRelations {
 
             for (let v of phase.vars) { // stack vars (local normal vars)
                 // join named attributes before in place attributes
-                let gn = phase.variableRelations.globalNamedGraphAttributes[v.name];
-                if (gn !== undefined) {
-                    v.graphAttributes = {...gn, ... v.graphAttributes};
-                    let r = v.graphAttributes.rank;
-                    if ( r !== undefined) v.rank = r;
+                let graphClass = undefined;
+                if (v.sclass && v.sclass.graphAttributes) {
+                    graphClass = v.sclass.graphAttributes;
                 }
-                gn = phase.namedGraphAttributes[v.name];
-                if (gn !== undefined) {
-                    v.graphAttributes = {...gn, ... v.graphAttributes};
-                    let r = v.graphAttributes.rank;
-                    if ( r !== undefined && r !== -1) v.rank = r;
-                }
+                let ggn = phase.variableRelations.globalNamedGraphAttributes[v.name];
+                let gn = phase.namedGraphAttributes[v.name];
+                v.graphAttributes = {...graphClass, ...ggn, ...gn, ...v.graphAttributes}
+                let r = v.graphAttributes.rank;
+                if ( r !== undefined && r !== -1) v.rank = r;
+
                 rank = getRank(ranks, rank, v.rank);
                 let oldp = {x: rank.x, y: rank.y};
 
@@ -3593,7 +3645,7 @@ class VisualSVGVariableRelations {
 
     reset() {
         this.stopAnimate();
-        this.step = 0;
+        this.step = this.firstStep;
     }
 
     move(dir) {
@@ -3812,11 +3864,13 @@ function setData(data) {
         newCall = false;
     }
     elements.svgdiv.visual = visual;  // to find next time
+    visual.firstStep = 0;
     let step1 = visual.maxStep() + 1;
     if ( params.animate) {
         if (newCall) new Animation(visual, elements.buttondiv);
         //step1 = params.firstStep ?? 0;
         step1 = params.firstStep ? params.firstStep : 0;
+        visual.firstStep = step1;
     }
     let step = variableRelations.runUntil(step1);
     visual.stepnumber = step;

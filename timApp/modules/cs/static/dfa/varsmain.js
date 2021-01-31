@@ -74,16 +74,32 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-g dir: 1, w: 0.7
-class Aika: h v, m v
-ref a1 -> s.Aika *+1040 12 15
-ref a2
-s.Aika +*$3 13 18
-#ref a3 -> s.Aika +$4 12 15
+rank 1: rd 1, ax=120, ay=100, rd: 1, dx: 100
+rank 0: rd: 1
+g w:1, r:0
+class Item: value V, next SR
+ref root
+s.Item item1 1
+s.Item item2 2
+s.Item item3 3
+s.Item item4 4
+s.Item item5 5
+gn item4: sx: 100
+root -> item1
+item1.next -> item2
+item2.next -> item3
+item3.next -> item4
+root.next.value = 6
+root.next.next.next.value=root.value
+g rank 1
+ref p
+p = root
+ref p2
+s.Item i3 8
 `;
 setData({
     code: code, args: "1001", params:
-        {mode: "code", errorlevel: 3, xanimate: "code", allowLazy: false}
+        {mode: "step,code", errorlevel: 3, xanimate: "code", allowLazy: false}
 });
 
 if (false) {
