@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
+set -e
+
 if [ ! -f "timApp/modules/cs/jsav/.git" ]; then
   echo "ERROR: JSAV submodule is missing! Did you run \`git submodule update --init\` before running this?"
   exit 1
 fi
-
-set -e
 
 (cd timApp &&
   npm install &&
