@@ -54,8 +54,8 @@ $lightselect-color: exportable(#fcfcfc, lightselect-color);
 $parselect-color: exportable(lightgray, parselect-color);
 
 // TODO decide if these two are necessary
-$left-side-columns: exportable(2, left-side-columns);
-$right-side-columns: exportable(3, right-side-columns);
+$left-side-columns: 2;
+$right-side-columns: 3;
 
 // Bootstrap variable overrides
 // See https://getbootstrap.com/docs/3.4/customize/ for default values
