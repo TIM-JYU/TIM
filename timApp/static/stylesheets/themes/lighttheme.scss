@@ -3,17 +3,17 @@
 /* Vaaleasävyinen teema */
 $basic-color: exportable(#3CC, basic-color);
 $button-bg-color: exportable($basic-color, button-bg-color);
-$editline-bg-color: exportable($basic-color, editline-bg-color);
-$areacollapse-color: exportable($basic-color, areacollapse-color);
-$tab-bg-color: exportable($basic-color, tab-bg-color);
-$csrundiv-color: exportable($basic-color, csrundiv-color);
-$note-private-color: exportable($basic-color, note-private-color);
-$csrunmenu-link-color: exportable($basic-color, csrunmenu-link-color);
-$timbutton-bg-color: exportable($button-bg-color, timbutton-bg-color);
-$viewlogin-link-color: exportable($basic-color, viewlogin-link-color);
-$draghandle-bg-color: exportable($basic-color, draghandle-bg-color);
+$editline-bg-color: $basic-color;
+$areacollapse-color: $basic-color;
+$tab-bg-color: $basic-color;
+$csrundiv-color: $basic-color;
+$note-private-color: $basic-color;
+$csrunmenu-link-color: $basic-color;
+$timbutton-bg-color: $button-bg-color;
+$viewlogin-link-color: $basic-color;
+$draghandle-bg-color: $basic-color;
 $icon-color: exportable($basic-color, icon-color);
 $icon-hover-color: exportable(darken($basic-color, 10%), icon-hover-color);
 
-$brand-primary: exportable($basic-color, brand-primary);
+$brand-primary: $basic-color;
 $link-color: exportable(#5588FF, link-color);
