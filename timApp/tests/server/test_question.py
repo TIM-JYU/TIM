@@ -14,25 +14,24 @@ class QuestionTest(BrowserTest):
         pars = d.document.get_paragraphs()
         data = self.get(d.url_relative, as_tree=True)
         first_id = pars[0].get_id()
-        expected_element = html.fromstring(
-            f"""
-    <div class="par questionPar"
-         id="{first_id}"
-         t="{pars[0].get_hash()}"
-         attrs="{{&#34;plugin&#34;: &#34;qst&#34;, &#34;question&#34;: &#34;true&#34;, &#34;taskId&#34;: &#34;test1&#34;}}">
-        <a href="#test1" title="Permlink" class="headerlink">#</a>
-        <div tabindex="0" class="parContent" id="test1">
-            <div id="{d.id}.test1.{first_id}" data-plugin="/qst">
-                <tim-qst json='{{"anonymous": false, "current_user_id": "testuser1", "doLazy": false, "info": null, "markup": {{"answerFieldType": "radio", "defaultPoints": 0.5, "headers": [], "isTask": false, "questionText": "What day is it today?", "questionTitle": "Today", "questionType": "radio-vertical", "rows": ["Monday", "Wednesday", "Friday"], "timeLimit": 90}}, "preview": false, "review": false, "show_result": false, "state": null, "targetFormat": "latex", "taskID": "{d.id}.test1", "taskIDExt": "{d.id}.test1.{first_id}", "userPrint": false, "user_id": "testuser1", "viewmode": true}}'></tim-qst>
-            </div>
-        </div>
-        <div class="editline" tabindex="0" title="Click to edit this paragraph"></div>
-        <div class="readline"
-             title="Click to mark this paragraph as read"></div>
-    </div>
-            """)
-        par = data.cssselect('#' + first_id)[0]
-        self.assert_elements_equal(expected_element, par)
+        self.assert_plugin_json(
+            data.cssselect('.parContent tim-qst')[0],
+            self.create_plugin_json(
+                d, 'test1',
+                par_id=first_id,
+                toplevel={'show_result': False},
+                markup={
+                    'answerFieldType': 'radio',
+                    'defaultPoints': 0.5,
+                    'headers': [],
+                    'isTask': False,
+                    'questionText': 'What day is it today?',
+                    'questionTitle': 'Today',
+                    'questionType': 'radio-vertical',
+                    'rows': ['Monday', 'Wednesday', 'Friday'],
+                    'timeLimit': 90,
+                },
+            ))
 
         second_id = pars[1].get_id()
         result = data.cssselect(f'#{second_id} .parContent tim-qst')

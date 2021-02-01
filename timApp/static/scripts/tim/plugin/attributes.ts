@@ -22,7 +22,7 @@ export const undoType = t.partial({
 
 // Attributes that are valid for all plugins.
 export const GenericPluginMarkup = t.partial({
-    answerLimit: t.Integer,
+    answerLimit: nullable(t.Integer),
     button: nullable(t.string),
     buttonText: nullable(t.string),
     disableUnchanged: t.boolean,

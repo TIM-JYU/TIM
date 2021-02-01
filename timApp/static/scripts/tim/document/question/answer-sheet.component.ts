@@ -273,7 +273,7 @@ export class AnswerSheetComponent implements OnChanges {
     json!: IAskedJsonJson; // TODO decide if undefined should be valid
     processed!: IProcessedHeaders; // TODO decide if undefined should be valid
     answerMatrix: MatrixElement[][] = [];
-    private expl?: IExplCollection;
+    private expl?: IExplCollection | null;
     private pointsTable: Array<Record<string, string>> = [];
     private defaultPoints?: number;
     userpoints?: number;

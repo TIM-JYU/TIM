@@ -1,16 +1,10 @@
 import deepEqual from "deep-equal";
-import {
-    ApplicationRef,
-    Component,
-    DoBootstrap,
-    ElementRef,
-    Input,
-    NgModule,
-} from "@angular/core";
+import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {HttpClientModule} from "@angular/common/http";
 import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import * as t from "io-ts";
 import {getParId} from "../document/parhelpers";
 import {
     AnswerSheetModule,
@@ -18,36 +12,43 @@ import {
     makePreview,
 } from "../document/question/answer-sheet.component";
 import {ChangeType, ITimComponent, ViewCtrl} from "../document/viewctrl";
-import {AnswerTable, IQuestionMarkup} from "../lecture/lecturetypes";
-import {defaultErrorMessage, to, to2} from "../util/utils";
+import {
+    AnswerTable,
+    AskedJsonJsonCodec,
+    IQuestionMarkup,
+} from "../lecture/lecturetypes";
+import {defaultErrorMessage, to} from "../util/utils";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {vctrlInstance} from "../document/viewctrlinstance";
-import {handleAnswerResponse} from "../document/interceptor";
 import {PurifyModule} from "../util/purify.module";
 import {showQuestionAskDialog} from "../lecture/showLectureDialogs";
 import {showMessageDialog} from "../ui/showMessageDialog";
-import {IGenericPluginTopLevelFields} from "./attributes";
-import {PluginBaseCommon, PluginMeta} from "./util";
+import {GenericPluginMarkup, getTopLevelFields, nullable} from "./attributes";
+import {AngularPluginBase} from "./angular-plugin-base.directive";
 
-// Represents fields that are not actually stored in plugin markup but that are added by TIM alongside markup
-// in view route so that extra information can be passed to qst component. TODO: they should not be inside markup.
-interface IQstExtraInfo {
-    invalid?: boolean;
-    isTask: boolean;
-    savedText?: string;
-}
-
-interface IQstAttributes
-    extends IGenericPluginTopLevelFields<IQuestionMarkup & IQstExtraInfo> {
-    state: AnswerTable | null;
-    show_result: boolean;
-    savedText: string;
-}
+const PluginMarkupFields = t.intersection([
+    GenericPluginMarkup,
+    AskedJsonJsonCodec,
+    t.partial({invalid: t.boolean, savedText: t.string}),
+    t.type({
+        isTask: t.boolean,
+    }),
+]);
+const PluginFields = t.intersection([
+    getTopLevelFields(PluginMarkupFields),
+    t.type({
+        state: nullable(t.array(t.array(t.string))),
+    }),
+    t.partial({
+        show_result: t.boolean,
+    }),
+]);
 
 @Component({
     selector: "tim-qst",
     template: `
+        <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
         <div class="csRunDiv qst no-popup-menu" *ngIf="isTask()">
             <h4 *ngIf="getHeader()" [innerHtml]="getHeader() | purify"></h4>
             <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
@@ -80,31 +81,23 @@ interface IQstAttributes
         <div *ngIf="log" class="qstLog" [innerHtml]="log"></div>
     `,
 })
-export class QstComponent extends PluginBaseCommon implements ITimComponent {
+export class QstComponent
+    extends AngularPluginBase<
+        t.TypeOf<typeof PluginMarkupFields>,
+        t.TypeOf<typeof PluginFields>,
+        typeof PluginFields
+    >
+    implements ITimComponent {
     error?: string;
     log?: string;
     isRunning: boolean = false;
     result?: string;
-    errors: string[];
     private vctrl!: ViewCtrl;
-    @Input() json!: string;
-    attrsall!: IQstAttributes; // ngOnInit
     preview!: IPreviewParams; // ngOnInit
     button: string = "";
-    stem: string = "";
     private savedAnswer?: AnswerTable;
     private newAnswer?: AnswerTable;
     private changes = false;
-    protected pluginMeta: PluginMeta;
-    element: JQuery;
-
-    constructor(element: ElementRef, private http: HttpClient) {
-        super();
-        const el = $(element.nativeElement);
-        this.element = el;
-        this.pluginMeta = new PluginMeta(el);
-        this.errors = [];
-    }
 
     getContent() {
         return JSON.stringify(this.newAnswer);
@@ -139,23 +132,18 @@ export class QstComponent extends PluginBaseCommon implements ITimComponent {
     }
 
     ngOnInit() {
+        super.ngOnInit();
         this.vctrl = vctrlInstance!;
         if (!this.pluginMeta.isPreview()) {
             this.vctrl.addTimComponent(this);
         }
-        this.attrsall = JSON.parse(this.json) as IQstAttributes;
         this.preview = makePreview(this.attrsall.markup, {
             answerTable: this.attrsall.state ?? [],
             showCorrectChoices: this.attrsall.show_result,
             showExplanations: this.attrsall.show_result,
             enabled: !this.attrsall.markup.invalid,
         });
-        this.result = "";
-        this.button =
-            this.attrsall.markup.button ??
-            this.attrsall.markup.buttonText ??
-            "Save";
-        this.stem = this.attrsall.markup.stem ?? "";
+        this.button = this.buttonText() ?? "Save";
     }
 
     getHeader() {
@@ -240,8 +228,8 @@ export class QstComponent extends PluginBaseCommon implements ITimComponent {
     }
 
     private initCode() {
-        this.error = "";
-        this.result = "";
+        this.error = undefined;
+        this.result = undefined;
     }
 
     saveText() {
@@ -261,7 +249,7 @@ export class QstComponent extends PluginBaseCommon implements ITimComponent {
         this.error = undefined;
         this.isRunning = true;
 
-        this.result = "";
+        this.result = undefined;
 
         const answers = this.newAnswer;
 
@@ -275,25 +263,17 @@ export class QstComponent extends PluginBaseCommon implements ITimComponent {
         if (nosave) {
             params.input.nosave = true;
         }
-        const url = this.pluginMeta.getAnswerUrl();
-
-        const r = await to2(
-            this.http
-                .put<{
-                    web: {
-                        result: string;
-                        show_result: boolean;
-                        state: AnswerTable;
-                        markup?: IQuestionMarkup;
-                        error?: string;
-                    };
-                    savedNew: number | false;
-                }>(url, params, {})
-                .toPromise()
-        );
+        const r = await this.postAnswer<{
+            web: {
+                result: string;
+                show_result: boolean;
+                state: AnswerTable;
+                markup?: IQuestionMarkup;
+                error?: string;
+            };
+        }>(params);
         this.isRunning = false;
         if (!r.ok) {
-            this.errors.push(r.result.error.error);
             this.error =
                 r.result.error.error ??
                 this.attrsall.markup.connectionErrorMessage ??
@@ -306,10 +286,6 @@ export class QstComponent extends PluginBaseCommon implements ITimComponent {
             };
         }
         const data = r.result;
-        handleAnswerResponse(
-            this.pluginMeta.getTaskId()!.docTask().toString(),
-            data
-        );
         let result = data.web.result;
         if (result == "Saved" && this.attrsall.markup.savedText) {
             result = this.attrsall.markup.savedText;
@@ -345,6 +321,23 @@ export class QstComponent extends PluginBaseCommon implements ITimComponent {
             enabled: !this.attrsall.markup.invalid,
         });
         this.checkChanges();
+    }
+
+    getAttributeType() {
+        return PluginFields;
+    }
+
+    getDefaultMarkup() {
+        return {
+            headers: [],
+            rows: [],
+            answerFieldType: "radio" as const,
+            questionText: "",
+            questionTitle: "",
+            questionType: "matrix" as const,
+            isTask: true,
+            invalid: true,
+        };
     }
 }
 

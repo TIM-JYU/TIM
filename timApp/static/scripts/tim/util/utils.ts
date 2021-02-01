@@ -5,6 +5,7 @@ import {AbstractControl, ValidatorFn} from "@angular/forms";
 import humanizeDuration from "humanize-duration";
 import {isLeft} from "fp-ts/lib/Either";
 import {Pos} from "tim/ui/pos";
+import {Props} from "io-ts";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
@@ -932,3 +933,15 @@ export type ReadonlyMoment = Omit<Moment, "add" | "subtract" | "set"> & {
         precise?: boolean
     ): number;
 };
+
+/**
+ * Shortcut function for defining a codec with mandatory and optional properties.
+ * @param mandatory The mandatory properties.
+ * @param optional The optional properties.
+ */
+export function mandatoryAndOptional<T extends Props, U extends Props>(
+    mandatory: T,
+    optional: U
+) {
+    return t.intersection([t.type(mandatory), t.partial(optional)]);
+}

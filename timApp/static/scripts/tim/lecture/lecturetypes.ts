@@ -1,8 +1,8 @@
 import moment, {Moment} from "moment";
-import {ReadonlyMoment} from "tim/util/utils";
+import {mandatoryAndOptional, ReadonlyMoment} from "tim/util/utils";
 import * as t from "io-ts";
 import {IItem} from "../item/IItem";
-import {IGenericPluginMarkup} from "../plugin/attributes";
+import {IGenericPluginMarkup, nullable} from "../plugin/attributes";
 import {DurationChoice} from "../ui/duration-picker.component";
 import {IUser} from "../user/IUser";
 
@@ -21,7 +21,7 @@ export interface IQuestionParagraph extends IUniqueParId {
 export interface IAskedJsonBase {
     answerFieldType: AnswerFieldType;
     defaultPoints?: number;
-    expl?: IExplCollection;
+    expl?: IExplCollection | null;
     doNotMove?: number[] | number;
     matrixType?: MatrixType; // is useless
     points?: string;
@@ -64,6 +64,52 @@ export const RowCodec = t.type({
     columns: t.array(t.type({id: t.number})),
 });
 
+export const AskedJsonJsonCodec = mandatoryAndOptional(
+    {
+        headers: t.array(
+            t.union([
+                t.string,
+                t.type({text: t.string, type: t.string, id: t.number}),
+            ])
+        ),
+        rows: t.array(t.union([RowCodec, t.string])),
+
+        answerFieldType: t.keyof({
+            radio: null,
+            checkbox: null,
+            matrix: null,
+            text: null,
+            inputText: null,
+        }),
+        questionText: t.string,
+        questionTitle: t.string,
+        questionType: t.keyof({
+            "checkbox-vertical": null,
+            matrix: null,
+            "radio-vertical": null,
+            "true-false": null,
+            textarea: null,
+            likert: null,
+            "": null,
+        }),
+    },
+    {
+        defaultPoints: t.number,
+        expl: nullable(t.record(t.string, t.string)),
+        doNotMove: t.union([t.number, t.array(t.number)]),
+        matrixType: t.keyof({
+            textArea: null,
+            "radiobutton-horizontal": null,
+            checkbox: null,
+            inputText: null,
+        }),
+        points: t.string,
+        randomizedRows: t.number,
+        timeLimit: t.number,
+        size: t.number,
+    }
+);
+
 export interface IHeader {
     text: string;
     type: string;
@@ -80,7 +126,7 @@ export interface IRow extends IHeader {
 
 export interface IUnprocessedHeaders {
     headers: Array<IHeader | string>;
-    rows: Array<IRow | string | Record<string, never>>;
+    rows: Array<IRow | string>;
 }
 
 export interface IProcessedHeaders {

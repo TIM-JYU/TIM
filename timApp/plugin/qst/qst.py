@@ -3,7 +3,6 @@ import json
 import re
 from dataclasses import dataclass, asdict
 from typing import Dict, Optional, List, Union, Any
-from xml.sax.saxutils import quoteattr
 
 import yaml
 from flask import Blueprint, render_template_string
@@ -13,9 +12,10 @@ from marshmallow import missing, EXCLUDE, ValidationError
 
 from markupmodels import GenericMarkupModel
 from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericAnswerModel, GenericHtmlModel, render_validationerror
+from pluginserver_flask import GenericAnswerModel, GenericHtmlModel, render_validationerror, make_base64
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
+from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
 from timApp.lecture.askedjson import normalize_question_json
@@ -638,10 +638,8 @@ def qst_get_html(jso, review):
         result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>' + s + '</div>'
         return result
 
-    attrs = json.dumps(jso, sort_keys=True)
-
     runner = 'tim-qst'
-    s = f'<{runner} json={quoteattr(attrs)}></{runner}>'
+    s = f'<{runner} json="{make_base64(jso, TimJsonEncoder)}"></{runner}>'
     return s
 
 

@@ -417,7 +417,7 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
         const pointsTable = getPointsTable(
             isAskedQuestion(data) ? data.json.json.points : data.markup.points
         );
-        const expl: IExplCollection | undefined = isAskedQuestion(data)
+        const expl: IExplCollection | undefined | null = isAskedQuestion(data)
             ? data.json.json.expl
             : data.markup.expl;
 
