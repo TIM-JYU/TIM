@@ -110,6 +110,7 @@ function isAskedQuestion(
     return (params as IAskedQuestion).asked_id != null;
 }
 
+// noinspection TypeScriptUnresolvedVariable
 @Component({
     selector: "tim-edit-question-dialog",
     template: `
@@ -193,7 +194,7 @@ function isAskedQuestion(
                     <div class="form-group form-horz-flex"
                          *ngIf="qst">
                         <label for="answerLimit">Answer limit</label>
-                        <input [(ngModel)]="pluginMarkup.answerLimit //noinspection UnresolvedVariable"
+                        <input [(ngModel)]="pluginMarkup.answerLimit"
                                id="answerLimit"
                                name="answerLimit"
                                class="form-control"
