@@ -1617,6 +1617,28 @@ class SetNamedGraphAttributes extends Command {
 
 }
 
+class MoveVars extends Command {
+    // Move var X after Y
+    // see https://regex101.com/r/DhHUjg/latest
+    // syntax:
+    //   move item5 item4
+    static isMy(s, variables) {
+        let re = /^[Mm]ove (\S+) (\S+)$/
+        let r = re.exec(s);
+        if (!r) return undefined;
+        return [new MoveVars(r[1], r[2])];
+    }
+
+    constructor(var1, var2) {
+        super();
+        this.var1 = var1;
+        this.var2 = var2;
+    }
+
+    run(variables) {
+        return variables.moveVars(this.var1, this.var2);
+    }
+}
 
 
 class CodeCommand extends Command {
@@ -1626,8 +1648,13 @@ class CodeCommand extends Command {
     //  Code: int a = 5;
     static isMy(s, variables) {
         let re = /^[Cc](ode|ODE)?[: ]+ *(.*)$/gm;
+        let re2 = /^(\/\/+) *(.*)$/gm;
         let r = re.exec(s);
-        if (!r) return undefined;
+        if (!r) {
+            r = re2.exec(s);
+            if (!r) return undefined;
+            r[2] = s;
+        }
         let code = "" + r[2];
         if (variables.isAnimateCommands() &&
             code !== "" &&
@@ -1688,6 +1715,7 @@ const knownCommands = [
     SetRankDefaults,
     SetNamedGraphAttributes,
     CodeCommand,
+    MoveVars,
     AddSVG,
     UnknownCommand,
 ];
@@ -1916,6 +1944,21 @@ class PhaseVariables {
 
     hasVars() {
         return this.vars.length > 0;
+    }
+
+    moveVars(var1, var2) {
+        //
+        if (!this.vars) return "Ei muutujia!";
+        let i1 = this.vars.findIndex(v => v.name === var1);
+        let i2 = this.vars.findIndex(v => v.name === var2);
+        let error = "";
+        if (i1 < 0) error = `Ei muuttujaa {var1} `;
+        if (i2 < 0) error += `Ei muuttujaa {var2} `;
+        if (error) return error;
+        let v = this.vars[i1];
+        this.vars.splice(i1, 1);
+        this.vars.splice(i2, 0, v);
+        return "";
     }
 
     addCode(code) {
@@ -2189,12 +2232,12 @@ class VariableRelations {
     }
 
 
-    findFirstStep() {
+    findStep(text) {
         // Returns next step nro of g firstStep command
         let nr = 0;
         let lastlinenr = 0;
         for (let cmd of this.commands) {
-            if (cmd.graphAttributes && cmd.graphAttributes.includes("firstStep"))
+            if (cmd.graphAttributes && cmd.graphAttributes.includes(text))
                 return nr+1;
             nr++;
         }
@@ -3879,14 +3922,18 @@ function setData(data) {
     }
     elements.svgdiv.visual = visual;  // to find next time
     visual.firstStep = 0;
+    visual.gotoStep = 0;
     let step1 = visual.maxStep() + 1;
     if ( params.animate) {
         if (newCall) new Animation(visual, elements.buttondiv);
         //step1 = params.firstStep ?? 0;
-        step1 = params.firstStep ? params.firstStep : 0;
+        step1 = params.gotoStep ? params.gotoStep : 0;
         if (step1 === 0)
-            step1 = visual.variableRelations.findFirstStep();
-        visual.firstStep = step1;
+            step1 = visual.variableRelations.findStep("gotoStep");
+        visual.gotoStep = step1;
+        visual.firstStep = params.firstStep ? params.firstStep : 0;
+        if (visual.firstStep === 0)
+            visual.firstStep = visual.variableRelations.findStep("firstStep");
     }
     let step = variableRelations.runUntil(step1);
     visual.stepnumber = step;

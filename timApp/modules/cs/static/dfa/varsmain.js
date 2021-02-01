@@ -74,6 +74,7 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
+// eka
 rank 1: rd 1, ax=120, ay=100, rd: 1, dx: 100
 rank 0, rd: 1
 g w:1, r:0, snap: 0 1
@@ -89,27 +90,28 @@ item1.next -> item2
 item2.next -> item3
 item3.next -> item4
 g firstStep, r 1, sx: 100
-CODE: // Uusi apuviite
+// Uusi apuviite
 ref p
-CODE: /// Alkuun
+/// Alkuun
 p = root
-CODE: /// Eteenpäin, etsitään 3
+/// Eteenpäin, etsitään 3
 p = p.next
-CODE: // Eteenpäin kunnes p.value == 3
+// Eteenpäin kunnes p.value == 3
 p = p.next
-CODE: /// Luodaan uusi alkio
-ref uusi -> s.Item item5 5
+/// Luodaan uusi alkio
 gn item5: r 1
-CODE: /// Ja tämän perään 3:n seuraava
+ref uusi -> s.Item item5 5
+/// Ja tämän perään 3:n seuraava
 uusi.next = p.next
-CODE: /// Tämän 3:n perään
+/// Tämän 3:n perään
 p.next = uusi
-gn item4: sx: 80
-gn item5: sx: -15, sy: -70
+#gn item4: sx: 80
+move item5 item4
+gn item5: r 0
 `;
 setData({
     code: code, args: "1001", params:
-        {mode: "step,code", errorlevel: 3, xanimate: "commands", allowLazy: false}
+        {mode: "step,code", errorlevel: 3, animate: "commands", allowLazy: false}
 });
 
 if (false) {
