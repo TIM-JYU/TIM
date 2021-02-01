@@ -1,3 +1,4 @@
 @charset "UTF-8";
+
 /* Harmaa varjo dokumentille */
-$material-shadow: 10px 10px 5px #888888;
+$material-shadow: exportable(10px 10px 5px #888888, material-shadow);

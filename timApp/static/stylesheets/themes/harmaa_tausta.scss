@@ -1,3 +1,4 @@
 @charset "UTF-8";
+
 /* Harmaa tausta dokumentin ulkopuolelle */
-$bg-color: lightgray;
+$bg-color: exportable(lightgray, bg-color);

@@ -1,84 +1,84 @@
 @charset "UTF-8";
 
-$basic-color: #004494;
-$basic-color-inverse: invert($basic-color);
-$button-bg-color: $basic-color;
-$button-toggle-color: black;
-$editline-bg-color: $basic-color;
-$areacollapse-color: $basic-color;
-$tab-bg-color: $basic-color;
-$csrundiv-color: $basic-color;
-$note-private-color: $basic-color;
-$note-public-color: #F60;
-$csrunmenu-link-color: $basic-color;
-$timbutton-bg-color: $button-bg-color;
-$viewlogin-link-color: $basic-color;
-$draghandle-bg-color: $basic-color;
-$draghandle-attached-color: #FFF;
-$basic-border-color: #B7B7B7;
-$bg-color: white;
-$material-shadow: none;
-$material-bg: white;
-$body-margin-left: 250px;
-$material-border: none;
-$material-border-radius: 0;
-$body-text-align: justify;
-$body-text-align-xs: left;
-$asset-path: "..";
-$footer-height: 60px;
-$footer-z: -1;
-$header-footer-border: 1px solid #e5e5e5;
-$editline-width: 3em;
-$editline-extra: 1.5em;
-$areaeditline-width: 1em;
-$readline-offset: -1em;
-$readline-width: 10em;
-$readline-color: #F60;
-$note-width: 30%;
-$heading-outdent: -1em;
-$icon-color: $basic-color;
-$icon-hover-color: darken($basic-color, 10%);
-$link-visited-color: #5242CE;
-$paragraph-preferred-width: 57.4em;
-$inline-code-size: 110%;
-$block-code-size: 115%;
-$pre-overflow: visible; // TODO: Default is supposed to be "auto", but it breaks velp annotations in pre blocks.
-$pre-left-border: 4px solid $basic-color;
-$pre-background: white;
-$container-xs-padding: 0.2em;
-$focus-bar-color: lightblue;
-$lightselect-color: #fcfcfc;
-$parselect-color: lightgray;
+$basic-color: exportable(#004494, basic-color);
+$basic-color-inverse: exportable(invert($basic-color), basic-color-inverse);
+$button-bg-color: exportable($basic-color, button-bg-color);
+$button-toggle-color: exportable(black, button-toggle-color);
+$editline-bg-color: exportable($basic-color, editline-bg-color);
+$areacollapse-color: exportable($basic-color, areacollapse-color);
+$tab-bg-color: exportable($basic-color, tab-bg-color);
+$csrundiv-color: exportable($basic-color, csrundiv-color);
+$note-private-color: exportable($basic-color, note-private-color);
+$note-public-color: exportable(#F60, note-public-color);
+$csrunmenu-link-color: exportable($basic-color, csrunmenu-link-color);
+$timbutton-bg-color: exportable($button-bg-color, timbutton-bg-color);
+$viewlogin-link-color: exportable($basic-color, viewlogin-link-color);
+$draghandle-bg-color: exportable($basic-color, draghandle-bg-color);
+$draghandle-attached-color: exportable(#FFF, draghandle-attached-color);
+$basic-border-color: exportable(#B7B7B7, basic-border-color);
+$bg-color: exportable(white, bg-color);
+$material-shadow: exportable(none, material-shadow);
+$material-bg: exportable(white, material-bg);
+$body-margin-left: exportable(250px, body-margin-left);
+$material-border: exportable(none, material-border);
+$material-border-radius: exportable(0, material-border-radius);
+$body-text-align: exportable(justify, body-text-align);
+$body-text-align-xs: exportable(left, body-text-align-xs);
+$asset-path: exportable("..", asset-path);
+$footer-height: exportable(60px, footer-height);
+$footer-z: exportable(-1, footer-z);
+$header-footer-border: exportable(1px solid #e5e5e5, header-footer-border);
+$editline-width: exportable(3em, editline-width);
+$editline-extra: exportable(1.5em, editline-extra);
+$areaeditline-width: exportable(1em, areaeditline-width);
+$readline-offset: exportable(-1em, readline-offset);
+$readline-width: exportable(10em, readline-width);
+$readline-color: exportable(#F60, readline-color);
+$note-width: exportable(30%, note-width);
+$heading-outdent: exportable(-1em, heading-outdent);
+$icon-color: exportable($basic-color, icon-color);
+$icon-hover-color: exportable(darken($basic-color, 10%), icon-hover-color);
+$link-visited-color: exportable(#5242CE, link-visited-color);
+$paragraph-preferred-width: exportable(57.4em, paragraph-preferred-width);
+$inline-code-size: exportable(110%, inline-code-size);
+$block-code-size: exportable(115%, block-code-size);
+$pre-overflow: exportable(visible, pre-overflow); // TODO: Default is supposed to be "auto", but it breaks velp annotations in pre blocks.
+$pre-left-border: exportable(4px solid $basic-color, pre-left-border);
+$pre-background: exportable(white, pre-background);
+$container-xs-padding: exportable(0.2em, container-xs-padding);
+$focus-bar-color: exportable(lightblue, focus-bar-color);
+$lightselect-color: exportable(#fcfcfc, lightselect-color);
+$parselect-color: exportable(lightgray, parselect-color);
 
 // TODO decide if these two are necessary
-$left-side-columns: 2;
-$right-side-columns: 3;
+$left-side-columns: exportable(2, left-side-columns);
+$right-side-columns: exportable(3, right-side-columns);
 
 // Bootstrap variable overrides
 // See https://getbootstrap.com/docs/3.4/customize/ for default values
-$screen-lg-min: 1281px;
-$gray-base: #000;
-$gray: lighten($gray-base, 33.5%);
-$brand-primary: $basic-color;
-$text-color: black;
-$input-color: black;
-$link-color: $basic-color;
-$link-hover-color: darken($link-color, 15%);
-$input-color-placeholder: $gray;
-$headings-font-weight: 700;
-$font-size-base: 14px; // this should probably not be changed from default 14px
-$font-size-h1: floor(($font-size-base * 2.29)); // default factor is 2.6
-$font-size-h2: floor(($font-size-base * 1.72)); // default factor is 2.15
-$font-size-h3: floor(($font-size-base * 1.5)); // default factor is 1.7
-$font-family-base: Verdana, Arial, sans-serif;
-$font-family-monospace: "Courier New", Courier, serif;
-$code-color: inherit;
-$code-bg: inherit;
-$pre-color: black;
-$pre-bg: inherit;
-$font-family-sans-serif: Verdana, Arial, sans-serif;
-$icon-font-path: "/js/bootstrap-fonts/";
-$label-visited-color: white;
+$screen-lg-min: exportable(1281px, screen-lg-min);
+$gray-base: exportable(#000, gray-base);
+$gray: exportable(lighten($gray-base, 33.5%), gray);
+$brand-primary: exportable($basic-color, brand-primary);
+$text-color: exportable(black, text-color);
+$input-color: exportable(black, input-color);
+$link-color: exportable($basic-color, link-color);
+$link-hover-color: exportable(darken($link-color, 15%), link-hover-color);
+$input-color-placeholder: exportable($gray, input-color-placeholder);
+$headings-font-weight: exportable(700, headings-font-weight);
+$font-size-base: exportable(14px, font-size-base); // this should probably not be changed from default 14px
+$font-size-h1: exportable(floor(($font-size-base * 2.29)), font-size-h1); // default factor is 2.6
+$font-size-h2: exportable(floor(($font-size-base * 1.72)), font-size-h2); // default factor is 2.15
+$font-size-h3: exportable(floor(($font-size-base * 1.5)), font-size-h3); // default factor is 1.7
+$font-family-base: exportable((Verdana, Arial, sans-serif), font-family-base);
+$font-family-monospace: exportable(("Courier New", Courier, serif), font-family-monospace);
+$code-color: exportable(inherit, code-color);
+$code-bg: exportable(inherit, code-bg);
+$pre-color: exportable(black, pre-color);
+$pre-bg: exportable(inherit, pre-bg);
+$font-family-sans-serif: exportable((Verdana, Arial, sans-serif), font-family-sans-serif);
+$icon-font-path: exportable("/js/bootstrap-fonts/", icon-font-path);
+$label-visited-color: exportable(white, label-visited-color);
 
-$score-menu-link-color: $link-color;
-$score-menu-link-visited-color: $link-visited-color;
+$score-menu-link-color: exportable($link-color, score-menu-link-color);
+$score-menu-link-visited-color: exportable($link-visited-color, score-menu-link-visited-color);
