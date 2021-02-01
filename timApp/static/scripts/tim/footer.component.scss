@@ -1,10 +1,8 @@
-@import "static/stylesheets/variables";
-
 footer {
     padding-top: 19px;
-    border-top: $header-footer-border;
+    border-top: var(--header-footer-border);
     width: 100%;
-    height: $footer-height;
-    z-index: $footer-z; // make section read mark clickable if it is above footer
+    height: var(--footer-height);
+    z-index: var(--footer-z); // make section read mark clickable if it is above footer
     font-size: smaller;
 }
