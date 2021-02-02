@@ -1,8 +1,10 @@
+import shutil
 import traceback
 
 from flask import request, render_template, session, flash, Flask, redirect
 from markupsafe import Markup
 from marshmallow import ValidationError
+from sass import CompileError
 
 from timApp.answer.answers import TooLargeAnswerException
 from timApp.auth.accesshelper import AccessDenied, ItemLockedException
@@ -17,14 +19,23 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.sisu.sisu import IncorrectSettings, SisuError
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
+from timApp.user.settings.theme_css import get_default_scss_gen_dir
 from timApp.user.userutils import NoSuchUserException, DeletedUserException
 from timApp.util.flask.requesthelper import JSONException, get_request_message, RouteException, NotExist
-from timApp.util.flask.responsehelper import error_generic
+from timApp.util.flask.responsehelper import error_generic, html_error
 from timApp.util.logger import log_error
 from timApp.util.utils import get_current_time
 
 
 def register_errorhandlers(app: Flask):
+    @app.errorhandler(CompileError)
+    def handle_sass_compile_error(error):
+        # Generally, compile error is caused by bad style SCSS (e.g. after an update)
+        # Right now, fix this by forcing the cache to regenerate and display a message with the error info
+        shutil.rmtree(get_default_scss_gen_dir(), ignore_errors=True)
+        return html_error(str(error), 400,
+                          description="Failed to load page style. The website might have been restarted recently.")
+
     @app.errorhandler(AccessDenied)
     def handle_access_denied(error):
         return error_generic(str(error), 403)

@@ -73,6 +73,7 @@ def generate_theme_scss(themes: List[Theme], gen_dir: Path) -> None:
             raise ThemeNotFoundException(t.filename)
     combined = get_combined_css_filename(themes)
     file_path = gen_dir / f'{combined}.scss'
+    # TODO: Maybe version the styles somehow so that combined SCSS can be regenerated smartly
     if file_path.exists():
         return
     gen_dir.mkdir(exist_ok=True)
