@@ -1,8 +1,8 @@
 @charset "UTF-8";
 
-$basic-color: #004494;
-$basic-color-inverse: invert($basic-color);
-$button-bg-color: $basic-color;
+$basic-color: exportable(#004494, basic-color);
+$basic-color-inverse: exportable(invert($basic-color), basic-color-inverse);
+$button-bg-color: exportable($basic-color, button-bg-color);
 $button-toggle-color: black;
 $editline-bg-color: $basic-color;
 $areacollapse-color: $basic-color;
@@ -15,8 +15,8 @@ $timbutton-bg-color: $button-bg-color;
 $viewlogin-link-color: $basic-color;
 $draghandle-bg-color: $basic-color;
 $draghandle-attached-color: #FFF;
-$basic-border-color: #B7B7B7;
-$bg-color: white;
+$basic-border-color: exportable(#B7B7B7, basic-border-color);
+$bg-color: exportable(white, bg-color);
 $material-shadow: none;
 $material-bg: white;
 $body-margin-left: 250px;
@@ -25,9 +25,12 @@ $material-border-radius: 0;
 $body-text-align: justify;
 $body-text-align-xs: left;
 $asset-path: "..";
-$footer-height: 60px;
-$footer-z: -1;
-$header-footer-border: 1px solid #e5e5e5;
+
+// Used by Angular
+$footer-height: exportable(60px, footer-height);
+$footer-z: exportable(-1, footer-z);
+$header-footer-border: exportable(1px solid #e5e5e5, header-footer-border);
+
 $editline-width: 3em;
 $editline-extra: 1.5em;
 $areaeditline-width: 1em;
@@ -36,19 +39,19 @@ $readline-width: 10em;
 $readline-color: #F60;
 $note-width: 30%;
 $heading-outdent: -1em;
-$icon-color: $basic-color;
-$icon-hover-color: darken($basic-color, 10%);
-$link-visited-color: #5242CE;
-$paragraph-preferred-width: 57.4em;
+$icon-color: exportable($basic-color, icon-color);
+$icon-hover-color: exportable(darken($basic-color, 10%), icon-hover-color);
+$link-visited-color: exportable(#5242CE, link-visited-color);
+$paragraph-preferred-width: exportable(57.4em, paragraph-preferred-width);
 $inline-code-size: 110%;
 $block-code-size: 115%;
 $pre-overflow: visible; // TODO: Default is supposed to be "auto", but it breaks velp annotations in pre blocks.
 $pre-left-border: 4px solid $basic-color;
 $pre-background: white;
 $container-xs-padding: 0.2em;
-$focus-bar-color: lightblue;
-$lightselect-color: #fcfcfc;
-$parselect-color: lightgray;
+$focus-bar-color: exportable(lightblue, focus-bar-color);
+$lightselect-color: exportable(#fcfcfc, lightselect-color);
+$parselect-color: exportable(lightgray, parselect-color);
 
 // TODO decide if these two are necessary
 $left-side-columns: 2;
@@ -62,21 +65,21 @@ $gray: lighten($gray-base, 33.5%);
 $brand-primary: $basic-color;
 $text-color: black;
 $input-color: black;
-$link-color: $basic-color;
-$link-hover-color: darken($link-color, 15%);
+$link-color: exportable($basic-color, link-color); // likely of interest
+$link-hover-color: exportable(darken($link-color, 15%), link-hover-color); // likely of interest
 $input-color-placeholder: $gray;
 $headings-font-weight: 700;
-$font-size-base: 14px; // this should probably not be changed from default 14px
-$font-size-h1: floor(($font-size-base * 2.29)); // default factor is 2.6
-$font-size-h2: floor(($font-size-base * 1.72)); // default factor is 2.15
-$font-size-h3: floor(($font-size-base * 1.5)); // default factor is 1.7
-$font-family-base: Verdana, Arial, sans-serif;
-$font-family-monospace: "Courier New", Courier, serif;
+$font-size-base: exportable(14px, font-size-base); // this should probably not be changed from default 14px
+$font-size-h1: exportable(floor(($font-size-base * 2.29)), font-size-h1); // default factor is 2.6
+$font-size-h2: exportable(floor(($font-size-base * 1.72)), font-size-h2); // default factor is 2.15
+$font-size-h3: exportable(floor(($font-size-base * 1.5)), font-size-h3); // default factor is 1.7
+$font-family-base: exportable((Verdana, Arial, sans-serif), font-family-base);              // likely of interest for custom CSS
+$font-family-monospace: exportable(("Courier New", Courier, serif), font-family-monospace); // likely of interest for custom CSS
 $code-color: inherit;
 $code-bg: inherit;
 $pre-color: black;
 $pre-bg: inherit;
-$font-family-sans-serif: Verdana, Arial, sans-serif;
+$font-family-sans-serif: exportable((Verdana, Arial, sans-serif), font-family-sans-serif);  // likely of interest for custom CSS
 $icon-font-path: "/js/bootstrap-fonts/";
 $label-visited-color: white;
 

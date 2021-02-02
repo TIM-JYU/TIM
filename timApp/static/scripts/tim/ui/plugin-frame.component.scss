@@ -1,8 +1,6 @@
-@import "static/stylesheets/variables";
-
 .root {
   border-radius: 5px;
-  border: 1px solid $basic-color;
+  border: 1px solid var(--basic-color);
   margin: 0.3em 0 1.5em 0;
 
   // Prevents tim-plugin-header from slightly "bleeding" over the rounded corners.
@@ -12,9 +10,4 @@
   .body {
     padding: 10px;
   }
-}
-
-:host-context(.theme-light) .root {
-  @import "static/stylesheets/themes/lighttheme";
-  border-color: $basic-color;
 }
