@@ -9,6 +9,7 @@ import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
 import {
     getElementByParId,
+    isHelpPar,
     Paragraph,
     saveCurrentScreenPar,
 } from "tim/document/parhelpers";
@@ -835,7 +836,12 @@ export class ViewCtrl implements IController {
     }
 
     isEmptyDocument() {
-        return this.docVersion[0] === 0 && this.docVersion[1] === 0; // TODO can be empty otherwise too
+        const parContainer = document.getElementById("pars")!;
+        const pars = parContainer.querySelectorAll(".par");
+        return (
+            pars.length === 0 ||
+            (pars.length === 1 && isHelpPar($(pars[0] as HTMLElement)))
+        );
     }
 
     reload() {
