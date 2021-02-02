@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="TIM - The Interactive Material."/>
+    <meta name="keywords" content="tim,interactive,material"/>
+    <link href="/static/images/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
+    <title>{% if title %}{{ title }}{% else %}Failed to load page - TIM{% endif %}</title>
+</head>
+<body>
+<a href="/">
+    <img alt="TIM - The Interactive Material."
+         src="/static/images/tim-logo_42height.png"
+         title="Go to front page"/>
+</a>
+<img alt="Jyväskylän yliopisto" class="pull-right" height="42" src="/static/images/jyulogo.png"/>
+<p class="text-center">{{ description }}</p>
+{% if auto_refresh %}
+    <p class="text-center">This page will refresh periodically. Please wait.</p>
+{% endif %}
+<h4>Error details</h4>
+<pre class="small">{{ error }}</pre>
+{% if auto_refresh %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(function () { window.location.reload(); }, 1000);
+        });
+    </script>
+{% endif %}
+</body>
+</html>

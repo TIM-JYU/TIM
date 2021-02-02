@@ -73,15 +73,18 @@ def generate_theme_scss(themes: List[Theme], gen_dir: Path) -> None:
             raise ThemeNotFoundException(t.filename)
     combined = get_combined_css_filename(themes)
     file_path = gen_dir / f'{combined}.scss'
+    # TODO: Maybe version the styles somehow so that combined SCSS can be regenerated smartly
     if file_path.exists():
         return
     gen_dir.mkdir(exist_ok=True)
     with file_path.open(encoding='utf-8', mode='w') as f:
         f.write('@charset "UTF-8";\n')
+        f.write('@import "stylesheets/varUtils";\n') # import utils with export-variables mixin
         f.write('@import "stylesheets/variables";\n')
         for t in themes:
             f.write(f'@mixin {t.filename} {{}}\n')
             f.write(f'@import "stylesheets/themes/{t.filename}";\n')
+        f.write("@include export-variables;\n") # export variables to CSS
         f.write('@import "stylesheets/all.scss";\n')  # "all" conflicts with a jQuery CSS file, so we must add the .scss extension
         for t in themes:
             f.write(f'@include {t.filename};\n')

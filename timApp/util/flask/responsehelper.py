@@ -124,6 +124,17 @@ def error_generic(error: str, code: int, template='error.jinja2'):
         return json_response({'error': error}, code)
 
 
+def html_error(error: str, code: int, title=None, description="", auto_refresh=True,
+               template='generic_html_error_standalone.jinja2'):
+    return render_template(template,
+                           error=error,
+                           code=code,
+                           title=title,
+                           description=description,
+                           auto_refresh=auto_refresh,
+                           status=http.client.responses[code]), code
+
+
 def get_grid_modules():
     return [
         "ui.grid",

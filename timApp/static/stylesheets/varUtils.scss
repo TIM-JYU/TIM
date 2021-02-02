@@ -1,0 +1,24 @@
+@charset "UTF-8";
+
+$var-map: ();
+
+/// Export a value as a CSS variable
+///
+/// @param {any} $value
+///   The value to export
+/// @param {string} $exportAs
+///   Name to export the value as
+/// @return {any} The original `$value`
+@function exportable($value, $exportAs) {
+  $var-map: map-merge($var-map, ("#{$exportAs}": $value)) !global;
+  @return $value;
+}
+
+// Exports all exportable variables into the root scope
+@mixin export-variables {
+  :root {
+    @each $name, $val in $var-map {
+      --#{$name}: #{inspect($val)};
+    }
+  }
+}
