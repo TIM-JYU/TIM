@@ -3951,5 +3951,6 @@ export {setData, varsStringToJson, VariableRelations, compareValsAndRefs, compar
 // export default setData;
 
 // TODO: null viitteestä parempi ilmoitus kuin undefined
-// TODO: A pois s.Jasen
+// TODO: JOs reunassa oleva viite  lähteevasemmalla, niin pallukka vasemmalle
+// TODO: SVGymargin, SVGxmargin
 
