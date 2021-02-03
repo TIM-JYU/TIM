@@ -125,7 +125,7 @@ export class JSParsonsEditorComponent implements IEditor {
         <ng-container *ngIf="files.length">
             <div *ngIf="showTabs" class="tab-list">
                 <div *ngFor="let file of files; index as i; trackBy: trackByPath" class="tab-label file-tab" [ngClass]="{'tab-label-active': tabIndex == i}" (click)="tabIndex = i">
-                    {{file.path}}
+                    {{file.path}} {{file.canModify ? "" : "(read-only)"}}
                     <div class="close-wrapper">
                         <tim-close-button *ngIf="file.canClose" (click)="closeFile(i)"></tim-close-button>
                     </div>
