@@ -2728,9 +2728,11 @@ const svgVariableMixin = {
             }
             let p = ref.closest(this);
             let x1 = this.x;
-            if (this.sref) { x1 += 0.4*this.width}
             let x2 = p.x;
             let y2 = p.y;
+            let rdir = 1;  // default right ->
+            if (x1 > x2) rdir = -1; // should be left
+            if (this.sref) { x1 += rdir*0.4*this.width}
             svg += `<line x1="${x1}" y1="${this.y}" x2="${x2}" y2="${y2}" stroke="${stroke}" stroke-width="1"  marker-end="url(#endarrow)" marker-start="url(#startarrow)" />`;
         }
         return svg;
