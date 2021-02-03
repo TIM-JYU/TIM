@@ -155,7 +155,8 @@ export class JSParsonsEditorComponent implements IEditor {
                     [languageMode]="languageMode"
                     [minRows]="minRows_"
                     [maxRows]="maxRows_"
-                    [placeholder]="file && file.placeholder ? file.placeholder : ''">
+                    [placeholder]="file && file.placeholder ? file.placeholder : ''"
+                    [disabled]="isDisabled">
             </cs-ace-editor>
             </ng-container>
             <div *ngIf="addTabActive" class="add-view">
@@ -513,13 +514,17 @@ export class EditorComponent implements IMultiEditor {
     }
 
     get mode(): ModeID {
-        if (this.isDisabled) {
-            return Mode.Normal;
-        }
         if (this.modeIndex == -1 || this.modeIndex >= this.modes.length) {
             return -1;
         }
-        return this.modes[this.modeIndex].id;
+        const mode = this.modes[this.modeIndex].id;
+        if (this.isDisabled) {
+            if (mode == Mode.Normal || mode == Mode.ACE) {
+                return mode;
+            }
+            return Mode.Normal;
+        }
+        return mode;
     }
     set mode(mode: ModeID) {
         if (mode == -1) {

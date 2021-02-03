@@ -1,4 +1,4 @@
-/* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "languageMode_"] }] */
+/* eslint no-underscore-dangle: ["error", { "allow": ["content_", "minRows_", "maxRows_", "languageMode_", "disabled_"] }] */
 import $ from "jquery";
 import {Ace} from "ace-builds/src-noconflict/ace";
 import {ElementRef, ViewChild, Component, Input} from "@angular/core";
@@ -20,6 +20,7 @@ export class AceEditorComponent implements IEditor {
     private maxRows_: number = 100;
     private content_?: string;
     private editorreadonly: boolean = false;
+    private disabled_: boolean = false;
 
     @ViewChild("area") area!: ElementRef;
     @Input() placeholder: string = ""; // TODO: make this work
@@ -28,6 +29,37 @@ export class AceEditorComponent implements IEditor {
     set languageMode(lang: string) {
         this.languageMode_ = lang;
         this.aceEditor?.getSession().setMode("ace/mode/" + lang);
+    }
+
+    updateDisabled() {
+        if(this.aceEditor) {
+            if (this.disabled) {
+                this.aceEditor.setOptions({
+                    readOnly: true,
+                    highlightActiveLine: false,
+                    highlightGutterLine: false
+                });
+                (this.aceEditor.renderer.$cursorLayer as unknown as {element: HTMLElement}).element.style.opacity = "0";
+            } else {
+                this.aceEditor.setOptions({
+                    readOnly: false,
+                    highlightActiveLine: true,
+                    highlightGutterLine: true
+                });
+                (this.aceEditor.renderer.$cursorLayer as unknown as {element: HTMLElement}).element.style.opacity = "1";
+            }
+        }
+        this.aceEditor?.setOption("readOnly", this.disabled);
+    }
+
+    @Input()
+    set disabled(d: boolean) {
+        this.disabled_ = d;
+        this.updateDisabled();
+    }
+
+    get disabled() {
+        return this.disabled_;
     }
 
     @Input()
@@ -71,6 +103,7 @@ export class AceEditorComponent implements IEditor {
         }
         editor.getSession().setUseWorker(false); // syntax check away
         editor.renderer.setScrollMargin(12, 12, 0, 0);
+        this.updateDisabled();
         this.content = this.content_ ?? "";
         this.content_ = undefined;
     }
