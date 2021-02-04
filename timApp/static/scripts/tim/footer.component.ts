@@ -18,12 +18,12 @@ import {genericglobals} from "tim/util/globals";
                                     <ng-container i18n>TIM last updated</ng-container>:
                                     <ng-container *ngIf="hide.links">{{config.gitLastestCommitTimestamp}}
                                         <br>
-                                        <ng-container i18n="@@probQuest">Problems and questions</ng-container>: {{config.helpEmail}}
+                                        <ng-container i18n="@@probQuest">Problems and questions about TIM</ng-container>: {{config.helpEmail}}
                                     </ng-container>
                                     <ng-container *ngIf="!hide.links">
                                         <a href="/view/tim/muutoshistoria">{{config.gitLastestCommitTimestamp}}</a>
                                         <br>
-                                        <ng-container i18n="@@probQuest">Problems and questions</ng-container>:
+                                        <ng-container i18n="@@probQuest">Problems and questions about TIM</ng-container>:
                                         <a href="mailto:{{config.helpEmail}}">{{config.helpEmail}}</a>
                                     </ng-container>
                                     <ng-container *ngIf="config.gitBranch != 'master'">

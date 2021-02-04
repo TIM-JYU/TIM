@@ -1974,8 +1974,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="probQuest" datatype="html">
-        <source>Problems and questions</source>
-        <target state="translated">Ongelmat ja kysymykset</target>
+        <source>Problems and questions about TIM</source>
+        <target state="translated">TIMiin liittyvät ongelmat ja kysymykset</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
           <context context-type="linenumber">21</context>
