@@ -30,7 +30,7 @@ export interface IAskedJsonBase {
     questionType: QuestionType;
     randomizedRows?: number;
     timeLimit?: number;
-    size?: number;
+    size?: string;
 }
 
 export interface IAskedJsonJson extends IUnprocessedHeaders, IAskedJsonBase {}
@@ -106,7 +106,7 @@ export const AskedJsonJsonCodec = mandatoryAndOptional(
         points: t.string,
         randomizedRows: t.number,
         timeLimit: t.number,
-        size: t.number,
+        size: t.string,
     }
 );
 
