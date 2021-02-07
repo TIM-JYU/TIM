@@ -63,44 +63,46 @@ export interface IDrawOptions extends t.TypeOf<typeof DrawOptions> {}
                                                           (ngModelChange)="onSettingsChanged()">
             Draw</label>
         <span class="drawOptions" [hidden]="!drawSettings.enabled">
-            <span *ngIf="drawVisibleOptions.freeHand">
-                <label>
-                <input type="radio"
-                       name="drawType"
-                       [value]="0"
-                       [(ngModel)]="drawSettings.drawType"
-                       (ngModelChange)="onSettingsChanged()">
-                FreeHand</label>
-            </span>
-            <span *ngIf="drawVisibleOptions.lineMode">
-                <label>
-                <input type="radio"
-                       name="drawType"
-                       [value]="1"
-                       [(ngModel)]="drawSettings.drawType"
-                       (ngModelChange)="onSettingsChanged()">
-                Line</label>
-            </span>
-            <span *ngIf="drawVisibleOptions.rectangleMode"
-                  (ngModelChange)="onSettingsChanged()">
-                <label>
-                <input type="radio"
-                       name="drawType"
-                       [value]="2"
-                       [(ngModel)]="drawSettings.drawType"
-                       (ngModelChange)="onSettingsChanged()">
-                Rectangle</label>
-            </span>
-            <span *ngIf="drawVisibleOptions.ellipseMode"
-                  (ngModelChange)="onSettingsChanged()">
-                <label>
-                <input type="radio"
-                       name="drawType"
-                       [value]="3"
-                       [(ngModel)]="drawSettings.drawType"
-                       (ngModelChange)="onSettingsChanged()">
-                Ellipse</label>
-            </span>
+            <form class="drawRadioForm">
+                <span *ngIf="drawVisibleOptions.freeHand">
+                    <label>
+                    <input type="radio"
+                           name="drawType"
+                           [value]="0"
+                           [(ngModel)]="drawSettings.drawType"
+                           (ngModelChange)="onSettingsChanged()">
+                    FreeHand</label>
+                </span>
+                <span *ngIf="drawVisibleOptions.lineMode">
+                    <label>
+                    <input type="radio"
+                           name="drawType"
+                           [value]="1"
+                           [(ngModel)]="drawSettings.drawType"
+                           (ngModelChange)="onSettingsChanged()">
+                    Line</label>
+                </span>
+                <span *ngIf="drawVisibleOptions.rectangleMode"
+                      (ngModelChange)="onSettingsChanged()">
+                    <label>
+                    <input type="radio"
+                           name="drawType"
+                           [value]="2"
+                           [(ngModel)]="drawSettings.drawType"
+                           (ngModelChange)="onSettingsChanged()">
+                    Rectangle</label>
+                </span>
+                <span *ngIf="drawVisibleOptions.ellipseMode"
+                      (ngModelChange)="onSettingsChanged()">
+                    <label>
+                    <input type="radio"
+                           name="drawType"
+                           [value]="3"
+                           [(ngModel)]="drawSettings.drawType"
+                           (ngModelChange)="onSettingsChanged()">
+                    Ellipse</label>
+                </span>
+            </form>
             <span *ngIf="drawVisibleOptions.fill">
                 <label>
                 <input type="checkbox"
