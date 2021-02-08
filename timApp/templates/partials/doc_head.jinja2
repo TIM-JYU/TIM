@@ -18,6 +18,10 @@
     <link rel="stylesheet" href="{{ cssFile }}">
 {% endfor %}
 
+{% if pars_only %}
+    <link rel="stylesheet" href="/static/stylesheets/viewhide.css">
+{% endif %}
+
 {{ (doc_css | safe ) if doc_css }}
 
 <script class="global-vars">
