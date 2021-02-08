@@ -837,7 +837,7 @@ export class ViewCtrl implements IController {
 
     isEmptyDocument() {
         const parContainer = document.getElementById("pars")!;
-        const pars = parContainer.querySelectorAll(".par");
+        const pars = parContainer.querySelectorAll(".par:not(.preamble)");
         return (
             pars.length === 0 ||
             (pars.length === 1 && isHelpPar($(pars[0] as HTMLElement)))
