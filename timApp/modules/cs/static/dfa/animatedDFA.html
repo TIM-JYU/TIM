@@ -3,7 +3,8 @@
 <head>
  <script src="https://tim.jyu.fi/csstatic/vizjs/viz.js"></script>
  <script src="https://tim.jyu.fi/csstatic/vizjs/full.render.js"></script>
- <script src="https://tim.jyu.fi/csstatic/dfa/dfa.js"></script>
+<!-- <script src="https:tim.jyu.fi/csstatic/dfa/dfa.js"></script>-->
+<script src="http://localhost:63342/tim/static/dfa/dfa.js"></script>
  <style>
   .argsdiv {font-size: xx-large; margin-left: 1em}
   .selarg {background-color: yellow; border-style: inset;}
@@ -153,20 +154,39 @@
               s += node.name + " [shape = " + circ + color + "];\n";
           }
 
-          // connect nodes by arcs
           for (let arc of dfaState.dfa.arcs) {
+              arc.done = false;
+          }
+
+          // connect nodes by arcs
+          for (let ia = 0; ia < dfaState.dfa.arcs.length; ia++) {
+              const arc = dfaState.dfa.arcs[ia];
+              // if need to draw separate arcs for same arc, set this ia+1:
+              const n = dfaState.dfa.arcs.length
+              if ( arc.done ) continue;
               let label = "";
               let color = "";
-              let q1 = '"';
-              let q2 = '"';
-              if (dfaState.activeArc === arc) {
-                  if (minstep === 1) {
-                      color = ", fontcolor=red";
-                      q1 = '<<b>';  // make bold
-                      q2 = '</b>>'
-                  } else color = ', color=red, penwidth=2'
+              let arctext = ""; // combine all labels to this
+              let comma = "";
+              for (let ia2 = ia; ia2 < n; ia2++) { // combine same arcs
+                  const arc2 = dfaState.dfa.arcs[ia2];
+                  if (arc2.done) continue;
+                  if (arc2.from === arc.from && arc2.to === arc.to) {
+                      let text = arc2.value !==-1 ? arc2.value : "";
+                      if (dfaState.activeArc === arc2) {
+                          if (minstep === 1) {
+                              color = ", fontcolor=red";
+                              if (text) text = '<b>' + text + '</b>'; // make bold
+                          } else color = ', color=red, penwidth=2'
+                      }
+                      arctext += comma + text;
+                      comma = ",";
+                      arc2.done = true;
+                  }
+                  arc.done = true;
               }
-              if (arc.value !== -1) label = ' [ label = ' + q1 + arc.value + q2 + color + ']';
+              if (arctext) arctext = '<' + arctext + '>';
+              if (arc.value !== -1) label = ' [ label = ' + arctext + color + ']';
               s += arc.from + " -> " + arc.to + label + ";\n";
           }
 
@@ -290,16 +310,19 @@
 
 </script>
   <script>
-    const code =
-     // "->*S1\n"+
-     // "+s3 s4 s5\n" +
-     "S1 0-> S2\n" +
-     //".  1-> .*\n" +
-     "0: S2 -> S1*\n" +
-     //"1: S2 -> .\n" +
-     //"*: S2 -> S3\n" +
-     "";
-    setData({code: code, args: "1001" });
+    const code = `
+= | a b c
+---------
+1 | 2 3 5
+2 | 1 4 6
+3 | 4 1 7
+4 | 3 2 8
+5 | 6 7 1
+6 | 5 8 2
+7 | 8 5 3
+8*| 7 6 4
+     `;
+    setData({code: code, args: "aabbac" });
     console.log(dfaState.dfa.accepts("1001"));
   </script>
 </body>

@@ -13,16 +13,21 @@ class DFA {
         // regexps for various syntaxes
         // syntax 1:  0: S1 -> S2
         // syntax 2:  S1 0-> S2
-        // syntax 3:  +S1 0 S2
+        // syntax 3:  +S1 0 S2        https://regex101.com/r/uowlQQ/latest
+        // syntax Table:  = | a b c   https://regex101.com/r/xwijfX/latest
+        // syntax Trow:   1 | 2 3 4   https://regex101.com/r/Tdv6Qs/latest
         // start node: ->S1
         const re1 = /^ *([^ >:+-]+): *([^ >:+-]+) *-?>? *([^ >:+-]+) *$/;
         const re2 = /^ *([^ >:+-]+) +([^ >:+-]+) *(->|-|>| ) *([^ >:+-]+) *$/;
-        const re3 = /^\+ *([^ ]+) +([^ ]+) +([^ ]+) *$/;
+        const re3 = /^\+ *([^ |;,]+)[ |;,]+(.*) *$/;
+        const reTable = /^ *= *\| *(.*)$/;
+        const reTrow = /^ *(\S+) * *\| *(.*)$/;
         const reStart = /^ *->? *([^ >:+-]+)$/;
 
         this.arcs = [];
         this.nodes = {};
         this.first = null;
+        this.columns = [0,1];
 
         let firstFound = undefined;
         let lastUsed = undefined;
@@ -64,8 +69,31 @@ class DFA {
         for (let line of s.split("\n")) {
             line = line.trim();
             if (!line) continue; // forget empty lines
+            if (line.startsWith("--")) continue; // forget lines with ---
+            if (line.startsWith("#")) continue; // forget lines with #
+            if (line.startsWith("//")) continue; // forget lines with //
 
-            let r = reStart.exec(line);
+            let r = reTable.exec(line);
+            if (r) { // Table column headers
+                this.columns = r[1].trim().replaceAll(/[ ,;|]+/g, " ").split(" ");
+                continue;
+            }
+
+            r = re3.exec(line); // syntax 3: +S1 S2 S3
+            if (!r) r = reTrow.exec(line); // syntax: Trow 1 | 2 3 4
+            if (r) {
+                const from = r[1];
+                const to = r[2].trim().replaceAll(/[ ,;|]+/g, " ").split(" ");
+                const n = Math.min(to.length, this.columns.length);
+                const f = addLNode(from);
+                for (let i=0; i<n; i++) {
+                    const t = addNode(to[i]);
+                    addArc(this.columns[i], f, t);
+                }
+                continue;
+            }
+
+            r = reStart.exec(line);
             if (r) { // start node
                 const n = addLNode(r[1])
                 addArc(-1, 'startpoint', n);
@@ -89,15 +117,6 @@ class DFA {
                 const t = addNode(r[4]);
                 addArc(v, f, t);
                 continue;
-            }
-
-            r = re3.exec(line);
-            if (r) { // syntax 3: +S1 S2 S3
-                const f = addLNode(r[1]);
-                const t1 = addNode(r[2]);
-                const t2 = addNode(r[3]);
-                addArc(0, f, t1);
-                addArc(1, f, t2);
             }
         }
 
