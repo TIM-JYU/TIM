@@ -1186,7 +1186,7 @@ class ScimTest(TimRouteTest):
         self.get(
             '/scim/Groups',
             query_string={'filter': 'externalId sw x'},
-            **scim_error('IP not whitelisted: None', 403),
+            **scim_error('IP not allowed: None', 403),
         )
         self.get(
             '/scim/Groups',
