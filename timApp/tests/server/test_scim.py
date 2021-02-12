@@ -1181,6 +1181,22 @@ class ScimTest(TimRouteTest):
                             'status': '422'},
         )
 
+    def test_ip_access(self):
+        app.config['SCIM_ALLOWED_IP'] = '1.2.3.4'
+        self.get(
+            '/scim/Groups',
+            query_string={'filter': 'externalId sw x'},
+            **scim_error('IP not whitelisted: None', 403),
+        )
+        self.get(
+            '/scim/Groups',
+            query_string={'filter': 'externalId sw x'},
+            headers=[('X-Forwarded-For', '1.2.3.4')],
+            auth=a,
+        )
+        app.config['SCIM_ALLOWED_IP'] = None
+
+
 def scim_error(msg: str, code=422):
     return dict(
         expect_status=code,
