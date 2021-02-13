@@ -74,40 +74,128 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-// eka
-rank 1: rd 1, ax=120, ay=100, rd: 1, dx: 100
-rank 0, rd: 1
-g w:1, r:0, snap: 0 1
-class Item: value V, next SR
-ref root
-s.Item item1 1
-s.Item item2 2
-s.Item item3 3
-s.Item item4 4
+# Ohjelmointi 2 kurssin malliharjoitustyön rakenne
+    g w:3, h:2, dir:1
+class Naytto: kerho R
+    g w:2, h:2, dir:1
+class Kerho: jasenet R, harrastukset R
+    g w:3
+class Jasenet: kokonimi S, tiedostonNimi S, maxLkm V, lkm V, alkiot R
+    g w:3
+class Jasen: tunnusNro V, nimi S, osoite S, postinumero V, "": S
+    g w:3
+class Harrastukset: "_": S, tiedostonNimi S, maxLkm V, lkm V, alkiot R
+    g w:3
+class Harrastus: tunnusNro V, jasenNro V, ala S, aloitusvuosi V, tuntiaViikossa V
 
-root -> item1
-item1.next -> item2
-item2.next -> item3
-item3.next -> item4
-g firstStep, r 1, sx: 100
-// Uusi apuviite
-ref p
-/// Alkuun
-p = root
-/// Eteenpäin, etsitään 3
-p = p.next
-// Eteenpäin kunnes p.value == 3
-p = p.next
-/// Luodaan uusi alkio
-gn item5: r 1
-ref uusi -> s.Item item5 5
-/// Ja tämän perään 3:n seuraava
-uusi.next = p.next
-/// Tämän 3:n perään
-p.next = uusi
-#gn item4: sx: 80
-move item5 item4
-gn item5: r 0
+g rank KERHO, ax: 250, ay: 45
+g rx: 380, ry: -4
+s.Naytto +naytto
+t {sx: -130, sy: -100} Naytto naytto
+
+g rx: 0, ry: 0
+s.Kerho +kerho
+t {"align": middle, sy: -105} Kerho
+t {"align": end, sx: -70, sy: -20} jasenet
+t {"align": start, sx: 70, sy: -20} harrastukset
+SVG <path d="M 730 130 Q 450 125 450 0" fill="none" stroke="#000" stroke-dasharray="3 3"></path>
+
+naytto.kerho -> kerho
+
+g rank JASENET, ax: 100, ay: 200
+g rx: 30, ry: 0
+s.Jasenet +jasenet "Kelmien kerho" nimet.dat 8 0
+g rx: 0, ry: 160, w:2, dir: 0
+a +alkiot R8
+g rx: 150, ry: 120
+s.Jasen j1 1 "Ankka Aku" Ankkalinna 12345 ...
+s.Jasen j2 2 "Susi Sepe" Takametsä 12555 ...
+s.Jasen j3 4 "Ponteva Veli" Takametsä 12355 ...
+t {"align": middle} Jasen
+
+jasenet.alkiot -> alkiot
+
+alkiot[0] -> j1
+alkiot[1] -> j2
+alkiot[2] -> j3
+jasenet.lkm = 3
+
+
+g rank HARRASTUKSET, ax: 360, ay: 200
+g rx: 0, ry: 0
+s.Harrastukset +harrastukset "" harrastukset.dat 10
+g rx: 20, ry: 160, w : 2, dir: 0
+a alkioth R10
+g rx: 240, ry: 10, snap: 0 2
+s.Harrastus h1  1 1 kalastus 1955 20
+s.Harrastus h2  2 1 "laiskottelu" 1950 20
+s.Harrastus h3  3 2 "kelmien kerho" 1962 2
+s.Harrastus h4  4 1 "työn pakoilu" 1962 40
+s.Harrastus h5  5 2 "possujen jah." 1954 20
+s.Harrastus h6  7 4 "susiansojen..." 1956 15
+t {"align": middle} Harrastus
+
+harrastukset.alkiot -> alkioth
+alkioth[0] -> h1
+alkioth[1] -> h2
+alkioth[2] -> h3
+alkioth[3] -> h4
+alkioth[4] -> h5
+alkioth[5] -> h6
+harrastukset.lkm = 6
+
+
+kerho.jasenet -> jasenet
+kerho.harrastukset -> harrastukset
+g gotoStep
+g firstStep
+t {x: 400, y: 50} Ankka Aku
+g x 270, y: 100
+ref jasen2:jasen
+t {x: 180, y: 160} Ankka Aku
+g x 155, y: 300
+ref jasen3:jasen
+jasen3 -> j1
+jasen2 -> j1
+jasen3 -> null
+gn jasen3: sx -500
+g rank ETSI, ax: 760, ay: 100
+g rx 0, ry 0
+ref jasen
+jasen -> j1
+jasen2 -> null
+gn jasen2: sx -500
+ref loytyneetnaytto: loytyneet
+gn jasen2: sx 0
+jasen2 -> j1
+g rank HARRASTUKSET
+g ry -75, rx 120
+val id=1
+ref loytyneet
+ref har
+g rank ETSI
+l loyt RV5
+loytyneet -> loyt
+har -> h1
+loyt[0] -> h1
+loyt.count = 1
+har -> h2
+loyt[1] -> h2
+loyt.count = 2
+har -> h3
+har -> h4
+loyt[2] -> h4
+loyt.count = 3
+har -> h5
+har -> h6
+gn id: tsx -600
+har -> null
+gn har: tsx -600
+loytyneetnaytto -> loyt
+loytyneet -> null
+gn loytyneet: tsx -600
+jasen2 -> null
+gn jasen2: tsx -600
 `;
 setData({
     code: code, args: "1001", params:

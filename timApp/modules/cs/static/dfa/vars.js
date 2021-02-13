@@ -1598,7 +1598,7 @@ class SetNamedGraphAttributes extends Command {
         this.name = name;
         this.global = global;
         this.graphAttributes = graphAttributes;
-        this.noAnimate = true;
+        // this.noAnimate = true;
     }
 
     run(variables) {

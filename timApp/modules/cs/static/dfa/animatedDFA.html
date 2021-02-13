@@ -4,7 +4,8 @@
  <script src="https://tim.jyu.fi/csstatic/vizjs/viz.js"></script>
  <script src="https://tim.jyu.fi/csstatic/vizjs/full.render.js"></script>
 <!-- <script src="https:tim.jyu.fi/csstatic/dfa/dfa.js"></script>-->
-<script src="http://localhost:63342/tim/static/dfa/dfa.js"></script>
+<script src="http://localhost/csstatic/dfa/dfa.js"></script>
+<!-- <script src="http://localhost:63342/tim/static/dfa/dfa.js"></script>-->
  <style>
   .argsdiv {font-size: xx-large; margin-left: 1em}
   .selarg {background-color: yellow; border-style: inset;}
@@ -301,7 +302,25 @@
     dfaState.update();
   }
 
+  function preCheck(data) {
+     if (!data) return false;
+     if (!data.params) return false;
+     if (!data.params.illegal) return false;
+     if (!data.args) return false;
+     let illegal = data.params.illegal;
+     let args = data.args.trim();
+     for (let s of illegal) {
+        let re = new RegExp("^"+s+"$");
+        if (args.match(re)) {
+            errspan.innerText = "Laiton jono: " + args;
+            return true;
+        }
+     }
+     return false;
+  }
+
   function setData(data) {
+    if ( preCheck(data) ) return;
     let dfa = new DFA(data.code);
     dfaState = new VisualDFAState(dfa, data.args);
     dfaState.makeViz();
