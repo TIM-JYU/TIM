@@ -309,6 +309,9 @@ class DocumentPrinter:
                 top_level = 'chapter'
 
             src = self.get_content(user_ctx, plugins_user_print=plugins_user_print, target_format=target_format)
+            # see: https://regex101.com/r/latest
+            # src = re.sub(r'\{width=[^ }]* +([^}]*scale=[^%]*%[^}]*\})',                         r'{\1', src)
+
 
             templbyte = bytearray(template_content, encoding='utf-8')
             # template_file.write(templbyte) # for some reason does not write small files
