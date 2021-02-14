@@ -149,34 +149,43 @@ kerho.jasenet -> jasenet
 kerho.harrastukset -> harrastukset
 g gotoStep
 g firstStep
+/// Etsitään Aku Ankka
 t {x: 400, y: 50} Ankka Aku
-g x 270, y: 100
-ref jasen2:jasen
-t {x: 180, y: 160} Ankka Aku
-g x 155, y: 300
-ref jasen3:jasen
-jasen3 -> j1
-jasen2 -> j1
-jasen3 -> null
-gn jasen3: sx -500
 g rank ETSI, ax: 760, ay: 100
 g rx 0, ry 0
 ref jasen
+g tx 270, ty: 100
+ref jasen2:jasen
+t {x: 180, y: 160} Ankka Aku
+g tx 155, ty: 300
+ref jasen3:jasen
+jasen3 -> j1
+// Palautetaan viite löytyneeseen
+jasen2 -> j1
+jasen3 -> null
+gn jasen3: tsx -500
 jasen -> j1
 jasen2 -> null
-gn jasen2: sx -500
+gn jasen2: tsx -500
+/// Etsitään Aku Ankan harrastuksia
+g rank ETSI
 ref loytyneetnaytto: loytyneet
-gn jasen2: sx 0
+gn jasen2: tsx 0
+// Viedään jasen-viite kerholle
 jasen2 -> j1
 g rank HARRASTUKSET
 g ry -75, rx 120
+// Viedään jäsenen id harrastuksille
 val id=1
+// Luodaan löytyneiden lista
 ref loytyneet
 ref har
 g rank ETSI
 l loyt RV5
 loytyneet -> loyt
+// Aletaan etsiä niitä harrastuksia, joilla 1 jäsen id:ssä
 har -> h1
+// Lisätään viitteet löytyneiden listaan
 loyt[0] -> h1
 loyt.count = 1
 har -> h2
@@ -189,6 +198,7 @@ loyt.count = 3
 har -> h5
 har -> h6
 gn id: tsx -600
+// Palautetaan viite löytyneiden listaan
 har -> null
 gn har: tsx -600
 loytyneetnaytto -> loyt
@@ -196,10 +206,17 @@ loytyneet -> null
 gn loytyneet: tsx -600
 jasen2 -> null
 gn jasen2: tsx -600
+// Nyt on viite jäseneen ja sen harrastuksiin
 `;
 setData({
-    code: code, args: "1001", params:
-        {mode: "step,code", errorlevel: 3, animate: "commands", allowLazy: false}
+    code: code, args: "1001", params: {
+         mode: "step,code",
+         errorlevel: 3,
+         // animate: "commands",
+         animate: "code",
+         allowLazy: false,
+         justone: true,
+         }
 });
 
 if (false) {

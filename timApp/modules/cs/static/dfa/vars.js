@@ -3431,7 +3431,7 @@ class VisualSVGVariableRelations {
             this.elements.codediv.innerHTML = "";
             let [prev, next] = this.getPrevNextStepNumbers(this.stepnumber);
             for (let code of this.variableRelations.allCodeList) {
-                if (linenr >= this.firstStep+1) {
+                if (code.stepnumber >= this.firstStep+1) {
                     let ns = String(linenr).padStart(2, '0');
                     let curr = "";
                     let text = this.encodeHTML(code.code);
@@ -3441,7 +3441,8 @@ class VisualSVGVariableRelations {
                     }
                     if (prev <= code.stepnumber && code.stepnumber <= next)
                         curr = "current";
-                    this.addCode(`<pre class="step ${curr}">${ns} ${text}</pre>`);
+                    if (!this.justone || curr)
+                        this.addCode(`<pre class="step ${curr}">${ns} ${text}</pre>`);
                 }
                 linenr++;
             }
@@ -3940,6 +3941,7 @@ function setData(data) {
     let step = variableRelations.runUntil(step1);
     visual.stepnumber = step;
     visual.step = step;
+    visual.justone = params.justone;
     visual.makeSVG();
     visual.draw();
 }
