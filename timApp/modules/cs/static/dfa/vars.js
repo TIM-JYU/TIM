@@ -1328,6 +1328,33 @@ class AssignTo extends Command {
     }
 }
 
+class SetStyle extends Command {
+    // Assign value to predefined variable
+    // see: https://regex101.com/r/LRSIyE/latest
+    // syntax: a = 5
+    static isMy(s) {
+        let re = /^style +([$.\w\d]+) *(.*)$/;
+        let r = re.exec(s);
+        if (!r) return undefined;
+        return [new SetStyle(r[1], r[2])];
+    }
+
+    constructor(to, style) {
+        super();
+        this.error = "";
+        this.to = to;
+        this.style = style;
+    }
+
+    run(variables) {
+        let varTo = this.findVarForAssign(variables,this.to, false)[1];
+        if (!varTo) return `Muuttujaa {varTo} ei löydy!`
+        varTo.style = this.style;
+        return "";
+    }
+}
+
+
 
 class CreateClass extends Command {
     // Creates a class for new structures
@@ -1622,7 +1649,7 @@ class MoveVars extends Command {
     // see https://regex101.com/r/DhHUjg/latest
     // syntax:
     //   move item5 item4
-    static isMy(s, variables) {
+    static isMy(s) {
         let re = /^[Mm]ove (\S+) (\S+)$/
         let r = re.exec(s);
         if (!r) return undefined;
@@ -1716,6 +1743,7 @@ const knownCommands = [
     SetNamedGraphAttributes,
     CodeCommand,
     MoveVars,
+    SetStyle,
     AddSVG,
     UnknownCommand,
 ];
@@ -2235,7 +2263,6 @@ class VariableRelations {
     findStep(text) {
         // Returns next step nro of g firstStep command
         let nr = 0;
-        let lastlinenr = 0;
         for (let cmd of this.commands) {
             if (cmd.graphAttributes && cmd.graphAttributes.includes(text))
                 return nr+1;
@@ -2348,6 +2375,19 @@ class SVGUtils {
        fill-opacity="0.2" fill="#000000" stroke="none"  pointer-events="all"/>
     <path d="M 0 0 L ${w} 0 L ${w + dx} ${-dy} M ${w} 0 L ${w} ${h}"
        fill="none" stroke="#000000" stroke-miterlimit="10"  pointer-events="all"/>
+</g>
+`;
+    }
+
+    static stylebox(id, w, h, x, y, style) {
+        // draw one svg 3D box
+        if (x === undefined) x = 0;
+        if (y === undefined) y = 0;
+        if (style === undefined) style = 'fill="#fff"';
+        return `
+<g id="${id}" transform="translate(${x - w / 2.0} ${y - h / 2.0})">
+    <path d="M 0 0 L 0 ${h} L ${w} ${h} L ${w} ${0} L 0 0 Z"
+       ${style}   pointer-events="all"/>
 </g>
 `;
     }
@@ -2597,6 +2637,10 @@ const svgVariableMixin = {
             svg += SVGUtils.box(this.name, w, h, 0, 0, x, y, fill)
         } else if (this.error) {
             svg += `<use href="#ebox" x="${x}" y="${y}" />\n`;
+        }
+
+        if (this.style) {
+            svg += SVGUtils.stylebox(this.name, w, h, x, y, this.style)
         }
 
         let sref = SVGUtils.grval(this, "sref", 0);

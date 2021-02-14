@@ -184,19 +184,32 @@ g rank ETSI
 l loyt RV5
 loytyneet -> loyt
 // Aletaan etsiä niitä harrastuksia, joilla 1 jäsen id:ssä
+style id fill=yellow
 har -> h1
+style h1.jasenNro fill=lime
 // Lisätään viitteet löytyneiden listaan
 loyt[0] -> h1
 loyt.count = 1
+style h1.jasenNro
 har -> h2
+style h2.jasenNro fill=lime
 loyt[1] -> h2
 loyt.count = 2
+style h2.jasenNro
 har -> h3
+style h3.jasenNro fill=red
+style h3.jasenNro
 har -> h4
+style h4.jasenNro fill=lime
 loyt[2] -> h4
 loyt.count = 3
+style h4.jasenNro
 har -> h5
+style h5.jasenNro fill=red
+style h5.jasenNro
 har -> h6
+style h6.jasenNro fill=red
+style h6.jasenNro
 gn id: tsx -600
 // Palautetaan viite löytyneiden listaan
 har -> null
