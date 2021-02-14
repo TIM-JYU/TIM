@@ -1333,7 +1333,7 @@ class SetStyle extends Command {
     // see: https://regex101.com/r/LRSIyE/latest
     // syntax: a = 5
     static isMy(s) {
-        let re = /^style +([$.\w\d]+) *(.*)$/;
+        let re = /^style +([$.[\]\w\d]+) *(.*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         return [new SetStyle(r[1], r[2])];
@@ -1347,7 +1347,8 @@ class SetStyle extends Command {
     }
 
     run(variables) {
-        let varTo = this.findVarForAssign(variables,this.to, false)[1];
+        // let varTo = this.findVarForAssign(variables,this.to, false)[1];
+        let varTo = variables.findVar(this.to);
         if (!varTo) return `Muuttujaa {varTo} ei löydy!`
         varTo.style = this.style;
         return "";
@@ -2640,7 +2641,7 @@ const svgVariableMixin = {
         }
 
         if (this.style) {
-            svg += SVGUtils.stylebox(this.name, w, h, x, y, this.style)
+            svg += SVGUtils.stylebox(this.name+"-s", this.width, this.height, x, y, this.style)
         }
 
         let sref = SVGUtils.grval(this, "sref", 0);
@@ -2865,6 +2866,10 @@ const svgSimpleReferenceVariableMixin = {
         if (this.parent) {
             text = text.replace(this.parent.name + ".", "");
             textsize = "10px";
+        }
+
+        if (this.style) {
+            svg += SVGUtils.stylebox(this.name+"-s", this.width, this.height, x, y, this.style)
         }
 
         // draw variable names if needed
@@ -3180,7 +3185,7 @@ const svgStructVariableMixin = {
                 let dropy = h/4;
                 if (vertical) dropy = 0;
                 else v.texty = hortexty;
-                svg += v.toSVG(xv, yv+ dropy, clientw, h * ymul, dx, dy, true, textalign, forcedw);
+                svg += v.toSVG(xv, yv+ dropy, clientw, h * ymul, dx, dy, true, textalign, 1);
             }
             xv += mx * bw; // v.width;
             yv += my * v.height;
@@ -3199,7 +3204,7 @@ const svgStructVariableMixin = {
         */
         let left = this.left();
         this.bottomy =  this.righty;
-        this.rightx =  maxx;
+        this.rightx =  Math.max(maxx, left.x + this.width + dx / 2);
         this.topy = left.y - fh / 2;
 
         this.snappoints = [

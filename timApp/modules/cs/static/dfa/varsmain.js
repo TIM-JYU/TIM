@@ -90,9 +90,11 @@ class Harrastus: tunnusNro V, jasenNro V, ala S, aloitusvuosi V, tuntiaViikossa 
 
 g rank KERHO, ax: 250, ay: 45
 g rx: 380, ry: -4
+g debug c
 s.Naytto +naytto
 t {sx: -130, sy: -100} Naytto naytto
-
+`;
+const code22=`
 g rx: 0, ry: 0
 s.Kerho +kerho
 t {"align": middle, sy: -105} Kerho
@@ -126,7 +128,7 @@ g rx: 0, ry: 0
 s.Harrastukset +harrastukset "" harrastukset.dat 10
 g rx: 20, ry: 160, w : 2, dir: 0
 a alkioth R10
-g rx: 240, ry: 10, snap: 0 2
+g rx: 240, ry: 110, snap: 0 2
 s.Harrastus h1  1 1 kalastus 1955 20
 s.Harrastus h2  2 1 "laiskottelu" 1950 20
 s.Harrastus h3  3 2 "kelmien kerho" 1962 2
@@ -149,27 +151,41 @@ kerho.jasenet -> jasenet
 kerho.harrastukset -> harrastukset
 g gotoStep
 g firstStep
+
 /// Etsitään Aku Ankka
-t {x: 400, y: 50} Ankka Aku
+g x: 520, y:30
+n guinimi:nimi Ankka Aku
 g rank ETSI, ax: 760, ay: 100
 g rx 0, ry 0
 ref jasen
+g tx 390, ty: 30
+ref kerhonimi:nimi -> guinimi
 g tx 270, ty: 100
 ref jasen2:jasen
-t {x: 180, y: 160} Ankka Aku
+g tx 210, ty: 160
+ref jasenetnimi:nimi -> guinimi
 g tx 155, ty: 300
 ref jasen3:jasen
+style guinimi fill=yellow
 jasen3 -> j1
+style j1.nimi fill=lime
 // Palautetaan viite löytyneeseen
+style guinimi 
+style j1.nimi 
 jasen2 -> j1
 jasen3 -> null
 gn jasen3: tsx -500
+jasenetnimi -> null
+gn jasenetnimi: tsx -500
+g rank ETSI
 jasen -> j1
 jasen2 -> null
-gn jasen2: tsx -500
+gn jasen2: tsx -700
+kerhonimi -> null
+gn kerhonimi: tsx -700
+// Nyt on käyttöliittymällä viite Aku Ankkaan
 /// Etsitään Aku Ankan harrastuksia
-g rank ETSI
-ref loytyneetnaytto: loytyneet
+ref guiharrastukset: harrastukset
 gn jasen2: tsx 0
 // Viedään jasen-viite kerholle
 jasen2 -> j1
@@ -178,11 +194,11 @@ g ry -75, rx 120
 // Viedään jäsenen id harrastuksille
 val id=1
 // Luodaan löytyneiden lista
-ref loytyneet
+ref loydetyt
 ref har
 g rank ETSI
 l loyt RV5
-loytyneet -> loyt
+loydetyt -> loyt
 // Aletaan etsiä niitä harrastuksia, joilla 1 jäsen id:ssä
 style id fill=yellow
 har -> h1
@@ -214,9 +230,9 @@ gn id: tsx -600
 // Palautetaan viite löytyneiden listaan
 har -> null
 gn har: tsx -600
-loytyneetnaytto -> loyt
-loytyneet -> null
-gn loytyneet: tsx -600
+guiharrastukset -> loyt
+loydetyt -> null
+gn loydetyt: tsx -600
 jasen2 -> null
 gn jasen2: tsx -600
 // Nyt on viite jäseneen ja sen harrastuksiin
@@ -226,7 +242,7 @@ setData({
          mode: "step,code",
          errorlevel: 3,
          // animate: "commands",
-         animate: "code",
+         // animate: "code",
          allowLazy: false,
          justone: true,
          }
