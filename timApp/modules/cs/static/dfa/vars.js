@@ -1331,12 +1331,15 @@ class AssignTo extends Command {
 class SetStyle extends Command {
     // Assign value to predefined variable
     // see: https://regex101.com/r/LRSIyE/latest
-    // syntax: a = 5
+    // syntax: style1 j3.id fill=red
     static isMy(s) {
-        let re = /^style +([$.[\]\w\d]+) *(.*)$/;
+        let re = /^style(1?) +([$.\w\d]+) *(.*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
-        return [new SetStyle(r[1], r[2])];
+        let oneTime = r[1] === "1";
+        let ret = [new SetStyle(r[2], r[3])];
+        if (oneTime) ret.push(new SetStyle(r[2], ""));
+        return ret;
     }
 
     constructor(to, style) {
@@ -1984,9 +1987,14 @@ class PhaseVariables {
         if (i1 < 0) error = `Ei muuttujaa {var1} `;
         if (i2 < 0) error += `Ei muuttujaa {var2} `;
         if (error) return error;
-        let v = this.vars[i1];
+        let v1 = this.vars[i1];
+        let v2 = this.vars[i2];
         this.vars.splice(i1, 1);
-        this.vars.splice(i2, 0, v);
+        this.vars.splice(i2, 0, v1);
+        v1.rank = v2.rank;
+        if (this.namedGraphAttributes[var1] && this.namedGraphAttributes[var1].rank)
+            this.namedGraphAttributes[var1].rank = v2.rank;
+        // this.namedGraphAttributes[var1] = {...this.namedGraphAttributes[name], ...{r: v2.rank}};
         return "";
     }
 

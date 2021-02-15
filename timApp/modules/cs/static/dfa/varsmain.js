@@ -74,6 +74,44 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
+gn item5: r 1
+rank 1: rd 1, ax=120, ay=100, rd: 1, dx: 100
+rank 0, rd: 1
+g w:1, snap: 0 1
+class Item: value V, next SR
+ref root
+g r 0
+s.Item item1 1
+s.Item item2 2
+s.Item item3 3
+s.Item item4 4
+
+root -> item1
+item1.next -> item2
+item2.next -> item3
+item3.next -> item4
+g gotoStep
+g firstStep, r 1, sx: 100
+// BYCODEBEGIN
+CODE: // Uusi apuviite
+ref p
+CODE: /// Alkuun
+p = root
+CODE: /// Eteenpäin, etsitään 3
+p = p.next
+CODE: // Eteenpäin kunnes p.value == 3
+p = p.next
+style1 item3.value fill=lime
+CODE: /// Luodaan uusi alkio
+ref uusi -> s.Item item5 5
+CODE: /// Ja tämän perään 3:n seuraava
+uusi.next = p.next
+CODE: /// Tämän 3:n perään
+p.next = uusi
+move item5 item4
+// BYCODEEND
+`;
+const code22=`
 # Ohjelmointi 2 kurssin malliharjoitustyön rakenne
     g w:3, h:2, dir:1
 class Naytto: kerho R
@@ -93,8 +131,7 @@ g rx: 380, ry: -4
 g debug c
 s.Naytto +naytto
 t {sx: -130, sy: -100} Naytto naytto
-`;
-const code22=`
+
 g rx: 0, ry: 0
 s.Kerho +kerho
 t {"align": middle, sy: -105} Kerho
@@ -242,7 +279,7 @@ setData({
          mode: "step,code",
          errorlevel: 3,
          // animate: "commands",
-         // animate: "code",
+         animate: "code",
          allowLazy: false,
          justone: true,
          }
