@@ -1338,15 +1338,16 @@ class SetStyle extends Command {
         if (!r) return undefined;
         let oneTime = r[1] === "1";
         let ret = [new SetStyle(r[2], r[3])];
-        if (oneTime) ret.push(new SetStyle(r[2], ""));
+        if (oneTime) ret.push(new SetStyle(r[2], "", "style "+r[2]));
         return ret;
     }
 
-    constructor(to, style) {
+    constructor(to, style, line) {
         super();
         this.error = "";
         this.to = to;
         this.style = style;
+        if (line) this.line = line;
     }
 
     run(variables) {

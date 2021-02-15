@@ -77,10 +77,9 @@ const code = `
 gn item5: r 1
 rank 1: rd 1, ax=120, ay=100, rd: 1, dx: 100
 rank 0, rd: 1
-g w:1, snap: 0 1
+g w:1, snap: 0 1, r: 0
 class Item: value V, next SR
 ref root
-g r 0
 s.Item item1 1
 s.Item item2 2
 s.Item item3 3
@@ -278,10 +277,10 @@ setData({
     code: code, args: "1001", params: {
          mode: "step,code",
          errorlevel: 3,
-         // animate: "commands",
-         animate: "code",
+         animate: "commands",
+         //animate: "code",
          allowLazy: false,
-         justone: true,
+         //justone: true,
          }
 });
 
