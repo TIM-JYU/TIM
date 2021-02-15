@@ -1978,7 +1978,13 @@ ${fhtml}
         //     this.preventSave = true;
         // }
         this.fullCode = this.getCode();
+
+        // TODO: showCodeNow() is required for viewCode: true to work.
+        //  Otherwise precode and postcode won't show up until user clicks hide + show code.
+        //  It's unclear if getCode should handle this already.
+        this.showCodeNow();
     }
+
     async ngAfterViewInit() {
         this.preview = this.element.find(".csrunPreview");
         const styleArgs = this.markup["style-args"];
