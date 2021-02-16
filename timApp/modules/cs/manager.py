@@ -84,7 +84,10 @@ def make(dictionary, error_cls, desc, name, query, sourcefiles = None):
                 # TODO: make all languages support multiple files OR
                 # iterate and save all the files before running, as if there were
                 # multiple submission boxes
-                raise ValueError(f"Language {name} does not support multiple files")
+                if name != "stack":
+                    raise ValueError(f"Language {name} does not support multiple files")
+                else:
+                    kargs = [sourcefiles]
 
         try:
             obj = cls(query, *kargs)
