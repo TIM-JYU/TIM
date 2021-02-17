@@ -11,8 +11,8 @@ from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 
 from timApp.auth.auth_models import AccessTypeModel
-from timApp.document.docentry import DocEntry
 from timApp.document.documents import import_document_from_file
+from timApp.folder.folder import Folder
 from timApp.tim_app import app
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db, get_tim_main_engine
@@ -72,7 +72,6 @@ def initialize_database(create_docs: bool = True) -> None:
 
         create_special_usergroups(sess)
         sess.add(UserGroup.create(app.config['HOME_ORGANIZATION'] + ORG_GROUP_SUFFIX))
-        anon_group = UserGroup.get_anonymous_group()
         precomputed_hashes = [
             '$2b$04$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu',  # test1pass
             '$2b$04$B0mE/VeD5Uzucfa2juzY5.8aObzCqQSDVK//bxdiQ5Ayv59PwWsVq',  # test2pass
@@ -85,16 +84,16 @@ def initialize_database(create_docs: bool = True) -> None:
                 email=f'test{i}@example.com',
             ))
             u.pass_ = precomputed_hashes[i - 1]
+        Folder.create('users', owner_groups=UserGroup.get_admin_group())
         if create_docs:
-            DocEntry.create('testaus-1', anon_group, title='Testaus 1')
-            DocEntry.create('testaus-2', anon_group, title='Testaus 2')
+            t1g = UserGroup.get_by_name('testuser1')
             import_document_from_file(f'{EXAMPLE_DOCS_PATH}/programming_examples.md',
-                                                      'programming-examples',
-                                                      anon_group,
-                                                      title='Programming examples')
+                                                      'tim/Eri-ohjelmointikielia',
+                                                      t1g,
+                                                      title='Eri ohjelmointikieliä')
             import_document_from_file(f'{EXAMPLE_DOCS_PATH}/mmcq_example.md',
-                                                      'mmcq-example',
-                                                      anon_group,
+                                                      'tim/mmcq-example',
+                                                      t1g,
                                                       title='Multiple choice plugin example')
         sess.commit()
         log_info('Database initialization done.')

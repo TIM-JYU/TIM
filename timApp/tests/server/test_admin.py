@@ -47,7 +47,7 @@ class MergeTest(TimRouteTest):
         self.post_answer('textfield', f'{d.id}.t', user_input={'c': 'x'})
         path = d.path
         r = find_and_merge_users('testuser2', 'testuser1')
-        self.assertEqual(3, r.accesses)
+        self.assertEqual(2, r.accesses)
         self.assertEqual(0, r.annotations)
         self.assertEqual(1, r.answers)
         self.assertEqual(0, r.lectureanswers)
@@ -74,7 +74,7 @@ class MergeTest(TimRouteTest):
         db.session.refresh(self.test_user_1.get_personal_group())
         db.session.refresh(self.test_user_2.get_personal_group())
         r = find_and_merge_users('testuser1', 'testuser2')
-        self.assertEqual(3, r.accesses)
+        self.assertEqual(2, r.accesses)
         self.assertEqual(0, r.annotations)
         self.assertEqual(1, r.answers)
         self.assertEqual(0, r.lectureanswers)
