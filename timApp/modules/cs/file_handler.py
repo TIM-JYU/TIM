@@ -252,9 +252,12 @@ class MasterSource(FileSource):
             raise ValueError("Master source path not found")
 
         if self.is_regex:
-            copy_files_regex(self.source_path, source_path, destination_path)
+            count = copy_files_regex(self.source_path, source_path, destination_path)
         else:
-            copy_files_glob(self.source_path, source_path, destination_path)
+            count = copy_files_glob(self.source_path, source_path, destination_path)
+
+        if count == 0:
+            raise ValueError(f"Configuration error: No files were found for {self.specification.source}.")
 
     @classmethod
     def init(cls, query, files) -> None:
@@ -322,7 +325,9 @@ class GitSource(ExternalFileSource):
 
     @classinstancemethod
     def copy(cls, self, destination_path: str) -> None:
-        return self.lib.copy_files(self.sub_path, destination_path, self.glob)
+        count = self.lib.copy_files(self.sub_path, destination_path, self.glob)
+        if count == 0:
+            raise ValueError(f"Configuration error: No files were found for {self.specification.source}.")
 
     @classmethod
     def init(cls, query, files) -> None:

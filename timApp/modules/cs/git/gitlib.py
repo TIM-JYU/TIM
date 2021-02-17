@@ -144,7 +144,7 @@ class GitLib:
         elif basepath.is_dir() and dpath.exists() and not dpath.is_dir():
             rm(dpath)
 
-        copy_files_glob(glob, str(basepath), destination)
+        return copy_files_glob(glob, str(basepath), destination)
 
     def sanitize_repo_path(self, repo: str):
         repo = re.sub(r'[^A-Za-z0-9\.-_]', "-", repo)
