@@ -1,13 +1,13 @@
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
-from timApp.util.utils import EXAMPLE_DOCS_PATH
+from timApp.util.utils import static_tim_doc
 
 
 class CopyCiteTest(TimRouteTest):
 
     def test_copy(self):
         self.login_test1()
-        d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/multiple_mmcqs.md')
+        d = self.create_doc(from_file=static_tim_doc('multiple_mmcqs.md'))
         d2 = self.create_doc(copy_from=d.id)
         self.assertEqual(d.document.export_markdown(), d2.document.export_markdown())
         self.login_test2()
@@ -15,7 +15,7 @@ class CopyCiteTest(TimRouteTest):
 
     def test_cite(self):
         self.login_test1()
-        d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/multiple_mmcqs.md')
+        d = self.create_doc(from_file=static_tim_doc('multiple_mmcqs.md'))
         d.document.set_settings({'test': 'hi'})
         d2 = self.create_doc(cite=d.id)
         self.assertEqual({'source_document': d.id, 'test': 'hi'}, d2.document.get_settings().get_dict())

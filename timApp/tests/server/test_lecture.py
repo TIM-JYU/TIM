@@ -4,18 +4,16 @@ from time import sleep
 from typing import Optional
 
 import dateutil.parser
-from marshmallow import missing
 
 from timApp.lecture.askedjson import AskedJson, make_error_question
 from timApp.lecture.askedquestion import AskedQuestion, get_asked_question
 from timApp.lecture.lecture import Lecture
 from timApp.lecture.lectureanswer import LectureAnswer
-from timApp.lecture.question_utils import qst_rand_array
 from timApp.lecture.showpoints import Showpoints
-from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_3_ID
+from timApp.tests.db.timdbtest import TEST_USER_1_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
-from timApp.util.utils import EXAMPLE_DOCS_PATH, get_current_time
+from timApp.util.utils import get_current_time, static_tim_doc
 
 
 class LectureTest(TimRouteTest):
@@ -39,7 +37,7 @@ class LectureTest(TimRouteTest):
 
     def test_lecture(self):
         self.login_test1()
-        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/questions.md')
+        doc = self.create_doc(from_file=static_tim_doc('questions.md'))
         current_time = get_current_time()
         start_time = (current_time - datetime.timedelta(minutes=15))
         end_time = (current_time + datetime.timedelta(hours=2))
@@ -366,7 +364,7 @@ testuser2;count;1
         start_time = (current_time - datetime.timedelta(minutes=15))
         end_time = (current_time + datetime.timedelta(hours=2))
         lecture_code = 'test lecture'
-        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/question_randomization.md')
+        doc = self.create_doc(from_file=static_tim_doc('question_randomization.md'))
         j = self.json_post('/createLecture', json_data=dict(doc_id=doc.id,
                                                             end_time=end_time,
                                                             lecture_code=lecture_code,

@@ -62,18 +62,19 @@ def delete_document(document_id: int):
     Document.remove(document_id)
 
 
-def import_document(content: str, path: str, owner_group: UserGroup, title: Optional[str] = None) -> Document:
-    doc = DocEntry.create(path, owner_group, title=title).document
+def import_document(content: str, path: str, owner_group: UserGroup, title: Optional[str] = None) -> DocInfo:
+    d = DocEntry.create(path, owner_group, title=title)
+    doc = d.document
     parser = DocumentParser(content)
     for block in parser.get_blocks():
         doc.add_paragraph(text=block['md'], attrs=block.get('attrs'))
-    return doc
+    return d
 
 
 def import_document_from_file(document_file: str,
                               path: str,
                               owner_group: UserGroup,
-                              title: Optional[str] = None) -> Document:
+                              title: Optional[str] = None) -> DocInfo:
     """Imports the specified document in the database.
 
     :param title: Title for the document.

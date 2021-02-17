@@ -6,7 +6,7 @@ from timApp.tests.browser.browsertest import BrowserTest
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
-from timApp.util.utils import EXAMPLE_DOCS_PATH, decode_csplugin
+from timApp.util.utils import decode_csplugin, static_tim_doc
 
 
 # TODO: Logging in as different user does not work in BrowserTest classes
@@ -51,15 +51,15 @@ class MinutesHandling(BrowserTest):
         db.session.commit()
         knro = 9
         d_kokous = self.create_doc(path=self.get_personal_item_path('tdk/2018/kokous9'),
-                                   from_file=f'{EXAMPLE_DOCS_PATH}/tdk/memo.md')
+                                   from_file=static_tim_doc('tdk/memo.md'))
         d_lait = self.create_doc(path=self.get_personal_item_path('tdk/lait/lait'),
-                                 from_file=f'{EXAMPLE_DOCS_PATH}/tdk/lait.md')
+                                 from_file=static_tim_doc('tdk/lait.md'))
         d_preamble = self.create_doc(
             path=self.get_personal_item_path(f'tdk/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/preamble'),
-            from_file=f'{EXAMPLE_DOCS_PATH}/tdk/preamble.md')
+            from_file=static_tim_doc('tdk/preamble.md'))
         d_preamble_year = self.create_doc(
             path=self.get_personal_item_path(f'tdk/2018/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/preamble'),
-            from_file=f'{EXAMPLE_DOCS_PATH}/tdk/preamble_year.md')
+            from_file=static_tim_doc('tdk/preamble_year.md'))
         for d in (d_preamble, d_preamble_year):
             perform_replace(d, ReplaceArguments(term='LAIT_ID_HERE',
                                                 to=f'{d_lait.id}'))

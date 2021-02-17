@@ -1,16 +1,17 @@
-from lxml import html
 from json import loads
+
+from lxml import html
 
 from timApp.auth.accesstype import AccessType
 from timApp.tests.browser.browsertest import BrowserTest
 from timApp.timdb.sqa import db
-from timApp.util.utils import EXAMPLE_DOCS_PATH
+from timApp.util.utils import static_tim_doc
 
 
 class QuestionTest(BrowserTest):
     def test_question_html(self):
         self.login_test1()
-        d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/questions.md')
+        d = self.create_doc(from_file=static_tim_doc('questions.md'))
         pars = d.document.get_paragraphs()
         data = self.get(d.url_relative, as_tree=True)
         first_id = pars[0].get_id()

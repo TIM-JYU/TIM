@@ -9,9 +9,13 @@ import sqlalchemy.exc
 from alembic.runtime.environment import EnvironmentContext
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
+from sqlalchemy_utils import database_exists, create_database
 
+from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel
 from timApp.document.documents import import_document_from_file
+from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME, PREAMBLE_FOLDER_NAME, \
+    DEFAULT_PREAMBLE_DOC
 from timApp.folder.folder import Folder
 from timApp.tim_app import app
 from timApp.timdb.dbaccess import get_files_path
@@ -21,8 +25,7 @@ from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup, ORG_GROUP_SUFFIX
 from timApp.user.users import create_special_usergroups
 from timApp.util.logger import log_info, enable_loggers, log_error
-from timApp.util.utils import EXAMPLE_DOCS_PATH
-from sqlalchemy_utils import database_exists, create_database
+from timApp.util.utils import static_tim_doc
 
 
 def check_db_version(_, context: MigrationContext):
@@ -84,17 +87,35 @@ def initialize_database(create_docs: bool = True) -> None:
                 email=f'test{i}@example.com',
             ))
             u.pass_ = precomputed_hashes[i - 1]
-        Folder.create('users', owner_groups=UserGroup.get_admin_group())
+        admin_group = UserGroup.get_admin_group()
+
+        # Create users folder explicitly with admin as owner.
+        # Otherwise its owner would be whoever logs in to TIM instance first.
+        Folder.create('users', owner_groups=admin_group)
+
         if create_docs:
             t1g = UserGroup.get_by_name('testuser1')
-            import_document_from_file(f'{EXAMPLE_DOCS_PATH}/programming_examples.md',
-                                                      'tim/Eri-ohjelmointikielia',
-                                                      t1g,
-                                                      title='Eri ohjelmointikieliä')
-            import_document_from_file(f'{EXAMPLE_DOCS_PATH}/mmcq_example.md',
-                                                      'tim/mmcq-example',
-                                                      t1g,
-                                                      title='Multiple choice plugin example')
+            import_document_from_file(
+                static_tim_doc('initial/programming_examples.md'),
+                'tim/Eri-ohjelmointikielia',
+                t1g,
+                title='Eri ohjelmointikieliä',
+            )
+            print_base = import_document_from_file(
+                static_tim_doc('initial/print_base.md'),
+                f'{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/base',
+                admin_group,
+                title='Default print template',
+            )
+            print_base.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+            group_preamble = import_document_from_file(
+                static_tim_doc('initial/group_preamble.md'),
+                f'groups/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}',
+                admin_group,
+                title='preamble',
+            )
+            group_preamble.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+
         sess.commit()
         log_info('Database initialization done.')
 

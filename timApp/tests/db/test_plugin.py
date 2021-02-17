@@ -5,13 +5,13 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.plugin.plugin import Plugin
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.util.flask.responsehelper import to_dict
-from timApp.util.utils import EXAMPLE_DOCS_PATH
+from timApp.util.utils import static_tim_doc
 
 
 class PluginTest(TimDbTest):
 
     def test_info(self):
-        d = DocEntry.create('test', self.test_user_1.get_personal_group(), from_file=f'{EXAMPLE_DOCS_PATH}/mmcq_example.md')
+        d = DocEntry.create('test', self.test_user_1.get_personal_group(), from_file=static_tim_doc('mmcq_example.md'))
         p = None
         for p in d.document.get_tasks():
             p = Plugin.from_paragraph(p, default_view_ctx)

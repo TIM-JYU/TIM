@@ -9,7 +9,7 @@ from timApp.document.translation.translation import Translation
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
-from timApp.util.utils import EXAMPLE_DOCS_PATH
+from timApp.util.utils import static_tim_doc
 
 
 class TranslationTest(TimRouteTest):
@@ -41,7 +41,7 @@ class TranslationTest(TimRouteTest):
 
     def test_translation_content(self):
         self.login_test1()
-        doc = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/multiple_mmcqs.md')
+        doc = self.create_doc(from_file=static_tim_doc('multiple_mmcqs.md'))
         j = self.create_translation(doc, 'MMCQ fi', 'fi')
         tr_doc = j.document
         pars = doc.document.get_paragraphs()

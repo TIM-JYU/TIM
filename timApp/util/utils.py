@@ -1,4 +1,5 @@
 """Utility functions."""
+import base64
 import json
 import os
 import re
@@ -7,10 +8,9 @@ import struct
 from dataclasses import fields, asdict
 from datetime import datetime, timezone
 from enum import Enum
-from pathlib import Path, PurePath, PurePosixPath
-from typing import List, Optional, Tuple, Union, Dict, Any, Sequence, Callable, Type, Set
+from pathlib import Path, PurePosixPath
+from typing import List, Optional, Tuple, Union, Dict, Any, Sequence, Callable, Set
 
-import base64
 import dateutil.parser
 import pytz
 from lxml.html import HtmlElement
@@ -217,7 +217,8 @@ def get_boolean(s: Union[bool, int, str], default: bool) -> bool:
     return True
 
 
-EXAMPLE_DOCS_PATH = 'static/example_docs'
+def static_tim_doc(path: str) -> str:
+    return f'static/tim_docs/{path}'
 
 
 def decode_csplugin(text: HtmlElement) -> Dict[str, Any]:

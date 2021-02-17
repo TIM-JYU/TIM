@@ -2,7 +2,6 @@
 """
 
 import random
-import unittest
 
 from timApp.document.document import Document
 from timApp.document.documentparser import DocumentParser
@@ -14,7 +13,7 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.tests.db.timdbtest import TimDbTest
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.usergroup import UserGroup
-from timApp.util.utils import EXAMPLE_DOCS_PATH
+from timApp.util.utils import static_tim_doc
 
 
 class DocumentTest(TimDbTest):
@@ -285,7 +284,7 @@ class DocumentTest(TimDbTest):
                          p.get_expanded_markdown(d.get_settings().get_macroinfo(default_view_ctx)))
 
     def test_import(self):
-        import_document_from_file(f'{EXAMPLE_DOCS_PATH}/mmcq_example.md',
+        import_document_from_file(static_tim_doc('mmcq_example.md'),
                                   'Multiple choice plugin example',
                                   UserGroup.get_anonymous_group())
 

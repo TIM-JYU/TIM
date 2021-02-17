@@ -8,4 +8,5 @@ class CreateDbTest(TimRouteTest):
         """Initial documents are created."""
         self.login_test1()
         self.get('/view/tim/Eri-ohjelmointikielia')
-        self.get('/view/tim/mmcq-example')
+        self.get('/view/templates/printing/base')
+        self.get('/view/groups/templates/preambles/preamble')

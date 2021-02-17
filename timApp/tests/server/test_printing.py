@@ -6,10 +6,12 @@ from timApp.document.docentry import DocEntry
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.util.flask.responsehelper import to_json_str
-from timApp.util.utils import exclude_keys, EXAMPLE_DOCS_PATH
+from timApp.util.utils import exclude_keys
 
 
 class PrintingTest(TimRouteTest):
+    create_docs = True
+
     def test_print_invalid_request(self):
         self.login_test1()
         d = self.create_doc()
@@ -57,8 +59,7 @@ class PrintingTest(TimRouteTest):
                                        'url': expected_url})
         result = self.get_no_warn(expected_url)
         self.assertEqual('Hello 1\n\nHello 2', result)
-        t2 = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/base',
-                             from_file=f'{EXAMPLE_DOCS_PATH}/templates/print_base.md')
+        t2 = DocEntry.find_by_path(f'{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/base')
         tj2 = json.loads(to_json_str(t2))
         result = self.get(f'/print/templates/{d.path}').get('templates')
         self.assert_list_of_dicts_subset(result, map(lambda x: exclude_keys(x, 'modified'), [tj, tj2]))

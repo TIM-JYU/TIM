@@ -1,6 +1,6 @@
 from timApp.document.docentry import DocEntry
 from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
-from timApp.util.utils import EXAMPLE_DOCS_PATH
+from timApp.util.utils import static_tim_doc
 
 
 class AnswerBrowserTest(BrowserTest):
@@ -8,7 +8,7 @@ class AnswerBrowserTest(BrowserTest):
     def test_referenced_area_plugin(self):
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(from_file=f'{EXAMPLE_DOCS_PATH}/multiple_mmcqs.md')
+        d = self.create_doc(from_file=static_tim_doc('multiple_mmcqs.md'))
         d2 = self.create_doc(initial_par=f'#- {{rd={d.id} ra=a1}}')
         self.check_reference_answerbrowser_ok(d2)
 

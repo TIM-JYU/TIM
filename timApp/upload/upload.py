@@ -266,7 +266,7 @@ def upload_document(folder, file):
 
     doc = import_document(content, path, get_current_user_group_object())
     db.session.commit()
-    return json_response({'id': doc.doc_id})
+    return json_response({'id': doc.id})
 
 
 def upload_and_stamp_attachment(d: DocInfo, file, stamp_data: AttachmentStampData, stampformat: str,
