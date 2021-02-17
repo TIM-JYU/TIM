@@ -165,7 +165,7 @@ def copy_files_glob(glob: str, source: str, dest: str):
             chown(destination, user="agent", group="agent")
             for f in m.relative_to(source).parents:
                 chown(dest / f, user="agent", group="agent")
-    else:
+    elif len(matches) > 0:
         copy2(str(matches[0]), dest)
         chown(dest, user="agent", group="agent")
 
