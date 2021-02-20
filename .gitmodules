@@ -3,7 +3,8 @@
 	url = https://gitlab.com/tim-jyu/haskellplugins.git
 [submodule "stack"]
 	path = stack
-	url = https://github.com/vesal/moodle-qtype_stack.git
+	url = https://gitlab.com/tim-jyu/stack.git
+	branch = api4.3
 [submodule "timApp/modules/cs/jsav"]
 	path = timApp/modules/cs/jsav
 	url = https://github.com/vkaravir/JSAV.git
