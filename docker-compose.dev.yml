@@ -72,10 +72,10 @@ services:
    - "49998:22"
  stack-api-server:
   << : *common-root
-  image: timimages/stack-debug
+  image: timimages/stack-api:latest-dev
   build:
     context: ./stack
-    dockerfile: DockerfileDebug
+    target: dev
   security_opt:
    - seccomp:unconfined
   volumes:
