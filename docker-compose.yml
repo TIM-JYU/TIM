@@ -308,13 +308,20 @@ services:
   tmpfs:
    - /tmp
    - /run/celery
+ maxima:
+  image: timimages/goemaxima:2020113000-latest
  stack-api-server:
   profiles:
    - prod
    - prod_multi
    - dev
-  build: ./stack
-  image: timimages/stack
+  build:
+   context: ./stack
+   target: prod
+  image: timimages/stack-api:latest
+  depends_on:
+   maxima:
+    condition: service_healthy
   security_opt:
    - seccomp:unconfined
   volumes:
