@@ -320,8 +320,7 @@ services:
    target: prod
   image: timimages/stack-api:latest
   depends_on:
-   maxima:
-    condition: service_healthy
+   - maxima
   security_opt:
    - seccomp:unconfined
   volumes:
