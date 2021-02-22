@@ -80,7 +80,7 @@ class CountModel:
 class PointSumRuleModel:
     count: CountModel = CountModel(best=9999)
     scoreboard: ScoreboardOptions = ScoreboardOptions()
-    include_groupless: bool = True
+    include_groupless: bool = False
     point_count_method: PointCountMethod = PointCountMethod.latest
 
 
