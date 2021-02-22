@@ -272,7 +272,7 @@ def convert_mcq_to_qst(jso, is_mmcq=False):
         "isTask": True,
     }
     jso["markup"] = qjso
-    copy_value("answerLimit", qjso, jsom, "1")
+    copy_value("answerLimit", qjso, jsom, 1)
     copy_value("header", qjso, jsom)
     copy_value("footer", qjso, jsom)
     copy_value("button", qjso, jsom)
