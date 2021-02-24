@@ -53,7 +53,6 @@ TIM_SAFE_TAGS = [
     'sup',
     'u',
     's',
-    'style',
     'tim-login-menu',
     'tim-plugin-loader',
     # plugin components:
