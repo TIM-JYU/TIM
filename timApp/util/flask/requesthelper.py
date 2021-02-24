@@ -13,11 +13,11 @@ from webargs.flaskparser import use_args
 from werkzeug.exceptions import HTTPException
 from werkzeug.wrappers import BaseRequest
 
-from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_current_user_name
+from timApp.auth.sessioninfo import get_current_user_name
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.viewcontext import ViewRoute, ViewContext
-from timApp.modules.py.marshmallow_dataclass import class_schema
-from timApp.modules.py.utils import DurationSchema
+from tim_common.marshmallow_dataclass import class_schema
+from tim_common.utils import DurationSchema
 from timApp.timdb.exceptions import InvalidReferenceException
 from timApp.user.user import Consent
 

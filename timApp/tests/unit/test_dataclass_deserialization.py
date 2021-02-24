@@ -4,8 +4,8 @@ from unittest import TestCase
 
 from marshmallow import ValidationError
 
-from marshmallow_dataclass import class_schema
-from utils import Missing
+from tim_common.marshmallow_dataclass import class_schema
+from tim_common.utils import Missing
 
 
 class DataclassDeserializationTest(TestCase):

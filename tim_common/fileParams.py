@@ -15,7 +15,7 @@ import binascii
 
 import base64
 
-from cs_sanitizer import allow_minimal, tim_sanitize
+from tim_common.cs_sanitizer import allow_minimal, tim_sanitize
 
 CACHE_DIR = "/tmp/cache/"
 

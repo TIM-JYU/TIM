@@ -11,8 +11,8 @@ from typing import Union, List, DefaultDict, Dict, Generator, Any, Optional
 from flask import render_template_string
 from marshmallow.utils import missing
 
-from markupmodels import GenericMarkupModel
-from pluginserver_flask import GenericHtmlModel, \
+from tim_common.markupmodels import GenericMarkupModel
+from tim_common.pluginserver_flask import GenericHtmlModel, \
     GenericAnswerModel, create_blueprint, value_or_default, PluginAnswerResp, PluginReqs, EditorTab
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
@@ -20,7 +20,7 @@ from timApp.user.hakaorganization import HakaOrganization
 from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode
 from timApp.user.user import User, UserInfo
 from timApp.util.utils import widen_fields
-from utils import Missing
+from tim_common.utils import Missing
 
 
 @dataclass

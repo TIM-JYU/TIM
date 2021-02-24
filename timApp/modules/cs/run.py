@@ -1,17 +1,13 @@
 import itertools
 import subprocess
-import sys
 import time
 import uuid
 from pathlib import PurePath, PureWindowsPath
 from subprocess import PIPE, Popen
-import shlex
+
+from tim_common.fileParams import *
 
 CS3_TAG = 'rust'
-
-sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
-
-from fileParams import *  # noqa
 
 
 def wait_file(f1):

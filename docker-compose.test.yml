@@ -3,7 +3,6 @@ services:
  tim:
   depends_on:
    - postgresql-test
-   - chrome
   tmpfs:
    - /tmp
   command: "sleep infinity"
@@ -15,14 +14,6 @@ services:
    - /var/lib/postgresql/data
   environment:
    POSTGRES_PASSWORD: postgresql
- chrome:
-  image: selenium/standalone-chrome:4.0.0-beta-1-prerelease-20201208
-  tmpfs:
-   - /home/seluser
-   - /run/supervisor
-   - /tmp
-   - /var/log/supervisor
-  read_only: true
  tests:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
   command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"
@@ -30,7 +21,7 @@ services:
    - .:/service:rw
   environment:
    TIM_SETTINGS: testconfig.py
-   PYTHONPATH: /service:/service/timApp/modules/py
+   PYTHONPATH: /service
    GITLAB_CI: ${GITLAB_CI:-false}
   depends_on:
    - caddy

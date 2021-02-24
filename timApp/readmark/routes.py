@@ -6,7 +6,6 @@ from flask import current_app, Response
 from sqlalchemy import func, distinct, true
 from sqlalchemy.exc import IntegrityError
 
-from marshmallow_dataclass import class_schema
 from timApp.auth.accesshelper import verify_read_marking_right, get_doc_or_abort, verify_teacher_access, \
     verify_manage_access
 from timApp.auth.sessioninfo import get_session_usergroup_ids, get_session_users_objs
@@ -26,6 +25,7 @@ from timApp.util.flask.requesthelper import get_option, \
     get_consent_opt, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, csv_response
 from timApp.util.utils import seq_to_str, split_by_semicolon
+from tim_common.marshmallow_dataclass import class_schema
 
 readings = Blueprint('readings',
                      __name__,

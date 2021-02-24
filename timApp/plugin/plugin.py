@@ -11,8 +11,6 @@ from jinja2 import Environment, BaseLoader
 from jinja2.sandbox import SandboxedEnvironment
 from marshmallow import missing, ValidationError
 
-from markupmodels import PointsRule, KnownMarkupFields
-from marshmallow_dataclass import class_schema
 from timApp.answer.answer import Answer
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -32,6 +30,8 @@ from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
 from timApp.util.rndutils import myhash
 from timApp.util.utils import try_load_json, get_current_time, Range
+from tim_common.markupmodels import PointsRule, KnownMarkupFields
+from tim_common.marshmallow_dataclass import class_schema
 
 date_format = '%Y-%m-%d %H:%M:%S'
 AUTOMD = 'automd'

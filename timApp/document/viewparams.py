@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from marshmallow_dataclass import class_schema
+from tim_common.marshmallow_dataclass import class_schema
 
 
 @dataclass(frozen=True)

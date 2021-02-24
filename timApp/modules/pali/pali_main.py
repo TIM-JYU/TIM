@@ -9,10 +9,10 @@ from typing import Union, List
 from flask import render_template_string
 from marshmallow import validates, ValidationError, missing
 
-from markupmodels import GenericMarkupModel
-from pluginserver_flask import GenericHtmlModel, \
+from tim_common.markupmodels import GenericMarkupModel
+from tim_common.pluginserver_flask import GenericHtmlModel, \
     GenericAnswerModel, register_plugin_app, launch_if_main, PluginAnswerResp, PluginAnswerWeb, PluginReqs, EditorTab
-from utils import Missing
+from tim_common.utils import Missing
 
 
 @dataclass

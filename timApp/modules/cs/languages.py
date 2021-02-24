@@ -9,9 +9,7 @@ from os.path import splitext
 from modifiers import Modifier
 from traceback import print_exc
 
-sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
-
-from fileParams import *  # noqa
+from tim_common.fileParams import *
 from file_util import File, default_filename
 
 """

@@ -7,11 +7,11 @@ from typing import Union, List, Any, Dict
 from flask import render_template_string
 from marshmallow.utils import missing
 
-from common_schemas import TextfieldStateModel
-from markupmodels import GenericMarkupModel
-from pluginserver_flask import GenericHtmlModel, \
+from tim_common.common_schemas import TextfieldStateModel
+from tim_common.markupmodels import GenericMarkupModel
+from tim_common.pluginserver_flask import GenericHtmlModel, \
     GenericAnswerModel, create_blueprint, PluginAnswerResp, PluginAnswerWeb, PluginReqs
-from utils import Missing
+from tim_common.utils import Missing
 
 
 @dataclass

@@ -5,10 +5,10 @@ from dataclasses import dataclass, asdict
 
 from flask import render_template_string
 
-from common_schemas import TextfieldStateModel
-from pluginserver_flask import GenericHtmlModel, \
+from tim_common.common_schemas import TextfieldStateModel
+from tim_common.pluginserver_flask import GenericHtmlModel, \
     create_blueprint, PluginAnswerResp, PluginAnswerWeb, PluginReqs
-from textfield import TextfieldAnswerModel, TextfieldInputModel, \
+from .textfield import TextfieldAnswerModel, TextfieldInputModel, \
     TextfieldMarkupModel
 
 

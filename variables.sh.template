@@ -69,3 +69,6 @@ export LOG_DIR=${DIR}/tim_logs
 
 # To print the concrete values of these variables, you can use:
 # env - bash -c ". ./variables.sh && env | grep -Ev '^(_|PWD|SHLVL)='"
+
+# The COMPOSE_PARALLEL_LIMIT is probably not required to be adjusted, but it's here just for reference.
+# export COMPOSE_PARALLEL_LIMIT=10

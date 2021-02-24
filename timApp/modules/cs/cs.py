@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import datetime
-import http.server
 import io
 import logging
 import signal
@@ -10,13 +9,12 @@ from manager import *
 import os
 import glob
 from base64 import b64encode
-from cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
+from tim_common.cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
 from os.path import splitext
-from fileParams import encode_json_data
+from tim_common.fileParams import encode_json_data
 from pathlib import Path
 from ttype import TType
 from file_handler import FileHandler
-# noinspection PyUnresolvedReferences
 
 #  uid = pwd.getpwnam('agent')[2]
 #  os.setuid(uid)

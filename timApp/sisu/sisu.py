@@ -23,8 +23,8 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
 from timApp.item.block import Block, BlockType
 from timApp.item.validation import ItemValidationRule, validate_item_and_create_intermediate_folders, validate_item
-from timApp.modules.py.marshmallow_dataclass import class_schema
-from timApp.modules.py.utils import Missing
+from tim_common.marshmallow_dataclass import class_schema
+from tim_common.utils import Missing
 from timApp.notification.notify import send_email
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException

@@ -25,7 +25,7 @@ services:
   command: python3 launch.py --with-gunicorn
   environment:
    FLASK_APP: tim.py
-   PYTHONPATH: /service:/service/timApp/modules/py
+   PYTHONPATH: /service
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST:?}
@@ -74,7 +74,7 @@ services:
    - /var/run/docker.sock:/var/run/docker.sock
    - ./timApp/modules/cs/generated:/csgenerated
    - ./timApp/modules/cs/static:/csstatic:ro
-   - ./timApp/modules/py:/py:ro
+   - ./tim_common:/cs/tim_common:ro
    - /tmp/${COMPOSE_PROJECT_NAME:?}_uhome:/tmp
    - /root/.ssh/
   working_dir: /cs
@@ -102,9 +102,11 @@ services:
   image: timimages/svn:bionic
   build: ./timApp/modules/svn
   volumes:
-   - ./timApp/modules/svn:/svn:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /svn
+   - ./timApp/modules/svn:/app/svn:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/svn
+  environment:
+   PYTHONPATH: /app
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
@@ -113,9 +115,11 @@ services:
  imagex:
   image: timimages/cs3:rust
   volumes:
-   - ./timApp/modules/imagex:/imagex:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /imagex
+   - ./timApp/modules/imagex:/app/imagex:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/imagex
+  environment:
+   PYTHONPATH: /app
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
@@ -123,11 +127,11 @@ services:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
   build: ./timApp/modules/pali
   volumes:
-   - ./timApp/modules/pali:/pali:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /pali
+   - ./timApp/modules/pali:/app/pali:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/pali
   environment:
-    PYTHONPATH: /pali:/py
+    PYTHONPATH: /app
     DEV: ${IS_DEVELOPMENT:?}
   command: ./startAll.sh
   restart: unless-stopped
@@ -138,11 +142,11 @@ services:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
   build: ./timApp/modules/fields
   volumes:
-   - ./timApp/modules/fields:/fields:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /fields
+   - ./timApp/modules/fields:/app/fields:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/fields
   environment:
-   PYTHONPATH: /fields:/py
+   PYTHONPATH: /app
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
@@ -164,11 +168,11 @@ services:
  drag:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
   volumes:
-   - ./timApp/modules/drag:/drag:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /drag
+   - ./timApp/modules/drag:/app/drag:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/drag
   environment:
-   PYTHONPATH: /drag:/py
+   PYTHONPATH: /app
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
@@ -177,11 +181,11 @@ services:
  feedback:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
   volumes:
-   - ./timApp/modules/feedback:/feedback:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /feedback
+   - ./timApp/modules/feedback:/app/feedback:ro
+   - ./tim_common:/app/tim_common:ro
+  working_dir: /app/feedback
   environment:
-   PYTHONPATH: /feedback:/py
+   PYTHONPATH: /app
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
@@ -221,7 +225,7 @@ services:
    - redis
   environment:
    FLASK_APP: tim.py
-   PYTHONPATH: /service:/service/timApp/modules/py
+   PYTHONPATH: /service
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST:?}

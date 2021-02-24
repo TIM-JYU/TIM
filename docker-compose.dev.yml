@@ -18,7 +18,6 @@ services:
    - "49999:22"
   depends_on:
    - postgresql-test
-   - chrome
  postgresql:
   ports:
    - "5432:5432"
@@ -34,10 +33,6 @@ services:
  imagex:
   << : *common-root
   image: timimages/cs3sudo:rust
-  volumes:
-   - ./timApp/modules/imagex:/imagex:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /imagex
   command: ${IMAGEX_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49995:22"
@@ -101,21 +96,6 @@ services:
   build:
    context: ./timApp/modules/cs
    dockerfile: DockerfileS
-  volumes:
-   - ./timApp/modules/svn:/svn:ro
-   - ./timApp/modules/py:/py:ro
-  working_dir: /svn
   command: ${SVNPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49996:22"
- chrome:
-  image: selenium/standalone-chrome:4.0.0-beta-1-prerelease-20201208
-  tmpfs:
-   - /home/seluser
-   - /run/supervisor
-   - /tmp
-   - /var/log/supervisor
-  volumes:
-   - /dev/shm:/dev/shm
-  restart: unless-stopped
-  read_only: true

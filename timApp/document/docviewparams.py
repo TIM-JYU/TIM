@@ -3,7 +3,7 @@ from typing import Union, Optional
 
 from marshmallow import ValidationError
 
-from marshmallow_dataclass import class_schema
+from tim_common.marshmallow_dataclass import class_schema
 
 
 @dataclass(frozen=True, eq=True)

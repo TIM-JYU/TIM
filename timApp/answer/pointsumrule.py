@@ -5,7 +5,7 @@ from typing import Dict, Union, List, Generator, Optional
 
 from marshmallow import ValidationError
 
-from marshmallow_dataclass import class_schema
+from tim_common.marshmallow_dataclass import class_schema
 
 
 class PointType(enum.Enum):

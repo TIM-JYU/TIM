@@ -6,7 +6,7 @@ from typing import Union, List, Dict, Any, Optional, Mapping, NewType
 import marshmallow
 from marshmallow import missing, pre_load
 
-from utils import Missing
+from tim_common.utils import Missing
 
 
 @dataclass

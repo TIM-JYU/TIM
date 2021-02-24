@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from cs_sanitizer import tim_sanitize
+from tim_common.cs_sanitizer import tim_sanitize
 from languages import Language
 
 

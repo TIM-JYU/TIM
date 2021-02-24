@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-gunicorn --config /py/plugin_gunicorn.py drag:app
+gunicorn --config python:tim_common.plugin_gunicorn drag.drag_main:app

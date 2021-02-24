@@ -29,16 +29,14 @@ import http.server
 import socketserver
 import time
 import math
-import sys
 import os
 
 import json
 
 import re
 
-sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
 
-from fileParams import get_param, get_surrounding_headers2, is_user_lazy, add_lazy, NOLAZY, get_clean_param, \
+from tim_common.fileParams import get_param, get_surrounding_headers2, is_user_lazy, add_lazy, NOLAZY, get_clean_param, \
     replace_template_param, replace_template_params, query_params_to_map_check_parts, encode_json_data, make_lazy, \
     get_params, do_headers, post_params, multi_post_params, get_chache_keys, clear_cache, get_template, join_dict, \
     get_all_templates, file_to_string, get_file_to_output, get_surrounding_md_headers, get_surrounding_headers, \

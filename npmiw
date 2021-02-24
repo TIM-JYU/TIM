@@ -14,4 +14,4 @@ fi
 # jsrunner cannot be installed in Windows because it needs to build native libraries.
 # && (cd modules/jsrunner/server && npm install)
 
-./run_command_workdir.sh timApp/modules/jsrunner/server bash -c "npm i --unsafe-perm --no-bin-links"
+./run_command_workdir.sh timApp/modules/jsrunner/server bash -c "npm i --unsafe-perm"

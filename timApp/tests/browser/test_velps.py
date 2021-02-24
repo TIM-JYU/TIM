@@ -2,7 +2,7 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.select import Select
 
-from timApp.tests.browser.browsertest import BrowserTest, ignore_timeout, find_button_by_text
+from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text
 
 
 class VelpTest(BrowserTest):

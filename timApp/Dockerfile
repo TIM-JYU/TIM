@@ -118,7 +118,8 @@ attrs \
 autopep8 \
 beautifulsoup4 \
 bcrypt \
-celery[redis] \
+bleach \
+celery[redis]==4.4 \
 cffi \
 cssselect \
 docformatter \
@@ -137,6 +138,7 @@ flask-wtf \
 gevent \
 git+git://github.com/miracle2k/webassets.git \
 gunicorn \
+html5lib \
 humanize \
 isodate \
 libsass \
@@ -158,7 +160,7 @@ python3-saml \
 pytz \
 recommonmark \
 responses \
-selenium==4.0.0a6.post2 \
+selenium==4.0.0b1 \
 sphinx \
 sqlalchemy \
 sqlalchemy-utils \
@@ -183,7 +185,7 @@ RUN chown -R agent /service
 
 RUN bash -c "${APT_INSTALL} curl pdftk gpg-agent poppler-utils && ${APT_CLEANUP} && pdftk --version && curl --version"
 
-RUN (curl -sL https://deb.nodesource.com/setup_12.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN (curl -sL https://deb.nodesource.com/setup_14.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 
 RUN mkdir /var/run/sshd
@@ -196,6 +198,35 @@ RUN sed -i "s/port=port, use_reloader=False/host='0.0.0.0', port=port, use_reloa
 RUN sed -i "s/from werkzeug import cached_property/from werkzeug.utils import cached_property/" /usr/local/lib/python3.8/dist-packages/flask_testing/utils.py
 
 RUN wget -q http://mirrors.ctan.org/support/latexmk/latexmk.pl -O /usr/bin/latexmk
+
+# Chromedriver (for running tests)
+# Taken from https://github.com/SeleniumHQ/docker-selenium/blob/trunk/NodeChrome/Dockerfile
+ARG CHROME_VERSION="google-chrome-stable"
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
+  && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+  && apt-get update -qqy \
+  && apt-get -qqy install unzip \
+    ${CHROME_VERSION:-google-chrome-stable} \
+  && rm /etc/apt/sources.list.d/google-chrome.list \
+  && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+RUN wget -q https://raw.githubusercontent.com/SeleniumHQ/docker-selenium/trunk/NodeChrome/wrap_chrome_binary -O /usr/local/bin/wrap_chrome_binary && chmod +x /usr/local/bin/wrap_chrome_binary
+RUN /usr/local/bin/wrap_chrome_binary
+
+ARG CHROME_DRIVER_VERSION
+RUN if [ -z "$CHROME_DRIVER_VERSION" ]; \
+  then CHROME_MAJOR_VERSION=$(google-chrome --version | sed -E "s/.* ([0-9]+)(\.[0-9]+){3}.*/\1/") \
+    && CHROME_DRIVER_VERSION=$(wget --no-verbose -O - "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_MAJOR_VERSION}"); \
+  fi \
+  && echo "Using chromedriver version: "$CHROME_DRIVER_VERSION \
+  && wget --no-verbose -O /tmp/chromedriver_linux64.zip https://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip \
+  && rm -rf /opt/selenium/chromedriver \
+  && unzip /tmp/chromedriver_linux64.zip -d /opt/selenium \
+  && rm /tmp/chromedriver_linux64.zip \
+  && mv /opt/selenium/chromedriver /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
+  && chmod 755 /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION \
+  && ln -fs /opt/selenium/chromedriver-$CHROME_DRIVER_VERSION /usr/bin/chromedriver
+
 
 WORKDIR /service
 

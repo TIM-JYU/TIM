@@ -4,16 +4,13 @@ See: https://tim.jyu.fi/view/tim/TIMin%20kehitys/Plugin%20development
 Serving from local port 5000
 """
 import json
-import sys
 
 from geometry import is_inside
 
-sys.path.insert(0, '/py')  # /py on mountattu docker kontissa /opt/tim/timApp/modules/py -hakemistoon
-
 # ImagexServer is inherited from this. Contains methods like do_GET, do_PUT, etc generic server stuff.
-import tim_server
+from tim_common.tim_server import TimServer, start_server
 # Library for checking if a point is inside a shape.
-from fileParams import encode_json_data, make_lazy, NOLAZY, replace_template_params, is_review, get_all_templates, \
+from tim_common.fileParams import encode_json_data, make_lazy, NOLAZY, replace_template_params, is_review, get_all_templates, \
     do_headers, QueryClass, get_param, get_json_param, query_params_to_map, get_query_from_json
 
 PORT = 5000
@@ -34,7 +31,7 @@ def get_lazy_imagex_html(query: QueryClass) -> str:
     return s
 
 
-class ImagexServer(tim_server.TimServer):
+class ImagexServer(TimServer):
     """Class for imagex server that can handle the TIM routes."""
 
     def get_html(self, query: QueryClass) -> str:
@@ -272,4 +269,4 @@ class ImagexServer(tim_server.TimServer):
 
 
 if __name__ == '__main__':
-    tim_server.start_server(ImagexServer)
+    start_server(ImagexServer)

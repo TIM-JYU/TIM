@@ -42,7 +42,7 @@ import time
 import html
 from marshmallow import RAISE, ValidationError
 
-from fileParams import *
+from tim_common.fileParams import *
 from run import *
 from points import *
 from languages import Language

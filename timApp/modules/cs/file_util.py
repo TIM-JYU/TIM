@@ -2,8 +2,8 @@ import re
 import os
 from typing import Optional, List
 from pathlib import Path
-from fileParams import get_json_param, get_param, mkdirs
-from marshmallow_dataclass import dataclass, NewType
+from tim_common.fileParams import get_json_param, get_param, mkdirs
+from tim_common.marshmallow_dataclass import dataclass, NewType
 from marshmallow import fields
 from dataclasses import field
 from shutil import rmtree, copy2, chown, copytree

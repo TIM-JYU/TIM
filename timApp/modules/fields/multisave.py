@@ -7,10 +7,10 @@ from typing import Union, List
 from flask import render_template_string
 from marshmallow.utils import missing
 
-from markupmodels import GenericMarkupModel
-from pluginserver_flask import GenericHtmlModel, \
+from tim_common.markupmodels import GenericMarkupModel
+from tim_common.pluginserver_flask import GenericHtmlModel, \
     create_nontask_blueprint, PluginReqs
-from utils import Missing
+from tim_common.utils import Missing
 
 
 @dataclass

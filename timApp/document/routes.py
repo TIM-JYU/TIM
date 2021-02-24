@@ -10,7 +10,7 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.documentversion import DocumentVersion
-from timApp.modules.py.marshmallow_dataclass import class_schema
+from tim_common.marshmallow_dataclass import class_schema
 from timApp.timdb.exceptions import TimDbException
 from timApp.util.flask.requesthelper import get_option, NotExist
 from timApp.util.flask.responsehelper import json_response

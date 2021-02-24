@@ -1,9 +1,7 @@
 import random
 from typing import List, Optional, TypeVar, Dict, Union
 
-from marshmallow import missing
-
-from utils import Missing
+from tim_common.utils import Missing
 
 
 def qst_rand_array(max_count: int,

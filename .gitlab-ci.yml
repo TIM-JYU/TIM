@@ -1,8 +1,8 @@
 image: tmaier/docker-compose:latest
 
-variables:
-  DOCKER_HOST: tcp://docker:2376
-  DOCKER_TLS_CERTDIR: "/certs"
+#variables:
+#  DOCKER_HOST: tcp://docker:2376
+#  DOCKER_TLS_CERTDIR: "/certs"
 
 .setup: &setup
   - docker info
@@ -13,7 +13,7 @@ variables:
   - sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh
   - export IS_TESTING=true
   - ./dc pull --quiet tim
-  - ./dc run --rm --no-deps --workdir /service tim mypy -p timApp
+  - ./dc run --rm --no-deps --workdir /service tim mypy -p timApp -p tim_common
   - ./dc pull --quiet
   - ./npmi
   - ./js
@@ -37,7 +37,7 @@ browser_tests:
     when: always
     paths:
     - screenshots
-  timeout: 35m  # usually takes less than 30 minutes
+  timeout: 40m  # usually takes less than 40 minutes
   retry:
     max: 2
     when:

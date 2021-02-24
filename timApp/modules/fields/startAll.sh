@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-gunicorn --config /py/plugin_gunicorn.py field:app
+gunicorn --config python:tim_common.plugin_gunicorn fields.field:app

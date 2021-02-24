@@ -10,9 +10,6 @@ from flask import Response
 from flask import request
 from marshmallow import missing, EXCLUDE, ValidationError
 
-from markupmodels import GenericMarkupModel
-from marshmallow_dataclass import class_schema
-from pluginserver_flask import GenericAnswerModel, GenericHtmlModel, render_validationerror, make_base64
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.timjsonencoder import TimJsonEncoder
@@ -31,7 +28,10 @@ from timApp.tim_app import csrf
 from timApp.util.flask.requesthelper import verify_json_params, use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.utils import get_dataclass_field_names
-from utils import Missing
+from tim_common.markupmodels import GenericMarkupModel
+from tim_common.marshmallow_dataclass import class_schema
+from tim_common.pluginserver_flask import GenericAnswerModel, GenericHtmlModel, render_validationerror, make_base64
+from tim_common.utils import Missing
 
 qst_plugin = Blueprint('qst_plugin',
                        __name__,

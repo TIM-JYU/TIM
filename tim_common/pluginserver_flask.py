@@ -28,9 +28,9 @@ from marshmallow import ValidationError, Schema
 from marshmallow.utils import missing
 from webargs.flaskparser import use_args
 
-from markupmodels import list_not_missing_fields, GenericMarkupModel
-from marshmallow_dataclass import class_schema
-from utils import Missing
+from tim_common.markupmodels import list_not_missing_fields, GenericMarkupModel
+from tim_common.marshmallow_dataclass import class_schema
+from tim_common.utils import Missing
 
 
 class PluginJsonEncoder(json.JSONEncoder):

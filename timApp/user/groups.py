@@ -11,7 +11,7 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import apply_template, create_document
 from timApp.document.docinfo import DocInfo
 from timApp.item.validation import ItemValidationRule
-from timApp.modules.py.marshmallow_dataclass import class_schema
+from tim_common.marshmallow_dataclass import class_schema
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_GROUPS, PRIVILEGED_GROUPS, SPECIAL_USERNAMES
 from timApp.user.user import User, view_access_set, edit_access_set

@@ -16,7 +16,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import lazyload
 from webargs.flaskparser import use_args
 
-from markupmodels import GenericMarkupModel
+from tim_common.markupmodels import GenericMarkupModel
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_existing_answers_info, save_answer, get_all_answers, \
@@ -39,7 +39,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
-from timApp.modules.py.marshmallow_dataclass import class_schema
+from tim_common.marshmallow_dataclass import class_schema
 from timApp.notification.notify import multi_send_email
 from timApp.peerreview.peerreview_utils import has_review_access, get_reviews_for_user, is_peerreview_enabled
 from timApp.plugin.containerLink import call_plugin_answer
@@ -70,7 +70,7 @@ from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time, approximate_real_name
 from timApp.util.utils import local_timezone
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
-from utils import Missing
+from tim_common.utils import Missing
 
 answers = Blueprint('answers',
                     __name__,

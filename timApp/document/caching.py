@@ -1,6 +1,6 @@
 import hashlib
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional, Union, Tuple
 
 import redis
 from redis import ResponseError
@@ -49,7 +49,7 @@ def check_doc_cache(
         return not_cached
 
     try:
-        cached = rclient.lrange(cache_key, 0, -1)  # type: ignore[no-untyped-call]
+        cached: Tuple[bytes, bytes, bytes] = rclient.lrange(cache_key, 0, -1)  # type: ignore
     except ResponseError:
         return not_cached
     if cached:

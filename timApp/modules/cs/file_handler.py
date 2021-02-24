@@ -1,7 +1,7 @@
 import os.path
 from typing import Optional, List
 from pathlib import Path
-from fileParams import get_json_param, get_param, mkdirs
+from tim_common.fileParams import get_json_param, get_param, mkdirs
 from marshmallow import EXCLUDE
 from shutil import chown, copy2
 

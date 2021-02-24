@@ -6,7 +6,7 @@ import yaml
 from marshmallow import ValidationError
 from marshmallow.fields import Field
 
-from marshmallow_dataclass import field_for_schema
+from tim_common.marshmallow_dataclass import field_for_schema
 from timApp.answer.pointsumrule import PointSumRule
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.macroinfo import MacroInfo

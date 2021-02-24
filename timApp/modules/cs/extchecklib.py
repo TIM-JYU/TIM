@@ -1,6 +1,6 @@
 from typing import List, Dict, Union, Optional
 from dataclasses import field
-from marshmallow_dataclass import dataclass
+from tim_common.marshmallow_dataclass import dataclass
 
 from loadable import Loadable
 

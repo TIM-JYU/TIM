@@ -8,7 +8,7 @@ import logging
 import os
 import socketserver
 
-from fileParams import get_template, file_to_string, do_headers, multi_post_params, get_param, QueryClass, get_params, \
+from tim_common.fileParams import get_template, file_to_string, do_headers, multi_post_params, get_param, QueryClass, get_params, \
     post_params
 
 PORT = 5000

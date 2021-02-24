@@ -7,8 +7,8 @@ from typing import Union, Dict, List, Tuple
 from flask import render_template_string
 from marshmallow.utils import missing
 
-from common_schemas import TextfieldStateModel
-from pluginserver_flask import GenericHtmlModel, \
+from tim_common.common_schemas import TextfieldStateModel
+from tim_common.pluginserver_flask import GenericHtmlModel, \
     create_blueprint, GenericAnswerModel, PluginAnswerWeb, PluginAnswerResp, PluginReqs
 from timApp.document.docentry import DocEntry
 from timApp.document.viewcontext import default_view_ctx
@@ -17,7 +17,7 @@ from timApp.plugin.taskid import TaskId
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFieldsAccess, FieldValue
-from utils import Missing
+from tim_common.utils import Missing
 
 
 @dataclass

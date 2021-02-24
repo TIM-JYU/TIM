@@ -1,6 +1,3 @@
-from dataclasses import field
-from marshmallow_dataclass import dataclass
-
 class Loadable:
     Schema = None
 

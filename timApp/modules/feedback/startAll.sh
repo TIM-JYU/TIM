@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-gunicorn --config /py/plugin_gunicorn.py feedback:app
+gunicorn --config python:tim_common.plugin_gunicorn feedback.feedback_main:app

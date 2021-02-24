@@ -1,4 +1,2 @@
 #!/usr/bin/env bash
-cd /svn
-mkdir /tmp/cache
-python3 svn3.py
+python3 -m svn.svn3

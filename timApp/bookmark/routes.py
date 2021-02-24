@@ -4,7 +4,6 @@ from flask import Blueprint, request
 from flask import current_app
 from flask import g
 
-from marshmallow_dataclass import class_schema
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.bookmark.bookmarks import Bookmarks
@@ -14,6 +13,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import use_model, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
+from tim_common.marshmallow_dataclass import class_schema
 
 bookmarks = Blueprint('bookmarks',
                       __name__,

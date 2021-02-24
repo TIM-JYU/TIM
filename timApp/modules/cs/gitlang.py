@@ -6,7 +6,7 @@ from marshmallow import EXCLUDE
 
 from git.util import Options, RemoteInfo, Settings
 
-from fileParams import *
+from tim_common.fileParams import *
 from git.gitlib import GitLib, get_lib
 from file_util import listify, FileSpecification
 

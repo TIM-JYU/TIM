@@ -3,14 +3,14 @@ TIM plugin: a field to start other fileds
 """
 from flask import Response
 
-from cbfield import cbfield_route
-from dropdown import dropdown_route
-from goaltable import goaltable_route
-from multisave import multisave_route
-from numericfield import numericfield_route
-from pluginserver_flask import jsonify, create_app, launch_if_main
-from rbfield import rbfield_route
-from textfield import textfield_route
+from .cbfield import cbfield_route
+from .dropdown import dropdown_route
+from .goaltable import goaltable_route
+from .multisave import multisave_route
+from .numericfield import numericfield_route
+from tim_common.pluginserver_flask import jsonify, create_app, launch_if_main
+from .rbfield import rbfield_route
+from .textfield import textfield_route
 
 app = create_app(__name__)
 

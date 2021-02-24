@@ -569,9 +569,12 @@ def onko_virheita(testitaulu, oikeataulu, maksimipisteet, portit = [], hyvportit
     # maksimipisteet kerrotaan oikeiden rivien suhteella kaikkiin riveihin
     pistekertoja = (riveja-virheita)/riveja
     # Muutetaan siten että pyöristetään alaspäin
-    #pisteet = round(maksimipisteet*pistekertoja*4)/4 # round to .25 intervals
-    from math import floor
-    pisteet = floor(maksimipisteet*pistekertoja*4)/4 # round down to .25 intervals
+    # pisteet = round(maksimipisteet*pistekertoja*4)/4 # round to .25 intervals
+    # from math import floor
+    # pisteet = floor(maksimipisteet*pistekertoja*4)/4 # round down to .25 intervals
+    # 0.25 välein pyöristäminen ei toimi, kun tehtävästä saa vain 0.5 pistettä, niin esim. 7/8 oikein antaa 0.25
+    # Pyöristetään vain 2 desimaalin tarkkuudella. 
+    pisteet = round(maksimipisteet*pistekertoja,2)
 
     if virheita == 0:
         if hyvportit == []:

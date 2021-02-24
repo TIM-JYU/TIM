@@ -30,7 +30,6 @@ SQLALCHEMY_MAX_OVERFLOW = 100
 LAST_EDITED_BOOKMARK_LIMIT = 3
 TRAP_HTTP_EXCEPTIONS = True
 PROPAGATE_EXCEPTIONS = True
-SELENIUM_REMOTE_URL = os.environ.get('SELENIUM_REMOTE_URL', 'http://chrome')
 SELENIUM_BROWSER_URL = os.environ.get('SELENIUM_BROWSER_URL', 'http://caddy:' +
                                       ('81' if pycharm_running() else '82'))
 LIVESERVER_PORT = 5001
