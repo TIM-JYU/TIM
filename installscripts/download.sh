@@ -14,7 +14,7 @@ chmod u+x checkargs.sh common.sh rhel8.sh ubuntu.sh
 
 echo "Installation scripts downloaded. Now, run
 
-./<distro>.sh <server's domain>
+sudo ./<distro>.sh <server's domain>
 
 where supported distros are currently:
 
