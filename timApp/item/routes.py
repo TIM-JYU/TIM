@@ -577,7 +577,7 @@ def render_doc_view(
             doc_css = None
             flash(Markup(f'Document stylesheet has errors: <pre>{html.escape(str(e))}</pre>'))
         else:
-            doc_css = sanitize_html('<style type="text/css">' + compiled_sass + '</style>')
+            doc_css = sanitize_html('<style type="text/css">' + compiled_sass + '</style>', allow_styles=True)
     else:
         doc_css = None
 
