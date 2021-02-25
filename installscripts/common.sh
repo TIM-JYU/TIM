@@ -1,5 +1,6 @@
 # Run docker commands without sudo.
-usermod -aG docker ${TIM_USER}
+# Absolute path for usermod is intentional; otherwise it doesn't always work on RHEL8.
+/usr/sbin/usermod -aG docker ${TIM_USER}
 
 # Create TIM folder and adjust permissions.
 mkdir -p /opt/tim
@@ -17,9 +18,9 @@ sudo -u ${TIM_USER} git submodule update --init
 sudo -u ${TIM_USER} cp variables.sh.template variables.sh
 chmod u+x variables.sh
 sed -i 's/^echo variables.sh/#echo variables.sh/' variables.sh
-SECRET_KEY=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 40)
+SECRET_KEY=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 40 ; echo '')
 sudo -u ${TIM_USER} touch ./timApp/prodconfig.py
-echo "SECRET_KEY = ${SECRET_KEY}" >>./timApp/prodconfig.py
+echo "SECRET_KEY = '${SECRET_KEY}'" >> ./timApp/prodconfig.py
 sed -i "s/localhost/${DOMAIN}/" variables.sh
 sed -i "s/http:/https:/" variables.sh
 echo Pulling Docker images...
