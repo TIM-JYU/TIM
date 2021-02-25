@@ -8,7 +8,7 @@ chown ${TIM_USER}:docker /opt/tim
 chmod ug+rwxs /opt/tim
 
 # Getting domain name automatically doesn't always work (e.g. because of firewalls), so we just ask it from the user.
-DOMAIN=$2
+DOMAIN=$1
 # DOMAIN=$(dig +short -x $(dig +short myip.opendns.com @resolver1.opendns.com) | sed 's/.$//')
 
 # Install TIM.
