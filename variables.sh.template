@@ -61,8 +61,9 @@ export DRAG_DEV_COMMAND=./startAll.sh
 # Same as above but for imagex plugin.
 export IMAGEX_DEV_COMMAND=./startAll.sh
 
-# Location of config file to use in addition to defaultconfig; can be empty when running locally.
-export CONFIG_FILE=''
+# Location of config file to use in addition to defaultconfig (relative to timApp directory).
+# In production, you need to create the prodconfig.py file.
+export CONFIG_FILE='prodconfig.py'
 
 # Location of log directory; will be mapped for TIM container at /service/tim_logs.
 export LOG_DIR=${DIR}/tim_logs
