@@ -159,8 +159,16 @@ TIM_SAFE_ATTRS = frozenset([
 
 ])
 
-c = Cleaner(
+c_no_style = Cleaner(
     allow_tags=TIM_SAFE_TAGS,
+    comments=False,
+    forms=False,
+    remove_unknown_tags=False,
+    safe_attrs=TIM_SAFE_ATTRS,
+)
+
+c_with_styles = Cleaner(
+    allow_tags=TIM_SAFE_TAGS + ['style'],
     comments=False,
     forms=False,
     remove_unknown_tags=False,
@@ -169,10 +177,11 @@ c = Cleaner(
 
 
 # NOTE: lxml cleaner is a LOT faster than bleach.
-def sanitize_html(html_string: str) -> str:
+def sanitize_html(html_string: str, allow_styles=False) -> str:
+    cleaner = c_with_styles if allow_styles else c_no_style
     try:
         doc = fromstring(html_string)
-        c(doc)
+        cleaner(doc)
         cleaned = tostring(doc, encoding='ascii').decode('ascii')
         return strip_div(cleaned)
     except lxml.etree.ParserError:  # Thrown if the HTML string is empty
