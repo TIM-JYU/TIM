@@ -21,8 +21,8 @@ sed -i 's/^echo variables.sh/#echo variables.sh/' variables.sh
 SECRET_KEY=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 40 ; echo '')
 sudo -u ${TIM_USER} touch ./timApp/prodconfig.py
 echo "SECRET_KEY = '${SECRET_KEY}'" >> ./timApp/prodconfig.py
-sed -i "s/localhost/${DOMAIN}/" variables.sh
-sed -i "s/http:/https:/" variables.sh
+sed -i "s|TIM_HOST=http://localhost|TIM_HOST=https://${DOMAIN}|" variables.sh
+sed -i "s|CADDY_DOMAINS='http://'|CADDY_DOMAINS='${DOMAIN}'|" variables.sh
 echo Pulling Docker images...
 ./dc pull --quiet
 ./npmi
