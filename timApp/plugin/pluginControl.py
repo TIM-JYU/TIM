@@ -597,8 +597,7 @@ def pluginify(doc: Document,
         for h, (idx, s) in zip(call_dumbo(htmls_to_dumbo,
                                           options=doc.get_settings().get_dumbo_options()),
                                dumbo_opts.items()):
-            # assume for now plugins can emit styles to preserve old behaviour
-            html_pars[idx][output_format.value] = sanitize_html(h, allow_styles=True)
+            html_pars[idx][output_format.value] = sanitize_html(h)
     taketime("phtml done")
 
     return PluginifyResult(
