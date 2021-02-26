@@ -185,8 +185,16 @@ RUN chown -R agent /service
 
 RUN bash -c "${APT_INSTALL} curl pdftk gpg-agent poppler-utils && ${APT_CLEANUP} && pdftk --version && curl --version"
 
-RUN (curl -sL https://deb.nodesource.com/setup_14.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
-RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
+# On current TIM production server, using latest versions of Node and NPM will cause
+# ./npmi and ./js scripts to fail, causing the following symptoms:
+#
+# * ./npmi simply freezes right away, consuming memory until an out of memory exception is thrown.
+# * ./js does not freeze, but it throws a permission error after building scripts when trying to copy them to the final
+#   output directory.
+#
+# It has not yet been investigated whether it's because of Node or NPM update.
+RUN (curl -sL https://deb.nodesource.com/setup_12.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN npm i npm@6.14.8 -g && bash -c "${APT_CLEANUP}"
 
 RUN mkdir /var/run/sshd
 RUN echo 'root:test' | chpasswd
