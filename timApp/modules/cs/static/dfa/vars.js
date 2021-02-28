@@ -316,9 +316,9 @@ class CreateVariable extends Command {
         let error = "";
         if (variable.name !== "null") {
             let v = variables.findVar(variable.name);
-            if (v) error = `Nimi ${v.name} on jo käytössä`;
+            if (v) error = `Nimi ${v.name} on jo käytössä. `;
         }
-        variables.add(variable);
+        error += variables.add(variable);
         return error;
     }
 
@@ -1092,8 +1092,8 @@ class CreateInitializedArrayVariable extends CreateVariable {
     run(variables) {
         let error = super.run(variables);
         let array = this.createdVar;
-        if (!array) return `${this.name} ${error} ei voitu luoda! `;
-        return array.initByVals(variables);
+        if (!array) return `${this.name} ${error} ei voitu luoda! ` + error;
+        return error + array.initByVals(variables);
     }
 }
 
@@ -1938,7 +1938,10 @@ class PhaseVariables {
         }
         */
         this.addFlat(variable); // cleans the name
+        let error = "";
+        // if (this.varsmap[variable.name]) error = `Muuttuja ${variable.name} on jo esitelty `;
         this.varsmap[variable.name] = variable;
+        return error;
     }
 
     findVar(name) {
@@ -2335,7 +2338,7 @@ class VariableRelations {
                 diffs += "Liikaa muuttujia:" + extra + "\n";
 
         }
-        return vars2.errors + diffs;
+        return this.errors + vars2.errors + diffs;
     }
 
 
@@ -2354,16 +2357,16 @@ function compareValsAndRefs(code1, code2, params) {
 }
 
 
-function compareWithUserCode(data, code, params) {
+function compareWithUserCode(data, modelcode, params) {
      let fp = data.answer_call_data.markup.fullprogram;
      let code2 = data.save_object.usercode;
      if (fp.includes("BYCODEBEGIN")) {
          let reg = /\/\/ BYCODEBEGIN(.|[\r\n])*BYCODEEND/;
          fp = fp.replace(reg, "BYCODE")
          code2 = fp.replace("BYCODE", code2);
-         code = fp.replace("BYCODE", code);
+         modelcode = fp.replace("BYCODE", modelcode);
      }
-     return compareValsAndRefs(code, code2, params);
+     return compareValsAndRefs(modelcode, code2, params);
 }
 
 // ------------------ Variables END -----------------------------------
