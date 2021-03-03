@@ -211,7 +211,7 @@ def maybe_auto_confirm(block: ItemOrBlock):
                 aliases = set(a.path for a in block.aliases)
                 if allowed & aliases:
                     try:
-                        acc = get_single_view_access(target)
+                        acc = get_single_view_access(target, allow_group=True)
                     except AccessDenied as e:
                         flash('Cannot get access to target document: ' + str(e))
                     else:
@@ -410,9 +410,23 @@ class AccessDenied(Exception):
     pass
 
 
-def get_single_view_access(i: Item) -> BlockAccess:
+def get_single_view_access(i: Item, allow_group: bool = False) -> BlockAccess:
     u = get_current_user_object()
     accs: List[BlockAccess] = u.get_personal_group().accesses.filter_by(block_id=i.id).all()
+    if not accs and allow_group:
+        lig = UserGroup.get_logged_in_group()
+        ugroups = set(gid for gid, in u.groups_dyn.with_entities(UserGroup.id).all())
+        for (ugid, act), acc in i.block.accesses.items():
+            if (ugid == lig.id or ugid in ugroups) and act == AccessType.view.value:
+                new_acc = u.grant_access(
+                    i,
+                    AccessType.view,
+                    accessible_to=acc.accessible_to,
+                    duration_from=acc.duration_from,
+                    duration_to=acc.duration_to,
+                    duration=acc.duration,
+                )
+                accs.append(new_acc)
     if not accs:
         raise AccessDenied(f"No access found for {i.path}.")
     if len(accs) > 1:

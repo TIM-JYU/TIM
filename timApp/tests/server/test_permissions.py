@@ -9,6 +9,7 @@ from timApp.tests.server.test_default_rights import convert_to_old_format
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
+from timApp.user.userutils import grant_access
 from timApp.util.utils import get_current_time
 
 
@@ -443,6 +444,36 @@ class PermissionTest(TimRouteTest):
         self.assertIn('My custom message', r)
         self.assertIn('Go to the next document', r)
         # and now there should be access
+        self.get(d2.url)
+
+    def test_chaining_logged_in(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.test_user_2.grant_access(
+            access_type=AccessType.view,
+            accessible_from=get_current_time(),
+            accessible_to=get_current_time(),
+            block=d,
+        )
+        db.session.commit()
+        d.document.set_settings({
+            'auto_confirm': self.get_personal_item_path('nextdoc2'),
+            'expire_next_doc_message': 'My custom message',
+        })
+        d2 = self.create_doc(path=self.get_personal_item_path('nextdoc2'))
+        d2.document.set_settings({
+            'allow_self_confirm_from': d.path,
+        })
+        grant_access(
+            group=UserGroup.get_logged_in_group(),
+            block=d2,
+            access_type=AccessType.view,
+            require_confirm=True,
+        )
+        db.session.commit()
+        self.login_test2()
+        self.get(d2.url, expect_status=403)
+        self.get(d.url, expect_status=403)
         self.get(d2.url)
 
     def test_confirm_with_end_date(self):
