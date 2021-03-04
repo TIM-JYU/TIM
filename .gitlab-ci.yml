@@ -1,4 +1,4 @@
-image: tmaier/docker-compose:latest
+image: timimages/ci
 
 #variables:
 #  DOCKER_HOST: tcp://docker:2376
@@ -11,7 +11,7 @@ image: tmaier/docker-compose:latest
   - cp variables.sh.template variables.sh
   - chmod +x variables.sh
   - sed -i 's/echo variables.sh/#echo variables.sh/' variables.sh
-  - export IS_TESTING=true
+  - sed -i 's/COMPOSE_PROFILES=prod/COMPOSE_PROFILES=test/' variables.sh
   - ./dc pull --quiet tim
   - ./dc run --rm --no-deps --workdir /service tim mypy -p timApp -p tim_common
   - ./dc pull --quiet

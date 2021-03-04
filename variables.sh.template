@@ -14,6 +14,9 @@ export TIM_HOST=http://localhost
 # export CADDY_DOMAINS='domain.com'
 export CADDY_DOMAINS='http://'
 
+# If COMPOSE_PROFILES=prod_multi, specifies the host port for Caddy. Otherwise unused.
+export CADDY_MULTI_PORT=50000
+
 # Extra configuration to add to Caddyfile.
 export CADDY_EXTRA_CONFIG='
 
@@ -34,10 +37,15 @@ export TIM_ROOT=${DIR}
 # Root directory for non-db storage (document content, uploaded files, etc.).
 export FILES_ROOT=${DIR}/timApp/tim_files
 
-# Whether this is a local development instance (needed for e.g. PyCharm).
-export IS_DEVELOPMENT=false
+# Possible values: prod, prod_multi, dev, test
+# Explanations:
+# * prod: This is a single TIM instance running on a remote machine.
+# * prod_multi: This is one of multiple TIM instances running on the same remote machine.
+# * dev: This is a local development TIM instance.
+# * test: This instance is used only for running tests. Used mostly in GitLab CI.
+export COMPOSE_PROFILES=prod
 
-# Command to start csplugin when IS_DEVELOPMENT is true; use empty command if you want to debug it with SSH.
+# Command to start csplugin when COMPOSE_PROFILES=dev; use empty command if you want to debug it with SSH.
 export CSPLUGIN_DEV_COMMAND=./startPlugins.sh
 
 # Same as above but for textfield plugin.

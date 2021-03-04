@@ -1,4 +1,23 @@
 version: "3.7"
+x-caddy:
+ &caddy-common
+ image: caddy:2.3.0
+ command: caddy run --config /etc/caddy/Caddyfile
+ read_only: true
+ volumes:
+  - caddy_data:/data
+  - caddy_config:/config
+  - ./Caddyfile:/etc/caddy/Caddyfile:ro
+  - ./timApp/static:/tim/timApp/static:ro
+  - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
+  - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
+ depends_on:
+  - jsrunner
+ environment:
+  CADDY_DOMAINS: ${CADDY_DOMAINS:?}
+  CADDY_EXTRA_CONFIG: ${CADDY_EXTRA_CONFIG:?}
+ restart: unless-stopped
+
 services:
  tim:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
@@ -41,7 +60,15 @@ services:
    - /var/cache
    - /var/log
    - /run/gunicorn
+  profiles:
+   - prod
+   - prod_multi
+   - dev
  timagent:
+  profiles:
+   - prod
+   - prod_multi
+   - dev
   image: timimages/timagent
   build:
    context: ./timApp
@@ -52,6 +79,10 @@ services:
   restart: unless-stopped
   read_only: true
  postgresql:
+  profiles:
+   - prod
+   - prod_multi
+   - dev
   image: postgres:11
   volumes:
    - data11:/var/lib/postgresql/data
@@ -63,6 +94,15 @@ services:
   tmpfs:
    - /run/postgresql
    - /tmp
+  environment:
+   POSTGRES_PASSWORD: postgresql
+ postgresql-test:
+  profiles:
+   - test
+   - dev
+  image: postgres:11
+  tmpfs:
+   - /var/lib/postgresql/data
   environment:
    POSTGRES_PASSWORD: postgresql
  csplugin:
@@ -132,7 +172,7 @@ services:
   working_dir: /app/pali
   environment:
     PYTHONPATH: /app
-    DEV: ${IS_DEVELOPMENT:?}
+    PROFILE: ${COMPOSE_PROFILES:?}
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true
@@ -237,6 +277,10 @@ services:
   tmpfs:
    - /tmp
  stack-api-server:
+  profiles:
+   - prod
+   - prod_multi
+   - dev
   build: ./stack
   image: timimages/stack
   security_opt:
@@ -261,26 +305,50 @@ services:
   tmpfs:
    - /tmp
  caddy:
-  image: caddy:2.3.0
-  command: caddy run --config /etc/caddy/Caddyfile
-  read_only: true
-  volumes:
-   - caddy_data:/data
-   - caddy_config:/config
-   - ./Caddyfile:/etc/caddy/Caddyfile:ro
-   - ./timApp/static:/tim/timApp/static:ro
-   - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
-   - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
+  <<: *caddy-common
+  profiles:
+   - prod
+   - dev
+   - test
   ports:
    - "80:80"
    - "443:443"
-  depends_on:
-   - tim
-   - jsrunner
+ caddy_multi:
+  <<: *caddy-common
+  profiles:
+   - prod_multi
+  ports:
+  - "${CADDY_MULTI_PORT}:80"
+ tests:
+  profiles:
+   - test
+  image: timimages/tim:${TIM_IMAGE_TAG:?}
+  command: "python3 -m unittest ${TEST_PARAMS:-discover tests/ 'test_*.py' .}"
+  volumes:
+   - .:/service:rw
   environment:
-   CADDY_DOMAINS: ${CADDY_DOMAINS:?}
-   CADDY_EXTRA_CONFIG: ${CADDY_EXTRA_CONFIG:?}
-  restart: unless-stopped
+   TIM_SETTINGS: testconfig.py
+   PYTHONPATH: /service
+   GITLAB_CI: ${GITLAB_CI:-false}
+  depends_on:
+   - csplugin
+   - pali
+   - fields
+   - showfile
+   - haskellplugins
+   - imagex
+   - dumbo
+   - feedback
+   - redis
+   - oiko
+   - caddy
+   - postgresql-test
+  tmpfs:
+   - /tmp
+   - /tim_files
+   - /cache
+  working_dir: /service/timApp
+  read_only: true
 volumes:
  data11:
  cache:

@@ -174,7 +174,7 @@ cols: 20
     }
 
     # Show pali templates only in development mode.
-    if os.environ.get('DEV') == "true":
+    if os.environ.get('PROFILE') == "dev":
         result['editor_tabs'] = editor_tabs
 
     return result

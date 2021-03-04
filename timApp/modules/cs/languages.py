@@ -16,11 +16,11 @@ from file_util import File, default_filename
 Adding new language to csPlugin:
 
 0. Install new compiler to cs/Dockerfile and build new Docker container from that
-    - if in varibles.sh is export IS_DEVELOPMENT=true, change it to false
-    - in /opt/tim directory run ./dc build csplugin
-    - if in varibles.sh was export IS_DEVELOPMENT=true, change it back to true
-        - in /opt/tim directory run ./dc build csplugin
-    -  docker push cs3:rust
+    - in /opt/tim directory, run:
+     - DEV=0 ./dc build csplugin
+     - DEV=1 ./dc build csplugin
+     - DEV=0 ./dc push csplugin
+     - DEV=1 ./dc push csplugin
 1. Add the language class starting with capital letter to this or new file
 2. Add language name to 'ttype' variable
 3. Mimic some existing language when creating the new class

@@ -19,16 +19,16 @@ fi
 
 if ! [ -z $DEV ]; then
   if [ "$DEV" == 1 ]; then
-    IS_DEVELOPMENT=true
+    COMPOSE_PROFILES=dev
   else
-    IS_DEVELOPMENT=false
+    COMPOSE_PROFILES=prod
   fi
 fi
 
-if [ "$IS_TESTING" = true ]; then
+if [ "$COMPOSE_PROFILES" = "test" ]; then
   COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}test"
-  docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.test.yml" "$@"
-elif [ "$IS_DEVELOPMENT" = true ]; then
+  docker-compose -f "${DIR}/docker-compose.yml" --profile test "$@"
+elif [ "$COMPOSE_PROFILES" = "dev" ]; then
   docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.dev.yml" "$@"
 else
   docker-compose -f "${DIR}/docker-compose.yml" "$@"
