@@ -189,6 +189,7 @@ export interface HideValues {
     alignLeft?: boolean;
     alignCenter?: boolean;
     alignRight?: boolean;
+    changeTable?: boolean;
     addToTemplates?: boolean;
     clearFormat?: boolean;
     changePin?: boolean;
@@ -1096,6 +1097,7 @@ export class TimTableComponent
             showTableEditorToolbar({
                 callbacks: {
                     setCell: (val) => this.handleToolbarSetCell(val),
+                    getCell: () => this.getCurrentCellAsString(),
                     addToTemplates: () => this.handleToolbarAddToTemplates(),
                     addColumn: (offset) => this.handleToolbarAddColumn(offset),
                     addRow: (offset) => this.handleToolbarAddRow(offset),
@@ -4026,6 +4028,18 @@ export class TimTableComponent
             return -1;
         }
         return this.activeCell.col;
+    }
+
+    getCurrentCellAsString() {
+        if (!this.currentCell) {
+            return "";
+        }
+        const str = this.currentCell.editedCellContent;
+        // const row = this.cellDataMatrix[this.activeCell.row]; // TODO: check if sorted rowindex?
+        // const cell = row[this.activeCell.col];
+        // if (cell.cell === null) return "";
+        // return "" + cell.cell;
+        return str;
     }
 
     getColumnName() {

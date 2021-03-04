@@ -74,10 +74,13 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-Ref sb
-l $1 c Kissa istuu
-sb -> $1
-l $1 c Kissa is
+Ref susi
+New *$1 Sepe
+Value paino
+paino = 50
+susi -> $1
+Array *$1 v 5
+#$2[3] = 99
 `;
 setData({
     code: code, args: "1001", params: {

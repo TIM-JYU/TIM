@@ -1353,7 +1353,7 @@ class SetStyle extends Command {
     run(variables) {
         // let varTo = this.findVarForAssign(variables,this.to, false)[1];
         let varTo = variables.findVar(this.to);
-        if (!varTo) return `Muuttujaa {varTo} ei löydy!`
+        if (!varTo) return `Muuttujaa ${this.to} ei löydy!`
         varTo.style = this.style;
         return "";
     }
@@ -4018,4 +4018,6 @@ export {setData, varsStringToJson, VariableRelations, compareValsAndRefs, compar
 // TODO: null viitteestä parempi ilmoitus kuin undefined
 // TODO: JOs reunassa oleva viite  lähteevasemmalla, niin pallukka vasemmalle
 // TODO: SVGymargin, SVGxmargin
-
+// TODO: Style ei toimi taulukolle?
+// TODO: debug näytä nimet
+// TODO: Luento 15 https://tim.jyu.fi/view/kurssit/tie/ohj2/2021k/luennot/luento15#varsmat2 liikaa tilaa

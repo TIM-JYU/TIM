@@ -10,6 +10,7 @@ import {setToolbarInstance} from "./toolbarUtils";
 
 export interface ITimTableToolbarCallbacks {
     setCell: (value: IToolbarTemplate) => void;
+    getCell: () => string;
     addToTemplates: () => void;
     addColumn: (offset: number) => void;
     addRow: (offset: number) => void;
@@ -92,6 +93,13 @@ const DEFAULT_CELL_BGCOLOR = "#FFFF00";
                                 title="Align right"
                                 (click)="setTextAlign('right')">
                             <i class="glyphicon glyphicon-align-right"></i>
+                        </button>
+                        &ngsp;
+                        <button class="timButton btn-xs"
+                                *ngIf="!hide?.changeTable"
+                                title="Change cell to table area"
+                                (click)="changeCellToTableArea()">
+                            <i class="glyphicon glyphicon-th"></i>
                         </button>
                         &ngsp;
                         <ng-container *ngFor="let r of activeTable?.data?.toolbarTemplates">
@@ -199,6 +207,38 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
      */
     setTextAlign(value: string) {
         this.callbacks.setCell({style: {textAlign: value}});
+    }
+
+    async changeCellToTableArea() {
+        const val = this.callbacks.getCell().trimEnd();
+        if (val === "") return;
+        const papa = await import("papaparse");
+        const result = papa.default.parse(val);
+        /*
+        let lnsep;
+        let colsep;
+        let sep = val.indexOf("\n");
+        if (sep >= 0) lnsep = "\n";
+        sep = val.indexOf("\t");
+        if (sep >= 0) colsep = "\t";
+        else {
+            sep = val.indexOf("|");
+            if (sep >= 0) colsep = "|";
+        }
+        if (!lnsep && !colsep) return;
+        let rows = [val];
+        if (lnsep) rows = val.split(lnsep);
+        */
+        const area = [];
+        for (const row of result.data) {
+            const acols = [];
+            for (const col of row as Array<string>) {
+                acols.push({cell: col});
+            }
+            area.push(acols);
+        }
+        const templ = {area: area};
+        this.callbacks.setCell(templ);
     }
 
     /**
@@ -331,6 +371,7 @@ export class TimTableEditorToolbarDialogComponent extends AngularDialogComponent
         this.callbacks.setCell({style: {backgroundColor: color}});
     }
 
+    // noinspection JSUnusedLocalSymbols
     private getStyle() {
         return {"background-color": "#" + this.previousBackgroundColor};
     }
