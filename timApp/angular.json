@@ -47,6 +47,7 @@
               "mathjax-full/js/output/svg",
               "ng-file-upload",
               "ngstorage",
+              "papaparse",
               "reveal.js",
               "typescript-json-serializer",
               "tinycolor2",
