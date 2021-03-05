@@ -1,4 +1,7 @@
+use pest::iterators::Pair;
+use pest::Token;
 use snafu::{ResultExt, Snafu};
+use std::borrow::Cow;
 use std::convert::TryFrom;
 use yaml_rust::{ScanError, Yaml, YamlLoader};
 
@@ -36,10 +39,75 @@ impl TryFrom<&str> for YamlBlock {
     }
 }
 
+fn has_nonstandard_yaml(r: &Pair<Rule>) -> bool {
+    r.clone()
+        .tokens()
+        .map(|t| match t {
+            Token::Start { rule, .. } | Token::End { rule, .. } => rule,
+        })
+        .any(|t| match t {
+            Rule::tim_multiline_str | Rule::tim_obj => true,
+            _ => false,
+        })
+}
+
+fn rule_to_std_yaml<'a>(r: &'a Pair<Rule>) -> Cow<'a, str> {
+    if !has_nonstandard_yaml(r) {
+        return r.as_str().into();
+    }
+    match r.as_rule() {
+        Rule::obj => panic!(),
+        Rule::keyvalue => panic!(),
+        Rule::value => panic!(),
+        Rule::tim_obj => panic!(),
+        Rule::list_element => panic!(),
+        Rule::list => panic!(), // maybe allow this
+        Rule::tim_multiline_str => panic!(),
+        Rule::EOI => "".into(),
+        Rule::yaml => unreachable!(),
+        Rule::multilinestr => unreachable!(),
+
+        // unsupported cases
+        Rule::flow_value => unreachable!(),
+        Rule::flow_str => unreachable!(),
+        Rule::flow_obj_element => unreachable!(),
+        Rule::flow_obj => unreachable!(),
+        Rule::flow_list_element => unreachable!(),
+        Rule::flow_list => unreachable!(),
+
+        // impossible cases
+        Rule::indentation => unreachable!(),
+        Rule::block_start => unreachable!(),
+        Rule::tim_multiline_str_content => unreachable!(),
+        Rule::multiline_str_line => unreachable!(),
+        Rule::standard_yaml_multiline_str => unreachable!(),
+        Rule::std_multiline_start => unreachable!(),
+        Rule::standard_yaml_multiline_str_noindent => unreachable!(),
+        Rule::standard_yaml_multiline_str_1 => unreachable!(),
+        Rule::standard_yaml_multiline_end => unreachable!(),
+        Rule::basic_str => unreachable!(),
+        Rule::unquoted_str => unreachable!(),
+        Rule::flow_unquoted_str => unreachable!(),
+        Rule::double_quoted_str => unreachable!(),
+        Rule::single_quoted_str => unreachable!(),
+        Rule::illegal_unquoted_start_char => unreachable!(),
+        Rule::EOW => unreachable!(),
+        Rule::boolean => unreachable!(),
+        Rule::number => unreachable!(),
+        Rule::null => unreachable!(),
+        Rule::W => unreachable!(),
+        Rule::SPACE => unreachable!(),
+        Rule::WHITESPACE => unreachable!(),
+        Rule::BLANK_LINE => unreachable!(),
+        Rule::COMMENT => unreachable!(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use pest::consumes_to;
+    use pest::iterators::Pairs;
     use pest::parses_to;
     use pest::Parser;
     use std::convert::TryFrom;
@@ -52,10 +120,11 @@ mod tests {
         );
     }
 
-    fn print(input: &str) {
+    fn print(input: &str) -> Pairs<Rule> {
         let s1 = YamlParser::parse(Rule::yaml, input).unwrap();
         println!("{:#?}", s1);
         println!("{}", s1);
+        s1
     }
 
     macro_rules! check {
@@ -71,13 +140,14 @@ mod tests {
 
     macro_rules! checkp {
         ($string:expr, [ $( $names:ident $calls:tt ),* $(,)* ] ) => {
-            print($string);
+            let mut x = print($string);
+            //rule_to_std_yaml(&x.next().unwrap());
         };
     }
 
     #[test]
     fn tim_obj() {
-        check!(
+        checkp!(
             r#"
 a: @!!
 b: @!1
