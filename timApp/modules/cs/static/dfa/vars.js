@@ -2091,10 +2091,10 @@ class PhaseVariables {
         return this.variableRelations.isCodeMode();
     }
 
-    solveLazy() {
+    solveLazy(allowErrors) {
         for (let v of this.flatvars) {
             let error = v.solveLazy(this);
-            if (error) this.variableRelations.addError(error);
+            if (error && !allowErrors) this.variableRelations.addError(error);
         }
     }
 
@@ -2313,6 +2313,9 @@ class VariableRelations {
             lastlinenr = cmd.linenumber;
             if (error && this.isShowErrors()) this.addError(`${cmd.linenumber}: ${error}`);
             nr++;
+        }
+        for (let phase of this.phaseList) {
+            phase.solveLazy(true);
         }
         if (nr >= this.commands.length) { // all runned, check counts
             for (let phase of this.phaseList) {
