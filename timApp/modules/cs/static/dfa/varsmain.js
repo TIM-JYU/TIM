@@ -74,21 +74,34 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-Ref susi
-New *$1 Sepe
-Value paino
-paino = 50
-susi -> $1
-Array *$1 v 5
-#$2[3] = 99
+styleall fill=red
+g w 1
+class Taulukko lkm V,alkiot SR
+g r 0
+ref luvut -> s.Taulukko $1 3 $2
+a $2 VV5 0 2 99
+g r 1
+#g firstStep
+/// Pyydetään oletusclone
+#g gotoStep
+ref taul -> s.Taulukko $4 3 $2
+/// Luodaan uusi samanlainen taulukko
+a $5 VV5 
+/// Laitetaan kloonin viite uuteen taulukkoon
+$4.alkiot -> $5
+/// Kopioidaan alkiot
+taul.alkiot[0] = luvut.alkiot[0]
+taul.alkiot[1] = luvut.alkiot[1]
+styleall
+taul.alkiot[2] = luvut.alkiot[2]
 `;
 setData({
     code: code, args: "1001", params: {
-         mode: "step",
+         mode: "code",
          errorlevel: 3,
-         xanimate: "commands",
+         animate: "commands",
          //animate: "code",
-         allowLazy: false,
+         allowLazy: true,
          //justone: true,
          }
 });
@@ -105,8 +118,8 @@ $1.count = 8
 // let vars2 =  new VariableRelations(code2, {mode: "static", errorlevel: 3, xanimate: "commands", allowLazy: true});
 // vars1.runUntil();
 // vars2.runUntil();
-    let diff = compareValsAndRefs(code, code2);
-    console.log(diff);
+    //let diff = compareValsAndRefs(code, code2);
+    //console.log(diff);
 }
 if (false) {
 // BYCODEBEGIN

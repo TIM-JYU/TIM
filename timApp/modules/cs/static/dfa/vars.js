@@ -251,7 +251,7 @@ class Command extends PrgObject {
             let rest = r[2];
             if (refvar && refvar.isRef() && refvar.refs.length > 0) {
                 // if ( refvalue ) return [name, refvar];  // p1 = p2;
-                newname = refvar.refs[0].name;
+                newname = refvar.getRef(variables).name;
                 name = newname + rest;
                 varTo = variables.findVar(name);
             }
@@ -265,7 +265,7 @@ class Command extends PrgObject {
                 if (!refvar) break;
                 if (refvar && refvar.isRef() && refvar.refs.length > 0) {
                     // if ( refvalue ) return [name, refvar];  // p1 = p2;
-                    name = refvar.refs[0].name + r[2];
+                    name = refvar.getRef(variables).name + r[2];
                     varTo = variables.findVar(name);
                 }
             }
@@ -412,6 +412,13 @@ class Variable extends PrgObject {
         return this.handleError(error, variables);
     }
 
+    getRef(variables) {
+        if (!this.isRef()) return NullVariable;
+        if (this.refs.length < 1) return NullVariable;
+        if (this.lazy) this.solveLazy(variables);
+        return this.refs[0];
+    }
+
     addRefByName(refname, variables, force) {
         let objTo = variables.findVar(refname);
         if (!objTo) {
@@ -422,6 +429,7 @@ class Variable extends PrgObject {
             }
             return `Oliota ${refname} ei löydy!`;
         }
+        variables.addFlashStyle(this, objTo);
         return this.addRef(objTo, variables, force);
     }
 
@@ -1318,22 +1326,24 @@ class AssignTo extends Command {
             varTo = varTo.vars[0];
         }
         if (refvalue && varTo.isRef()) {
+            variables.addFlashStyle(varTo, refvalue);
             if ( refvalue.refs.length > 0)
                 refvalue = refvalue.refs[0];
             return error + varTo.addRef(refvalue, variables);
         }
         let [value, valueVar] = this.findVarForAssign(variables, this.value);
         if (valueVar) value = valueVar.value;
+        variables.addFlashStyle(varTo, valueVar);
         return error + varTo.assign(value, variables);
     }
 }
 
 class SetStyle extends Command {
-    // Assign value to predefined variable
+    // Set style for variables
     // see: https://regex101.com/r/LRSIyE/latest
-    // syntax: style1 j3.id fill=red
+    // syntax: style1 j3.id,j4.id fill=red
     static isMy(s) {
-        let re = /^style(1?) +([$.\w\d]+) *(.*)$/;
+        let re = /^style(1?) +([$.,[\]\w\d]+) *(.*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         let oneTime = r[1] === "1";
@@ -1351,14 +1361,43 @@ class SetStyle extends Command {
     }
 
     run(variables) {
+        let errors = "";
         // let varTo = this.findVarForAssign(variables,this.to, false)[1];
-        let varTo = variables.findVar(this.to);
-        if (!varTo) return `Muuttujaa ${this.to} ei löydy!`
-        varTo.style = this.style;
-        return "";
+        let tos = this.to.split(",");
+        for (const nto of tos) {
+            // let varTo = variables.findVar(nto);
+            let [,varTo] = this.findVarForAssign(variables,nto, true)
+            if (!varTo) errors += `Muuttujaa ${nto} ei löydy! `
+            else varTo.style = this.style;
+        }
+        return errors;
     }
 }
 
+class SetStyleAll extends Command {
+    // Set flash style for all next assignments and refs
+    // syntax: styleall fill=red
+    static isMy(s) {
+        let re = /^styleall *(.*)$/;
+        let r = re.exec(s);
+        if (!r) return undefined;
+        return [new SetStyleAll(r[1])];
+    }
+
+    constructor(style) {
+        super();
+        this.error = "";
+        this.style = style;
+    }
+
+    run(variables) {
+        let errors = "";
+        // let varTo = this.findVarForAssign(variables,this.to, false)[1];
+        variables.styleAll = this.style;
+        variables.clearStyleVariables = undefined;
+        return errors;
+    }
+}
 
 
 class CreateClass extends Command {
@@ -1749,6 +1788,7 @@ const knownCommands = [
     CodeCommand,
     MoveVars,
     SetStyle,
+    SetStyleAll,
     AddSVG,
     UnknownCommand,
 ];
@@ -1958,6 +1998,23 @@ class PhaseVariables {
            // if (name.endsWith(".")) ret = this.flatvarsmap[name.replace(".", ",")];
         }
         return ret;
+    }
+
+    addClearStyle(v) {
+        if (!this.clearStyleVariables) this.clearStyleVariables = [];
+        if (v) this.clearStyleVariables.push(v);
+    }
+
+    addFlashStyle(v1, v2) {
+        if (!this.styleAll) return;
+        if (v1) { v1.style = this.styleAll; this.addClearStyle(v1); }
+        if (v2) { v2.style = this.styleAll; this.addClearStyle(v2); }
+    }
+
+    clearLastStyleVariables() {
+        if (!this.clearStyleVariables) return;
+        for (const v of this.clearStyleVariables)
+            v.style = undefined;
     }
 
     addClass(name, defList) {
@@ -2251,6 +2308,7 @@ class VariableRelations {
         if (n === undefined) n = this.maxStep()+1;
         for (let cmd of this.commands) {
             if (nr >= n) break;
+            this.currentPhase.clearLastStyleVariables();
             let error = cmd.run(this.currentPhase);
             lastlinenr = cmd.linenumber;
             if (error && this.isShowErrors()) this.addError(`${cmd.linenumber}: ${error}`);
@@ -2623,6 +2681,7 @@ const svgVariableMixin = {
         if (forcedw) {
             size = "" + forcedw;
             this.width = forcedw * w;
+            if (this.parent && this.width > this.parent.width) this.width = this.parent.width;
         }
         if (forcedh) {
             this.height = forcedh * h;
@@ -2881,7 +2940,7 @@ const svgSimpleReferenceVariableMixin = {
         }
 
         if (this.style) {
-            svg += SVGUtils.stylebox(this.name+"-s", this.width, this.height, x, y, this.style)
+            svg += SVGUtils.stylebox(this.name+"-s", this.width, this.height, x, this.y, this.style)
         }
 
         // draw variable names if needed
