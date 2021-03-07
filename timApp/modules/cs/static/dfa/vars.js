@@ -425,6 +425,7 @@ class Variable extends PrgObject {
             if (variables.isAllowLazy()) {
                 this.lazy = refname;
                 this.lazyForce = force;
+                variables.isLazy = true;
                 return "";
             }
             return `Oliota ${refname} ei löydy!`;
@@ -2092,10 +2093,14 @@ class PhaseVariables {
     }
 
     solveLazy(allowErrors) {
+        if (!this.isLazy) return;
+        let n = 0;
         for (let v of this.flatvars) {
             let error = v.solveLazy(this);
+            if (error) n++;
             if (error && !allowErrors) this.variableRelations.addError(error);
         }
+        this.isLazy = n != 0;
     }
 
 }
@@ -2313,6 +2318,7 @@ class VariableRelations {
             lastlinenr = cmd.linenumber;
             if (error && this.isShowErrors()) this.addError(`${cmd.linenumber}: ${error}`);
             nr++;
+            this.currentPhase.solveLazy(true);
         }
         for (let phase of this.phaseList) {
             phase.solveLazy(true);

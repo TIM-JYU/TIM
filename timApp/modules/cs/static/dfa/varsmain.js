@@ -74,33 +74,44 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-styleall fill=red
-g w 1
-class Taulukko lkm V,alkiot SR
-g r 0
-ref luvut -> s.Taulukko $1 3 $2
-a $2 VV5 0 2 99
-g r 1
-#g firstStep
-/// Pyydetään oletusclone
-#g gotoStep
-ref taul -> s.Taulukko $4 3 $2
-/// Luodaan uusi samanlainen taulukko
-a $5 VV5 
-/// Laitetaan kloonin viite uuteen taulukkoon
-$4.alkiot -> $5
-/// Kopioidaan alkiot
-taul.alkiot[0] = luvut.alkiot[0]
-taul.alkiot[1] = luvut.alkiot[1]
-styleall
-taul.alkiot[2] = luvut.alkiot[2]
+rank 1: rd 1, ax=120, ay=100, rd: 1, dx: 100
+rank 0, rd: 1
+g w:1, r:0
+class Item: value V, next SR
+ref luvut -> item1
+s.Item item1 1 item2
+s.Item item2 2 item3
+s.Item item3 3 item4
+s.Item item4 4 
+
+styleall fill=yellow
+g gotoStep
+g firstStep, r 1, sx: 100
+// BYCODEBEGIN
+CODE: var iter = luvut.iterator(); // iteraattori
+ref iter -> item1
+CODE: var luku = iter.next(); 
+g tx: 80
+val luku
+luku = iter.value
+iter = iter.next 
+CODE: var luku = iter.next(); 
+luku = iter.value
+iter = iter.next 
+CODE: var luku = iter.next(); 
+luku = iter.value
+iter = iter.next 
+CODE: var luku = iter.next(); 
+luku = iter.value
+iter = iter.next 
+// BYCODEEND
 `;
 setData({
     code: code, args: "1001", params: {
          mode: "code",
          errorlevel: 3,
-         animate: "commands",
-         //animate: "code",
+         // animate: "commands",
+         animate: "code",
          allowLazy: true,
          //justone: true,
          }
