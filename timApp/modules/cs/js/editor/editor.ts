@@ -84,7 +84,7 @@ export class EditorFile {
     canRename: boolean; // TODO: implement renaming
     canModify: boolean;
     placeholder?: string;
-    source?: string = undefined;
+    source?: string;
 
     constructor(
         path?: string,
