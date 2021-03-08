@@ -7,9 +7,10 @@ from typing import List, Optional, Dict, Tuple, Iterable, Any, Generator, TypeVa
     TypedDict, MappingView, ItemsView
 
 from bs4 import UnicodeDammit
+from flask import current_app
 from sqlalchemy import func, Numeric, Float, true
 from sqlalchemy.dialects.postgresql import aggregate_order_by
-from sqlalchemy.orm import selectinload, defaultload, Query
+from sqlalchemy.orm import selectinload, defaultload, Query, joinedload
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
@@ -364,6 +365,8 @@ def get_users_for_tasks(
         cols.append(doc_id)
     if user_ids is not None:
         main = main.filter(User.id.in_(user_ids))
+    if current_app.config["LOAD_STUDENT_IDS_IN_TEACHER"]:
+        main = main.options(joinedload('uniquecodes'))
     main = main.group_by(User.id, *group_by_cols)
 
     # prevents error:
