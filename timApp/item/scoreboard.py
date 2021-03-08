@@ -138,12 +138,11 @@ def get_score_infos_if_enabled(
         doc_info: DocInfo,
         doc_settings: DocSettings,
         user_ctx: UserContext,
-        lang_id: Optional[str] = None,
 ) -> Optional[List[DocScoreInfo]]:
     score_infos = None
     if user_ctx.logged_user.logged_in and doc_settings.show_scoreboard():
         scoreboard_docs = doc_settings.scoreboard_docs()
         if not scoreboard_docs:
             scoreboard_docs.append(doc_info.short_name)
-        score_infos = get_score_infos(doc_info.parent, scoreboard_docs, user_ctx, lang_id)
+        score_infos = get_score_infos(doc_info.parent, scoreboard_docs, user_ctx, doc_info.lang_id)
     return score_infos
