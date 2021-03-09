@@ -67,7 +67,9 @@ export class UserListController implements IController {
         let anyAnnotations = false;
         let smallFieldWidth = 59;
         // check if server gave student ids for users
-        let includeStudentId = this.viewctrl.users.some(a => a.user.hasOwnProperty('student_id'));
+        const includeStudentId = this.viewctrl.users.some((a) =>
+            a.user.hasOwnProperty("student_id")
+        );
 
         function nameCompare(a: IUserListEntry, b: IUserListEntry) {
             return sortByRealName(a.user, b.user);
@@ -102,14 +104,18 @@ export class UserListController implements IController {
                 maxWidth: 100,
             },
             // only include Student # tab if server gave them
-            ...(includeStudentId ? [{
-                field: "user.student_id",
-                name: "Student #",
-                cellTooltip: true,
-                headerTooltip: true,
-                visible: false,
-                maxWidth: 70,
-            }] : []),
+            ...(includeStudentId
+                ? [
+                      {
+                          field: "user.student_id",
+                          name: "Student #",
+                          cellTooltip: true,
+                          headerTooltip: true,
+                          visible: false,
+                          maxWidth: 70,
+                      },
+                  ]
+                : []),
             {
                 field: "task_count",
                 name: "Tasks",
