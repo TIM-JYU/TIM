@@ -99,6 +99,7 @@ TIM_SAFE_TAGS = [
     'tim-goto-link',
     'tim-graph-viz',
     'tim-variables',
+    'tim-new-message-list'
 ]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
