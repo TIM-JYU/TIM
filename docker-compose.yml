@@ -91,6 +91,7 @@ services:
   networks:
    - db
   read_only: true
+  shm_size: ${PG_SHM_SIZE:?}
   tmpfs:
    - /run/postgresql
    - /tmp
