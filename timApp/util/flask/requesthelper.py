@@ -1,5 +1,6 @@
 import itertools
 import json
+import os
 import pprint
 import time
 import warnings
@@ -150,6 +151,7 @@ def get_request_message(status_code: Optional[int]=None, include_body: bool=Fals
 {status_code or ""}
 {get_request_time()}
 {ua.platform}/{ua.browser}/{ua.version}
+{os.getpid()}
 """.replace('\n', ' ').strip()
     if not include_body or request.method not in ('POST', 'PUT', 'DELETE'):
         return msg
