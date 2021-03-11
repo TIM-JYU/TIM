@@ -1186,7 +1186,7 @@ class ScimTest(TimRouteTest):
         self.get(
             '/scim/Groups',
             query_string={'filter': 'externalId sw x'},
-            **scim_error('IP not allowed: None', 403),
+            **scim_error('IP not allowed: 127.0.0.1', 403),
         )
         self.get(
             '/scim/Groups',
@@ -1194,7 +1194,7 @@ class ScimTest(TimRouteTest):
             headers=[('X-Forwarded-For', '1.2.3.4')],
             auth=a,
         )
-        app.config['SCIM_ALLOWED_IP'] = None
+        app.config['SCIM_ALLOWED_IP'] = '127.0.0.1'
 
 
 def scim_error(msg: str, code=422):

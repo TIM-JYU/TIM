@@ -49,6 +49,7 @@ services:
    TIM_SETTINGS: ${CONFIG_FILE}
    TIM_HOST: ${TIM_HOST:?}
    PG_MAX_CONNECTIONS: ${PG_MAX_CONNECTIONS:?}
+   COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
   restart: unless-stopped
   networks:
    - db
@@ -173,7 +174,7 @@ services:
   working_dir: /app/pali
   environment:
     PYTHONPATH: /app
-    PROFILE: ${COMPOSE_PROFILES:?}
+    COMPOSE_PROFILES: ${COMPOSE_PROFILES:?}
   command: ./startAll.sh
   restart: unless-stopped
   read_only: true

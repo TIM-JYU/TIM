@@ -144,7 +144,7 @@ def get_request_message(status_code: Optional[int]=None, include_body: bool=Fals
     ua: UA = request.user_agent  # type: ignore
     msg = f"""
 {name}
-[{request.headers.get("X-Forwarded-For") or request.remote_addr}]:
+[{request.remote_addr}]:
 {request.method}
 {url_or_path}
 {status_code or ""}
