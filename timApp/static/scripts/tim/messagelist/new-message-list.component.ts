@@ -20,7 +20,7 @@ import {Users} from "../user/userService";
  
     </div>
     <div>
-        <input type="checkbox" id="if-archived" /> <label for="if-archived">Archive messages?</label>
+        <input type="checkbox" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive messages?</label>
     </div>
     <div>
         <input type="radio" id="public-archive" name="archive-type" value="isPublic" />
@@ -50,6 +50,8 @@ export class NewMessageListComponent implements OnInit {
     listname?: string;
     // default domain
     domain: string = "@lists.tim.jyu.fi";
+    // list is archived by default
+    archive: boolean = true;
 
     domains = ["@lists.tim.jyu.fi", "@timlists.jyu.fi", "@lists.jyu.fi"];
 
@@ -69,6 +71,7 @@ export class NewMessageListComponent implements OnInit {
                 .post<JSON>("/messagelist/createlist", {
                     listname: this.listname,
                     domain: this.domain,
+                    archive: this.archive,
                     archiveType: "isSecret",
                 })
                 .toPromise()
