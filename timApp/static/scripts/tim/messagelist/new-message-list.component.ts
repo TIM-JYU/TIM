@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {HttpClient} from "@angular/common/http";
 import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";

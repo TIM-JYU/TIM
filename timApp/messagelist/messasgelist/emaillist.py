@@ -27,7 +27,7 @@ def create_list() -> Response:
     return ok_response()
 
 
-def create_new_email_list(obj: dict):
+def create_new_email_list(obj: dict) -> None:
     """Creates a new mailing list.
 
     TODO: Complete
