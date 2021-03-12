@@ -1516,12 +1516,13 @@ def get_answers(task_id: str, user_id: int):
     user = User.get_by_id(user_id)
     if user is None:
         raise RouteException('Non-existent user')
+    curr_user = get_current_user_object()
     if user_id != get_current_user_id():
         if not verify_seeanswers_access(d, require=False):
             if not is_peerreview_enabled(d):
                 raise AccessDenied()
-            if not has_review_access(d, get_current_user_object(), tid, user):
-                if has_review_access(d, get_current_user_object(), None, user):
+            if not has_review_access(d, curr_user, tid, user):
+                if has_review_access(d, curr_user, None, user):
                     return json_response([])
                 else:
                     raise AccessDenied()
@@ -1537,7 +1538,7 @@ def get_answers(task_id: str, user_id: int):
         for answer in user_answers:
             for u in answer.users_all:
                 maybe_hide_name(d, u)
-    if p and not p.known.show_points() and not get_current_user_object().has_teacher_access(d):
+    if p and not p.known.show_points() and not curr_user.has_teacher_access(d):
         user_answers = list(map(hide_points, user_answers))
     return json_response(user_answers)
 
