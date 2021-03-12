@@ -27,7 +27,7 @@ def create_list() -> Response:
     return ok_response()
 
 
-def create_new_email_list(obj: dict):
+def create_new_email_list(obj: dict) -> None:
     """Creates a new mailing list.
 
     TODO: Complete
@@ -38,5 +38,8 @@ def create_new_email_list(obj: dict):
     """
 
     listname: str = obj["listname"]
+    domain: str = obj["domain"]
+    archive: bool = obj["archive"]
     print("Poor man's listname check:")
-    print(listname)
+    print(listname + domain)
+    print("archive? " + str(archive))
