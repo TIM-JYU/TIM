@@ -568,8 +568,11 @@ export class ViewCtrl implements IController {
             }
         );
         this.reviewCtrl.loadDocumentAnnotations();
-        // TODO: Currently editline hiding is done by exam mode on backend side but by a general bool on frontend
-        if (!this.hideVars.editLine) {
+
+        // TODO: Inserting help par is currently unconditional.
+        //  The non-existence of the help par causes at least some plugins
+        //  to not update properly (for example, "Saved" text will not appear when saving qst).
+        if (true) {
             this.editingHandler.insertHelpPar();
         }
         this.viewRangeInfo.loadRanges();
