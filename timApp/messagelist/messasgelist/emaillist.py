@@ -38,5 +38,6 @@ def create_new_email_list(obj: dict):
     """
 
     listname: str = obj["listname"]
+    domain: str = obj["domain"]
     print("Poor man's listname check:")
-    print(listname)
+    print(listname + domain)

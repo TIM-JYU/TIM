@@ -12,10 +12,8 @@ import {Users} from "../user/userService";
     <h1>Create new message list</h1>
     <div>
         <label for="list-name">List name: </label><input type="text" id="list-name" [(ngModel)]="listname"/>
-       <select id="domain-select">
-            <option value="lists.tim.jyu.fi">@lists.jyu.fi</option>
-            <option value="timlists.jyu.fi">@timlists.jyu.fi</option>
-            <option value="lists.jyu.fi">@lists.jyu.fi</option>
+       <select id="domain-select" [(ngModel)]="domain">
+            <option *ngFor="let domain of domains">{{domain}}</option>
         </select>
     </div>
     <div>
@@ -50,10 +48,15 @@ import {Users} from "../user/userService";
 })
 export class NewMessageListComponent implements OnInit {
     listname?: string;
+    // default domain
+    domain: string = "@lists.tim.jyu.fi";
+
+    domains = ["@lists.tim.jyu.fi", "@timlists.jyu.fi", "@lists.jyu.fi"];
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
         }
+        console.log(this.domain);
     }
 
     constructor(private http: HttpClient) {}
@@ -64,8 +67,8 @@ export class NewMessageListComponent implements OnInit {
         const result = await to2(
             this.http
                 .post<JSON>("/messagelist/createlist", {
-                    // listname: this.listname,
                     listname: this.listname,
+                    domain: this.domain,
                     archiveType: "isSecret",
                 })
                 .toPromise()
