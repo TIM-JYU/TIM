@@ -1394,12 +1394,11 @@ def hide_points(a: Answer):
     j = a.to_json()
     j['points'] = None
 
-    c = j.get('content', None)
-    if c and c.find('"points": {') >= 0:  # TODO: Hack for csPlugin
-        c = json.loads(c)
-        c.pop('points')
-        c = json.dumps(c)
-        j['content'] = c
+    # TODO: Hack for csPlugin
+    c = a.content_as_json
+    if isinstance(c, dict):
+        c.pop('points', None)
+        j['content'] = json.dumps(c)
 
     if a.points is not None:
         j['points_hidden'] = True
