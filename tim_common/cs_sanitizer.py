@@ -1,10 +1,9 @@
+import bleach
 import html5lib
 from html5lib.constants import namespaces
 from html5lib.filters import sanitizer
 from html5lib.filters.sanitizer import allowed_elements, allowed_attributes, allowed_css_properties
 from html5lib.serializer import HTMLSerializer
-import bleach
-import html
 
 '''
 "kirjasto cs-pluginissa tarvittaville sanitoinneille
@@ -22,6 +21,7 @@ def allow_minimal(s: str) -> str:
         return s
     return bleach.clean(s, cs_allowed_tags, cs_allowed_attrs)
 
+
 cs_svg_tim_allowed_elements = set(allowed_elements).union({
     (namespaces['svg'], 'feBlend'),
     (namespaces['svg'], 'feColorMatrix'),
@@ -30,7 +30,6 @@ cs_svg_tim_allowed_elements = set(allowed_elements).union({
     (namespaces['svg'], 'filter'),
     (namespaces['svg'], 'style'),
 })
-
 
 cs_svg_allowed_attributes = set(allowed_attributes).union({
     (None, 'filter'),
@@ -67,6 +66,7 @@ def cs_min_sanitize(s: str) -> str:
 
     # s = tim_sanitize(s)
     return s
+
 
 TIM_SAFE_TAGS = ['a',
                  'abbr',
@@ -113,7 +113,8 @@ TIM_SAFE_TAGS = ['a',
                  'u',
                  's',
                  'style',
-                 'svg']
+                 'svg',
+                 'tt']
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
                       'video': ['src', 'controls'],
@@ -136,7 +137,7 @@ TIM_SAFE_ATTRS = frozenset([
     'size', 'span', 'src', 'start', 'style', 'summary', 'tabindex', 'target', 'title',
     'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'controls', 'plugin'])
 
-TIM_SAFE_PROTOCOLS=['http', 'https', 'smb', 'data']
+TIM_SAFE_PROTOCOLS = ['http', 'https', 'smb', 'data']
 TIM_SAFE_STYLES = ['width', 'height', 'vertical-align']
 
 
