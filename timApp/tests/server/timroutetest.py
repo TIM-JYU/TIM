@@ -931,7 +931,7 @@ class TimRouteTest(TimDbTest):
             content: Any = '',
             points: Union[None, int, float] = None,
             valid: bool = True,
-            content_key: str = 'c',
+            content_key: Optional[str] = 'c',
             user: Optional[User] = None,
     ):
         if user is None:
@@ -939,7 +939,7 @@ class TimRouteTest(TimDbTest):
         a = Answer(
             users_all=[user],
             task_id=f'{d.id}.{task_name}',
-            content=json.dumps({content_key: content}),
+            content=json.dumps({content_key: content}) if content_key is not None else json.dumps(content),
             points=points,
             valid=valid,
         )
