@@ -40,3 +40,7 @@ def create_new_email_list(obj: dict):
     listname: str = obj["listname"]
     print("Poor man's listname check:")
     print(listname)
+
+    emails: [] = obj["emails"]
+    print("Emails:")
+    print(emails)

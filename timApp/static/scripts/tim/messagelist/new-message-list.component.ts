@@ -33,7 +33,8 @@ import {Users} from "../user/userService";
         <label for="secret-archive"> "Super secret archive"</label>
     </div>
     <div>
-        <textarea id="add-multiple-emails"></textarea>
+        <label for="add-multiple-emails">Add multiple emails</label> <br />
+        <textarea id="add-multiple-emails" [(ngModel)]="emails"></textarea>
     </div>
 
     <div>
@@ -50,6 +51,7 @@ import {Users} from "../user/userService";
 })
 export class NewMessageListComponent implements OnInit {
     listname?: string;
+    emails?: string;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -64,9 +66,9 @@ export class NewMessageListComponent implements OnInit {
         const result = await to2(
             this.http
                 .post<JSON>("/messagelist/createlist", {
-                    // listname: this.listname,
                     listname: this.listname,
                     archiveType: "isSecret",
+                    emails: this.parseEmails(),
                 })
                 .toPromise()
         ); // to2()
@@ -74,6 +76,18 @@ export class NewMessageListComponent implements OnInit {
             console.error(result.result.error.error);
         }
     } // newList()
+
+    /**
+     * Compile email addresses separated by line breaks into a list
+     * @private
+     */
+    private parseEmails(): string[] {
+        if (this.emails == null) {
+            return [];
+        }
+
+        return this.emails.split("\n").filter(Boolean);
+    }
 } // class NewMessageListComponent
 
 @NgModule({
