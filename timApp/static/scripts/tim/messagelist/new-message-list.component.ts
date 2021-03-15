@@ -71,7 +71,6 @@ export class NewMessageListComponent implements OnInit {
                     listname: this.listname,
                     domain: this.domain,
                     archive: this.archive,
-                    archiveType: "isSecret",
                 })
                 .toPromise()
         ); // to2()
@@ -86,4 +85,4 @@ export class NewMessageListComponent implements OnInit {
     exports: [NewMessageListComponent],
     imports: [CommonModule, FormsModule],
 })
-export class NewMessageListModule {}
+export class NewMsgListModule {}
