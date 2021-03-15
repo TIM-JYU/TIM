@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {HttpClient} from "@angular/common/http";
 import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
@@ -12,17 +11,15 @@ import {Users} from "../user/userService";
     <h1>Create new message list</h1>
     <div>
         <label for="list-name">List name: </label><input type="text" id="list-name" [(ngModel)]="listname"/>
-       <select id="domain-select">
-            <option value="lists.tim.jyu.fi">@lists.jyu.fi</option>
-            <option value="timlists.jyu.fi">@timlists.jyu.fi</option>
-            <option value="lists.jyu.fi">@lists.jyu.fi</option>
+       <select id="domain-select" [(ngModel)]="domain">
+            <option *ngFor="let domain of domains">{{domain}}</option>
         </select>
     </div>
     <div>
  
     </div>
     <div>
-        <input type="checkbox" id="if-archived" /> <label for="if-archived">Archive messages?</label>
+        <input type="checkbox" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive messages?</label>
     </div>
     <div>
         <input type="radio" id="public-archive" name="archive-type" value="isPublic" />
@@ -51,6 +48,12 @@ import {Users} from "../user/userService";
 })
 export class NewMessageListComponent implements OnInit {
     listname?: string;
+    // default domain
+    domain: string = "@lists.tim.jyu.fi";
+    // list is archived by default
+    archive: boolean = true;
+
+    domains = ["@lists.tim.jyu.fi", "@timlists.jyu.fi", "@lists.jyu.fi"];
     emails?: string;
 
     ngOnInit(): void {
@@ -67,6 +70,8 @@ export class NewMessageListComponent implements OnInit {
             this.http
                 .post<JSON>("/messagelist/createlist", {
                     listname: this.listname,
+                    domain: this.domain,
+                    archive: this.archive,
                     archiveType: "isSecret",
                     emails: this.parseEmails(),
                 })
@@ -95,4 +100,4 @@ export class NewMessageListComponent implements OnInit {
     exports: [NewMessageListComponent],
     imports: [CommonModule, FormsModule],
 })
-export class NewMessageListModule {}
+export class NewMsgListModule {}

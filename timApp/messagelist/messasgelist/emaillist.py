@@ -1,4 +1,4 @@
-from flask import Response, request
+from flask import Response
 
 from timApp.util.flask.responsehelper import ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -7,39 +7,35 @@ messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
 
 @messagelist.route('/createlist', methods=['POST'])
-def create_list() -> Response:
+def create_list(listname: str, archive: bool, domain: str) -> Response:
     """Handles creating a new message list.
 
-    This function assumes that the request proxy's request body is a JSON
-    object with certain specified fields, see new-message-list.component.ts
-
-    Flask's Request is used to carry over the data.
-
+    :param listname The name of the email-list
+    :param domain Selected domain for the email-list
+    :param archive Whether or not this email-list will be archived
     :return: A Response how the operation succeeded.
     """
 
-    # TODO: Explore the possibility of a more sane datatype to use than
-    # direct object/dict type.
-    json_object: dict = request.get_json()
-
-    create_new_email_list(json_object)
+    create_new_email_list(listname, archive, domain)
 
     return ok_response()
 
 
-def create_new_email_list(obj: dict):
+def create_new_email_list(listname: str, archive: bool, domain: str) -> None:
     """Creates a new mailing list.
 
     TODO: Complete
     This function is a stub, intended to complete when access to
     a safe testing environment with Mailman can be arranged.
 
-    :param obj: A Python object structure
+    :param listname The name of the email-list
+    :param domain Selected domain for the email-list
+    :param archive Whether or not this email-list will be archived
     """
 
-    listname: str = obj["listname"]
     print("Poor man's listname check:")
-    print(listname)
+    print(listname + domain)
+    print("archive? " + str(archive))
 
     emails: [] = obj["emails"]
     print("Emails:")
