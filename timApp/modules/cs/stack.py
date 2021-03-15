@@ -83,6 +83,9 @@ class Stack(Language):
             save = result["save"]
             save["seed"] = userseed
 
+        # Prevent [[jsxgraphapi]] blocks from being sanitized as Bleach will
+        # sanitize away some characters from it (e.g. < and >)
+        # Do this by extracting the blocks, pass data to sanitizer and then reinsert the blocks
         jsxgraph_blocks = collect_jsxgraphapi_blocks(stack_data)
         sanitize_dict(stack_data)
         restore_jsxgraphapi_blocks(stack_data, jsxgraph_blocks)
