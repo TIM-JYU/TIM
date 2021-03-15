@@ -79,7 +79,6 @@ services:
   security_opt:
    - seccomp:unconfined
   volumes:
-   - ./timApp/modules/cs/generated/stackplots:/var/data/api/stack/plots:rw
    - ./stack/plots:/var/data/api/stack/plots:rw
    - ./stack/plots:/var/www/html/plots:rw
    - ./stack/api:/var/www/html/api:rw

@@ -328,7 +328,6 @@ services:
    - ./stack/plots:/var/www/html/plots:rw
    - ./stack/api/config.php.docker:/var/www/html/config.php:rw
    - ./stack/entrypoint_install_and_run.sh:/var/www/html/entrypoint_install_and_run.sh
-   # - ./stack/cas/castext/jsxgraphapi.block.php:/var/www/html/stack/cas/castext/jsxgraph.block.php
   restart: unless-stopped
   environment:
    BROWSER_URL: ${TIM_HOST:?}
