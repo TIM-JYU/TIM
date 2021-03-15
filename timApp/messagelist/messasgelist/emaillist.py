@@ -16,12 +16,12 @@ def create_list(listname: str, archive: bool, domain: str) -> Response:
     :return: A Response how the operation succeeded.
     """
 
-    create_new_email_list(listname, domain, archive)
+    create_new_email_list(listname, archive, domain)
 
     return ok_response()
 
 
-def create_new_email_list(listname: str, domain: str, archive: str) -> None:
+def create_new_email_list(listname: str, archive: bool, domain: str) -> None:
     """Creates a new mailing list.
 
     TODO: Complete
