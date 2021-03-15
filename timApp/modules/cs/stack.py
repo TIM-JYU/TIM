@@ -1,9 +1,14 @@
 import json
+from typing import Dict, Callable, Any, Optional
 
 import requests
 
-from tim_common.cs_sanitizer import tim_sanitize
 from languages import Language
+from tim_common.cs_sanitizer import tim_sanitize
+
+JSXGRAPHAPI_START = "[[jsxgraphapi"
+JSXGRAPHAPI_END = "[[/jsxgraphapi]]"
+JSXGRAPHAPI_BLOCK_PREFIX = "jsxgraphapi_tmp"
 
 
 def do_jsxgraph_replace(q):
@@ -14,7 +19,8 @@ def do_jsxgraph_replace(q):
 
 
 class Stack(Language):
-    ttype="stack"
+    ttype = "stack"
+
     def can_give_task(self):
         return True
 
@@ -62,12 +68,7 @@ class Stack(Language):
         q = stack_data.get("question", "")
 
         if not self.query.jso.get('markup').get('stackjsx'):
-            if isinstance(q, str):
-                stack_data["question"] = do_jsxgraph_replace(q)
-            else:
-                q_html = stack_data["question"]["question_html"]
-                if q_html:
-                    stack_data["question"]["question_html"] = do_jsxgraph_replace(q_html)
+            transform_stack_question(stack_data, do_jsxgraph_replace)
 
         if nosave or get_task:
             stack_data['score'] = False
@@ -82,7 +83,9 @@ class Stack(Language):
             save = result["save"]
             save["seed"] = userseed
 
+        jsxgraph_blocks = collect_jsxgraphapi_blocks(stack_data)
         sanitize_dict(stack_data)
+        restore_jsxgraphapi_blocks(stack_data, jsxgraph_blocks)
 
         # TODO: Couldn't stack server accept dict directly in 'question'?
         if isinstance(q, dict):
@@ -112,6 +115,52 @@ class Stack(Language):
         r = requests.post(url=url, data=json.dumps(data))
         r = r.json()
         return 0, r.get('yaml'), "", ""
+
+
+def value_between(s: str, start: str, end: str) -> Optional[str]:
+    start_index = s.find(start, 0)
+    if start_index < 0:
+        return None
+    end_index = s.find(end, start_index)
+    if end_index < 0:
+        return None
+    return s[start_index:end_index + len(end)]
+
+
+def collect_jsxgraphapi_blocks(stack_data: Any) -> Dict[str, str]:
+    result = {}
+
+    def collect(q: str) -> str:
+        while True:
+            block = value_between(q, JSXGRAPHAPI_START, JSXGRAPHAPI_END)
+            if not block:
+                break
+            key = f"{JSXGRAPHAPI_BLOCK_PREFIX}_{hash(block)}"
+            result[key] = block
+            q = q.replace(block, key)
+        return q
+
+    transform_stack_question(stack_data, collect)
+    return result
+
+
+def restore_jsxgraphapi_blocks(stack_data: Any, jsxgraph_blocks: Dict[str, str]) -> None:
+    def restore(q: str) -> str:
+        for k, v in jsxgraph_blocks.items():
+            q = q.replace(k, v)
+        return q
+
+    transform_stack_question(stack_data, restore)
+
+
+def transform_stack_question(stack_data: Any, transform: Callable[[str], str]) -> None:
+    q = stack_data.get("question", "")
+    if isinstance(q, str):
+        stack_data["question"] = transform(q)
+    else:
+        q_html = stack_data["question"]["question_html"]
+        if q_html:
+            stack_data["question"]["question_html"] = transform(q_html)
 
 
 def sanitize_dict(d):
