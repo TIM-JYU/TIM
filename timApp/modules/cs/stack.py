@@ -90,11 +90,6 @@ class Stack(Language):
         sanitize_dict(stack_data)
         restore_jsxgraphapi_blocks(stack_data, jsxgraph_blocks)
 
-        # TODO: Couldn't stack server accept dict directly in 'question'?
-        if isinstance(q, dict):
-            q = json.dumps(q)
-            stack_data["question"] = q
-
         r = requests.post(url=url, data=json.dumps(stack_data))  # json.dumps(data_to_send, cls=TimJsonEncoder))
         # r = requests.get(url="http://stack-test-container/api/endpoint.html")
 
