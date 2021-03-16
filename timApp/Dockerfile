@@ -143,6 +143,7 @@ humanize \
 isodate \
 libsass \
 lxml \
+mailmanclient \
 marshmallow \
 marshmallow-enum \
 marshmallow_union \
