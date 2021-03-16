@@ -69,11 +69,14 @@ export class NewMessageListComponent implements OnInit {
         const result = await to2(
             this.http
                 .post<JSON>("/messagelist/createlist", {
-                    listname: this.listname,
-                    domain: this.domain,
-                    archive: this.archive,
-                    archiveType: "isSecret",
-                    emails: this.parseEmails(),
+                    options: {
+                        // VIESTIM check that all other options are inside this object here,
+                        // this organization matches the route function at emaillist.py
+                        listname: this.listname,
+                        domain: this.domain,
+                        archive: this.archive,
+                        emails: this.parseEmails(),
+                    },
                 })
                 .toPromise()
         ); // to2()
