@@ -162,7 +162,7 @@ recommonmark \
 responses \
 selenium==4.0.0b1 \
 sphinx \
-sqlalchemy==1.3.23 \
+sqlalchemy\<1.4.0 \
 sqlalchemy-utils \
 typing-inspect \
 voikko \
