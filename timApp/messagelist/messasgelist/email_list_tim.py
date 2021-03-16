@@ -38,7 +38,7 @@ class IEmailList:
     list_domain: str
     archive: bool
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def check_name_availability(self, name_candidate: str) -> bool:
