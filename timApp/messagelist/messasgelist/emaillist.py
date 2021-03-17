@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 from flask import Response
 
@@ -14,7 +15,7 @@ class ListOptions:
     listname: str
     domain: str
     archive: bool
-    emails: tuple
+    emails: List[str]
 
 
 @messagelist.route('/createlist', methods=['POST'])
