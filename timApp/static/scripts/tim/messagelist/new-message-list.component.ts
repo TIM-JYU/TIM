@@ -90,7 +90,7 @@ export class NewMessageListComponent implements OnInit {
      * @private
      */
     private parseEmails(): string[] {
-        if (this.emails == null) {
+        if (!this.emails) {
             return [];
         }
 
