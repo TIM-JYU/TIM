@@ -8,20 +8,20 @@ import {Users} from "../user/userService";
 @Component({
     selector: "tim-new-message-list",
     template: `
-    <h1>Create new message list</h1>
-    <div>
-        <label for="list-name">List name: </label><input type="text" id="list-name" [(ngModel)]="listname"/>
-       <select id="domain-select" [(ngModel)]="domain">
-            <option *ngFor="let domain of domains">{{domain}}</option>
-        </select>
-    </div>
-    <div>
- 
-    </div>
-    <div>
-        <input type="checkbox" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive messages?</label>
-    </div>
-    <div>
+        <h1>Create new message list</h1>
+        <div>
+            <label for="list-name">List name: </label><input type="text" id="list-name" [(ngModel)]="listname"/>
+            <select id="domain-select" [(ngModel)]="domain">
+                <option *ngFor="let domain of domains">{{domain}}</option>
+            </select>
+        </div>
+        <div>
+        </div>
+        <div>
+            <input type="checkbox" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive
+            messages?</label>
+        </div>
+        <div>
             <p>Radio buttons example</p>
             <p>Currently selected item: {{ archiveType }}</p>
             <label *ngFor="let item of items">
@@ -33,11 +33,11 @@ import {Users} from "../user/userService";
                 />
                 {{ item }}
             </label>
-    </div>
-    <div>
-        <label for="add-multiple-emails">Add multiple emails</label> <br />
-        <textarea id="add-multiple-emails" [(ngModel)]="emails"></textarea>
-    </div>
+        </div>
+        <div>
+            <label for="add-multiple-emails">Add multiple emails</label> <br/>
+            <textarea id="add-multiple-emails" [(ngModel)]="emails"></textarea>
+        </div>
 
         <div>
             <select id="search-groups" multiple>
@@ -72,13 +72,13 @@ export class NewMessageListComponent implements OnInit {
 
     async newList() {
         // TODO: Validate input values before sending, e.g. this list
-        // has a unique name.
+        //  has a unique name.
         const result = await to2(
             this.http
-                .post<JSON>("/messagelist/createlist", {
+                .post("/messagelist/createlist", {
                     options: {
                         // VIESTIM check that all other options are inside this object here,
-                        // this organization matches the route function at emaillist.py
+                        //  this organization matches the route function at emaillist.py
                         listname: this.listname,
                         domain: this.domain,
                         archive: this.archive,
