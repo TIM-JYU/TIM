@@ -969,6 +969,46 @@ choices:
         d3 = make_doc('"*"')
         run_js(d3, '')
 
+    def test_mcq_qst_fetch(self):
+        d = self.create_jsrun("""
+fields: [t, t2]
+group: testuser1
+program: |!!
+const t = tools.getValue("t");
+tools.println(t);
+const t2 = tools.getValue("t2");
+tools.println(t2);
+!!
+        """)
+        d.document.add_text("""
+#- {plugin=mcq #t}
+headerText: ''
+stem: ""
+choices:
+- text: "first" 
+- text: "second"
+
+``` {#t2 plugin="qst"}
+answerFieldType: radio
+answerLimit: 1
+expl: {}
+headers: []
+questionText: x
+questionTitle: x
+questionType: radio-vertical
+rows:
+- a
+- b
+```
+        """)
+        self.add_answer(d, 't', 1, content_key=None, user=self.test_user_1)
+        self.add_answer(d, 't2', [['2']], content_key=None, user=self.test_user_1)
+        db.session.commit()
+        self.do_jsrun(
+            d,
+            expect_content={'web': {'errors': [], 'outdata': {}, 'output': '1\n[["2"]]\n'}},
+        )
+
 
 class JsRunnerGroupTest(JsRunnerTestBase):
     def test_jsrunner_group(self):

@@ -5,6 +5,7 @@ Insert only configuration-related things in this file. Do NOT define routes here
 """
 import inspect
 import mimetypes
+import os
 import sys
 from typing import Optional
 
@@ -13,6 +14,7 @@ from flask_migrate import Migrate
 from flask_wtf import CSRFProtect
 from sqlalchemy import func
 from sqlalchemy.sql.ddl import CreateTable
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from timApp.answer.answer import Answer, AnswerSaver
 from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
@@ -163,6 +165,20 @@ app.jinja_env.add_extension('jinja2.ext.do')
 mimetypes.add_type('text/plain', '.scss')
 
 app.json_encoder = TimJsonEncoder
+
+# Caddy sets the following headers:
+# X-Forwarded-For: <ip>
+# X-Forwarded-Proto: <http/https>
+# In prod_multi, there are 2 Caddys - the one in the container and the one in the host machine.
+num_proxies = 2 if os.environ.get('COMPOSE_PROFILES') == 'prod_multi' else 1
+app.wsgi_app = ProxyFix(
+    app.wsgi_app,
+    x_for=num_proxies,
+    x_proto=1,
+    x_host=0,
+    x_port=0,
+    x_prefix=0,
+)
 
 
 @app.shell_context_processor

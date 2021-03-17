@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List
 
 from flask import Response
 
@@ -15,6 +16,7 @@ class ListOptions:
     domain: str
     archive: bool
     archiveType: str
+    emails: List[str]
 
 
 @messagelist.route('/createlist', methods=['POST'])
@@ -46,3 +48,4 @@ def create_new_email_list(options: ListOptions) -> None:
     print(options.listname + options.domain)
     print("archive? " + str(options.archive))
     print("archiveType? " + str(options.archiveType))
+    print("emails: " + str(options.emails))

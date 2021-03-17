@@ -128,11 +128,7 @@ def scim_error_json(code: int, msg: str) -> Dict:
 
 @scim.before_request
 def check_auth() -> None:
-    # The following IP check is safe because X-Forwarded-For cannot be forged
-    # in the current configuration (Caddy + Gunicorn + Flask):
-    # If a user sends a forged X-Forwarded-For header, the variable "ip" will be a comma-separated list of IPs,
-    # containing both the forged IP and the real IP.
-    ip = request.headers.get('X-Forwarded-For')
+    ip = request.remote_addr
     if ip != current_app.config.get('SCIM_ALLOWED_IP'):
         raise SCIMException(403, f'IP not allowed: {ip}')
     expected_username = current_app.config.get('SCIM_USERNAME')

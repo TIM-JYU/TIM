@@ -8,21 +8,20 @@ import {Users} from "../user/userService";
 @Component({
     selector: "tim-new-message-list",
     template: `
-        <h1>Create new message list</h1>
-        <div>
-            <label for="list-name">List name: </label><input type="text" id="list-name" [(ngModel)]="listname"/>
-            <select id="domain-select" [(ngModel)]="domain">
-                <option *ngFor="let domain of domains">{{domain}}</option>
-            </select>
-        </div>
-        <div>
-
-        </div>
-        <div>
-            <input type="checkbox" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive
-            messages?</label>
-        </div>
-        <div>
+    <h1>Create new message list</h1>
+    <div>
+        <label for="list-name">List name: </label><input type="text" id="list-name" [(ngModel)]="listname"/>
+       <select id="domain-select" [(ngModel)]="domain">
+            <option *ngFor="let domain of domains">{{domain}}</option>
+        </select>
+    </div>
+    <div>
+ 
+    </div>
+    <div>
+        <input type="checkbox" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive messages?</label>
+    </div>
+    <div>
             <p>Radio buttons example</p>
             <p>Currently selected item: {{ archiveType }}</p>
             <label *ngFor="let item of items">
@@ -34,10 +33,11 @@ import {Users} from "../user/userService";
                 />
                 {{ item }}
             </label>
-        </div>
-        <div>
-            <textarea id="add-multiple-emails"></textarea>
-        </div>
+    </div>
+    <div>
+        <label for="add-multiple-emails">Add multiple emails</label> <br />
+        <textarea id="add-multiple-emails" [(ngModel)]="emails"></textarea>
+    </div>
 
         <div>
             <select id="search-groups" multiple>
@@ -61,6 +61,7 @@ export class NewMessageListComponent implements OnInit {
     archive: boolean = true;
 
     domains = ["@lists.tim.jyu.fi", "@timlists.jyu.fi", "@lists.jyu.fi"];
+    emails?: string;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -81,6 +82,7 @@ export class NewMessageListComponent implements OnInit {
                         listname: this.listname,
                         domain: this.domain,
                         archive: this.archive,
+                        emails: this.parseEmails(),
                         archiveType: this.archiveType,
                     },
                 })
@@ -90,6 +92,18 @@ export class NewMessageListComponent implements OnInit {
             console.error(result.result.error.error);
         }
     } // newList()
+
+    /**
+     * Compile email addresses separated by line breaks into a list
+     * @private
+     */
+    private parseEmails(): string[] {
+        if (!this.emails) {
+            return [];
+        }
+
+        return this.emails.split("\n").filter(Boolean);
+    }
 } // class NewMessageListComponent
 
 @NgModule({

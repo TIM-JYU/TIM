@@ -8,6 +8,7 @@ from jinja2 import TemplateNotFound
 
 from timApp.admin.user_cli import do_soft_delete
 from timApp.answer.answer_models import AnswerUpload
+from timApp.answer.routes import hide_points
 from timApp.auth.accesshelper import verify_logged_in, verify_admin
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
@@ -100,12 +101,13 @@ def get_user_info(u: User, include_doc_content: bool=False) -> Dict[str, Any]:
     velpgroups = Block.query.filter(Block.id.in_(block_query) & (Block.type_id == BlockType.Velpgroup.value)).all()
     answers = u.answers.all()
     answer_uploads = AnswerUpload.query.filter(AnswerUpload.answer_id.in_([a.id for a in answers])).all()
+    answers_no_points = list(map(hide_points, answers))
     for d in docs:
         d.serialize_content = include_doc_content
 
     return {
         'annotations': u.annotations.all(),
-        'answers': answers,
+        'answers': answers_no_points,
         'answer_uploads': answer_uploads,
         'groups': u.groups,
         'lectureanswers': u.lectureanswers.all(),
