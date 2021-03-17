@@ -28,6 +28,9 @@ export TIM_IMAGE_TAG=$(${DIR}/get_latest_date.sh)
 # Maximum number of allowed connections to PostgreSQL.
 export PG_MAX_CONNECTIONS=200
 
+# Size for /dev/shm for PostgreSQL container.
+export PG_SHM_SIZE=64mb
+
 # Name of the Docker Compose project. Modify only if there are multiple TIM instances in the same host.
 export COMPOSE_PROJECT_NAME=tim
 

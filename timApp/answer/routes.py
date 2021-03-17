@@ -1394,12 +1394,11 @@ def hide_points(a: Answer):
     j = a.to_json()
     j['points'] = None
 
-    c = j.get('content', None)
-    if c and c.find('"points": {') >= 0:  # TODO: Hack for csPlugin
-        c = json.loads(c)
-        c.pop('points')
-        c = json.dumps(c)
-        j['content'] = c
+    # TODO: Hack for csPlugin
+    c = a.content_as_json
+    if isinstance(c, dict):
+        c.pop('points', None)
+        j['content'] = json.dumps(c)
 
     if a.points is not None:
         j['points_hidden'] = True
@@ -1517,12 +1516,13 @@ def get_answers(task_id: str, user_id: int):
     user = User.get_by_id(user_id)
     if user is None:
         raise RouteException('Non-existent user')
+    curr_user = get_current_user_object()
     if user_id != get_current_user_id():
         if not verify_seeanswers_access(d, require=False):
             if not is_peerreview_enabled(d):
                 raise AccessDenied()
-            if not has_review_access(d, get_current_user_object(), tid, user):
-                if has_review_access(d, get_current_user_object(), None, user):
+            if not has_review_access(d, curr_user, tid, user):
+                if has_review_access(d, curr_user, None, user):
                     return json_response([])
                 else:
                     raise AccessDenied()
@@ -1538,7 +1538,7 @@ def get_answers(task_id: str, user_id: int):
         for answer in user_answers:
             for u in answer.users_all:
                 maybe_hide_name(d, u)
-    if p and not p.known.show_points() and not get_current_user_object().has_teacher_access(d):
+    if p and not p.known.show_points() and not curr_user.has_teacher_access(d):
         user_answers = list(map(hide_points, user_answers))
     return json_response(user_answers)
 

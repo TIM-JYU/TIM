@@ -1,3 +1,5 @@
+import json
+
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.usergroup import UserGroup
 from timApp.timdb.sqa import db
@@ -100,6 +102,19 @@ class SettingsTest(TimRouteTest):
                                  'uploaded_images': [],
                                  'velpgroups': [],
                                  'velps': []})
+
+    def test_info_no_points(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin #t}
+type: python
+-pointsRule:
+  run: 1
+        """)
+        self.post_answer('csPlugin', f'{d.id}.t', {'usercode': 'print("hi")'})
+        answs = self.get('/settings/info')['answers']
+        self.assertIsNone(answs[0]['points'])
+        self.assertNotIn('points', json.loads(answs[0]['content']))
 
     def test_settings_save(self):
         self.login_test1()

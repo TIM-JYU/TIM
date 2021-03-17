@@ -387,19 +387,15 @@ def get_fields_and_users(
                         except:
                             value = json.dumps(p)
                     else:
-                        if len(json_str) > 1:
-                            plug = cpf.find(task)
-                            if plug:
-                                content_field = plug.get_content_field_name()
-                            else:
-                                content_field = "c"
-                            if isinstance(p, dict):
-                                value = p.get(content_field)
-                            else:
-                                value = p
+                        plug = cpf.find(task)
+                        if plug:
+                            content_field = plug.get_content_field_name()
                         else:
-                            values_p = list(p.values())
-                            value = values_p[0]
+                            content_field = "c"
+                        if isinstance(p, dict):
+                            value = p.get(content_field)
+                        else:
+                            value = p
             user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
             user_fieldstyles[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = style
     return (
