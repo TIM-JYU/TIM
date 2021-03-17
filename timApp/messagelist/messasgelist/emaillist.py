@@ -14,6 +14,7 @@ class ListOptions:
     listname: str
     domain: str
     archive: bool
+    archiveType: str
 
 
 @messagelist.route('/createlist', methods=['POST'])
@@ -44,3 +45,4 @@ def create_new_email_list(options: ListOptions) -> None:
     print("Poor man's listname check:")
     print(options.listname + options.domain)
     print("archive? " + str(options.archive))
+    print("archiveType? " + str(options.archiveType))
