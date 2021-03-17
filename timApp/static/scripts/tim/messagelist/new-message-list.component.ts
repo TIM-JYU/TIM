@@ -22,31 +22,38 @@ import {Users} from "../user/userService";
         <input type="checkbox" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive messages?</label>
     </div>
     <div>
-        <input type="radio" id="public-archive" name="archive-type" value="isPublic" />
-        <label for="public-archive">Public archive</label>
-    </div>
-    <div>
-        <input type="radio" id="secret-archive" name="archive-type" value="isSecret" />
-        <label for="secret-archive"> "Super secret archive"</label>
+            <p>Radio buttons example</p>
+            <p>Currently selected item: {{ archiveType }}</p>
+            <label *ngFor="let item of items">
+                <input
+                        name="items-radio"
+                        type="radio"
+                        [value]="item"
+                        [(ngModel)]="archiveType"
+                />
+                {{ item }}
+            </label>
     </div>
     <div>
         <label for="add-multiple-emails">Add multiple emails</label> <br />
         <textarea id="add-multiple-emails" [(ngModel)]="emails"></textarea>
     </div>
 
-    <div>
-        <select id="search-groups" multiple>
-            <option value="1">Lundberg Tomi</option>
-            <option value="15">ViesTIM </option>
-            <option value="17">ViesTIM-opetus</option>
-            <option value="18">ViesTIM-ohjaajat</option>
-        </select>
-    </div>
+        <div>
+            <select id="search-groups" multiple>
+                <option value="1">Lundberg Tomi</option>
+                <option value="15">ViesTIM</option>
+                <option value="17">ViesTIM-opetus</option>
+                <option value="18">ViesTIM-ohjaajat</option>
+            </select>
+        </div>
         <button (click)="newList()">Create List</button>
-        
+
     `,
 })
 export class NewMessageListComponent implements OnInit {
+    archiveType: string = "";
+    items: string[] = ["public archive", "secret archive"];
     listname?: string;
     // default domain
     domain: string = "@lists.tim.jyu.fi";
@@ -76,6 +83,7 @@ export class NewMessageListComponent implements OnInit {
                         domain: this.domain,
                         archive: this.archive,
                         emails: this.parseEmails(),
+                        archiveType: this.archiveType,
                     },
                 })
                 .toPromise()
