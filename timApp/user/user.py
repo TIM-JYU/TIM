@@ -264,7 +264,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         # back_populates="group",
     )
     lectures = db.relationship('Lecture', secondary=LectureUsers.__table__,
-                               back_populates='users', lazy='dynamic')
+                               back_populates='users', lazy='select')
     owned_lectures = db.relationship('Lecture', back_populates='owner', lazy='dynamic')
     owned_lectures_alt = db.relationship('Lecture')
     lectureanswers = db.relationship('LectureAnswer', back_populates='user', lazy='dynamic')
