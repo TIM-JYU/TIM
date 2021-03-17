@@ -29,7 +29,7 @@ class EmailList(IEmailList):
     # TODO: Arguments given to Client here are the same as in
     #  https://mailmanclient.readthedocs.io/en/latest/src/mailmanclient/docs/using.html
     #  Set correct values for contacting Mailman on it's server.
-    _manager = Client("http://localhost:9001/3.1", 'restadmin', "restpass")
+    _manager: Client = Client("http://localhost:9001/3.1", 'restadmin', "restpass")
 
     # VIESTIM: Would it be polite to return something as an indication how the operation went?
     def set_archive_type(self, archive: bool) -> None:

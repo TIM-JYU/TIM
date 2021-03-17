@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 
 class IEmailListManager:
@@ -17,7 +17,7 @@ class IEmailListManager:
         """
         raise NotImplementedError
 
-    def get_domains(self) -> list[str]:
+    def get_domains(self) -> List[str]:
         """Return all possible domains.
 
         :return a list of domains.
