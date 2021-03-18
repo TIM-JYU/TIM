@@ -5,6 +5,15 @@ import {to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {Users} from "../user/userService";
 
+interface CreateListOptions {
+    // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
+    listname: string;
+    domain: string;
+    archive: boolean;
+    archiveType: string;
+    emails: string[];
+}
+
 @Component({
     selector: "tim-new-message-list",
     template: `
@@ -52,15 +61,18 @@ import {Users} from "../user/userService";
     `,
 })
 export class NewMessageListComponent implements OnInit {
-    archiveType: string = "";
-    items: string[] = ["public archive", "secret archive"];
-    listname?: string;
-    // default domain
-    domain: string = "@lists.tim.jyu.fi";
+    listname: string = "";
+
     // list is archived by default
     archive: boolean = true;
+    archiveType: string = "";
+    items: string[] = ["public archive", "secret archive"];
 
-    domains = ["@lists.tim.jyu.fi", "@timlists.jyu.fi", "@lists.jyu.fi"];
+    domains = ["@lists.tim.jyu.fi", "@timlist.jyu.fi", "@lists.jyu.fi"];
+    // default domain
+    domain: string =
+        !this.domains || this.domains.length == 0 ? "" : this.domains[1];
+
     emails?: string;
 
     ngOnInit(): void {
@@ -71,27 +83,28 @@ export class NewMessageListComponent implements OnInit {
     constructor(private http: HttpClient) {}
 
     async newList() {
-        // TODO: Validate input values before sending, e.g. this list
-        //  has a unique name.
-        const result = await to2(
-            this.http
-                .post("/messagelist/createlist", {
-                    options: {
-                        // VIESTIM check that all other options are inside this object here,
-                        //  this organization matches the route function at emaillist.py
-                        listname: this.listname,
-                        domain: this.domain,
-                        archive: this.archive,
-                        emails: this.parseEmails(),
-                        archiveType: this.archiveType,
-                    },
-                })
-                .toPromise()
-        ); // to2()
+        const result = await this.createList({
+            // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
+            // TODO: Validate input values before sending, e.g. this list has a unique name.
+            listname: this.listname,
+            domain: this.domain,
+            archive: this.archive,
+            emails: this.parseEmails(),
+            archiveType: this.archiveType,
+        });
         if (!result.ok) {
             console.error(result.result.error.error);
         }
+        // VIESTIM Helps see that data was sent succesfully after clicking the button.
+        console.log("List options sent successfully.");
     } // newList()
+
+    // VIESTIM this helper function helps keeping types in check.
+    private createList(options: CreateListOptions) {
+        return to2(
+            this.http.post("/messagelist/createlist", {options}).toPromise()
+        );
+    }
 
     /**
      * Compile email addresses separated by line breaks into a list
@@ -101,7 +114,6 @@ export class NewMessageListComponent implements OnInit {
         if (!this.emails) {
             return [];
         }
-
         return this.emails.split("\n").filter(Boolean);
     }
 } // class NewMessageListComponent
