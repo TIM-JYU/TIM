@@ -54,17 +54,33 @@ import {Users} from "../user/userService";
 export class NewMessageListComponent implements OnInit {
     archiveType: string = "";
     items: string[] = ["public archive", "secret archive"];
+
     listname?: string;
-    // default domain
-    domain: string = "@lists.tim.jyu.fi";
+
+    domain: string = "";
+    domains: string[] = [];
+
     // list is archived by default
     archive: boolean = true;
 
-    domains = ["@lists.tim.jyu.fi", "@timlists.jyu.fi", "@lists.jyu.fi"];
     emails?: string;
+
+    urlPrefix: string = "/messagelist";
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
+            this.getDomains();
+        }
+    }
+
+    private async getDomains() {
+        const result = await to2(
+            this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
+        );
+        if (result.ok) {
+            this.domains = result.result;
+        } else {
+            console.error(result.result.error.error);
         }
     }
 
@@ -72,13 +88,13 @@ export class NewMessageListComponent implements OnInit {
 
     async newList() {
         // TODO: Validate input values before sending, e.g. this list
-        //  has a unique name.
+        //  has a unique name. The last line of validation has to happen at the server side.
         const result = await to2(
             this.http
-                .post("/messagelist/createlist", {
+                .post(`${this.urlPrefix}/createlist`, {
                     options: {
                         // VIESTIM check that all other options are inside this object here,
-                        //  this organization matches the route function at emaillist.py
+                        //  this organization matches the view function at emaillist.py
                         listname: this.listname,
                         domain: this.domain,
                         archive: this.archive,
@@ -91,7 +107,7 @@ export class NewMessageListComponent implements OnInit {
         if (!result.ok) {
             console.error(result.result.error.error);
         }
-    } // newList()
+    }
 
     /**
      * Compile email addresses separated by line breaks into a list
@@ -104,7 +120,7 @@ export class NewMessageListComponent implements OnInit {
 
         return this.emails.split("\n").filter(Boolean);
     }
-} // class NewMessageListComponent
+}
 
 @NgModule({
     declarations: [NewMessageListComponent],

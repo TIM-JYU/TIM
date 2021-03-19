@@ -5,7 +5,6 @@ from mailmanclient import Client
 
 from timApp.messagelist.messasgelist.email_list_tim import IEmailList, IEmailListManager
 
-
 @dataclass
 class EmailListManager(IEmailListManager):
     # VIESTIM: define new attributes, functions (and other things) in IEmailListManager first, then make necessary
@@ -13,11 +12,13 @@ class EmailListManager(IEmailListManager):
     def search_for_name(self, name: str) -> bool:
         pass
 
-    def get_domains(self) -> List[str]:
+    @staticmethod
+    def get_domains() -> List[str]:
         pass
 
     def _set_domains(self) -> None:
         pass
+
 
 
 @dataclass
