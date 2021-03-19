@@ -71,14 +71,13 @@ export class NewMessageListComponent implements OnInit {
     domain: string = "";
     domains: string[] = [];
 
-
     emails?: string;
 
     urlPrefix: string = "/messagelist";
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
-            this.getDomains();
+            void this.getDomains();
         }
     }
 
@@ -105,13 +104,12 @@ export class NewMessageListComponent implements OnInit {
             emails: this.parseEmails(),
             archiveType: this.archiveType,
         });
-         if (!result.ok) {
+        if (!result.ok) {
             console.error(result.result.error.error);
         } else {
-         // VIESTIM Helps see that data was sent succesfully after clicking the button.
-        console.log("List options sent successfully.");
-    }
-
+            // VIESTIM Helps see that data was sent succesfully after clicking the button.
+            console.log("List options sent successfully.");
+        }
     }
 
     // VIESTIM this helper function helps keeping types in check.
