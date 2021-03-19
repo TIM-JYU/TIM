@@ -17,47 +17,48 @@ interface CreateListOptions {
 @Component({
     selector: "tim-new-message-list",
     template: `
-        <h1>Create new message list</h1>
-        <div>
-            <label for="list-name">List name: </label><input type="text" id="list-name" [(ngModel)]="listname"/>
-            <select id="domain-select" [(ngModel)]="domain">
-                <option *ngFor="let domain of domains">{{domain}}</option>
-            </select>
-        </div>
-        <div>
-        </div>
-        <div>
-            <input type="checkbox" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive
-            messages?</label>
-        </div>
-        <div>
-            <p>Radio buttons example</p>
-            <p>Currently selected item: {{ archiveType }}</p>
-            <label *ngFor="let item of items">
-                <input
-                        name="items-radio"
-                        type="radio"
-                        [value]="item"
-                        [(ngModel)]="archiveType"
-                />
-                {{ item }}
-            </label>
-        </div>
-        <div>
-            <label for="add-multiple-emails">Add multiple emails</label> <br/>
-            <textarea id="add-multiple-emails" [(ngModel)]="emails"></textarea>
-        </div>
+        <form>
+            <h1>Create new message list</h1>
+            <div>
+                <label for="list-name">List name: </label><input type="text" id="list-name" [(ngModel)]="listname"/>
+                <select id="domain-select" [(ngModel)]="domain">
+                    <option *ngFor="let domain of domains">{{domain}}</option>
+                </select>
+            </div>
+            <div>
+            </div>
+            <div>
+                <input type="checkbox" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive
+                messages?</label>
+            </div>
+            <div>
+                <p>Radio buttons example</p>
+                <p>Currently selected item: {{ archiveType }}</p>
+                <label *ngFor="let item of items">
+                    <input
+                            name="items-radio"
+                            type="radio"
+                            [value]="item"
+                            [(ngModel)]="archiveType"
+                    />
+                    {{ item }}
+                </label>
+            </div>
+            <div>
+                <label for="add-multiple-emails">Add multiple emails</label> <br/>
+                <textarea id="add-multiple-emails" [(ngModel)]="emails"></textarea>
+            </div>
 
-        <div>
-            <select id="search-groups" multiple>
-                <option value="1">Lundberg Tomi</option>
-                <option value="15">ViesTIM</option>
-                <option value="17">ViesTIM-opetus</option>
-                <option value="18">ViesTIM-ohjaajat</option>
-            </select>
-        </div>
-        <button (click)="newList()">Create List</button>
-
+            <div>
+                <select id="search-groups" multiple>
+                    <option value="1">Lundberg Tomi</option>
+                    <option value="15">ViesTIM</option>
+                    <option value="17">ViesTIM-opetus</option>
+                    <option value="18">ViesTIM-ohjaajat</option>
+                </select>
+            </div>
+            <button (click)="newList()">Create List</button>
+        </form>
     `,
 })
 export class NewMessageListComponent implements OnInit {
