@@ -74,44 +74,22 @@ a $4 rv $1 $2 $3
 t -> $4
 */
 const code = `
-rank 1: rd 1, ax=120, ay=100, rd: 1, dx: 100
-rank 0, rd: 1
-g w:1, r:0
-class Item: value V, next SR
-ref luvut -> item1
-s.Item item1 1 item2
-s.Item item2 2 item3
-s.Item item3 3 item4
-s.Item item4 4 
-
-styleall fill=yellow
-g gotoStep
-g firstStep, r 1, sx: 100
-// BYCODEBEGIN
-CODE: var iter = luvut.iterator(); // iteraattori
-ref iter -> item1
-CODE: var luku = iter.next(); 
-g tx: 80
-val luku
-luku = iter.value
-iter = iter.next 
-CODE: var luku = iter.next(); 
-luku = iter.value
-iter = iter.next 
-CODE: var luku = iter.next(); 
-luku = iter.value
-iter = iter.next 
-CODE: var luku = iter.next(); 
-luku = iter.value
-iter = iter.next 
-// BYCODEEND
+val a=5
+.=5
+a=6
+class A: n v, b r
+s.A $1
+$1.n = 4
+n $2 kissa
+$1.b -> $2
+.n -> $2
 `;
 setData({
     code: code, args: "1001", params: {
          mode: "code",
          errorlevel: 3,
          // animate: "commands",
-         animate: "code",
+         xanimate: "code",
          allowLazy: true,
          //justone: true,
          }
