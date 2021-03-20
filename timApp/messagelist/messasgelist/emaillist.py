@@ -27,12 +27,10 @@ def create_list(options: ListOptions) -> Response:
     :return: A Response how the operation succeeded.
     """
 
-    # create_new_email_list(listname, archive, domain)
     create_new_email_list(options)
     return ok_response()
 
 
-# def create_new_email_list(listname: str, archive: bool, domain: str) -> None:
 def create_new_email_list(options: ListOptions) -> None:
     """Creates a new mailing list.
 
@@ -70,7 +68,6 @@ def domains() -> Response:
     :return: If domains exists, return them as an array. If there are no domains, return an empty array.
     """
     # TODO: rewrite to check from a proper source. Now we just send this test data.
-    # If necessary to control displaying of a preferred domain, make sure it is the first in this list.
     possible_domains: List[str] = ["@lists.tim.jyu.fi", "@timlist.jyu.fi", "@lists.jyu.fi"]
 
     return json_response(possible_domains)

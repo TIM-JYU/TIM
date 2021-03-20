@@ -3,44 +3,80 @@ from typing import List
 
 from mailmanclient import Client
 
-from timApp.messagelist.messasgelist.email_list_tim import IEmailList, IEmailListManager
+# TODO: Configure Client with proper URL, user name and password. The values presented here are placeholders. See
+#  https://mailmanclient.readthedocs.io/en/latest/src/mailmanclient/docs/using.html
+_client = Client("http://localhost:9001/3.0/", "restadmin", "restadmin")
+"""A client object to utilize Mailmans REST API. Poke directly only if necessary, otherwise use via EmailListManager 
+class."""
+
+
+# VIESTIM Decorate class methods with @staticmethod unless the method would necessarily be needed for an instance of
+#  the class. We wish to avoid instancing classes if possible.
+
 
 @dataclass
-class EmailListManager(IEmailListManager):
-    # VIESTIM: define new attributes, functions (and other things) in IEmailListManager first, then make necessary
-    #  changes here. This naturally doesn't apply to completely implementation dependent details.
-    def search_for_name(self, name: str) -> bool:
-        pass
+class EmailListManager:
+    """Functionality for chosen email list management system Mailman 3. Handels everything else except things
+    spesific to existing email lists."""
+
+    domains: List[str]
+    """Possible domains which can be used with our instance of Mailman."""
+
+    @staticmethod
+    def check_name_availability(name_candidate: str) -> bool:
+        """Search for a name from the pool of used email list names.
+
+        :param name_candidate: The name to search for. The name needs to be a proper email list name,
+        e.g. name@domain.org.
+        :return: Return True if name is already in use. Return False if not
+        """
+        # TODO: Implement the search.
+        return False
 
     @staticmethod
     def get_domains() -> List[str]:
+        """
+
+        :return: A list of possible domains.
+        """
+        # TODO: Change to return domains properly.
+        possible_domains: List[str] = ["@lists.tim.jyu.fi", "@timlist.jyu.fi", "@lists.jyu.fi"]
+        return possible_domains
+
+    @staticmethod
+    def _set_domains() -> None:
+        """Set possible domains. Searches possible domains from a configure file."""
+        # TODO: Search the proper configuration file(s) for domains.
         pass
 
-    def _set_domains(self) -> None:
-        pass
+    @staticmethod
+    def create_new_list(name: str) -> None:
+        """
 
+        :param name: A full email list name, e.g. name@domain.org.
+        :return:
+        """
+        pass
 
 
 @dataclass
-class EmailList(IEmailList):
-    """Implementation of TIM's email list interface. Interacts with TIM's email list engine Mailman 3 via
-    mailmanclient library.
+class EmailList:
+    """Class to aid with email list spesific functionality attribute checking and changes.
+
+    This class is designed to be used when an existing email list is expected to exits. Think operations like adding
+    an email to an existing list etc. For operations other than mentioned, use EmailListManager.
     """
 
-    # TODO: Arguments given to Client here are the same as in
-    #  https://mailmanclient.readthedocs.io/en/latest/src/mailmanclient/docs/using.html
-    #  Set correct values for contacting Mailman on it's server.
-    _manager: Client = Client("http://localhost:9001/3.1", 'restadmin', "restpass")
-
     # VIESTIM: Would it be polite to return something as an indication how the operation went?
-    def set_archive_type(self, archive: bool) -> None:
+
+    @staticmethod
+    def set_archive_type(listname: str, archive: bool) -> None:
         pass
 
-    def delete_email(self, email: str) -> None:
+    @staticmethod
+    def delete_email(listname: str, email: str) -> None:
         pass
 
-    def add_email(self, email: str) -> None:
-        pass
-
-    def check_name_availability(self, name_candidate: str) -> bool:
+    @staticmethod
+    def add_email(listname: str, email: str) -> None:
         pass
