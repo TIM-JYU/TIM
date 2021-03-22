@@ -510,7 +510,6 @@ def send_grades_to_sisu(
     completion_date_iso = completion_date.isoformat()
     validation_errors = []
     try:
-        # noinspection PyTypeChecker
         AssessmentSchema(many=True).load([a.to_sisu_json(completion_date=completion_date_iso) for a in assessments])
     except ValidationError as e:
         msgs = e.messages
@@ -552,7 +551,6 @@ def send_grades_to_sisu(
         },
     )
     # log_info(json.dumps(r.json(), indent=4))
-    # noinspection PyTypeChecker
     try:
         pr: PostAssessmentsResponse = PostAssessmentsResponseSchema().load(r.json())
     except JSONDecodeError:

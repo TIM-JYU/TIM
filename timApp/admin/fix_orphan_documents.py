@@ -26,7 +26,6 @@ def fix_orphans_without_docentry() -> None:
 
         for o in orphans:
             print(f'Adding a DocEntry for document with id {o.id}')
-            # noinspection PyArgumentList
             d = DocEntry(id=o.id, name=f'{f.path}/orphan_{o.id}', public=True)
             db.session.add(d)
         db.session.commit()

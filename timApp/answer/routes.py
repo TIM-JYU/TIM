@@ -915,9 +915,7 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
     This is required to fetch the requested data from the database."""
 
     s = JsRunnerMarkupSchema()
-    # noinspection PyTypeChecker
     runnermarkup: JsRunnerMarkupModel = s.load(plugin.values)
-    # noinspection PyTypeChecker
     runner_req: JsRunnerAnswerModel = JsRunnerAnswerSchema().load(request.get_json())
     groupnames = runnermarkup.groups
     if groupnames is missing:

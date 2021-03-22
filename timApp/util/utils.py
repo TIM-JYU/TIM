@@ -77,13 +77,11 @@ def get_error_html(message: Union[str, Exception], response: Optional[str]=None)
                                                  f'<pre>---Full response string start---\n{response}\n---Full response string end---</pre>' if response is not None else ''))
 
 
-# noinspection PyUnusedLocal
-def get_error_tex(title: str, message: Union[str, Exception], response: Optional[str]=None) -> str:
+def get_error_tex(title: str, message: Union[str, Exception]) -> str:
     """Wraps an error message in a TeX element 'timpluginerror'.
 
     :param title: The plugin response string.
     :param message: The message to be displayed in the error.
-    :param response: No tused?
     :return: The sanitized error message HTML.
     """
 

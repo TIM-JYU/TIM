@@ -52,7 +52,7 @@ LOCALHOST = 'http://localhost/'
 
 BasicAuthParams = Tuple[str, str]
 
-# noinspection PyIncorrectDocstring
+
 @lru_cache(maxsize=100)
 def fast_getaddrinfo(host, port, family=0, addrtype=0, proto=0, flags=0):
     """On Windows/Boot2docker, the getaddrinfo function is really slow, so we wrap the function and cache the result."""

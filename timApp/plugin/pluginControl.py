@@ -50,7 +50,7 @@ def get_error_plugin(plugin_name, message, response=None,
     :type plugin_name: str
     """
     if plugin_output_format == PluginOutputFormat.MD:
-        return get_error_tex(f'Plugin {plugin_name} error:', message, response)
+        return get_error_tex(f'Plugin {plugin_name} error:', message)
 
     return get_error_html(f'Plugin {plugin_name} error: {message}', response)
 

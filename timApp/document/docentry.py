@@ -65,14 +65,12 @@ class DocEntry(db.Model, DocInfo):
     def lang_id(self) -> Optional[str]:
         return self.tr.lang_id if self.tr else None
 
-    # noinspection PyMethodOverriding
     @lang_id.setter
     def lang_id(self, value: str) -> None:
         tr = self.tr
         if tr:
             tr.lang_id = value
         else:
-            # noinspection PyArgumentList
             self.trs.append(Translation(src_docid=self.id, lang_id=value, doc_id=self.id))
 
     @property
@@ -138,7 +136,6 @@ class DocEntry(db.Model, DocInfo):
 
     @staticmethod
     def get_dummy(title: str) -> 'DocEntry':
-        # noinspection PyArgumentList
         return DocEntry(id=-1, name=title)
 
     @staticmethod
@@ -169,7 +166,6 @@ class DocEntry(db.Model, DocInfo):
 
         document = create_document_and_block(owner_group, title or path)
 
-        # noinspection PyArgumentList
         docentry = DocEntry(id=document.doc_id, name=path, public=True)
         docentry._doc = document
         if path is not None:

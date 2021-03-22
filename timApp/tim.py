@@ -418,9 +418,8 @@ def after_request(resp: Response):
     return resp
 
 
-# noinspection PyUnusedLocal
 @app.teardown_appcontext
-def close_db_appcontext(e):
+def close_db_appcontext(_e):
     if not app.config['TESTING'] and hasattr(g, 'timdb'):
         g.timdb.close()
 
