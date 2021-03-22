@@ -1071,6 +1071,21 @@ class JJS(Language):
         return code, out, err, pwddir
 
 
+class TS(Language):
+    ttype = "ts"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = "/tmp/%s/%s.ts" % (self.basename, self.filename)
+        self.exename = self.sourcefilename
+        self.pure_exename = u"./{0:s}.ts".format(self.filename)
+        self.fileext = "ts"
+
+    def run(self, result, sourcelines, points_rule):
+        code, out, err, pwddir = self.runself(["ts-node", self.pure_exename])
+        return code, out, err, pwddir
+
+
 class JS(Language):
     ttype = "js"
 
