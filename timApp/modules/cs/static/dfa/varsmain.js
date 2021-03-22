@@ -75,8 +75,9 @@ t -> $4
 */
 const code = `
 val a=5
-.=5
-a=6
+val b=1
+a=.5
+b=.
 class A: n v, b r
 s.A $1
 $1.n = 4

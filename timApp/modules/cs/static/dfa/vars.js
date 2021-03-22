@@ -245,7 +245,7 @@ class Command extends PrgObject {
             // see https://regex101.com/r/PXDieklatest
             let re = /^([^.\[]*)([.\[].*)$/;
             let r = re.exec(name);
-            if (!r) return [name, varTo];
+            if (!r || !r[1]) return [name, varTo];
             let refvar = variables.findVar(r[1]);
             let newname = r[1];
             let rest = r[2];
