@@ -13,6 +13,7 @@ from flask import render_template, make_response, Response, stream_with_context
 from flask import request
 from flask import session
 from markupsafe import Markup
+from sqlalchemy.orm import joinedload, defaultload
 
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
@@ -37,7 +38,7 @@ from timApp.document.viewcontext import default_view_ctx, ViewRoute, ViewContext
 from timApp.document.viewparams import ViewParams, ViewParamsSchema
 from timApp.folder.folder import Folder
 from timApp.folder.folder_view import try_return_folder
-from timApp.item.block import BlockType
+from timApp.item.block import BlockType, Block
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.item.item import Item
 from timApp.item.partitioning import get_piece_size_from_cookie, decide_view_range, get_doc_version_hash, load_index, \
@@ -358,8 +359,16 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
 
     save_last_page()
 
-    doc_info = DocEntry.find_by_path(item_path, fallback_to_id=True)
-
+    doc_info = DocEntry.find_by_path(
+        item_path,
+        fallback_to_id=True,
+        docentry_load_opts=
+        (defaultload(DocEntry._block)
+         .defaultload(Block.accesses)
+         .joinedload(BlockAccess.usergroup),
+         joinedload(DocEntry.trs)
+         )
+    )
     if doc_info is None:
         return try_return_folder(item_path)
 
@@ -423,6 +432,7 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
     )
     r = make_response(final_html)
     add_no_cache_headers(r)
+    # db.session.commit()
     return r
 
 
@@ -456,6 +466,7 @@ def render_doc_view(
     index_cache_folder = cache_folder_path / "indexcache" / str(doc_info.id)
     contents_have_changed = False
     doc_hash = get_doc_version_hash(doc_info)
+    # db.session.close()
     index = load_index(index_cache_folder / f"{doc_hash}.json")
     if index is not None:
         # If cached header is up to date, partition document here.
@@ -753,9 +764,11 @@ def render_doc_view(
         override_theme=override_theme,
         current_list_user=current_list_user,
     )
+    # db.session.close()
     head, content = (
         render_template('partials/' + tmpl, **tmpl_params) for tmpl in templates_to_render
     )
+    # db.session.close()
     return DocRenderResult(
         head_html=head,
         content_html=content,

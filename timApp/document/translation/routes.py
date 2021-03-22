@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from timApp.auth.accesshelper import get_doc_or_abort, verify_view_access, verify_manage_access, has_manage_access, \
     AccessDenied
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.docentry import create_document_and_block
+from timApp.document.docentry import create_document_and_block, DocEntry
 from timApp.document.documents import add_reference_pars
 from timApp.document.translation.translation import Translation
 from timApp.item.block import copy_default_rights, BlockType
@@ -46,7 +46,13 @@ def create_translation_route(tr_doc_id, language):
     tr.title = title
 
     add_reference_pars(cite_doc, src_doc, 'tr')
-    db.session.add(tr)
+    if isinstance(doc, DocEntry):
+        de = doc
+    elif isinstance(doc, Translation):
+        de = doc.docentry
+    else:
+        assert False, 'doc has unexpected type'
+    de.trs.append(tr)
     copy_default_rights(tr, BlockType.Document)
     db.session.commit()
     return json_response(tr)

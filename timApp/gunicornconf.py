@@ -1,4 +1,5 @@
 import multiprocessing
+from typing import Any
 
 from psycogreen.gevent import patch_psycopg
 
@@ -11,5 +12,5 @@ limit_request_line = 0
 timeout = 600
 
 
-def post_fork(server, worker):
+def post_fork(server: Any, worker: Any) -> None:
     patch_psycopg()

@@ -3,7 +3,6 @@ from typing import List
 from sqlalchemy import UniqueConstraint
 
 from timApp.document.docinfo import DocInfo
-from timApp.item.item import Item
 from timApp.timdb.sqa import db
 
 
@@ -25,16 +24,11 @@ class Translation(db.Model, DocInfo):
 
     _block = db.relationship('Block', back_populates='translation', foreign_keys=[doc_id])
 
-    @property
-    def docentry(self):
-        if not hasattr(self, '_docentry'):
-            from timApp.document.docentry import DocEntry
-            self._docentry = DocEntry.find_by_id(self.src_docid)
-        return self._docentry
-
-    @docentry.setter
-    def docentry(self, value):
-        self._docentry = value
+    docentry = db.relationship(
+        'DocEntry',
+        back_populates='trs',
+        primaryjoin="foreign(Translation.src_docid) == DocEntry.id",
+    )
 
     @property
     def path(self):
@@ -56,20 +50,13 @@ class Translation(db.Model, DocInfo):
     def translations(self) -> List['Translation']:
         return Translation.query.filter_by(src_docid=self.src_docid).all()
 
-    @staticmethod
-    def find_by_docentry(d: 'DocEntry'):
-        trs = Translation.query.filter_by(src_docid=d.id).all()
-        for tr in trs:
-            tr.docentry = d
-        return trs
-
     def to_json(self):
         return {**super(Translation, self).to_json(),
                 'src_docid': self.src_docid,
                 'lang_id': self.lang_id}
 
 
-def add_tr_entry(doc_id: int, item: Item, tr: Translation) -> Translation:
+def add_tr_entry(doc_id: int, item: DocInfo, tr: Translation) -> Translation:
     new_tr = Translation(doc_id=doc_id, src_docid=item.id, lang_id=tr.lang_id)
     new_tr.title = tr.title
     db.session.add(new_tr)

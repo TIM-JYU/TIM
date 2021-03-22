@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import List, Dict, Tuple, TYPE_CHECKING
 
 import attr
@@ -240,6 +241,16 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     @staticmethod
     def get_logged_in_group() -> 'UserGroup':
         return UserGroup.query.filter_by(name=LOGGED_IN_GROUPNAME).one()
+
+
+@lru_cache()
+def get_logged_in_group_id() -> int:
+    return UserGroup.get_logged_in_group().id
+
+
+@lru_cache()
+def get_anonymous_group_id() -> int:
+    return UserGroup.get_anonymous_group().id
 
 
 def get_usergroup_eager_query():

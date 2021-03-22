@@ -161,10 +161,7 @@ class FolderTest(TimRouteTest):
         self.get('/view/' + self.get_personal_item_path('perf'))
         event.remove(eng, 'before_cursor_execute', before_cursor_execute)
 
-        # TODO: Find out why there is one extra statement at the end when running all tests in this class.
-        self.assertGreaterEqual(stmts, 12)
-        self.assertLessEqual(stmts, 14)
-        # print(stmts)
+        self.assertEqual(stmts, 11)
 
 
 class FolderCopyTest(TimRouteTest):
@@ -278,6 +275,7 @@ class FolderCopyTest(TimRouteTest):
         self.assertEqual(['hi'], [p.get_markdown() for p in f2d1c.document.get_paragraphs()])
         self.assertEqual(['hello_en'], [p.get_markdown() for p in trs[1].document.get_paragraphs()])
         self.assertEqual(['hello_sv'], [p.get_markdown() for p in trs[2].document.get_paragraphs()])
+        f1d1 = DocEntry.find_by_id(f1d1.id)
         self.assertFalse(set(tr.id for tr in f1d1.translations) & set(tr.id for tr in f1d1c.translations))
 
         self.json_post(f'/copy/{a.id}',

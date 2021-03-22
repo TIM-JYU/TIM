@@ -2,9 +2,10 @@ from textwrap import dedent
 from typing import Dict, List, Optional
 
 from flask import session, g, request, current_app
+from sqlalchemy.orm import joinedload
 
 from timApp.document.usercontext import UserContext
-from timApp.user.user import User
+from timApp.user.user import User, user_query_with_joined_groups
 
 
 def get_current_user():
@@ -14,7 +15,7 @@ def get_current_user():
 def get_current_user_object() -> User:
     if not hasattr(g, 'user'):
         curr_id = get_current_user_id()
-        u = User.get_by_id(curr_id)
+        u = user_query_with_joined_groups().options(joinedload(User.lectures)).get(curr_id)
         if u is None:
             if curr_id != 0:
                 curr_id = 0

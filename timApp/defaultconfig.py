@@ -130,3 +130,6 @@ LOG_HOST = False
 MAX_ANSWER_CONTENT_SIZE = 200 * 1024  # bytes
 
 SCIM_ALLOWED_IP = '127.0.0.1'
+
+# If true, prints all SQL statements with tracebacks.
+DEBUG_SQL = False

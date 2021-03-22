@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Optional, List, TYPE_CHECKING, Any, Dict
 
+from sqlalchemy.orm import foreign
+
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.document.translation.translation import Translation
@@ -39,7 +41,17 @@ class DocEntry(db.Model, DocInfo):
 
     _block = db.relationship('Block', back_populates='docentries', lazy='joined')
 
+    trs: List[Translation] = db.relationship(
+        'Translation',
+        primaryjoin=id == foreign(Translation.src_docid),
+        back_populates='docentry',
+    )
+
     __table_args__ = (db.Index('docentry_id_idx', 'id'),)
+
+    @property
+    def tr(self) -> Optional[Translation]:
+        return next((tr for tr in self.trs if tr.doc_id == self.id), None)
 
     @property
     def path(self) -> str:
@@ -51,30 +63,23 @@ class DocEntry(db.Model, DocInfo):
 
     @property
     def lang_id(self) -> Optional[str]:
-        tr = Translation.query.filter_by(src_docid=self.id, doc_id=self.id).first()
-        if tr:
-            return tr.lang_id
-        return None
+        return self.tr.lang_id if self.tr else None
 
     # noinspection PyMethodOverriding
     @lang_id.setter
     def lang_id(self, value: str) -> None:
-        tr = Translation.query.filter_by(src_docid=self.id, doc_id=self.id).first()
+        tr = self.tr
         if tr:
             tr.lang_id = value
         else:
             # noinspection PyArgumentList
-            tr = Translation(src_docid=self.id, doc_id=self.id, lang_id=value)
-            db.session.add(tr)
+            self.trs.append(Translation(src_docid=self.id, lang_id=value, doc_id=self.id))
 
     @property
     def translations(self) -> List['Translation']:
-        trs = Translation.find_by_docentry(self)
-        if not any(tr.doc_id == self.id for tr in trs):
-            # noinspection PyArgumentList
-            tr = Translation(src_docid=self.id, doc_id=self.id, lang_id='')
-            tr.docentry = self
-            trs.append(tr)
+        trs = self.trs
+        if not self.tr:
+            self.trs.append(Translation(src_docid=self.id, doc_id=self.id, lang_id=''))
         return trs
 
     @staticmethod
@@ -93,25 +98,32 @@ class DocEntry(db.Model, DocInfo):
         """
         q = DocEntry.query.filter_by(id=doc_id)
         if docentry_load_opts:
-            q = q.options(docentry_load_opts)
+            q = q.options(*docentry_load_opts)
         d = q.first()
         if d:
             return d
         return Translation.query.get(doc_id)
 
     @staticmethod
-    def find_by_path(path: str, fallback_to_id: bool=False, try_translation: bool=True) -> Optional['DocInfo']:
+    def find_by_path(
+            path: str,
+            fallback_to_id: bool = False,
+            try_translation: bool = True,
+            docentry_load_opts: Any = None
+    ) -> Optional['DocInfo']:
         """Finds a DocInfo by path, falling back to id if specified.
 
         TODO: This method doesn't really belong in DocEntry class.
         """
-        d = DocEntry.query.get(path)
+        if docentry_load_opts is None:
+            docentry_load_opts = []
+        d = DocEntry.query.options(*docentry_load_opts).get(path)
         if d:
             return d
         # try translation
         if try_translation:
             base_doc_path, lang = split_location(path)
-            entry = DocEntry.find_by_path(base_doc_path, try_translation=False)
+            entry = DocEntry.find_by_path(base_doc_path, try_translation=False, docentry_load_opts=docentry_load_opts)
             if entry is not None:
                 tr = Translation.query.filter_by(src_docid=entry.id, lang_id=lang).first()
                 if tr is not None:
@@ -119,7 +131,7 @@ class DocEntry(db.Model, DocInfo):
                     return tr
         if fallback_to_id:
             try:
-                return DocEntry.find_by_id(int(path))
+                return DocEntry.find_by_id(int(path), docentry_load_opts=docentry_load_opts)
             except ValueError:
                 return None
         return d

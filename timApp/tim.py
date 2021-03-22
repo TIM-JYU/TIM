@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
+import traceback
 from dataclasses import dataclass
 from typing import Optional, List
 from urllib.parse import urlparse
@@ -16,6 +17,7 @@ from flask import session
 from flask_assets import Environment
 from flask_wtf.csrf import generate_csrf
 from requests.exceptions import MissingSchema, InvalidURL
+from sqlalchemy import event
 from werkzeug.middleware.profiler import ProfilerMiddleware
 
 from timApp.admin.cli import register_clis
@@ -63,6 +65,7 @@ from timApp.readmark.routes import readings
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
 from timApp.tim_app import app
+from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
@@ -210,7 +213,7 @@ def inject_user() -> dict:
         locale=get_locale(),
     )
     if logged_in() and app.config['BOOKMARKS_ENABLED']:
-        r['bookmarks'] = Bookmarks(get_current_user_object()).as_dict()
+        r['bookmarks'] = get_current_user_object().bookmarks.as_dict()
     return r
 
 
@@ -322,6 +325,25 @@ def start_page():
     return render_template(
         'start.jinja2',
     )
+
+
+def install_sql_hook():
+    prev_exec_time = get_current_time()
+
+    @event.listens_for(db.engine, 'before_execute')
+    def receive_before_execute(conn, clauseelement, multiparams, params):
+        nonlocal prev_exec_time
+        curr = get_current_time()
+        print(f'--------------------------------------TIMING: {curr} ({curr - prev_exec_time})')
+        prev_exec_time = curr
+        for r in traceback.format_stack():
+            if r.startswith('  File "/service/'):
+                print(r, end='')
+        print(clauseelement)
+
+
+if app.config['DEBUG_SQL']:
+    install_sql_hook()
 
 
 @app.before_request
