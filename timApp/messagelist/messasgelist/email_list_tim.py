@@ -1,5 +1,9 @@
-from typing import Optional, List
+from typing import List
 
+
+# VIESTIM: These interfaces are a remnant from plans forged long ago and most likely to not necessary for our
+#  project. This file is set for deletion later down the line if no replacement use is invented. Don't use these or
+#  write new things here. Use things from email_list_mailman.py instead.
 
 class IEmailListManager:
     """This interface represents the functionality TIM shows from it's chosen email list management system (e.g.
@@ -32,14 +36,6 @@ class IEmailList:
     """TIM's email list interface. Defines functionality which TIM promises to it's users when they use email list
     functionality.
     """
-    list_manager: IEmailListManager
-    list_name: str
-    domains: Optional[str]
-    list_domain: str
-    archive: bool
-
-    def __init__(self) -> None:
-        pass
 
     def check_name_availability(self, name_candidate: str) -> bool:
         """Check availability of a proposed mailing list name.
@@ -49,7 +45,6 @@ class IEmailList:
         :return: Return True if given parameter listname is an available name in the email list
         engine. Return False if listname already exists as a mailing list.
         """
-        # VIESTIM: Is there a better return type than bool?
         raise NotImplementedError
 
     def add_email(self, email: str) -> None:
