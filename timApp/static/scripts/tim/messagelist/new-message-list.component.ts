@@ -20,15 +20,15 @@ interface CreateListOptions {
         <form>
             <h1>Create new message list</h1>
             <div>
-                <label for="list-name">List name: </label><input type="text" id="list-name" [(ngModel)]="listname"/>
-                <select id="domain-select" [(ngModel)]="domain">
+                <label for="list-name">List name: </label><input type="text" name="list-name" id="list-name" [(ngModel)]="listname"/>
+                <select id="domain-select" name="domain-select" [(ngModel)]="domain">
                     <option *ngFor="let domain of domains">{{domain}}</option>
                 </select>
             </div>
             <div>
             </div>
             <div>
-                <input type="checkbox" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive
+                <input type="checkbox" name="if-archived" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive
                 messages?</label>
             </div>
             <div>
@@ -46,7 +46,7 @@ interface CreateListOptions {
             </div>
             <div>
                 <label for="add-multiple-emails">Add multiple emails</label> <br/>
-                <textarea id="add-multiple-emails" [(ngModel)]="emails"></textarea>
+                <textarea id="add-multiple-emails" name="add-multiple-emails" [(ngModel)]="emails"></textarea>
             </div>
 
             <div>
