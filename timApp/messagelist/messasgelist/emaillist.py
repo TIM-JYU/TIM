@@ -1,73 +1,82 @@
 from dataclasses import dataclass
 from typing import List
 
-from flask import Response
+from mailmanclient import Client
 
-from timApp.util.flask.responsehelper import ok_response, json_response
-from timApp.util.flask.typedblueprint import TypedBlueprint
+# TODO: Configure Client with proper URL, user name and password. The values presented here are placeholders. See
+#  https://mailmanclient.readthedocs.io/en/latest/src/mailmanclient/docs/using.html
+_client = Client("http://localhost:9001/3.0/", "restadmin", "restadmin")
+"""A client object to utilize Mailmans REST API. Poke directly only if necessary, otherwise use via EmailListManager 
+class."""
 
-messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
+
+# VIESTIM Decorate class methods with @staticmethod unless the method would necessarily be needed for an instance of
+#  the class. We wish to avoid instancing classes if possible.
 
 
 @dataclass
-class ListOptions:
-    """All options regarding message lists."""
-    listname: str
-    domain: str
-    archive: bool
-    archiveType: str
-    emails: List[str]
+class EmailListManager:
+    """Functionality for chosen email list management system Mailman 3. Handels everything else except things
+    spesific to existing email lists."""
+
+    domains: List[str]
+    """Possible domains which can be used with our instance of Mailman."""
+
+    @staticmethod
+    def check_name_availability(name_candidate: str) -> bool:
+        """Search for a name from the pool of used email list names.
+
+        :param name_candidate: The name to search for. The name needs to be a proper email list name,
+        e.g. name@domain.org.
+        :return: Return True if name is already in use. Return False if not
+        """
+        # TODO: Implement the search.
+        return False
+
+    @staticmethod
+    def get_domains() -> List[str]:
+        """
+
+        :return: A list of possible domains.
+        """
+        # TODO: Change to return domains properly.
+        possible_domains: List[str] = ["@lists.tim.jyu.fi", "@timlist.jyu.fi", "@lists.jyu.fi"]
+        return possible_domains
+
+    @staticmethod
+    def _set_domains() -> None:
+        """Set possible domains. Searches possible domains from a configure file."""
+        # TODO: Search the proper configuration file(s) for domains.
+        pass
+
+    @staticmethod
+    def create_new_list(name: str) -> None:
+        """
+
+        :param name: A full email list name, e.g. name@domain.org.
+        :return:
+        """
+        pass
 
 
-@messagelist.route('/createlist', methods=['POST'])
-def create_list(options: ListOptions) -> Response:
-    """Handles creating a new message list.
+@dataclass
+class EmailList:
+    """Class to aid with email list spesific functionality attribute checking and changes.
 
-    :param options All options regarding establishing a new message list.
-    :return: A Response how the operation succeeded.
+    This class is designed to be used when an existing email list is expected to exits. Think operations like adding
+    an email to an existing list etc. For operations other than mentioned, use EmailListManager.
     """
 
-    create_new_email_list(options)
-    return ok_response()
+    # VIESTIM: Would it be polite to return something as an indication how the operation went?
 
+    @staticmethod
+    def set_archive_type(listname: str, archive: bool) -> None:
+        pass
 
-def create_new_email_list(options: ListOptions) -> None:
-    """Creates a new mailing list.
+    @staticmethod
+    def delete_email(listname: str, email: str) -> None:
+        pass
 
-    TODO: Complete, this function is a stub, intended to complete when access to a safe testing environment with
-     Mailman can be arranged.
-
-
-    :param options All options regarding message lists.
-    """
-
-    print("Poor man's listname check:")
-    print(options.listname + options.domain)
-    print("archive? " + str(options.archive))
-    print("archiveType? " + str(options.archiveType))
-    print("emails: " + str(options.emails))
-
-
-@messagelist.route("/checkName/<string:name_candidate>", methods=['GET'])
-def check_name(name_candidate: str) -> Response:
-    """Check if parameter is unique in the pool of email list names.
-
-    :param name_candidate: Possible name for message/email list. :return: Return a positive response if this name is
-    unique and can be assigned to a message/email list. Return a negative response if name is not unique and
-    therefore is already reserved for someone or something else.
-    """
-    # TODO: Prototype name uniqueness check.
-    pass
-
-
-@messagelist.route("/domains", methods=['GET'])
-def domains() -> Response:
-    """ Send possible domains for a client, if such exists.
-
-
-    :return: If domains exists, return them as an array. If there are no domains, return an empty array.
-    """
-    # TODO: rewrite to check from a proper source. Now we just send this test data.
-    possible_domains: List[str] = ["@lists.tim.jyu.fi", "@timlist.jyu.fi", "@lists.jyu.fi"]
-
-    return json_response(possible_domains)
+    @staticmethod
+    def add_email(listname: str, email: str) -> None:
+        pass

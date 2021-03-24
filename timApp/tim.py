@@ -48,7 +48,7 @@ from timApp.item.routes_tags import tags_blueprint
 from timApp.item.tag import Tag, GROUP_TAG_PREFIX
 from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.lecture.routes import lecture_routes
-from timApp.messagelist.messasgelist.emaillist import messagelist
+from timApp.messagelist.messasgelist.routes import messagelist
 from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
 from timApp.notification.notify import notify
