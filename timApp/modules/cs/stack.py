@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Dict, Any, Optional, Union
 
 import requests
@@ -17,6 +18,9 @@ def do_jsxgraph_replace(q):
     q = q.replace('[[jsxgraph]]', '[[jsxgraphapi]]')
     q = q.replace('[[/jsxgraph]]', '[[/jsxgraphapi]]')
     return q
+
+
+STACK_API_SERVER_ADDRESS = os.environ.get("STACK_API_SERVER") or "stack-api-server"
 
 
 class Stack(Language):
@@ -51,7 +55,7 @@ class Stack(Language):
 
     def run(self, result, sourcelines, points_rule):
         get_task = self.query.jso.get("input", {}).get("getTask", False)
-        url = "http://stack-api-server/api/endpoint.php"
+        url = f"http://{STACK_API_SERVER_ADDRESS}/api/endpoint.php"
         data = self.query.jso.get("input").get("stackData")
         stack_data = self.query.jso.get('markup').get('-stackData')
         if not stack_data:
@@ -122,7 +126,7 @@ class Stack(Language):
             except yaml.YAMLError:
                 return {}
 
-            if not question:
+            if not question or not isinstance(question, dict):
                 return {}
         else:
             question = stack_question
