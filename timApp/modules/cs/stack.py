@@ -135,9 +135,10 @@ class Stack(Language):
         q_html = question["question_html"]
         if q_html:
             if replace_jsxgraph_blocks:
-                question["question_html"] = q_html = do_jsxgraph_replace(q_html)
+                q_html = do_jsxgraph_replace(q_html)
+                question["question_html"] = q_html
 
-            # Prevent [[jsxgraphapi]] blocks from being sanitized as Bleach will
+                # Prevent [[jsxgraphapi]] blocks from being sanitized as Bleach will
             # sanitize away some characters from it (e.g. < and >)
             # Do this by extracting the blocks, pass data to sanitizer and then reinsert the blocks
             while True:
