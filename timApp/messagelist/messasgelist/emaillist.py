@@ -3,11 +3,18 @@ from typing import List
 
 from mailmanclient import Client
 
-# TODO: Configure Client with proper URL, user name and password. The values presented here are placeholders. See
-#  https://mailmanclient.readthedocs.io/en/latest/src/mailmanclient/docs/using.html
-_client = Client("http://localhost:9001/3.0/", "restadmin", "restadmin")
-"""A client object to utilize Mailmans REST API. Poke directly only if necessary, otherwise use via EmailListManager 
+from timApp.tim_app import app
+
+_client = None
+"""A client object to utilize Mailmans REST API. Poke directly only when necessary, otherwise use via EmailListManager 
 class."""
+
+if "MAILMAN_URL" not in app.config or "MAILMAN_PASS" not in app.config or "MAILMAN_PASS" not in app.config:
+    pass
+elif app.config['MAILMAN_URL'] == "" or app.config['MAILMAN_USER'] == "" or app.config['MAILMAN_PASS']:
+    print("Server started without proper configuration for Mailman connection.")
+else:
+    _client = Client(app.config['MAILMAN_URL'], app.config['MAILMAN_USER'], app.config['MAILMAN_PASS'])
 
 
 # VIESTIM Decorate class methods with @staticmethod unless the method would necessarily be needed for an instance of
@@ -56,7 +63,8 @@ class EmailListManager:
         :param name: A full email list name, e.g. name@domain.org.
         :return:
         """
-        pass
+        print("testiprinti")
+        print(name)
 
 
 @dataclass
