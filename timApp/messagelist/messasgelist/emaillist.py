@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from mailmanclient import Client
+from mailmanclient import Client, MailingList
 
 from timApp.tim_app import app
 
@@ -10,11 +10,15 @@ _client = None
 class."""
 
 if "MAILMAN_URL" not in app.config or "MAILMAN_PASS" not in app.config or "MAILMAN_PASS" not in app.config:
+    # No configuration for Mailman found.
     pass
 elif app.config['MAILMAN_URL'] == "" or app.config['MAILMAN_USER'] == "" or app.config['MAILMAN_PASS'] == "":
+    # Only placeholder configuration for Mailman found.
     print("Server started without proper configuration for Mailman connection.")
 else:
+    # All Mailman confiration values exist and are something other than an empty strgin.
     _client = Client(app.config['MAILMAN_URL'], app.config['MAILMAN_USER'], app.config['MAILMAN_PASS'])
+    # TODO: Test connection somehow?
 
 
 # VIESTIM Decorate class methods with @staticmethod unless the method would necessarily be needed for an instance of
@@ -35,10 +39,17 @@ class EmailListManager:
 
         :param name_candidate: The name to search for. The name needs to be a proper email list name,
         e.g. name@domain.org.
-        :return: Return True if name is already in use. Return False if not
+        :return: Return True if name is available. Return False if not.
         """
-        # TODO: Implement the search.
-        return False
+        if _client is not None:
+            mlists: List[MailingList] = _client.get_lists()
+        else:
+            # TODO: Replace bad return value, this doesn't inform the caller that we can't perform this operation.
+            return False
+        for name in [mlist.fqdn_listname for mlist in mlists]:
+            if name_candidate == name:
+                return False
+        return True
 
     @staticmethod
     def get_domains() -> List[str]:
@@ -47,7 +58,8 @@ class EmailListManager:
         :return: A list of possible domains.
         """
         # TODO: Change to return domains properly.
-        possible_domains: List[str] = ["@lists.tim.jyu.fi", "@timlist.jyu.fi", "@lists.jyu.fi"]
+        possible_domains: List[str] = ["@foo.bar", "@lists.tim.jyu.fi", "@timlist.jyu.fi", "@lists.jyu.fi", "@example"
+                                                                                                            ".com"]
         return possible_domains
 
     @staticmethod
