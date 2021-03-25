@@ -42,7 +42,6 @@ class Folder(db.Model, Item):
 
     @staticmethod
     def get_root() -> 'Folder':
-        # noinspection PyArgumentList
         return Folder(id=ROOT_FOLDER_ID, name='', location='')
 
     @staticmethod
@@ -168,7 +167,6 @@ class Folder(db.Model, Item):
     def path(self):
         return self.get_full_path()
 
-    # noinspection PyMethodOverriding
     @path.setter
     def path(self, new_path: str):
         loc, name = split_location(new_path)
@@ -288,7 +286,6 @@ class Folder(db.Model, Item):
             owner_groups,
         )
 
-        # noinspection PyArgumentList
         f = Folder(_block=block, name=rel_name, location=rel_path)
         db.session.add(f)
 

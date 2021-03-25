@@ -29,7 +29,7 @@ def setup_logging(app: Flask) -> None:
     if app.config['LOG_LEVEL_STDOUT'] is not None:
         stdout_handler = logging.StreamHandler(stream=sys.stdout)
         stdout_handler.setLevel(app.config['LOG_LEVEL_STDOUT'])
-        stdout_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+        stdout_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
         tim_logger.addHandler(stdout_handler)
 
 

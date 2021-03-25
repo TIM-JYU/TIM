@@ -1,1 +1,0 @@
-5b922063c6dc842c2e5a6a42161fafb6  ncurses.tcz

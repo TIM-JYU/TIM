@@ -191,6 +191,11 @@ RUN java -version
 # RUN dbus-uuidgen > /etc/machine-id
 # run echo 3c99bef9df635abd860662e8594b78af >/etc/machine-id
 
+# NodeJS and TypeScript
+RUN (curl -sL https://deb.nodesource.com/setup_14.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
+RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
+
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 20
 
 RUN useradd -m agent

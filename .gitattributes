@@ -8,6 +8,4 @@ npmiw text eol=lf
 r text eol=lf
 js text eol=lf
 *.sh.template text eol=lf
-boot2docker/*.txt text eol=lf
-boot2docker/*.dep text eol=lf
 pandoc_*filter.py text eol=lf

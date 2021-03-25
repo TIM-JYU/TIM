@@ -423,7 +423,7 @@ def par_response(pars: List[DocParagraph],
         if edit_request and logged_in():
             update_associated_uploads(pars, docu)
             if current_app.config['BOOKMARKS_ENABLED']:
-                bms = Bookmarks(get_current_user_object())
+                bms = get_current_user_object().bookmarks
                 bms.add_bookmark(
                     'Last edited',
                     docu.title,

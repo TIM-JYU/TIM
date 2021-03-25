@@ -34,6 +34,8 @@ from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
+from timApp.timdb.sqa import db
+from timApp.user.user import User
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFieldsAccess
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex, Range
@@ -48,7 +50,7 @@ def get_error_plugin(plugin_name, message, response=None,
     :type plugin_name: str
     """
     if plugin_output_format == PluginOutputFormat.MD:
-        return get_error_tex(f'Plugin {plugin_name} error:', message, response)
+        return get_error_tex(f'Plugin {plugin_name} error:', message)
 
     return get_error_html(f'Plugin {plugin_name} error: {message}', response)
 
@@ -384,6 +386,7 @@ def pluginify(doc: Document,
         # TODO: could this return also the plugins, then there is no need for other iteration
         task_ids, _, _ = find_task_ids(pars, view_ctx, user_ctx, check_access=user_ctx.is_different)
         get_answers(user_ctx.user, task_ids, answer_map)
+        # db.session.close()
         # TODO: RND_SEED get all users rand_seeds for this doc's tasks. New table?
 
     placements = {}

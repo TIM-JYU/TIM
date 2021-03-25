@@ -13,8 +13,7 @@ from timApp.util.logger import log_info
 from timApp.util.utils import pycharm_running
 
 
-# noinspection PyUnusedLocal
-def quit_fast(sig: signal.Signals, frame: FrameType) -> None:
+def quit_fast(_sig: signal.Signals, _frame: FrameType) -> None:
     sys.exit(0)
 
 

@@ -39,7 +39,7 @@ def get_documents_from_bookmark_folder(foldername: str) -> Response:
         return json_response([])
     folder = None
     paths = []
-    bookmark_folders = Bookmarks(get_current_user_object())
+    bookmark_folders = get_current_user_object().bookmarks
     for bookmark_folder in bookmark_folders.as_dict():
         if bookmark_folder['name'] == foldername:
             folder = bookmark_folder

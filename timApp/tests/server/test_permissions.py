@@ -587,6 +587,9 @@ class PermissionTest(TimRouteTest):
         d2.document.set_settings({
             'allow_self_confirm_from': d.path,
         })
+        d = DocEntry.find_by_id(d.id)
+        d2 = DocEntry.find_by_id(d2.id)
+        d2.document.clear_mem_cache()
         synchronize_translations(d, DocumentEditResult(added=d.document.get_paragraphs()))
         synchronize_translations(d2, DocumentEditResult(added=d2.document.get_paragraphs()))
         self.login_test2()
