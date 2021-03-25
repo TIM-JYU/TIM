@@ -3,10 +3,13 @@ from typing import List
 
 from mailmanclient import Client
 
+from timApp.tim_app import app
+
 # TODO: Configure Client with proper URL, user name and password. The values presented here are placeholders. See
 #  https://mailmanclient.readthedocs.io/en/latest/src/mailmanclient/docs/using.html
-_client = Client("http://localhost:9001/3.0/", "restadmin", "restadmin")
-"""A client object to utilize Mailmans REST API. Poke directly only if necessary, otherwise use via EmailListManager 
+
+_client = Client(app.config['MAILMAN_URL'], app.config['MAILMAN_USER'], app.config['MAILMAN_PASS'])
+"""A client object to utilize Mailmans REST API. Poke directly only when necessary, otherwise use via EmailListManager 
 class."""
 
 
@@ -56,7 +59,8 @@ class EmailListManager:
         :param name: A full email list name, e.g. name@domain.org.
         :return:
         """
-        pass
+        print("testiprinti")
+        print(name)
 
 
 @dataclass

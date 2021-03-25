@@ -62,10 +62,10 @@ WUFF_EMAIL = 'wuff@tim.jyu.fi'
 NOREPLY_EMAIL = 'no-reply@tim.jyu.fi'
 GLOBAL_NOTIFICATION_FILE = '/tmp/global_notification.html'
 
-
 GIT_LATEST_COMMIT_TIMESTAMP = subprocess.run(["git", "log", "-1", "--date=format:%d.%m.%Y %H:%M:%S", "--format=%cd"],
                                              stdout=subprocess.PIPE).stdout.decode().strip()
-GIT_BRANCH = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], stdout=subprocess.PIPE).stdout.decode().strip()
+GIT_BRANCH = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                            stdout=subprocess.PIPE).stdout.decode().strip()
 
 CELERY_BROKER_URL = 'redis://redis:6379',
 CELERY_RESULT_BACKEND = 'redis://redis:6379'
@@ -130,3 +130,8 @@ LOG_HOST = False
 MAX_ANSWER_CONTENT_SIZE = 200 * 1024  # bytes
 
 SCIM_ALLOWED_IP = '127.0.0.1'
+
+# Settings for mailmanclient-library. Set properly in production.
+MAILMAN_URL = ""
+MAILMAN_USER = ""
+MAILMAN_PASS = ""

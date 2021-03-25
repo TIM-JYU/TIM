@@ -3,6 +3,7 @@ from typing import List
 
 from flask import Response
 
+from timApp.messagelist.messasgelist.emaillist import EmailListManager
 from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -42,7 +43,7 @@ def create_new_email_list(options: ListOptions) -> None:
     """
 
     print("Poor man's listname check:")
-    print(options.listname + options.domain)
+    EmailListManager.create_new_list(options.listname + options.domain)
     print("archive? " + str(options.archive))
     print("archiveType? " + str(options.archiveType))
     print("emails: " + str(options.emails))
