@@ -73,19 +73,6 @@ services:
  stack-api-server:
   << : *common-root
   image: timimages/stack-api:latest-dev
-  build:
-    context: ./stack
-    target: dev
-  security_opt:
-   - seccomp:unconfined
-  volumes:
-   - ./stack/plots:/var/data/api/stack/plots:rw
-   - ./stack/plots:/var/www/html/plots:rw
-   - ./stack/api:/var/www/html/api:rw
-   - ./stack/stack:/var/www/html/stack:rw
-   - ./stack/blob:/var/www/html/api/blob:rw
-   - ./stack/api/config.php.docker:/var/www/html/config.php:rw
-   - ./stack/entrypoint_install_and_run_debug.sh:/var/www/html/entrypoint_install_and_run.sh
   restart: unless-stopped
   ports:
    - "49992:22"
