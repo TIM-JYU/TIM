@@ -13,7 +13,7 @@ from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LOGGED_IN_GROUPNAME, \
-    ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME, SPECIAL_GROUPS
+    ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME, SPECIAL_GROUPS, FUNCTIONSCHEDULER_GROUPNAME
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember, membership_current
 
@@ -206,20 +206,12 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     @staticmethod
     def get_organization_group(org: str) -> 'UserGroup':
         gname = org + ORG_GROUP_SUFFIX
-        ug = UserGroup.get_by_name(gname)
-        if not ug:
-            ug = UserGroup.create(gname)
-            db.session.add(ug)
-        return ug
+        return UserGroup.get_or_create_group(gname)
 
     @staticmethod
     def get_haka_group() -> 'UserGroup':
         haka_group_name = 'Haka users'
-        ug = UserGroup.get_by_name(haka_group_name)
-        if not ug:
-            ug = UserGroup.create(haka_group_name)
-            db.session.add(ug)
-        return ug
+        return UserGroup.get_or_create_group(haka_group_name)
 
     @staticmethod
     def get_organizations() -> List['UserGroup']:
@@ -232,9 +224,17 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     @staticmethod
     def get_user_creator_group() -> 'UserGroup':
         user_creator_group_name = 'User creators'
-        ug = UserGroup.get_by_name(user_creator_group_name)
+        return UserGroup.get_or_create_group(user_creator_group_name)
+
+    @staticmethod
+    def get_function_scheduler_group() -> 'UserGroup':
+        return UserGroup.get_or_create_group(FUNCTIONSCHEDULER_GROUPNAME)
+
+    @staticmethod
+    def get_or_create_group(group_name: str) -> 'UserGroup':
+        ug = UserGroup.get_by_name(group_name)
         if not ug:
-            ug = UserGroup.create(user_creator_group_name)
+            ug = UserGroup.create(group_name)
             db.session.add(ug)
         return ug
 

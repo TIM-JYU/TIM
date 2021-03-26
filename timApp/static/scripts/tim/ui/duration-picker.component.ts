@@ -4,8 +4,8 @@ import {Component, EventEmitter, Input, Output} from "@angular/core";
 @Component({
     selector: "tim-duration-picker",
     template: `
-        <div class="form-group" timErrorState>
-            <div class="col-md-6">
+        <div timErrorState>
+            <div class="picker">
                 <input [(ngModel)]="amount"
                        (ngModelChange)="amountChange.emit($event)"
                        class="form-control"
@@ -16,8 +16,6 @@ import {Component, EventEmitter, Input, Output} from "@angular/core";
                        step="0.1"
                        [required]="!disabled && required"
                        [disabled]="disabled"/>
-            </div>
-            <div class="col-md-6">
                 <select class="form-control"
                         [(ngModel)]="type"
                         (ngModelChange)="typeChange.emit($event)"
@@ -28,6 +26,7 @@ import {Component, EventEmitter, Input, Output} from "@angular/core";
             <tim-error-message></tim-error-message>
         </div>
     `,
+    styleUrls: ["./duration-picker.component.scss"],
 })
 export class DurationPickerComponent {
     durationTypes: moment.unitOfTime.Base[];

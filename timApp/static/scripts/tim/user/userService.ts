@@ -2,7 +2,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {genericglobals, Locale} from "../util/globals";
 import {$http, $httpParamSerializer} from "../util/ngimport";
 import {to, ToReturn} from "../util/utils";
-import {ADMIN_GROUPNAME, IFullUser, IUser} from "./IUser";
+import {ADMIN_GROUPNAME, IFullUser, IUser, TEACHERS_GROUPNAME} from "./IUser";
 
 export interface ILoginResponse {
     other_users: IUser[];
@@ -76,6 +76,14 @@ export class UserService {
 
     public isGroupAdmin() {
         return userBelongsToGroupOrIsAdmin("Group admins");
+    }
+
+    public canScheduleFunctions() {
+        return (
+            isAdmin() ||
+            Users.belongsToGroup("Function schedulers") ||
+            Users.belongsToGroup(TEACHERS_GROUPNAME)
+        );
     }
 
     public async loginWithEmail(

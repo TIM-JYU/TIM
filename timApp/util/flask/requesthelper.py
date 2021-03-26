@@ -5,7 +5,7 @@ import pprint
 import time
 import warnings
 from dataclasses import is_dataclass, dataclass
-from typing import Optional, Type, TypeVar, Callable, Any, List, Tuple
+from typing import Optional, Type, TypeVar, Callable, Any, List, Tuple, Union
 
 from flask import Request, current_app, g, Response
 from flask import request
@@ -68,7 +68,7 @@ def get_referenced_pars_from_req(par: DocParagraph) -> List[DocParagraph]:
         return [par]
 
 
-def get_option(req: Request, name: str, default: Any, cast: Optional[Type]=None) -> Any:
+def get_option(req: Union[Request, ViewContext], name: str, default: Any, cast: Optional[Type]=None) -> Any:
     if name not in req.args:
         return default
     result = req.args[name]

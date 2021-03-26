@@ -38,7 +38,7 @@ session_manager = SessionManager()
 # session = session_manager()
 
 
-logger = get_logger('celery_sqlalchemy_scheduler.schedulers')
+logger = get_logger('timApp.celery_sqlalchemy_scheduler.schedulers')
 
 
 class ModelEntry(ScheduleEntry):
@@ -294,7 +294,7 @@ class DatabaseScheduler(Scheduler):
         """Initialize the database scheduler."""
         self.app = kwargs['app']
         self.dburi = kwargs.get('dburi') or self.app.conf.get(
-            'beat_dburi') or DEFAULT_BEAT_DBURI
+            'BEAT_DBURI') or DEFAULT_BEAT_DBURI
         self.engine, self.Session = session_manager.create_session(self.dburi)
         session_manager.prepare_models(self.engine)
 

@@ -279,6 +279,7 @@ def get_fields_and_users(
         join_relation,
         tally_fields,
         view_ctx,
+        UserContext.from_one_user(current_user)
     )
     sub = []
     # For some reason, with 7 or more fields, executing the following query is very slow in PostgreSQL 9.5.
@@ -413,11 +414,11 @@ def get_tally_field_values(
         join_relation,
         tally_fields: List[Tuple[TallyField, Optional[str]]],
         view_ctx: ViewContext,
+        user_ctx: UserContext
 ):
     tally_field_values: DefaultDict[int, List[Tuple[float, str]]] = defaultdict(list)
     task_id_cache = {}
     field_groups = itertools.groupby(tally_fields, key=lambda f: f[0].grouping_key)
-    user_ctx = user_context_with_logged_in(None)
     for _, x in field_groups:
         fs = list(x)
         g = fs[0][0]

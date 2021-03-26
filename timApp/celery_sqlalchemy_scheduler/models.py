@@ -14,7 +14,9 @@ from celery.utils.log import get_logger
 
 from .tzcrontab import TzAwareCrontab
 from .session import ModelBase
-
+from ..item.block import Block
+from ..plugin.taskid import TaskId
+from ..util.utils import cached_property
 
 logger = get_logger('celery_sqlalchemy_scheduler.models')
 
@@ -220,6 +222,8 @@ class PeriodicTask(ModelBase, ModelMixin):
     __table_args__ = {'sqlite_autoincrement': True}
 
     id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    block_id = sa.Column(sa.Integer, sa.ForeignKey('block.id'), nullable=True)
+    block = relationship(Block)
     # name
     name = sa.Column(sa.String(255), unique=True)
     # task name
@@ -298,6 +302,11 @@ class PeriodicTask(ModelBase, ModelMixin):
         elif self.solar:
             return self.solar.schedule
         raise ValueError('{} schedule is None!'.format(self.name))
+
+    @cached_property
+    def task_id(self):
+        """Returns the TIM task id. Only valid for tasks added by users."""
+        return TaskId.parse(self.name, allow_block_hint=False, allow_type=False)
 
 
 listen(PeriodicTask, 'after_insert', PeriodicTaskChanged.update_changed)

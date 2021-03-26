@@ -3,14 +3,14 @@
 
 from contextlib import contextmanager
 
+from kombu.utils.compat import register_after_fork
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
-from kombu.utils.compat import register_after_fork
+from timApp.timdb.sqa import db
 
-ModelBase = declarative_base()
+ModelBase = db.Model
 
 
 @contextmanager
@@ -62,9 +62,7 @@ class SessionManager(object):
             return engine, sessionmaker(bind=engine)
 
     def prepare_models(self, engine):
-        if not self.prepared:
-            ModelBase.metadata.create_all(engine)
-            self.prepared = True
+        pass
 
     def session_factory(self, dburi, **kwargs):
         engine, session = self.create_session(dburi, **kwargs)
