@@ -51,15 +51,19 @@ def create_new_email_list(options: ListOptions) -> None:
 
 @messagelist.route("/checkname/<string:name_candidate>", methods=['GET'])
 def check_name(name_candidate: str) -> Response:
-    """Check if parameter is unique in the pool of email list names.
+    """Check if name candidate meets requirements.
 
     :param name_candidate: Possible name for message/email list.
     :return: Return a positive response if this name is
     unique and can be assigned to a message/email list. Return a negative response if name is not unique and
     therefore is already reserved for someone or something else.
     """
-    exists = EmailListManager.check_name_availability(name_candidate)
-    return json_response(exists)
+    # TODO add message list name requirement check. Now just use dummy value to get going.
+    messagelist_requirements = True
+    email_requirements = EmailListManager.check_name_requirements(name_candidate)
+    requirements_met: bool = email_requirements or messagelist_requirements
+
+    return json_response(requirements_met)
 
 
 @messagelist.route("/domains", methods=['GET'])

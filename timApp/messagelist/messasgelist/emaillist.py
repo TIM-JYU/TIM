@@ -52,6 +52,35 @@ class EmailListManager:
         return True
 
     @staticmethod
+    def check_name_requirements(name_candidate: str) -> bool:
+        """Checks name requirements spesific for email lists.
+
+        :param name_candidate: Name to check for things and stuff. Mostly stuff.
+        :return: Return True if all name requirements are met. Otherwise return False.
+        """
+        em = EmailListManager
+        # Check name is available.
+        em.check_name_availability(name_candidate)
+        # Check if name is some reserved name.
+        em.check_reserved_names(name_candidate)
+        return True
+
+    @staticmethod
+    def check_reserved_names(name_candidate: str) -> bool:
+        """
+        Check a name candidate against reserved names, e.g. postmaster.
+
+        :param name_candidate:
+        :return: Return True if name is not among reserved names. Otherwise return False.
+        """
+        # TODO: Implement a smarter check for reserved names. Now only compare against simple list for prototyping
+        #  purposes. Maybe an external config file for known reserved names or something like that?
+        #  Is it possible to query reserved names e.g. from Mailman?
+        reserved_names: List[str] = ["postmaster"]
+
+        return name_candidate not in reserved_names
+
+    @staticmethod
     def get_domains() -> List[str]:
         """
 
