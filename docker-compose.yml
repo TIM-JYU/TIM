@@ -309,6 +309,10 @@ services:
    - /tmp
    - /run/celery
  maxima:
+  profiles:
+   - prod
+   - prod_multi
+   - dev
   image: timimages/goemaxima:2020113000-latest
  stack-api-server:
   profiles:
