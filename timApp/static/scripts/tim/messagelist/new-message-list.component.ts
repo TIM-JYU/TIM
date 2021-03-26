@@ -184,6 +184,18 @@ export class NewMessageListComponent implements OnInit {
             return false;
         }
 
+        // Name doesn't contain multiple sequential dots.
+        const regExpMultipleDots: RegExp = /\.[.+]/;
+        if (regExpMultipleDots.test(this.listname)) {
+            return false;
+        }
+
+        // Name doesn't end in a dot.
+        const regExpEndDot: RegExp = /.$/;
+        if (regExpEndDot.test(this.listname)) {
+            return false;
+        }
+
         // Name contains only acceptable characters, which are:
         //     letters                  a - z
         //     numbers                  0 - 9
