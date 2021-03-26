@@ -92,6 +92,7 @@ export class NewMessageListComponent implements OnInit {
         );
         if (result.ok) {
             this.domains = result.result;
+            this.domain = this.domains[0];
         } else {
             console.error(result.result.error.error);
         }
