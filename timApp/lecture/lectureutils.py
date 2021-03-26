@@ -22,7 +22,7 @@ class CurrentLectureInfo:
 
 
 def get_current_lecture_info() -> CurrentLectureInfo:
-    lectures = get_current_user_object().lectures.all()
+    lectures = get_current_user_object().lectures
     is_in_lecture = bool(lectures and lectures[0].is_running)
     if is_in_lecture:
         return CurrentLectureInfo(

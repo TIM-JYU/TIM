@@ -204,6 +204,7 @@ class LanguageTypes {
         "viz",
         "vars",
         "r",
+        "ts",
     ];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
@@ -254,6 +255,7 @@ class LanguageTypes {
         "text",
         "text",
         "r",
+        "typescript",
     ];
 
     // What are known test types (be careful not to include partial word):

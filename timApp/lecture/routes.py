@@ -442,7 +442,7 @@ def lecture_dict(lecture: Lecture):
 @lecture_routes.route('/checkLecture', methods=['GET'])
 def check_lecture():
     """Route to check if the current user is in some lecture in specific document."""
-    lectures = get_current_user_object().lectures.all()
+    lectures = get_current_user_object().lectures
     lecture = lectures[0] if lectures else None
 
     if lecture:
@@ -784,7 +784,7 @@ def extend_question():
 
 def get_current_lecture() -> Optional[Lecture]:
     u = get_current_user_object()
-    lectures: List[Lecture] = u.lectures.all()
+    lectures: List[Lecture] = u.lectures
     if not lectures:
         return None
     if len(lectures) > 1:

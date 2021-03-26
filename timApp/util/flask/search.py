@@ -374,7 +374,7 @@ def validate_query(query: str, search_whole_words: bool) -> None:
 
 # Query options for loading DocEntry relevance eagerly; it should speed up search cache processing because
 # we know we'll need relevance.
-docentry_eager_relevance_opt = defaultload(DocEntry._block).joinedload(Block.relevance)
+docentry_eager_relevance_opt = (defaultload(DocEntry._block).joinedload(Block.relevance),)
 
 
 def add_doc_info_title_line(doc_id: int) -> Union[str, None]:

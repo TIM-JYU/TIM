@@ -20,15 +20,19 @@ interface CreateListOptions {
         <form>
             <h1>Create new message list</h1>
             <div>
-                <label for="list-name">List name: </label><input type="text" name="list-name" id="list-name" [(ngModel)]="listname"/>
+                <label for="list-name">List name: </label><input type="text" name="list-name" id="list-name"
+                                                                 [(ngModel)]="listname"/>
                 <select id="domain-select" name="domain-select" [(ngModel)]="domain">
                     <option *ngFor="let domain of domains">{{domain}}</option>
                 </select>
+                <!-- For testing name checking -->
+                <button (click)="checkEmailListNameAvailability()">Tarkasta nimi</button>
             </div>
             <div>
             </div>
             <div>
-                <input type="checkbox" name="if-archived" id="if-archived" [(ngModel)]="archive"/> <label for="if-archived">Archive
+                <input type="checkbox" name="if-archived" id="if-archived" [(ngModel)]="archive"/> <label
+                    for="if-archived">Archive
                 messages?</label>
             </div>
             <div>
@@ -129,6 +133,31 @@ export class NewMessageListComponent implements OnInit {
             return [];
         }
         return this.emails.split("\n").filter(Boolean);
+    }
+
+    /**
+     * Helper to check if this list name exists.
+     * VIESTIM: This is a demo function, will only probably need this when we have implemented the creation dialoque?
+     */
+    async checkEmailListNameAvailability() {
+        const nameCandidate: string = this.listname + this.domain;
+        const result = await to2(
+            this.http
+                .get<boolean>(`${this.urlPrefix}/checkname/${nameCandidate}`)
+                .toPromise()
+        );
+        if (result.ok) {
+            console.log("Hei maailma, tarkistus on tehty. Tulos on:");
+            if (result.result) {
+                console.log("nimi on vapaa käyttöön.");
+            } else {
+                console.log(
+                    "nimi on muussa käytössä (tai tarkistusta ei voitu tehdä)."
+                );
+            }
+        } else {
+            console.error(result.result.error.error);
+        }
     }
 }
 

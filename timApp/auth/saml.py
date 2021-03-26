@@ -181,7 +181,6 @@ class TimRequestedAttributes:
         return values[0] if values else None
 
     def get_attributes_by_friendly_name(self, name: str) -> Optional[List[str]]:
-        # noinspection PyTypeChecker
         return self.saml_auth.get_attribute(self.friendly_name_map[name])
 
     @property

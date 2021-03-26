@@ -31,7 +31,7 @@ wb: WithBookmarks = g
 @bookmarks.before_request
 def verify_login():
     verify_logged_in()
-    wb.bookmarks = Bookmarks(get_current_user_object())
+    wb.bookmarks = get_current_user_object().bookmarks
 
 
 @dataclass

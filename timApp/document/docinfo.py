@@ -162,7 +162,6 @@ class DocInfo(Item):
 
     def add_alias(self, new_name, is_public):
         from timApp.document.docentry import DocEntry
-        # noinspection PyArgumentList
         d = DocEntry(id=self.src_docid, name=new_name, public=is_public)
         db.session.add(d)
 

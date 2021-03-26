@@ -49,16 +49,17 @@ def create_new_email_list(options: ListOptions) -> None:
     print("emails: " + str(options.emails))
 
 
-@messagelist.route("/checkName/<string:name_candidate>", methods=['GET'])
+@messagelist.route("/checkname/<string:name_candidate>", methods=['GET'])
 def check_name(name_candidate: str) -> Response:
     """Check if parameter is unique in the pool of email list names.
 
-    :param name_candidate: Possible name for message/email list. :return: Return a positive response if this name is
+    :param name_candidate: Possible name for message/email list.
+    :return: Return a positive response if this name is
     unique and can be assigned to a message/email list. Return a negative response if name is not unique and
     therefore is already reserved for someone or something else.
     """
-    # TODO: Prototype name uniqueness check.
-    pass
+    exists = EmailListManager.check_name_availability(name_candidate)
+    return json_response(exists)
 
 
 @messagelist.route("/domains", methods=['GET'])
@@ -69,6 +70,6 @@ def domains() -> Response:
     :return: If domains exists, return them as an array. If there are no domains, return an empty array.
     """
     # TODO: rewrite to check from a proper source. Now we just send this test data.
-    possible_domains: List[str] = ["@lists.tim.jyu.fi", "@timlist.jyu.fi", "@lists.jyu.fi"]
+    possible_domains: List[str] = EmailListManager.get_domains()
 
     return json_response(possible_domains)

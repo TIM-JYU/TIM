@@ -135,3 +135,6 @@ SCIM_ALLOWED_IP = '127.0.0.1'
 MAILMAN_URL = ""
 MAILMAN_USER = ""
 MAILMAN_PASS = ""
+
+# If true, prints all SQL statements with tracebacks.
+DEBUG_SQL = False

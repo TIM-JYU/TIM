@@ -7,6 +7,7 @@ from flask import current_app
 from sqlalchemy import tuple_, func
 from sqlalchemy.orm import defaultload
 
+from timApp.auth.auth_models import BlockAccess
 from timApp.item.block import Block, BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
@@ -110,7 +111,7 @@ class Item(ItemBase):
         parts = self.path_without_lang.rsplit('/', 1)
         return parts[len(parts) - 1]
 
-    def parents_to_root(self, include_root=True):
+    def parents_to_root(self, include_root=True, eager_load_groups=False):
         if not self.path_without_lang:
             return []
         path_parts = self.path_without_lang.split('/')
@@ -123,13 +124,20 @@ class Item(ItemBase):
         # TODO: Add an option whether to load relevance eagerly or not;
         #  currently eager by default is better to speed up search cache processing
         #  and it doesn't slow down other code much.
-        crumbs = (
+        crumbs_q = (
             Folder.query
                 .filter(tuple_(Folder.location, Folder.name).in_(path_tuples))
                 .order_by(func.length(Folder.location).desc())
                 .options(defaultload(Folder._block).joinedload(Block.relevance))
-                .all()
         )
+        if eager_load_groups:
+            crumbs_q = (
+                crumbs_q
+                    .options(defaultload(Folder._block)
+                             .joinedload(Block.accesses)
+                             .joinedload(BlockAccess.usergroup))
+            )
+        crumbs = crumbs_q.all()
         if include_root:
             crumbs.append(Folder.get_root())
         return crumbs

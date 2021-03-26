@@ -21,7 +21,7 @@ from enum import Enum
 from json import JSONEncoder
 from typing import Optional, Union, TypeVar, Generic, Dict, Type, Any, List, Callable, TypedDict
 
-from flask import Blueprint, request, Response
+from flask import Blueprint, request, Response, current_app
 from flask import render_template_string, jsonify, Flask
 from flask_wtf import CSRFProtect
 from marshmallow import ValidationError, Schema
@@ -187,13 +187,14 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         """Renders the plugin as HTML."""
         component = self.get_component_html_name()
         if self.viewmode and not self.show_in_view():
-            return render_template_string("")
+            return ''
 
         if self.review:
             return self.get_review()
 
-        return render_template_string(
+        return current_app.jinja_env.from_string(
             """<{{component}} json="{{data}}"></{{component}}>""",
+        ).render(
             data=make_base64(self.get_browser_json(), json_encoder=self.get_json_encoder()),
             component=component,
         )
@@ -203,7 +204,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
 
     def get_real_md(self) -> str:
         if self.viewmode and not self.show_in_view():
-            return render_template_string("")
+            return ''
 
         return self.get_md()
 

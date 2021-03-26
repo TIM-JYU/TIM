@@ -6,7 +6,7 @@ from typing import List, Tuple
 from typing import Optional, Union, Set
 
 from sqlalchemy import func
-from sqlalchemy.orm import Query, joinedload
+from sqlalchemy.orm import Query, joinedload, defaultload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.answer.answer import Answer
@@ -30,7 +30,7 @@ from timApp.user.scimentity import SCIMEntity
 from timApp.user.settings.theme import Theme
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME, \
     SPECIAL_USERNAMES
-from timApp.user.usergroup import UserGroup
+from timApp.user.usergroup import UserGroup, get_logged_in_group_id, get_anonymous_group_id
 from timApp.user.usergroupmember import UserGroupMember, membership_current, membership_deleted
 from timApp.user.userutils import grant_access, get_access_type_id, \
     create_password_hash, check_password_hash, check_password_hash_old
@@ -264,7 +264,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         # back_populates="group",
     )
     lectures = db.relationship('Lecture', secondary=LectureUsers.__table__,
-                               back_populates='users', lazy='dynamic')
+                               back_populates='users', lazy='select')
     owned_lectures = db.relationship('Lecture', back_populates='owner', lazy='dynamic')
     owned_lectures_alt = db.relationship('Lecture')
     lectureanswers = db.relationship('LectureAnswer', back_populates='user', lazy='dynamic')
@@ -291,6 +291,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     @property
     def is_deleted(self):
         return self.name.endswith(deleted_user_suffix) and self.email.endswith(deleted_user_suffix)
+
+    @property
+    def group_ids(self):
+        return set(g.id for g in self.groups)
 
     @cached_property
     def is_admin(self):
@@ -325,7 +329,6 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             uid: Optional[int] = None,
     ) -> Tuple['User', UserGroup]:
         p_hash = create_password_hash(info.password) if info.password is not None else info.password_hash
-        # noinspection PyArgumentList
         user = User(
             id=uid,
             name=info.username,
@@ -404,10 +407,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @cached_property
     def personal_group_prop(self) -> UserGroup:
+        group_to_find = self.name
         if self.name == ANONYMOUS_USERNAME:
-            return UserGroup.get_anonymous_group()
+            group_to_find = ANONYMOUS_GROUPNAME
         for g in self.groups:
-            if g.name == self.name:
+            if g.name == group_to_find:
                 return g
         raise TimDbException(f'Personal usergroup for user {self.name} was not found!')
 
@@ -438,7 +442,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             (Folder.location == 'users') &
             group_condition &
             (BlockAccess.type == AccessType.owner.value)
-        ).with_entities(Folder).all()
+        ).with_entities(Folder).options(
+            defaultload(Folder._block)
+                .joinedload(Block.accesses)
+                .joinedload(BlockAccess.usergroup)
+        ).all()
         if len(folders) >= 2:
             raise TimDbException(f'Found multiple personal folders for user {self.name}: {[f.name for f in folders]}')
         if not folders:
@@ -560,12 +568,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             return None
         now = get_current_time()
         best_access = None
+        curr_group_ids = self.group_ids
         for a in b.accesses.values():  # type: BlockAccess
-            if a.usergroup not in self.groups:
-                name = a.usergroup.name
-                if self.logged_in and name == LOGGED_IN_GROUPNAME:
+            if a.usergroup_id not in curr_group_ids:
+                if self.logged_in and a.usergroup_id == get_logged_in_group_id():
                     pass
-                elif name == ANONYMOUS_GROUPNAME:
+                elif a.usergroup_id == get_anonymous_group_id():
                     pass
                 else:
                     continue
@@ -694,6 +702,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 'consent': self.consent,
                 'last_name': self.last_name,
                 } if full else self.basic_info_dict
+
+    @cached_property
+    def bookmarks(self):
+        from timApp.bookmark.bookmarks import Bookmarks
+        return Bookmarks(self)
 
 
 def get_membership_end(u: User, group_ids: Set[int]):

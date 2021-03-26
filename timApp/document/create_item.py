@@ -68,7 +68,7 @@ def do_create_item(
     item = create_function(item_path, owner_group, item_title)
     grant_access_to_session_users(item)
     if item_type == BlockType.Document and app.config['BOOKMARKS_ENABLED']:
-        bms = Bookmarks(get_current_user_object())
+        bms = get_current_user_object().bookmarks
         bms.add_bookmark('Last edited',
                          item.title,
                          item.url_relative,

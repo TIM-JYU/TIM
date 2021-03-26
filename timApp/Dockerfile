@@ -151,6 +151,7 @@ mmh3 \
 mypy \
 pandocfilters \
 pillow \
+psycogreen \
 psycopg2-binary \
 pyaml \
 pylatex \

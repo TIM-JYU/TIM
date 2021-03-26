@@ -245,7 +245,7 @@ class Command extends PrgObject {
             // see https://regex101.com/r/PXDieklatest
             let re = /^([^.\[]*)([.\[].*)$/;
             let r = re.exec(name);
-            if (!r) return [name, varTo];
+            if (!r || !r[1]) return [name, varTo];
             let refvar = variables.findVar(r[1]);
             let newname = r[1];
             let rest = r[2];
@@ -1298,7 +1298,7 @@ class AssignTo extends Command {
     // see: https://regex101.com/r/bPn7zX/latest
     // syntax: a = 5
     static isMy(s) {
-        let re = /^([$[\].,\w\d]+) *(<-|=|:=) *(.*)$/;
+        let re = /^([^.][$.\w\d]*) *(<-|=|:=) *(.*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         return [new AssignTo(r[1], r[3])];
@@ -2100,7 +2100,7 @@ class PhaseVariables {
             if (error) n++;
             if (error && !allowErrors) this.variableRelations.addError(error);
         }
-        this.isLazy = n != 0;
+        this.isLazy = n !== 0;
     }
 
 }
@@ -4089,3 +4089,4 @@ export {setData, varsStringToJson, VariableRelations, compareValsAndRefs, compar
 // TODO: Style ei toimi taulukolle?
 // TODO: debug näytä nimet
 // TODO: Luento 15 https://tim.jyu.fi/view/kurssit/tie/ohj2/2021k/luennot/luento15#varsmat2 liikaa tilaa
+// TODO:  Kaatuu (jää ikuiseen silmukkaan) jos on rivi tyyliin .=
