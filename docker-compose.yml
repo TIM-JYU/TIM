@@ -313,7 +313,7 @@ services:
    - prod
    - prod_multi
    - dev
-  image: timimages/goemaxima:2020113000-latest
+  image: timimages/goemaxima:2020113001-latest
  stack-api-server:
   profiles:
    - prod
