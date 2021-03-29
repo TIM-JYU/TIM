@@ -181,12 +181,19 @@ const sortLang = "fi";
                 <label title="Send also a copy for me"><input type="checkbox" [(ngModel)]="emailbccme">BCC also
                     for me</label>&nbsp;
                 <label title="Send using TIM. Every mail is sent as a personal mail."><input type="checkbox"
-                                                                                              [(ngModel)]="emailtim">use
+                                                                                             [(ngModel)]="emailtim">use
                     TIM to send</label>&nbsp;
             </p>
             <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
-            <p>eMail content:</p>
+            <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
+            <p><label title="Viestiä ei saa kuitata pois"><input type="checkbox"
+                                      [(ngModel)]="noCheck">Viestiä ei saa kuitata pois</label></p>
+            <p>
+            <p><label title="" name="replyAll"><input type="radio"
+                                      [(ngModel)]="replyAll" value="true">Viestin vastaanottaja vastaa kaikille</label><br/>
+            <label title="" name="replyAll"><input type="radio"
+                                      [(ngModel)]="replyAll" value="false">Viestin vastaanottaja vastaa vain lähettäjälle</label></p>
             <p>
                 <button class="timButton"
                         (click)="sendEmail()">
@@ -206,6 +213,8 @@ export class TimEmailComponent {
     emailbccme: boolean = true;
     emailtim: boolean = true;
     emailMsg: string = "";
+    noCheck: boolean = false;
+    replyAll: boolean = true;
     @Input()
     taskid?: TaskId;
 
@@ -356,7 +365,8 @@ export class TimEmailComponent {
                     [disabled]="loading"
                     (click)="openTable()">
                 {{openButtonText}}
-            </button><tim-loading *ngIf="loading"></tim-loading>
+            </button>
+            <tim-loading *ngIf="loading"></tim-loading>
         </div>
     `,
     styleUrls: ["./tableForm.scss"],
@@ -733,6 +743,7 @@ export class TableFormComponent
         if (this.attrsall.markup.sisugroups) {
             return;
         }
+
         // TODO: Save before reset?
         interface TableFetchResponse {
             aliases: Record<string, string>;
@@ -743,6 +754,7 @@ export class TableFormComponent
             rows: IRowsType;
             styles: t.TypeOf<typeof Styles>;
         }
+
         let prom;
         const tid = this.getTaskId();
         if (!tid) {
