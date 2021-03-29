@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from typing import List
 
@@ -16,7 +17,8 @@ elif app.config['MAILMAN_URL'] == "" or app.config['MAILMAN_USER'] == "" or app.
     # Only placeholder configuration for Mailman found.
     print("Server started without proper configuration for Mailman connection.")
 else:
-    # All Mailman confiration values exist and are something other than an empty strgin.
+    # All Mailman configuration values exist and are something other than an empty string. We can initialize the
+    # Client-object.
     _client = Client(app.config['MAILMAN_URL'], app.config['MAILMAN_USER'], app.config['MAILMAN_PASS'])
     # TODO: Test connection somehow?
 
@@ -61,8 +63,12 @@ class EmailListManager:
         em = EmailListManager
         # Check name is available.
         em.check_name_availability(name_candidate)
+
         # Check if name is some reserved name.
         em.check_reserved_names(name_candidate)
+
+        # Check name against name rules. These rules are also checked client-side.
+        em.check_name_rules(name_candidate)
         return True
 
     @staticmethod
@@ -76,7 +82,7 @@ class EmailListManager:
         # TODO: Implement a smarter check for reserved names. Now only compare against simple list for prototyping
         #  purposes. Maybe an external config file for known reserved names or something like that?
         #  Is it possible to query reserved names e.g. from Mailman?
-        reserved_names: List[str] = ["postmaster"]
+        reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
 
         return name_candidate not in reserved_names
 
@@ -94,7 +100,7 @@ class EmailListManager:
     @staticmethod
     def _set_domains() -> None:
         """Set possible domains. Searches possible domains from a configure file."""
-        # TODO: Search the proper configuration file(s) for domains.
+        # TODO: Search the proper configuration file(s) for domains. Or should these be asked from the server instead?
         pass
 
     @staticmethod
@@ -106,6 +112,55 @@ class EmailListManager:
         """
         print("testiprinti")
         print(name)
+
+    @staticmethod
+    def check_name_rules(name_candidate: str) -> bool:
+        """Check if name candidate complies with naming rules.
+
+        :param name_candidate:
+        :return: Return True if name passes all rule checks. Otherwise return False.
+        """
+        # Be careful when checking regex rules. Some rules allow a pattern to exist, while prohibiting others. Some
+        # rules prohibit something, but allow other things to exist. If the explanation for a rule is different than
+        # the regex, the explanation is more likely to be correct.
+
+        # Name is within length boundaries.
+        if len(name_candidate) < 5 or 36 < len(name_candidate):
+            return False
+
+        # Name has to start with a lowecase letter.
+        p1 = re.compile(r"^[a-z]")
+        if p1.search(name_candidate) is None:
+            return False
+
+        # Name cannot have multiple dots in sequence.
+        p2 = re.compile(r"\.\.+")
+        if p2.search(name_candidate) is not None:
+            return False
+
+        # Name cannot end in a dot
+        p3 = re.compile(r".$")
+        if p3.search(name_candidate) is not None:
+            return False
+
+        # Name can have only these allowed characters. This set of characters is an import from Korppi's character
+        # limitations for email list names, and can probably be expanded in the future if desired.
+        #     lowercase letters a - z
+        #     digits 0 - 9
+        #     dot '.'
+        #     hyphen '-'
+        #     underscore '_'
+        # Notice the compliment usage of ^.
+        p4 = re.compile(r"[^a-z0-9.\-_]")
+        if p4.search(name_candidate) is not None:
+            return False
+
+        # Name has to include at least one digit.
+        p5 = re.compile(r"\d")
+        if p5.search(name_candidate) is None:
+            return False
+
+        return True
 
 
 @dataclass
