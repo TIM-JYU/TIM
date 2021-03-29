@@ -10,8 +10,6 @@ from timApp.admin.user_cli import do_soft_delete
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.routes import hide_points
 from timApp.auth.accesshelper import verify_logged_in, verify_admin
-from timApp.auth.accesstype import AccessType
-from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
@@ -21,7 +19,7 @@ from timApp.timdb.sqa import db
 from timApp.user.consentchange import ConsentChange
 from timApp.user.preferences import Preferences
 from timApp.user.settings.theme import get_available_themes
-from timApp.user.user import User, Consent
+from timApp.user.user import User, Consent, get_owned_objects_query
 from timApp.util.flask.requesthelper import get_option, verify_json_params, RouteException, use_model, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 
@@ -92,13 +90,11 @@ def get_setting(name: str) -> Response:
 
 def get_user_info(u: User, include_doc_content: bool=False) -> Dict[str, Any]:
     """Returns all data associated with a user."""
-    block_query = u.get_personal_group().accesses.filter_by(type=AccessType.owner.value).with_entities(
-        BlockAccess.block_id)
+    block_query = get_owned_objects_query(u)
     docs = DocEntry.query.filter(DocEntry.id.in_(block_query)).all()
     folders = Folder.query.filter(Folder.id.in_(block_query)).all()
     images = Block.query.filter(Block.id.in_(block_query) & (Block.type_id == BlockType.Image.value)).all()
     files = Block.query.filter(Block.id.in_(block_query) & (Block.type_id == BlockType.File.value)).all()
-    velpgroups = Block.query.filter(Block.id.in_(block_query) & (Block.type_id == BlockType.Velpgroup.value)).all()
     answers = u.answers.all()
     answer_uploads = AnswerUpload.query.filter(AnswerUpload.answer_id.in_([a.id for a in answers])).all()
     answers_no_points = list(map(hide_points, answers))
@@ -118,7 +114,6 @@ def get_user_info(u: User, include_doc_content: bool=False) -> Dict[str, Any]:
         'readparagraphs': u.get_personal_group().readparagraphs.all(),
         'uploaded_images': images,
         'uploaded_files': files,
-        'velpgroups': velpgroups,
         'velps': u.velps.all(),
     }
 

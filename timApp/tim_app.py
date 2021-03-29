@@ -19,6 +19,8 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from timApp.answer.answer import Answer, AnswerSaver
 from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
+from timApp.celery_sqlalchemy_scheduler import IntervalSchedule, CrontabSchedule, SolarSchedule, PeriodicTaskChanged, \
+    PeriodicTask
 from timApp.document.docentry import DocEntry
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
@@ -125,6 +127,12 @@ all_models = (
     VelpLabel,
     VelpLabelContent,
     VelpVersion,
+
+    CrontabSchedule,
+    IntervalSchedule,
+    PeriodicTask,
+    PeriodicTaskChanged,
+    SolarSchedule,
 )
 
 sys.setrecursionlimit(10000)

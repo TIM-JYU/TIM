@@ -1,0 +1,7 @@
+.picker {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  grid-auto-flow: row;
+  column-gap: 10px;
+  row-gap: 10px;
+}

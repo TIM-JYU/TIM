@@ -255,7 +255,7 @@ services:
   read_only: true
  celery:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
-  command: celery -A timApp.tim_celery.celery worker -B --concurrency 4
+  command: celery worker -A timApp.tim_celery.celery --concurrency 4
   volumes:
    - .:/service
    - ${LOG_DIR:?}:/service/tim_logs
@@ -278,6 +278,36 @@ services:
   read_only: true
   tmpfs:
    - /tmp
+ celery-beat:
+  image: timimages/tim:${TIM_IMAGE_TAG:?}
+  command: >-
+   celery beat
+   -A timApp.tim_celery.celery
+   -S timApp.celery_sqlalchemy_scheduler.schedulers:DatabaseScheduler
+   --pidfile /var/run/celery/celerybeat.pid
+  volumes:
+   - .:/service
+   - ${LOG_DIR:?}:/service/tim_logs
+   - ${FILES_ROOT:?}:/tim_files
+   - cache:/cache
+  working_dir: /service/timApp
+  depends_on:
+   - postgresql
+   - redis
+  environment:
+   FLASK_APP: tim.py
+   PYTHONPATH: /service:/service/timApp/modules/py
+   COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
+   TIM_SETTINGS: ${CONFIG_FILE}
+   TIM_HOST: ${TIM_HOST:?}
+  restart: unless-stopped
+  networks:
+   - db
+   - default
+  read_only: true
+  tmpfs:
+   - /tmp
+   - /run/celery
  stack-api-server:
   profiles:
    - prod

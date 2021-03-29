@@ -63,6 +63,7 @@ from timApp.plugin.timmenu.timMenu import timMenu_plugin
 from timApp.plugin.timtable.timTable import timTable_plugin
 from timApp.printing.print import print_blueprint
 from timApp.readmark.routes import readings
+from timApp.scheduling.scheduling_routes import scheduling
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
 from timApp.tim_app import app
@@ -113,6 +114,7 @@ blueprints = [
     upload,
     velps,
     view_page,
+    scheduling,
 
     # plugins
     importData_plugin,

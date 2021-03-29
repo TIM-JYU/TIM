@@ -67,19 +67,23 @@ GIT_LATEST_COMMIT_TIMESTAMP = subprocess.run(["git", "log", "-1", "--date=format
 GIT_BRANCH = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"],
                             stdout=subprocess.PIPE).stdout.decode().strip()
 
-CELERY_BROKER_URL = 'redis://redis:6379',
+CELERY_BROKER_URL = 'redis://redis:6379'
 CELERY_RESULT_BACKEND = 'redis://redis:6379'
 CELERY_IMPORTS = ('timApp.tim_celery',)
 CELERYBEAT_SCHEDULE = {
     'update-search-files': {
         'task': 'timApp.tim_celery.update_search_files',
-        'schedule': crontab(hour='*/12', minute=0),
+        'schedule': crontab(hour='*/12', minute='0'),
     },
     'process-notifications': {
         'task': 'timApp.tim_celery.process_notifications',
         'schedule': crontab(minute='*/5'),
     }
 }
+# This makes the log format a little less verbose by omitting the Celery task id (which is an UUID).
+CELERYD_TASK_LOG_FORMAT = "[%(asctime)s: %(levelname)s/%(processName)s] %(task_name)s: %(message)s"
+BEAT_DBURI = DB_URI
+
 MAIL_HOST = "smtp.jyu.fi"
 MAIL_SIGNATURE = "\n\n-- \nThis message was automatically sent by TIM"
 WTF_CSRF_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE']
@@ -138,3 +142,7 @@ MAILMAN_PASS = ""
 
 # If true, prints all SQL statements with tracebacks.
 DEBUG_SQL = False
+
+MINIMUM_SCHEDULED_FUNCTION_INTERVAL = 3600
+
+INTERNAL_PLUGIN_DOMAIN = 'tim'

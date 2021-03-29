@@ -134,8 +134,7 @@ class BlockType(Enum):
     Folder = 6
     File = 7
     Upload = 8
-    Velpgroup = 9
-    Annotation = 10
+    ScheduledFunction = 9
 
     @staticmethod
     def from_str(type_name: str) -> BlockType:

@@ -25,6 +25,9 @@ const ImportDataMarkup = t.intersection([
         fields: t.array(t.string),
         createMissingUsers: t.boolean,
         addUsersToGroup: t.string,
+        aplus: t.type({
+            course: t.number,
+        }),
     }),
     GenericPluginMarkup,
     t.type({
@@ -96,16 +99,21 @@ interface IFieldSaveResult {
             <ng-container body>
                 <tim-close-button *ngIf="!header" (click)="isOpen = false"></tim-close-button>
                 <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
-                <div *ngIf="markup.useurl" class="form">
-                    <div class="form-group form-group-sm">
+                <div *ngIf="useurl || useurltoken" class="form">
+                    <div *ngIf="useurl" class="form-group form-group-sm">
                         <label for="url" class="small">{{markup.urlstem}}</label>
-                        <input id="url" class="form-control" [(ngModel)]="url" size="50">
+                        <input id="url"
+                               [disabled]="!!markup.aplus"
+                               class="form-control"
+                               [(ngModel)]="url"
+                               size="50">
                     </div>
-                    <div *ngIf="markup.useurltoken" class="form-group form-group-sm">
+                    <div *ngIf="useurltoken" class="form-group form-group-sm">
                         <label for="urltoken" class="small">Auth token:</label>
                         <input id="urltoken" class="form-control" [(ngModel)]="urlToken">
                     </div>
                     <button [disabled]="fetchingData || !url"
+                            *ngIf="!markup.aplus"
                             class="timButton btn-sm"
                             (click)="pickFromWWW()">{{markup.loadButtonText}}
                     </button>
@@ -118,7 +126,7 @@ interface IFieldSaveResult {
                 </div>
                 <p class="form-inline small" *ngIf="markup.useseparator">{{markup.separatorstem}}<input
                         [(ngModel)]="separator" size="5"/></p>
-                <p>Fields:</p>
+                <p *ngIf="markup.usefields">Fields:</p>
                 <p><textarea class="form-control"
                              *ngIf="markup.usefields"
                              [(ngModel)]="fields"
@@ -126,6 +134,7 @@ interface IFieldSaveResult {
                              rows="7"
                              cols="30"></textarea></p>
                 <p><textarea class="form-control"
+                             *ngIf="!markup.aplus"
                              [(ngModel)]="importText"
                              (change)="importTextChanged()"
                              [placeholder]="markup.placeholder"
@@ -144,7 +153,7 @@ interface IFieldSaveResult {
                 <div *ngIf="error">
                     <tim-close-button (click)="error = undefined"></tim-close-button>
                     <tim-alert severity="danger">
-                        <div [innerHTML]="error"></div>
+                        <span [innerHTML]="error"></span>
                     </tim-alert>
                 </div>
                 <pre *ngIf="result">{{result}}</pre>
@@ -190,6 +199,8 @@ export class ImportDataComponent extends AngularPluginBase<
         "importData",
         t.type({importToken: t.string, importUrl: t.string})
     );
+    useurl = false;
+    useurltoken = false;
 
     getDefaultMarkup() {
         return {};
@@ -209,6 +220,11 @@ export class ImportDataComponent extends AngularPluginBase<
         this.url = state?.url ?? stored?.importUrl ?? this.markup.url;
         this.urlToken = stored?.importToken ?? "";
         this.fields = (state?.fields ?? this.markup.fields ?? []).join("\n");
+        this.useurltoken = this.markup.useurltoken || !!this.markup.aplus;
+        this.useurl = this.markup.useurl || !!this.markup.aplus;
+        if (this.markup.aplus) {
+            this.url = `https://plus.cs.aalto.fi/api/v2/courses/${this.markup.aplus.course}/aggregatedata/`;
+        }
     }
 
     getAttributeType() {
@@ -265,13 +281,19 @@ export class ImportDataComponent extends AngularPluginBase<
     async doImport() {
         this.isRunning = true;
         const params = {
-            input: {
-                data: this.importText,
-                separator: this.separator,
-                url: this.url,
-                fields: this.fields ? this.fields.split("\n") : undefined,
-                createMissingUsers: this.createMissingUsers,
-            },
+            input: this.markup.aplus
+                ? {
+                      // If this is A+ import, the server will fetch the data from A+.
+                      // We only need to send the access token.
+                      token: this.urlToken,
+                  }
+                : {
+                      data: this.importText,
+                      separator: this.separator,
+                      url: this.url,
+                      fields: this.fields ? this.fields.split("\n") : undefined,
+                      createMissingUsers: this.createMissingUsers,
+                  },
         };
 
         this.result = undefined;
