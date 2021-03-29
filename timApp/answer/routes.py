@@ -71,6 +71,7 @@ from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time, approximate_real_name
 from timApp.util.utils import local_timezone
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
+from tim_common.pluginserver_flask import value_or_default
 from tim_common.utils import Missing
 
 answers = Blueprint('answers',
@@ -413,7 +414,7 @@ class JsRunnerInputModel:
     nosave: Union[bool, Missing] = missing
     userNames: Union[List[str], Missing] = missing
     paramComps: Union[Dict[str, str], Missing] = missing
-    includeUsers: MembershipFilter = field(default=MembershipFilter.Current, metadata={'by_value': True})
+    includeUsers: Union[MembershipFilter, Missing] = field(default=missing, metadata={'by_value': True})
 
 
 @dataclass
@@ -954,7 +955,10 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
         preprg = runnermarkup.preprogram or ''
         plugin.values["preprogram"] = f"gtools.params = {json.dumps(runner_req.input.paramComps)};\n{preprg}"
     siw = runnermarkup.showInView
-    if not runnermarkup.selectIncludeUsers and runnermarkup.includeUsers != runner_req.input.includeUsers:
+    markup_include_opt = value_or_default(runnermarkup.includeUsers, MembershipFilter.Current)
+    if (not runnermarkup.selectIncludeUsers and
+            isinstance(runner_req.input.includeUsers, MembershipFilter) and
+            markup_include_opt != runner_req.input.includeUsers):
         raise AccessDenied('Not allowed to select includeUsers option.')
 
     ensure_grade_and_credit(runnermarkup.program, runnermarkup.fields)
@@ -966,7 +970,7 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
         curr_user,
         default_view_ctx,
         access_option=GetFieldsAccess.from_bool(siw),
-        member_filter_type=runner_req.input.includeUsers,
+        member_filter_type=value_or_default(runner_req.input.includeUsers, markup_include_opt),
         user_filter=User.name.in_(runner_req.input.userNames) if runner_req.input.userNames else None
     )
     answerdata.pop('paramComps', None)  # This isn't needed by jsrunner server, so don't send it.

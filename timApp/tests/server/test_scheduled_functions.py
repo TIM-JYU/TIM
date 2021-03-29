@@ -165,6 +165,7 @@ tools.setInt("sum", sum);
         self.login_test2()
         d = self.create_doc(initial_par="""
 #- {plugin=jsrunner #runner}
+includeUsers: all
 fields: []
 groups: []
 program: ''
