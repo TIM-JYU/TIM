@@ -175,7 +175,7 @@ def sanitize_stack_question(d):
     for k, v in d.items():
         # Only sanitize data that stack actually considers as HTML (properties that end with _html)
         # Sanitizing anything else can cause issues with Maxima (e.g. sanitizing < to &lt;)
-        if isinstance(k, str) and k.endswith("_html") and isinstance(v, str):
+        if isinstance(k, str) and "_html" in k and isinstance(v, str):
             d[k] = tim_sanitize(v)
         elif isinstance(v, dict):
             sanitize_stack_question(v)
