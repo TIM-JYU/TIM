@@ -1,9 +1,6 @@
 [submodule "timApp/modules/Haskell/Choices"]
 	path = timApp/modules/Haskell/Choices
 	url = https://gitlab.com/tim-jyu/haskellplugins.git
-[submodule "stack"]
-	path = stack
-	url = https://github.com/vesal/moodle-qtype_stack.git
 [submodule "timApp/modules/cs/jsav"]
 	path = timApp/modules/cs/jsav
 	url = https://github.com/vkaravir/JSAV.git
