@@ -171,6 +171,9 @@ export class NewMessageListComponent implements OnInit {
      * @returns {boolean} Returns true if name requirements are met. Otherwise returns false.
      */
     checkNameRequirements(): boolean {
+        // VIESTIM: Since the server has the final say for allowed names, sync these rules with the server. Maybe they
+        //  could be imported from the server?
+
         // Name length is within length boundaries.
         if (this.listname.length < 5 || 36 < this.listname.length) {
             return false;
@@ -179,13 +182,13 @@ export class NewMessageListComponent implements OnInit {
         // Name starts with a character that is a letter a - z.
         // Notice that ^ serves two different purposes in the following regular expression.
         // The first one checks at the beginning of the string, the second is a negation.
-        const regExpStartCharacter: RegExp = /^[^a-z]/;
-        if (regExpStartCharacter.test(this.listname)) {
+        const regExpStartCharacter: RegExp = /^[a-z]/;
+        if (!regExpStartCharacter.test(this.listname)) {
             return false;
         }
 
-        // Name doesn't contain multiple sequential dots.
-        const regExpMultipleDots: RegExp = /\.[.+]/;
+        // Name can't contain multiple sequential dots.
+        const regExpMultipleDots: RegExp = /\.\.+/;
         if (regExpMultipleDots.test(this.listname)) {
             return false;
         }
