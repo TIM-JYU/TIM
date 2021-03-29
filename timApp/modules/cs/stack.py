@@ -1,9 +1,16 @@
 import json
+import os
+from typing import Dict, Any, Optional, Union
 
 import requests
+import yaml
 
-from tim_common.cs_sanitizer import tim_sanitize
 from languages import Language
+from tim_common.cs_sanitizer import tim_sanitize
+
+JSXGRAPHAPI_START = "[[jsxgraphapi"
+JSXGRAPHAPI_END = "[[/jsxgraphapi]]"
+JSXGRAPHAPI_BLOCK_PREFIX = "jsxgraphapi_tmp"
 
 
 def do_jsxgraph_replace(q):
@@ -13,8 +20,12 @@ def do_jsxgraph_replace(q):
     return q
 
 
+STACK_API_SERVER_ADDRESS = os.environ.get("STACK_API_SERVER") or "stack-api-server"
+
+
 class Stack(Language):
-    ttype="stack"
+    ttype = "stack"
+
     def can_give_task(self):
         return True
 
@@ -44,7 +55,7 @@ class Stack(Language):
 
     def run(self, result, sourcelines, points_rule):
         get_task = self.query.jso.get("input", {}).get("getTask", False)
-        url = "http://stack-api-server/api/endpoint.php"
+        url = f"http://{STACK_API_SERVER_ADDRESS}/api/endpoint.php"
         data = self.query.jso.get("input").get("stackData")
         stack_data = self.query.jso.get('markup').get('-stackData')
         if not stack_data:
@@ -59,15 +70,10 @@ class Stack(Language):
             userseed = state.get("seed", seed)
         nosave = self.query.jso.get('input', {}).get('nosave', False)
         stack_data["seed"] = userseed
-        q = stack_data.get("question", "")
 
-        if not self.query.jso.get('markup').get('stackjsx'):
-            if isinstance(q, str):
-                stack_data["question"] = do_jsxgraph_replace(q)
-            else:
-                q_html = stack_data["question"]["question_html"]
-                if q_html:
-                    stack_data["question"]["question_html"] = do_jsxgraph_replace(q_html)
+        q = stack_data.get("question", "")
+        q_data = self.parse_stack_question(q, not self.query.jso.get('markup').get('stackjsx'))
+        stack_data["question"] = q_data
 
         if nosave or get_task:
             stack_data['score'] = False
@@ -81,13 +87,6 @@ class Stack(Language):
         else:
             save = result["save"]
             save["seed"] = userseed
-
-        sanitize_dict(stack_data)
-
-        # TODO: Couldn't stack server accept dict directly in 'question'?
-        if isinstance(q, dict):
-            q = json.dumps(q)
-            stack_data["question"] = q
 
         r = requests.post(url=url, data=json.dumps(stack_data))  # json.dumps(data_to_send, cls=TimJsonEncoder))
         # r = requests.get(url="http://stack-test-container/api/endpoint.html")
@@ -113,10 +112,75 @@ class Stack(Language):
         r = r.json()
         return 0, r.get('yaml'), "", ""
 
+    def parse_stack_question(self, stack_question: Union[str, Dict[str, Any]], replace_jsxgraph_blocks: bool = True):
+        if not stack_question:
+            return {}
+        if isinstance(stack_question, str):
+            # Convert XML Stack question to YAML before parsing
+            # This check is the same as in stack/api/endpoint.php
+            if stack_question.strip().startswith("<"):
+                _, stack_question, _, _ = self.convert(stack_question)
 
-def sanitize_dict(d):
+            try:
+                question = yaml.safe_load(stack_question)
+            except yaml.YAMLError:
+                return {}
+
+            if not question or not isinstance(question, dict):
+                return {}
+        else:
+            question = stack_question
+
+        jsxgraph_block_cache = {}
+
+        for k, v in question.items():
+            # Multilang questions can have multiple question_html* attributes, handle jsxgraph properly for them all
+            if not k.startswith("question_html"):
+                continue
+            q_html = v
+            jsxgraph_block_cache[k] = {}
+            if replace_jsxgraph_blocks:
+                q_html = do_jsxgraph_replace(q_html)
+                question[k] = q_html
+
+            # Prevent [[jsxgraphapi]] blocks from being sanitized as Bleach will
+            # sanitize away some characters from it (e.g. < and >)
+            # Do this by extracting the blocks, pass data to sanitizer and then reinsert the blocks
+            while True:
+                block = value_between(q_html, JSXGRAPHAPI_START, JSXGRAPHAPI_END)
+                if not block:
+                    break
+                key = f"{JSXGRAPHAPI_BLOCK_PREFIX}_{hash(block)}"
+                jsxgraph_block_cache[k][key] = block
+                q_html = q_html.replace(block, key)
+            question[k] = q_html
+
+        sanitize_stack_question(question)
+
+        for k, blocks in jsxgraph_block_cache.items():
+            q_html = question[k]
+            for block_key, block in blocks.items():
+                q_html = q_html.replace(block_key, block)
+            question[k] = q_html
+
+        return question
+
+
+def value_between(s: str, start: str, end: str) -> Optional[str]:
+    start_index = s.find(start, 0)
+    if start_index < 0:
+        return None
+    end_index = s.find(end, start_index)
+    if end_index < 0:
+        return None
+    return s[start_index:end_index + len(end)]
+
+
+def sanitize_stack_question(d):
     for k, v in d.items():
-        if isinstance(v, str):
+        # Only sanitize data that stack actually considers as HTML (properties that end with _html)
+        # Sanitizing anything else can cause issues with Maxima (e.g. sanitizing < to &lt;)
+        if isinstance(k, str) and "_html" in k and isinstance(v, str):
             d[k] = tim_sanitize(v)
         elif isinstance(v, dict):
-            sanitize_dict(v)
+            sanitize_stack_question(v)

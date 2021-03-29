@@ -308,21 +308,20 @@ services:
   tmpfs:
    - /tmp
    - /run/celery
+ maxima:
+  profiles:
+   - prod
+   - prod_multi
+   - dev
+  image: timimages/goemaxima:2020113001-latest
  stack-api-server:
   profiles:
    - prod
    - prod_multi
    - dev
-  build: ./stack
-  image: timimages/stack
-  security_opt:
-   - seccomp:unconfined
-  volumes:
-   - ./stack/plots:/var/data/api/stack/plots:rw
-   - ./stack/plots:/var/www/html/plots:rw
-   - ./stack/api/config.php.docker:/var/www/html/config.php:rw
-   - ./stack/entrypoint_install_and_run.sh:/var/www/html/entrypoint_install_and_run.sh
-   # - ./stack/cas/castext/jsxgraphapi.block.php:/var/www/html/stack/cas/castext/jsxgraph.block.php
+  image: timimages/stack-api:latest
+  depends_on:
+   - maxima
   restart: unless-stopped
   environment:
    BROWSER_URL: ${TIM_HOST:?}
