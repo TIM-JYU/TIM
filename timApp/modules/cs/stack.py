@@ -131,14 +131,19 @@ class Stack(Language):
         else:
             question = stack_question
 
-        jsxgraph_blocks = {}
-        q_html = question["question_html"]
-        if q_html:
+        jsxgraph_block_cache = {}
+
+        for k, v in question.items():
+            # Multilang questions can have multiple question_html* attributes, handle jsxgraph properly for them all
+            if not k.startswith("question_html"):
+                continue
+            q_html = v
+            jsxgraph_block_cache[k] = {}
             if replace_jsxgraph_blocks:
                 q_html = do_jsxgraph_replace(q_html)
-                question["question_html"] = q_html
+                question[k] = q_html
 
-                # Prevent [[jsxgraphapi]] blocks from being sanitized as Bleach will
+            # Prevent [[jsxgraphapi]] blocks from being sanitized as Bleach will
             # sanitize away some characters from it (e.g. < and >)
             # Do this by extracting the blocks, pass data to sanitizer and then reinsert the blocks
             while True:
@@ -146,17 +151,17 @@ class Stack(Language):
                 if not block:
                     break
                 key = f"{JSXGRAPHAPI_BLOCK_PREFIX}_{hash(block)}"
-                jsxgraph_blocks[key] = block
+                jsxgraph_block_cache[k][key] = block
                 q_html = q_html.replace(block, key)
-            question["question_html"] = q_html
+            question[k] = q_html
 
         sanitize_stack_question(question)
 
-        q_html = question["question_html"]
-        if q_html:
-            for k, v in jsxgraph_blocks.items():
-                q_html = q_html.replace(k, v)
-            question["question_html"] = q_html
+        for k, blocks in jsxgraph_block_cache.items():
+            q_html = question[k]
+            for block_key, block in blocks:
+                q_html = q_html.replace(block_key, block)
+            question[k] = q_html
 
         return question
 
