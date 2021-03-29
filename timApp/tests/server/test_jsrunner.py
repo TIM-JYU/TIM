@@ -724,7 +724,8 @@ tools.print(tools.getLeaveDate());
             d,
             user_input={'includeUsers': 'x'},
             expect_status=400,
-            expect_content={'error': "{'input': {'includeUsers': ['Invalid enum value x']}}"},
+            expect_content={'error': "{'input': {'includeUsers': [['Invalid enum value x'], {'_schema': "
+                                     "['Invalid input type.']}]}}"},
         )
         self.do_jsrun(
             d,
