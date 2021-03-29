@@ -61,7 +61,7 @@ def check_name(name_candidate: str) -> Response:
     # TODO add message list name requirement check. Now just use dummy value to get going.
     messagelist_requirements = True
     email_requirements = EmailListManager.check_name_requirements(name_candidate)
-    requirements_met: bool = email_requirements or messagelist_requirements
+    requirements_met: bool = email_requirements and messagelist_requirements
 
     return json_response(requirements_met)
 

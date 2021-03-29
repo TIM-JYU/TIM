@@ -62,14 +62,14 @@ class EmailListManager:
         """
         em = EmailListManager
         # Check name is available.
-        em.check_name_availability(name_candidate)
+        available: bool = em.check_name_availability(name_candidate)
 
         # Check if name is some reserved name.
-        em.check_reserved_names(name_candidate)
+        not_reserved: bool = em.check_reserved_names(name_candidate)
 
         # Check name against name rules. These rules are also checked client-side.
-        em.check_name_rules(name_candidate)
-        return True
+        within_rules: bool = em.check_name_rules(name_candidate)
+        return available and not_reserved and within_rules
 
     @staticmethod
     def check_reserved_names(name_candidate: str) -> bool:
