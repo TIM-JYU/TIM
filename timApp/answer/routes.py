@@ -22,13 +22,14 @@ from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_existing_answers_info, save_answer, get_all_answers, \
     valid_answers_query, valid_taskid_filter
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access, AccessDenied, \
-    verify_admin
+    verify_admin, get_origin_from_request
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
     verify_view_access, get_plugin_from_request
 from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
-from timApp.auth.sessioninfo import get_current_user_id, logged_in, user_context_with_logged_in
+from timApp.auth.sessioninfo import get_current_user_id, logged_in, user_context_with_logged_in, \
+    get_other_session_users_objs
 from timApp.auth.sessioninfo import get_current_user_object, get_session_users, get_current_user_group
 from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
@@ -36,7 +37,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.document.hide_names import hide_names_in_teacher
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
+from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx, OriginInfo
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from tim_common.marshmallow_dataclass import class_schema
@@ -498,17 +499,46 @@ def post_answer(plugintype: str, task_id_ext: str):
     """Saves the answer submitted by user for a plugin in the database.
 
     :param plugintype: The type of the plugin, e.g. csPlugin.
+     TODO: No longer needed because it is checked from the document block's plugin attribute.
     :param task_id_ext: The extended task id of the form "22.palidrome.par_id".
-    :return: JSON
 
     """
+    answerdata, = verify_json_params('input')
+    answer_browser_data, answer_options = verify_json_params('abData', 'options', require=False, default={})
+    curr_user = get_current_user_object()
+    return json_response(
+        post_answer_impl(
+            task_id_ext,
+            answerdata,
+            answer_browser_data,
+            answer_options,
+            curr_user,
+            get_urlmacros_from_request(),
+            get_other_session_users_objs(),
+            get_origin_from_request()
+        ).result)
 
+
+@dataclass
+class AnswerRouteResult:
+    result: Dict[str, Any]
+    plugin: Plugin
+
+
+def post_answer_impl(
+        task_id_ext: str,
+        answerdata: AnswerData,
+        answer_browser_data,
+        answer_options,
+        curr_user: User,
+        urlmacros,
+        other_session_users: List[User],
+        origin: Optional[OriginInfo]
+) -> AnswerRouteResult:
     receive_time = get_current_time()
     tid = TaskId.parse(task_id_ext)
     d = get_doc_or_abort(tid.doc_id)
     d.document.insert_preamble_pars()
-
-    curr_user = get_current_user_object()
 
     # It is rare but possible that the current user has been deleted (for example as the result of merging 2 accounts).
     # We assume it's the case here, so we clear the session and ask to log in again.
@@ -516,28 +546,15 @@ def post_answer(plugintype: str, task_id_ext: str):
         session.clear()
         raise AccessDenied('Please refresh the page and log in again.')
 
-    ptype = PluginType(plugintype)
-    answerdata, = verify_json_params('input')
-    answer_browser_data, answer_options = verify_json_params('abData', 'options', require=False, default={})
     force_answer = answer_options.get('forceSave', False)  # Only used in feedback plugin.
     is_teacher = answer_browser_data.get('teacher', False)
     save_teacher = answer_browser_data.get('saveTeacher', False)
     should_save_answer = answer_browser_data.get('saveAnswer', True) and tid.task_name
 
-    if tid.is_points_ref:
-        return handle_points_ref(answerdata, curr_user, d, ptype, tid)
-
     if save_teacher:
-        verify_teacher_access(d)
+        verify_teacher_access(d, user=curr_user)
     users = None
 
-    try:
-        get_task = answerdata and answerdata.get("getTask", None) and ptype.can_give_task()
-    except:
-        get_task = False
-
-    if not (should_save_answer or get_task) or is_teacher:
-        verify_seeanswers_access(d)
     ctx_user = None
     if is_teacher:
         answer_id = answer_browser_data.get('answer_id', None)
@@ -576,20 +593,27 @@ def post_answer(plugintype: str, task_id_ext: str):
             tid,
             AccessType.view,
             TaskIdAccess.ReadWrite,
-            context_user=user_context_with_logged_in(ctx_user),
-            view_ctx=ViewContext(ViewRoute.View, False, urlmacros=get_urlmacros_from_request()),
+            context_user=UserContext(ctx_user or curr_user, curr_user),
+            view_ctx=ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin),
             allow_grace_period=True,
         )
         plugin = vr.plugin
     except (PluginException, TimDbException) as e:
         raise PluginException(str(e))
 
-    if plugin.type != plugintype:
-        raise PluginException(f'Plugin type mismatch: {plugin.type} != {plugintype}')
+    if tid.is_points_ref:
+        return AnswerRouteResult(
+            result=handle_points_ref(answerdata, curr_user, d, plugin.ptype, tid),
+            plugin=plugin,
+        )
+
+    get_task = isinstance(answerdata, dict) and answerdata.get("getTask", False) and plugin.ptype.can_give_task()
+    if not (should_save_answer or get_task) or is_teacher:
+        verify_seeanswers_access(d, user=curr_user)
 
     uploads = []
 
-    if not logged_in() and not plugin.known.anonymous:
+    if not curr_user.logged_in and not plugin.known.anonymous:
         raise RouteException('You must be logged in to answer this task.')
     if plugin.known.useCurrentUser or plugin.task_id.is_global:  # For plugins that is saved only for current user
         users = [curr_user]
@@ -606,7 +630,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                                        (Block.type_id == BlockType.Upload.value)).first()
             if block is None:
                 raise PluginException(f'Non-existent upload: {trimmed_file}')
-            verify_view_access(block, message="You don't have permission to touch this file.")
+            verify_view_access(block, message="You don't have permission to touch this file.", user=curr_user)
             uploads = [AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first()]
             # if upload.answer_id is not None:
             #    raise PluginException(f'File was already uploaded: {file}')
@@ -619,20 +643,20 @@ def post_answer(plugintype: str, task_id_ext: str):
                                            (Block.type_id == BlockType.Upload.value)).first()
                 if block is None:
                     raise PluginException(f'Non-existent upload: {trimmed_file}')
-                verify_view_access(block, message="You don't have permission to touch this file.")
+                verify_view_access(block, message="You don't have permission to touch this file.", user=curr_user)
                 uploads.append(AnswerUpload.query.filter(AnswerUpload.upload_block_id == block.id).first())
 
     # Load old answers
 
     if users is None:
-        users = [User.query.get(u['id']) for u in get_session_users()]
+        users = [curr_user] + other_session_users
 
     answerinfo = get_existing_answers_info(users, tid)
     valid, _ = plugin.is_answer_valid(answerinfo.count, {})
     info = plugin.get_info(users, answerinfo.count, look_answer=is_teacher and not save_teacher, valid=valid)
 
     # Get the newest answer (state). Only for logged in users.
-    state = try_load_json(answerinfo.latest_answer.content) if logged_in() and answerinfo.latest_answer else None
+    state = try_load_json(answerinfo.latest_answer.content) if curr_user.logged_in and answerinfo.latest_answer else None
 
     preprocessor = answer_call_preprocessors.get(plugin.type)
     if preprocessor:
@@ -644,7 +668,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                         'taskID': tid.doc_task,
                         'info': info}
 
-    jsonresp = call_plugin_answer_and_parse(answer_call_data, plugintype)
+    jsonresp = call_plugin_answer_and_parse(answer_call_data, plugin.type)
 
     web = jsonresp.get('web')
     if web is None:
@@ -656,12 +680,7 @@ def post_answer(plugintype: str, task_id_ext: str):
         add_group = None
         if plugin.type == 'importData':
             add_group = plugin.values.get('addUsersToGroup')
-        saveresult = save_fields(
-            jsonresp,
-            d,
-            allow_non_teacher=siw,
-            add_users_to_group=add_group,
-        )
+        saveresult = save_fields(jsonresp, curr_user, d, allow_non_teacher=siw, add_users_to_group=add_group)
 
         # TODO: Could report the result to other plugins too.
         if plugin.type == 'importData':
@@ -834,7 +853,10 @@ def post_answer(plugintype: str, task_id_ext: str):
                     force_answer = data.get("force_answer", force_answer)
                     postprogram_result(data, output)
                 except JsRunnerError as e:
-                    return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
+                    return AnswerRouteResult(
+                        result={'web': {'error': 'Error in JavaScript: ' + e.args[0]}},
+                        plugin=plugin,
+                    )
 
             if points or save_object is not None or tags:
                 result['savedNew'] = save_answer(
@@ -846,7 +868,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                     is_valid,
                     points_given_by,
                     force_answer,
-                    plugintype=ptype,
+                    plugintype=plugin.ptype,
                     max_content_len=current_app.config['MAX_ANSWER_CONTENT_SIZE'],
                 )
             else:
@@ -868,7 +890,7 @@ def post_answer(plugintype: str, task_id_ext: str):
                 valid=True,
                 points_given_by=get_current_user_group(),
                 saver=curr_user,
-                plugintype=ptype,
+                plugintype=plugin.ptype,
                 max_content_len=current_app.config['MAX_ANSWER_CONTENT_SIZE'],
             )
         else:
@@ -890,7 +912,10 @@ def post_answer(plugintype: str, task_id_ext: str):
                     output += "\nPoints: " + str(points)
                     postprogram_result(data, output)
                 except JsRunnerError as e:
-                    return json_response({'web': {'error': 'Error in JavaScript: ' + e.args[0]}})
+                    return AnswerRouteResult(
+                        result={'web': {'error': 'Error in JavaScript: ' + e.args[0]}},
+                        plugin=plugin,
+                    )
         if result['savedNew'] is not None and uploads:
             # Associate this answer with the upload entries
             for upload in uploads:
@@ -907,7 +932,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     except:
         pass
 
-    return json_response(result)
+    return AnswerRouteResult(result=result, plugin=plugin)
 
 
 def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocInfo, plugin: Plugin):
@@ -916,7 +941,7 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
 
     s = JsRunnerMarkupSchema()
     runnermarkup: JsRunnerMarkupModel = s.load(plugin.values)
-    runner_req: JsRunnerAnswerModel = JsRunnerAnswerSchema().load(request.get_json())
+    runner_req: JsRunnerAnswerModel = JsRunnerAnswerSchema().load({'input': answerdata})
     groupnames = runnermarkup.groups
     if groupnames is missing:
         groupnames = [runnermarkup.group]
@@ -938,7 +963,7 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
         runnermarkup.fields,
         requested_groups,
         d,
-        get_current_user_object(),
+        curr_user,
         default_view_ctx,
         access_option=GetFieldsAccess.from_bool(siw),
         member_filter_type=runner_req.input.includeUsers,
@@ -981,7 +1006,7 @@ answer_call_preprocessors: Dict[str, Callable[[AnswerData, User, DocInfo, Plugin
 
 
 def handle_points_ref(answerdata: AnswerData, curr_user: User, d: DocInfo, ptype: PluginType, tid: TaskId):
-    verify_teacher_access(d)
+    verify_teacher_access(d, user=curr_user)
     given_points = answerdata.get(ptype.get_content_field_name())
     if given_points is not None:
         try:
@@ -1004,7 +1029,7 @@ def handle_points_ref(answerdata: AnswerData, curr_user: User, d: DocInfo, ptype
         db.session.flush()
         s = a.id
     db.session.commit()
-    return json_response({'savedNew': s, 'web': {'result': 'points saved'}})
+    return {'savedNew': s, 'web': {'result': 'points saved'}}
 
 
 class JsrunnerGroups(TypedDict, total=False):
@@ -1016,10 +1041,9 @@ class JsrunnerGroups(TypedDict, total=False):
 MAX_GROUPS_PER_CALL = 10
 
 
-def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups]):
+def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User):
     if not groupdata:
         return
-    curr_user = get_current_user_object()
     groups_created = 0
     for op, group_set in groupdata.items():
         for name, uids in group_set.items():
@@ -1035,7 +1059,7 @@ def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups]):
                 else:
                     raise RouteException(f'Group does not exist: {name}')
             else:
-                verify_group_edit_access(ug)
+                verify_group_edit_access(ug, curr_user)
             users: List[User] = User.query.filter(User.id.in_(uids)).all()
             found_user_ids = set(u.id for u in users)
             missing_ids = set(uids) - found_user_ids
@@ -1061,8 +1085,12 @@ def create_missing_users(users: List[MissingUser]) -> Tuple[List[UserFieldEntry]
     created_users = []
     for mu in users:
         ui = mu.user
-        if ui.email is not None and not is_valid_email(ui.email):
-            raise RouteException(f'Invalid email: "{ui.email}"')
+        if ui.email is not None:
+            # A+ may give users with invalid mails like '6128@localhost'. Just skip over those.
+            if ui.email.endswith('@localhost'):
+                continue
+            if not is_valid_email(ui.email):
+                raise RouteException(f'Invalid email: "{ui.email}"')
         if ui.username is None:
             ui.username = ui.email
         if ui.full_name is None and ui.email is not None:
@@ -1104,17 +1132,17 @@ class FieldSaveRequest(TypedDict, total=False):
     groups: Optional[JsrunnerGroups]
 
 
-def verify_user_create_right():
-    u = get_current_user_object()
-    if u.is_admin:
+def verify_user_create_right(curr_user: User):
+    if curr_user.is_admin:
         return
     user_creators = UserGroup.get_user_creator_group()
-    if user_creators not in u.groups:
+    if user_creators not in curr_user.groups:
         raise AccessDenied('You do not have permission to create users.')
 
 
 def save_fields(
         jsonresp: FieldSaveRequest,
+        curr_user: User,
         current_doc: Optional[DocInfo] = None,
         allow_non_teacher: bool = False,
         add_users_to_group: Optional[str] = None,
@@ -1123,16 +1151,15 @@ def save_fields(
     ignore_missing = jsonresp.get('ignoreMissing', False)
     allow_missing = jsonresp.get('allowMissing', False)
     ignore_fields = {}
-    handle_jsrunner_groups(jsonresp.get('groups'))
+    handle_jsrunner_groups(jsonresp.get('groups'), curr_user)
     missing_users = jsonresp.get('missingUsers')
     saveresult = FieldSaveResult()
-    curr_user = get_current_user_object()
     if save_obj is None:
         save_obj = []
     if missing_users:
         m_users: List[MissingUser] = MissingUserSchema().load(missing_users, many=True)
         if jsonresp.get('createMissingUsers'):
-            verify_user_create_right()
+            verify_user_create_right(curr_user)
             new_fields, users = create_missing_users(m_users)
             save_obj += new_fields
             saveresult.users_created = users
@@ -1148,7 +1175,7 @@ def save_fields(
     # They are created above, so the plugin cannot report them with "groups" in jsonresp because the user IDs are not
     # known until now.
     if add_users_to_group:
-        handle_jsrunner_groups({'add': {add_users_to_group: [k for k in user_map.keys()]}})
+        handle_jsrunner_groups({'add': {add_users_to_group: [k for k in user_map.keys()]}}, curr_user)
 
     for item in save_obj:
         task_u = item['fields']
@@ -1179,7 +1206,7 @@ def save_fields(
                 t_id,
                 AccessType.view,
                 TaskIdAccess.ReadWrite,
-                user_context_with_logged_in(None),
+                UserContext.from_one_user(curr_user),
                 default_view_ctx,
             )
             plugin = vr.plugin
@@ -1698,6 +1725,7 @@ def get_state(args: GetStateModel):
     user = User.get_by_id(user_id)
     if user is None:
         raise RouteException('Non-existent user')
+    view_ctx = ViewContext(ViewRoute.View, False, origin=get_origin_from_request())
     if answer_id:
         answer = Answer.query.get(answer_id)
         if not answer:
@@ -1707,7 +1735,12 @@ def get_state(args: GetStateModel):
         doc_id = d.id
         if not has_review_access(d, get_current_user_object(), tid, user):
             try:
-                answer, doc_id = verify_answer_access(answer_id, user_id, default_view_ctx, allow_grace_period=True)
+                answer, doc_id = verify_answer_access(
+                    answer_id,
+                    user_id,
+                    view_ctx,
+                    allow_grace_period=True,
+                )
             except PluginException as e:
                 raise RouteException(str(e))
         doc = Document(doc_id)
@@ -1728,18 +1761,18 @@ def get_state(args: GetStateModel):
         tid.maybe_set_hint(par_id)
     user_ctx = user_context_with_logged_in(user)
     try:
-        doc, plug = get_plugin_from_request(doc, task_id=tid, u=user_ctx, view_ctx=default_view_ctx)
+        doc, plug = get_plugin_from_request(doc, task_id=tid, u=user_ctx, view_ctx=view_ctx)
     except PluginException as e:
         raise RouteException(str(e))
     block = plug.par
 
-    presult = pluginify(doc, [block], user_ctx, default_view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
+    presult = pluginify(doc, [block], user_ctx, view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
                         pluginwrap=PluginWrap.Nothing)
     plug = presult.custom_answer_plugin
     html = plug.get_final_output()
     if review:
         block.final_dict = None
-        presult2 = pluginify(doc, [block], user_ctx, default_view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
+        presult2 = pluginify(doc, [block], user_ctx, view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
                              review=review, pluginwrap=PluginWrap.Nothing)
         rplug = presult2.custom_answer_plugin
         rhtml = rplug.get_final_output()

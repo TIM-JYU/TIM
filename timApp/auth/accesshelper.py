@@ -15,7 +15,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, dereference_pars
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import ViewContext
+from timApp.document.viewcontext import ViewContext, OriginInfo
 from timApp.folder.folder import Folder
 from timApp.item.item import Item, ItemBase
 from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
@@ -79,8 +79,9 @@ def verify_access(
         check_duration=False,
         check_parents=False,
         grace_period=timedelta(seconds=0),
+        user: Optional[User] = None,
 ):
-    u = get_current_user_object()
+    u = user or get_current_user_object()
     has_access = u.has_access(b, access_type, grace_period)
     if not has_access and check_parents:
         # Only uploaded files and images have a parent so far.
@@ -98,20 +99,20 @@ def verify_access(
     )
 
 
-def verify_view_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
-    return verify_access(b, AccessType.view, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
+def verify_view_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False, user=None):
+    return verify_access(b, AccessType.view, require=require, message=message, check_duration=check_duration, check_parents=check_parents, user=user)
 
 
-def verify_teacher_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
-    return verify_access(b, AccessType.teacher, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
+def verify_teacher_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False, user=None):
+    return verify_access(b, AccessType.teacher, require=require, message=message, check_duration=check_duration, check_parents=check_parents, user=user)
 
 
 def verify_copy_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
     return verify_access(b, AccessType.copy, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
 
 
-def verify_seeanswers_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
-    return verify_access(b, AccessType.see_answers, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
+def verify_seeanswers_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False, user=None):
+    return verify_access(b, AccessType.see_answers, require=require, message=message, check_duration=check_duration, check_parents=check_parents, user=user)
 
 
 class ItemLockedException(Exception):
@@ -304,7 +305,8 @@ def verify_comment_right(b: ItemOrBlock):
 
 def get_plugin_from_request(doc: Document, task_id: TaskId, u: UserContext, view_ctx: ViewContext) -> Tuple[Document, Plugin]:
     assert doc.doc_id == task_id.doc_id
-    orig_doc_id, orig_par_id = get_orig_doc_and_par_id_from_request()
+    orig_info = view_ctx.origin
+    orig_doc_id, orig_par_id = (orig_info.doc_id, orig_info.par_id) if orig_info else (None, None)
     plug = find_plugin_from_document(doc, task_id, u, view_ctx)
     par_id = plug.par.get_id()
     if orig_doc_id is None or orig_par_id is None:
@@ -328,13 +330,13 @@ def get_plugin_from_request(doc: Document, task_id: TaskId, u: UserContext, view
     return doc, plug
 
 
-def get_orig_doc_and_par_id_from_request() -> Tuple[int, str]:
+def get_origin_from_request() -> Optional[OriginInfo]:
     ref_from = ((request.get_json() or {}).get('ref_from') or {})
     doc_id = ref_from.get('docId', get_option(request, 'ref_from_doc_id',
                                               default=None, cast=int))
     par_id = ref_from.get('par', get_option(request, 'ref_from_par_id',
                                             default=None))
-    return doc_id, par_id
+    return OriginInfo(doc_id=doc_id, par_id=par_id) if doc_id is not None and par_id is not None else None
 
 
 @dataclass
@@ -355,7 +357,7 @@ def verify_task_access(
 ) -> TaskAccessVerification:
     assert d.id == task_id.doc_id
     doc, found_plugin = get_plugin_from_request(d.document, task_id, context_user, view_ctx)
-    access = verify_access(doc.get_docinfo(), access_type, require=False)
+    access = verify_access(doc.get_docinfo(), access_type, require=False, user=context_user.logged_user)
     is_expired = False
     if not access:
         if not allow_grace_period:

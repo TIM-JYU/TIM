@@ -1,25 +1,25 @@
 """
 A plugin for importing data to TIM fields.
 """
-import csv
 import re
 from collections import defaultdict
 from dataclasses import dataclass, asdict, field
 from enum import Enum
 from typing import Union, List, DefaultDict, Dict, Generator, Any, Optional
 
+import requests
 from flask import render_template_string
 from marshmallow.utils import missing
 
-from tim_common.markupmodels import GenericMarkupModel
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, create_blueprint, value_or_default, PluginAnswerResp, PluginReqs, EditorTab
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
 from timApp.tim_app import csrf
 from timApp.user.hakaorganization import HakaOrganization
 from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniqueCode
 from timApp.user.user import User, UserInfo
 from timApp.util.utils import widen_fields
+from tim_common.markupmodels import GenericMarkupModel
+from tim_common.pluginserver_flask import GenericHtmlModel, \
+    GenericAnswerModel, create_blueprint, value_or_default, PluginAnswerResp, PluginReqs, EditorTab
 from tim_common.utils import Missing
 
 
@@ -29,6 +29,11 @@ class ImportDataStateModel:
     url: Union[str, Missing, None] = missing
     separator: Union[str, Missing, None] = missing
     fields: Union[List[str], Missing] = missing
+
+
+@dataclass
+class AplusData:
+    course: int
 
 
 @dataclass
@@ -54,16 +59,17 @@ class ImportDataMarkupModel(GenericMarkupModel):
     joinProperty: Union[str, Missing, None] = missing
     createMissingUsers: Union[bool, Missing] = missing
     addUsersToGroup: Union[str, Missing] = missing
+    nextRunner: Union[str, Missing] = missing
 
-    # A hint for TIM where the imported data comes from. Currently "A+" is recognized.
-    importSource: Union[str, Missing] = missing
+    aplus: Union[AplusData, Missing] = missing
 
 
 @dataclass
 class ImportDataInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    data: str
-    createMissingUsers: bool = False
+    data: Optional[str] = None
+    token: Optional[str] = None
+    createMissingUsers: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
     url: Union[str, Missing] = missing
     fields: Union[List[str], Missing] = missing
@@ -254,26 +260,65 @@ class ImportDataAnswerResp(PluginAnswerResp, total=False):
 
 def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
     sdata = args.input.data
+    aalto_data = None
+    if sdata is None:
+        if isinstance(args.markup.aplus, Missing):
+            return args.make_answer_error('input data missing')
+        if not args.input.token:
+            return args.make_answer_error('token missing')
+        headers = {'Authorization': f'Token {args.input.token}'}
+        try:
+            r = requests.get(
+                f'https://plus.cs.aalto.fi/api/v2/courses/{args.markup.aplus.course}/aggregatedata/',
+                params={'format': 'json'},
+                headers=headers,
+            )
+            if r.status_code != 200:
+                return args.make_answer_error(f'unexpected status from A+: {r.status_code}')
+            aalto_data = r.json()
+        except requests.exceptions.ConnectionError:
+            return args.make_answer_error('error connecting to A+')
+        except requests.exceptions.Timeout:
+            return args.make_answer_error('timeout connecting to A+')
+    elif args.markup.aplus:
+        return args.make_answer_error('cannot send data from browser if aplus is given')
+    output = ""
     defaultseparator = value_or_default(args.markup.separator, ";")
     separator = value_or_default(args.input.separator, defaultseparator)
-    data = sdata.splitlines()
-    output = ""
     field_names = args.input.fields
-    vals = convert_data(data, value_or_default(field_names, []), separator)
-    if field_names:
-        data = vals.to_tim_format()
-    if isinstance(args.markup.prefilter, str):
-        params = JsRunnerParams(code=args.markup.prefilter, data=data)
-        try:
-            processed_data, output = jsrunner_run(params)
-        except JsRunnerError as e:
-            return args.make_answer_error('Error in JavaScript: ' + e.args[0])
-        vals = FieldValues.from_tim_format(processed_data)
+    if sdata is not None:
+        data = sdata.splitlines()
+        vals = convert_data(data, value_or_default(field_names, []), separator)
+        if field_names:
+            data = vals.to_tim_format()
+        if isinstance(args.markup.prefilter, str):
+            params = JsRunnerParams(code=args.markup.prefilter, data=data)
+            try:
+                processed_data, output = jsrunner_run(params)
+            except JsRunnerError as e:
+                return args.make_answer_error('Error in JavaScript: ' + e.args[0])
+            vals = FieldValues.from_tim_format(processed_data)
+    elif aalto_data:
+        field_name_re = re.compile(r'(?P<num>\d+) (?P<type>Total|Ratio|Count)')
+        fvals: DefaultDict[str, Dict[str, str]] = defaultdict(dict)
+        for d in aalto_data:
+            user_vals = {}
+            for k, v in d.items():
+                m = field_name_re.match(k)
+                if m:
+                    user_vals[m.group('type').lower() + m.group('num')] = str(v)
+            fvals[d['StudentID']] = user_vals
+        vals = FieldValues(values=fvals)
+    else:
+        return args.make_answer_error('sdata and aalto_data were both None, which should not happen')
     did = int(args.taskID.split(".")[0])
     if isinstance(args.markup.docid, int):
         did = args.markup.docid
     rows = []
-    id_prop = value_or_default(args.markup.joinProperty, 'username')
+    id_prop = value_or_default(
+        args.markup.joinProperty,
+        'studentID(aalto.fi)' if args.markup.aplus else 'username',
+    )
     idents = [r for r in vals.values.keys()]
 
     m = re.fullmatch(r'studentID\((?P<org>[a-z.]+)\)', id_prop)
@@ -325,15 +370,8 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
 
     mu = []
     if org:
-        if org == 'aalto.fi' and args.markup.importSource == 'A+':
-            reader = csv.reader(data, delimiter=',')
-            student_id_email_map = {}
-            for row in reader:
-                if len(row) < 3:
-                    return args.make_answer_error(f'Too few columns ({len(row)}) in CSV row: "{row}"')
-                studentid = row[1]
-                email = row[2]
-                student_id_email_map[studentid] = email
+        if aalto_data:
+            student_id_email_map = {row['StudentID']: row['Email'] for row in aalto_data}
             mu = [
                 MissingUser(
                     user=UserInfo(
@@ -377,11 +415,15 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
         ]
     elif missing_users:
         return args.make_answer_error('missingUsers not implemented when joinProperty is "id"')
+    if isinstance(args.input.createMissingUsers, bool):
+        create_missing = args.input.createMissingUsers
+    else:
+        create_missing = args.markup.aplus is not missing
     jsonresp: ImportDataAnswerResp = {
         'ignoreMissing': args.markup.ignoreMissing,
         'allowMissing': args.markup.allowMissing,
         'savedata': rows,
-        'createMissingUsers': args.input.createMissingUsers,
+        'createMissingUsers': create_missing,
         'missingUsers': mu,
         'web': {
             'result': f"{output}",

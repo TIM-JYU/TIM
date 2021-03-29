@@ -81,7 +81,6 @@ class SettingsTest(TimRouteTest):
                                  'readparagraphs': [],
                                  'uploaded_files': [],
                                  'uploaded_images': [],
-                                 'velpgroups': [],
                                  'velps': []})
         self.get('/settings/info/testuser2', expect_status=403)
         u = self.test_user_1
@@ -100,7 +99,6 @@ class SettingsTest(TimRouteTest):
                                  'readparagraphs': [],
                                  'uploaded_files': [],
                                  'uploaded_images': [],
-                                 'velpgroups': [],
                                  'velps': []})
 
     def test_info_no_points(self):

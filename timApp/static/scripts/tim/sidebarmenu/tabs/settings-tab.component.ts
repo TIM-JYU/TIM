@@ -37,6 +37,7 @@ import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {showMergePdfDialog} from "tim/document/minutes/showMergePdfDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
+import {openScheduleDialog} from "tim/document/scheduling/openScheduleDialog";
 
 const DEFAULT_PIECE_SIZE = 20;
 
@@ -113,7 +114,8 @@ const DEFAULT_PIECE_SIZE = 20;
         <ng-container *ngIf="lctrl.lectureSettings.inLecture">
             <h5 i18n>Lecture settings</h5>
             <div class="checkbox">
-                <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useWall" (ngModelChange)="lctrl.refreshWall()"> Show wall</label>
+                <label i18n><input type="checkbox" [(ngModel)]="lctrl.lectureSettings.useWall"
+                                   (ngModelChange)="lctrl.refreshWall()"> Show wall</label>
             </div>
             <div *ngIf="!lctrl.isLecturer" class="checkbox">
                 <label i18n>
@@ -208,10 +210,15 @@ const DEFAULT_PIECE_SIZE = 20;
                 <a href="/view/groups" i18n>Browse existing groups</a>
             </ng-container>
         </ng-container>
-        
+
         <ng-container *ngIf="docSettings?.cache && item?.rights?.manage">
             <h5 i18n>Cache</h5>
             <a href="/generateCache/{{ item?.path }}?caddy_nobuffering=1" target="_blank" i18n>Refresh cache</a>
+        </ng-container>
+
+        <ng-container *ngIf="users.canScheduleFunctions()">
+            <h5 i18n>Scheduled functions</h5>
+            <button (click)="openScheduleDialog()" class="timButton" i18n>Manage scheduled functions</button>
         </ng-container>
 
         <ng-template i18n="@@markAllReadFail">Could not mark the document as read.</ng-template>
@@ -587,5 +594,12 @@ export class SettingsTabComponent implements OnInit {
     private loadViewRangeSettings() {
         this.currentViewRange = getCurrentViewRange();
         this.updateIsFullRange();
+    }
+
+    openScheduleDialog() {
+        if (!this.item) {
+            return;
+        }
+        openScheduleDialog(this.item);
     }
 }

@@ -708,6 +708,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         from timApp.bookmark.bookmarks import Bookmarks
         return Bookmarks(self)
 
+    def belongs_to_any_of(self, *groups: UserGroup):
+        return bool(set(groups) & set(self.groups))
+
 
 def get_membership_end(u: User, group_ids: Set[int]):
     relevant_memberships: List[UserGroupMember] = [m for m in u.memberships if m.usergroup_id in group_ids]
@@ -734,3 +737,8 @@ def check_rights(hide_type: str, rights: dict):
             'edit': not rights['see_answers'],
             'see_answers': not rights['teacher'],
             'teacher': not rights['manage']}.get(hide_type, False)
+
+
+def get_owned_objects_query(u: User):
+    return u.get_personal_group().accesses.filter_by(type=AccessType.owner.value).with_entities(
+        BlockAccess.block_id)

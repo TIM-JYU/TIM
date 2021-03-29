@@ -1,7 +1,14 @@
 """Server tests for importData plugin."""
+import json
+from contextlib import contextmanager
+
+import responses
+from requests import PreparedRequest
+
 from timApp.tests.browser.browsertest import BrowserTest
 from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 
 
@@ -50,16 +57,17 @@ def field_result(
 
 
 class ImportDataTestBase(BrowserTest):
-    def imp(self, d, data, expect, status: int, task=None):
+    def imp(self, d, data, expect, status: int, task=None, aalto_return=None):
         if not task:
             task = 't'
-        self.post_answer(
-            'importData',
-            f'{d.id}.{task}',
-            data,
-            expect_content=expect,
-            expect_status=status,
-        )
+        with self.importdata_ctx(aalto_return):
+            self.post_answer(
+                'importData',
+                f'{d.id}.{task}',
+                data,
+                expect_content=expect,
+                expect_status=status,
+            )
 
     def grant_user_creation_right(self):
         self.current_user.add_to_group(UserGroup.get_user_creator_group(), added_by=None)
@@ -186,44 +194,8 @@ class AaltoImportTest(ImportDataTestBase):
         d = self.create_doc(initial_par="""
 ``` {#t plugin="importData"}
 allowMissing: true
-useurl: true
-useurltoken: true
-joinProperty: studentID(aalto.fi)
-importSource: A+
-prefilter: |!!
-res = [];
-let nr = 0;
-let fields = data[0];
-let useridfield = 1;
-
-fields = fields.toLowerCase(fields);
-fields = fields.split(",");
-for (let i = 0; i < fields.length; i++) {
-   let fn = fields[i];
-   let parts = fn.split(' ');
-   if (parts.length < 2) continue;
-   fields[i] = parts[1] + parts[0];
-}
-
-for (let i = 1; i < data.length; i++) {
-    let r = data[i];
-    let parts = r.split(",");
-    let userid = parts[useridfield];
-    let fieldcount = 0;
-    for (let fi = useridfield+1; fi < fields.length; fi++) {
-        if (fi >= parts.length) continue;
-        value = parts[fi].trim();
-        if (value === "") continue;
-        if (value === "0") continue;
-        fieldcount++;
-        let r2 = "" + userid + ";" + fields[fi] + ";" + value;
-        res.push(r2);
-    }
-    if (fieldcount < 1) continue;
-    nr++;
-}
-return res;
-!!
+aplus:
+  course: 1234
 ```
         """)
 
@@ -235,48 +207,93 @@ return res;
         UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
         123,12345X,matti.meikalainen@aalto.fi,aalto,5,200,1.0,4,700,1.0
                 """.strip(),
-                'createMissingUsers': True,
+            },
+            {'web': {'error': 'cannot send data from browser if aplus is given'}},
+            200,
+        )
+        self.imp(
+            d,
+            {
+                'token': 'xxx',
             },
             'You do not have permission to create users.',
             403,
+            aalto_return=[{
+                "UserID": 123,
+                "StudentID": "12345X",
+                "Email": "matti.meikalainen@aalto.fi",
+                "Tags": "aalto",
+                "1 Count": 2,
+                "1 Total": 100,
+                "1 Ratio": 0.125,
+                "2 Count": 0,
+                "2 Total": 0,
+                "2 Ratio": 0.0,
+            }],
         )
+
         self.grant_user_creation_right()
         self.imp(
             d,
 
             {
-                'data': """
-UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
-123,12345X,matti.meikalainen@aalto.fi,aalto,5,200,1.0,4,700,1.0
-        """.strip(),
-                'createMissingUsers': True,
+                'token': 'xxx',
             },
             {
-             'web': field_result(
-                 changed=8,
-                 created_users=[
-                     {'email': 'matti.meikalainen@aalto.fi',
-                      'id': 5,
-                      'name': 'matti.meikalainen@aalto.fi',
-                      'real_name': 'Meikalainen Matti'},
-                 ]),
-             },
+                'web': field_result(
+                    changed=6,
+                    created_users=[
+                        {'email': 'matti.meikalainen@aalto.fi',
+                         'id': 5,
+                         'name': 'matti.meikalainen@aalto.fi',
+                         'real_name': 'Meikalainen Matti'},
+                    ]),
+            },
             200,
+            aalto_return=[{
+                "UserID": 123,
+                "StudentID": "12345X",
+                "Email": "matti.meikalainen@aalto.fi",
+                "Tags": "aalto",
+                "1 Count": 5,
+                "1 Total": 200,
+                "1 Ratio": 1.0,
+                "2 Count": 4,
+                "2 Total": 700,
+                "2 Ratio": 1.0,
+            }],
         )
+        matti_user = User.get_by_email('matti.meikalainen@aalto.fi')
+        self.assertEqual(PersonalUniqueCode.find_by_student_id('12345X', 'aalto.fi').user, matti_user)
+        self.verify_answer_content(f'{d.id}.count1', 'c', '5', matti_user)
+        self.verify_answer_content(f'{d.id}.total1', 'c', '200', matti_user)
+        self.verify_answer_content(f'{d.id}.ratio1', 'c', '1.0', matti_user)
+        self.verify_answer_content(f'{d.id}.count2', 'c', '4', matti_user)
+        self.verify_answer_content(f'{d.id}.total2', 'c', '700', matti_user)
+        self.verify_answer_content(f'{d.id}.ratio2', 'c', '1.0', matti_user)
         self.imp(
             d,
 
             {
-                'data': """
-        UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
-        123,12345X,matti.meikalainen@aalto.fi,aalto,5,200,1.0,4,700,1.0
-                """.strip(),
+                'token': 'xxx',
             },
             {
-                'web': field_result(unchanged=8),
+                'web': field_result(unchanged=6),
             }
             ,
             200,
+            aalto_return=[{
+                "UserID": 123,
+                "StudentID": "12345X",
+                "Email": "matti.meikalainen@aalto.fi",
+                "Tags": "aalto",
+                "1 Count": 5,
+                "1 Total": 200,
+                "1 Ratio": 1.0,
+                "2 Count": 4,
+                "2 Total": 700,
+                "2 Ratio": 1.0,
+            }],
         )
 
         puc = PersonalUniqueCode.find_by_student_id('12345X', 'aalto.fi')
@@ -290,15 +307,23 @@ UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
             d,
 
             {
-                'data': """
-        UserID,StudentID,Email,Tags,1 Count,1 Total,1 Ratio,2 Count,2 Total,2 Ratio
-        123,12345Z,,aalto,5,200,1.0,4,700,1.0
-                """.strip(),
-                'createMissingUsers': True,
+                'token': 'xxx',
             },
             'Invalid email: ""'
             ,
             400,
+            aalto_return=[{
+                "UserID": 123,
+                "StudentID": "12345Z",
+                "Email": "",
+                "Tags": "aalto",
+                "1 Count": 5,
+                "1 Total": 200,
+                "1 Ratio": 1.0,
+                "2 Count": 4,
+                "2 Total": 700,
+                "2 Ratio": 1.0,
+            }],
         )
 
     def test_import_add_to_group(self):

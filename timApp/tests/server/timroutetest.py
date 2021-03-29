@@ -6,15 +6,18 @@ import re
 import socket
 import warnings
 from base64 import b64encode
+from contextlib import contextmanager
 from functools import lru_cache
 from typing import Union, Optional, List, Dict, Tuple, Any
 from urllib.parse import urlparse
 
-from flask import Response
+import responses
+from flask import Response, current_app
 from flask import session
 from flask.testing import FlaskClient
 from lxml import html
 from lxml.html import HtmlElement
+from requests import PreparedRequest
 
 import timApp.tim
 from timApp.answer.answer import Answer
@@ -953,6 +956,26 @@ class TimRouteTest(TimDbTest):
         """
         self.client.__exit__(None, None, None)
         self.client.__enter__()
+
+    @contextmanager
+    def importdata_ctx(self, aalto_return=None):
+        with responses.RequestsMock() as m:
+            if aalto_return:
+                m.add(
+                    'GET',
+                    'https://plus.cs.aalto.fi/api/v2/courses/1234/aggregatedata/?format=json',
+                    body=json.dumps(aalto_return),
+                    status=200,
+                )
+
+            def rq_cb(request: PreparedRequest):
+                r = self.json_put(request.path_url, json_data=json.loads(request.body))
+                return 200, {}, json.dumps(r)
+
+            host = current_app.config['INTERNAL_PLUGIN_DOMAIN']
+            m.add_callback('PUT', f'http://{host}:5001/importData/answer', callback=rq_cb)
+            m.add_passthru('http://jsrunner:5000')
+            yield
 
 
 class TimPluginFix(TimRouteTest):

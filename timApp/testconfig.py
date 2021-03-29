@@ -54,3 +54,7 @@ HOME_ORGANIZATION = 'jyu.fi'
 SAML_PATH = '/service/timApp/auth/saml/test'
 
 SESSION_COOKIE_SECURE = False  # Test running does not have HTTPS, so secure cookie can't be used.
+
+MINIMUM_SCHEDULED_FUNCTION_INTERVAL = 1
+
+INTERNAL_PLUGIN_DOMAIN = 'localhost'

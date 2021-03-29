@@ -60,6 +60,7 @@ class PluginReg:
 @lru_cache()
 def get_plugins() -> Dict[str, PluginReg]:
     qst_port = current_app.config['QST_PLUGIN_PORT']
+    internal_domain = current_app.config['INTERNAL_PLUGIN_DOMAIN']
     plugin_list = [
         PluginReg(name="csPlugin", domain=CSPLUGIN_DOMAIN, path="/cs/"),
         PluginReg(name="taunoPlugin", domain=CSPLUGIN_DOMAIN, path="/cs/tauno/"),
@@ -71,14 +72,14 @@ def get_plugins() -> Dict[str, PluginReg]:
         PluginReg(name="showPdf", domain=SVNPLUGIN_DOMAIN, path="/svn/pdf/"),
         PluginReg(name="mcq", domain=HASKELLPLUGIN_DOMAIN, port=5001),
         PluginReg(name="mmcq", domain=HASKELLPLUGIN_DOMAIN, port=5002),
-        PluginReg(name="mcq2", domain="localhost", port=qst_port, path="/qst/mcq/", regexattrs=QSTMDATTRS, automd=True),
-        PluginReg(name="mmcq2", domain="localhost", port=qst_port, path="/qst/mmcq/", regexattrs=QSTMDATTRS, automd=True),
+        PluginReg(name="mcq2", domain=internal_domain, port=qst_port, path="/qst/mcq/", regexattrs=QSTMDATTRS, automd=True),
+        PluginReg(name="mmcq2", domain=internal_domain, port=qst_port, path="/qst/mmcq/", regexattrs=QSTMDATTRS, automd=True),
         PluginReg(name="pali", domain=PALIPLUGIN_DOMAIN),
         # TODO: field is just a dummy class to get route for /field - better solution is needed
         PluginReg(name="field", domain=FIELDPLUGIN_DOMAIN, regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="textfield", domain=FIELDPLUGIN_DOMAIN, path="/tf/", regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="cbfield", domain=FIELDPLUGIN_DOMAIN, path="/cb/", regexattrs=TEXTFIELDATTRS, automd=True),
-        PluginReg(name="cbcountfield", domain="localhost", port=qst_port, path="/cbcountfield/", regexattrs=TEXTFIELDATTRS, automd=True),
+        PluginReg(name="cbcountfield", domain=internal_domain, port=qst_port, path="/cbcountfield/", regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="rbfield", domain=FIELDPLUGIN_DOMAIN, path="/rb/", regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="numericfield", domain=FIELDPLUGIN_DOMAIN, path="/nf/", regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="goaltable", domain=FIELDPLUGIN_DOMAIN, path="/goaltable/", regexattrs=GOALTABLEATTRS, automd=True),
@@ -86,12 +87,12 @@ def get_plugins() -> Dict[str, PluginReg]:
         PluginReg(name="dropdown", domain=FIELDPLUGIN_DOMAIN, path="/dropdown/"),
         PluginReg(name="jsrunner", domain=JSRUNNERPLUGIN_DOMAIN),
         PluginReg(name="imagex", domain=IMAGEXPLUGIN_DOMAIN),
-        PluginReg(name="qst", domain="localhost", port=qst_port, path="/qst/", regexattrs=QSTMDATTRS, automd=True),
-        PluginReg(name="timMenu", domain="localhost", port=qst_port, path="/timMenu/"),
-        PluginReg(name="timTable", domain="localhost", port=qst_port, path="/timTable/", instance=timTable.TimTable(), lazy=False),
-        PluginReg(name="tableForm", domain="localhost", port=qst_port, path="/tableForm/", lazy=False),
-        PluginReg(name="importData", domain="localhost", port=qst_port, path="/importData/"),
-        PluginReg(name="tape", domain="localhost", port=qst_port, path="/tape/"),
+        PluginReg(name="qst", domain=internal_domain, port=qst_port, path="/qst/", regexattrs=QSTMDATTRS, automd=True),
+        PluginReg(name="timMenu", domain=internal_domain, port=qst_port, path="/timMenu/"),
+        PluginReg(name="timTable", domain=internal_domain, port=qst_port, path="/timTable/", instance=timTable.TimTable(), lazy=False),
+        PluginReg(name="tableForm", domain=internal_domain, port=qst_port, path="/tableForm/", lazy=False),
+        PluginReg(name="importData", domain=internal_domain, port=qst_port, path="/importData/"),
+        PluginReg(name="tape", domain=internal_domain, port=qst_port, path="/tape/"),
         PluginReg(name="echo", domain="tim", path="/echoRequest/", skip_reqs=True),
         PluginReg(name="feedback", domain=FEEDBACKPLUGIN_DOMAIN, regexattrs=FBMDATTRS, automd=True),
         PluginReg(name="drag", domain=DRAGPLUGIN_DOMAIN, regexattrs=DRAGATTRS, automd=True),

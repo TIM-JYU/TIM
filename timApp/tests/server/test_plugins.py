@@ -1383,8 +1383,8 @@ print(x == '%%username%%')
             # expect_status=403,
             # expect_content='Permission denied: you are not in teachers group.'
         )
-
-        self.test_user_2.groups.append(UserGroup.get_teachers_group())
+        u = self.test_user_2
+        u.groups.append(UserGroup.get_teachers_group())
         db.session.commit()
         self.post_answer(
             'csPlugin',

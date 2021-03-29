@@ -580,6 +580,7 @@ def send_grades_to_sisu(
                 ],
                 'allowMissing': True,
             },
+            teacher,
             current_doc=doc,
             allow_non_teacher=False,
         )

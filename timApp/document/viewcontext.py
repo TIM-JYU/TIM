@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Tuple, Any, Optional
+from typing import Tuple, Any, Optional, Dict
 
 
 class ViewRoute(Enum):
@@ -36,16 +36,39 @@ viewmode_routes = {
 }
 
 
-@dataclass(frozen=True, eq=True)
+@dataclass(frozen=True)
+class OriginInfo:
+    doc_id: int
+    par_id: str
+
+
+UrlMacros = Tuple[Tuple[str, str], ...]
+
+@dataclass(frozen=True)
 class ViewContext:
     route: ViewRoute
     preview: bool
     hide_names_requested: bool = False
-    urlmacros: Tuple[Tuple[str, str], ...] = ()
+    urlmacros: UrlMacros = ()
+    origin: Optional[OriginInfo] = None
 
     @property
     def viewmode(self) -> bool:
         return self.route in viewmode_routes
+
+    @property
+    def url_params(self) -> UrlMacros:
+        return self.urlmacros  # TODO urlmacros should be a subset of all params
+
+    def get_url_param(self, key: str) -> Optional[str]:
+        for k, v in self.url_params:
+            if k == key:
+                return v
+        return None
+
+    @property
+    def args(self) -> Dict[str, str]:
+        return {k: v for k, v in self.url_params}
 
     def isview(self, ret_val: bool, mode: Any = None) -> bool:
         if not isinstance(mode, str):

@@ -1,0 +1,8 @@
+.add-function {
+  display: grid;
+  grid-template-columns: 150px auto;
+  grid-auto-flow: row;
+  column-gap: 10px;
+  row-gap: 10px;
+  align-items: center;
+}
