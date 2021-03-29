@@ -159,7 +159,7 @@ class Stack(Language):
 
         for k, blocks in jsxgraph_block_cache.items():
             q_html = question[k]
-            for block_key, block in blocks:
+            for block_key, block in blocks.items():
                 q_html = q_html.replace(block_key, block)
             question[k] = q_html
 
