@@ -143,7 +143,7 @@ humanize \
 isodate \
 libsass \
 lxml \
-mailmanclient \
+git+https://gitlab.com/mailman/mailmanclient.git@1c895c84b5744b2a79146c613885fe8d0f692ec3 \
 marshmallow \
 marshmallow-enum \
 marshmallow_union \
