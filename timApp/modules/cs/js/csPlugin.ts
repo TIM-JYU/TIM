@@ -2129,30 +2129,34 @@ ${fhtml}
     }
 
     onFileLoad(file: IFile) {
-        let bycodefile = this.uploadByCodeFiles.find(
-            (f) => f.path == file.path
-        );
-        if (
-            !bycodefile &&
-            (this.uploadByCodeFiles.length == 1 || this.markup.uploadbycode)
-        ) {
-            bycodefile = this.uploadByCodeFiles[0];
-        }
-
-        if (bycodefile) {
-            if (bycodefile.show && this.editor) {
-                if (this.editor.findFile(file.path) == -1) {
-                    const f = this.createUploadByCodeEditorFile(
-                        bycodefile.path,
-                        file.content
-                    );
-                    if (f) {
-                        this.editor.addFile(f);
-                    }
-                }
-                this.editor.setFileContent(bycodefile.path, file.content);
-                this.editor.activeFile = file.path;
+        if (this.markup.files) {
+            let bycodefile = this.uploadByCodeFiles.find(
+                (f) => f.path == file.path
+            );
+            if (
+                !bycodefile &&
+                (this.uploadByCodeFiles.length == 1 || this.markup.uploadbycode)
+            ) {
+                bycodefile = this.uploadByCodeFiles[0];
             }
+
+            if (bycodefile) {
+                if (bycodefile.show && this.editor) {
+                    if (this.editor.findFile(file.path) == -1) {
+                        const f = this.createUploadByCodeEditorFile(
+                            bycodefile.path,
+                            file.content
+                        );
+                        if (f) {
+                            this.editor.addFile(f);
+                        }
+                    }
+                    this.editor.setFileContent(bycodefile.path, file.content);
+                    this.editor.activeFile = file.path;
+                }
+            }
+        } else {
+            this.usercode = file.content;
         }
         if (this.markup.uploadautosave) {
             this.runCode();
