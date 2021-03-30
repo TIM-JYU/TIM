@@ -159,6 +159,58 @@ export class NewMessageListComponent implements OnInit {
             console.error(result.result.error.error);
         }
     }
+
+    /**
+     * Check list name requirements locally.
+     * TODO: Hook this into a text field to check at updates.
+     *
+     * If you make changes here, make sure to check that the server checks the same things. Otherwise there will
+     * inconsistant name checking and a confused user.
+     *
+     * TODO: Expand to return information if returns false, to inform the user why name requirements aren't met.
+     * @returns {boolean} Returns true if name requirements are met. Otherwise returns false.
+     */
+    checkNameRequirements(): boolean {
+        // VIESTIM: Since the server has the final say for allowed names, sync these rules with the server. Maybe they
+        //  could be imported from the server?
+
+        // Name length is within length boundaries.
+        if (this.listname.length < 5 || 36 < this.listname.length) {
+            return false;
+        }
+
+        // Name starts with a character that is a letter a - z.
+        // Notice that ^ serves two different purposes in the following regular expression.
+        // The first one checks at the beginning of the string, the second is a negation.
+        const regExpStartCharacter: RegExp = /^[a-z]/;
+        if (!regExpStartCharacter.test(this.listname)) {
+            return false;
+        }
+
+        // Name can't contain multiple sequential dots.
+        const regExpMultipleDots: RegExp = /\.\.+/;
+        if (regExpMultipleDots.test(this.listname)) {
+            return false;
+        }
+
+        // Name doesn't end in a dot.
+        const regExpEndDot: RegExp = /.$/;
+        if (regExpEndDot.test(this.listname)) {
+            return false;
+        }
+
+        // Name contains only acceptable characters, which are:
+        //     letters                  a - z
+        //     numbers                  0 - 9
+        //     dot                      '.'
+        //     underscore               '_'
+        //     hyphen (or "minus sign") '-'
+        // The following regular expression searches for characters that are not one of the above. If those are not
+        // found the name is of correct form. Notice that hyphen is in two different roles and one hyphen has
+        // to be escaped. The dot does not have to be escaped here.
+        const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
+        return !regExpNonAllowedCharacters.test(this.listname);
+    }
 }
 
 @NgModule({
