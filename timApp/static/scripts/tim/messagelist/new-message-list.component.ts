@@ -91,7 +91,16 @@ export class NewMessageListComponent implements OnInit {
             this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
         );
         if (result.ok) {
-            this.domains = result.result;
+            // Add '@' in front of domain names for display purposes.
+            const tempDomains: string[] = result.result;
+
+            for (let i = 0; i < tempDomains.length; i++) {
+                tempDomains[i] = "@" + tempDomains[i];
+            }
+            this.domains = tempDomains;
+
+            // Set default domain.
+            this.domain = this.domains[0];
         } else {
             console.error(result.result.error.error);
         }
