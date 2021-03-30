@@ -141,6 +141,21 @@ def row_key(s):
         return s
     return f'{parts[2]:0>4}{parts[1]:>3}'
 
+
+def matrix_to_cells(matrix):
+    if not matrix:
+        return None
+    cells = {}
+    row = 0
+    for mrow in matrix:
+        col = 0
+        for mcol in mrow:
+            cells[cell_coordinate(row, col)] = mcol
+            col += 1
+        row += 1
+    return { "cells": cells,  "type": "Relative" }
+
+
 def tim_table_get_html(jso, review):
     """
     Returns the HTML of a single TimTable paragraph.
@@ -154,6 +169,8 @@ def tim_table_get_html(jso, review):
     if state != None:
         userdata = state.get(USERDATA, None)
         headers = state.get("headers", None)
+        if not userdata: # if no userdata use matrix to init data
+            userdata = matrix_to_cells(state.get('matrix', None))
         values[USERDATA] = userdata
         if headers and values.get("saveUserDataHeader", False):
             values['headers'] = headers
@@ -965,7 +982,7 @@ def save_cell(datablock: Dict[str, Any], row: int, col: int, cell_content: Union
     :param cell_content: Cell content
     :return:
     """
-    coordinate = colnum_to_letters(col) + str(row+1)
+    coordinate = cell_coordinate(row, col)
     try:
         cells = datablock[CELLS]
         if coordinate in cells:
@@ -998,6 +1015,10 @@ def find_cell(rows: list, row: int, col: int) -> str:
     return right_cell.get(CELL,'')
 
 
+def cell_coordinate(row: int, col: int) -> str:
+    return colnum_to_letters(col) + str(row+1)
+
+
 def find_cell_from_datablock(cells: dict, row: int, col: int) -> Optional[str]:
     """
     Finds cell from datablock
@@ -1007,7 +1028,7 @@ def find_cell_from_datablock(cells: dict, row: int, col: int) -> Optional[str]:
     :return: cell if exists
     """
     ret = None
-    coordinate = colnum_to_letters(col) + str(row+1)
+    coordinate = cell_coordinate(row, col)
     try:
         value = cells[coordinate]
         ret = value
@@ -1208,7 +1229,8 @@ def create_datablock_from_entry_list(relative_data_block_values: list) -> Dict[s
     cells = {}
 
     for entry in relative_data_block_values:
-        key = colnum_to_letters(entry.column) + str(entry.row + 1)
+        cell_coordinate(entry.row, entry.column)
+        key = cell_coordinate(entry.row, entry.column)
         cells[key] = entry.data
 
     datablock = {}
