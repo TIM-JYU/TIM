@@ -96,9 +96,11 @@ class EmailListManager:
         # VIESTIM: Do we need to query the Mailman server every time? Should we cache this data locally and only
         #  query the Mailman server every now and then? Maybe even that server would inform us if new domains are
         #  added?
-        domains: List[Domain] = _client.domains
-        domain_names: List[str] = [domain.mail_host for domain in domains]
-        return domain_names
+        if _client is not None:
+            domains: List[Domain] = _client.domains
+            domain_names: List[str] = [domain.mail_host for domain in domains]
+            return domain_names
+        return []
 
     @staticmethod
     def _set_domains() -> None:
