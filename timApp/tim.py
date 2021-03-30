@@ -339,7 +339,7 @@ def install_sql_hook():
         print(f'--------------------------------------TIMING: {curr} ({curr - prev_exec_time})')
         prev_exec_time = curr
         for r in traceback.format_stack():
-            if r.startswith('  File "/service/'):
+            if r.startswith('  File "/service/') and not receive_before_execute.__name__ in r:
                 print(r, end='')
         print(clauseelement)
 
