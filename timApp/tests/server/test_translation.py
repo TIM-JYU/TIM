@@ -261,6 +261,7 @@ b
 
         # only editors should see the outofdate messages
         self.login_test2()
+        t = Translation.find_by_id(t.id)
         self.check_outofdate_count(t, 0)
 
     def check_preview_diff(self, t, tr_par, old, new):

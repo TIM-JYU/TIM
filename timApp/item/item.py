@@ -12,7 +12,7 @@ from timApp.item.block import Block, BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import include_if_loaded
-from timApp.util.utils import split_location, date_to_relative
+from timApp.util.utils import split_location, date_to_relative, cached_property
 
 if TYPE_CHECKING:
     from timApp.folder.folder import Folder
@@ -141,6 +141,10 @@ class Item(ItemBase):
         if include_root:
             crumbs.append(Folder.get_root())
         return crumbs
+
+    @cached_property
+    def parents_to_root_eager(self):
+        return self.parents_to_root(eager_load_groups=True)
 
     @property
     def parent(self) -> Folder:  # TODO rename this to parent_folder to distinguish better from "parents" attribute

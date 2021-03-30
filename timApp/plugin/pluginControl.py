@@ -386,6 +386,7 @@ def pluginify(doc: Document,
         # TODO: could this return also the plugins, then there is no need for other iteration
         task_ids, _, _ = find_task_ids(pars, view_ctx, user_ctx, check_access=user_ctx.is_different)
         get_answers(user_ctx.user, task_ids, answer_map)
+        # get_answers(User.get_by_id(user_ctx.user.id), task_ids, answer_map)
         # db.session.close()
         # TODO: RND_SEED get all users rand_seeds for this doc's tasks. New table?
 

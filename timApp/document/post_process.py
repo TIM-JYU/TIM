@@ -163,6 +163,7 @@ def post_process_pars(
 
     taketime("read mixed")
     notes = get_notes(group, doc)
+    # db.session.close()
     # taketime("notes picked")
 
     should_hide_names = view_ctx.hide_names_requested or force_hide_names(curr_user, docinfo)

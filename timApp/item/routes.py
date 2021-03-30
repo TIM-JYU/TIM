@@ -33,6 +33,7 @@ from timApp.document.docviewparams import DocViewParams, ViewModelSchema
 from timApp.document.hide_names import is_hide_names, force_hide_names
 from timApp.document.post_process import post_process_pars
 from timApp.document.preloadoption import PreloadOption
+from timApp.document.translation.translation import Translation
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx, ViewRoute, ViewContext
 from timApp.document.viewparams import ViewParams, ViewParamsSchema
@@ -367,6 +368,8 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
          .defaultload(Block.accesses)
          .joinedload(BlockAccess.usergroup),
          joinedload(DocEntry.trs)
+         .joinedload(Translation.docentry),
+         joinedload(DocEntry.trs).joinedload(Translation._block)
          )
     )
     if doc_info is None:
@@ -421,6 +424,14 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
         refresh_doc_expire(cr.key)
         result = cr.doc
 
+    # This is only used for optimizing database access so that we can close the db session
+    # as early as possible.
+    preload_personal_folder_and_breadcrumbs(current_user, doc_info)
+    # TODO: Closing session here breaks is_attribute_loaded function.
+    #  According to https://docs.sqlalchemy.org/en/13/errors.html#error-bhk3, it may not be good practice to close
+    #  the session manually in the first place.
+    # db.session.close()
+
     final_html = render_template(
         'show_slide.jinja2' if view_ctx.route == ViewRoute.ShowSlide else 'view_html.jinja2',
         access=access,
@@ -434,6 +445,12 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
     add_no_cache_headers(r)
     # db.session.commit()
     return r
+
+
+def preload_personal_folder_and_breadcrumbs(current_user: User, doc_info: DocInfo):
+    if current_user.logged_in:
+        current_user.get_personal_folder()
+    _ = doc_info.parents_to_root_eager
 
 
 def render_doc_view(

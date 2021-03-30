@@ -698,7 +698,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return {**self.basic_info_dict,
                 'group': self.get_personal_group(),
                 'groups': self.groups,
-                'folder': self.get_personal_folder(),
+                'folder': self.get_personal_folder() if self.logged_in else None,
                 'consent': self.consent,
                 'last_name': self.last_name,
                 } if full else self.basic_info_dict

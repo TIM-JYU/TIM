@@ -3,6 +3,6 @@
     {{ super() }}
     <script>
         var curr_item = {{item|tojson}};
-        var breadcrumbs = {{item.parents_to_root(eager_load_groups=True)|tojson}};
+        var breadcrumbs = {{item.parents_to_root_eager|tojson}};
     </script>
 {% endblock %}

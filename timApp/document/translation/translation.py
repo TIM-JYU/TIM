@@ -48,7 +48,7 @@ class Translation(db.Model, DocInfo):
 
     @property
     def translations(self) -> List['Translation']:
-        return Translation.query.filter_by(src_docid=self.src_docid).all()
+        return self.docentry.trs
 
     def to_json(self):
         return {**super(Translation, self).to_json(),

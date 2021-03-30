@@ -23,7 +23,7 @@ import {Users} from "./userService";
                 aria-labelledby="single-button">
                 <ng-container *ngIf="!hideOptions.userMenuOptions">
                     <li role="menuitem"><a
-                            href="/view/{{ getCurrentUser().folder.path }}" i18n="@@myDocuments">My documents</a></li>
+                            href="/view/{{ getCurrentUser().folder!.path }}" i18n="@@myDocuments">My documents</a></li>
                     <li role="menuitem"><a
                             (click)="addUser()"
                             href="#">
