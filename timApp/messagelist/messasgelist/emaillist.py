@@ -128,19 +128,19 @@ class EmailListManager:
         if len(name_candidate) < 5 or 36 < len(name_candidate):
             return False
 
-        # Name has to start with a lowecase letter.
-        p1 = re.compile(r"^[a-z]")
-        if p1.search(name_candidate) is None:
+        # Name has to start with a lowercase letter.
+        start_with_lowercase = re.compile(r"^[a-z]")
+        if start_with_lowercase.search(name_candidate) is None:
             return False
 
         # Name cannot have multiple dots in sequence.
-        p2 = re.compile(r"\.\.+")
-        if p2.search(name_candidate) is not None:
+        no_sequential_dots = re.compile(r"\.\.+")
+        if no_sequential_dots.search(name_candidate) is not None:
             return False
 
         # Name cannot end in a dot
-        p3 = re.compile(r".$")
-        if p3.search(name_candidate) is not None:
+        no_end_in_dot = re.compile(r"\.$")
+        if no_end_in_dot.search(name_candidate) is not None:
             return False
 
         # Name can have only these allowed characters. This set of characters is an import from Korppi's character
@@ -151,13 +151,13 @@ class EmailListManager:
         #     hyphen '-'
         #     underscore '_'
         # Notice the compliment usage of ^.
-        p4 = re.compile(r"[^a-z0-9.\-_]")
-        if p4.search(name_candidate) is not None:
+        allowed_characters = re.compile(r"[^a-z0-9.\-_]")
+        if allowed_characters.search(name_candidate) is not None:
             return False
 
         # Name has to include at least one digit.
-        p5 = re.compile(r"\d")
-        if p5.search(name_candidate) is None:
+        required_digit = re.compile(r"\d")
+        if required_digit.search(name_candidate) is None:
             return False
 
         return True
