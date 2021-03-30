@@ -26,7 +26,7 @@ interface CreateListOptions {
                     <option *ngFor="let domain of domains">{{domain}}</option>
                 </select>
                 <!-- For testing name checking -->
-                <button (click)="checkEmailListNameAvailability()">Tarkasta nimi</button>
+                <button (click)="checkListNameAvailability()">Tarkasta nimi</button>
             </div>
             <div>
             </div>
@@ -148,8 +148,8 @@ export class NewMessageListComponent implements OnInit {
      * Helper to check if this list name exists.
      * VIESTIM: This is a demo function, will only probably need this when we have implemented the creation dialoque?
      */
-    async checkEmailListNameAvailability() {
-        const nameCandidate: string = this.listname + this.domain;
+    async checkListNameAvailability() {
+        const nameCandidate: string = this.listname;
         const result = await to2(
             this.http
                 .get<boolean>(`${this.urlPrefix}/checkname/${nameCandidate}`)
@@ -179,7 +179,7 @@ export class NewMessageListComponent implements OnInit {
      * TODO: Expand to return information if returns false, to inform the user why name requirements aren't met.
      * @returns {boolean} Returns true if name requirements are met. Otherwise returns false.
      */
-    checkNameRequirements(): boolean {
+    checkNameRequirementsLocally(): boolean {
         // VIESTIM: Since the server has the final say for allowed names, sync these rules with the server. Maybe they
         //  could be imported from the server?
 
@@ -203,8 +203,8 @@ export class NewMessageListComponent implements OnInit {
         }
 
         // Name doesn't end in a dot.
-        const regExpEndDot: RegExp = /.$/;
-        if (regExpEndDot.test(this.listname)) {
+        // ESLint prefers to not use regex for this.
+        if (this.listname.endsWith(".")) {
             return false;
         }
 
@@ -214,7 +214,7 @@ export class NewMessageListComponent implements OnInit {
         //     dot                      '.'
         //     underscore               '_'
         //     hyphen (or "minus sign") '-'
-        // The following regular expression searches for characters that are not one of the above. If those are not
+        // The following regular expression searches for characters that are *not* one of the above. If those are not
         // found the name is of correct form. Notice that hyphen is in two different roles and one hyphen has
         // to be escaped. The dot does not have to be escaped here.
         const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
