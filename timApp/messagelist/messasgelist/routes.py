@@ -70,10 +70,8 @@ def check_name(name_candidate: str) -> Response:
 def domains() -> Response:
     """ Send possible domains for a client, if such exists.
 
-
     :return: If domains exists, return them as an array. If there are no domains, return an empty array.
     """
-    # TODO: rewrite to check from a proper source. Now we just send this test data.
-    possible_domains: List[str] = EmailListManager.get_domains()
+    possible_domains: List[str] = EmailListManager.get_domain_names()
 
     return json_response(possible_domains)
