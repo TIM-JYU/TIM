@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from typing import List
 
-from mailmanclient import Client, MailingList
+from mailmanclient import Client, MailingList, Domain
 
 from timApp.tim_app import app
 
@@ -26,6 +26,7 @@ else:
 # VIESTIM Decorate class methods with @staticmethod unless the method would necessarily be needed for an instance of
 #  the class. We wish to avoid instancing classes if possible.
 
+# TODO: Handle situations where we can't contact Mailman server.
 
 @dataclass
 class EmailListManager:
@@ -81,21 +82,23 @@ class EmailListManager:
         """
         # TODO: Implement a smarter check for reserved names. Now only compare against simple list for prototyping
         #  purposes. Maybe an external config file for known reserved names or something like that?
-        #  Is it possible to query reserved names e.g. from Mailman?
+        #  Is it possible to query reserved names e.g. from Mailman or it's server?
         reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
 
         return name_candidate not in reserved_names
 
     @staticmethod
-    def get_domains() -> List[str]:
-        """
+    def get_domain_names() -> List[str]:
+        """Returns a list of all domain names.
 
-        :return: A list of possible domains.
+        :return: A list of possible domain names.
         """
-        # TODO: Change to return domains properly.
-        possible_domains: List[str] = ["@foo.bar", "@lists.tim.jyu.fi", "@timlist.jyu.fi", "@lists.jyu.fi", "@example"
-                                                                                                            ".com"]
-        return possible_domains
+        # VIESTIM: Do we need to query the Mailman server every time? Should we cache this data locally and only
+        #  query the Mailman server every now and then? Maybe even that server would inform us if new domains are
+        #  added?
+        domains: List[Domain] = _client.domains
+        domain_names: List[str] = [domain.mail_host for domain in domains]
+        return domain_names
 
     @staticmethod
     def _set_domains() -> None:
