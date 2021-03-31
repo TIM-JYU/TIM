@@ -101,6 +101,28 @@ def tim_table_multihtml_direct(jsondata):
     return json.dumps(multi)
 
 
+@timTable_plugin.route("convertExportData", methods=["POST"])
+def convert_export_data():
+    """
+    Route for getting save JSON from exportdata
+    :return: JSON to save or {} if nothing to save
+    """
+    jsondata = request.get_json()
+    result = {}
+    save = jsondata.get("save", None)
+    if not save:
+        return result
+    matrix = jsondata.get("matrix", None)
+    userdata = matrix_to_cells(matrix)
+    if not userdata:
+        return result
+    result["userdata"] = userdata
+    headers = jsondata.get("headers", None)
+    if headers:
+        result["headers"] = headers
+    return result
+
+
 @timTable_plugin.route("multihtml", methods=["POST"])
 @csrf.exempt
 def tim_table_multihtml():
