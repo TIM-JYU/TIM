@@ -368,8 +368,10 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
          .defaultload(Block.accesses)
          .joinedload(BlockAccess.usergroup),
          joinedload(DocEntry.trs)
-         .joinedload(Translation.docentry),
-         joinedload(DocEntry.trs).joinedload(Translation._block)
+         # TODO: These joinedloads are for some reason very inefficient at least for certain documents.
+         #  See https://gitlab.com/tim-jyu/tim/-/issues/2201. Needs more investigation.
+         # .joinedload(Translation.docentry),
+         # joinedload(DocEntry.trs).joinedload(Translation._block)
          )
     )
     if doc_info is None:
