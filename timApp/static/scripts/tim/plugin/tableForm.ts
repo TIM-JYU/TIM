@@ -28,6 +28,9 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TaskId} from "tim/plugin/taskid";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {BsDropdownModule} from "ngx-bootstrap/dropdown";
+import {TimepickerModule} from "ngx-bootstrap/timepicker";
+import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import {ViewCtrl} from "../document/viewctrl";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
@@ -187,13 +190,27 @@ const sortLang = "fi";
             <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
             <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
-            <p><label title="Viestiä ei saa kuitata pois"><input type="checkbox"
-                                      [(ngModel)]="noCheck">Viestiä ei saa kuitata pois</label></p>
-            <p>
+            <p><label title=""><input type="checkbox"
+                                      [(ngModel)]="archive">Archive message</label></p>
+            <h3>Options for TIM message</h3>
+            <p><label title=""><input type="checkbox"
+                                      [(ngModel)]="timMessage">Send as TIM message</label></p>
+            <p><label title=""><input type="checkbox"
+                                      [(ngModel)]="check">Message can be checked</label></p>
+            <p><label title=""><input type="checkbox"
+                                      [(ngModel)]="reply">Message can be replied to</label></p>
             <p><label title="" name="replyAll"><input type="radio"
-                                      [(ngModel)]="replyAll" value="true">Viestin vastaanottaja vastaa kaikille</label><br/>
+                                      [(ngModel)]="replyAll" value="true">Recipient replies all by default</label><br/>
             <label title="" name="replyAll"><input type="radio"
-                                      [(ngModel)]="replyAll" value="false">Viestin vastaanottaja vastaa vain lähettäjälle</label></p>
+                                      [(ngModel)]="replyAll" value="false">Recipient only replies to sender</label></p>
+            <p class="form-group"
+                 title="">
+                <label for="expiration-selector" class="col-sm-4 control-label">Message will be removed on:</label>
+                <tim-datetime-picker id="expiration-selector"
+                                     [(time)]="expires"
+                                     placeholder="Leave empty, if the message should not be removed automatically">
+                </tim-datetime-picker>
+            </p>
             <p>
                 <button class="timButton"
                         (click)="sendEmail()">
@@ -213,8 +230,12 @@ export class TimEmailComponent {
     emailbccme: boolean = true;
     emailtim: boolean = true;
     emailMsg: string = "";
-    noCheck: boolean = false;
+    archive: boolean = true;
+    timMessage: boolean = false;
+    check: boolean = true;
+    reply: boolean = true;
     replyAll: boolean = true;
+    expires: Date | undefined;
     @Input()
     taskid?: TaskId;
 
@@ -1651,6 +1672,9 @@ export class TableFormComponent
         FormsModule,
         TimUtilityModule,
         TimTableModule,
+        BsDropdownModule.forRoot(),
+        TimepickerModule.forRoot(),
+        DatetimePickerModule,
     ],
 })
 export class TableFormModule implements DoBootstrap {
