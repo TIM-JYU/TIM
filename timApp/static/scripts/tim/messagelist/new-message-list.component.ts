@@ -20,10 +20,12 @@ interface CreateListOptions {
         <form>
             <h1>Create new message list</h1>
             <div>
-                <label for="list-name">List name: </label><input type="text" name="list-name" id="list-name"
-                                                                 [(ngModel)]="listname"/>
+                <label for="list-name">List name: </label>
+                <input type="text" name="list-name" id="list-name"
+                       [(ngModel)]="listname"
+                       (keyup)="checkNameRequirementsLocally()"/>
                 <select id="domain-select" name="domain-select" [(ngModel)]="domain">
-                    <option *ngFor="let domain of domains">{{domain}}</option>
+                    <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
                 </select>
                 <!-- For testing name checking -->
                 <button (click)="checkListNameAvailability()">Tarkasta nimi</button>
@@ -185,9 +187,12 @@ export class NewMessageListComponent implements OnInit {
     checkNameRequirementsLocally(): boolean {
         // VIESTIM: Since the server has the final say for allowed names, sync these rules with the server. Maybe they
         //  could be imported from the server?
+        // TODO: Replace console.logs with a better feedback system for the user.
+        console.log(`start check on listname: ${this.listname}`);
 
         // Name length is within length boundaries.
         if (this.listname.length < 5 || 36 < this.listname.length) {
+            console.log("Name not in length boundaries");
             return false;
         }
 
@@ -196,18 +201,22 @@ export class NewMessageListComponent implements OnInit {
         // The first one checks at the beginning of the string, the second is a negation.
         const regExpStartCharacter: RegExp = /^[a-z]/;
         if (!regExpStartCharacter.test(this.listname)) {
+            console.log("name doesn't start with a lowercase letter");
             return false;
         }
 
         // Name can't contain multiple sequential dots.
         const regExpMultipleDots: RegExp = /\.\.+/;
         if (regExpMultipleDots.test(this.listname)) {
+            console.log("name contains multiple dots");
             return false;
         }
 
         // Name doesn't end in a dot.
-        // ESLint prefers to not use regex for this.
+        // ESLint prefers to not use regex for this. And by "prefer" we mean this won't transpile with a regular
+        // expression.
         if (this.listname.endsWith(".")) {
+            console.log("name ends in a dot");
             return false;
         }
 
@@ -221,7 +230,14 @@ export class NewMessageListComponent implements OnInit {
         // found the name is of correct form. Notice that hyphen is in two different roles and one hyphen has
         // to be escaped. The dot does not have to be escaped here.
         const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
-        return !regExpNonAllowedCharacters.test(this.listname);
+        if (regExpNonAllowedCharacters.test(this.listname)) {
+            console.log("Name had forbidden characters");
+            return false;
+        }
+        console.log("name has passed all local tests");
+
+        // TODO: Local tests have been passed. Now launch server side checks.
+        return true;
     }
 }
 
