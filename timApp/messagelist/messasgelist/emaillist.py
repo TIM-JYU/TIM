@@ -1,24 +1,27 @@
 import re
 from dataclasses import dataclass
-from typing import List
+from typing import List, Tuple, Optional
 
 from mailmanclient import Client, MailingList, Domain
 
 from timApp.tim_app import app
 
-_client = None
-"""A client object to utilize Mailmans REST API. Poke directly only when necessary, otherwise use via EmailListManager 
-class."""
+_client: Optional[Client] = None
+"""
+A client object to utilize Mailmans REST API. Poke directly only when necessary, otherwise use via EmailListManager 
+class. If this is None, mailmanclient-library has not been configured for use.
+"""
 
 if "MAILMAN_URL" not in app.config or "MAILMAN_PASS" not in app.config or "MAILMAN_PASS" not in app.config:
     # No configuration for Mailman found.
+    print("No configuration found for Mailman connection.")
     pass
 elif app.config['MAILMAN_URL'] == "" or app.config['MAILMAN_USER'] == "" or app.config['MAILMAN_PASS'] == "":
     # Only placeholder configuration for Mailman found.
     print("Server started without proper configuration for Mailman connection.")
 else:
     # All Mailman configuration values exist and are something other than an empty string. We can initialize the
-    # Client-object.
+    # Client-object for connection.
     _client = Client(app.config['MAILMAN_URL'], app.config['MAILMAN_USER'], app.config['MAILMAN_PASS'])
     # TODO: Test connection somehow?
 
@@ -37,55 +40,71 @@ class EmailListManager:
     """Possible domains which can be used with our instance of Mailman."""
 
     @staticmethod
-    def check_name_availability(name_candidate: str) -> bool:
+    def check_name_availability(name_candidate: str, domain: str) -> Tuple[Optional[bool], str]:
         """Search for a name from the pool of used email list names.
 
+        :param domain: Domain to search for lists, which then are used to check name availability.
         :param name_candidate: The name to search for. The name needs to be a proper email list name,
         e.g. name@domain.org.
-        :return: Return True if name is available. Return False if not.
+        :return: If we cannot get data from Mailman, return None and an explanation string. Return True if name is
+        available. Return False if name was not available and a string to specify why.
         """
-        if _client is not None:
-            mlists: List[MailingList] = _client.get_lists()
-        else:
-            # TODO: Replace bad return value, this doesn't inform the caller that we can't perform this operation.
-            return False
+        if _client is None:
+            return None, "No connection with email list server established."
+
+        # TODO: Handle possible errors.
+        d = _client.get_domain(domain)
+        mlists: List[MailingList] = d.get_lists()
+
         for name in [mlist.fqdn_listname for mlist in mlists]:
             if name_candidate == name:
-                return False
-        return True
+                return False, "Name is already in use."
+        return True, "Name is available."
 
     @staticmethod
-    def check_name_requirements(name_candidate: str) -> bool:
+    def check_name_requirements(name_candidate: str, domain: str) -> Tuple[Optional[bool], str]:
         """Checks name requirements spesific for email lists.
 
+        :param domain: Domain to search for lists.
         :param name_candidate: Name to check for things and stuff. Mostly stuff.
         :return: Return True if all name requirements are met. Otherwise return False.
         """
         em = EmailListManager
+
         # Check name is available.
-        available: bool = em.check_name_availability(name_candidate)
+        available, availability_explanation = em.check_name_availability(name_candidate, domain)
+        if not available:
+            return available, availability_explanation
 
         # Check if name is some reserved name.
-        not_reserved: bool = em.check_reserved_names(name_candidate)
+        not_reserved, reserved_explanation = em.check_reserved_names(name_candidate)
+        if not not_reserved:
+            return not_reserved, reserved_explanation
 
         # Check name against name rules. These rules are also checked client-side.
-        within_rules: bool = em.check_name_rules(name_candidate)
-        return available and not_reserved and within_rules
+        # VIESTIM: When other message list functionality exists, move this rule check there.
+        within_rules, rule_explanation = em.check_name_rules(name_candidate)
+        if not within_rules:
+            return within_rules, rule_explanation
+
+        return True, "Ok."
 
     @staticmethod
-    def check_reserved_names(name_candidate: str) -> bool:
+    def check_reserved_names(name_candidate: str) -> Tuple[Optional[bool], str]:
         """
         Check a name candidate against reserved names, e.g. postmaster.
 
-        :param name_candidate:
+        :param name_candidate: The name to be compared against reserved names.
         :return: Return True if name is not among reserved names. Otherwise return False.
         """
-        # TODO: Implement a smarter check for reserved names. Now only compare against simple list for prototyping
+        # TODO: Implement a smarter query for reserved names. Now only compare against simple list for prototyping
         #  purposes. Maybe an external config file for known reserved names or something like that?
         #  Is it possible to query reserved names e.g. from Mailman or it's server?
         reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
-
-        return name_candidate not in reserved_names
+        if name_candidate in reserved_names:
+            return False, "Name {0} is a reserved name.".format(name_candidate)
+        else:
+            return True, "Name is not reserved and can be used."
 
     @staticmethod
     def get_domain_names() -> List[str]:
@@ -119,7 +138,7 @@ class EmailListManager:
         print(name)
 
     @staticmethod
-    def check_name_rules(name_candidate: str) -> bool:
+    def check_name_rules(name_candidate: str) -> Tuple[Optional[bool], str]:
         """Check if name candidate complies with naming rules.
 
         :param name_candidate:
@@ -130,23 +149,26 @@ class EmailListManager:
         # the regex, the explanation is more likely to be correct.
 
         # Name is within length boundaries.
-        if len(name_candidate) < 5 or 36 < len(name_candidate):
-            return False
+        lower_bound = 5
+        upper_bound = 36
+        if len(name_candidate) < lower_bound or upper_bound < len(name_candidate):
+            return False, "Name is not within length boundaries. Name has to be at least {0} and at most {1} " \
+                          "characters long".format(lower_bound, upper_bound)
 
         # Name has to start with a lowercase letter.
         start_with_lowercase = re.compile(r"^[a-z]")
         if start_with_lowercase.search(name_candidate) is None:
-            return False
+            return False, "Name has to start with a lowercase letter."
 
         # Name cannot have multiple dots in sequence.
         no_sequential_dots = re.compile(r"\.\.+")
         if no_sequential_dots.search(name_candidate) is not None:
-            return False
+            return False, "Name cannot have sequential dots"
 
         # Name cannot end in a dot
         no_end_in_dot = re.compile(r"\.$")
         if no_end_in_dot.search(name_candidate) is not None:
-            return False
+            return False, "Name cannot end in a dot."
 
         # Name can have only these allowed characters. This set of characters is an import from Korppi's character
         # limitations for email list names, and can probably be expanded in the future if desired.
@@ -158,14 +180,14 @@ class EmailListManager:
         # Notice the compliment usage of ^.
         allowed_characters = re.compile(r"[^a-z0-9.\-_]")
         if allowed_characters.search(name_candidate) is not None:
-            return False
+            return False, "Name contains forbidden characters."
 
         # Name has to include at least one digit.
         required_digit = re.compile(r"\d")
         if required_digit.search(name_candidate) is None:
-            return False
+            return False, "Name has to include at least one digit."
 
-        return True
+        return True, "Name meets all the naming rules."
 
 
 @dataclass

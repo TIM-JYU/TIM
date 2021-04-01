@@ -149,20 +149,21 @@ export class NewMessageListComponent implements OnInit {
      * VIESTIM: This is a demo function, will only probably need this when we have implemented the creation dialoque?
      */
     async checkListNameAvailability() {
-        const nameCandidate: string = this.listname;
+        const nameCandidate: string = this.listname + this.domain; // this.domain, if specified, already contains '@'.
         const result = await to2(
             this.http
-                .get<boolean>(`${this.urlPrefix}/checkname/${nameCandidate}`)
+                .get<{nameOk: boolean; explanation: string}>(
+                    `${this.urlPrefix}/checkname/${nameCandidate}`
+                )
                 .toPromise()
         );
         if (result.ok) {
-            console.log("Hei maailma, tarkistus on tehty. Tulos on:");
-            if (result.result) {
-                console.log("nimi on vapaa käyttöön.");
+            console.log("Name check done. Result:");
+            const temp = result.result;
+            if (temp.nameOk) {
+                console.log(temp.explanation);
             } else {
-                console.log(
-                    "nimi on muussa käytössä (tai tarkistusta ei voitu tehdä)."
-                );
+                console.log(temp.explanation);
             }
         } else {
             console.error(result.result.error.error);

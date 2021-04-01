@@ -58,12 +58,32 @@ def check_name(name_candidate: str) -> Response:
     unique and can be assigned to a message/email list. Return a negative response if name is not unique and
     therefore is already reserved for someone or something else.
     """
-    # TODO add message list name requirement check. Now just use dummy value to get going.
-    messagelist_requirements = True
-    email_requirements = EmailListManager.check_name_requirements(name_candidate)
-    requirements_met: bool = email_requirements and messagelist_requirements
+    # TODO: add message list name requirement check. Now just use dummy value to get going.
 
-    return json_response(requirements_met)
+    name, sep, domain = name_candidate.partition("@")
+
+    messagelist_requirements = True
+    messagelist_explanation: Optional[str] = None
+
+    email_requirements = False
+    email_explanation: Optional[str] = None
+
+    if sep:
+        # If character '@' is found, we check email list spesific name requirements.
+        email_requirements, email_explanation = EmailListManager.check_name_requirements(name, domain)
+
+    # requirements_met: bool = email_requirements and messagelist_requirements
+    response = dict(nameOk=False, explanation="")
+    if email_requirements and messagelist_requirements:
+        response["nameOk"] = True
+        response["explanation"] = "Name is available and it meets requirements."
+    elif not messagelist_requirements:
+        pass
+    elif not email_requirements:
+        response["explanation"] = email_explanation
+        pass
+
+    return json_response(response)
 
 
 @messagelist.route("/domains", methods=['GET'])
