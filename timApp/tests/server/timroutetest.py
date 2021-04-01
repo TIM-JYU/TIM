@@ -188,6 +188,7 @@ class TimRouteTest(TimDbTest):
                 url: str,
                 method: str,
                 as_tree: bool = False,
+                as_response: bool = False,
                 expect_status: Optional[int] = 200,
                 expect_content: Union[None, str, Dict, List] = None,
                 expect_contains: Union[None, str, List[str]] = None,
@@ -253,6 +254,8 @@ class TimRouteTest(TimDbTest):
             return resp_data
         if expect_status >= 400 and json_key is None and (isinstance(expect_content, str) or isinstance(expect_contains, str)):
             json_key = 'error'
+        if as_response:
+            return resp
         if as_tree:
             if json_key is not None:
                 resp_data = json.loads(resp_data)[json_key]
@@ -956,6 +959,32 @@ class TimRouteTest(TimDbTest):
         """
         self.client.__exit__(None, None, None)
         self.client.__enter__()
+
+    @contextmanager
+    def internal_plugin_ctx(self, plugin_type: str):
+        """Redirects internal plugin requests to go through Flask test client.
+         Otherwise such requests would fail during test, unless BrowserTest class is used.
+
+        TODO: Using BrowserTest in cases where it's not actually a browser test should be fixed to
+         use this method instead.
+        """
+        with responses.RequestsMock(assert_all_requests_are_fired=False) as m:
+            def rq_cb(request: PreparedRequest, fn):
+                r: Response = fn(request.path_url, json_data=json.loads(request.body), as_response=True)
+                return r.status_code, {}, r.data
+
+            def rq_cb_put(request: PreparedRequest):
+                return rq_cb(request, self.json_put)
+
+            def rq_cb_post(request: PreparedRequest):
+                return rq_cb(request, self.json_post)
+
+            host = current_app.config['INTERNAL_PLUGIN_DOMAIN']
+            m.add_callback('PUT', f'http://{host}:5001/{plugin_type}/answer', callback=rq_cb_put)
+            m.add_callback('POST', f'http://{host}:5001/{plugin_type}/convertExportData', callback=rq_cb_post)
+            m.add_passthru('http://csplugin:5000')
+            m.add_passthru('http://jsrunner:5000')
+            yield
 
     @contextmanager
     def importdata_ctx(self, aalto_return=None):

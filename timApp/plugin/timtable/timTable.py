@@ -109,9 +109,6 @@ def convert_export_data():
     """
     jsondata = request.get_json()
     result = {}
-    save = jsondata.get("save", None)
-    if not save:
-        return result
     matrix = jsondata.get("matrix", None)
     userdata = matrix_to_cells(matrix)
     if not userdata:
@@ -120,7 +117,7 @@ def convert_export_data():
     headers = jsondata.get("headers", None)
     if headers:
         result["headers"] = headers
-    return result
+    return {"answers": result}
 
 
 @timTable_plugin.route("multihtml", methods=["POST"])

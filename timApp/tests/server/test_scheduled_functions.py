@@ -161,6 +161,92 @@ tools.setInt("sum", sum);
             do_run_user_function(self.test_user_1.id, f'{d.id}.runner', {})
             self.verify_answer_content(f'{d.id}.sum', 'c', 4, self.test_user_1, expected_count=2)
 
+    def test_scheduled_function_exportdata(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {#GLO_stat plugin="timTable"}
+task: true
+```
+
+``` {plugin="csPlugin" #GLO_DemoN}
+type: chartjs
+data:
+  title: Demot
+```
+
+#- {#runner plugin=jsrunner}
+groups: []
+fields: []
+program: ""
+postprogram: |!!
+gtools.outdata.exportdata = [
+{
+  plugin: 'GLO_stat',
+  data: {
+        "headers": ["", "n", "sum", "avg", "min", "max", "sd", "%"],
+        "matrix": [
+            ["d1", 1, 1, 1, 1, 1, 0, 100],
+            ["d2", 1, 2, 2, 2, 2, 0, 100]
+        ]
+    },
+  save: true,
+},
+{
+  plugin: 'GLO_DemoN',
+  data: {
+    "labels": ["d1", "d2", "d3"],
+    "data": [306, 300, 294]
+  },
+  save: true,
+},
+];
+!!
+        """)
+        with self.no_request_context():
+            with self.internal_plugin_ctx('timTable'):
+                do_run_user_function(self.test_user_1.id, f'{d.id}.runner', {})
+        self.verify_answer_content(
+            f'{d.id}.GLO_stat',
+            None,
+            {'headers': ['', 'n', 'sum', 'avg', 'min', 'max', 'sd', '%'],
+             'userdata': {
+                 'cells': {
+                     'A1': 'd1',
+                     'A2': 'd2',
+                     'B1': 1,
+                     'B2': 1,
+                     'C1': 1,
+                     'C2': 2,
+                     'D1': 1,
+                     'D2': 2,
+                     'E1': 1,
+                     'E2': 2,
+                     'F1': 1,
+                     'F2': 2,
+                     'G1': 0,
+                     'G2': 0,
+                     'H1': 100,
+                     'H2': 100},
+                 'type': 'Relative'},
+             }, self.test_user_1, expected_count=1,
+        )
+        self.verify_answer_content(
+            f'{d.id}.GLO_DemoN',
+            'c',
+            {
+                'labels': [
+                    'd1',
+                    'd2',
+                    'd3',
+                ],
+                'data': [
+                    306,
+                    300,
+                    294,
+                ]
+            }, self.test_user_1, expected_count=1,
+        )
+
     def test_import_function_with_create_users(self):
         self.login_test2()
         d = self.create_doc(initial_par="""
