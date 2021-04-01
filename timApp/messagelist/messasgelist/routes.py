@@ -92,10 +92,10 @@ def check_name(name_candidate: str) -> Response:
         response.nameOK = True
         response.explanation = "Name is available and it meets requirements."
     elif not messagelist_requirements:
-        response.nameOk = False
+        response.nameOK = False
         response.explanation = messagelist_explanation
     elif not email_requirements:
-        response.nameOk = False
+        response.nameOK = False
         response.explanation = email_explanation
         pass
 
