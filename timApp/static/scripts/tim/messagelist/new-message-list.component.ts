@@ -152,7 +152,7 @@ export class NewMessageListComponent implements OnInit {
         const nameCandidate: string = this.listname + this.domain; // this.domain, if specified, already contains '@'.
         const result = await to2(
             this.http
-                .get<{nameOk: boolean; explanation: string}>(
+                .get<{nameOK: boolean; explanation: string}>(
                     `${this.urlPrefix}/checkname/${nameCandidate}`
                 )
                 .toPromise()
@@ -160,9 +160,11 @@ export class NewMessageListComponent implements OnInit {
         if (result.ok) {
             console.log("Name check done. Result:");
             const temp = result.result;
-            if (temp.nameOk) {
+            if (temp.nameOK) {
+                // TODO: Indicate somehow that name is usable as a new list name.
                 console.log(temp.explanation);
             } else {
+                // TODO: Indicate somehow that name is not usable as a new list name.
                 console.log(temp.explanation);
             }
         } else {

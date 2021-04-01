@@ -67,7 +67,8 @@ class EmailListManager:
 
         :param domain: Domain to search for lists.
         :param name_candidate: Name to check for things and stuff. Mostly stuff.
-        :return: Return True if all name requirements are met. Otherwise return False.
+        :return: Return None if connection to Mailman failed. Return True if all name requirements are met. Otherwise
+        return False. In all cases, return an explanatory string.
         """
         em = EmailListManager
 
@@ -90,7 +91,7 @@ class EmailListManager:
         return True, "Ok."
 
     @staticmethod
-    def check_reserved_names(name_candidate: str) -> Tuple[Optional[bool], str]:
+    def check_reserved_names(name_candidate: str) -> Tuple[bool, str]:
         """
         Check a name candidate against reserved names, e.g. postmaster.
 
@@ -138,7 +139,7 @@ class EmailListManager:
         print(name)
 
     @staticmethod
-    def check_name_rules(name_candidate: str) -> Tuple[Optional[bool], str]:
+    def check_name_rules(name_candidate: str) -> Tuple[bool, str]:
         """Check if name candidate complies with naming rules.
 
         :param name_candidate:
