@@ -123,7 +123,8 @@ class EmailListManager:
             domains: List[Domain] = _client.domains
             domain_names: List[str] = [domain.mail_host for domain in domains]
             return domain_names
-        return []
+        except HTTPError:
+            return []
 
     @staticmethod
     def _set_domains() -> None:
