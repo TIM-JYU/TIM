@@ -52,15 +52,15 @@ class EmailListManager:
         """
         if _client is None:
             return None, "No connection with email list server established."
-
-        # TODO: Handle possible errors.
-        d = _client.get_domain(domain)
-        mlists: List[MailingList] = d.get_lists()
-
-        for name in [mlist.fqdn_listname for mlist in mlists]:
-            if name_candidate == name:
-                return False, "Name is already in use."
-        return True, "Name is available."
+        try:
+            d = _client.get_domain(domain)
+            mlists: List[MailingList] = d.get_lists()
+            for name in [mlist.fqdn_listname for mlist in mlists]:
+                if name_candidate == name:
+                    return False, "Name is already in use."
+            return True, "Name is available."
+        except HTTPError:
+            return None, "Connection to server failed."
 
     @staticmethod
     def check_name_requirements(name_candidate: str, domain: str) -> Tuple[Optional[bool], str]:
@@ -117,7 +117,9 @@ class EmailListManager:
         # VIESTIM: Do we need to query the Mailman server every time? Should we cache this data locally and only
         #  query the Mailman server every now and then? Maybe even that server would inform us if new domains are
         #  added?
-        if _client is not None:
+        if _client is None:
+            return []
+        try:
             domains: List[Domain] = _client.domains
             domain_names: List[str] = [domain.mail_host for domain in domains]
             return domain_names
