@@ -26,6 +26,7 @@ class DFA {
         const reStart = /^ *->? *([^ >:+-]+)$/;
         const rePos = /^ *(\S*) *\/ *(\S+)$/;
 
+        params = params || {};
         let syntaxes = params.syntaxes || "123";
         let allowstar = params.allowstar || false;
 
@@ -86,7 +87,7 @@ class DFA {
 
             let r = reTable.exec(line);
             if (r) { // Table column headers
-                colnames = r[1].trim().replaceAll(/[ ,;|]+/g, " ");
+                colnames = r[1].trim().replace(/[ ,;|]+/g, " ");
                 this.columns = colnames.split(" ");
                 continue;
             }
@@ -95,7 +96,7 @@ class DFA {
             if (!r) r = reTrow.exec(line); // syntax: Trow 1 | 2 3 4
             if (r && syntaxes.includes("3")) {
                 const from = r[1];
-                const to = r[2].trim().replaceAll(/[ ,;|]+/g, " ").split(" ");
+                const to = r[2].trim().replace(/[ ,;|]+/g, " ").split(" ");
                 const n = Math.min(to.length, this.columns.length);
                 const f = addLNode(from);
                 for (let i=0; i<n; i++) {
