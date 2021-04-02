@@ -27,7 +27,7 @@ class DFA {
         const rePos = /^ *(\S*) *\/ *(\S+)$/;
 
         let syntaxes = params.syntaxes || "123";
-        let allowstar = params.allowstart || false;
+        let allowstar = params.allowstar || false;
 
         this.arcs = [];
         this.nodes = {};

@@ -357,12 +357,13 @@
 </script>
   <script>
     const code = `
-=| 0 1
-->*S1
-S1 0-> S2
+=|0 1
+*a 1 b
+b 1 c
+c 1 d*
+d 1 a
      `;
-    // setData({code: code, args: "aabbac"} );
-       // params: {syntaxes: "2", allowstart: false}});
+    // setData({code: code, args: "aabbac", params: {syntaxes: "2", allowstar: true}});
     //console.log(dfaState.dfa.accepts("1001"));
   </script>
 </body>
