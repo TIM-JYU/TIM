@@ -207,8 +207,29 @@ class EmailList:
         pass
 
     @staticmethod
-    def delete_email(listname: str, email: str) -> None:
-        pass
+    def delete_email(listname: str, email: str) -> str:
+        """
+        Destructive email unsubscribtion. After this function has performed, the email is no longer on the list. If
+        you intended to perform a soft removal, use other function for a "soft" deletion.
+
+        :param listname: The list where the email is being removed.
+        :param email: The email being removed.
+        :return: A string informing operation success.
+        """
+        mlist: Optional[MailingList]
+        try:
+
+            mlist = _client.get_list(fqdn_listname=listname)
+        except HTTPError:
+            return "List {0} is not found or connection to list program was severed.".format(listname)
+        if mlist is not None:
+            # mlist shouldn't be None here. Either the list existed or mailmanclient raised HTTPError. We'll still
+            # cover our bases.
+            try:
+                mlist.unsubscribe(email=email)
+                return "{0} has been removed from {1}".format(email, listname)
+            except HTTPError:
+                return "Address {0} doesn't exist on {1}. No removal performed.".format(email, listname)
 
     @staticmethod
     def add_email(listname: str, email: str) -> None:
