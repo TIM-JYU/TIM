@@ -113,7 +113,7 @@ def domains() -> Response:
     return json_response(possible_domains)
 
 
-@messagelist.route("/delete", methods=['DELETE'])
+@messagelist.route("/deletelist", methods=['DELETE'])
 def delete_list(listname: str) -> Response:
     """Delete message/email list. List name is provided in the request body.
 

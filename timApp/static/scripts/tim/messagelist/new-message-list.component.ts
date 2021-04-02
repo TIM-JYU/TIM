@@ -245,7 +245,7 @@ export class NewMessageListComponent implements OnInit {
         // const result =
         const result = await to2(
             this.http
-                .delete(`/messagelist/delete`, {
+                .delete(`/messagelist/deletelist`, {
                     params: {
                         listname: `${this.listname}${this.domain}`,
                     },
