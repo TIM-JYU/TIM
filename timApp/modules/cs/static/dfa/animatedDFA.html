@@ -40,12 +40,12 @@
   let errspan = document.getElementById('error');
 
   let viz = new Viz();
-  function drawimage(vizcmd)  {
-    viz.renderSVGElement(vizcmd)
+  function drawimage(vizcmd, options, errors)  {
+    viz.renderSVGElement(vizcmd, options)
       .then(function(element) {
         vizChild.replaceWith(element);
         vizChild = element;
-        errspan.innerText = ".";
+        errspan.innerText = errors;
       })
      .catch(error => {
         // Create a new Viz instance (@see Caveats page for more info)
@@ -103,7 +103,9 @@
               return result;
           }
           if (minStep === 2)
-              this.active = this.dfa.nodes[this.activeArc.to];
+              if (this.activeArc && this.activeArc.to !== undefined)
+                  this.active = this.dfa.nodes[this.activeArc.to];
+              else result = false;
           return result;
       }
 
@@ -124,6 +126,13 @@
       }
 
 
+      getPos(name, dfa) {
+          const xy = dfa.positions[name];
+          if (!xy) return "";
+          this.pos = true;
+          return ', pos = "' + xy + '!"';
+      }
+
       /*!
        * Converts dfa structure to GraphViz-syntax
        * \fn makeViz()
@@ -131,16 +140,20 @@
        */
       makeViz() {
           let dfaState = this;
+          this.errors = "";
+          const dfa = dfaState.dfa;
+          let pos = this.getPos("startpoint", dfa);
           let s = 'digraph finite_state_machine {\n' +
               'rankdir=LR;\n' +
               'size="8,5";\n' +
-              'startpoint [shape = none, fontcolor=white, label=""];\n';
+              'startpoint [shape = none, fontcolor=white, label=""' + pos +'];\n';
 
           let minstep = dfaState.step % 3;
+          this.pos = false;
 
-          // make node descriotions
-          for (let n in dfaState.dfa.nodes) {
-              let node = dfaState.dfa.nodes[n];
+          // make node descriptions
+          for (let n in dfa.nodes) {
+              let node = dfa.nodes[n];
               let circ = "circle";
               let color = "";
               if (dfaState.active && dfaState.active.name === n)
@@ -148,29 +161,38 @@
                       color = ', fillcolor="#ffffB0", style=filled'
                   else
                       color = ", fillcolor=yellow, style=filled"
-              if (node.error)
+              let error = "";
+              if (node.error && (dfaState.active || node.dublicate)) {
                   color = ", fillcolor=red, style=filled"
+                  error = node.error;
+              }
 
               if (node.accept) circ = "doublecircle";
-              s += node.name + " [shape = " + circ + color + "];\n";
+              let pos = this.getPos(node.name, dfa);
+              let xlabel = "";
+              if (error) {
+                  // xlabel = ', xlabel="' + error + '"';
+                  this.errors += error;
+              }
+              s += node.name + " [shape = " + circ + color + pos + xlabel + "];\n";
           }
 
-          for (let arc of dfaState.dfa.arcs) {
+          for (let arc of dfa.arcs) {
               arc.done = false;
           }
 
           // connect nodes by arcs
-          for (let ia = 0; ia < dfaState.dfa.arcs.length; ia++) {
-              const arc = dfaState.dfa.arcs[ia];
+          for (let ia = 0; ia < dfa.arcs.length; ia++) {
+              const arc = dfa.arcs[ia];
               // if need to draw separate arcs for same arc, set this ia+1:
-              const n = dfaState.dfa.arcs.length
+              const n = dfa.arcs.length
               if ( arc.done ) continue;
               let label = "";
               let color = "";
               let arctext = ""; // combine all labels to this
               let comma = "";
               for (let ia2 = ia; ia2 < n; ia2++) { // combine same arcs
-                  const arc2 = dfaState.dfa.arcs[ia2];
+                  const arc2 = dfa.arcs[ia2];
                   if (arc2.done) continue;
                   if (arc2.from === arc.from && arc2.to === arc.to) {
                       let text = arc2.value !==-1 ? arc2.value : "";
@@ -205,7 +227,10 @@
       drawdfa() {
           let dfa = this;
           argsdiv.innerHTML = "";
-          drawimage(this.viz);
+          let options = {};
+          if (this.pos) options = {engine: "neato"};
+
+          drawimage(this.viz, options, this.errors);
           let args = dfa.args;
           if (!args) {
               buttondiv.classList.add("hidden");
@@ -321,7 +346,9 @@
 
   function setData(data) {
     if ( preCheck(data) ) return;
-    let dfa = new DFA(data.code);
+    let params = data.params;
+    if (!params) params = {};
+    let dfa = new DFA(data.code, params);
     dfaState = new VisualDFAState(dfa, data.args);
     dfaState.makeViz();
     dfaState.drawdfa();
@@ -330,19 +357,13 @@
 </script>
   <script>
     const code = `
-= | a b c
----------
-1 | 2 3 5
-2 | 1 4 6
-3 | 4 1 7
-4 | 3 2 8
-5 | 6 7 1
-6 | 5 8 2
-7 | 8 5 3
-8*| 7 6 4
+=| 0 1
+->*S1
+S1 0-> S2
      `;
-    setData({code: code, args: "aabbac" });
-    console.log(dfaState.dfa.accepts("1001"));
+    // setData({code: code, args: "aabbac"} );
+       // params: {syntaxes: "2", allowstart: false}});
+    //console.log(dfaState.dfa.accepts("1001"));
   </script>
 </body>
 
