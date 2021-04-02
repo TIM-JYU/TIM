@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from flask import Response
 
-from timApp.messagelist.messasgelist.emaillist import EmailListManager
+from timApp.messagelist.messasgelist.emaillist import EmailListManager, EmailList
 from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -111,3 +111,22 @@ def domains() -> Response:
     possible_domains: List[str] = EmailListManager.get_domain_names()
 
     return json_response(possible_domains)
+
+
+@messagelist.route("/delete", methods=['DELETE'])
+def delete_list(listname: str) -> Response:
+    """Delete message/email list. List name is provided in the request body.
+
+    :param listname: The list to be deleted. If the name does not contain '@', just delete  a message list. If it
+     contains '@', we delete a message list and the corresponding email list.
+    :return: A string describing how the operation went.
+    """
+    # TODO: User authentication. We can't let just anyone delete a list just because they can type the name.
+    list_name, sep, domain = listname.partition("@")
+    if domain:
+        # A domain is given, so we are also looking to delete an email list.
+        # Notice parameter. We give the fqdn list name to delete_list(), not plain list_name.
+        r = EmailList.delete_list(listname)
+        pass
+    # TODO: Put message list deletion here.
+    return json_response(r)

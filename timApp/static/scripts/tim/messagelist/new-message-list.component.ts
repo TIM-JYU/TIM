@@ -176,12 +176,10 @@ export class NewMessageListComponent implements OnInit {
 
     /**
      * Check list name requirements locally.
-     * TODO: Hook this into a text field to check at updates.
      *
      * If you make changes here, make sure to check that the server checks the same things. Otherwise there will
      * inconsistant name checking and a confused user.
      *
-     * TODO: Expand to return information if returns false, to inform the user why name requirements aren't met.
      * @returns {boolean} Returns true if name requirements are met. Otherwise returns false.
      */
     checkNameRequirementsLocally(): boolean {
@@ -238,6 +236,29 @@ export class NewMessageListComponent implements OnInit {
 
         // TODO: Local tests have been passed. Now launch server side checks.
         return true;
+    }
+
+    /**
+     * Helper for list deletion.
+     */
+    async deleteList() {
+        // const result =
+        const result = await to2(
+            this.http
+                .delete(`/messagelist/delete`, {
+                    params: {
+                        listname: `${this.listname}${this.domain}`,
+                    },
+                })
+                .toPromise()
+        );
+        if (result.ok) {
+            // TODO: Inform the user deletion was succesfull.
+            console.log(result.result);
+        } else {
+            // TODO: Inform the user deletion was not succesfull.
+            console.log(result.result);
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass
 from typing import List, Tuple, Optional
+from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain
 
@@ -212,3 +213,21 @@ class EmailList:
     @staticmethod
     def add_email(listname: str, email: str) -> None:
         pass
+
+    @staticmethod
+    def delete_list(fqdn_listname: str) -> str:
+        """Delete a mailing list.
+
+        :param fqdn_listname: The fully qualified domain name for the list, e.g. testlist1@domain.fi.
+        :return: A string describing how the operation went.
+        """
+        if _client is None:
+            return "There is no connection to Mailman server. No deletion can be attempted."
+
+        try:
+            # get_list() may raise ValueError.
+            list_to_delete: MailingList = _client.get_list(fqdn_listname)
+            list_to_delete.delete()
+            return "The list has been deleted."
+        except HTTPError:
+            return "List {0} is not found. No deletion occured.".format(fqdn_listname)
