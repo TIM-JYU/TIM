@@ -194,10 +194,10 @@ class EmailListManager:
 
 @dataclass
 class EmailList:
-    """Class to aid with email list spesific functionality attribute checking and changes.
+    """Class to aid with email list spesific functionality, such as attribute checking and changes.
 
-    This class is designed to be used when an existing email list is expected to exits. Think operations like adding
-    an email to an existing list etc. For operations other than mentioned, use EmailListManager.
+    This class is designed to be used when an email list is expected to exits. Think operations like adding
+    an email to an existing list etc. For operations other than that, use EmailListManager.
     """
 
     # VIESTIM: Would it be polite to return something as an indication how the operation went?
@@ -246,9 +246,10 @@ class EmailList:
             return "There is no connection to Mailman server. No deletion can be attempted."
 
         try:
-            # get_list() may raise ValueError.
+            # get_list() may raise HTTPError
             list_to_delete: MailingList = _client.get_list(fqdn_listname)
             list_to_delete.delete()
-            return "The list has been deleted."
+            return "The list {0} has been deleted.".format(fqdn_listname)
         except HTTPError:
-            return "List {0} is not found. No deletion occured.".format(fqdn_listname)
+            return "List {0} is not found or connection to server was severed." \
+                   " No deletion occured.".format(fqdn_listname)
