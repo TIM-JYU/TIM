@@ -228,7 +228,7 @@ class EmailList:
             try:
                 mlist.unsubscribe(email=email)
                 return "{0} has been removed from {1}".format(email, listname)
-            except HTTPError:
+            except ValueError:
                 return "Address {0} doesn't exist on {1}. No removal performed.".format(email, listname)
 
     @staticmethod
