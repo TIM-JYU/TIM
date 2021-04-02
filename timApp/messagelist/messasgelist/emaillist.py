@@ -216,20 +216,19 @@ class EmailList:
         :param email: The email being removed.
         :return: A string informing operation success.
         """
+        if _client is None:
+            return "There is no connection to Mailman server. No deletion can be attempted."
         mlist: Optional[MailingList]
         try:
-
+            # This might raise HTTPError
             mlist = _client.get_list(fqdn_listname=listname)
+            # This might raise ValueError
+            mlist.unsubscribe(email=email)
+            return "{0} has been removed from {1}".format(email, listname)
         except HTTPError:
             return "List {0} is not found or connection to list program was severed.".format(listname)
-        if mlist is not None:
-            # mlist shouldn't be None here. Either the list existed or mailmanclient raised HTTPError. We'll still
-            # cover our bases.
-            try:
-                mlist.unsubscribe(email=email)
-                return "{0} has been removed from {1}".format(email, listname)
-            except ValueError:
-                return "Address {0} doesn't exist on {1}. No removal performed.".format(email, listname)
+        except ValueError:
+            return "Address {0} doesn't exist on {1}. No removal performed.".format(email, listname)
 
     @staticmethod
     def add_email(listname: str, email: str) -> None:
