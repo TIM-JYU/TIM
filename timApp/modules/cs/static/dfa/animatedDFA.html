@@ -330,10 +330,12 @@
   function preCheck(data) {
      if (!data) return false;
      if (!data.params) return false;
-     if (!data.params.illegal) return false;
-     if (!data.args) return false;
+     let args = data.args || data.params.args;
+     if (!args) return;
+     args = (""+args).trim();
+     data.args = args;
      let illegal = data.params.illegal;
-     let args = data.args.trim();
+     if (!illegal) return false;
      for (let s of illegal) {
         let re = new RegExp("^"+s+"$");
         if (args.match(re)) {
