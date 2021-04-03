@@ -65,6 +65,7 @@ class DFA {
 
 
         function addArc(value, from, to) {
+            if (value instanceof String) value = value.trim();
             const arc = {value: value, from: from, to: to};
             dfa.arcs.push(arc);
             if (value === -1) return;
@@ -128,7 +129,9 @@ class DFA {
                 const v = r[2];
                 const f = addLNode(r[1]);
                 const t = addNode(r[4]);
-                addArc(v, f, t);
+                let vs = v.split(",");
+                for (let val of vs)
+                    addArc(val, f, t);
                 continue;
             }
 
