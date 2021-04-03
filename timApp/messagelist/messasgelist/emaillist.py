@@ -300,5 +300,12 @@ class EmailList:
         return
 
     @staticmethod
-    def get_user_delivery_option(email: str):
+    def get_member_delivery_status(list_name: str, email: str) -> None:
+        """
+        Get member's delivery status.
+
+        :param list_name:
+        :param email:
+        :return:
+        """
         pass
