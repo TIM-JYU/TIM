@@ -255,3 +255,50 @@ class EmailList:
         except HTTPError:
             return "List {0} is not found or connection to server was severed." \
                    " No deletion occured.".format(fqdn_listname)
+
+    @staticmethod
+    def change_user_delivery_status(list_name: str, member_email: str, option: str, status: str) -> None:
+        """ Change user's send or delivery status on an email list.
+
+        :param list_name: List where we are changing delivery options.
+        :param member_email: Which email's delivery options we are changing.
+        :param option: Option can be 'delivery' or 'send'.
+        :param status: A value that determs if option is 'enabled' or 'disabled'.
+        :return:
+        """
+        # VIESTIM: We might want to change option and status parametrs from string to something like enum to rid
+        #  ourselves from errors generated with typos.
+        delivery = "delivery_status"
+        if _client is None:
+            return
+        try:
+            email_list = _client.get_list(list_name)
+            member = email_list.get_member(member_email)
+            member_preferences = member.preferences
+            if option == delivery:
+                # Viestim: This is just an idea how to go about changing user's delivery options. There exists
+                #  frustratingly little documentation about this kind of thing, so this might not work. The idea
+                #  originates from
+                #  https://docs.mailman3.org/projects/mailman/en/latest/src/mailman/handlers/docs/owner-recips.html
+                #  More information also at
+                #  https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/member.py
+                #
+                # Change user's delivery off by setting "delivery_status" preference option to value "by_user"
+                # or on by setting "delivery_status" preference option to "enabled".
+                if status == "disabled":
+                    member_preferences[delivery] = "by_user"
+                if status == "enabled":
+                    member_preferences[delivery] = "enabled"
+
+                # Saving is required for changes to take effect.
+                member_preferences.save()
+            if option == "send":
+                # TODO: Implement send status change.
+                pass
+        except HTTPError:
+            pass
+        return
+
+    @staticmethod
+    def get_user_delivery_option(email: str):
+        pass
