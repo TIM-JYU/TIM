@@ -78,6 +78,7 @@ class Language:
         self.stdin = None
         self.query = query
         self.user_id = '--'
+        self.nofilesave = False  # if no need to save files
         if query.jso:
             self.user_id = df(query.jso.get('info'), {}).get('user_id', '--')
             self.markup = query.jso.get('markup', {})
@@ -1517,6 +1518,25 @@ class Mathcheck(Language):
             out = out.replace("No errors found. MathCheck is convinced that there are no errors.", correct_text)
             out = out.replace("No errors found. Please notice that the check was not complete.", correct_text)
         return 0, out, "", ""
+
+
+class Maxima(Language):
+    ttype = "maxima"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = "/tmp/%s/%s.mc" % (self.basename, self.filename)
+        self.fileext = "mc"
+        self.nofilesave = True
+
+    def run(self, result, sourcelines, points_rule):
+        r = requests.post("http://maxima:8080/maxima", data={
+                "input": sourcelines.strip(),
+                "timeout": 10000,
+             })
+        out = r.text
+        return 0, out, "", ""
+
 
 
 class Upload(Language):
