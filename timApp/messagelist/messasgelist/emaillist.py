@@ -261,9 +261,9 @@ class EmailList:
         """ Change user's send or delivery status on an email list.
 
         :param list_name: List where we are changing delivery options.
-        :param member_email: Which email's delivery options we are changing.
+        :param member_email: Which email's delivery status we are changing.
         :param option: Option can be 'delivery' or 'send'.
-        :param status: A value that determs if option is 'enabled' or 'disabled'.
+        :param status: A value that determines if option is 'enabled' or 'disabled'.
         :return:
         """
         # VIESTIM: We might want to change option and status parametrs from string to something like enum to rid
@@ -289,12 +289,14 @@ class EmailList:
                     member_preferences[delivery] = "by_user"
                 if status == "enabled":
                     member_preferences[delivery] = "enabled"
-
                 # Saving is required for changes to take effect.
                 member_preferences.save()
             if option == "send":
-                # TODO: Implement send status change.
-                pass
+                if status == "disabled":
+                    member.moderation_action = "discard"
+                if status == "enabled":
+                    member.moderation_action = "accept"
+                member.save()
         except HTTPError:
             pass
         return
