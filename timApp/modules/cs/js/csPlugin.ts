@@ -324,10 +324,7 @@ class LanguageTypes {
         if (!type.startsWith("all")) {
             return false;
         }
-        if (type.match(/^all[^a-z0-9]?/)) {
-            return true;
-        }
-        return false;
+        return !!type.match(/^all[^a-z0-9]?/);
     }
 
     getRunType(type: string, def: string) {
@@ -629,6 +626,7 @@ const CsMarkupOptional = t.partial({
     buttons: t.string,
     byCode: t.string,
     docurl: t.string,
+    editorreadonly: t.boolean,
     examples: t.array(Example),
     file: t.string,
     filename: t.string,
@@ -667,7 +665,7 @@ const CsMarkupOptional = t.partial({
     useSameFrame: t.boolean,
     variables: t.string,
     width: t.union([t.number, t.string]),
-    wrap: t.Integer,
+    wrap: t.number,
     borders: withDefault(t.boolean, true),
     iframeopts: t.string,
     count: CountType,
@@ -1004,6 +1002,7 @@ export class CsController extends CsBase implements ITimComponent {
             return;
         }
 
+        this.editor.setReadOnly(this.markup.editorreadonly === true);
         if (this.attrsall.submittedFiles || this.markup.files) {
             const files = new OrderedSet<EditorFile>((f) => f.path);
             const defaultMode =
@@ -1434,7 +1433,7 @@ export class CsController extends CsBase implements ITimComponent {
         return this.english ? "copy from SimCir" : "kopioi SimCiristä";
     }
 
-    get copyToSimCirText() {
+    public get copyToSimCirText() {
         return this.english ? "copy to SimCir" : "kopioi SimCiriin";
     }
 
@@ -2137,7 +2136,7 @@ ${fhtml}
         }
     }
 
-    async runCodeCommon(nosave: boolean, extraMarkUp?: IExtraMarkup) {
+    async runCodeCommon(nosave: boolean, _extraMarkUp?: IExtraMarkup) {
         this.runned = true;
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
         if (ty === "md") {

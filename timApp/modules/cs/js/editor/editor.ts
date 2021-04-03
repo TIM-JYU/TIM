@@ -48,6 +48,7 @@ export interface IEditor {
     setSelection?(): void;
     doWrap?(wrap: number): void;
     insert?(str: string): void;
+    setReadOnly(b: boolean): void;
 }
 
 export interface IEditorFile {
@@ -110,6 +111,7 @@ export class EditorFile {
 })
 export class JSParsonsEditorComponent implements IEditor {
     content: string = "";
+    setReadOnly(b: boolean) {}
 }
 
 @Component({
@@ -173,6 +175,7 @@ export class EditorComponent implements IMultiEditor {
     private normalEditor?: NormalEditorComponent;
     private aceEditor?: AceEditorComponent;
     parsonsEditor?: ParsonsEditorComponent;
+    editorreadonly: boolean = false;
 
     @Input() disabled: boolean = false;
 
@@ -215,6 +218,11 @@ export class EditorComponent implements IMultiEditor {
         );
     }
 
+    setReadOnly(b: boolean) {
+        this.editor?.setReadOnly(b);
+        this.editorreadonly = b;
+    }
+
     ngOnInit() {
         if (this.minRows_ < 1) {
             this.minRows_ = 1;
@@ -242,6 +250,7 @@ export class EditorComponent implements IMultiEditor {
         if (!this.editor) {
             this.content_ = oldContent;
         } else {
+            this.editor.setReadOnly(this.editorreadonly);
             this.content = oldContent;
             this.content_ = undefined;
         }

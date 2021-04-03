@@ -27,8 +27,8 @@ class DFA {
         const rePos = /^ *(\S*) *\/ *(\S+)$/;
 
         params = params || {};
-        let syntaxes = params.syntaxes || "123";
-        let allowstar = params.allowstar || false;
+        let syntaxes = params["syntaxes"] || "123";
+        let allowstar = params["allowstar"] || false;
 
         this.arcs = [];
         this.nodes = {};

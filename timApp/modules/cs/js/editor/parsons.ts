@@ -38,6 +38,10 @@ export class ParsonsEditorComponent implements IEditor {
         this.createParsons(this.content);
     }
 
+    setReadOnly(b: boolean) {
+        // TODO: implement readonly
+    }
+
     get content(): string {
         return this.content_ ?? this.base;
     }

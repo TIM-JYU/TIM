@@ -30,8 +30,15 @@ export class NormalEditorComponent implements IEditor {
     @Input() placeholder: string = "";
     @Input() disabled: boolean = false;
     @ViewChild("area") private area!: ElementRef;
+    private editorreadonly: boolean = false;
 
     constructor(private cdr: ChangeDetectorRef) {}
+
+    setReadOnly(b: boolean) {
+        this.editorreadonly = b;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        this.area.nativeElement.disabled = b;
+    }
 
     get content(): string {
         return this.content_;
@@ -44,7 +51,7 @@ export class NormalEditorComponent implements IEditor {
         this.cdr.detectChanges();
     }
 
-    ngOnChanges(changes: SimpleChanges) {
+    ngOnChanges(_changes: SimpleChanges) {
         this.checkRowBounds();
     }
 
@@ -73,19 +80,23 @@ export class NormalEditorComponent implements IEditor {
 
     insert(str: string, strPos?: number): void {
         const txtarea = this.area.nativeElement as HTMLTextAreaElement;
-        const scrollPos = txtarea.scrollTop;
+        // const scrollPos = txtarea.scrollTop;
+        txtarea.focus();
+        const endPos = strPos ?? txtarea.selectionEnd ?? 0;
         strPos = strPos ?? txtarea.selectionStart ?? 0;
 
         const cont = this.content;
-        this.content = cont.slice(0, strPos) + str + cont.slice(strPos);
+        this.content = cont.slice(0, strPos) + str + cont.slice(endPos);
 
-        strPos = strPos + str.length;
+        const newPos = strPos + str.length;
         if (txtarea.selectionStart) {
-            txtarea.selectionStart = strPos;
-            txtarea.selectionEnd = strPos;
-            txtarea.focus();
+            function setpos() {
+                txtarea.selectionStart = newPos;
+                txtarea.selectionEnd = newPos;
+            }
+            setTimeout(() => setpos());
         }
-        txtarea.scrollTop = scrollPos;
+        // txtarea.scrollTop = scrollPos;
     }
 
     doWrap(wrap: number) {
