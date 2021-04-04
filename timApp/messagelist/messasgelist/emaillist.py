@@ -327,4 +327,17 @@ class EmailList:
             # TODO: Error handling.
             pass
 
+    @staticmethod
+    def get_member_send_status(list_name: str, member_email: str) -> str:
+        if _client is None:
+            return "No Mailman configuration"
+        try:
+            email_list = _client.get_list(list_name)
+            member = email_list.get_member(member_email)
+            if member.moderation_action == "accept":
+                return "enabled"
+            if member.moderation_action in ["discard", "reject", "hold"]:
+                return "disabled"
+        except HTTPError:
+            pass
 
