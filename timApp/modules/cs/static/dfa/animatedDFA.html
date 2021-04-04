@@ -18,7 +18,7 @@
  <title>DFA</title>
 </head>
 <body>
-<div><span id="error" style="color: red;"></span></div>
+<div style="margin-bottom: 3px"><span id="error" style="color: red;"></span></div>
 <span id="argsdiv" class="argsdiv"></span>
 <div id="vizdiv"></div>
 <div id="buttondiv" class="buttondiv hidden">
@@ -58,6 +58,7 @@
   class DFAState {
       reset() {
           this.step = -1;
+          this.error = false;
           this.active = null;
           this.activeArc = null;
       }
@@ -75,8 +76,10 @@
        */
       forward() {
           let step = this.step;
+          if (this.step >= 0 && this.error) return false;
           if (this.step < 0) {
               this.step = 0;
+              this.error = false;
               this.activeArc = null;
               this.active = this.dfa.first;
               return true;
@@ -96,11 +99,12 @@
               return result;
           }
           if (minStep === 1) {
+              if (!this.active) return false;
               this.activeArc = this.active.arcs[value];
               if (!this.activeArc) this.activeArc = this.active.arcs['*'];
-              //if ( dfa.activeArc.from === dfa.activeArc.to )
-              //    dfa.step++; // if arc to self
-              return result;
+              if (this.activeArc) return result;
+              this.error = true;
+              return false;
           }
           if (minStep === 2)
               if (this.activeArc && this.activeArc.to !== undefined)
@@ -140,8 +144,8 @@
        */
       makeViz() {
           let dfaState = this;
-          this.errors = "";
           const dfa = dfaState.dfa;
+          this.errors = dfa.staticerrors;
           let pos = this.getPos("startpoint", dfa);
           let s = 'digraph finite_state_machine {\n' +
               'rankdir=LR;\n' +
@@ -156,16 +160,20 @@
               let node = dfa.nodes[n];
               let circ = "circle";
               let color = "";
+              let error = "";
+              let activeColor = "yellow";
+              if (node.error && (dfaState.active || node.dublicate)) {
+                  color = ", fillcolor=red, style=filled"
+                  error = node.error;
+                  activeColor = "orange";
+              }
+
               if (dfaState.active && dfaState.active.name === n)
                   if (minstep === 2)
                       color = ', fillcolor="#ffffB0", style=filled'
                   else
-                      color = ", fillcolor=yellow, style=filled"
-              let error = "";
-              if (node.error && (dfaState.active || node.dublicate)) {
-                  color = ", fillcolor=red, style=filled"
-                  error = node.error;
-              }
+                      color = ", fillcolor=" + activeColor + ", style=filled";
+
 
               if (node.accept) circ = "doublecircle";
               let pos = this.getPos(node.name, dfa);
@@ -257,8 +265,8 @@
               // let el = '<span' + color + '>' + c + '</span>';
               argsdiv.appendChild(el);
           }
-          if (dfa.step >= last) {
-              if (dfa.active.accept) argsdiv.classList.add("accept");
+          if (dfa.step >= last || dfa.error ) {
+              if (!dfa.error && dfa.active && dfa.active.accept) argsdiv.classList.add("accept");
               else argsdiv.classList.add("deny");
           }
       }
@@ -359,13 +367,15 @@
 </script>
   <script>
     const code = `
-=|0 1
-*a 1 b
-b 1 c
-c 1 d*
-d 1 a
+=|a b
+*1 a 2
+1 b 3
+2 a 4*
+4 a 1
+4 b 4
+3 a,b 3
      `;
-    // setData({code: code, args: "aabbac", params: {syntaxes: "2", allowstar: true}});
+    //setData({code: code, args: "aacaa", params: {syntaxes: "2", allowstar: false}});
     //console.log(dfaState.dfa.accepts("1001"));
   </script>
 </body>

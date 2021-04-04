@@ -35,7 +35,10 @@ class DFA {
         this.positions = {};
         this.first = null;
         this.errors = "";
+        this.staticerrors = "";
+        let errors = "";
         this.columns = [0,1];
+        let columns = this.columns;
 
         let firstFound = undefined;
         let lastUsed = undefined;
@@ -66,6 +69,10 @@ class DFA {
 
         function addArc(value, from, to) {
             if (value instanceof String) value = value.trim();
+            if (colnames && !columns.includes(value) && value !== "*" && value !== -1) {
+                errors += "Illegal transition: " + value + "\n";
+                return;
+            }
             const arc = {value: value, from: from, to: to};
             dfa.arcs.push(arc);
             if (value === -1) return;
@@ -87,9 +94,10 @@ class DFA {
             if (line.startsWith("//")) continue; // forget lines with //
 
             let r = reTable.exec(line);
-            if (r) { // Table column headers
+            if (r && colnames === "") { // Table column headers, only first accepted
                 colnames = r[1].trim().replace(/[ ,;|]+/g, " ");
                 this.columns = colnames.split(" ");
+                columns = this.columns;
                 continue;
             }
 
@@ -141,7 +149,9 @@ class DFA {
                 const p = r[2];
                 if (n === "" || n.includes(">")) n = "startpoint";
                 this.positions[n] = p;
+                continue;
             }
+            this.staticerrors += 'Illegal line: ' + line + "\n";
         }
 
 
@@ -170,11 +180,13 @@ class DFA {
             if (cols !== "" && !starFound) {
                 if (allowstar)
                     addArc("*", n, n);
-                else
+                else {
                     node.error += "Node " + n + ": missing transitions: " + cols + "\n";
+                }
             }
             if (node.error) this.errors += node.error;
         }
+        this.staticerrors += errors;
     }
 
 
@@ -191,6 +203,7 @@ class DFA {
             if (!activeArc) activeArc = active.arcs['*'];
             if (!activeArc) return false;
             active = this.nodes[activeArc.to];
+
         }
         if (!active || !active.accept) return false;
         return active.accept;
