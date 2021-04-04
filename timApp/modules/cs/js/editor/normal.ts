@@ -37,7 +37,7 @@ export class NormalEditorComponent implements IEditor {
     setReadOnly(b: boolean) {
         this.editorreadonly = b;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        this.area.nativeElement.disabled = b;
+        this.area.nativeElement.readOnly = b;
     }
 
     get content(): string {
