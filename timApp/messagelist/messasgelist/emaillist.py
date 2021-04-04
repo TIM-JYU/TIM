@@ -64,7 +64,7 @@ class EmailListManager:
 
     @staticmethod
     def check_name_requirements(name_candidate: str, domain: str) -> Tuple[Optional[bool], str]:
-        """Checks name requirements spesific for email lists.
+        """Checks name requirements spesific for email list.
 
         :param domain: Domain to search for lists.
         :param name_candidate: Name to check for things and stuff. Mostly stuff.
@@ -261,7 +261,7 @@ class EmailList:
         """ Change user's send or delivery status on an email list.
 
         :param list_name: List where we are changing delivery options.
-        :param member_email: Which email's delivery status we are changing.
+        :param member_email: Which member's email's delivery status we are changing.
         :param option: Option can be 'delivery' or 'send'.
         :param status: A value that determines if option is 'enabled' or 'disabled'.
         :return:
@@ -298,16 +298,33 @@ class EmailList:
                     member.moderation_action = "accept"
                 member.save()
         except HTTPError:
+            # TODO: Proper error handling.
             pass
         return
 
     @staticmethod
-    def get_member_delivery_status(list_name: str, email: str) -> None:
+    def get_member_delivery_status(list_name: str, member_email: str) -> str:
         """
         Get member's delivery status.
 
-        :param list_name:
-        :param email:
-        :return:
+        :param list_name: The list we are interested in.
+        :param member_email: The member who's delivery status is being checked.
+        :return: A string 'enabled' or 'disabled'.
         """
-        pass
+        if _client is None:
+            return "No Mailman configuration."
+        delivery_status = "delivery_status"
+        try:
+            email_list = _client.get_list(list_name)
+            member = email_list.get_member(member_email)
+            member_preferences = member.preferences
+            if member_preferences[delivery_status] == "enabled":
+                return "enabled"
+            if member_preferences[delivery_status] == "by_user":
+                # TODO: Do we need to check for other status?
+                return "disabled"
+        except HTTPError:
+            # TODO: Error handling.
+            pass
+
+
