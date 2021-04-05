@@ -443,3 +443,13 @@ class EmailList:
             mail_list_settings.save()
         except HTTPError:
             return
+
+    @staticmethod
+    def unfreeze_list(listname: str) -> None:
+        """
+        The opposite of freezing a list. Sets some default values for delivery and send status of each member.
+
+        :param listname: The list to bring back into function.
+        :return:
+        """
+        pass
