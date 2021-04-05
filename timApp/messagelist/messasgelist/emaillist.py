@@ -317,10 +317,10 @@ class EmailList:
                 if status == "enabled":
                     member.moderation_action = "accept"
                 member.save()
+            return
         except HTTPError:
             # TODO: Proper error handling.
-            pass
-        return
+            return
 
     @staticmethod
     def get_member_delivery_status(list_name: str, member_email: str) -> str:
@@ -345,7 +345,7 @@ class EmailList:
                 return "disabled"
         except HTTPError:
             # TODO: Error handling.
-            pass
+            return "Error on the connection or bad list name or member name"
 
     @staticmethod
     def get_member_send_status(list_name: str, member_email: str) -> str:
@@ -358,6 +358,8 @@ class EmailList:
                 return "enabled"
             if member.moderation_action in ["discard", "reject", "hold"]:
                 return "disabled"
+            # TODO: Probably needs a better return value.
+            return "unknown"
         except HTTPError:
-            pass
+            return "No connection to server, list doesn't exists or there member in questin is not on the list."
 
