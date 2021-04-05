@@ -412,3 +412,34 @@ class EmailList:
             return link
         except HTTPError:
             return "Connection to Mailman failed while getting list's UI link."
+
+    @staticmethod
+    def freeze_list(listname: str) -> None:
+        """
+        Freeze an email list. No posts are allowed on the list after freezing. Think a course spesific email list and
+        the course ends, but it's mail archive is kept intact for later potential use. This stops (or at least
+        mitigates) that the mail archive on that list changes after the freezing.
+
+        :param listname: The list about the be frozen.
+        :return:
+        """
+        if _client is None:
+            return
+        try:
+            mail_list = _client.get_list(listname)
+
+            # VIESTIM: Another possible way would be to iterate over all members and set their individual moderation
+            #  action accordingly. How does Mailman's rule propagation matter here? The rule propagation goes from
+            #  user -> member -> list -> system (maybe domain in between list and system). So if member's default
+            #  moderation action is 'accept' and we set list's default member action as 'discard', which one wins?
+            #  Should we double-tap just to make sure and do both?
+
+            # We freeze a list by simply setting list's moderation to 'discard'. It could also be 'reject'. Holding
+            # the messages isn't probably a reasonable choice, since the point of freezing is to not allow posts on
+            # the list.
+            mail_list_settings = mail_list.settings
+            mail_list_settings["default_member_action"] = "discard"
+            mail_list_settings["default_nonmember_action"] = "discard"
+            mail_list_settings.save()
+        except HTTPError:
+            return
