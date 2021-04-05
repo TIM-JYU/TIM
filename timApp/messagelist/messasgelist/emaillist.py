@@ -453,3 +453,15 @@ class EmailList:
         :return:
         """
         pass
+
+    @staticmethod
+    def find_email_lists(email: str) -> List[MailingList]:
+        if _client is None:
+            return []
+        try:
+            # VIESTIM: This may or may not be enough. Function find_lists can take optional argument for role on the
+            #  list ('member', 'owner' or 'moderator'). Does this get them all?
+            lists = _client.find_lists(email)
+            return lists
+        except HTTPError:
+            return []
