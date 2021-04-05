@@ -698,6 +698,10 @@ def post_answer_impl(
 
     noupdate = False  #  if true do not send new id
 
+    resultmd = result['web'].get('md', None)
+    if resultmd:
+        result['web']['md'] = call_dumbo([resultmd])[0]
+
     if not get_task:
         add_reply(result['web'], '-replyImage')
         add_reply(result['web'], '-replyMD', True)

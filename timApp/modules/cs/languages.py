@@ -1118,7 +1118,6 @@ class Processing(JS):
     pass
 
 
-
 class WeScheme(JS):
     ttype = "wescheme"
 
@@ -1534,13 +1533,28 @@ class Maxima(Language):
                 "input": sourcelines.strip(),
                 "timeout": 10000,
              })
-        # showinput = self.query.jso['markup'].get('-maxima', {}).get('showinput', False)
-        showinput = get_value(self.query.jso, False, 'markup', "-maxima", "showinput")
-        out = r.text.strip()
-        if not showinput:
-            out = re.sub(r'\(%i[^)]*\).*\n*', '', out, flags=re.M)
-        return 0, out, "", ""
 
+        def maxima_option(name):
+            res = get_value(self.query.jso, False, 'markup', "-maxima", name) or \
+                  name in sourcelines
+            return res
+
+        showinput = maxima_option("showinput")
+        showtex = maxima_option("showtex")
+
+        out = r.text.strip()
+        # s = out.replace("\n", " ")
+        p = re.compile(r'\$\$.*?\$\$', flags=re.DOTALL)
+        tex = "\n".join(p.findall(out))
+        if tex:
+            result["web"]["md"] = tex
+            if not showtex:
+                out = re.sub(r'\$\$.*?\$\$', '', out, flags=re.DOTALL)
+        if not showinput:
+            out = re.sub(r'^\(%i[^)]*\) *\n', '', out, flags=re.M)
+            out = re.sub(r'^\(%i[^)]*\)$', '', out, flags=re.M)
+
+        return 0, out, "", ""
 
 
 class Upload(Language):

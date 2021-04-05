@@ -257,7 +257,7 @@ class LanguageTypes {
         "text",
         "r",
         "typescript",
-        "maxima",
+        "matlab",
     ];
 
     // What are known test types (be careful not to include partial word):
@@ -832,6 +832,7 @@ interface IRunResponseWeb {
     console?: string;
     runtime?: string;
     language?: unknown; // determined by language
+    md?: string;
     "-replyImage"?: string;
     "-replyHTML"?: string;
     "-replyMD"?: string;
@@ -1210,7 +1211,7 @@ export class CsController extends CsBase implements ITimComponent {
 
         this.errors = [];
         this.result = "";
-        this.htmlresult = "";
+        this.htmlresult = ""; // '<span class="math display">\\[-\\]</span>';
         this.imgURL = "";
         this.runSuccess = false;
         this.copyingFromTauno = false;
@@ -2413,7 +2414,9 @@ ${fhtml}
             // if ( !imgURL ) imgURL = data.web["-replyImage"];
             this.imgURL = data.web["-replyImage"] ?? "";
             this.htmlresult =
-                (data.web["-replyHTML"] ?? "") + (data.web["-replyMD"] ?? "");
+                (data.web.md ?? "") +
+                (data.web["-replyHTML"] ?? "") +
+                (data.web["-replyMD"] ?? "");
             const wavURL = data.web.wav;
             if (data.web.testGreen) {
                 this.runTestGreen = true;
