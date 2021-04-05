@@ -206,8 +206,28 @@ class EmailList:
     # VIESTIM: Would it be polite to return something as an indication how the operation went?
 
     @staticmethod
-    def set_archive_type(listname: str, archive: bool) -> None:
-        pass
+    def set_archive_type(listname: str, archive_status: bool) -> None:
+        """
+        Set list archiving on or off.
+
+        :param listname: The email list
+        :param archive_status: Models if this list is archived on Mailman's end. If True, all possible archivers are
+         used. If False, no archivers are used.
+        :return:
+        """
+        if _client is None:
+            return
+        try:
+            mail_list = _client.get_list(listname)
+            list_archivers = mail_list.archivers
+            # VIESTIM: We set all archivers on or off here. Would we have any reason to be pick and choose possible
+            #  archivers? Technicallyl the only one functional right now is hyper-kitty.
+            for archiver in list_archivers:
+                list_archivers[archiver] = archive_status
+        except HTTPError:
+            pass
+
+
 
     @staticmethod
     def delete_email(listname: str, email: str) -> str:
