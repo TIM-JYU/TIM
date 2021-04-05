@@ -103,7 +103,9 @@ def get_value(jso, default, *keys):
             return default
         if not isinstance(d, dict):
             return default
-        d = d[key]
+        d = d.get(key, None)
+    if d == None:
+        return default
     return d
 
 
