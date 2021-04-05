@@ -227,7 +227,31 @@ class EmailList:
         except HTTPError:
             pass
 
+    @staticmethod
+    def get_archive_type(listname: str) -> bool:
+        """
+        Get the archive status of a email list.
 
+        :param listname:
+        :return: True if email list in question
+        """
+        if _client is None:
+            # TODO: Better return value/error handling here.
+            return False
+        try:
+            mail_list = _client.get_list(listname)
+            list_archivers = mail_list.archivers
+            # VIESTIM: Here we assume that set_archive_type sets all archivers on or off at the same time. If Mailman
+            #  has multiple archivers and they can be set on or off independently, then another solution is required.
+            #  We also leverage the fact that Python treats booleans as numbers under the hood.
+            archiver_status = [list_archivers[archiver] for archiver in list_archivers]
+            if sum(archiver_status) == 0:
+                return False
+            else:
+                return True
+        except HTTPError:
+            # TODO: Better return value/error handling here.
+            return False
 
     @staticmethod
     def delete_email(listname: str, email: str) -> str:
@@ -362,4 +386,3 @@ class EmailList:
             return "unknown"
         except HTTPError:
             return "No connection to server, list doesn't exists or there member in questin is not on the list."
-
