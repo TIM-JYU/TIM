@@ -367,6 +367,7 @@ class EmailList:
             if member_preferences[delivery_status] == "by_user":
                 # TODO: Do we need to check for other status?
                 return "disabled"
+            return "unknown"
         except HTTPError:
             # TODO: Error handling.
             return "Error on the connection or bad list name or member name"
