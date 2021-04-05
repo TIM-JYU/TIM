@@ -1536,10 +1536,10 @@ class Maxima(Language):
              })
         # showinput = self.query.jso['markup'].get('-maxima', {}).get('showinput', False)
         showinput = get_value(self.query.jso, False, 'markup', "-maxima", "showinput")
-        out = r.text
+        out = r.text.strip()
         if not showinput:
             out = re.sub(r'\(%i[^)]*\).*\n*', '', out, flags=re.M)
-        return 0, out.strip(), "", ""
+        return 0, out, "", ""
 
 
 
