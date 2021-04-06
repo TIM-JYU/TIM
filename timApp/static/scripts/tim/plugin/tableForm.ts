@@ -21,6 +21,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -171,6 +172,15 @@ const emailColIndex = 2;
 const memberShipColIndex = 3;
 const sortLang = "fi";
 
+interface CreateMessageOptions {
+    // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py)
+    archive: boolean;
+    check: boolean;
+    reply: boolean;
+    replyAll: boolean;
+    // expires: Date | undefined;
+}
+
 @Component({
     selector: "tim-email-send",
     template: `
@@ -239,6 +249,8 @@ export class TimEmailComponent {
     @Input()
     taskid?: TaskId;
 
+    constructor(private http: HttpClient) {}
+
     async sendEmailTim() {
         if (!this.taskid) {
             this.emailMsg = "Cannot send email without taskid";
@@ -257,7 +269,40 @@ export class TimEmailComponent {
         this.emailMsg = response.ok ? "Sent" : response.result.data.error;
     }
 
+    async sendTimMessage() {
+        // TODO: actual logic here.
+        // VIESTIM These fields have to match with interface CreateMessageOptions, otherwise a type error occurs.
+        console.log("sendTimMessage");
+        const result = await this.postTimMessage({
+            archive: this.archive,
+            check: this.check,
+            reply: this.reply,
+            replyAll: this.replyAll,
+            // expires: this.expires,
+        });
+        if (!result.ok) {
+            console.error(result.result.error.error);
+        } else {
+            console.log("tim message sent");
+            // If emailMsg != "", text "Sent!" appears next to Send button.
+            this.emailMsg = "sent";
+        }
+    }
+
+    // VIESTIM this helper function helps keeping types in check.
+    private postTimMessage(options: CreateMessageOptions) {
+        console.log("postTimMessage");
+        console.log(options);
+        return to2(this.http.post("/timMessage/send", {options}).toPromise());
+    }
+
+    // TODO: separate TIM messages from here?
     public async sendEmail() {
+        if (this.timMessage) {
+            await this.sendTimMessage();
+            return;
+        }
+
         if (this.emailtim) {
             await this.sendEmailTim();
             return;
