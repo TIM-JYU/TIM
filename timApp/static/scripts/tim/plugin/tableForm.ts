@@ -3,6 +3,7 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
+import * as moment from "moment";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
 import {clone, maxContentOrFitContent, to} from "tim/util/utils";
 import {
@@ -174,6 +175,7 @@ const sortLang = "fi";
 
 interface CreateMessageOptions {
     // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py)
+    private: boolean;
     archive: boolean;
     check: boolean;
     reply: boolean;
@@ -202,6 +204,8 @@ interface CreateMessageOptions {
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
             <p><label title=""><input type="checkbox"
                                       [(ngModel)]="archive">Archive message</label></p>
+            <p><label title=""><input type="checkbox"
+                                      [(ngModel)]="private">Recipient sees message as private</label></p>
             <h3>Options for TIM message</h3>
             <p><label title=""><input type="checkbox"
                                       [(ngModel)]="timMessage">Send as TIM message</label></p>
@@ -240,6 +244,7 @@ export class TimEmailComponent {
     emailbccme: boolean = true;
     emailtim: boolean = true;
     emailMsg: string = "";
+    private: boolean = false;
     archive: boolean = true;
     timMessage: boolean = false;
     check: boolean = true;
@@ -272,8 +277,9 @@ export class TimEmailComponent {
     async sendTimMessage() {
         // TODO: actual logic here.
         // VIESTIM These fields have to match with interface CreateMessageOptions, otherwise a type error occurs.
-        console.log("sendTimMessage");
+        console.log("now is", moment());
         const result = await this.postTimMessage({
+            private: this.private,
             archive: this.archive,
             check: this.check,
             reply: this.reply,
@@ -283,7 +289,6 @@ export class TimEmailComponent {
         if (!result.ok) {
             console.error(result.result.error.error);
         } else {
-            console.log("tim message sent");
             // If emailMsg != "", text "Sent!" appears next to Send button.
             this.emailMsg = "sent";
         }
@@ -291,8 +296,6 @@ export class TimEmailComponent {
 
     // VIESTIM this helper function helps keeping types in check.
     private postTimMessage(options: CreateMessageOptions) {
-        console.log("postTimMessage");
-        console.log(options);
         return to2(this.http.post("/timMessage/send", {options}).toPromise());
     }
 

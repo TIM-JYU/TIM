@@ -12,6 +12,7 @@ timMessage = TypedBlueprint('timMessage', __name__, url_prefix='/timMessage')
 @dataclass
 class MessageOptions:
     #Options regarding TIM messages
+    private: bool
     archive: bool
     check: bool
     reply: bool
