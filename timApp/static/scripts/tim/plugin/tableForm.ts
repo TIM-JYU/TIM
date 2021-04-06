@@ -178,7 +178,7 @@ interface CreateMessageOptions {
     check: boolean;
     reply: boolean;
     replyAll: boolean;
-    // expires: Date | undefined;
+    expires: Date | undefined;
 }
 
 @Component({
@@ -278,7 +278,7 @@ export class TimEmailComponent {
             check: this.check,
             reply: this.reply,
             replyAll: this.replyAll,
-            // expires: this.expires,
+            expires: this.expires,
         });
         if (!result.ok) {
             console.error(result.result.error.error);

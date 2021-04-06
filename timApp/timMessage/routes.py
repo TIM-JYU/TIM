@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-import datetime
+from typing import Optional
+from datetime import datetime, timezone
 
 from flask import Response
 
@@ -15,7 +16,7 @@ class MessageOptions:
     check: bool
     reply: bool
     replyAll: bool
-    #expires: <type here>
+    expires: Optional[datetime] = None
 
 @timMessage.route("/send", methods=['POST'])
 def send_tim_message(options: MessageOptions) -> Response:
