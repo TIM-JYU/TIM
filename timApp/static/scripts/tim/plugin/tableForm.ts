@@ -175,6 +175,7 @@ const sortLang = "fi";
 
 interface CreateMessageOptions {
     // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py)
+    messageChannel: boolean;
     private: boolean;
     archive: boolean;
     check: boolean;
@@ -202,6 +203,8 @@ interface CreateMessageOptions {
             <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
             <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
+            <p><label title=""><input type="checkbox"
+                                      [(ngModel)]="messageChannel">Send to recipient's own message channels</label></p>
             <p><label title=""><input type="checkbox"
                                       [(ngModel)]="archive">Archive message</label></p>
             <p><label title=""><input type="checkbox"
@@ -244,6 +247,7 @@ export class TimEmailComponent {
     emailbccme: boolean = true;
     emailtim: boolean = true;
     emailMsg: string = "";
+    messageChannel: boolean = false;
     private: boolean = false;
     archive: boolean = true;
     timMessage: boolean = false;
@@ -279,6 +283,7 @@ export class TimEmailComponent {
         // VIESTIM These fields have to match with interface CreateMessageOptions, otherwise a type error occurs.
         console.log("now is", moment());
         const result = await this.postTimMessage({
+            messageChannel: this.messageChannel,
             private: this.private,
             archive: this.archive,
             check: this.check,
