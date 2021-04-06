@@ -301,3 +301,47 @@ rows:
         self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"]]})
         answers = self.get_task_answers(f'{d.id}.t', self.current_user)
         self.assertEqual(-2, answers[0]['points'])
+
+    def test_question_answer_markdown_html(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {#t plugin="qst"}
+answerFieldType: radio
+answerLimit: 1
+expl:
+ 1: '**wrong**'
+headers:
+ - '*h1*'
+ - '*h2*'
+points: '2:1'
+questionText: '*test*'
+questionTitle: test
+stem: '*hello*'
+questionType: matrix
+matrixType: radiobutton-horizontal
+rows:
+- '*a*'
+- '*b*'
+```""")
+        r = self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"], []]})
+        ans_id = r['savedNew']
+        self.assertEqual({
+            'savedNew': ans_id,
+            'web': {
+                'markup': {
+                    'answerFieldType': 'radio',
+                    'answerLimit': 1,
+                    'expl': {'1': '<strong>wrong</strong>'},
+                    'headers': ['<em>h1</em>', '<em>h2</em>'],
+                    'matrixType': 'radiobutton-horizontal',
+                    'points': '2:1',
+                    'questionText': '<em>test</em>',
+                    'questionTitle': 'test',
+                    'questionType': 'matrix',
+                    'rows': ['<em>a</em>', '<em>b</em>'],
+                    'stem': '<em>hello</em>'},
+                'result': 'Saved',
+                'show_result': True,
+                'state': [['2'], []],
+            }
+        }, r)

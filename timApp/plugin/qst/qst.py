@@ -212,7 +212,7 @@ def qst_answer_jso(m: QstAnswerModel):
     if info and info.max_answers and info.max_answers <= info.earlier_answers + 1 and prev_state != answers:
         result = True
     jsonmarkup = m.markup.get_visible_data()
-    convert_md([jsonmarkup], options=DumboOptions.default())  # TODO get mathtype from doc settings?
+    convert_qst_md(jsonmarkup)  # TODO get mathtype from doc settings?
     save = answers
     if not markup.show_points():
         jsonmarkup.pop('expl', None)
@@ -392,9 +392,7 @@ def get_question_md():
     md, = verify_json_params('text')
     markup = json.loads(md)
     plugin_data = {'markup': markup}
-    prepare_for_dumbo_attr_list_recursive(get_plugin_regex_obj('qst'), plugin_data)
-    convert_md([plugin_data], options=DumboOptions.default())
-
+    convert_qst_md(plugin_data)
     return json_response({'md': plugin_data['markup']})
 
 
@@ -841,8 +839,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
         convert_mcq_to_qst(plugindata, par.get_attr('plugin', '').find('mmcq') == 0)
     if not edit or edit == 'false':
         settings = d.document.get_settings()
-        prepare_for_dumbo_attr_list_recursive(get_plugin_regex_obj('qst'), plugindata)
-        convert_md([plugindata], options=par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
+        convert_qst_md(plugindata, par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
     markup = plugindata.get('markup')
     return QuestionInDocument(
         markup=normalize_question_json(markup),
@@ -852,6 +849,13 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
         parId=par_id,
         isPreamble=bool(par.from_preamble()),
     )
+
+
+def convert_qst_md(plugindata: Dict, dumbo_opts: Optional[DumboOptions] = None) -> None:
+    if not dumbo_opts:
+        dumbo_opts = DumboOptions.default()
+    prepare_for_dumbo_attr_list_recursive(get_plugin_regex_obj('qst'), plugindata)
+    convert_md([plugindata], options=dumbo_opts)
 
 
 def render_static_qst(m: QstHtmlModel):
