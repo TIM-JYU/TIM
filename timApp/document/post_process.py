@@ -262,13 +262,14 @@ def process_areas(
                 collapse = cur_area.attrs.get('collapse') if cur_area else None
                 if collapse is not None:
                     html_par['collapse_area'] = area_start
-                    collapse_classes = ['areaexpand' if collapse else 'areacollapse']
+                    is_collapsed = collapse not in ('false', '')
+                    collapse_classes = ['areaexpand' if is_collapsed else 'areacollapse']
                     collapse_classes.extend(['areawidget_' + area for area in new_areas if area != area_start])
                     collapse_classes.extend(['par'])
 
                     if len(current_collapsed) > 0:
                         collapse_classes.append('collapsed')
-                    if collapse:
+                    if is_collapsed:
                         current_collapsed.append(area_start)
 
                     html_par['collapse_class'] = ' '.join(collapse_classes)
