@@ -12,9 +12,12 @@ timMessage = TypedBlueprint('timMessage', __name__, url_prefix='/timMessage')
 @dataclass
 class MessageOptions:
     #Options regarding TIM messages
+    emailsubject: str
+    emailbody: str
     messageChannel: bool
     private: bool
     archive: bool
+    pageList: str
     check: bool
     reply: bool
     replyAll: bool

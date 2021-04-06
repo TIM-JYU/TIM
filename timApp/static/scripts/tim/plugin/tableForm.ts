@@ -3,7 +3,6 @@
  */
 import angular from "angular";
 import * as t from "io-ts";
-import * as moment from "moment";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
 import {clone, maxContentOrFitContent, to} from "tim/util/utils";
 import {
@@ -175,9 +174,12 @@ const sortLang = "fi";
 
 interface CreateMessageOptions {
     // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py)
+    emailsubject: string;
+    emailbody: string;
     messageChannel: boolean;
-    private: boolean;
     archive: boolean;
+    private: boolean;
+    pageList: string;
     check: boolean;
     reply: boolean;
     replyAll: boolean;
@@ -212,6 +214,8 @@ interface CreateMessageOptions {
             <h3>Options for TIM message</h3>
             <p><label title=""><input type="checkbox"
                                       [(ngModel)]="timMessage">Send as TIM message</label></p>
+            <p>Pages to send message to: (enter names)</p>
+            <p><textarea [(ngModel)]="pageList" rows="4" cols="40"></textarea></p>                                      
             <p><label title=""><input type="checkbox"
                                       [(ngModel)]="check">Message can be checked</label></p>
             <p><label title=""><input type="checkbox"
@@ -248,9 +252,10 @@ export class TimEmailComponent {
     emailtim: boolean = true;
     emailMsg: string = "";
     messageChannel: boolean = false;
-    private: boolean = false;
     archive: boolean = true;
+    private: boolean = false;
     timMessage: boolean = false;
+    pageList: string = "";
     check: boolean = true;
     reply: boolean = true;
     replyAll: boolean = true;
@@ -281,11 +286,13 @@ export class TimEmailComponent {
     async sendTimMessage() {
         // TODO: actual logic here.
         // VIESTIM These fields have to match with interface CreateMessageOptions, otherwise a type error occurs.
-        console.log("now is", moment());
         const result = await this.postTimMessage({
+            emailsubject: this.emailsubject,
+            emailbody: this.emailbody,
             messageChannel: this.messageChannel,
             private: this.private,
             archive: this.archive,
+            pageList: this.pageList,
             check: this.check,
             reply: this.reply,
             replyAll: this.replyAll,
