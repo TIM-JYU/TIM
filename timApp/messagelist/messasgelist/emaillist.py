@@ -133,25 +133,35 @@ class EmailListManager:
         pass
 
     @staticmethod
-    def create_new_list(name: str) -> None:
+    def create_new_list(fqdn_listname: str, owner_email: str, archive: str) -> None:
         """Create a new email list.
 
-        :param name: A full email list name, e.g. name@domain.org.
+        :param archive: A value describing how this list should be archived. Possible values are 'never', 'private' and
+        'public'
+        :param owner_email: List owner's email address. Must exist and be a valid address.
+        :param fqdn_listname: A full email list name, e.g. name@domain.org.
         :return:
         """
-        full_list_name: List[str] = name.split("@")
-
-        # TODO: check that name matches requirements
-        if EmailListManager.check_name_availability(name):
-            print("list " + name + " does not exist yet, creating...")
-            # TODO: Retrieve domain instead of creating it here,
-            #  i.e. domain: Domain = _client.get_domain(full_list_name[1]),
-            #  however get_domain does not currently work for some reason.
-            #  This temporary implementation can be run only once per domain name between restarts.
-            domain: Domain = _client.create_domain(full_list_name[1])
-            email_list: MailingList = domain.create_list(full_list_name[0])
+        list_name, sep, domain_name = fqdn_listname.partition("@")
+        if EmailListManager.check_name_availability(list_name):
+            try:
+                domain: Domain = _client.get_domain(domain_name)
+                email_list: MailingList = domain.create_list(list_name)
+                email_list.add_owner(owner_email)
+                mlist_settings = email_list.settings
+                mlist_settings["archive_policy"] = archive
+                # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
+                # advertising on if they so choose.
+                mlist_settings["advertised"] = False
+                mlist_settings.save()
+                return
+            except HTTPError:
+                # TODO: exceptions to catch: domain doesn't exist, list can't be created, connection to server fails.
+                return
         else:
-            print("list " + name + " already exists")
+            # VIESTIM: If a list with this name exists (it shouldn't since it's checked before allowing list creation,
+            #  but technically it could if someone can grab the name during list creation process), then what do we do?
+            return
 
     @staticmethod
     def check_name_rules(name_candidate: str) -> Tuple[bool, str]:
