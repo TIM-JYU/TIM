@@ -174,6 +174,7 @@ const sortLang = "fi";
 
 interface CreateMessageOptions {
     // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py)
+    rcpt: string;
     emailsubject: string;
     emailbody: string;
     messageChannel: boolean;
@@ -289,6 +290,7 @@ export class TimEmailComponent {
         // TODO: actual logic here.
         // VIESTIM These fields have to match with interface CreateMessageOptions, otherwise a type error occurs.
         const result = await this.postTimMessage({
+            rcpt: this.emaillist.replace(/\n/g, ";"),
             emailsubject: this.emailsubject,
             emailbody: this.emailbody,
             messageChannel: this.messageChannel,

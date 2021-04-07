@@ -12,6 +12,7 @@ timMessage = TypedBlueprint('timMessage', __name__, url_prefix='/timMessage')
 @dataclass
 class MessageOptions:
     #Options regarding TIM messages
+    rcpt: str #multiple email addresses separated by ; VIESTIM: find recipient by email or some other identifier?
     emailsubject: str
     emailbody: str
     messageChannel: bool
