@@ -190,8 +190,7 @@ class EmailListManager:
             return False, "Name cannot have sequential dots"
 
         # Name cannot end in a dot
-        no_end_in_dot = re.compile(r"\.$")
-        if no_end_in_dot.search(name_candidate) is not None:
+        if name_candidate.endswith("."):
             return False, "Name cannot end in a dot."
 
         # Name can have only these allowed characters. This set of characters is an import from Korppi's character
