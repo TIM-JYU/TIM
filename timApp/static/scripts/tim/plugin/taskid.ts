@@ -106,22 +106,23 @@ export class TaskId {
         }
         let field: string | undefined;
         let blockHint: string | undefined;
-        if (blockHintOrField) {
-            if (KNOWN_FIELD_NAMES.has(blockHintOrField)) {
-                field = blockHintOrField;
-            }
-        } else if (blockHintOpt == BlockHintOption.Optional) {
-            if (blockHintOrField && !isValidId(blockHintOrField)) {
+        if (blockHintOrField && KNOWN_FIELD_NAMES.has(blockHintOrField)) {
+            field = blockHintOrField;
+        } else if (blockHintOrField) {
+            if (!isValidId(blockHintOrField)) {
                 return {
                     ok: false,
                     result: `Invalid block id format in task id: ${tid}`,
                 };
             }
             blockHint = blockHintOrField;
-        } else if (blockHintOrField) {
+        } else if (
+            !blockHintOrField &&
+            blockHintOpt === BlockHintOption.Required
+        ) {
             return {
                 ok: false,
-                result: `Invalid field access in task id: ${tid}`,
+                result: `Missing required block id in task id: ${tid}`,
             };
         }
         let access: TaskIdAccess | undefined;
