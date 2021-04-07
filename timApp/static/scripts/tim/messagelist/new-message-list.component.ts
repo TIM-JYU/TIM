@@ -122,7 +122,10 @@ export class NewMessageListComponent implements OnInit {
             // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
             // TODO: Validate input values before sending, e.g. this list has a unique name.
             listname: this.listname,
-            domain: this.domain,
+            // We added '@' in domain name for display purposes, remove it when sending domain to the server.
+            domain: this.domain.startsWith("@")
+                ? this.domain.slice(1)
+                : this.domain,
             archive: this.archive,
             emails: this.parseEmails(),
             archiveType: this.archiveType,
