@@ -134,23 +134,24 @@ class EmailListManager:
         pass
 
     @staticmethod
-    def create_new_list(fqdn_listname: str, owner_email: str, archive: str) -> None:
+    # def create_new_list(fqdn_listname: str, owner_email: str, archive: str) -> None:
+    def create_new_list(list_options: ListOptions) -> None:
         """Create a new email list.
 
-        :param archive: A value describing how this list should be archived. Possible values are 'never', 'private' and
-        'public'
-        :param owner_email: List owner's email address. Must exist and be a valid address.
-        :param fqdn_listname: A full email list name, e.g. name@domain.org.
+        :param list_options: Options for message lists, here we use the options necessary for email list creation.
         :return:
         """
-        list_name, sep, domain_name = fqdn_listname.partition("@")
-        if EmailListManager.check_name_availability(list_name):
+        if _client is None:
+            return
+
+        domain_name = list_options.domain.removeprefix("@")
+        if EmailListManager.check_name_availability(list_options.listname):
             try:
                 domain: Domain = _client.get_domain(domain_name)
-                email_list: MailingList = domain.create_list(list_name)
-                email_list.add_owner(owner_email)
+                email_list: MailingList = domain.create_list(list_options.listname)
+                email_list.add_owner(list_options.ownerEmail)
                 mlist_settings = email_list.settings
-                mlist_settings["archive_policy"] = archive
+                mlist_settings["archive_policy"] = list_options.archive
                 # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
                 # advertising on if they so choose.
                 mlist_settings["advertised"] = False
