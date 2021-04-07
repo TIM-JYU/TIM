@@ -19,25 +19,9 @@ def create_list(options: ListOptions) -> Response:
     :return: A Response how the operation succeeded.
     """
 
-    create_new_email_list(options)
+    EmailListManager.create_new_list(options)
+    # EmailListManager.create_new_list(options.listname + options.domain, options.ownerEmail, options.archive)
     return ok_response()
-
-
-def create_new_email_list(options: ListOptions) -> None:
-    """Creates a new mailing list.
-
-    TODO: Complete, this function is a stub, intended to complete when access to a safe testing environment with
-     Mailman can be arranged.
-
-
-    :param options All options regarding message lists.
-    """
-
-    print("Poor man's listname check:")
-    EmailListManager.create_new_list(options.listname + options.domain)
-    print("archive? " + str(options.archive))
-    print("archiveType? " + str(options.archiveType))
-    print("emails: " + str(options.emails))
 
 
 @dataclass
