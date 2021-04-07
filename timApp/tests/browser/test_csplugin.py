@@ -8,6 +8,9 @@ class CsPluginTest(BrowserTest):
         d = self.create_doc(initial_par="""
 #- {plugin=csPlugin #py}
 type: python
+pointsRule:
+  code: 1
+  expectCode: .*Hei maailma.*
         """)
         dt = self.create_translation(d)
         dt.document.set_settings({
@@ -15,11 +18,31 @@ type: python
             # Hide the out-of-date decoration so we don't have to update the screenshot because of it.
             'css': '.troutofdate::before { display: none; }',
         })
+        tr_par = dt.document.get_paragraphs()[1]
+        tr_par.set_markdown("""
+type: python
+pointsRule:
+  code: 1
+  expectCode: .*Hello world.*
+        """)
+        tr_par.save()
+        self.goto_document(d)
+        self.wait_until_present_and_vis('#py textarea')
+        textarea = self.find_element_and_move_to('#py textarea')
+        textarea.send_keys('print("Hei maailma!")')
+        par = self.find_element_avoid_staleness('#py > tim-plugin-loader > div')
+        runbutton = par.find_element_by_css_selector('button')
+        runbutton.click()
+        self.wait_until_present_and_vis('.console')
+        self.wait_until_present_and_vis('answerbrowser')
+        ptxt = self.find_element_by_text('Points:', 'span')
+        self.assertEqual('Points: 1', ptxt.text)
+
         self.goto_document(dt)
 
         self.wait_until_present_and_vis('#py textarea')
         textarea = self.find_element_and_move_to('#py textarea')
-        # sleep(0.5)
+        textarea.clear()
         textarea.send_keys('print("Hello world!")')
         self.get_uninteractable_element().click()
         par = self.find_element_avoid_staleness('#py > tim-plugin-loader > div')
@@ -28,6 +51,9 @@ type: python
         runbutton.click()
         self.wait_until_present_and_vis('.console')
         self.wait_until_present_and_vis('answerbrowser')
+        ptxt = self.find_element_by_text('Points:', 'span')
+        self.assertEqual('Points: 1', ptxt.text)
+        self.get_uninteractable_element().click()
         self.assert_same_screenshot(par, 'csplugin/python_after_answer', attempts=2)
 
         # post a second answer because otherwise clicking previous answer does not do anything
