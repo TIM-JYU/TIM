@@ -299,8 +299,35 @@ class EmailList:
             return "Address {0} doesn't exist on {1}. No removal performed.".format(email, listname)
 
     @staticmethod
-    def add_email(listname: str, email: str) -> None:
-        pass
+    def add_email(listname: str, email: str, real_name: str, email_owner_pre_confirmation: bool) -> None:
+        """
+        Add email to a list.
+
+        :param listname: List where a new email address is being added.
+        :param email: The email address being added to a list.
+        :param real_name: The real name associated with email.
+        :param email_owner_pre_confirmation: If True, then the user *doesn't* have to confirm their joining. If False,
+        then a confirmation email is sent to the email address before email is added to the list.
+        :return:
+        """
+        if _client is None:
+            return "There is no connection to Mailman server. No new email addresses can be added to the list."
+        try:
+            mlist: MailingList = _client.get_list(listname)
+            # Viestim:
+            #  We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise
+            #  they have to verify themselves for Mailman. Note that this is different from confirming to join a list.
+            #  We use pre_approved flag, because we assume that who adds an email to a list also wants that email onto
+            #  a list. Otherwise they would have to afterwards manually moderate their subscription request.
+            mlist.subscribe(email,
+                            pre_verified=True,
+                            pre_approved=True,
+                            pre_confirmed=email_owner_pre_confirmation,
+                            display_name=real_name)
+            return
+        except HTTPError:
+            # TODO: handle exceptions. Possible exceptions are list doesn't exits and email is already in the list.
+            return
 
     @staticmethod
     def delete_list(fqdn_listname: str) -> str:
