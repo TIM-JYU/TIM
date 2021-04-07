@@ -12,6 +12,7 @@ interface CreateListOptions {
     archive: boolean;
     archiveType: string;
     emails: string[];
+    ownerEmail: string;
 }
 
 @Component({
@@ -27,8 +28,13 @@ interface CreateListOptions {
                 <select id="domain-select" name="domain-select" [(ngModel)]="domain">
                     <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
                 </select>
-                <!-- For testing name checking -->
+                <!-- VIESTIM: For testing name checking. -->
                 <button (click)="checkListNameAvailability()">Tarkasta nimi</button>
+            </div>
+            <div>
+                <!-- VIESTIM: For testing list adding with owner email address. -->
+                <label for="">List owner's adress</label>
+                <input type="text" name="owner-adress" id="owner-adress" [(ngModel)]="ownerEmail"/>
             </div>
             <div>
             </div>
@@ -82,6 +88,8 @@ export class NewMessageListComponent implements OnInit {
 
     urlPrefix: string = "/messagelist";
 
+    ownerEmail: string = "";
+
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
             void this.getDomains();
@@ -119,6 +127,7 @@ export class NewMessageListComponent implements OnInit {
             archive: this.archive,
             emails: this.parseEmails(),
             archiveType: this.archiveType,
+            ownerEmail: this.ownerEmail,
         });
         if (!result.ok) {
             console.error(result.result.error.error);
