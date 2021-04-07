@@ -454,16 +454,14 @@ class EmailList:
             return ""
         try:
             mail_list = _client.get_list(listname)
-            # Get the domain for this list. The name and sep(arator) are irrelevant going forward.
-            list_name, sep, domain_name = listname.partition("@")
             # Get the list's list id, which is basically it's address/name but '@' replaced with a dot.
-            list_id = mail_list.rest_data["list_id"]
+            list_id: str = mail_list.rest_data["list_id"]
             # VIESTIM: This here is now hardcoded for Postorius Web UI. There might not be a way to just
             #  programmatically get the spesific hyperlink for non-TIM email list management needs, but is there a
             #  way to not hard code the Postorius part in (Postorius is Mailman's default web UI and technically
             #  we could switch to a different web UI)?
             # Build the hyperlink.
-            link = "".join(["https://", domain_name, "/postorius/lists/", list_id])
+            link = "https://timlist.it.jyu.fi/postorius/lists/" + list_id
             return link
         except HTTPError:
             return "Connection to Mailman failed while getting list's UI link."
