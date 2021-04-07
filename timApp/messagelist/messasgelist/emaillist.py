@@ -311,7 +311,7 @@ class EmailList:
         :return:
         """
         if _client is None:
-            return "There is no connection to Mailman server. No new email addresses can be added to the list."
+            return
         try:
             mlist: MailingList = _client.get_list(listname)
             # Viestim:
