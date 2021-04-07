@@ -803,7 +803,15 @@ export class AnswerBrowserController
                     "data:image"
                 );
                 if (this.selectedAnswer) {
-                    this.reviewHtml = r.result.data.reviewHtml;
+                    let newReviewHtml = r.result.data.reviewHtml;
+                    if (newReviewHtml === this.reviewHtml) {
+                        // It's possible that the user was changed but the user has exactly the same
+                        // answer as the current one. In that case, we still want to refresh the DOM
+                        // because we need to clear the annotations of the previous user.
+                        // That's why we append a space here so that Angular will always update the DOM.
+                        newReviewHtml += " ";
+                    }
+                    this.reviewHtml = newReviewHtml;
                 } else {
                     this.reviewHtml = undefined;
                 }
