@@ -5,6 +5,7 @@ from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain
 
+from timApp.messagelist.messasgelist.listoptions import ListOptions
 from timApp.tim_app import app
 
 _client: Optional[Client] = None

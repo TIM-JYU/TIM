@@ -4,20 +4,11 @@ from typing import List, Optional
 from flask import Response
 
 from timApp.messagelist.messasgelist.emaillist import EmailListManager, EmailList
+from timApp.messagelist.messasgelist.listoptions import ListOptions
 from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
-
-
-@dataclass
-class ListOptions:
-    """All options regarding message lists."""
-    listname: str
-    domain: str
-    archive: bool
-    archiveType: str
-    emails: List[str]
 
 
 @messagelist.route('/createlist', methods=['POST'])
