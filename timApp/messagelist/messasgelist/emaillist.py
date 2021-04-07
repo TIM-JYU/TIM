@@ -134,13 +134,24 @@ class EmailListManager:
 
     @staticmethod
     def create_new_list(name: str) -> None:
-        """
+        """Create a new email list.
 
         :param name: A full email list name, e.g. name@domain.org.
         :return:
         """
-        print("testiprinti")
-        print(name)
+        full_list_name: List[str] = name.split("@")
+
+        # TODO: check that name matches requirements
+        if EmailListManager.check_name_availability(name):
+            print("list " + name + " does not exist yet, creating...")
+            # TODO: Retrieve domain instead of creating it here,
+            #  i.e. domain: Domain = _client.get_domain(full_list_name[1]),
+            #  however get_domain does not currently work for some reason.
+            #  This temporary implementation can be run only once per domain name between restarts.
+            domain: Domain = _client.create_domain(full_list_name[1])
+            email_list: MailingList = domain.create_list(full_list_name[0])
+        else:
+            print("list " + name + " already exists")
 
     @staticmethod
     def check_name_rules(name_candidate: str) -> Tuple[bool, str]:
