@@ -9,8 +9,6 @@ interface CreateListOptions {
     // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
     listname: string;
     domain: string;
-    // archive: boolean;
-    // archiveType: string;
     archive: string;
     emails: string[];
     ownerEmail: string;
@@ -128,7 +126,6 @@ export class NewMessageListComponent implements OnInit {
                 : this.domain,
             archive: this.archive,
             emails: this.parseEmails(),
-            archiveType: this.archiveType,
             ownerEmail: this.ownerEmail,
         });
         if (!result.ok) {
