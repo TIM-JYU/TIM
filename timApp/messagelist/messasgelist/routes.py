@@ -98,10 +98,10 @@ def delete_list(listname: str) -> Response:
     """
     # TODO: User authentication. We can't let just anyone delete a list just because they can type the name.
     list_name, sep, domain = listname.partition("@")
+    r = ""
     if domain:
         # A domain is given, so we are also looking to delete an email list.
         # Notice parameter. We give the fqdn list name to delete_list(), not plain list_name.
         r = EmailList.delete_list(listname)
-        pass
     # TODO: Put message list deletion here.
     return json_response(r)
