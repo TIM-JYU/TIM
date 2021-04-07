@@ -184,6 +184,8 @@ interface CreateMessageOptions {
     reply: boolean;
     replyAll: boolean;
     expires: Date | undefined;
+    sender: string | null;
+    senderEmail: string | null;
 }
 
 @Component({
@@ -297,6 +299,8 @@ export class TimEmailComponent {
             reply: this.reply,
             replyAll: this.replyAll,
             expires: this.expires,
+            sender: Users.getCurrent().real_name,
+            senderEmail: Users.getCurrent().email,
         });
         if (!result.ok) {
             console.error(result.result.error.error);

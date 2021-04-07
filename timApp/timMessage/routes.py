@@ -22,6 +22,8 @@ class MessageOptions:
     reply: bool
     replyAll: bool
     expires: Optional[datetime] = None
+    sender: Optional[str] = None #VIESTIM: can't send message without sender!
+    senderEmail: Optional[str] = None #VIESTIM: can't send message without email?
 
 @timMessage.route("/send", methods=['POST'])
 def send_tim_message(options: MessageOptions) -> Response:
