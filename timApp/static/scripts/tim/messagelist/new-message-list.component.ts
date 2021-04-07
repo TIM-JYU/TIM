@@ -9,8 +9,9 @@ interface CreateListOptions {
     // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
     listname: string;
     domain: string;
-    archive: boolean;
-    archiveType: string;
+    // archive: boolean;
+    // archiveType: string;
+    archive: string;
     emails: string[];
     ownerEmail: string;
 }
@@ -44,16 +45,15 @@ interface CreateListOptions {
                 messages?</label>
             </div>
             <div>
-                <p>Radio buttons example</p>
-                <p>Currently selected item: {{ archiveType }}</p>
-                <label *ngFor="let item of items">
+                <p>List archive policy:</p>
+                <label *ngFor="let option of archiveOptions">
                     <input
                             name="items-radio"
                             type="radio"
-                            [value]="item"
-                            [(ngModel)]="archiveType"
+                            [value]="option"
+                            [(ngModel)]="archive"
                     />
-                    {{ item }}
+                    {{ option }}
                 </label>
             </div>
             <div>
@@ -76,10 +76,9 @@ interface CreateListOptions {
 export class NewMessageListComponent implements OnInit {
     listname: string = "";
 
-    // list is archived by default
-    archive: boolean = true;
-    archiveType: string = "";
-    items: string[] = ["public archive", "secret archive"];
+    archiveOptions: string[] = ["none", "private", "public"];
+    // List has a private archive by default.
+    archive: string = this.archiveOptions[1];
 
     domain: string = "";
     domains: string[] = [];
