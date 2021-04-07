@@ -144,11 +144,20 @@ class EmailListManager:
             return
         if EmailListManager.check_name_availability(list_options.listname, list_options.domain):
             try:
-                domain: Domain = _client.get_domain(domain_name)
+                domain: Domain = _client.get_domain(list_options.domain)
                 email_list: MailingList = domain.create_list(list_options.listname)
+                # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
+                #  their lists on Mailman.
                 email_list.add_owner(list_options.ownerEmail)
+                # settings-attribute is a dict.
                 mlist_settings = email_list.settings
-                mlist_settings["archive_policy"] = list_options.archive
+                if list_options.archive == "none":
+                    # If Archive policy is intented to be 'none', then this list isn't archived at all.
+                    EmailList.set_archive_type(list_options.listname + "@" + list_options.domain, False)
+                else:
+                    # Unless archive policy is intented to be 'none', then we assume archiving to be on by default
+                    # and we just set the appropriate archive secrecy level.
+                    mlist_settings["archive_policy"] = list_options.archive
                 # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
                 # advertising on if they so choose.
                 mlist_settings["advertised"] = False
