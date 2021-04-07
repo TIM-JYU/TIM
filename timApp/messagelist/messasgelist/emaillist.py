@@ -55,8 +55,9 @@ class EmailListManager:
         try:
             d = _client.get_domain(domain)
             mlists: List[MailingList] = d.get_lists()
+            fqdn_name_candidate = name_candidate + "@" + domain
             for name in [mlist.fqdn_listname for mlist in mlists]:
-                if name_candidate == name:
+                if fqdn_name_candidate == name:
                     return False, "Name is already in use."
             return True, "Name is available."
         except HTTPError:
