@@ -46,8 +46,7 @@ class EmailListManager:
         """Search for a name from the pool of used email list names.
 
         :param domain: Domain to search for lists, which then are used to check name availability.
-        :param name_candidate: The name to search for. The name needs to be a proper email list name,
-        e.g. name@domain.org.
+        :param name_candidate: The name to search for.
         :return: If we cannot get data from Mailman, return None and an explanation string. Return True if name is
         available. Return False if name was not available and a string to specify why.
         """
@@ -68,9 +67,9 @@ class EmailListManager:
         """Checks name requirements spesific for email list.
 
         :param domain: Domain to search for lists.
-        :param name_candidate: Name to check for things and stuff. Mostly stuff.
-        :return: Return None if connection to Mailman failed. Return True if all name requirements are met. Otherwise
-        return False. In all cases, return an explanatory string.
+        :param name_candidate: Name to check against naming rules.
+        :return: Return A tuple. None if connection to Mailman failed. Return True if all name requirements are met.
+         Otherwise return False. In all cases, return an explanatory string as the second part of the tuple.
         """
         em = EmailListManager
 
@@ -134,7 +133,6 @@ class EmailListManager:
         pass
 
     @staticmethod
-    # def create_new_list(fqdn_listname: str, owner_email: str, archive: str) -> None:
     def create_new_list(list_options: ListOptions) -> None:
         """Create a new email list.
 
@@ -143,9 +141,7 @@ class EmailListManager:
         """
         if _client is None:
             return
-
-        domain_name = list_options.domain.removeprefix("@")
-        if EmailListManager.check_name_availability(list_options.listname):
+        if EmailListManager.check_name_availability(list_options.listname, list_options.domain):
             try:
                 domain: Domain = _client.get_domain(domain_name)
                 email_list: MailingList = domain.create_list(list_options.listname)
@@ -169,8 +165,8 @@ class EmailListManager:
     def check_name_rules(name_candidate: str) -> Tuple[bool, str]:
         """Check if name candidate complies with naming rules.
 
-        :param name_candidate:
-        :return: Return True if name passes all rule checks. Otherwise return False.
+        :param name_candidate: What name we are checking.
+        :return: Return True if name passes all rule checks. Otherwise return False. Also return an explanation string.
         """
         # Be careful when checking regex rules. Some rules allow a pattern to exist, while prohibiting others. Some
         # rules prohibit something, but allow other things to exist. If the explanation for a rule is different than
@@ -510,7 +506,9 @@ class EmailList:
             return []
         try:
             # VIESTIM: This may or may not be enough. Function find_lists can take optional argument for role on the
-            #  list ('member', 'owner' or 'moderator'). Does this get them all?
+            #  list ('member', 'owner' or 'moderator'). This returns them all, but might return duplicates if email
+            #  is in different roles in a list. Is it better to ask them from Mailman separated by role, or do role
+            #  checking and grouping here?
             lists = _client.find_lists(email)
             return lists
         except HTTPError:
