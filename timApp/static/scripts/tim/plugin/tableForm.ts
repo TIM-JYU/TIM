@@ -179,7 +179,7 @@ interface CreateMessageOptions {
     emailbody: string;
     messageChannel: boolean;
     archive: boolean;
-    private: boolean;
+    isPrivate: boolean;
     pageList: string;
     check: boolean;
     reply: boolean;
@@ -209,28 +209,28 @@ interface CreateMessageOptions {
             <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
             <p><label><input type="checkbox"
-                                      [(ngModel)]="messageChannel">Send to recipient's own message channels</label></p>
+                                      [(ngModel)]="createMessageOptions.messageChannel">Send to recipient's own message channels</label></p>
             <p><label><input type="checkbox"
-                                      [(ngModel)]="archive">Archive message</label></p>
+                                      [(ngModel)]="createMessageOptions.archive">Archive message</label></p>
             <p><label><input type="checkbox"
-                                      [(ngModel)]="private">Recipient sees message as private</label></p>
+                                      [(ngModel)]="createMessageOptions.isPrivate">Recipient sees message as private</label></p>
             <h3>Options for TIM message</h3>
             <p><label><input type="checkbox"
                                       [(ngModel)]="timMessage">Send as TIM message</label></p>
             <p>Pages to send message to: (enter names)</p>
-            <p><textarea [(ngModel)]="pageList" rows="4" cols="40"></textarea></p>                                      
+            <p><textarea [(ngModel)]="createMessageOptions.pageList" rows="4" cols="40"></textarea></p>                                      
             <p><label><input type="checkbox"
-                                      [(ngModel)]="check">Message can be checked</label></p>
+                                      [(ngModel)]="createMessageOptions.check">Message can be checked</label></p>
             <p><label><input type="checkbox"
-                                      [(ngModel)]="reply">Message can be replied to</label></p>
-            <p><label name="replyAll"><input type="radio"
-                                      [(ngModel)]="replyAll" value="true">Recipient replies all by default</label><br/>
-            <label name="replyAll"><input type="radio"
-                                      [(ngModel)]="replyAll" value="false">Recipient only replies to sender</label></p>
+                                      [(ngModel)]="createMessageOptions.reply">Message can be replied to</label></p>
+            <p><label><input type="radio"
+                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" value="true">Recipient replies all by default</label><br/>
+            <label><input type="radio"
+                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" value="false">Recipient only replies to sender</label></p>
             <p class="form-group">
                 <label for="expiration-selector" class="col-sm-4 control-label">Message will be removed on:</label>
                 <tim-datetime-picker id="expiration-selector"
-                                     [(time)]="expires"
+                                     [(time)]="createMessageOptions.expires"
                                      placeholder="Leave empty, if the message should not be removed automatically">
                 </tim-datetime-picker>
             </p>
@@ -253,15 +253,22 @@ export class TimEmailComponent {
     emailbccme: boolean = true;
     emailtim: boolean = true;
     emailMsg: string = "";
-    messageChannel: boolean = false;
-    archive: boolean = true;
-    private: boolean = false;
     timMessage: boolean = false;
-    pageList: string = "";
-    check: boolean = true;
-    reply: boolean = true;
-    replyAll: boolean = true;
-    expires: Date | undefined;
+    createMessageOptions: CreateMessageOptions = {
+        recipient: this.emaillist.replace(/\n/g, ";"),
+        emailsubject: this.emailsubject,
+        emailbody: this.emailbody,
+        messageChannel: false,
+        archive: true,
+        isPrivate: false,
+        pageList: "",
+        check: true,
+        reply: true,
+        replyAll: true,
+        expires: undefined,
+        sender: Users.getCurrent().real_name,
+        senderEmail: Users.getCurrent().email,
+    };
     @Input()
     taskid?: TaskId;
 
@@ -288,21 +295,7 @@ export class TimEmailComponent {
     async sendTimMessage() {
         // TODO: actual logic here.
         // VIESTIM These fields have to match with interface CreateMessageOptions, otherwise a type error occurs.
-        const result = await this.postTimMessage({
-            recipient: this.emaillist.replace(/\n/g, ";"),
-            emailsubject: this.emailsubject,
-            emailbody: this.emailbody,
-            messageChannel: this.messageChannel,
-            private: this.private,
-            archive: this.archive,
-            pageList: this.pageList,
-            check: this.check,
-            reply: this.reply,
-            replyAll: this.replyAll,
-            expires: this.expires,
-            sender: Users.getCurrent().real_name,
-            senderEmail: Users.getCurrent().email,
-        });
+        const result = await this.postTimMessage(this.createMessageOptions);
         if (!result.ok) {
             console.error(result.result.error.error);
         } else {

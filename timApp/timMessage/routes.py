@@ -16,7 +16,7 @@ class MessageOptions:
     emailsubject: str
     emailbody: str
     messageChannel: bool
-    private: bool
+    isPrivate: bool
     archive: bool
     pageList: str
     check: bool
