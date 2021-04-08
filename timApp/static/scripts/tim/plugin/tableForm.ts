@@ -174,7 +174,7 @@ const sortLang = "fi";
 
 interface CreateMessageOptions {
     // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py)
-    rcpt: string;
+    recipient: string;
     emailsubject: string;
     emailbody: string;
     messageChannel: boolean;
@@ -208,27 +208,26 @@ interface CreateMessageOptions {
             <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
             <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
-            <p><label title=""><input type="checkbox"
+            <p><label><input type="checkbox"
                                       [(ngModel)]="messageChannel">Send to recipient's own message channels</label></p>
-            <p><label title=""><input type="checkbox"
+            <p><label><input type="checkbox"
                                       [(ngModel)]="archive">Archive message</label></p>
-            <p><label title=""><input type="checkbox"
+            <p><label><input type="checkbox"
                                       [(ngModel)]="private">Recipient sees message as private</label></p>
             <h3>Options for TIM message</h3>
-            <p><label title=""><input type="checkbox"
+            <p><label><input type="checkbox"
                                       [(ngModel)]="timMessage">Send as TIM message</label></p>
             <p>Pages to send message to: (enter names)</p>
             <p><textarea [(ngModel)]="pageList" rows="4" cols="40"></textarea></p>                                      
-            <p><label title=""><input type="checkbox"
+            <p><label><input type="checkbox"
                                       [(ngModel)]="check">Message can be checked</label></p>
-            <p><label title=""><input type="checkbox"
+            <p><label><input type="checkbox"
                                       [(ngModel)]="reply">Message can be replied to</label></p>
-            <p><label title="" name="replyAll"><input type="radio"
+            <p><label name="replyAll"><input type="radio"
                                       [(ngModel)]="replyAll" value="true">Recipient replies all by default</label><br/>
-            <label title="" name="replyAll"><input type="radio"
+            <label name="replyAll"><input type="radio"
                                       [(ngModel)]="replyAll" value="false">Recipient only replies to sender</label></p>
-            <p class="form-group"
-                 title="">
+            <p class="form-group">
                 <label for="expiration-selector" class="col-sm-4 control-label">Message will be removed on:</label>
                 <tim-datetime-picker id="expiration-selector"
                                      [(time)]="expires"
@@ -290,7 +289,7 @@ export class TimEmailComponent {
         // TODO: actual logic here.
         // VIESTIM These fields have to match with interface CreateMessageOptions, otherwise a type error occurs.
         const result = await this.postTimMessage({
-            rcpt: this.emaillist.replace(/\n/g, ";"),
+            recipient: this.emaillist.replace(/\n/g, ";"),
             emailsubject: this.emailsubject,
             emailbody: this.emailbody,
             messageChannel: this.messageChannel,
