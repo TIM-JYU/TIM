@@ -8,10 +8,10 @@ from mailmanclient import Client, MailingList, Domain
 from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.tim_app import app
 from timApp.util.logger import log_warning, log_info
-from tim_common.marshmallow_dataclass import dataclass as marshmallow_dataclass
+from tim_common.marshmallow_dataclass import class_schema
 
 
-@marshmallow_dataclass
+@dataclass
 class MailmanConfig:
     MAILMAN_URL: Optional[str]
     MAILMAN_USER: Optional[str]
@@ -21,7 +21,7 @@ class MailmanConfig:
         return bool(self.MAILMAN_URL and self.MAILMAN_USER and self.MAILMAN_PASS)
 
 
-config: MailmanConfig = MailmanConfig.Schema().load(app.config, unknown="EXCLUDE")
+config: MailmanConfig = class_schema(MailmanConfig)().load(app.config, unknown="EXCLUDE")
 _client = Client(config.MAILMAN_URL, config.MAILMAN_USER, config.MAILMAN_PASS) if config else None
 """
 A client object to utilize Mailman's REST API. Poke directly only when necessary, otherwise use via EmailListManager 
