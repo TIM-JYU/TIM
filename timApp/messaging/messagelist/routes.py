@@ -3,7 +3,8 @@ from typing import List, Optional
 
 from flask import Response
 
-from timApp.messaging.messagelist.emaillist import EmailListManager
+from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
+from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
