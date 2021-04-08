@@ -141,7 +141,7 @@ export class NewMessageListComponent implements OnInit {
         if (!this.emails) {
             return [];
         }
-        return this.emails.split("\n").filter(Boolean);
+        return this.emails.split("\n").filter((e) => e);
     }
 
     /**
