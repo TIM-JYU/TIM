@@ -211,6 +211,12 @@ export class NewMessageListComponent implements OnInit {
             return false;
         }
 
+        // Name contains at least one digit.
+        const regExpAtLeastOneDigit: RegExp = /\d/;
+        if (!regExpAtLeastOneDigit.test(this.listname)) {
+            console.error("name doesn't contain at least one digit.");
+        }
+
         // Name can't contain multiple sequential dots.
         const regExpMultipleDots: RegExp = /\.\.+/;
         if (regExpMultipleDots.test(this.listname)) {
