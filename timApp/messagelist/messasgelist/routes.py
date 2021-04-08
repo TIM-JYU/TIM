@@ -20,7 +20,6 @@ def create_list(options: ListOptions) -> Response:
     """
 
     EmailListManager.create_new_list(options)
-    # EmailListManager.create_new_list(options.listname + options.domain, options.ownerEmail, options.archive)
     return ok_response()
 
 
@@ -53,7 +52,7 @@ def check_name(name_candidate: str) -> Response:
     email_explanation: str = ""
 
     if sep:
-        # If character '@' is found, we check email list spesific name requirements.
+        # If character '@' is found, we check email list specific name requirements.
         email_requirements, email_explanation = EmailListManager.check_name_requirements(name, domain)
 
     # Initialize a response.

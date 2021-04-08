@@ -10,11 +10,11 @@ from timApp.tim_app import app
 
 _client: Optional[Client] = None
 """
-A client object to utilize Mailmans REST API. Poke directly only when necessary, otherwise use via EmailListManager 
+A client object to utilize Mailman's REST API. Poke directly only when necessary, otherwise use via EmailListManager 
 class. If this is None, mailmanclient-library has not been configured for use.
 """
 
-if "MAILMAN_URL" not in app.config or "MAILMAN_PASS" not in app.config or "MAILMAN_PASS" not in app.config:
+if "MAILMAN_URL" not in app.config or "MAILMAN_PASS" not in app.config or "MAILMAN_USER" not in app.config:
     # No configuration for Mailman found.
     print("No configuration found for Mailman connection.")
     pass
@@ -36,7 +36,7 @@ else:
 @dataclass
 class EmailListManager:
     """Functionality for chosen email list management system Mailman 3. Handels everything else except things
-    spesific to existing email lists."""
+    specific to existing email lists."""
 
     domains: List[str]
     """Possible domains which can be used with our instance of Mailman."""
@@ -65,7 +65,7 @@ class EmailListManager:
 
     @staticmethod
     def check_name_requirements(name_candidate: str, domain: str) -> Tuple[Optional[bool], str]:
-        """Checks name requirements spesific for email list.
+        """Checks name requirements specific for email list.
 
         :param domain: Domain to search for lists.
         :param name_candidate: Name to check against naming rules.
@@ -225,7 +225,7 @@ class EmailListManager:
 
 @dataclass
 class EmailList:
-    """Class to aid with email list spesific functionality, such as attribute checking and changes.
+    """Class to aid with email list specific functionality, such as attribute checking and changes.
 
     This class is designed to be used when an email list is expected to exits. Think operations like adding
     an email to an existing list etc. For operations other than that, use EmailListManager.
@@ -457,7 +457,7 @@ class EmailList:
             # Get the list's list id, which is basically it's address/name but '@' replaced with a dot.
             list_id: str = mail_list.rest_data["list_id"]
             # VIESTIM: This here is now hardcoded for Postorius Web UI. There might not be a way to just
-            #  programmatically get the spesific hyperlink for non-TIM email list management needs, but is there a
+            #  programmatically get the specific hyperlink for non-TIM email list management needs, but is there a
             #  way to not hard code the Postorius part in (Postorius is Mailman's default web UI and technically
             #  we could switch to a different web UI)?
             # Build the hyperlink.
@@ -469,7 +469,7 @@ class EmailList:
     @staticmethod
     def freeze_list(listname: str) -> None:
         """
-        Freeze an email list. No posts are allowed on the list after freezing. Think a course spesific email list and
+        Freeze an email list. No posts are allowed on the list after freezing. Think a course specific email list and
         the course ends, but it's mail archive is kept intact for later potential use. This stops (or at least
         mitigates) that the mail archive on that list changes after the freezing.
 
