@@ -7,6 +7,7 @@ from mailmanclient import Client, MailingList, Domain
 
 from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.tim_app import app
+from timApp.util.flask.requesthelper import NotExist
 from timApp.util.logger import log_warning, log_info
 from tim_common.marshmallow_dataclass import class_schema
 
@@ -161,6 +162,7 @@ class EmailListManager:
                 # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
                 # advertising on if they so choose.
                 mlist_settings["advertised"] = False
+                mlist_settings["admin_notify_mchanges"] = list_options.notifyOwnerOnListChange
                 mlist_settings.save()
                 return
             except HTTPError:
@@ -254,6 +256,23 @@ class EmailList:
                 list_archivers[archiver] = archive_status
         except HTTPError:
             pass
+
+    @staticmethod
+    def set_notify_owner_on_list_change(listname: str, on_change_flag: bool) -> None:
+        if _client is None:
+            raise NotExist("No email list server connection.")
+
+        mlist = _client.get_list(listname)
+        mlist.settings["admin_notify_mchanges"] = on_change_flag
+        mlist.settings.save()
+        return
+
+    @staticmethod
+    def get_notify_owner_on_list_change(listname: str) -> bool:
+        if _client is None:
+            raise NotExist("No email list server connection.")
+        mlist = _client.get_list(listname)
+        return mlist.settings["admin_notify_mchanges"]
 
     @staticmethod
     def get_archive_type(listname: str) -> bool:

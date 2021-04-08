@@ -8,6 +8,6 @@ class ListOptions:
     listname: str
     domain: str
     archive: str
-    # archiveType: str
     emails: List[str]
     ownerEmail: str
+    notifyOwnerOnListChange: bool

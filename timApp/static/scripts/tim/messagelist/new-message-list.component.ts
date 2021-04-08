@@ -12,6 +12,7 @@ interface CreateListOptions {
     archive: string;
     emails: string[];
     ownerEmail: string;
+    notifyOwnerOnListChange: boolean;
 }
 
 @Component({
@@ -55,6 +56,11 @@ interface CreateListOptions {
                 </label>
             </div>
             <div>
+                <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
+                       [(ngModel)]="notifyOwnerOnListChange"/>
+                <label for="notify-owner-on-list-change">Notify me on list changes (e.g. user subscribes)</label>
+            </div>
+            <div>
                 <label for="add-multiple-emails">Add multiple emails</label> <br/>
                 <textarea id="add-multiple-emails" name="add-multiple-emails" [(ngModel)]="emails"></textarea>
             </div>
@@ -86,6 +92,8 @@ export class NewMessageListComponent implements OnInit {
     urlPrefix: string = "/messagelist";
 
     ownerEmail: string = "";
+
+    notifyOwnerOnListChange: boolean = false;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -127,6 +135,7 @@ export class NewMessageListComponent implements OnInit {
             archive: this.archive,
             emails: this.parseEmails(),
             ownerEmail: this.ownerEmail,
+            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
         });
         if (!result.ok) {
             console.error(result.result.error.error);
