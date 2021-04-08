@@ -8,7 +8,7 @@ from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
-messagelist = TypedBlueprint('messaging', __name__, url_prefix='/messaging')
+messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
 
 @messagelist.route('/createlist', methods=['POST'])

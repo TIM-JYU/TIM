@@ -66,7 +66,7 @@ from timApp.readmark.routes import readings
 from timApp.scheduling.scheduling_routes import scheduling
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
-from timApp.messaging.timMessage import timMessage
+from timApp.messaging.timMessage.routes import timMessage
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
