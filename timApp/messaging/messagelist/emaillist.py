@@ -7,25 +7,35 @@ from mailmanclient import Client, MailingList, Domain
 
 from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.tim_app import app
+from timApp.util.logger import log_warning, log_info
+from tim_common.marshmallow_dataclass import dataclass as marshmallow_dataclass
 
-_client: Optional[Client] = None
+
+@marshmallow_dataclass
+class MailmanConfig:
+    MAILMAN_URL: Optional[str]
+    MAILMAN_USER: Optional[str]
+    MAILMAN_PASS: Optional[str]
+
+    def __bool__(self):
+        return bool(self.MAILMAN_URL and self.MAILMAN_USER and self.MAILMAN_PASS)
+
+
+config: MailmanConfig = MailmanConfig.Schema().load(app.config, unknown="EXCLUDE")
+_client = Client(config.MAILMAN_URL, config.MAILMAN_USER, config.MAILMAN_PASS)
 """
 A client object to utilize Mailman's REST API. Poke directly only when necessary, otherwise use via EmailListManager 
 class. If this is None, mailmanclient-library has not been configured for use.
 """
 
-if "MAILMAN_URL" not in app.config or "MAILMAN_PASS" not in app.config or "MAILMAN_USER" not in app.config:
-    # No configuration for Mailman found.
-    print("No configuration found for Mailman connection.")
-    pass
-elif app.config['MAILMAN_URL'] == "" or app.config['MAILMAN_USER'] == "" or app.config['MAILMAN_PASS'] == "":
-    # Only placeholder configuration for Mailman found.
-    print("Server started without proper configuration for Mailman connection.")
+# Test mailmanclient's initialization.
+if not _client:
+    log_warning("No mailman configuration found, no email support will be enabled.")
 else:
-    # All Mailman configuration values exist and are something other than an empty string. We can initialize the
-    # Client-object for connection.
-    _client = Client(app.config['MAILMAN_URL'], app.config['MAILMAN_USER'], app.config['MAILMAN_PASS'])
-    # TODO: Test connection somehow?
+    log_info("Mailman connection configured.")
+
+
+# TODO: Test connection somehow?
 
 
 # VIESTIM Decorate class methods with @staticmethod unless the method would necessarily be needed for an instance of
