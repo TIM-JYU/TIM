@@ -22,7 +22,7 @@ class MailmanConfig:
 
 
 config: MailmanConfig = MailmanConfig.Schema().load(app.config, unknown="EXCLUDE")
-_client = Client(config.MAILMAN_URL, config.MAILMAN_USER, config.MAILMAN_PASS)
+_client = Client(config.MAILMAN_URL, config.MAILMAN_USER, config.MAILMAN_PASS) if config else None
 """
 A client object to utilize Mailman's REST API. Poke directly only when necessary, otherwise use via EmailListManager 
 class. If this is None, mailmanclient-library has not been configured for use.
