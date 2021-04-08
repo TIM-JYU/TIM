@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, timezone
 
 from flask import Response
@@ -12,7 +12,7 @@ timMessage = TypedBlueprint('timMessage', __name__, url_prefix='/timMessage')
 @dataclass
 class MessageOptions:
     #Options regarding TIM messages
-    recipient: str #multiple email addresses separated by ; VIESTIM: find recipient by email or some other identifier?
+    recipients: List[str] # VIESTIM: find recipient by email or some other identifier?
     emailsubject: str
     emailbody: str
     messageChannel: bool

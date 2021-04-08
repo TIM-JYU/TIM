@@ -173,10 +173,8 @@ const memberShipColIndex = 3;
 const sortLang = "fi";
 
 interface CreateMessageOptions {
-    // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py)
-    recipient: string;
-    emailsubject: string;
-    emailbody: string;
+    // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py). BUT recipients, emailsubject and emailbody are added later at postTimMessage()
+    // VIESTIM or TODO: change this later when separate email functionality is removed?
     messageChannel: boolean;
     archive: boolean;
     isPrivate: boolean;
@@ -255,9 +253,6 @@ export class TimEmailComponent {
     emailMsg: string = "";
     timMessage: boolean = false;
     createMessageOptions: CreateMessageOptions = {
-        recipient: this.emaillist.replace(/\n/g, ";"),
-        emailsubject: this.emailsubject,
-        emailbody: this.emailbody,
         messageChannel: false,
         archive: true,
         isPrivate: false,
@@ -293,8 +288,6 @@ export class TimEmailComponent {
     }
 
     async sendTimMessage() {
-        // TODO: actual logic here.
-        // VIESTIM These fields have to match with interface CreateMessageOptions, otherwise a type error occurs.
         const result = await this.postTimMessage(this.createMessageOptions);
         if (!result.ok) {
             console.error(result.result.error.error);
@@ -306,7 +299,17 @@ export class TimEmailComponent {
 
     // VIESTIM this helper function helps keeping types in check.
     private postTimMessage(options: CreateMessageOptions) {
-        return to2(this.http.post("/timMessage/send", {options}).toPromise());
+        const message = {
+            emailbody: this.emailbody,
+            emailsubject: this.emailsubject,
+            recipients: this.emaillist.split(/\n/g),
+        };
+        const timMessage = {...options, ...message};
+        return to2(
+            this.http
+                .post("/timMessage/send", {options: timMessage})
+                .toPromise()
+        );
     }
 
     // TODO: separate TIM messages from here?
