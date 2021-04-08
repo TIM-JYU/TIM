@@ -37,10 +37,6 @@ else:
 
 # TODO: Test connection somehow?
 
-
-# VIESTIM Decorate class methods with @staticmethod unless the method would necessarily be needed for an instance of
-#  the class. We wish to avoid instancing classes if possible.
-
 # TODO: Handle situations where we can't contact Mailman server.
 
 @dataclass
@@ -136,12 +132,6 @@ class EmailListManager:
             return domain_names
         except HTTPError:
             return []
-
-    @staticmethod
-    def _set_domains() -> None:
-        """Set possible domains. Searches possible domains from a configure file."""
-        # TODO: Search the proper configuration file(s) for domains. Or should these be asked from the server instead?
-        pass
 
     @staticmethod
     def create_new_list(list_options: ListOptions) -> None:
