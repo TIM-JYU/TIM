@@ -3,11 +3,11 @@ from typing import List
 
 from flask import Response
 
-from timApp.messagelist.messasgelist.emaillist import EmailListManager
+from timApp.messaging.messagelist.emaillist import EmailListManager
 from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
-messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
+messagelist = TypedBlueprint('messaging', __name__, url_prefix='/messaging')
 
 
 @dataclass
