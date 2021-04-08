@@ -17,7 +17,7 @@ class MailmanConfig:
     MAILMAN_USER: Optional[str]
     MAILMAN_PASS: Optional[str]
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self.MAILMAN_URL and self.MAILMAN_USER and self.MAILMAN_PASS)
 
 
