@@ -8,13 +8,13 @@ import {CommonModule} from "@angular/common";
     template: `
         <div class="timMessageDisplay" *ngIf="showMessage">
             <p>From: {{sender}}</p>
-            <div class="fullMessageContent" *ngIf="readMore">
+            <div class="fullMessageContent" *ngIf="showFullContent">
                 <p>{{fullContent}}</p>
-                <p *ngIf="!shortMessage"><a (click)="displayContent()">Read less</a></p>
+                <p *ngIf="messageOverMaxLength"><a (click)="toggleDisplayedContentLength()">Read less</a></p>
             </div>
-            <div class="cutMessageContent" *ngIf="!readMore">
+            <div class="cutMessageContent" *ngIf="!showFullContent">
                 <p>{{shownContent}}<span>...</span></p>
-                <p><a (click)="displayContent()">Read more</a></p>
+                <p><a (click)="toggleDisplayedContentLength()">Read more</a></p>
             </div>
             <div class="buttonArea">
                 <button class="timButton" [disabled]="!canMarkAsRead" title="Read Receipt"
@@ -27,24 +27,24 @@ import {CommonModule} from "@angular/common";
             <div class="replyArea" *ngIf="showReply">
                 <textarea id="reply-message" name="reply-message"></textarea>
                 <div class="sent">
-                    <button class="timButton" (click)="send()">Send</button>
+                    <button class="timButton" (click)="sendReply()">Send</button>
                     <span *ngIf="replySent">Sent!</span>
                 </div>
             </div>
         </div>
         <ng-container *ngIf="markedAsRead">
             <p>Read receipt delivered to sender</p>
-            <button class="timButton" (click)="cancel()">Cancel</button>
+            <button class="timButton" (click)="cancelReadReceipt()">Cancel</button>
         </ng-container>
     `,
 })
 export class TimMessageComponent implements OnInit {
     messageMaxLength: number = 320;
-    shortMessage: boolean = false;
+    messageOverMaxLength: boolean = true;
     showMessage: boolean = true;
     fullContent?: string;
     shownContent?: string;
-    readMore: boolean = false;
+    showFullContent: boolean = false;
     showReply: boolean = false;
     canMarkAsRead: boolean = false;
     markedAsRead: boolean = false;
@@ -55,8 +55,8 @@ export class TimMessageComponent implements OnInit {
     /**
      * Displays the full message content or the shortened version.
      */
-    displayContent(): void {
-        this.readMore = !this.readMore;
+    toggleDisplayedContentLength(): void {
+        this.showFullContent = !this.showFullContent;
     }
 
     /**
@@ -70,7 +70,7 @@ export class TimMessageComponent implements OnInit {
     /**
      * Cancels the read receipt and re-displays the message.
      */
-    cancel(): void {
+    cancelReadReceipt(): void {
         this.markedAsRead = false;
         this.showMessage = true;
     }
@@ -92,7 +92,7 @@ export class TimMessageComponent implements OnInit {
     /**
      * Hides the message and shows a "sent" alert.
      */
-    send(): void {
+    sendReply(): void {
         this.replySent = true;
     }
 
@@ -114,8 +114,8 @@ export class TimMessageComponent implements OnInit {
             tehtävä vähintään yksi Bonus- tai Guru-tehtävä (vuonna 2018 ekassa jaksossa, \
             jatkossa molemmissa jaksoissa).";
         if (this.fullContent.length < this.messageMaxLength) {
-            this.shortMessage = true;
-            this.readMore = true;
+            this.messageOverMaxLength = false;
+            this.showFullContent = true;
         } else {
             this.shownContent = this.fullContent.substr(
                 0,
