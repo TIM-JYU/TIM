@@ -205,3 +205,29 @@ tim-alert {
         max-height: 50vh;
     }
 }
+
+tim-message {
+    .timMessageDisplay {
+        border: 1px solid black;
+        border-radius: 6px;
+        padding: 10px;
+        background-color: $basic-color-inverse;
+    }
+
+    .timButton {
+        margin-right: 5px;
+    }
+
+    .replyArea {
+        padding-top: 10px;
+
+        textarea {
+            width: 500px;
+            display: block;
+        }
+
+        .sent {
+            margin-top: 5px;
+        }
+    }
+}
