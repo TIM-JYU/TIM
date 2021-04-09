@@ -13,12 +13,14 @@ interface CreateListOptions {
     emails: string[];
     ownerEmail: string;
     notifyOwnerOnListChange: boolean;
+    listDescription: string;
+    listInfo: string;
 }
 
 @Component({
     selector: "tim-new-message-list",
     template: `
-        <form>
+        <form name="list-options-form">
             <h1>Create new message list</h1>
             <div>
                 <label for="list-name">List name: </label>
@@ -33,8 +35,16 @@ interface CreateListOptions {
             </div>
             <div>
                 <!-- VIESTIM: For testing list adding with owner email address. -->
-                <label for="">List owner's adress</label>
-                <input type="text" name="owner-adress" id="owner-adress" [(ngModel)]="ownerEmail"/>
+                <label for="owner-address">List owner's adress</label>
+                <input type="text" name="owner-address" id="owner-adress" [(ngModel)]="ownerEmail"/>
+            </div>
+            <div>
+                <label for="list-description">Short description</label>
+                <input type="text" name="list-description" id="list-description" [(ngModel)]="listDescription"/>
+            </div>
+            <div>
+                <label for="list-info">Long description</label>
+                <textarea name="list-info" [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
             </div>
             <div>
             </div>
@@ -95,6 +105,9 @@ export class NewMessageListComponent implements OnInit {
 
     notifyOwnerOnListChange: boolean = false;
 
+    listInfo: string = "";
+    listDescription: string = "";
+
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
             void this.getDomains();
@@ -136,6 +149,8 @@ export class NewMessageListComponent implements OnInit {
             emails: this.parseEmails(),
             ownerEmail: this.ownerEmail,
             notifyOwnerOnListChange: this.notifyOwnerOnListChange,
+            listInfo: this.listInfo,
+            listDescription: this.listDescription,
         });
         if (!result.ok) {
             console.error(result.result.error.error);

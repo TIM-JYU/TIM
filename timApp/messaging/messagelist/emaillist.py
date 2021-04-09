@@ -163,6 +163,8 @@ class EmailListManager:
                 # advertising on if they so choose.
                 mlist_settings["advertised"] = False
                 mlist_settings["admin_notify_mchanges"] = list_options.notifyOwnerOnListChange
+                set_email_list_description(email_list, list_options.listDescription)
+                set_email_list_info(email_list, list_options.listInfo)
                 mlist_settings.save()
                 return
             except HTTPError:
@@ -539,3 +541,43 @@ class EmailList:
             return lists
         except HTTPError:
             return []
+
+
+def set_email_list_description(mlist: MailingList, new_description: str) -> None:
+    """
+    Set mailing list's (short) description.
+    :param mlist: Email list we wish to set description for.
+    :param new_description: A new (short) description for the email list.
+    :return:
+    """
+    mlist.settings["description"] = new_description
+    mlist.settings.save()
+
+
+def get_email_list_description(mlist: MailingList) -> str:
+    """
+    Get email list's (short) description.
+    :param mlist: Email list we wish to get description from.
+    :return: A string for email list's description.
+    """
+    return mlist.settings["description"]
+
+
+def set_email_list_info(mlist: MailingList, new_info: str) -> None:
+    """
+    Set email list's info, A.K.A. long description.
+    :param mlist: Email list
+    :param new_info: New info for the email list.
+    :return:
+    """
+    mlist.settings["info"] = new_info
+    mlist.settings.save()
+
+
+def get_email_list_info(mlist: MailingList) -> str:
+    """
+    Get email list's info, A.K.A. long description.
+    :param mlist: Email list
+    :return: Email list's info as a string.
+    """
+    return mlist.settings["info"]

@@ -11,3 +11,5 @@ class ListOptions:
     emails: List[str]
     ownerEmail: str
     notifyOwnerOnListChange: bool
+    listDescription: str
+    listInfo: str
