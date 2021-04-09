@@ -108,6 +108,9 @@ export class NewMessageListComponent implements OnInit {
     listInfo: string = "";
     listDescription: string = "";
 
+    // For name check
+    timeoutID?: NodeJS.Timeout;
+
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
             void this.getDomains();
@@ -220,6 +223,12 @@ export class NewMessageListComponent implements OnInit {
         // TODO: Replace console.logs with a better feedback system for the user.
         console.log(`start check on listname: ${this.listname}`);
 
+        // Cancel previous timed call to server name checks.
+        if (this.timeoutID) {
+            clearTimeout(this.timeoutID);
+        }
+        this.timeoutID = undefined;
+
         // Name length is within length boundaries.
         if (this.listname.length < 5 || 36 < this.listname.length) {
             console.log("Name not in length boundaries");
@@ -239,6 +248,7 @@ export class NewMessageListComponent implements OnInit {
         const regExpAtLeastOneDigit: RegExp = /\d/;
         if (!regExpAtLeastOneDigit.test(this.listname)) {
             console.error("name doesn't contain at least one digit.");
+            return false;
         }
 
         // Name can't contain multiple sequential dots.
@@ -271,8 +281,15 @@ export class NewMessageListComponent implements OnInit {
             return false;
         }
         console.log("name has passed all local tests");
+        console.log(
+            "start server side tests in 5 seconds after last key down."
+        );
+        // Local tests have been passed. Now launch server side checks.
+        this.timeoutID = setTimeout(
+            () => this.checkListNameAvailability(),
+            5 * 1000
+        );
 
-        // TODO: Local tests have been passed. Now launch server side checks.
         return true;
     }
 
