@@ -128,7 +128,13 @@ def handle_exportdata(result: AnswerRouteResult, u: User, wod: WithOutData) -> N
         # csPlugin always returns status 200 for (almost?) any request, so we must handle it separately.
         if plug.type != 'csPlugin':
             try:
-                res = call_plugin_generic(plug.type, 'post', 'convertExportData', json.dumps(p.data))
+                res = call_plugin_generic(
+                    plug.type,
+                    'post',
+                    'convertExportData',
+                    json.dumps(p.data),
+                    headers={'Content-type': 'application/json'},
+                )
             except PluginException as e:
                 logger.error(f'convertExportData call failed: {e}')
                 continue
