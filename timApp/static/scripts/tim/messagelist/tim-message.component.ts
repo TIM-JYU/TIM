@@ -37,6 +37,7 @@ import {CommonModule} from "@angular/common";
             <button class="timButton" (click)="cancelReadReceipt()">Cancel</button>
         </ng-container>
     `,
+    styleUrls: ["tim-message.component.scss"],
 })
 export class TimMessageComponent implements OnInit {
     messageMaxLength: number = 320;
