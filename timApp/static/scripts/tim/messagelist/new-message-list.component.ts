@@ -9,12 +9,27 @@ interface CreateListOptions {
     // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
     listname: string;
     domain: string;
-    archive: string;
+    archive: ArchiveType;
     emails: string[];
     ownerEmail: string;
     notifyOwnerOnListChange: boolean;
     listDescription: string;
     listInfo: string;
+}
+
+enum ArchiveType {
+    // See ArchiveType class on Python side of things for explanations.
+    NONE,
+    SECRET,
+    GROUPONLY,
+    UNLISTED,
+    PUBLIC,
+}
+
+// For proper setting of archive options on UI.
+interface ArchivePolicyNames {
+    archiveType: ArchiveType;
+    policyName: string;
 }
 
 @Component({
@@ -44,26 +59,25 @@ interface CreateListOptions {
             </div>
             <div>
                 <label for="list-info">Long description</label>
-                <textarea name="list-info" [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
+                <textarea name="list-info"
+                          [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
             </div>
             <div>
             </div>
             <div>
-                <input type="checkbox" name="if-archived" id="if-archived" [(ngModel)]="archive"/> <label
-                    for="if-archived">Archive
-                messages?</label>
-            </div>
-            <div>
-                <p>List archive policy:</p>
-                <label *ngFor="let option of archiveOptions">
-                    <input
-                            name="items-radio"
-                            type="radio"
-                            [value]="option"
-                            [(ngModel)]="archive"
-                    />
-                    {{ option }}
-                </label>
+                <b>List archive policy:</b>
+                <ul style="list-style-type: none">
+                    <li *ngFor="let option of archiveOptions">
+                        <input
+                                name="items-radio"
+                                type="radio"
+                                id="archive-{{option.archiveType}}"
+                                [value]="option.archiveType"
+                                [(ngModel)]="archive"
+                        />
+                        <label for="archive-{{option}}">{{option.policyName}}</label>
+                    </li>
+                </ul>
             </div>
             <div>
                 <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
@@ -90,9 +104,30 @@ interface CreateListOptions {
 export class NewMessageListComponent implements OnInit {
     listname: string = "";
 
-    archiveOptions: string[] = ["none", "private", "public"];
-    // List has a private archive by default.
-    archive: string = this.archiveOptions[1];
+    // archiveOptions: string[] = ["none", "private", "public"];
+    archiveOptions: ArchivePolicyNames[] = [
+        {archiveType: ArchiveType.NONE, policyName: "No archiving."},
+        {
+            archiveType: ArchiveType.SECRET,
+            policyName: "Secret archive, only for owner.",
+        },
+        {
+            archiveType: ArchiveType.GROUPONLY,
+            policyName:
+                "Members only archive. Only members of this list can access.",
+        },
+        {
+            archiveType: ArchiveType.UNLISTED,
+            policyName: "Unlisted archive. Everyone with link can access.",
+        },
+        {
+            archiveType: ArchiveType.PUBLIC,
+            policyName:
+                "Public archive. Everyone with link can access and the archive is advertised.",
+        },
+    ];
+    // List has a private members only archive by default.
+    archive: ArchiveType = ArchiveType.GROUPONLY;
 
     domain: string = "";
     domains: string[] = [];
