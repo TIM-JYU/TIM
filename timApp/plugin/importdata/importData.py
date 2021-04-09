@@ -305,7 +305,7 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
             user_vals = {}
             for k, v in d.items():
                 m = field_name_re.match(k)
-                if m:
+                if m and v != 0:
                     user_vals[m.group('type').lower() + m.group('num')] = str(v)
             fvals[d['StudentID']] = user_vals
         vals = FieldValues(values=fvals)
