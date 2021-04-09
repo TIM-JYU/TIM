@@ -9,15 +9,33 @@ interface CreateListOptions {
     // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
     listname: string;
     domain: string;
-    archive: string;
+    archive: ArchiveType;
     emails: string[];
     ownerEmail: string;
+    notifyOwnerOnListChange: boolean;
+    listDescription: string;
+    listInfo: string;
+}
+
+enum ArchiveType {
+    // See ArchiveType class on Python side of things for explanations.
+    NONE,
+    SECRET,
+    GROUPONLY,
+    UNLISTED,
+    PUBLIC,
+}
+
+// For proper setting of archive options on UI.
+interface ArchivePolicyNames {
+    archiveType: ArchiveType;
+    policyName: string;
 }
 
 @Component({
     selector: "tim-new-message-list",
     template: `
-        <form>
+        <form name="list-options-form">
             <h1>Create new message list</h1>
             <div>
                 <label for="list-name">List name: </label>
@@ -32,27 +50,39 @@ interface CreateListOptions {
             </div>
             <div>
                 <!-- VIESTIM: For testing list adding with owner email address. -->
-                <label for="">List owner's adress</label>
-                <input type="text" name="owner-adress" id="owner-adress" [(ngModel)]="ownerEmail"/>
+                <label for="owner-address">List owner's adress</label>
+                <input type="text" name="owner-address" id="owner-adress" [(ngModel)]="ownerEmail"/>
+            </div>
+            <div>
+                <label for="list-description">Short description</label>
+                <input type="text" name="list-description" id="list-description" [(ngModel)]="listDescription"/>
+            </div>
+            <div>
+                <label for="list-info">Long description</label>
+                <textarea name="list-info"
+                          [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
             </div>
             <div>
             </div>
             <div>
-                <input type="checkbox" name="if-archived" id="if-archived" [(ngModel)]="archive"/> <label
-                    for="if-archived">Archive
-                messages?</label>
+                <b>List archive policy:</b>
+                <ul style="list-style-type: none">
+                    <li *ngFor="let option of archiveOptions">
+                        <input
+                                name="items-radio"
+                                type="radio"
+                                id="archive-{{option.archiveType}}"
+                                [value]="option.archiveType"
+                                [(ngModel)]="archive"
+                        />
+                        <label for="archive-{{option}}">{{option.policyName}}</label>
+                    </li>
+                </ul>
             </div>
             <div>
-                <p>List archive policy:</p>
-                <label *ngFor="let option of archiveOptions">
-                    <input
-                            name="items-radio"
-                            type="radio"
-                            [value]="option"
-                            [(ngModel)]="archive"
-                    />
-                    {{ option }}
-                </label>
+                <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
+                       [(ngModel)]="notifyOwnerOnListChange"/>
+                <label for="notify-owner-on-list-change">Notify me on list changes (e.g. user subscribes)</label>
             </div>
             <div>
                 <label for="add-multiple-emails">Add multiple emails</label> <br/>
@@ -74,9 +104,30 @@ interface CreateListOptions {
 export class NewMessageListComponent implements OnInit {
     listname: string = "";
 
-    archiveOptions: string[] = ["none", "private", "public"];
-    // List has a private archive by default.
-    archive: string = this.archiveOptions[1];
+    // archiveOptions: string[] = ["none", "private", "public"];
+    archiveOptions: ArchivePolicyNames[] = [
+        {archiveType: ArchiveType.NONE, policyName: "No archiving."},
+        {
+            archiveType: ArchiveType.SECRET,
+            policyName: "Secret archive, only for owner.",
+        },
+        {
+            archiveType: ArchiveType.GROUPONLY,
+            policyName:
+                "Members only archive. Only members of this list can access.",
+        },
+        {
+            archiveType: ArchiveType.UNLISTED,
+            policyName: "Unlisted archive. Everyone with link can access.",
+        },
+        {
+            archiveType: ArchiveType.PUBLIC,
+            policyName:
+                "Public archive. Everyone with link can access and the archive is advertised.",
+        },
+    ];
+    // List has a private members only archive by default.
+    archive: ArchiveType = ArchiveType.GROUPONLY;
 
     domain: string = "";
     domains: string[] = [];
@@ -86,6 +137,14 @@ export class NewMessageListComponent implements OnInit {
     urlPrefix: string = "/messagelist";
 
     ownerEmail: string = "";
+
+    notifyOwnerOnListChange: boolean = false;
+
+    listInfo: string = "";
+    listDescription: string = "";
+
+    // For name check
+    timeoutID?: number;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -127,6 +186,9 @@ export class NewMessageListComponent implements OnInit {
             archive: this.archive,
             emails: this.parseEmails(),
             ownerEmail: this.ownerEmail,
+            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
+            listInfo: this.listInfo,
+            listDescription: this.listDescription,
         });
         if (!result.ok) {
             console.error(result.result.error.error);
@@ -196,6 +258,12 @@ export class NewMessageListComponent implements OnInit {
         // TODO: Replace console.logs with a better feedback system for the user.
         console.log(`start check on listname: ${this.listname}`);
 
+        // Cancel previous timed call to server name checks.
+        if (this.timeoutID) {
+            clearTimeout(this.timeoutID);
+        }
+        this.timeoutID = undefined;
+
         // Name length is within length boundaries.
         if (this.listname.length < 5 || 36 < this.listname.length) {
             console.log("Name not in length boundaries");
@@ -215,6 +283,7 @@ export class NewMessageListComponent implements OnInit {
         const regExpAtLeastOneDigit: RegExp = /\d/;
         if (!regExpAtLeastOneDigit.test(this.listname)) {
             console.error("name doesn't contain at least one digit.");
+            return false;
         }
 
         // Name can't contain multiple sequential dots.
@@ -247,8 +316,15 @@ export class NewMessageListComponent implements OnInit {
             return false;
         }
         console.log("name has passed all local tests");
+        console.log(
+            "start server side tests in 5 seconds after last key down."
+        );
+        // Local tests have been passed. Now launch server side checks.
+        this.timeoutID = window.setTimeout(
+            () => this.checkListNameAvailability(),
+            5 * 1000
+        );
 
-        // TODO: Local tests have been passed. Now launch server side checks.
         return true;
     }
 
