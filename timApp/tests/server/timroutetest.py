@@ -410,6 +410,7 @@ class TimRouteTest(TimDbTest):
                  json_key: Optional[str] = None,
                  headers: Optional[List[Tuple[str, str]]] = None,
                  auth: Optional[BasicAuthParams] = None,
+                 content_type: Optional[str] = None,
                  **kwargs):
         """Performs a JSON request.
 
@@ -423,7 +424,7 @@ class TimRouteTest(TimDbTest):
         return self.request(url,
                             method=method,
                             data=json.dumps(json_data, cls=TimJsonEncoder),
-                            content_type='application/json',
+                            content_type=content_type or 'application/json',
                             as_tree=as_tree,
                             expect_status=expect_status,
                             expect_content=expect_content,
@@ -970,7 +971,12 @@ class TimRouteTest(TimDbTest):
         """
         with responses.RequestsMock(assert_all_requests_are_fired=False) as m:
             def rq_cb(request: PreparedRequest, fn):
-                r: Response = fn(request.path_url, json_data=json.loads(request.body), as_response=True)
+                r: Response = fn(
+                    request.path_url,
+                    json_data=json.loads(request.body),
+                    as_response=True,
+                    content_type=request.headers.get('content-type', 'application/octet-stream'),
+                )
                 return r.status_code, {}, r.data
 
             def rq_cb_put(request: PreparedRequest):
