@@ -109,7 +109,7 @@ export class NewMessageListComponent implements OnInit {
     listDescription: string = "";
 
     // For name check
-    timeoutID?: NodeJS.Timeout;
+    timeoutID?: number;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -285,7 +285,7 @@ export class NewMessageListComponent implements OnInit {
             "start server side tests in 5 seconds after last key down."
         );
         // Local tests have been passed. Now launch server side checks.
-        this.timeoutID = setTimeout(
+        this.timeoutID = window.setTimeout(
             () => this.checkListNameAvailability(),
             5 * 1000
         );
