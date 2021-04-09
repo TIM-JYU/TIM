@@ -102,6 +102,7 @@ def tim_table_multihtml_direct(jsondata):
 
 
 @timTable_plugin.route("convertExportData", methods=["POST"])
+@csrf.exempt
 def convert_export_data():
     """
     Route for getting save JSON from exportdata
