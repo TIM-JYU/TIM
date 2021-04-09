@@ -8,14 +8,21 @@ import {CommonModule} from "@angular/common";
     template: `
         <div class="timMessageDisplay" *ngIf="showMessage">
             <p>From: {{sender}}</p>
-            <p>{{content}}</p>
+            <div class="fullMessageContent" *ngIf="readMore">
+                <p>{{fullContent}}</p>
+                <p *ngIf="!shortMessage"><a (click)="displayContent()">Read less</a></p>
+            </div>
+            <div class="cutMessageContent" *ngIf="!readMore">
+                <p>{{shownContent}}<span>...</span></p>
+                <p><a (click)="displayContent()">Read more</a></p>
+            </div>
             <div class="buttonArea">
                 <button class="timButton" [disabled]="!canMarkAsRead" title="Read Receipt"
                         (click)="markAsRead()">
                     Mark as Read
                 </button>
                 <button class="timButton" *ngIf="canReply" (click)="reply()">Reply</button>
-                <button class="timButton" (click)="readReceipt()">TEST: allow/disallow read receipt</button>
+                <span><a (click)="readReceipt()">TEST: allow/disallow read receipt</a></span>
             </div>
             <div class="replyArea" *ngIf="showReply">
                 <textarea id="reply-message" name="reply-message"></textarea>
@@ -32,17 +39,28 @@ import {CommonModule} from "@angular/common";
     `,
 })
 export class TimMessageComponent implements OnInit {
+    messageMaxLength: number = 320;
+    shortMessage: boolean = false;
     showMessage: boolean = true;
+    fullContent?: string;
+    shownContent?: string;
+    readMore: boolean = false;
     showReply: boolean = false;
     canMarkAsRead: boolean = false;
     markedAsRead: boolean = false;
     replySent: boolean = false;
     canReply: boolean = true;
     sender?: string;
-    content?: string;
 
     /**
-     * Hides the message contents; shows an alert about message being read and an option to cancel.
+     * Displays the full message content or the shortened version.
+     */
+    displayContent(): void {
+        this.readMore = !this.readMore;
+    }
+
+    /**
+     * Hides the message view; shows an alert about message being read and an option to cancel.
      */
     markAsRead(): void {
         this.markedAsRead = true;
@@ -50,7 +68,7 @@ export class TimMessageComponent implements OnInit {
     }
 
     /**
-     * Cancel read receipt and re-display the message.
+     * Cancels the read receipt and re-displays the message.
      */
     cancel(): void {
         this.markedAsRead = false;
@@ -65,7 +83,7 @@ export class TimMessageComponent implements OnInit {
     }
 
     /**
-     * Allow/disallow marking as read for testing purposes.
+     * Allows/disallows marking as read for testing purposes.
      */
     readReceipt(): void {
         this.canMarkAsRead = !this.canMarkAsRead;
@@ -81,8 +99,29 @@ export class TimMessageComponent implements OnInit {
     ngOnInit(): void {
         // TODO Read sender, content etc. from JSON?
         this.sender = "ohj1k21";
-        this.content =
-            "Sinulta puuttuu demo 3 ja 4 pisteitä. Miten jatketaan kurssin kanssa?";
+        // this.fullContent =
+        //     "Sinulta puuttuu demo 3 ja 4 pisteitä. Miten jatketaan kurssin kanssa?";
+        this.fullContent =
+            "Sinulta puuttuu demo 3 ja 4 pisteitä. Miten jatketaan kurssin kanssa? \
+            Kullakin demokerralla 100% oikeuttava määrä on 8 pistettä. Kultakin \
+            demokerralta lasketaan jakson 1 aikana max. 10 p, eli vaikka saisit \
+            kerättyä lisätehtävillä enemmänkin pisteitä, otetaan jokaiselta demokerralta \
+            lukuun enintään 10 pistettä. Jakso 2 max 8p/kerta. Muutos: paitsi demo 12 \
+            jolloin määrällä ei ole ylärajaa. HUOM! 2 tehtävää / kerta ei kuitenkaan \
+            riitä kurssin läpäisemiseen, sillä ensinnäkään siitä ei tule yhteensä 40% \
+            ja toisekseen joka kerta jää 6 tehtävää muita jälkeen. 12 kerran jälkeen on \
+            melkoisen paljon muita jäljessä! 105 % suoritustavassa on JOKA demokerta \
+            tehtävä vähintään yksi Bonus- tai Guru-tehtävä (vuonna 2018 ekassa jaksossa, \
+            jatkossa molemmissa jaksoissa).";
+        if (this.fullContent.length < this.messageMaxLength) {
+            this.shortMessage = true;
+            this.readMore = true;
+        } else {
+            this.shownContent = this.fullContent.substr(
+                0,
+                this.messageMaxLength
+            );
+        }
     }
 }
 
