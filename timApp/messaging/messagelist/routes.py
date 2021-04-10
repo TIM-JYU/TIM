@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from flask import Response
 
+from timApp.auth.accesshelper import verify_logged_in
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
 from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.util.flask.responsehelper import ok_response, json_response
@@ -18,6 +19,12 @@ def create_list(options: ListOptions) -> Response:
     :param options All options regarding establishing a new message list.
     :return: A Response how the operation succeeded.
     """
+
+    verify_logged_in()
+
+    # TODO: List can only be created by someone with at least Group creation level rights. Check this. Or is it
+    #  sufficient to assume client side checks are enough? Probably not. verify_teacher_access AccessType.teacher
+    #  User.logged_in() get_current_user_object()
 
     EmailListManager.create_new_list(options)
     return ok_response()
@@ -71,7 +78,6 @@ def check_name(name_candidate: str) -> Response:
     elif not email_requirements:
         response.nameOK = False
         response.explanation = email_explanation
-        pass
 
     return json_response(response)
 
@@ -96,6 +102,7 @@ def delete_list(listname: str) -> Response:
     :return: A string describing how the operation went.
     """
     # TODO: User authentication. We can't let just anyone delete a list just because they can type the name.
+    verify_logged_in()
     list_name, sep, domain = listname.partition("@")
     r = ""
     if domain:
