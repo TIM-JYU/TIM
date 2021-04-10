@@ -5,7 +5,7 @@ from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain
 
-from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate
+from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate, reply_to_munging
 from timApp.tim_app import app
 from timApp.util.flask.requesthelper import NotExist
 from timApp.util.logger import log_warning, log_info
@@ -147,15 +147,20 @@ class EmailListManager:
                 # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
                 #  their lists on Mailman.
                 email_list.add_owner(list_options.ownerEmail)
+
                 # settings-attribute is a dict.
                 mlist_settings = email_list.settings
 
                 # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
                 # advertising on if they so choose.
                 mlist_settings["advertised"] = False
+
                 mlist_settings["admin_notify_mchanges"] = list_options.notifyOwnerOnListChange
+
                 set_email_list_description(email_list, list_options.listDescription)
                 set_email_list_info(email_list, list_options.listInfo)
+
+                # Email list's archive policy.
 
                 mm_policy = mailman_archive_policy_correlate[list_options.archive]
                 if mm_policy == "none":
@@ -169,17 +174,21 @@ class EmailListManager:
                     # Unless archive policy is intented to be 'none', then we assume archiving to be on by default
                     # and we just set the appropriate archive policy.
                     mlist_settings["archive_policy"] = mm_policy
-                # This needs to be the last line, because no changes to settings take effect until save-method is
+
+                # Default reply-type for the email list.
+                mlist_settings["reply_goes_to_list"] = reply_to_munging[list_options.defaultReplyType]
+
+                # This *needs* to be the last line, because no changes to settings take effect until save-method is
                 # called.
                 mlist_settings.save()
                 return
             except HTTPError:
                 # TODO: exceptions to catch: domain doesn't exist, list can't be created, connection to server fails.
-                return
+                raise
         else:
             # VIESTIM: If a list with this name exists (it shouldn't since it's checked before allowing list creation,
             #  but technically it could if someone can grab the name during list creation process), then what do we do?
-            return
+            raise
 
     @staticmethod
     def check_name_rules(name_candidate: str) -> Tuple[bool, str]:

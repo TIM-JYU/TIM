@@ -5,7 +5,7 @@ import {to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {Users} from "../user/userService";
 
-interface CreateListOptions {
+interface ListOptions {
     // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
     listname: string;
     domain: string;
@@ -15,6 +15,8 @@ interface CreateListOptions {
     notifyOwnerOnListChange: boolean;
     listDescription: string;
     listInfo: string;
+    defaultReplyType: ReplyToListChanges;
+    htmlAllowed: boolean;
 }
 
 enum ArchiveType {
@@ -26,10 +28,20 @@ enum ArchiveType {
     PUBLIC,
 }
 
+enum ReplyToListChanges {
+    NOCHANGES,
+    ADDLIST,
+}
+
 // For proper setting of archive options on UI.
-interface ArchivePolicyNames {
+interface ArchivePolicyDescriptions {
     archiveType: ArchiveType;
     policyName: string;
+}
+
+interface ReplyToDescriptions {
+    replyType: ReplyToListChanges;
+    explanation: string;
 }
 
 @Component({
@@ -75,7 +87,7 @@ interface ArchivePolicyNames {
                                 [value]="option.archiveType"
                                 [(ngModel)]="archive"
                         />
-                        <label for="archive-{{option}}">{{option.policyName}}</label>
+                        <label for="archive-{{option.archiveType}}">{{option.policyName}}</label>
                     </li>
                 </ul>
             </div>
@@ -83,6 +95,21 @@ interface ArchivePolicyNames {
                 <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
                        [(ngModel)]="notifyOwnerOnListChange"/>
                 <label for="notify-owner-on-list-change">Notify me on list changes (e.g. user subscribes)</label>
+            </div>
+            <div>
+                <b>List answer default:</b>
+                <ul style="list-style-type: none">
+                    <li *ngFor="let replyType of replyToDescriptions">
+                        <input
+                                name="list-reply-type"
+                                type="radio"
+                                id="reply-type-{{replyType.replyType}}"
+                                [value]="replyType.replyType"
+                                [(ngModel)]="replyToOption"
+                        />
+                        <label for="reply-type-{{replyType.replyType}}">{{replyType.explanation}}</label>
+                    </li>
+                </ul>
             </div>
             <div>
                 <label for="add-multiple-emails">Add multiple emails</label> <br/>
@@ -105,7 +132,7 @@ export class NewMessageListComponent implements OnInit {
     listname: string = "";
 
     // archiveOptions: string[] = ["none", "private", "public"];
-    archiveOptions: ArchivePolicyNames[] = [
+    archiveOptions: ArchivePolicyDescriptions[] = [
         {archiveType: ArchiveType.NONE, policyName: "No archiving."},
         {
             archiveType: ArchiveType.SECRET,
@@ -143,8 +170,20 @@ export class NewMessageListComponent implements OnInit {
     listInfo: string = "";
     listDescription: string = "";
 
-    // For name check
+    // For timed server name check id's, see window.setTimeout.
     timeoutID?: number;
+
+    replyToDescriptions: ReplyToDescriptions[] = [
+        {
+            replyType: ReplyToListChanges.NOCHANGES,
+            explanation: "No changes",
+        },
+        {
+            replyType: ReplyToListChanges.ADDLIST,
+            explanation: "Add list as reply-to address.",
+        },
+    ];
+    replyToOption: ReplyToListChanges = ReplyToListChanges.NOCHANGES;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -176,7 +215,7 @@ export class NewMessageListComponent implements OnInit {
 
     async newList() {
         const result = await this.createList({
-            // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
+            // VIESTIM These fields have to match with interface ListOptions, otherwise a type error happens.
             // TODO: Validate input values before sending, e.g. this list has a unique name.
             listname: this.listname,
             // We added '@' in domain name for display purposes, remove it when sending domain to the server.
@@ -189,6 +228,8 @@ export class NewMessageListComponent implements OnInit {
             notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             listInfo: this.listInfo,
             listDescription: this.listDescription,
+            defaultReplyType: this.replyToOption,
+            htmlAllowed: false,
         });
         if (!result.ok) {
             console.error(result.result.error.error);
@@ -199,7 +240,7 @@ export class NewMessageListComponent implements OnInit {
     }
 
     // VIESTIM this helper function helps keeping types in check.
-    private createList(options: CreateListOptions) {
+    private createList(options: ListOptions) {
         return to2(
             this.http.post("/messagelist/createlist", {options}).toPromise()
         );
