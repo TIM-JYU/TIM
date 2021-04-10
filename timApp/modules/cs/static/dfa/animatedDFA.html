@@ -7,19 +7,22 @@
 <script src="http://localhost/csstatic/dfa/dfa.js"></script>
 <!-- <script src="http://localhost:63342/tim/static/dfa/dfa.js"></script>-->
  <style>
-  .argsdiv {font-size: xx-large; margin-left: 1em}
+  .argsdiv {font-size: xx-large; margin-left: 1em;}
   .selarg {background-color: yellow; border-style: inset;}
-  .buttondiv {margin-top: 1em; margin-left: 2em}
-  .buttondiv button {font-size: x-large}
+  .buttondiv {margin-top: 1em; margin-left: 2em;}
+  .buttondiv button {font-size: x-large;}
   .hidden {visibility: hidden;}
-  .accept {background-color: lime}
-  .deny {background-color: red}
+  .accept {background-color: lime;}
+  .reject {background-color: red;}
+  .accepttext {position: relative; top: -15px;}
  </style>
  <title>DFA</title>
 </head>
 <body>
-<div style="margin-bottom: 3px"><span id="error" style="color: red;"></span></div>
-<span id="argsdiv" class="argsdiv"></span>
+<div style="margin-bottom: 3px"><span id="error" style="color: red;"></span>
+</div>
+<span id="argsdiv" class="argsdiv"></span>&nbsp;&nbsp;
+<span id="accepttext" class="accepttext" ></span>
 <div id="vizdiv"></div>
 <div id="buttondiv" class="buttondiv hidden">
   <button onclick="jumpToStart()" title="reset">|&lt;</button>
@@ -38,6 +41,7 @@
   let argsdiv = document.getElementById('argsdiv');
   let buttondiv = document.getElementById('buttondiv');
   let errspan = document.getElementById('error');
+  let accepttext = document.getElementById('accepttext');
 
   let viz = new Viz();
   function drawimage(vizcmd, options, errors)  {
@@ -244,9 +248,11 @@
               buttondiv.classList.add("hidden");
               return;
           }
-          argsdiv.classList.remove("deny");
+          argsdiv.classList.remove("reject");
           argsdiv.classList.remove("accept");
           buttondiv.classList.remove("hidden");
+          accepttext.innerText = "";
+
           // let index = dfa.args.length-1; let indexdir = -1;  // id RL
           let index = 0;
           let indexdir = 1;
@@ -266,8 +272,14 @@
               argsdiv.appendChild(el);
           }
           if (dfa.step >= last || dfa.error ) {
-              if (!dfa.error && dfa.active && dfa.active.accept) argsdiv.classList.add("accept");
-              else argsdiv.classList.add("deny");
+              if (!dfa.error && dfa.active && dfa.active.accept) {
+                  argsdiv.classList.add("accept");
+                  accepttext.innerText = "accept";
+              }
+              else {
+                  argsdiv.classList.add("reject");
+                  accepttext.innerText = "reject";
+              }
           }
       }
 
@@ -370,12 +382,12 @@
 =|a b
 *1 a 2
 1 b 3
-2 a 4*
+2 * 4*
 4 a 1
 4 b 4
 3 a,b 3
      `;
-    //setData({code: code, args: "aacaa", params: {syntaxes: "2", allowstar: false}});
+    //setData({code: code, args: "b", params: {syntaxes: "2", allowstar: false}});
     //console.log(dfaState.dfa.accepts("1001"));
   </script>
 </body>
