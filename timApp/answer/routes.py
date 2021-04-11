@@ -668,6 +668,11 @@ def post_answer_impl(
                         'input': answerdata,
                         'taskID': tid.doc_task,
                         'info': info}
+    preoutput = ""
+    preprogram = plugin.values.get("preprogram", None)
+    if preprogram:
+        params = JsRunnerParams(code=preprogram, data=answer_call_data)
+        answer_call_data, preoutput = jsrunner_run(params)
 
     jsonresp = call_plugin_answer_and_parse(answer_call_data, plugin.type)
 
@@ -792,7 +797,7 @@ def post_answer_impl(
                               postprogram
 
         def set_postoutput(result, output, postoutput):
-            if not postoutput or not output:
+            if not postoutput or (not output and not preoutput):
                 return
             parts = postoutput.split(".")
             r = result
@@ -801,7 +806,7 @@ def post_answer_impl(
                 if not p in r:
                     r[p] = {}
                 r = r[p]
-            r[lastkey] = r.get(lastkey, '') + str(output)
+            r[lastkey] = r.get(lastkey, '') + str(preoutput) + str(output)
 
         def add_value(result, key, data):
             value = data.get(key, None)

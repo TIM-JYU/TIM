@@ -1,3 +1,6 @@
+from base64 import b64encode
+from zipfile import ZipFile
+
 import requests
 
 from subprocess import check_output
@@ -1525,8 +1528,9 @@ class Maxima(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.mc" % (self.basename, self.filename)
+        self.dir = "/tmp/%s/" % (self.basename)
         self.fileext = "mc"
-        self.nofilesave = True
+        # self.nofilesave = True
 
     def run(self, result, sourcelines, points_rule):
         r = requests.post("http://maxima:8080/maxima", data={
@@ -1539,15 +1543,49 @@ class Maxima(Language):
                   name in sourcelines
             return res
 
+        htmldata = ""
+        result["web"]["md"] = ""
+        out = ""
+        if r.text.startswith("PK"):
+            zipfile = self.dir + "maxima.zip"
+            with open(zipfile, "wb") as file:
+                file.write(r.content)
+            with ZipFile(zipfile, 'r') as zipObj:
+                # Extract all the contents of zip file in current directory
+                zipObj.extractall(self.dir)
+
+            for fn in zipObj.filelist:
+                imgext = 'svg+xml'
+                image_attributes = ''
+                img = fn.filename
+                if img.startswith('/'):
+                    img = img[1:]
+                img = self.dir + img
+                with open(img,"rb") as fh:
+                    data = fh.read()
+                if fn.filename == "OUTPUT":
+                    out = data.decode().strip()
+                else:
+                    pngenc = b64encode(data)
+                    # _,imgext = splitext(img)
+                    # imgext = imgext[1:]
+                    htmldata += '<img src="data:image/'+imgext+';base64, ' + pngenc.decode() + '" ' + image_attributes + '/>'
+                try:
+                    os.remove(img)
+                except:
+                    pass
+            result["web"]["md"] = htmldata
+        else:
+            out = r.text.strip()
+
         showinput = maxima_option("showinput")
         showtex = maxima_option("showtex")
 
-        out = r.text.strip()
         # s = out.replace("\n", " ")
         p = re.compile(r'\$\$.*?\$\$', flags=re.DOTALL)
         tex = "\n".join(p.findall(out))
         if tex:
-            result["web"]["md"] = tex
+            result["web"]["md"] = tex + result["web"]["md"]
             if not showtex:
                 out = re.sub(r'\$\$.*?\$\$', '', out, flags=re.DOTALL)
         if not showinput:
