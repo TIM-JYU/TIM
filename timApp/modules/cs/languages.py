@@ -674,8 +674,8 @@ class Java(Language):
 
     def get_cmdline(self):
         return f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib" + \
-            " --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath}" +\
-               " {self.javaname}"
+               f" --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath}" +\
+               f" {self.javaname}"
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "--module-path", f"/javafx-sdk-{JAVAFX_VERSION}/lib",
