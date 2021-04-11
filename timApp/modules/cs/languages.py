@@ -1,4 +1,5 @@
 from base64 import b64encode
+from io import BytesIO
 from zipfile import ZipFile
 
 import requests
@@ -6,6 +7,7 @@ import requests
 from subprocess import check_output
 from typing import Optional
 
+from tim_common.cs_sanitizer import cs_min_sanitize
 from points import *
 from run import *
 from os.path import splitext
@@ -384,7 +386,7 @@ class Language:
         return subclasses + [i for sc in subclasses for i in sc.all_subclasses()]
 
     @classmethod
-    def get_client_ttype(cls, ttype):
+    def get_client_ttype(cls, _ttype):
         """Returns the ttype of this class that should be given to client"""
         if isinstance(cls.ttype, list):
             return cls.ttype[0]
@@ -671,7 +673,9 @@ class Java(Language):
         self.sourcefilename = self.javaname
 
     def get_cmdline(self):
-        return f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath} {self.javaname}"
+        return f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib" + \
+            " --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath}" +\
+               " {self.javaname}"
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "--module-path", f"/javafx-sdk-{JAVAFX_VERSION}/lib",
@@ -1528,9 +1532,9 @@ class Maxima(Language):
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
         self.sourcefilename = "/tmp/%s/%s.mc" % (self.basename, self.filename)
-        self.dir = "/tmp/%s/" % (self.basename)
+        # self.dir = "/tmp/%s/" % self.basename
         self.fileext = "mc"
-        # self.nofilesave = True
+        self.nofilesave = True
 
     def run(self, result, sourcelines, points_rule):
         r = requests.post("http://maxima:8080/maxima", data={
@@ -1546,35 +1550,28 @@ class Maxima(Language):
         htmldata = ""
         result["web"]["md"] = ""
         out = ""
-        if r.text.startswith("PK"):
-            zipfile = self.dir + "maxima.zip"
-            with open(zipfile, "wb") as file:
-                file.write(r.content)
-            with ZipFile(zipfile, 'r') as zipObj:
-                # Extract all the contents of zip file in current directory
-                zipObj.extractall(self.dir)
+        if r.text.startswith("PK"):  # TODO: is there a better wy to check zip?
+            all_image_attributes = cs_min_sanitize(get_param(self.query, "imageAttributes", ""))
 
-            for fn in zipObj.filelist:
-                imgext = 'svg+xml'
-                image_attributes = ''
-                img = fn.filename
-                if img.startswith('/'):
-                    img = img[1:]
-                img = self.dir + img
-                with open(img,"rb") as fh:
-                    data = fh.read()
-                if fn.filename == "OUTPUT":
-                    out = data.decode().strip()
-                else:
-                    pngenc = b64encode(data)
-                    # _,imgext = splitext(img)
-                    # imgext = imgext[1:]
-                    htmldata += '<img src="data:image/'+imgext+';base64, ' + pngenc.decode() + '" ' + image_attributes + '/>'
-                try:
-                    os.remove(img)
-                except:
-                    pass
-            result["web"]["md"] = htmldata
+            with ZipFile(BytesIO(r.content)) as zipObj:
+                for fn in zipObj.filelist:
+                    image_attributes = all_image_attributes
+                    data = zipObj.read(fn.filename)
+                    if fn.filename == "OUTPUT":
+                        out = data.decode().strip()
+                    else:
+                        if image_attributes == "":
+                            sdata = data[:100].decode()  # take svg viewBox
+                            match = re.search(r'viewBox="0 0 ([0-9]+) ([0-9]+)', sdata)
+                            if match:
+                                image_attributes = ' style="width: '+match.group(1)+'px;"'
+                        pngenc = b64encode(data)
+                        # _,imgext = splitext(fn.filename)
+                        # imgext = imgext[1:]
+                        imgext = 'svg+xml'  # pure svg is not enough
+                        htmldata += '<img src="data:image/'+imgext+';base64, ' + \
+                                    pngenc.decode() + '" ' + image_attributes + '/>'
+                result["web"]["md"] = htmldata
         else:
             out = r.text.strip()
 
