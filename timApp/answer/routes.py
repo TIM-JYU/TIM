@@ -670,7 +670,7 @@ def post_answer_impl(
                         'info': info}
     preoutput = ""
     preprogram = plugin.values.get("preprogram", None)
-    if preprogram:
+    if preprogram and plugin.type != "jsrunner":
         params = JsRunnerParams(code=preprogram, data=answer_call_data)
         answer_call_data, preoutput = jsrunner_run(params)
 
