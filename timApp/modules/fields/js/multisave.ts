@@ -93,7 +93,7 @@ const multisaveAll = t.intersection([
             {{unsavedText}}
             <ul>
                 <li *ngFor="let tag of unsaveds">
-                    <a href="" (click)="scrollTo(tag)">{{tag.getName()}}</a>
+                    <a href="" (click)="scrollTo(tag); $event.preventDefault()">{{tag.getName()}}</a>
                 </li>
             </ul>
         </div>
@@ -112,7 +112,7 @@ const multisaveAll = t.intersection([
     <button class="btn btn-default"
             *ngIf="(undoButton && (!listener || !allSaved()))"
             [title]="undoTitle"
-            (click)="resetChanges()">
+            (click)="tryResetChanges()">
         {{undoButton}}
     </button>
     <p class="savedtext" *ngIf="isSaved && allSaved()">{{savedText}}</p>
@@ -404,7 +404,7 @@ export class MultisaveComponent
         return multisaveAll;
     }
 
-    resetChanges() {
+    tryResetChanges(): void {
         if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
             return;
         }
