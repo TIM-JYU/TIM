@@ -2123,12 +2123,13 @@ ${fhtml}
     }
 
     async processPluginMath() {
-        if (!this.isMathCheck) {
-            return;
+        if (this.isMathCheck) {
+            await timeout();
+            await ParCompiler.processMathJaxAsciiMath(this.element[0]);
+        } else if (this.type === "maxima") {
+            await timeout();
+            await ParCompiler.processMathJaxTeX(this.element[0]);
         }
-
-        await timeout();
-        await ParCompiler.processMathJaxAsciiMath(this.element[0]);
     }
 
     runCodeIfCR(event: KeyboardEvent) {
