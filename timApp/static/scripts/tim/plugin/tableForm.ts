@@ -179,7 +179,7 @@ interface CreateMessageOptions {
     archive: boolean;
     isPrivate: boolean;
     pageList: string;
-    check: boolean;
+    confirm: boolean;
     reply: boolean;
     replyAll: boolean;
     expires: Date | undefined;
@@ -192,13 +192,10 @@ interface CreateMessageOptions {
     template: `
         <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="emaillist">
             <tim-close-button (click)="emaillist=''"></tim-close-button>
+            <p>Recipients:</p>
             <p><textarea [(ngModel)]="emaillist" rows="4" cols="40"></textarea>
             </p>
             <p>
-                <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox"
-                                                                                                   [(ngModel)]="emailbcc">BCC</label>&nbsp;
-                <label title="Send also a copy for me"><input type="checkbox" [(ngModel)]="emailbccme">BCC also
-                    for me</label>&nbsp;
                 <label title="Send using TIM. Every mail is sent as a personal mail."><input type="checkbox"
                                                                                              [(ngModel)]="emailtim">use
                     TIM to send</label>&nbsp;
@@ -206,34 +203,37 @@ interface CreateMessageOptions {
             <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
             <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
-            <p><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.messageChannel">Send to recipient's own message channels</label></p>
+            <p>Send<br/><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.messageChannel">to recipient's own message channels</label><br/>
+            <label><input type="checkbox"
+                                      [(ngModel)]="emailtim">as email</label><br/>
+            <label><input type="checkbox"
+                                      [(ngModel)]="timMessage">as TIM message</label></p>
             <p><label><input type="checkbox"
                                       [(ngModel)]="createMessageOptions.archive">Archive message</label></p>
             <p><label><input type="checkbox"
                                       [(ngModel)]="createMessageOptions.isPrivate">Recipient sees message as private</label></p>
-            <h3>Options for TIM message</h3>
             <p><label><input type="checkbox"
-                                      [(ngModel)]="timMessage">Send as TIM message</label></p>
-            <p>Pages to send message to: (enter names)</p>
-            <p><textarea [(ngModel)]="createMessageOptions.pageList" rows="4" cols="40"></textarea></p>                                      
-            <p><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.check">Message can be checked</label></p>
-            <p><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.reply">Message can be replied to</label></p>
-            <p><label><input type="radio"
+                                      [(ngModel)]="createMessageOptions.reply">Message can be replied to</label></p>  
+            <p *ngIf="createMessageOptions.reply"><label><input type="radio"
                                       [(ngModel)]="createMessageOptions.replyAll" name="replyAll" value="true">Recipient replies all by default</label><br/>
             <label><input type="radio"
                                       [(ngModel)]="createMessageOptions.replyAll" name="replyAll" value="false">Recipient only replies to sender</label></p>
-            <p class="form-group">
-                <label for="expiration-selector" class="col-sm-4 control-label">Message will be removed on:</label>
+            
+            <p *ngIf="timMessage">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
+            <p *ngIf="timMessage"><textarea [(ngModel)]="createMessageOptions.pageList" rows="4" cols="70"></textarea></p>                                      
+            <p *ngIf="timMessage"><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.confirm">TIM message can be confirmed</label></p>
+                      
+            <p *ngIf="timMessage" class="form-group">
+                <label for="expiration-selector" class="col-sm-4 control-label">TIM message will be removed on:</label>
                 <tim-datetime-picker id="expiration-selector"
                                      [(time)]="createMessageOptions.expires"
-                                     placeholder="Leave empty, if the message should not be removed automatically">
+                                     placeholder="No automatic date">
                 </tim-datetime-picker>
             </p>
             <p>
-                <button class="timButton"
+                <button class="timButton" *ngIf="createMessageOptions.messageChannel || emailtim || timMessage"
                         (click)="sendEmail()">
                     Send
                 </button>
@@ -249,17 +249,17 @@ export class TimEmailComponent {
     emailbody: string = "";
     emailbcc: boolean = false;
     emailbccme: boolean = true;
-    emailtim: boolean = true;
+    emailtim: boolean = false;
     emailMsg: string = "";
     timMessage: boolean = false;
     createMessageOptions: CreateMessageOptions = {
         messageChannel: false,
-        archive: true,
+        archive: false,
         isPrivate: false,
         pageList: "",
-        check: true,
-        reply: true,
-        replyAll: true,
+        confirm: false,
+        reply: false,
+        replyAll: false,
         expires: undefined,
         sender: Users.getCurrent().real_name,
         senderEmail: Users.getCurrent().email,

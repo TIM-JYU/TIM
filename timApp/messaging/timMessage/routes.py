@@ -19,7 +19,7 @@ class MessageOptions:
     isPrivate: bool
     archive: bool
     pageList: str
-    check: bool
+    confirm: bool
     reply: bool
     replyAll: bool
     sender: str
