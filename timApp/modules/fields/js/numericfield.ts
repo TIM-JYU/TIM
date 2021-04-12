@@ -192,7 +192,10 @@ class NumericfieldController
         return undefined;
     }
 
-    tryResetChanges(): void {
+    tryResetChanges(e?: Event): void {
+        if (e) {
+            e.preventDefault();
+        }
         if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
             return;
         }
@@ -561,7 +564,7 @@ numericfieldApp.component("numericfieldRunner", {
             ng-click="$ctrl.saveText()">
         {{::$ctrl.buttonText()}}
     </button>
-    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.tryResetChanges();">{{::$ctrl.undoButton}}</a>
+    <a href="" ng-if="$ctrl.undoButton && $ctrl.isUnSaved()" title="{{::$ctrl.undoTitle}}" ng-click="$ctrl.tryResetChanges($event);">{{::$ctrl.undoButton}}</a>
     <p class="savedtext" ng-if="!$ctrl.hideSavedText && $ctrl.buttonText()">Saved!</p>
     <p ng-if="::$ctrl.footer" ng-bind="::$ctrl.footer" class="plgfooter"></p>
 </div> `,

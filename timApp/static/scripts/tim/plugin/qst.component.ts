@@ -59,7 +59,7 @@ const PluginFields = t.intersection([
             <button class="timButton" [innerHtml]="button" *ngIf="button"
                     [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
                     (click)="saveText()"></button>
-            <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges()">
+            <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event)">
                 &nbsp;{{undoButton}}
             </a>
 
@@ -305,7 +305,10 @@ export class QstComponent
         return {saved: true, message: undefined};
     }
 
-    tryResetChanges(): void {
+    tryResetChanges(e?: Event): void {
+        if (e) {
+            e.preventDefault();
+        }
         if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
             return;
         }
