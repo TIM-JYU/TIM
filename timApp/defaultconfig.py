@@ -139,6 +139,8 @@ SCIM_ALLOWED_IP = '127.0.0.1'
 MAILMAN_URL = None
 MAILMAN_USER = None
 MAILMAN_PASS = None
+MAILMAN_EVENT_API_USER= None
+MAILMAN_EVENT_API_KEY = None
 
 # If true, prints all SQL statements with tracebacks.
 DEBUG_SQL = False
