@@ -21,6 +21,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -28,6 +29,9 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {TaskId} from "tim/plugin/taskid";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {BsDropdownModule} from "ngx-bootstrap/dropdown";
+import {TimepickerModule} from "ngx-bootstrap/timepicker";
+import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import {ViewCtrl} from "../document/viewctrl";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
@@ -168,6 +172,21 @@ const emailColIndex = 2;
 const memberShipColIndex = 3;
 const sortLang = "fi";
 
+interface CreateMessageOptions {
+    // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py). BUT recipients, emailsubject and emailbody are added later at postTimMessage()
+    // VIESTIM or TODO: change this later when separate email functionality is removed?
+    messageChannel: boolean;
+    archive: boolean;
+    isPrivate: boolean;
+    pageList: string;
+    check: boolean;
+    reply: boolean;
+    replyAll: boolean;
+    expires: Date | undefined;
+    sender: string | null;
+    senderEmail: string | null;
+}
+
 @Component({
     selector: "tim-email-send",
     template: `
@@ -181,12 +200,38 @@ const sortLang = "fi";
                 <label title="Send also a copy for me"><input type="checkbox" [(ngModel)]="emailbccme">BCC also
                     for me</label>&nbsp;
                 <label title="Send using TIM. Every mail is sent as a personal mail."><input type="checkbox"
-                                                                                              [(ngModel)]="emailtim">use
+                                                                                             [(ngModel)]="emailtim">use
                     TIM to send</label>&nbsp;
             </p>
             <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
-            <p>eMail content:</p>
+            <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
+            <p><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.messageChannel">Send to recipient's own message channels</label></p>
+            <p><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.archive">Archive message</label></p>
+            <p><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.isPrivate">Recipient sees message as private</label></p>
+            <h3>Options for TIM message</h3>
+            <p><label><input type="checkbox"
+                                      [(ngModel)]="timMessage">Send as TIM message</label></p>
+            <p>Pages to send message to: (enter names)</p>
+            <p><textarea [(ngModel)]="createMessageOptions.pageList" rows="4" cols="40"></textarea></p>                                      
+            <p><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.check">Message can be checked</label></p>
+            <p><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.reply">Message can be replied to</label></p>
+            <p><label><input type="radio"
+                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" value="true">Recipient replies all by default</label><br/>
+            <label><input type="radio"
+                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" value="false">Recipient only replies to sender</label></p>
+            <p class="form-group">
+                <label for="expiration-selector" class="col-sm-4 control-label">Message will be removed on:</label>
+                <tim-datetime-picker id="expiration-selector"
+                                     [(time)]="createMessageOptions.expires"
+                                     placeholder="Leave empty, if the message should not be removed automatically">
+                </tim-datetime-picker>
+            </p>
             <p>
                 <button class="timButton"
                         (click)="sendEmail()">
@@ -206,8 +251,23 @@ export class TimEmailComponent {
     emailbccme: boolean = true;
     emailtim: boolean = true;
     emailMsg: string = "";
+    timMessage: boolean = false;
+    createMessageOptions: CreateMessageOptions = {
+        messageChannel: false,
+        archive: true,
+        isPrivate: false,
+        pageList: "",
+        check: true,
+        reply: true,
+        replyAll: true,
+        expires: undefined,
+        sender: Users.getCurrent().real_name,
+        senderEmail: Users.getCurrent().email,
+    };
     @Input()
     taskid?: TaskId;
+
+    constructor(private http: HttpClient) {}
 
     async sendEmailTim() {
         if (!this.taskid) {
@@ -227,7 +287,38 @@ export class TimEmailComponent {
         this.emailMsg = response.ok ? "Sent" : response.result.data.error;
     }
 
+    async sendTimMessage() {
+        const result = await this.postTimMessage(this.createMessageOptions);
+        if (!result.ok) {
+            console.error(result.result.error.error);
+        } else {
+            // If emailMsg != "", text "Sent!" appears next to Send button.
+            this.emailMsg = "sent";
+        }
+    }
+
+    // VIESTIM this helper function helps keeping types in check.
+    private postTimMessage(options: CreateMessageOptions) {
+        const message = {
+            emailbody: this.emailbody,
+            emailsubject: this.emailsubject,
+            recipients: this.emaillist.split(/\n/g),
+        };
+        const timMessage = {...options, ...message};
+        return to2(
+            this.http
+                .post("/timMessage/send", {options: timMessage})
+                .toPromise()
+        );
+    }
+
+    // TODO: separate TIM messages from here?
     public async sendEmail() {
+        if (this.timMessage) {
+            await this.sendTimMessage();
+            return;
+        }
+
         if (this.emailtim) {
             await this.sendEmailTim();
             return;
@@ -356,7 +447,8 @@ export class TimEmailComponent {
                     [disabled]="loading"
                     (click)="openTable()">
                 {{openButtonText}}
-            </button><tim-loading *ngIf="loading"></tim-loading>
+            </button>
+            <tim-loading *ngIf="loading"></tim-loading>
         </div>
     `,
     styleUrls: ["./tableForm.scss"],
@@ -733,6 +825,7 @@ export class TableFormComponent
         if (this.attrsall.markup.sisugroups) {
             return;
         }
+
         // TODO: Save before reset?
         interface TableFetchResponse {
             aliases: Record<string, string>;
@@ -743,6 +836,7 @@ export class TableFormComponent
             rows: IRowsType;
             styles: t.TypeOf<typeof Styles>;
         }
+
         let prom;
         const tid = this.getTaskId();
         if (!tid) {
@@ -1639,6 +1733,9 @@ export class TableFormComponent
         FormsModule,
         TimUtilityModule,
         TimTableModule,
+        BsDropdownModule.forRoot(),
+        TimepickerModule.forRoot(),
+        DatetimePickerModule,
     ],
 })
 export class TableFormModule implements DoBootstrap {

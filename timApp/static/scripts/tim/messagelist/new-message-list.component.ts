@@ -9,44 +9,80 @@ interface CreateListOptions {
     // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
     listname: string;
     domain: string;
-    archive: boolean;
-    archiveType: string;
+    archive: ArchiveType;
     emails: string[];
+    ownerEmail: string;
+    notifyOwnerOnListChange: boolean;
+    listDescription: string;
+    listInfo: string;
+}
+
+enum ArchiveType {
+    // See ArchiveType class on Python side of things for explanations.
+    NONE,
+    SECRET,
+    GROUPONLY,
+    UNLISTED,
+    PUBLIC,
+}
+
+// For proper setting of archive options on UI.
+interface ArchivePolicyNames {
+    archiveType: ArchiveType;
+    policyName: string;
 }
 
 @Component({
     selector: "tim-new-message-list",
     template: `
-        <form>
+        <form name="list-options-form">
             <h1>Create new message list</h1>
             <div>
-                <label for="list-name">List name: </label><input type="text" name="list-name" id="list-name"
-                                                                 [(ngModel)]="listname"/>
+                <label for="list-name">List name: </label>
+                <input type="text" name="list-name" id="list-name"
+                       [(ngModel)]="listname"
+                       (keyup)="checkNameRequirementsLocally()"/>
                 <select id="domain-select" name="domain-select" [(ngModel)]="domain">
-                    <option *ngFor="let domain of domains">{{domain}}</option>
+                    <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
                 </select>
-                <!-- For testing name checking -->
+                <!-- VIESTIM: For testing name checking. -->
                 <button (click)="checkListNameAvailability()">Tarkasta nimi</button>
             </div>
             <div>
+                <!-- VIESTIM: For testing list adding with owner email address. -->
+                <label for="owner-address">List owner's adress</label>
+                <input type="text" name="owner-address" id="owner-adress" [(ngModel)]="ownerEmail"/>
             </div>
             <div>
-                <input type="checkbox" name="if-archived" id="if-archived" [(ngModel)]="archive"/> <label
-                    for="if-archived">Archive
-                messages?</label>
+                <label for="list-description">Short description</label>
+                <input type="text" name="list-description" id="list-description" [(ngModel)]="listDescription"/>
             </div>
             <div>
-                <p>Radio buttons example</p>
-                <p>Currently selected item: {{ archiveType }}</p>
-                <label *ngFor="let item of items">
-                    <input
-                            name="items-radio"
-                            type="radio"
-                            [value]="item"
-                            [(ngModel)]="archiveType"
-                    />
-                    {{ item }}
-                </label>
+                <label for="list-info">Long description</label>
+                <textarea name="list-info"
+                          [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
+            </div>
+            <div>
+            </div>
+            <div>
+                <b>List archive policy:</b>
+                <ul style="list-style-type: none">
+                    <li *ngFor="let option of archiveOptions">
+                        <input
+                                name="items-radio"
+                                type="radio"
+                                id="archive-{{option.archiveType}}"
+                                [value]="option.archiveType"
+                                [(ngModel)]="archive"
+                        />
+                        <label for="archive-{{option}}">{{option.policyName}}</label>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
+                       [(ngModel)]="notifyOwnerOnListChange"/>
+                <label for="notify-owner-on-list-change">Notify me on list changes (e.g. user subscribes)</label>
             </div>
             <div>
                 <label for="add-multiple-emails">Add multiple emails</label> <br/>
@@ -68,10 +104,30 @@ interface CreateListOptions {
 export class NewMessageListComponent implements OnInit {
     listname: string = "";
 
-    // list is archived by default
-    archive: boolean = true;
-    archiveType: string = "";
-    items: string[] = ["public archive", "secret archive"];
+    // archiveOptions: string[] = ["none", "private", "public"];
+    archiveOptions: ArchivePolicyNames[] = [
+        {archiveType: ArchiveType.NONE, policyName: "No archiving."},
+        {
+            archiveType: ArchiveType.SECRET,
+            policyName: "Secret archive, only for owner.",
+        },
+        {
+            archiveType: ArchiveType.GROUPONLY,
+            policyName:
+                "Members only archive. Only members of this list can access.",
+        },
+        {
+            archiveType: ArchiveType.UNLISTED,
+            policyName: "Unlisted archive. Everyone with link can access.",
+        },
+        {
+            archiveType: ArchiveType.PUBLIC,
+            policyName:
+                "Public archive. Everyone with link can access and the archive is advertised.",
+        },
+    ];
+    // List has a private members only archive by default.
+    archive: ArchiveType = ArchiveType.GROUPONLY;
 
     domain: string = "";
     domains: string[] = [];
@@ -79,6 +135,16 @@ export class NewMessageListComponent implements OnInit {
     emails?: string;
 
     urlPrefix: string = "/messagelist";
+
+    ownerEmail: string = "";
+
+    notifyOwnerOnListChange: boolean = false;
+
+    listInfo: string = "";
+    listDescription: string = "";
+
+    // For name check
+    timeoutID?: number;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -113,10 +179,16 @@ export class NewMessageListComponent implements OnInit {
             // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
             // TODO: Validate input values before sending, e.g. this list has a unique name.
             listname: this.listname,
-            domain: this.domain,
+            // We added '@' in domain name for display purposes, remove it when sending domain to the server.
+            domain: this.domain.startsWith("@")
+                ? this.domain.slice(1)
+                : this.domain,
             archive: this.archive,
             emails: this.parseEmails(),
-            archiveType: this.archiveType,
+            ownerEmail: this.ownerEmail,
+            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
+            listInfo: this.listInfo,
+            listDescription: this.listDescription,
         });
         if (!result.ok) {
             console.error(result.result.error.error);
@@ -141,7 +213,7 @@ export class NewMessageListComponent implements OnInit {
         if (!this.emails) {
             return [];
         }
-        return this.emails.split("\n").filter(Boolean);
+        return this.emails.split("\n").filter((e) => e);
     }
 
     /**
@@ -149,20 +221,23 @@ export class NewMessageListComponent implements OnInit {
      * VIESTIM: This is a demo function, will only probably need this when we have implemented the creation dialoque?
      */
     async checkListNameAvailability() {
-        const nameCandidate: string = this.listname;
+        const nameCandidate: string = this.listname + this.domain; // this.domain, if specified, already contains '@'.
         const result = await to2(
             this.http
-                .get<boolean>(`${this.urlPrefix}/checkname/${nameCandidate}`)
+                .get<{nameOK: boolean; explanation: string}>(
+                    `${this.urlPrefix}/checkname/${nameCandidate}`
+                )
                 .toPromise()
         );
         if (result.ok) {
-            console.log("Hei maailma, tarkistus on tehty. Tulos on:");
-            if (result.result) {
-                console.log("nimi on vapaa käyttöön.");
+            console.log("Name check done. Result:");
+            const temp = result.result;
+            if (temp.nameOK) {
+                // TODO: Indicate somehow that name is usable as a new list name.
+                console.log(temp.explanation);
             } else {
-                console.log(
-                    "nimi on muussa käytössä (tai tarkistusta ei voitu tehdä)."
-                );
+                // TODO: Indicate somehow that name is not usable as a new list name.
+                console.log(temp.explanation);
             }
         } else {
             console.error(result.result.error.error);
@@ -171,20 +246,27 @@ export class NewMessageListComponent implements OnInit {
 
     /**
      * Check list name requirements locally.
-     * TODO: Hook this into a text field to check at updates.
      *
      * If you make changes here, make sure to check that the server checks the same things. Otherwise there will
      * inconsistant name checking and a confused user.
      *
-     * TODO: Expand to return information if returns false, to inform the user why name requirements aren't met.
      * @returns {boolean} Returns true if name requirements are met. Otherwise returns false.
      */
     checkNameRequirementsLocally(): boolean {
         // VIESTIM: Since the server has the final say for allowed names, sync these rules with the server. Maybe they
         //  could be imported from the server?
+        // TODO: Replace console.logs with a better feedback system for the user.
+        console.log(`start check on listname: ${this.listname}`);
+
+        // Cancel previous timed call to server name checks.
+        if (this.timeoutID) {
+            clearTimeout(this.timeoutID);
+        }
+        this.timeoutID = undefined;
 
         // Name length is within length boundaries.
         if (this.listname.length < 5 || 36 < this.listname.length) {
+            console.log("Name not in length boundaries");
             return false;
         }
 
@@ -193,18 +275,29 @@ export class NewMessageListComponent implements OnInit {
         // The first one checks at the beginning of the string, the second is a negation.
         const regExpStartCharacter: RegExp = /^[a-z]/;
         if (!regExpStartCharacter.test(this.listname)) {
+            console.log("name doesn't start with a lowercase letter");
+            return false;
+        }
+
+        // Name contains at least one digit.
+        const regExpAtLeastOneDigit: RegExp = /\d/;
+        if (!regExpAtLeastOneDigit.test(this.listname)) {
+            console.error("name doesn't contain at least one digit.");
             return false;
         }
 
         // Name can't contain multiple sequential dots.
         const regExpMultipleDots: RegExp = /\.\.+/;
         if (regExpMultipleDots.test(this.listname)) {
+            console.log("name contains multiple dots");
             return false;
         }
 
         // Name doesn't end in a dot.
-        // ESLint prefers to not use regex for this.
+        // ESLint prefers to not use regex for this. And by "prefer" we mean this won't transpile with a regular
+        // expression.
         if (this.listname.endsWith(".")) {
+            console.log("name ends in a dot");
             return false;
         }
 
@@ -218,7 +311,44 @@ export class NewMessageListComponent implements OnInit {
         // found the name is of correct form. Notice that hyphen is in two different roles and one hyphen has
         // to be escaped. The dot does not have to be escaped here.
         const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
-        return !regExpNonAllowedCharacters.test(this.listname);
+        if (regExpNonAllowedCharacters.test(this.listname)) {
+            console.log("Name had forbidden characters");
+            return false;
+        }
+        console.log("name has passed all local tests");
+        console.log(
+            "start server side tests in 5 seconds after last key down."
+        );
+        // Local tests have been passed. Now launch server side checks.
+        this.timeoutID = window.setTimeout(
+            () => this.checkListNameAvailability(),
+            5 * 1000
+        );
+
+        return true;
+    }
+
+    /**
+     * Helper for list deletion.
+     */
+    async deleteList() {
+        // const result =
+        const result = await to2(
+            this.http
+                .delete(`/messagelist/deletelist`, {
+                    params: {
+                        listname: `${this.listname}${this.domain}`,
+                    },
+                })
+                .toPromise()
+        );
+        if (result.ok) {
+            // TODO: Inform the user deletion was succesfull.
+            console.log(result.result);
+        } else {
+            // TODO: Inform the user deletion was not succesfull.
+            console.log(result.result);
+        }
     }
 }
 

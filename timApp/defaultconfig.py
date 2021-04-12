@@ -136,9 +136,9 @@ MAX_ANSWER_CONTENT_SIZE = 200 * 1024  # bytes
 SCIM_ALLOWED_IP = '127.0.0.1'
 
 # Settings for mailmanclient-library. Set properly in production.
-MAILMAN_URL = ""
-MAILMAN_USER = ""
-MAILMAN_PASS = ""
+MAILMAN_URL = None
+MAILMAN_USER = None
+MAILMAN_PASS = None
 
 # If true, prints all SQL statements with tracebacks.
 DEBUG_SQL = False
