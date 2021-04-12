@@ -6,32 +6,34 @@ import {CommonModule} from "@angular/common";
 @Component({
     selector: "tim-message",
     template: `
-        <div class="timMessageDisplay" *ngIf="showMessage">
-            <p>From: {{sender}}</p>
-            <div class="fullMessageContent" *ngIf="showFullContent">
-                <p>{{fullContent}}</p>
-                <p *ngIf="messageOverMaxLength"><a (click)="toggleDisplayedContentLength()">Read less</a></p>
-            </div>
-            <div class="cutMessageContent" *ngIf="!showFullContent">
-                <p>{{shownContent}}<span>...</span></p>
-                <p><a (click)="toggleDisplayedContentLength()">Read more</a></p>
-            </div>
-            <div class="buttonArea">
-                <button class="timButton" [disabled]="!canMarkAsRead" title="Read Receipt"
-                        (click)="markAsRead()">
-                    Mark as Read
-                </button>
-                <button class="timButton" *ngIf="canReply" (click)="reply()">Reply</button>
-                <span><a (click)="readReceipt()">TEST: allow/disallow read receipt</a></span>
-            </div>
-            <div class="replyArea" *ngIf="showReply">
-                <textarea id="reply-message" name="reply-message"></textarea>
-                <div class="sent">
-                    <button class="timButton" (click)="sendReply()">Send</button>
-                    <span *ngIf="replySent">Sent!</span>
+        <ng-container *ngIf="showMessage">
+            <div class="timMessageDisplay">
+                <p>From: {{sender}}</p>
+                <div class="fullMessageContent" *ngIf="showFullContent">
+                    <p>{{fullContent}}</p>
+                    <p *ngIf="messageOverMaxLength"><a (click)="toggleDisplayedContentLength()">Read less</a></p>
+                </div>
+                <div class="cutMessageContent" *ngIf="!showFullContent">
+                    <p>{{shownContent}}<span>...</span></p>
+                    <p><a (click)="toggleDisplayedContentLength()">Read more</a></p>
+                </div>
+                <div class="buttonArea">
+                    <button class="timButton" [disabled]="!canMarkAsRead" title="Read Receipt"
+                            (click)="markAsRead()">
+                        Mark as Read
+                    </button>
+                    <button class="timButton" *ngIf="canReply" (click)="reply()">Reply</button>
+                    <span><a (click)="readReceipt()">TEST: allow/disallow read receipt</a></span>
+                </div>
+                <div class="replyArea" *ngIf="showReply">
+                    <textarea id="reply-message" name="reply-message"></textarea>
+                    <div class="sent">
+                        <button class="timButton" (click)="sendReply()">Send</button>
+                        <span *ngIf="replySent">Sent!</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </ng-container>
         <ng-container *ngIf="markedAsRead">
             <p>Read receipt delivered to sender</p>
             <button class="timButton" (click)="cancelReadReceipt()">Cancel</button>
@@ -54,14 +56,14 @@ export class TimMessageComponent implements OnInit {
     sender?: string;
 
     /**
-     * Displays the full message content or the shortened version.
+     * Toggles between showing the full message content and the shortened version.
      */
     toggleDisplayedContentLength(): void {
         this.showFullContent = !this.showFullContent;
     }
 
     /**
-     * Hides the message view; shows an alert about message being read and an option to cancel.
+     * Hides the message view; shows an alert about sending a read receipt and an option to cancel.
      */
     markAsRead(): void {
         this.markedAsRead = true;
@@ -91,14 +93,14 @@ export class TimMessageComponent implements OnInit {
     }
 
     /**
-     * Hides the message and shows a "sent" alert.
+     * Shows a "sent" alert after sending a reply.
      */
     sendReply(): void {
         this.replySent = true;
     }
 
     ngOnInit(): void {
-        // TODO Read sender, content etc. from JSON?
+        // TODO Read sender, content etc. from database
         this.sender = "ohj1k21";
         // this.fullContent =
         //     "Sinulta puuttuu demo 3 ja 4 pisteitä. Miten jatketaan kurssin kanssa?";
