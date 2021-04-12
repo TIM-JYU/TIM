@@ -209,6 +209,15 @@ const DEFAULT_PIECE_SIZE = 20;
                 </button>
                 <a href="/view/groups" i18n>Browse existing groups</a>
             </ng-container>
+            <ng-container *ngIf="users.isGroupAdmin()">
+                <h5 i18n>Message lists</h5>
+                <button class="timButton btn-block"
+                        title="Create a new message list" i18n-title
+                        (click)="createMessagelist()"
+                        i18n>Create a new message list
+                </button>
+                <a href="/view/message lists" i18n>Browse existing message lists</a>
+            </ng-container>
         </ng-container>
 
         <ng-container *ngIf="docSettings?.cache && item?.rights?.manage">
@@ -554,6 +563,26 @@ export class SettingsTabComponent implements OnInit {
             defaultValue: "",
             text: "Enter name of the usergroup",
             title: "Create group",
+            validator: async (s) => {
+                const r = await to2(
+                    this.http.get<IDocument>(`/groups/create/${s}`).toPromise()
+                );
+                if (r.ok) {
+                    return {ok: true, result: r.result};
+                } else {
+                    return {ok: false, result: r.result.error.error};
+                }
+            },
+        });
+        redirectToItem(doc);
+    }
+
+    async createMessagelist() {
+        const doc = await showInputDialog({
+            isInput: InputDialogKind.InputAndValidator,
+            defaultValue: "",
+            text: "Enter name of the message list",
+            title: "Create message list",
             validator: async (s) => {
                 const r = await to2(
                     this.http.get<IDocument>(`/groups/create/${s}`).toPromise()
