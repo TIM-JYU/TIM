@@ -4,7 +4,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
 
 @Component({
-    selector: "tim-message-dialog",
+    selector: "message-list-creation",
     template: `
         <tim-dialog-frame>
             <ng-container header>
@@ -19,15 +19,15 @@ import {BrowserModule} from "@angular/platform-browser";
         </tim-dialog-frame>
     `,
 })
-export class MessageDialogComponent extends AngularDialogComponent<
+export class MessageListComponent extends AngularDialogComponent<
     string,
     unknown
 > {
-    protected dialogName = "Message";
+    protected dialogName = "MessageList";
 }
 
 @NgModule({
-    declarations: [MessageDialogComponent],
+    declarations: [MessageListComponent],
     imports: [BrowserModule, DialogModule],
 })
-export class MessageDialogModule {}
+export class MessageListModule {}
