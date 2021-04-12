@@ -131,7 +131,6 @@ interface ReplyToDescriptions {
 export class NewMessageListComponent implements OnInit {
     listname: string = "";
 
-    // archiveOptions: string[] = ["none", "private", "public"];
     archiveOptions: ArchivePolicyDescriptions[] = [
         {archiveType: ArchiveType.NONE, policyName: "No archiving."},
         {

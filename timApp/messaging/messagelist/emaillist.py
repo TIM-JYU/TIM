@@ -596,3 +596,22 @@ def get_email_list_info(mlist: MailingList) -> str:
     :return: Email list's info as a string.
     """
     return mlist.settings["info"]
+
+
+def set_email_list_options(list_options: ListOptions) -> ListOptions:
+    """Set email list spesific options and values to general message list options, obtained from Mailman.
+
+    :param list_options: Message list options.
+    :return: Message list options, but with email list spesific options attached.
+    """
+    fqdn_listname = list_options.listname + "@" + list_options.domain
+    mlist = _client.get_list(fqdn_listname)
+
+    # Get list members and their display names.
+
+    emails_and_display_names = [(member.rest_data["email"], member.rest_data["display_name"])
+                                for member in mlist.members]
+
+    # Separate TIM-members from 'outside' members, who aren't TIM users.
+    list_options.emails
+    return list_options

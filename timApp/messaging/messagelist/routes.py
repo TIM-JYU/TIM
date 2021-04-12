@@ -5,7 +5,7 @@ from flask import Response
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
-from timApp.messaging.messagelist.listoptions import ListOptions
+from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
 from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
@@ -111,3 +111,29 @@ def delete_list(listname: str) -> Response:
         r = EmailList.delete_list(listname)
     # TODO: Put message list deletion here.
     return json_response(r)
+
+
+@messagelist.route("/list/<list_name>")
+def get_list(list_name: str) -> Response:
+    """
+    Get list's options for owner in control view.
+
+    :param list_name: The message list's name.
+    :return: Response with list options as JSON.
+    """
+    options = create_placeholder_msglist()
+    # TODO: Add Message list options and values. Now just return placeholders.
+    #  Maybe we need some email list spesific things to be added from emaillist.py, such as 'outsider' emails?
+    #  options = set_email_list_options(options)
+    return json_response(options)
+
+
+def create_placeholder_msglist() -> ListOptions:
+    ret_value = ListOptions(archive=ArchiveType.GROUPONLY, defaultReplyType=ReplyToListChanges.NOCHANGES,
+                            domain="timlist.it.jyu.fi", emails=[],
+                            htmlAllowed=True, listDescription="Lyhyt ja täsmällinen kuvaus listalle.",
+                            listInfo="Pitkä kuvaus listalle. Voisi vaikka esim. täsmentää listan tarkoitusta ja "
+                                     "ohjata muihin viestikanaviin",
+                            listname="testilista-ei-olemassa-mailmanissa", notifyOwnerOnListChange=True,
+                            ownerEmail="totalund@student.jyu.fi")
+    return ret_value
