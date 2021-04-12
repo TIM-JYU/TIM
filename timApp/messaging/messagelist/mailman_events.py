@@ -14,17 +14,17 @@ from tim_common.marshmallow_dataclass import class_schema
 
 mailman_events = Blueprint("mailman_events", __name__, url_prefix="/mailman/event")
 
-AUTH_NAME = app.config.get("MAILMAN_EVENT_API_NAME") or ""
+AUTH_USER = app.config.get("MAILMAN_EVENT_API_USER") or ""
 AUTH_KEY = app.config.get("MAILMAN_EVENT_API_KEY") or ""
-if not AUTH_NAME or not AUTH_KEY:
+if not AUTH_USER or not AUTH_KEY:
     log_warning("No mailman event API credentials set! Generating random credentials.")
-    AUTH_NAME = secrets.token_urlsafe(32)
+    AUTH_USER = secrets.token_urlsafe(32)
     AUTH_KEY = secrets.token_urlsafe(32)
 
 
 def check_auth():
     auth = request.authorization
-    return auth and auth.type == "basic" and auth.username == AUTH_NAME and auth.password == AUTH_KEY
+    return auth and auth.type == "basic" and auth.username == AUTH_USER and auth.password == AUTH_KEY
 
 
 @dataclass
