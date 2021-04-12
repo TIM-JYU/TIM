@@ -50,6 +50,7 @@ from timApp.item.routes_tags import tags_blueprint
 from timApp.item.tag import Tag, GROUP_TAG_PREFIX
 from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.lecture.routes import lecture_routes
+from timApp.messaging.messagelist.mailman_events import mailman_events
 from timApp.messaging.messagelist.routes import messagelist
 from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
@@ -116,6 +117,7 @@ blueprints = [
     velps,
     view_page,
     scheduling,
+    mailman_events,
 
     # plugins
     importData_plugin,
