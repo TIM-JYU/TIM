@@ -74,7 +74,7 @@ EVENTS = {
 
 @mailman_events.route("", methods=["POST"])
 @csrf.exempt
-def handle_event():
+def handle_event() -> Response:
     if not check_auth():
         return Response(status=401, headers={"WWW-Authenticate": "Basic realm=\"Needs auth\""})
 
