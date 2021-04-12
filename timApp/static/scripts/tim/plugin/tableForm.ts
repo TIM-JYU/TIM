@@ -195,11 +195,6 @@ interface CreateMessageOptions {
             <p>Recipients:</p>
             <p><textarea [(ngModel)]="emaillist" rows="4" cols="40"></textarea>
             </p>
-            <p>
-                <label title="Send using TIM. Every mail is sent as a personal mail."><input type="checkbox"
-                                                                                             [(ngModel)]="emailtim">use
-                    TIM to send</label>&nbsp;
-            </p>
             <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
             <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
@@ -231,9 +226,9 @@ interface CreateMessageOptions {
                                      [(time)]="createMessageOptions.expires"
                                      placeholder="No automatic date">
                 </tim-datetime-picker>
-            </p>
+            </p><br/>
             <p>
-                <button class="timButton" *ngIf="createMessageOptions.messageChannel || emailtim || timMessage"
+                <button class="timButton" id="sendButton" *ngIf="createMessageOptions.messageChannel || emailtim || timMessage"
                         (click)="sendEmail()">
                     Send
                 </button>
@@ -241,6 +236,7 @@ interface CreateMessageOptions {
             </p>
         </div>
     `,
+    styleUrls: ["./tableForm.scss"],
 })
 export class TimEmailComponent {
     @Input()
@@ -256,6 +252,8 @@ export class TimEmailComponent {
         messageChannel: false,
         archive: false,
         isPrivate: false,
+        /* VIESTIM: check that urls listed in pageList exist in TIM and inform user if not.*/
+        /* VIESTIM: shorten urls listed in pageList and show them to user */
         pageList: "",
         confirm: false,
         reply: false,
