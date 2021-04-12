@@ -22,7 +22,7 @@ if not AUTH_USER or not AUTH_KEY:
     AUTH_KEY = secrets.token_urlsafe(32)
 
 
-def check_auth():
+def check_auth() -> bool:
     auth = request.authorization
     return auth and auth.type == "basic" and auth.username == AUTH_USER and auth.password == AUTH_KEY
 
