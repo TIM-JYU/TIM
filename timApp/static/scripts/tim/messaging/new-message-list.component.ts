@@ -83,7 +83,7 @@ export class NewMessageListComponent implements OnInit {
 
     emails?: string;
 
-    urlPrefix: string = "/messagelist";
+    urlPrefix: string = "/messaging";
 
     ownerEmail: string = "";
 
@@ -139,7 +139,7 @@ export class NewMessageListComponent implements OnInit {
     // VIESTIM this helper function helps keeping types in check.
     private createList(options: CreateListOptions) {
         return to2(
-            this.http.post("/messagelist/createlist", {options}).toPromise()
+            this.http.post("/messaging/createlist", {options}).toPromise()
         );
     }
 
