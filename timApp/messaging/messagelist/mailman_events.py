@@ -24,7 +24,7 @@ if not AUTH_USER or not AUTH_KEY:
 
 def check_auth() -> bool:
     auth = request.authorization
-    return auth and auth.type == "basic" and auth.username == AUTH_USER and auth.password == AUTH_KEY
+    return auth is not None and auth.type == "basic" and auth.username == AUTH_USER and auth.password == AUTH_KEY
 
 
 @dataclass
