@@ -2060,6 +2060,7 @@ ${fhtml}
         }
 
         this.anyChanged();
+        this.cdr.detectChanges();
     }
 
     anyChanged() {
@@ -3269,6 +3270,13 @@ ${fhtml}
             await this.runCode();
         }
     }
+
+    get runChanged(): boolean {
+        if (this.editor?.parsonsEditor) {
+            return false;
+        }
+        return this.byCode !== this.usercode;
+    }
 }
 
 @Component({
@@ -3342,7 +3350,7 @@ ${fhtml}
                     [parsonsWords]="words"
                     (content)="onContentChange($event)">
             </cs-editor>
-            <div class="csRunChanged" *ngIf="usercode !== byCode && !hide.changed"></div>
+            <div class="csRunChanged" *ngIf="runChanged && !hide.changed"></div>
             <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
         </div>
         <pre class="csRunPost" *ngIf="viewCode && !codeunder && !codeover">{{postcode}}</pre>
