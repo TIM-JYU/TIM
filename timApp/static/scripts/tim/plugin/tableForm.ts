@@ -181,7 +181,7 @@ interface CreateMessageOptions {
     pageList: string;
     confirm: boolean;
     reply: boolean;
-    replyAll: boolean;
+    replyAll: boolean | undefined;
     expires: Date | undefined;
     sender: string | null;
     senderEmail: string | null;
@@ -228,7 +228,7 @@ interface CreateMessageOptions {
                 </tim-datetime-picker>
             </p><br/>
             <p>
-                <button class="timButton" id="sendButton" *ngIf="createMessageOptions.messageChannel || emailtim || timMessage"
+                <button class="timButton" id="sendButton" *ngIf="showSendButton()"
                         (click)="sendEmail()">
                     Send
                 </button>
@@ -257,7 +257,7 @@ export class TimEmailComponent {
         pageList: "",
         confirm: false,
         reply: false,
-        replyAll: false,
+        replyAll: undefined,
         expires: undefined,
         sender: Users.getCurrent().real_name,
         senderEmail: Users.getCurrent().email,
@@ -266,6 +266,18 @@ export class TimEmailComponent {
     taskid?: TaskId;
 
     constructor(private http: HttpClient) {}
+
+    // Checks if all mandatory fields have values
+    showSendButton() {
+        return (
+            (this.createMessageOptions.messageChannel ||
+                this.emailtim ||
+                this.timMessage) &&
+            ((this.createMessageOptions.reply &&
+                this.createMessageOptions.replyAll != undefined) ||
+                !this.createMessageOptions.reply)
+        );
+    }
 
     async sendEmailTim() {
         if (!this.taskid) {

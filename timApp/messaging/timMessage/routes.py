@@ -21,9 +21,9 @@ class MessageOptions:
     pageList: str
     confirm: bool
     reply: bool
-    replyAll: bool
     sender: str
     senderEmail: str
+    replyAll: Optional[bool] = None # VIESTIM: ignore this if !reply
     expires: Optional[datetime] = None
 
 @timMessage.route("/send", methods=['POST'])
