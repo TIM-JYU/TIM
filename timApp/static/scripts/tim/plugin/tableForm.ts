@@ -179,9 +179,9 @@ interface CreateMessageOptions {
     archive: boolean;
     isPrivate: boolean;
     pageList: string;
-    check: boolean;
+    confirm: boolean;
     reply: boolean;
-    replyAll: boolean;
+    replyAll: boolean | undefined;
     expires: Date | undefined;
     sender: string | null;
     senderEmail: string | null;
@@ -192,48 +192,47 @@ interface CreateMessageOptions {
     template: `
         <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="emaillist">
             <tim-close-button (click)="emaillist=''"></tim-close-button>
+            <p>Recipients:</p>
             <p><textarea [(ngModel)]="emaillist" rows="4" cols="40"></textarea>
-            </p>
-            <p>
-                <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox"
-                                                                                                   [(ngModel)]="emailbcc">BCC</label>&nbsp;
-                <label title="Send also a copy for me"><input type="checkbox" [(ngModel)]="emailbccme">BCC also
-                    for me</label>&nbsp;
-                <label title="Send using TIM. Every mail is sent as a personal mail."><input type="checkbox"
-                                                                                             [(ngModel)]="emailtim">use
-                    TIM to send</label>&nbsp;
             </p>
             <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
             <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
-            <p><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.messageChannel">Send to recipient's own message channels</label></p>
-            <p><label><input type="checkbox"
+            <fieldset><p>Send</p><label *ngIf="!defaultEmail"><input type="checkbox" 
+                                      [(ngModel)]="createMessageOptions.messageChannel">to recipient's own message channels</label><br/>
+            <label><input type="checkbox" (change)="notDefault()"
+                                      [(ngModel)]="emailtim">as email</label><br/>
+                <ul *ngIf="emailtim"><li>
+                    <label><input type="checkbox"
+                                      [(ngModel)]="defaultEmail">use your default email client</label><br/>
+                </li></ul>
+            <label *ngIf="!defaultEmail"><input type="checkbox"
+                                      [(ngModel)]="timMessage">as TIM message</label></fieldset><br/>
+            <p *ngIf="!defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="createMessageOptions.archive">Archive message</label></p>
-            <p><label><input type="checkbox"
+            <p *ngIf="!defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="createMessageOptions.isPrivate">Recipient sees message as private</label></p>
-            <h3>Options for TIM message</h3>
-            <p><label><input type="checkbox"
-                                      [(ngModel)]="timMessage">Send as TIM message</label></p>
-            <p>Pages to send message to: (enter names)</p>
-            <p><textarea [(ngModel)]="createMessageOptions.pageList" rows="4" cols="40"></textarea></p>                                      
-            <p><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.check">Message can be checked</label></p>
-            <p><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.reply">Message can be replied to</label></p>
-            <p><label><input type="radio"
+            <p *ngIf="!defaultEmail"><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.reply">Message can be replied to</label></p>  
+            <p *ngIf="createMessageOptions.reply"><label><input type="radio"
                                       [(ngModel)]="createMessageOptions.replyAll" name="replyAll" value="true">Recipient replies all by default</label><br/>
             <label><input type="radio"
                                       [(ngModel)]="createMessageOptions.replyAll" name="replyAll" value="false">Recipient only replies to sender</label></p>
-            <p class="form-group">
-                <label for="expiration-selector" class="col-sm-4 control-label">Message will be removed on:</label>
+            
+            <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
+            <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="createMessageOptions.pageList" rows="4" cols="70"></textarea></p>                                      
+            <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.confirm">TIM message can be confirmed</label></p>
+                      
+            <p *ngIf="timMessage && !defaultEmail" class="form-group">
+                <label for="expiration-selector">TIM message will be removed on:</label>
                 <tim-datetime-picker id="expiration-selector"
                                      [(time)]="createMessageOptions.expires"
-                                     placeholder="Leave empty, if the message should not be removed automatically">
+                                     placeholder="No automatic date">
                 </tim-datetime-picker>
-            </p>
+            </p><br/>
             <p>
-                <button class="timButton"
+                <button class="timButton" id="sendButton" *ngIf="showSendButton()"
                         (click)="sendEmail()">
                     Send
                 </button>
@@ -241,6 +240,7 @@ interface CreateMessageOptions {
             </p>
         </div>
     `,
+    styleUrls: ["./tableForm.scss"],
 })
 export class TimEmailComponent {
     @Input()
@@ -249,17 +249,20 @@ export class TimEmailComponent {
     emailbody: string = "";
     emailbcc: boolean = false;
     emailbccme: boolean = true;
-    emailtim: boolean = true;
+    emailtim: boolean = false;
+    defaultEmail: boolean = false;
     emailMsg: string = "";
     timMessage: boolean = false;
     createMessageOptions: CreateMessageOptions = {
         messageChannel: false,
-        archive: true,
+        archive: false,
         isPrivate: false,
+        /* VIESTIM: check that urls listed in pageList exist in TIM and inform user if not.*/
+        /* VIESTIM: shorten urls listed in pageList and show them to user */
         pageList: "",
-        check: true,
-        reply: true,
-        replyAll: true,
+        confirm: false,
+        reply: false,
+        replyAll: undefined,
         expires: undefined,
         sender: Users.getCurrent().real_name,
         senderEmail: Users.getCurrent().email,
@@ -268,6 +271,22 @@ export class TimEmailComponent {
     taskid?: TaskId;
 
     constructor(private http: HttpClient) {}
+
+    notDefault() {
+        this.defaultEmail = false;
+    }
+
+    // Checks if all mandatory fields have values
+    showSendButton() {
+        return (
+            (this.createMessageOptions.messageChannel ||
+                this.emailtim ||
+                this.timMessage) &&
+            ((this.createMessageOptions.reply &&
+                this.createMessageOptions.replyAll != undefined) ||
+                !this.createMessageOptions.reply)
+        );
+    }
 
     async sendEmailTim() {
         if (!this.taskid) {
@@ -313,13 +332,16 @@ export class TimEmailComponent {
     }
 
     // TODO: separate TIM messages from here?
+    // VIESTIM: make it possible to send as TIM message and email at the same time
     public async sendEmail() {
+        // send as TIM message
         if (this.timMessage) {
             await this.sendTimMessage();
             return;
         }
 
-        if (this.emailtim) {
+        // send as email in TIM
+        if (this.emailtim && !this.defaultEmail) {
             await this.sendEmailTim();
             return;
         }
