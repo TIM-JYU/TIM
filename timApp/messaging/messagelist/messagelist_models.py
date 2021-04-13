@@ -38,14 +38,19 @@ class MessageListMember(db.Model):
     send_right = db.Column(db.Bool)
     # VIESTIM: delivery_right doesn't exist in the original plan.
     delivery_right = db.Column(db.Bool)
+    # VIESTIM: This doesn't strictly speaking exists in the original plan. This acts as an discriminator,
+    #  see SQLAlchemy's documentation's term list.
+    member_type = db.Column(db.Text)
 
     list = db.relationship("MessageListModel", back_populates="members")
     tim_member = db.relationship("MessageListTimMember", back_populates="member")
     external_member = db.relationship("MessageListExternalMember", back_populates="member")
     distribution = db.relationship("MessageListDistribution", back_populates="member")
 
+    __mapper_args__ = {"polymorphic_identity": "member", "polymorphic_on": member_type}
 
-class MessageListTimMember(db.Model):
+
+class MessageListTimMember(MessageListMember):
     """A member of message list who is also a TIM user."""
     __tablename__ = "messagelist_tim_member"
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
@@ -54,15 +59,19 @@ class MessageListTimMember(db.Model):
     member = db.relationship("MessageListMember", back_populates="tim_member")
     user_group = db.relationship("UserGroup", back_populates="")
 
+    __mapper_args__ = {"polymorphic_identity": "tim_member"}
 
-class MessageListExternalMember(db.Model):
+
+class MessageListExternalMember(MessageListMember):
     """A member of message list who is *not* a TIM user. Mainly intended for, but not necessary limited to,
     email-list only usage."""
     __tablename__ = "messagelist_external_member"
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
-    email_address = db.Model(db.Text)
+    email_address = db.Model(db.Text, unique=True)
 
     member = db.relationship("MessageListMember", back_populates="external_member")
+
+    __mapper_args__ = {"polymorphic_identity": "external_member"}
 
 
 class MessageListDistribution(db.Model):
