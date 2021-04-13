@@ -1,9 +1,13 @@
 tim-datetime-picker {
   display: inline-block;
-  width: 33%;
+  width: 50%;
   float: right;
 }
 
 input[type='checkbox'] {
   margin-right: 10px;
+}
+
+ul {
+  list-style-type: none;
 }
