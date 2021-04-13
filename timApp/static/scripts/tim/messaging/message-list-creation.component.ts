@@ -1,7 +1,7 @@
-import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
-import {Component, NgModule} from "@angular/core";
-import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
+import {Component, NgModule} from "@angular/core";
+import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
+import {DialogModule} from "../ui/angulardialog/dialog.module";
 
 @Component({
     selector: "message-list-creation",
