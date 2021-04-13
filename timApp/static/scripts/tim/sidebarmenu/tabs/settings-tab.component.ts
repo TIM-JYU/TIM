@@ -211,13 +211,13 @@ const DEFAULT_PIECE_SIZE = 20;
                 <a href="/view/groups" i18n>Browse existing groups</a>
             </ng-container>
             <ng-container *ngIf="users.isGroupAdmin()">
-                <h5 i18n>Message lists</h5>
+                <h5>Message lists</h5>
                 <button class="timButton btn-block"
-                        title="Create a new message list" i18n-title
+                        title="Create a new message list"
                         (click)="createMessagelist()"
-                        i18n>Create a new message list
+                >Create a new message list
                 </button>
-                <a href="/view/message lists" i18n>Browse existing message lists</a>
+                <a href="/view/message lists">Browse existing message lists</a>
             </ng-container>
         </ng-container>
 
