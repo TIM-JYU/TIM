@@ -25,7 +25,7 @@ class MessageListModel(db.Model):
     # VIESTIM: archive is type bool in the original plan.
     archive = db.Column(db.Enum(ArchiveType))
 
-    block = db.relationship("Block", back_populates="")
+    block = db.relationship("Block")
     members = db.relationship("MessageListMember", back_populates="list")
 
 
@@ -51,13 +51,15 @@ class MessageListMember(db.Model):
 
 
 class MessageListTimMember(MessageListMember):
-    """A member of message list who is also a TIM user."""
+    """A member of message list who is also a TIM user(group). This can be one person in their own personal user
+    group or his can be e.g. a course's group."""
     __tablename__ = "messagelist_tim_member"
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
 
     member = db.relationship("MessageListMember", back_populates="tim_member")
-    user_group = db.relationship("UserGroup", back_populates="")
+    # TODO: Add relationship in the UserGroup table.
+    user_group = db.relationship("UserGroup", back_populates="messagelist_membership")
 
     __mapper_args__ = {"polymorphic_identity": "tim_member"}
 
