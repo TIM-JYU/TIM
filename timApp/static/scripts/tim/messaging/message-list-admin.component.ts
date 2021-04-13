@@ -3,6 +3,7 @@ import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
+import {archivePolicyNames, ArchiveType} from "tim/messaging/listOptionTypes";
 import {Users} from "../user/userService";
 
 interface CreateListOptions {
@@ -15,21 +16,6 @@ interface CreateListOptions {
     notifyOwnerOnListChange: boolean;
     listDescription: string;
     listInfo: string;
-}
-
-enum ArchiveType {
-    // See ArchiveType class on Python side of things for explanations.
-    NONE,
-    SECRET,
-    GROUPONLY,
-    UNLISTED,
-    PUBLIC,
-}
-
-// For proper setting of archive options on UI.
-interface ArchivePolicyNames {
-    archiveType: ArchiveType;
-    policyName: string;
 }
 
 @Component({
@@ -101,28 +87,6 @@ interface ArchivePolicyNames {
 export class MessageListAdminComponent implements OnInit {
     listname: string = "";
 
-    // archiveOptions: string[] = ["none", "private", "public"];
-    archiveOptions: ArchivePolicyNames[] = [
-        {archiveType: ArchiveType.NONE, policyName: "No archiving."},
-        {
-            archiveType: ArchiveType.SECRET,
-            policyName: "Secret archive, only for owner.",
-        },
-        {
-            archiveType: ArchiveType.GROUPONLY,
-            policyName:
-                "Members only archive. Only members of this list can access.",
-        },
-        {
-            archiveType: ArchiveType.UNLISTED,
-            policyName: "Unlisted archive. Everyone with link can access.",
-        },
-        {
-            archiveType: ArchiveType.PUBLIC,
-            policyName:
-                "Public archive. Everyone with link can access and the archive is advertised.",
-        },
-    ];
     // List has a private members only archive by default.
     archive: ArchiveType = ArchiveType.GROUPONLY;
 
@@ -134,6 +98,8 @@ export class MessageListAdminComponent implements OnInit {
     urlPrefix: string = "/messagelist";
 
     ownerEmail: string = "";
+
+    archiveOptions = archivePolicyNames;
 
     notifyOwnerOnListChange: boolean = false;
 

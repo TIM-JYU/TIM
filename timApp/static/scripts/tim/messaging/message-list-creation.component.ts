@@ -6,6 +6,7 @@ import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-compone
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
 import {Users} from "../user/userService";
+import {archivePolicyNames, ArchiveType} from "./listOptionTypes";
 
 @Component({
     selector: "message-list-creation",
@@ -15,15 +16,31 @@ import {Users} from "../user/userService";
                 Message list creation
             </ng-container>
             <ng-container body>
-                <label for="list-name">List name: </label>
-                <input type="text" name="list-name" id="list-name"
-                       [(ngModel)]="listname"
-                       (keyup)="checkNameRequirementsLocally()"/>
-                <span>@</span>
-                <select id="domain-select" name="domain-select" [(ngModel)]="domain">
-                    <option [disabled]="domains.length" *ngFor="let domain of domains">{{domain}}</option>
-                </select>
-                <span></span>
+                <div>
+                    <label for="list-name">List name: </label>
+                    <input type="text" name="list-name" id="list-name"
+                           [(ngModel)]="listname"
+                           (keyup)="checkNameRequirementsLocally()"/>
+                    <span>@</span>
+                    <select id="domain-select" name="domain-select" [(ngModel)]="domain">
+                        <option [disabled]="domains.length" *ngFor="let domain of domains">{{domain}}</option>
+                    </select>
+                </div>
+                <div>
+                    <b>List archive policy:</b>
+                    <ul style="list-style-type: none">
+                        <li *ngFor="let option of archiveOptions">
+                            <input
+                                    name="items-radio"
+                                    type="radio"
+                                    id="archive-{{option.archiveType}}"
+                                    [value]="option.archiveType"
+                                    [(ngModel)]="archive"
+                            />
+                            <label for="archive-{{option}}">{{option.policyName}}</label>
+                        </li>
+                    </ul>
+                </div>
             </ng-container>
             <ng-container footer>
                 <button class="timButton" type="button" (click)="close({})">OK</button>
@@ -42,6 +59,10 @@ export class MessageListComponent extends AngularDialogComponent<
 
     domains: string[] = [];
     domain: string = "";
+
+    // List has a private members only archive by default.
+    archive: ArchiveType = ArchiveType.GROUPONLY;
+    archiveOptions = archivePolicyNames;
 
     // For name check
     timeoutID?: number;
