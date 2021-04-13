@@ -56,7 +56,7 @@ import * as selfExpire from "tim/item/selfExpire";
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
 import {DurationPickerComponent} from "tim/ui/duration-picker.component";
 import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
-import {NewMessageListComponent} from "tim/messaging/new-message-list.component";
+import {MessageListAdminComponent} from "tim/messaging/message-list-admin.component";
 import {TimMessageComponent} from "tim/messaging/tim-message.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
@@ -120,7 +120,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timHelpParContent", HelpParContent);
     doDowngrade(dg, "timDurationPicker", DurationPickerComponent);
     doDowngrade(dg, "timRelevanceEdit", RelevanceEditComponent);
-    doDowngrade(dg, "timNewMessageList", NewMessageListComponent);
+    doDowngrade(dg, "timNewMessageList", MessageListAdminComponent);
     doDowngrade(dg, "timMessage", TimMessageComponent);
     return dg;
 }

@@ -36,7 +36,7 @@ interface ArchivePolicyNames {
     selector: "tim-new-message-list",
     template: `
         <form name="list-options-form">
-            <h1>Create new message list</h1>
+            <h1>Message list management</h1>
             <div>
                 <label for="list-name">List name: </label>
                 <input type="text" name="list-name" id="list-name"
@@ -44,8 +44,6 @@ interface ArchivePolicyNames {
                 <select id="domain-select" name="domain-select" [(ngModel)]="domain">
                     <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
                 </select>
-                <!-- VIESTIM: For testing name checking. -->
-                <!--<button (click)="checkListNameAvailability()">Tarkasta nimi</button>-->
             </div>
             <div>
                 <!-- VIESTIM: For testing list adding with owner email address. -->
@@ -100,7 +98,7 @@ interface ArchivePolicyNames {
         </form>
     `,
 })
-export class NewMessageListComponent implements OnInit {
+export class MessageListAdminComponent implements OnInit {
     listname: string = "";
 
     // archiveOptions: string[] = ["none", "private", "public"];
@@ -231,8 +229,8 @@ export class NewMessageListComponent implements OnInit {
 }
 
 @NgModule({
-    declarations: [NewMessageListComponent],
-    exports: [NewMessageListComponent],
+    declarations: [MessageListAdminComponent],
+    exports: [MessageListAdminComponent],
     imports: [CommonModule, FormsModule],
 })
 export class NewMsgListModule {}
