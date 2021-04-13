@@ -38,6 +38,7 @@ import {showMergePdfDialog} from "tim/document/minutes/showMergePdfDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
 import {openScheduleDialog} from "tim/document/scheduling/openScheduleDialog";
+import {showMessageListCreation} from "tim/messaging/showMessageListCreation.component";
 
 const DEFAULT_PIECE_SIZE = 20;
 
@@ -210,13 +211,13 @@ const DEFAULT_PIECE_SIZE = 20;
                 <a href="/view/groups" i18n>Browse existing groups</a>
             </ng-container>
             <ng-container *ngIf="users.isGroupAdmin()">
-                <h5 i18n>Message lists</h5>
+                <h5>Message lists</h5>
                 <button class="timButton btn-block"
-                        title="Create a new message list" i18n-title
+                        title="Create a new message list"
                         (click)="createMessagelist()"
-                        i18n>Create a new message list
+                >Create a new message list
                 </button>
-                <a href="/view/message lists" i18n>Browse existing message lists</a>
+                <a href="/view/message lists">Browse existing message lists</a>
             </ng-container>
         </ng-container>
 
@@ -578,23 +579,7 @@ export class SettingsTabComponent implements OnInit {
     }
 
     async createMessagelist() {
-        const doc = await showInputDialog({
-            isInput: InputDialogKind.InputAndValidator,
-            defaultValue: "",
-            text: "Enter name of the message list",
-            title: "Create message list",
-            validator: async (s) => {
-                const r = await to2(
-                    this.http.get<IDocument>(`/groups/create/${s}`).toPromise()
-                );
-                if (r.ok) {
-                    return {ok: true, result: r.result};
-                } else {
-                    return {ok: false, result: r.result.error.error};
-                }
-            },
-        });
-        redirectToItem(doc);
+        await showMessageListCreation("Heimaailma");
     }
 
     /**
