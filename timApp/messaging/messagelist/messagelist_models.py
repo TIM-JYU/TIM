@@ -5,7 +5,7 @@ from timApp.timdb.sqa import db
 
 
 class Channel(Enum):
-    """The message channels TIM uses."""
+    """The message channels TIM uses and provides for message lists."""
     TIM_MESSAGE = 1
     EMAIL_LIST = 2
     # EMAIL = 3
@@ -18,10 +18,15 @@ class MessageListModel(db.Model):
     """Database model for message lists"""
     __tablename__ = "messagelist"
     id = db.Column(db.Integer, primary_key=True)
+    # The message list management document.
     manage_doc_id = db.Column(db.Integer, db.ForeignKey("block.id"))
     name = db.Column(db.Text)
     can_unsubscribe = db.Column(db.Bool)
+    # VIESTIM: archive is type bool in the original plan.
     archive = db.Column(db.Enum(ArchiveType))
+
+    block = db.relationship("Block", back_populates="")
+    members = db.relationship("MessageListMember", back_populates="list")
 
 
 class MessageListMember(db.Model):
@@ -34,12 +39,20 @@ class MessageListMember(db.Model):
     # VIESTIM: delivery_right doesn't exist in the original plan.
     delivery_right = db.Column(db.Bool)
 
+    list = db.relationship("MessageListModel", back_populates="members")
+    tim_member = db.relationship("MessageListTimMember", back_populates="member")
+    external_member = db.relationship("MessageListExternalMember", back_populates="member")
+    distribution = db.relationship("MessageListDistribution", back_populates="member")
+
 
 class MessageListTimMember(db.Model):
     """A member of message list who is also a TIM user."""
     __tablename__ = "messagelist_tim_member"
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
+
+    member = db.relationship("MessageListMember", back_populates="tim_member")
+    user_group = db.relationship("UserGroup", back_populates="")
 
 
 class MessageListExternalMember(db.Model):
@@ -49,9 +62,13 @@ class MessageListExternalMember(db.Model):
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
     email_address = db.Model(db.Text)
 
+    member = db.relationship("MessageListMember", back_populates="external_member")
+
 
 class MessageListDistribution(db.Model):
     """Message list member's chosen distribution channels."""
     __tablename__ = "messagelist_distribution"
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
     channel_id = db.Column(db.Enum(Channel))
+
+    member = db.relationship("MessageListMember", back_populates="distribution")
