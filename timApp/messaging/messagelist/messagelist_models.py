@@ -21,7 +21,7 @@ class MessageListModel(db.Model):
     # The message list management document.
     manage_doc_id = db.Column(db.Integer, db.ForeignKey("block.id"))
     name = db.Column(db.Text)
-    can_unsubscribe = db.Column(db.Bool)
+    can_unsubscribe = db.Column(db.Boolean)
     # VIESTIM: archive is type bool in the original plan.
     archive = db.Column(db.Enum(ArchiveType))
 
@@ -35,9 +35,9 @@ class MessageListMember(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     message_list_id = db.Column(db.Integer, db.ForeignKey("messagelist.id"))
     # VIESTIM: This is can_send in the original database plan.
-    send_right = db.Column(db.Bool)
+    send_right = db.Column(db.Boolean)
     # VIESTIM: delivery_right doesn't exist in the original plan.
-    delivery_right = db.Column(db.Bool)
+    delivery_right = db.Column(db.Boolean)
     # VIESTIM: This doesn't strictly speaking exists in the original plan. This acts as an discriminator,
     #  see SQLAlchemy's documentation's term list.
     member_type = db.Column(db.Text)
@@ -69,7 +69,7 @@ class MessageListExternalMember(MessageListMember):
     email-list only usage."""
     __tablename__ = "messagelist_external_member"
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
-    email_address = db.Model(db.Text, unique=True)
+    email_address = db.Column(db.Text, unique=True)
 
     member = db.relationship("MessageListMember", back_populates="external_member")
 
