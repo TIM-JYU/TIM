@@ -7,6 +7,9 @@ import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
 import {Users} from "../user/userService";
 import {archivePolicyNames, ArchiveType} from "./listOptionTypes";
+import {showInputDialog} from "../ui/showInputDialog";
+import {InputDialogKind} from "../ui/input-dialog.kind";
+import {IDocument, redirectToItem} from "../item/IItem";
 
 @Component({
     selector: "message-list-creation",
@@ -43,7 +46,7 @@ import {archivePolicyNames, ArchiveType} from "./listOptionTypes";
                 </div>
             </ng-container>
             <ng-container footer>
-                <button class="timButton" type="button" (click)="close({})">OK</button>
+                <button class="timButton" type="button" (click)="ok()"></button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -179,6 +182,27 @@ export class MessageListComponent extends AngularDialogComponent<
         );
 
         return true;
+    }
+
+    // This was added 13.4.
+    async ok() {
+        const doc = await showInputDialog({
+            isInput: InputDialogKind.InputAndValidator,
+            defaultValue: "",
+            text: "Enter name of the message list",
+            title: "Message list creation",
+            validator: async (s) => {
+                const r = await to2(
+                    this.http.get<IDocument>(`/groups/create/${s}`).toPromise()
+                );
+                if (r.ok) {
+                    return {ok: true, result: r.result};
+                } else {
+                    return {ok: false, result: r.result.error.error};
+                }
+            },
+        });
+        redirectToItem(doc);
     }
 
     /**
