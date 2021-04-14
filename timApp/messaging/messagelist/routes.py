@@ -3,11 +3,13 @@ from typing import List, Optional
 
 from flask import Response
 
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
 from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
+from timApp.timdb.sqa import db
 from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
@@ -22,9 +24,9 @@ def create_list(options: ListOptions) -> Response:
     :param options All options regarding establishing a new message list.
     :return: A Response how the operation succeeded.
     """
-
+    manage_doc = new_list(options)
     EmailListManager.create_new_list(options)
-    return ok_response()
+    return json_response(manage_doc)
 
 
 @dataclass
@@ -116,18 +118,27 @@ def new_list(list_options: ListOptions) -> DocInfo:
     :param list_options: The list information for creating a new message list.
     :return: The management document.
     """
+    # VIESTIM: Check creation permission? Or should it be in the calling view function?
     msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
-    # db.session.add(msg_list)
-    # TODO: Check creation permission.
+    db.session.add(msg_list)
+
     doc_info = MessageListModel.create_management_doc(list_options)
-    # db.session.commit()
+
+    db.session.commit()
     return doc_info
 
 
 def create_management_doc(msg_list_model, list_options: ListOptions) -> DocInfo:
     # TODO: Document should reside in owner's personal path.
-    # creator = get_u
-    personal_path = "placeholderpath"
-    doc = create_document(f'/{personal_path}/{remove_path_special_chars(list_options.listname)}')
+
+    creator = get_current_user_object()
+    personal_path = creator.get_personal_folder()
+    # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
+    path_safe_list_name = remove_path_special_chars(list_options.listname)
+
+    doc = create_document(f'/{personal_path}/{path_safe_list_name}', list_options.listname)
+
+    test_text = f"""Welcome to a new message list,{creator.name}"""
+    doc.document.add_text(test_text)
 
     return doc
