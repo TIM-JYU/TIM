@@ -51,19 +51,6 @@ class MessageListModel(db.Model):
     members = db.relationship("MessageListMember", back_populates="message_list")
 
     @staticmethod
-    def new_list(list_options: ListOptions) -> 'MessageListModel':
-        """Adds a new message list into the database."""
-        msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
-        db.session.add(msg_list)
-        MessageListModel.create_management_doc(msg_list, list_options)
-        db.session.commit()
-        return msg_list
-
-    @staticmethod
-    def create_management_doc(msg_list_model, list_options: ListOptions):
-        pass
-
-    @staticmethod
     def owners() -> None:
         """Owners of a message list. Owners are infered from the management doc's owners."""
         pass

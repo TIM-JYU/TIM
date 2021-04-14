@@ -3,10 +3,14 @@ from typing import List, Optional
 
 from flask import Response
 
+from timApp.document.create_item import create_document
+from timApp.document.docinfo import DocInfo
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
 from timApp.messaging.messagelist.listoptions import ListOptions
+from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.utils import remove_path_special_chars
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
@@ -104,3 +108,26 @@ def delete_list(listname: str) -> Response:
         r = EmailList.delete_list(listname)
     # TODO: Put message list deletion here.
     return json_response(r)
+
+
+def new_list(list_options: ListOptions) -> DocInfo:
+    """Adds a new message list into the database and creates the list's management doc.
+
+    :param list_options: The list information for creating a new message list.
+    :return: The management document.
+    """
+    msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
+    # db.session.add(msg_list)
+    # TODO: Check creation permission.
+    doc_info = MessageListModel.create_management_doc(list_options)
+    # db.session.commit()
+    return doc_info
+
+
+def create_management_doc(msg_list_model, list_options: ListOptions) -> DocInfo:
+    # TODO: Document should reside in owner's personal path.
+    # creator = get_u
+    personal_path = "placeholderpath"
+    doc = create_document(f'/{personal_path}/{remove_path_special_chars(list_options.listname)}')
+
+    return doc
