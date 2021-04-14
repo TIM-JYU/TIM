@@ -142,7 +142,8 @@ export class JSParsonsEditorComponent implements IEditor {
                     [base]="base"
                     [words]="parsonsWords"
                     [styleWords]="parsonsStyleWords"
-                    [notordermatters]="parsonsNotordermatters">
+                    [notordermatters]="parsonsNotordermatters"
+                    (change)="onEditorContentChanged($event)">
             </cs-parsons-editor>
             <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
             <cs-ace-editor *ngIf="mode == Mode.ACE"
@@ -234,6 +235,9 @@ export class EditorComponent implements IMultiEditor {
 
     ngDoCheck() {
         // TODO: make editors emit an event instead of ngDoCheck
+        if (this.mode == Mode.Parsons) {
+            return;
+        }
         const content = this.content;
         if (content !== this.oldContent) {
             this.oldContent = content;
@@ -244,6 +248,13 @@ export class EditorComponent implements IMultiEditor {
 
             this.contentChange.emit(content);
         }
+    }
+
+    onEditorContentChanged(args: {content: string; init: boolean}) {
+        if (!args.init && this.oldContent !== args.content) {
+            this.contentChange.emit(args.content);
+        }
+        this.oldContent = args.content;
     }
 
     private initEditor(oldContent: string) {

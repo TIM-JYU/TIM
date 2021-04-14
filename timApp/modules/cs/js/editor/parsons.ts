@@ -1,4 +1,6 @@
 /* eslint no-underscore-dangle: ["error", { "allow": ["content_"] }] */
+import {EventEmitter} from "@angular/core";
+import {Output} from "@angular/core";
 import {
     ElementRef,
     ViewChild,
@@ -26,7 +28,10 @@ export class ParsonsEditorComponent implements IEditor {
     @Input() styleWords: string = "";
     @Input() words: boolean = false;
     @ViewChild("area") area!: ElementRef;
-
+    @Output("change") private contentChange: EventEmitter<{
+        content: string;
+        init: boolean;
+    }> = new EventEmitter(true);
     ngOnChanges(changes: SimpleChanges) {
         if (this.parson) {
             // TODO: something smarter than recreating the whole thing on changes
@@ -52,8 +57,6 @@ export class ParsonsEditorComponent implements IEditor {
     }
 
     async createParsons(content: string) {
-        this.content_ = content;
-
         const csp = await import("../cs-parsons/csparsons");
         const parson = new csp.CsParsonsWidget({
             sortable: this.area.nativeElement as Element,
@@ -64,12 +67,19 @@ export class ParsonsEditorComponent implements IEditor {
             maxcheck: this.maxcheck,
             notordermatters: this.notordermatters,
             onChange: (p) => {
-                this.content_ = p.join("\n");
+                this.contentChanged(p.join("\n"));
             },
         });
-        parson.init(this.base, this.content_);
+        parson.init(this.base, content);
         parson.show();
         this.parson = parson;
+        this.content_ = parson.join("\n");
+        this.contentChange.emit({content: this.content_, init: true});
+    }
+
+    contentChanged(content: string) {
+        this.content_ = content;
+        this.contentChange.emit({content, init: false});
     }
 
     check(): string {
