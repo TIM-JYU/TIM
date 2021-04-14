@@ -24,6 +24,11 @@ class MessageListModel(db.Model):
     can_unsubscribe = db.Column(db.Boolean)
     # VIESTIM: archive is type bool in the original plan.
     archive = db.Column(db.Enum(ArchiveType))
+    # VIESTIM: New values.
+    owner = db.Column(db.Integer)
+    notify_owner_on_change = db.Column(db.Boolean)
+    description = db.Column(db.Text)
+    info = db.Column(db.Text)
 
     block = db.relationship("Block")
     members = db.relationship("MessageListMember", back_populates="message_list")
@@ -52,7 +57,7 @@ class MessageListMember(db.Model):
 
 class MessageListTimMember(MessageListMember):
     """A member of message list who is also a TIM user(group). This can be one person in their own personal user
-    group or his can be e.g. a course's group."""
+    group or this can be e.g. a course's group."""
     __tablename__ = "messagelist_tim_member"
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
     group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
