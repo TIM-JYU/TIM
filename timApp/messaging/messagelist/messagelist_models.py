@@ -1,6 +1,6 @@
 from enum import Enum
 
-from timApp.messaging.messagelist.listoptions import ArchiveType
+from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions
 from timApp.timdb.sqa import db
 
 
@@ -32,6 +32,18 @@ class MessageListModel(db.Model):
 
     block = db.relationship("Block")
     members = db.relationship("MessageListMember", back_populates="message_list")
+
+    @staticmethod
+    def new_list(list_options: ListOptions) -> 'MessageListModel':
+        """Adds a new message list into the database."""
+        msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
+        db.session.add(msg_list)
+        db.session.commit()
+        return msg_list
+
+    @staticmethod
+    def create_management_doc():
+        pass
 
 
 class MessageListMember(db.Model):
