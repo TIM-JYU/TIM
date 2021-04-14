@@ -62,6 +62,11 @@ class MessageListModel(db.Model):
     def create_management_doc():
         pass
 
+    @staticmethod
+    def owners() -> None:
+        """Owners of a message list. Owners are infered from the management doc's owners."""
+        pass
+
 
 class MessageListMember(db.Model):
     """Database model for members of a message list."""
