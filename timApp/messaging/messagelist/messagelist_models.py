@@ -26,7 +26,7 @@ class MessageListModel(db.Model):
     archive = db.Column(db.Enum(ArchiveType))
 
     block = db.relationship("Block")
-    members = db.relationship("MessageListMember", back_populates="list")
+    members = db.relationship("MessageListMember", back_populates="message_list")
 
 
 class MessageListMember(db.Model):
@@ -42,7 +42,7 @@ class MessageListMember(db.Model):
     #  see SQLAlchemy's documentation's term list.
     member_type = db.Column(db.Text)
 
-    list = db.relationship("MessageListModel", back_populates="members")
+    message_list = db.relationship("MessageListModel", back_populates="members")
     tim_member = db.relationship("MessageListTimMember", back_populates="member")
     external_member = db.relationship("MessageListExternalMember", back_populates="member")
     distribution = db.relationship("MessageListDistribution", back_populates="member")
