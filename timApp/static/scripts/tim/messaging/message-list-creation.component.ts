@@ -1,7 +1,7 @@
 import {BrowserModule} from "@angular/platform-browser";
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {HttpClient} from "@angular/common/http";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
@@ -239,6 +239,6 @@ export class MessageListComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [MessageListComponent],
-    imports: [BrowserModule, DialogModule, FormsModule],
+    imports: [BrowserModule, DialogModule, FormsModule, HttpClientModule],
 })
 export class MessageListModule {}
