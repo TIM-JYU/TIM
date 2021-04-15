@@ -3,6 +3,7 @@ import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
+import {archivePolicyNames, ArchiveType} from "tim/messaging/listOptionTypes";
 import {Users} from "../user/userService";
 
 interface CreateListOptions {
@@ -17,36 +18,18 @@ interface CreateListOptions {
     listInfo: string;
 }
 
-enum ArchiveType {
-    // See ArchiveType class on Python side of things for explanations.
-    NONE,
-    SECRET,
-    GROUPONLY,
-    UNLISTED,
-    PUBLIC,
-}
-
-// For proper setting of archive options on UI.
-interface ArchivePolicyNames {
-    archiveType: ArchiveType;
-    policyName: string;
-}
-
 @Component({
     selector: "tim-new-message-list",
     template: `
         <form name="list-options-form">
-            <h1>Create new message list</h1>
+            <h1>Message list management</h1>
             <div>
                 <label for="list-name">List name: </label>
                 <input type="text" name="list-name" id="list-name"
-                       [(ngModel)]="listname"
-                       (keyup)="checkNameRequirementsLocally()"/>
+                       [(ngModel)]="listname"/><span>@</span>
                 <select id="domain-select" name="domain-select" [(ngModel)]="domain">
                     <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
                 </select>
-                <!-- VIESTIM: For testing name checking. -->
-                <button (click)="checkListNameAvailability()">Tarkasta nimi</button>
             </div>
             <div>
                 <!-- VIESTIM: For testing list adding with owner email address. -->
@@ -101,31 +84,9 @@ interface ArchivePolicyNames {
         </form>
     `,
 })
-export class NewMessageListComponent implements OnInit {
+export class MessageListAdminComponent implements OnInit {
     listname: string = "";
 
-    // archiveOptions: string[] = ["none", "private", "public"];
-    archiveOptions: ArchivePolicyNames[] = [
-        {archiveType: ArchiveType.NONE, policyName: "No archiving."},
-        {
-            archiveType: ArchiveType.SECRET,
-            policyName: "Secret archive, only for owner.",
-        },
-        {
-            archiveType: ArchiveType.GROUPONLY,
-            policyName:
-                "Members only archive. Only members of this list can access.",
-        },
-        {
-            archiveType: ArchiveType.UNLISTED,
-            policyName: "Unlisted archive. Everyone with link can access.",
-        },
-        {
-            archiveType: ArchiveType.PUBLIC,
-            policyName:
-                "Public archive. Everyone with link can access and the archive is advertised.",
-        },
-    ];
     // List has a private members only archive by default.
     archive: ArchiveType = ArchiveType.GROUPONLY;
 
@@ -138,13 +99,12 @@ export class NewMessageListComponent implements OnInit {
 
     ownerEmail: string = "";
 
+    archiveOptions = archivePolicyNames;
+
     notifyOwnerOnListChange: boolean = false;
 
     listInfo: string = "";
     listDescription: string = "";
-
-    // For name check
-    timeoutID?: number;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -157,16 +117,10 @@ export class NewMessageListComponent implements OnInit {
             this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
         );
         if (result.ok) {
-            // Add '@' in front of domain names for display purposes.
-            const tempDomains: string[] = result.result;
-
-            for (let i = 0; i < tempDomains.length; i++) {
-                tempDomains[i] = "@" + tempDomains[i];
+            this.domains = result.result;
+            if (!this.domains.length) {
+                this.domain = this.domains[0];
             }
-            this.domains = tempDomains;
-
-            // Set default domain.
-            this.domain = this.domains[0];
         } else {
             console.error(result.result.error.error);
         }
@@ -217,118 +171,6 @@ export class NewMessageListComponent implements OnInit {
     }
 
     /**
-     * Helper to check if this list name exists.
-     * VIESTIM: This is a demo function, will only probably need this when we have implemented the creation dialoque?
-     */
-    async checkListNameAvailability() {
-        const nameCandidate: string = this.listname + this.domain; // this.domain, if specified, already contains '@'.
-        const result = await to2(
-            this.http
-                .get<{nameOK: boolean; explanation: string}>(
-                    `${this.urlPrefix}/checkname/${nameCandidate}`
-                )
-                .toPromise()
-        );
-        if (result.ok) {
-            console.log("Name check done. Result:");
-            const temp = result.result;
-            if (temp.nameOK) {
-                // TODO: Indicate somehow that name is usable as a new list name.
-                console.log(temp.explanation);
-            } else {
-                // TODO: Indicate somehow that name is not usable as a new list name.
-                console.log(temp.explanation);
-            }
-        } else {
-            console.error(result.result.error.error);
-        }
-    }
-
-    /**
-     * Check list name requirements locally.
-     *
-     * If you make changes here, make sure to check that the server checks the same things. Otherwise there will
-     * inconsistant name checking and a confused user.
-     *
-     * @returns {boolean} Returns true if name requirements are met. Otherwise returns false.
-     */
-    checkNameRequirementsLocally(): boolean {
-        // VIESTIM: Since the server has the final say for allowed names, sync these rules with the server. Maybe they
-        //  could be imported from the server?
-        // TODO: Replace console.logs with a better feedback system for the user.
-        console.log(`start check on listname: ${this.listname}`);
-
-        // Cancel previous timed call to server name checks.
-        if (this.timeoutID) {
-            clearTimeout(this.timeoutID);
-        }
-        this.timeoutID = undefined;
-
-        // Name length is within length boundaries.
-        if (this.listname.length < 5 || 36 < this.listname.length) {
-            console.log("Name not in length boundaries");
-            return false;
-        }
-
-        // Name starts with a character that is a letter a - z.
-        // Notice that ^ serves two different purposes in the following regular expression.
-        // The first one checks at the beginning of the string, the second is a negation.
-        const regExpStartCharacter: RegExp = /^[a-z]/;
-        if (!regExpStartCharacter.test(this.listname)) {
-            console.log("name doesn't start with a lowercase letter");
-            return false;
-        }
-
-        // Name contains at least one digit.
-        const regExpAtLeastOneDigit: RegExp = /\d/;
-        if (!regExpAtLeastOneDigit.test(this.listname)) {
-            console.error("name doesn't contain at least one digit.");
-            return false;
-        }
-
-        // Name can't contain multiple sequential dots.
-        const regExpMultipleDots: RegExp = /\.\.+/;
-        if (regExpMultipleDots.test(this.listname)) {
-            console.log("name contains multiple dots");
-            return false;
-        }
-
-        // Name doesn't end in a dot.
-        // ESLint prefers to not use regex for this. And by "prefer" we mean this won't transpile with a regular
-        // expression.
-        if (this.listname.endsWith(".")) {
-            console.log("name ends in a dot");
-            return false;
-        }
-
-        // Name contains only acceptable characters, which are:
-        //     letters                  a - z
-        //     numbers                  0 - 9
-        //     dot                      '.'
-        //     underscore               '_'
-        //     hyphen (or "minus sign") '-'
-        // The following regular expression searches for characters that are *not* one of the above. If those are not
-        // found the name is of correct form. Notice that hyphen is in two different roles and one hyphen has
-        // to be escaped. The dot does not have to be escaped here.
-        const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
-        if (regExpNonAllowedCharacters.test(this.listname)) {
-            console.log("Name had forbidden characters");
-            return false;
-        }
-        console.log("name has passed all local tests");
-        console.log(
-            "start server side tests in 5 seconds after last key down."
-        );
-        // Local tests have been passed. Now launch server side checks.
-        this.timeoutID = window.setTimeout(
-            () => this.checkListNameAvailability(),
-            5 * 1000
-        );
-
-        return true;
-    }
-
-    /**
      * Helper for list deletion.
      */
     async deleteList() {
@@ -353,8 +195,8 @@ export class NewMessageListComponent implements OnInit {
 }
 
 @NgModule({
-    declarations: [NewMessageListComponent],
-    exports: [NewMessageListComponent],
+    declarations: [MessageListAdminComponent],
+    exports: [MessageListAdminComponent],
     imports: [CommonModule, FormsModule],
 })
 export class NewMsgListModule {}
