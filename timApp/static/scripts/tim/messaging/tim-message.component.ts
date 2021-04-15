@@ -8,7 +8,11 @@ import {CommonModule} from "@angular/common";
     template: `
         <ng-container *ngIf="showMessage">
             <div class="timMessageDisplay">
-                <p>From: {{sender}}</p>
+                <p>
+                    <span>From: </span>
+                    <span>{{sender}}</span>
+                    <span *ngIf="messageToGroup">, {{group}}</span>
+                </p>
                 <p class="message-heading">{{heading}}</p>
                 <div class="fullMessageContent" *ngIf="showFullContent">
                     <p>{{fullContent}}</p>
@@ -20,7 +24,6 @@ import {CommonModule} from "@angular/common";
                 </div>
                 <div class="buttonArea">
                     <button class="timButton" *ngIf="canReply" (click)="reply()">Reply</button>
-                    <span><a (click)="readReceipt()">TEST: allow/disallow read receipt</a></span>
                 </div>
                 <div class="replyArea" *ngIf="showReply">
                     <p>To: {{sender}}</p>
@@ -31,12 +34,14 @@ import {CommonModule} from "@angular/common";
                     </div>
                 </div>
                 <div class="readReceiptArea">
-                    <input type="checkbox" name="mark-as-read" id="mark-as-read" [disabled]="!canMarkAsRead"
-                           (click)="markAsRead()"/>
+                    <input type="checkbox" name="mark-as-read" id="mark-as-read" 
+                           [disabled]="!canMarkAsRead || markedAsRead" (click)="markAsRead()"/>
                     <label for="mark-as-read">Mark as Read</label>
                     <span class="readReceiptLink"
                           *ngIf="markedAsRead">Read receipt can be cancelled in <a>your messages</a></span>
-                    <button class="timButton" title="Close Message" [disabled]="!markedAsRead" (click)="closeMessage()">
+                    <button class="timButton" title="Close Message" 
+                            [disabled]="(!canMarkAsRead && !replySent) || (canMarkAsRead && !markedAsRead)" 
+                            (click)="closeMessage()">
                         Close
                     </button>
                 </div>
@@ -59,6 +64,8 @@ export class TimMessageComponent implements OnInit {
     canReply: boolean = true; // show/hide 'Reply' button
     canSendReply: boolean = true; // enable/disable 'Send' button
     sender?: string;
+    messageToGroup: boolean = true;
+    group?: string;
     heading?: string;
 
     /**
@@ -107,6 +114,7 @@ export class TimMessageComponent implements OnInit {
     ngOnInit(): void {
         // TODO Read sender, content etc. from database
         this.sender = "Matti Meikäläinen";
+        this.group = "ohj1k21";
         this.heading = "Puuttuvat demopisteet";
         // this.fullContent =
         //     "Sinulta puuttuu demo 3 ja 4 pisteitä. Miten jatketaan kurssin kanssa?";
