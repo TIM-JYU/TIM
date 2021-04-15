@@ -8,6 +8,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.auth.auth_models import BlockAccess
+from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
@@ -111,6 +112,8 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     # For groups created from SCIM API
     external_id: ScimUserGroup = db.relationship('ScimUserGroup', lazy='select', uselist=False)
+
+    messagelist_membership: MessageListTimMember = db.relationship("MessageListTimMember", back_populates="user_group")
 
     def __repr__(self):
         return f'<UserGroup(id={self.id}, name={self.name})>'

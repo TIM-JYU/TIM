@@ -10,6 +10,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
 from timApp.item.blockassociation import BlockAssociation
 from timApp.item.tag import Tag
+from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
@@ -75,6 +76,13 @@ class Block(db.Model):
         lazy='select',
         uselist=False,
     )
+
+    # VIESTIM: Should we somehow disallow that the same Block is both a user group management Block and message list
+    #  management Block? Would that be even necessary?
+
+    #  If this Block corresponds to a message list's manage document, indicates the message list
+    #  being managed.
+    managed_messagelist: Optional[MessageListModel] = db.relationship("MessageListModel", back_populates="block")
 
     def __json__(self):
         return ['id', 'type_id', 'description', 'created', 'modified']
