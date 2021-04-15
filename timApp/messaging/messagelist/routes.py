@@ -22,10 +22,13 @@ def create_list(options: ListOptions) -> Response:
     """Handles creating a new message list.
 
     :param options All options regarding establishing a new message list.
-    :return: A Response how the operation succeeded.
+    :return: A Response with the list's management doc included. This way the creator can re-directed to the list's
+    management page directly.
     """
+
     manage_doc = new_list(options)
     EmailListManager.create_new_list(options)
+
     return json_response(manage_doc)
 
 
@@ -122,7 +125,7 @@ def new_list(list_options: ListOptions) -> DocInfo:
     msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
     db.session.add(msg_list)
 
-    doc_info = create_management_doc(list_options)
+    doc_info = create_management_doc(msg_list, list_options)
 
     db.session.commit()
     return doc_info
@@ -131,14 +134,23 @@ def new_list(list_options: ListOptions) -> DocInfo:
 def create_management_doc(msg_list_model, list_options: ListOptions) -> DocInfo:
     # TODO: Document should reside in owner's personal path.
 
+    # VIESTIM: The management document is created on the message list creator's personal folder. This might be a good
+    #  default, but if the owner is someone else than the creator then we have to handle that.
     creator = get_current_user_object()
-    personal_path = creator.get_personal_folder()
+
+    personal_path = creator.get_personal_folder().path
+
     # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
     path_safe_list_name = remove_path_special_chars(list_options.listname)
+    path_to_doc = f'/{personal_path}/{path_safe_list_name}'
 
-    doc = create_document(f'/{personal_path}/{path_safe_list_name}', list_options.listname)
+    doc = create_document(path_to_doc, list_options.listname)
 
-    test_text = f"""Welcome to a new message list,{creator.name}"""
+    # VIESTIM: Placeholder text for a new document.
+    test_text = f"""Welcome to a new message list, {creator.name}"""
     doc.document.add_text(test_text)
+
+    # Set the management doc for the message list.
+    msg_list_model.manage_doc_id = doc.id
 
     return doc
