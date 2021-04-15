@@ -131,7 +131,7 @@ def new_list(list_options: ListOptions) -> DocInfo:
     return doc_info
 
 
-def create_management_doc(msg_list_model, list_options: ListOptions) -> DocInfo:
+def create_management_doc(msg_list_model: MessageListModel, list_options: ListOptions) -> DocInfo:
     # TODO: Document should reside in owner's personal path.
 
     # VIESTIM: The management document is created on the message list creator's personal folder. This might be a good
