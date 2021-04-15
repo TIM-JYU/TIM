@@ -140,7 +140,7 @@ def create_minute_extracts(doc: str) -> Response:
     for extract_number, (extract_title, paragraphs) in extract_dict.items():
         if isinstance(extract_number, str):
             extract_number = extract_number.strip()
-        docentry = create_or_get_and_wipe_document(f"{base_path}lista{extract_number}", f"lista{extract_number}")
+        docentry = create_or_get_and_wipe_document(f"{base_path}lista{extract_number}", f"Lista {extract_number}")
 
         #  Next must be add_text to avoid first coming as text and then changing to different paragraph
         #  and #- must be on the column 1!
