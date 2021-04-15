@@ -122,7 +122,7 @@ def new_list(list_options: ListOptions) -> DocInfo:
     msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
     db.session.add(msg_list)
 
-    doc_info = MessageListModel.create_management_doc(list_options)
+    doc_info = create_management_doc(list_options)
 
     db.session.commit()
     return doc_info
