@@ -5,7 +5,6 @@ import {HttpClientModule} from "@angular/common/http";
 import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
-import {getParId} from "../document/parhelpers";
 import {
     AnswerSheetModule,
     IPreviewParams,
@@ -23,7 +22,6 @@ import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {vctrlInstance} from "../document/viewctrlinstance";
 import {PurifyModule} from "../util/purify.module";
 import {showQuestionAskDialog} from "../lecture/showLectureDialogs";
-import {showMessageDialog} from "../ui/showMessageDialog";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "./attributes";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 
@@ -205,13 +203,7 @@ export class QstComponent
     }
 
     questionClicked() {
-        const par = this.element.parents(".par");
-        const parId = getParId(par);
-        if (!parId) {
-            showMessageDialog("Not a valid paragraph.");
-            return;
-        }
-        this.showQuestionNew(parId);
+        this.showQuestionNew(this.getPar().originalPar.id);
     }
 
     private async showQuestionNew(parId: string) {

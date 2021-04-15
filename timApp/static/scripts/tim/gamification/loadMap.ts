@@ -21,7 +21,7 @@ export interface ITile {
     isPointInside(x: number, y: number): boolean;
 }
 
-interface IParsedData {
+type IParsedData = {
     lectures: [
         {
             id: number;
@@ -39,7 +39,7 @@ interface IParsedData {
         }
     ];
     buttonText: string;
-}
+};
 
 // A global variable because Tile-class uses this too.
 let scale: number = 0.5;

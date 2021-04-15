@@ -1,6 +1,7 @@
 import moment, {Moment} from "moment";
-import {mandatoryAndOptional, ReadonlyMoment} from "tim/util/utils";
+import {mandatoryAndOptional} from "tim/util/utils";
 import * as t from "io-ts";
+import {ReadonlyMoment} from "tim/util/readonlymoment";
 import {IItem} from "../item/IItem";
 import {IGenericPluginMarkup, nullable} from "../plugin/attributes";
 import {DurationChoice} from "../ui/duration-picker.component";

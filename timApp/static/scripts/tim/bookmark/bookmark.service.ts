@@ -10,11 +10,11 @@ export interface IBookmarkGroup {
     editable: boolean;
 }
 
-export interface IBookmark {
+export type IBookmark = {
     group: string;
     link: string;
     name: string;
-}
+};
 
 @Injectable({
     providedIn: "platform",

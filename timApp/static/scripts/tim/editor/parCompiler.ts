@@ -35,6 +35,11 @@ export async function compileWithViewctrl(
     return result;
 }
 
+export const replaceAction = (e: JQuery, c: JQuery) => e.replaceWith(c);
+export const afterAction = (e: JQuery, c: JQuery) => e.after(c);
+export const beforeAction = (e: JQuery, c: JQuery) => e.before(c);
+export const appendToAction = (e: JQuery, c: JQuery) => e.empty().append(c);
+
 export class ParagraphCompiler {
     /**
      * Private function. Use one of: compileAnd{AppendTo,Replace,After,Before}.
@@ -69,7 +74,7 @@ export class ParagraphCompiler {
         view?: ViewCtrl
     ) {
         return this.compileAndDOMAction(
-            (e, c) => e.empty().append(c),
+            appendToAction,
             element,
             data,
             scope,
@@ -84,7 +89,7 @@ export class ParagraphCompiler {
         view?: ViewCtrl
     ) {
         return this.compileAndDOMAction(
-            (e, c) => e.replaceWith(c),
+            replaceAction,
             element,
             data,
             scope,
@@ -99,7 +104,7 @@ export class ParagraphCompiler {
         view?: ViewCtrl
     ) {
         return this.compileAndDOMAction(
-            (e, c) => e.after(c),
+            afterAction,
             element,
             data,
             scope,
@@ -114,7 +119,7 @@ export class ParagraphCompiler {
         view?: ViewCtrl
     ) {
         return this.compileAndDOMAction(
-            (e, c) => e.before(c),
+            beforeAction,
             element,
             data,
             scope,

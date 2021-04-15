@@ -3,27 +3,19 @@ import $ from "jquery";
 import {to} from "tim/util/utils";
 import {showNameAreaDialog} from "tim/document/editing/showNameAreaDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {$http, $timeout} from "../util/ngimport";
-import {INameAreaOptions} from "./editing/name-area-dialog.component";
-import {onClick, onMouseOverOut} from "./eventhandlers";
-import {
-    Area,
-    getArea,
-    getFirstParId,
-    getLastParId,
-    Paragraph,
-    Paragraphs,
-} from "./parhelpers";
+import {UserSelection} from "tim/document/editing/userSelection";
+import {EditType, IParResponse} from "tim/document/editing/edittypes";
+import {Paragraph} from "tim/document/structure/paragraph";
+import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
+import {BrokenArea} from "tim/document/structure/brokenArea";
+import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
+import {ParContext} from "tim/document/structure/parContext";
+import {ParSelection} from "tim/document/editing/parSelection";
+import {createParContext} from "tim/document/structure/parsing";
+import {$http} from "../util/ngimport";
 import {ViewCtrl} from "./viewctrl";
-
-function selectArea(areaName: string, className: string, selected: boolean) {
-    const selection = $(".area.area_" + areaName).children(className);
-    if (selected) {
-        selection.addClass("manualhover");
-    } else {
-        selection.removeClass("manualhover");
-    }
-}
+import {onClick} from "./eventhandlers";
+import {INameAreaOptions} from "./editing/name-area-dialog.component";
 
 export class AreaHandler {
     public selectedAreaName: string | undefined;
@@ -34,144 +26,73 @@ export class AreaHandler {
         this.sc = sc;
         this.viewctrl = view;
 
-        onMouseOverOut(".areaeditline1", ($this, e, select) => {
-            const areaName = $this.attr("data-area");
-            if (!areaName) {
-                return;
-            }
-            selectArea(areaName, ".areaeditline1", select);
-        });
-
-        onMouseOverOut(".areaeditline2", ($this, e, select) => {
-            const areaName = $this.attr("data-area");
-            if (!areaName) {
-                return;
-            }
-            selectArea(areaName, ".areaeditline2", select);
-        });
-
-        onMouseOverOut(".areaeditline3", ($this, e, select) => {
-            const areaName = $this.attr("data-area");
-            if (!areaName) {
-                return;
-            }
-            selectArea(areaName, ".areaeditline3", select);
-        });
-
-        onClick(".areaeditline1", ($this, e) =>
-            this.onAreaEditClicked($this, e.originalEvent, ".areaeditline1")
-        );
-
-        onClick(".areaeditline2", ($this, e) =>
-            this.onAreaEditClicked($this, e.originalEvent, ".areaeditline2")
-        );
-
-        onClick(".areaeditline3", ($this, e) =>
-            this.onAreaEditClicked($this, e.originalEvent, ".areaeditline3")
-        );
-
         onClick(".areaexpand, .areacollapse", ($this, e) => {
             if (
-                $(e.target).hasClass("areareadline") ||
                 $(e.target).hasClass("readline") ||
                 $(e.target).hasClass("editline")
             ) {
                 return;
             }
-            let expanding = true;
-            let newClass = "areacollapse";
-            if ($this.hasClass("areacollapse")) {
-                expanding = false;
-                newClass = "areaexpand";
+            const elem = $this[0];
+            const area = createParContext(elem);
+
+            let ar;
+            if (area.context instanceof ReferenceParagraph) {
+                ar = area.context.target;
+            } else {
+                ar = area.context;
             }
-            $this.removeClass("areaexpand areacollapse");
-            const areaName = $this.attr("data-area");
-            if (!areaName) {
+            if (ar instanceof Paragraph || ar instanceof BrokenArea) {
                 return;
             }
-            const toggle = $this.children(".areatoggle");
-            toggle.attr("class", "");
-            const area = getArea(areaName);
-            if (expanding) {
-                area.removeClass("collapsed");
-                $(".areawidget_" + areaName).removeClass("collapsed");
-                toggle.attr("class", "areatoggle glyphicon glyphicon-minus");
-            } else {
-                area.addClass("collapsed");
-                $(".areawidget_" + areaName).addClass("collapsed");
-                toggle.attr("class", "areatoggle glyphicon glyphicon-plus");
+            if (!ar.collapse) {
+                return;
             }
-
-            $this.addClass(newClass);
+            ar.collapse.toggle();
         });
     }
 
-    onAreaEditClicked($this: JQuery, e: MouseEvent, className: string) {
-        this.viewctrl.closePopupIfOpen();
-        const areaName = $this.attr("data-area");
-        if (!areaName) {
-            return;
-        }
-        const pars = getArea(areaName).find(".par");
-        const areaPart = $this.parent().filter(".area");
-
-        this.selectedAreaName = areaName;
-        $(".area.area_" + areaName)
-            .children(className)
-            .addClass("menuopen");
-
-        // We need the timeout so we don't trigger the ng-clicks on the buttons
-        $timeout(() => {
-            this.showAreaOptionsWindow(e, areaPart, pars);
-        }, 80);
-    }
-
-    showAreaOptionsWindow(e: MouseEvent, $area: Area, $pars: Paragraphs) {
-        this.viewctrl.parmenuHandler.showPopupMenu(
-            e,
-            $pars,
-            this.viewctrl.parmenuHandler.getPopupAttrs(),
-            "area"
+    startSelection(e: MouseEvent, par: ParContext) {
+        this.viewctrl.editingHandler.setSelection(
+            new UserSelection(new ParSelection(par, par), par)
         );
     }
 
-    startArea(e: MouseEvent, par: Paragraph) {
-        this.viewctrl.editingHandler.extendSelection(par);
-    }
-
-    async nameArea(e: MouseEvent, $pars: Paragraphs) {
-        if (!this.viewctrl.selection.pars) {
-            return;
-        }
+    async createArea(e: MouseEvent, sel: UnbrokenSelection) {
         const result = await showNameAreaDialog();
-        await this.nameAreaOk(
-            this.viewctrl.selection.pars,
-            result.areaName,
-            result.options
-        );
+        await this.nameAreaOk(sel, result.areaName, result.options);
     }
 
-    async nameAreaOk($area: Area, areaName: string, options: INameAreaOptions) {
+    async nameAreaOk(
+        sel: UnbrokenSelection,
+        areaName: string,
+        options: INameAreaOptions
+    ) {
         const r = await to(
-            $http.post("/name_area/" + this.viewctrl.docId + "/" + areaName, {
-                area_start: getFirstParId($area.first()),
-                area_end: getLastParId($area.last()),
-                options,
-            })
+            $http.post<IParResponse>(
+                "/name_area/" + this.viewctrl.docId + "/" + areaName,
+                {
+                    area_start: sel.start.originalPar.id,
+                    area_end: sel.end.originalPar.id,
+                    options,
+                }
+            )
         );
         if (r.ok) {
-            this.viewctrl.reload();
+            await this.viewctrl.editingHandler.addSavedParToDom(r.result.data, {
+                type: EditType.Edit,
+                pars: sel,
+            });
         } else {
             await showMessageDialog(r.result.data.error);
         }
     }
 
-    cancelArea() {
-        this.viewctrl.selection.start = undefined;
-        this.viewctrl.selection.end = undefined;
+    cancelSelection() {
+        this.viewctrl.editingHandler.setSelection(undefined);
     }
 
-    async removeAreaMarking(e: MouseEvent, $pars: Paragraph) {
+    async removeAreaMarking(e: MouseEvent, par: ParContext) {
         const areaName = this.selectedAreaName;
         if (!areaName) {
             await showMessageDialog("Could not get area name");

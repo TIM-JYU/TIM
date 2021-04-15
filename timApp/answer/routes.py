@@ -34,7 +34,7 @@ from timApp.auth.sessioninfo import get_current_user_object, get_session_users, 
 from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.document.document import Document
+from timApp.document.document import Document, dereference_pars
 from timApp.document.hide_names import hide_names_in_teacher
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx, OriginInfo
@@ -1779,13 +1779,16 @@ def get_state(args: GetStateModel):
         raise RouteException(str(e))
     block = plug.par
 
-    presult = pluginify(doc, [block], user_ctx, view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
+    def deref():
+        return dereference_pars([block], context_doc=doc, view_ctx=view_ctx)
+
+    presult = pluginify(doc, deref(), user_ctx, view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
                         pluginwrap=PluginWrap.Nothing)
     plug = presult.custom_answer_plugin
     html = plug.get_final_output()
     if review:
         block.final_dict = None
-        presult2 = pluginify(doc, [block], user_ctx, view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
+        presult2 = pluginify(doc, deref(), user_ctx, view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
                              review=review, pluginwrap=PluginWrap.Nothing)
         rplug = presult2.custom_answer_plugin
         rhtml = rplug.get_final_output()

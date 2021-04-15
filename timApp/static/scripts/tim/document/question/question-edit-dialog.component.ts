@@ -79,7 +79,7 @@ export type IQuestionDialogParams = INewQuestionParams | IEditQuestionParams;
 
 export interface INewQuestionParams {
     qst: boolean;
-    par_id_next: string;
+    par_id_next: string | null;
     docId: number;
 }
 
@@ -101,7 +101,7 @@ export interface IPointsUpdate {
 function isNewQuestion(
     params: IQuestionDialogParams
 ): params is INewQuestionParams {
-    return (params as INewQuestionParams).par_id_next != null;
+    return (params as INewQuestionParams).par_id_next !== undefined;
 }
 
 function isAskedQuestion(

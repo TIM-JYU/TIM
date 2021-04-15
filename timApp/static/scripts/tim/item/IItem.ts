@@ -1,5 +1,6 @@
 import moment, {Moment} from "moment";
 import {to} from "tim/util/utils";
+import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
 import {IRights} from "../user/IRights";
 import {IGroup} from "../user/IUser";
 import {$http} from "../util/ngimport";
@@ -12,7 +13,7 @@ export interface IDocument extends IItem {
 
 export interface IFullDocument extends IDocument {
     fulltext: string;
-    versions: Array<unknown>; // TODO proper element type
+    versions: Array<IChangelogEntry>;
 }
 
 export type DocumentOrFolder = IDocument | IFolder;

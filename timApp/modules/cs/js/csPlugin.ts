@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access,no-underscore-dangle */
 import {
-    Component,
-    ViewChild,
     ChangeDetectorRef,
-    ElementRef,
+    Component,
     Directive,
+    ElementRef,
+    ViewChild,
 } from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
@@ -32,11 +32,11 @@ import {
     defaultErrorMessage,
     defaultTimeout,
     getClipboardHelper,
-    to2,
+    timeout,
     to,
+    to2,
     valueDefu,
     valueOr,
-    timeout,
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -44,15 +44,15 @@ import deepEqual from "deep-equal";
 import {SimcirConnectorDef, SimcirDeviceInstance} from "../simcir/simcir-all";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
-import {Mode, EditorComponent, EditorFile} from "./editor/editor";
+import {EditorComponent, EditorFile, Mode} from "./editor/editor";
 import {CountBoardComponent} from "./editor/countboard";
 import {getInt} from "./util/util";
 import {
-    IFile,
     FileSelectManagerComponent,
+    IFile,
     IFileSpecification,
 } from "./util/file-select";
-import {Set, OrderedSet} from "./util/set";
+import {OrderedSet, Set} from "./util/set";
 
 // TODO better name?
 interface Vid {
@@ -556,7 +556,7 @@ const FileSubmission = t.intersection([
         type: t.string,
     }),
 ]);
-export interface IFileSubmission extends t.TypeOf<typeof FileSubmission> {}
+export type IFileSubmission = t.TypeOf<typeof FileSubmission>;
 
 const UploadedFile = t.type({
     path: t.string,
@@ -848,7 +848,7 @@ interface IFetchResponse {
     files: IFileSubmission[];
 }
 
-interface IRunRequestInput extends Partial<IExtraMarkup> {
+type IRunRequestInput = Partial<IExtraMarkup> & {
     usercode?: string;
     submittedFiles?: IFileSubmission[];
     userinput: string;
@@ -860,7 +860,7 @@ interface IRunRequestInput extends Partial<IExtraMarkup> {
     nosave: boolean;
     type: string;
     selectedLanguage?: string;
-}
+};
 
 export interface IRunRequest {
     input: IRunRequestInput;

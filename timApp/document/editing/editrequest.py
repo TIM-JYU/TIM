@@ -36,7 +36,7 @@ class EditRequest:
 
     @property
     def is_adding(self):
-        return self.par in ('NEW_PAR', 'HELP_PAR') or self.par is None
+        return self.par in ('HELP_PAR', ) or self.par is None
 
     @property
     def editing_area(self) -> bool:

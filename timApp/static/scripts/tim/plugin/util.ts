@@ -4,6 +4,7 @@ import {FormModeOption, ISetAnswerResult} from "tim/document/viewctrl";
 import {isLeft} from "fp-ts/lib/Either";
 import {IAnswer} from "tim/answer/IAnswer";
 import {IUser} from "tim/user/IUser";
+import {createParContext} from "tim/document/structure/parsing";
 import {Binding} from "../util/utils";
 import {IGenericPluginMarkup, IGenericPluginTopLevelFields} from "./attributes";
 import {getErrors} from "./errors";
@@ -186,7 +187,7 @@ export abstract class PluginBaseCommon {
      * Returns the plugin's parent paragraph.
      */
     public getPar() {
-        return this.element.parents(".par");
+        return createParContext(this.element.parents(".par")[0]);
     }
 
     /**

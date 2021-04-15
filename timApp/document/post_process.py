@@ -2,7 +2,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Dict, DefaultDict, Tuple
+from typing import List, Dict, DefaultDict, Tuple, Optional
 
 import pytz
 from flask import flash
@@ -12,7 +12,8 @@ from timApp.auth.sessioninfo import get_session_usergroup_ids
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
-from timApp.document.document import Document
+from timApp.document.document import Document, dereference_pars
+from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.hide_names import force_hide_names
 from timApp.document.macroinfo import get_user_specific_macros
 from timApp.document.usercontext import UserContext
@@ -48,9 +49,23 @@ def post_process_pars(
         sanitize: bool = True,
         do_lazy: bool = False,
         load_plugin_states: bool = True,
+        filter_return: Optional[GlobalParId] = None,
 ) -> PostProcessResult:
     taketime("start pluginify")
-    presult = pluginify(doc, pars, user_ctx, view_ctx, sanitize=sanitize, do_lazy=do_lazy, load_states=load_plugin_states)
+
+    pars_deref = dereference_pars(pars, context_doc=doc, view_ctx=view_ctx)
+    if filter_return:
+        pars_deref = [p for p in pars_deref if
+                      p.get_doc_id() == filter_return.doc_id and p.get_id() == filter_return.par_id]
+    presult = pluginify(
+        doc,
+        pars_deref,
+        user_ctx,
+        view_ctx,
+        sanitize=sanitize,
+        do_lazy=do_lazy,
+        load_states=load_plugin_states,
+    )
     final_pars = presult.pars
     taketime("end pluginify")
     should_mark_all_read = False
@@ -264,7 +279,6 @@ def process_areas(
                     html_par['collapse_area'] = area_start
                     is_collapsed = collapse not in ('false', '')
                     collapse_classes = ['areaexpand' if is_collapsed else 'areacollapse']
-                    collapse_classes.extend(['areawidget_' + area for area in new_areas if area != area_start])
                     collapse_classes.extend(['par'])
 
                     if len(current_collapsed) > 0:

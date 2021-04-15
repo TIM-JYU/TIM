@@ -9,6 +9,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {JsonValue} from "tim/util/jsonvalue";
 import {saveCurrentScreenPar} from "../document/parhelpers";
 import {genericglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
@@ -458,7 +459,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
         }
     }
 
-    private async sendRequest<T>(url: string, data: unknown): ToReturn<T> {
+    private async sendRequest<T>(url: string, data: JsonValue): ToReturn<T> {
         this.signUpRequestInProgress = true;
         const r = await to($http.post<T>(url, data));
         this.signUpRequestInProgress = false;

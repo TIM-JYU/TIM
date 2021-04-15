@@ -830,17 +830,26 @@ class TimRouteTest(TimDbTest):
         u.add_to_group(gr, added_by=None)
         db.session.commit()
 
-    def post_comment(self, par, public, text, **kwargs):
+    def post_comment(self, par: DocParagraph, public: bool, text: str, orig: Optional[DocParagraph] = None, **kwargs):
+        glob_id = dict(doc_id=par.doc.doc_id, par_id=par.get_id())
+        orig_glob_id = glob_id if not orig else dict(doc_id=orig.doc.doc_id, par_id=orig.get_id())
         return self.json_post('/postNote', {'text': text,
                                             'access': 'everyone' if public else 'justme',
-                                            'docId': par.doc.doc_id,
-                                            'par': par.get_id()}, **kwargs)
+                                            'ctx': {
+                                                'curr': glob_id,
+                                                'orig': orig_glob_id,
+                                            }}, **kwargs)
 
-    def edit_comment(self, note_id, public, text, **kwargs):
+    def edit_comment(self, note_id, par, public, text, **kwargs):
+        glob_id = dict(doc_id=par.doc.doc_id, par_id=par.get_id())
         return self.json_post('/editNote',
                               {'text': text,
                                'id': note_id,
                                'access': 'everyone' if public else 'justme',
+                               'ctx': {
+                                   'curr': glob_id,
+                                   'orig': glob_id,
+                               },
                                }, **kwargs)
 
     def post_preview(self, d: DocInfo, text: str, spellcheck=False, par_next=None, par=None, **kwargs):

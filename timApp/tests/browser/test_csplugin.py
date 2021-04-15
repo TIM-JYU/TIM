@@ -72,6 +72,14 @@ pointsRule:
 
         # TODO: Why is this slightly different from python_before_answer ?
         self.assert_same_screenshot(par, 'csplugin/python_after_answer_switch')
+        self.verify_answer_content(
+            f'{d.id}.py', 'usercode', 'print("Hello world!") ', self.test_user_1, expected_count=3,
+        )
+        # The answers should always be saved under the original document, so the translated document should
+        # not have answers.
+        self.verify_answer_content(
+            f'{dt.id}.py', 'usercode', '', self.test_user_1, expected_count=0,
+        )
 
     def make_text_and_answer(self, d):
         self.goto_document(d)

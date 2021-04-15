@@ -31,7 +31,7 @@ export class HelpParContent {
         const spars = eh.findSettingsPars();
         this.hasText = eh.hasNonSettingsPars();
         this.showHelp = !this.hasText && this.canEdit();
-        this.showSettingsYaml = spars.length > 0 && this.showHelp;
+        this.showSettingsYaml = spars !== undefined && this.showHelp;
     }
 
     canEdit() {

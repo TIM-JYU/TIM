@@ -325,8 +325,7 @@ def pluginify(doc: Document,
               pluginwrap=PluginWrap.Full,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
-              target_format: PrintFormat = PrintFormat.LATEX,
-              dereference=True) -> PluginifyResult:
+              target_format: PrintFormat = PrintFormat.LATEX) -> PluginifyResult:
     """
     "Pluginifies" the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
@@ -343,13 +342,10 @@ def pluginify(doc: Document,
     :param output_format: Desired output format (html/md) for plugins
     :param user_print: Whether the plugins should output the original values or user's input (when exporting markdown).
     :param target_format: for MD-print what exact format to use
-    :param dereference: should pars be checked id dereference is needed
     :return: Processed HTML blocks along with JavaScript and CSS stylesheet dependencies.
     """
 
     taketime("answ", "start")
-    if dereference:
-        pars = dereference_pars(pars, context_doc=doc, view_ctx=view_ctx)
     if not view_ctx.preview and has_edit_access(doc.get_docinfo()):
         for p in pars:
             if p.is_translation_out_of_date():

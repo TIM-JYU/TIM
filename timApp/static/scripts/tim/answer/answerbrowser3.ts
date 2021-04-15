@@ -6,7 +6,7 @@ import {TaskId} from "tim/plugin/taskid";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
-import {dereferencePar, getParId, Paragraph} from "../document/parhelpers";
+import {createParContext} from "tim/document/structure/parsing";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {
@@ -586,9 +586,7 @@ export class AnswerBrowserController
         } else if (this.hasUserChanged()) {
             this.dimPlugin();
             const par = this.getPar();
-            this.viewctrl.reviewCtrl.clearAnswerAnnotationsFromParMargin(
-                par[0]
-            );
+            this.viewctrl.reviewCtrl.clearAnswerAnnotationsFromParMargin(par);
         } else {
             this.unDimPlugin();
         }
@@ -728,15 +726,12 @@ export class AnswerBrowserController
             return;
         }
         const par = this.getPar();
-        const ids = dereferencePar(par);
-        if (!ids) {
-            return;
-        }
+        const orig = par.originalPar;
         const parParams = {
-            doc_id: ids[0],
-            par_id: ids[1],
-            ref_from_doc_id: this.viewctrl.docId,
-            ref_from_par_id: getParId(par),
+            doc_id: par.par.docId,
+            par_id: par.par.id,
+            ref_from_doc_id: orig.docId,
+            ref_from_par_id: orig.id,
         };
         const preParams = {
             ...parParams,
@@ -822,7 +817,7 @@ export class AnswerBrowserController
         if (!(this.imageReview && this.review)) {
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(
                 this.selectedAnswer?.id,
-                par[0]
+                par
             );
         }
         if (!changeReviewOnly) {
@@ -848,7 +843,7 @@ export class AnswerBrowserController
             this.viewctrl.reviewCtrl.setCanvas(this.selectedAnswer.id, canvas);
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(
                 this.selectedAnswer.id,
-                par[0]
+                par
             );
         }
     };
@@ -1062,7 +1057,7 @@ export class AnswerBrowserController
             newroute = "view";
         } // TODO: think other routes also?
         const par = this.getPar();
-        const parId = getParId(par);
+        const parId = par.originalPar.id;
         const params = getUrlParams();
         const group = params.get("group"); // TODO: should we save other params also?
         const rangeParams = single
@@ -1084,7 +1079,7 @@ export class AnswerBrowserController
 
     getReviewLink() {
         return `/review/${this.viewctrl.item.path}?${$httpParamSerializer({
-            b: getParId(this.getPar()),
+            b: this.getPar().originalPar.id,
             size: 1,
             group: getUrlParams().get("group"),
         })}`;
@@ -1485,8 +1480,8 @@ export class AnswerBrowserController
         sa.users.splice(index, 1);
     }
 
-    getPar(): Paragraph {
-        return this.element.parents(".par");
+    getPar() {
+        return createParContext(this.element.parents(".par")[0]);
     }
 }
 

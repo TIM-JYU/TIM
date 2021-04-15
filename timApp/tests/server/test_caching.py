@@ -54,14 +54,14 @@ class CachingTest(TimRouteTest):
         self.check_is_cached(d)
 
         self.login_test3()
-        self.edit_comment(nid, True, 'test2')
+        self.edit_comment(nid, par, True, 'test2')
         self.check_not_cached_and_then_cached(d)
 
         self.login_test2()
         self.check_not_cached_and_then_cached(d)
 
         self.login_test3()
-        self.edit_comment(nid, False, 'test2')
+        self.edit_comment(nid, par, False, 'test2')
         self.check_not_cached_and_then_cached(d)
 
         self.login_test2()

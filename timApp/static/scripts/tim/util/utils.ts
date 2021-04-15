@@ -1,11 +1,11 @@
 import angular, {IHttpResponse, IPromise} from "angular";
 import * as t from "io-ts";
-import moment, {Moment, MomentInput, unitOfTime} from "moment";
+import {Props} from "io-ts";
+import moment from "moment";
 import {AbstractControl, ValidatorFn} from "@angular/forms";
 import humanizeDuration from "humanize-duration";
 import {isLeft} from "fp-ts/lib/Either";
 import {Pos} from "tim/ui/pos";
-import {Props} from "io-ts";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
@@ -921,18 +921,6 @@ export function secondsToShortTime(
 export function timeout(ms?: number) {
     return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
-
-/**
- * Represents an immutable Moment object. Not perfect, but prevents some bugs.
- */
-export type ReadonlyMoment = Omit<Moment, "add" | "subtract" | "set"> & {
-    isSame(m: ReadonlyMoment | MomentInput): boolean;
-    diff(
-        b: ReadonlyMoment | MomentInput,
-        unitOfTime?: unitOfTime.Diff,
-        precise?: boolean
-    ): number;
-};
 
 /**
  * Shortcut function for defining a codec with mandatory and optional properties.

@@ -417,7 +417,7 @@ export class MultisaveComponent
     }
 
     scrollTo(target: ITimComponent) {
-        scrollToElement(target.getPar().children(".parContent")[0]);
+        scrollToElement(target.getPar().getContent());
     }
 }
 

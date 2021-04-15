@@ -38,20 +38,20 @@ import {
 } from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 
-interface IRectangle {
+type IRectangle = {
     type: "rectangle";
     drawData: IRectangleOrEllipse;
-}
+};
 
-interface IEllipse {
+type IEllipse = {
     type: "ellipse";
     drawData: IRectangleOrEllipse;
-}
+};
 
-interface IFreeHand {
+type IFreeHand = {
     type: "freehand";
     drawData: ILineSegment;
-}
+};
 
 // TODO: 4th variable for reporting MouseDown, TouchMove etc could be useful for fine-tuning the desired
 //  update behaviour - for now this is called on certain MouseUp/TouchEnd events, and the behaviour

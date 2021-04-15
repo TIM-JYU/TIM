@@ -80,17 +80,14 @@ def copy_to_clipboard(
         from_par,
         to_par,
         area_name: Optional[str] = None,
-        ref_doc_id: Optional[int] = None,
 ):
     verify_logged_in()
     verify_view_access(wd.docentry)
 
-    ref_doc = Document(ref_doc_id) if ref_doc_id is not None and ref_doc_id != doc_id else None
-
     doc = wd.docentry.document_as_current_user
     clip = Clipboard().get(get_current_user_object())
     try:
-        clip.copy_pars(doc, from_par, to_par, area_name, ref_doc, disable_ref=False)
+        clip.copy_pars(doc, from_par, to_par, area_name, disable_ref=False)
     except TimDbException as e:
         raise RouteException(str(e))
 

@@ -7,12 +7,7 @@ import {Document} from "tim/document/document";
 import {ClipboardHandler, IClipboardMeta} from "tim/document/editing/clipboard";
 import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
-import {
-    getElementByParId,
-    isHelpPar,
-    Paragraph,
-    saveCurrentScreenPar,
-} from "tim/document/parhelpers";
+import {getElementByParId, saveCurrentScreenPar} from "tim/document/parhelpers";
 import {ParmenuHandler} from "tim/document/parmenu";
 import {QuestionHandler} from "tim/document/question/questions";
 import {initReadings} from "tim/document/readings";
@@ -33,6 +28,10 @@ import {diffDialog} from "tim/document/showDiffDialog";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import * as t from "io-ts";
+import {ParContext} from "tim/document/structure/parContext";
+import {DerefOption} from "tim/document/structure/derefOption";
+import {getParContainerElem} from "tim/document/structure/parsing";
+import {enumPars} from "tim/document/structure/iteration";
 import {
     AnswerBrowserController,
     PluginLoaderCtrl,
@@ -54,7 +53,7 @@ import {IUser, IUserListEntry} from "../user/IUser";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {documentglobals} from "../util/globals";
-import {$compile, $filter, $http, $interval, $timeout} from "../util/ngimport";
+import {$compile, $http, $interval, $timeout} from "../util/ngimport";
 import {AnnotationComponent} from "../velp/annotation.component";
 import {ReviewController} from "../velp/reviewController";
 import {EditingHandler} from "./editing/editing";
@@ -88,7 +87,7 @@ export interface ITimComponent {
     formBehavior: () => FormModeOption;
     isUnSaved: (userChange?: boolean) => boolean;
     save: () => Promise<{saved: boolean; message: string | undefined}>;
-    getPar: () => Paragraph;
+    getPar: () => ParContext;
     setPluginWords?: (words: string[]) => void;
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;
@@ -167,7 +166,6 @@ export class ViewCtrl implements IController {
         allowPasteRef: false,
         empty: true,
     };
-    selection: {pars?: JQuery; start?: Paragraph; end?: Paragraph} = {};
     public par: JQuery | undefined;
 
     static $inject = ["$scope"];
@@ -209,7 +207,7 @@ export class ViewCtrl implements IController {
     );
     private liveUpdates: number;
     private oldWidth: number;
-    public defaultAction: IMenuFunctionEntry | undefined;
+    public defaultAction: string | undefined;
     public reviewCtrl: ReviewController;
     public lectureCtrl: LectureController;
     public questionHandler: QuestionHandler;
@@ -295,7 +293,6 @@ export class ViewCtrl implements IController {
                 const jqTarget = $(e.target);
                 const ignoreTags = ["button", "input", "label", "i"];
                 const ignoreClasses = [
-                    "areaeditline",
                     "draghandle",
                     "editline",
                     "menu-icon",
@@ -363,26 +360,24 @@ export class ViewCtrl implements IController {
             this.startLiveUpdates();
         }
 
-        try {
-            const found = $filter("filter")(
-                this.editingHandler.getEditorFunctions(),
-                {
-                    desc: this.defaultActionStorage.get() ?? "Close menu",
-                    show: true,
-                },
-                true
-            );
-            if (found.length) {
-                this.defaultAction = found[0];
-            }
-        } catch (e) {}
+        this.defaultAction =
+            this.defaultActionStorage.get() ?? "Show options window";
         this.reviewCtrl = new ReviewController(this);
         timLogTime("ViewCtrl end", "view");
     }
 
+    getDefaultAction(par: ParContext): IMenuFunctionEntry | undefined {
+        if (!this.defaultAction) {
+            return undefined;
+        }
+        return this.editingHandler
+            .getEditorFunctions(par)
+            .find((f) => f.desc === this.defaultAction);
+    }
+
     $postLink() {
         initCssPrint();
-        const parselem = document.getElementById("pars");
+        const parselem = getParContainerElem();
         if (this.item.lang_id && parselem) {
             // TODO document language ids should be validated
             parselem.lang = this.item.lang_id;
@@ -547,19 +542,18 @@ export class ViewCtrl implements IController {
         this.scope.$watchGroup(
             [
                 () => this.lectureCtrl.lectureSettings.lectureMode,
-                () => this.selection.start,
-                () => this.selection.end,
                 () => this.editing,
                 () => this.getEditMode(),
                 () => this.getAllowMove(),
             ],
             (newValues, oldValues, scope) => {
-                const par = $(".editline.menuopen").parents(".par");
-                this.parmenuHandler.updatePopupMenuIfOpen(
-                    this.parmenuHandler.getPopupAttrs(
-                        par.length > 0 ? par : undefined
-                    )
-                );
+                if (this.popupmenu && this.parmenuHandler.currCtx) {
+                    this.popupmenu.updateAttrs(
+                        this.parmenuHandler.getPopupAttrs(
+                            this.parmenuHandler.currCtx
+                        )
+                    );
+                }
                 if (this.editing) {
                     this.notification = "Editor is already open.";
                 } else {
@@ -627,31 +621,31 @@ export class ViewCtrl implements IController {
      * All table controllers need to register for toggling edit mode of
      * the table to work.
      * @param {TimTableComponent} controller The table controller.
-     * @param {string} parId The ID of the table paragraph.
+     * @param {string} par The par context where the table is.
      */
-    public addTable(controller: TimTableComponent, parId: string) {
+    public addTable(controller: TimTableComponent, par: ParContext) {
         // console.log("table added!");
-        this.timTables.set(parId, controller);
+        this.timTables.set(par.originalPar.id, controller);
     }
 
     /**
      * Returns a table controller related to a specific table paragraph.
-     * @param {string} parId The paragraph's ID.
-     * @returns {TimTableComponent} The table controller related to the given table paragraph, or undefined.
+     * @param par The paragraph context.
+     * @returns The table controller related to the given table paragraph, or undefined.
      */
-    public getTableControllerFromParId(parId: string) {
-        return this.timTables.get(parId);
+    public getTableControllerFromParId(par: ParContext) {
+        return this.timTables.get(par.originalPar.id);
     }
 
     public addParMenuEntry(
         controller: ICtrlWithMenuFunctionEntry,
-        parId: string
+        par: ParContext
     ) {
-        this.parMenuEntries.set(parId, controller);
+        this.parMenuEntries.set(par.originalPar.id, controller);
     }
 
-    public getParMenuEntry(parId: string) {
-        return this.parMenuEntries.get(parId);
+    public getParMenuEntry(par: ParContext) {
+        return this.parMenuEntries.get(par.originalPar.id);
     }
 
     // TODO: Refactor plugin interface for tableForm:
@@ -839,12 +833,12 @@ export class ViewCtrl implements IController {
     }
 
     isEmptyDocument() {
-        const parContainer = document.getElementById("pars")!;
-        const pars = parContainer.querySelectorAll(".par:not(.preamble)");
-        return (
-            pars.length === 0 ||
-            (pars.length === 1 && isHelpPar($(pars[0] as HTMLElement)))
-        );
+        for (const p of enumPars(DerefOption.NoDeref)) {
+            if (!p.preamblePath) {
+                return false;
+            }
+        }
+        return true;
     }
 
     reload() {
@@ -1010,7 +1004,9 @@ export class ViewCtrl implements IController {
                 answers: Record<string, IAnswer | undefined>;
                 userId: number;
             }>("/userAnswersForTasks", {
-                tasks: Array.from(formAnswerBrowsers.keys()),
+                tasks: Array.from(formAnswerBrowsers.keys()).map((task) =>
+                    task.toString()
+                ),
                 user: user.id,
             })
         );
@@ -1123,21 +1119,11 @@ export class ViewCtrl implements IController {
             const n = $(val);
             par.replaceWith(n);
             const compiled = $($compile(n)(this.scope));
-            this.applyDynamicStyles(compiled);
             ParCompiler.processAllMathDelayed(compiled);
         }
         this.document.rebuildSections();
         this.pendingUpdates.clear();
         this.questionHandler.processQuestions();
-    }
-
-    applyDynamicStyles(par: Paragraph) {
-        if (documentglobals().editMode) {
-            par.addClass("editmode");
-
-            // Show hidden paragraphs if in edit mode
-            par.find(".mdcontent").css("display", "initial");
-        }
     }
 
     setHeaderLinks() {
