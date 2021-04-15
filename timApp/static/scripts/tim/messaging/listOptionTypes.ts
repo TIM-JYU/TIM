@@ -1,3 +1,15 @@
+export interface CreateListOptions {
+    // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
+    listname: string;
+    domain: string;
+    archive: ArchiveType;
+    emails: string[];
+    ownerEmail: string;
+    notifyOwnerOnListChange: boolean;
+    listDescription: string;
+    listInfo: string;
+}
+
 export enum ArchiveType {
     // See ArchiveType class on Python side of things for explanations.
     NONE,

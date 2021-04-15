@@ -1,15 +1,12 @@
 import {BrowserModule} from "@angular/platform-browser";
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {HttpClient} from "@angular/common/http";
 import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
 import {Users} from "../user/userService";
 import {archivePolicyNames, ArchiveType} from "./listOptionTypes";
-import {showInputDialog} from "../ui/showInputDialog";
-import {InputDialogKind} from "../ui/input-dialog.kind";
-import {IDocument, redirectToItem} from "../item/IItem";
 
 @Component({
     selector: "message-list-creation",
@@ -46,7 +43,7 @@ import {IDocument, redirectToItem} from "../item/IItem";
                 </div>
             </ng-container>
             <ng-container footer>
-                <button class="timButton" type="button" (click)="ok()"></button>
+                <button class="timButton" type="button" (click)="close({})">OK</button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -184,27 +181,6 @@ export class MessageListComponent extends AngularDialogComponent<
         return true;
     }
 
-    // This was added 13.4.
-    async ok() {
-        const doc = await showInputDialog({
-            isInput: InputDialogKind.InputAndValidator,
-            defaultValue: "",
-            text: "Enter name of the message list",
-            title: "Message list creation",
-            validator: async (s) => {
-                const r = await to2(
-                    this.http.get<IDocument>(`/groups/create/${s}`).toPromise()
-                );
-                if (r.ok) {
-                    return {ok: true, result: r.result};
-                } else {
-                    return {ok: false, result: r.result.error.error};
-                }
-            },
-        });
-        redirectToItem(doc);
-    }
-
     /**
      * Helper to check if this list name exists.
      * VIESTIM: This is a demo function, will only probably need this when we have implemented the creation dialoque?
@@ -239,6 +215,6 @@ export class MessageListComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [MessageListComponent],
-    imports: [BrowserModule, DialogModule, FormsModule, HttpClientModule],
+    imports: [BrowserModule, DialogModule, FormsModule],
 })
 export class MessageListModule {}
