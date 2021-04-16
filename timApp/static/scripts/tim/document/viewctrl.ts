@@ -280,7 +280,7 @@ export class ViewCtrl implements IController {
         this.notesHandler = new NotesHandler(sc, this);
         this.parmenuHandler = new ParmenuHandler(sc, this);
         this.viewRangeInfo = new ViewRangeInfo(this);
-        if (!this.isSlideView()) {
+        if (!this.isShowSlideView()) {
             initReadings(this.item);
         } else {
             initSlideView(this.item);
@@ -386,7 +386,9 @@ export class ViewCtrl implements IController {
         this.questionHandler.processQuestions();
         this.setHeaderLinks();
         this.noBeginPageBreak();
-        this.document.rebuildSections();
+        if (!this.isSlideOrShowSlideView()) {
+            this.document.rebuildSections();
+        }
         // from https://stackoverflow.com/a/7317311
         window.addEventListener("beforeunload", (e) => {
             saveCurrentScreenPar();
@@ -430,9 +432,18 @@ export class ViewCtrl implements IController {
         this.videoElements.set(followid, v);
     }
 
+    isShowSlideView() {
+        const p = document.location.pathname;
+        return p.startsWith("/show_slide/");
+    }
+
     isSlideView() {
         const p = document.location.pathname;
-        return p.startsWith("/slidefff/") || p.startsWith("/show_slide/");
+        return p.startsWith("/slide/");
+    }
+
+    isSlideOrShowSlideView() {
+        return this.isSlideView() || this.isShowSlideView();
     }
 
     // noinspection JSUnusedGlobalSymbols (used in view_html.jinja2)
@@ -563,10 +574,10 @@ export class ViewCtrl implements IController {
         );
         this.reviewCtrl.loadDocumentAnnotations();
 
-        // TODO: Inserting help par is currently unconditional.
+        // TODO: Inserting help par is currently independent of hideVars.editLine.
         //  The non-existence of the help par causes at least some plugins
         //  to not update properly (for example, "Saved" text will not appear when saving qst).
-        if (true) {
+        if (!this.isSlideOrShowSlideView()) {
             this.editingHandler.insertHelpPar();
         }
         this.viewRangeInfo.loadRanges();
@@ -833,6 +844,9 @@ export class ViewCtrl implements IController {
     }
 
     isEmptyDocument() {
+        if (this.isSlideOrShowSlideView()) {
+            return false;
+        }
         for (const p of enumPars(DerefOption.NoDeref)) {
             if (!p.preamblePath) {
                 return false;
