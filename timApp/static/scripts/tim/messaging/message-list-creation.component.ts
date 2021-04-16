@@ -6,7 +6,12 @@ import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-compone
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
 import {Users} from "../user/userService";
-import {archivePolicyNames, ArchiveType} from "./listOptionTypes";
+import {
+    archivePolicyNames,
+    ArchiveType,
+    CreateListOptions,
+} from "./listOptionTypes";
+import {IDocument, redirectToItem} from "../item/IItem";
 
 @Component({
     selector: "message-list-creation",
@@ -43,7 +48,7 @@ import {archivePolicyNames, ArchiveType} from "./listOptionTypes";
                 </div>
             </ng-container>
             <ng-container footer>
-                <button class="timButton" type="button" (click)="close({})">OK</button>
+                <button class="timButton" type="button" (click)="newList() ">Create</button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -66,6 +71,13 @@ export class MessageListComponent extends AngularDialogComponent<
 
     // For name check
     timeoutID?: number;
+    ownerEmail: string = "totalund@student.jyu.fi";
+    notifyOwnerOnListChange: boolean = true;
+
+    listDescription: string = "Listan lyhyt kuvaus.";
+    listInfo: string = "Listan pitkä kuvaus.";
+
+    emails?: string;
 
     constructor(private http: HttpClient) {
         super();
@@ -95,6 +107,51 @@ export class MessageListComponent extends AngularDialogComponent<
         } else {
             console.error(result.result.error.error);
         }
+    }
+
+    async newList() {
+        // Somanyduplicate
+        const result = await this.createList({
+            // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
+            // TODO: Validate input values before sending, e.g. this list has a unique name.
+            listname: this.listname,
+            // We added '@' in domain name for display purposes, remove it when sending domain to the server.
+            domain: this.domain.startsWith("@")
+                ? this.domain.slice(1)
+                : this.domain,
+            archive: this.archive,
+            emails: this.parseEmails(),
+            ownerEmail: this.ownerEmail,
+            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
+            listInfo: this.listInfo,
+            listDescription: this.listDescription,
+        });
+        if (!result.ok) {
+            console.error(result.result.error.error);
+        } else {
+            // VIESTIM Helps see that data was sent succesfully after clicking the button.
+            redirectToItem(result.result);
+        }
+    }
+
+    // VIESTIM this helper function helps keeping types in check.
+    private createList(options: CreateListOptions) {
+        return to2(
+            this.http
+                .post<IDocument>("/messagelist/createlist", {options})
+                .toPromise()
+        );
+    }
+
+    /**
+     * Compile email addresses separated by line breaks into a list
+     * @private
+     */
+    private parseEmails(): string[] {
+        if (!this.emails) {
+            return [];
+        }
+        return this.emails.split("\n").filter((e) => e);
     }
 
     /**
