@@ -35,12 +35,12 @@ export enum DrawType {
     Ellipse,
 }
 
-const DrawTypeCodec = t.keyof({
-    [DrawType.Freehand]: null,
-    [DrawType.Line]: null,
-    [DrawType.Rectangle]: null,
-    [DrawType.Ellipse]: null,
-});
+export const DrawTypeCodec = t.union([
+    t.literal(DrawType.Freehand),
+    t.literal(DrawType.Line),
+    t.literal(DrawType.Rectangle),
+    t.literal(DrawType.Ellipse),
+]);
 
 export const DrawOptions = t.type({
     color: t.string,
