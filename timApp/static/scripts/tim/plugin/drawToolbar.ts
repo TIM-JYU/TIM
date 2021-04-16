@@ -35,7 +35,9 @@ export enum DrawType {
     Ellipse,
 }
 
-export const DrawTypeCodec = t.union([
+// keyof is designed to work with objects containing string keys, so we use an union of number literals instead
+// https://github.com/gcanti/io-ts/blob/master/index.md
+const DrawTypeCodec = t.union([
     t.literal(DrawType.Freehand),
     t.literal(DrawType.Line),
     t.literal(DrawType.Rectangle),
