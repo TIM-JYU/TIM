@@ -1525,6 +1525,36 @@ class Mathcheck(Language):
             out = out.replace("No errors found. Please notice that the check was not complete.", correct_text)
         return 0, out, "", ""
 
+# Pre sentences to make maxima plot2d etc possible in TIM
+MAXIMA_T_PLOT = """
+plotcnt: 1$
+plottmpf: ""$
+openplot() := block(
+    filename: concat("plot",plotcnt), 
+    plotcnt: plotcnt+1,
+    afn: concat(IMAGE_DIR, filename, ".", PLOT_TERMINAL),
+    tmpf: concat(maxima_tempdir, concat(filename, ".plt")),
+    set_plot_option([svg_file, afn], [gnuplot_out_file, tmpf]),
+    plottmpf: [tmpf, afn]
+)$
+closeplot() := block(
+    system(concat(GNUPLOT_CMD, " ", plottmpf[1])),
+    system(concat(DEL_CMD, " ", plottmpf[1])),
+    return (plottmpf)
+)$
+gplt(f,a) := block(
+    system(concat(GNUPLOT_CMD, " ", a[1])),
+    system(concat(DEL_CMD, " ", a[1])),
+    return (a)
+)$
+
+t_plot2d([args]) := block(openplot(), apply(plot2d, args),  closeplot())$
+t_contour_plot([args]) := block(openplot(), apply(contour_plot, args),  closeplot())$
+t_plot3d([args]) := block(openplot(), apply(plot3d, args),  closeplot())$
+t_julia([args]) := block(openplot(), apply(julia, args),  closeplot())$
+t_mandelbrot([args]) := block(openplot(), apply(mandelbrot, args),  closeplot())$
+alias(plot2d, t_plot2d, contour_plot, t_contour_plot, plot3d, t_plot3d, julia, t_julia, mandelbrot, t_mandelbrot)$
+"""
 
 class Maxima(Language):
     ttype = "maxima"
@@ -1537,15 +1567,20 @@ class Maxima(Language):
         self.nofilesave = True
 
     def run(self, result, sourcelines, points_rule):
+        def maxima_option(name):
+            res = get_value(self.query.jso, False, 'markup', "-maxima", name) or \
+                  name in sourcelines
+            return res
+
+        timplot = maxima_option("timplot")
+        if timplot:
+            sourcelines = MAXIMA_T_PLOT + sourcelines
+
         r = requests.post("http://maxima:8080/maxima", data={
                 "input": sourcelines.strip(),
                 "timeout": 10000,
              })
 
-        def maxima_option(name):
-            res = get_value(self.query.jso, False, 'markup', "-maxima", name) or \
-                  name in sourcelines
-            return res
 
         htmldata = ""
         result["web"]["md"] = ""
