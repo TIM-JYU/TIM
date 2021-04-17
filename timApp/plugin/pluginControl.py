@@ -444,6 +444,7 @@ def pluginify(doc: Document,
     for plugin_name, plugin_block_map in plugins.items():
         for _, plugin in plugin_block_map.items():
             plugin.values.pop('postprogram', None)
+            plugin.values.pop('preprogram', None)
             if not plugin.task_id:
                 continue
             if plugin.task_id.is_global:
