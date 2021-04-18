@@ -147,6 +147,27 @@ class EmailListManager:
                 # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
                 #  their lists on Mailman.
                 email_list.add_owner(list_options.ownerEmail)
+
+                # VIESTIM: Sometimes Mailman gets confused how mail is supposed to be interpreted, and with some
+                #  email client's different interpretation with Mailman's email coding templates (e.g. list
+                #  information footers) may appear as attachments. We fix it by setting header and footer for all new
+                #  lists explicitly.
+
+                # VIESTIM: We build the URI in case because not giving one is interpreted by Mailman as deleting the
+                #  template form the list.
+
+                list_id = email_list.rest_data['list_id']
+                template_base_uri = "http://localhost/postorius/api/templates/list/" \
+                                    f"{list_id}"
+
+                footer_uri = f"{template_base_uri}/list:member:regular:footer"
+                header_uri = f"{template_base_uri}/list:member:regular:header"
+
+                # VIESTIM: These templates don't actually exist, but non-existing templates are substituted with
+                #  empty strings and that should still fix the broken coding leading to attachments issue.
+                email_list.set_template("list:member:regular:footer", footer_uri)
+                email_list.set_template("list:member:regular:header", header_uri)
+
                 # settings-attribute is a dict.
                 mlist_settings = email_list.settings
 
