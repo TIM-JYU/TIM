@@ -146,9 +146,13 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
 
     doc = create_document(path_to_doc, list_options.listname)
 
-    # VIESTIM: Placeholder text for a new document.
-    test_text = f"""Welcome to a new message list, {creator.name}"""
-    doc.document.add_text(test_text)
+    # VIESTIM: We add the admin component to the document. This might have to be changed if the component is turned
+    #  into a plugin.
+
+    admin_component = """#- {allowangular="true"}
+<tim-message-list-admin></tim-message-list-admin>
+    """
+    doc.document.add_text(admin_component)
 
     # Set the management doc for the message list.
     msg_list_model.manage_doc_id = doc.id
