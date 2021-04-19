@@ -11,7 +11,7 @@ class DisplayType(Enum):
 class InternalMessageModel(db.Model):
     """A TIM message."""
 
-    __tablename__: 'internalmessage'
+    __tablename__ = 'internalmessage'
 
     id = db.Column(db.Integer, primary_key=True)
     """Message identifier."""
@@ -40,7 +40,7 @@ class InternalMessageModel(db.Model):
 class InternalMessageDisplayModel(db.Model):
     """Where and for whom a TIM message is displayed."""
 
-    __tablename__: 'internalmessagedisplay'
+    __tablename__ = 'internalmessagedisplay'
 
     message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), primary_key=True)
     """Message identifier."""
@@ -56,7 +56,7 @@ class InternalMessageDisplayModel(db.Model):
 class InternalMessageConfirmModel(db.Model):
     """Metadata about message confirmations."""
 
-    __tablename__: 'internalmessageconfirm'
+    __tablename__ = 'internalmessageconfirm'
 
     message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), primary_key=True)
     """Message identifier."""
