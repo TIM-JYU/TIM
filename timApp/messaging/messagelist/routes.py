@@ -10,7 +10,7 @@ from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
 from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.timdb.sqa import db
-from timApp.util.flask.responsehelper import ok_response, json_response
+from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
 
@@ -163,5 +163,19 @@ def get_list(document_id: int) -> Response:
     :param document_id: ID for message list's admin document.
     :return: ListOptions with the list's information.
     """
-    # TODO: Implement information query and proper return value.
-    return json_response(f"a-okay, {document_id}")
+    msg_list = MessageListModel.get_list_by_manage_doc_id(document_id)
+    list_options = ListOptions(
+        listname=msg_list.name,
+        listInfo=msg_list.info,
+        listDescription=msg_list.description,
+        notifyOwnerOnListChange=msg_list.notify_owner_on_change,
+        # VIESTIM: We need a better way of either querying or inferring list's (possible) domain. For the time being,
+        #  here is a placeholder.
+        domain="tim.jyu.fi",
+        archive=msg_list.archive,
+        # TODO: Query members.
+        emails=[],
+        # TODO: Replace placeholder once we can properly query the owners email.
+        ownerEmail="totalund@student.jyu.fi"
+    )
+    return json_response(list_options)
