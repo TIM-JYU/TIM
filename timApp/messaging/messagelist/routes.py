@@ -154,3 +154,14 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     msg_list_model.manage_doc_id = doc.id
 
     return doc
+
+
+@messagelist.route("/getlist/<document_id>", methods=['GET'])
+def get_list(document_id: int) -> Response:
+    """Get the information for a message list.
+
+    :param document_id: ID for message list's admin document.
+    :return: ListOptions with the list's information.
+    """
+    # TODO: Implement information query and proper return value.
+    return json_response(f"a-okay, {document_id}")

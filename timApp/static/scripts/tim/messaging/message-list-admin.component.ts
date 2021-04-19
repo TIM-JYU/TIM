@@ -4,6 +4,7 @@ import {CommonModule} from "@angular/common";
 import {to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {archivePolicyNames, ArchiveType} from "tim/messaging/listOptionTypes";
+import {documentglobals} from "tim/util/globals";
 import {Users} from "../user/userService";
 
 interface CreateListOptions {
@@ -109,6 +110,8 @@ export class MessageListAdminComponent implements OnInit {
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
             void this.getDomains();
+            const docId = documentglobals().curr_item.id;
+            void this.loadValues(docId);
         }
     }
 
@@ -191,6 +194,46 @@ export class MessageListAdminComponent implements OnInit {
             // TODO: Inform the user deletion was not succesfull.
             console.log(result.result);
         }
+    }
+
+    /**
+     * Load values for message list.
+     * @param docID List is defined by it's management document, so we get list's options and members with it.
+     */
+    async loadValues(docID: number) {
+        const result = await to2(
+            this.http
+                .get<CreateListOptions>(`${this.urlPrefix}/getlist/${docID}`)
+                .toPromise()
+        );
+        if (result.ok) {
+            // TODO: After server side value loading is complete, remove the console logging and uncomment line below.
+            console.log(result.result);
+            // this.setValues(result.result);
+        } else {
+            console.error(result.result.error.error);
+            // TODO: Check what went wrong.
+        }
+    }
+
+    /**
+     * Helper for setting list values after loading.
+     * @param listOptions
+     */
+    setValues(listOptions: CreateListOptions) {
+        this.listname = listOptions.listname;
+        this.archive = listOptions.archive;
+
+        this.domain = listOptions.domain;
+
+        this.ownerEmail = "";
+
+        this.notifyOwnerOnListChange = listOptions.notifyOwnerOnListChange;
+
+        this.listInfo = listOptions.listInfo;
+        this.listDescription = listOptions.listDescription;
+
+        // TODO: Add existing list members.
     }
 }
 
