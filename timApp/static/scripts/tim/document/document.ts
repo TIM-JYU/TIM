@@ -5,7 +5,10 @@ import {Area} from "tim/document/structure/area";
 import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 import {BrokenArea} from "tim/document/structure/brokenArea";
 import {ParContext} from "tim/document/structure/parContext";
-import {enumDocParts} from "tim/document/structure/iteration";
+import {
+    enumDocParts,
+    PreambleIteration,
+} from "tim/document/structure/iteration";
 import {documentglobals} from "../util/globals";
 
 function* getInnerPars(p: Paragraph | Area | BrokenArea) {
@@ -90,7 +93,7 @@ export class Document {
     private buildSections() {
         this.sections = new WeakMap();
         this.sectionList = [];
-        const allpars = enumDocParts();
+        const allpars = enumDocParts(PreambleIteration.Include);
         let currentSection: ParContext[] = [];
         let prev: Element | undefined;
 

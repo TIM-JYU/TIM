@@ -47,6 +47,7 @@ import {
     enumDocParts,
     enumPars,
     nextParContext,
+    PreambleIteration,
 } from "tim/document/structure/iteration";
 import {
     createParContext,
@@ -373,7 +374,7 @@ This will delete the whole ${
     }
 
     findSettingsPars() {
-        const pars = enumDocParts();
+        const pars = enumDocParts(PreambleIteration.Exclude);
         const found = [];
         for (const p of pars) {
             if (p instanceof Paragraph) {
@@ -431,7 +432,7 @@ This will delete the whole ${
                     "Faulty recursion stopped, there should be a settings paragraph already"
                 );
             }
-            const iter = enumDocParts().next();
+            const iter = enumDocParts(PreambleIteration.Exclude).next();
             let parNext: string | undefined;
             if (!iter.done) {
                 if (iter.value instanceof BrokenArea) {

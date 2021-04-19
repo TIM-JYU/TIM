@@ -39,7 +39,12 @@ export function nextParContext(par: ParContext) {
     }
 }
 
-export function* enumDocParts(): Generator<DocumentPart> {
+export enum PreambleIteration {
+    Exclude,
+    Include,
+}
+
+export function* enumDocParts(pi: PreambleIteration): Generator<DocumentPart> {
     const parContainer = getParContainerElem();
     if (!parContainer) {
         throw Error("pars div not found");
@@ -54,19 +59,24 @@ export function* enumDocParts(): Generator<DocumentPart> {
             continue;
         }
         const par = fromHtmlElement(currelem);
-        yield par;
+        if (
+            !par.getFirstOrigPar()?.preamblePath ||
+            pi === PreambleIteration.Include
+        ) {
+            yield par;
+        }
         currelem = par.nextInHtml() ?? null;
     }
 }
 
 export function* enumPars(d: DerefOption) {
-    for (const p of enumDocParts()) {
+    for (const p of enumDocParts(PreambleIteration.Include)) {
         yield* p.enumPars(d);
     }
 }
 
 export function* enumParCtxts() {
-    for (const p of enumDocParts()) {
+    for (const p of enumDocParts(PreambleIteration.Include)) {
         for (const x of p.enumPars(DerefOption.Deref)) {
             yield new ParContext(x, p);
         }
