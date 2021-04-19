@@ -579,7 +579,7 @@ export class SettingsTabComponent implements OnInit {
     }
 
     async createMessagelist() {
-        await showMessageListCreation("Heimaailma");
+        await showMessageListCreation();
     }
 
     /**

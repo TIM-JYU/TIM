@@ -53,7 +53,7 @@ import {
     `,
 })
 export class MessageListComponent extends AngularDialogComponent<
-    string,
+    unknown,
     unknown
 > {
     protected dialogName = "MessageList";
