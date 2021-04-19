@@ -133,6 +133,29 @@ export class TimMessageComponent {
         );
     }
 
+    resetForm() {
+        this.emailsubject = "";
+        this.emailbody = "";
+        this.emailbcc = false;
+        this.emailbccme = true;
+        this.emailtim = true;
+        this.defaultEmail = false;
+        this.timMessage = false;
+        this.createMessageOptions = {
+            messageChannel: false,
+            archive: false,
+            important: false,
+            isPrivate: false,
+            pageList: "",
+            confirm: false,
+            reply: true,
+            replyAll: false,
+            expires: undefined,
+            sender: Users.getCurrent().real_name,
+            senderEmail: Users.getCurrent().email,
+        };
+    }
+
     async sendEmailTim() {
         if (!this.taskId) {
             this.emailMsg = "Cannot send email without taskId";
@@ -148,7 +171,12 @@ export class TimMessageComponent {
                 bccme: this.emailbccme,
             })
         );
-        this.emailMsg = response.ok ? "Sent" : response.result.data.error;
+        if (response.ok) {
+            this.emailMsg = "Sent";
+            this.resetForm();
+        } else {
+            this.emailMsg = response.result.data.error;
+        }
     }
 
     async sendTimMessage() {
@@ -158,27 +186,7 @@ export class TimMessageComponent {
         } else {
             // If emailMsg != "", text "Sent!" appears next to Send button.
             this.emailMsg = "sent";
-            // reset form
-            this.emailsubject = "";
-            this.emailbody = "";
-            this.emailbcc = false;
-            this.emailbccme = true;
-            this.emailtim = true;
-            this.defaultEmail = false;
-            this.timMessage = false;
-            this.createMessageOptions = {
-                messageChannel: false,
-                archive: false,
-                important: false,
-                isPrivate: false,
-                pageList: "",
-                confirm: false,
-                reply: true,
-                replyAll: false,
-                expires: undefined,
-                sender: Users.getCurrent().real_name,
-                senderEmail: Users.getCurrent().email,
-            };
+            this.resetForm();
         }
     }
 
@@ -236,5 +244,6 @@ export class TimMessageComponent {
             "&" +
             "bcc=" +
             bcc;
+        this.resetForm();
     }
 }
