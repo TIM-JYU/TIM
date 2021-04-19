@@ -120,7 +120,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timHelpParContent", HelpParContent);
     doDowngrade(dg, "timDurationPicker", DurationPickerComponent);
     doDowngrade(dg, "timRelevanceEdit", RelevanceEditComponent);
-    doDowngrade(dg, "timNewMessageList", MessageListAdminComponent);
+    doDowngrade(dg, "timMessageListAdmin", MessageListAdminComponent);
     doDowngrade(dg, "timMessage", TimMessageComponent);
     return dg;
 }
