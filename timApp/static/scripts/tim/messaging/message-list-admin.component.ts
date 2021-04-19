@@ -20,7 +20,7 @@ interface CreateListOptions {
 }
 
 @Component({
-    selector: "tim-new-message-list",
+    selector: "tim-message-list-admin",
     template: `
         <form name="list-options-form">
             <h1>Message list management</h1>
