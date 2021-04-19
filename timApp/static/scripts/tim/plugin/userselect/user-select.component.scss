@@ -1,0 +1,13 @@
+:host {
+  width: 100%;
+  display: block;
+}
+
+form.search {
+  display: flex;
+
+  input[type="text"] {
+    flex-grow: 1;
+    margin-right: 1em;
+  }
+}

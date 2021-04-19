@@ -13,7 +13,8 @@ class UserSelectInputModel:
 
 @dataclass
 class UserSelectMarkupModel(GenericMarkupModel):
-    pass
+    inputMinLength: int = 3
+    autoSearchDelay: float = 0.0
 
 
 @dataclass

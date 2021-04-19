@@ -1,13 +1,30 @@
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    NgModule,
+    ViewChild,
+} from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
 import {HttpClientModule} from "@angular/common/http";
+import {FormsModule, NgForm} from "@angular/forms";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
-import {GenericPluginMarkup, getTopLevelFields} from "../attributes";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    withDefault,
+} from "../attributes";
 
-const PluginMarkup = t.intersection([GenericPluginMarkup, t.type({})]);
+const PluginMarkup = t.intersection([
+    GenericPluginMarkup,
+    t.type({
+        inputMinLength: withDefault(t.number, 3),
+        autoSearchDelay: withDefault(t.number, 0),
+    }),
+]);
 
 const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkup),
@@ -17,14 +34,50 @@ const PluginFields = t.intersection([
 @Component({
     selector: "user-selector",
     template: `
-        <h1>Woo!</h1>
+        <h3>Search user</h3>
+        <form class="search" (ngSubmit)="doSearch()" #searchForm="ngForm">
+            <input name="search-string" type="text" [(ngModel)]="searchString" minlength="{{ inputMinLength }}" required
+                   (input)="startSearchTimer()">
+            <input class="timButton" type="submit" value="Search" [disabled]="!searchForm.form.valid">
+        </form>
     `,
+    styleUrls: ["user-select.component.scss"],
 })
 export class UserSelectComponent extends AngularPluginBase<
     t.TypeOf<typeof PluginMarkup>,
     t.TypeOf<typeof PluginFields>,
     typeof PluginFields
 > {
+    @ViewChild("searchForm") searchForm!: NgForm;
+
+    searchString: string = "";
+    inputMinLength: number = 3;
+    private currentTimeoutTimer = 0;
+
+    ngOnInit() {
+        super.ngOnInit();
+        this.inputMinLength = this.markup.inputMinLength;
+    }
+
+    startSearchTimer() {
+        if (this.markup.autoSearchDelay > 0) {
+            if (this.currentTimeoutTimer) {
+                window.clearTimeout(this.currentTimeoutTimer);
+                this.currentTimeoutTimer = 0;
+            }
+            this.currentTimeoutTimer = window.setTimeout(() => {
+                this.currentTimeoutTimer = 0;
+                if (this.searchForm.form.valid) {
+                    this.searchForm.ngSubmit.emit();
+                }
+            }, this.markup.autoSearchDelay * 1000);
+        }
+    }
+
+    doSearch() {
+        console.log("Search!");
+    }
+
     getAttributeType(): typeof PluginFields {
         return PluginFields;
     }
@@ -36,7 +89,7 @@ export class UserSelectComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [UserSelectComponent],
-    imports: [BrowserModule, HttpClientModule],
+    imports: [BrowserModule, HttpClientModule, FormsModule],
 })
 export class UserSelectModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
