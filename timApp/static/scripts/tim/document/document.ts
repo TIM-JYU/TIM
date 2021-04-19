@@ -111,6 +111,9 @@ export class Document {
                     addSection();
                     currentSection = [];
                 }
+                if (x.isSetting()) {
+                    continue;
+                }
                 currentSection.push(new ParContext(x, p));
                 prev = x.htmlElement;
             }
