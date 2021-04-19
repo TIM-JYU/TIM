@@ -20,7 +20,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
-from timApp.messaging.timMessage.internalmessage_models import InternalMessageConfirm
+from timApp.messaging.timMessage.internalmessage_models import InternalMessageReadReceipt
 from timApp.notification.notification import Notification
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin
@@ -203,8 +203,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         collection_class=attribute_mapped_collection('user_collection_key'),
     )
 
-    internalmessage_confirm: Optional[InternalMessageConfirm] = db.relationship('InternalMessageConfirm',
-                                                                                back_populates='user')
+    internalmessage_readreceipt: Optional[InternalMessageReadReceipt] = db.relationship('internalmessage_readreceipt',
+                                                                                        back_populates='user')
 
     @property
     def scim_display_name(self):

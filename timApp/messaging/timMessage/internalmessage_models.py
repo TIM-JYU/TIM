@@ -22,9 +22,8 @@ class InternalMessage(db.Model):
     par_id = db.Column(db.Text, nullable=False)
     """Paragraph identifier."""
 
-    can_confirm = db.Column(db.Boolean, nullable=False)
-    """Whether the message can be confirmed as read."""
-    # VIESTIM: confirm, receipt or acknowledge?
+    can_mark_as_read = db.Column(db.Boolean, nullable=False)
+    """Whether the recipient can mark the message as read."""
 
     reply = db.Column(db.Boolean, nullable=False)
     """Whether the message can be replied to."""
@@ -33,7 +32,7 @@ class InternalMessage(db.Model):
     """How the message is displayed."""
 
     displays = db.relationship('InternalMessageDisplay', back_populates='message')
-    confirmation = db.relationship('InternalMessageConfirm', uselist=False, back_populates='message')
+    readreceipt = db.relationship('InternalMessageReadReceipt', uselist=False, back_populates='message')
     block = db.relationship('Block', back_populates='internalmessage')
 
     # TODO: Expiration date and sender if necessary
@@ -44,7 +43,7 @@ class InternalMessage(db.Model):
 class InternalMessageDisplay(db.Model):
     """Where and for whom a TIM message is displayed."""
 
-    __tablename__ = 'internalmessagedisplay'
+    __tablename__ = 'internalmessage_display'
 
     message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), primary_key=True)
     """Message identifier."""
@@ -62,19 +61,19 @@ class InternalMessageDisplay(db.Model):
     display_block = db.relationship('Block', back_populates='internalmessage_display')
 
 
-class InternalMessageConfirm(db.Model):
-    """Metadata about message confirmations."""
+class InternalMessageReadReceipt(db.Model):
+    """Metadata about read receipts."""
 
-    __tablename__ = 'internalmessageconfirm'
+    __tablename__ = 'internalmessage_readreceipt'
 
     message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), primary_key=True)
     """Message identifier."""
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    """Identifier for the user who confirmed the message as read."""
+    """Identifier for the user who marked the message as read."""
 
-    confirmed_on = db.Column(db.DateTime)
-    """Timestamp for when the message was confirmed as read."""
+    marked_as_read_on = db.Column(db.DateTime)
+    """Timestamp for when the message was marked as read."""
 
-    message = db.relationship('InternalMessage', back_populates='confirmation')
-    user = db.relationship('useraccount', back_populates='internalmessage_confirm')
+    message = db.relationship('InternalMessage', back_populates='readreceipt')
+    user = db.relationship('useraccount', back_populates='internalmessage_readreceipt')
