@@ -23,7 +23,7 @@ from timApp.lecture.lectureusers import LectureUsers
 from timApp.notification.notification import Notification
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded
-from timApp.user.hakaorganization import HakaOrganization, get_home_organisation_id
+from timApp.user.hakaorganization import HakaOrganization, get_home_organization_id
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.preferences import Preferences
 from timApp.user.scimentity import SCIMEntity
@@ -403,7 +403,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             self.groups.append(ag)
 
     def get_home_org_student_id(self):
-        home_org_id = get_home_organisation_id()
+        home_org_id = get_home_organization_id()
         puc = self.uniquecodes.get((home_org_id, 'studentID'), None)
         return puc.code if puc is not None else None
 

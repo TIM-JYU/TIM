@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from timApp.timdb.sqa import db
 
 from flask import current_app
@@ -16,12 +18,9 @@ class HakaOrganization(db.Model):
             db.session.add(found)
         return found
 
-_home_organization_id = None
-def get_home_organisation_id():
-    global _home_organization_id
-    if _home_organization_id is None:
-        org = HakaOrganization.get_or_create(name=current_app.config['HOME_ORGANIZATION'])
-        if org.id is None:
-            db.session.flush()
-        _home_organization_id = org.id
-    return _home_organization_id
+@lru_cache
+def get_home_organization_id():
+    org = HakaOrganization.get_or_create(name=current_app.config['HOME_ORGANIZATION'])
+    if org.id is None:
+        db.session.flush()
+    return org.id
