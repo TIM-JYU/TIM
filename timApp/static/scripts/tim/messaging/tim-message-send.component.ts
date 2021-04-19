@@ -4,7 +4,6 @@ import {$http} from "../util/ngimport";
 import {to, to2} from "../util/utils";
 import {TaskId} from "../plugin/taskid";
 import {Users} from "../user/userService";
-import {DatetimePickerModule} from "../ui/datetime-picker/datetime-picker.component";
 
 interface CreateMessageOptions {
     // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py). BUT recipients, emailsubject and emailbody are added later at postTimMessage()
@@ -33,9 +32,9 @@ interface CreateMessageOptions {
             <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
             <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
-            <fieldset><p>Send (choose at least one of the three)</p><label *ngIf="!defaultEmail"><input type="checkbox" 
-                                      [(ngModel)]="createMessageOptions.messageChannel">to recipient's own message channels</label><br/>
-                
+            
+            <fieldset><p>Send (choose at least one of the two)</p><!--<label *ngIf="!defaultEmail"><input type="checkbox" 
+                                      [(ngModel)]="createMessageOptions.messageChannel">to recipient's own message channels</label><br/>-->
             <label><input type="checkbox" (change)="notDefault()"
                                       [(ngModel)]="emailtim">as email</label><br/>
                 <ul *ngIf="emailtim">
@@ -45,8 +44,7 @@ interface CreateMessageOptions {
                 </li><li>
                     <label><input type="radio"
                                       [(ngModel)]="defaultEmail" name="defaultEmail" [value]="true">use your default email client (recipients will see each others' addresses)</label>
-                </li></ul>
-                
+                </li></ul>                
             <label *ngIf="!defaultEmail"><input type="checkbox"
                                       [(ngModel)]="timMessage">as TIM message</label></fieldset><br/>
             
@@ -160,6 +158,27 @@ export class TimMessageComponent {
         } else {
             // If emailMsg != "", text "Sent!" appears next to Send button.
             this.emailMsg = "sent";
+            // reset form
+            this.emailsubject = "";
+            this.emailbody = "";
+            this.emailbcc = false;
+            this.emailbccme = true;
+            this.emailtim = true;
+            this.defaultEmail = false;
+            this.timMessage = false;
+            this.createMessageOptions = {
+                messageChannel: false,
+                archive: false,
+                important: false,
+                isPrivate: false,
+                pageList: "",
+                confirm: false,
+                reply: true,
+                replyAll: false,
+                expires: undefined,
+                sender: Users.getCurrent().real_name,
+                senderEmail: Users.getCurrent().email,
+            };
         }
     }
 
