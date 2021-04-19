@@ -13,13 +13,20 @@ import {JsonValue} from "tim/util/jsonvalue";
 import {saveCurrentScreenPar} from "../document/parhelpers";
 import {genericglobals} from "../util/globals";
 import {$http} from "../util/ngimport";
-import {capitalizeFirstLetter, IOkResponse, to, ToReturn} from "../util/utils";
+import {
+    capitalizeFirstLetter,
+    IOkResponse,
+    mapSuccess,
+    Result,
+    to,
+    ToReturn,
+} from "../util/utils";
 import {
     HakaLoginComponent,
     IDiscoveryFeedEntry,
     loadIdPs,
 } from "./haka-login.component";
-import {Users} from "./userService";
+import {ILoginResponse, Users} from "./userService";
 
 interface INameResponse {
     status: "name";
@@ -40,6 +47,16 @@ const orgNames: Record<string, string | undefined> = {
 
 function getHomeOrgDisplay(s: string): string {
     return orgNames[s] ?? s;
+}
+
+export interface ISimpleLoginResponse {
+    type: "login";
+    data: ILoginResponse;
+}
+
+interface ISimpleRegistrationResponse {
+    type: "registration";
+    data: {can_change_name: boolean; name: string | null};
 }
 
 @Component({
@@ -71,25 +88,39 @@ function getHomeOrgDisplay(s: string): string {
             <label for="email" class="control-label" i18n>Email or username</label>
             <input class="form-control"
                    id="email"
+                   [disabled]="simpleLoginEmailGiven"
                    #loginEmail
                    [(ngModel)]="loginForm.email"
-                   (keydown.enter)="pw.focus()"
+                   (keydown.enter)="handleEmailEnterKeyDown()"
                    type="text">
         </div>
 
-        <div class="form-group">
+            <ng-container *ngIf="simpleLoginEmailGiven">
+                <p i18n>If you have not logged in to TIM before, TIM sent a password to your email now.</p>
+                <p i18n>If you have logged in before, use your current password.</p>
+            </ng-container>
+
+        <div class="form-group" [hidden]="simpleEmailLogin && !simpleLoginEmailGiven">
             <label for="password" class="control-label" i18n>Password</label>
             <input class="form-control"
                    id="password"
                    #pw
                    [(ngModel)]="loginForm.password"
                    (keydown.enter)="loginWithEmail()"
+                   focusMe
+                   [enable]="focusPassword"
                    type="password">
             <p *ngIf="!hideVars.passwordRecovery" class="text-smaller"><a href="#" (click)="forgotPassword()" i18n>I forgot my password</a></p>
         </div>
 
+            <div class="flex cl align-center" *ngIf="simpleEmailLogin && !simpleLoginEmailGiven">
+                <button [disabled]="!loginForm.email || signUpRequestInProgress"
+                        class="timButton"
+                        (click)="continueSimpleLogin()" i18n>Continue</button>
+                <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
+            </div>
 
-        <div class="flex cl align-center">
+        <div class="flex cl align-center" *ngIf="simpleLoginEmailGiven || !simpleEmailLogin">
             <button [disabled]="loggingIn" class="timButton" (click)="loginWithEmail()" i18n>Log in</button>
             <tim-loading *ngIf="loggingIn"></tim-loading>
         </div>
@@ -261,7 +292,6 @@ export class LoginDialogComponent extends AngularDialogComponent<
 > {
     hideVars: IVisibilityVars = getVisibilityVars();
     showSignup?: boolean; // Show sign up form instead of log in.
-    private loggingout = false;
     loginForm = {email: "", password: ""};
     addingToSession = false;
 
@@ -283,14 +313,21 @@ export class LoginDialogComponent extends AngularDialogComponent<
     url: string | undefined;
     urlStyle = {position: "absolute", top: "-10em", width: "50%"}; // hide the fake URL field
     homeOrg = genericglobals().homeOrganization;
+    config = genericglobals().config;
     idps: IDiscoveryFeedEntry[] = [];
     protected dialogName = "login";
 
     // Reserve space for possible login error so that it will be directly visible and not behind a scrollbar.
-    protected extraVerticalSize = 75;
+    // TODO: This is probably no longer needed because the login dialog will resize itself whenever the dialog DOM
+    //  is changed. That's why this is set to 0 now.
+    protected extraVerticalSize = 0;
     loggingIn = false;
 
     @ViewChild("loginEmail") private loginField!: ElementRef<HTMLInputElement>;
+    @ViewChild("pw") private passwordField!: ElementRef<HTMLInputElement>;
+    simpleEmailLogin = this.config.simpleEmailLogin;
+    simpleLoginEmailGiven = false;
+    focusPassword = false;
 
     ngOnInit() {
         const params = this.data;
@@ -338,20 +375,54 @@ export class LoginDialogComponent extends AngularDialogComponent<
         }
         this.loginError = undefined;
         this.loggingIn = true;
-        const result = await Users.loginWithEmail(
-            this.loginForm.email,
-            this.loginForm.password,
-            this.addingToSession
-        );
+        let result: Result<
+            ISimpleLoginResponse | ISimpleRegistrationResponse,
+            {data: {error: string}}
+        >;
+        if (this.simpleEmailLogin) {
+            result = mapSuccess(
+                await this.sendRequest<
+                    ISimpleLoginResponse | ISimpleRegistrationResponse
+                >("/simpleLogin/password", {
+                    email: this.loginForm.email,
+                    password: this.loginForm.password,
+                }),
+                (r) =>
+                    r.data.type === "login"
+                        ? {type: r.data.type, data: r.data.data}
+                        : {type: r.data.type, data: r.data.data}
+            );
+        } else {
+            result = mapSuccess(
+                await Users.loginWithEmail(
+                    this.loginForm.email,
+                    this.loginForm.password,
+                    this.addingToSession
+                ),
+                (r) => ({type: "login", data: r.data})
+            );
+        }
+
         this.loggingIn = false;
         if (!result.ok) {
             this.loginError = result.result.data.error;
         } else {
-            if (!this.addingToSession) {
-                saveCurrentScreenPar();
-                window.location.reload();
+            if (result.result.type === "login") {
+                if (!this.addingToSession) {
+                    saveCurrentScreenPar();
+                    window.location.reload();
+                }
+                this.close();
+            } else {
+                this.tempPasswordProvided = true;
+                this.tempPassword = this.loginForm.password;
+                this.email = this.loginForm.email;
+                this.canChangeName = result.result.data.can_change_name;
+                this.name = result.result.data.name ?? "";
+                this.showSignup = true;
+                this.emailSent = true;
+                this.resetPassword = true;
             }
-            this.close();
         }
     }
 
@@ -359,9 +430,10 @@ export class LoginDialogComponent extends AngularDialogComponent<
         if (!this.email || this.signUpRequestInProgress) {
             return;
         }
-        const r = await this.sendRequest("/altsignup", {
+        const r = await this.sendRequest("/emailSignup", {
             email: this.email,
             url: this.url,
+            reset_password: this.resetPassword,
         });
         if (!r.ok) {
             this.signUpError = r.result.data.error;
@@ -417,7 +489,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
             return;
         }
         const r = await this.sendRequest<{status: "registered" | "updated"}>(
-            "/altsignup2",
+            "/emailSignupFinish",
             {
                 email: this.email,
                 passconfirm: this.rePassword,
@@ -464,6 +536,25 @@ export class LoginDialogComponent extends AngularDialogComponent<
         const r = await to($http.post<T>(url, data));
         this.signUpRequestInProgress = false;
         return r;
+    }
+
+    async continueSimpleLogin() {
+        this.loginError = undefined;
+        const r = await this.sendRequest(`/simpleLogin/email`, {
+            email: this.loginForm.email,
+        });
+        if (!r.ok) {
+            this.loginError = r.result.data.error;
+            return;
+        }
+        this.simpleLoginEmailGiven = true;
+    }
+
+    async handleEmailEnterKeyDown() {
+        if (this.simpleEmailLogin) {
+            await this.continueSimpleLogin();
+        }
+        this.focusPassword = true;
     }
 }
 

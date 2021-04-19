@@ -84,13 +84,6 @@ def get_option(req: Union[Request, ViewContext], name: str, default: Any, cast: 
     return result
 
 
-def is_xhr(req: BaseRequest) -> bool:
-    """Same as req.is_xhr but without the deprecation warning."""
-    return req.environ.get(
-        'HTTP_X_REQUESTED_WITH', ''
-    ).lower() == 'xmlhttprequest'
-
-
 def is_testing() -> bool:
     return current_app.config['TESTING']
 

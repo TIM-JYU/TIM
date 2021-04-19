@@ -53,6 +53,7 @@ interface IConfig {
     gitBranch: string;
     hakaEnabled: boolean;
     emailRegistrationEnabled: boolean;
+    simpleEmailLogin: boolean;
     hosts?: IHostConfig;
 }
 

@@ -1,6 +1,6 @@
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {genericglobals, Locale} from "../util/globals";
-import {$http, $httpParamSerializer} from "../util/ngimport";
+import {$http} from "../util/ngimport";
 import {to, ToReturn} from "../util/utils";
 import {ADMIN_GROUPNAME, IFullUser, IUser, TEACHERS_GROUPNAME} from "./IUser";
 
@@ -92,18 +92,10 @@ export class UserService {
         addUser: boolean
     ): ToReturn<ILoginResponse> {
         const r = await to(
-            $http<ILoginResponse>({
-                method: "POST",
-                url: "/altlogin",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "X-Requested-With": "XMLHttpRequest",
-                },
-                data: $httpParamSerializer({
-                    email,
-                    password,
-                    add_user: addUser,
-                }),
+            $http.post<ILoginResponse>("/emailLogin", {
+                email,
+                password,
+                add_user: addUser,
             })
         );
         if (r.ok) {

@@ -129,6 +129,12 @@ ALLOW_CREATE_DOCUMENTS = True
 EMAIL_REGISTRATION_ENABLED = True
 HAKA_ENABLED = True
 
+# When enabled, the email login and signup processes are unified so that:
+#
+# * only email is asked first
+# * then the password is requested and TIM asks to check email if the user has not logged in before.
+SIMPLE_EMAIL_LOGIN = False
+
 LOG_HOST = False
 
 MAX_ANSWER_CONTENT_SIZE = 200 * 1024  # bytes

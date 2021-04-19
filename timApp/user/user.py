@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from typing import Optional, Union, Set
 
 from sqlalchemy import func
@@ -694,7 +694,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 'email': f'user{self.id}@example.com',
             }
 
-    def to_json(self, full=False):
+    def to_json(self, full: bool=False) -> Dict:
         return {**self.basic_info_dict,
                 'group': self.get_personal_group(),
                 'groups': self.groups,

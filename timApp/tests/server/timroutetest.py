@@ -642,7 +642,7 @@ class TimRouteTest(TimDbTest):
             with self.client.session_transaction() as s:
                 s.pop('last_doc', None)
                 s.pop('came_from', None)
-        return self.post('/altlogin',
+        return self.post('/emailLogin',
                          data={'email': email, 'password': passw, 'add_user': add},
                          follow_redirects=True, **kwargs)
 

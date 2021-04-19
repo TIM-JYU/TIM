@@ -6,7 +6,7 @@ from flask import session
 
 from timApp.auth.login import test_pws, create_or_update_user, set_single_user_to_session
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.tim_app import get_home_organization_group
+from timApp.tim_app import get_home_organization_group, app
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
@@ -153,7 +153,7 @@ class TestSignUp(TimRouteTest):
     def test_block_bot_signup(self):
         bot_email = 'bot@example.com'
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {
                 'email': bot_email,
                 'url': 'http://www.example.com',
@@ -163,7 +163,7 @@ class TestSignUp(TimRouteTest):
 
         for allowed_email in ('test@jyu.fi', 'test@gmail.com'):
             self.json_post(
-                '/altsignup',
+                '/emailSignup',
                 {
                     'email': allowed_email,
                     'url': 'http://www.example.com',
@@ -176,7 +176,7 @@ class TestSignUp(TimRouteTest):
     def test_signup_case_insensitive(self):
         email = 'SomeOneCase@example.com'
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {'email': email})
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('someonecase@example.com',)])
         self.json_post(
@@ -185,7 +185,7 @@ class TestSignUp(TimRouteTest):
             expect_content={'status': 'ok'},
         )
         self.json_post(
-            '/altsignup2',
+            '/emailSignupFinish',
             {'realname': 'Testing Signup',
              'email': email,
              'token': test_pws[-1],
@@ -198,7 +198,7 @@ class TestSignUp(TimRouteTest):
     def test_signup_whitespace(self):
         email = 'whitespace@example.com '
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {'email': email})
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('whitespace@example.com',)])
         self.json_post(
@@ -207,7 +207,7 @@ class TestSignUp(TimRouteTest):
             expect_content={'status': 'ok'},
         )
         self.json_post(
-            '/altsignup2',
+            '/emailSignupFinish',
             {'realname': 'Testing Signup',
              'email': email,
              'token': test_pws[-1],
@@ -247,15 +247,15 @@ class TestSignUp(TimRouteTest):
     def test_signup(self):
         email = 'testingsignup@example.com'
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {'email': email})
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [(email,)])
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {'email': email})
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [(email,)])
         self.json_post(
-            '/altsignup2',
+            '/emailSignupFinish',
             {'realname': 'Testing Signup',
              'email': email,
              'token': test_pws[-1],
@@ -269,7 +269,7 @@ class TestSignUp(TimRouteTest):
 
         # TODO needs a better error message
         self.json_post(
-            '/altsignup2',
+            '/emailSignupFinish',
             {'realname': 'Testing Signup',
              'token': test_pws[-1],
              'email': email,
@@ -279,27 +279,30 @@ class TestSignUp(TimRouteTest):
             expect_status=400,
         )
 
+        old_pw_hash = self.current_user.pass_
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {'email': email})
         self.json_post(
-            '/altsignup2',
+            '/emailSignupFinish',
             {'realname': 'Testing Signup2',
              'email': email,
              'token': test_pws[-1],
-             'password': test_pw,
-             'passconfirm': test_pw},
+             'password': 'changedpass',
+             'passconfirm': 'changedpass'},
             expect_contains='updated',
             json_key='status')
-        self.assertEqual('Testing Signup2', self.current_user.real_name)
+        # Name change not allowed.
+        self.assertEqual('Testing Signup', self.current_user.real_name)
+        self.assertNotEqual(old_pw_hash, self.current_user.pass_)
 
     def test_password_mismatch(self):
         email = 'testingsignup@example.com'
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {'email': email})
         self.json_post(
-            '/altsignup2',
+            '/emailSignupFinish',
             {'realname': 'Testing Signup',
              'email': email,
              'token': test_pws[-1],
@@ -312,10 +315,10 @@ class TestSignUp(TimRouteTest):
     def test_too_short_password(self):
         email = 'testingsignup@example.com'
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {'email': email})
         self.json_post(
-            '/altsignup2',
+            '/emailSignupFinish',
             {'realname': 'Testing Signup',
              'email': email,
              'token': test_pws[-1],
@@ -329,10 +332,10 @@ class TestSignUp(TimRouteTest):
     def test_temp_password_wrong(self):
         email = 'testingsignup@example.com'
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {'email': email})
         self.json_post(
-            '/altsignup2',
+            '/emailSignupFinish',
             {'realname': 'Testing Signup',
              'email': email,
              'token': 'asdasd',
@@ -346,7 +349,7 @@ class TestSignUp(TimRouteTest):
     def test_invalid_email(self):
         old_len = len(test_pws)
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {'email': 'invalid'})
         self.assertFalse(self.is_logged_in)
         self.assertEqual(old_len, len(test_pws))
@@ -440,11 +443,11 @@ class TestSignUp(TimRouteTest):
         curr_real_name = self.current_user.real_name
         curr_email = self.current_user.email
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {'email': curr_email})
         pw = test_pw
         self.json_post(
-            '/altsignup2',
+            '/emailSignupFinish',
             {'realname': 'Johnny John',
              'email': curr_email,
              'token': test_pws[-1],
@@ -503,11 +506,11 @@ class TestSignUp(TimRouteTest):
         self.create_or_update_test_user()
         curr_name = self.current_user.name
         self.json_post(
-            '/altsignup',
+            '/emailSignup',
             {'email': curr_name})
         pw = test_pw
         self.json_post(
-            '/altsignup2',
+            '/emailSignupFinish',
             {'realname': 'Johnny John',
              'email': curr_name,
              'token': test_pws[-1],
@@ -652,3 +655,71 @@ class TestSignUp(TimRouteTest):
                 data={},
                 expect_status=302,
             )
+
+    def test_simple_login(self):
+        simple_email = 'simple@example.com'
+        self.json_post(
+            '/simpleLogin/email', {
+                'email': simple_email
+            }, expect_content='Simple email login is not enabled.',
+            expect_status=400,
+        )
+        app.config['SIMPLE_EMAIL_LOGIN'] = True
+        self.json_post(
+            '/simpleLogin/email', {
+                'email': simple_email
+            }, expect_content={'status': 'ok'}
+        )
+        self.json_post(
+            '/simpleLogin/password', {
+                'email': simple_email,
+                'password': test_pws[-1],
+            }, expect_content={'data': {'can_change_name': True, 'name': None}, 'type': 'registration'}
+        )
+        self.json_post(
+            '/emailSignupFinish', {
+                'email': simple_email,
+                'password': test_pw,
+                'passconfirm': test_pw,
+                'token': test_pws[-1],
+                'realname': None,
+            }, expect_content={'status': 'registered'}
+        )
+
+        app.config['EMAIL_REGISTRATION_ENABLED'] = False
+        pwcount = len(test_pws)
+        self.json_post(
+            '/simpleLogin/email', {
+                'email': simple_email
+            }, expect_content={'status': 'ok'}
+        )
+        self.assertEqual(pwcount, len(test_pws))
+        self.json_post(
+            '/emailSignup', {
+                'email': simple_email
+            }, expect_content='Email registration is disabled.', expect_status=403,
+        )
+        self.json_post(
+            '/emailSignup', {
+                'email': simple_email,
+                'reset_password': True,
+            }, expect_content={'status': 'ok'},
+        )
+        self.assertEqual(pwcount + 1, len(test_pws))
+        s_e = User.get_by_email(simple_email)
+        s_e.pass_ = None
+        db.session.commit()
+        self.json_post(
+            '/simpleLogin/email', {
+                'email': simple_email
+            }, expect_content={'status': 'ok'}
+        )
+        self.assertEqual(pwcount + 2, len(test_pws))
+        self.json_post(
+            '/simpleLogin/email', {
+                'email': 'simple2@example.com'
+            }, expect_content={'status': 'ok'}
+        )
+        # No new mails because registration disabled.
+        self.assertEqual(pwcount + 2, len(test_pws))
+        app.config['EMAIL_REGISTRATION_ENABLED'] = True

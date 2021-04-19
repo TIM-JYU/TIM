@@ -323,6 +323,16 @@ interface Failure<T> {
 
 export type Result<T, U> = Success<T> | Failure<U>;
 
+export function mapSuccess<T, U, M>(
+    r: Result<T, U>,
+    f: (p: T) => M
+): Result<M, U> {
+    if (!r.ok) {
+        return r;
+    }
+    return {ok: true, result: f(r.result)};
+}
+
 /**
  * Wraps the given promise so that it always gets fulfilled.
  * Additionally, calls $rootScope.$applyAsync() to force AngularJS update. We can't override global Promise object
