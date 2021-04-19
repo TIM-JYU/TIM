@@ -38,7 +38,7 @@ const PluginFields = t.intersection([
         <form class="search" (ngSubmit)="doSearch()" #searchForm="ngForm">
             <input name="search-string" type="text" [(ngModel)]="searchString" minlength="{{ inputMinLength }}" required
                    (input)="startSearchTimer()">
-            <input class="timButton" type="submit" value="Search" [disabled]="!searchForm.form.valid">
+            <input class="timButton" type="submit" value="Search" [disabled]="!searchForm.form.valid || search">
         </form>
     `,
     styleUrls: ["user-select.component.scss"],
@@ -52,6 +52,7 @@ export class UserSelectComponent extends AngularPluginBase<
 
     searchString: string = "";
     inputMinLength: number = 3;
+    search: boolean = false;
     private currentTimeoutTimer = 0;
 
     ngOnInit() {
@@ -75,7 +76,13 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     doSearch() {
+        if (this.currentTimeoutTimer) {
+            window.clearTimeout(this.currentTimeoutTimer);
+            this.currentTimeoutTimer = 0;
+        }
+        this.search = true;
         console.log("Search!");
+        setTimeout(() => (this.search = false), 1000);
     }
 
     getAttributeType(): typeof PluginFields {
