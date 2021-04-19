@@ -33,7 +33,7 @@ class InternalMessage(db.Model):
     """How the message is displayed."""
 
     displays = db.relationship('InternalMessageDisplay', back_populates='message')
-    confirmation = db.relationship('InternalMessageConfirm', back_populates='message')
+    confirmation = db.relationship('InternalMessageConfirm', uselist=False, back_populates='message')
     block = db.relationship('Block', back_populates='internalmessage')
 
     # TODO: Expiration date and sender if necessary
@@ -77,4 +77,4 @@ class InternalMessageConfirm(db.Model):
     """Timestamp for when the message was confirmed as read."""
 
     message = db.relationship('InternalMessage', back_populates='confirmation')
-    user = db.relationship('User', back_populates='internalmessage_confirm')
+    user = db.relationship('useraccount', back_populates='internalmessage_confirm')
