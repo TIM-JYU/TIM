@@ -32,8 +32,8 @@ class InternalMessage(db.Model):
     display_type = db.Column(db.Enum(DisplayType), nullable=False)
     """How the message is displayed."""
 
-    displays = db.relationship('InternalMessageDisplay', back_populates='message', nullable=False)
-    confirmation = db.relationship('InternalMessageConfirm', back_populates='message', nullable=False)
+    displays = db.relationship('InternalMessageDisplay', back_populates='message')
+    confirmation = db.relationship('InternalMessageConfirm', back_populates='message')
     block = db.relationship('Block', back_populates='internalmessage')
 
     # TODO: Expiration date and sender if necessary
