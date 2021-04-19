@@ -684,23 +684,25 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def basic_info_dict(self):
-        code_dict = {'student_id': self.get_home_org_student_id()} if is_attribute_loaded("uniquecodes", self) else {}
         if not self.is_name_hidden:
-            return {
+            info_dict = {
                 'id': self.id,
                 'name': self.name,
                 'real_name': self.real_name,
                 'email': self.email,
-                **code_dict,
             }
         else:
-            return {
+            info_dict = {
                 'id': self.id,
                 'name': f'user{self.id}',
                 'real_name': f'User {self.id}',
                 'email': f'user{self.id}@example.com',
-                **code_dict,
             }
+
+        if is_attribute_loaded("uniquecodes", self):
+            info_dict['student_id'] = self.get_home_org_student_id()
+
+        return info_dict
 
     def to_json(self, full: bool=False) -> Dict:
         return {**self.basic_info_dict,
