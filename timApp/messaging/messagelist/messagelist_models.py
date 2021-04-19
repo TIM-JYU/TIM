@@ -56,7 +56,7 @@ class MessageListModel(db.Model):
         pass
 
     @staticmethod
-    def get_list_by_manage_doc_id(doc_id) -> 'MessageListModel':
+    def get_list_by_manage_doc_id(doc_id: int) -> 'MessageListModel':
         m = MessageListModel.query.filter_by(manage_doc_id=doc_id).one()
         return m
 
