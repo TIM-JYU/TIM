@@ -64,6 +64,8 @@ export function staticDynamicImport(s: string) {
             return import("tim/lecture/lecture-menu.component");
         case "lectureInfo":
             return import("tim/lecture/lecture-info.component");
+        case "userSelect":
+            return import("tim/plugin/userselect/user-select.component");
     }
     throw Error(`Module was not statically known: ${s}`);
 }

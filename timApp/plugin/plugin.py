@@ -94,6 +94,7 @@ NEVERLAZY_PLUGINS = {
     'cbfield',
     'rbfield',
     'dropdown',
+    'userSelect',
 }
 
 
@@ -102,6 +103,7 @@ NO_ANSWERBROWSER_PLUGINS = {
     'jsrunner',
     'tableForm',
     'importData',
+    'userSelect',
 }
 
 ALLOW_STYLES_PLUGINS = {
