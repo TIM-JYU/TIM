@@ -67,8 +67,8 @@ export class UserListController implements IController {
         let anyAnnotations = false;
         let smallFieldWidth = 59;
         // check if server gave student ids for users
-        const includeStudentId = this.viewctrl.users.some((a) =>
-            a.user.hasOwnProperty("student_id")
+        const includeStudentId = this.viewctrl.users.some(
+            (a) => a.user.student_id !== undefined
         );
 
         function nameCompare(a: IUserListEntry, b: IUserListEntry) {
