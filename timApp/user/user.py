@@ -203,7 +203,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         collection_class=attribute_mapped_collection('user_collection_key'),
     )
 
-    internalmessage_readreceipt: Optional[InternalMessageReadReceipt] = db.relationship('internalmessage_readreceipt',
+    internalmessage_readreceipt: Optional[InternalMessageReadReceipt] = db.relationship('InternalMessageReadReceipt',
                                                                                         back_populates='user')
 
     @property
