@@ -12,13 +12,14 @@ from jinja2.sandbox import SandboxedEnvironment
 from marshmallow import missing, ValidationError
 
 from timApp.answer.answer import Answer
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import ViewContext
+from timApp.document.viewcontext import ViewContext, ViewRoute
 from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
@@ -28,6 +29,7 @@ from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
+from timApp.util.flask.requesthelper import view_ctx_with_urlmacros, NotExist
 from timApp.util.rndutils import myhash
 from timApp.util.utils import try_load_json, get_current_time, Range
 from tim_common.markupmodels import PointsRule, KnownMarkupFields
@@ -715,6 +717,25 @@ def find_plugin_from_document(d: Document, task_id: TaskId, u: UserContext, view
     if used_hint:
         err_msg += ' (potentially because of wrong block id hint)'
     raise TaskNotFoundException(err_msg)
+
+
+def find_plugin_by_task_id(task_id: str, user: Optional[User] = None)\
+        -> Tuple[Plugin, DocInfo, Optional[User], ViewContext]:
+    user = get_current_user_object() if not user else user
+    tid = TaskId.parse(task_id, require_doc_id=True, allow_block_hint=False)
+    # Use directly to prevent circular dependency
+    doc = DocEntry.find_by_id(tid.doc_id)
+    if not doc:
+        raise NotExist('Document not found')
+    doc.document.insert_preamble_pars()
+    view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
+    try:
+        return find_plugin_from_document(doc.document, tid, UserContext.from_one_user(user), view_ctx),\
+               doc,\
+               user,\
+               view_ctx
+    except TaskNotFoundException:
+        raise NotExist(f'Plugin not found: {tid}')
 
 
 class InlinePlugin(Plugin):

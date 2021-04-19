@@ -17,6 +17,7 @@ import {
     getTopLevelFields,
     withDefault,
 } from "../attributes";
+import {to2} from "../../util/utils";
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
@@ -75,14 +76,26 @@ export class UserSelectComponent extends AngularPluginBase<
         }
     }
 
-    doSearch() {
+    async doSearch() {
         if (this.currentTimeoutTimer) {
             window.clearTimeout(this.currentTimeoutTimer);
             this.currentTimeoutTimer = 0;
         }
         this.search = true;
-        console.log("Search!");
-        setTimeout(() => (this.search = false), 1000);
+
+        const result = await to2(
+            this.http
+                .get("/userSelect/search", {
+                    params: {
+                        task_id: this.getTaskId()?.docTask().toString() ?? "",
+                        search_string: this.searchString,
+                    },
+                })
+                .toPromise()
+        );
+
+        console.log(result);
+        this.search = false;
     }
 
     getAttributeType(): typeof PluginFields {

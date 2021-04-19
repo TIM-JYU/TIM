@@ -1,8 +1,14 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List, Optional
 
-from flask import render_template_string
+from flask import render_template_string, Response
 
+from timApp.plugin.plugin import find_plugin_by_task_id
+from timApp.util.flask.requesthelper import use_model
+from timApp.util.flask.responsehelper import ok_response
+from timApp.util.get_fields import get_fields_and_users, RequestedGroups
 from tim_common.markupmodels import GenericMarkupModel
+from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import GenericHtmlModel, create_nontask_blueprint, PluginReqs
 
 
@@ -15,6 +21,11 @@ class UserSelectInputModel:
 class UserSelectMarkupModel(GenericMarkupModel):
     inputMinLength: int = 3
     autoSearchDelay: float = 0.0
+    groups: List[str] = field(default_factory=list)
+    fields: List[str] = field(default_factory=list)
+
+
+UserSelectMarkupModelSchema = class_schema(UserSelectMarkupModel)
 
 
 @dataclass
@@ -48,3 +59,39 @@ user_select_plugin = create_nontask_blueprint(
     UserSelectHtmlModel,
     reqs_handler,
 )
+
+
+@dataclass
+class SearchUsersOptions:
+    task_id: str
+    search_string: str
+
+
+@user_select_plugin.route('/search')
+@use_model(SearchUsersOptions)
+def search_users(opts: SearchUsersOptions) -> Response:
+    plug, doc, user, view_ctx = find_plugin_by_task_id(opts.task_id)
+    model: UserSelectMarkupModel = UserSelectMarkupModelSchema().load(plug.values)
+    field_data, _, _, _ = get_fields_and_users(
+        model.fields,
+        RequestedGroups.from_name_list(model.groups),
+        doc,
+        user,
+        view_ctx
+    )
+
+    matched_field_data = []
+
+    for field_obj in field_data:
+        fields = field_obj["fields"]
+        usr = field_obj["user"]
+        values_to_check: List[Optional[str, float, None]] = [usr.name, usr.real_name, usr.email, *fields.values()]
+        for field_val in values_to_check:
+            if not field_val:
+                continue
+            val = field_val if isinstance(field_val, str) else str(field_val)
+            if opts.search_string in val:
+                matched_field_data.append(field_obj)
+                break
+
+    return ok_response()
