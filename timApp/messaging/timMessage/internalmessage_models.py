@@ -8,7 +8,7 @@ class DisplayType(Enum):
     STICKY = 1
 
 
-class InternalMessageModel(db.Model):
+class InternalMessage(db.Model):
     """A TIM message."""
 
     __tablename__ = 'internalmessage'
@@ -22,7 +22,7 @@ class InternalMessageModel(db.Model):
     par_id = db.Column(db.Text, nullable=False)
     """Paragraph identifier."""
 
-    confirm = db.Column(db.Boolean, nullable=False)
+    can_confirm = db.Column(db.Boolean, nullable=False)
     """Whether the message can be confirmed as read."""
     # VIESTIM: confirm, receipt or acknowledge?
 
@@ -32,12 +32,16 @@ class InternalMessageModel(db.Model):
     display_type = db.Column(db.Enum(DisplayType), nullable=False)
     """How the message is displayed."""
 
+    displays = db.relationship('InternalMessageDisplay', back_populates='message', nullable=False)
+    confirmation = db.relationship('InternalMessageConfirm', back_populates='message', nullable=False)
+    block = db.relationship('Block', back_populates='internalmessage')
+
     # TODO: Expiration date and sender if necessary
     #  Expiration date: use Block's BlockAccess: accessible_from and accessible_to?
     #  Sender: use Block's BlockAccess: usergroup_id (owner?)
 
 
-class InternalMessageDisplayModel(db.Model):
+class InternalMessageDisplay(db.Model):
     """Where and for whom a TIM message is displayed."""
 
     __tablename__ = 'internalmessagedisplay'
@@ -48,13 +52,17 @@ class InternalMessageDisplayModel(db.Model):
     usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
     """Who sees the message; if null, displayed for everyone."""
 
-    display_doc_id = db.Columm(db.Integer, db.ForeignKey('block.id'), nullable=False)
+    display_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
     """Identifier for the document or the folder where the message is displayed."""
     # VIESTIM: If null, displayed globally on TIM? We're not doing message approval through admin though.
     #  Currently not nullable.
 
+    message = db.relationship('InternalMessage', back_populates='displays')
+    usergroup = db.relationship('UserGroup', back_populates='internalmessage_display')
+    display_block = db.relationship('Block', back_populates='internalmessage_display')
 
-class InternalMessageConfirmModel(db.Model):
+
+class InternalMessageConfirm(db.Model):
     """Metadata about message confirmations."""
 
     __tablename__ = 'internalmessageconfirm'
@@ -67,3 +75,6 @@ class InternalMessageConfirmModel(db.Model):
 
     confirmed_on = db.Column(db.DateTime)
     """Timestamp for when the message was confirmed as read."""
+
+    message = db.relationship('InternalMessage', back_populates='confirmation')
+    user = db.relationship('User', back_populates='internalmessage_confirm')

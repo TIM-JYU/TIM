@@ -42,8 +42,8 @@ from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, MessageListMember, \
     MessageListExternalMember, MessageListTimMember, MessageListDistribution
-from timApp.messaging.timMessage.internalmessage_models import InternalMessageModel, InternalMessageDisplayModel, \
-    InternalMessageConfirmModel
+from timApp.messaging.timMessage.internalmessage_models import InternalMessage, InternalMessageDisplay, \
+    InternalMessageConfirm
 from timApp.note.usernote import UserNote
 from timApp.notification.notification import Notification
 from timApp.notification.pending_notification import PendingNotification, DocumentNotification, CommentNotification
@@ -92,9 +92,9 @@ all_models = (
     DocumentNotification,
     Folder,
     HakaOrganization,
-    InternalMessageModel,
-    InternalMessageConfirmModel,
-    InternalMessageDisplayModel,
+    InternalMessage,
+    InternalMessageConfirm,
+    InternalMessageDisplay,
     LabelInVelp,
     Lecture,
     LectureAnswer,
