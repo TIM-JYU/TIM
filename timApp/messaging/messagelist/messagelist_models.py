@@ -55,6 +55,11 @@ class MessageListModel(db.Model):
         """Owners of a message list. Owners are infered from the management doc's owners."""
         pass
 
+    @staticmethod
+    def get_list_by_manage_doc_id(doc_id: int) -> 'MessageListModel':
+        m = MessageListModel.query.filter_by(manage_doc_id=doc_id).one()
+        return m
+
 
 class MessageListMember(db.Model):
     """Database model for members of a message list."""

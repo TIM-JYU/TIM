@@ -54,7 +54,7 @@ import {
     `,
 })
 export class MessageListComponent extends AngularDialogComponent<
-    string,
+    unknown,
     unknown
 > {
     protected dialogName = "MessageList";
@@ -74,8 +74,8 @@ export class MessageListComponent extends AngularDialogComponent<
     ownerEmail: string = "totalund@student.jyu.fi";
     notifyOwnerOnListChange: boolean = true;
 
-    listDescription: string = "Listan lyhyt kuvaus.";
-    listInfo: string = "Listan pitkä kuvaus.";
+    listDescription: string = "";
+    listInfo: string = "";
 
     emails?: string; // voiko poistaa??
 

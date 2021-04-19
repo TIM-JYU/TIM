@@ -10,7 +10,7 @@ from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
 from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.timdb.sqa import db
-from timApp.util.flask.responsehelper import ok_response, json_response
+from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
 
@@ -147,11 +147,40 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
 
     doc = create_document(path_to_doc, list_options.listname)
 
-    # VIESTIM: Placeholder text for a new document.
-    test_text = f"""Welcome to a new message list, {creator.name}"""
-    doc.document.add_text(test_text)
+    # VIESTIM: We add the admin component to the document. This might have to be changed if the component is turned
+    #  into a plugin.
+
+    admin_component = """#- {allowangular="true"}
+<tim-message-list-admin></tim-message-list-admin>
+    """
+    doc.document.add_text(admin_component)
 
     # Set the management doc for the message list.
     msg_list_model.manage_doc_id = doc.id
 
     return doc
+
+
+@messagelist.route("/getlist/<document_id>", methods=['GET'])
+def get_list(document_id: int) -> Response:
+    """Get the information for a message list.
+
+    :param document_id: ID for message list's admin document.
+    :return: ListOptions with the list's information.
+    """
+    msg_list = MessageListModel.get_list_by_manage_doc_id(document_id)
+    list_options = ListOptions(
+        listname=msg_list.name,
+        listInfo=msg_list.info,
+        listDescription=msg_list.description,
+        notifyOwnerOnListChange=msg_list.notify_owner_on_change,
+        # VIESTIM: We need a better way of either querying or inferring list's (possible) domain. For the time being,
+        #  here is a placeholder.
+        domain="tim.jyu.fi",
+        archive=msg_list.archive,
+        # TODO: Query members.
+        emails=[],
+        # TODO: Replace placeholder once we can properly query the owners email.
+        ownerEmail="totalund@student.jyu.fi"
+    )
+    return json_response(list_options)
