@@ -6,12 +6,12 @@ import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-compone
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
 import {Users} from "../user/userService";
+import {IDocument, redirectToItem} from "../item/IItem";
 import {
     archivePolicyNames,
     ArchiveType,
     CreateListOptions,
 } from "./listOptionTypes";
-import {IDocument, redirectToItem} from "../item/IItem";
 
 @Component({
     selector: "message-list-creation",
@@ -77,7 +77,7 @@ export class MessageListComponent extends AngularDialogComponent<
     listDescription: string = "Listan lyhyt kuvaus.";
     listInfo: string = "Listan pitkä kuvaus.";
 
-    emails?: string;
+    emails?: string; // voiko poistaa??
 
     constructor(private http: HttpClient) {
         super();
