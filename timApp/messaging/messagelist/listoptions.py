@@ -1,22 +1,22 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Union, Dict
+from typing import List, Dict
 
 
 class ArchiveType(Enum):
     """Different supported archive types."""
     # If you change this, make sure the mapping for Mailman's archive policies is also updated at
-    # mailman_archive_policy_correlate.
+    # mailman_archive_policy_correlate. TIM's and Mailman's archive policies aren't a one-to-one match.
 
-    # No archiving at all for list. Equals to Mailman's archive policy of 'none'
+    # No archiving at all for list. Equals to Mailman's archive policy of 'none'.
     NONE = 0
     # Secret archive. Only for owner/moderators. No direct correlation with Mailman's archive policies.
     SECRET = 1
-    # For group and it's members' eyes only. Equal for Mailman's archive policy of 'private'
+    # For group and it's members' eyes only. Equal for Mailman's archive policy of 'private'.
     GROUPONLY = 2
     # Anyone with a link can access archive. No direct correlation with Mailman's archive policies.
     UNLISTED = 3
-    # Completely public (and advertised) archive. Equals to Mailman's archive policy of 'public'
+    # Completely public (and advertised) archive. Equals to Mailman's archive policy of 'public'.
     PUBLIC = 4
 
 
@@ -47,4 +47,3 @@ mailman_archive_policy_correlate: Dict[ArchiveType, str] = {
     ArchiveType.UNLISTED: "private",
     ArchiveType.PUBLIC: "public"
 }
-
