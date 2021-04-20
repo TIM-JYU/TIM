@@ -7,9 +7,10 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
-from timApp.messaging.messagelist.listoptions import ListOptions
+from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.timdb.sqa import db
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
@@ -157,3 +158,50 @@ def get_list(document_id: int) -> Response:
         ownerEmail="totalund@student.jyu.fi"
     )
     return json_response(list_options)
+
+
+@messagelist.route("/archive/<message_list_name>", methods=['POST'])
+def archive(message_list_name: str, message: str) -> Response:
+    """Archive a message sent to a message list.
+
+    :param message_list_name: Which message list is the message intented to.
+    :param message: The message to be archived.
+    :return: Return OK response if everything went smoothly.
+    """
+    # VIESTIM: This view function has not been tested yet. It's implementation is still badly a work in progress.
+
+    msg_list = MessageListModel.get_list_by_name(message_list_name)
+    if msg_list is None:
+        raise RouteException(f"No message list with name {message_list_name} exists.")
+
+    # TODO: Check rights to message list.
+    # TODO: Get the message list's archive policy.
+
+    archive_policy = msg_list.archive_policy()
+    # TODO: Check if this message list is archived at all in the first place, or if the message has had some special
+    if archive_policy is ArchiveType.NONE:
+        raise RouteException("This list doesn't archive messages.")
+
+    #  value that blocks archiving. Think X-No-Archive header on emails.
+    # TODO: Create document.
+    archive_path = "/archives/"
+    archive_title = "This is a placeholder title"
+    archive_doc = create_document(archive_path, archive_title)
+
+    # TODO: Add header information for archived message. Now just a placeholder text.
+    archive_doc.document.add_text("Header information")
+
+    # TODO: Add the message body. Now just a placeholder text.
+    archive_doc.document.add_text("Message body.")
+
+    # TODO: Add footer information. Now just a placeholder text.
+    archive_doc.document.add_text("Footer information.")
+
+    # TODO: Get the newest document in the archive folder (before this archived message). Would this be easier if we
+    #  query for this before we create the new document?
+    # TODO: Update the previous latest archived message's footer to point to the newest message.
+
+    # TODO: Set proper rights to the document. The message sender owns the document. Owner of the list gets at least a
+    #  view right. Other rights depend on the message list's archive policy.
+
+    return ok_response()
