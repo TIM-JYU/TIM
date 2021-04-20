@@ -7,7 +7,6 @@ import {Users} from "../user/userService";
 
 interface CreateMessageOptions {
     // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py). BUT recipients, emailsubject and emailbody are added later at postTimMessage()
-    // VIESTIM or TODO: change this later when separate email functionality is removed?
     messageChannel: boolean;
     archive: boolean;
     important: boolean;
@@ -34,6 +33,10 @@ interface CreateMessageOptions {
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
             <button class="timButton" id="optionsButton" (click)="toggleOptions()">{{showOptions ? "Hide" : "Show"}} message options</button>
             <div *ngIf="showOptions">
+            <p *ngIf="!defaultEmail"><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.archive">Archive message</label></p>
+            <p *ngIf="!defaultEmail"><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.important">Mark message as important (currently only applies to TIM messages)</label></p>
             <fieldset><p>Send (choose at least one of the two)</p><!--<label *ngIf="!defaultEmail"><input type="checkbox" 
                                       [(ngModel)]="createMessageOptions.messageChannel">to recipient's own message channels</label><br/>-->
             <label><input type="checkbox" (change)="notDefault()"
@@ -54,11 +57,7 @@ interface CreateMessageOptions {
             </ul>
             <label *ngIf="!defaultEmail"><input type="checkbox"
                                       [(ngModel)]="timMessage">as TIM message</label></fieldset><br/>
-            
-            <p *ngIf="!defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.archive">Archive message</label></p>
-            <p *ngIf="!defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.important">Mark message as important</label></p>
+                
             <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
             <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="createMessageOptions.pageList" rows="4" cols="70"></textarea></p>
             <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
@@ -94,7 +93,6 @@ export class TimMessageComponent {
     emailbcc: boolean = false;
     emailbccme: boolean = true;
     email: boolean = true;
-    // emailtim: boolean = true;
     defaultEmail: boolean = false;
     emailMsg: string = "";
     timMessage: boolean = false;
@@ -162,56 +160,6 @@ export class TimMessageComponent {
         };
     }
 
-    async sendEmailTim() {
-        if (!this.taskId) {
-            this.emailMsg = "Cannot send email without taskId";
-            return;
-        }
-        this.emailMsg = ""; // JSON.stringify(response);
-        const url = `/multiSendEmail/${this.taskId.docTask().toString()}`;
-        const response = await to(
-            $http.post<string[]>(url, {
-                rcpt: this.emailList.replace(/\n/g, ";"),
-                subject: this.emailsubject,
-                msg: this.emailbody,
-                bccme: this.emailbccme,
-            })
-        );
-        if (response.ok) {
-            this.emailMsg = "Sent";
-            this.resetForm();
-        } else {
-            this.emailMsg = response.result.data.error;
-        }
-    }
-
-    async sendTimMessage() {
-        const result = await this.postTimMessage(this.createMessageOptions);
-        if (!result.ok) {
-            console.error(result.result.error.error);
-        } else {
-            // If emailMsg != "", text "Sent!" appears next to Send button.
-            this.emailMsg = "sent";
-            this.resetForm();
-        }
-    }
-
-    // VIESTIM this helper function helps keeping types in check.
-    private postTimMessage(options: CreateMessageOptions) {
-        const message = {
-            emailbody: this.emailbody,
-            emailsubject: this.emailsubject,
-            recipients: this.emailList.split(/\n/g),
-        };
-        const timMessage = {...options, ...message};
-        return to2(
-            this.http
-                .post("/timMessage/send", {options: timMessage})
-                .toPromise()
-        );
-    }
-
-    // TODO: separate TIM messages from here?
     // VIESTIM: make it possible to send as TIM message and email at the same time
     public async sendMessage() {
         // send as TIM message
@@ -249,6 +197,77 @@ export class TimMessageComponent {
                 "&" +
                 "bcc=" +
                 bcc;
+            this.resetForm();
+        }
+    }
+
+    async sendTimMessage() {
+        const result = await this.postTimMessage(this.createMessageOptions);
+        if (!result.ok) {
+            console.error(result.result.error.error);
+        } else {
+            // If emailMsg != "", text "Sent!" appears next to Send button.
+            this.emailMsg = "sent";
+            this.resetForm();
+        }
+    }
+
+    // VIESTIM this helper function helps keeping types in check.
+    private postTimMessage(options: CreateMessageOptions) {
+        const message = {
+            emailbody: this.emailbody,
+            emailsubject: this.emailsubject,
+            recipients: this.emailList.split(/\n/g),
+        };
+        const timMessage = {...options, ...message};
+        return to2(
+            this.http
+                .post("/timMessage/send", {options: timMessage})
+                .toPromise()
+        );
+    }
+
+    async sendEmailTim() {
+        if (!this.taskId) {
+            this.emailMsg = "Cannot send email without taskId";
+            return;
+        }
+        this.emailMsg = ""; // JSON.stringify(response);
+        const url = `/multiSendEmail/${this.taskId.docTask().toString()}`;
+        let response;
+        // if reply all is chosen
+        if (this.createMessageOptions.replyAll) {
+            response = await to(
+                $http.post<string[]>(url, {
+                    rcpt: this.emailList.replace(/\n/g, ";"),
+                    subject: this.emailsubject,
+                    msg: this.emailbody,
+                    bccme: this.emailbccme,
+                })
+            );
+            if (!response.ok) {
+                this.emailMsg = response.result.data.error;
+            } else {
+                this.emailMsg = "Sent";
+                this.resetForm();
+            }
+        } else {
+            // if only reply to sender is chosen
+            const recipients = this.emailList.split(/\n/g);
+            for (let recipient in recipients) {
+                response = await to(
+                    $http.post<string[]>(url, {
+                        rcpt: recipient,
+                        subject: this.emailsubject,
+                        msg: this.emailbody,
+                        bccme: this.emailbccme,
+                    })
+                );
+                if (!response.ok) {
+                    this.emailMsg = response.result.data.error;
+                }
+            }
+            this.emailMsg = "Sent";
             this.resetForm();
         }
     }
