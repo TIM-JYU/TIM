@@ -32,7 +32,8 @@ interface CreateMessageOptions {
             <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
             <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
-            
+            <button class="timButton" id="optionsButton" (click)="toggleOptions()">{{showOptions ? "Hide" : "Show"}} message options</button>
+            <div *ngIf="showOptions">
             <fieldset><p>Send (choose at least one of the two)</p><!--<label *ngIf="!defaultEmail"><input type="checkbox" 
                                       [(ngModel)]="createMessageOptions.messageChannel">to recipient's own message channels</label><br/>-->
             <label><input type="checkbox" (change)="notDefault()"
@@ -74,7 +75,7 @@ interface CreateMessageOptions {
                                      [(time)]="createMessageOptions.expires"
                                      placeholder="No automatic date">
                 </tim-datetime-picker>
-            </p><br/>
+            </p><br/></div>
             <p>
                 <button class="timButton" id="sendButton" [disabled]="!showSendButton()"
                         (click)="sendMessage()">
@@ -91,6 +92,7 @@ export class TimMessageComponent {
     emailList: string = "";
     emailsubject: string = "";
     emailbody: string = "";
+    showOptions: boolean = false;
     emailbcc: boolean = false;
     emailbccme: boolean = true;
     email: boolean = true;
@@ -117,6 +119,10 @@ export class TimMessageComponent {
     taskId?: TaskId;
 
     constructor(private http: HttpClient) {}
+
+    toggleOptions() {
+        this.showOptions = !this.showOptions;
+    }
 
     notDefault() {
         this.defaultEmail = false;
