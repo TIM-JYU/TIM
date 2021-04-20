@@ -45,7 +45,13 @@ interface CreateMessageOptions {
                 </li><li>
                     <label><input type="radio"
                                       [(ngModel)]="defaultEmail" name="defaultEmail" [value]="true">use your default email client (recipients will see each others' addresses)</label>
-                </li></ul>                
+                </li></ul>     
+                <ul *ngIf="email && !defaultEmail">
+                <li><label><input type="radio"
+                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" [value]="false" checked>Recipient only replies to sender (sees message as private)</label></li>
+                <li><label><input type="radio"
+                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" [value]="true" [disabled]="timMessage">Recipient replies all by default (sees message as a group message)</label></li>
+            </ul>
             <label *ngIf="!defaultEmail"><input type="checkbox"
                                       [(ngModel)]="timMessage">as TIM message</label></fieldset><br/>
             
@@ -53,22 +59,14 @@ interface CreateMessageOptions {
                                       [(ngModel)]="createMessageOptions.archive">Archive message</label></p>
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="createMessageOptions.important">Mark message as important</label></p>
-            <p *ngIf="!defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.isPrivate">Recipient sees message as private</label></p>
-            <p *ngIf="!defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.reply" [disabled]="email">Message can be replied to</label></p>  
-            <ul *ngIf="createMessageOptions.reply && !defaultEmail">
-                <li><label><input type="radio"
-                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" [value]="false" checked>Recipient only replies to sender</label></li>
-                <li><label><input type="radio"
-                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" [value]="true" [disabled]="timMessage">Recipient replies all by default</label></li>
-            </ul>
-            
             <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
-            <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="createMessageOptions.pageList" rows="4" cols="70"></textarea></p>                                      
+            <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="createMessageOptions.pageList" rows="4" cols="70"></textarea></p>
             <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.confirm">TIM message can be confirmed</label></p>
-                      
+                                      [(ngModel)]="createMessageOptions.isPrivate">Recipient sees TIM message as private</label></p>
+            <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.reply">TIM message can be replied to</label></p> 
+            <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
+                                      [(ngModel)]="createMessageOptions.confirm">TIM message can be marked as read</label></p>
             <p *ngIf="timMessage && !defaultEmail" class="form-group">
                 <label for="expiration-selector">TIM message will be removed on:</label>
                 <tim-datetime-picker id="expiration-selector"
@@ -109,7 +107,7 @@ export class TimMessageComponent {
         /* VIESTIM: shorten urls listed in pageList and show them to user */
         pageList: "",
         confirm: false,
-        reply: true,
+        reply: false,
         replyAll: false,
         expires: undefined,
         sender: Users.getCurrent().real_name,
@@ -140,6 +138,7 @@ export class TimMessageComponent {
         );
     }
 
+    // resets form to it's initial values
     resetForm() {
         this.emailsubject = "";
         this.emailbody = "";
