@@ -29,8 +29,6 @@ class ListOptions:
     archive: ArchiveType = field(metadata={'by_value': True})
     # VIESTIM: Is this needed?
     # emails: List[str]
-    ownerEmail: str
-    notifyOwnerOnListChange: bool
     listDescription: str
     listInfo: str
 
