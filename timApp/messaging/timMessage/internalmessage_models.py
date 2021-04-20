@@ -4,8 +4,8 @@ from timApp.timdb.sqa import db
 
 
 class DisplayType(Enum):
-    TOP_OF_PAGE = 0
-    STICKY = 1
+    TOP_OF_PAGE = 1
+    STICKY = 2
 
 
 class InternalMessage(db.Model):
@@ -51,10 +51,11 @@ class InternalMessageDisplay(db.Model):
     usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
     """Who sees the message; if null, displayed for everyone."""
 
-    display_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
-    """Identifier for the document or the folder where the message is displayed."""
-    # VIESTIM: If null, displayed globally on TIM? We're not doing message approval through admin though.
-    #  Currently not nullable.
+    display_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'))
+    """
+    Identifier for the document or the folder where the message is displayed. If null, 
+    the message is displayed globally.
+    """
 
     message = db.relationship('InternalMessage', back_populates='displays')
     usergroup = db.relationship('UserGroup', back_populates='internalmessage_display')
