@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from typing import List, Optional
 from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain
@@ -72,33 +72,28 @@ class EmailListManager:
             raise  # "Connection to server failed."
 
     @staticmethod
-    def check_name_requirements(name_candidate: str, domain: str) -> Tuple[Optional[bool], str]:
+    def check_name_requirements(name_candidate: str, domain: str) -> None:
         """Checks name requirements specific for email list.
+
+        If at any point a name requirement check fails, then an exception is raised an carried to the client. If all
+        name requirements are met, then succeed silently.
 
         :param domain: Domain to search for lists.
         :param name_candidate: Name to check against naming rules.
-        :return: Return A tuple. None if connection to Mailman failed. Return True if all name requirements are met.
-         Otherwise return False. In all cases, return an explanatory string as the second part of the tuple.
         """
         em = EmailListManager
 
         # Check name is available.
-        available, availability_explanation = em.check_name_availability(name_candidate, domain)
-        if not available:
-            return available, availability_explanation
+        em.check_name_availability(name_candidate, domain)
 
         # Check if name is some reserved name.
-        not_reserved, reserved_explanation = em.check_reserved_names(name_candidate)
-        if not not_reserved:
-            return not_reserved, reserved_explanation
+        em.check_reserved_names(name_candidate)
 
         # Check name against name rules. These rules are also checked client-side.
         # VIESTIM: When other message list functionality exists, move this rule check there.
-        within_rules, rule_explanation = em.check_name_rules(name_candidate)
-        if not within_rules:
-            return within_rules, rule_explanation
+        em.check_name_rules(name_candidate)
 
-        return True, "Ok."
+        # If we are here, name can be used by the user.
 
     @staticmethod
     def check_reserved_names(name_candidate: str) -> None:
@@ -114,7 +109,6 @@ class EmailListManager:
         reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
         if name_candidate in reserved_names:
             raise RouteException(f"Name {name_candidate} is a reserved name and cannot be used.")
-
 
     @staticmethod
     def get_domain_names() -> List[str]:

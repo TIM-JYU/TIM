@@ -10,7 +10,7 @@ from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
 from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.timdb.sqa import db
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
 
@@ -43,46 +43,20 @@ class NameCheckInfo:
 def check_name(name_candidate: str) -> Response:
     """Check if name candidate meets requirements.
 
+    If name checking fails at any point, an exception is raised and that exception is delivered to the client. If all
+    checks succeed, then just return an OK response.
+
     :param name_candidate: Possible name for message/email list. Should either be a name for a list or a fully qualifed
     domain name for (email) list. In the latter case we also check email list specific name requirements.
-    :return: Return a response of form class NameCheckInfo. The value nameOk is the "in the nutshell"
-    explanation how the check went. If connection to Mailman failed, then return None. If name is both available and
-    conforms to naming rules, return True. Otherwise return False. In all cases, also return an explanatory string as
-    the explanation value.
     """
 
     name, sep, domain = name_candidate.partition("@")
 
-    # TODO: add message list name requirement check. Now just use dummy value to get going.
-    messagelist_requirements: bool = True
-    messagelist_explanation: str = ""
-
-    email_requirements: Optional[bool] = False
-    email_explanation: str = ""
-
     if sep:
         # If character '@' is found, we check email list specific name requirements.
-        email_requirements, email_explanation = EmailListManager.check_name_requirements(name, domain)
+        EmailListManager.check_name_requirements(name, domain)
 
-    # Initialize a response.
-    response = NameCheckInfo()
-
-    # Go through possibilities of name check outcomes.
-    if email_requirements is None:
-        # Connection to Mailman or it's host server failed.
-        response.explanation = email_explanation
-    elif email_requirements and messagelist_requirements:
-        response.nameOK = True
-        response.explanation = "Name is available and it meets requirements."
-    elif not messagelist_requirements:
-        response.nameOK = False
-        response.explanation = messagelist_explanation
-    elif not email_requirements:
-        response.nameOK = False
-        response.explanation = email_explanation
-        pass
-
-    return json_response(response)
+    return ok_response()
 
 
 @messagelist.route("/domains", methods=['GET'])
