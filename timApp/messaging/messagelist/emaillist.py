@@ -49,26 +49,27 @@ class EmailListManager:
     """Possible domains which can be used with our instance of Mailman."""
 
     @staticmethod
-    def check_name_availability(name_candidate: str, domain: str) -> Tuple[Optional[bool], str]:
+    def check_name_availability(name_candidate: str, domain: str) -> None:
         """Search for a name from the pool of used email list names.
+
+        Raises a RouteException if no connection was ever established with the Mailman server via mailmanclient.
+        Re-raises HTTPError if something went wrong with the query from the server.
 
         :param domain: Domain to search for lists, which then are used to check name availability.
         :param name_candidate: The name to search for.
-        :return: If we cannot get data from Mailman, return None and an explanation string. Return True if name is
-        available. Return False if name was not available and a string to specify why.
         """
         if _client is None:
-            return None, "No connection with email list server established."
+            raise RouteException("No connection with email list server established.")
         try:
             d = _client.get_domain(domain)
             mlists: List[MailingList] = d.get_lists()
             fqdn_name_candidate = name_candidate + "@" + domain
             for name in [mlist.fqdn_listname for mlist in mlists]:
                 if fqdn_name_candidate == name:
-                    return False, "Name is already in use."
-            return True, "Name is available."
+                    raise RouteException("Name is already in use.")
         except HTTPError:
-            return None, "Connection to server failed."
+            # VIESTIM: Should we just raise the old error or inspect it closer? Now raise old error.
+            raise  # "Connection to server failed."
 
     @staticmethod
     def check_name_requirements(name_candidate: str, domain: str) -> Tuple[Optional[bool], str]:
