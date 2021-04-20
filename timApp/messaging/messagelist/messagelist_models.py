@@ -71,7 +71,7 @@ class MessageListModel(db.Model):
         return m
 
     @property
-    def archive_policy(self):
+    def archive_policy(self) -> ArchiveType:
         return self.archive
 
 
