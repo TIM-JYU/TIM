@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 
 from flask import Response
@@ -8,7 +8,7 @@ from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType
-from timApp.messaging.messagelist.messagelist_models import MessageListModel
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -106,18 +106,19 @@ def new_list(list_options: ListOptions) -> DocInfo:
     return doc_info
 
 
+message_list_doc_prefix = "/messagelists"
+message_list_archive_prefix = "/archives"
+
+
 def create_management_doc(msg_list_model: MessageListModel, list_options: ListOptions) -> DocInfo:
     # TODO: Document should reside in owner's personal path.
 
     # VIESTIM: The management document is created on the message list creator's personal folder. This might be a good
     #  default, but if the owner is someone else than the creator then we have to handle that.
-    creator = get_current_user_object()
-
-    personal_path = creator.get_personal_folder().path
 
     # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
     path_safe_list_name = remove_path_special_chars(list_options.listname)
-    path_to_doc = f'/{personal_path}/{path_safe_list_name}'
+    path_to_doc = f'/{message_list_doc_prefix}/{path_safe_list_name}'
 
     doc = create_document(path_to_doc, list_options.listname)
 
@@ -160,48 +161,74 @@ def get_list(document_id: int) -> Response:
     return json_response(list_options)
 
 
-@messagelist.route("/archive/<message_list_name>", methods=['POST'])
-def archive(message_list_name: str, message: str) -> Response:
+@dataclass
+class Message:
+    # Meta information about where this message belongs to.
+    message_list_name: str
+    domain: Optional[str]
+    message_channel: Channel = field(metadata={'by_value': True})
+
+    # Header information
+    sender: str
+    reply_to: Optional[str]
+    recipients: List[str]
+    title: str
+
+    # Message body
+    message_body: str
+
+
+@messagelist.route("/archive", methods=['POST'])
+def archive(message: Message) -> Response:
     """Archive a message sent to a message list.
 
-    :param message_list_name: Which message list is the message intented to.
     :param message: The message to be archived.
     :return: Return OK response if everything went smoothly.
     """
     # VIESTIM: This view function has not been tested yet. It's implementation is still badly a work in progress.
 
-    msg_list = MessageListModel.get_list_by_name(message_list_name)
+    msg_list = MessageListModel.get_list_by_name(message.message_list_name)
+
     if msg_list is None:
-        raise RouteException(f"No message list with name {message_list_name} exists.")
+        raise RouteException(f"No message list with name {message.message_list_name} exists.")
 
     # TODO: Check rights to message list.
-    # TODO: Get the message list's archive policy.
 
+    # TODO: Get the message list's archive policy.
     archive_policy = msg_list.archive_policy
+
     # TODO: Check if this message list is archived at all in the first place, or if the message has had some special
+    #  value that blocks archiving. Think X-No-Archive header on emails.
     if archive_policy is ArchiveType.NONE:
         raise RouteException("This list doesn't archive messages.")
 
-    #  value that blocks archiving. Think X-No-Archive header on emails.
     # TODO: Create document.
-    archive_path = "/archives/"
-    archive_title = "This is a placeholder title"
+
+    archive_title = "This is a placeholder title"  # TODO: Title comes from the message's title: message.title
+    archive_path = f"{message_list_archive_prefix}/{remove_path_special_chars(archive_title)}"
+
     archive_doc = create_document(archive_path, archive_title)
 
-    # TODO: Add header information for archived message. Now just a placeholder text.
-    archive_doc.document.add_text("Header information")
+    archive_doc.document.add_text(f"Title: {message.title}")
+    archive_doc.document.add_text(f"Sender: {message.sender}")
+    archive_doc.document.add_text(f"Recipients: {message.recipients}")
 
-    # TODO: Add the message body. Now just a placeholder text.
-    archive_doc.document.add_text("Message body.")
+    archive_doc.document.add_text(f"{message.message_body}")
 
     # TODO: Add footer information. Now just a placeholder text.
-    archive_doc.document.add_text("Footer information.")
+    previous_doc_title = f"Linkkiteksti"  # TODO: Get title from previous message's title.
+    previous_doc_link = f"Linkkiosoite"  # TODO: Get the path to previous message.
+    previous_message_link = f"[{previous_doc_title}]({previous_doc_link})"
+
+    archive_doc.document.add_text(f"Previous message: {previous_message_link}")
+    archive_doc.document.add_text("Next message:")
 
     # TODO: Get the newest document in the archive folder (before this archived message). Would this be easier if we
     #  query for this before we create the new document?
+
     # TODO: Update the previous latest archived message's footer to point to the newest message.
 
-    # TODO: Set proper rights to the document. The message sender owns the document. Owner of the list gets at least a
+    # TODO: Set proper rights to the document. The message sender owns the document. Owners of the list get at least a
     #  view right. Other rights depend on the message list's archive policy.
 
     return ok_response()
