@@ -100,21 +100,20 @@ class EmailListManager:
         return True, "Ok."
 
     @staticmethod
-    def check_reserved_names(name_candidate: str) -> Tuple[bool, str]:
+    def check_reserved_names(name_candidate: str) -> None:
         """
-        Check a name candidate against reserved names, e.g. postmaster.
+        Check a name candidate against reserved names, e.g. postmaster. Raises a RouteException if the name candidate
+        is a reserved name. If name is not reserved, the method succeeds silently.
 
         :param name_candidate: The name to be compared against reserved names.
-        :return: Return True if name is not among reserved names. Otherwise return False.
         """
         # TODO: Implement a smarter query for reserved names. Now only compare against simple list for prototyping
         #  purposes. Maybe an external config file for known reserved names or something like that?
         #  Is it possible to query reserved names e.g. from Mailman or it's server?
         reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
         if name_candidate in reserved_names:
-            return False, "Name {0} is a reserved name.".format(name_candidate)
-        else:
-            return True, "Name is not reserved and can be used."
+            raise RouteException(f"Name {name_candidate} is a reserved name and cannot be used.")
+
 
     @staticmethod
     def get_domain_names() -> List[str]:
