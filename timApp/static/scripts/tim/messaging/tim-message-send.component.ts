@@ -36,8 +36,8 @@ interface CreateMessageOptions {
             <fieldset><p>Send (choose at least one of the two)</p><!--<label *ngIf="!defaultEmail"><input type="checkbox" 
                                       [(ngModel)]="createMessageOptions.messageChannel">to recipient's own message channels</label><br/>-->
             <label><input type="checkbox" (change)="notDefault()"
-                                      [(ngModel)]="emailtim">as email</label><br/>
-                <ul *ngIf="emailtim">
+                                      [(ngModel)]="email">as email</label><br/>
+                <ul *ngIf="email">
                     <li>
                     <label><input type="radio"
                                       [(ngModel)]="defaultEmail" name="defaultEmail" [value]="false">use TIM to send</label>
@@ -55,12 +55,12 @@ interface CreateMessageOptions {
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="createMessageOptions.isPrivate">Recipient sees message as private</label></p>
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.reply">Message can be replied to</label></p>  
+                                      [(ngModel)]="createMessageOptions.reply" [disabled]="email">Message can be replied to</label></p>  
             <ul *ngIf="createMessageOptions.reply && !defaultEmail">
                 <li><label><input type="radio"
                                       [(ngModel)]="createMessageOptions.replyAll" name="replyAll" [value]="false" checked>Recipient only replies to sender</label></li>
                 <li><label><input type="radio"
-                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" [value]="true">Recipient replies all by default</label></li>
+                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" [value]="true" [disabled]="timMessage">Recipient replies all by default</label></li>
             </ul>
             
             <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
@@ -77,7 +77,7 @@ interface CreateMessageOptions {
             </p><br/>
             <p>
                 <button class="timButton" id="sendButton" [disabled]="!showSendButton()"
-                        (click)="sendEmail()">
+                        (click)="sendMessage()">
                     Send
                 </button>
                 <span class="savedtext" *ngIf="emailMsg"> Sent!</span>
@@ -93,7 +93,8 @@ export class TimMessageComponent {
     emailbody: string = "";
     emailbcc: boolean = false;
     emailbccme: boolean = true;
-    emailtim: boolean = true;
+    email: boolean = true;
+    // emailtim: boolean = true;
     defaultEmail: boolean = false;
     emailMsg: string = "";
     timMessage: boolean = false;
@@ -125,7 +126,7 @@ export class TimMessageComponent {
     showSendButton() {
         return (
             (this.createMessageOptions.messageChannel ||
-                this.emailtim ||
+                this.email ||
                 this.timMessage) &&
             ((this.createMessageOptions.reply &&
                 this.createMessageOptions.replyAll != undefined) ||
@@ -138,7 +139,7 @@ export class TimMessageComponent {
         this.emailbody = "";
         this.emailbcc = false;
         this.emailbccme = true;
-        this.emailtim = true;
+        this.email = true;
         this.defaultEmail = false;
         this.timMessage = false;
         this.createMessageOptions = {
@@ -207,43 +208,43 @@ export class TimMessageComponent {
 
     // TODO: separate TIM messages from here?
     // VIESTIM: make it possible to send as TIM message and email at the same time
-    public async sendEmail() {
+    public async sendMessage() {
         // send as TIM message
         if (this.timMessage) {
             await this.sendTimMessage();
-            return;
         }
-
         // send as email in TIM
-        if (this.emailtim && !this.defaultEmail) {
+        if (this.email && !this.defaultEmail) {
             await this.sendEmailTim();
             return;
         }
         // TODO: iPad do not like ;
-        let addrs = this.emailList.replace(/\n/g, ",");
-        let bcc = "";
-        if (this.emailbcc) {
-            bcc = addrs;
-            addrs = "";
-        }
-        if (this.emailbccme) {
-            if (bcc) {
-                bcc += ",";
+        if (this.email && this.defaultEmail) {
+            let addrs = this.emailList.replace(/\n/g, ",");
+            let bcc = "";
+            if (this.emailbcc) {
+                bcc = addrs;
+                addrs = "";
             }
-            bcc += Users.getCurrent().email;
+            if (this.emailbccme) {
+                if (bcc) {
+                    bcc += ",";
+                }
+                bcc += Users.getCurrent().email;
+            }
+            window.location.href =
+                "mailto:" +
+                addrs +
+                "?" +
+                "subject=" +
+                this.emailsubject +
+                "&" +
+                "body=" +
+                this.emailbody +
+                "&" +
+                "bcc=" +
+                bcc;
+            this.resetForm();
         }
-        window.location.href =
-            "mailto:" +
-            addrs +
-            "?" +
-            "subject=" +
-            this.emailsubject +
-            "&" +
-            "body=" +
-            this.emailbody +
-            "&" +
-            "bcc=" +
-            bcc;
-        this.resetForm();
     }
 }
