@@ -244,24 +244,17 @@ export class MessageListComponent extends AngularDialogComponent<
         const nameCandidate: string = this.domain
             ? `${this.listname}@${this.domain}`
             : this.listname;
+
         const result = await to2(
             this.http
-                .get<{nameOK: boolean; explanation: string}>(
-                    `${this.urlPrefix}/checkname/${nameCandidate}`
-                )
+                .get(`${this.urlPrefix}/checkname/${nameCandidate}`)
                 .toPromise()
         );
         if (result.ok) {
-            console.log("Name check done. Result:");
-            const temp = result.result;
-            if (temp.nameOK) {
-                // TODO: Indicate somehow that name is usable as a new list name.
-                console.log(temp.explanation);
-            } else {
-                // TODO: Indicate somehow that name is not usable as a new list name.
-                console.log(temp.explanation);
-            }
+            // VIESTIM: we need a better indication that the name is available to the user.
+            console.log("Name check done. Name is available.");
         } else {
+            // VIESTIM: We need a better indication that the name is not available to the user.
             console.error(result.result.error.error);
         }
     }
