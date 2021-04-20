@@ -7,7 +7,7 @@ from mailmanclient import Client, MailingList, Domain
 
 from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate
 from timApp.tim_app import app
-from timApp.util.flask.requesthelper import NotExist
+from timApp.util.flask.requesthelper import NotExist, RouteException
 from timApp.util.logger import log_warning, log_info
 from tim_common.marshmallow_dataclass import class_schema
 
@@ -203,11 +203,11 @@ class EmailListManager:
             return
 
     @staticmethod
-    def check_name_rules(name_candidate: str) -> Tuple[bool, str]:
-        """Check if name candidate complies with naming rules.
+    def check_name_rules(name_candidate: str) -> None:
+        """Check if name candidate complies with naming rules. The method raises a RouteException if naming rule is
+        violated. If this function doesn't raise an exception, then the name follows naming rules.
 
         :param name_candidate: What name we are checking.
-        :return: Return True if name passes all rule checks. Otherwise return False. Also return an explanation string.
         """
         # Be careful when checking regex rules. Some rules allow a pattern to exist, while prohibiting others. Some
         # rules prohibit something, but allow other things to exist. If the explanation for a rule is different than
@@ -217,22 +217,22 @@ class EmailListManager:
         lower_bound = 5
         upper_bound = 36
         if not (lower_bound < len(name_candidate) < upper_bound):
-            return False, "Name is not within length boundaries. Name has to be at least {0} and at most {1} " \
-                          "characters long".format(lower_bound, upper_bound)
+            raise RouteException(f"Name is not within length boundaries. Name has to be at least {lower_bound} and at "
+                                 f"most {upper_bound} characters long.")
 
         # Name has to start with a lowercase letter.
         start_with_lowercase = re.compile(r"^[a-z]")
         if start_with_lowercase.search(name_candidate) is None:
-            return False, "Name has to start with a lowercase letter."
+            raise RouteException("Name has to start with a lowercase letter.")
 
         # Name cannot have multiple dots in sequence.
         no_sequential_dots = re.compile(r"\.\.+")
         if no_sequential_dots.search(name_candidate) is not None:
-            return False, "Name cannot have sequential dots"
+            raise RouteException("Name cannot have sequential dots.")
 
         # Name cannot end in a dot
         if name_candidate.endswith("."):
-            return False, "Name cannot end in a dot."
+            raise RouteException("Name cannot end in a dot.")
 
         # Name can have only these allowed characters. This set of characters is an import from Korppi's character
         # limitations for email list names, and can probably be expanded in the future if desired.
@@ -244,14 +244,14 @@ class EmailListManager:
         # Notice the compliment usage of ^.
         allowed_characters = re.compile(r"[^a-z0-9.\-_]")
         if allowed_characters.search(name_candidate) is not None:
-            return False, "Name contains forbidden characters."
+            raise RouteException("Name contains forbidden characters.")
 
         # Name has to include at least one digit.
         required_digit = re.compile(r"\d")
         if required_digit.search(name_candidate) is None:
-            return False, "Name has to include at least one digit."
+            raise RouteException("Name has to include at least one digit.")
 
-        return True, "Name meets all the naming rules."
+        # If we are here, then the name follows all naming rules.
 
 
 @dataclass
