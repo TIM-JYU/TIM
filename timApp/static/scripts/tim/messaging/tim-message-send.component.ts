@@ -5,16 +5,15 @@ import {to, to2} from "../util/utils";
 import {TaskId} from "../plugin/taskid";
 import {Users} from "../user/userService";
 
-interface CreateMessageOptions {
-    // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py). BUT recipients, emailsubject and emailbody are added later at postTimMessage()
-    messageChannel: boolean;
+interface TimMessageOptions {
+    // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py). BUT recipients, messageSubject and messageBody are added later at postTimMessage()
     archive: boolean;
     important: boolean;
-    isPrivate: boolean;
+    messageChannel: boolean;
     pageList: string;
-    confirm: boolean;
+    isPrivate: boolean;
     reply: boolean;
-    replyAll: boolean | undefined;
+    readReceipt: boolean;
     expires: Date | undefined;
     sender: string | null;
     senderEmail: string | null;
@@ -23,22 +22,22 @@ interface CreateMessageOptions {
 @Component({
     selector: "tim-message-send",
     template: `
-        <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="emailList">
-            <tim-close-button (click)="emailList=''"></tim-close-button>
+        <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="recipientList">
+            <tim-close-button (click)="recipientList=''"></tim-close-button>
             <p>Recipients:</p>
-            <p><textarea [(ngModel)]="emailList" rows="4" cols="40"></textarea>
+            <p><textarea [(ngModel)]="recipientList" rows="4" cols="40"></textarea>
             </p>
-            <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
+            <p>Subject: <input [(ngModel)]="messageSubject" size="60"></p>
             <p>Message content:</p>
-            <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
+            <p><textarea [(ngModel)]="messageBody" rows="10" cols="70"></textarea></p>
             <button class="timButton" id="optionsButton" (click)="toggleOptions()">{{showOptions ? "Hide" : "Show"}} message options</button>
             <div *ngIf="showOptions">
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.archive">Archive message</label></p>
+                                      [(ngModel)]="TimMessageOptions.archive">Archive message</label></p>
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.important">Mark message as important (currently only applies to TIM messages)</label></p>
+                                      [(ngModel)]="TimMessageOptions.important">Mark message as important (currently only applies to TIM messages)</label></p>
             <fieldset><p>Send (choose at least one of the two)</p><!--<label *ngIf="!defaultEmail"><input type="checkbox" 
-                                      [(ngModel)]="createMessageOptions.messageChannel">to recipient's own message channels</label><br/>-->
+                                      [(ngModel)]="TimMessageOptions.messageChannel">to recipient's own message channels</label><br/>-->
             <label><input type="checkbox" (change)="notDefault()"
                                       [(ngModel)]="email">as email</label><br/>
                 <ul *ngIf="email">
@@ -51,25 +50,25 @@ interface CreateMessageOptions {
                 </li></ul>     
                 <ul *ngIf="email && !defaultEmail">
                 <li><label><input type="radio"
-                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" [value]="false" checked>Recipient only replies to sender (sees message as private)</label></li>
+                                      [(ngModel)]="replyAll" name="replyAll" [value]="false" checked>Recipient only replies to sender (sees message as private)</label></li>
                 <li><label><input type="radio"
-                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" [value]="true" [disabled]="timMessage">Recipient replies all by default (sees message as a group message)</label></li>
+                                      [(ngModel)]="replyAll" name="replyAll" [value]="true" [disabled]="timMessage">Recipient replies all by default (sees message as a group message)</label></li>
             </ul>
             <label *ngIf="!defaultEmail"><input type="checkbox"
                                       [(ngModel)]="timMessage">as TIM message</label></fieldset><br/>
                 
             <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
-            <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="createMessageOptions.pageList" rows="4" cols="70"></textarea></p>
+            <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="TimMessageOptions.pageList" rows="4" cols="70"></textarea></p>
             <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.isPrivate">Recipient sees TIM message as private</label></p>
+                                      [(ngModel)]="TimMessageOptions.isPrivate">Recipient sees TIM message as private</label></p>
             <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.reply">TIM message can be replied to</label></p> 
+                                      [(ngModel)]="TimMessageOptions.reply">TIM message can be replied to</label></p> 
             <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.confirm">TIM message can be marked as read</label></p>
+                                      [(ngModel)]="TimMessageOptions.readReceipt">TIM message can be marked as read</label></p>
             <p *ngIf="timMessage && !defaultEmail" class="form-group">
                 <label for="expiration-selector">TIM message will be removed on:</label>
                 <tim-datetime-picker id="expiration-selector"
-                                     [(time)]="createMessageOptions.expires"
+                                     [(time)]="TimMessageOptions.expires"
                                      placeholder="No automatic date">
                 </tim-datetime-picker>
             </p><br/></div>
@@ -78,7 +77,7 @@ interface CreateMessageOptions {
                         (click)="sendMessage()">
                     Send
                 </button>
-                <span class="savedtext" *ngIf="emailMsg"> Sent!</span>
+                <span class="savedtext" *ngIf="messageMsg"> Sent!</span>
             </p>
         </div>
     `,
@@ -86,17 +85,21 @@ interface CreateMessageOptions {
 })
 export class TimMessageComponent {
     @Input()
-    emailList: string = "";
-    emailsubject: string = "";
-    emailbody: string = "";
+    recipientList: string = "";
+    messageSubject: string = "";
+    messageBody: string = "";
     showOptions: boolean = false;
     emailbcc: boolean = false;
     emailbccme: boolean = true;
     email: boolean = true;
     defaultEmail: boolean = false;
-    emailMsg: string = "";
+    replyAll: boolean | undefined = false;
+    messageMsg: string = "";
     timMessage: boolean = false;
-    createMessageOptions: CreateMessageOptions = {
+    TimMessageOptions: TimMessageOptions = {
+        /* recipients: this.recipientList.split(/\n/g),
+        messageSubject: this.messageSubject,
+        messageBody: this.messageBody, */
         messageChannel: false,
         archive: false,
         important: false,
@@ -104,9 +107,8 @@ export class TimMessageComponent {
         /* VIESTIM: check that urls listed in pageList exist in TIM (and user has at least edit permission to them) and inform user if not.*/
         /* VIESTIM: shorten urls listed in pageList and show them to user */
         pageList: "",
-        confirm: false,
+        readReceipt: false,
         reply: false,
-        replyAll: false,
         expires: undefined,
         sender: Users.getCurrent().real_name,
         senderEmail: Users.getCurrent().email,
@@ -127,33 +129,33 @@ export class TimMessageComponent {
     // Checks if all mandatory fields have values
     showSendButton() {
         return (
-            (this.createMessageOptions.messageChannel ||
-                this.email ||
-                this.timMessage) &&
-            ((this.createMessageOptions.reply &&
-                this.createMessageOptions.replyAll != undefined) ||
-                !this.createMessageOptions.reply)
+            this.TimMessageOptions.messageChannel ||
+            this.email ||
+            this.timMessage
         );
     }
 
     // resets form to it's initial values
     resetForm() {
-        this.emailsubject = "";
-        this.emailbody = "";
+        this.messageSubject = "";
+        this.messageBody = "";
         this.emailbcc = false;
         this.emailbccme = true;
         this.email = true;
         this.defaultEmail = false;
+        this.replyAll = false;
         this.timMessage = false;
-        this.createMessageOptions = {
+        this.TimMessageOptions = {
+            /* recipients: [],
+            messageSubject: this.messageSubject,
+            messageBody: this.messageBody, */
             messageChannel: false,
             archive: false,
             important: false,
             isPrivate: false,
             pageList: "",
-            confirm: false,
+            readReceipt: false,
             reply: true,
-            replyAll: false,
             expires: undefined,
             sender: Users.getCurrent().real_name,
             senderEmail: Users.getCurrent().email,
@@ -164,7 +166,11 @@ export class TimMessageComponent {
     public async sendMessage() {
         // send as TIM message
         if (this.timMessage) {
-            await this.sendTimMessage();
+            const result = await this.postTimMessage(this.TimMessageOptions);
+            if (!result.ok) {
+                console.error(result.result.error.error);
+                return;
+            }
         }
         // send as email in TIM
         if (this.email && !this.defaultEmail) {
@@ -173,7 +179,7 @@ export class TimMessageComponent {
         }
         // TODO: iPad do not like ;
         if (this.email && this.defaultEmail) {
-            let addrs = this.emailList.replace(/\n/g, ",");
+            let addrs = this.recipientList.replace(/\n/g, ",");
             let bcc = "";
             if (this.emailbcc) {
                 bcc = addrs;
@@ -190,34 +196,25 @@ export class TimMessageComponent {
                 addrs +
                 "?" +
                 "subject=" +
-                this.emailsubject +
+                this.messageSubject +
                 "&" +
                 "body=" +
-                this.emailbody +
+                this.messageBody +
                 "&" +
                 "bcc=" +
                 bcc;
             this.resetForm();
         }
-    }
-
-    async sendTimMessage() {
-        const result = await this.postTimMessage(this.createMessageOptions);
-        if (!result.ok) {
-            console.error(result.result.error.error);
-        } else {
-            // If emailMsg != "", text "Sent!" appears next to Send button.
-            this.emailMsg = "sent";
-            this.resetForm();
-        }
+        this.messageMsg = "sent";
+        this.resetForm();
     }
 
     // VIESTIM this helper function helps keeping types in check.
-    private postTimMessage(options: CreateMessageOptions) {
+    private postTimMessage(options: TimMessageOptions) {
         const message = {
-            emailbody: this.emailbody,
-            emailsubject: this.emailsubject,
-            recipients: this.emailList.split(/\n/g),
+            messageBody: this.messageBody,
+            messageSubject: this.messageSubject,
+            recipients: this.recipientList.split(/\n/g),
         };
         const timMessage = {...options, ...message};
         return to2(
@@ -229,45 +226,45 @@ export class TimMessageComponent {
 
     async sendEmailTim() {
         if (!this.taskId) {
-            this.emailMsg = "Cannot send email without taskId";
+            this.messageMsg = "Cannot send email without taskId";
             return;
         }
-        this.emailMsg = ""; // JSON.stringify(response);
+        this.messageMsg = ""; // JSON.stringify(response);
         const url = `/multiSendEmail/${this.taskId.docTask().toString()}`;
         let response;
         // if reply all is chosen
-        if (this.createMessageOptions.replyAll) {
+        if (this.replyAll) {
             response = await to(
                 $http.post<string[]>(url, {
-                    rcpt: this.emailList.replace(/\n/g, ";"),
-                    subject: this.emailsubject,
-                    msg: this.emailbody,
+                    rcpt: this.recipientList.replace(/\n/g, ";"),
+                    subject: this.messageSubject,
+                    msg: this.messageBody,
                     bccme: this.emailbccme,
                 })
             );
             if (!response.ok) {
-                this.emailMsg = response.result.data.error;
+                this.messageMsg = response.result.data.error;
             } else {
-                this.emailMsg = "Sent";
+                this.messageMsg = "Sent";
                 this.resetForm();
             }
         } else {
             // if only reply to sender is chosen
-            const recipients = this.emailList.split(/\n/g);
-            for (let recipient in recipients) {
+            const recipients = this.recipientList.split(/\n/g);
+            for (const recipient of recipients) {
                 response = await to(
                     $http.post<string[]>(url, {
                         rcpt: recipient,
-                        subject: this.emailsubject,
-                        msg: this.emailbody,
+                        subject: this.messageSubject,
+                        msg: this.messageBody,
                         bccme: this.emailbccme,
                     })
                 );
                 if (!response.ok) {
-                    this.emailMsg = response.result.data.error;
+                    this.messageMsg = response.result.data.error;
                 }
             }
-            this.emailMsg = "Sent";
+            this.messageMsg = "Sent";
             this.resetForm();
         }
     }

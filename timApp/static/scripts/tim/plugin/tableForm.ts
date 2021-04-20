@@ -255,7 +255,7 @@ const sortLang = "fi";
                     Copy
                 </button>
             </div>
-            <tim-message-send [emailList]="emaillist" [taskId]="getTaskId()"></tim-message-send>
+            <tim-message-send [recipientList]="recipientList" [taskId]="getTaskId()"></tim-message-send>
             <pre *ngIf="result">{{result}}</pre>
             <pre *ngIf="error" [innerHtml]="error"></pre>
             <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
@@ -329,7 +329,7 @@ export class TableFormComponent
     cbCount: number = 0;
     @ViewChild(TimTableComponent)
     timTable?: TimTableComponent;
-    emaillist = "";
+    recipientList = "";
     loading = false;
 
     getDefaultMarkup() {
@@ -1211,7 +1211,7 @@ export class TableFormComponent
             return;
         }
         const selUsers = timTable.getCheckedRows(0, true);
-        this.emaillist = TableFormComponent.makeUserList(
+        this.recipientList = TableFormComponent.makeUserList(
             selUsers,
             emailColIndex,
             "",
