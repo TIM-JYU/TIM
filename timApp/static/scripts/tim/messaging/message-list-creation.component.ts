@@ -120,7 +120,6 @@ export class MessageListComponent extends AngularDialogComponent<
                 ? this.domain.slice(1)
                 : this.domain,
             archive: this.archive,
-            emails: this.parseEmails(),
             ownerEmail: this.ownerEmail,
             notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             listInfo: this.listInfo,
