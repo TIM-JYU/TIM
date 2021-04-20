@@ -216,7 +216,7 @@ class EmailListManager:
         # Name is within length boundaries.
         lower_bound = 5
         upper_bound = 36
-        if len(name_candidate) < lower_bound or upper_bound < len(name_candidate):
+        if not (lower_bound < len(name_candidate) < upper_bound):
             return False, "Name is not within length boundaries. Name has to be at least {0} and at most {1} " \
                           "characters long".format(lower_bound, upper_bound)
 
