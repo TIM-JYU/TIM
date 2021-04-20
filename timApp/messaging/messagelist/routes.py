@@ -177,7 +177,7 @@ def archive(message_list_name: str, message: str) -> Response:
     # TODO: Check rights to message list.
     # TODO: Get the message list's archive policy.
 
-    archive_policy = msg_list.archive_policy()
+    archive_policy = msg_list.archive_policy
     # TODO: Check if this message list is archived at all in the first place, or if the message has had some special
     if archive_policy is ArchiveType.NONE:
         raise RouteException("This list doesn't archive messages.")
