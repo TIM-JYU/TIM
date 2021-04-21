@@ -17,6 +17,7 @@ from timApp.util.utils import remove_path_special_chars
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
 
+
 @messagelist.route('/createlist', methods=['POST'])
 def create_list(options: ListOptions) -> Response:
     """Handles creating a new message list.
@@ -178,7 +179,6 @@ def get_list(document_id: int) -> Response:
         domain="tim.jyu.fi",
         archive=msg_list.archive,
         # TODO: Query members.
-        emails=[],
         # TODO: Replace placeholder once we can properly query the owners email.
         ownerEmail="totalund@student.jyu.fi"
     )
