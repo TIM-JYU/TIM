@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from flask import Response
-from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm.exc import NoResultFound  # type: ignore
 
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
