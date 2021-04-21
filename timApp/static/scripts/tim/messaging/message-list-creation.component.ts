@@ -16,7 +16,7 @@ import {
 @Component({
     selector: "message-list-creation",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame size="lg">
             <ng-container header>
                 Message list creation
             </ng-container>
