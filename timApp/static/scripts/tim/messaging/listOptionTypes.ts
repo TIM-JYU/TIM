@@ -3,7 +3,6 @@ export interface CreateListOptions {
     listname: string;
     domain: string;
     archive: ArchiveType;
-    emails: string[];
     ownerEmail: string;
     notifyOwnerOnListChange: boolean;
     listDescription: string;

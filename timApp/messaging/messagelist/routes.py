@@ -19,6 +19,7 @@ from timApp.util.utils import remove_path_special_chars
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
 
+
 @messagelist.route('/createlist', methods=['POST'])
 def create_list(options: ListOptions) -> Response:
     """Handles creating a new message list.
