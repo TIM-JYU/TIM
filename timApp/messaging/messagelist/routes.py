@@ -179,7 +179,6 @@ def get_list(document_id: int) -> Response:
         domain="tim.jyu.fi",
         archive=msg_list.archive,
         # TODO: Query members.
-        emails=[],
         # TODO: Replace placeholder once we can properly query the owners email.
         ownerEmail="totalund@student.jyu.fi"
     )
