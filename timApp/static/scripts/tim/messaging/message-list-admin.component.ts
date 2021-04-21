@@ -12,7 +12,7 @@ interface CreateListOptions {
     listname: string;
     domain: string;
     archive: ArchiveType;
-    emails: string[];
+    // members: string[];
     ownerEmail: string;
     notifyOwnerOnListChange: boolean;
     listDescription: string;
@@ -69,20 +69,22 @@ interface CreateListOptions {
                 <label for="notify-owner-on-list-change">Notify me on list changes (e.g. user subscribes)</label>
             </div>
             <div>
-                <label for="add-multiple-emails">Add multiple emails</label> <br/>
-                <textarea id="add-multiple-emails" name="add-multiple-emails" [(ngModel)]="emails"></textarea>
+                <label for="add-multiple-members">Add members</label> <br/>
+                <textarea id="add-multiple-members" name="add-multiple-members" [(ngModel)]="members"></textarea>
+                <button (click)="addNewListMember()">Add new members</button>
             </div>
-
-            <div>
-                <select id="search-groups" multiple>
-                    <option value="1">Lundberg Tomi</option>
-                    <option value="15">ViesTIM</option>
-                    <option value="17">ViesTIM-opetus</option>
-                    <option value="18">ViesTIM-ohjaajat</option>
-                </select>
-            </div>
-            <button (click)="newList()">Create List</button>
         </form>
+
+        <!--
+        <div>
+            <select id="search-groups" multiple>
+                <option value="1">Lundberg Tomi</option>
+                <option value="15">ViesTIM</option>
+                <option value="17">ViesTIM-opetus</option>
+                <option value="18">ViesTIM-ohjaajat</option>
+            </select>
+        </div>
+-->
     `,
 })
 export class MessageListAdminComponent implements OnInit {
@@ -94,7 +96,7 @@ export class MessageListAdminComponent implements OnInit {
     domain: string = "";
     domains: string[] = [];
 
-    emails?: string;
+    members?: string;
 
     urlPrefix: string = "/messagelist";
 
@@ -109,7 +111,10 @@ export class MessageListAdminComponent implements OnInit {
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
+            // Get domains.
             void this.getDomains();
+
+            // Load message list options.
             const docId = documentglobals().curr_item.id;
             void this.loadValues(docId);
         }
@@ -141,7 +146,6 @@ export class MessageListAdminComponent implements OnInit {
                 ? this.domain.slice(1)
                 : this.domain,
             archive: this.archive,
-            emails: this.parseEmails(),
             ownerEmail: this.ownerEmail,
             notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             listInfo: this.listInfo,
@@ -167,10 +171,32 @@ export class MessageListAdminComponent implements OnInit {
      * @private
      */
     private parseEmails(): string[] {
-        if (!this.emails) {
+        if (!this.members) {
             return [];
         }
-        return this.emails.split("\n").filter((e) => e);
+        return this.members.split("\n").filter((e) => e);
+    }
+
+    async addNewListMember() {
+        const memberCandidates = this.parseEmails();
+        if (memberCandidates.length == 0) {
+            return;
+        }
+        const result = await to2(
+            this.http
+                .post(`${this.urlPrefix}/addmember`, {
+                    memberCandidates: memberCandidates,
+                    msgList: this.listname,
+                })
+                .toPromise()
+        );
+        if (result.ok) {
+            // TODO: Sending succeeded.
+            console.log("Sending members succeeded.");
+        } else {
+            // TODO: Sending failed.
+            console.error(result.result.error.error);
+        }
     }
 
     /**
@@ -208,8 +234,7 @@ export class MessageListAdminComponent implements OnInit {
         );
         if (result.ok) {
             // TODO: After server side value loading is complete, remove the console logging and uncomment line below.
-            console.log(result.result);
-            // this.setValues(result.result);
+            this.setValues(result.result);
         } else {
             console.error(result.result.error.error);
             // TODO: Check what went wrong.

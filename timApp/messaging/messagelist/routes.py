@@ -10,7 +10,7 @@ from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
 from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.timdb.sqa import db
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
 
@@ -177,9 +177,16 @@ def get_list(document_id: int) -> Response:
         #  here is a placeholder.
         domain="tim.jyu.fi",
         archive=msg_list.archive,
-        # TODO: Query members.
-        emails=[],
         # TODO: Replace placeholder once we can properly query the owners email.
         ownerEmail="totalund@student.jyu.fi"
     )
     return json_response(list_options)
+
+
+@messagelist.route("/addmember", methods=['POST'])
+def add_member(memberCandidates: List[str], msgList: str) -> Response:
+    # TODO: new_members comes as a string of multiple possible new members. This can be a unique user or a user group.
+    print(msgList)
+    print(memberCandidates)
+
+    return ok_response()
