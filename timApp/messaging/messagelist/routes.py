@@ -19,7 +19,6 @@ from timApp.util.utils import remove_path_special_chars
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
 
-
 @messagelist.route('/createlist', methods=['POST'])
 def create_list(options: ListOptions) -> Response:
     """Handles creating a new message list.
@@ -195,13 +194,16 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
     except NoResultFound:
         raise RouteException(f"There is no list named {msgList}")
 
+    # TODO: Implement checking whether or not users are just added to a list (like they are now) or they are invited
+    #  to a list (requires link generation and other things).
+
     for member_candidate in memberCandidates:
         u = User.get_by_name(member_candidate)
         if u is not None:
             # The name given was an existing TIM user.
             new_tim_member = MessageListTimMember()
-            new_tim_member.message_list_id = msg_list
-            new_tim_member.group_id = u.get_personal_group()
+            new_tim_member.message_list_id = msg_list.id
+            new_tim_member.group_id = u.get_personal_group().id
             # VIESTIM: For convenience sake just add these. Figure out list rights at a later date.
             new_tim_member.delivery_right = True
             new_tim_member.send_right = True
