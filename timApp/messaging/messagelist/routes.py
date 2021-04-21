@@ -2,14 +2,16 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from flask import Response
+from sqlalchemy.orm.exc import NoResultFound
 
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
 from timApp.messaging.messagelist.listoptions import ListOptions
-from timApp.messaging.messagelist.messagelist_models import MessageListModel
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, MessageListTimMember
 from timApp.timdb.sqa import db
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
@@ -185,8 +187,30 @@ def get_list(document_id: int) -> Response:
 
 @messagelist.route("/addmember", methods=['POST'])
 def add_member(memberCandidates: List[str], msgList: str) -> Response:
-    # TODO: new_members comes as a string of multiple possible new members. This can be a unique user or a user group.
-    print(msgList)
-    print(memberCandidates)
+    from timApp.user.user import User  # Local import to avoid cyclical imports.
+
+    try:
+        msg_list = MessageListModel.get_list_by_name(msgList)
+    except NoResultFound:
+        raise RouteException(f"There is no list named {msgList}")
+
+    for member_candidate in memberCandidates:
+        u = User.get_by_name(member_candidate)
+        if u is not None:
+            # The name given was an existing TIM user.
+            new_tim_member = MessageListTimMember()
+            new_tim_member.message_list_id = msg_list
+            new_tim_member.group_id = u.get_personal_group()
+            # VIESTIM: For convenience sake just add these. Figure out list rights at a later date.
+            new_tim_member.delivery_right = True
+            new_tim_member.send_right = True
+            db.session.add(new_tim_member)
+
+        # TODO: If member_candidate is a user group, what do? Add as is or open it to individual users?
+
+        # TODO: If member candidate is not a user, or a user group, then we assume an external member. Add external
+        #  members.
+
+    db.session.commit()
 
     return ok_response()

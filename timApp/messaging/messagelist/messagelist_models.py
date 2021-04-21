@@ -60,6 +60,11 @@ class MessageListModel(db.Model):
         m = MessageListModel.query.filter_by(manage_doc_id=doc_id).one()
         return m
 
+    @staticmethod
+    def get_list_by_name(name: str) -> 'MessageListModel':
+        m = MessageListModel.query.filter_by(name=name).one()
+        return m
+
 
 class MessageListMember(db.Model):
     """Database model for members of a message list."""
