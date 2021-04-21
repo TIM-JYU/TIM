@@ -1445,7 +1445,7 @@ def hide_points(a: Answer):
 
 @answers.route('/exportAnswers/<path:doc_path>')
 def export_answers(doc_path: str):
-    d = DocEntry.find_by_path(doc_path)
+    d = DocEntry.find_by_path(doc_path, try_translation=False)
     if not d:
         raise RouteException('Document not found')
     verify_teacher_access(d)
@@ -1463,6 +1463,7 @@ def export_answers(doc_path: str):
         'points': a.points,
         'time': a.answered_on,
         'task': a.task_name,
+        'doc': doc_path,
     } for a, email in answer_list])
 
 
@@ -1474,31 +1475,40 @@ class ExportedAnswer:
     task: str
     time: datetime
     valid: bool
+    doc: str
 
 
 @dataclass
 class ImportAnswersModel:
-    doc: str
     answers: List[ExportedAnswer]
     allow_missing_users: bool = False
+    doc_map: Dict[str, str] = field(default_factory=dict)
 
 
 @answers.route('/importAnswers', methods=['post'])
 @use_model(ImportAnswersModel)
 def import_answers(m: ImportAnswersModel):
-    d = DocEntry.find_by_path(m.doc)
-    if not d:
-        raise RouteException('Document not found')
-    verify_teacher_access(d)
     verify_admin()
+    doc_paths = set(m.doc_map.get(a.doc, a.doc) for a in m.answers)
+    docs = DocEntry.query.filter(DocEntry.name.in_(doc_paths)).all()
+    doc_path_map = {d.path: d for d in docs}
+    missing_docs = doc_paths - set(doc_path_map)
+    if missing_docs:
+        raise RouteException(f'Some documents not found: {missing_docs}')
+    for d in docs:
+        verify_teacher_access(d)
+    filter_cond = Answer.task_id.startswith(f'{docs[0].id}.')
+    for d in docs[1:]:
+        filter_cond |= Answer.task_id.startswith(f'{d.id}.')
     existing_answers: List[Tuple[Answer, str]] = (
         Answer.query
-            .filter(Answer.task_id.startswith(f'{d.id}.'))
+            .filter(filter_cond)
             .join(User, Answer.users)
             .with_entities(Answer, User.email)
             .all()
     )
-    existing_set = set((a.task_name, a.answered_on, a.valid, a.points, email) for a, email in existing_answers)
+    existing_set = set((a.parsed_task_id.doc_id, a.task_name, a.answered_on, a.valid, a.points, email) for a, email in
+                       existing_answers)
     dupes = 0
     users = {u.email: u for u in User.query.filter(User.email.in_([a.email for a in m.answers])).all()}
     requested_users = set(a.email for a in m.answers)
@@ -1508,14 +1518,15 @@ def import_answers(m: ImportAnswersModel):
     m.answers.sort(key=lambda a: a.time)
     all_imported = []
     for a in m.answers:
-        if (a.task, a.time, a.valid, a.points, a.email) not in existing_set:
+        doc_id = doc_path_map[m.doc_map.get(a.doc, a.doc)].id
+        if (doc_id, a.task, a.time, a.valid, a.points, a.email) not in existing_set:
             u = users.get(a.email)
             if not u:
                 if not m.allow_missing_users:
                     raise Exception('Missing user should have been reported earlier')
                 continue
             imported_answer = Answer(
-                task_id=f'{d.id}.{a.task}',
+                task_id=f'{doc_id}.{a.task}',
                 valid=a.valid,
                 points=a.points,
                 content=a.content,

@@ -76,29 +76,30 @@ class AnswerTest(TimRouteTest):
         db.session.commit()
 
         exported = self.get(f'/exportAnswers/{d.path}')
-
+        old_path = d.path
         d = self.create_doc()
+        path_map = {old_path: d.path}
         self.json_post(
-            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            f'/importAnswers', {'answers': exported, 'doc_map': path_map},
             expect_content='This action requires administrative rights.',
             expect_status=403,
         )
         self.make_admin(self.current_user)
         self.json_post(
-            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            f'/importAnswers', {'answers': exported, 'doc_map': path_map},
             expect_content={'imported': 3, 'skipped_duplicates': 0, 'missing_users': []},
         )
         self.json_post(
-            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            f'/importAnswers', {'answers': exported, 'doc_map': path_map},
             expect_content={'imported': 0, 'skipped_duplicates': 3, 'missing_users': []},
         )
         exported[0]['email'] = 'xxx'
         self.json_post(
-            f'/importAnswers', {'answers': exported, 'doc': d.path, 'allow_missing_users': True},
+            f'/importAnswers', {'answers': exported, 'doc_map': path_map, 'allow_missing_users': True},
             expect_content={'imported': 0, 'skipped_duplicates': 2, 'missing_users': ['xxx']},
         )
         self.json_post(
-            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            f'/importAnswers', {'answers': exported, 'doc_map': path_map},
             expect_content='Email(s) not found: xxx',
             expect_status=400,
         )
