@@ -5,6 +5,7 @@ from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain
 
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate
 from timApp.tim_app import app
 from timApp.util.flask.requesthelper import NotExist
@@ -144,9 +145,10 @@ class EmailListManager:
             try:
                 domain: Domain = _client.get_domain(list_options.domain)
                 email_list: MailingList = domain.create_list(list_options.listname)
+                user = get_current_user_object()
                 # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
                 #  their lists on Mailman.
-                email_list.add_owner(list_options.ownerEmail)
+                email_list.add_owner(user.email)
 
                 # VIESTIM: Sometimes Mailman gets confused how mail is supposed to be interpreted, and with some
                 #  email client's different interpretation with Mailman's email coding templates (e.g. list
@@ -174,7 +176,7 @@ class EmailListManager:
                 # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
                 # advertising on if they so choose.
                 mlist_settings["advertised"] = False
-                mlist_settings["admin_notify_mchanges"] = list_options.notifyOwnerOnListChange
+                mlist_settings["admin_notify_mchanges"] = False
                 set_email_list_description(email_list, list_options.listDescription)
                 set_email_list_info(email_list, list_options.listInfo)
 

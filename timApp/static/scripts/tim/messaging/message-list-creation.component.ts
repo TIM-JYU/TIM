@@ -22,7 +22,7 @@ import {
             </ng-container>
             <ng-container body>
                 <div>
-                    <label for="list-name">List name: </label>
+                    <label for="list-name" class="list-name">List name: </label>
                     <input type="text" name="list-name" id="list-name"
                            [(ngModel)]="listname"
                            (keyup)="checkNameRequirementsLocally()"/>
@@ -31,8 +31,8 @@ import {
                         <option [disabled]="domains.length" *ngFor="let domain of domains">{{domain}}</option>
                     </select>
                 </div>
-                <div>
-                    <b>List archive policy:</b>
+                <div class="archive-options">
+                    <p class="list-name">List archive policy: </p>
                     <ul style="list-style-type: none">
                         <li *ngFor="let option of archiveOptions">
                             <input
@@ -52,6 +52,7 @@ import {
             </ng-container>
         </tim-dialog-frame>
     `,
+    styleUrls: ["message-list-creation.component.scss"],
 })
 export class MessageListComponent extends AngularDialogComponent<
     unknown,
@@ -120,8 +121,6 @@ export class MessageListComponent extends AngularDialogComponent<
                 ? this.domain.slice(1)
                 : this.domain,
             archive: this.archive,
-            ownerEmail: this.ownerEmail,
-            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             listInfo: this.listInfo,
             listDescription: this.listDescription,
         });
