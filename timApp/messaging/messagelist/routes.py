@@ -169,6 +169,7 @@ def get_list(document_id: int) -> Response:
     :return: ListOptions with the list's information.
     """
     msg_list = MessageListModel.get_list_by_manage_doc_id(document_id)
+    # TODO: Maybe don't use ListOptions since ownerEmail and notifyOwnerOnListChange is not used there
     list_options = ListOptions(
         listname=msg_list.name,
         listInfo=msg_list.info,
