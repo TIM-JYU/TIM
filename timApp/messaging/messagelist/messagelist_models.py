@@ -93,6 +93,17 @@ class MessageListMember(db.Model):
     delivery_right = db.Column(db.Boolean)
     """If a member can get messages from a message list."""
 
+    membership_ended = db.Column(db.DateTime(timezone=True))
+    """When member's membership on a list ended. This is set when member is removed from a list."""
+
+    join_method = db.Column(db.Enum(MessageListJoinMethod))
+    """How the member came to a list."""
+
+    membership_verified = db.Column(db.DateTime(timezone=True))
+    """When the user's joining was verified. If user is added e.g. by a teacher to a course's message list, 
+    this date is the date teacher added the member. If the user was invited, then this is the date they verified 
+    their join. """
+
     # VIESTIM: This doesn't strictly speaking exists in the original plan. This acts as an discriminator,
     #  see SQLAlchemy's documentation's term list.
     member_type = db.Column(db.Text)
