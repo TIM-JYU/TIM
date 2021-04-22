@@ -624,3 +624,48 @@ def get_email_list_by_name(list_name: str, list_domain: str) -> MailingList:
         # VIESTIM: Should we give some additional information, or are we satisfied with just re-raising the HTTPError
         #  from mailmanclient? This can fail in not getting contact to the server or Mailman not finding a list.
         raise
+
+
+def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool, real_name: Optional[str],
+              send_right=True, delivery_right=False, ) -> None:
+    """Add a new email
+
+    :param mlist: Email list where a new member is being added.
+    :param email: The email being added.
+    :param email_owner_pre_confirmation: Whether the email's owner has to confirm them joining an email list. For True,
+    no confirmation is needed by the email's owner. For False, Mailman send's a confirmation mail for email's owner to
+    join the list.
+    :param real_name: Name associated with the email.
+    :param send_right: Whether email can send mail to the list. For True, then can send messages and for False they
+    can't.
+    :param delivery_right: Whether email list delivers mail to email. For True, mail is delivered to email. For False,
+    no mail is delivered.
+    :return:
+    """
+    # VIESTIM: Check if email belongs to an existing User object? If it does, subscribe the user instead?
+
+    # VIESTIM:
+    #  We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise
+    #  they have to verify themselves for Mailman. Note that this is different from confirming to join a list.
+    #  We use pre_approved flag, because we assume that who adds an email to a list also wants that email onto
+    #  a list. Otherwise they would have to afterwards manually moderate their subscription request.
+    new_member = mlist.subscribe(email,
+                                 pre_verified=True,
+                                 pre_approved=True,
+                                 pre_confirmed=email_owner_pre_confirmation,
+                                 display_name=real_name)
+
+    # Set member's send right to email list.
+    if send_right:
+        new_member.preferences["delivery_status"] = "enabled"
+    else:
+        new_member.preferences["delivery_status"] = "by_moderator"
+    new_member.preferences.save()
+
+    # Set member's delivery right to email list.
+    if delivery_right:
+        new_member.moderation_action = "accept"
+    else:
+        new_member.moderation_action = "discard"
+    new_member.save()
+
