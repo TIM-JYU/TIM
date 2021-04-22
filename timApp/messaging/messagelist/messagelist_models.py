@@ -1,6 +1,6 @@
 from enum import Enum
 
-from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions
+from timApp.messaging.messagelist.listoptions import ArchiveType
 from timApp.timdb.sqa import db
 
 
@@ -38,13 +38,16 @@ class MessageListModel(db.Model):
     can_unsubscribe = db.Column(db.Boolean)
     """If a member can unsubscribe from this list on their own."""
 
+    email_list_domain = db.Column(db.Text)
+    """The domain used for an email list attached to a message list. If None/null, then message list doesn't have an 
+    attached email list. This is a tad silly at this point in time, because JYU TIM only has one domain. However, 
+    this allows quick adaptation if more domains are added or otherwise changed in the future. """
+
     # VIESTIM: archive is type bool in the original plan.
     archive = db.Column(db.Enum(ArchiveType))
     """The archive policy of a message list."""
 
     # VIESTIM: New values.
-
-    """Who owns this message list"""
 
     notify_owner_on_change = db.Column(db.Boolean)
     """Should the owner of the message list be notified if there are changes on message list members."""
@@ -55,13 +58,11 @@ class MessageListModel(db.Model):
     info = db.Column(db.Text)
     """Additional information about the message list."""
 
+    removed = db.Column(db.DateTime(timezone=True))
+    """When this list has been marked for removal."""
+
     block = db.relationship("Block")
     members = db.relationship("MessageListMember", back_populates="message_list")
-
-    @staticmethod
-    def owners() -> None:
-        """Owners of a message list. Owners are infered from the management doc's owners."""
-        pass
 
     @staticmethod
     def get_list_by_manage_doc_id(doc_id: int) -> 'MessageListModel':
