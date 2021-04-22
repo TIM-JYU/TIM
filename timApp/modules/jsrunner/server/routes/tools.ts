@@ -978,7 +978,9 @@ export class Tools extends ToolsBase {
     }
 
     getRealName(): string {
-        return this.data.user.real_name;
+        return (
+            this.data.user.real_name ?? `Unnamed user '${this.data.user.name}'`
+        );
     }
 
     getStudentName(): string {
