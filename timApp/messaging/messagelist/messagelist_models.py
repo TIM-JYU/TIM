@@ -156,7 +156,7 @@ class MessageListDistribution(db.Model):
     __tablename__ = "messagelist_distribution"
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
 
-    channel_id = db.Column(db.Enum(Channel))
+    channel = db.Column(db.Enum(Channel))
     """Which message channels are used for a message list."""
 
     member = db.relationship("MessageListMember", back_populates="distribution")
