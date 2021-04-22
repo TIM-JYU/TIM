@@ -25,7 +25,7 @@ interface CreateListOptions {
         <form name="list-options-form">
             <h1>Message list management</h1>
             <div>
-                <label for="list-name">List name: </label>
+                <label for="list-name" class="list-name">List name: </label>
                 <input type="text" name="list-name" id="list-name"
                        [(ngModel)]="listname"/><span>@</span>
                 <select id="domain-select" name="domain-select" [(ngModel)]="domain">
@@ -34,22 +34,22 @@ interface CreateListOptions {
             </div>
             <div>
                 <!-- VIESTIM: For testing list adding with owner email address. -->
-                <label for="owner-address">List owner's adress</label>
+                <label for="owner-address" class="owner-address">List owner's address: </label>
                 <input type="text" name="owner-address" id="owner-adress" [(ngModel)]="ownerEmail"/>
             </div>
             <div>
-                <label for="list-description">Short description</label>
+                <label for="list-description" class="short-description">Short description: </label>
                 <input type="text" name="list-description" id="list-description" [(ngModel)]="listDescription"/>
             </div>
             <div>
-                <label for="list-info">Long description</label>
-                <textarea name="list-info"
+                <label for="list-info" class="long-description">Long description: </label>
+                <textarea name="list-info" class="list-info" 
                           [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
             </div>
             <div>
             </div>
             <div>
-                <b>List archive policy:</b>
+                <p class="list-archive-policy-header">List archive policy:</p>
                 <ul style="list-style-type: none">
                     <li *ngFor="let option of archiveOptions">
                         <input
@@ -68,7 +68,7 @@ interface CreateListOptions {
                        [(ngModel)]="notifyOwnerOnListChange"/>
                 <label for="notify-owner-on-list-change">Notify me on list changes (e.g. user subscribes)</label>
             </div>
-            <div>
+            <div class="multiple-emails">
                 <label for="add-multiple-emails">Add multiple emails</label> <br/>
                 <textarea id="add-multiple-emails" name="add-multiple-emails" [(ngModel)]="emails"></textarea>
             </div>
@@ -83,7 +83,9 @@ interface CreateListOptions {
             </div>
             <button (click)="newList()">Create List</button>
         </form>
+        <p></p>
     `,
+    styleUrls: ["message-list-admin.component.scss"],
 })
 export class MessageListAdminComponent implements OnInit {
     listname: string = "";
