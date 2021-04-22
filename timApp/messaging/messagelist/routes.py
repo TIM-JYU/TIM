@@ -162,7 +162,7 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     return doc
 
 
-@messagelist.route("/getlist/<document_id>", methods=['GET'])
+@messagelist.route("/getlist/<int:document_id>", methods=['GET'])
 def get_list(document_id: int) -> Response:
     """Get the information for a message list.
 

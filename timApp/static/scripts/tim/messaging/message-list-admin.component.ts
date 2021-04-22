@@ -5,6 +5,7 @@ import {to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {archivePolicyNames, ArchiveType} from "tim/messaging/listOptionTypes";
 import {documentglobals} from "tim/util/globals";
+import {IUser} from "tim/user/IUser";
 import {Users} from "../user/userService";
 
 interface CreateListOptions {
@@ -70,8 +71,20 @@ interface CreateListOptions {
             </div>
             <div>
                 <label for="add-multiple-members">Add members</label> <br/>
-                <textarea id="add-multiple-members" name="add-multiple-members" [(ngModel)]="members"></textarea>
+                <textarea id="add-multiple-members" name="add-multiple-members"
+                          [(ngModel)]="membersTextField"></textarea>
                 <button (click)="addNewListMember()">Add new members</button>
+            </div>
+            <div>
+                <p>List members</p>
+                <ul>
+                    <li *ngFor="let member of membersList">
+                        <span>{{member.real_name}}</span>
+                        <span>{{member.email}}</span>
+                        <span>send</span>
+                        <span>delivery</span>
+                    </li>
+                </ul>
             </div>
         </form>
 
@@ -96,7 +109,8 @@ export class MessageListAdminComponent implements OnInit {
     domain: string = "";
     domains: string[] = [];
 
-    members?: string;
+    membersTextField?: string;
+    membersList: IUser[] = [];
 
     urlPrefix: string = "/messagelist";
 
@@ -174,10 +188,10 @@ export class MessageListAdminComponent implements OnInit {
      * @private
      */
     private parseEmails(): string[] {
-        if (!this.members) {
+        if (!this.membersTextField) {
             return [];
         }
-        return this.members.split("\n").filter((e) => e);
+        return this.membersTextField.split("\n").filter((e) => e);
     }
 
     async addNewListMember() {
