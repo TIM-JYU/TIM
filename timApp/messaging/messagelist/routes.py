@@ -9,7 +9,7 @@ from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList, get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions
-from timApp.messaging.messagelist.messagelist_models import MessageListModel, MessageListTimMember
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, MessageListTimMember, get_members_for_list
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -231,3 +231,16 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
     db.session.commit()
 
     return ok_response()
+
+
+@messagelist.route("/getmembers/<list_name>", methods=['POST'])
+def get_members(list_name: str) -> Response:
+    """Get members belonging to a certain list.
+
+    :param list_name:
+    :return:
+    """
+    msg_list = MessageListModel.get_list_by_name(list_name)
+    list_members = get_members_for_list(msg_list)
+
+    return json_response(list_members)
