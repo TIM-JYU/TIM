@@ -198,43 +198,61 @@ interface CreateMessageOptions {
             <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
             <p>Message content:</p>
             <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
-            <fieldset><p>Send</p><label *ngIf="!defaultEmail"><input type="checkbox" 
-                                      [(ngModel)]="createMessageOptions.messageChannel">to recipient's own message channels</label><br/>
-            <label><input type="checkbox" (change)="notDefault()"
-                                      [(ngModel)]="emailtim">as email</label><br/>
-                <ul *ngIf="emailtim"><li>
-                    <label><input type="checkbox"
+            <fieldset><p>Send</p><label *ngIf="!defaultEmail"><input type="checkbox"
+                                                                     [(ngModel)]="createMessageOptions.messageChannel">to
+                recipient's own message channels</label><br/>
+                <label><input type="checkbox" (change)="notDefault()"
+                              [(ngModel)]="emailtim">as email</label><br/>
+                <ul *ngIf="emailtim">
+                    <li>
+                        <label><input type="checkbox"
                                       [(ngModel)]="defaultEmail">use your default email client</label><br/>
-                </li></ul>
-            <label *ngIf="!defaultEmail"><input type="checkbox"
-                                      [(ngModel)]="timMessage">as TIM message</label></fieldset><br/>
+                    </li>
+                </ul>
+                <label *ngIf="!defaultEmail"><input type="checkbox"
+                                                    [(ngModel)]="timMessage">as TIM message</label></fieldset>
+            <br/>
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.archive">Archive message</label></p>
+                                                   [(ngModel)]="createMessageOptions.archive">Archive message</label>
+            </p>
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.isPrivate">Recipient sees message as private</label></p>
+                                                   [(ngModel)]="createMessageOptions.isPrivate">Recipient sees message
+                as private</label></p>
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.reply">Message can be replied to</label></p>  
+                                                   [(ngModel)]="createMessageOptions.reply">Message can be replied
+                to</label></p>
             <p *ngIf="createMessageOptions.reply"><label><input type="radio"
-                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" value="true">Recipient replies all by default</label><br/>
-            <label><input type="radio"
-                                      [(ngModel)]="createMessageOptions.replyAll" name="replyAll" value="false">Recipient only replies to sender</label></p>
-            
-            <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
-            <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="createMessageOptions.pageList" rows="4" cols="70"></textarea></p>                                      
+                                                                [(ngModel)]="createMessageOptions.replyAll"
+                                                                name="replyAll" value="true">Recipient replies all by
+                default</label><br/>
+                <label><input type="radio"
+                              [(ngModel)]="createMessageOptions.replyAll" name="replyAll" value="false">Recipient only
+                    replies to sender</label></p>
+
+            <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be
+                automatically shortened)</p>
+            <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="createMessageOptions.pageList" rows="4"
+                                                             cols="70"></textarea></p>
             <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="createMessageOptions.confirm">TIM message can be confirmed</label></p>
-                      
+                                                                 [(ngModel)]="createMessageOptions.confirm">TIM message
+                can be confirmed</label></p>
+
             <p *ngIf="timMessage && !defaultEmail" class="form-group">
                 <label for="expiration-selector">TIM message will be removed on:</label>
                 <tim-datetime-picker id="expiration-selector"
                                      [(time)]="createMessageOptions.expires"
                                      placeholder="No automatic date">
                 </tim-datetime-picker>
-            </p><br/>
+            </p>
+            <br/>
             <p>
                 <button class="timButton" id="sendButton" *ngIf="showSendButton()"
                         (click)="sendEmail()">
                     Send
+                </button>
+                <button class="timButton" *ngIf="showSendButton()"
+                        (click)="sendTimMessage()">
+                    Send TIM message (test)
                 </button>
                 <span class="savedtext" *ngIf="emailMsg">Sent!</span>
             </p>
@@ -325,9 +343,7 @@ export class TimEmailComponent {
         };
         const timMessage = {...options, ...message};
         return to2(
-            this.http
-                .post("/timMessage/send", {options: timMessage})
-                .toPromise()
+            this.http.post("/timMessage/send", {timMessage}).toPromise()
         );
     }
 

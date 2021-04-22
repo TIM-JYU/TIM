@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List
 
 from timApp.timdb.sqa import db
 
@@ -38,6 +39,11 @@ class InternalMessage(db.Model):
     # TODO: Expiration date and sender if necessary
     #  Expiration date: use Block's BlockAccess: accessible_from and accessible_to?
     #  Sender: use Block's BlockAccess: usergroup_id (owner?)
+
+    @staticmethod
+    def get_messages() -> 'List[InternalMessage]':  # VIESTIM get all messages for testing purposes
+        messages = InternalMessage.query
+        return messages
 
 
 class InternalMessageDisplay(db.Model):
