@@ -189,13 +189,10 @@ class VerificationType(Enum):
 
 
 class Verifications(db.Model):
-    """For various pending verifications, such as message list joining verification and email ownership verification."""
+    """For various pending verifications, such as message list joining and email ownership verification."""
     __tablename__ = "verifications"
 
     id = db.Column(db.Integer, primary_key=True)
-
-    # verification_sent = db.Column(db.DateTime(timezone=True))
-    """ d"""
 
     verification_type = db.Column(db.Enum(VerificationType))
     """The type of verification, see VerificationType class for details."""
@@ -206,3 +203,6 @@ class Verifications(db.Model):
     verification_link = db.Column(db.Text)
     """Generated verification link. This is given to the user and once they click on it, they are verified (in 
     whatever it was that needed verification)."""
+
+    verified = db.Column(db.DateTime(timezone=True))
+    """When the user used the link to verify."""
