@@ -52,8 +52,8 @@ def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
     """
     print(message)
 
-    tim_message = InternalMessage(can_mark_as_read=options.confirm, reply=options.reply)
-    create_tim_message(tim_message, message)
+    tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply)
+    create_tim_message(tim_message, options, message)
 
     db.session.add(tim_message)
     db.session.commit()
@@ -61,11 +61,12 @@ def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
     return ok_response()
 
 
-def create_tim_message(tim_message: InternalMessage, message_body: MessageBody) -> DocInfo:
+def create_tim_message(tim_message: InternalMessage, options: MessageOptions, message_body: MessageBody) -> DocInfo:
     """
     Creates a TIM document for the TIM message to sender's Messages-folder.
 
     :param tim_message: InternalMessage object
+    :param options: Options related to the message
     :param message_body: Message subject, contents and list of recipients
     :return: The created Document object
     """
@@ -85,11 +86,16 @@ def create_tim_message(tim_message: InternalMessage, message_body: MessageBody) 
 
     message_doc.document.add_paragraph(f'# {message_subject}')
     message_doc.document.add_paragraph(f'**From:** {sender.name}, {sender.email}')
+    message_doc.document.add_paragraph(f'**To:** {message_body.recipients}')
     message_par = message_doc.document.add_paragraph(message_body.messageBody)
 
     tim_message.doc_id = message_doc.id
     tim_message.par_id = message_par.get_id()
-    tim_message.display_type = DisplayType.TOP_OF_PAGE  # VIESTIM default value for now
+    if options.important:
+        # Important messages are interpreted to 'sticky'
+        tim_message.display_type = DisplayType.STICKY  # TODO actual functionality
+    else:
+        tim_message.display_type = DisplayType.TOP_OF_PAGE  # default display type
 
     return message_doc
 
