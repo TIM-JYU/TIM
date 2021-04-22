@@ -117,6 +117,9 @@ export class MessageListAdminComponent implements OnInit {
             // Load message list options.
             const docId = documentglobals().curr_item.id;
             void this.loadValues(docId);
+
+            // Load message list's members.
+            void this.getListMembers();
         }
     }
 
@@ -195,6 +198,19 @@ export class MessageListAdminComponent implements OnInit {
             console.log("Sending members succeeded.");
         } else {
             // TODO: Sending failed.
+            console.error(result.result.error.error);
+        }
+    }
+
+    async getListMembers() {
+        const result = await to2(
+            this.http
+                .get(`${this.urlPrefix}/getmembers/${this.listname}`)
+                .toPromise()
+        );
+        if (result.ok) {
+            console.log(result.result);
+        } else {
             console.error(result.result.error.error);
         }
     }
