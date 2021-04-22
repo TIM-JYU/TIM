@@ -42,7 +42,7 @@ class InternalMessage(db.Model):
 
     @staticmethod
     def get_messages() -> 'List[InternalMessage]':  # VIESTIM get all messages for testing purposes
-        messages = InternalMessage.query
+        messages = InternalMessage.query.all()
         return messages
 
 
