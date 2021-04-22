@@ -336,14 +336,17 @@ export class TimEmailComponent {
 
     // VIESTIM this helper function helps keeping types in check.
     private postTimMessage(options: CreateMessageOptions) {
+        console.log(options.sender);
+        console.log(options.senderEmail);
         const message = {
             emailbody: this.emailbody,
             emailsubject: this.emailsubject,
             recipients: this.emaillist.split(/\n/g),
         };
         const timMessage = {...options, ...message};
+        console.log({timMessage});
         return to2(
-            this.http.post("/timMessage/send", {timMessage}).toPromise()
+            this.http.post("/timMessage/send", {options, message}).toPromise()
         );
     }
 

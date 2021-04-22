@@ -7,9 +7,9 @@ from flask import Response
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
-from timApp.messaging.timMessage.internalmessage_models import InternalMessage
+from timApp.messaging.timMessage.internalmessage_models import InternalMessage, DisplayType
 from timApp.timdb.sqa import db
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 timMessage = TypedBlueprint('timMessage', __name__, url_prefix='/timMessage')
@@ -37,23 +37,17 @@ class MessageBody:
     recipients: List[str]  # VIESTIM: find recipient by email or some other identifier?
 
 
-@dataclass
-class CompleteTimMessage:
-    options: MessageOptions
-    message: MessageBody
-
-
 @timMessage.route("/send", methods=['POST'])
-def send_tim_message(message: CompleteTimMessage) -> DocInfo:
+def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
     print(message)
 
-    tim_message = InternalMessage(can_mark_as_read=message.options.confirm, reply=message.options.reply)
-    message_doc = create_tim_message(tim_message, message.message)
+    tim_message = InternalMessage(can_mark_as_read=options.confirm, reply=options.reply)
+    message_doc = create_tim_message(tim_message, message)
 
     db.session.add(tim_message)
     db.session.commit()
 
-    return message_doc
+    return ok_response()
 
 
 def create_tim_message(tim_message: InternalMessage, message_body: MessageBody) -> DocInfo:
@@ -69,6 +63,7 @@ def create_tim_message(tim_message: InternalMessage, message_body: MessageBody) 
 
     tim_message.doc_id = message_doc.id
     tim_message.par_id = message_par.get_id()
+    tim_message.display_type = DisplayType.TOP_OF_PAGE  # VIESTIM default value for now
 
     return message_doc
 
