@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import List, Dict, Tuple, TYPE_CHECKING
+from typing import List, Dict, Tuple, TYPE_CHECKING, Optional
 
 import attr
 from sqlalchemy.orm import joinedload
@@ -9,6 +9,7 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.auth.auth_models import BlockAccess
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
+from timApp.messaging.timMessage.internalmessage_models import InternalMessageDisplay
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
@@ -114,6 +115,9 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     external_id: ScimUserGroup = db.relationship('ScimUserGroup', lazy='select', uselist=False)
 
     messagelist_membership: MessageListTimMember = db.relationship("MessageListTimMember", back_populates="user_group")
+
+    internalmessage_display: Optional[InternalMessageDisplay] = db.relationship('InternalMessageDisplay',
+                                                                                back_populates='usergroup')
 
     def __repr__(self):
         return f'<UserGroup(id={self.id}, name={self.name})>'
@@ -284,9 +288,11 @@ DELETED_GROUP_PREFIX = 'deleted:'
 class UserGroupWithSisuInfo:
     """Wrapper for UserGroup that reports the sisugroup path in to_json."""
     ug: UserGroup
+
     def to_json(self):
         return {
             **self.ug.to_json(),
             'admin_doc': self.ug.admin_doc.docentries[0] if self.ug.admin_doc else None,
-            'sisugroup_path': parse_sisu_group_display_name(self.ug.display_name).sisugroups_doc_path if self.ug.display_name else None
+            'sisugroup_path': parse_sisu_group_display_name(
+                self.ug.display_name).sisugroups_doc_path if self.ug.display_name else None
         }
