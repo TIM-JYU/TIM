@@ -11,6 +11,7 @@ from timApp.auth.auth_models import BlockAccess
 from timApp.item.blockassociation import BlockAssociation
 from timApp.item.tag import Tag
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
+from timApp.messaging.timMessage.internalmessage_models import InternalMessage, InternalMessageDisplay
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
@@ -45,7 +46,8 @@ class Block(db.Model):
 
     docentries = db.relationship('DocEntry', back_populates='_block')
     folder = db.relationship('Folder', back_populates='_block', uselist=False)
-    translation = db.relationship('Translation', back_populates='_block', uselist=False, foreign_keys="Translation.doc_id")
+    translation = db.relationship('Translation', back_populates='_block', uselist=False,
+                                  foreign_keys="Translation.doc_id")
     answerupload = db.relationship('AnswerUpload', back_populates='block', lazy='dynamic')
     accesses = db.relationship(
         'BlockAccess',
@@ -84,6 +86,10 @@ class Block(db.Model):
     #  being managed.
     managed_messagelist: Optional[MessageListModel] = db.relationship("MessageListModel", back_populates="block")
 
+    internalmessage: Optional[InternalMessage] = db.relationship('InternalMessage', back_populates='block')
+    internalmessage_display: Optional[InternalMessageDisplay] = db.relationship('InternalMessageDisplay',
+                                                                                back_populates='display_block')
+
     def __json__(self):
         return ['id', 'type_id', 'description', 'created', 'modified']
 
@@ -104,7 +110,8 @@ class Block(db.Model):
     def is_unpublished(self):
         from timApp.auth.sessioninfo import get_current_user_object
         u = get_current_user_object()
-        return u.has_ownership(self) is not None and all(not o.is_large() for o in self.owners) and len(self.accesses) <= 1
+        return u.has_ownership(self) is not None and all(not o.is_large() for o in self.owners) and len(
+            self.accesses) <= 1
 
     @property
     def owner_accesses(self):
@@ -149,7 +156,8 @@ class BlockType(Enum):
         return BlockType[type_name.title()]
 
 
-def insert_block(block_type: BlockType, description: Optional[str], owner_groups: Optional[List[UserGroup]] = None) -> Block:
+def insert_block(block_type: BlockType, description: Optional[str],
+                 owner_groups: Optional[List[UserGroup]] = None) -> Block:
     """Inserts a block to database.
 
     :param description: The name (description) of the block.
