@@ -160,3 +160,49 @@ class MessageListDistribution(db.Model):
     """Which message channels are used for a message list."""
 
     member = db.relationship("MessageListMember", back_populates="distribution")
+
+
+class UserEmails(db.Model):
+    """TIM users' additional emails."""
+
+    __tablename__ = "user_emails"
+
+    id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
+
+    additional_email = db.Column(db.Text, unique=True)
+    """The users another email."""
+
+    is_primary_email = db.Column(db.Boolean)
+    """Which one of the additional emails is user's primary email address. If none are, the Sisu given email address 
+    is assumed to be primary email address."""
+
+    address_verified = db.Column(db.DateTime(timezone=True))
+    """The user has to verify they are in the possession of the email address."""
+
+    # VIESTIM: Do we need a relationship to useraccount table?
+
+
+class VerificationType(Enum):
+    """Type of verification, used to direct the proper verification action afterwards."""
+    LIST_JOIN = 1
+    EMAIL_OWNERSHIP = 2
+
+
+class Verifications(db.Model):
+    """For various pending verifications, such as message list joining verification and email ownership verification."""
+    __tablename__ = "verifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # verification_sent = db.Column(db.DateTime(timezone=True))
+    """ d"""
+
+    verification_type = db.Column(db.Enum(VerificationType))
+    """The type of verification, see VerificationType class for details."""
+
+    verification_pending = db.Column(db.DateTime(timezone=True))
+    """When a verification has been added to db, pending sending to a user."""
+
+    verification_link = db.Column(db.Text)
+    """Generated verification link. This is given to the user and once they click on it, they are verified (in 
+    whatever it was that needed verification)."""
