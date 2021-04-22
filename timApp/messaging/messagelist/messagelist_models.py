@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import List
 
 from timApp.messaging.messagelist.listoptions import ArchiveType
 from timApp.timdb.sqa import db
@@ -116,6 +117,16 @@ class MessageListMember(db.Model):
     distribution = db.relationship("MessageListDistribution", back_populates="member")
 
     __mapper_args__ = {"polymorphic_identity": "member", "polymorphic_on": member_type}
+
+
+def get_members_for_list(msg_list: MessageListModel) -> List[MessageListMember]:
+    """Get all members belonging to a list.
+
+    :param msg_list:
+    :return:
+    """
+    list_members = MessageListMember.query.filter_by(message_list_id=msg_list.id).all()
+    return list_members
 
 
 class MessageListTimMember(MessageListMember):
