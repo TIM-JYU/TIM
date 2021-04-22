@@ -23,21 +23,21 @@ timMessage = TypedBlueprint('timMessage', __name__, url_prefix='/timMessage')
 class MessageOptions:
     # Options regarding TIM messages
     messageChannel: bool
+    important: bool
     isPrivate: bool
     archive: bool
     pageList: str
-    confirm: bool
+    readReceipt: bool
     reply: bool
     sender: str
     senderEmail: str
-    replyAll: Optional[bool] = None  # VIESTIM: ignore this if !reply
     expires: Optional[datetime] = None
 
 
 @dataclass
 class MessageBody:
-    emailbody: str
-    emailsubject: str
+    messageBody: str
+    messageSubject: str
     recipients: List[str]  # VIESTIM: find recipient by email or some other identifier?
 
 
@@ -78,14 +78,14 @@ def create_tim_message(tim_message: InternalMessage, message_body: MessageBody) 
                       title="Messages",
                       creation_opts=FolderCreationOptions(apply_default_rights=True))
 
-    message_subject = message_body.emailsubject
+    message_subject = message_body.messageSubject
 
     message_doc = create_document(f'{message_folder_path}/{remove_path_special_chars(message_subject)}',
                                   message_subject)
 
     message_doc.document.add_paragraph(f'# {message_subject}')
     message_doc.document.add_paragraph(f'**From:** {sender.name}, {sender.email}')
-    message_par = message_doc.document.add_paragraph(message_body.emailbody)
+    message_par = message_doc.document.add_paragraph(message_body.messageBody)
 
     tim_message.doc_id = message_doc.id
     tim_message.par_id = message_par.get_id()
