@@ -96,7 +96,8 @@ class MessageListMember(db.Model):
     membership_ended = db.Column(db.DateTime(timezone=True))
     """When member's membership on a list ended. This is set when member is removed from a list."""
 
-    join_method = db.Column(db.Enum(MessageListJoinMethod))
+    # VIESTIM:  This doesn't work in migration for some reason. Maybe figure out if this is needed or fix later.
+    # join_method = db.Column(db.Enum(MessageListJoinMethod))
     """How the member came to a list."""
 
     membership_verified = db.Column(db.DateTime(timezone=True))
