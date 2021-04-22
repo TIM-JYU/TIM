@@ -13,17 +13,17 @@ timMessage = TypedBlueprint('timMessage', __name__, url_prefix='/timMessage')
 class MessageOptions:
     #Options regarding TIM messages
     recipients: List[str] # VIESTIM: find recipient by email or some other identifier?
-    emailsubject: str
-    emailbody: str
+    messageSubject: str
+    messageBody: str
     messageChannel: bool
+    important: bool
     isPrivate: bool
     archive: bool
     pageList: str
-    confirm: bool
+    readReceipt: bool
     reply: bool
     sender: str
     senderEmail: str
-    replyAll: Optional[bool] = None # VIESTIM: ignore this if !reply
     expires: Optional[datetime] = None
 
 @timMessage.route("/send", methods=['POST'])
