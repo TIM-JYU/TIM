@@ -7,7 +7,7 @@ from sqlalchemy.orm.exc import NoResultFound  # type: ignore
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
-from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
+from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList, get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, MessageListTimMember
 from timApp.timdb.sqa import db
@@ -197,6 +197,11 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
     # TODO: Implement checking whether or not users are just added to a list (like they are now) or they are invited
     #  to a list (requires link generation and other things).
 
+    # TODO: Check if there is an email list attached to the message list.
+    em_list = None
+    if msg_list.email_list_domain is not None:
+        em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
+
     for member_candidate in memberCandidates:
         u = User.get_by_name(member_candidate)
         if u is not None:
@@ -204,10 +209,19 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
             new_tim_member = MessageListTimMember()
             new_tim_member.message_list_id = msg_list.id
             new_tim_member.group_id = u.get_personal_group().id
-            # VIESTIM: For convenience sake just add these. Figure out list rights at a later date.
+            # VIESTIM: For convenience sake just add these. Figure out list rights at a later date. Everyone loves a
+            #  bit of technical debt, don't they?
             new_tim_member.delivery_right = True
             new_tim_member.send_right = True
             db.session.add(new_tim_member)
+
+            # VIESTIM: Get user's email and add it to list's email list.
+            if em_list is not None:
+                user_email = u.email  # TODO: Search possible additional emails.
+                # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
+                #  placeholder value of True.
+                add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=u.real_name,
+                          send_right=new_tim_member.send_right, delivery_right=new_tim_member.delivery_right)
 
         # TODO: If member_candidate is a user group, what do? Add as is or open it to individual users?
 
