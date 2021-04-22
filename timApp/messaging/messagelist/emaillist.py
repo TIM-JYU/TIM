@@ -608,3 +608,12 @@ def get_email_list_info(mlist: MailingList) -> str:
     :return: Email list's info as a string.
     """
     return mlist.settings["info"]
+
+
+def get_email_list_by_name(list_name: str, list_domain: str) -> Optional[MailingList]:
+    """Get email list by name."""
+    try:
+        mlist = _client.get_list(fqdn_listname=f"{list_name}@{list_domain}")
+        return mlist
+    except HTTPError:
+        return None
