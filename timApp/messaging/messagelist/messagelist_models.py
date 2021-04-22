@@ -6,8 +6,8 @@ from timApp.timdb.sqa import db
 
 class Channel(Enum):
     """The message channels TIM uses and provides for message lists."""
-    TIM_MESSAGE = 1
-    EMAIL_LIST = 2
+    TIM_MESSAGE = 'tim_message'
+    EMAIL_LIST = 'email_list'
     # EMAIL = 3
 
 
