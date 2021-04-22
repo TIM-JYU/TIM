@@ -627,7 +627,7 @@ def get_email_list_by_name(list_name: str, list_domain: str) -> MailingList:
 
 
 def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool, real_name: Optional[str],
-              send_right=True, delivery_right=False) -> None:
+              send_right: bool = True, delivery_right: bool = False) -> None:
     """Add a new email
 
     :param mlist: Email list where a new member is being added.
@@ -668,4 +668,3 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     else:
         new_member.moderation_action = "discard"
     new_member.save()
-
