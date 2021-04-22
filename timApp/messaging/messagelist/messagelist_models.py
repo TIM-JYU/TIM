@@ -11,6 +11,14 @@ class Channel(Enum):
     # EMAIL = 3
 
 
+class MessageListJoinMethod(Enum):
+    """How a user was added to a message list."""
+    DIRECT_ADD = 1
+    """The owner of the list has just added this member. The member wasn't asked."""
+    INVITED = 2
+    """User was invited and they confirmed joining."""
+
+
 # VIESTIM: The dabase models for message lists. Primarily follow the database plan, if you should deviate from the plan
 #  document it so after the project it's easier to update the plan for maintainers.
 
