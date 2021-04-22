@@ -610,10 +610,17 @@ def get_email_list_info(mlist: MailingList) -> str:
     return mlist.settings["info"]
 
 
-def get_email_list_by_name(list_name: str, list_domain: str) -> Optional[MailingList]:
-    """Get email list by name."""
+def get_email_list_by_name(list_name: str, list_domain: str) -> MailingList:
+    """Get email list by name.
+
+    :param list_name: List's name.
+    :param list_domain: A domain we use to search an email list.
+    :return: Return email list as MailingList object
+    """
     try:
         mlist = _client.get_list(fqdn_listname=f"{list_name}@{list_domain}")
         return mlist
     except HTTPError:
-        return None
+        # VIESTIM: Should we give some additional information, or are we satisfied with just re-raising the HTTPError
+        #  from mailmanclient? This can fail in not getting contact to the server or Mailman not finding a list.
+        raise
