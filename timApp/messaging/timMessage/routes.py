@@ -40,6 +40,11 @@ class MessageBody:
     messageSubject: str
     recipients: List[str]  # VIESTIM: find recipient by email or some other identifier?
 
+@timMessage.route("/url_check", methods=['POST'])
+def check_urls(urls: str) -> Response:
+    print("tsekataan: " + urls)
+    return ok_response()
+
 
 @timMessage.route("/send", methods=['POST'])
 def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:

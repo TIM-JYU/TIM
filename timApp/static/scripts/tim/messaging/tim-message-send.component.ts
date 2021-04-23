@@ -58,7 +58,8 @@ interface TimMessageOptions {
                                       [(ngModel)]="timMessage">TIM message</label></fieldset><br/>
                 
             <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
-            <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="TimMessageOptions.pageList" rows="4" cols="70"></textarea></p>
+            <p class="urlError" *ngIf="urlError">{{urlError}}</p>    
+            <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="TimMessageOptions.pageList" (change)="checkUrls()" rows="4" cols="70"></textarea></p>
             <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="TimMessageOptions.isPrivate">Recipient sees TIM message as private</label></p>
             <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
@@ -96,6 +97,7 @@ export class TimMessageComponent {
     replyAll: boolean | undefined = false;
     messageMsg: string = "";
     timMessage: boolean = false;
+    urlError: string = "";
     TimMessageOptions: TimMessageOptions = {
         messageChannel: false,
         archive: false,
@@ -130,6 +132,23 @@ export class TimMessageComponent {
             this.email ||
             this.timMessage
         );
+    }
+
+    // VIESTIM: logic here
+    // Checks if the URLs that the user wants to save TIM message to actually exist in TIM
+    // Also shortens existing URLs
+    async checkUrls() {
+        console.log("tsekataan urlin olemassaolo");
+        const result = await to2(
+            this.http
+                .post("/timMessage/url_check", {
+                    urls: this.TimMessageOptions.pageList,
+                })
+                .toPromise()
+        );
+        if (!result.ok) {
+            console.error(result.result.error.error);
+        }
     }
 
     // resets form to it's initial values
