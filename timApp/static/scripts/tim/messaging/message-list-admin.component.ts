@@ -253,7 +253,8 @@ export class MessageListAdminComponent implements OnInit {
 
         this.ownerEmail = "";
 
-        this.notifyOwnerOnListChange = listOptions.notifyOwnerOnListChange;
+        this.notifyOwnerOnListChange =
+            listOptions.notifyOwnerOnListChange ?? false;
 
         this.listInfo = listOptions.listInfo;
         this.listDescription = listOptions.listDescription;

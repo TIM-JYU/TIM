@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 
 class ArchiveType(Enum):
@@ -29,9 +29,9 @@ class ListOptions:
     archive: ArchiveType = field(metadata={'by_value': True})
     # members: List[str]
     ownerEmail: str
-    notifyOwnerOnListChange: bool
     listDescription: str
     listInfo: str
+    notifyOwnerOnListChange: Optional[bool] = None
 
 
 # A list of tuples mapping TIM's archive policies to Mailman's archive policies. Mailman's archive policies are
