@@ -220,6 +220,7 @@ def qst_answer_jso(m: QstAnswerModel):
     if not markup.show_points():
         jsonmarkup.pop('expl', None)
         jsonmarkup.pop('points', None)
+        jsonmarkup.pop('defaultPoints', None)
 
     savedText = "Saved"  # markup.savedText or "Saved"
 

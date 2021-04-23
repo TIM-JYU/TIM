@@ -23,7 +23,6 @@ class QuestionTest(BrowserTest):
                 toplevel={'show_result': False},
                 markup={
                     'answerFieldType': 'radio',
-                    'defaultPoints': 0.5,
                     'headers': [],
                     'isTask': False,
                     'questionText': 'What day is it today?',
