@@ -68,14 +68,6 @@ def reqs_handler() -> PluginReqs:
     }
 
 
-# user_select_plugin = create_nontask_blueprint_schema(
-#     __name__,
-#     'userSelect',
-#     UserSelectMarkupModelSchema,
-#     reqs_handler,
-# )
-
-
 @user_select_plugin.route('/search')
 def search_users(task_id: str, search_string: str) -> Response:
     plug, doc, user, view_ctx = find_plugin_by_task_id(task_id)
