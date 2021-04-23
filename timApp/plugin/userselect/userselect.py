@@ -95,11 +95,7 @@ def search_users(opts: SearchUsersOptions) -> Response:
 
     return json_response([
         {
-            "user": {
-                "name": field_obj["user"].name,
-                "real_name": field_obj["user"].real_name,
-                "email": field_obj["user"].email
-            },
+            "user": field_obj["user"],
             "fields": field_obj["fields"]
         }
         for field_obj in matched_field_data

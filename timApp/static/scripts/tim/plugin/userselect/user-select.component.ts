@@ -26,6 +26,12 @@ import {
     withDefault,
 } from "../attributes";
 import {to2} from "../../util/utils";
+import {IUser} from "../../user/IUser";
+
+interface UserResult {
+    user: IUser;
+    field: Record<string, string | number | undefined>;
+}
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
@@ -81,7 +87,7 @@ export class UserSelectComponent extends AngularPluginBase<
 
         const result = await to2(
             this.http
-                .get("/userSelect/search", {
+                .get<UserResult[]>("/userSelect/search", {
                     params: {
                         task_id: this.getTaskId()?.docTask().toString() ?? "",
                         search_string: this.searchString,
