@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from flask import render_template_string, Response
 
@@ -107,7 +107,7 @@ def search_users(task_id: str, search_string: str) -> Response:
     for field_obj in field_data:
         fields = field_obj["fields"]
         usr = field_obj["user"]
-        values_to_check: List[Optional[str, float, None]] = [usr.name, usr.real_name, usr.email, *fields.values()]
+        values_to_check: List[Optional[Union[str, float, None]]] = [usr.name, usr.real_name, usr.email, *fields.values()]
         for field_val in values_to_check:
             if not field_val:
                 continue
@@ -134,7 +134,7 @@ def search_users(task_id: str, search_string: str) -> Response:
 
 
 @user_select_plugin.route("/apply", methods=["POST"])
-def apply(task_id: str, username: str):
+def apply(task_id: str, username: str) -> Response:
     plug, doc, user, view_ctx = find_plugin_by_task_id(task_id)
     model: UserSelectMarkupModel = UserSelectMarkupModelSchema().load(plug.values)
     # No permissions to apply, simply remove
