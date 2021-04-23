@@ -71,6 +71,7 @@ import {Users} from "../user/userService";
                 <p>List members</p>
                 <ul>
                     <li *ngFor="let member of membersList">
+                        <!-- TODO: Clean up representation. -->
                         <span>{{member.name}}</span>
                         <span>{{member.email}}</span>
                         <span>send</span>
@@ -114,9 +115,13 @@ export class MessageListAdminComponent implements OnInit {
             void this.loadValues(docId);
 
             // Load message list's members.
-            console.log("Start calling for members.");
-            window.setTimeout(() => this.getListMembers(), 2 * 1000);
-            // void this.getListMembers();
+            if (!this.listname) {
+                // getListmembers() might launch it's HTTP call before loadValues() finishes with setting listname,
+                // so if this happens we schedule the call for list members.
+                window.setTimeout(() => this.getListMembers(), 2 * 1000);
+            } else {
+                void this.getListMembers();
+            }
         }
     }
 
