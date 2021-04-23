@@ -233,14 +233,47 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
     return ok_response()
 
 
-@messagelist.route("/getmembers/<list_name>", methods=['POST'])
+class MemberInfo:
+    """Wrapper for information about a member on a message list."""
+    name: str
+    sendRight: bool
+    deliveryRight: bool
+    email: str
+
+
+@messagelist.route("/getmembers/<list_name>", methods=['GET'])
 def get_members(list_name: str) -> Response:
     """Get members belonging to a certain list.
 
     :param list_name:
     :return:
     """
+    from timApp.user.usergroup import UserGroup
+
     msg_list = MessageListModel.get_list_by_name(list_name)
-    list_members = get_members_for_list(msg_list)
+    members = get_members_for_list(msg_list)
+    list_members: List[MemberInfo] = []
+    # list_members: List[dict] = []
+    for member in members:
+        mi = MemberInfo()
+        # d = dict()
+        # d["sendRight"] = member.send_right
+        # d["deliveryRight"] = member.delivery_right
+        mi.sendRight = member.send_right
+        mi.deliveryRight = member.delivery_right
+        if member.tim_member:
+            gid = member.group_id
+            ug = UserGroup.query.filter_by(id=gid).one()
+            u = ug.users[0]
+            # d["email"] = u.email
+            # d["name"] = u.real_name
+            mi.email = u.email
+            mi.name = u.real_name
+        else:
+            mi.email = member.external_member.email_address
+            mi.name = "External"
+            pass
+        list_members.append(mi)
+        # list_members.append(d)
 
     return json_response(list_members)

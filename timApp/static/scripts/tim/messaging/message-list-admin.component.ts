@@ -5,7 +5,6 @@ import {to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {archivePolicyNames, ArchiveType} from "tim/messaging/listOptionTypes";
 import {documentglobals} from "tim/util/globals";
-import {IUser} from "tim/user/IUser";
 import {Users} from "../user/userService";
 
 interface CreateListOptions {
@@ -13,11 +12,18 @@ interface CreateListOptions {
     listname: string;
     domain: string;
     archive: ArchiveType;
-    // members: string[];
     ownerEmail: string;
     notifyOwnerOnListChange: boolean;
     listDescription: string;
     listInfo: string;
+}
+
+interface MemberInfo {
+    // VIESTIM Keep this updates with MemberInfo at server side.
+    name: string;
+    sendRight: boolean;
+    delivery: boolean;
+    email: string;
 }
 
 @Component({
@@ -79,7 +85,7 @@ interface CreateListOptions {
                 <p>List members</p>
                 <ul>
                     <li *ngFor="let member of membersList">
-                        <span>{{member.real_name}}</span>
+                        <span>{{member.name}}</span>
                         <span>{{member.email}}</span>
                         <span>send</span>
                         <span>delivery</span>
@@ -87,17 +93,6 @@ interface CreateListOptions {
                 </ul>
             </div>
         </form>
-
-        <!--
-        <div>
-            <select id="search-groups" multiple>
-                <option value="1">Lundberg Tomi</option>
-                <option value="15">ViesTIM</option>
-                <option value="17">ViesTIM-opetus</option>
-                <option value="18">ViesTIM-ohjaajat</option>
-            </select>
-        </div>
--->
     `,
 })
 export class MessageListAdminComponent implements OnInit {
@@ -110,7 +105,7 @@ export class MessageListAdminComponent implements OnInit {
     domains: string[] = [];
 
     membersTextField?: string;
-    membersList: IUser[] = [];
+    membersList: MemberInfo[] = [];
 
     urlPrefix: string = "/messagelist";
 
@@ -133,7 +128,9 @@ export class MessageListAdminComponent implements OnInit {
             void this.loadValues(docId);
 
             // Load message list's members.
-            void this.getListMembers();
+            console.log("Start calling for members.");
+            window.setTimeout(() => this.getListMembers(), 2 * 1000);
+            // void this.getListMembers();
         }
     }
 
@@ -187,7 +184,7 @@ export class MessageListAdminComponent implements OnInit {
      * Compile email addresses separated by line breaks into a list
      * @private
      */
-    private parseEmails(): string[] {
+    private parseMembers(): string[] {
         if (!this.membersTextField) {
             return [];
         }
@@ -195,7 +192,7 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     async addNewListMember() {
-        const memberCandidates = this.parseEmails();
+        const memberCandidates = this.parseMembers();
         if (memberCandidates.length == 0) {
             return;
         }
@@ -216,14 +213,26 @@ export class MessageListAdminComponent implements OnInit {
         }
     }
 
+    /**
+     * Get all list members.
+     */
     async getListMembers() {
         const result = await to2(
             this.http
-                .get(`${this.urlPrefix}/getmembers/${this.listname}`)
+                .get<MemberInfo[]>(
+                    `${this.urlPrefix}/getmembers/${this.listname}`
+                )
+                /** .map(response => {
+                const array = JSON.parse(response.json()) as any[];
+                const memberinfos = array.map(data => new MemberInfo(data));
+                return memberinfos;
+            )
+    }*/
                 .toPromise()
         );
         if (result.ok) {
             console.log(result.result);
+            this.membersList = result.result;
         } else {
             console.error(result.result.error.error);
         }
@@ -233,7 +242,6 @@ export class MessageListAdminComponent implements OnInit {
      * Helper for list deletion.
      */
     async deleteList() {
-        // const result =
         const result = await to2(
             this.http
                 .delete(`/messagelist/deletelist`, {
