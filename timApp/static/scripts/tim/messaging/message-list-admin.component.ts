@@ -141,36 +141,6 @@ export class MessageListAdminComponent implements OnInit {
 
     constructor(private http: HttpClient) {}
 
-    async newList() {
-        const result = await this.createList({
-            // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
-            // TODO: Validate input values before sending, e.g. this list has a unique name.
-            listname: this.listname,
-            // We added '@' in domain name for display purposes, remove it when sending domain to the server.
-            domain: this.domain.startsWith("@")
-                ? this.domain.slice(1)
-                : this.domain,
-            archive: this.archive,
-            ownerEmail: this.ownerEmail,
-            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
-            listInfo: this.listInfo,
-            listDescription: this.listDescription,
-        });
-        if (!result.ok) {
-            console.error(result.result.error.error);
-        } else {
-            // VIESTIM Helps see that data was sent succesfully after clicking the button.
-            console.log("List options sent successfully.");
-        }
-    }
-
-    // VIESTIM this helper function helps keeping types in check.
-    private createList(options: CreateListOptions) {
-        return to2(
-            this.http.post("/messagelist/createlist", {options}).toPromise()
-        );
-    }
-
     /**
      * Compile email addresses separated by line breaks into a list
      * @private
