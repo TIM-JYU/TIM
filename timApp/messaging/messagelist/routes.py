@@ -156,7 +156,6 @@ def get_list(document_id: int) -> Response:
         domain="tim.jyu.fi",
         archive=msg_list.archive,
         # TODO: Replace placeholder once we can properly query the owners email.
-        ownerEmail="totalund@student.jyu.fi"
     )
     return json_response(list_options)
 
@@ -232,7 +231,7 @@ def get_members(list_name: str) -> Response:
     list_members: List[MemberInfo] = []
     for member in members:
         if member.tim_member:
-            gid = member.group_id
+            gid = member.tim_member.group_id
             # VIESTIM: This should be the user's personal user group.
             ug = UserGroup.query.filter_by(id=gid).one()
             u = ug.users[0]
@@ -242,7 +241,6 @@ def get_members(list_name: str) -> Response:
             mi = MemberInfo(name="External member", email=member.external_member.email_address,
                             sendRight=member.send_right, deliveryRight=member.delivery_right)
         list_members.append(mi)
-        # list_members.append(d)
 
     return json_response(list_members)
 
