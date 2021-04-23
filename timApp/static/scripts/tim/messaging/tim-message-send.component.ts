@@ -77,7 +77,7 @@ interface TimMessageOptions {
                         (click)="sendMessage()">
                     Send
                 </button>
-                <span class="savedtext" *ngIf="messageMsg"> Sent!</span>
+                <span class="savedtext" *ngIf="messageMsg"> {{messageMsg}}</span>
             </p>
         </div>
     `,
@@ -97,9 +97,6 @@ export class TimMessageComponent {
     messageMsg: string = "";
     timMessage: boolean = false;
     TimMessageOptions: TimMessageOptions = {
-        /* recipients: this.recipientList.split(/\n/g),
-        messageSubject: this.messageSubject,
-        messageBody: this.messageBody, */
         messageChannel: false,
         archive: false,
         important: false,
@@ -137,6 +134,7 @@ export class TimMessageComponent {
 
     // resets form to it's initial values
     resetForm() {
+        this.messageMsg = "Sent!";
         this.messageSubject = "";
         this.messageBody = "";
         this.emailbcc = false;
@@ -146,9 +144,6 @@ export class TimMessageComponent {
         this.replyAll = false;
         this.timMessage = false;
         this.TimMessageOptions = {
-            /* recipients: [],
-            messageSubject: this.messageSubject,
-            messageBody: this.messageBody, */
             messageChannel: false,
             archive: false,
             important: false,
@@ -169,7 +164,6 @@ export class TimMessageComponent {
             const result = await this.postTimMessage(this.TimMessageOptions);
             if (!result.ok) {
                 console.error(result.result.error.error);
-                return;
             }
         }
         // send as email in TIM
@@ -205,7 +199,6 @@ export class TimMessageComponent {
                 bcc;
             this.resetForm();
         }
-        this.messageMsg = "sent";
         this.resetForm();
     }
 
@@ -242,7 +235,6 @@ export class TimMessageComponent {
             if (!response.ok) {
                 this.messageMsg = response.result.data.error;
             } else {
-                this.messageMsg = "Sent";
                 this.resetForm();
             }
         } else {
@@ -261,7 +253,6 @@ export class TimMessageComponent {
                     this.messageMsg = response.result.data.error;
                 }
             }
-            this.messageMsg = "Sent";
             this.resetForm();
         }
     }
