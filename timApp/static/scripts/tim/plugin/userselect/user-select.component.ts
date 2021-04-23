@@ -10,6 +10,14 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
+import {race, Subject} from "rxjs";
+import {Observable} from "rxjs/internal/Observable";
+import {
+    debounceTime,
+    distinctUntilChanged,
+    filter,
+    first,
+} from "rxjs/operators";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {
@@ -18,14 +26,6 @@ import {
     withDefault,
 } from "../attributes";
 import {to2} from "../../util/utils";
-import {Observable} from "rxjs/internal/Observable";
-import {race, Subject} from "rxjs";
-import {
-    debounceTime,
-    distinctUntilChanged,
-    filter,
-    first,
-} from "rxjs/operators";
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
