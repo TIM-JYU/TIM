@@ -60,14 +60,16 @@ const PluginFields = t.intersection([
         <form class="search" (ngSubmit)="searchPress.next()" #searchForm="ngForm">
             <input class="form-control input-lg"
                    placeholder="Search for user"
+                   i18n-placeholder
                    name="search-string"
                    type="text"
                    [(ngModel)]="searchString"
                    (ngModelChange)="inputTyped.next($event)"
                    minlength="{{ inputMinLength }}"
                    required
-                    #searchInput>
-            <input class="timButton btn-lg" type="submit" value="Search" [disabled]="!searchForm.form.valid || search">
+                   #searchInput>
+            <input class="timButton btn-lg" type="submit" value="Search" i18n-value
+                   [disabled]="!searchForm.form.valid || search">
         </form>
         <div class="search-result" *ngIf="search || lastSearchResult">
             <div class="progress" *ngIf="search">
@@ -77,9 +79,9 @@ const PluginFields = t.intersection([
             <table *ngIf="lastSearchResult">
                 <thead>
                 <tr>
-                    <th>Select</th>
-                    <th>Username</th>
-                    <th>Full name</th>
+                    <th i18n>Select</th>
+                    <th i18n>Username</th>
+                    <th i18n>Full name</th>
                     <th *ngFor="let fieldName of lastSearchResult.fieldNames">
                         {{fieldName}}
                     </th>
@@ -88,7 +90,7 @@ const PluginFields = t.intersection([
                 <tbody *ngIf="lastSearchResult.matches.length == 0">
                 <tr>
                     <td [colSpan]="3 + lastSearchResult.fieldNames.length">
-                        <em>No matches for given keyword</em>
+                        <em i18n>No matches for given keyword</em>
                     </td>
                 </tr>
                 </tbody>
@@ -114,7 +116,8 @@ const PluginFields = t.intersection([
             </table>
 
             <div class="more-matches-info"
-                 *ngIf="lastSearchResult && lastSearchResult.matches.length < lastSearchResult.allMatchCount">
+                 *ngIf="lastSearchResult && lastSearchResult.matches.length < lastSearchResult.allMatchCount"
+                 i18n>
                 There are {{lastSearchResult.allMatchCount}} matches. Only first {{lastSearchResult.matches.length}} are
                 shown.
                 Please give more specific keywords to show all results.
@@ -122,16 +125,17 @@ const PluginFields = t.intersection([
 
             <div class="action-buttons" *ngIf="selectedUser">
                 <tim-loading *ngIf="applying"></tim-loading>
-                <button type="button" class="btn btn-success btn-lg" [disabled]="applying" (click)="apply()">Apply
+                <button type="button" class="btn btn-success btn-lg" [disabled]="applying" (click)="apply()" i18n>Apply
                 </button>
-                <button type="button" class="btn btn-danger btn-lg" [disabled]="applying" (click)="resetView()">Cancel
+                <button type="button" class="btn btn-danger btn-lg" [disabled]="applying" (click)="resetView()" i18n>
+                    Cancel
                 </button>
             </div>
         </div>
-        <tim-alert *ngIf="applied" severity="success">
+        <tim-alert *ngIf="applied" severity="success" i18n>
             Permissions applied successfully.
         </tim-alert>
-        <tim-alert *ngIf="errorMessage">
+        <tim-alert *ngIf="errorMessage" i18n>
             <span>Could not search for the user.</span>
             <div style="margin-top: 1rem;">
                 <p>Please try refreshing the page and try again.</p>
