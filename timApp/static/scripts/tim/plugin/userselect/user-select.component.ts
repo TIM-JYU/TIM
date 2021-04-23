@@ -81,7 +81,14 @@ const PluginFields = t.intersection([
                     {{fieldName}}
                 </td>
                 </thead>
-                <tbody>
+                <tbody *ngIf="lastSearchResult.matches.length == 0">
+                    <tr>
+                        <td [colSpan]="3 + lastSearchResult.fieldNames.length">
+                            <em>No matches for given keyword</em>
+                        </td>
+                    </tr>
+                </tbody>
+                <tbody *ngIf="lastSearchResult.matches.length > 0">
                     <tr class="user-row" *ngFor="let match of lastSearchResult.matches" [class.selected-user]="selectedUser == match.user" (click)="selectedUser = match.user">
                         <td>
                             <span class="radio">
@@ -96,6 +103,11 @@ const PluginFields = t.intersection([
                     </tr>
                 </tbody>
             </table>
+            
+            <div class="small" *ngIf="lastSearchResult && lastSearchResult.matches.length < lastSearchResult.allMatchCount">
+                There are {{lastSearchResult.allMatchCount}} matches. Only first {{lastSearchResult.matches.length}} are shown.
+                Please give more specific keywords to show all results.
+            </div>
         </div>
         <tim-alert *ngIf="errorMessage">
             <span>Could not search for the user.</span>

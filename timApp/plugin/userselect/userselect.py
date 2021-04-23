@@ -90,7 +90,7 @@ def search_users(opts: SearchUsersOptions) -> Response:
             if not field_val:
                 continue
             val = field_val if isinstance(field_val, str) else str(field_val)
-            if opts.search_string in val:
+            if opts.search_string in val.lower():
                 matched_field_data.append(field_obj)
                 break
 
