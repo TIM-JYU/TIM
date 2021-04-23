@@ -103,6 +103,7 @@ def search_users(task_id: str, search_string: str) -> Response:
         view_ctx
     )
 
+    search_string = search_string.strip().lower()
     matched_field_data = []
     for field_obj in field_data:
         fields = field_obj["fields"]
