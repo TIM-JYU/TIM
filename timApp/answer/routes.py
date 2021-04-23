@@ -16,6 +16,8 @@ from sqlalchemy import func
 from sqlalchemy.orm import lazyload
 from webargs.flaskparser import use_args
 
+from timApp.answer.exportedanswer import ExportedAnswer
+from timApp.answer.backup import send_answer_backup_if_enabled
 from tim_common.markupmodels import GenericMarkupModel
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
@@ -30,7 +32,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
 from timApp.auth.sessioninfo import get_current_user_id, logged_in, user_context_with_logged_in, \
     get_other_session_users_objs
-from timApp.auth.sessioninfo import get_current_user_object, get_session_users, get_current_user_group
+from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group
 from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -869,7 +871,7 @@ def post_answer_impl(
                     )
 
             if points or save_object is not None or tags:
-                result['savedNew'] = save_answer(
+                a = save_answer(
                     users,
                     tid,
                     save_object,
@@ -881,6 +883,9 @@ def post_answer_impl(
                     plugintype=plugin.ptype,
                     max_content_len=current_app.config['MAX_ANSWER_CONTENT_SIZE'],
                 )
+                result['savedNew'] = a.id if a else None
+                if a:
+                    send_answer_backup_if_enabled(a)
             else:
                 result['savedNew'] = None
             if noupdate:
@@ -891,7 +896,7 @@ def post_answer_impl(
         elif save_teacher:
             points = answer_browser_data.get('points', points)
             points = points_to_float(points)
-            result['savedNew'] = save_answer(
+            a = save_answer(
                 users,
                 tid,
                 save_object,
@@ -903,6 +908,8 @@ def post_answer_impl(
                 plugintype=plugin.ptype,
                 max_content_len=current_app.config['MAX_ANSWER_CONTENT_SIZE'],
             )
+            # TODO: Could call backup here too, but first we'd need to add support for saver in export/import.
+            result['savedNew'] = a.id if a else None
         else:
             result['savedNew'] = None
             if postprogram:
@@ -1465,17 +1472,6 @@ def export_answers(doc_path: str):
         'task': a.task_name,
         'doc': doc_path,
     } for a, email in answer_list])
-
-
-@dataclass
-class ExportedAnswer:
-    content: str
-    email: str
-    points: Union[int, float, None]
-    task: str
-    time: datetime
-    valid: bool
-    doc: str
 
 
 @dataclass

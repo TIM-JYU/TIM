@@ -18,11 +18,11 @@ class PluginTest(TimDbTest):
             break
         a_ids = []
         for i in range(1, 5):
-            aid = save_answer([self.test_user_1], p.task_id,
+            a = save_answer([self.test_user_1], p.task_id,
                               f'content{i}', points=None, valid=True)
-            aid2 = save_answer([self.test_user_2], p.task_id,
+            a2 = save_answer([self.test_user_2], p.task_id,
                                f'content{i}', points=None, valid=True)
-            a_ids.append((aid, aid2))
+            a_ids.append((a.id, a2.id))
         for i, (aid, aid2) in enumerate(a_ids, start=1):
             a: Answer = Answer.query.get(aid)
             self.assert_dict_subset(to_dict(a), {

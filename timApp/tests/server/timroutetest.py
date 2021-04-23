@@ -971,8 +971,8 @@ class TimRouteTest(TimDbTest):
         self.client.__enter__()
 
     @contextmanager
-    def internal_plugin_ctx(self, plugin_type: str):
-        """Redirects internal plugin requests to go through Flask test client.
+    def internal_container_ctx(self):
+        """Redirects internal container requests to go through Flask test client.
          Otherwise such requests would fail during test, unless BrowserTest class is used.
 
         TODO: Using BrowserTest in cases where it's not actually a browser test should be fixed to
@@ -995,10 +995,11 @@ class TimRouteTest(TimDbTest):
                 return rq_cb(request, self.json_post)
 
             host = current_app.config['INTERNAL_PLUGIN_DOMAIN']
-            m.add_callback('PUT', f'http://{host}:5001/{plugin_type}/answer', callback=rq_cb_put)
-            m.add_callback('POST', f'http://{host}:5001/{plugin_type}/convertExportData', callback=rq_cb_post)
+            m.add_callback('PUT', re.compile(f'http://{host}:5001/'), callback=rq_cb_put)
+            m.add_callback('POST', re.compile(f'http://{host}:5001/'), callback=rq_cb_post)
             m.add_passthru('http://csplugin:5000')
             m.add_passthru('http://jsrunner:5000')
+            m.add_passthru('http://fields:5000')
             yield
 
     @contextmanager
@@ -1020,6 +1021,15 @@ class TimRouteTest(TimDbTest):
             m.add_callback('PUT', f'http://{host}:5001/importData/answer', callback=rq_cb)
             m.add_passthru('http://jsrunner:5000')
             yield
+
+    @contextmanager
+    def temp_config(self, settings: Dict[str, Any]):
+        old_settings = {k: current_app.config[k] for k in settings.keys()}
+        for k, v in settings.items():
+            current_app.config[k] = v
+        yield
+        for k, v in old_settings.items():
+            current_app.config[k] = v
 
 
 class TimPluginFix(TimRouteTest):

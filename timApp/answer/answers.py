@@ -88,7 +88,7 @@ def save_answer(
         saver: Optional[User] = None,
         plugintype: Optional[PluginType] = None,
         max_content_len: Optional[int] = None,
-) -> Optional[int]:
+) -> Optional[Answer]:
     """Saves an answer to the database.
 
     :param max_content_len: Maximum length for answer content.
@@ -132,7 +132,7 @@ def save_answer(
     if saver:
         a.saver = saver
     db.session.flush()
-    return a.id
+    return a
 
 
 def get_all_answers(task_ids: List[TaskId],

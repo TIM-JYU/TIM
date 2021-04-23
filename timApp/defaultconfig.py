@@ -147,3 +147,17 @@ DEBUG_SQL = False
 MINIMUM_SCHEDULED_FUNCTION_INTERVAL = 3600
 
 INTERNAL_PLUGIN_DOMAIN = 'tim'
+
+# BACKUP_ANSWER_* variables are related to backing up answers by sending them to another host on the fly.
+
+# When sending an answer to another host, use this token for authentication.
+BACKUP_ANSWER_SEND_TOKEN = None
+
+# When receiving an answer from another host, make sure that the given token matches this one.
+BACKUP_ANSWER_RECEIVE_TOKEN = None
+
+# In the receiving host, the filename where the answers will be stored, one JSON string per line.
+BACKUP_ANSWER_FILE = 'answers.backup'
+
+# The host where to back up the answers. Should start with "https://".
+BACKUP_ANSWER_HOST = None
