@@ -1,8 +1,15 @@
 import deepEqual from "deep-equal";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import {
+    ApplicationRef,
+    ChangeDetectorRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {HttpClientModule} from "@angular/common/http";
-import {BrowserModule} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
 import {
@@ -97,6 +104,15 @@ export class QstComponent
     private newAnswer?: AnswerTable;
     private changes = false;
 
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        public cdr: ChangeDetectorRef
+    ) {
+        super(el, http, domSanitizer);
+    }
+
     getContent() {
         return JSON.stringify(this.newAnswer);
     }
@@ -164,6 +180,7 @@ export class QstComponent
                 this.changes ? ChangeType.Modified : ChangeType.Saved
             );
         }
+        this.cdr.detectChanges();
     }
 
     updateListeners(state: ChangeType) {
