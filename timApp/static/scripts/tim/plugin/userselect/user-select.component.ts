@@ -70,15 +70,17 @@ const PluginFields = t.intersection([
             <div class="progress" *ngIf="search">
                 <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
             </div>
-            
+
             <table *ngIf="lastSearchResult">
                 <thead>
-                <td>Select</td>
-                <td>Username</td>
-                <td>Full name</td>
-                <td *ngFor="let fieldName of lastSearchResult.fieldNames">
-                    {{fieldName}}
-                </td>
+                <tr>
+                    <th>Select</th>
+                    <th>Username</th>
+                    <th>Full name</th>
+                    <th *ngFor="let fieldName of lastSearchResult.fieldNames">
+                        {{fieldName}}
+                    </th>
+                </tr>
                 </thead>
                 <tbody *ngIf="lastSearchResult.matches.length == 0">
                 <tr>
@@ -90,7 +92,7 @@ const PluginFields = t.intersection([
                 <tbody *ngIf="lastSearchResult.matches.length > 0">
                 <tr class="user-row" *ngFor="let match of lastSearchResult.matches"
                     [class.selected-user]="selectedUser == match.user" (click)="selectedUser = match.user">
-                    <td>
+                    <td class="select-col">
                             <span class="radio">
                                 <label>
                                     <input type="radio"

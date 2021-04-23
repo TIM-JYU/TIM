@@ -49,3 +49,44 @@ tr.user-row {
     margin-right: 0;
   }
 }
+
+table {
+  width: 100%;
+  margin-top: 2rem;
+  border: none;
+
+  thead {
+    border-bottom: 2px solid var(--basic-border-color);
+
+    th {
+      background-color: transparent;
+      border: none;
+    }
+  }
+
+  tbody tr.user-row {
+    border-bottom: 1px solid var(--basic-border-color);
+
+    td {
+      vertical-align: middle;
+      border: none;
+    }
+
+    td.select-col {
+      width: 1%;
+
+      input {
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    &.selected-user {
+      background-color: #88beff;
+    }
+
+    &:hover {
+      background-color: #d4e7ff;
+    }
+  }
+}
