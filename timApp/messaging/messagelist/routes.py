@@ -4,15 +4,13 @@ from typing import List, Optional
 from flask import Response
 from sqlalchemy.orm.exc import NoResultFound  # type: ignore
 
-from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
-from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList, get_email_list_by_name, add_email
-from timApp.messaging.messagelist.listoptions import ListOptions
-from timApp.messaging.messagelist.messagelist_models import MessageListModel, MessageListTimMember, get_members_for_list
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
+from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
+from timApp.messaging.messagelist.messagelist_models import MessageListTimMember, get_members_for_list
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
