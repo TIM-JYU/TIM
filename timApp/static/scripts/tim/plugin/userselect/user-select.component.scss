@@ -1,3 +1,5 @@
+@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap/variables";
+
 :host {
   width: 100%;
   display: block;
@@ -47,6 +49,15 @@ tr.user-row {
 
   & > *:last-child {
     margin-right: 0;
+  }
+
+  @media (max-width: $screen-xs-max) {
+    flex-direction: column;
+    align-items: stretch;
+
+    & > *:last-child {
+      margin-right: 0.5rem;
+    }
   }
 }
 
