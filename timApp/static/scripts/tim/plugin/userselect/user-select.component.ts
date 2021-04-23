@@ -18,6 +18,14 @@ import {
     withDefault,
 } from "../attributes";
 import {to2} from "../../util/utils";
+import {Observable} from "rxjs/internal/Observable";
+import {race, Subject} from "rxjs";
+import {
+    debounceTime,
+    distinctUntilChanged,
+    filter,
+    first,
+} from "rxjs/operators";
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
@@ -36,9 +44,14 @@ const PluginFields = t.intersection([
     selector: "user-selector",
     template: `
         <h3>Search user</h3>
-        <form class="search" (ngSubmit)="doSearch()" #searchForm="ngForm">
-            <input name="search-string" type="text" [(ngModel)]="searchString" minlength="{{ inputMinLength }}" required
-                   (input)="startSearchTimer()">
+        <form class="search" (ngSubmit)="searchPress.next()" #searchForm="ngForm">
+            <input class="form-control"
+                   placeholder="Search for user"
+                   name="search-string"
+                   type="text"
+                   [(ngModel)]="searchString"
+                   (ngModelChange)="inputTyped.next($event)"
+                   minlength="{{ inputMinLength }}" required>
             <input class="timButton" type="submit" value="Search" [disabled]="!searchForm.form.valid || search">
         </form>
     `,
@@ -54,33 +67,16 @@ export class UserSelectComponent extends AngularPluginBase<
     searchString: string = "";
     inputMinLength: number = 3;
     search: boolean = false;
-    private currentTimeoutTimer = 0;
+    searchPress: Subject<void> = new Subject();
+    inputTyped: Subject<string> = new Subject();
 
     ngOnInit() {
         super.ngOnInit();
         this.inputMinLength = this.markup.inputMinLength;
-    }
-
-    startSearchTimer() {
-        if (this.markup.autoSearchDelay > 0) {
-            if (this.currentTimeoutTimer) {
-                window.clearTimeout(this.currentTimeoutTimer);
-                this.currentTimeoutTimer = 0;
-            }
-            this.currentTimeoutTimer = window.setTimeout(() => {
-                this.currentTimeoutTimer = 0;
-                if (this.searchForm.form.valid) {
-                    this.searchForm.ngSubmit.emit();
-                }
-            }, this.markup.autoSearchDelay * 1000);
-        }
+        this.initSearch();
     }
 
     async doSearch() {
-        if (this.currentTimeoutTimer) {
-            window.clearTimeout(this.currentTimeoutTimer);
-            this.currentTimeoutTimer = 0;
-        }
         this.search = true;
 
         const result = await to2(
@@ -96,6 +92,7 @@ export class UserSelectComponent extends AngularPluginBase<
 
         console.log(result);
         this.search = false;
+        this.initSearch();
     }
 
     getAttributeType(): typeof PluginFields {
@@ -104,6 +101,21 @@ export class UserSelectComponent extends AngularPluginBase<
 
     getDefaultMarkup(): Partial<t.TypeOf<typeof PluginMarkup>> {
         return {};
+    }
+
+    private initSearch() {
+        const observables: Observable<unknown>[] = [this.searchPress];
+        if (this.markup.autoSearchDelay > 0)
+            observables.push(
+                this.inputTyped.pipe(
+                    filter(() => this.searchForm.form.valid),
+                    distinctUntilChanged(),
+                    debounceTime(this.markup.autoSearchDelay * 1000)
+                )
+            );
+        race(...observables)
+            .pipe(first())
+            .subscribe(() => this.doSearch());
     }
 }
 
