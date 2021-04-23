@@ -36,17 +36,17 @@ interface TimMessageOptions {
                                       [(ngModel)]="TimMessageOptions.archive">Archive message</label></p>
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="TimMessageOptions.important">Mark message as important (currently only applies to TIM messages)</label></p>
-            <fieldset><p>Send (choose at least one of the two)</p><!--<label *ngIf="!defaultEmail"><input type="checkbox" 
+            <fieldset><p>Send as (choose at least one of the two)</p><!--<label *ngIf="!defaultEmail"><input type="checkbox" 
                                       [(ngModel)]="TimMessageOptions.messageChannel">to recipient's own message channels</label><br/>-->
             <label><input type="checkbox" (change)="notDefault()"
-                                      [(ngModel)]="email">as email</label><br/>
+                                      [(ngModel)]="email">email</label><br/>
                 <ul *ngIf="email">
                     <li>
                     <label><input type="radio"
-                                      [(ngModel)]="defaultEmail" name="defaultEmail" [value]="false">use TIM to send</label>
+                                      [(ngModel)]="defaultEmail" name="defaultEmail" [value]="false">Use TIM to send</label>
                 </li><li>
                     <label><input type="radio"
-                                      [(ngModel)]="defaultEmail" name="defaultEmail" [value]="true">use your default email client (recipients will see each others' addresses)</label>
+                                      [(ngModel)]="defaultEmail" name="defaultEmail" [value]="true">Use your default email client (recipients will see each others' addresses)</label>
                 </li></ul>     
                 <ul *ngIf="email && !defaultEmail">
                 <li><label><input type="radio"
@@ -55,7 +55,7 @@ interface TimMessageOptions {
                                       [(ngModel)]="replyAll" name="replyAll" [value]="true" [disabled]="timMessage">Recipient replies all by default (sees message as a group message)</label></li>
             </ul>
             <label *ngIf="!defaultEmail"><input type="checkbox"
-                                      [(ngModel)]="timMessage">as TIM message</label></fieldset><br/>
+                                      [(ngModel)]="timMessage">TIM message</label></fieldset><br/>
                 
             <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
             <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="TimMessageOptions.pageList" rows="4" cols="70"></textarea></p>
