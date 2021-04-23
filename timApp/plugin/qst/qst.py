@@ -166,6 +166,7 @@ def qst_answer_jso(m: QstAnswerModel):
     tim_info = {}
     answers = m.input.answers
     spoints = m.markup.points
+    default_points = m.markup.defaultPoints
     markup = m.markup
     info = m.info
     rand_arr = None
@@ -185,13 +186,15 @@ def qst_answer_jso(m: QstAnswerModel):
             locks = [locks]
         seed_string = info.user_id + m.taskID
         rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, seed_string, random_seed, locks)
-    if spoints:
-        if rand_arr:
-            question_type = m.markup.questionType
-            spoints = qst_filter_markup_points(spoints, question_type, rand_arr)
-            m.markup.points = spoints
-        points_table = create_points_table(spoints)
-        default_points = m.markup.defaultPoints
+    if spoints or default_points:
+        if spoints:
+            if rand_arr:
+                question_type = m.markup.questionType
+                spoints = qst_filter_markup_points(spoints, question_type, rand_arr)
+                m.markup.points = spoints
+            points_table = create_points_table(spoints)
+        else:
+            points_table = [{}]*len(answers)
         points = calculate_points_from_json_answer(answers, points_table, default_points)
         minpoints = markup.minpoints if markup.minpoints is not missing else -1e20
         maxpoints = markup.maxpoints if markup.maxpoints is not missing else 1e20
@@ -654,6 +657,7 @@ def qst_try_hide_points(jso):
     if not limit_reached or not show_points:
         markup.pop('points', None)
         markup.pop('expl', None)
+        markup.pop('defaultPoints', None)
     return limit_reached
 
 
