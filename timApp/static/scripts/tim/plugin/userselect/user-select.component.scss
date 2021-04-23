@@ -11,3 +11,21 @@ form.search {
     margin-right: 1em;
   }
 }
+
+.search-result {
+  margin-top: 0.5rem;
+
+  .progress {
+    height: 1rem;
+  }
+}
+
+tim-alert {
+  display: block;
+  margin-top: 1rem;
+  font-size: 1.2rem;
+
+  ::ng-deep div.alert {
+    padding: 0.8rem;
+  }
+}

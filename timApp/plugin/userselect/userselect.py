@@ -21,6 +21,7 @@ class UserSelectInputModel:
 class UserSelectMarkupModel(GenericMarkupModel):
     inputMinLength: int = 3
     autoSearchDelay: float = 0.0
+    maxMatches: int = 10
     groups: List[str] = field(default_factory=list)
     fields: List[str] = field(default_factory=list)
 
@@ -72,7 +73,7 @@ class SearchUsersOptions:
 def search_users(opts: SearchUsersOptions) -> Response:
     plug, doc, user, view_ctx = find_plugin_by_task_id(opts.task_id)
     model: UserSelectMarkupModel = UserSelectMarkupModelSchema().load(plug.values)
-    field_data, _, _, _ = get_fields_and_users(
+    field_data, _, field_names, _ = get_fields_and_users(
         model.fields,
         RequestedGroups.from_name_list(model.groups),
         doc,
@@ -93,10 +94,18 @@ def search_users(opts: SearchUsersOptions) -> Response:
                 matched_field_data.append(field_obj)
                 break
 
-    return json_response([
-        {
-            "user": field_obj["user"],
-            "fields": field_obj["fields"]
-        }
-        for field_obj in matched_field_data
-    ])
+    match_count = len(matched_field_data)
+    if match_count > model.maxMatches:
+        matched_field_data = matched_field_data[0:model.maxMatches]
+
+    return json_response({
+        "matches": [
+            {
+                "user": field_obj["user"],
+                "fields": field_obj["fields"]
+            }
+            for field_obj in matched_field_data
+        ],
+        "allMatchCount": match_count,
+        "fieldNames": field_names
+    })

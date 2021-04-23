@@ -27,10 +27,17 @@ import {
 } from "../attributes";
 import {to2} from "../../util/utils";
 import {IUser} from "../../user/IUser";
+import {TimUtilityModule} from "../../ui/tim-utility.module";
 
 interface UserResult {
     user: IUser;
     field: Record<string, string | number | undefined>;
+}
+
+interface SearchResult {
+    matches: UserResult[];
+    allMatchCount: number;
+    fieldNames: string[];
 }
 
 const PluginMarkup = t.intersection([
@@ -51,15 +58,40 @@ const PluginFields = t.intersection([
     template: `
         <h3>Search user</h3>
         <form class="search" (ngSubmit)="searchPress.next()" #searchForm="ngForm">
-            <input class="form-control"
+            <input class="form-control input-lg"
                    placeholder="Search for user"
                    name="search-string"
                    type="text"
                    [(ngModel)]="searchString"
                    (ngModelChange)="inputTyped.next($event)"
                    minlength="{{ inputMinLength }}" required>
-            <input class="timButton" type="submit" value="Search" [disabled]="!searchForm.form.valid || search">
+            <input class="timButton btn-lg" type="submit" value="Search" [disabled]="!searchForm.form.valid || search">
         </form>
+        <div class="search-result" *ngIf="search || lastSearchResult">
+            <div class="progress" *ngIf="search">
+                <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
+            </div>
+
+            <table *ngIf="lastSearchResult">
+                <thead>
+                <td>Select</td>
+                <td>Username</td>
+                <td>Full name</td>
+                <td *ngFor="let fieldName of lastSearchResult.fieldNames">
+                    {{fieldName}}
+                </td>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <tim-alert *ngIf="errorMessage">
+            <span>Could not search for the user.</span>
+            <div style="margin-top: 1rem;">
+                <p>Please try refreshing the page and try again.</p>
+                <div><a (click)="showErrorMessage = !showErrorMessage"><i class="glyphicon glyphicon-chevron-down"></i> Show details</a></div>
+                <pre *ngIf="showErrorMessage">{{errorMessage}}</pre>
+            </div>
+        </tim-alert>
     `,
     styleUrls: ["user-select.component.scss"],
 })
@@ -70,11 +102,14 @@ export class UserSelectComponent extends AngularPluginBase<
 > {
     @ViewChild("searchForm") searchForm!: NgForm;
 
+    showErrorMessage = false;
+    errorMessage?: string;
     searchString: string = "";
     inputMinLength: number = 3;
     search: boolean = false;
     searchPress: Subject<void> = new Subject();
     inputTyped: Subject<string> = new Subject();
+    lastSearchResult?: SearchResult;
 
     ngOnInit() {
         super.ngOnInit();
@@ -84,10 +119,11 @@ export class UserSelectComponent extends AngularPluginBase<
 
     async doSearch() {
         this.search = true;
-
+        this.lastSearchResult = undefined;
+        this.errorMessage = undefined;
         const result = await to2(
             this.http
-                .get<UserResult[]>("/userSelect/search", {
+                .get<SearchResult>("/userSelect/search", {
                     params: {
                         task_id: this.getTaskId()?.docTask().toString() ?? "",
                         search_string: this.searchString,
@@ -96,7 +132,12 @@ export class UserSelectComponent extends AngularPluginBase<
                 .toPromise()
         );
 
-        console.log(result);
+        if (result.ok) {
+            this.lastSearchResult = result.result;
+        } else {
+            this.showErrorMessage = false;
+            this.errorMessage = result.result.error.error;
+        }
         this.search = false;
         this.initSearch();
     }
@@ -127,7 +168,7 @@ export class UserSelectComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [UserSelectComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule],
+    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
 })
 export class UserSelectModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
