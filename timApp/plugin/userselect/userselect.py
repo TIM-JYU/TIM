@@ -5,7 +5,7 @@ from flask import render_template_string, Response
 
 from timApp.plugin.plugin import find_plugin_by_task_id
 from timApp.util.flask.requesthelper import use_model
-from timApp.util.flask.responsehelper import ok_response
+from timApp.util.flask.responsehelper import json_response
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
@@ -81,7 +81,6 @@ def search_users(opts: SearchUsersOptions) -> Response:
     )
 
     matched_field_data = []
-
     for field_obj in field_data:
         fields = field_obj["fields"]
         usr = field_obj["user"]
@@ -94,4 +93,14 @@ def search_users(opts: SearchUsersOptions) -> Response:
                 matched_field_data.append(field_obj)
                 break
 
-    return ok_response()
+    return json_response([
+        {
+            "user": {
+                "name": field_obj["user"].name,
+                "real_name": field_obj["user"].real_name,
+                "email": field_obj["user"].email
+            },
+            "fields": field_obj["fields"]
+        }
+        for field_obj in matched_field_data
+    ])
