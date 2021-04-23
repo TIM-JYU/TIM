@@ -31,7 +31,7 @@ import {TimUtilityModule} from "../../ui/tim-utility.module";
 
 interface UserResult {
     user: IUser;
-    field: Record<string, string | number | undefined>;
+    fields: Record<string, string | number | undefined>;
 }
 
 interface SearchResult {
@@ -81,7 +81,20 @@ const PluginFields = t.intersection([
                     {{fieldName}}
                 </td>
                 </thead>
-                <tbody></tbody>
+                <tbody>
+                    <tr class="user-row" *ngFor="let match of lastSearchResult.matches" [class.selected-user]="selectedUser == match.user" (click)="selectedUser = match.user">
+                        <td>
+                            <span class="radio">
+                                <label>
+                                    <input type="radio" name="{{taskId}}-userselect-radios" [value]="match.user" [(ngModel)]="selectedUser">
+                                </label>
+                            </span>
+                        </td>
+                        <td>{{match.user.name}}</td>
+                        <td>{{match.user.real_name}}</td>
+                        <td *ngFor="let fieldName of lastSearchResult.fieldNames">{{match.fields[fieldName]}}</td>    
+                    </tr>
+                </tbody>
             </table>
         </div>
         <tim-alert *ngIf="errorMessage">
@@ -110,11 +123,14 @@ export class UserSelectComponent extends AngularPluginBase<
     searchPress: Subject<void> = new Subject();
     inputTyped: Subject<string> = new Subject();
     lastSearchResult?: SearchResult;
+    taskId: string = "";
+    selectedUser?: IUser;
 
     ngOnInit() {
         super.ngOnInit();
         this.inputMinLength = this.markup.inputMinLength;
         this.initSearch();
+        this.taskId = this.getTaskId()?.docTask().toString() ?? "";
     }
 
     async doSearch() {
@@ -125,7 +141,7 @@ export class UserSelectComponent extends AngularPluginBase<
             this.http
                 .get<SearchResult>("/userSelect/search", {
                     params: {
-                        task_id: this.getTaskId()?.docTask().toString() ?? "",
+                        task_id: this.taskId,
                         search_string: this.searchString,
                     },
                 })
