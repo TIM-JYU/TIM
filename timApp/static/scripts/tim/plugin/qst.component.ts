@@ -108,7 +108,7 @@ export class QstComponent
         el: ElementRef<HTMLElement>,
         http: HttpClient,
         domSanitizer: DomSanitizer,
-        public cdr: ChangeDetectorRef
+        private cdr: ChangeDetectorRef
     ) {
         super(el, http, domSanitizer);
     }
