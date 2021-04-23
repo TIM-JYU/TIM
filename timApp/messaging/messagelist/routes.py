@@ -233,6 +233,7 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
     return ok_response()
 
 
+@dataclass
 class MemberInfo:
     """Wrapper for information about a member on a message list."""
     name: str
@@ -253,26 +254,17 @@ def get_members(list_name: str) -> Response:
     msg_list = MessageListModel.get_list_by_name(list_name)
     members = get_members_for_list(msg_list)
     list_members: List[MemberInfo] = []
-    # list_members: List[dict] = []
     for member in members:
-        mi = MemberInfo()
-        # d = dict()
-        # d["sendRight"] = member.send_right
-        # d["deliveryRight"] = member.delivery_right
-        mi.sendRight = member.send_right
-        mi.deliveryRight = member.delivery_right
         if member.tim_member:
             gid = member.group_id
+            # VIESTIM: This should be the user's personal user group.
             ug = UserGroup.query.filter_by(id=gid).one()
             u = ug.users[0]
-            # d["email"] = u.email
-            # d["name"] = u.real_name
-            mi.email = u.email
-            mi.name = u.real_name
+            mi = MemberInfo(name=u.real_name,email=u.email, sendRight=member.send_right,
+                            deliveryRight=member.delivery_right)
         else:
-            mi.email = member.external_member.email_address
-            mi.name = "External"
-            pass
+            mi = MemberInfo(name="External member", email=member.external_member.email_address,
+                            sendRight=member.send_right, deliveryRight=member.delivery_right)
         list_members.append(mi)
         # list_members.append(d)
 
