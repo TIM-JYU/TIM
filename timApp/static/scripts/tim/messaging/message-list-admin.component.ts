@@ -3,28 +3,14 @@ import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
-import {archivePolicyNames, ArchiveType} from "tim/messaging/listOptionTypes";
+import {
+    archivePolicyNames,
+    ArchiveType,
+    CreateListOptions,
+    MemberInfo,
+} from "tim/messaging/listOptionTypes";
 import {documentglobals} from "tim/util/globals";
 import {Users} from "../user/userService";
-
-interface CreateListOptions {
-    // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
-    listname: string;
-    domain: string;
-    archive: ArchiveType;
-    ownerEmail: string;
-    notifyOwnerOnListChange: boolean;
-    listDescription: string;
-    listInfo: string;
-}
-
-interface MemberInfo {
-    // VIESTIM Keep this updates with MemberInfo at server side.
-    name: string;
-    sendRight: boolean;
-    delivery: boolean;
-    email: string;
-}
 
 @Component({
     selector: "tim-message-list-admin",
