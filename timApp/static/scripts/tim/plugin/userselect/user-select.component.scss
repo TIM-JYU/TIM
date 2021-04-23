@@ -50,10 +50,17 @@ tr.user-row {
   }
 }
 
+.more-matches-info {
+  font-size: 1.2rem;
+  color: #aeaeae;
+  font-style: italic;
+}
+
 table {
   width: 100%;
   margin-top: 2rem;
   border: none;
+  margin-bottom: 0.5rem;
 
   thead {
     border-bottom: 2px solid var(--basic-border-color);

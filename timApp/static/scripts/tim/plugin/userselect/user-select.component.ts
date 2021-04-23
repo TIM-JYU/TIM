@@ -2,6 +2,7 @@ import {
     ApplicationRef,
     Component,
     DoBootstrap,
+    ElementRef,
     NgModule,
     ViewChild,
 } from "@angular/core";
@@ -63,7 +64,9 @@ const PluginFields = t.intersection([
                    type="text"
                    [(ngModel)]="searchString"
                    (ngModelChange)="inputTyped.next($event)"
-                   minlength="{{ inputMinLength }}" required>
+                   minlength="{{ inputMinLength }}"
+                   required
+                    #searchInput>
             <input class="timButton btn-lg" type="submit" value="Search" [disabled]="!searchForm.form.valid || search">
         </form>
         <div class="search-result" *ngIf="search || lastSearchResult">
@@ -110,7 +113,7 @@ const PluginFields = t.intersection([
                 </tbody>
             </table>
 
-            <div class="small"
+            <div class="more-matches-info"
                  *ngIf="lastSearchResult && lastSearchResult.matches.length < lastSearchResult.allMatchCount">
                 There are {{lastSearchResult.allMatchCount}} matches. Only first {{lastSearchResult.matches.length}} are
                 shown.
@@ -146,6 +149,7 @@ export class UserSelectComponent extends AngularPluginBase<
     typeof PluginFields
 > {
     @ViewChild("searchForm") searchForm!: NgForm;
+    @ViewChild("searchInput") searchInput!: ElementRef<HTMLInputElement>;
 
     showErrorMessage = false;
     errorMessage?: string;
@@ -201,6 +205,7 @@ export class UserSelectComponent extends AngularPluginBase<
         this.selectedUser = undefined;
         this.lastSearchResult = undefined;
         this.searchString = "";
+        this.searchInput.nativeElement.focus();
     }
 
     async doSearch() {
