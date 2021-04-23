@@ -216,11 +216,8 @@ export class TimMessageComponent {
             messageSubject: this.messageSubject,
             recipients: this.recipientList.split(/\n/g),
         };
-        const timMessage = {...options, ...message};
         return to2(
-            this.http
-                .post("/timMessage/send", {options: timMessage})
-                .toPromise()
+            this.http.post("/timMessage/send", {options, message}).toPromise()
         );
     }
 

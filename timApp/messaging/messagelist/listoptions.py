@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 
 class ArchiveType(Enum):
@@ -27,12 +27,11 @@ class ListOptions:
     domain: str
     # Enums need this to help marshmallow decipher JSON values in from client side properly.
     archive: ArchiveType = field(metadata={'by_value': True})
-    # VIESTIM: Is this needed?
-    # emails: List[str]
+    # members: List[str]
+    ownerEmail: str
+    notifyOwnerOnListChange: bool
     listDescription: str
     listInfo: str
-    notifyOwnerOnListChange: Optional[bool] = None
-    ownerEmail: Optional[str] = None
 
 
 # A list of tuples mapping TIM's archive policies to Mailman's archive policies. Mailman's archive policies are

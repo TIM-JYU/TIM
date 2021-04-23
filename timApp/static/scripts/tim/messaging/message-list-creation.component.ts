@@ -78,8 +78,6 @@ export class MessageListComponent extends AngularDialogComponent<
     listDescription: string = "";
     listInfo: string = "";
 
-    emails?: string; // voiko poistaa??
-
     constructor(private http: HttpClient) {
         super();
     }
@@ -139,17 +137,6 @@ export class MessageListComponent extends AngularDialogComponent<
                 .post<IDocument>("/messagelist/createlist", {options})
                 .toPromise()
         );
-    }
-
-    /**
-     * Compile email addresses separated by line breaks into a list
-     * @private
-     */
-    private parseEmails(): string[] {
-        if (!this.emails) {
-            return [];
-        }
-        return this.emails.split("\n").filter((e) => e);
     }
 
     /**
