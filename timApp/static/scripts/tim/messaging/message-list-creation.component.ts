@@ -6,6 +6,7 @@ import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-compone
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
 import {Users} from "../user/userService";
+import {IDocument, redirectToItem} from "../item/IItem";
 import {
     archivePolicyNames,
     ArchiveType,
@@ -76,8 +77,6 @@ export class MessageListComponent extends AngularDialogComponent<
     listDescription: string = "";
     listInfo: string = "";
 
-    emails?: string;
-
     constructor(private http: HttpClient) {
         super();
     }
@@ -119,7 +118,6 @@ export class MessageListComponent extends AngularDialogComponent<
                 ? this.domain.slice(1)
                 : this.domain,
             archive: this.archive,
-            emails: this.parseEmails(),
             ownerEmail: this.ownerEmail,
             notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             listInfo: this.listInfo,
@@ -129,26 +127,17 @@ export class MessageListComponent extends AngularDialogComponent<
             console.error(result.result.error.error);
         } else {
             // VIESTIM Helps see that data was sent succesfully after clicking the button.
-            console.log("List options sent successfully.");
+            redirectToItem(result.result);
         }
     }
 
     // VIESTIM this helper function helps keeping types in check.
     private createList(options: CreateListOptions) {
         return to2(
-            this.http.post("/messagelist/createlist", {options}).toPromise()
+            this.http
+                .post<IDocument>("/messagelist/createlist", {options})
+                .toPromise()
         );
-    }
-
-    /**
-     * Compile email addresses separated by line breaks into a list
-     * @private
-     */
-    private parseEmails(): string[] {
-        if (!this.emails) {
-            return [];
-        }
-        return this.emails.split("\n").filter((e) => e);
     }
 
     /**
