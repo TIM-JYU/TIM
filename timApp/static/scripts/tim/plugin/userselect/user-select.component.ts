@@ -56,7 +56,6 @@ const PluginFields = t.intersection([
 @Component({
     selector: "user-selector",
     template: `
-        <h3>Search user</h3>
         <form class="search" (ngSubmit)="searchPress.next()" #searchForm="ngForm">
             <input class="form-control input-lg"
                    placeholder="Search for user"
@@ -71,7 +70,7 @@ const PluginFields = t.intersection([
             <div class="progress" *ngIf="search">
                 <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
             </div>
-
+            
             <table *ngIf="lastSearchResult">
                 <thead>
                 <td>Select</td>
@@ -164,6 +163,10 @@ export class UserSelectComponent extends AngularPluginBase<
         this.inputMinLength = this.markup.inputMinLength;
         this.initSearch();
         this.taskId = this.getTaskId()?.docTask().toString() ?? "";
+        this.inputTyped.subscribe(() => {
+            this.selectedUser = undefined;
+            this.lastSearchResult = undefined;
+        });
     }
 
     async apply() {
@@ -244,9 +247,9 @@ export class UserSelectComponent extends AngularPluginBase<
         if (this.markup.autoSearchDelay > 0)
             observables.push(
                 this.inputTyped.pipe(
-                    filter(() => this.searchForm.form.valid),
+                    debounceTime(this.markup.autoSearchDelay * 1000),
                     distinctUntilChanged(),
-                    debounceTime(this.markup.autoSearchDelay * 1000)
+                    filter(() => this.searchForm.form.valid)
                 )
             );
         race(...observables)
