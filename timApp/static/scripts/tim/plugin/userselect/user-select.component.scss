@@ -33,3 +33,19 @@ tim-alert {
 tr.user-row {
   cursor: pointer;
 }
+
+.action-buttons {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+
+  & > * {
+    margin: 0.5rem;
+  }
+
+  & > *:last-child {
+    margin-right: 0;
+  }
+}

@@ -82,38 +82,49 @@ const PluginFields = t.intersection([
                 </td>
                 </thead>
                 <tbody *ngIf="lastSearchResult.matches.length == 0">
-                    <tr>
-                        <td [colSpan]="3 + lastSearchResult.fieldNames.length">
-                            <em>No matches for given keyword</em>
-                        </td>
-                    </tr>
+                <tr>
+                    <td [colSpan]="3 + lastSearchResult.fieldNames.length">
+                        <em>No matches for given keyword</em>
+                    </td>
+                </tr>
                 </tbody>
                 <tbody *ngIf="lastSearchResult.matches.length > 0">
-                    <tr class="user-row" *ngFor="let match of lastSearchResult.matches" [class.selected-user]="selectedUser == match.user" (click)="selectedUser = match.user">
-                        <td>
+                <tr class="user-row" *ngFor="let match of lastSearchResult.matches"
+                    [class.selected-user]="selectedUser == match.user" (click)="selectedUser = match.user">
+                    <td>
                             <span class="radio">
                                 <label>
-                                    <input type="radio" name="{{taskId}}-userselect-radios" [value]="match.user" [(ngModel)]="selectedUser">
+                                    <input type="radio" name="{{taskId}}-userselect-radios" [value]="match.user"
+                                           [(ngModel)]="selectedUser">
                                 </label>
                             </span>
-                        </td>
-                        <td>{{match.user.name}}</td>
-                        <td>{{match.user.real_name}}</td>
-                        <td *ngFor="let fieldName of lastSearchResult.fieldNames">{{match.fields[fieldName]}}</td>    
-                    </tr>
+                    </td>
+                    <td>{{match.user.name}}</td>
+                    <td>{{match.user.real_name}}</td>
+                    <td *ngFor="let fieldName of lastSearchResult.fieldNames">{{match.fields[fieldName]}}</td>
+                </tr>
                 </tbody>
             </table>
-            
-            <div class="small" *ngIf="lastSearchResult && lastSearchResult.matches.length < lastSearchResult.allMatchCount">
-                There are {{lastSearchResult.allMatchCount}} matches. Only first {{lastSearchResult.matches.length}} are shown.
+
+            <div class="small"
+                 *ngIf="lastSearchResult && lastSearchResult.matches.length < lastSearchResult.allMatchCount">
+                There are {{lastSearchResult.allMatchCount}} matches. Only first {{lastSearchResult.matches.length}} are
+                shown.
                 Please give more specific keywords to show all results.
+            </div>
+
+            <div class="action-buttons" *ngIf="selectedUser">
+                <tim-loading></tim-loading>
+                <button type="button" class="btn btn-success btn-lg">Apply</button>
+                <button type="button" class="btn btn-danger btn-lg">Cancel</button>
             </div>
         </div>
         <tim-alert *ngIf="errorMessage">
             <span>Could not search for the user.</span>
             <div style="margin-top: 1rem;">
                 <p>Please try refreshing the page and try again.</p>
-                <div><a (click)="showErrorMessage = !showErrorMessage"><i class="glyphicon glyphicon-chevron-down"></i> Show details</a></div>
+                <div><a (click)="showErrorMessage = !showErrorMessage"><i class="glyphicon glyphicon-chevron-down"></i>
+                    Show details</a></div>
                 <pre *ngIf="showErrorMessage">{{errorMessage}}</pre>
             </div>
         </tim-alert>

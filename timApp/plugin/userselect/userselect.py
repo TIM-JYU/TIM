@@ -3,18 +3,31 @@ from typing import List, Optional
 
 from flask import render_template_string, Response
 
+from timApp.auth.accesstype import AccessType
+from timApp.item.manage import TimeOpt
 from timApp.plugin.plugin import find_plugin_by_task_id
-from timApp.util.flask.requesthelper import use_model
 from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
-from tim_common.pluginserver_flask import GenericHtmlModel, create_nontask_blueprint, PluginReqs
+from tim_common.pluginserver_flask import GenericHtmlModel, PluginReqs, register_html_routes
+from tim_common.utils import DurationSchema
+
+user_select_plugin = TypedBlueprint("userSelect", __name__, url_prefix="/userSelect")
 
 
 @dataclass
 class UserSelectInputModel:
     pass
+
+
+@dataclass
+class Permission:
+    doc_path: str
+    type: AccessType
+    time: TimeOpt
+    confirm: bool = False
 
 
 @dataclass
@@ -24,9 +37,10 @@ class UserSelectMarkupModel(GenericMarkupModel):
     maxMatches: int = 10
     groups: List[str] = field(default_factory=list)
     fields: List[str] = field(default_factory=list)
+    permissions: List[Permission] = field(default_factory=list)
 
 
-UserSelectMarkupModelSchema = class_schema(UserSelectMarkupModel)
+UserSelectMarkupModelSchema = class_schema(UserSelectMarkupModel, base_schema=DurationSchema)
 
 
 @dataclass
@@ -54,24 +68,17 @@ def reqs_handler() -> PluginReqs:
     }
 
 
-user_select_plugin = create_nontask_blueprint(
-    __name__,
-    'userSelect',
-    UserSelectHtmlModel,
-    reqs_handler,
-)
-
-
-@dataclass
-class SearchUsersOptions:
-    task_id: str
-    search_string: str
+# user_select_plugin = create_nontask_blueprint_schema(
+#     __name__,
+#     'userSelect',
+#     UserSelectMarkupModelSchema,
+#     reqs_handler,
+# )
 
 
 @user_select_plugin.route('/search')
-@use_model(SearchUsersOptions)
-def search_users(opts: SearchUsersOptions) -> Response:
-    plug, doc, user, view_ctx = find_plugin_by_task_id(opts.task_id)
+def search_users(task_id: str, search_string: str) -> Response:
+    plug, doc, user, view_ctx = find_plugin_by_task_id(task_id)
     model: UserSelectMarkupModel = UserSelectMarkupModelSchema().load(plug.values)
     field_data, _, field_names, _ = get_fields_and_users(
         model.fields,
@@ -90,7 +97,7 @@ def search_users(opts: SearchUsersOptions) -> Response:
             if not field_val:
                 continue
             val = field_val if isinstance(field_val, str) else str(field_val)
-            if opts.search_string in val.lower():
+            if search_string in val.lower():
                 matched_field_data.append(field_obj)
                 break
 
@@ -109,3 +116,10 @@ def search_users(opts: SearchUsersOptions) -> Response:
         "allMatchCount": match_count,
         "fieldNames": field_names
     })
+
+
+register_html_routes(
+    user_select_plugin,
+    class_schema(UserSelectHtmlModel, base_schema=DurationSchema),
+    reqs_handler
+)
