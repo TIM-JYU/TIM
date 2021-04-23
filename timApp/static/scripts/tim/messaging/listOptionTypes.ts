@@ -45,3 +45,11 @@ export const archivePolicyNames: ArchivePolicyNames[] = [
             "Public archive. Everyone with link can access and the archive is advertised.",
     },
 ];
+
+export interface MemberInfo {
+    // VIESTIM Keep this updates with MemberInfo at server side.
+    name: string;
+    sendRight: boolean;
+    delivery: boolean;
+    email: string;
+}
