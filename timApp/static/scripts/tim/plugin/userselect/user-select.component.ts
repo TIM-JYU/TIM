@@ -149,6 +149,7 @@ export class UserSelectComponent extends AngularPluginBase<
         this.search = true;
         this.lastSearchResult = undefined;
         this.errorMessage = undefined;
+        this.selectedUser = undefined;
         const result = await to2(
             this.http
                 .get<SearchResult>("/userSelect/search", {
@@ -162,6 +163,9 @@ export class UserSelectComponent extends AngularPluginBase<
 
         if (result.ok) {
             this.lastSearchResult = result.result;
+            if (this.lastSearchResult.matches.length > 0) {
+                this.selectedUser = this.lastSearchResult.matches[0].user;
+            }
         } else {
             this.showErrorMessage = false;
             this.errorMessage = result.result.error.error;
