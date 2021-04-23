@@ -92,6 +92,8 @@ def reqs_handler() -> PluginReqs:
 @user_select_plugin.route('/search')
 def search_users(task_id: str, search_string: str) -> Response:
     plug, doc, user, view_ctx = find_plugin_by_task_id(task_id)
+    if not user:
+        raise RouteException("Need to be logged in")
     model: UserSelectMarkupModel = UserSelectMarkupModelSchema().load(plug.values)
     field_data, _, field_names, _ = get_fields_and_users(
         model.fields,
