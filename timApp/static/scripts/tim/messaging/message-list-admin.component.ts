@@ -26,9 +26,12 @@ import {Users} from "../user/userService";
                 </select>
             </div>
             <div>
-                <!-- VIESTIM: For testing list adding with owner email address. -->
+                <!-- TODO: Add owners here? Should we at least display owner information and give a way to change 
+                      owners, or should that be done by directly changing the owner of the document? -->
+                <!--
                 <label for="owner-address">List owner's adress</label>
                 <input type="text" name="owner-address" id="owner-adress" [(ngModel)]="ownerEmail"/>
+                -->
             </div>
             <div>
                 <label for="list-description">Short description</label>
