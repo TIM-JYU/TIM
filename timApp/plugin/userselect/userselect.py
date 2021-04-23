@@ -146,13 +146,13 @@ def apply(task_id: str, username: str):
     all_permissions: List[PermissionActionBase] = [*model.permissions.add, *model.permissions.remove]
     doc_entries = {}
 
-    # Verify first that all documents can be accessed and permissions edited
+    # Verify first that all documents can be accessed and permissions edited + cache doc entries
     for perm in all_permissions:
         if perm.doc_path in doc_entries:
             continue
         doc_entry = DocEntry.find_by_path(perm.doc_path, fallback_to_id=True, try_translation=False)
         if not doc_entry:
-            raise NotExist(f"Can't find {perm.doc_path}!")
+            raise NotExist(f"Can't find document {perm.doc_path}")
         verify_permission_edit_access(doc_entry, perm.type)
         doc_entries[perm.doc_path] = doc_entry
 

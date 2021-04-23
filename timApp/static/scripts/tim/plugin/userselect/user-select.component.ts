@@ -94,8 +94,11 @@ const PluginFields = t.intersection([
                     <td>
                             <span class="radio">
                                 <label>
-                                    <input type="radio" name="{{taskId}}-userselect-radios" [value]="match.user"
-                                           [(ngModel)]="selectedUser">
+                                    <input type="radio"
+                                           name="{{taskId}}-userselect-radios"
+                                           [value]="match.user"
+                                           [(ngModel)]="selectedUser"
+                                           [disabled]="applying">
                                 </label>
                             </span>
                     </td>
@@ -114,11 +117,16 @@ const PluginFields = t.intersection([
             </div>
 
             <div class="action-buttons" *ngIf="selectedUser">
-                <tim-loading></tim-loading>
-                <button type="button" class="btn btn-success btn-lg">Apply</button>
-                <button type="button" class="btn btn-danger btn-lg">Cancel</button>
+                <tim-loading *ngIf="applying"></tim-loading>
+                <button type="button" class="btn btn-success btn-lg" [disabled]="applying" (click)="apply()">Apply
+                </button>
+                <button type="button" class="btn btn-danger btn-lg" [disabled]="applying" (click)="resetView()">Cancel
+                </button>
             </div>
         </div>
+        <tim-alert *ngIf="applied" severity="success">
+            Permissions applied successfully.
+        </tim-alert>
         <tim-alert *ngIf="errorMessage">
             <span>Could not search for the user.</span>
             <div style="margin-top: 1rem;">
@@ -141,8 +149,10 @@ export class UserSelectComponent extends AngularPluginBase<
     showErrorMessage = false;
     errorMessage?: string;
     searchString: string = "";
-    inputMinLength: number = 3;
+    inputMinLength!: number;
     search: boolean = false;
+    applying: boolean = false;
+    applied: boolean = false;
     searchPress: Subject<void> = new Subject();
     inputTyped: Subject<string> = new Subject();
     lastSearchResult?: SearchResult;
@@ -156,11 +166,43 @@ export class UserSelectComponent extends AngularPluginBase<
         this.taskId = this.getTaskId()?.docTask().toString() ?? "";
     }
 
+    async apply() {
+        if (!this.selectedUser) {
+            return;
+        }
+        this.applying = true;
+        this.resetError();
+
+        const result = await to2(
+            this.http
+                .post("/userSelect/apply", {
+                    task_id: this.taskId,
+                    username: this.selectedUser.name,
+                })
+                .toPromise()
+        );
+
+        if (result.ok) {
+            this.applied = true;
+            this.resetView();
+        } else {
+            this.errorMessage = result.result.error.error;
+        }
+
+        this.applying = false;
+    }
+
+    resetView() {
+        this.selectedUser = undefined;
+        this.lastSearchResult = undefined;
+        this.searchString = "";
+    }
+
     async doSearch() {
         this.search = true;
         this.lastSearchResult = undefined;
-        this.errorMessage = undefined;
-        this.selectedUser = undefined;
+        this.applied = false;
+        this.resetError();
         const result = await to2(
             this.http
                 .get<SearchResult>("/userSelect/search", {
@@ -178,7 +220,6 @@ export class UserSelectComponent extends AngularPluginBase<
                 this.selectedUser = this.lastSearchResult.matches[0].user;
             }
         } else {
-            this.showErrorMessage = false;
             this.errorMessage = result.result.error.error;
         }
         this.search = false;
@@ -191,6 +232,11 @@ export class UserSelectComponent extends AngularPluginBase<
 
     getDefaultMarkup(): Partial<t.TypeOf<typeof PluginMarkup>> {
         return {};
+    }
+
+    private resetError() {
+        this.showErrorMessage = false;
+        this.errorMessage = undefined;
     }
 
     private initSearch() {
