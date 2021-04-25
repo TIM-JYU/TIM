@@ -7,6 +7,7 @@ from mailmanclient import Client, MailingList, Domain
 
 from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate
 from timApp.tim_app import app
+from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
 from timApp.util.logger import log_warning, log_info
 from tim_common.marshmallow_dataclass import class_schema
@@ -126,9 +127,10 @@ class EmailListManager:
             return []
 
     @staticmethod
-    def create_new_list(list_options: ListOptions) -> None:
+    def create_new_list(list_options: ListOptions, owner: User) -> None:
         """Create a new email list with proper initial options set.
 
+        :param owner: Who owns this list.
         :param list_options: Options for message lists, here we use the options necessary for email list creation.
         :return:
         """
@@ -140,7 +142,7 @@ class EmailListManager:
                 email_list: MailingList = domain.create_list(list_options.listname)
                 # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
                 #  their lists on Mailman.
-                email_list.add_owner(list_options.ownerEmail)
+                email_list.add_owner(owner.email)
 
                 # VIESTIM: Sometimes Mailman gets confused how mail is supposed to be interpreted, and with some
                 #  email client's different interpretation with Mailman's email coding templates (e.g. list

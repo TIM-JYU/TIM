@@ -4,6 +4,8 @@ from typing import List, Optional
 from flask import Response
 from sqlalchemy.orm.exc import NoResultFound  # type: ignore
 
+from timApp.auth.accesshelper import verify_logged_in
+from timApp.auth.sessioninfo import get_current_user
 from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
@@ -29,9 +31,12 @@ def create_list(options: ListOptions) -> Response:
     :return: A Response with the list's management doc included. This way the creator can re-directed to the list's
     management page directly.
     """
+    verify_logged_in()
+    # Current user is set as the default owner.
+    owner = get_current_user()
 
     manage_doc = new_list(options)
-    EmailListManager.create_new_list(options)
+    EmailListManager.create_new_list(options, owner)
 
     return json_response(manage_doc)
 
