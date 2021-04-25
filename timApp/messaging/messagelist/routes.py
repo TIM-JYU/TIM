@@ -6,6 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound  # type: ignore
 
 from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
+from timApp.folder.folder import Folder
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType
@@ -235,7 +236,7 @@ def get_members(list_name: str) -> Response:
             # VIESTIM: This should be the user's personal user group.
             ug = UserGroup.query.filter_by(id=gid).one()
             u = ug.users[0]
-            mi = MemberInfo(name=u.real_name,email=u.email, sendRight=member.send_right,
+            mi = MemberInfo(name=u.real_name, email=u.email, sendRight=member.send_right,
                             deliveryRight=member.delivery_right)
         else:
             mi = MemberInfo(name="External member", email=member.external_member.email_address,
@@ -269,16 +270,15 @@ def archive(message: Message) -> Response:
     :param message: The message to be archived.
     :return: Return OK response if everything went smoothly.
     """
-    # VIESTIM: This view function has not been tested yet. It's implementation is still badly a work in progress.
+    # VIESTIM: This view function has not been tested yet.
 
     msg_list = MessageListModel.get_list_by_name(message.message_list_name)
 
     if msg_list is None:
         raise RouteException(f"No message list with name {message.message_list_name} exists.")
 
-    # TODO: Check rights to message list.
+    # TODO: Check rights to message list?
 
-    # TODO: Get the message list's archive policy.
     archive_policy = msg_list.archive_policy
 
     # TODO: Check if this message list is archived at all in the first place, or if the message has had some special
@@ -286,31 +286,43 @@ def archive(message: Message) -> Response:
     if archive_policy is ArchiveType.NONE:
         raise RouteException("This list doesn't archive messages.")
 
-    # TODO: Create document.
-
-    archive_title = "This is a placeholder title"  # TODO: Title comes from the message's title: message.title
+    # TODO: If there are multiple messages with same title, differentiate them.
+    archive_title = message.title
     archive_path = f"{message_list_archive_prefix}/{remove_path_special_chars(archive_title)}"
+
+    # Archive folder for message list.
+    archive_folder = Folder.find_by_location(archive_path, msg_list.name)
 
     archive_doc = create_document(archive_path, archive_title)
 
+    # Set header information for archived message.
     archive_doc.document.add_text(f"Title: {message.title}")
     archive_doc.document.add_text(f"Sender: {message.sender}")
     archive_doc.document.add_text(f"Recipients: {message.recipients}")
 
+    # Set message body for archived message.
     archive_doc.document.add_text(f"{message.message_body}")
 
-    # TODO: Add footer information. Now just a placeholder text.
-    previous_doc_title = f"Linkkiteksti"  # TODO: Get title from previous message's title.
-    previous_doc_link = f"Linkkiosoite"  # TODO: Get the path to previous message.
-    previous_message_link = f"[{previous_doc_title}]({previous_doc_link})"
+    # From the archive folder, query all documents, sort them by created attribute. We do this to get the previously
+    # newest archived message, before we create a archive document for newest message.
+    all_archived_messages = archive_folder.get_all_documents()
+    sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
 
-    archive_doc.document.add_text(f"Previous message: {previous_message_link}")
-    archive_doc.document.add_text("Next message:")
+    if len(sorted_messages) > 1:
+        previous_doc = sorted_messages[1]
 
-    # TODO: Get the newest document in the archive folder (before this archived message). Would this be easier if we
-    #  query for this before we create the new document?
+        # Set footer information for archived message. Footer information is not set for the very first message,
+        # it get's it's link to next message when a second message is archived.
 
-    # TODO: Update the previous latest archived message's footer to point to the newest message.
+        # VIESTIM: Do we need other type of URL to previous_doc and archive_doc? Is url attribute enough?
+        previous_doc_title = "Previous message"
+        previous_doc_link = f"{previous_doc.url}"
+        previous_message_link = f"[{previous_doc_title}]({previous_doc_link})"
+        archive_doc.document.add_text(f"{previous_message_link}")
+
+        next_doc_title = "Next message"
+        next_doc_link = f"{archive_doc.url}"
+        previous_doc.document.add_text(f"[{next_doc_title}]({next_doc_link})")
 
     # TODO: Set proper rights to the document. The message sender owns the document. Owners of the list get at least a
     #  view right. Other rights depend on the message list's archive policy.
