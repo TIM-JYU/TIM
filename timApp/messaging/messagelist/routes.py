@@ -5,10 +5,11 @@ from flask import Response
 from sqlalchemy.orm.exc import NoResultFound  # type: ignore
 
 from timApp.auth.accesshelper import verify_logged_in
-from timApp.auth.sessioninfo import get_current_user
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
+from timApp.item.block import Block
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType
@@ -33,7 +34,7 @@ def create_list(options: ListOptions) -> Response:
     """
     verify_logged_in()
     # Current user is set as the default owner.
-    owner = get_current_user()
+    owner = get_current_user_object()
 
     manage_doc = new_list(options)
     EmailListManager.create_new_list(options, owner)
@@ -314,7 +315,10 @@ def archive(message: Message) -> Response:
     if archive_folder is not None:
         all_archived_messages = archive_folder.get_all_documents()
     else:
-        Folder.create(archive_path, f"{msg_list.name}")
+        # TODO: Set folder's owners to be message list's owners.
+        manage_doc_block = Block.query.filter_by(id=msg_list.manage_doc_id).one()
+        owners = manage_doc_block.owners()
+        Folder.create(archive_path, owner_groups=owners, title=f"{msg_list.name}")
 
     if len(all_archived_messages) > 1:
         sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
