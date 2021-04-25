@@ -305,10 +305,14 @@ def archive(message: Message) -> Response:
 
     # From the archive folder, query all documents, sort them by created attribute. We do this to get the previously
     # newest archived message, before we create a archive document for newest message.
-    all_archived_messages = archive_folder.get_all_documents()
-    sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
+    all_archived_messages = []
+    if archive_folder is not None:
+        all_archived_messages = archive_folder.get_all_documents()
+    else:
+        Folder.create(archive_path, f"{msg_list.name}")
 
-    if len(sorted_messages) > 1:
+    if len(all_archived_messages) > 1:
+        sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
         previous_doc = sorted_messages[1]
 
         # Set footer information for archived message. Footer information is not set for the very first message,
