@@ -10,7 +10,7 @@ from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
-from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
+from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList, create_new_email_list
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
@@ -32,12 +32,13 @@ def create_list(options: ListOptions) -> Response:
     :return: A Response with the list's management doc included. This way the creator can re-directed to the list's
     management page directly.
     """
+    # VIESTIM: We assume here that email list will be created alongside message list. This might not be the case.
     verify_logged_in()
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
     manage_doc = new_list(options)
-    EmailListManager.create_new_list(options, owner)
+    create_new_email_list(options, owner)
 
     return json_response(manage_doc)
 

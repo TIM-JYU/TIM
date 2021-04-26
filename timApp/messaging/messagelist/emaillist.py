@@ -5,7 +5,7 @@ from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain, Member
 
-from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate
+from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate, ArchiveType
 from timApp.tim_app import app
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
@@ -125,78 +125,6 @@ class EmailListManager:
             return domain_names
         except HTTPError:
             return []
-
-    @staticmethod
-    def create_new_list(list_options: ListOptions, owner: User) -> None:
-        """Create a new email list with proper initial options set.
-
-        :param owner: Who owns this list.
-        :param list_options: Options for message lists, here we use the options necessary for email list creation.
-        :return:
-        """
-        if _client is None:
-            return
-        if EmailListManager.check_name_availability(list_options.listname, list_options.domain):
-            try:
-                domain: Domain = _client.get_domain(list_options.domain)
-                email_list: MailingList = domain.create_list(list_options.listname)
-                # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
-                #  their lists on Mailman.
-                email_list.add_owner(owner.email)
-
-                # VIESTIM: Sometimes Mailman gets confused how mail is supposed to be interpreted, and with some
-                #  email client's different interpretation with Mailman's email coding templates (e.g. list
-                #  information footers) may appear as attachments. We fix it by setting header and footer for all new
-                #  lists explicitly.
-
-                # VIESTIM: We build the URI in case because not giving one is interpreted by Mailman as deleting the
-                #  template form the list.
-
-                list_id = email_list.rest_data['list_id']
-                template_base_uri = "http://localhost/postorius/api/templates/list/" \
-                                    f"{list_id}"
-
-                footer_uri = f"{template_base_uri}/list:member:regular:footer"
-                header_uri = f"{template_base_uri}/list:member:regular:header"
-
-                # VIESTIM: These templates don't actually exist, but non-existing templates are substituted with
-                #  empty strings and that should still fix the broken coding leading to attachments issue.
-                email_list.set_template("list:member:regular:footer", footer_uri)
-                email_list.set_template("list:member:regular:header", header_uri)
-
-                # settings-attribute is a dict.
-                mlist_settings = email_list.settings
-
-                # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
-                # advertising on if they so choose.
-                mlist_settings["advertised"] = False
-                mlist_settings["admin_notify_mchanges"] = list_options.notifyOwnerOnListChange
-                set_email_list_description(email_list, list_options.listDescription)
-                set_email_list_info(email_list, list_options.listInfo)
-
-                mm_policy = mailman_archive_policy_correlate[list_options.archive]
-                if mm_policy == "none":
-                    # If Archive policy is intented to be 'none', then this list isn't archived at all. Set archive
-                    # policy and turn off archivers.
-                    mlist_settings["archive_policy"] = mm_policy
-                    list_archivers = email_list.archivers
-                    for archiver in list_archivers:
-                        list_archivers[archiver] = False
-                else:
-                    # Unless archive policy is intented to be 'none', then we assume archiving to be on by default
-                    # and we just set the appropriate archive policy.
-                    mlist_settings["archive_policy"] = mm_policy
-                # This needs to be the last line, because no changes to settings take effect until save-method is
-                # called.
-                mlist_settings.save()
-                return
-            except HTTPError:
-                # TODO: exceptions to catch: domain doesn't exist, list can't be created, connection to server fails.
-                return
-        else:
-            # VIESTIM: If a list with this name exists (it shouldn't since it's checked before allowing list creation,
-            #  but technically it could if someone can grab the name during list creation process), then what do we do?
-            return
 
     @staticmethod
     def check_name_rules(name_candidate: str) -> None:
@@ -443,6 +371,102 @@ class EmailList:
             return lists
         except HTTPError:
             return []
+
+
+def set_default_templates(email_list: MailingList) -> None:
+    """Set default templates for email list.
+
+    :param: email_list: The email list we are setting templates for.
+    """
+    # VIESTIM: Sometimes Mailman gets confused how mail is supposed to be interpreted, and with some
+    #  email client's different interpretation with Mailman's email coding templates (e.g. list
+    #  information footers) may appear as attachments. We fix it by setting header and footer for all new
+    #  lists explicitly.
+
+    # VIESTIM: We build the URI in case because not giving one is interpreted by Mailman as deleting the
+    #  template form the list.
+
+    list_id = email_list.rest_data['list_id']
+    # TODO: Check this URI, it should be plausible if we wished to change default templates to be something other
+    #  than empty strings.
+    template_base_uri = "http://localhost/postorius/api/templates/list/" \
+                        f"{list_id}"
+    footer_uri = f"{template_base_uri}/list:member:regular:footer"
+    header_uri = f"{template_base_uri}/list:member:regular:header"
+
+    # VIESTIM: These templates don't actually exist, but non-existing templates are substituted with
+    #  empty strings and that should still fix the broken coding leading to attachments issue.
+    email_list.set_template("list:member:regular:footer", footer_uri)
+    email_list.set_template("list:member:regular:header", header_uri)
+    return
+
+
+def set_email_list_archive_policy(email_list: MailingList, archive: ArchiveType) -> None:
+    """Set email list's archive policy.
+
+    :param email_list: Email list
+    :param archive: What type of archiving is set for message list, and what that means for an email list.
+    """
+    mlist_settings = email_list.settings
+    mm_policy = mailman_archive_policy_correlate[archive]
+    if mm_policy == "none":
+        # If Archive policy is intented to be 'none', then this list isn't archived at all. Set archive
+        # policy and turn off archivers.
+        mlist_settings["archive_policy"] = mm_policy
+        list_archivers = email_list.archivers
+        for archiver in list_archivers:
+            list_archivers[archiver] = False
+    else:
+        # Unless archive policy is intented to be 'none', then we assume archiving to be on by default
+        # and we just set the appropriate archive policy.
+        mlist_settings["archive_policy"] = mm_policy
+    mlist_settings.save()  # This needs to be the last line, otherwise changes won't take effect.
+    return
+
+
+def create_new_email_list(list_options: ListOptions, owner: User) -> None:
+    """Create a new email list with proper initial options set.
+
+    :param owner: Who owns this list.
+    :param list_options: Options for message lists, here we use the options necessary for email list creation.
+    :return:
+    """
+    if _client is None:
+        return
+    if EmailListManager.check_name_availability(list_options.listname, list_options.domain):
+        try:
+            domain: Domain = _client.get_domain(list_options.domain)
+            email_list: MailingList = domain.create_list(list_options.listname)
+            # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
+            #  their lists on Mailman.
+            email_list.add_owner(owner.email)
+
+            set_default_templates(email_list)
+
+            # settings-attribute acts like a dict.
+            mlist_settings = email_list.settings
+
+            # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
+            # advertising on if they so choose.
+            mlist_settings["advertised"] = False
+            mlist_settings["admin_notify_mchanges"] = list_options.notifyOwnerOnListChange
+
+            set_email_list_description(email_list, list_options.listDescription)
+            set_email_list_info(email_list, list_options.listInfo)
+
+            set_email_list_archive_policy(email_list, list_options.archive)
+
+            # This needs to be the last line, because no changes to settings take effect until save-method is
+            # called.
+            mlist_settings.save()
+            return
+        except HTTPError:
+            # TODO: exceptions to catch: domain doesn't exist, list can't be created, connection to server fails.
+            raise
+    else:
+        # VIESTIM: If a list with this name exists (it shouldn't since it's checked before allowing list creation,
+        #  but technically it could if someone can grab the name during list creation process), then what do we do?
+        return
 
 
 def set_email_list_description(mlist: MailingList, new_description: str) -> None:
