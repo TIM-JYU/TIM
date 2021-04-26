@@ -8,6 +8,7 @@ from copy import copy
 from logging import Logger
 from typing import Any, Dict
 
+import requests
 from celery import Celery
 from celery.signals import after_setup_logger
 from celery.utils.log import get_task_logger
@@ -152,3 +153,19 @@ def handle_exportdata(result: AnswerRouteResult, u: User, wod: WithOutData) -> N
                 continue
 
         post_answer_impl(plug.task_id.doc_task, converted, {}, {}, u, (), [], None)
+
+
+@celery.task
+def send_answer_backup(
+        exported_answer: Dict[str, Any]
+):
+    return do_send_answer_backup(exported_answer)
+
+
+def do_send_answer_backup(exported_answer: Dict[str, Any]):
+    backup_host = app.config["BACKUP_ANSWER_HOST"]
+    r = requests.post(
+        f'{backup_host}/backup/answer',
+        json={'answer': exported_answer, 'token': app.config['BACKUP_ANSWER_SEND_SECRET']},
+    )
+    return r.status_code

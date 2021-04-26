@@ -23,6 +23,7 @@ from werkzeug.middleware.profiler import ProfilerMiddleware
 from timApp.admin.cli import register_clis
 from timApp.admin.global_notification import global_notification
 from timApp.admin.routes import admin_bp
+from timApp.backup.backup_routes import backup
 from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
 from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
@@ -86,6 +87,7 @@ blueprints = [
     admin_bp,
     annotations,
     answers,
+    backup,
     clipboard,
     course_blueprint,
     doc_bp,

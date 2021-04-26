@@ -203,7 +203,7 @@ gtools.outdata.exportdata = [
 !!
         """)
         with self.no_request_context():
-            with self.internal_plugin_ctx('timTable'):
+            with self.internal_container_ctx():
                 do_run_user_function(self.test_user_1.id, f'{d.id}.runner', {})
         self.verify_answer_content(
             f'{d.id}.GLO_stat',
