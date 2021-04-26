@@ -82,6 +82,9 @@ import {Users} from "../user/userService";
                     </li>
                 </ul>
             </div>
+            <div>
+                <button (click)="deleteList()">Delete List</button>
+            </div>
         </form>
     `,
 })
@@ -120,7 +123,8 @@ export class MessageListAdminComponent implements OnInit {
             // Load message list's members.
             if (!this.listname) {
                 // getListmembers() might launch it's HTTP call before loadValues() finishes with setting listname,
-                // so if this happens we schedule the call for list members.
+                // so if this happens we schedule the call for list members. The time is a so called sleeve constant,
+                // and it is not based on anything other than it seems to work on small scale testing.
                 window.setTimeout(() => this.getListMembers(), 2 * 1000);
             } else {
                 void this.getListMembers();
@@ -206,11 +210,15 @@ export class MessageListAdminComponent implements OnInit {
      * Helper for list deletion.
      */
     async deleteList() {
+        // TODO: Confirm with user if they are really sure they want to delete the entire message list. Technically it
+        //  could be reversible, but such an hassle that not letting it happen by a single button press should be
+        //  allowed.
         const result = await to2(
             this.http
                 .delete(`/messagelist/deletelist`, {
                     params: {
-                        listname: `${this.listname}${this.domain}`,
+                        listname: this.listname,
+                        domain: this.domain,
                     },
                 })
                 .toPromise()
@@ -220,7 +228,7 @@ export class MessageListAdminComponent implements OnInit {
             console.log(result.result);
         } else {
             // TODO: Inform the user deletion was not succesfull.
-            console.log(result.result);
+            console.error(result.result);
         }
     }
 

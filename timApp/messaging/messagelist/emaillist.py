@@ -252,25 +252,6 @@ class EmailList:
             return False
 
     @staticmethod
-    def delete_list(fqdn_listname: str) -> str:
-        """Delete a mailing list.
-
-        :param fqdn_listname: The fully qualified domain name for the list, e.g. testlist1@domain.fi.
-        :return: A string describing how the operation went.
-        """
-        if _client is None:
-            return "There is no connection to Mailman server. No deletion can be attempted."
-
-        try:
-            # get_list() may raise HTTPError
-            list_to_delete: MailingList = _client.get_list(fqdn_listname)
-            list_to_delete.delete()
-            return "The list {0} has been deleted.".format(fqdn_listname)
-        except HTTPError:
-            return "List {0} is not found or connection to server was severed." \
-                   " No deletion occured.".format(fqdn_listname)
-
-    @staticmethod
     def get_list_ui_link(listname: str) -> str:
         """
         Get a link for a list to use for advanced email list options and moderation.
@@ -347,6 +328,38 @@ class EmailList:
             return lists
         except HTTPError:
             return []
+
+
+def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> None:
+    """Delete a mailing list.
+
+    :param permanent_deletion: If True, then the list is permanently gone. If False, perform a soft deletion.
+    :param fqdn_listname: The fully qualified domain name for the list, e.g. testlist1@domain.fi.
+    """
+    if _client is None:
+        raise RouteException("No connection to Mailman, email list is not deleted.")
+    try:
+        # get_list() may raise HTTPError
+        list_to_delete: MailingList = _client.get_list(fqdn_listname)
+    except HTTPError:
+        raise
+    if permanent_deletion:
+        try:
+            list_to_delete.delete()
+        except HTTPError:
+            raise
+    else:
+        # Perform a soft deletion on a list.
+        try:
+            for member in list_to_delete.members:
+                # All members have their send and delivery rights revoked.
+                set_email_list_member_delivery_status(member, False)
+                set_email_list_member_send_status(member, False)
+            # TODO: Probably needs other changes as well. Should we drop all moderator requests and set all
+            #  future moderation requests from messages and subscriptions to just discard?
+        except HTTPError:
+            raise
+    return
 
 
 def remove_email_list_membership(member: Member, permanent_deletion: bool = False) -> None:

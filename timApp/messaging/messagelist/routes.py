@@ -10,7 +10,7 @@ from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
-from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList, create_new_email_list
+from timApp.messaging.messagelist.emaillist import EmailListManager, create_new_email_list, delete_email_list
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
@@ -82,22 +82,25 @@ def domains() -> Response:
 
 
 @messagelist.route("/deletelist", methods=['DELETE'])
-def delete_list(listname: str) -> Response:
+def delete_list(listname: str, domain: str) -> Response:
     """Delete message/email list. List name is provided in the request body.
 
+    :param domain: If an empty string, message list is not considered to have a domain associated and therefore doesn't
+     have an email list. If this is an unempty string, then an email list is excpected to also exist.
     :param listname: The list to be deleted. If the name does not contain '@', just delete  a message list. If it
      contains '@', we delete a message list and the corresponding email list.
     :return: A string describing how the operation went.
     """
-    # TODO: User authentication. We can't let just anyone delete a list just because they can type the name.
-    list_name, sep, domain = listname.partition("@")
-    r = ""
+    verify_logged_in()
+    # TODO: Verify that the deleter is an owner of the message list.
+    msg_list = MessageListModel.get_list_by_name(listname)
+    # list_domain = msg_list.email_list_domain
+    # TODO: Put message list deletion here.
     if domain:
         # A domain is given, so we are also looking to delete an email list.
-        # Notice parameter. We give the fqdn list name to delete_list(), not plain list_name.
-        r = EmailList.delete_list(listname)
-    # TODO: Put message list deletion here.
-    return json_response(r)
+        # VIESTIM: Perform a soft deletion for now.
+        delete_email_list(f"{listname}@{domain}")
+    return ok_response()
 
 
 def new_list(list_options: ListOptions) -> DocInfo:
