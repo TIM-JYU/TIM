@@ -240,13 +240,19 @@ def get_members(list_name: str) -> Response:
     list_members: List[MemberInfo] = []
     for member in members:
         if member.tim_member:
-            gid = member.tim_member.group_id
-            # VIESTIM: This should be the user's personal user group.
+            gid = member.tim_member[0].group_id
             ug = UserGroup.query.filter_by(id=gid).one()
-            u = ug.users[0]
-            mi = MemberInfo(name=u.real_name, email=u.email, sendRight=member.send_right,
-                            deliveryRight=member.delivery_right)
+            if len(ug.users) == 1:
+                # VIESTIM: This should be the user's personal user group.
+                u = ug.users[0]
+                mi = MemberInfo(name=u.real_name, email=u.email, sendRight=member.send_right,
+                                deliveryRight=member.delivery_right)
+            else:
+                # VIESTIM: If the user group wasn't a personal user group, we have a group individuals on our hands.
+                #  We probably don't need to return it, or if we do we need to return it somehow separately.
+                pass
         else:
+            # If we are here, we have an external member.
             mi = MemberInfo(name="External member", email=member.external_member.email_address,
                             sendRight=member.send_right, deliveryRight=member.delivery_right)
         list_members.append(mi)
