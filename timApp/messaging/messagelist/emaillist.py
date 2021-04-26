@@ -562,7 +562,7 @@ def set_email_list_member_send_status(member: Member, status: bool) -> None:
         raise
 
 
-def set_email_list_member_delivery_status(member: Member, status: bool, by_moderator=True) -> None:
+def set_email_list_member_delivery_status(member: Member, status: bool, by_moderator: bool = True) -> None:
     """Change email list's member's delivery status on a list.
 
     This function can fail if connection to Mailman is lost.
