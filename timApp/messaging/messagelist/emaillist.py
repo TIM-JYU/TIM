@@ -398,48 +398,6 @@ class EmailList:
                    " No deletion occured.".format(fqdn_listname)
 
     @staticmethod
-    def get_member_delivery_status(list_name: str, member_email: str) -> str:
-        """
-        Get member's delivery status.
-
-        :param list_name: The list we are interested in.
-        :param member_email: The member who's delivery status is being checked.
-        :return: A string 'enabled' or 'disabled'.
-        """
-        if _client is None:
-            return "No Mailman configuration."
-        delivery_status = "delivery_status"
-        try:
-            email_list = _client.get_list(list_name)
-            member = email_list.get_member(member_email)
-            member_preferences = member.preferences
-            if member_preferences[delivery_status] == "enabled":
-                return "enabled"
-            if member_preferences[delivery_status] == "by_user":
-                # TODO: Do we need to check for other status?
-                return "disabled"
-            return "unknown"
-        except HTTPError:
-            # TODO: Error handling.
-            return "Error on the connection or bad list name or member name"
-
-    @staticmethod
-    def get_member_send_status(list_name: str, member_email: str) -> str:
-        if _client is None:
-            return "No Mailman configuration"
-        try:
-            email_list = _client.get_list(list_name)
-            member = email_list.get_member(member_email)
-            if member.moderation_action == "accept":
-                return "enabled"
-            if member.moderation_action in ["discard", "reject", "hold"]:
-                return "disabled"
-            # TODO: Probably needs a better return value.
-            return "unknown"
-        except HTTPError:
-            return "No connection to server, list doesn't exists or there member in questin is not on the list."
-
-    @staticmethod
     def get_list_ui_link(listname: str) -> str:
         """
         Get a link for a list to use for advanced email list options and moderation.
@@ -618,7 +576,7 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     new_member.save()
 
 
-def change_email_list_member_send_status(member: Member, status: bool) -> None:
+def set_email_list_member_send_status(member: Member, status: bool) -> None:
     """ Change user's send status on an email list. Send right / status is changed by changing the member's
     moderation status.
 
@@ -643,7 +601,7 @@ def change_email_list_member_send_status(member: Member, status: bool) -> None:
         raise
 
 
-def change_email_list_member_delivery_status(member: Member, status: bool, by_moderator=True) -> None:
+def set_email_list_member_delivery_status(member: Member, status: bool, by_moderator=True) -> None:
     """Change email list's member's delivery status on a list.
 
     This function can fail if connection to Mailman is lost.
@@ -674,3 +632,37 @@ def change_email_list_member_delivery_status(member: Member, status: bool, by_mo
     except HTTPError:
         # Saving can fail if connection is lost to Mailman or it's server.
         raise
+
+
+def get_email_list_member_delivery_status(member: Member) -> bool:
+    """Get member's delivery status.
+
+    :param member: Member who's delivery status / right on a list we are interested in.
+    :return: A string 'enabled' or 'disabled'.
+    """
+    member_preferences = member.preferences
+    if member_preferences["delivery_status"] == "enabled":
+        return True
+    # VIESTIM: If delivery status is "by_bounces", then something is wrong with member's email address as it cannot
+    #  properly receive email. Is there anything meaningful we can do about it here?
+    if member_preferences["delivery_status"] in ["by_user", "by_moderator", "by_bounces"]:
+        return False
+    # If we are here, something has gone terribly wrong.
+    # VIESTIM: Is this logging worthy? If yes, what severity?
+    raise RouteException(f"Member {member.address} has an invalid delivery status assigned to them.")
+
+
+def get_email_list_member_send_status(member: Member) -> bool:
+    """Get email list's member's send status / right in an email list.
+
+    :param member: Member who's send status we wish to know.
+    :return: Return True, if member has a send right to a list (moderation action is set as "accept"). Otherwise return
+    False.
+    """
+    if member.moderation_action == "accept":
+        return True
+    if member.moderation_action in ["discard", "reject", "hold"]:
+        return False
+    # If we are here, something has gone terribly wrong.
+    # VIESTIM: Is this logging worthy? If yes, what severity?
+    raise RouteException(f"Member {member.address} has an invalid send status assigned to them.")
