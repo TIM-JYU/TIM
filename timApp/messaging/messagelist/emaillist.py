@@ -252,30 +252,6 @@ class EmailList:
             return False
 
     @staticmethod
-    def delete_email(listname: str, email: str) -> str:
-        """
-        Destructive email unsubscribtion. After this function has performed, the email is no longer on the list. If
-        you intended to perform a soft removal, use other function for a "soft" deletion.
-
-        :param listname: The list where the email is being removed.
-        :param email: The email being removed.
-        :return: A string informing operation success.
-        """
-        if _client is None:
-            return "There is no connection to Mailman server. No deletion can be attempted."
-        mlist: Optional[MailingList]
-        try:
-            # This might raise HTTPError
-            mlist = _client.get_list(fqdn_listname=listname)
-            # This might raise ValueError
-            mlist.unsubscribe(email=email)
-            return "{0} has been removed from {1}".format(email, listname)
-        except HTTPError:
-            return "List {0} is not found or connection to list program was severed.".format(listname)
-        except ValueError:
-            return "Address {0} doesn't exist on {1}. No removal performed.".format(email, listname)
-
-    @staticmethod
     def delete_list(fqdn_listname: str) -> str:
         """Delete a mailing list.
 
@@ -371,6 +347,26 @@ class EmailList:
             return lists
         except HTTPError:
             return []
+
+
+def remove_email_list_membership(member: Member, permanent_deletion: bool = False) -> None:
+    """
+    Remove membership from an email list.
+
+    :param member: The membership to be terminated on a list.
+    :param permanent_deletion: If True, unsubscribes the user from the list permanently. If False, membership is
+     "deleted" in a soft manner by removing delivery and send rights. Membership is kept, but emails from
+      member aren't automatically let through nor does the member receive mail from the list.
+    """
+
+    if permanent_deletion:
+        try:
+            member.unsubscribe()
+        except HTTPError:
+            raise
+    else:
+        set_email_list_member_send_status(member, False)
+        set_email_list_member_delivery_status(member, False)
 
 
 def set_default_templates(email_list: MailingList) -> None:
@@ -530,7 +526,7 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     """Add a new email to a email list.
 
     :param mlist: Email list where a new member is being added.
-    :param email: The email being added.
+    :param email: The email being added. Email address has to be validated before calling this function.
     :param email_owner_pre_confirmation: Whether the email's owner has to confirm them joining an email list. For True,
     no confirmation is needed by the email's owner. For False, Mailman send's a confirmation mail for email's owner to
     join the list.
