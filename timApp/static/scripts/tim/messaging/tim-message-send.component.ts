@@ -58,7 +58,9 @@ interface TimMessageOptions {
                                       [(ngModel)]="timMessage">TIM message</label></fieldset><br/>
                 
             <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
-            <p class="urlError" *ngIf="urlError">{{urlError}}</p>    
+                <tim-alert *ngIf="urlError" severity="danger">
+                    {{ urlError }}
+                </tim-alert>
             <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="TimMessageOptions.pageList" (change)="checkUrls()" rows="4" cols="70"></textarea></p>
             <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="TimMessageOptions.isPrivate">Recipient sees TIM message as private</label></p>
@@ -134,11 +136,11 @@ export class TimMessageComponent {
         );
     }
 
-    // VIESTIM: logic here
+    // VIESTIM: make "urls" a list and add shortenig the urls
     // Checks if the URLs that the user wants to save TIM message to actually exist in TIM
+    // and that the user has at least edit access to them
     // Also shortens existing URLs
     async checkUrls() {
-        console.log("tsekataan urlin olemassaolo");
         const result = await to2(
             this.http
                 .post("/timMessage/url_check", {
@@ -147,6 +149,7 @@ export class TimMessageComponent {
                 .toPromise()
         );
         if (!result.ok) {
+            this.urlError = result.result.error.error;
             console.error(result.result.error.error);
         }
     }

@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from typing import Optional, List
 from datetime import datetime
@@ -5,6 +6,7 @@ from datetime import datetime
 from flask import Response
 
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.accesshelper import verify_edit_access
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -15,6 +17,7 @@ from timApp.timdb.sqa import db
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
+
 
 timMessage = TypedBlueprint('timMessage', __name__, url_prefix='/timMessage')
 
@@ -33,7 +36,6 @@ class MessageOptions:
     senderEmail: str
     expires: Optional[datetime] = None
 
-
 @dataclass
 class MessageBody:
     messageBody: str
@@ -41,10 +43,30 @@ class MessageBody:
     recipients: List[str]  # VIESTIM: find recipient by email or some other identifier?
 
 @timMessage.route("/url_check", methods=['POST'])
+# VIESTIM: change this to take List[str] as argument
 def check_urls(urls: str) -> Response:
     print("tsekataan: " + urls)
-    return ok_response()
-
+    regex = "https?://[a-z.]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/"
+    shortened_url = ""
+    if re.search(regex, urls):
+        print("oikean muotoinen url")
+        shortened_url = re.sub(regex, "", urls)
+        print(shortened_url)
+    else:
+        return json_response({"error": "URL not found"}, 404)
+    document = DocEntry.find_by_path(shortened_url)
+    print("document: " + str(document))
+    if document is None:
+        return json_response({"error": "URL not found"}, 404)
+    try:
+        # VIESTIM: check also other valid access types!
+        # access = verify_admin()
+        access = verify_edit_access(document)
+        print("access: " + str(access))
+        return ok_response()
+    except Exception as e:
+        print("Poikkeus: " + str(e))
+        return json_response({"error": "You don't have permission to post TIM message to this page"}, 401)
 
 @timMessage.route("/send", methods=['POST'])
 def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
