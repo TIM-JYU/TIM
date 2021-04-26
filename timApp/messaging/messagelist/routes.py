@@ -10,7 +10,7 @@ from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
-from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList
+from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList, get_list_ui_link
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
@@ -164,6 +164,8 @@ def get_list(document_id: int) -> Response:
         archive=msg_list.archive,
         # TODO: Replace placeholder once we can properly query the owners email.
     )
+    if msg_list.email_list_domain:
+        list_options.emailAdminURL = get_list_ui_link(msg_list.name)
     return json_response(list_options)
 
 

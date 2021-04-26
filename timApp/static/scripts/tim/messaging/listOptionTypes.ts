@@ -6,6 +6,7 @@ export interface CreateListOptions {
     notifyOwnerOnListChange: boolean;
     listDescription: string;
     listInfo: string;
+    emailAdminURL?: string;
 }
 
 export enum ArchiveType {
