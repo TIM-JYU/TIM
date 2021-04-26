@@ -94,7 +94,7 @@ def delete_list(listname: str, domain: str) -> Response:
     """
     verify_logged_in()
     # TODO: Verify that the deleter is an owner of the message list.
-    msg_list = MessageListModel.get_list_by_name(listname)
+    msg_list = MessageListModel.get_list_by_name_exactly_one(listname)
     # list_domain = msg_list.email_list_domain
     # TODO: Put message list deletion here.
     if domain:
@@ -178,7 +178,7 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
     from timApp.user.user import User  # Local import to avoid cyclical imports.
 
     try:
-        msg_list = MessageListModel.get_list_by_name(msgList)
+        msg_list = MessageListModel.get_list_by_name_exactly_one(msgList)
     except NoResultFound:
         raise RouteException(f"There is no list named {msgList}")
 
@@ -239,7 +239,7 @@ def get_members(list_name: str) -> Response:
     """
     from timApp.user.usergroup import UserGroup
 
-    msg_list = MessageListModel.get_list_by_name(list_name)
+    msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
     members = get_members_for_list(msg_list)
     list_members: List[MemberInfo] = []
     for member in members:
@@ -284,7 +284,7 @@ def archive(message: Message) -> Response:
     """
     # VIESTIM: This view function has not been tested yet.
 
-    msg_list = MessageListModel.get_list_by_name(message.message_list_name)
+    msg_list = MessageListModel.get_list_by_name_first(message.message_list_name)
 
     if msg_list is None:
         raise RouteException(f"No message list with name {message.message_list_name} exists.")
