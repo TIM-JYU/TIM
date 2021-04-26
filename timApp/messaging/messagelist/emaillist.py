@@ -367,29 +367,6 @@ class EmailList:
                    " No deletion occured.".format(fqdn_listname)
 
     @staticmethod
-    def get_list_ui_link(listname: str) -> str:
-        """
-        Get a link for a list to use for advanced email list options and moderation.
-        :param listname: The list we are getting the UI link for.
-        :return: A Hyperlink for list web UI on the Mailman side.
-        """
-        if _client is None:
-            return ""
-        try:
-            mail_list = _client.get_list(listname)
-            # Get the list's list id, which is basically it's address/name but '@' replaced with a dot.
-            list_id: str = mail_list.rest_data["list_id"]
-            # VIESTIM: This here is now hardcoded for Postorius Web UI. There might not be a way to just
-            #  programmatically get the specific hyperlink for non-TIM email list management needs, but is there a
-            #  way to not hard code the Postorius part in (Postorius is Mailman's default web UI and technically
-            #  we could switch to a different web UI)?
-            # Build the hyperlink.
-            link = "https://timlist.it.jyu.fi/postorius/lists/" + list_id
-            return link
-        except HTTPError:
-            return "Connection to Mailman failed while getting list's UI link."
-
-    @staticmethod
     def freeze_list(listname: str) -> None:
         """
         Freeze an email list. No posts are allowed on the list after freezing. Think a course specific email list and
@@ -443,6 +420,30 @@ class EmailList:
             return lists
         except HTTPError:
             return []
+
+
+def get_list_ui_link(listname: str) -> str:
+    """
+    Get a link for a list to use for advanced email list options and moderation.
+    :param listname: The list we are getting the UI link for.
+    :return: A Hyperlink for list web UI on the Mailman side.
+    """
+    if _client is None:
+        return ""
+    try:
+        mail_list = _client.get_list(listname)
+        # Get the list's list id, which is basically it's address/name but '@' replaced with a dot.
+        list_id: str = mail_list.rest_data["list_id"]
+        # VIESTIM: This here is now hardcoded for Postorius Web UI. There might not be a way to just
+        #  programmatically get the specific hyperlink for non-TIM email list management needs, but is there a
+        #  way to not hard code the Postorius part in (Postorius is Mailman's default web UI and technically
+        #  we could switch to a different web UI)?
+        # Build the hyperlink.
+        link = "https://timlist.it.jyu.fi/postorius/lists/" + list_id
+        return link
+    except HTTPError:
+        return "Connection to Mailman failed while getting list's UI link."
+
 
 
 def set_email_list_description(mlist: MailingList, new_description: str) -> None:
