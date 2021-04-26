@@ -150,11 +150,11 @@ INTERNAL_PLUGIN_DOMAIN = 'tim'
 
 # BACKUP_ANSWER_* variables are related to backing up answers by sending them to another host on the fly.
 
-# When sending an answer to another host, use this token for authentication.
-BACKUP_ANSWER_SEND_TOKEN = None
+# When sending an answer to another host, use this secret for authentication.
+BACKUP_ANSWER_SEND_SECRET = None
 
 # When receiving an answer from another host, make sure that the given token matches this one.
-BACKUP_ANSWER_RECEIVE_TOKEN = None
+BACKUP_ANSWER_RECEIVE_SECRET = None
 
 # In the receiving host, the filename where the answers will be stored, one JSON string per line.
 BACKUP_ANSWER_FILE = 'answers.backup'

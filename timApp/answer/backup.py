@@ -16,9 +16,9 @@ def get_backup_answer_file() -> Path:
 
 
 def save_answer_backup(answer: ExportedAnswer, token: str) -> Response:
-    expected_token = current_app.config['BACKUP_ANSWER_RECEIVE_TOKEN']
+    expected_token = current_app.config['BACKUP_ANSWER_RECEIVE_SECRET']
     if expected_token is None:
-        raise RouteException('BACKUP_ANSWER_RECEIVE_TOKEN not configured.')
+        raise RouteException('BACKUP_ANSWER_RECEIVE_SECRET not configured.')
     if token != expected_token:
         raise RouteException('Wrong token')
     with filelock.FileLock(f'/tmp/answer_backup'):
@@ -28,7 +28,7 @@ def save_answer_backup(answer: ExportedAnswer, token: str) -> Response:
 
 
 def send_answer_backup_if_enabled(a: Answer) -> None:
-    if current_app.config['BACKUP_ANSWER_SEND_TOKEN'] is None:
+    if current_app.config['BACKUP_ANSWER_SEND_SECRET'] is None:
         return
     from timApp.tim_celery import send_answer_backup
     doc_id = a.parsed_task_id.doc_id

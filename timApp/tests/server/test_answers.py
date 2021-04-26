@@ -188,8 +188,8 @@ class AnswerTest(TimRouteTest):
         """)
         task_id = f'{d.id}.t'
         with self.temp_config({
-            'BACKUP_ANSWER_SEND_TOKEN': 'xxx',
-            'BACKUP_ANSWER_RECEIVE_TOKEN': 'xxx',
+            'BACKUP_ANSWER_SEND_SECRET': 'xxx',
+            'BACKUP_ANSWER_RECEIVE_SECRET': 'xxx',
             'BACKUP_ANSWER_HOST': f'http://{app.config["INTERNAL_PLUGIN_DOMAIN"]}:5001',
         }):
             with patch.object(tim_celery.send_answer_backup, 'delay', wraps=tim_celery.do_send_answer_backup) as m:  # type: Mock

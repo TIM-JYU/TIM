@@ -166,6 +166,6 @@ def do_send_answer_backup(exported_answer: Dict[str, Any]):
     backup_host = app.config["BACKUP_ANSWER_HOST"]
     r = requests.post(
         f'{backup_host}/backup/answer',
-        json={'answer': exported_answer, 'token': app.config['BACKUP_ANSWER_SEND_TOKEN']},
+        json={'answer': exported_answer, 'token': app.config['BACKUP_ANSWER_SEND_SECRET']},
     )
     return r.status_code
