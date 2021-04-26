@@ -1,20 +1,26 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Tuple
 
 from flask import render_template_string, Response
 
+from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
+from timApp.document.editing.globalparid import GlobalParId
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.item.manage import TimeOpt, verify_permission_edit_access, PermissionEditModel, add_perm, \
     log_right, remove_perm
-from timApp.plugin.plugin import find_plugin_by_task_id
+from timApp.plugin.plugin import Plugin
 from timApp.timdb.sqa import db
+from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import NotExist, RouteException
+from timApp.util.flask.requesthelper import NotExist, RouteException, view_ctx_with_urlmacros
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups
-from timApp.util.utils import seq_to_str
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import GenericHtmlModel, PluginReqs, register_html_routes
@@ -89,12 +95,26 @@ def reqs_handler() -> PluginReqs:
     }
 
 
-@user_select_plugin.route('/search')
-def search_users(task_id: str, search_string: str) -> Response:
-    plug, doc, user, view_ctx = find_plugin_by_task_id(task_id)
-    if not user:
-        raise RouteException("Need to be logged in")
-    model: UserSelectMarkupModel = UserSelectMarkupModelSchema().load(plug.values)
+def get_plugin_markup(task_id: Optional[str], par: Optional[GlobalParId]) \
+        -> Tuple[UserSelectMarkupModel, DocInfo, User, ViewContext]:
+    verify_logged_in()
+    user = get_current_user_object()
+    user_ctx = UserContext.from_one_user(user)
+    view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
+
+    if task_id:
+        plugin, doc = Plugin.from_task_id(task_id, user_ctx, view_ctx)
+    elif par:
+        plugin, doc = Plugin.from_global_par(par, user_ctx, view_ctx)
+    else:
+        raise RouteException("Either task_id or par must be specified")
+    model: UserSelectMarkupModel = UserSelectMarkupModelSchema().load(plugin.values)
+    return model, doc, user, view_ctx
+
+
+@user_select_plugin.route('/search', methods=['POST'])
+def search_users(search_string: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
+    model, doc, user, view_ctx = get_plugin_markup(task_id, par)
     field_data, _, field_names, _ = get_fields_and_users(
         model.fields,
         RequestedGroups.from_name_list(model.groups),
@@ -108,7 +128,8 @@ def search_users(task_id: str, search_string: str) -> Response:
     for field_obj in field_data:
         fields = field_obj["fields"]
         usr = field_obj["user"]
-        values_to_check: List[Optional[Union[str, float, None]]] = [usr.name, usr.real_name, usr.email, *fields.values()]
+        values_to_check: List[Optional[Union[str, float, None]]] = [usr.name, usr.real_name, usr.email,
+                                                                    *fields.values()]
         for field_val in values_to_check:
             if not field_val:
                 continue
@@ -135,9 +156,8 @@ def search_users(task_id: str, search_string: str) -> Response:
 
 
 @user_select_plugin.route("/apply", methods=["POST"])
-def apply(task_id: str, username: str) -> Response:
-    plug, doc, user, view_ctx = find_plugin_by_task_id(task_id)
-    model: UserSelectMarkupModel = UserSelectMarkupModelSchema().load(plug.values)
+def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
+    model, _, _, _ = get_plugin_markup(task_id, par)
     # No permissions to apply, simply remove
     if not model.permissions:
         return ok_response()

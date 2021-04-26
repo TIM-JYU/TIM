@@ -75,46 +75,47 @@ const PluginFields = t.intersection([
             <div class="progress" *ngIf="search">
                 <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
             </div>
+            <form>
+                <table *ngIf="lastSearchResult">
+                    <thead>
+                    <tr>
+                        <th i18n>Select</th>
+                        <th i18n>Username</th>
+                        <th i18n>Full name</th>
+                        <th *ngFor="let fieldName of lastSearchResult.fieldNames">
+                            {{fieldName}}
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody *ngIf="lastSearchResult.matches.length == 0">
+                    <tr>
+                        <td [colSpan]="3 + lastSearchResult.fieldNames.length">
+                            <em i18n>No matches for given keyword</em>
+                        </td>
+                    </tr>
+                    </tbody>
+                    <tbody *ngIf="lastSearchResult.matches.length > 0">
 
-            <table *ngIf="lastSearchResult">
-                <thead>
-                <tr>
-                    <th i18n>Select</th>
-                    <th i18n>Username</th>
-                    <th i18n>Full name</th>
-                    <th *ngFor="let fieldName of lastSearchResult.fieldNames">
-                        {{fieldName}}
-                    </th>
-                </tr>
-                </thead>
-                <tbody *ngIf="lastSearchResult.matches.length == 0">
-                <tr>
-                    <td [colSpan]="3 + lastSearchResult.fieldNames.length">
-                        <em i18n>No matches for given keyword</em>
-                    </td>
-                </tr>
-                </tbody>
-                <tbody *ngIf="lastSearchResult.matches.length > 0">
-                <tr class="user-row" *ngFor="let match of lastSearchResult.matches"
-                    [class.selected-user]="selectedUser == match.user" (click)="selectedUser = match.user">
-                    <td class="select-col">
+                    <tr class="user-row" *ngFor="let match of lastSearchResult.matches"
+                        [class.selected-user]="selectedUser == match.user" (click)="selectedUser = match.user">
+                        <td class="select-col">
                             <span class="radio">
                                 <label>
                                     <input type="radio"
-                                           name="{{taskId}}-userselect-radios"
+                                           name="userselect-radios"
                                            [value]="match.user"
                                            [(ngModel)]="selectedUser"
                                            [disabled]="applying">
                                 </label>
                             </span>
-                    </td>
-                    <td>{{match.user.name}}</td>
-                    <td>{{match.user.real_name}}</td>
-                    <td *ngFor="let fieldName of lastSearchResult.fieldNames">{{match.fields[fieldName]}}</td>
-                </tr>
-                </tbody>
-            </table>
-
+                        </td>
+                        <td>{{match.user.name}}</td>
+                        <td>{{match.user.real_name}}</td>
+                        <td *ngFor="let fieldName of lastSearchResult.fieldNames">{{match.fields[fieldName]}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </form>
             <div class="more-matches-info"
                  *ngIf="lastSearchResult && lastSearchResult.matches.length < lastSearchResult.allMatchCount"
                  i18n>
@@ -165,14 +166,12 @@ export class UserSelectComponent extends AngularPluginBase<
     searchPress: Subject<void> = new Subject();
     inputTyped: Subject<string> = new Subject();
     lastSearchResult?: SearchResult;
-    taskId: string = "";
     selectedUser?: IUser;
 
     ngOnInit() {
         super.ngOnInit();
         this.inputMinLength = this.markup.inputMinLength;
         this.initSearch();
-        this.taskId = this.getTaskId()?.docTask().toString() ?? "";
         this.inputTyped.subscribe(() => {
             this.selectedUser = undefined;
             this.lastSearchResult = undefined;
@@ -189,7 +188,7 @@ export class UserSelectComponent extends AngularPluginBase<
         const result = await to2(
             this.http
                 .post("/userSelect/apply", {
-                    task_id: this.taskId,
+                    par: this.getPar().par.getJsonForServer(),
                     username: this.selectedUser.name,
                 })
                 .toPromise()
@@ -219,11 +218,9 @@ export class UserSelectComponent extends AngularPluginBase<
         this.resetError();
         const result = await to2(
             this.http
-                .get<SearchResult>("/userSelect/search", {
-                    params: {
-                        task_id: this.taskId,
-                        search_string: this.searchString,
-                    },
+                .post<SearchResult>("/userSelect/search", {
+                    par: this.getPar().par.getJsonForServer(),
+                    search_string: this.searchString,
                 })
                 .toPromise()
         );
@@ -240,11 +237,11 @@ export class UserSelectComponent extends AngularPluginBase<
         this.initSearch();
     }
 
-    getAttributeType(): typeof PluginFields {
+    getAttributeType() {
         return PluginFields;
     }
 
-    getDefaultMarkup(): Partial<t.TypeOf<typeof PluginMarkup>> {
+    getDefaultMarkup() {
         return {};
     }
 

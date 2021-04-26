@@ -12,11 +12,11 @@ from jinja2.sandbox import SandboxedEnvironment
 from marshmallow import missing, ValidationError
 
 from timApp.answer.answer import Answer
-from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
+from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, ViewRoute
@@ -29,7 +29,6 @@ from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
-from timApp.util.flask.requesthelper import view_ctx_with_urlmacros, NotExist
 from timApp.util.rndutils import myhash
 from timApp.util.utils import try_load_json, get_current_time, Range
 from tim_common.markupmodels import PointsRule, KnownMarkupFields
@@ -98,7 +97,6 @@ NEVERLAZY_PLUGINS = {
     'dropdown',
     'userSelect',
 }
-
 
 NO_ANSWERBROWSER_PLUGINS = {
     'multisave',
@@ -222,6 +220,19 @@ class Plugin:
         return f'{self.par.doc.doc_id}..{self.par.get_id()}'
 
     @staticmethod
+    def from_global_par(global_par_id: GlobalParId,
+                        user_ctx: UserContext,
+                        view_ctx: ViewContext, ) -> Tuple['Plugin', DocInfo]:
+        doc = DocEntry.find_by_id(global_par_id.doc_id)
+        if not doc:
+            raise PluginException(f'Document not found: {global_par_id.doc_id}')
+        # Check for par here to prevent potential TimDbException
+        if not doc.document.has_paragraph(global_par_id.par_id):
+            raise PluginException(doc.document.get_par_not_found_msg(global_par_id.par_id))
+        par = doc.document.get_paragraph(global_par_id.par_id)
+        return Plugin.from_paragraph(par, view_ctx, user_ctx), doc
+
+    @staticmethod
     def from_task_id(
             task_id: str,
             user_ctx: UserContext,
@@ -319,7 +330,8 @@ class Plugin:
 
     def to_paragraph(self, max_attr_width: Optional[float] = None) -> DocParagraph:
         yaml.Dumper.ignore_aliases = lambda *args: True
-        text = '```\n' + yaml.dump(self.values, allow_unicode=True, default_flow_style=False, width=max_attr_width) + '\n```'
+        text = '```\n' + yaml.dump(self.values, allow_unicode=True, default_flow_style=False,
+                                   width=max_attr_width) + '\n```'
         attrs = {}
         if self.par:
             attrs = self.par.attrs
@@ -381,7 +393,8 @@ class Plugin:
                 "state": state,
                 "taskID": self.task_id.doc_task if self.task_id else self.fake_task_id,
                 "taskIDExt": self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id,
-                "doLazy": (options.do_lazy and self.type not in NEVERLAZY_PLUGINS) if isinstance(options.do_lazy, bool) else options.do_lazy,
+                "doLazy": (options.do_lazy and self.type not in NEVERLAZY_PLUGINS) if isinstance(options.do_lazy,
+                                                                                                 bool) else options.do_lazy,
                 "userPrint": options.user_print,
                 # added preview here so that whether or not the window is in preview can be
                 # checked in python so that decisions on what data is sent can be made.
@@ -509,8 +522,8 @@ class Plugin:
 <tim-plugin-loader type="{abtype}" answer-id="{self.answer.id if self.answer else None or ''}"
                    class="{self.get_container_class()}"
                    task-id="{doc_task_id or ''}">""".replace("\n", "") + \
-                       cont + "</tim-plugin-loader>"  #  0.001 sec
-            if abtype and self.options.wraptype == PluginWrap.Full: # and False
+                       cont + "</tim-plugin-loader>"  # 0.001 sec
+            if abtype and self.options.wraptype == PluginWrap.Full:  # and False
                 ret = render_template_string3(  # TODO: 0.05 sec
                     PLG_RTEMPLATE,
                     abtype=abtype,
@@ -521,7 +534,8 @@ class Plugin:
                 )
                 return ret  # .replace("\n", "") # TODO: for some reason this is important for tables
             if abtype and self.options.wraptype == PluginWrap.Full:
-                return render_template_string2(  # TODO: 0.05 sec with rts3 2.3 sec with rts2, 8.5 sec with rts, 0.0001 sec with f
+                return render_template_string2(
+                    # TODO: 0.05 sec with rts3 2.3 sec with rts2, 8.5 sec with rts, 0.0001 sec with f
                     """
 <tim-plugin-loader type="{{abtype}}"
                    answer-id="{{aid or ''}}"
@@ -717,25 +731,6 @@ def find_plugin_from_document(d: Document, task_id: TaskId, u: UserContext, view
     if used_hint:
         err_msg += ' (potentially because of wrong block id hint)'
     raise TaskNotFoundException(err_msg)
-
-
-def find_plugin_by_task_id(task_id: str, user: Optional[User] = None)\
-        -> Tuple[Plugin, DocInfo, Optional[User], ViewContext]:
-    user = get_current_user_object() if not user else user
-    tid = TaskId.parse(task_id, require_doc_id=True, allow_block_hint=False)
-    # Use directly to prevent circular dependency
-    doc = DocEntry.find_by_id(tid.doc_id)
-    if not doc:
-        raise NotExist('Document not found')
-    doc.document.insert_preamble_pars()
-    view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
-    try:
-        return find_plugin_from_document(doc.document, tid, UserContext.from_one_user(user), view_ctx),\
-               doc,\
-               user,\
-               view_ctx
-    except TaskNotFoundException:
-        raise NotExist(f'Plugin not found: {tid}')
 
 
 class InlinePlugin(Plugin):
