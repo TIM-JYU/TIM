@@ -11,6 +11,7 @@ import {
     archivePolicyNames,
     ArchiveType,
     CreateListOptions,
+    ReplyToListChanges,
 } from "./listOptionTypes";
 
 @Component({
@@ -101,10 +102,8 @@ export class MessageListComponent extends AngularDialogComponent<
     }
 
     async newList() {
-        // Somanyduplicate
         const result = await this.createList({
             // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
-            // TODO: Validate input values before sending, e.g. this list has a unique name.
             listname: this.listname,
             // We added '@' in domain name for display purposes, remove it when sending domain to the server.
             // VIESTIM: This bit is probably now obsolete, since the '@' is no longer added to the value, but is
@@ -116,6 +115,8 @@ export class MessageListComponent extends AngularDialogComponent<
             notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             listInfo: this.listInfo,
             listDescription: this.listDescription,
+            htmlAllowed: true,
+            defaultReplyType: ReplyToListChanges.NOCHANGES,
         });
         if (!result.ok) {
             console.error(result.result.error.error);
