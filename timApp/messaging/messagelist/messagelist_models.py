@@ -75,6 +75,20 @@ class MessageListModel(db.Model):
         m = MessageListModel.query.filter_by(name=name).one()
         return m
 
+    @staticmethod
+    def get_list_by_name_first(name: str) -> 'MessageListModel':
+        """Get a message list by it's name, if a list with said name exists.
+
+        :param name: The name of the message list.
+        :return: Return the message list after query by name. Returns at most one result.
+        """
+        m = MessageListModel.query.filter_by(name=name).first()
+        return m
+
+    @property
+    def archive_policy(self) -> ArchiveType:
+        return self.archive
+
 
 class MessageListMember(db.Model):
     """Database model for members of a message list."""

@@ -71,7 +71,6 @@ export class MessageListComponent extends AngularDialogComponent<
 
     // For name check
     timeoutID?: number;
-    ownerEmail: string = "totalund@student.jyu.fi";
     notifyOwnerOnListChange: boolean = true;
 
     listDescription: string = "";
@@ -92,12 +91,6 @@ export class MessageListComponent extends AngularDialogComponent<
             this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
         );
         if (result.ok) {
-            // Add '@' in front of domain names for display purposes.
-            // const tempDomains: string[] = result.result;
-
-            // for (let i = 0; i < tempDomains.length; i++) {
-            //    tempDomains[i] = "@" + tempDomains[i];
-            // }
             this.domains = result.result;
 
             // Set default domain.
@@ -114,11 +107,12 @@ export class MessageListComponent extends AngularDialogComponent<
             // TODO: Validate input values before sending, e.g. this list has a unique name.
             listname: this.listname,
             // We added '@' in domain name for display purposes, remove it when sending domain to the server.
+            // VIESTIM: This bit is probably now obsolete, since the '@' is no longer added to the value, but is
+            //  instead put directly to an HTML-element
             domain: this.domain.startsWith("@")
                 ? this.domain.slice(1)
                 : this.domain,
             archive: this.archive,
-            ownerEmail: this.ownerEmail,
             notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             listInfo: this.listInfo,
             listDescription: this.listDescription,
@@ -233,24 +227,17 @@ export class MessageListComponent extends AngularDialogComponent<
         const nameCandidate: string = this.domain
             ? `${this.listname}@${this.domain}`
             : this.listname;
+
         const result = await to2(
             this.http
-                .get<{nameOK: boolean; explanation: string}>(
-                    `${this.urlPrefix}/checkname/${nameCandidate}`
-                )
+                .get(`${this.urlPrefix}/checkname/${nameCandidate}`)
                 .toPromise()
         );
         if (result.ok) {
-            console.log("Name check done. Result:");
-            const temp = result.result;
-            if (temp.nameOK) {
-                // TODO: Indicate somehow that name is usable as a new list name.
-                console.log(temp.explanation);
-            } else {
-                // TODO: Indicate somehow that name is not usable as a new list name.
-                console.log(temp.explanation);
-            }
+            // VIESTIM: we need a better indication that the name is available to the user.
+            console.log("Name check done. Name is available.");
         } else {
+            // VIESTIM: We need a better indication that the name is not available to the user.
             console.error(result.result.error.error);
         }
     }
