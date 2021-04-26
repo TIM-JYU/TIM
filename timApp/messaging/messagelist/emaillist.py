@@ -503,7 +503,7 @@ def get_email_list_by_name(list_name: str, list_domain: str) -> MailingList:
 
 def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool, real_name: Optional[str],
               send_right: bool = True, delivery_right: bool = False) -> None:
-    """Add a new email
+    """Add a new email to a email list.
 
     :param mlist: Email list where a new member is being added.
     :param email: The email being added.
@@ -524,25 +524,17 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     #  they have to verify themselves for Mailman. Note that this is different from confirming to join a list.
     #  We use pre_approved flag, because we assume that who adds an email to a list also wants that email onto
     #  a list. Otherwise they would have to afterwards manually moderate their subscription request.
-    new_member = mlist.subscribe(email,
-                                 pre_verified=True,
-                                 pre_approved=True,
-                                 pre_confirmed=email_owner_pre_confirmation,
-                                 display_name=real_name)
-
-    # Set member's send right to email list.
-    if send_right:
-        new_member.preferences["delivery_status"] = "enabled"
-    else:
-        new_member.preferences["delivery_status"] = "by_moderator"
-    new_member.preferences.save()
-
-    # Set member's delivery right to email list.
-    if delivery_right:
-        new_member.moderation_action = "accept"
-    else:
-        new_member.moderation_action = "discard"
-    new_member.save()
+    try:
+        new_member = mlist.subscribe(email,
+                                     pre_verified=True,
+                                     pre_approved=True,
+                                     pre_confirmed=email_owner_pre_confirmation,
+                                     display_name=real_name)
+        # Set member's send and delivery rights to email list.
+        set_email_list_member_send_status(new_member, send_right)
+        set_email_list_member_delivery_status(new_member, delivery_right)
+    except HTTPError:
+        raise
 
 
 def set_email_list_member_send_status(member: Member, status: bool) -> None:
