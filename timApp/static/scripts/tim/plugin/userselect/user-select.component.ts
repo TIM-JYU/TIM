@@ -150,14 +150,24 @@ const PluginFields = t.intersection([
             Permissions applied successfully.
         </tim-alert>
         <tim-alert *ngIf="errorMessage" i18n>
-            <span>Could not search for the user.</span>
+            <span>{{errorMessage}}</span>
             <div style="margin-top: 1rem;">
                 <p>Please try refreshing the page and try again.</p>
-                <div><a (click)="showErrorMessage = !showErrorMessage"><i class="glyphicon glyphicon-chevron-down"></i>
-                    Show details</a></div>
-                <pre *ngIf="showErrorMessage">{{errorMessage}}</pre>
+                <ng-container *ngIf="detailedError">
+                    <div>
+                        <a (click)="showErrorMessage = !showErrorMessage">
+                            <i class="glyphicon glyphicon-chevron-down"></i>
+                            Show details
+                        </a>
+                    </div>
+                    <pre *ngIf="showErrorMessage">{{detailedError}}</pre>
+                </ng-container>
             </div>
         </tim-alert>
+
+        <ng-template i18n="@@userSelectErrorNoSearchResult">Could not search for the user.</ng-template>
+        <ng-template i18n="@@userSelectScanError">Could not scan the bar code.</ng-template>
+        <ng-template i18n="@@userSelectApplyError">Could not apply the permission.</ng-template>
     `,
     styleUrls: ["user-select.component.scss"],
 })
@@ -172,6 +182,8 @@ export class UserSelectComponent extends AngularPluginBase<
 
     showErrorMessage = false;
     errorMessage?: string;
+    detailedError?: string;
+
     searchString: string = "";
     inputMinLength!: number;
     search: boolean = false;
@@ -211,36 +223,48 @@ export class UserSelectComponent extends AngularPluginBase<
 
     async initCodeReader() {
         this.readBarcode = true;
-        const scanTime = 1500;
-        const reader = new BrowserMultiFormatReader(undefined, scanTime);
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: "environment",
-            },
-        });
+        this.resetError();
+        try {
+            const reader = new BrowserMultiFormatReader(
+                undefined,
+                this.markup.scanner.scanInterval * 1000
+            );
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: "environment",
+                },
+            });
 
-        this.videoAspectRatio =
-            stream.getVideoTracks()[0].getSettings().aspectRatio ?? 1;
+            this.videoAspectRatio =
+                stream.getVideoTracks()[0].getSettings().aspectRatio ?? 1;
 
-        const decoder = reader.decodeOnceFromStream(
-            stream,
-            this.barcodeOutput.nativeElement
-        );
+            const decoder = reader.decodeOnceFromStream(
+                stream,
+                this.barcodeOutput.nativeElement
+            );
 
-        // Trick: set torch constraints for the stream after reading starts
-        // See https://github.com/zxing-js/library/issues/267
-        await stream.getVideoTracks()[0].applyConstraints({
-            advanced: [
-                {
-                    torch: true,
-                    fillLightMode: "torch",
-                } as Record<string, unknown>,
-            ],
-        });
+            // Trick: set torch constraints for the stream after reading starts
+            // See https://github.com/zxing-js/library/issues/267
+            await stream.getVideoTracks()[0].applyConstraints({
+                advanced: [
+                    {
+                        torch: true,
+                        fillLightMode: "torch",
+                    } as Record<string, unknown>,
+                ],
+            });
 
-        const result = await decoder;
-        this.searchString = result.getText();
-        reader.reset();
+            const result = await decoder;
+            this.searchString = result.getText();
+            reader.reset();
+        } catch (e) {
+            const err = $localize`:@@userSelectErrorNoSearchResult:Could not search for the user.`;
+            if (e instanceof Error) {
+                this.setError(err, `${e.name}: ${e.message}`);
+            } else {
+                this.setError(err);
+            }
+        }
         this.readBarcode = false;
     }
 
@@ -264,7 +288,10 @@ export class UserSelectComponent extends AngularPluginBase<
             this.applied = true;
             this.resetView();
         } else {
-            this.errorMessage = result.result.error.error;
+            this.setError(
+                $localize`:@@userSelectApplyError:Could not apply the permission.`,
+                result.result.error.error
+            );
         }
 
         this.applying = false;
@@ -297,7 +324,10 @@ export class UserSelectComponent extends AngularPluginBase<
                 this.selectedUser = this.lastSearchResult.matches[0].user;
             }
         } else {
-            this.errorMessage = result.result.error.error;
+            this.setError(
+                $localize`:@@userSelectScanError:Could not scan the bar code.`,
+                result.result.error.error
+            );
         }
         this.search = false;
         this.initSearch();
@@ -321,6 +351,12 @@ export class UserSelectComponent extends AngularPluginBase<
     private resetError() {
         this.showErrorMessage = false;
         this.errorMessage = undefined;
+        this.detailedError = undefined;
+    }
+
+    private setError(message: string, details?: string) {
+        this.errorMessage = message;
+        this.detailedError = details;
     }
 
     private initSearch() {
