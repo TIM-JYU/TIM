@@ -5,6 +5,48 @@
   display: block;
 }
 
+.barcode-video {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  & > * {
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+  }
+
+  video {
+    width: 50%;
+  }
+
+  .glyphicon {
+    font-size: 1.5em;
+  }
+
+  button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    & > * {
+      margin-top: 0.2em;
+      margin-bottom: 0.2em;
+    }
+
+    .icon-text {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      * {
+        margin-left: 0.1em;
+        margin-right: 0.1em;
+      }
+    }
+  }
+}
+
 form.search {
   display: flex;
 

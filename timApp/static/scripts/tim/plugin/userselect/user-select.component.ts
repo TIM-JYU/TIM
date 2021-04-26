@@ -19,6 +19,7 @@ import {
     filter,
     first,
 } from "rxjs/operators";
+import {BrowserMultiFormatReader} from "@zxing/library";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {
@@ -57,6 +58,18 @@ const PluginFields = t.intersection([
 @Component({
     selector: "user-selector",
     template: `
+        <div class="barcode-video">
+            <video [class.hidden]="!readBarcode" #barcodeOutput></video>
+            <button [disabled]="readBarcode" class="timButton btn-lg" (click)="initCodeReader()">
+                <span class="icon-text">
+                    <i class="glyphicon glyphicon-qrcode"></i>
+                    <span>/</span>
+                    <i class="glyphicon glyphicon-barcode"></i><br>
+                </span>
+                <span>Scan code</span>
+            </button>
+        </div>
+            <p>{{barCodeResult}}</p>    
         <form class="search" (ngSubmit)="searchPress.next()" #searchForm="ngForm">
             <input class="form-control input-lg"
                    placeholder="Search for user"
@@ -155,6 +168,7 @@ export class UserSelectComponent extends AngularPluginBase<
 > {
     @ViewChild("searchForm") searchForm!: NgForm;
     @ViewChild("searchInput") searchInput!: ElementRef<HTMLInputElement>;
+    @ViewChild("barcodeOutput") barcodeOutput!: ElementRef<HTMLVideoElement>;
 
     showErrorMessage = false;
     errorMessage?: string;
@@ -167,6 +181,10 @@ export class UserSelectComponent extends AngularPluginBase<
     inputTyped: Subject<string> = new Subject();
     lastSearchResult?: SearchResult;
     selectedUser?: IUser;
+    barCodeResult: string = "";
+    videoAspectRatio: number = 1;
+    videoWidth: number = 50;
+    readBarcode: boolean = false;
 
     ngOnInit() {
         super.ngOnInit();
@@ -176,6 +194,44 @@ export class UserSelectComponent extends AngularPluginBase<
             this.selectedUser = undefined;
             this.lastSearchResult = undefined;
         });
+    }
+
+    async initCodeReader() {
+        this.readBarcode = true;
+        const scanTime = 1500;
+        const reader = new BrowserMultiFormatReader(undefined, scanTime);
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "environment",
+            },
+        });
+
+        this.videoAspectRatio =
+            stream.getVideoTracks()[0].getSettings().aspectRatio ?? 1;
+
+        const decoder = reader.decodeOnceFromStream(
+            stream,
+            this.barcodeOutput.nativeElement
+        );
+
+        // Trick: set torch constraints for the stream after reading starts
+        // See https://github.com/zxing-js/library/issues/267
+        await stream.getVideoTracks()[0].applyConstraints({
+            advanced: [
+                {
+                    torch: true,
+                    fillLightMode: "torch",
+                } as Record<string, unknown>,
+            ],
+        });
+
+        const result = await decoder;
+
+        this.searchString = result.getText();
+
+        reader.reset();
+
+        this.readBarcode = false;
     }
 
     async apply() {
