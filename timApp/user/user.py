@@ -20,6 +20,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
+from timApp.messaging.timMessage.internalmessage_models import InternalMessageReadReceipt
 from timApp.notification.notification import Notification
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin
@@ -95,6 +96,7 @@ access_sets = {
 }
 
 SCIM_USER_NAME = ':scimuser'
+
 
 class Consent(Enum):
     CookieOnly = 1
@@ -200,6 +202,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         back_populates='user',
         collection_class=attribute_mapped_collection('user_collection_key'),
     )
+
+    internalmessage_readreceipt: Optional[InternalMessageReadReceipt] = db.relationship('InternalMessageReadReceipt',
+                                                                                        back_populates='user')
 
     @property
     def scim_display_name(self):
