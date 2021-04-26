@@ -12,7 +12,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList, create_new_email_list
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
-from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType
+from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember, get_members_for_list
 from timApp.timdb.sqa import db
@@ -163,7 +163,8 @@ def get_list(document_id: int) -> Response:
         #  here is a placeholder.
         domain="tim.jyu.fi",
         archive=msg_list.archive,
-        # TODO: Replace placeholder once we can properly query the owners email.
+        htmlAllowed=True,
+        defaultReplyType=ReplyToListChanges.NOCHANGES
     )
     return json_response(list_options)
 
