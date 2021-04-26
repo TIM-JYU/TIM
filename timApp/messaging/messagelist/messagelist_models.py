@@ -71,19 +71,31 @@ class MessageListModel(db.Model):
         return m
 
     @staticmethod
-    def get_list_by_name(name: str) -> 'MessageListModel':
+    def get_list_by_name_exactly_one(name: str) -> 'MessageListModel':
         m = MessageListModel.query.filter_by(name=name).one()
         return m
 
     @staticmethod
-    def get_list_by_name_first(name: str) -> 'MessageListModel':
+    def get_list_by_name_first(name_candidate: str) -> 'MessageListModel':
         """Get a message list by it's name, if a list with said name exists.
 
-        :param name: The name of the message list.
-        :return: Return the message list after query by name. Returns at most one result.
+        :param name_candidate: The name of the message list.
+        :return: Return the message list after query by name. Returns at most one result or None if no there are hits.
         """
-        m = MessageListModel.query.filter_by(name=name).first()
+        m = MessageListModel.query.filter_by(name=name_candidate).first()
         return m
+
+    @staticmethod
+    def name_exists(name_candidate: str) -> bool:
+        """Check if given name already exists among message lists.
+
+        :param name_candidate: The name we are checking if it already is already in use by another list.
+        """
+        maybe_list = MessageListModel.get_list_by_name_first(name_candidate=name_candidate)
+        if maybe_list is None:
+            return True
+        else:
+            return False
 
     @property
     def archive_policy(self) -> ArchiveType:
