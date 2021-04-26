@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from urllib.error import HTTPError
 
-from mailmanclient import Client, MailingList, Domain
+from mailmanclient import Client, MailingList, Domain, Member
 
 from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate
 from timApp.tim_app import app
@@ -398,52 +398,6 @@ class EmailList:
                    " No deletion occured.".format(fqdn_listname)
 
     @staticmethod
-    def change_user_delivery_status(list_name: str, member_email: str, option: str, status: str) -> None:
-        """ Change user's send or delivery status on an email list.
-
-        :param list_name: List where we are changing delivery options.
-        :param member_email: Which member's email's delivery status we are changing.
-        :param option: Option can be 'delivery' or 'send'.
-        :param status: A value that determines if option is 'enabled' or 'disabled'.
-        :return:
-        """
-        # VIESTIM: We might want to change option and status parametrs from string to something like enum to rid
-        #  ourselves from errors generated with typos.
-        delivery = "delivery_status"
-        if _client is None:
-            return
-        try:
-            email_list = _client.get_list(list_name)
-            member = email_list.get_member(member_email)
-            member_preferences = member.preferences
-            if option == delivery:
-                # Viestim: This is just an idea how to go about changing user's delivery options. There exists
-                #  frustratingly little documentation about this kind of thing, so this might not work. The idea
-                #  originates from
-                #  https://docs.mailman3.org/projects/mailman/en/latest/src/mailman/handlers/docs/owner-recips.html
-                #  More information also at
-                #  https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/member.py
-                #
-                # Change user's delivery off by setting "delivery_status" preference option to value "by_user"
-                # or on by setting "delivery_status" preference option to "enabled".
-                if status == "disabled":
-                    member_preferences[delivery] = "by_user"
-                if status == "enabled":
-                    member_preferences[delivery] = "enabled"
-                # Saving is required for changes to take effect.
-                member_preferences.save()
-            if option == "send":
-                if status == "disabled":
-                    member.moderation_action = "discard"
-                if status == "enabled":
-                    member.moderation_action = "accept"
-                member.save()
-            return
-        except HTTPError:
-            # TODO: Proper error handling.
-            return
-
-    @staticmethod
     def get_member_delivery_status(list_name: str, member_email: str) -> str:
         """
         Get member's delivery status.
@@ -662,3 +616,61 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     else:
         new_member.moderation_action = "discard"
     new_member.save()
+
+
+def change_email_list_member_send_status(member: Member, status: bool) -> None:
+    """ Change user's send status on an email list. Send right / status is changed by changing the member's
+    moderation status.
+
+    This function can fail if connection to Mailman is lost.
+
+    :param member: Member who is having their send status changed.
+    :param status: A value that determines if option is 'enabled' or 'disabled'. If True, the member can send messages
+    (past moderation) to the email list. If False, then all email from member will be rejected.
+    """
+    if status:
+        # This could also be e.g. "discard", but then there would be no information whether or not the email ever
+        # made it to moderation.
+        member.moderation_action = "accept"
+    else:
+        member.moderation_action = "reject"
+    # Changing the moderation_action requires saving, otherwise change won't take effect.
+    try:
+        member.save()
+        return
+    except HTTPError:
+        # Saving can fail if connection is lost to Mailman or it's server.
+        raise
+
+
+def change_email_list_member_delivery_status(member: Member, status: bool, by_moderator=True) -> None:
+    """Change email list's member's delivery status on a list.
+
+    This function can fail if connection to Mailman is lost.
+
+    :param member: Member who is having their delivery status changed.
+    :param status: If True, then this member receives email list's messages. If false, member does not receive messages
+    from the email list.
+    :param by_moderator: Who initiated the change in delivery right. If True, then the change was initiated by a
+    moderator or owner. If False, then the change was initiated by the member themselves.
+    """
+    # Viestim: This is just an idea how to go about changing user's delivery options. There exists
+    #  frustratingly little documentation about this kind of thing, so this might not work. The idea
+    #  originates from
+    #  https://docs.mailman3.org/projects/mailman/en/latest/src/mailman/handlers/docs/owner-recips.html
+    #  More information also at
+    #  https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/member.py
+    if status:
+        member.preferences["delivery_status"] = "enabled"
+    else:
+        if by_moderator:
+            member.preferences["delivery_status"] = "by_moderator"
+        else:
+            member.preferences["delivery_status"] = "by_user"
+    # If changed, preferences have to be saved for them to take effect on Mailman.
+    try:
+        member.preferences.save()
+        return
+    except HTTPError:
+        # Saving can fail if connection is lost to Mailman or it's server.
+        raise
