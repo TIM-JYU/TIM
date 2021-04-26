@@ -4,6 +4,7 @@ from datetime import datetime
 
 from flask import Response
 
+from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
@@ -52,8 +53,7 @@ def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
     :param message: Message subject, contents and sender
     :return:
     """
-    print(message)
-    print(options)
+    verify_logged_in()
 
     tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply)
     create_tim_message(tim_message, options, message)
@@ -66,7 +66,7 @@ def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
 
 def create_tim_message(tim_message: InternalMessage, options: MessageOptions, message_body: MessageBody) -> DocInfo:
     """
-    Creates a TIM document for the TIM message to sender's Messages-folder.
+    Creates a TIM document for the message to the TIM messages folder at TIM's root.
 
     :param tim_message: InternalMessage object
     :param options: Options related to the message
@@ -79,20 +79,14 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 
     message_subject = message_body.messageSubject
     timestamp = datetime.now()
-    message_path = remove_path_special_chars(f'{timestamp} {message_subject}')
+    message_path = remove_path_special_chars(f'{timestamp}-{message_subject}')
 
-    f = Folder.find_by_location(message_folder_path, 'tim-messages')  # VIESTIM create folder elsewhere
-
-    if not f:
-        f = Folder.create(message_folder_path, UserGroup.get_admin_group(), title='TIM messages',
-                          creation_opts=FolderCreationOptions(apply_default_rights=True))
-        f.block.add_rights([UserGroup.get_by_name(sender.name)], AccessType.view)
-
-    f.block.add_rights(recipient_users, AccessType.view)
+    check_messages_folder_path('/messages', message_folder_path)
 
     message_doc = create_document(f'{message_folder_path}/{message_path}',
                                   message_subject)
 
+    message_doc.block.add_rights([sender.get_personal_group()], AccessType.owner)
     message_doc.block.add_rights(recipient_users, AccessType.view)
 
     message_doc.document.add_paragraph(f'# {message_subject}')
@@ -113,6 +107,7 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 
 @timMessage.route("/reply", methods=['POST'])
 def reply_to_tim_message(options: MessageOptions, message: MessageBody) -> Response:
+    # TODO handle replying to message
     return ok_response()
 
 
@@ -124,8 +119,40 @@ def get_tim_messages() -> Response:
 
 
 def get_recipient_users(recipients: List[str]) -> List[UserGroup]:
+    """
+    Finds UserGroup objects of recipients based on their email
+
+    :param recipients: list of recipients' emails
+    :return: list of recipient UserGroups
+    """
     users = []
     for rcpt in recipients:
         users.append(UserGroup.get_by_name(User.get_by_email(rcpt).name))
 
     return users
+
+
+def check_messages_folder_path(msg_folder_path: str, tim_msg_folder_path: str) -> Folder:
+    """
+    Checks if the /messages/tim-messages folder exists and if not, creates it and
+    adds view rights to logged in users.
+
+    :param msg_folder_path: path for /messages
+    :param tim_msg_folder_path: path for /messages/tim-messages
+    :return: /messages/tim-messages folder
+    """
+    msg_folder = Folder.find_by_location(msg_folder_path, 'messages')
+
+    if not msg_folder:
+        msg_folder = Folder.create(msg_folder_path, UserGroup.get_admin_group(), title='Messages',
+                                   creation_opts=FolderCreationOptions(apply_default_rights=True))
+        msg_folder.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+
+    tim_msg_folder = Folder.find_by_location(tim_msg_folder_path, 'tim-messages')
+
+    if not tim_msg_folder:
+        tim_msg_folder = Folder.create(tim_msg_folder_path, UserGroup.get_admin_group(), title='TIM messages',
+                                       creation_opts=FolderCreationOptions(apply_default_rights=True))
+        tim_msg_folder.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+
+    return tim_msg_folder
