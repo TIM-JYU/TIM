@@ -7,6 +7,7 @@ x-caddy:
  volumes:
   - caddy_data:/data
   - caddy_config:/config
+  - ./certs/caddy:/certs:ro
   - ./Caddyfile:/etc/caddy/Caddyfile:ro
   - ./timApp/static:/tim/timApp/static:ro
   - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
