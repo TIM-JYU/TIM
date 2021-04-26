@@ -62,11 +62,12 @@ def check_name(name_candidate: str) -> Response:
     """
 
     name, sep, domain = name_candidate.partition("@")
-
+    msg_list_exists = MessageListModel.name_exists(name)
+    if msg_list_exists:
+        raise RouteException(f"Message list with name {name} already exists.")
     if sep:
         # If character '@' is found, we check email list specific name requirements.
         EmailListManager.check_name_requirements(name, domain)
-
     return ok_response()
 
 
