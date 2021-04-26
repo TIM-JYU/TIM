@@ -10,6 +10,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  margin-bottom: 1rem;
 
   & > * {
     margin-top: 0.2em;
@@ -107,6 +108,12 @@ tr.user-row {
   font-size: 1.2rem;
   color: #aeaeae;
   font-style: italic;
+}
+
+.label.not-supported {
+  font-size: 0.5em;
+  font-weight: normal;
+  user-select: none;
 }
 
 table {

@@ -58,10 +58,17 @@ class PermissionsCollection:
 
 
 @dataclass
+class ScannerOptions:
+    enabled: bool = False
+    scanInterval: float = 1.5
+
+
+@dataclass
 class UserSelectMarkupModel(GenericMarkupModel):
     inputMinLength: int = 3
     autoSearchDelay: float = 0.0
     maxMatches: int = 10
+    scanner: ScannerOptions = field(default_factory=ScannerOptions)
     groups: List[str] = field(default_factory=list)
     fields: List[str] = field(default_factory=list)
     permissions: Optional[PermissionsCollection] = None

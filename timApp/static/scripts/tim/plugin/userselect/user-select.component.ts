@@ -22,11 +22,7 @@ import {
 import {BrowserMultiFormatReader} from "@zxing/library";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
-import {
-    GenericPluginMarkup,
-    getTopLevelFields,
-    withDefault,
-} from "../attributes";
+import {GenericPluginMarkup, getTopLevelFields} from "../attributes";
 import {to2} from "../../util/utils";
 import {IUser} from "../../user/IUser";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
@@ -45,8 +41,12 @@ interface SearchResult {
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
-        inputMinLength: withDefault(t.number, 3),
-        autoSearchDelay: withDefault(t.number, 0),
+        inputMinLength: t.number,
+        autoSearchDelay: t.number,
+        scanner: t.type({
+            enabled: t.boolean,
+            scanInterval: t.number,
+        }),
     }),
 ]);
 
@@ -58,9 +58,9 @@ const PluginFields = t.intersection([
 @Component({
     selector: "user-selector",
     template: `
-        <div class="barcode-video">
+        <div *ngIf="enableScanner" class="barcode-video">
             <video [class.hidden]="!readBarcode" #barcodeOutput></video>
-            <button [disabled]="readBarcode" class="timButton btn-lg" (click)="initCodeReader()">
+            <button [disabled]="!hasMediaDevices || readBarcode" class="timButton btn-lg" (click)="initCodeReader()">
                 <span class="icon-text">
                     <i class="glyphicon glyphicon-qrcode"></i>
                     <span>/</span>
@@ -68,8 +68,8 @@ const PluginFields = t.intersection([
                 </span>
                 <span>Scan code</span>
             </button>
+            <span *ngIf="!hasMediaDevices" class="label label-default not-supported">Not supported on this device</span>
         </div>
-            <p>{{barCodeResult}}</p>    
         <form class="search" (ngSubmit)="searchPress.next()" #searchForm="ngForm">
             <input class="form-control input-lg"
                    placeholder="Search for user"
@@ -185,15 +185,28 @@ export class UserSelectComponent extends AngularPluginBase<
     videoAspectRatio: number = 1;
     videoWidth: number = 50;
     readBarcode: boolean = false;
+    hasMediaDevices = false;
+    enableScanner = false;
 
     ngOnInit() {
         super.ngOnInit();
+        void this.initMediaDevices();
+        this.enableScanner = this.markup.scanner.enabled;
         this.inputMinLength = this.markup.inputMinLength;
         this.initSearch();
         this.inputTyped.subscribe(() => {
             this.selectedUser = undefined;
             this.lastSearchResult = undefined;
         });
+    }
+
+    async initMediaDevices() {
+        this.hasMediaDevices = "mediaDevices" in navigator;
+        if (this.hasMediaDevices) {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            this.hasMediaDevices =
+                devices.filter((d) => d.kind == "videoinput").length > 0;
+        }
     }
 
     async initCodeReader() {
@@ -226,11 +239,8 @@ export class UserSelectComponent extends AngularPluginBase<
         });
 
         const result = await decoder;
-
         this.searchString = result.getText();
-
         reader.reset();
-
         this.readBarcode = false;
     }
 
@@ -298,7 +308,14 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     getDefaultMarkup() {
-        return {};
+        return {
+            scanner: {
+                enabled: false,
+                scanInterval: 1.5,
+            },
+            inputMinLength: 3,
+            autoSearchDelay: 0,
+        };
     }
 
     private resetError() {
