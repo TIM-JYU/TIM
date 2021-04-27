@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import List
 
 from timApp.timdb.sqa import db
 
@@ -40,18 +39,16 @@ class InternalMessage(db.Model):
     #  Expiration date: use Block's BlockAccess: accessible_from and accessible_to?
     #  Sender: use Block's BlockAccess: usergroup_id (owner?)
 
-    @staticmethod
-    def get_messages() -> 'List[InternalMessage]':  # VIESTIM get all messages for testing purposes
-        messages = InternalMessage.query.all()
-        return messages
-
 
 class InternalMessageDisplay(db.Model):
     """Where and for whom a TIM message is displayed."""
 
     __tablename__ = 'internalmessage_display'
 
-    message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    """Message display identifier."""
+
+    message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), nullable=False)
     """Message identifier."""
 
     usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
@@ -76,7 +73,7 @@ class InternalMessageReadReceipt(db.Model):
     message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), primary_key=True)
     """Message identifier."""
 
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'))
     """Identifier for the user who marked the message as read."""
 
     marked_as_read_on = db.Column(db.DateTime)

@@ -8,14 +8,18 @@ from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
-from timApp.messaging.timMessage.internalmessage_models import InternalMessage, DisplayType
+from timApp.item.block import Block
+from timApp.item.item import Item
+from timApp.messaging.timMessage.internalmessage_models import InternalMessage, DisplayType, InternalMessageDisplay, \
+    InternalMessageReadReceipt
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
 
@@ -57,9 +61,10 @@ def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
 
     tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply)
     create_tim_message(tim_message, options, message)
-
     db.session.add(tim_message)
     db.session.commit()
+
+    create_message_displays(tim_message.id, options, message)
 
     return ok_response()
 
@@ -78,7 +83,7 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
     message_folder_path = '/messages/tim-messages'
 
     message_subject = message_body.messageSubject
-    timestamp = datetime.now()
+    timestamp = datetime.now()  # add timestamp to document path to make it unique
     message_path = remove_path_special_chars(f'{timestamp}-{message_subject}')
 
     check_messages_folder_path('/messages', message_folder_path)
@@ -102,6 +107,10 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
     else:
         tim_message.display_type = DisplayType.TOP_OF_PAGE  # default display type
 
+    tim_message.readreceipt = InternalMessageReadReceipt()  # TODO read receipts for all recipients
+
+    tim_message.block = Block(type_id=0, created=message_doc.block.created)
+
     return message_doc
 
 
@@ -109,13 +118,6 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 def reply_to_tim_message(options: MessageOptions, message: MessageBody) -> Response:
     # TODO handle replying to message
     return ok_response()
-
-
-@timMessage.route("/get", methods=['GET'])  # VIESTIM get all messages for testing purposes
-def get_tim_messages() -> Response:
-    tim_messages: List[InternalMessage] = InternalMessage.get_messages()
-
-    return json_response(tim_messages)
 
 
 def get_recipient_users(recipients: List[str]) -> List[UserGroup]:
@@ -127,9 +129,32 @@ def get_recipient_users(recipients: List[str]) -> List[UserGroup]:
     """
     users = []
     for rcpt in recipients:
-        users.append(UserGroup.get_by_name(User.get_by_email(rcpt).name))
+        user = User.get_by_email(rcpt)
+        if user:
+            users.append(UserGroup.get_by_name(user.name))
 
     return users
+
+
+def get_display_pages(pagelist: List[str]) -> List[Item]:
+    """
+    Finds folders and documents based on their paths.
+
+    :param pagelist: list of paths
+    :return: list of folders and documents
+    """
+    pages = []
+    for page in pagelist:
+        folder = Folder.find_by_path(page)
+        if folder:
+            pages.append(folder)
+            continue
+
+        doc = DocEntry.find_by_path(page)
+        if doc:
+            pages.append(doc)
+
+    return pages
 
 
 def check_messages_folder_path(msg_folder_path: str, tim_msg_folder_path: str) -> Folder:
@@ -146,13 +171,60 @@ def check_messages_folder_path(msg_folder_path: str, tim_msg_folder_path: str) -
     if not msg_folder:
         msg_folder = Folder.create(msg_folder_path, UserGroup.get_admin_group(), title='Messages',
                                    creation_opts=FolderCreationOptions(apply_default_rights=True))
-        msg_folder.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+        msg_block = msg_folder.block
+        if msg_block:
+            msg_block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
 
     tim_msg_folder = Folder.find_by_location(tim_msg_folder_path, 'tim-messages')
 
     if not tim_msg_folder:
         tim_msg_folder = Folder.create(tim_msg_folder_path, UserGroup.get_admin_group(), title='TIM messages',
                                        creation_opts=FolderCreationOptions(apply_default_rights=True))
-        tim_msg_folder.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+        tim_msg_block = tim_msg_folder.block
+        if tim_msg_block:
+            tim_msg_block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
 
     return tim_msg_folder
+
+
+def create_message_displays(msg_id: int, options: MessageOptions, message_body: MessageBody):
+    """
+    Creates InternalMessageDisplay entries for all recipients and display pages.
+
+    :param msg_id:
+    :param options:
+    :param message_body:
+    :return:
+    """
+    pages = get_display_pages(options.pageList.splitlines())
+    recipients = get_recipient_users(message_body.recipients)
+
+    if pages and recipients:
+        for page in pages:
+            for rcpt in recipients:
+                display = InternalMessageDisplay()
+                display.message_id = msg_id
+                display.usergroup_id = rcpt.id
+                display.display_doc_id = page.id
+                db.session.add(display)
+
+    if pages and not recipients:
+        for page in pages:
+            display = InternalMessageDisplay()
+            display.message_id = msg_id
+            display.display_doc_id = page.id
+            db.session.add(display)
+
+    if not pages and recipients:
+        for rcpt in recipients:
+            display = InternalMessageDisplay()
+            display.message_id = msg_id
+            display.usergroup_id = rcpt.id
+            db.session.add(display)
+
+    if not pages and not recipients:
+        display = InternalMessageDisplay()
+        display.message_id = msg_id
+        db.session.add(display)
+
+    db.session.commit()
