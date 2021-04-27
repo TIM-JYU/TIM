@@ -61,6 +61,7 @@ class PermissionsCollection:
 class ScannerOptions:
     enabled: bool = False
     scanInterval: float = 1.5
+    applyOnMatch: bool = False
 
 
 @dataclass

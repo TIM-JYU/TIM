@@ -46,6 +46,7 @@ const PluginMarkup = t.intersection([
         scanner: t.type({
             enabled: t.boolean,
             scanInterval: t.number,
+            applyOnMatch: t.boolean,
         }),
     }),
 ]);
@@ -258,6 +259,11 @@ export class UserSelectComponent extends AngularPluginBase<
             const result = await decoder;
             this.searchString = result.getText();
             await this.doSearch();
+            if (this.lastSearchResult && this.markup.scanner.applyOnMatch) {
+                if (this.lastSearchResult.matches.length == 1) {
+                    await this.apply();
+                }
+            }
         } catch (e) {
             const err = $localize`:@@userSelectErrorNoSearchResult:Could not search for the user.`;
             if (e instanceof Error) {
@@ -346,6 +352,7 @@ export class UserSelectComponent extends AngularPluginBase<
             scanner: {
                 enabled: false,
                 scanInterval: 1.5,
+                applyOnMatch: false,
             },
             inputMinLength: 3,
             autoSearchDelay: 0,
@@ -374,7 +381,7 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     private initSearch() {
-        if (!this.inputListener?.closed) {
+        if (this.inputListener && !this.inputListener.closed) {
             return;
         }
         const observables: Observable<unknown>[] = [this.searchPress];
