@@ -245,17 +245,16 @@ def render_validationerror(e: ValidationError) -> str:
 The following fields have invalid values:
 <ul>
 {%- for k, val in errors.items() recursive -%}
-<li>
-  {{k}}
-  {%- if val is mapping %}
+<li>{{k}}
+    {%- if val is mapping -%}
     <ul>
         {{ loop(val.items()) }}
     </ul>
-  {% elif val is iterable -%}
-    : {% for item in val -%}{{item}}{% if loop.nextitem %}, {% endif %}{% endfor -%}
-  {%- else -%}
-    : {{ val }}
-  {%- endif -%}
+    {%- elif val is iterable -%}
+        : {% for item in val -%}{{item}}{% if loop.nextitem %}, {% endif %}{% endfor -%}
+    {%- else -%}
+        : {{ val }}
+    {%- endif -%}
 </li>
 {%- endfor -%}
 </ul>
