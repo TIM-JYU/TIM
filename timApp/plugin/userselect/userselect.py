@@ -222,6 +222,7 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
     }
     if fields_to_save:
         user_acc = User.get_by_name(user.name)
+        assert user_acc is not None
         # Reuse existing helper for answer route to save field values quickly
         save_fields(
             FieldSaveRequest(savedata=[FieldSaveUserEntry(user=user_acc.id, fields=fields_to_save)]),
