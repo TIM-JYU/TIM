@@ -62,8 +62,8 @@ class MessageListModel(db.Model):
     removed = db.Column(db.DateTime(timezone=True))
     """When this list has been marked for removal."""
 
-    block = db.relationship("Block")
-    members = db.relationship("MessageListMember", back_populates="message_list")
+    block = db.relationship("Block", back_populates="managed_messagelist", lazy="select")
+    members = db.relationship("MessageListMember", back_populates="message_list", lazy="select")
 
     @staticmethod
     def get_list_by_manage_doc_id(doc_id: int) -> 'MessageListModel':
@@ -137,10 +137,10 @@ class MessageListMember(db.Model):
     member_type = db.Column(db.Text)
     """Discriminator for polymorhphic members."""
 
-    message_list = db.relationship("MessageListModel", back_populates="members")
-    tim_member = db.relationship("MessageListTimMember", back_populates="member")
-    external_member = db.relationship("MessageListExternalMember", back_populates="member")
-    distribution = db.relationship("MessageListDistribution", back_populates="member")
+    message_list = db.relationship("MessageListModel", back_populates="members", lazy="select")
+    tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select")
+    external_member = db.relationship("MessageListExternalMember", back_populates="member", lazy="select")
+    distribution = db.relationship("MessageListDistribution", back_populates="member", lazy="select")
 
     __mapper_args__ = {"polymorphic_identity": "member", "polymorphic_on": member_type}
 
@@ -166,8 +166,8 @@ class MessageListTimMember(MessageListMember):
     group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
     """A UserGroup id for a member."""
 
-    member = db.relationship("MessageListMember", back_populates="tim_member")
-    user_group = db.relationship("UserGroup", back_populates="messagelist_membership")
+    member = db.relationship("MessageListMember", back_populates="tim_member", lazy="select")
+    user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select")
 
     __mapper_args__ = {"polymorphic_identity": "tim_member"}
 
@@ -183,7 +183,7 @@ class MessageListExternalMember(MessageListMember):
     email_address = db.Column(db.Text, unique=True)
     """Email address of message list's external member."""
 
-    member = db.relationship("MessageListMember", back_populates="external_member")
+    member = db.relationship("MessageListMember", back_populates="external_member", lazy="select")
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
 
@@ -197,7 +197,7 @@ class MessageListDistribution(db.Model):
     channel = db.Column(db.Enum(Channel))
     """Which message channels are used for a message list."""
 
-    member = db.relationship("MessageListMember", back_populates="distribution")
+    member = db.relationship("MessageListMember", back_populates="distribution", lazy="select")
 
 
 class UserEmails(db.Model):
