@@ -62,11 +62,10 @@ def check_urls(urls: str) -> Response:
         global shortened_url
         if re.search(regex, url):  # check if url matches the TIM urls' pattern
             shortened_url = re.sub(regex, "", url)
-            document = DocEntry.find_by_path(shortened_url) # check if url exists in TIM
-            if document is None:
-                error_message = url + " was not found in TIM"
-                status_code = 404
         else:
+            shortened_url = url
+        document = DocEntry.find_by_path(shortened_url) # check if url exists in TIM
+        if document is None:
             error_message = url + " was not found in TIM"
             status_code = 404
             break
