@@ -329,40 +329,36 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     """
     if _client is None:
         return
-    if check_name_availability(list_options.listname, list_options.domain):
-        try:
-            domain: Domain = _client.get_domain(list_options.domain)
-            email_list: MailingList = domain.create_list(list_options.listname)
-            # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
-            #  their lists on Mailman.
-            email_list.add_owner(owner.email)
+    check_name_availability(list_options.listname, list_options.domain)
+    try:
+        domain: Domain = _client.get_domain(list_options.domain)
+        email_list: MailingList = domain.create_list(list_options.listname)
+        # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
+        #  their lists on Mailman.
+        email_list.add_owner(owner.email)
 
-            set_default_templates(email_list)
+        set_default_templates(email_list)
 
-            # settings-attribute acts like a dict.
-            mlist_settings = email_list.settings
+        # settings-attribute acts like a dict.
+        mlist_settings = email_list.settings
 
-            # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
-            # advertising on if they so choose.
-            mlist_settings["advertised"] = False
-            mlist_settings["admin_notify_mchanges"] = list_options.notifyOwnerOnListChange
+        # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
+        # advertising on if they so choose.
+        mlist_settings["advertised"] = False
+        mlist_settings["admin_notify_mchanges"] = list_options.notifyOwnerOnListChange
 
-            set_email_list_description(email_list, list_options.listDescription)
-            set_email_list_info(email_list, list_options.listInfo)
+        set_email_list_description(email_list, list_options.listDescription)
+        set_email_list_info(email_list, list_options.listInfo)
 
-            set_email_list_archive_policy(email_list, list_options.archive)
+        set_email_list_archive_policy(email_list, list_options.archive)
 
-            # This needs to be the last line, because no changes to settings take effect until save-method is
-            # called.
-            mlist_settings.save()
-            return
-        except HTTPError:
-            # TODO: exceptions to catch: domain doesn't exist, list can't be created, connection to server fails.
-            raise
-    else:
-        # VIESTIM: If a list with this name exists (it shouldn't since it's checked before allowing list creation,
-        #  but technically it could if someone can grab the name during list creation process), then what do we do?
+        # This needs to be the last line, because no changes to settings take effect until save-method is
+        # called.
+        mlist_settings.save()
         return
+    except HTTPError:
+        # TODO: exceptions to catch: domain doesn't exist, list can't be created, connection to server fails.
+        raise
 
 
 def get_list_ui_link(listname: str) -> str:
