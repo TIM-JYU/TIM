@@ -265,16 +265,19 @@ export class UserSelectComponent extends AngularPluginBase<
                 this.barcodeOutput.nativeElement
             );
 
-            // Trick: set torch constraints for the stream after reading starts
-            // See https://github.com/zxing-js/library/issues/267
-            await stream.getVideoTracks()[0].applyConstraints({
-                advanced: [
-                    {
-                        torch: true,
-                        fillLightMode: "torch",
-                    } as Record<string, unknown>,
-                ],
-            });
+            try {
+                // Trick: set torch constraints for the stream after reading starts
+                // See https://github.com/zxing-js/library/issues/267
+                await stream.getVideoTracks()[0].applyConstraints({
+                    advanced: [
+                        {
+                            torch: true,
+                        } as Record<string, unknown>,
+                    ],
+                });
+            } catch (e) {
+                // Swallow the error; the torch is just not supported
+            }
 
             const result = await decoder;
             this.searchString = result.getText();
