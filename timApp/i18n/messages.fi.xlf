@@ -359,7 +359,7 @@
       </trans-unit>
       <trans-unit id="userSelectTextSuccess" datatype="html">
         <source>Permissions applied to <x id="INTERPOLATION" equiv-text="{{0}}"/>.</source>
-        <target state="translated">Asetettu oikeuden käyttäjälle <x id="INTERPOLATION" equiv-text="{{0}}"/>.</target>
+        <target state="translated">Asetettu oikeudet käyttäjälle <x id="INTERPOLATION" equiv-text="{{0}}"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">180</context>
@@ -634,10 +634,7 @@
         </context-group>
       </trans-unit>
       <trans-unit id="a75ca887f809e6410834a31724e69d230ccbba1d" datatype="html">
-        <source> You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }
-            "/> in <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;
-                              [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;
-                              (onFinish)=&quot;this.countDown = false&quot;>"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>. </source>
+        <source> You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }             "/> in <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;>"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>. </source>
         <target state="translated">
             Tämä <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/>
             aukeaa ajassa: <x id="START_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;tim-countdown>"/><x id="CLOSE_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;/tim-countdown>"/>.
