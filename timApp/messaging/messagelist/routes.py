@@ -37,6 +37,8 @@ def create_list(options: ListOptions) -> Response:
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
+    options.listname = options.listname.strip()
+
     manage_doc = new_list(options)
     create_new_email_list(options, owner)
 
@@ -60,8 +62,8 @@ def check_name(name_candidate: str) -> Response:
     :param name_candidate: Possible name for message/email list. Should either be a name for a list or a fully qualifed
     domain name for (email) list. In the latter case we also check email list specific name requirements.
     """
-
-    name, sep, domain = name_candidate.partition("@")
+    normalized_name = name_candidate.strip()
+    name, sep, domain = normalized_name.partition("@")
     msg_list_exists = MessageListModel.name_exists(name)
     if msg_list_exists:
         raise RouteException(f"Message list with name {name} already exists.")
@@ -191,7 +193,7 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
         em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
 
     for member_candidate in memberCandidates:
-        u = User.get_by_name(member_candidate)
+        u = User.get_by_name(member_candidate.strip())
         if u is not None:
             # The name given was an existing TIM user.
             new_tim_member = MessageListTimMember()
