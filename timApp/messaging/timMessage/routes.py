@@ -66,6 +66,8 @@ def check_urls(urls: str) -> Response:
             shortened_url = url
         document = DocEntry.find_by_path(shortened_url) # check if url exists in TIM
         if document is None:
+            document = Folder.find_by_path(shortened_url)
+        if document is None:
             error_message = url + " was not found in TIM"
             status_code = 404
             break
