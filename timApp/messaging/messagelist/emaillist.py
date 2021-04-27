@@ -8,7 +8,7 @@ from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archiv
 from timApp.tim_app import app
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
-from timApp.util.logger import log_warning, log_info
+from timApp.util.logger import log_warning, log_info, log_error
 from tim_common.marshmallow_dataclass import class_schema
 
 
@@ -327,8 +327,17 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     :return:
     """
     if _client is None:
-        return
-    check_name_availability(list_options.listname, list_options.domain)
+        # VIESTIM: If someone is somehow able to start creating lists, while mailmanclient isn't configured,
+        #  it means that we failed to check for connection at some point. Would there be a way to give a kind of a
+        #  traceback here with error logging, so this would be easy to narrow down where the slip up is?
+        log_error("New list creation has been accessed, even though mailmanclient is not configured for connection.")
+        raise RouteException("No connection configured.")
+    try:
+        check_name_availability(list_options.listname, list_options.domain)
+    except HTTPError:
+        # TODO: If the name has been snatched between checking it's availability, we might want to offer name
+        #  recommendations?
+        raise
     try:
         domain: Domain = _client.get_domain(list_options.domain)
         email_list: MailingList = domain.create_list(list_options.listname)
@@ -356,10 +365,10 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # This needs to be the last line, because no changes to settings take effect until save-method is
         # called.
         mlist_settings.save()
-        return
     except HTTPError:
         # TODO: exceptions to catch: domain doesn't exist, list can't be created, connection to server fails.
         raise
+    return
 
 
 def get_list_ui_link(listname: str) -> str:
