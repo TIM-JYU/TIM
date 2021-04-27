@@ -50,44 +50,6 @@ class EmailListManager:
     """Possible domains which can be used with our instance of Mailman."""
 
     @staticmethod
-    def check_name_availability(name_candidate: str, domain: str) -> None:
-        """Search for a name from the pool of used email list names.
-
-        Raises a RouteException if no connection was ever established with the Mailman server via mailmanclient.
-        Re-raises HTTPError if something went wrong with the query from the server.
-
-        :param domain: Domain to search for lists, which then are used to check name availability.
-        :param name_candidate: The name to search for.
-        """
-        if _client is None:
-            raise RouteException("No connection with email list server established.")
-        try:
-            d = _client.get_domain(domain)
-            mlists: List[MailingList] = d.get_lists()
-            fqdn_name_candidate = name_candidate + "@" + domain
-            for name in [mlist.fqdn_listname for mlist in mlists]:
-                if fqdn_name_candidate == name:
-                    raise RouteException("Name is already in use.")
-        except HTTPError:
-            # VIESTIM: Should we just raise the old error or inspect it closer? Now raise old error.
-            raise  # "Connection to server failed."
-
-    @staticmethod
-    def check_reserved_names(name_candidate: str) -> None:
-        """
-        Check a name candidate against reserved names, e.g. postmaster. Raises a RouteException if the name candidate
-        is a reserved name. If name is not reserved, the method succeeds silently.
-
-        :param name_candidate: The name to be compared against reserved names.
-        """
-        # TODO: Implement a smarter query for reserved names. Now only compare against simple list for prototyping
-        #  purposes. Maybe an external config file for known reserved names or something like that?
-        #  Is it possible to query reserved names e.g. from Mailman or it's server?
-        reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
-        if name_candidate in reserved_names:
-            raise RouteException(f"Name {name_candidate} is a reserved name and cannot be used.")
-
-    @staticmethod
     def get_domain_names() -> List[str]:
         """Returns a list of all domain names.
 
@@ -608,3 +570,52 @@ def get_email_list_member_send_status(member: Member) -> bool:
     # If we are here, something has gone terribly wrong.
     # VIESTIM: Is this logging worthy? If yes, what severity?
     raise RouteException(f"Member {member.address} has an invalid send status assigned to them.")
+
+
+def check_emaillist_name_requirements(name_candidate: str, domain: str):
+    """Check email list's name requirements. General message list name requirement checks are assumed to be passed
+    at this point. """
+    # We assume that name rule checks for message lists are good enough for email list name requirements. If they
+    # change to allow things that email list names aren't allowed to have, then we need a name rule check here.
+    check_name_availability(name_candidate, domain)
+    check_reserved_names(name_candidate)
+
+
+def check_name_availability(name_candidate: str, domain: str) -> None:
+    """Search for a name from the pool of used email list names.
+
+    Raises a RouteException if no connection was ever established with the Mailman server via mailmanclient.
+    Re-raises HTTPError if something went wrong with the query from the server.
+
+    :param domain: Domain to search for lists, which then are used to check name availability.
+    :param name_candidate: The name to search for.
+    """
+    if _client is None:
+        raise RouteException("No connection with email list server established.")
+    try:
+        d = _client.get_domain(domain)
+        mlists: List[MailingList] = d.get_lists()
+        fqdn_name_candidate = name_candidate + "@" + domain
+        for name in [mlist.fqdn_listname for mlist in mlists]:
+            if fqdn_name_candidate == name:
+                raise RouteException("Name is already in use.")
+    except HTTPError:
+        # VIESTIM: Should we just raise the old error or inspect it closer? Now raise old error.
+        raise  # "Connection to server failed."
+    return
+
+
+def check_reserved_names(name_candidate: str) -> None:
+    """
+    Check a name candidate against reserved names, e.g. postmaster. Raises a RouteException if the name candidate
+    is a reserved name. If name is not reserved, the method succeeds silently.
+
+    :param name_candidate: The name to be compared against reserved names.
+    """
+    # TODO: Implement a smarter query for reserved names. Now only compare against simple list for prototyping
+    #  purposes. Maybe an external config file for known reserved names or something like that?
+    #  Is it possible to query reserved names e.g. from Mailman or it's server?
+    reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
+    if name_candidate in reserved_names:
+        raise RouteException(f"Name {name_candidate} is a reserved name and cannot be used.")
+    return

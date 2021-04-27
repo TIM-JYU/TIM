@@ -16,10 +16,10 @@ def check_messagelist_name_requirements(name_candidate: str) -> None:
     check_name_rules(name_candidate)
 
     # Check name is available.
-    # em.check_name_availability(name_candidate, domain)
+    check_name_availability(name_candidate)
 
-    # Check if name is some reserved name.
-    # em.check_reserved_names(name_candidate)
+    # There might become a time when we also check here if name is some message list specific reserved name. We
+    # haven't got a source of those reserved names, not including names that already exists, so no check at this time.
 
     # If we are here, name can be used by the user.
     return
