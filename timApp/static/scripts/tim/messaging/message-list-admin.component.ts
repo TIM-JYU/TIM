@@ -82,7 +82,7 @@ import {Users} from "../user/userService";
                     </li>
                 </ul>
             </div>
-            <div >
+            <div *ngIf="emailAdminURL">
                 <a [href]="emailAdminURL">Advanced email list settings</a>
             </div>
         </form>
@@ -266,8 +266,6 @@ export class MessageListAdminComponent implements OnInit {
         this.listDescription = listOptions.listDescription;
 
         this.emailAdminURL = listOptions.emailAdminURL;
-
-        // TODO: Add existing list members.
     }
 }
 
