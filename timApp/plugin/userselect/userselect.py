@@ -1,10 +1,7 @@
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import List, Optional, Union, Tuple
 
 from flask import render_template_string, Response
-from marshmallow import missing
-from marshmallow_enum import LoadDumpOptions
 
 from timApp.answer.routes import save_fields, FieldSaveRequest, FieldSaveUserEntry
 from timApp.auth.accesshelper import verify_logged_in
@@ -66,7 +63,6 @@ class ActionCollection:
     addPermission: List[AddPermission] = field(default_factory=list)
     removePermission: List[RemovePermission] = field(default_factory=list)
     setValue: List[SetTaskValueAction] = field(default_factory=list)
-
 
 
 @dataclass
