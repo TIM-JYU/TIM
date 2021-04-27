@@ -10,6 +10,7 @@ x-caddy:
   - ./certs/caddy:/certs:ro
   - ./Caddyfile:/etc/caddy/Caddyfile:ro
   - ./timApp/static:/tim/timApp/static:ro
+  - ./tim_logs/caddy:/logs
   - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
   - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
  depends_on:
