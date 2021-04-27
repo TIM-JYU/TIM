@@ -22,8 +22,8 @@ import {
 import {BrowserMultiFormatReader} from "@zxing/library";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
-import {GenericPluginMarkup, getTopLevelFields} from "../attributes";
-import {isMobileDevice, to2} from "../../util/utils";
+import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
+import {formatString, isMobileDevice, to2} from "../../util/utils";
 import {IUser} from "../../user/IUser";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 
@@ -47,6 +47,11 @@ const PluginMarkup = t.intersection([
             enabled: t.boolean,
             scanInterval: t.number,
             applyOnMatch: t.boolean,
+        }),
+        text: t.type({
+            apply: nullable(t.string),
+            cancel: nullable(t.string),
+            success: nullable(t.string),
         }),
     }),
 ]);
@@ -140,15 +145,16 @@ const PluginFields = t.intersection([
 
             <div class="action-buttons" *ngIf="selectedUser">
                 <tim-loading *ngIf="applying"></tim-loading>
-                <button type="button" class="btn btn-success btn-lg" [disabled]="applying" (click)="apply()" i18n>Apply
+                <button type="button" class="btn btn-success btn-lg" [disabled]="applying" (click)="apply()">
+                    {{applyButtonText}}
                 </button>
-                <button type="button" class="btn btn-danger btn-lg" [disabled]="applying" (click)="resetView()" i18n>
-                    Cancel
+                <button type="button" class="btn btn-danger btn-lg" [disabled]="applying" (click)="resetView()">
+                    {{cancelButtonText}}
                 </button>
             </div>
         </div>
-        <tim-alert *ngIf="lastAddedUser" severity="success" i18n>
-            Permissions applied successfully to <strong>{{lastAddedUser}}</strong>.
+        <tim-alert *ngIf="lastAddedUser" severity="success">
+            {{successMessage}}
         </tim-alert>
         <tim-alert *ngIf="errorMessage" i18n>
             <span>{{errorMessage}}</span>
@@ -169,6 +175,9 @@ const PluginFields = t.intersection([
         <ng-template i18n="@@userSelectErrorNoSearchResult">Could not search for the user.</ng-template>
         <ng-template i18n="@@userSelectScanError">Could not scan the bar code.</ng-template>
         <ng-template i18n="@@userSelectApplyError">Could not apply the permission.</ng-template>
+        <ng-template i18n="@@userSelectButtonApply">Set permission</ng-template>
+        <ng-template i18n="@@userSelectButtonCancel">Cancel</ng-template>
+        <ng-template i18n="@@userSelectTextSuccess">Permissions applied to {{0}}.</ng-template>
     `,
     styleUrls: ["user-select.component.scss"],
 })
@@ -202,9 +211,20 @@ export class UserSelectComponent extends AngularPluginBase<
     codeReader?: BrowserMultiFormatReader;
     inputListener?: Subscription;
 
+    applyButtonText!: string;
+    cancelButtonText!: string;
+
     ngOnInit() {
         super.ngOnInit();
         void this.initMediaDevices();
+
+        this.applyButtonText =
+            this.markup.text.apply ??
+            $localize`:@@userSelectButtonApply:Set permission`;
+        this.cancelButtonText =
+            this.markup.text.cancel ??
+            $localize`:@@userSelectButtonCancel:Cancel`;
+
         this.enableScanner = this.markup.scanner.enabled;
         this.inputMinLength = this.markup.inputMinLength;
         this.initSearch();
@@ -273,6 +293,13 @@ export class UserSelectComponent extends AngularPluginBase<
             }
         }
         this.resetCodeReader();
+    }
+
+    get successMessage() {
+        if (this.markup.text.success) {
+            return formatString(this.markup.text.success, this.lastAddedUser!);
+        }
+        return $localize`:@@userSelectTextSuccess:Permissions applied to ${this.lastAddedUser}:INTERPOLATION:.`;
     }
 
     async apply() {
@@ -371,6 +398,11 @@ export class UserSelectComponent extends AngularPluginBase<
                 enabled: false,
                 scanInterval: 1.5,
                 applyOnMatch: false,
+            },
+            text: {
+                apply: null,
+                cancel: null,
+                success: null,
             },
             inputMinLength: 3,
             autoSearchDelay: 0,

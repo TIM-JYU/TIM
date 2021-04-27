@@ -73,6 +73,13 @@ class ScannerOptions:
 
 
 @dataclass
+class TextOptions:
+    apply: Optional[str] = None
+    cancel: Optional[str] = None
+    success: Optional[str] = None
+
+
+@dataclass
 class UserSelectMarkupModel(GenericMarkupModel):
     inputMinLength: int = 3
     autoSearchDelay: float = 0.0
@@ -81,6 +88,7 @@ class UserSelectMarkupModel(GenericMarkupModel):
     groups: List[str] = field(default_factory=list)
     fields: List[str] = field(default_factory=list)
     actions: Optional[ActionCollection] = None
+    text: TextOptions = field(default_factory=TextOptions)
 
 
 UserSelectMarkupModelSchema = class_schema(UserSelectMarkupModel, base_schema=DurationSchema)
