@@ -27,21 +27,24 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('internalmessage_display',
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('message_id', sa.Integer(), nullable=False),
     sa.Column('usergroup_id', sa.Integer(), nullable=True),
     sa.Column('display_doc_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['display_doc_id'], ['block.id'], ),
     sa.ForeignKeyConstraint(['message_id'], ['internalmessage.id'], ),
     sa.ForeignKeyConstraint(['usergroup_id'], ['usergroup.id'], ),
-    sa.PrimaryKeyConstraint('message_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('internalmessage_readreceipt',
+    sa.Column('rcpt_id', sa.Integer(), nullable=False),
     sa.Column('message_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('marked_as_read_on', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['rcpt_id'], ['usergroup.id'], ),
     sa.ForeignKeyConstraint(['message_id'], ['internalmessage.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['useraccount.id'], ),
-    sa.PrimaryKeyConstraint('message_id')
+    sa.PrimaryKeyConstraint('rcpt_id', 'message_id')
     )
     # ### end Alembic commands ###
 
@@ -51,4 +54,5 @@ def downgrade():
     op.drop_table('internalmessage_readreceipt')
     op.drop_table('internalmessage_display')
     op.drop_table('internalmessage')
+    sa.Enum(name='displaytype').drop(op.get_bind(), checkfirst=False)
     # ### end Alembic commands ###
