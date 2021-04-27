@@ -209,10 +209,18 @@ export class UserSelectComponent extends AngularPluginBase<
     hasMediaDevices = false;
     enableScanner = false;
     codeReader?: BrowserMultiFormatReader;
+    codeReaderStream?: MediaStream;
     inputListener?: Subscription;
 
     applyButtonText!: string;
     cancelButtonText!: string;
+
+    get successMessage() {
+        if (this.markup.text.success) {
+            return formatString(this.markup.text.success, this.lastAddedUser!);
+        }
+        return $localize`:@@userSelectTextSuccess:Permissions applied to ${this.lastAddedUser}:INTERPOLATION:.`;
+    }
 
     ngOnInit() {
         super.ngOnInit();
@@ -251,33 +259,22 @@ export class UserSelectComponent extends AngularPluginBase<
                 undefined,
                 this.markup.scanner.scanInterval * 1000
             );
-            const stream = await navigator.mediaDevices.getUserMedia({
+            this.codeReaderStream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: "environment",
                 },
             });
 
             this.videoAspectRatio =
-                stream.getVideoTracks()[0].getSettings().aspectRatio ?? 1;
+                this.codeReaderStream.getVideoTracks()[0].getSettings()
+                    .aspectRatio ?? 1;
 
             const decoder = this.codeReader.decodeOnceFromStream(
-                stream,
+                this.codeReaderStream,
                 this.barcodeOutput.nativeElement
             );
 
-            try {
-                // Trick: set torch constraints for the stream after reading starts
-                // See https://github.com/zxing-js/library/issues/267
-                await stream.getVideoTracks()[0].applyConstraints({
-                    advanced: [
-                        {
-                            torch: true,
-                        } as Record<string, unknown>,
-                    ],
-                });
-            } catch (e) {
-                // Swallow the error; the torch is just not supported
-            }
+            await this.setTorchState(true);
 
             const result = await decoder;
             this.searchString = result.getText();
@@ -295,14 +292,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 this.setError(err);
             }
         }
-        this.resetCodeReader();
-    }
-
-    get successMessage() {
-        if (this.markup.text.success) {
-            return formatString(this.markup.text.success, this.lastAddedUser!);
-        }
-        return $localize`:@@userSelectTextSuccess:Permissions applied to ${this.lastAddedUser}:INTERPOLATION:.`;
+        await this.resetCodeReader();
     }
 
     async apply() {
@@ -358,7 +348,7 @@ export class UserSelectComponent extends AngularPluginBase<
         this.lastAddedUser = undefined;
         this.lastAddedUser = undefined;
         this.resetError();
-        this.resetCodeReader();
+        await this.resetCodeReader();
 
         const params = new HttpParams({
             fromString: window.location.search.replace("?", "&"),
@@ -412,14 +402,35 @@ export class UserSelectComponent extends AngularPluginBase<
         };
     }
 
-    private resetCodeReader() {
+    private async setTorchState(enabled: boolean) {
+        if (!this.codeReaderStream) {
+            return;
+        }
+        try {
+            // Trick: set torch constraints for the stream after reading starts
+            // See https://github.com/zxing-js/library/issues/267
+            await this.codeReaderStream.getVideoTracks()[0].applyConstraints({
+                advanced: [
+                    {
+                        torch: enabled,
+                    } as Record<string, unknown>,
+                ],
+            });
+        } catch (e) {
+            // Swallow the error; the torch is just not supported
+        }
+    }
+
+    private async resetCodeReader() {
         if (!this.codeReader) {
             return;
         }
         try {
+            await this.setTorchState(false);
             this.codeReader.reset();
         } catch (e) {}
         this.codeReader = undefined;
+        this.codeReaderStream = undefined;
     }
 
     private resetError() {
