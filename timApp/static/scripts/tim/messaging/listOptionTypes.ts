@@ -6,7 +6,15 @@ export interface CreateListOptions {
     notifyOwnerOnListChange: boolean;
     listDescription: string;
     listInfo: string;
+    htmlAllowed: boolean;
+    defaultReplyType: ReplyToListChanges;
     emailAdminURL?: string;
+}
+
+export enum ReplyToListChanges {
+    // See ReplyToListChanges Python class.
+    NOCHANGES,
+    ADDLIST,
 }
 
 export enum ArchiveType {

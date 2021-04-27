@@ -10,9 +10,9 @@ from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
-from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList, get_list_ui_link
+from timApp.messaging.messagelist.emaillist import EmailListManager, EmailList, get_list_ui_link, create_new_email_list, delete_email_list
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
-from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType
+from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember, get_members_for_list
 from timApp.timdb.sqa import db
@@ -32,12 +32,13 @@ def create_list(options: ListOptions) -> Response:
     :return: A Response with the list's management doc included. This way the creator can re-directed to the list's
     management page directly.
     """
+    # VIESTIM: We assume here that email list will be created alongside message list. This might not be the case.
     verify_logged_in()
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
     manage_doc = new_list(options)
-    EmailListManager.create_new_list(options, owner)
+    create_new_email_list(options, owner)
 
     return json_response(manage_doc)
 
@@ -61,11 +62,12 @@ def check_name(name_candidate: str) -> Response:
     """
 
     name, sep, domain = name_candidate.partition("@")
-
+    msg_list_exists = MessageListModel.name_exists(name)
+    if msg_list_exists:
+        raise RouteException(f"Message list with name {name} already exists.")
     if sep:
         # If character '@' is found, we check email list specific name requirements.
         EmailListManager.check_name_requirements(name, domain)
-
     return ok_response()
 
 
@@ -81,22 +83,25 @@ def domains() -> Response:
 
 
 @messagelist.route("/deletelist", methods=['DELETE'])
-def delete_list(listname: str) -> Response:
+def delete_list(listname: str, domain: str) -> Response:
     """Delete message/email list. List name is provided in the request body.
 
+    :param domain: If an empty string, message list is not considered to have a domain associated and therefore doesn't
+     have an email list. If this is an unempty string, then an email list is excpected to also exist.
     :param listname: The list to be deleted. If the name does not contain '@', just delete  a message list. If it
      contains '@', we delete a message list and the corresponding email list.
     :return: A string describing how the operation went.
     """
-    # TODO: User authentication. We can't let just anyone delete a list just because they can type the name.
-    list_name, sep, domain = listname.partition("@")
-    r = ""
+    verify_logged_in()
+    # TODO: Verify that the deleter is an owner of the message list.
+    msg_list = MessageListModel.get_list_by_name_exactly_one(listname)
+    # list_domain = msg_list.email_list_domain
+    # TODO: Put message list deletion here.
     if domain:
         # A domain is given, so we are also looking to delete an email list.
-        # Notice parameter. We give the fqdn list name to delete_list(), not plain list_name.
-        r = EmailList.delete_list(listname)
-    # TODO: Put message list deletion here.
-    return json_response(r)
+        # VIESTIM: Perform a soft deletion for now.
+        delete_email_list(f"{listname}@{domain}")
+    return ok_response()
 
 
 def new_list(list_options: ListOptions) -> DocInfo:
@@ -162,7 +167,8 @@ def get_list(document_id: int) -> Response:
         #  here is a placeholder.
         domain="tim.jyu.fi",
         archive=msg_list.archive,
-        # TODO: Replace placeholder once we can properly query the owners email.
+        htmlAllowed=True,
+        defaultReplyType=ReplyToListChanges.NOCHANGES
     )
     if msg_list.email_list_domain:
         list_options.emailAdminURL = get_list_ui_link(msg_list.name)
@@ -174,7 +180,7 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
     from timApp.user.user import User  # Local import to avoid cyclical imports.
 
     try:
-        msg_list = MessageListModel.get_list_by_name(msgList)
+        msg_list = MessageListModel.get_list_by_name_exactly_one(msgList)
     except NoResultFound:
         raise RouteException(f"There is no list named {msgList}")
 
@@ -235,7 +241,7 @@ def get_members(list_name: str) -> Response:
     """
     from timApp.user.usergroup import UserGroup
 
-    msg_list = MessageListModel.get_list_by_name(list_name)
+    msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
     members = get_members_for_list(msg_list)
     list_members: List[MemberInfo] = []
     for member in members:
@@ -286,7 +292,7 @@ def archive(message: Message) -> Response:
     """
     # VIESTIM: This view function has not been tested yet.
 
-    msg_list = MessageListModel.get_list_by_name(message.message_list_name)
+    msg_list = MessageListModel.get_list_by_name_first(message.message_list_name)
 
     if msg_list is None:
         raise RouteException(f"No message list with name {message.message_list_name} exists.")
