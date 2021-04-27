@@ -70,6 +70,9 @@ class InternalMessageReadReceipt(db.Model):
 
     __tablename__ = 'internalmessage_readreceipt'
 
+    rcpt_id = db.Column(db.Integer, primary_key=True)
+    """Message recipient identifier."""
+
     message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), primary_key=True)
     """Message identifier."""
 

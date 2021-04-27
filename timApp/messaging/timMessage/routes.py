@@ -143,7 +143,7 @@ def get_display_pages(pagelist: List[str]) -> List[Item]:
     :param pagelist: list of paths
     :return: list of folders and documents
     """
-    pages = []
+    pages: List[Item] = []
     for page in pagelist:
         folder = Folder.find_by_path(page)
         if folder:
@@ -191,9 +191,9 @@ def create_message_displays(msg_id: int, options: MessageOptions, message_body: 
     """
     Creates InternalMessageDisplay entries for all recipients and display pages.
 
-    :param msg_id:
-    :param options:
-    :param message_body:
+    :param msg_id: Message identifier
+    :param options: Options related to the message
+    :param message_body: Message subject, contents and recipients
     :return:
     """
     pages = get_display_pages(options.pageList.splitlines())
@@ -228,3 +228,7 @@ def create_message_displays(msg_id: int, options: MessageOptions, message_body: 
         db.session.add(display)
 
     db.session.commit()
+
+
+def create_read_receipts(msg_id: int, options: MessageOptions, message_body: MessageBody):
+    return
