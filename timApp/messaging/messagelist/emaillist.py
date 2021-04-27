@@ -458,7 +458,9 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
             # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
             # advertising on if they so choose.
             mlist_settings["advertised"] = False
-            mlist_settings["admin_notify_mchanges"] = list_options.notifyOwnerOnListChange
+            # Ownerss / moderators don't get automatic notifications from changese on their message list. Owner
+            # switches this on if necessary.
+            mlist_settings["admin_notify_mchanges"] = False
 
             set_email_list_description(email_list, list_options.listDescription)
             set_email_list_info(email_list, list_options.listInfo)
