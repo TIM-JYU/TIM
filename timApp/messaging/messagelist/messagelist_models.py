@@ -183,6 +183,8 @@ class MessageListExternalMember(MessageListMember):
     email_address = db.Column(db.Text, unique=True)
     """Email address of message list's external member."""
 
+    # TODO: Add a column for display name.
+
     member = db.relationship("MessageListMember", back_populates="external_member", lazy="select")
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}

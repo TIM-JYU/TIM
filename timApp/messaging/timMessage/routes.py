@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from typing import Optional, List
 from datetime import datetime
@@ -7,6 +8,7 @@ from flask import Response
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.accesshelper import verify_edit_access
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -19,9 +21,10 @@ from timApp.messaging.timMessage.internalmessage_models import InternalMessage, 
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import ok_response
+from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
+
 
 timMessage = TypedBlueprint('timMessage', __name__, url_prefix='/timMessage')
 
@@ -40,12 +43,52 @@ class MessageOptions:
     senderEmail: str
     expires: Optional[datetime] = None
 
-
 @dataclass
 class MessageBody:
     messageBody: str
     messageSubject: str
     recipients: List[str]  # VIESTIM: find recipient by email or some other identifier?
+
+
+@timMessage.route("/url_check", methods=['POST'])
+def check_urls(urls: str) -> Response:
+    """
+    Checks if given URLS's exist in TIM and that user has right to post TIM message to them
+
+    :param urls: Urls where user wishes to post TIM message
+    :return: Shortened urls to show the user in the UI, or an error message
+    """
+    url_list = list(filter(None, urls.splitlines()))  # turn URL string into a list with empty values (new lines) removed
+    valid_urls: List[str] = []
+    error_message: str = ""
+    status_code: int
+
+    for url in url_list:
+        url = url.strip()  #remove leading and trailing whitespaces
+        regex = "https?://[a-z.]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/"
+        if re.search(regex, url):  # check if url matches the TIM urls' pattern
+            shortened_url = re.sub(regex, "", url)
+        else:
+            shortened_url = url
+        document = DocEntry.find_by_path(shortened_url) # check if url exists in TIM
+        if document is None:
+            document = Folder.find_by_path(shortened_url)
+        if document is None:
+            error_message = url + " was not found in TIM"
+            status_code = 404
+            break
+        try: # check if user has permission to edit the url
+            verify_edit_access(document)
+            valid_urls.append(shortened_url)
+        except Exception:
+            error_message = "You don't have permission to post TIM message to this page"
+            status_code = 401
+
+    if error_message:
+        return json_response({"error": error_message}, status_code)
+    else:
+        valid_urls_string = "\n".join(valid_urls)  # turn URL list into a string again
+        return json_response({"shortened_urls": valid_urls_string}, 200)
 
 
 @timMessage.route("/send", methods=['POST'])
