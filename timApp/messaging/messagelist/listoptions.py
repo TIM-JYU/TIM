@@ -34,7 +34,7 @@ class ListOptions:
     """All options regarding message lists."""
     listname: str
     domain: str
-    # Enums need this to help marshmallow decipher JSON values in from client side properly.
+    # VIESTIM: Enums need this to help marshmallow decipher JSON values in from client side properly.
     archive: ArchiveType = field(metadata={'by_value': True})
     notifyOwnerOnListChange: bool
     listDescription: str

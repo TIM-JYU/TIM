@@ -39,6 +39,8 @@ def create_list(options: ListOptions) -> Response:
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
+    options.listname = options.listname.strip()
+
     manage_doc = new_list(options)
     create_new_email_list(options, owner)
 
@@ -56,6 +58,7 @@ def check_name(name_candidate: str) -> Response:
     domain name for (email) list. In the latter case we also check email list specific name requirements.
     """
 
+    normalized_name = name_candidate.strip()
     name, sep, domain = name_candidate.partition("@")
     check_messagelist_name_requirements(name)
     if sep:
@@ -186,7 +189,7 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
         em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
 
     for member_candidate in memberCandidates:
-        u = User.get_by_name(member_candidate)
+        u = User.get_by_name(member_candidate.strip())
         if u is not None:
             # The name given was an existing TIM user.
             new_tim_member = MessageListTimMember()
