@@ -36,7 +36,7 @@
 }
 
 (tim_server) {
-    import common
+	import common
 	@nobuffering {
 		query caddy_nobuffering=1
 	}
