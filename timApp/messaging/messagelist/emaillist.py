@@ -329,7 +329,7 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     """
     if _client is None:
         return
-    if EmailListManager.check_name_availability(list_options.listname, list_options.domain):
+    if check_name_availability(list_options.listname, list_options.domain):
         try:
             domain: Domain = _client.get_domain(list_options.domain)
             email_list: MailingList = domain.create_list(list_options.listname)
