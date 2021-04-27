@@ -1,7 +1,10 @@
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import List, Optional, Union, Tuple
 
 from flask import render_template_string, Response
+from marshmallow import missing
+from marshmallow_enum import LoadDumpOptions
 
 from timApp.answer.routes import save_fields, FieldSaveRequest, FieldSaveUserEntry
 from timApp.auth.accesshelper import verify_logged_in
@@ -25,7 +28,7 @@ from timApp.util.get_fields import get_fields_and_users, RequestedGroups
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import GenericHtmlModel, PluginReqs, register_html_routes
-from tim_common.utils import DurationSchema
+from tim_common.utils import DurationSchema, Missing
 
 user_select_plugin = TypedBlueprint("userSelect", __name__, url_prefix="/userSelect")
 
@@ -65,11 +68,13 @@ class ActionCollection:
     setValue: List[SetTaskValueAction] = field(default_factory=list)
 
 
+
 @dataclass
 class ScannerOptions:
+    applyOnMatch: bool = False
+    continuousMatch: bool = False
     enabled: bool = False
     scanInterval: float = 1.5
-    applyOnMatch: bool = False
 
 
 @dataclass

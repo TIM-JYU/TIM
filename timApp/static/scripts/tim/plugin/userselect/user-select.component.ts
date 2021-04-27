@@ -47,6 +47,7 @@ const PluginMarkup = t.intersection([
             enabled: t.boolean,
             scanInterval: t.number,
             applyOnMatch: t.boolean,
+            continuousMatch: t.boolean,
         }),
         text: t.type({
             apply: nullable(t.string),
@@ -314,6 +315,11 @@ export class UserSelectComponent extends AngularPluginBase<
             if (this.lastSearchResult && this.markup.scanner.applyOnMatch) {
                 if (this.lastSearchResult.matches.length == 1) {
                     await this.apply();
+                    if (this.markup.scanner.continuousMatch) {
+                        // noinspection ES6MissingAwait: Run the code in a new context without deepening the call stack
+                        this.startCodeReader();
+                        return;
+                    }
                 }
             }
         } catch (e) {
@@ -428,6 +434,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 enabled: false,
                 scanInterval: 1.5,
                 applyOnMatch: false,
+                continuousMatch: false,
             },
             text: {
                 apply: null,
