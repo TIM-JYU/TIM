@@ -81,8 +81,8 @@ def check_urls(urls: str) -> Response:
     if error_message:
         return json_response({"error": error_message}, status_code)
     else:
-        valid_urls = "\n".join(valid_urls)  # turn URL list into a string again
-        return json_response({"shortened_urls": valid_urls}, 200)
+        valid_urls_string = "\n".join(valid_urls)  # turn URL list into a string again
+        return json_response({"shortened_urls": valid_urls_string}, 200)
 
 
 @timMessage.route("/send", methods=['POST'])
