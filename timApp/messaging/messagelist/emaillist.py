@@ -572,13 +572,14 @@ def get_email_list_member_send_status(member: Member) -> bool:
     raise RouteException(f"Member {member.address} has an invalid send status assigned to them.")
 
 
-def check_emaillist_name_requirements(name_candidate: str, domain: str):
+def check_emaillist_name_requirements(name_candidate: str, domain: str) -> None:
     """Check email list's name requirements. General message list name requirement checks are assumed to be passed
     at this point. """
     # We assume that name rule checks for message lists are good enough for email list name requirements. If they
     # change to allow things that email list names aren't allowed to have, then we need a name rule check here.
     check_name_availability(name_candidate, domain)
     check_reserved_names(name_candidate)
+    return
 
 
 def check_name_availability(name_candidate: str, domain: str) -> None:
