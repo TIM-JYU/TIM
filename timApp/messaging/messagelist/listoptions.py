@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict
+from typing import Dict, Optional
 
 
 class ArchiveType(Enum):
@@ -41,6 +41,7 @@ class ListOptions:
     listInfo: str
     htmlAllowed: bool
     defaultReplyType: ReplyToListChanges = field(metadata={'by_value': True})
+    emailAdminURL: Optional[str] = None
 
 
 reply_to_munging: Dict[ReplyToListChanges, str] = {
