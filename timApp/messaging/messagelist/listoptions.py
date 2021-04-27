@@ -28,7 +28,6 @@ class ListOptions:
     # Enums need this to help marshmallow decipher JSON values in from client side properly.
     archive: ArchiveType = field(metadata={'by_value': True})
     # members: List[str]
-    ownerEmail: str
     listDescription: str
     listInfo: str
     notifyOwnerOnListChange: Optional[bool] = None
