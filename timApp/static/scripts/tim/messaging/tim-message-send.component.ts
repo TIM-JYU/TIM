@@ -141,9 +141,10 @@ export class TimMessageComponent {
     // and that the user has at least edit access to them
     // Also shortens existing URLs
     async checkUrls() {
+        this.urlError = "";
         const result = await to2(
             this.http
-                .post<{shortened_url: string}>("/timMessage/url_check", {
+                .post<{shortened_urls: string}>("/timMessage/url_check", {
                     urls: this.TimMessageOptions.pageList,
                 })
                 .toPromise()
@@ -152,7 +153,7 @@ export class TimMessageComponent {
             this.urlError = result.result.error.error;
             console.error(result.result.error.error);
         } else {
-            this.TimMessageOptions.pageList = result.result.shortened_url;
+            this.TimMessageOptions.pageList = result.result.shortened_urls;
         }
     }
 

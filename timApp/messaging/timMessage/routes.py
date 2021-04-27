@@ -42,28 +42,47 @@ class MessageBody:
     messageSubject: str
     recipients: List[str]  # VIESTIM: find recipient by email or some other identifier?
 
+
 @timMessage.route("/url_check", methods=['POST'])
-# VIESTIM: change this to take List[str] as argument
 def check_urls(urls: str) -> Response:
-    print("tsekataan: " + urls)
-    regex = "https?://[a-z.]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/"
-    global shortened_url
-    if re.search(regex, urls):
-        print("oikean muotoinen url")
-        shortened_url = re.sub(regex, "", urls)
-        print(shortened_url)
+    """
+    Checks if given URLS's exist in TIM and that user has right to post TIM message to them
+
+    :param urls: Urls where user wishes to post TIM message
+    :return: Shortened urls to show the user in the UI, or an error message
+    """
+    url_list = list(filter(None, urls.splitlines()))  # turn URL string into a list with empty values (new lines) removed
+    valid_urls: List[str] = []
+    error_message: str = ""
+    status_code: int
+
+    for url in url_list:
+        url = url.strip()  #remove leading and trailing whitespaces
+        regex = "https?://[a-z.]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/"
+        global shortened_url
+        if re.search(regex, url):  # check if url matches the TIM urls' pattern
+            shortened_url = re.sub(regex, "", url)
+            document = DocEntry.find_by_path(shortened_url) # check if url exists in TIM
+            if document is None:
+                error_message = url + " was not found in TIM"
+                status_code = 404
+        else:
+            error_message = url + " was not found in TIM"
+            status_code = 404
+            break
+        try: # check if user has permission to edit the url
+            verify_edit_access(document)
+            valid_urls.append(shortened_url)
+        except Exception:
+            error_message = "You don't have permission to post TIM message to this page"
+            status_code = 401
+
+    if error_message:
+        return json_response({"error": error_message}, status_code)
     else:
-        return json_response({"error": "URL not found"}, 404)
-    document = DocEntry.find_by_path(shortened_url)
-    print("document: " + str(document))
-    if document is None:
-        return json_response({"error": "URL not found"}, 404)
-    try:
-        access = verify_edit_access(document)
-        print("access: " + str(access))
-        return json_response({"shortened_url": shortened_url}, 200)
-    except Exception:
-        return json_response({"error": "You don't have permission to post TIM message to this page"}, 401)
+        valid_urls = "\n".join(valid_urls)  # turn URL list into a string again
+        return json_response({"shortened_urls": valid_urls}, 200)
+
 
 @timMessage.route("/send", methods=['POST'])
 def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
