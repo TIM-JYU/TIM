@@ -11,7 +11,7 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
-import {race, Subject} from "rxjs";
+import {race, Subject, Subscription} from "rxjs";
 import {Observable} from "rxjs/internal/Observable";
 import {
     debounceTime,
@@ -59,8 +59,8 @@ const PluginFields = t.intersection([
     selector: "user-selector",
     template: `
         <div *ngIf="enableScanner" class="barcode-video">
-            <video [class.hidden]="!readBarcode" #barcodeOutput></video>
-            <button [disabled]="!hasMediaDevices || readBarcode" class="timButton btn-lg" (click)="initCodeReader()">
+            <video [class.hidden]="!codeReader" #barcodeOutput></video>
+            <button [disabled]="!hasMediaDevices || codeReader" class="timButton btn-lg" (click)="initCodeReader()">
                 <span class="icon-text">
                     <i class="glyphicon glyphicon-qrcode"></i>
                     <span>/</span>
@@ -196,9 +196,10 @@ export class UserSelectComponent extends AngularPluginBase<
     barCodeResult: string = "";
     videoAspectRatio: number = 1;
     videoWidth: number = 50;
-    readBarcode: boolean = false;
     hasMediaDevices = false;
     enableScanner = false;
+    codeReader?: BrowserMultiFormatReader;
+    inputListener?: Subscription;
 
     ngOnInit() {
         super.ngOnInit();
@@ -222,11 +223,10 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     async initCodeReader() {
-        this.readBarcode = true;
         this.resetError();
         this.resetView(false);
         try {
-            const reader = new BrowserMultiFormatReader(
+            this.codeReader = new BrowserMultiFormatReader(
                 undefined,
                 this.markup.scanner.scanInterval * 1000
             );
@@ -239,7 +239,7 @@ export class UserSelectComponent extends AngularPluginBase<
             this.videoAspectRatio =
                 stream.getVideoTracks()[0].getSettings().aspectRatio ?? 1;
 
-            const decoder = reader.decodeOnceFromStream(
+            const decoder = this.codeReader.decodeOnceFromStream(
                 stream,
                 this.barcodeOutput.nativeElement
             );
@@ -257,7 +257,7 @@ export class UserSelectComponent extends AngularPluginBase<
 
             const result = await decoder;
             this.searchString = result.getText();
-            reader.reset();
+            await this.doSearch();
         } catch (e) {
             const err = $localize`:@@userSelectErrorNoSearchResult:Could not search for the user.`;
             if (e instanceof Error) {
@@ -266,7 +266,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 this.setError(err);
             }
         }
-        this.readBarcode = false;
+        this.resetCodeReader();
     }
 
     async apply() {
@@ -312,6 +312,7 @@ export class UserSelectComponent extends AngularPluginBase<
         this.lastSearchResult = undefined;
         this.applied = false;
         this.resetError();
+        this.resetCodeReader();
         const result = await to2(
             this.http
                 .post<SearchResult>("/userSelect/search", {
@@ -351,6 +352,16 @@ export class UserSelectComponent extends AngularPluginBase<
         };
     }
 
+    private resetCodeReader() {
+        if (!this.codeReader) {
+            return;
+        }
+        try {
+            this.codeReader.reset();
+        } catch (e) {}
+        this.codeReader = undefined;
+    }
+
     private resetError() {
         this.showErrorMessage = false;
         this.errorMessage = undefined;
@@ -363,6 +374,9 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     private initSearch() {
+        if (!this.inputListener?.closed) {
+            return;
+        }
         const observables: Observable<unknown>[] = [this.searchPress];
         if (this.markup.autoSearchDelay > 0)
             observables.push(
@@ -372,7 +386,7 @@ export class UserSelectComponent extends AngularPluginBase<
                     filter(() => this.searchForm.form.valid)
                 )
             );
-        race(...observables)
+        this.inputListener = race(...observables)
             .pipe(first())
             .subscribe(() => this.doSearch());
     }
