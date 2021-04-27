@@ -45,13 +45,6 @@ def create_list(options: ListOptions) -> Response:
     return json_response(manage_doc)
 
 
-@dataclass
-class NameCheckInfo:
-    """Return information about name check results."""
-    nameOK: Optional[bool] = None
-    explanation: str = ""
-
-
 @messagelist.route("/checkname/<string:name_candidate>", methods=['GET'])
 def check_name(name_candidate: str) -> Response:
     """Check if name candidate meets requirements.
