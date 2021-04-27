@@ -217,7 +217,7 @@ const DEFAULT_PIECE_SIZE = 20;
                         (click)="createMessagelist()"
                 >Create a new message list
                 </button>
-                <a href="/view/message lists">Browse existing message lists</a>
+                <a href="/view/messagelists">Browse existing message lists</a>
             </ng-container>
         </ng-container>
 
