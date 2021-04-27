@@ -36,7 +36,7 @@
 }
 
 (tim_server) {
-    import common
+	import common
 	@nobuffering {
 		query caddy_nobuffering=1
 	}
@@ -47,6 +47,12 @@
 	}
 	handle {
 		reverse_proxy * http://tim:5000
+	}
+	log {
+		output file /logs/access.log {
+			roll_keep 100
+			roll_keep_for 365d
+		}
 	}
 }
 
