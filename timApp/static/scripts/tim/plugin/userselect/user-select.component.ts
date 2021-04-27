@@ -224,6 +224,7 @@ export class UserSelectComponent extends AngularPluginBase<
     async initCodeReader() {
         this.readBarcode = true;
         this.resetError();
+        this.resetView(false);
         try {
             const reader = new BrowserMultiFormatReader(
                 undefined,
@@ -297,11 +298,13 @@ export class UserSelectComponent extends AngularPluginBase<
         this.applying = false;
     }
 
-    resetView() {
+    resetView(refocus: boolean = true) {
         this.selectedUser = undefined;
         this.lastSearchResult = undefined;
         this.searchString = "";
-        this.searchInput.nativeElement.focus();
+        if (refocus) {
+            this.searchInput.nativeElement.focus();
+        }
     }
 
     async doSearch() {
