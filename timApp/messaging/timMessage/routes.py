@@ -191,7 +191,7 @@ def check_messages_folder_path(msg_folder_path: str, tim_msg_folder_path: str) -
     return tim_msg_folder
 
 
-def create_message_displays(msg_id: int, pages: List[Item], recipients: List[UserGroup]):
+def create_message_displays(msg_id: int, pages: List[Item], recipients: List[UserGroup]) -> None:
     """
     Creates InternalMessageDisplay entries for all recipients and display pages.
 
@@ -231,7 +231,7 @@ def create_message_displays(msg_id: int, pages: List[Item], recipients: List[Use
     db.session.commit()
 
 
-def create_read_receipts(msg_id: int, recipients: List[UserGroup]):
+def create_read_receipts(msg_id: int, recipients: List[UserGroup]) -> None:
     """
     Create InternalMessageReadReceipt entries for all recipients.
 
