@@ -47,7 +47,7 @@ class MessageBody:
 def check_urls(urls: str) -> Response:
     print("tsekataan: " + urls)
     regex = "https?://[a-z.]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/"
-    shortened_url = ""
+    global shortened_url
     if re.search(regex, urls):
         print("oikean muotoinen url")
         shortened_url = re.sub(regex, "", urls)
@@ -59,13 +59,10 @@ def check_urls(urls: str) -> Response:
     if document is None:
         return json_response({"error": "URL not found"}, 404)
     try:
-        # VIESTIM: check also other valid access types!
-        # access = verify_admin()
         access = verify_edit_access(document)
         print("access: " + str(access))
-        return ok_response()
-    except Exception as e:
-        print("Poikkeus: " + str(e))
+        return json_response({"shortened_url": shortened_url}, 200)
+    except Exception:
         return json_response({"error": "You don't have permission to post TIM message to this page"}, 401)
 
 @timMessage.route("/send", methods=['POST'])
