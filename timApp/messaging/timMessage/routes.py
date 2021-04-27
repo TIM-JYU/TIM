@@ -21,7 +21,7 @@ from timApp.messaging.timMessage.internalmessage_models import InternalMessage, 
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import ok_response
+from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
 
@@ -66,7 +66,6 @@ def check_urls(urls: str) -> Response:
     for url in url_list:
         url = url.strip()  #remove leading and trailing whitespaces
         regex = "https?://[a-z.]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/"
-        global shortened_url
         if re.search(regex, url):  # check if url matches the TIM urls' pattern
             shortened_url = re.sub(regex, "", url)
         else:
