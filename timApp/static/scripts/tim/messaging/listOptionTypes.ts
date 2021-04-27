@@ -3,10 +3,17 @@ export interface CreateListOptions {
     listname: string;
     domain: string;
     archive: ArchiveType;
-    ownerEmail: string;
     notifyOwnerOnListChange: boolean;
     listDescription: string;
     listInfo: string;
+    htmlAllowed: boolean;
+    defaultReplyType: ReplyToListChanges;
+}
+
+export enum ReplyToListChanges {
+    // See ReplyToListChanges Python class.
+    NOCHANGES,
+    ADDLIST,
 }
 
 export enum ArchiveType {
@@ -45,3 +52,11 @@ export const archivePolicyNames: ArchivePolicyNames[] = [
             "Public archive. Everyone with link can access and the archive is advertised.",
     },
 ];
+
+export interface MemberInfo {
+    // VIESTIM Keep this updates with MemberInfo at server side.
+    name: string;
+    sendRight: boolean;
+    delivery: boolean;
+    email: string;
+}

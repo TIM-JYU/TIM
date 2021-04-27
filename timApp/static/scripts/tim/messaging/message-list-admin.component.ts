@@ -3,21 +3,14 @@ import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
-import {archivePolicyNames, ArchiveType} from "tim/messaging/listOptionTypes";
+import {
+    archivePolicyNames,
+    ArchiveType,
+    CreateListOptions,
+    MemberInfo,
+} from "tim/messaging/listOptionTypes";
 import {documentglobals} from "tim/util/globals";
 import {Users} from "../user/userService";
-
-interface CreateListOptions {
-    // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
-    listname: string;
-    domain: string;
-    archive: ArchiveType;
-    emails: string[];
-    ownerEmail: string;
-    notifyOwnerOnListChange: boolean;
-    listDescription: string;
-    listInfo: string;
-}
 
 @Component({
     selector: "tim-message-list-admin",
@@ -33,9 +26,12 @@ interface CreateListOptions {
                 </select>
             </div>
             <div>
-                <!-- VIESTIM: For testing list adding with owner email address. -->
+                <!-- TODO: Add owners here? Should we at least display owner information and give a way to change 
+                      owners, or should that be done by directly changing the owner of the document? -->
+                <!--
                 <label for="owner-address">List owner's adress</label>
                 <input type="text" name="owner-address" id="owner-adress" [(ngModel)]="ownerEmail"/>
+                -->
             </div>
             <div>
                 <label for="list-description">Short description</label>
@@ -69,19 +65,26 @@ interface CreateListOptions {
                 <label for="notify-owner-on-list-change">Notify me on list changes (e.g. user subscribes)</label>
             </div>
             <div>
-                <label for="add-multiple-emails">Add multiple emails</label> <br/>
-                <textarea id="add-multiple-emails" name="add-multiple-emails" [(ngModel)]="emails"></textarea>
+                <label for="add-multiple-members">Add members</label> <br/>
+                <textarea id="add-multiple-members" name="add-multiple-members"
+                          [(ngModel)]="membersTextField"></textarea>
+                <button (click)="addNewListMember()">Add new members</button>
             </div>
-
             <div>
-                <select id="search-groups" multiple>
-                    <option value="1">Lundberg Tomi</option>
-                    <option value="15">ViesTIM</option>
-                    <option value="17">ViesTIM-opetus</option>
-                    <option value="18">ViesTIM-ohjaajat</option>
-                </select>
+                <p>List members</p>
+                <ul>
+                    <li *ngFor="let member of membersList">
+                        <!-- TODO: Clean up representation. -->
+                        <span>{{member.name}}</span>
+                        <span>{{member.email}}</span>
+                        <span>send</span>
+                        <span>delivery</span>
+                    </li>
+                </ul>
             </div>
-            <button (click)="newList()">Create List</button>
+            <div>
+                <button (click)="deleteList()">Delete List</button>
+            </div>
         </form>
     `,
 })
@@ -94,7 +97,8 @@ export class MessageListAdminComponent implements OnInit {
     domain: string = "";
     domains: string[] = [];
 
-    emails?: string;
+    membersTextField?: string;
+    membersList: MemberInfo[] = [];
 
     urlPrefix: string = "/messagelist";
 
@@ -109,9 +113,22 @@ export class MessageListAdminComponent implements OnInit {
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
+            // Get domains.
             void this.getDomains();
+
+            // Load message list options.
             const docId = documentglobals().curr_item.id;
             void this.loadValues(docId);
+
+            // Load message list's members.
+            if (!this.listname) {
+                // getListmembers() might launch it's HTTP call before loadValues() finishes with setting listname,
+                // so if this happens we schedule the call for list members. The time is a so called sleeve constant,
+                // and it is not based on anything other than it seems to work on small scale testing.
+                window.setTimeout(() => this.getListMembers(), 2 * 1000);
+            } else {
+                void this.getListMembers();
+            }
         }
     }
 
@@ -131,58 +148,77 @@ export class MessageListAdminComponent implements OnInit {
 
     constructor(private http: HttpClient) {}
 
-    async newList() {
-        const result = await this.createList({
-            // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
-            // TODO: Validate input values before sending, e.g. this list has a unique name.
-            listname: this.listname,
-            // We added '@' in domain name for display purposes, remove it when sending domain to the server.
-            domain: this.domain.startsWith("@")
-                ? this.domain.slice(1)
-                : this.domain,
-            archive: this.archive,
-            emails: this.parseEmails(),
-            ownerEmail: this.ownerEmail,
-            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
-            listInfo: this.listInfo,
-            listDescription: this.listDescription,
-        });
-        if (!result.ok) {
-            console.error(result.result.error.error);
-        } else {
-            // VIESTIM Helps see that data was sent succesfully after clicking the button.
-            console.log("List options sent successfully.");
-        }
-    }
-
-    // VIESTIM this helper function helps keeping types in check.
-    private createList(options: CreateListOptions) {
-        return to2(
-            this.http.post("/messagelist/createlist", {options}).toPromise()
-        );
-    }
-
     /**
      * Compile email addresses separated by line breaks into a list
      * @private
      */
-    private parseEmails(): string[] {
-        if (!this.emails) {
+    private parseMembers(): string[] {
+        if (!this.membersTextField) {
             return [];
         }
-        return this.emails.split("\n").filter((e) => e);
+        return this.membersTextField.split("\n").filter((e) => e);
+    }
+
+    async addNewListMember() {
+        const memberCandidates = this.parseMembers();
+        if (memberCandidates.length == 0) {
+            return;
+        }
+        const result = await to2(
+            this.http
+                .post(`${this.urlPrefix}/addmember`, {
+                    memberCandidates: memberCandidates,
+                    msgList: this.listname,
+                })
+                .toPromise()
+        );
+        if (result.ok) {
+            // TODO: Sending succeeded.
+            console.log("Sending members succeeded.");
+        } else {
+            // TODO: Sending failed.
+            console.error(result.result.error.error);
+        }
+    }
+
+    /**
+     * Get all list members.
+     */
+    async getListMembers() {
+        const result = await to2(
+            this.http
+                .get<MemberInfo[]>(
+                    `${this.urlPrefix}/getmembers/${this.listname}`
+                )
+                /** .map(response => {
+                const array = JSON.parse(response.json()) as any[];
+                const memberinfos = array.map(data => new MemberInfo(data));
+                return memberinfos;
+            )
+    }*/
+                .toPromise()
+        );
+        if (result.ok) {
+            console.log(result.result);
+            this.membersList = result.result;
+        } else {
+            console.error(result.result.error.error);
+        }
     }
 
     /**
      * Helper for list deletion.
      */
     async deleteList() {
-        // const result =
+        // TODO: Confirm with user if they are really sure they want to delete the entire message list. Technically it
+        //  could be reversible, but such an hassle that not letting it happen by a single button press should be
+        //  allowed.
         const result = await to2(
             this.http
                 .delete(`/messagelist/deletelist`, {
                     params: {
-                        listname: `${this.listname}${this.domain}`,
+                        listname: this.listname,
+                        domain: this.domain,
                     },
                 })
                 .toPromise()
@@ -192,7 +228,7 @@ export class MessageListAdminComponent implements OnInit {
             console.log(result.result);
         } else {
             // TODO: Inform the user deletion was not succesfull.
-            console.log(result.result);
+            console.error(result.result);
         }
     }
 
@@ -208,8 +244,7 @@ export class MessageListAdminComponent implements OnInit {
         );
         if (result.ok) {
             // TODO: After server side value loading is complete, remove the console logging and uncomment line below.
-            console.log(result.result);
-            // this.setValues(result.result);
+            this.setValues(result.result);
         } else {
             console.error(result.result.error.error);
             // TODO: Check what went wrong.

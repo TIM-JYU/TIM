@@ -20,6 +20,15 @@ class ArchiveType(Enum):
     PUBLIC = 4
 
 
+class ReplyToListChanges(Enum):
+    """Options for email list's own address to be added to the Reply-To header for emails that are sent through the
+    list. See reply_to_munging for mapping to Mailman's options"""
+    # Don't meddle with the Reply-To header.
+    NOCHANGES = 0
+    # Add an explicit Reply-To header to messages.
+    ADDLIST = 1
+
+
 @dataclass
 class ListOptions:
     """All options regarding message lists."""
@@ -27,16 +36,20 @@ class ListOptions:
     domain: str
     # Enums need this to help marshmallow decipher JSON values in from client side properly.
     archive: ArchiveType = field(metadata={'by_value': True})
-    # VIESTIM: Is this needed?
-    # emails: List[str]
-    ownerEmail: str
     notifyOwnerOnListChange: bool
     listDescription: str
     listInfo: str
+    htmlAllowed: bool
+    defaultReplyType: ReplyToListChanges = field(metadata={'by_value': True})
 
 
-# A list of tuples mapping TIM's archive policies to Mailman's archive policies. Mailman's archive policies are
-# listed here: https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/archiver.py
+reply_to_munging: Dict[ReplyToListChanges, str] = {
+    ReplyToListChanges.NOCHANGES: "no_munging",
+    ReplyToListChanges.ADDLIST: "explicit_header"
+}
+
+# A mapping of TIM's archive policies to Mailman's archive policies. Mailman's archive policies are listed here:
+# https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/archiver.py
 mailman_archive_policy_correlate: Dict[ArchiveType, str] = {
     ArchiveType.NONE: "none",
     # Secret archive type doesn't exist in Mailman. Because Mailman's private archive policy is open for list

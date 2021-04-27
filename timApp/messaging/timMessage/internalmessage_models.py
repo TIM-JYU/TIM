@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import List
 
 from timApp.timdb.sqa import db
 
@@ -33,17 +32,12 @@ class InternalMessage(db.Model):
     """How the message is displayed."""
 
     displays = db.relationship('InternalMessageDisplay', back_populates='message')
-    readreceipt = db.relationship('InternalMessageReadReceipt', uselist=False, back_populates='message')
+    readreceipts = db.relationship('InternalMessageReadReceipt', back_populates='message')
     block = db.relationship('Block', back_populates='internalmessage')
 
     # TODO: Expiration date and sender if necessary
     #  Expiration date: use Block's BlockAccess: accessible_from and accessible_to?
     #  Sender: use Block's BlockAccess: usergroup_id (owner?)
-
-    @staticmethod
-    def get_messages() -> 'List[InternalMessage]':  # VIESTIM get all messages for testing purposes
-        messages = InternalMessage.query.all()
-        return messages
 
 
 class InternalMessageDisplay(db.Model):
@@ -51,7 +45,10 @@ class InternalMessageDisplay(db.Model):
 
     __tablename__ = 'internalmessage_display'
 
-    message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    """Message display identifier."""
+
+    message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), nullable=False)
     """Message identifier."""
 
     usergroup_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
@@ -73,14 +70,18 @@ class InternalMessageReadReceipt(db.Model):
 
     __tablename__ = 'internalmessage_readreceipt'
 
+    rcpt_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), primary_key=True)
+    """Message recipient identifier."""
+
     message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), primary_key=True)
     """Message identifier."""
 
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'))
     """Identifier for the user who marked the message as read."""
 
     marked_as_read_on = db.Column(db.DateTime)
     """Timestamp for when the message was marked as read."""
 
-    message = db.relationship('InternalMessage', back_populates='readreceipt')
+    recipient = db.relationship('UserGroup', back_populates='internalmessage_readreceipt')
+    message = db.relationship('InternalMessage', back_populates='readreceipts')
     user = db.relationship('User', back_populates='internalmessage_readreceipt')
