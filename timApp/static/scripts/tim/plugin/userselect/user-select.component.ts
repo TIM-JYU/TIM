@@ -9,7 +9,7 @@ import {
 import {BrowserModule} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
-import {HttpClientModule} from "@angular/common/http";
+import {HttpClientModule, HttpParams} from "@angular/common/http";
 import {FormsModule, NgForm} from "@angular/forms";
 import {race, Subject, Subscription} from "rxjs";
 import {Observable} from "rxjs/internal/Observable";
@@ -282,12 +282,20 @@ export class UserSelectComponent extends AngularPluginBase<
         this.applying = true;
         this.resetError();
 
+        // Pass possible urlmacros
+        const params = new HttpParams({
+            fromString: window.location.search.replace("?", "&"),
+        });
         const result = await to2(
             this.http
-                .post("/userSelect/apply", {
-                    par: this.getPar().par.getJsonForServer(),
-                    username: this.selectedUser.name,
-                })
+                .post(
+                    "/userSelect/apply",
+                    {
+                        par: this.getPar().par.getJsonForServer(),
+                        username: this.selectedUser.name,
+                    },
+                    {params}
+                )
                 .toPromise()
         );
 
@@ -319,12 +327,20 @@ export class UserSelectComponent extends AngularPluginBase<
         this.applied = false;
         this.resetError();
         this.resetCodeReader();
+
+        const params = new HttpParams({
+            fromString: window.location.search.replace("?", "&"),
+        });
         const result = await to2(
             this.http
-                .post<SearchResult>("/userSelect/search", {
-                    par: this.getPar().par.getJsonForServer(),
-                    search_string: this.searchString,
-                })
+                .post<SearchResult>(
+                    "/userSelect/search",
+                    {
+                        par: this.getPar().par.getJsonForServer(),
+                        search_string: this.searchString,
+                    },
+                    {params}
+                )
                 .toPromise()
         );
 
