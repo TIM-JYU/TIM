@@ -15,15 +15,17 @@ import {Users} from "../user/userService";
 @Component({
     selector: "tim-message-list-admin",
     template: `
-        <form name="list-options-form">
+        <form name="form-horizontal">
             <h1>Message list management</h1>
-            <div>
-                <label for="list-name" class="list-name">List name: </label>
-                <input type="text" name="list-name" id="list-name"
+            <div class="form-group">
+                <label for="list-name" class="list-name control-label col-sm-2">List name: </label>
+                <div class="col-sm-9">
+                <input type="text" class="form-control" name="list-name" id="list-name"
                        [(ngModel)]="listname"/><span>@</span>
                 <select id="domain-select" name="domain-select" [(ngModel)]="domain">
                     <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
                 </select>
+            </div>
             </div>
             <div>
                 <!-- TODO: Add owners here? Should we at least display owner information and give a way to change 
@@ -33,15 +35,19 @@ import {Users} from "../user/userService";
                 <input type="text" name="owner-address" id="owner-adress" [(ngModel)]="ownerEmail"/>
                 -->
             </div>
-            <div>
-                <label for="list-description" class="short-description">Short description: </label>
-                <input type="text" name="list-description" id="list-description" [(ngModel)]="listDescription"/>
+            <div class="form-group">
+                <label for="list-description" class="short-description control-label col-sm-2">Short description: </label>
+                <div class="col-sm-9">
+                <input type="text" class="form-control" name="list-description" id="list-description" [(ngModel)]="listDescription"/>
             </div>
-            <div>
-                <label for="list-info" class="long-description">Long description: </label>
-                <textarea name="list-info" class="list-info" 
+                </div>
+            <div class="form-group">
+                <label for="list-info" class="long-description control-label col-sm-2">Long description: </label>
+                <div class="col-sm-9">
+                <textarea name="list-info" class="list-info form-control" 
                           [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
             </div>
+                </div>
             <div>
             </div>
             <div>
