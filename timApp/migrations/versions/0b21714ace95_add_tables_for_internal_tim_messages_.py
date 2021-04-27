@@ -41,6 +41,7 @@ def upgrade():
     sa.Column('message_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('marked_as_read_on', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['rcpt_id'], ['usergroup.id'], ),
     sa.ForeignKeyConstraint(['message_id'], ['internalmessage.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['useraccount.id'], ),
     sa.PrimaryKeyConstraint('rcpt_id', 'message_id')

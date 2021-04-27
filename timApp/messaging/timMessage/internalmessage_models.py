@@ -32,7 +32,7 @@ class InternalMessage(db.Model):
     """How the message is displayed."""
 
     displays = db.relationship('InternalMessageDisplay', back_populates='message')
-    readreceipt = db.relationship('InternalMessageReadReceipt', uselist=False, back_populates='message')
+    readreceipts = db.relationship('InternalMessageReadReceipt', back_populates='message')
     block = db.relationship('Block', back_populates='internalmessage')
 
     # TODO: Expiration date and sender if necessary
@@ -70,7 +70,7 @@ class InternalMessageReadReceipt(db.Model):
 
     __tablename__ = 'internalmessage_readreceipt'
 
-    rcpt_id = db.Column(db.Integer, primary_key=True)
+    rcpt_id = db.Column(db.Integer, db.ForeignKey('usergroup.id'), primary_key=True)
     """Message recipient identifier."""
 
     message_id = db.Column(db.Integer, db.ForeignKey('internalmessage.id'), primary_key=True)
@@ -82,5 +82,6 @@ class InternalMessageReadReceipt(db.Model):
     marked_as_read_on = db.Column(db.DateTime)
     """Timestamp for when the message was marked as read."""
 
-    message = db.relationship('InternalMessage', back_populates='readreceipt')
+    recipient = db.relationship('UserGroup', back_populates='internalmessage_readreceipt')
+    message = db.relationship('InternalMessage', back_populates='readreceipts')
     user = db.relationship('User', back_populates='internalmessage_readreceipt')

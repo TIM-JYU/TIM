@@ -64,7 +64,11 @@ def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
     db.session.add(tim_message)
     db.session.commit()
 
-    create_message_displays(tim_message.id, options, message)
+    pages = get_display_pages(options.pageList.splitlines())
+    recipients = get_recipient_users(message.recipients)
+    create_message_displays(tim_message.id, pages, recipients)
+    if recipients:
+        create_read_receipts(tim_message.id, recipients)
 
     return ok_response()
 
@@ -187,18 +191,15 @@ def check_messages_folder_path(msg_folder_path: str, tim_msg_folder_path: str) -
     return tim_msg_folder
 
 
-def create_message_displays(msg_id: int, options: MessageOptions, message_body: MessageBody):
+def create_message_displays(msg_id: int, pages: List[Item], recipients: List[UserGroup]):
     """
     Creates InternalMessageDisplay entries for all recipients and display pages.
 
     :param msg_id: Message identifier
-    :param options: Options related to the message
-    :param message_body: Message subject, contents and recipients
+    :param pages: List of pages where message is displayed
+    :param recipients: List of message recipients
     :return:
     """
-    pages = get_display_pages(options.pageList.splitlines())
-    recipients = get_recipient_users(message_body.recipients)
-
     if pages and recipients:
         for page in pages:
             for rcpt in recipients:
@@ -230,5 +231,16 @@ def create_message_displays(msg_id: int, options: MessageOptions, message_body: 
     db.session.commit()
 
 
-def create_read_receipts(msg_id: int, options: MessageOptions, message_body: MessageBody):
-    return
+def create_read_receipts(msg_id: int, recipients: List[UserGroup]):
+    """
+    Create InternalMessageReadReceipt entries for all recipients.
+
+    :param msg_id: Message identifier
+    :param recipients: Message recipients
+    :return:
+    """
+    for recipient in recipients:
+        readreceipt = InternalMessageReadReceipt(rcpt_id=recipient.id, message_id=msg_id)
+        db.session.add(readreceipt)
+
+    db.session.commit()
