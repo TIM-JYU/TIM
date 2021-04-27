@@ -3,9 +3,17 @@ export interface CreateListOptions {
     listname: string;
     domain: string;
     archive: ArchiveType;
-    notifyOwnerOnListChange?: boolean;
+    notifyOwnerOnListChange: boolean;
     listDescription: string;
     listInfo: string;
+    htmlAllowed: boolean;
+    defaultReplyType: ReplyToListChanges;
+}
+
+export enum ReplyToListChanges {
+    // See ReplyToListChanges Python class.
+    NOCHANGES,
+    ADDLIST,
 }
 
 export enum ArchiveType {

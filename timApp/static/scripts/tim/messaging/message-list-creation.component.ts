@@ -11,12 +11,13 @@ import {
     archivePolicyNames,
     ArchiveType,
     CreateListOptions,
+    ReplyToListChanges,
 } from "./listOptionTypes";
 
 @Component({
     selector: "message-list-creation",
     template: `
-        <tim-dialog-frame size="lg">
+        <tim-dialog-frame>
             <ng-container header>
                 Message list creation
             </ng-container>
@@ -72,7 +73,6 @@ export class MessageListComponent extends AngularDialogComponent<
 
     // For name check
     timeoutID?: number;
-    ownerEmail: string = "totalund@student.jyu.fi";
     notifyOwnerOnListChange: boolean = true;
 
     listDescription: string = "";
@@ -93,12 +93,6 @@ export class MessageListComponent extends AngularDialogComponent<
             this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
         );
         if (result.ok) {
-            // Add '@' in front of domain names for display purposes.
-            // const tempDomains: string[] = result.result;
-
-            // for (let i = 0; i < tempDomains.length; i++) {
-            //    tempDomains[i] = "@" + tempDomains[i];
-            // }
             this.domains = result.result;
 
             // Set default domain.
@@ -109,18 +103,21 @@ export class MessageListComponent extends AngularDialogComponent<
     }
 
     async newList() {
-        // Somanyduplicate
         const result = await this.createList({
             // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
-            // TODO: Validate input values before sending, e.g. this list has a unique name.
             listname: this.listname,
             // We added '@' in domain name for display purposes, remove it when sending domain to the server.
+            // VIESTIM: This bit is probably now obsolete, since the '@' is no longer added to the value, but is
+            //  instead put directly to an HTML-element
             domain: this.domain.startsWith("@")
                 ? this.domain.slice(1)
                 : this.domain,
             archive: this.archive,
+            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             listInfo: this.listInfo,
             listDescription: this.listDescription,
+            htmlAllowed: true,
+            defaultReplyType: ReplyToListChanges.NOCHANGES,
         });
         if (!result.ok) {
             console.error(result.result.error.error);
@@ -232,24 +229,17 @@ export class MessageListComponent extends AngularDialogComponent<
         const nameCandidate: string = this.domain
             ? `${this.listname}@${this.domain}`
             : this.listname;
+
         const result = await to2(
             this.http
-                .get<{nameOK: boolean; explanation: string}>(
-                    `${this.urlPrefix}/checkname/${nameCandidate}`
-                )
+                .get(`${this.urlPrefix}/checkname/${nameCandidate}`)
                 .toPromise()
         );
         if (result.ok) {
-            console.log("Name check done. Result:");
-            const temp = result.result;
-            if (temp.nameOK) {
-                // TODO: Indicate somehow that name is usable as a new list name.
-                console.log(temp.explanation);
-            } else {
-                // TODO: Indicate somehow that name is not usable as a new list name.
-                console.log(temp.explanation);
-            }
+            // VIESTIM: we need a better indication that the name is available to the user.
+            console.log("Name check done. Name is available.");
         } else {
+            // VIESTIM: We need a better indication that the name is not available to the user.
             console.error(result.result.error.error);
         }
     }
