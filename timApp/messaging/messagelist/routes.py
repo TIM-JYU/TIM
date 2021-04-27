@@ -57,7 +57,7 @@ def check_name(name_candidate: str) -> Response:
     """
 
     name, sep, domain = name_candidate.partition("@")
-    check_messagelist_name_requirements(name_candidate)
+    check_messagelist_name_requirements(name)
     if sep:
         # If character '@' is found, we check email list specific name requirements.
         check_emaillist_name_requirements(name, domain)
