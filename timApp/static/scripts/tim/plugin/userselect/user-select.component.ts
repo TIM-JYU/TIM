@@ -23,7 +23,7 @@ import {BrowserMultiFormatReader} from "@zxing/library";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields} from "../attributes";
-import {to2} from "../../util/utils";
+import {isMobileDevice, to2} from "../../util/utils";
 import {IUser} from "../../user/IUser";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 
@@ -225,7 +225,7 @@ export class UserSelectComponent extends AngularPluginBase<
 
     async initCodeReader() {
         this.resetError();
-        this.resetView(false);
+        this.resetView();
         try {
             this.codeReader = new BrowserMultiFormatReader(
                 undefined,
@@ -313,11 +313,11 @@ export class UserSelectComponent extends AngularPluginBase<
         this.applying = false;
     }
 
-    resetView(refocus: boolean = true) {
+    resetView() {
         this.selectedUser = undefined;
         this.lastSearchResult = undefined;
         this.searchString = "";
-        if (refocus) {
+        if (!isMobileDevice()) {
             this.searchInput.nativeElement.focus();
         }
     }
