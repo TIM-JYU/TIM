@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Optional
+from typing import Dict, Optional
 
 
 class ArchiveType(Enum):
@@ -37,12 +37,11 @@ class ListOptions:
     # Enums need this to help marshmallow decipher JSON values in from client side properly.
     archive: ArchiveType = field(metadata={'by_value': True})
     notifyOwnerOnListChange: bool
-    # members: List[str]
     listDescription: str
     listInfo: str
     htmlAllowed: bool
     defaultReplyType: ReplyToListChanges = field(metadata={'by_value': True})
-    notifyOwnerOnListChange: Optional[bool] = None
+    emailAdminURL: Optional[str] = None
 
 
 reply_to_munging: Dict[ReplyToListChanges, str] = {

@@ -82,6 +82,9 @@ import {Users} from "../user/userService";
                     </li>
                 </ul>
             </div>
+            <div *ngIf="emailAdminURL">
+                <a [href]="emailAdminURL">Advanced email list settings</a>
+            </div>
             <div>
                 <button (click)="deleteList()">Delete List</button>
             </div>
@@ -111,6 +114,8 @@ export class MessageListAdminComponent implements OnInit {
 
     listInfo: string = "";
     listDescription: string = "";
+
+    emailAdminURL?: string;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -270,7 +275,7 @@ export class MessageListAdminComponent implements OnInit {
         this.listInfo = listOptions.listInfo;
         this.listDescription = listOptions.listDescription;
 
-        // TODO: Add existing list members.
+        this.emailAdminURL = listOptions.emailAdminURL;
     }
 }
 

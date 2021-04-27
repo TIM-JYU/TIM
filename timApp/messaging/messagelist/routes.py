@@ -10,11 +10,13 @@ from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
-from timApp.messaging.messagelist.emaillist import EmailListManager, create_new_email_list, delete_email_list
+from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui_link, create_new_email_list, \
+    delete_email_list, check_emaillist_name_requirements
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember, get_members_for_list
+from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -43,13 +45,6 @@ def create_list(options: ListOptions) -> Response:
     return json_response(manage_doc)
 
 
-@dataclass
-class NameCheckInfo:
-    """Return information about name check results."""
-    nameOK: Optional[bool] = None
-    explanation: str = ""
-
-
 @messagelist.route("/checkname/<string:name_candidate>", methods=['GET'])
 def check_name(name_candidate: str) -> Response:
     """Check if name candidate meets requirements.
@@ -62,12 +57,10 @@ def check_name(name_candidate: str) -> Response:
     """
 
     name, sep, domain = name_candidate.partition("@")
-    msg_list_exists = MessageListModel.name_exists(name)
-    if msg_list_exists:
-        raise RouteException(f"Message list with name {name} already exists.")
+    check_messagelist_name_requirements(name)
     if sep:
         # If character '@' is found, we check email list specific name requirements.
-        EmailListManager.check_name_requirements(name, domain)
+        check_emaillist_name_requirements(name, domain)
     return ok_response()
 
 
@@ -170,6 +163,8 @@ def get_list(document_id: int) -> Response:
         htmlAllowed=True,
         defaultReplyType=ReplyToListChanges.NOCHANGES
     )
+    if msg_list.email_list_domain:
+        list_options.emailAdminURL = get_list_ui_link(msg_list.name)
     return json_response(list_options)
 
 
@@ -244,13 +239,19 @@ def get_members(list_name: str) -> Response:
     list_members: List[MemberInfo] = []
     for member in members:
         if member.tim_member:
-            gid = member.tim_member.group_id
-            # VIESTIM: This should be the user's personal user group.
+            gid = member.tim_member[0].group_id
             ug = UserGroup.query.filter_by(id=gid).one()
-            u = ug.users[0]
-            mi = MemberInfo(name=u.real_name, email=u.email, sendRight=member.send_right,
-                            deliveryRight=member.delivery_right)
+            if len(ug.users) == 1:
+                # VIESTIM: This should be the user's personal user group.
+                u = ug.users[0]
+                mi = MemberInfo(name=u.real_name, email=u.email, sendRight=member.send_right,
+                                deliveryRight=member.delivery_right)
+            else:
+                # VIESTIM: If the user group wasn't a personal user group, we have a group individuals on our hands.
+                #  We probably don't need to return it, or if we do we need to return it somehow separately.
+                pass
         else:
+            # If we are here, we have an external member.
             mi = MemberInfo(name="External member", email=member.external_member.email_address,
                             sendRight=member.send_right, deliveryRight=member.delivery_right)
         list_members.append(mi)

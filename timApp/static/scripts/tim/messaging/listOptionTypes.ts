@@ -8,6 +8,7 @@ export interface CreateListOptions {
     listInfo: string;
     htmlAllowed: boolean;
     defaultReplyType: ReplyToListChanges;
+    emailAdminURL?: string;
 }
 
 export enum ReplyToListChanges {
