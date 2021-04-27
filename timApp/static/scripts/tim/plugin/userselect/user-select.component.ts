@@ -147,8 +147,8 @@ const PluginFields = t.intersection([
                 </button>
             </div>
         </div>
-        <tim-alert *ngIf="applied" severity="success" i18n>
-            Permissions applied successfully.
+        <tim-alert *ngIf="lastAddedUser" severity="success" i18n>
+            Permissions applied successfully to <strong>{{lastAddedUser}}</strong>.
         </tim-alert>
         <tim-alert *ngIf="errorMessage" i18n>
             <span>{{errorMessage}}</span>
@@ -189,11 +189,11 @@ export class UserSelectComponent extends AngularPluginBase<
     inputMinLength!: number;
     search: boolean = false;
     applying: boolean = false;
-    applied: boolean = false;
     searchPress: Subject<void> = new Subject();
     inputTyped: Subject<string> = new Subject();
     lastSearchResult?: SearchResult;
     selectedUser?: IUser;
+    lastAddedUser?: string;
     barCodeResult: string = "";
     videoAspectRatio: number = 1;
     videoWidth: number = 50;
@@ -300,7 +300,8 @@ export class UserSelectComponent extends AngularPluginBase<
         );
 
         if (result.ok) {
-            this.applied = true;
+            this.lastAddedUser =
+                this.selectedUser.real_name ?? this.selectedUser.name;
             this.resetView();
         } else {
             this.setError(
@@ -324,7 +325,8 @@ export class UserSelectComponent extends AngularPluginBase<
     async doSearch() {
         this.search = true;
         this.lastSearchResult = undefined;
-        this.applied = false;
+        this.lastAddedUser = undefined;
+        this.lastAddedUser = undefined;
         this.resetError();
         this.resetCodeReader();
 
