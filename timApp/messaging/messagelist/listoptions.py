@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict, Optional
+from typing import Dict, Optional
 
 
 class ArchiveType(Enum):
