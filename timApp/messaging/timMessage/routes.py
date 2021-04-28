@@ -58,11 +58,8 @@ def get_tim_message(item_id: int) -> Response:
     :return:
     """
     message = InternalMessage.query.filter_by(doc_id=item_id).first()
-    print(message)
-    display = InternalMessageReadReceipt.query.filter_by(message_id=message.id).first()
-    print(display)
 
-    return json_response(display)  # recursion error
+    return json_response(message)
 
 
 @timMessage.route("/send", methods=['POST'])

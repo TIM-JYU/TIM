@@ -39,6 +39,15 @@ class InternalMessage(db.Model):
     #  Expiration date: use Block's BlockAccess: accessible_from and accessible_to?
     #  Sender: use Block's BlockAccess: usergroup_id (owner?)
 
+    def to_json(self):
+        return {'id': self.id,
+                'doc_id': self.doc_id,
+                'par_id': self.par_id,
+                'can_mark_as_read': self.can_mark_as_read,
+                'reply': self.reply,
+                'display_type': self.display_type,
+                }
+
 
 class InternalMessageDisplay(db.Model):
     """Where and for whom a TIM message is displayed."""
@@ -64,6 +73,13 @@ class InternalMessageDisplay(db.Model):
     usergroup = db.relationship('UserGroup', back_populates='internalmessage_display')
     display_block = db.relationship('Block', back_populates='internalmessage_display')
 
+    def to_json(self):
+        return {'id': self.id,
+                'message_id': self.message_id,
+                'usergroup_id': self.usergroup_id,
+                'display_doc_id': self.display_doc_id,
+                }
+
 
 class InternalMessageReadReceipt(db.Model):
     """Metadata about read receipts."""
@@ -85,3 +101,10 @@ class InternalMessageReadReceipt(db.Model):
     recipient = db.relationship('UserGroup', back_populates='internalmessage_readreceipt')
     message = db.relationship('InternalMessage', back_populates='readreceipts')
     user = db.relationship('User', back_populates='internalmessage_readreceipt')
+
+    def to_json(self):
+        return {'rcpt_id': self.rcpt_id,
+                'message_id': self.message_id,
+                'user_id': self.user_id,
+                'marked_as_read_on': self.marked_as_read_on,
+                }

@@ -150,7 +150,6 @@ export class TimMessageComponent implements OnInit {
     }
 
     async loadValues(itemId: number) {
-        console.log(itemId);
         const result = await to2(
             this.http
                 .get<TimMessageComponent>(`/timMessage/get/${itemId}`)
