@@ -114,11 +114,12 @@ class MessageListMember(db.Model):
 
     # VIESTIM: This is can_send in the original database plan.
     send_right = db.Column(db.Boolean)
-    """If a member can send messages to a message list."""
+    """If a member can send messages to a message list. Send right for a user group is meaningless at this point"""
 
     # VIESTIM: delivery_right doesn't exist in the original plan.
     delivery_right = db.Column(db.Boolean)
-    """If a member can get messages from a message list."""
+    """If a member can get messages from a message list. Delivery right for a user group is meaningless at this 
+    point. """
 
     membership_ended = db.Column(db.DateTime(timezone=True))
     """When member's membership on a list ended. This is set when member is removed from a list."""
@@ -143,6 +144,36 @@ class MessageListMember(db.Model):
     distribution = db.relationship("MessageListDistribution", back_populates="member", lazy="select")
 
     __mapper_args__ = {"polymorphic_identity": "member", "polymorphic_on": member_type}
+
+    def is_external_member(self) -> bool:
+        """If this member is an external member to a message list."""
+        if self.external_member:
+            return True
+        return False
+
+    def is_tim_member(self) -> bool:
+        """If this member is a 'TIM member', i.e. a user group. This can be either a personal user group or a
+        group. """
+        if self.tim_member:
+            return True
+        return False
+
+    def is_personal_user(self) -> bool:
+        """If this member is an individual user, i.e. a personal user group."""
+        gid = self.tim_member[0].group_id
+        from timApp.user.usergroup import UserGroup
+        ug = UserGroup.query.filter_by(id=gid).one()
+        return ug.is_personal_group()
+
+    def is_group(self) -> bool:
+        """If this message list member is actually a group of users."""
+        return not self.is_personal_user()
+
+    def is_active(self) -> bool:
+        return self.membership_ended is None and self.is_verified()
+
+    def is_verified(self) -> bool:
+        return self.membership_verified is not None
 
 
 def get_members_for_list(msg_list: MessageListModel) -> List[MessageListMember]:
