@@ -59,7 +59,7 @@ def check_name(name_candidate: str) -> Response:
     """
 
     normalized_name = name_candidate.strip()
-    name, sep, domain = name_candidate.partition("@")
+    name, sep, domain = normalized_name.partition("@")
     check_messagelist_name_requirements(name)
     if sep:
         # If character '@' is found, we check email list specific name requirements.

@@ -93,9 +93,9 @@ class MessageListModel(db.Model):
         """
         maybe_list = MessageListModel.get_list_by_name_first(name_candidate=name_candidate)
         if maybe_list is None:
-            return True
-        else:
             return False
+        else:
+            return True
 
     @property
     def archive_policy(self) -> ArchiveType:
