@@ -53,11 +53,13 @@ class MessageBody:
 def get_tim_message(item_id: int) -> Response:
     """
     Retrieve message based on item id.
+    TODO returns currently only the first message matching to criteria, should return all
 
     :param item_id: Identifier for document or folder where message is displayed
     :return:
     """
-    message = InternalMessage.query.filter_by(doc_id=item_id).first()
+    display = InternalMessageDisplay.query.filter_by(display_doc_id=item_id).first()
+    message = InternalMessage.query.filter_by(id=display.message_id).first()
 
     return json_response(message)
 

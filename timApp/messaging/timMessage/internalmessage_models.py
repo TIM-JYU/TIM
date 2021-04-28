@@ -46,6 +46,8 @@ class InternalMessage(db.Model):
                 'can_mark_as_read': self.can_mark_as_read,
                 'reply': self.reply,
                 'display_type': self.display_type,
+                'displays': self.displays,
+                'readreceipts': self.readreceipts,
                 }
 
 

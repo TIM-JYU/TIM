@@ -3,6 +3,7 @@ import {CommonModule} from "@angular/common";
 import {itemglobals} from "tim/util/globals";
 import {HttpClient} from "@angular/common/http";
 import {to2} from "tim/util/utils";
+import {getItem, IItem} from "tim/item/IItem";
 
 // import {TimMessage} from "tim/timApp/messaging/timMessage/timMessage";
 
@@ -37,13 +38,13 @@ import {to2} from "tim/util/utils";
                     </div>
                 </div>
                 <div class="readReceiptArea">
-                    <input type="checkbox" name="mark-as-read" id="mark-as-read" 
+                    <input type="checkbox" name="mark-as-read" id="mark-as-read"
                            [disabled]="!canMarkAsRead || markedAsRead" (click)="markAsRead()"/>
                     <label for="mark-as-read">Mark as Read</label>
                     <span class="readReceiptLink"
                           *ngIf="markedAsRead">Read receipt can be cancelled in <a>your messages</a></span>
-                    <button class="timButton" title="Close Message" 
-                            [disabled]="(!canMarkAsRead && !replySent) || (canMarkAsRead && !markedAsRead)" 
+                    <button class="timButton" title="Close Message"
+                            [disabled]="(!canMarkAsRead && !replySent) || (canMarkAsRead && !markedAsRead)"
                             (click)="closeMessage()">
                         Close
                     </button>
@@ -150,21 +151,43 @@ export class TimMessageComponent implements OnInit {
     }
 
     async loadValues(itemId: number) {
-        const result = await to2(
+        const message = await to2(
+            // get message shown on current page
             this.http
                 .get<TimMessageComponent>(`/timMessage/get/${itemId}`)
                 .toPromise()
         );
 
-        if (result.ok) {
-            this.setValues(result.result);
+        if (message.ok) {
+            console.log(message.result);
+            const messageDocId = await to2(
+                // get item id for message
+                this.http
+                    .get<{doc_id: number}>(`/timMessage/get/${itemId}`)
+                    .toPromise()
+            );
+
+            if (messageDocId.ok) {
+                console.log(messageDocId.result);
+                const messageDoc = await getItem(messageDocId.result.doc_id);
+                if (!messageDoc) {
+                    return;
+                }
+                console.log(messageDoc); // 404 not found
+                this.setValues(message.result, messageDoc);
+            } else {
+                console.error(messageDocId.result.error.error);
+            }
         } else {
-            console.error(result.result.error.error);
+            console.error(message.result.error.error);
         }
     }
 
-    setValues(options: TimMessageComponent) {
+    setValues(options: TimMessageComponent, doc: IItem) {
         // TODO set values
+        this.sender = doc.owners[0].name;
+        this.heading = options.heading;
+        this.fullContent = options.fullContent;
     }
 }
 
