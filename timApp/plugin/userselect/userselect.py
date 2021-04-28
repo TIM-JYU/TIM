@@ -71,6 +71,8 @@ class ScannerOptions:
     continuousMatch: bool = False
     enabled: bool = False
     scanInterval: float = 1.5
+    waitBetweenScans: float = 0.0
+    beepOnSuccess: bool = False
 
 
 @dataclass

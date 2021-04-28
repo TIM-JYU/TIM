@@ -23,7 +23,13 @@ import {BrowserMultiFormatReader, NotFoundException} from "@zxing/library";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {formatString, isMobileDevice, TimStorage, to2} from "../../util/utils";
+import {
+    formatString,
+    isMobileDevice,
+    timeout,
+    TimStorage,
+    to2,
+} from "../../util/utils";
 import {IUser} from "../../user/IUser";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 
@@ -48,6 +54,8 @@ const PluginMarkup = t.intersection([
             scanInterval: t.number,
             applyOnMatch: t.boolean,
             continuousMatch: t.boolean,
+            waitBetweenScans: t.number,
+            beepOnSuccess: t.boolean,
         }),
         text: t.type({
             apply: nullable(t.string),
@@ -67,6 +75,7 @@ const PluginFields = t.intersection([
     template: `
         <div *ngIf="enableScanner" class="barcode-video">
             <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
+            <audio class="hidden" src="/static/audio/beep.wav" #beep></audio>
             <button [disabled]="!supportsMediaDevices" class="timButton btn-lg"
                     (click)="startCodeReader()">
                 <span class="icon-text">
@@ -200,6 +209,7 @@ export class UserSelectComponent extends AngularPluginBase<
     @ViewChild("searchForm") searchForm!: NgForm;
     @ViewChild("searchInput") searchInput!: ElementRef<HTMLInputElement>;
     @ViewChild("barcodeOutput") barcodeOutput!: ElementRef<HTMLVideoElement>;
+    @ViewChild("beep") beep!: ElementRef<HTMLAudioElement>;
 
     showErrorMessage = false;
     errorMessage?: string;
@@ -345,11 +355,19 @@ export class UserSelectComponent extends AngularPluginBase<
 
             const result = await decoder;
             this.searchString = result.getText();
+            if (this.markup.scanner.beepOnSuccess) {
+                await this.beep.nativeElement.play();
+            }
             await this.doSearch();
             if (this.lastSearchResult && this.markup.scanner.applyOnMatch) {
                 if (this.lastSearchResult.matches.length == 1) {
                     await this.apply();
                     if (this.markup.scanner.continuousMatch) {
+                        if (this.markup.scanner.waitBetweenScans > 0) {
+                            await timeout(
+                                this.markup.scanner.waitBetweenScans * 1000
+                            );
+                        }
                         // noinspection ES6MissingAwait: Run the code in a new context without deepening the call stack
                         this.startCodeReader();
                         return;
@@ -469,6 +487,8 @@ export class UserSelectComponent extends AngularPluginBase<
                 scanInterval: 1.5,
                 applyOnMatch: false,
                 continuousMatch: false,
+                waitBetweenScans: 0,
+                beepOnSuccess: false,
             },
             text: {
                 apply: null,
