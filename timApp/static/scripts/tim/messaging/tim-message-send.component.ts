@@ -52,9 +52,9 @@ interface TimMessageOptions {
                 <li><label><input type="radio"
                                       [(ngModel)]="replyAll" name="replyAll" [value]="false" checked>Recipient only replies to sender (sees message as private)</label></li>
                 <li><label><input type="radio"
-                                      [(ngModel)]="replyAll" name="replyAll" [value]="true" [disabled]="timMessage">Recipient replies all by default (sees message as a group message)</label></li>
+                                      [(ngModel)]="replyAll" name="replyAll" [value]="true">Recipient replies all by default (sees message as a group message)</label></li>
             </ul>
-            <label *ngIf="!defaultEmail"><input type="checkbox"
+            <label *ngIf="!defaultEmail"><input type="checkbox" (change) ="emptyPageList()"
                                       [(ngModel)]="timMessage">TIM message</label></fieldset><br/>
                 
             <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
@@ -76,7 +76,7 @@ interface TimMessageOptions {
                 </tim-datetime-picker>
             </p><br/></div>
             <p>
-                <button class="timButton" id="sendButton" [disabled]="!showSendButton()"
+                <button class="timButton" id="sendButton" [disabled]="disableSendButton()"
                         (click)="sendMessage()">
                     Send
                 </button>
@@ -127,12 +127,18 @@ export class TimMessageComponent {
         this.defaultEmail = false;
     }
 
+    emptyPageList() {
+        this.TimMessageOptions.pageList = "";
+    }
+
     // Checks if all mandatory fields have values
-    showSendButton() {
+    disableSendButton() {
         return (
-            this.TimMessageOptions.messageChannel ||
-            this.email ||
-            this.timMessage
+            this.urlError ||
+            (!this.TimMessageOptions.messageChannel &&
+                !this.email &&
+                !this.timMessage) ||
+            (this.timMessage && !this.TimMessageOptions.pageList)
         );
     }
 
