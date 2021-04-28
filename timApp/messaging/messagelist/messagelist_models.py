@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import List
 
@@ -174,6 +175,10 @@ class MessageListMember(db.Model):
 
     def is_verified(self) -> bool:
         return self.membership_verified is not None
+
+    def remove(self) -> None:
+        self.membership_ended = datetime.now()
+        return
 
 
 def get_members_for_list(msg_list: MessageListModel) -> List[MessageListMember]:
