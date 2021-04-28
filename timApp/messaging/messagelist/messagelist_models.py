@@ -102,6 +102,14 @@ class MessageListModel(db.Model):
     def archive_policy(self) -> ArchiveType:
         return self.archive
 
+    def get_individual_members(self):
+        """Get all the members that are not user groups."""
+        individuals = []
+        for member in self.members:
+            if not member.is_group() and member.is_active():
+                individuals.append(member)
+        return individuals
+
 
 class MessageListMember(db.Model):
     """Database model for members of a message list."""
