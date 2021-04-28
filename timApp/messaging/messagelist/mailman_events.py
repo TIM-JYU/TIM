@@ -114,8 +114,8 @@ def handle_event() -> Response:
             #  configured, but messages are directed at it. Not sure what do exactly do here, honestly.
             log_warning(f"Message list '{message_list.name}' with id '{message_list.id}' doesn't have a domain "
                         f"configured properly. Domain '{evt.mlist.host}' was expected.")
-        parsed_message = parse_mailman_message(evt.message)
-        archive_message(parsed_message)
+        parsed_message = parse_mailman_message(evt.message, message_list)
+        archive_message(message_list, parsed_message)
         # TODO: Relay this message forward, if there are other message channels in use for a message list.
 
     return ok_response()
