@@ -326,7 +326,7 @@ def call_plugin_resource(plugin: str, filename: str, args: Any=None) -> requests
     try:
         plug = get_plugin(plugin)
         # We need to avoid calling ourselves to avoid infinite request loop.
-        if plug.host.startswith('http://localhost'):
+        if plug.host.startswith(f'http://{current_app.config["INTERNAL_PLUGIN_DOMAIN"]}'):
             raise PluginException('Plugin route not found')
         resp = requests.get(plug.host + filename, timeout=5, stream=True, params=args)
         resp.encoding = 'utf-8'
