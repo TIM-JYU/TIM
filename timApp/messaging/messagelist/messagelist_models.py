@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List
+from typing import List, Optional, Dict, Any
 
 from timApp.messaging.messagelist.listoptions import ArchiveType
 from timApp.timdb.sqa import db
@@ -206,6 +206,25 @@ class MessageListTimMember(MessageListMember):
     user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select")
 
     __mapper_args__ = {"polymorphic_identity": "tim_member"}
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "name": self.get_name(),
+            "email": self.get_email() if self.get_email() is not None else "",
+            "send_right": self.member[0].send_right,
+            "delivery_right": self.member[0].delivery_right
+        }
+
+    def get_name(self) -> str:
+        ug = self.user_group[0]
+        return ug.name
+
+    def get_email(self) -> Optional[str]:
+        if self.is_group():
+            return None
+        ug = self.user_group[0]
+        user = ug.personal_user
+        return user.email
 
 
 class MessageListExternalMember(MessageListMember):
