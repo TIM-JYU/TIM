@@ -7,6 +7,7 @@ import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
 import {Users} from "../user/userService";
 import {IDocument, redirectToItem} from "../item/IItem";
+import {TimUtilityModule} from "../ui/tim-utility.module";
 import {
     archivePolicyNames,
     ArchiveType,
@@ -22,6 +23,7 @@ import {
                 Message list creation
             </ng-container>
             <ng-container body>
+               <!-- <div>{{errorrMessage}}</div> -->
                 <div>
                     <label for="list-name" class="list-name">List name: </label>
                     <input type="text" name="list-name" id="list-name"
@@ -49,7 +51,8 @@ import {
                 </div>
             </ng-container>
             <ng-container footer>
-                <button class="timButton" type="button" (click)="newList() ">Create</button>
+                <tim-loading *ngIf="disableCreate"></tim-loading>
+                <button [disabled]="disableCreate" class="timButton" type="button" (click)="newList() ">Create</button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -59,8 +62,10 @@ export class MessageListComponent extends AngularDialogComponent<
     unknown,
     unknown
 > {
+    disableCreate: boolean = false;
     protected dialogName = "MessageList";
     listname: string = "";
+    errorrMessage: string = "";
 
     urlPrefix: string = "/messagelist";
 
@@ -103,6 +108,13 @@ export class MessageListComponent extends AngularDialogComponent<
     }
 
     async newList() {
+        // if (true) {
+        // TODO: tarkista, että nimi on väärin
+        // this.errorrMessage = "List name is wrong!";
+        // return;
+        // }
+
+        this.disableCreate = true;
         const result = await this.createList({
             // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
             listname: this.listname,
@@ -120,6 +132,7 @@ export class MessageListComponent extends AngularDialogComponent<
             defaultReplyType: ReplyToListChanges.NOCHANGES,
         });
         if (!result.ok) {
+            // this.errorrMessage = result.result.error.error;
             console.error(result.result.error.error);
         } else {
             // VIESTIM Helps see that data was sent succesfully after clicking the button.
@@ -247,6 +260,6 @@ export class MessageListComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [MessageListComponent],
-    imports: [BrowserModule, DialogModule, FormsModule],
+    imports: [BrowserModule, DialogModule, FormsModule, TimUtilityModule],
 })
 export class MessageListModule {}

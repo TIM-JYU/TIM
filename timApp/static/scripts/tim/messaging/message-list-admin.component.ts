@@ -15,18 +15,22 @@ import {Users} from "../user/userService";
 @Component({
     selector: "tim-message-list-admin",
     template: `
-        <form name="form-horizontal">
+        <form class="form-horizontal">
             <h1>Message list management</h1>
             <div class="form-group">
-                <label for="list-name" class="list-name control-label col-sm-2">List name: </label>
+                <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
                 <div class="col-sm-9">
+                <div class="input-group">    
                 <input type="text" class="form-control" name="list-name" id="list-name"
-                       [(ngModel)]="listname"/><span>@</span>
-                <select id="domain-select" name="domain-select" [(ngModel)]="domain">
+                       [(ngModel)]="listname"/>
+                    <div class="input-group-addon">@</div>
+                <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
                     <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
                 </select>
             </div>
             </div>
+                </div>
+                
             <div>
                 <!-- TODO: Add owners here? Should we at least display owner information and give a way to change 
                       owners, or should that be done by directly changing the owner of the document? -->
@@ -36,13 +40,13 @@ import {Users} from "../user/userService";
                 -->
             </div>
             <div class="form-group">
-                <label for="list-description" class="short-description control-label col-sm-2">Short description: </label>
+                <label for="list-description" class="short-description control-label col-sm-3">Short description: </label>
                 <div class="col-sm-9">
                 <input type="text" class="form-control" name="list-description" id="list-description" [(ngModel)]="listDescription"/>
             </div>
                 </div>
             <div class="form-group">
-                <label for="list-info" class="long-description control-label col-sm-2">Long description: </label>
+                <label for="list-info" class="long-description control-label col-sm-3">Long description: </label>
                 <div class="col-sm-9">
                 <textarea name="list-info" class="list-info form-control" 
                           [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
@@ -92,7 +96,7 @@ import {Users} from "../user/userService";
                 <a [href]="emailAdminURL">Advanced email list settings</a>
             </div>
             <div>
-                <button (click)="deleteList()">Delete List</button>
+                <button class="btn btn-default" (click)="deleteList()">Delete List</button>
             </div>
         </form>
     `,
