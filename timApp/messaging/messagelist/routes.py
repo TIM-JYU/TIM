@@ -41,10 +41,22 @@ def create_list(options: ListOptions) -> Response:
 
     options.listname = options.listname.strip()
 
+    test_name(options.listname)  # Test the name we are creating.
+
     manage_doc = new_list(options)
     create_new_email_list(options, owner)
 
     return json_response(manage_doc)
+
+
+def test_name(name_candidate: str) -> None:
+    normalized_name = name_candidate.strip()
+    name, sep, domain = normalized_name.partition("@")
+    check_messagelist_name_requirements(name)
+    if sep:
+        # If character '@' is found, we check email list specific name requirements.
+        check_emaillist_name_requirements(name, domain)
+    return
 
 
 @messagelist.route("/checkname/<string:name_candidate>", methods=['GET'])
@@ -57,13 +69,7 @@ def check_name(name_candidate: str) -> Response:
     :param name_candidate: Possible name for message/email list. Should either be a name for a list or a fully qualifed
     domain name for (email) list. In the latter case we also check email list specific name requirements.
     """
-
-    normalized_name = name_candidate.strip()
-    name, sep, domain = normalized_name.partition("@")
-    check_messagelist_name_requirements(name)
-    if sep:
-        # If character '@' is found, we check email list specific name requirements.
-        check_emaillist_name_requirements(name, domain)
+    test_name(name_candidate)
     return ok_response()
 
 
