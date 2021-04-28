@@ -1,7 +1,13 @@
 import re
+from dataclasses import dataclass, field
+from typing import Optional, List
 
-from timApp.messaging.messagelist.messagelist_models import MessageListModel
+from timApp.document.create_item import create_document
+from timApp.folder.folder import Folder
+from timApp.item.block import Block
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.util.flask.requesthelper import RouteException
+from timApp.util.utils import remove_path_special_chars
 
 
 def check_messagelist_name_requirements(name_candidate: str) -> None:
@@ -82,3 +88,76 @@ def check_name_rules(name_candidate: str) -> None:
 
     # If we are here, then the name follows all naming rules.
     return
+
+
+@dataclass
+class Message:
+    """A unified datastructure for messages TIM handles."""
+    # Meta information about where this message belongs to.
+    message_list_name: str
+    domain: Optional[str]
+    message_channel: Channel = field(metadata={'by_value': True})
+
+    # Header information
+    sender: str
+    reply_to: Optional[str]
+    recipients: List[str]
+    title: str
+
+    # Message body
+    message_body: str
+
+
+message_list_doc_prefix = "/messagelists"
+message_list_archive_prefix = "/archives"
+
+
+def archive_message(message_list: MessageListModel, message) -> None:
+    """Archive a message for a message list."""
+    # TODO: If there are multiple messages with same title, differentiate them.
+    archive_title = message.title
+    archive_path = f"{message_list_archive_prefix}/{remove_path_special_chars(archive_title)}"
+
+    # Archive folder for message list.
+    archive_folder = Folder.find_by_location(archive_path, message_list.name)
+
+    archive_doc = create_document(archive_path, archive_title)
+
+    # Set header information for archived message.
+    archive_doc.document.add_text(f"Title: {message.title}")
+    archive_doc.document.add_text(f"Sender: {message.sender}")
+    archive_doc.document.add_text(f"Recipients: {message.recipients}")
+
+    # Set message body for archived message.
+    archive_doc.document.add_text(f"{message.message_body}")
+
+    # From the archive folder, query all documents, sort them by created attribute. We do this to get the previously
+    # newest archived message, before we create a archive document for newest message.
+    all_archived_messages = []
+    if archive_folder is not None:
+        all_archived_messages = archive_folder.get_all_documents()
+    else:
+        # TODO: Set folder's owners to be message list's owners.
+        manage_doc_block = Block.query.filter_by(id=message_list.manage_doc_id).one()
+        owners = manage_doc_block.owners()
+        Folder.create(archive_path, owner_groups=owners, title=f"{message_list.name}")
+
+    if len(all_archived_messages) > 1:
+        sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
+        previous_doc = sorted_messages[1]
+
+        # Set footer information for archived message. Footer information is not set for the very first message,
+        # it get's it's link to next message when a second message is archived.
+
+        # VIESTIM: Do we need other type of URL to previous_doc and archive_doc? Is url attribute enough?
+        previous_doc_title = "Previous message"
+        previous_doc_link = f"{previous_doc.url}"
+        previous_message_link = f"[{previous_doc_title}]({previous_doc_link})"
+        archive_doc.document.add_text(f"{previous_message_link}")
+
+        next_doc_title = "Next message"
+        next_doc_link = f"{archive_doc.url}"
+        previous_doc.document.add_text(f"[{next_doc_title}]({next_doc_link})")
+
+    # TODO: Set proper rights to the document. The message sender owns the document. Owners of the list get at least a
+    #  view right. Other rights depend on the message list's archive policy.
