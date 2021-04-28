@@ -75,7 +75,6 @@ const PluginFields = t.intersection([
     template: `
         <div *ngIf="enableScanner" class="barcode-video">
             <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
-            <audio class="hidden" src="/static/audio/beep.wav" #beep></audio>
             <button [disabled]="!supportsMediaDevices" class="timButton btn-lg"
                     (click)="startCodeReader()">
                 <span class="icon-text">
@@ -209,7 +208,6 @@ export class UserSelectComponent extends AngularPluginBase<
     @ViewChild("searchForm") searchForm!: NgForm;
     @ViewChild("searchInput") searchInput!: ElementRef<HTMLInputElement>;
     @ViewChild("barcodeOutput") barcodeOutput!: ElementRef<HTMLVideoElement>;
-    @ViewChild("beep") beep!: ElementRef<HTMLAudioElement>;
 
     showErrorMessage = false;
     errorMessage?: string;
@@ -233,6 +231,7 @@ export class UserSelectComponent extends AngularPluginBase<
     codeReader!: BrowserMultiFormatReader;
     codeReaderStream?: MediaStream;
     inputListener?: Subscription;
+    beepAudio?: HTMLAudioElement;
     availableCameras: {id: string; name: string}[] = [];
     selectedCamera?: string;
     private supportedCameraConstraints: Record<string, boolean> = {};
@@ -249,6 +248,15 @@ export class UserSelectComponent extends AngularPluginBase<
             return formatString(this.markup.text.success, this.lastAddedUser!);
         }
         return $localize`:@@userSelectTextSuccess:Permissions applied to ${this.lastAddedUser}:INTERPOLATION:.`;
+    }
+
+    private async playBeep() {
+        try {
+            if (!this.beepAudio) {
+                this.beepAudio = new Audio("/static/audio/beep.wav");
+            }
+            await this.beepAudio.play();
+        } catch (e) {}
     }
 
     ngOnInit() {
@@ -328,6 +336,14 @@ export class UserSelectComponent extends AngularPluginBase<
             this.selectedCamera =
                 this.selectedCameraStorage.get() ?? this.availableCameras[0].id;
 
+            // Reset camera if it's missing
+            if (
+                !this.availableCameras.find((c) => c.id == this.selectedCamera)
+            ) {
+                this.selectedCamera = this.availableCameras[0].id;
+                this.selectedCameraStorage.set(this.selectedCamera);
+            }
+
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     deviceId: this.selectedCamera,
@@ -356,7 +372,7 @@ export class UserSelectComponent extends AngularPluginBase<
             const result = await decoder;
             this.searchString = result.getText();
             if (this.markup.scanner.beepOnSuccess) {
-                await this.beep.nativeElement.play();
+                await this.playBeep();
             }
             await this.doSearch();
             if (this.lastSearchResult && this.markup.scanner.applyOnMatch) {
