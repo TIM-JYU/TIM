@@ -15,7 +15,7 @@ from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, R
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember, get_members_for_list
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, Message, \
-    archive_message, message_list_doc_prefix
+    archive_message, MESSAGE_LIST_DOC_PREFIX
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -123,7 +123,7 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
 
     # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
     path_safe_list_name = remove_path_special_chars(list_options.listname)
-    path_to_doc = f'/{message_list_doc_prefix}/{path_safe_list_name}'
+    path_to_doc = f'/{MESSAGE_LIST_DOC_PREFIX}/{path_safe_list_name}'
 
     doc = create_document(path_to_doc, list_options.listname)
 

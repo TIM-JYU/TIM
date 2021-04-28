@@ -93,30 +93,32 @@ def check_name_rules(name_candidate: str) -> None:
 @dataclass
 class Message:
     """A unified datastructure for messages TIM handles."""
-    # Meta information about where this message belongs to.
+    # Meta information about where this message belongs to and where it's from.
     message_list_name: str
-    domain: Optional[str]
     message_channel: Channel = field(metadata={'by_value': True})
 
-    # Header information
+    # Header information.
     sender: str
     reply_to: Optional[str]
     recipients: List[str]
     title: str
 
-    # Message body
+    # Message body.
     message_body: str
 
+    # Email specific attributes.
+    domain: Optional[str]
 
-message_list_doc_prefix = "/messagelists"
-message_list_archive_prefix = "/archives"
+
+MESSAGE_LIST_DOC_PREFIX = "messagelists"
+MESSAGE_LIST_ARCHIVE_PREFIX = "archives"
 
 
 def archive_message(message_list: MessageListModel, message) -> None:
     """Archive a message for a message list."""
     # TODO: If there are multiple messages with same title, differentiate them.
     archive_title = message.title
-    archive_path = f"{message_list_archive_prefix}/{remove_path_special_chars(archive_title)}"
+    archive_path = f"{MESSAGE_LIST_ARCHIVE_PREFIX}/{remove_path_special_chars(archive_title)}"
 
     # Archive folder for message list.
     archive_folder = Folder.find_by_location(archive_path, message_list.name)
@@ -161,3 +163,30 @@ def archive_message(message_list: MessageListModel, message) -> None:
 
     # TODO: Set proper rights to the document. The message sender owns the document. Owners of the list get at least a
     #  view right. Other rights depend on the message list's archive policy.
+
+
+def parse_mailman_message(original: dict, msg_list: MessageListModel) -> Message:
+    """Modify an email message sent from Mailman to TIM's universal message format."""
+    # VIESTIM: original should have fields specified in https://pypi.org/project/mail-parser/
+    visible_recipients= []
+
+    visible_recipients.extend(original["to"])
+    visible_recipients.extend(original["cc"])
+    # VIESTIM: How should we differentiate with cc and bcc in TIM's context? bcc recipients should still get messages
+    #  intented for them.
+
+    message = Message(
+        message_list_name=msg_list.name,
+        domain=msg_list.email_list_domain,
+        message_channel=Channel.EMAIL_LIST,
+
+        # Header information
+        sender=original["from_"],
+        reply_to=original["reply_to"],
+        recipients=visible_recipients,
+        title=original["subject"],
+
+        # Message body
+        message_body=original["body"],
+    )
+    return message
