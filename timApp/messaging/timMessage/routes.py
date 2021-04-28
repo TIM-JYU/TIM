@@ -7,6 +7,7 @@ from flask import Response
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
+from timApp.document import macroinfo
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -19,7 +20,7 @@ from timApp.messaging.timMessage.internalmessage_models import InternalMessage, 
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import ok_response
+from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
 
@@ -46,6 +47,22 @@ class MessageBody:
     messageBody: str
     messageSubject: str
     recipients: List[str]  # VIESTIM: find recipient by email or some other identifier?
+
+
+@timMessage.route("/get/<int:item_id>", methods=['GET'])
+def get_tim_message(item_id: int) -> Response:
+    """
+    Retrieve message based on item id.
+
+    :param item_id: Identifier for document or folder where message is displayed
+    :return:
+    """
+    message = InternalMessage.query.filter_by(doc_id=item_id).first()
+    print(message)
+    display = InternalMessageReadReceipt.query.filter_by(message_id=message.id).first()
+    print(display)
+
+    return json_response(display)  # recursion error
 
 
 @timMessage.route("/send", methods=['POST'])

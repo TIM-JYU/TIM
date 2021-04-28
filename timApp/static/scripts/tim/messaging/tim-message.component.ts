@@ -1,5 +1,8 @@
 import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {itemglobals} from "tim/util/globals";
+import {HttpClient} from "@angular/common/http";
+import {to2} from "tim/util/utils";
 
 // import {TimMessage} from "tim/timApp/messaging/timMessage/timMessage";
 
@@ -68,6 +71,8 @@ export class TimMessageComponent implements OnInit {
     group?: string;
     heading?: string;
 
+    constructor(private http: HttpClient) {}
+
     /**
      * Toggles between showing the full message content and the shortened version.
      */
@@ -112,6 +117,9 @@ export class TimMessageComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        const itemId = itemglobals().curr_item.id;
+        void this.loadValues(itemId);
+
         // TODO Read sender, content etc. from database
         this.sender = "Matti Meikäläinen";
         this.group = "ohj1k21";
@@ -139,6 +147,25 @@ export class TimMessageComponent implements OnInit {
                 this.messageMaxLength
             );
         }
+    }
+
+    async loadValues(itemId: number) {
+        console.log(itemId);
+        const result = await to2(
+            this.http
+                .get<TimMessageComponent>(`/timMessage/get/${itemId}`)
+                .toPromise()
+        );
+
+        if (result.ok) {
+            this.setValues(result.result);
+        } else {
+            console.error(result.result.error.error);
+        }
+    }
+
+    setValues(options: TimMessageComponent) {
+        // TODO set values
     }
 }
 
