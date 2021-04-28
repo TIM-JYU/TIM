@@ -305,7 +305,11 @@ export class UserSelectComponent extends AngularPluginBase<
 
     async hasVideoDevice() {
         try {
-            await navigator.mediaDevices.getUserMedia({video: true});
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+            });
+            // Reset the camera so that it can be used
+            stream.getVideoTracks().forEach((track) => track.stop());
             return true;
         } catch (e) {
             return false;
@@ -313,23 +317,22 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     async startCodeReader() {
+        this.resetError();
+        this.resetView();
+        await this.resetCodeReader();
+
         // Ask for permission first
         this.hasCameras = await this.hasVideoDevice();
         if (!this.hasCameras) {
             return;
         }
-
-        this.resetError();
-        this.resetView();
-        await this.resetCodeReader();
         try {
             const codeReader = new BrowserMultiFormatReader(
                 undefined,
                 this.markup.scanner.scanInterval * 1000
             );
-            this.availableCameras = (
-                await codeReader.listVideoInputDevices()
-            ).map((d) => ({
+            const devices = await codeReader.listVideoInputDevices();
+            this.availableCameras = devices.map((d) => ({
                 id: d.deviceId,
                 name: d.label,
             }));
@@ -391,6 +394,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 }
             }
         } catch (e) {
+            console.log(e);
             const err = $localize`:@@userSelectErrorNoSearchResult:Could not search for the user.`;
             // Simply reset if no code found
             if (e instanceof NotFoundException) {
@@ -551,6 +555,9 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     private async resetCodeReader() {
+        if (!this.codeReaderStream) {
+            return;
+        }
         try {
             await this.setAdvancedCameraConstraints({torch: false});
             this.codeReader.reset();
