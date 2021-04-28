@@ -180,14 +180,24 @@ class MessageListExternalMember(MessageListMember):
 
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
 
+    # VIESTIM: Does this unique constraint block same external member from being part of more than one message list?
     email_address = db.Column(db.Text, unique=True)
     """Email address of message list's external member."""
 
     # TODO: Add a column for display name.
+    # display_name = db.Column(db.Text)
 
     member = db.relationship("MessageListMember", back_populates="external_member", lazy="select")
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "name": "External member",  # TODO: If/When a display name is added as a column, that can be used here.
+            "email": self.email_address,
+            "send_right": self.member[0].send_right,
+            "delivery_right": self.member[0].delivery_right
+        }
 
 
 class MessageListDistribution(db.Model):
