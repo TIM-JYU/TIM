@@ -180,6 +180,19 @@ class MessageListMember(db.Model):
         self.membership_ended = datetime.now()
         return
 
+    def to_json(self) -> Dict[str, Any]:
+        if self.is_external_member():
+            ext_member = self.external_member[0]
+            return ext_member.to_json()
+        if self.is_tim_member():
+            if self.is_group():
+                # VIESTIM: What do we do with groups? Is there a good way to make them JSON, because group's members
+                #  are also individually part of the list?
+                return dict()
+            elif self.is_personal_user():
+                personal_user = self.tim_member[0]
+                return personal_user.to_json()
+
 
 def get_members_for_list(msg_list: MessageListModel) -> List[MessageListMember]:
     """Get all members belonging to a list.
