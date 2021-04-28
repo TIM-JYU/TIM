@@ -59,7 +59,7 @@ def check_name(name_candidate: str) -> Response:
     """
 
     normalized_name = name_candidate.strip()
-    name, sep, domain = name_candidate.partition("@")
+    name, sep, domain = normalized_name.partition("@")
     check_messagelist_name_requirements(name)
     if sep:
         # If character '@' is found, we check email list specific name requirements.
@@ -108,6 +108,8 @@ def new_list(list_options: ListOptions) -> DocInfo:
     """
     # VIESTIM: Check creation permission? Or should it be in the calling view function?
     msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
+    if list_options.domain:
+        msg_list.email_list_domain = list_options.domain
     db.session.add(msg_list)
 
     doc_info = create_management_doc(msg_list, list_options)
