@@ -1,0 +1,159 @@
+@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap/variables";
+
+:host {
+  width: 100%;
+  display: block;
+}
+
+.barcode-video {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  & > * {
+    margin-top: 0.2em;
+    margin-bottom: 0.2em;
+  }
+
+  video {
+    width: 50%;
+  }
+
+  .glyphicon {
+    font-size: 1.5em;
+  }
+
+  button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    & > * {
+      margin-top: 0.2em;
+      margin-bottom: 0.2em;
+    }
+
+    .icon-text {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      * {
+        margin-left: 0.1em;
+        margin-right: 0.1em;
+      }
+    }
+  }
+}
+
+form.search {
+  display: flex;
+
+  input[type="text"] {
+    flex-grow: 1;
+    margin-right: 1em;
+  }
+}
+
+.search-result {
+  margin-top: 0.5rem;
+
+  .progress {
+    height: 1rem;
+  }
+}
+
+tim-alert {
+  display: block;
+  margin-top: 1rem;
+  font-size: 1.2rem;
+
+  ::ng-deep div.alert {
+    padding: 0.8rem;
+  }
+}
+
+tr.user-row {
+  cursor: pointer;
+}
+
+.action-buttons {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+
+  & > * {
+    margin: 0.5rem;
+  }
+
+  & > *:last-child {
+    margin-right: 0;
+  }
+
+  @media (max-width: $screen-xs-max) {
+    flex-direction: column;
+    align-items: stretch;
+
+    & > *:last-child {
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+.more-matches-info {
+  font-size: 1.2rem;
+  color: #aeaeae;
+  font-style: italic;
+}
+
+.label.not-supported {
+  font-size: 0.5em;
+  font-weight: normal;
+  user-select: none;
+}
+
+table {
+  width: 100%;
+  margin-top: 2rem;
+  border: none;
+  margin-bottom: 0.5rem;
+
+  thead {
+    border-bottom: 2px solid var(--basic-border-color);
+
+    th {
+      background-color: transparent;
+      border: none;
+    }
+  }
+
+  tbody tr.user-row {
+    border-bottom: 1px solid var(--basic-border-color);
+
+    td {
+      vertical-align: middle;
+      border: none;
+    }
+
+    td.select-col {
+      width: 1%;
+
+      input {
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    &.selected-user {
+      background-color: #88beff;
+    }
+
+    &:hover {
+      background-color: #d4e7ff;
+    }
+  }
+}
