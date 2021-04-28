@@ -154,8 +154,6 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
     else:
         tim_message.display_type = DisplayType.TOP_OF_PAGE  # default display type
 
-    tim_message.readreceipt = InternalMessageReadReceipt()  # TODO read receipts for all recipients
-
     tim_message.block = Block(type_id=0, created=message_doc.block.created)
 
     return message_doc
