@@ -66,8 +66,9 @@ const PluginFields = t.intersection([
     selector: "user-selector",
     template: `
         <div *ngIf="enableScanner" class="barcode-video">
-            <video [class.hidden]="!codeReader" #barcodeOutput></video>
-            <button [disabled]="!hasMediaDevices || codeReader" class="timButton btn-lg" (click)="startCodeReader()">
+            <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
+            <button [disabled]="!supportsMediaDevices" class="timButton btn-lg"
+                    (click)="startCodeReader()">
                 <span class="icon-text">
                     <i class="glyphicon glyphicon-qrcode"></i>
                     <span>/</span>
@@ -75,9 +76,12 @@ const PluginFields = t.intersection([
                 </span>
                 <span>Scan code</span>
             </button>
-            <span *ngIf="!hasMediaDevices" class="label label-default not-supported">Not supported on this device</span>
-            <div class="input-group" *ngIf="availableCameras.length > 0">
-                <span class="input-group-addon">Selected camera</span>
+            <span *ngIf="!supportsMediaDevices" class="label label-default not-supported" i18n>Not supported in this browser</span>
+            <span *ngIf="!hasCameras" class="label label-danger not-supported" i18n>No cameras found</span>
+            <span *ngIf="supportsMediaDevices && !supportsConstraint('torch')" class="label label-default not-supported"
+                  i18n>Flashlight is not supported</span>
+            <div class="input-group" *ngIf="availableCameras.length > 1">
+                <span class="input-group-addon" i18n>Selected camera</span>
                 <select class="form-control" [(ngModel)]="selectedCamera" (ngModelChange)="cameraSelected()">
                     <option *ngFor="let camera of availableCameras" [ngValue]="camera.id">{{camera.name}}</option>
                 </select>
@@ -213,13 +217,15 @@ export class UserSelectComponent extends AngularPluginBase<
     barCodeResult: string = "";
     videoAspectRatio: number = 1;
     videoWidth: number = 50;
-    hasMediaDevices = false;
+    supportsMediaDevices = true;
+    hasCameras = true;
     enableScanner = false;
-    codeReader?: BrowserMultiFormatReader;
+    codeReader!: BrowserMultiFormatReader;
     codeReaderStream?: MediaStream;
     inputListener?: Subscription;
     availableCameras: {id: string; name: string}[] = [];
-    selectedCamera!: string;
+    selectedCamera?: string;
+    private supportedCameraConstraints: Record<string, boolean> = {};
     private selectedCameraStorage = new TimStorage(
         "codeScannerCamera",
         t.string
@@ -256,32 +262,45 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     async cameraSelected() {
-        this.selectedCameraStorage.set(this.selectedCamera);
+        this.selectedCameraStorage.set(this.selectedCamera!);
         if (!this.codeReader) {
             return;
         }
         await this.startCodeReader();
     }
 
-    async initMediaDevices() {
-        this.hasMediaDevices = "mediaDevices" in navigator;
-        if (this.hasMediaDevices) {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const cameras = devices.filter((d) => d.kind == "videoinput");
-            this.hasMediaDevices = cameras.length > 0;
-            this.availableCameras = cameras.map((d) => ({
-                id: d.deviceId,
-                name: d.label,
-            }));
-            this.selectedCamera =
-                this.selectedCameraStorage.get() ??
-                (this.availableCameras.length > 0
-                    ? this.availableCameras[0].id
-                    : "none");
+    initMediaDevices() {
+        this.codeReader = new BrowserMultiFormatReader(
+            undefined,
+            this.markup.scanner.scanInterval * 1000
+        );
+        this.supportsMediaDevices = this.codeReader.isMediaDevicesSuported;
+        if (this.supportsMediaDevices) {
+            // There can be more constraints than what TS lib lists
+            this.supportedCameraConstraints = navigator.mediaDevices.getSupportedConstraints() as Record<
+                string,
+                boolean
+            >;
+            this.selectedCamera = this.selectedCameraStorage.get();
+        }
+    }
+
+    async hasVideoDevice() {
+        try {
+            await navigator.mediaDevices.getUserMedia({video: true});
+            return true;
+        } catch (e) {
+            return false;
         }
     }
 
     async startCodeReader() {
+        // Ask for permission first
+        this.hasCameras = await this.hasVideoDevice();
+        if (!this.hasCameras) {
+            return;
+        }
+
         this.resetError();
         this.resetView();
         await this.resetCodeReader();
@@ -290,6 +309,15 @@ export class UserSelectComponent extends AngularPluginBase<
                 undefined,
                 this.markup.scanner.scanInterval * 1000
             );
+            this.availableCameras = (
+                await codeReader.listVideoInputDevices()
+            ).map((d) => ({
+                id: d.deviceId,
+                name: d.label,
+            }));
+            this.selectedCamera =
+                this.selectedCameraStorage.get() ?? this.availableCameras[0].id;
+
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     deviceId: this.selectedCamera,
@@ -306,8 +334,14 @@ export class UserSelectComponent extends AngularPluginBase<
                 this.barcodeOutput.nativeElement
             );
 
-            await this.setAdvancedCameraConstraints({focusMode: "auto"});
-            await this.setAdvancedCameraConstraints({torch: true});
+            // Set focus mode separately since apparently it can cause torch to not be enabled later
+            await this.setAdvancedCameraConstraints({
+                focusMode: "auto",
+            });
+            // https://github.com/zxing-js/library/issues/267
+            await this.setAdvancedCameraConstraints({
+                torch: true,
+            });
 
             const result = await decoder;
             this.searchString = result.getText();
@@ -446,17 +480,34 @@ export class UserSelectComponent extends AngularPluginBase<
         };
     }
 
+    supportsConstraint(name: string) {
+        return (
+            this.supportsMediaDevices && this.supportedCameraConstraints[name]
+        );
+    }
+
     private async setAdvancedCameraConstraints(
         constraints: Record<string, unknown>
     ) {
         if (!this.codeReaderStream) {
             return;
         }
+        const cleanConstraints: Record<string, unknown> = {};
+        for (const k in constraints) {
+            if (
+                Object.hasOwnProperty.call(constraints, k) &&
+                this.supportsConstraint(k)
+            ) {
+                cleanConstraints[k] = constraints[k];
+            }
+        }
+        if (!cleanConstraints) {
+            return;
+        }
+        // Browser *should* ignore unknown constraints, but on some browsers it appears to throw nonetheless
         try {
-            // Trick: set torch constraints for the stream after reading starts
-            // See https://github.com/zxing-js/library/issues/267
             await this.codeReaderStream.getVideoTracks()[0].applyConstraints({
-                advanced: [constraints],
+                advanced: [cleanConstraints],
             });
         } catch (e) {
             // Swallow the error; the torch is just not supported
@@ -464,14 +515,10 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     private async resetCodeReader() {
-        if (!this.codeReader) {
-            return;
-        }
         try {
             await this.setAdvancedCameraConstraints({torch: false});
             this.codeReader.reset();
         } catch (e) {}
-        this.codeReader = undefined;
         this.codeReaderStream = undefined;
     }
 
