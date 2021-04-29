@@ -21,6 +21,7 @@ from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.user import User, UserInfo, deleted_user_suffix
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.user.userutils import check_password_hash
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.utils import approximate_real_name
@@ -97,6 +98,7 @@ class MergeResult:
     readparagraphs: int = 0
     notes: int = 0
     accesses: int = 0
+    groups: int = 0
 
 
 @user_cli.command()
@@ -146,6 +148,20 @@ def do_merge_users(u_prim: User, u_sec: User) -> MergeResult:
     u_prim_folder = u_prim.get_personal_folder()
     u_sec_folder = u_sec.get_personal_folder()
     docs = u_sec_folder.get_all_documents(include_subdirs=True)
+
+    # Move group memberships.
+    curr_prim_memberships = set(m.usergroup_id for m in u_prim.memberships)
+    for m in u_sec.memberships:
+        # Skip personal usergroup.
+        if m.usergroup_id == u_sec_group.id:
+            continue
+
+        if m.usergroup_id not in curr_prim_memberships:
+            ugm = UserGroupMember(usergroup_id=m.usergroup_id, added_by=m.added_by, membership_end=m.membership_end)
+            u_prim.memberships.append(ugm)
+            moved_data.groups += 1
+        db.session.delete(m)
+
     for d in docs:
         move_document(d, u_prim_folder)
     for a in ('readparagraphs', 'notes', 'accesses'):
