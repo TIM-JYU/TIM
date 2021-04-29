@@ -327,7 +327,7 @@ def get_file(file_id, file_filename):
         raise NotExist('File not found')
     verify_view_access(f, check_parents=True)
     file_path = f.filesystem_path.as_posix()
-    return send_file(file_path, mimetype=get_mimetype(file_path))
+    return send_file(file_path, mimetype=get_mimetype(file_path), conditional=True)
 
 
 @upload.route('/images/<int:image_id>/<image_filename>')
