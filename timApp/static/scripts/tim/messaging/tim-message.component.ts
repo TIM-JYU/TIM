@@ -56,11 +56,11 @@ import {getItem, IItem} from "tim/item/IItem";
 })
 export class TimMessageComponent implements OnInit {
     messageMaxLength: number = 210;
-    messageOverMaxLength: boolean = true;
+    messageOverMaxLength: boolean = false;
     showMessage: boolean = true;
     fullContent?: string;
     shownContent?: string;
-    showFullContent: boolean = false;
+    showFullContent: boolean = true;
     showReply: boolean = false;
     canMarkAsRead: boolean = true;
     markedAsRead: boolean = false;
@@ -123,42 +123,18 @@ export class TimMessageComponent implements OnInit {
 
         // TODO Read group and content from database
         this.group = "ohj1k21";
-        // this.fullContent =
-        //     "Sinulta puuttuu demo 3 ja 4 pisteitä. Miten jatketaan kurssin kanssa?";
-        this.fullContent =
-            "Sinulta puuttuu demo 3 ja 4 pisteitä. Miten jatketaan kurssin kanssa? \
-            Kullakin demokerralla 100% oikeuttava määrä on 8 pistettä. Kultakin \
-            demokerralta lasketaan jakson 1 aikana max. 10 p, eli vaikka saisit \
-            kerättyä lisätehtävillä enemmänkin pisteitä, otetaan jokaiselta demokerralta \
-            lukuun enintään 10 pistettä. Jakso 2 max 8p/kerta. Muutos: paitsi demo 12 \
-            jolloin määrällä ei ole ylärajaa. HUOM! 2 tehtävää / kerta ei kuitenkaan \
-            riitä kurssin läpäisemiseen, sillä ensinnäkään siitä ei tule yhteensä 40% \
-            ja toisekseen joka kerta jää 6 tehtävää muita jälkeen. 12 kerran jälkeen on \
-            melkoisen paljon muita jäljessä! 105 % suoritustavassa on JOKA demokerta \
-            tehtävä vähintään yksi Bonus- tai Guru-tehtävä (vuonna 2018 ekassa jaksossa, \
-            jatkossa molemmissa jaksoissa).";
-        if (this.fullContent.length < this.messageMaxLength) {
-            this.messageOverMaxLength = false;
-            this.showFullContent = true;
-        } else {
-            this.shownContent = this.fullContent.substr(
-                0,
-                this.messageMaxLength
-            );
-        }
     }
 
     async loadValues(itemId: number) {
         const message = await to2(
             // get message shown on current page
             this.http
-                .get<MessageOptions>(`/timMessage/get/${itemId}`)
+                .get<TimMessageData>(`/timMessage/get/${itemId}`)
                 .toPromise()
         );
 
         if (message.ok) {
-            const parId = message.result.parId; // TODO retrieve par contents
-            const messageDoc = await getItem(message.result.docId); // get message's document
+            const messageDoc = await getItem(message.result.doc_id); // get message's document
             if (!messageDoc) {
                 return;
             }
@@ -168,22 +144,36 @@ export class TimMessageComponent implements OnInit {
         }
     }
 
-    setValues(options: MessageOptions, doc: IItem) {
+    setValues(options: TimMessageData, doc: IItem) {
         // TODO set message contents
         this.sender = doc.owners[0].name;
-        this.heading = doc.title;
-        this.canMarkAsRead = options.canMarkAsRead;
-        this.canReply = options.reply;
+        this.heading = options.message_subject;
+        this.fullContent = options.message_body; // TODO handle html properly
+        this.canMarkAsRead = options.can_mark_as_read;
+        this.canReply = options.can_reply;
+
+        if (this.fullContent.length > this.messageMaxLength) {
+            this.messageOverMaxLength = true;
+            this.showFullContent = false;
+            this.shownContent = this.fullContent.substr(
+                0,
+                this.messageMaxLength
+            );
+        }
     }
 }
 
-interface MessageOptions {
-    canMarkAsRead: boolean;
-    displayType: number;
-    docId: number;
+interface TimMessageData {
+    // Information about the message retrieved from server
     id: number;
-    parId: string;
-    reply: boolean;
+    doc_id: number;
+    par_id: string;
+    can_mark_as_read: boolean;
+    can_reply: boolean;
+    display_type: number;
+    message_body: string;
+    message_subject: string;
+    recipients: [string];
 }
 
 @NgModule({

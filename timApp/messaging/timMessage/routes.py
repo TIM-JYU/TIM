@@ -10,6 +10,8 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.document import Document
+from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
@@ -47,6 +49,20 @@ class MessageBody:
     recipients: List[str]  # VIESTIM: find recipient by email or some other identifier?
 
 
+@dataclass
+class TimMessageData:
+    # Information about the message sent to browser
+    id: int
+    doc_id: int
+    par_id: str
+    can_mark_as_read: bool
+    can_reply: bool
+    display_type: int
+    message_body: str
+    message_subject: str
+    recipients: List[str]
+
+
 @timMessage.route("/get/<int:item_id>", methods=['GET'])
 def get_tim_message(item_id: int) -> Response:
     """
@@ -56,10 +72,22 @@ def get_tim_message(item_id: int) -> Response:
     :param item_id: Identifier for document or folder where message is displayed
     :return:
     """
-    display = InternalMessageDisplay.query.filter_by(display_doc_id=item_id).first()
-    message = InternalMessage.query.filter_by(id=display.message_id).first()
+    displays = InternalMessageDisplay.query.filter_by(display_doc_id=item_id).all()
+    message = InternalMessage.query.filter_by(id=displays[0].message_id).first()
+    document = DocEntry.find_by_id(message.doc_id)
 
-    return json_response(message)
+    recipients = []
+    for display in displays:
+        recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
+
+    fullmessage = TimMessageData(id=message.id, doc_id=message.doc_id, par_id=message.par_id,
+                                 can_mark_as_read=message.can_mark_as_read, can_reply=message.reply,
+                                 display_type=message.display_type,
+                                 message_body=Document.get_paragraph(document.document, message.par_id).get_html(
+                                 default_view_ctx),
+                                 message_subject=document.title, recipients=recipients)
+
+    return json_response(fullmessage)
 
 
 @timMessage.route("/send", methods=['POST'])
@@ -77,7 +105,6 @@ def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
     create_tim_message(tim_message, options, message)
     db.session.add(tim_message)
     db.session.flush()
-    print(tim_message.id)
 
     pages = get_display_pages(options.pageList.splitlines())
     recipients = get_recipient_users(message.recipients)
