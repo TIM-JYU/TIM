@@ -144,7 +144,9 @@ def archive_message(message_list: MessageListModel, message) -> None:
         owners = manage_doc_block.owners()
         Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
 
+    # If there is only one message, we don't need to add links to any other messages.
     if len(all_archived_messages) > 1:
+        # TODO: Extract linkings to their own functions.
         sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
         previous_doc = sorted_messages[1]
 
