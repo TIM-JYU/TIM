@@ -121,10 +121,8 @@ export class TimMessageComponent implements OnInit {
         const itemId = itemglobals().curr_item.id;
         void this.loadValues(itemId);
 
-        // TODO Read sender, content etc. from database
-        this.sender = "Matti Meikäläinen";
+        // TODO Read group and content from database
         this.group = "ohj1k21";
-        this.heading = "Puuttuvat demopisteet";
         // this.fullContent =
         //     "Sinulta puuttuu demo 3 ja 4 pisteitä. Miten jatketaan kurssin kanssa?";
         this.fullContent =
@@ -159,7 +157,6 @@ export class TimMessageComponent implements OnInit {
         );
 
         if (message.ok) {
-            console.log(message.result);
             const messageDocId = await to2(
                 // get item id for message
                 this.http
@@ -167,16 +164,29 @@ export class TimMessageComponent implements OnInit {
                     .toPromise()
             );
 
-            if (messageDocId.ok) {
-                console.log(messageDocId.result);
-                const messageDoc = await getItem(messageDocId.result.doc_id);
-                if (!messageDoc) {
-                    return;
+            const parId = await to2(
+                this.http
+                    .get<{par_id: string}>(`/timMessage/get/${itemId}`)
+                    .toPromise()
+            );
+
+            if (parId.ok) {
+                // TODO retrieve paragraph contents
+
+                if (messageDocId.ok) {
+                    const messageDoc = await getItem(
+                        messageDocId.result.doc_id
+                    ); // get message's document
+                    if (!messageDoc) {
+                        return;
+                    }
+
+                    this.setValues(message.result, messageDoc);
+                } else {
+                    console.error(messageDocId.result.error.error);
                 }
-                console.log(messageDoc); // 404 not found
-                this.setValues(message.result, messageDoc);
             } else {
-                console.error(messageDocId.result.error.error);
+                console.error(parId.result.error.error);
             }
         } else {
             console.error(message.result.error.error);
@@ -185,9 +195,10 @@ export class TimMessageComponent implements OnInit {
 
     setValues(options: TimMessageComponent, doc: IItem) {
         // TODO set values
+        console.log(options);
+        console.log(doc);
         this.sender = doc.owners[0].name;
-        this.heading = options.heading;
-        this.fullContent = options.fullContent;
+        this.heading = doc.title;
     }
 }
 

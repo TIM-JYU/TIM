@@ -119,17 +119,14 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
     message_doc.document.add_paragraph(f'**To:** {message_body.recipients}')
     message_par = message_doc.document.add_paragraph(message_body.messageBody)
 
-    tim_message.doc_id = message_doc.id
+    tim_message.block = message_doc.block
     tim_message.par_id = message_par.get_id()
+
     if options.important:
         # Important messages are interpreted as 'sticky' display type
         tim_message.display_type = DisplayType.STICKY  # TODO actual functionality
     else:
         tim_message.display_type = DisplayType.TOP_OF_PAGE  # default display type
-
-    tim_message.readreceipt = InternalMessageReadReceipt()  # TODO read receipts for all recipients
-
-    tim_message.block = Block(type_id=0, created=message_doc.block.created)
 
     return message_doc
 
