@@ -106,7 +106,9 @@ class MessageListModel(db.Model):
         """Get all the members that are not user groups."""
         individuals = []
         for member in self.members:
-            if not member.is_group() and member.is_active():
+            # VIESTIM: When user's verification is done, displace member.membership_ended with the commented out
+            #  predicate.
+            if not member.is_group() and not member.membership_ended:  # and member.is_active():
                 individuals.append(member)
         return individuals
 
@@ -172,7 +174,7 @@ class MessageListMember(db.Model):
         gid = self.tim_member[0].group_id
         from timApp.user.usergroup import UserGroup
         ug = UserGroup.query.filter_by(id=gid).one()
-        return ug.is_personal_group()
+        return ug.is_personal_group
 
     def is_group(self) -> bool:
         """If this message list member is actually a group of users."""
@@ -188,6 +190,9 @@ class MessageListMember(db.Model):
         self.membership_ended = datetime.now()
         return
 
+# VIESTIM: to_json might be unnecessary for general member, because when getting members they come as tim members or
+#  external members.
+"""
     def to_json(self) -> Dict[str, Any]:
         if self.is_external_member():
             ext_member = self.external_member[0]
@@ -200,6 +205,7 @@ class MessageListMember(db.Model):
             elif self.is_personal_user():
                 personal_user = self.tim_member[0]
                 return personal_user.to_json()
+"""
 
 
 def get_members_for_list(msg_list: MessageListModel) -> List[MessageListMember]:
