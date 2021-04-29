@@ -157,8 +157,8 @@ export class TimMessageComponent implements OnInit {
         );
 
         if (message.ok) {
-            const parId = message.result.par_id; // TODO retrieve par contents
-            const messageDoc = await getItem(message.result.doc_id); // get message's document
+            const parId = message.result.parId; // TODO retrieve par contents
+            const messageDoc = await getItem(message.result.docId); // get message's document
             if (!messageDoc) {
                 return;
             }
@@ -172,17 +172,17 @@ export class TimMessageComponent implements OnInit {
         // TODO set message contents
         this.sender = doc.owners[0].name;
         this.heading = doc.title;
-        this.canMarkAsRead = options.can_mark_as_read;
+        this.canMarkAsRead = options.canMarkAsRead;
         this.canReply = options.reply;
     }
 }
 
 interface MessageOptions {
-    can_mark_as_read: boolean;
-    display_type: number;
-    doc_id: number;
+    canMarkAsRead: boolean;
+    displayType: number;
+    docId: number;
     id: number;
-    par_id: string;
+    parId: string;
     reply: boolean;
 }
 

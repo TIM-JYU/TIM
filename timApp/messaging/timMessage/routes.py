@@ -76,13 +76,16 @@ def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
     tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply)
     create_tim_message(tim_message, options, message)
     db.session.add(tim_message)
-    db.session.commit()
+    db.session.flush()
+    print(tim_message.id)
 
     pages = get_display_pages(options.pageList.splitlines())
     recipients = get_recipient_users(message.recipients)
     create_message_displays(tim_message.id, pages, recipients)
     if recipients:
         create_read_receipts(tim_message.id, recipients)
+
+    db.session.commit()
 
     return ok_response()
 
@@ -239,8 +242,6 @@ def create_message_displays(msg_id: int, pages: List[Item], recipients: List[Use
         display.message_id = msg_id
         db.session.add(display)
 
-    db.session.commit()
-
 
 def create_read_receipts(msg_id: int, recipients: List[UserGroup]) -> None:
     """
@@ -253,5 +254,3 @@ def create_read_receipts(msg_id: int, recipients: List[UserGroup]) -> None:
     for recipient in recipients:
         readreceipt = InternalMessageReadReceipt(rcpt_id=recipient.id, message_id=msg_id)
         db.session.add(readreceipt)
-
-    db.session.commit()
