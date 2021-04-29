@@ -14,7 +14,7 @@ from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_e
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember, get_members_for_list
-from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, Message, \
+from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
     archive_message, MESSAGE_LIST_DOC_PREFIX
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
@@ -273,7 +273,7 @@ def get_members(list_name: str) -> Response:
 
 
 @messagelist.route("/archive", methods=['POST'])
-def archive(message: Message) -> Response:
+def archive(message: MessageTIMversalis) -> Response:
     """Archive a message sent to a message list.
 
     :param message: The message to be archived.

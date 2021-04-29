@@ -91,7 +91,7 @@ def check_name_rules(name_candidate: str) -> None:
 
 
 @dataclass
-class Message:
+class MessageTIMversalis:
     """A unified datastructure for messages TIM handles."""
     # Meta information about where this message belongs to and where it's from.
     message_list_name: str
@@ -114,7 +114,7 @@ MESSAGE_LIST_DOC_PREFIX = "messagelists"
 MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
 
-def archive_message(message_list: MessageListModel, message) -> None:
+def archive_message(message_list: MessageListModel, message: MessageTIMversalis) -> None:
     """Archive a message for a message list."""
     # TODO: If there are multiple messages with same title, differentiate them.
     archive_title = message.title
@@ -167,7 +167,7 @@ def archive_message(message_list: MessageListModel, message) -> None:
     #  view right. Other rights depend on the message list's archive policy.
 
 
-def parse_mailman_message(original: dict, msg_list: MessageListModel) -> Message:
+def parse_mailman_message(original: dict, msg_list: MessageListModel) -> MessageTIMversalis:
     """Modify an email message sent from Mailman to TIM's universal message format."""
     # VIESTIM: original should have fields specified in https://pypi.org/project/mail-parser/
     visible_recipients = []
@@ -177,7 +177,7 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> Message
     # VIESTIM: How should we differentiate with cc and bcc in TIM's context? bcc recipients should still get messages
     #  intented for them.
 
-    message = Message(
+    message = MessageTIMversalis(
         message_list_name=msg_list.name,
         domain=msg_list.email_list_domain,
         message_channel=Channel.EMAIL_LIST,
