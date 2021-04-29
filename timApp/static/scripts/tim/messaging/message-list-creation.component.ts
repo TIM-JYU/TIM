@@ -78,7 +78,7 @@ export class MessageListComponent extends AngularDialogComponent<
 
     // For name check
     timeoutID?: number;
-    notifyOwnerOnListChange: boolean = true;
+    notifyOwnerOnListChange: boolean = false;
 
     listDescription: string = "";
     listInfo: string = "";

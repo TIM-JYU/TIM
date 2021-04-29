@@ -65,7 +65,7 @@ def check_urls(urls: str) -> Response:
 
     for url in url_list:
         url = url.strip()  #remove leading and trailing whitespaces
-        regex = "https?://[a-z.]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/"
+        regex = "https?://[a-z0-9.-]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/"
         if re.search(regex, url):  # check if url matches the TIM urls' pattern
             shortened_url = re.sub(regex, "", url)
         else:
@@ -153,8 +153,6 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
         tim_message.display_type = DisplayType.STICKY  # TODO actual functionality
     else:
         tim_message.display_type = DisplayType.TOP_OF_PAGE  # default display type
-
-    tim_message.readreceipt = InternalMessageReadReceipt()  # TODO read receipts for all recipients
 
     tim_message.block = Block(type_id=0, created=message_doc.block.created)
 

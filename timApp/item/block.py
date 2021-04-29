@@ -84,7 +84,8 @@ class Block(db.Model):
 
     #  If this Block corresponds to a message list's manage document, indicates the message list
     #  being managed.
-    managed_messagelist: Optional[MessageListModel] = db.relationship("MessageListModel", back_populates="block")
+    managed_messagelist: Optional[MessageListModel] = db.relationship("MessageListModel", back_populates="block",
+                                                                      lazy="select")
 
     internalmessage: Optional[InternalMessage] = db.relationship('InternalMessage', back_populates='block')
     internalmessage_display: Optional[InternalMessageDisplay] = db.relationship('InternalMessageDisplay',

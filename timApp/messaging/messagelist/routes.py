@@ -39,10 +39,24 @@ def create_list(options: ListOptions) -> Response:
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
+    options.listname = options.listname.strip()
+
+    test_name(options.listname)  # Test the name we are creating.
+
     manage_doc = new_list(options)
     create_new_email_list(options, owner)
 
     return json_response(manage_doc)
+
+
+def test_name(name_candidate: str) -> None:
+    normalized_name = name_candidate.strip()
+    name, sep, domain = normalized_name.partition("@")
+    check_messagelist_name_requirements(name)
+    if sep:
+        # If character '@' is found, we check email list specific name requirements.
+        check_emaillist_name_requirements(name, domain)
+    return
 
 
 @messagelist.route("/checkname/<string:name_candidate>", methods=['GET'])
@@ -55,12 +69,7 @@ def check_name(name_candidate: str) -> Response:
     :param name_candidate: Possible name for message/email list. Should either be a name for a list or a fully qualifed
     domain name for (email) list. In the latter case we also check email list specific name requirements.
     """
-
-    name, sep, domain = name_candidate.partition("@")
-    check_messagelist_name_requirements(name)
-    if sep:
-        # If character '@' is found, we check email list specific name requirements.
-        check_emaillist_name_requirements(name, domain)
+    test_name(name_candidate)
     return ok_response()
 
 
@@ -105,6 +114,8 @@ def new_list(list_options: ListOptions) -> DocInfo:
     """
     # VIESTIM: Check creation permission? Or should it be in the calling view function?
     msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
+    if list_options.domain:
+        msg_list.email_list_domain = list_options.domain
     db.session.add(msg_list)
 
     doc_info = create_management_doc(msg_list, list_options)
@@ -186,7 +197,7 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
         em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
 
     for member_candidate in memberCandidates:
-        u = User.get_by_name(member_candidate)
+        u = User.get_by_name(member_candidate.strip())
         if u is not None:
             # The name given was an existing TIM user.
             new_tim_member = MessageListTimMember()
@@ -232,16 +243,24 @@ def get_members(list_name: str) -> Response:
     :param list_name:
     :return:
     """
+    msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
+    list_members = msg_list.get_individual_members()
+    return json_response(list_members)
+
+# VIESTIM: Old get_members for reference:
+"""  
     from timApp.user.usergroup import UserGroup
 
     msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
-    members = get_members_for_list(msg_list)
     list_members: List[MemberInfo] = []
-    for member in members:
-        if member.tim_member:
-            gid = member.tim_member[0].group_id
-            ug = UserGroup.query.filter_by(id=gid).one()
-            if len(ug.users) == 1:
+    for member in msg_list.members:
+        if member.is_external_member():
+            pass
+        if member.is_tim_member():
+
+            if member.is_personal_user():
+                gid = member.tim_member[0].group_id
+                ug = UserGroup.query.filter_by(id=gid).one()
                 # VIESTIM: This should be the user's personal user group.
                 u = ug.users[0]
                 mi = MemberInfo(name=u.real_name, email=u.email, sendRight=member.send_right,
@@ -255,8 +274,7 @@ def get_members(list_name: str) -> Response:
             mi = MemberInfo(name="External member", email=member.external_member.email_address,
                             sendRight=member.send_right, deliveryRight=member.delivery_right)
         list_members.append(mi)
-
-    return json_response(list_members)
+"""
 
 
 @dataclass

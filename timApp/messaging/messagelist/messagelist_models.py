@@ -1,5 +1,6 @@
+from datetime import datetime
 from enum import Enum
-from typing import List
+from typing import List, Optional, Dict, Any
 
 from timApp.messaging.messagelist.listoptions import ArchiveType
 from timApp.timdb.sqa import db
@@ -62,8 +63,8 @@ class MessageListModel(db.Model):
     removed = db.Column(db.DateTime(timezone=True))
     """When this list has been marked for removal."""
 
-    block = db.relationship("Block")
-    members = db.relationship("MessageListMember", back_populates="message_list")
+    block = db.relationship("Block", back_populates="managed_messagelist", lazy="select")
+    members = db.relationship("MessageListMember", back_populates="message_list", lazy="select")
 
     @staticmethod
     def get_list_by_manage_doc_id(doc_id: int) -> 'MessageListModel':
@@ -93,13 +94,23 @@ class MessageListModel(db.Model):
         """
         maybe_list = MessageListModel.get_list_by_name_first(name_candidate=name_candidate)
         if maybe_list is None:
-            return True
-        else:
             return False
+        else:
+            return True
 
     @property
     def archive_policy(self) -> ArchiveType:
         return self.archive
+
+    def get_individual_members(self) -> List['MessageListMember']:
+        """Get all the members that are not user groups."""
+        individuals = []
+        for member in self.members:
+            # VIESTIM: When user's verification is done, replace 'not member.membership_ended' with the commented out
+            #  predicate.
+            if not member.is_group() and not member.membership_ended:  # member.is_active():
+                individuals.append(member)
+        return individuals
 
 
 class MessageListMember(db.Model):
@@ -114,11 +125,12 @@ class MessageListMember(db.Model):
 
     # VIESTIM: This is can_send in the original database plan.
     send_right = db.Column(db.Boolean)
-    """If a member can send messages to a message list."""
+    """If a member can send messages to a message list. Send right for a user group is meaningless at this point"""
 
     # VIESTIM: delivery_right doesn't exist in the original plan.
     delivery_right = db.Column(db.Boolean)
-    """If a member can get messages from a message list."""
+    """If a member can get messages from a message list. Delivery right for a user group is meaningless at this 
+    point. """
 
     membership_ended = db.Column(db.DateTime(timezone=True))
     """When member's membership on a list ended. This is set when member is removed from a list."""
@@ -137,12 +149,65 @@ class MessageListMember(db.Model):
     member_type = db.Column(db.Text)
     """Discriminator for polymorhphic members."""
 
-    message_list = db.relationship("MessageListModel", back_populates="members")
-    tim_member = db.relationship("MessageListTimMember", back_populates="member")
-    external_member = db.relationship("MessageListExternalMember", back_populates="member")
-    distribution = db.relationship("MessageListDistribution", back_populates="member")
+    message_list = db.relationship("MessageListModel", back_populates="members", lazy="select")
+    tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select", uselist=False)
+    external_member = db.relationship("MessageListExternalMember", back_populates="member", lazy="select",
+                                      uselist=False)
+    distribution = db.relationship("MessageListDistribution", back_populates="member", lazy="select")
 
     __mapper_args__ = {"polymorphic_identity": "member", "polymorphic_on": member_type}
+
+    def is_external_member(self) -> bool:
+        """If this member is an external member to a message list."""
+        if self.external_member:
+            return True
+        return False
+
+    def is_tim_member(self) -> bool:
+        """If this member is a 'TIM member', i.e. a user group. This can be either a personal user group or a
+        group. """
+        if self.tim_member:
+            return True
+        return False
+
+    def is_personal_user(self) -> bool:
+        """If this member is an individual user, i.e. a personal user group."""
+        gid = self.tim_member.group_id
+        from timApp.user.usergroup import UserGroup
+        ug = UserGroup.query.filter_by(id=gid).one()
+        return ug.is_personal_group
+
+    def is_group(self) -> bool:
+        """If this message list member is actually a group of users."""
+        return not self.is_personal_user()
+
+    def is_active(self) -> bool:
+        return self.membership_ended is None and self.is_verified()
+
+    def is_verified(self) -> bool:
+        return self.membership_verified is not None
+
+    def remove(self) -> None:
+        self.membership_ended = datetime.now()
+        return
+
+
+# VIESTIM: to_json might be unnecessary for general member, because when getting members they come as tim members or
+#  external members.
+"""
+    def to_json(self) -> Dict[str, Any]:
+        if self.is_external_member():
+            ext_member = self.external_member[0]
+            return ext_member.to_json()
+        if self.is_tim_member():
+            if self.is_group():
+                # VIESTIM: What do we do with groups? Is there a good way to make them JSON, because group's members
+                #  are also individually part of the list?
+                return dict()
+            elif self.is_personal_user():
+                personal_user = self.tim_member[0]
+                return personal_user.to_json()
+"""
 
 
 def get_members_for_list(msg_list: MessageListModel) -> List[MessageListMember]:
@@ -166,10 +231,29 @@ class MessageListTimMember(MessageListMember):
     group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
     """A UserGroup id for a member."""
 
-    member = db.relationship("MessageListMember", back_populates="tim_member")
-    user_group = db.relationship("UserGroup", back_populates="messagelist_membership")
+    member = db.relationship("MessageListMember", back_populates="tim_member", lazy="select", uselist=False)
+    user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select", uselist=False)
 
     __mapper_args__ = {"polymorphic_identity": "tim_member"}
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "name": self.get_name(),
+            "email": self.get_email() if self.get_email() is not None else "",
+            "send_right": self.member.send_right,
+            "delivery_right": self.member.delivery_right
+        }
+
+    def get_name(self) -> str:
+        ug = self.user_group
+        return ug.name
+
+    def get_email(self) -> Optional[str]:
+        if self.is_group():
+            return None
+        ug = self.user_group
+        user = ug.personal_user
+        return user.email
 
 
 class MessageListExternalMember(MessageListMember):
@@ -180,14 +264,24 @@ class MessageListExternalMember(MessageListMember):
 
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
 
+    # VIESTIM: Does this unique constraint block same external member from being part of more than one message list?
     email_address = db.Column(db.Text, unique=True)
     """Email address of message list's external member."""
 
     # TODO: Add a column for display name.
+    # display_name = db.Column(db.Text)
 
-    member = db.relationship("MessageListMember", back_populates="external_member")
+    member = db.relationship("MessageListMember", back_populates="external_member", lazy="select", uselist=False)
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "name": "External member",  # TODO: If/When a display name is added as a column, that can be used here.
+            "email": self.email_address,
+            "send_right": self.member.send_right,
+            "delivery_right": self.member.delivery_right
+        }
 
 
 class MessageListDistribution(db.Model):
@@ -199,7 +293,7 @@ class MessageListDistribution(db.Model):
     channel = db.Column(db.Enum(Channel))
     """Which message channels are used for a message list."""
 
-    member = db.relationship("MessageListMember", back_populates="distribution")
+    member = db.relationship("MessageListMember", back_populates="distribution", lazy="select")
 
 
 class UserEmails(db.Model):
