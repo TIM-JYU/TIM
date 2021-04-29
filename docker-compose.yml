@@ -316,6 +316,7 @@ services:
    - prod_multi
    - dev
   image: timimages/goemaxima:2020113001-latest
+  restart: unless-stopped
  stack-api-server:
   profiles:
    - prod
