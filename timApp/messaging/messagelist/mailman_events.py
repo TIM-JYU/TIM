@@ -3,6 +3,7 @@
 
 import secrets
 from dataclasses import dataclass
+from typing import Optional
 
 from flask import request, Response, Blueprint
 
@@ -39,13 +40,16 @@ class MailmanMessageList:
 @dataclass
 class MailmanMemberAddress:
     email: str
-    name: str
+    # name: str
+    name: Optional[str]  # name seemed to be empty at least at some point.
 
 
 @dataclass
 class MailmanMember:
-    user_id: str
-    name: str
+    # user_id: str
+    # name: str
+    user_id: int
+    address: MailmanMemberAddress
 
 
 @dataclass
@@ -85,21 +89,24 @@ def handle_event() -> Response:
         raise RouteException("Body must be JSON")
 
     data = request.json
+    log_info("Request data:")
+    log_info(data)
     if "event" not in data or data["event"] not in EVENTS:
         # VIESTIM: Should we log if an unhandled event happened?
         #  e.g. log_error("A call without any event field has occured.")
         #  and/or log_error(f"Unhandled event {data['event']}.")
         raise RouteException("Event not handled")
+
     evt = EVENTS[data["event"]].load(data)
 
     log_info(f"Got event: {evt}")
     if isinstance(evt, SubscriptionEvent):
         if evt.event == "user_subscribed":
+            log_info("Subscription event captured.")
             # TODO: Handle subscription event.
-            pass
         elif evt.event == "user_unsubscribed":
             # TODO: Handle unsubscription event.
-            pass
+            log_info("Unsubscription event captured.")
     # TODO: Check if this message is a duplicate. If it is, then handle (e.g. drop) it.
     # VIESTIM: How to check if the message is a duplicate?
     # VIESTIM: If we are checking for a duplicate, should we be counting how "manyeth" duplicate the message is, so
