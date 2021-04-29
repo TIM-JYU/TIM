@@ -68,8 +68,8 @@ export class TimMessageComponent implements OnInit {
     canReply: boolean = true; // show/hide 'Reply' button
     canSendReply: boolean = true; // enable/disable 'Send' button
     sender?: string;
-    messageToGroup: boolean = true;
-    group?: string;
+    messageToGroup: boolean = true; // can't get from database
+    group?: string; // can't get from database
     heading?: string;
 
     constructor(private http: HttpClient) {}
@@ -152,54 +152,38 @@ export class TimMessageComponent implements OnInit {
         const message = await to2(
             // get message shown on current page
             this.http
-                .get<TimMessageComponent>(`/timMessage/get/${itemId}`)
+                .get<MessageOptions>(`/timMessage/get/${itemId}`)
                 .toPromise()
         );
 
         if (message.ok) {
-            const messageDocId = await to2(
-                // get item id for message
-                this.http
-                    .get<{doc_id: number}>(`/timMessage/get/${itemId}`)
-                    .toPromise()
-            );
-
-            const parId = await to2(
-                this.http
-                    .get<{par_id: string}>(`/timMessage/get/${itemId}`)
-                    .toPromise()
-            );
-
-            if (parId.ok) {
-                // TODO retrieve paragraph contents
-
-                if (messageDocId.ok) {
-                    const messageDoc = await getItem(
-                        messageDocId.result.doc_id
-                    ); // get message's document
-                    if (!messageDoc) {
-                        return;
-                    }
-
-                    this.setValues(message.result, messageDoc);
-                } else {
-                    console.error(messageDocId.result.error.error);
-                }
-            } else {
-                console.error(parId.result.error.error);
+            const parId = message.result.par_id; // TODO retrieve par contents
+            const messageDoc = await getItem(message.result.doc_id); // get message's document
+            if (!messageDoc) {
+                return;
             }
+            this.setValues(message.result, messageDoc);
         } else {
             console.error(message.result.error.error);
         }
     }
 
-    setValues(options: TimMessageComponent, doc: IItem) {
-        // TODO set values
-        console.log(options);
-        console.log(doc);
+    setValues(options: MessageOptions, doc: IItem) {
+        // TODO set message contents
         this.sender = doc.owners[0].name;
         this.heading = doc.title;
+        this.canMarkAsRead = options.can_mark_as_read;
+        this.canReply = options.reply;
     }
+}
+
+interface MessageOptions {
+    can_mark_as_read: boolean;
+    display_type: number;
+    doc_id: number;
+    id: number;
+    par_id: string;
+    reply: boolean;
 }
 
 @NgModule({

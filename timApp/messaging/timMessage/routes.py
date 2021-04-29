@@ -7,13 +7,11 @@ from flask import Response
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document import macroinfo
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
-from timApp.item.block import Block
 from timApp.item.item import Item
 from timApp.messaging.timMessage.internalmessage_models import InternalMessage, DisplayType, InternalMessageDisplay, \
     InternalMessageReadReceipt
