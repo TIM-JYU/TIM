@@ -111,19 +111,19 @@ class Message:
 
 
 MESSAGE_LIST_DOC_PREFIX = "messagelists"
-MESSAGE_LIST_ARCHIVE_PREFIX = "archives"
+MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
 
 def archive_message(message_list: MessageListModel, message) -> None:
     """Archive a message for a message list."""
     # TODO: If there are multiple messages with same title, differentiate them.
     archive_title = message.title
-    archive_path = f"{MESSAGE_LIST_ARCHIVE_PREFIX}/{remove_path_special_chars(archive_title)}"
+    archive_folder_path = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{remove_path_special_chars(message_list.name)}"
 
     # Archive folder for message list.
-    archive_folder = Folder.find_by_location(archive_path, message_list.name)
+    archive_folder = Folder.find_by_location(archive_folder_path, message_list.name)
 
-    archive_doc = create_document(archive_path, archive_title)
+    archive_doc = create_document(archive_folder_path, archive_title)
 
     # Set header information for archived message.
     archive_doc.document.add_text(f"Title: {message.title}")
@@ -142,7 +142,7 @@ def archive_message(message_list: MessageListModel, message) -> None:
         # TODO: Set folder's owners to be message list's owners.
         manage_doc_block = Block.query.filter_by(id=message_list.manage_doc_id).one()
         owners = manage_doc_block.owners()
-        Folder.create(archive_path, owner_groups=owners, title=f"{message_list.name}")
+        Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
 
     if len(all_archived_messages) > 1:
         sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
@@ -168,7 +168,7 @@ def archive_message(message_list: MessageListModel, message) -> None:
 def parse_mailman_message(original: dict, msg_list: MessageListModel) -> Message:
     """Modify an email message sent from Mailman to TIM's universal message format."""
     # VIESTIM: original should have fields specified in https://pypi.org/project/mail-parser/
-    visible_recipients= []
+    visible_recipients = []
 
     visible_recipients.extend(original["to"])
     visible_recipients.extend(original["cc"])
