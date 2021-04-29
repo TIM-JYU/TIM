@@ -238,16 +238,24 @@ def get_members(list_name: str) -> Response:
     :param list_name:
     :return:
     """
+    msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
+    list_members = msg_list.get_individual_members()
+    return json_response(list_members)
+
+# VIESTIM: Old get_members for reference:
+"""  
     from timApp.user.usergroup import UserGroup
 
     msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
-    members = get_members_for_list(msg_list)
     list_members: List[MemberInfo] = []
-    for member in members:
-        if member.tim_member:
-            gid = member.tim_member[0].group_id
-            ug = UserGroup.query.filter_by(id=gid).one()
-            if len(ug.users) == 1:
+    for member in msg_list.members:
+        if member.is_external_member():
+            pass
+        if member.is_tim_member():
+
+            if member.is_personal_user():
+                gid = member.tim_member[0].group_id
+                ug = UserGroup.query.filter_by(id=gid).one()
                 # VIESTIM: This should be the user's personal user group.
                 u = ug.users[0]
                 mi = MemberInfo(name=u.real_name, email=u.email, sendRight=member.send_right,
@@ -261,8 +269,7 @@ def get_members(list_name: str) -> Response:
             mi = MemberInfo(name="External member", email=member.external_member.email_address,
                             sendRight=member.send_right, deliveryRight=member.delivery_right)
         list_members.append(mi)
-
-    return json_response(list_members)
+"""
 
 
 @messagelist.route("/archive", methods=['POST'])
