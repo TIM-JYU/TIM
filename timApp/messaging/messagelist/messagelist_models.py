@@ -102,13 +102,13 @@ class MessageListModel(db.Model):
     def archive_policy(self) -> ArchiveType:
         return self.archive
 
-    def get_individual_members(self):
+    def get_individual_members(self) -> List['MessageListMember']:
         """Get all the members that are not user groups."""
         individuals = []
         for member in self.members:
-            # VIESTIM: When user's verification is done, displace member.membership_ended with the commented out
+            # VIESTIM: When user's verification is done, replace 'not member.membership_ended' with the commented out
             #  predicate.
-            if not member.is_group() and not member.membership_ended:  # and member.is_active():
+            if not member.is_group() and not member.membership_ended:  # member.is_active():
                 individuals.append(member)
         return individuals
 
@@ -150,8 +150,9 @@ class MessageListMember(db.Model):
     """Discriminator for polymorhphic members."""
 
     message_list = db.relationship("MessageListModel", back_populates="members", lazy="select")
-    tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select")
-    external_member = db.relationship("MessageListExternalMember", back_populates="member", lazy="select")
+    tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select", uselist=False)
+    external_member = db.relationship("MessageListExternalMember", back_populates="member", lazy="select",
+                                      uselist=False)
     distribution = db.relationship("MessageListDistribution", back_populates="member", lazy="select")
 
     __mapper_args__ = {"polymorphic_identity": "member", "polymorphic_on": member_type}
@@ -171,7 +172,7 @@ class MessageListMember(db.Model):
 
     def is_personal_user(self) -> bool:
         """If this member is an individual user, i.e. a personal user group."""
-        gid = self.tim_member[0].group_id
+        gid = self.tim_member.group_id
         from timApp.user.usergroup import UserGroup
         ug = UserGroup.query.filter_by(id=gid).one()
         return ug.is_personal_group
@@ -189,6 +190,7 @@ class MessageListMember(db.Model):
     def remove(self) -> None:
         self.membership_ended = datetime.now()
         return
+
 
 # VIESTIM: to_json might be unnecessary for general member, because when getting members they come as tim members or
 #  external members.
@@ -229,8 +231,8 @@ class MessageListTimMember(MessageListMember):
     group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
     """A UserGroup id for a member."""
 
-    member = db.relationship("MessageListMember", back_populates="tim_member", lazy="select")
-    user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select")
+    member = db.relationship("MessageListMember", back_populates="tim_member", lazy="select", uselist=False)
+    user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select", uselist=False)
 
     __mapper_args__ = {"polymorphic_identity": "tim_member"}
 
@@ -238,18 +240,18 @@ class MessageListTimMember(MessageListMember):
         return {
             "name": self.get_name(),
             "email": self.get_email() if self.get_email() is not None else "",
-            "send_right": self.member[0].send_right,
-            "delivery_right": self.member[0].delivery_right
+            "send_right": self.member.send_right,
+            "delivery_right": self.member.delivery_right
         }
 
     def get_name(self) -> str:
-        ug = self.user_group[0]
+        ug = self.user_group
         return ug.name
 
     def get_email(self) -> Optional[str]:
         if self.is_group():
             return None
-        ug = self.user_group[0]
+        ug = self.user_group
         user = ug.personal_user
         return user.email
 
@@ -269,7 +271,7 @@ class MessageListExternalMember(MessageListMember):
     # TODO: Add a column for display name.
     # display_name = db.Column(db.Text)
 
-    member = db.relationship("MessageListMember", back_populates="external_member", lazy="select")
+    member = db.relationship("MessageListMember", back_populates="external_member", lazy="select", uselist=False)
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
 
@@ -277,8 +279,8 @@ class MessageListExternalMember(MessageListMember):
         return {
             "name": "External member",  # TODO: If/When a display name is added as a column, that can be used here.
             "email": self.email_address,
-            "send_right": self.member[0].send_right,
-            "delivery_right": self.member[0].delivery_right
+            "send_right": self.member.send_right,
+            "delivery_right": self.member.delivery_right
         }
 
 
