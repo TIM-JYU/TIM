@@ -106,16 +106,30 @@ def handle_event() -> Response:
     #  we can e.g. catch if there is a spammer channel that bombards with duplicate messages?
     # TODO: Archive this message, if it is intended for a message list that has archiving on.
     elif isinstance(evt, NewMessageEvent):
-        message_list = MessageListModel.get_list_by_name_first(evt.mlist.name)
-        if message_list is None:
-            raise RouteException("Message list does not exist.")
-        if not message_list.email_list_domain == evt.mlist.host:
-            # VIESTIM: If we are here, something is now funky. Message list doesn't have a email list (domain)
-            #  configured, but messages are directed at it. Not sure what do exactly do here, honestly.
-            log_warning(f"Message list '{message_list.name}' with id '{message_list.id}' doesn't have a domain "
-                        f"configured properly. Domain '{evt.mlist.host}' was expected.")
-        parsed_message = parse_mailman_message(evt.message, message_list)
-        archive_message(message_list, parsed_message)
-        # TODO: Relay this message forward, if there are other message channels in use for a message list.
+        handle_new_message(evt)
 
     return ok_response()
+
+
+def handle_new_message(event: NewMessageEvent) -> None:
+    # VIESTIM: log_info():s are used for testing, when everything works they can be removed.
+    log_info("***Start new message handling***")
+    message_list, sep, domain = event.mlist.name.partition("@")
+    log_info(f"Message seems to go to list {message_list}")
+    message_list = MessageListModel.get_list_by_name_first(message_list)
+    log_info("Got proper list.")
+    if message_list is None:
+        raise RouteException("Message list does not exist.")
+    if not message_list.email_list_domain == event.mlist.host:
+        # VIESTIM: If we are here, something is now funky. Message list doesn't have a email list (domain)
+        #  configured, but messages are directed at it. Not sure what do exactly do here, honestly.
+        log_warning(f"Message list '{message_list.name}' with id '{message_list.id}' doesn't have a domain "
+                    f"configured properly. Domain '{event.mlist.host}' was expected.")
+        raise RouteException("List not configured properly.")
+    parsed_message = parse_mailman_message(event.message, message_list)
+    log_info("Message parsed to TIM's message format.")
+    archive_message(message_list, parsed_message)
+    log_info("Message has been archived.")
+    # TODO: Relay this message forward, if there are other message channels in use for a message list.
+    log_info("***End new message handling. Things have succeeded, i.e. no exceptions were thrown***")
+    return
