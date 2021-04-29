@@ -112,14 +112,16 @@ def handle_event() -> Response:
 
 
 def handle_new_message(event: NewMessageEvent) -> None:
-    # VIESTIM: log_info():s are used for testing, when everything works they can be removed.
+    # VIESTIM: logging are used for testing, when everything works they can be removed.
     log_info("***Start new message handling***")
     message_list, sep, domain = event.mlist.name.partition("@")
     log_info(f"Message seems to go to list {message_list}")
     message_list = MessageListModel.get_list_by_name_first(message_list)
-    log_info("Got proper list.")
+
     if message_list is None:
+        log_warning("Tried to get a list that does not exist.")
         raise RouteException("Message list does not exist.")
+    log_info("Got proper list.")
     if not message_list.email_list_domain == event.mlist.host:
         # VIESTIM: If we are here, something is now funky. Message list doesn't have a email list (domain)
         #  configured, but messages are directed at it. Not sure what do exactly do here, honestly.
