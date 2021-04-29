@@ -18,22 +18,26 @@ import {
 @Component({
     selector: "message-list-creation",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame class="form-horizontal">
             <ng-container header>
                 Message list creation
             </ng-container>
             <ng-container body>
                <!-- <div>{{errorrMessage}}</div> -->
-                <div>
-                    <label for="list-name" class="list-name">List name: </label>
-                    <input type="text" name="list-name" id="list-name"
+                <div class="form-group">
+                    <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
+                    <div class="col-sm-7">
+                        <div class="input-group">    
+                    <input type="text" class="form-control" name="list-name" id="list-name"
                            [(ngModel)]="listname"
                            (keyup)="checkNameRequirementsLocally()"/>
-                    <span>@</span>
-                    <select id="domain-select" name="domain-select" [(ngModel)]="domain">
+                            <div class="input-group-addon">@</div>
+                    <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
                         <option [disabled]="domains.length" *ngFor="let domain of domains">{{domain}}</option>
                     </select>
                 </div>
+                        </div>
+                    </div>
                 <div class="archive-options">
                     <p class="list-name">List archive policy: </p>
                     <ul style="list-style-type: none">
