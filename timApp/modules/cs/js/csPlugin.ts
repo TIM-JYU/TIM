@@ -1526,6 +1526,10 @@ export class CsController extends CsBase implements ITimComponent {
     handleHTML(s: string): string {
         const regex = /<!-- DELETEBEGIN -->(.|\n)*?<!-- DELETEEND -->/gm;
         s = s.replace(regex, "");
+        s = s.replace(
+            /http:\/\/localhost\/csstatic\//g,
+            window.origin + "/csstatic/"
+        );
         return s;
     }
 

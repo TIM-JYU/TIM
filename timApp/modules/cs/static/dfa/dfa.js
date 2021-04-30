@@ -38,6 +38,7 @@ class DFA {
         this.staticerrors = "";
         let errors = "";
         this.columns = [0,1];
+        this.params = params;
         let columns = this.columns;
 
         let firstFound = undefined;
@@ -59,7 +60,7 @@ class DFA {
             if (s === ".") s = lastUsed;
             if (s === undefined) s = "???";
             let node = dfa.nodes[s];
-            if (!node) node = {name: s, arcs: {}, error: "", };
+            if (!node) node = {name: s, arcs: {}, error: "", cnt: 0};
             if (accept) node.accept = true;
             dfa.nodes[s] = node;
             if (!firstFound) firstFound = s;
@@ -68,12 +69,19 @@ class DFA {
 
 
         function addArc(value, from, to) {
-            if (value instanceof String) value = value.trim();
+            let label;
+            if (typeof value === 'string' || value instanceof String) {
+                value = value.trim();
+                label = value.replace(/_/g, " ");
+                value = value.replace(/_/g, "");
+            } else {
+                label = "" + value;
+            }
             if (colnames && !columns.includes(value) && value !== "*" && value !== -1) {
                 errors += "Illegal transition: " + value + "\n";
                 return;
             }
-            const arc = {value: value, from: from, to: to};
+            const arc = {value: value, label: label, from: from, to: to};
             dfa.arcs.push(arc);
             if (value === -1) return;
             const node = dfa.nodes[from];
@@ -196,13 +204,21 @@ class DFA {
      * \return boolean true if accpeted
      */
     accepts(s) {
+        this.cnt = 0;
+        for (const node of Object.values(this.nodes)) node.cnt = 0;
+        for (const arc of Object.values(this.arcs)) arc.cnt = 0;
         let active = this.first;
         if (!active) return false;
+        active.cnt = 1;
+        this.cnt++;
         for (let value of s) {
             let activeArc = active.arcs[value];
             if (!activeArc) activeArc = active.arcs['*'];
             if (!activeArc) return false;
             active = this.nodes[activeArc.to];
+            activeArc.cnt++;
+            if (active.cnt === 0) this.cnt++;
+            active.cnt++;
 
         }
         if (!active || !active.accept) return false;

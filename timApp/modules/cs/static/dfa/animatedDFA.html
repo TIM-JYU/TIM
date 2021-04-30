@@ -3,8 +3,9 @@
 <head>
  <script src="https://tim.jyu.fi/csstatic/vizjs/viz.js"></script>
  <script src="https://tim.jyu.fi/csstatic/vizjs/full.render.js"></script>
-<!-- <script src="https:tim.jyu.fi/csstatic/dfa/dfa.js"></script>-->
+<!-- <script src="https://tim.jyu.fi/csstatic/dfa/dfa.js"></script>-->
 <script src="http://localhost/csstatic/dfa/dfa.js"></script>
+<!--<script src="dfa.js"></script>-->
 <!-- <script src="http://localhost:63342/tim/static/dfa/dfa.js"></script>-->
  <style>
   .argsdiv {font-size: xx-large; margin-left: 1em;}
@@ -65,11 +66,15 @@
           this.error = false;
           this.active = null;
           this.activeArc = null;
+          for (const node of Object.values(this.dfa.nodes)) node.cnt = 0;
+          for (const arc of Object.values(this.dfa.arcs)) arc.cnt = 0;
+          this.dfa.cnt = 0;
       }
 
       constructor(dfa, args) {
           this.dfa = dfa;
           this.args = args;
+          this.params = dfa.params;
           this.reset();
       }
 
@@ -86,6 +91,8 @@
               this.error = false;
               this.activeArc = null;
               this.active = this.dfa.first;
+              this.dfa.cnt = 1;
+              this.dfa.first.cnt = 1;
               return true;
           }
           step++;
@@ -106,13 +113,16 @@
               if (!this.active) return false;
               this.activeArc = this.active.arcs[value];
               if (!this.activeArc) this.activeArc = this.active.arcs['*'];
-              if (this.activeArc) return result;
+              if (this.activeArc) {this.activeArc.cnt++;  return result; }
               this.error = true;
               return false;
           }
           if (minStep === 2)
-              if (this.activeArc && this.activeArc.to !== undefined)
+              if (this.activeArc && this.activeArc.to !== undefined) {
                   this.active = this.dfa.nodes[this.activeArc.to];
+                  if (this.active.cnt === 0) this.dfa.cnt++;
+                  this.active.cnt++;
+              }
               else result = false;
           return result;
       }
@@ -177,7 +187,9 @@
                       color = ', fillcolor="#ffffB0", style=filled'
                   else
                       color = ", fillcolor=" + activeColor + ", style=filled";
-
+              else
+                  if (dfa.params.trace && node.cnt > 0)
+                     color = ', fillcolor="#00ff00", style=filled'
 
               if (node.accept) circ = "doublecircle";
               let pos = this.getPos(node.name, dfa);
@@ -207,12 +219,15 @@
                   const arc2 = dfa.arcs[ia2];
                   if (arc2.done) continue;
                   if (arc2.from === arc.from && arc2.to === arc.to) {
-                      let text = arc2.value !==-1 ? arc2.value : "";
+                      let text = arc2.value !==-1 ? arc2.label : "";
                       if (dfaState.activeArc === arc2) {
                           if (minstep === 1) {
                               color = ", fontcolor=red";
                               if (text) text = '<b>' + text + '</b>'; // make bold
                           } else color = ', color=red, penwidth=2'
+                      } else if (this.params.trace) {
+                          if (arc2.cnt > 0)
+                             color = ', color="#00b000", penwidth=1'
                       }
                       arctext += comma + text;
                       comma = ",";
@@ -271,15 +286,21 @@
               // let el = '<span' + color + '>' + c + '</span>';
               argsdiv.appendChild(el);
           }
+          if (this.params.trace)
+              accepttext.innerText = dfa.dfa.cnt;
           if (dfa.step >= last || dfa.error ) {
+              let text;
+              let cls;
               if (!dfa.error && dfa.active && dfa.active.accept) {
-                  argsdiv.classList.add("accept");
-                  accepttext.innerText = "accept";
+                  text = this.params.acceptText;
+                  cls = "accept";
               }
               else {
-                  argsdiv.classList.add("reject");
-                  accepttext.innerText = "reject";
+                  text = this.params.rejectText;
+                  cls = "reject";
               }
+              argsdiv.classList.add(cls);
+              accepttext.innerText = text;
           }
       }
 
@@ -366,10 +387,18 @@
      return false;
   }
 
+
+  function paramDefault(params, name, value) {
+      if (params[name] === undefined) params[name] = value;
+  }
+
+
   function setData(data) {
     if ( preCheck(data) ) return;
     let params = data.params;
-    if (!params) params = {};
+    if (!params) params = { };
+    paramDefault(params, "acceptText", "accept");
+    paramDefault(params, "rejectText", "reject");
     let dfa = new DFA(data.code, params);
     dfaState = new VisualDFAState(dfa, data.args);
     dfaState.makeViz();
@@ -380,15 +409,15 @@
   <script>
     const code = `
 =|a b
-*1 a 2
+*1 a_ 2
 1 b 3
 2 * 4*
 4 a 1
 4 b 4
 3 a,b 3
      `;
-    //setData({code: code, args: "b", params: {syntaxes: "2", allowstar: false}});
-    //console.log(dfaState.dfa.accepts("1001"));
+    setData({code: code, args: "abaa", params: {trace: true, acceptText: "joo", rejectText: "nyyh", syntaxes: "2", allowstar: false}});
+    console.log(dfaState.dfa.accepts("abaa"));
   </script>
 </body>
 
