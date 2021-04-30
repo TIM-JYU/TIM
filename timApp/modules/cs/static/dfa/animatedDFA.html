@@ -286,7 +286,7 @@
               // let el = '<span' + color + '>' + c + '</span>';
               argsdiv.appendChild(el);
           }
-          if (this.params.trace)
+          if (this.params.trace && dfa.dfa.cnt)
               accepttext.innerText = dfa.dfa.cnt;
           if (dfa.step >= last || dfa.error ) {
               let text;
