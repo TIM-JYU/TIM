@@ -36,7 +36,7 @@ interface TimMessageOptions {
                                       [(ngModel)]="TimMessageOptions.archive">Archive message</label></p>
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="TimMessageOptions.important">Mark message as important (currently only applies to TIM messages)</label></p>
-            <fieldset><p>Send as (choose at least one of the two)</p><!--<label *ngIf="!defaultEmail"><input type="checkbox" 
+            <fieldset><p class="bold">Send as (choose at least one of the two)</p><!--<label *ngIf="!defaultEmail"><input type="checkbox" 
                                       [(ngModel)]="TimMessageOptions.messageChannel">to recipient's own message channels</label><br/>-->
             <label><input type="checkbox" (change)="notDefault()"
                                       [(ngModel)]="email">email</label><br/>
