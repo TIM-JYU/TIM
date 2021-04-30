@@ -20,7 +20,7 @@ from timApp.messaging.timMessage.internalmessage_models import InternalMessage, 
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import ok_response, json_response
+from timApp.util.flask.responsehelper import ok_response, json_response, error_generic
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
 
@@ -75,6 +75,9 @@ def get_tim_message(item_id: int) -> Response:
     displays = InternalMessageDisplay.query.filter_by(display_doc_id=item_id).all()
     message = InternalMessage.query.filter_by(id=displays[0].message_id).first()
     document = DocEntry.find_by_id(message.doc_id)
+
+    if not document:
+        return error_generic('Message document not found', 404)
 
     recipients = []
     for display in displays:
