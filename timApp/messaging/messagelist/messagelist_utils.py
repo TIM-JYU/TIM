@@ -93,21 +93,21 @@ def check_name_rules(name_candidate: str) -> None:
 @dataclass
 class MessageTIMversalis:
     """A unified datastructure for messages TIM handles."""
-    # Meta information about where this message belongs to and where it's from.
+    # Meta information about where this message belongs to and where it's from. Mandatory values for all messages.
     message_list_name: str
-    message_channel: Channel = field(metadata={'by_value': True})
+    message_channel: Channel = field(metadata={'by_value': True})  # Where the message came from.
 
-    # Header information.
+    # Header information. Mandatory values for all messages.
     sender: str
-    reply_to: Optional[str]
     recipients: List[str]
     title: str
 
-    # Message body.
+    # Message body. Mandatory values for all messages.
     message_body: str
 
     # Email specific attributes.
-    domain: Optional[str]
+    domain: Optional[str] = None
+    reply_to: Optional[str] = None
 
 
 MESSAGE_LIST_DOC_PREFIX = "messagelists"
