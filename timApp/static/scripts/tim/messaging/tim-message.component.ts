@@ -1,5 +1,7 @@
 import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {HttpClient} from "@angular/common/http";
+import {to2} from "tim/util/utils";
 
 // import {TimMessage} from "tim/timApp/messaging/timMessage/timMessage";
 
@@ -68,6 +70,8 @@ export class TimMessageComponent implements OnInit {
     group?: string;
     heading?: string;
 
+    constructor(private http: HttpClient) {}
+
     /**
      * Toggles between showing the full message content and the shortened version.
      */
@@ -78,8 +82,20 @@ export class TimMessageComponent implements OnInit {
     /**
      * Hides the message view; shows an alert about sending a read receipt and an option to cancel.
      */
-    markAsRead(): void {
-        this.markedAsRead = !this.markedAsRead;
+    async markAsRead() {
+        this.markedAsRead = true;
+        const result = await to2(
+            this.http
+                .post<{read: boolean}>("/timMessage/mark_as_read", {
+                    markedAsRead: this.markedAsRead,
+                })
+                .toPromise()
+        );
+        if (!result.ok) {
+            console.error(result.result.error.error);
+        } else {
+            console.log(result);
+        }
     }
 
     /**

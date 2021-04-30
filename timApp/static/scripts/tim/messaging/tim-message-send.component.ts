@@ -30,13 +30,14 @@ interface TimMessageOptions {
             <p>Subject: <input [(ngModel)]="messageSubject" size="60"></p>
             <p>Message content:</p>
             <p><textarea [(ngModel)]="messageBody" rows="10" cols="70"></textarea></p>
-            <button class="timButton" id="optionsButton" (click)="toggleOptions()">{{showOptions ? "Hide" : "Show"}} message options</button>
+            <span class="cursor-pointer" (click)="toggleOptions()"><a><span class="glyphicon"
+                             [ngClass]="showOptions ? 'glyphicon-minus' : 'glyphicon-plus'"></span></a>{{showOptions ? "Hide" : "Show"}} message options</span>
             <div *ngIf="showOptions">
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="TimMessageOptions.archive">Archive message</label></p>
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="TimMessageOptions.important">Mark message as important (currently only applies to TIM messages)</label></p>
-            <fieldset><p>Send as (choose at least one of the two)</p><!--<label *ngIf="!defaultEmail"><input type="checkbox" 
+            <fieldset><p class="bold">Send as (choose at least one of the two)</p><!--<label *ngIf="!defaultEmail"><input type="checkbox" 
                                       [(ngModel)]="TimMessageOptions.messageChannel">to recipient's own message channels</label><br/>-->
             <label><input type="checkbox" (change)="notDefault()"
                                       [(ngModel)]="email">email</label><br/>
@@ -56,25 +57,25 @@ interface TimMessageOptions {
             </ul>
             <label *ngIf="!defaultEmail"><input type="checkbox" (change) ="emptyPageList()"
                                       [(ngModel)]="timMessage">TIM message</label></fieldset><br/>
-                
-            <p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p>
-                <tim-alert *ngIf="urlError" severity="danger">
+            <ul>    
+                <li><p *ngIf="timMessage && !defaultEmail">Pages to send TIM message to: (enter URL addresses)<br/>(URLs will be automatically shortened)</p></li>
+                <li><tim-alert *ngIf="urlError" severity="danger">
                     {{ urlError }}
-                </tim-alert>
-            <p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="TimMessageOptions.pageList" (change)="checkUrls()" rows="4" cols="70"></textarea></p>
-            <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="TimMessageOptions.isPrivate">Recipient sees TIM message as private</label></p>
-            <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="TimMessageOptions.reply">TIM message can be replied to</label></p> 
-            <p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
-                                      [(ngModel)]="TimMessageOptions.readReceipt">TIM message can be marked as read</label></p>
-            <p *ngIf="timMessage && !defaultEmail" class="form-group">
+                </tim-alert></li>
+            <li><p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="TimMessageOptions.pageList" (change)="checkUrls()" rows="4" cols="70"></textarea></p></li>
+            <li><p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
+                                      [(ngModel)]="TimMessageOptions.isPrivate">Recipient sees TIM message as private</label></p></li>
+            <li><p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
+                                      [(ngModel)]="TimMessageOptions.reply">TIM message can be replied to</label></p></li>
+            <li><p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
+                                      [(ngModel)]="TimMessageOptions.readReceipt">TIM message can be marked as read</label></p></li>
+            <li><p *ngIf="timMessage && !defaultEmail" class="form-group">
                 <label for="expiration-selector">TIM message will be removed on:</label>
                 <tim-datetime-picker id="expiration-selector"
                                      [(time)]="TimMessageOptions.expires"
                                      placeholder="No automatic date">
                 </tim-datetime-picker>
-            </p><br/></div>
+            </p></li></ul><br/></div>
             <p>
                 <button class="timButton" id="sendButton" [disabled]="disableSendButton()"
                         (click)="sendMessage()">

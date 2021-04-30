@@ -65,6 +65,9 @@ def check_urls(urls: str) -> Response:
 
     for url in url_list:
         url = url.strip()  #remove leading and trailing whitespaces
+        hashtag_index = url.find("#")  #remove anchors
+        if hashtag_index != -1:
+            url = url[:hashtag_index]
         regex = "https?://[a-z0-9.-]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/"
         if re.search(regex, url):  # check if url matches the TIM urls' pattern
             shortened_url = re.sub(regex, "", url)
@@ -164,6 +167,12 @@ def reply_to_tim_message(options: MessageOptions, message: MessageBody) -> Respo
     # TODO handle replying to message
     return ok_response()
 
+@timMessage.route("/mark_as_read", methods=['POST'])
+def mark_as_read() -> Response:
+    # TODO handle marking message as read
+    print("merkattiin luetuksi")
+    #return json_response({"read": "true"}, 200)
+    return ok_response()
 
 def get_recipient_users(recipients: List[str]) -> List[UserGroup]:
     """
