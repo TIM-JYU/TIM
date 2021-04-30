@@ -1,6 +1,6 @@
 import re
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from timApp.document.create_item import create_document
 from timApp.folder.folder import Folder
@@ -167,13 +167,13 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
     #  view right. Other rights depend on the message list's archive policy.
 
 
-def parse_mailman_message(original: dict, msg_list: MessageListModel) -> MessageTIMversalis:
+def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> MessageTIMversalis:
     """Modify an email message sent from Mailman to TIM's universal message format."""
-    # VIESTIM: original should have fields specified in https://pypi.org/project/mail-parser/
-    visible_recipients = []
+    # VIESTIM: original message is of form specified in https://pypi.org/project/mail-parser/
 
-    visible_recipients.extend(original["to"])
-    visible_recipients.extend(original["cc"])
+    visible_recipients = (original.get("to", []))
+    visible_recipients.extend(original.get("cc", []))
+    visible_recipients.extend(original.get("bcc", []))
     # VIESTIM: How should we differentiate with cc and bcc in TIM's context? bcc recipients should still get messages
     #  intented for them.
 
@@ -184,11 +184,15 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> Message
 
         # Header information
         sender=original["from_"],
-        reply_to=original["reply_to"],
         recipients=visible_recipients,
         title=original["subject"],
 
         # Message body
         message_body=original["body"],
     )
+
+    # Try parsing email spesific fields.
+    if "reply_to" in original:
+        message.reply_to = original["reply_to"]
+
     return message
