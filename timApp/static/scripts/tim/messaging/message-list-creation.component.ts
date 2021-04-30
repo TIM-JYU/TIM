@@ -25,8 +25,8 @@ import {
             <ng-container body>
                <!-- <div>{{errorrMessage}}</div> -->
                 <div class="form-group">
-                    <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
-                    <div class="col-sm-7">
+                    <label for="list-name" class="list-name text-left control-label col-sm-3">List name: </label>
+                    <div class="col-sm-8">
                         <div class="input-group">    
                     <input type="text" class="form-control" name="list-name" id="list-name"
                            [(ngModel)]="listname"

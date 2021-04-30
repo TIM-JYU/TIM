@@ -8,11 +8,12 @@ input[type='radio'] {
 
 input[type='text'] {
   //margin-left: 10px;
-  margin-right: 0.5em;
+  //margin-left: 1em;
 }
 
 .list-name {
   font-weight: bold;
+  text-align: left !important;
 }
 
 label {
