@@ -164,6 +164,12 @@ def reply_to_tim_message(options: MessageOptions, message: MessageBody) -> Respo
     # TODO handle replying to message
     return ok_response()
 
+@timMessage.route("/mark_as_read", methods=['POST'])
+def mark_as_read() -> Response:
+    # TODO handle marking message as read
+    print("merkattiin luetuksi")
+    #return json_response({"read": "true"}, 200)
+    return ok_response()
 
 def get_recipient_users(recipients: List[str]) -> List[UserGroup]:
     """
