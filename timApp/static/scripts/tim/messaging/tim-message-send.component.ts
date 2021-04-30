@@ -30,7 +30,8 @@ interface TimMessageOptions {
             <p>Subject: <input [(ngModel)]="messageSubject" size="60"></p>
             <p>Message content:</p>
             <p><textarea [(ngModel)]="messageBody" rows="10" cols="70"></textarea></p>
-            <button class="timButton" id="optionsButton" (click)="toggleOptions()">{{showOptions ? "Hide" : "Show"}} message options</button>
+            <span class="cursor-pointer" (click)="toggleOptions()"><a><span class="glyphicon"
+                             [ngClass]="showOptions ? 'glyphicon-minus' : 'glyphicon-plus'"></span></a>{{showOptions ? "Hide" : "Show"}} message options</span>
             <div *ngIf="showOptions">
             <p *ngIf="!defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="TimMessageOptions.archive">Archive message</label></p>
