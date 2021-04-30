@@ -15,7 +15,7 @@ from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, R
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember, get_members_for_list
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
-    archive_message, MESSAGE_LIST_DOC_PREFIX
+    archive_message, MESSAGE_LIST_DOC_PREFIX, parse_mailman_message
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -242,6 +242,7 @@ def get_members(list_name: str) -> Response:
     list_members = msg_list.get_individual_members()
     return json_response(list_members)
 
+
 # VIESTIM: Old get_members for reference:
 """  
     from timApp.user.usergroup import UserGroup
@@ -294,5 +295,19 @@ def archive(message: MessageTIMversalis) -> Response:
         raise RouteException("This list doesn't archive messages.")
 
     archive_message(msg_list, message)
+
+    return ok_response()
+
+
+@messagelist.route("/test", methods=['POST'])
+def test_route() -> Response:
+    # Build test message, simulating an new message event from Mailman
+    new_message = {}
+
+    message_list = MessageListModel.get_list_by_name_exactly_one("uuslista343463")
+
+    parsed_message = parse_mailman_message(new_message, message_list)
+
+    archive_message(message_list, parsed_message)
 
     return ok_response()
