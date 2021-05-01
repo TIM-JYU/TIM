@@ -220,3 +220,26 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> Message
         message.reply_to = original["reply_to"]
 
     return message
+
+
+def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[EmailAndDisplayName]]:
+    """Parse (potentially existing) fields 'from' 'to', 'cc', or 'bcc' from a dict representing Mailman's email message.
+    The fields are in lists, with individual list indicies being lists themselves of the form
+        ['Display Name', 'email@domain.fi']
+
+    :param original: Original message.
+    :param header: One of "from", "to", "cc" or "bcc".
+    """
+
+    if header not in ["from", "to", "cc", "bcc"]:
+        return None
+
+    list_of_emails: List[EmailAndDisplayName] = []
+
+    if header in original:
+        for email_name_pair in original[header]:
+            new_email_name_pair = EmailAndDisplayName(email_address=email_name_pair[1],
+                                                      display_name=email_name_pair[0])
+            list_of_emails.append(new_email_name_pair)
+
+    return list_of_emails
