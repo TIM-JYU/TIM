@@ -161,7 +161,7 @@
           const dfa = dfaState.dfa;
           this.errors = dfa.staticerrors;
           let pos = this.getPos("startpoint", dfa);
-          let s = 'digraph finite_state_machine {\n' +
+          let s = 'digraph graph {\n' +
               'rankdir=LR;\n' +
               'size="8,5";\n' +
               'startpoint [shape = none, fontcolor=white, label=""' + pos +'];\n';
@@ -227,7 +227,7 @@
                           } else color = ', color=red, penwidth=2'
                       } else if (this.params.trace) {
                           if (arc2.cnt > 0)
-                             color = ', color="#00b000", penwidth=1'
+                             color = ', color="#00b000", penwidth=2'
                       }
                       arctext += comma + text;
                       comma = ",";
@@ -416,8 +416,8 @@
 4 b 4
 3 a,b 3
      `;
-    setData({code: code, args: "abaa", params: {trace: true, acceptText: "joo", rejectText: "nyyh", syntaxes: "2", allowstar: false}});
-    console.log(dfaState.dfa.accepts("abaa"));
+    // setData({code: code, args: "abaa", params: {trace: true, acceptText: "joo", rejectText: "nyyh", syntaxes: "2", allowstar: false}});
+    // console.log(dfaState.dfa.accepts("abaa"));
   </script>
 </body>
 

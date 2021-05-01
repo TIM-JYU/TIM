@@ -467,7 +467,7 @@ ${backTicks}
                                         "Teksti",
                                         "bgred"
                                     ),
-                                name: "Red",
+                                name: "Red bg",
                             },
                             {
                                 title: "Blue background",
