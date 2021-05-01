@@ -3,13 +3,19 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, List, Dict
 
+from timApp.auth.accesstype import AccessType
+from timApp.auth.sessioninfo import get_current_user_group_object
 from timApp.document.create_item import create_document
+from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.timdb.sqa import db
+from timApp.user.special_group_names import ANONYMOUS_GROUPNAME
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
-from timApp.util.utils import remove_path_special_chars
+from timApp.util.utils import remove_path_special_chars, get_current_time
 
 
 def check_messagelist_name_requirements(name_candidate: str) -> None:
@@ -258,3 +264,8 @@ def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[
             list_of_emails.append(new_email_name_pair)
 
     return list_of_emails
+
+
+def get_message_list_owners(mlist: MessageListModel) -> List[UserGroup]:
+    manage_doc_block = Block.query.filter_by(id=mlist.manage_doc_id).one()
+    return manage_doc_block.owners
