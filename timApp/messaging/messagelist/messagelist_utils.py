@@ -111,7 +111,7 @@ class MessageTIMversalis:
     message_channel: Channel = field(metadata={'by_value': True})  # Where the message came from.
 
     # Header information. Mandatory values for all messages.
-    sender: str
+    sender: EmailAndDisplayName
     recipients: List[EmailAndDisplayName]
     title: str
 
@@ -120,9 +120,9 @@ class MessageTIMversalis:
 
     # Email specific attributes.
     domain: Optional[str] = None
-    reply_to: Optional[str] = None
+    reply_to: Optional[EmailAndDisplayName] = None
 
-    timestamp: datetime = datetime.now()
+    timestamp: datetime = get_current_time()
 
 
 MESSAGE_LIST_DOC_PREFIX = "messagelists"
