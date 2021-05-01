@@ -52,10 +52,10 @@ reply_to_munging: Dict[ReplyToListChanges, str] = {
 # A mapping of TIM's archive policies to Mailman's archive policies. Mailman's archive policies are listed here:
 # https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/archiver.py
 mailman_archive_policy_correlate: Dict[ArchiveType, str] = {
-    ArchiveType.NONE: "none",
+    ArchiveType.NONE: "never",
     # Secret archive type doesn't exist in Mailman. Because Mailman's private archive policy is open for list
     # member's, we turn Mailman's archiving off and rely solely on TIM's archiving.
-    ArchiveType.SECRET: "none",
+    ArchiveType.SECRET: "never",
     ArchiveType.GROUPONLY: "private",
     # Unlisted archive type doesn't exist in Mailman, but closest is setting policy as private and provide necessary
     # archive links from TIM.
