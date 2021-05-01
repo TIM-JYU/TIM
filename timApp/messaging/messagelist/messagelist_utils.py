@@ -112,15 +112,17 @@ class MessageTIMversalis:
 
     # Header information. Mandatory values for all messages.
     sender: str
-    recipients: List[str]
+    recipients: List[EmailAndDisplayName]
     title: str
 
-    # Message body. Mandatory values for all messages.
+    # Message body. Mandatory value for all messages.
     message_body: str
 
     # Email specific attributes.
     domain: Optional[str] = None
     reply_to: Optional[str] = None
+
+    timestamp: datetime = datetime.now()
 
 
 MESSAGE_LIST_DOC_PREFIX = "messagelists"
@@ -178,7 +180,7 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
         next_message_link = f"[{next_doc_title}]({next_doc_link})"
         previous_doc.document.add_text(next_message_link)
 
-        # Set the "Previous message" for the newest message.
+        # Set the "Previous message" link for the newest message.
         previous_doc_title = f"Previous message: {previous_doc.title}"
         previous_doc_link = f"{previous_doc.url}"
         previous_message_link = f"[{previous_doc_title}]({previous_doc_link})"
@@ -193,13 +195,23 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
 def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> MessageTIMversalis:
     """Modify an email message sent from Mailman to TIM's universal message format."""
     # VIESTIM: original message is of form specified in https://pypi.org/project/mail-parser/
-    # msg = Mailparser(original)
-    visible_recipients: List[str] = []
-    visible_recipients.append(original.get("to", []))
-    visible_recipients.append(original.get("cc", []))
-    visible_recipients.append(original.get("bcc", []))
+    # TODO: Get 'content-type' field, e.g. 'text/plain; charset="UTF-8"'
+    # TODO: Get 'date' field, e.g. '2021-05-01T19:09:07'
+    # VIESTIM: Get 'message-id-hash' field (maybe to check for duplicate messages), e.g.
+    #  'H5IULFLU3PXSUPCBEXZ5IKTHX4SMCFHJ'
+    visible_recipients: List[EmailAndDisplayName] = []
+
+    visible_recipients.extend(parse_mailman_message_address(original, "to")
+                              if parse_mailman_message_address(original, "to") is not None else [])
+
+    visible_recipients.extend(parse_mailman_message_address(original, "cc")
+                              if parse_mailman_message_address(original, "cc") is not None else [])
+
     # VIESTIM: How should we differentiate with cc and bcc in TIM's context? bcc recipients should still get messages
     #  intented for them.
+
+    sender = parse_mailman_message_address(original, "from") \
+        if parse_mailman_message_address(original, "from") is not None else ""
 
     message = MessageTIMversalis(
         message_list_name=msg_list.name,
@@ -207,7 +219,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> Message
         message_channel=Channel.EMAIL_LIST,
 
         # Header information
-        sender=original["from_"],
+        sender=sender,
         recipients=visible_recipients,
         title=original["subject"],
 
@@ -215,7 +227,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> Message
         message_body=original["body"],
     )
 
-    # Try parsing email spesific fields.
+    # Try parsing the rest of email spesific fields.
     if "reply_to" in original:
         message.reply_to = original["reply_to"]
 
