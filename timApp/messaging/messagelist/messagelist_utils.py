@@ -93,6 +93,17 @@ def check_name_rules(name_candidate: str) -> None:
 
 
 @dataclass
+class EmailAndDisplayName:
+    email_address: str
+    display_name: str
+
+    def __repr__(self):
+        if self.display_name:
+            return f"{self.display_name} <{self.email_address}>"
+        return f"<{self.email_address}>"
+
+
+@dataclass
 class MessageTIMversalis:
     """A unified datastructure for messages TIM handles."""
     # Meta information about where this message belongs to and where it's from. Mandatory values for all messages.
