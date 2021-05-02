@@ -304,17 +304,7 @@ def set_email_list_archive_policy(email_list: MailingList, archive: ArchiveType)
     """
     mlist_settings = email_list.settings
     mm_policy = mailman_archive_policy_correlate[archive]
-    if mm_policy == "none":
-        # If Archive policy is intented to be 'none', then this list isn't archived at all. Set archive
-        # policy and turn off archivers.
-        mlist_settings["archive_policy"] = mm_policy
-        list_archivers = email_list.archivers
-        for archiver in list_archivers:
-            list_archivers[archiver] = False
-    else:
-        # Unless archive policy is intented to be 'none', then we assume archiving to be on by default
-        # and we just set the appropriate archive policy.
-        mlist_settings["archive_policy"] = mm_policy
+    mlist_settings["archive_policy"] = mm_policy
     mlist_settings.save()  # This needs to be the last line, otherwise changes won't take effect.
     return
 
