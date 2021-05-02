@@ -209,18 +209,20 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> Message
     # VIESTIM: Get 'message-id-hash' field (maybe to check for duplicate messages), e.g.
     #  'H5IULFLU3PXSUPCBEXZ5IKTHX4SMCFHJ'
     visible_recipients: List[EmailAndDisplayName] = []
-
-    visible_recipients.extend(parse_mailman_message_address(original, "to")
-                              if parse_mailman_message_address(original, "to") is not None else [])
-
-    visible_recipients.extend(parse_mailman_message_address(original, "cc")
-                              if parse_mailman_message_address(original, "cc") is not None else [])
+    maybe_to_addresses = parse_mailman_message_address(original, "to")
+    if maybe_to_addresses is not None:
+        visible_recipients.extend(maybe_to_addresses)
+    maybe_cc_addresses = parse_mailman_message_address(original, "cc")
+    if maybe_cc_addresses is not None:
+        visible_recipients.extend(maybe_cc_addresses)
 
     # VIESTIM: How should we differentiate with cc and bcc in TIM's context? bcc recipients should still get messages
     #  intented for them.
-
-    sender = parse_mailman_message_address(original, "from")
-    if sender is None:
+    sender = []
+    maybe_from_address = parse_mailman_message_address(original, "from")
+    if maybe_from_address is not None:
+        sender = maybe_from_address[0]
+    if not sender:
         # VIESTIM: Should there be a reasonable exception that messages always have to have a sender, and if not then
         #  they are dropped? What good can be a (email) message if there is no sender field?
         raise RouteException("No sender found in the message.")
@@ -231,7 +233,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> Message
         message_channel=Channel.EMAIL_LIST,
 
         # Header information
-        sender=sender[0],  # VIESTIM: Message should only have one sender?
+        sender=sender,  # VIESTIM: Message should only have one sender?
         recipients=visible_recipients,
         title=original["subject"],
 
