@@ -301,22 +301,5 @@ def archive(message: MessageTIMversalis) -> Response:
 
 @messagelist.route("/test", methods=['GET'])
 def test_route() -> Response:
-    # Build test message, simulating an new message event from Mailman
-    new_message = {
-        "from_": "from@example.com",
-        "to": ["to@example.com"],
-        "cc": ["cc@example.com"],
-        "bcc": ["bcc@example.com"],
-        "x-no-archive": "",
-        "body": """Testing a message.""",
-        "subject": "A subject for this message",
-        "reply_to": "vastaakkin_tanne@domain.fi"
-    }
-
-    message_list = MessageListModel.get_list_by_name_exactly_one("uuslista343463")
-
-    parsed_message = parse_mailman_message(new_message, message_list)
-
-    archive_message(message_list, parsed_message)
-
+    """A testing route."""
     return ok_response()

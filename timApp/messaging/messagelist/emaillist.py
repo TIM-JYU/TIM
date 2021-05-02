@@ -75,26 +75,6 @@ class EmailList:
     # VIESTIM: Would it be polite to return something as an indication how the operation went?
 
     @staticmethod
-    def set_archive_type(fqdn_listname: str, archive_status: bool) -> None:
-        """
-        Set list archiving on or off.
-
-        :param fqdn_listname: The email list's fully qualified domain name, e.g. list1@domain.fi.
-        :param archive_status: Models if this list is archived on Mailman's end. If True, all possible archivers are
-         used. If False, no archivers are used.
-        :return:
-        """
-        if _client is None:
-            return
-        try:
-            mail_list = _client.get_list(fqdn_listname)
-            list_archivers = mail_list.archivers
-            for archiver in list_archivers:
-                list_archivers[archiver] = archive_status
-        except HTTPError:
-            pass
-
-    @staticmethod
     def set_notify_owner_on_list_change(listname: str, on_change_flag: bool) -> None:
         if _client is None:
             raise NotExist("No email list server connection.")
@@ -110,55 +90,6 @@ class EmailList:
             raise NotExist("No email list server connection.")
         mlist = _client.get_list(listname)
         return mlist.settings["admin_notify_mchanges"]
-
-    @staticmethod
-    def get_archive_type(listname: str) -> bool:
-        """
-        Get the archive status of a email list.
-
-        :param listname:
-        :return: True if email list in question
-        """
-        if _client is None:
-            # TODO: Better return value/error handling here.
-            return False
-        try:
-            mail_list = _client.get_list(listname)
-            list_archivers = mail_list.archivers
-            # VIESTIM: Here we assume that set_archive_type sets all archivers on or off at the same time. If Mailman
-            #  has multiple archivers and they can be set on or off independently, then another solution is required.
-            #  We also leverage the fact that Python treats booleans as numbers under the hood.
-            archiver_status = [list_archivers[archiver] for archiver in list_archivers]
-            if sum(archiver_status) == 0:
-                return False
-            else:
-                return True
-        except HTTPError:
-            # TODO: Better return value/error handling here.
-            return False
-
-    @staticmethod
-    def get_list_ui_link(listname: str) -> str:
-        """
-        Get a link for a list to use for advanced email list options and moderation.
-        :param listname: The list we are getting the UI link for.
-        :return: A Hyperlink for list web UI on the Mailman side.
-        """
-        if _client is None:
-            return ""
-        try:
-            mail_list = _client.get_list(listname)
-            # Get the list's list id, which is basically it's address/name but '@' replaced with a dot.
-            list_id: str = mail_list.rest_data["list_id"]
-            # VIESTIM: This here is now hardcoded for Postorius Web UI. There might not be a way to just
-            #  programmatically get the specific hyperlink for non-TIM email list management needs, but is there a
-            #  way to not hard code the Postorius part in (Postorius is Mailman's default web UI and technically
-            #  we could switch to a different web UI)?
-            # Build the hyperlink.
-            link = "https://timlist.it.jyu.fi/postorius/lists/" + list_id
-            return link
-        except HTTPError:
-            return "Connection to Mailman failed while getting list's UI link."
 
     @staticmethod
     def freeze_list(listname: str) -> None:
@@ -304,17 +235,7 @@ def set_email_list_archive_policy(email_list: MailingList, archive: ArchiveType)
     """
     mlist_settings = email_list.settings
     mm_policy = mailman_archive_policy_correlate[archive]
-    if mm_policy == "none":
-        # If Archive policy is intented to be 'none', then this list isn't archived at all. Set archive
-        # policy and turn off archivers.
-        mlist_settings["archive_policy"] = mm_policy
-        list_archivers = email_list.archivers
-        for archiver in list_archivers:
-            list_archivers[archiver] = False
-    else:
-        # Unless archive policy is intented to be 'none', then we assume archiving to be on by default
-        # and we just set the appropriate archive policy.
-        mlist_settings["archive_policy"] = mm_policy
+    mlist_settings["archive_policy"] = mm_policy
     mlist_settings.save()  # This needs to be the last line, otherwise changes won't take effect.
     return
 
