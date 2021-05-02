@@ -218,13 +218,13 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> Message
 
     # VIESTIM: How should we differentiate with cc and bcc in TIM's context? bcc recipients should still get messages
     #  intented for them.
-    sender = []
+    sender: Optional[EmailAndDisplayName] = None
     maybe_from_address = parse_mailman_message_address(original, "from")
     if maybe_from_address is not None:
         sender = maybe_from_address[0]
-    if not sender:
-        # VIESTIM: Should there be a reasonable exception that messages always have to have a sender, and if not then
-        #  they are dropped? What good can be a (email) message if there is no sender field?
+    if sender is None:
+        # VIESTIM: Should there be a reasonable exception that messages always have to have a sender (and only one
+        #  sender), and if not then they are dropped? What good can be a (email) message if there is no sender field?
         raise RouteException("No sender found in the message.")
 
     message = MessageTIMversalis(
