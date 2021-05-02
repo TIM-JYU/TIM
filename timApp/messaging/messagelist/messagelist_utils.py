@@ -100,7 +100,7 @@ class EmailAndDisplayName:
     email_address: str
     display_name: str
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.display_name:
             return f"{self.display_name} <{self.email_address}>"
         return f"<{self.email_address}>"
