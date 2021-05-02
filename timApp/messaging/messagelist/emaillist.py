@@ -75,26 +75,6 @@ class EmailList:
     # VIESTIM: Would it be polite to return something as an indication how the operation went?
 
     @staticmethod
-    def set_archive_type(fqdn_listname: str, archive_status: bool) -> None:
-        """
-        Set list archiving on or off.
-
-        :param fqdn_listname: The email list's fully qualified domain name, e.g. list1@domain.fi.
-        :param archive_status: Models if this list is archived on Mailman's end. If True, all possible archivers are
-         used. If False, no archivers are used.
-        :return:
-        """
-        if _client is None:
-            return
-        try:
-            mail_list = _client.get_list(fqdn_listname)
-            list_archivers = mail_list.archivers
-            for archiver in list_archivers:
-                list_archivers[archiver] = archive_status
-        except HTTPError:
-            pass
-
-    @staticmethod
     def set_notify_owner_on_list_change(listname: str, on_change_flag: bool) -> None:
         if _client is None:
             raise NotExist("No email list server connection.")
