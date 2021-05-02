@@ -344,6 +344,9 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
         #  their lists on Mailman.
         email_list.add_owner(owner.email)
+        # Add owner automatically as a member of a list.
+        email_list.subscribe(owner.email, display_name=owner.real_name, pre_approved=True, pre_verified=True,
+                             pre_confirmed=True)
 
         set_default_templates(email_list)
 

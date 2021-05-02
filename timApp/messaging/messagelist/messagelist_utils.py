@@ -1,7 +1,18 @@
 import re
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Optional, List, Dict
 
-from timApp.messaging.messagelist.messagelist_models import MessageListModel
+from timApp.auth.accesstype import AccessType
+from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder
+from timApp.item.block import Block
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
+from timApp.timdb.sqa import db
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
+from timApp.util.utils import remove_path_special_chars, get_current_time
 
 
 def check_messagelist_name_requirements(name_candidate: str) -> None:
@@ -82,3 +93,184 @@ def check_name_rules(name_candidate: str) -> None:
 
     # If we are here, then the name follows all naming rules.
     return
+
+
+@dataclass
+class EmailAndDisplayName:
+    email_address: str
+    display_name: str
+
+    def __repr__(self) -> str:
+        if self.display_name:
+            return f"{self.display_name} <{self.email_address}>"
+        return f"<{self.email_address}>"
+
+
+@dataclass
+class MessageTIMversalis:
+    """A unified datastructure for messages TIM handles."""
+    # Meta information about where this message belongs to and where it's from. Mandatory values for all messages.
+    message_list_name: str
+    message_channel: Channel = field(metadata={'by_value': True})  # Where the message came from.
+
+    # Header information. Mandatory values for all messages.
+    sender: EmailAndDisplayName
+    recipients: List[EmailAndDisplayName]
+    title: str
+
+    # Message body. Mandatory value for all messages.
+    message_body: str
+
+    # Email specific attributes.
+    domain: Optional[str] = None
+    reply_to: Optional[EmailAndDisplayName] = None
+
+    timestamp: datetime = get_current_time()
+
+
+MESSAGE_LIST_DOC_PREFIX = "messagelists"
+MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
+
+
+def archive_message(message_list: MessageListModel, message: MessageTIMversalis) -> None:
+    """Archive a message for a message list."""
+    # TODO: If there are multiple messages with same title, differentiate them. FIXME MESSAGE TITLE IN BRACKETS
+    archive_title = f"{message.title}-{get_current_time()}"
+    archive_folder_path = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{remove_path_special_chars(message_list.name)}"
+    archive_doc_path = f"{archive_folder_path}/{remove_path_special_chars(archive_title)}"
+
+    # From the archive folder, query all documents, sort them by created attribute. We do this to get the previously
+    # newest archived message, before we create a archive document for newest message.
+    # Archive folder for message list.
+    archive_folder = Folder.find_by_path(archive_folder_path)
+    all_archived_messages = []
+    if archive_folder is not None:
+        all_archived_messages = archive_folder.get_all_documents()
+    else:
+        # TODO: Set folder's owners to be message list's owners.
+        # FIXME USE BETTER METHOD HERE
+        manage_doc_block = Block.query.filter_by(id=message_list.manage_doc_id).one()
+        owners = manage_doc_block.owners
+        Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
+
+    # Find suitable name for archive document.
+    # TODO: Create new document, setting the owner as either the person sending the message or message list's owner
+    message_owners: List[UserGroup] = []
+    message_owner = User.get_by_email(message.sender.email_address)
+    if message_owner:
+        message_owners.append(message_owner.get_personal_group())
+    message_owners.extend(get_message_list_owners(message_list))
+
+    # Add create archive document and add owners for the document.
+    # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
+    #  that, because in this context that is the anonymous user, and that raises an error.
+    archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
+    if len(message_owners) > 1:
+        archive_doc.block.add_rights(message_owners[1:], AccessType.owner)
+
+    # Set header information for archived message.
+    archive_doc.document.add_text(f"Title: {message.title}")
+    archive_doc.document.add_text(f"Sender: {message.sender}")
+    archive_doc.document.add_text(f"Recipients: {message.recipients}")
+
+    # Set message body for archived message.
+    archive_doc.document.add_text("Message body:")
+    archive_doc.document.add_text(f"{message.message_body}")
+
+    # If there is only one message, we don't need to add links to any other messages.
+    if len(all_archived_messages):
+        # TODO: Extract linkings to their own functions.
+        sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
+        previous_doc = sorted_messages[0]
+
+        # Set the "Next message" link for the previous newest message.
+        next_doc_title = f"Next message: {archive_title}"
+        next_doc_link = f"{archive_doc.url}"
+        next_message_link = f"[{next_doc_title}]({next_doc_link})"
+        previous_doc.document.add_text(next_message_link)
+
+        # Set the "Previous message" link for the newest message.
+        previous_doc_title = f"Previous message: {previous_doc.title}"
+        previous_doc_link = f"{previous_doc.url}"
+        previous_message_link = f"[{previous_doc_title}]({previous_doc_link})"
+        archive_doc.document.add_text(f"{previous_message_link}")
+
+    # TODO: Set proper rights to the document. The message sender owns the document. Owners of the list get at least a
+    #  view right. Other rights depend on the message list's archive policy.
+    db.session.commit()
+    return
+
+
+def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> MessageTIMversalis:
+    """Modify an email message sent from Mailman to TIM's universal message format."""
+    # VIESTIM: original message is of form specified in https://pypi.org/project/mail-parser/
+    # TODO: Get 'content-type' field, e.g. 'text/plain; charset="UTF-8"'
+    # TODO: Get 'date' field, e.g. '2021-05-01T19:09:07'
+    # VIESTIM: Get 'message-id-hash' field (maybe to check for duplicate messages), e.g.
+    #  'H5IULFLU3PXSUPCBEXZ5IKTHX4SMCFHJ'
+    visible_recipients: List[EmailAndDisplayName] = []
+    maybe_to_addresses = parse_mailman_message_address(original, "to")
+    if maybe_to_addresses is not None:
+        visible_recipients.extend(maybe_to_addresses)
+    maybe_cc_addresses = parse_mailman_message_address(original, "cc")
+    if maybe_cc_addresses is not None:
+        visible_recipients.extend(maybe_cc_addresses)
+
+    # VIESTIM: How should we differentiate with cc and bcc in TIM's context? bcc recipients should still get messages
+    #  intented for them.
+    sender: Optional[EmailAndDisplayName] = None
+    maybe_from_address = parse_mailman_message_address(original, "from")
+    if maybe_from_address is not None:
+        sender = maybe_from_address[0]
+    if sender is None:
+        # VIESTIM: Should there be a reasonable exception that messages always have to have a sender (and only one
+        #  sender), and if not then they are dropped? What good can be a (email) message if there is no sender field?
+        raise RouteException("No sender found in the message.")
+
+    message = MessageTIMversalis(
+        message_list_name=msg_list.name,
+        domain=msg_list.email_list_domain,
+        message_channel=Channel.EMAIL_LIST,
+
+        # Header information
+        sender=sender,  # VIESTIM: Message should only have one sender?
+        recipients=visible_recipients,
+        title=original["subject"],
+
+        # Message body
+        message_body=original["body"],
+    )
+
+    # Try parsing the rest of email spesific fields.
+    if "reply_to" in original:
+        message.reply_to = original["reply_to"]
+
+    return message
+
+
+def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[EmailAndDisplayName]]:
+    """Parse (potentially existing) fields 'from' 'to', 'cc', or 'bcc' from a dict representing Mailman's email message.
+    The fields are in lists, with individual list indicies being lists themselves of the form
+        ['Display Name', 'email@domain.fi']
+
+    :param original: Original message.
+    :param header: One of "from", "to", "cc" or "bcc".
+    """
+
+    if header not in ["from", "to", "cc", "bcc"]:
+        return None
+
+    list_of_emails: List[EmailAndDisplayName] = []
+
+    if header in original:
+        for email_name_pair in original[header]:
+            new_email_name_pair = EmailAndDisplayName(email_address=email_name_pair[1],
+                                                      display_name=email_name_pair[0])
+            list_of_emails.append(new_email_name_pair)
+
+    return list_of_emails
+
+
+def get_message_list_owners(mlist: MessageListModel) -> List[UserGroup]:
+    manage_doc_block = Block.query.filter_by(id=mlist.manage_doc_id).one()
+    return manage_doc_block.owners
