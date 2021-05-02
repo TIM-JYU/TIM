@@ -4,14 +4,11 @@ from datetime import datetime
 from typing import Optional, List, Dict
 
 from timApp.auth.accesstype import AccessType
-from timApp.auth.sessioninfo import get_current_user_group_object
-from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.timdb.sqa import db
-from timApp.user.special_group_names import ANONYMOUS_GROUPNAME
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
@@ -138,16 +135,14 @@ MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 def archive_message(message_list: MessageListModel, message: MessageTIMversalis) -> None:
     """Archive a message for a message list."""
     # TODO: If there are multiple messages with same title, differentiate them. FIXME MESSAGE TITLE IN BRACKETS
-    archive_title = f"{message.title}-{datetime.now()}"
+    archive_title = f"{message.title}-{get_current_time()}"
     archive_folder_path = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{remove_path_special_chars(message_list.name)}"
     archive_doc_path = f"{archive_folder_path}/{remove_path_special_chars(archive_title)}"
 
     # From the archive folder, query all documents, sort them by created attribute. We do this to get the previously
     # newest archived message, before we create a archive document for newest message.
     # Archive folder for message list.
-    # archive_folder = Folder.find_by_location(archive_folder_path, message_list.name)
     archive_folder = Folder.find_by_path(archive_folder_path)
-
     all_archived_messages = []
     if archive_folder is not None:
         all_archived_messages = archive_folder.get_all_documents()
@@ -158,12 +153,20 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
         owners = manage_doc_block.owners
         Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
 
-    # if archive_folder is None:
-    #    archive_folder = Folder.create(archive_folder_path, owner_groups=None, title=message_list.name)
-
     # Find suitable name for archive document.
-    # datetime.now()
-    archive_doc = create_document(archive_doc_path, archive_title)
+    # TODO: Create new document, setting the owner as either the person sending the message or message list's owner
+    message_owners: List[UserGroup] = []
+    message_owner = User.get_by_email(message.sender.email_address)
+    if message_owner:
+        message_owners.append(message_owner.get_personal_group())
+    message_owners.extend(get_message_list_owners(message_list))
+
+    # Add create archive document and add owners for the document.
+    # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
+    #  that, because in this context that is the anonymous user, and that raises an error.
+    archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
+    if len(message_owners) > 1:
+        archive_doc.block.add_rights(message_owners[1:], AccessType.owner)
 
     # Set header information for archived message.
     archive_doc.document.add_text(f"Title: {message.title}")
