@@ -189,5 +189,8 @@
       }
     }
   },
-  "defaultProject": "tim"
+  "defaultProject": "tim",
+  "cli": {
+    "analytics": false
+  }
 }
