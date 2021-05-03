@@ -126,27 +126,27 @@ export class TimMessageComponent implements OnInit {
     }
 
     async loadValues(itemId: number) {
-        const message = await to2(
-            // get message shown on current page
+        const messages = await to2(
+            // get messages shown on current page
             this.http
                 .get<TimMessageData>(`/timMessage/get/${itemId}`)
                 .toPromise()
         );
 
-        if (message.ok) {
-            const messageDoc = await getItem(message.result.doc_id); // get message's document
+        if (messages.ok) {
+            const messageDoc = await getItem(messages.result.doc_id); // get message's document
             if (!messageDoc) {
                 return;
             }
-            this.setValues(message.result, messageDoc);
+            this.setValues(messages.result, messageDoc);
         } else {
-            console.error(message.result.error.error);
+            console.error(messages.result.error.error);
         }
     }
 
     setValues(options: TimMessageData, doc: IItem) {
         // TODO set message contents
-        this.sender = doc.owners[0].name;
+        this.sender = doc.owners[0].name; // TODO return sender in TimMessageData from server
         this.heading = options.message_subject;
         this.fullContent = options.message_body; // TODO handle html properly
         this.canMarkAsRead = options.can_mark_as_read;
