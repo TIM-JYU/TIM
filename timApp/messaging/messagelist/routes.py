@@ -175,7 +175,7 @@ def get_list(document_id: int) -> Response:
 
 
 @messagelist.route("/save", methods=['POST'])
-def save_list_options(list_options: ListOptions):
+def save_list_options(list_options: ListOptions) -> Response:
     verify_logged_in()
 
     message_list = MessageListModel.get_list_by_name_exactly_one(list_options.listname)
