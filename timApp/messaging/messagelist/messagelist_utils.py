@@ -133,9 +133,40 @@ MESSAGE_LIST_DOC_PREFIX = "messagelists"
 MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
 
+def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str, message_list: MessageListModel,
+                                       message: MessageTIMversalis):
+    # Gather owners of the archive document.
+    # TODO: Create new document, setting the owner as either the person sending the message or message list's owner
+    message_owners: List[UserGroup] = []
+    message_owner = User.get_by_email(message.sender.email_address)
+    if message_owner:
+        message_owners.append(message_owner.get_personal_group())
+    message_owners.extend(get_message_list_owners(message_list))
+
+    # Add create archive document and add owners for the document.
+    # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
+    #  that, because in this context that is the anonymous user, and that raises an error.
+    archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
+
+    if len(message_owners) > 1:
+        # Add the rest of the message owners.
+        archive_doc.block.add_rights(message_owners[1:], AccessType.owner)
+
+    if message_list.archive_policy is ArchiveType.PUBLIC:
+        pass
+    elif message_list.archive_policy is ArchiveType.UNLISTED:
+        pass
+    elif message_list.archive_policy is ArchiveType.GROUPONLY:
+        pass
+    elif message_list.archive_policy is ArchiveType.SECRET:
+        pass
+
+    return archive_doc
+
+
 def archive_message(message_list: MessageListModel, message: MessageTIMversalis) -> None:
     """Archive a message for a message list."""
-    # TODO: If there are multiple messages with same title, differentiate them. FIXME MESSAGE TITLE IN BRACKETS
+    # Archive policy of no archiving is a special case, where we abort immediately since these won't be archived at all.
     if message_list.archive_policy is ArchiveType.NONE:
         # VIESTIM: Do we need an exception here? Is it enough to just silently return?
         return
@@ -158,20 +189,7 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
         owners = manage_doc_block.owners
         Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
 
-    # Find suitable name for archive document.
-    # TODO: Create new document, setting the owner as either the person sending the message or message list's owner
-    message_owners: List[UserGroup] = []
-    message_owner = User.get_by_email(message.sender.email_address)
-    if message_owner:
-        message_owners.append(message_owner.get_personal_group())
-    message_owners.extend(get_message_list_owners(message_list))
-
-    # Add create archive document and add owners for the document.
-    # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
-    #  that, because in this context that is the anonymous user, and that raises an error.
-    archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
-    if len(message_owners) > 1:
-        archive_doc.block.add_rights(message_owners[1:], AccessType.owner)
+    archive_doc = create_archive_doc_with_permission(archive_title, archive_doc_path, message_list, message)
 
     # Set header information for archived message.
     archive_doc.document.add_text(f"Title: {message.title}")
