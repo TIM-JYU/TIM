@@ -42,6 +42,10 @@ class ListOptions:
     htmlAllowed: bool
     defaultReplyType: ReplyToListChanges = field(metadata={'by_value': True})
     emailAdminURL: Optional[str] = None
+    # TODO: Add following fields to list options (and to TS side)
+    # userCanUnsubscribe: bool
+    # defaultSendRight: bool
+    # defaultDeliveryRight: bool
 
 
 reply_to_munging: Dict[ReplyToListChanges, str] = {

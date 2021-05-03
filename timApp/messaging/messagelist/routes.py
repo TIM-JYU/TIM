@@ -174,6 +174,32 @@ def get_list(document_id: int) -> Response:
     return json_response(list_options)
 
 
+@messagelist.route("/save", methods=['POST'])
+def save_list_options(list_options: ListOptions):
+    verify_logged_in()
+
+    message_list = MessageListModel.get_list_by_name_exactly_one(list_options.listname)
+
+    # TODO: Verify that user has rights to the message list.
+
+    if message_list.archive_policy != list_options.archive:
+        # TODO: If message list changes it's archive policy, the members on the list need to be notified.
+        message_list.archive = list_options.archive
+        pass
+
+    message_list.description = list_options.listDescription
+    message_list.info = list_options.listInfo
+
+    message_list.notify_owner_on_change = list_options.notifyOwnerOnListChange
+
+    # TODO: save the following list options.
+    # message_list.can_unsubscribe
+    # message_list.default_send_right
+    # message_list.default_delivery_right
+
+    return ok_response()
+
+
 @messagelist.route("/addmember", methods=['POST'])
 def add_member(memberCandidates: List[str], msgList: str) -> Response:
     from timApp.user.user import User  # Local import to avoid cyclical imports.
