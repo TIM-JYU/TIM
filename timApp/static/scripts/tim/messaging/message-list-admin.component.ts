@@ -8,6 +8,7 @@ import {
     ArchiveType,
     ListOptions,
     MemberInfo,
+    ReplyToListChanges,
 } from "tim/messaging/listOptionTypes";
 import {documentglobals} from "tim/util/globals";
 import {Users} from "../user/userService";
@@ -286,6 +287,41 @@ export class MessageListAdminComponent implements OnInit {
         this.listDescription = listOptions.listDescription;
 
         this.emailAdminURL = listOptions.emailAdminURL;
+    }
+
+    /**
+     * Function to initiate, when the user saves the list options.
+     */
+    async save() {
+        await this.saveListOptions({
+            listname: this.listname,
+            domain: this.domain,
+            listInfo: this.listInfo,
+            listDescription: this.listDescription,
+            htmlAllowed: true, // TODO: Option to ask the user.
+            defaultReplyType: ReplyToListChanges.NOCHANGES, // TODO: Option to ask the user.
+            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
+            archive: this.archive,
+        });
+    }
+
+    /**
+     * Helper for list saving to keep types in check.
+     * @param listOptions All the list options the user saves.
+     */
+    async saveListOptions(listOptions: ListOptions) {
+        const result = await to2(
+            this.http
+                .post(`${this.urlPrefix}/save`, {
+                    list_options: listOptions,
+                })
+                .toPromise()
+        );
+        if (result.ok) {
+            console.log("save succee");
+        } else {
+            console.error("save fail");
+        }
     }
 }
 
