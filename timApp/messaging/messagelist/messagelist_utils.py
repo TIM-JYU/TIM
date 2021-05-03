@@ -5,10 +5,11 @@ from typing import Optional, List, Dict
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
+from timApp.document.document import Document
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.messaging.messagelist.listoptions import ArchiveType
-from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME
 from timApp.user.user import User
@@ -192,7 +193,11 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
 
 
 def archive_message(message_list: MessageListModel, message: MessageTIMversalis) -> None:
-    """Archive a message for a message list."""
+    """Archive a message for a message list.
+
+    :param message_list: The message list where the archived message belongs.
+    :param message: The message being archived.
+    """
     # Archive policy of no archiving is a special case, where we abort immediately since these won't be archived at all.
     if message_list.archive_policy is ArchiveType.NONE:
         # VIESTIM: Do we need an exception here? Is it enough to just silently return?
@@ -233,22 +238,26 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
         sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
         previous_doc = sorted_messages[0]
 
-        # Set the "Next message" link for the previous newest message.
-        next_doc_title = f"Next message: {archive_title}"
-        next_doc_link = f"{archive_doc.url}"
-        next_message_link = f"[{next_doc_title}]({next_doc_link})"
-        previous_doc.document.add_text(next_message_link)
-
-        # Set the "Previous message" link for the newest message.
-        previous_doc_title = f"Previous message: {previous_doc.title}"
-        previous_doc_link = f"{previous_doc.url}"
-        previous_message_link = f"[{previous_doc_title}]({previous_doc_link})"
-        archive_doc.document.add_text(f"{previous_message_link}")
+        # Link the previous newest message and now archived message together.
+        set_message_link(previous_doc.document, f"Next Message: {archive_doc.title}", archive_doc.url)
+        set_message_link(archive_doc.document, f"Previous message: {previous_doc.title}", previous_doc.url)
 
     # TODO: Set proper rights to the document. The message sender owns the document. Owners of the list get at least a
     #  view right. Other rights depend on the message list's archive policy.
     db.session.commit()
     return
+
+
+def set_message_link(link_to: Document, link_text: str, link_from_url: str) -> None:
+    """Set link to a document from another document.
+
+    :param link_to: The document where the link is appended.
+    :param link_text: The text the link gets.
+    :param link_from_url: The link to another document.
+    """
+    link = f"[{link_text}]({link_from_url})"
+    link_to.add_text(link)
+    pass
 
 
 def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> MessageTIMversalis:
