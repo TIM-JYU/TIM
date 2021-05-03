@@ -169,10 +169,12 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
         # Unlisted and public archiving only differs in whether or not the archive folder is in a special place
         # where it can be found more easily. The folder is linked/aliased elsewhere and is not a concer in archiving.
         message_viewers.append(UserGroup.get_anonymous_group())
-        message_owners.append(message_sender.get_personal_group())
+        if message_sender:
+            message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.GROUPONLY:
         message_viewers = message_list_tim_members_as_user_groups(message_list.get_tim_members())
-        message_owners.append(message_sender.get_personal_group())
+        if message_sender:
+            message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.SECRET:
         # VIESTIM: There shouldn't be much to do with this archive policy? The list owners get ownership,
         #  and otherwise no one else sees it?
