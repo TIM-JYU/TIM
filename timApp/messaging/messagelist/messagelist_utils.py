@@ -134,7 +134,7 @@ MESSAGE_LIST_DOC_PREFIX = "messagelists"
 MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
 
-def message_list_tim_members_as_user_groups(tim_members: List['MessageListTimMember']):
+def message_list_tim_members_as_user_groups(tim_members: List['MessageListTimMember']) -> List[UserGroup]:
     user_groups = []
     for member in tim_members:
         user_groups.append(member.user_group)
@@ -143,32 +143,29 @@ def message_list_tim_members_as_user_groups(tim_members: List['MessageListTimMem
 
 def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str, message_list: MessageListModel,
                                        message: MessageTIMversalis) -> DocEntry:
-    """
-    Create archive document with permissions matching the message list's archive type.
+    """Create archive document with permissions matching the message list's archive type.
 
-    :param archive_title:
-    :param archive_doc_path:
-    :param message_list:
-    :param message:
-    :return:
+    :param archive_title: The title of the archive document.
+    :param archive_doc_path: The path where the archive document should be created.
+    :param message_list: The message list where the message belongs.
+    :param message: The message about to be archived.
+    :return: The archive document.
     """
     # Gather owners of the archive document.
     # TODO: Create new document, setting the owner as either the person sending the message or message list's owner
     message_owners: List[UserGroup] = []
     message_sender = User.get_by_email(message.sender.email_address)
-    # if message_sender:
-    #    message_owners.append(message_sender.get_personal_group())
+
+    # List owners get a default ownership for the messages on a list.
     message_owners.extend(get_message_list_owners(message_list))
 
-    # Add create archive document and add owners for the document.
-    # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
-    #  that, because in this context that is the anonymous user, and that raises an error.
+    # Who gets to see a message in the archives.
     message_viewers: List[UserGroup] = []
 
     # Gather permissions to the archive doc. The meanings of different archive settings are listed with ArchiveType
     # class.
     if message_list.archive_policy is ArchiveType.PUBLIC or ArchiveType.UNLISTED:
-        # Unlisted and public archiving only differs in whether or not the archive folder is in a special place,
+        # Unlisted and public archiving only differs in whether or not the archive folder is in a special place
         # where it can be found more easily. The folder is linked/aliased elsewhere and is not a concer in archiving.
         message_viewers.append(ANONYMOUS_GROUPNAME)
         message_owners.append(message_sender.get_personal_group())
@@ -176,17 +173,20 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
         message_viewers = message_list_tim_members_as_user_groups(message_list.get_tim_members())
         message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.SECRET:
-        # In
+        # VIESTIM: There shouldn't be much to do with this archive policy? The list owners get ownership,
+        #  and otherwise no one else sees it?
         pass
 
+    # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
+    #  that, because in this context that is the anonymous user, and that raises an error.
     archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
 
     # Add the rest of the message owners.
     if len(message_owners) > 1:
         archive_doc.block.add_rights(message_owners[1:], AccessType.owner)
 
-    if len(message_viewers):
-        archive_doc.block.add_rights(message_viewers, AccessType.view)
+    # Add view rights.
+    archive_doc.block.add_rights(message_viewers, AccessType.view)
 
     return archive_doc
 
