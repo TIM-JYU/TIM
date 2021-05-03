@@ -6,7 +6,7 @@ import {FormsModule} from "@angular/forms";
 import {
     archivePolicyNames,
     ArchiveType,
-    CreateListOptions,
+    ListOptions,
     MemberInfo,
 } from "tim/messaging/listOptionTypes";
 import {documentglobals} from "tim/util/globals";
@@ -255,7 +255,7 @@ export class MessageListAdminComponent implements OnInit {
     async loadValues(docID: number) {
         const result = await to2(
             this.http
-                .get<CreateListOptions>(`${this.urlPrefix}/getlist/${docID}`)
+                .get<ListOptions>(`${this.urlPrefix}/getlist/${docID}`)
                 .toPromise()
         );
         if (result.ok) {
@@ -271,7 +271,7 @@ export class MessageListAdminComponent implements OnInit {
      * Helper for setting list values after loading.
      * @param listOptions
      */
-    setValues(listOptions: CreateListOptions) {
+    setValues(listOptions: ListOptions) {
         this.listname = listOptions.listname;
         this.archive = listOptions.archive;
 

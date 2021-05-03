@@ -1,4 +1,4 @@
-export interface CreateListOptions {
+export interface ListOptions {
     // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
     listname: string;
     domain: string;
