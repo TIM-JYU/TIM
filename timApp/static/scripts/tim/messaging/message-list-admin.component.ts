@@ -97,6 +97,9 @@ import {Users} from "../user/userService";
                 <a [href]="emailAdminURL">Advanced email list settings</a>
             </div>
             <div>
+                <button class="btn btn-default" (click)="save()">Save changes</button>
+            </div>
+            <div>
                 <button class="btn btn-default" (click)="deleteList()">Delete List</button>
             </div>
         </form>
