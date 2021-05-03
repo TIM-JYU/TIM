@@ -155,9 +155,9 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
     # Gather owners of the archive document.
     # TODO: Create new document, setting the owner as either the person sending the message or message list's owner
     message_owners: List[UserGroup] = []
-    message_owner = User.get_by_email(message.sender.email_address)
-    if message_owner:
-        message_owners.append(message_owner.get_personal_group())
+    message_sender = User.get_by_email(message.sender.email_address)
+    # if message_sender:
+    #    message_owners.append(message_sender.get_personal_group())
     message_owners.extend(get_message_list_owners(message_list))
 
     # Add create archive document and add owners for the document.
@@ -171,9 +171,12 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
         # Unlisted and public archiving only differs in whether or not the archive folder is in a special place,
         # where it can be found more easily. The folder is linked/aliased elsewhere and is not a concer in archiving.
         message_viewers.append(ANONYMOUS_GROUPNAME)
+        message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.GROUPONLY:
-        pass
+        message_viewers = message_list_tim_members_as_user_groups(message_list.get_tim_members())
+        message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.SECRET:
+        # In
         pass
 
     archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
