@@ -284,6 +284,14 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         set_email_list_description(email_list, list_options.listDescription)
         set_email_list_info(email_list, list_options.listInfo)
 
+        # This is to force Mailman generate archivers into it's db. This is to fix a race condition, where creating a
+        # new list without proper engineer interface procedures might make duplicate archiver rows in to db,
+        # while Mailman's code expects there to be only one archiver row (which results in the db code breaking and
+        # the list becoming unusable, at least without manual db fixing). This might be unnecessary at some point in
+        # time in the future if the condition is remedied in Mailman Core, but since this line is only needed once on
+        # list creation it might be good enough to just leave as is.
+        _ = dict(email_list.archivers)
+
         set_email_list_archive_policy(email_list, list_options.archive)
 
         # This needs to be the last line, because no changes to settings take effect until save-method is
