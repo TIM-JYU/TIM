@@ -231,7 +231,7 @@ export class MessageListComponent extends AngularDialogComponent<
         // Local tests have been passed. Now launch server side checks.
         this.timeoutID = window.setTimeout(
             () => this.checkListNameAvailability(),
-            5 * 1000
+            2 * 1000
         );
 
         return true;
