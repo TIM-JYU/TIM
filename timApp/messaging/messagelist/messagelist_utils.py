@@ -10,6 +10,7 @@ from timApp.item.block import Block
 from timApp.messaging.messagelist.listoptions import ArchiveType
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.timdb.sqa import db
+from timApp.user.special_group_names import ANONYMOUS_GROUPNAME
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
@@ -134,7 +135,16 @@ MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
 
 def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str, message_list: MessageListModel,
-                                       message: MessageTIMversalis):
+                                       message: MessageTIMversalis) -> DocEntry:
+    """
+    Create archive document with permissions matching the message list's archive type.
+
+    :param archive_title:
+    :param archive_doc_path:
+    :param message_list:
+    :param message:
+    :return:
+    """
     # Gather owners of the archive document.
     # TODO: Create new document, setting the owner as either the person sending the message or message list's owner
     message_owners: List[UserGroup] = []
@@ -146,20 +156,27 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
     # Add create archive document and add owners for the document.
     # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
     #  that, because in this context that is the anonymous user, and that raises an error.
-    archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
+    message_viewers: List[UserGroup] = []
 
-    if len(message_owners) > 1:
-        # Add the rest of the message owners.
-        archive_doc.block.add_rights(message_owners[1:], AccessType.owner)
-
-    if message_list.archive_policy is ArchiveType.PUBLIC:
-        pass
-    elif message_list.archive_policy is ArchiveType.UNLISTED:
-        pass
+    # Gather permissions to the archive doc. The meanings of different archive settings are listed with ArchiveType
+    # class.
+    if message_list.archive_policy is ArchiveType.PUBLIC or ArchiveType.UNLISTED:
+        # Unlisted and public archiving only differs in whether or not the archive folder is in a special place,
+        # where it can be found more easily. The folder is linked/aliased elsewhere and is not a concer in archiving.
+        message_viewers.append(ANONYMOUS_GROUPNAME)
     elif message_list.archive_policy is ArchiveType.GROUPONLY:
         pass
     elif message_list.archive_policy is ArchiveType.SECRET:
         pass
+
+    archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
+
+    # Add the rest of the message owners.
+    if len(message_owners) > 1:
+        archive_doc.block.add_rights(message_owners[1:], AccessType.owner)
+
+    if len(message_viewers):
+        archive_doc.block.add_rights(message_viewers, AccessType.view)
 
     return archive_doc
 
