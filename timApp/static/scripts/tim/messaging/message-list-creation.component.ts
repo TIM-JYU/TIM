@@ -230,7 +230,7 @@ export class MessageListComponent extends AngularDialogComponent<
         );
         // Local tests have been passed. Now launch server side checks.
         this.timeoutID = window.setTimeout(
-            () => this.checkListNameAvailability(),
+            () => this.checkServerNameRequirements(),
             2 * 1000
         );
 
@@ -239,9 +239,8 @@ export class MessageListComponent extends AngularDialogComponent<
 
     /**
      * Helper to check if this list name exists.
-     * VIESTIM: This is a demo function, will only probably need this when we have implemented the creation dialoque?
      */
-    async checkListNameAvailability() {
+    async checkServerNameRequirements() {
         // Name candidate depends on whether domains are configured for TIM.
         const nameCandidate: string = this.domain
             ? `${this.listname}@${this.domain}`
