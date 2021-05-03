@@ -7,6 +7,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
+from timApp.messaging.messagelist.listoptions import ArchiveType
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -135,6 +136,10 @@ MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 def archive_message(message_list: MessageListModel, message: MessageTIMversalis) -> None:
     """Archive a message for a message list."""
     # TODO: If there are multiple messages with same title, differentiate them. FIXME MESSAGE TITLE IN BRACKETS
+    if message_list.archive_policy is ArchiveType.NONE:
+        # VIESTIM: Do we need an exception here? Is it enough to just silently return?
+        return
+
     archive_title = f"{message.title}-{get_current_time()}"
     archive_folder_path = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{remove_path_special_chars(message_list.name)}"
     archive_doc_path = f"{archive_folder_path}/{remove_path_special_chars(archive_title)}"
