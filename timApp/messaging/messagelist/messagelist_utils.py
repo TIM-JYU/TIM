@@ -134,6 +134,13 @@ MESSAGE_LIST_DOC_PREFIX = "messagelists"
 MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
 
+def message_list_tim_members_as_user_groups(tim_members: List['MessageListTimMember']):
+    user_groups = []
+    for member in tim_members:
+        user_groups.append(member.user_group)
+    return user_groups
+
+
 def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str, message_list: MessageListModel,
                                        message: MessageTIMversalis) -> DocEntry:
     """

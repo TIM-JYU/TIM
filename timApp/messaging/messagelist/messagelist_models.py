@@ -63,6 +63,11 @@ class MessageListModel(db.Model):
     removed = db.Column(db.DateTime(timezone=True))
     """When this list has been marked for removal."""
 
+    # TODO: Maybe needs columns for default send and delivery rights for a new list member, especially if this member
+    #  is added from outside sources without direct list owner intervention.
+    # default_send_right = db.Column(db.Boolean)
+    # default_delivery_right = db.Column(db.Boolean)
+
     block = db.relationship("Block", back_populates="managed_messagelist", lazy="select")
     members = db.relationship("MessageListMember", back_populates="message_list", lazy="select")
 
@@ -111,6 +116,14 @@ class MessageListModel(db.Model):
             if not member.is_group() and not member.membership_ended:  # member.is_active():
                 individuals.append(member)
         return individuals
+
+    def get_tim_members(self) -> List['MessageListTimMember']:
+        """Get all members that have belong to a user group, i.e. TIM users and user groups."""
+        tim_members = []
+        for member in self.members:
+            if member.is_tim_member():
+                tim_members.append(member.group_id)
+        return tim_members
 
 
 class MessageListMember(db.Model):
