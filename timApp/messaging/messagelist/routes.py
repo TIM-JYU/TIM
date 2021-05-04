@@ -132,9 +132,9 @@ def get_list(document_id: int) -> Response:
     if msg_list.email_list_domain:
         list_options.emailAdminURL = get_list_ui_link(msg_list.name, msg_list.email_list_domain)
     if msg_list.info:
-        list_options.listInfo = msg_list.info,
+        list_options.listInfo = msg_list.info
     if msg_list.description:
-        list_options.listDescription = msg_list.description,
+        list_options.listDescription = msg_list.description
     return json_response(list_options)
 
 

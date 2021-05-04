@@ -281,8 +281,10 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # switches this on if necessary.
         mlist_settings["admin_notify_mchanges"] = False
 
-        set_email_list_description(email_list, list_options.listDescription)
-        set_email_list_info(email_list, list_options.listInfo)
+        if list_options.listDescription:
+            set_email_list_description(email_list, list_options.listDescription)
+        if list_options.listInfo:
+            set_email_list_info(email_list, list_options.listInfo)
 
         # This is to force Mailman generate archivers into it's db. This is to fix a race condition, where creating a
         # new list without proper engineer interface procedures might make duplicate archiver rows in to db,
