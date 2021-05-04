@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
-from typing import List, Optional
+from dataclasses import dataclass
+from typing import List
 
 from flask import Response
 from sqlalchemy.orm.exc import NoResultFound  # type: ignore
@@ -8,13 +8,14 @@ from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docinfo import DocInfo
-from timApp.folder.folder import Folder
-from timApp.item.block import Block
-from timApp.messaging.messagelist.emaillist import EmailListManager, create_new_email_list, delete_email_list
+from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui_link, create_new_email_list, \
+    delete_email_list, check_emaillist_name_requirements
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
-from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
+from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember, get_members_for_list
+from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
+    archive_message, MESSAGE_LIST_DOC_PREFIX, parse_mailman_message
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -37,17 +38,24 @@ def create_list(options: ListOptions) -> Response:
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
+    options.listname = options.listname.strip()
+
+    test_name(options.listname)  # Test the name we are creating.
+
     manage_doc = new_list(options)
     create_new_email_list(options, owner)
 
     return json_response(manage_doc)
 
 
-@dataclass
-class NameCheckInfo:
-    """Return information about name check results."""
-    nameOK: Optional[bool] = None
-    explanation: str = ""
+def test_name(name_candidate: str) -> None:
+    normalized_name = name_candidate.strip()
+    name, sep, domain = normalized_name.partition("@")
+    check_messagelist_name_requirements(name)
+    if sep:
+        # If character '@' is found, we check email list specific name requirements.
+        check_emaillist_name_requirements(name, domain)
+    return
 
 
 @messagelist.route("/checkname/<string:name_candidate>", methods=['GET'])
@@ -60,14 +68,7 @@ def check_name(name_candidate: str) -> Response:
     :param name_candidate: Possible name for message/email list. Should either be a name for a list or a fully qualifed
     domain name for (email) list. In the latter case we also check email list specific name requirements.
     """
-
-    name, sep, domain = name_candidate.partition("@")
-    msg_list_exists = MessageListModel.name_exists(name)
-    if msg_list_exists:
-        raise RouteException(f"Message list with name {name} already exists.")
-    if sep:
-        # If character '@' is found, we check email list specific name requirements.
-        EmailListManager.check_name_requirements(name, domain)
+    test_name(name_candidate)
     return ok_response()
 
 
@@ -112,16 +113,14 @@ def new_list(list_options: ListOptions) -> DocInfo:
     """
     # VIESTIM: Check creation permission? Or should it be in the calling view function?
     msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
+    if list_options.domain:
+        msg_list.email_list_domain = list_options.domain
     db.session.add(msg_list)
 
     doc_info = create_management_doc(msg_list, list_options)
 
     db.session.commit()
     return doc_info
-
-
-message_list_doc_prefix = "/messagelists"
-message_list_archive_prefix = "/archives"
 
 
 def create_management_doc(msg_list_model: MessageListModel, list_options: ListOptions) -> DocInfo:
@@ -132,7 +131,7 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
 
     # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
     path_safe_list_name = remove_path_special_chars(list_options.listname)
-    path_to_doc = f'/{message_list_doc_prefix}/{path_safe_list_name}'
+    path_to_doc = f'/{MESSAGE_LIST_DOC_PREFIX}/{path_safe_list_name}'
 
     doc = create_document(path_to_doc, list_options.listname)
 
@@ -170,6 +169,8 @@ def get_list(document_id: int) -> Response:
         htmlAllowed=True,
         defaultReplyType=ReplyToListChanges.NOCHANGES
     )
+    if msg_list.email_list_domain:
+        list_options.emailAdminURL = get_list_ui_link(msg_list.name)
     return json_response(list_options)
 
 
@@ -191,7 +192,7 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
         em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
 
     for member_candidate in memberCandidates:
-        u = User.get_by_name(member_candidate)
+        u = User.get_by_name(member_candidate.strip())
         if u is not None:
             # The name given was an existing TIM user.
             new_tim_member = MessageListTimMember()
@@ -237,46 +238,43 @@ def get_members(list_name: str) -> Response:
     :param list_name:
     :return:
     """
-    from timApp.user.usergroup import UserGroup
-
     msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
-    members = get_members_for_list(msg_list)
-    list_members: List[MemberInfo] = []
-    for member in members:
-        if member.tim_member:
-            gid = member.tim_member.group_id
-            # VIESTIM: This should be the user's personal user group.
-            ug = UserGroup.query.filter_by(id=gid).one()
-            u = ug.users[0]
-            mi = MemberInfo(name=u.real_name, email=u.email, sendRight=member.send_right,
-                            deliveryRight=member.delivery_right)
-        else:
-            mi = MemberInfo(name="External member", email=member.external_member.email_address,
-                            sendRight=member.send_right, deliveryRight=member.delivery_right)
-        list_members.append(mi)
-
+    list_members = msg_list.get_individual_members()
     return json_response(list_members)
 
 
-@dataclass
-class Message:
-    # Meta information about where this message belongs to.
-    message_list_name: str
-    domain: Optional[str]
-    message_channel: Channel = field(metadata={'by_value': True})
+# VIESTIM: Old get_members for reference:
+"""  
+    from timApp.user.usergroup import UserGroup
 
-    # Header information
-    sender: str
-    reply_to: Optional[str]
-    recipients: List[str]
-    title: str
+    msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
+    list_members: List[MemberInfo] = []
+    for member in msg_list.members:
+        if member.is_external_member():
+            pass
+        if member.is_tim_member():
 
-    # Message body
-    message_body: str
+            if member.is_personal_user():
+                gid = member.tim_member[0].group_id
+                ug = UserGroup.query.filter_by(id=gid).one()
+                # VIESTIM: This should be the user's personal user group.
+                u = ug.users[0]
+                mi = MemberInfo(name=u.real_name, email=u.email, sendRight=member.send_right,
+                                deliveryRight=member.delivery_right)
+            else:
+                # VIESTIM: If the user group wasn't a personal user group, we have a group individuals on our hands.
+                #  We probably don't need to return it, or if we do we need to return it somehow separately.
+                pass
+        else:
+            # If we are here, we have an external member.
+            mi = MemberInfo(name="External member", email=member.external_member.email_address,
+                            sendRight=member.send_right, deliveryRight=member.delivery_right)
+        list_members.append(mi)
+"""
 
 
 @messagelist.route("/archive", methods=['POST'])
-def archive(message: Message) -> Response:
+def archive(message: MessageTIMversalis) -> Response:
     """Archive a message sent to a message list.
 
     :param message: The message to be archived.
@@ -285,65 +283,23 @@ def archive(message: Message) -> Response:
     # VIESTIM: This view function has not been tested yet.
 
     msg_list = MessageListModel.get_list_by_name_first(message.message_list_name)
-
     if msg_list is None:
         raise RouteException(f"No message list with name {message.message_list_name} exists.")
 
     # TODO: Check rights to message list?
 
-    archive_policy = msg_list.archive_policy
-
     # TODO: Check if this message list is archived at all in the first place, or if the message has had some special
     #  value that blocks archiving. Think X-No-Archive header on emails.
+    archive_policy = msg_list.archive_policy
     if archive_policy is ArchiveType.NONE:
         raise RouteException("This list doesn't archive messages.")
 
-    # TODO: If there are multiple messages with same title, differentiate them.
-    archive_title = message.title
-    archive_path = f"{message_list_archive_prefix}/{remove_path_special_chars(archive_title)}"
+    archive_message(msg_list, message)
 
-    # Archive folder for message list.
-    archive_folder = Folder.find_by_location(archive_path, msg_list.name)
+    return ok_response()
 
-    archive_doc = create_document(archive_path, archive_title)
 
-    # Set header information for archived message.
-    archive_doc.document.add_text(f"Title: {message.title}")
-    archive_doc.document.add_text(f"Sender: {message.sender}")
-    archive_doc.document.add_text(f"Recipients: {message.recipients}")
-
-    # Set message body for archived message.
-    archive_doc.document.add_text(f"{message.message_body}")
-
-    # From the archive folder, query all documents, sort them by created attribute. We do this to get the previously
-    # newest archived message, before we create a archive document for newest message.
-    all_archived_messages = []
-    if archive_folder is not None:
-        all_archived_messages = archive_folder.get_all_documents()
-    else:
-        # TODO: Set folder's owners to be message list's owners.
-        manage_doc_block = Block.query.filter_by(id=msg_list.manage_doc_id).one()
-        owners = manage_doc_block.owners()
-        Folder.create(archive_path, owner_groups=owners, title=f"{msg_list.name}")
-
-    if len(all_archived_messages) > 1:
-        sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
-        previous_doc = sorted_messages[1]
-
-        # Set footer information for archived message. Footer information is not set for the very first message,
-        # it get's it's link to next message when a second message is archived.
-
-        # VIESTIM: Do we need other type of URL to previous_doc and archive_doc? Is url attribute enough?
-        previous_doc_title = "Previous message"
-        previous_doc_link = f"{previous_doc.url}"
-        previous_message_link = f"[{previous_doc_title}]({previous_doc_link})"
-        archive_doc.document.add_text(f"{previous_message_link}")
-
-        next_doc_title = "Next message"
-        next_doc_link = f"{archive_doc.url}"
-        previous_doc.document.add_text(f"[{next_doc_title}]({next_doc_link})")
-
-    # TODO: Set proper rights to the document. The message sender owns the document. Owners of the list get at least a
-    #  view right. Other rights depend on the message list's archive policy.
-
+@messagelist.route("/test", methods=['GET'])
+def test_route() -> Response:
+    """A testing route."""
     return ok_response()

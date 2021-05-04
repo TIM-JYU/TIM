@@ -12,6 +12,18 @@ ul {
   list-style-type: none;
 }
 
+label {
+  font-weight: normal;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.glyphicon {
+  margin: 0px 10px 20px 0px;
+}
+
 #optionsButton {
   margin-bottom: 10px;
 }

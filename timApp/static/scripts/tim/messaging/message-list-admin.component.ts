@@ -15,16 +15,22 @@ import {Users} from "../user/userService";
 @Component({
     selector: "tim-message-list-admin",
     template: `
-        <form name="list-options-form">
+        <form class="form-horizontal">
             <h1>Message list management</h1>
-            <div>
-                <label for="list-name">List name: </label>
-                <input type="text" name="list-name" id="list-name"
-                       [(ngModel)]="listname"/><span>@</span>
-                <select id="domain-select" name="domain-select" [(ngModel)]="domain">
+            <div class="form-group">
+                <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
+                <div class="col-sm-9">
+                <div class="input-group">    
+                <input type="text" class="form-control" name="list-name" id="list-name"
+                       [(ngModel)]="listname"/>
+                    <div class="input-group-addon">@</div>
+                <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
                     <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
                 </select>
             </div>
+            </div>
+                </div>
+                
             <div>
                 <!-- TODO: Add owners here? Should we at least display owner information and give a way to change 
                       owners, or should that be done by directly changing the owner of the document? -->
@@ -33,19 +39,23 @@ import {Users} from "../user/userService";
                 <input type="text" name="owner-address" id="owner-adress" [(ngModel)]="ownerEmail"/>
                 -->
             </div>
-            <div>
-                <label for="list-description">Short description</label>
-                <input type="text" name="list-description" id="list-description" [(ngModel)]="listDescription"/>
+            <div class="form-group">
+                <label for="list-description" class="short-description control-label col-sm-3">Short description: </label>
+                <div class="col-sm-9">
+                <input type="text" class="form-control" name="list-description" id="list-description" [(ngModel)]="listDescription"/>
             </div>
-            <div>
-                <label for="list-info">Long description</label>
-                <textarea name="list-info"
+                </div>
+            <div class="form-group">
+                <label for="list-info" class="long-description control-label col-sm-3">Long description: </label>
+                <div class="col-sm-9">
+                <textarea name="list-info" class="list-info form-control" 
                           [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
             </div>
+                </div>
             <div>
             </div>
             <div>
-                <b>List archive policy:</b>
+                <p class="list-archive-policy-header">List archive policy:</p>
                 <ul style="list-style-type: none">
                     <li *ngFor="let option of archiveOptions">
                         <input
@@ -82,11 +92,15 @@ import {Users} from "../user/userService";
                     </li>
                 </ul>
             </div>
+            <div *ngIf="emailAdminURL">
+                <a [href]="emailAdminURL">Advanced email list settings</a>
+            </div>
             <div>
-                <button (click)="deleteList()">Delete List</button>
+                <button class="btn btn-default" (click)="deleteList()">Delete List</button>
             </div>
         </form>
     `,
+    styleUrls: ["message-list-admin.component.scss"],
 })
 export class MessageListAdminComponent implements OnInit {
     listname: string = "";
@@ -110,6 +124,8 @@ export class MessageListAdminComponent implements OnInit {
 
     listInfo: string = "";
     listDescription: string = "";
+
+    emailAdminURL?: string;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -263,12 +279,13 @@ export class MessageListAdminComponent implements OnInit {
 
         this.ownerEmail = "";
 
-        this.notifyOwnerOnListChange = listOptions.notifyOwnerOnListChange;
+        this.notifyOwnerOnListChange =
+            listOptions.notifyOwnerOnListChange ?? false;
 
         this.listInfo = listOptions.listInfo;
         this.listDescription = listOptions.listDescription;
 
-        // TODO: Add existing list members.
+        this.emailAdminURL = listOptions.emailAdminURL;
     }
 }
 

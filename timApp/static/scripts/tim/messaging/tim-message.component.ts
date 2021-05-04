@@ -70,6 +70,8 @@ export class TimMessageComponent implements OnInit {
     group?: string; // can't get from database
     heading?: string;
 
+    constructor(private http: HttpClient) {}
+
     /**
      * Toggles between showing the full message content and the shortened version.
      */
@@ -80,8 +82,20 @@ export class TimMessageComponent implements OnInit {
     /**
      * Hides the message view; shows an alert about sending a read receipt and an option to cancel.
      */
-    markAsRead(): void {
-        this.markedAsRead = !this.markedAsRead;
+    async markAsRead() {
+        this.markedAsRead = true;
+        const result = await to2(
+            this.http
+                .post<{read: boolean}>("/timMessage/mark_as_read", {
+                    markedAsRead: this.markedAsRead,
+                })
+                .toPromise()
+        );
+        if (!result.ok) {
+            console.error(result.result.error.error);
+        } else {
+            console.log(result);
+        }
     }
 
     /**

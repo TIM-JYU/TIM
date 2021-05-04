@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict
+from typing import Dict, Optional
 
 
 class ArchiveType(Enum):
@@ -10,7 +10,7 @@ class ArchiveType(Enum):
 
     # No archiving at all for list. Equals to Mailman's archive policy of 'none'.
     NONE = 0
-    # Secret archive. Only for owner/moderators. No direct correlation with Mailman's archive policies.
+    # Secret archive. Only for owner(and moderators?). No direct correlation with Mailman's archive policies.
     SECRET = 1
     # For group and it's members' eyes only. Equal for Mailman's archive policy of 'private'.
     GROUPONLY = 2
@@ -34,13 +34,14 @@ class ListOptions:
     """All options regarding message lists."""
     listname: str
     domain: str
-    # Enums need this to help marshmallow decipher JSON values in from client side properly.
+    # VIESTIM: Enums need this to help marshmallow decipher JSON values in from client side properly.
     archive: ArchiveType = field(metadata={'by_value': True})
     notifyOwnerOnListChange: bool
     listDescription: str
     listInfo: str
     htmlAllowed: bool
     defaultReplyType: ReplyToListChanges = field(metadata={'by_value': True})
+    emailAdminURL: Optional[str] = None
 
 
 reply_to_munging: Dict[ReplyToListChanges, str] = {
@@ -51,10 +52,10 @@ reply_to_munging: Dict[ReplyToListChanges, str] = {
 # A mapping of TIM's archive policies to Mailman's archive policies. Mailman's archive policies are listed here:
 # https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/archiver.py
 mailman_archive_policy_correlate: Dict[ArchiveType, str] = {
-    ArchiveType.NONE: "none",
+    ArchiveType.NONE: "never",
     # Secret archive type doesn't exist in Mailman. Because Mailman's private archive policy is open for list
     # member's, we turn Mailman's archiving off and rely solely on TIM's archiving.
-    ArchiveType.SECRET: "none",
+    ArchiveType.SECRET: "never",
     ArchiveType.GROUPONLY: "private",
     # Unlisted archive type doesn't exist in Mailman, but closest is setting policy as private and provide necessary
     # archive links from TIM.

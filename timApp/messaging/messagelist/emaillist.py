@@ -1,4 +1,3 @@
-import re
 from dataclasses import dataclass
 from typing import List, Optional
 from urllib.error import HTTPError
@@ -9,7 +8,7 @@ from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archiv
 from timApp.tim_app import app
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
-from timApp.util.logger import log_warning, log_info
+from timApp.util.logger import log_warning, log_info, log_error
 from tim_common.marshmallow_dataclass import class_schema
 
 
@@ -50,68 +49,6 @@ class EmailListManager:
     """Possible domains which can be used with our instance of Mailman."""
 
     @staticmethod
-    def check_name_availability(name_candidate: str, domain: str) -> None:
-        """Search for a name from the pool of used email list names.
-
-        Raises a RouteException if no connection was ever established with the Mailman server via mailmanclient.
-        Re-raises HTTPError if something went wrong with the query from the server.
-
-        :param domain: Domain to search for lists, which then are used to check name availability.
-        :param name_candidate: The name to search for.
-        """
-        if _client is None:
-            raise RouteException("No connection with email list server established.")
-        try:
-            d = _client.get_domain(domain)
-            mlists: List[MailingList] = d.get_lists()
-            fqdn_name_candidate = name_candidate + "@" + domain
-            for name in [mlist.fqdn_listname for mlist in mlists]:
-                if fqdn_name_candidate == name:
-                    raise RouteException("Name is already in use.")
-        except HTTPError:
-            # VIESTIM: Should we just raise the old error or inspect it closer? Now raise old error.
-            raise  # "Connection to server failed."
-
-    @staticmethod
-    def check_name_requirements(name_candidate: str, domain: str) -> None:
-        """Checks name requirements specific for email list.
-
-        If at any point a name requirement check fails, then an exception is raised an carried to the client. If all
-        name requirements are met, then succeed silently.
-
-        :param domain: Domain to search for lists.
-        :param name_candidate: Name to check against naming rules.
-        """
-        em = EmailListManager
-
-        # Check name is available.
-        em.check_name_availability(name_candidate, domain)
-
-        # Check if name is some reserved name.
-        em.check_reserved_names(name_candidate)
-
-        # Check name against name rules. These rules are also checked client-side.
-        # VIESTIM: When other message list functionality exists, move this rule check there.
-        em.check_name_rules(name_candidate)
-
-        # If we are here, name can be used by the user.
-
-    @staticmethod
-    def check_reserved_names(name_candidate: str) -> None:
-        """
-        Check a name candidate against reserved names, e.g. postmaster. Raises a RouteException if the name candidate
-        is a reserved name. If name is not reserved, the method succeeds silently.
-
-        :param name_candidate: The name to be compared against reserved names.
-        """
-        # TODO: Implement a smarter query for reserved names. Now only compare against simple list for prototyping
-        #  purposes. Maybe an external config file for known reserved names or something like that?
-        #  Is it possible to query reserved names e.g. from Mailman or it's server?
-        reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
-        if name_candidate in reserved_names:
-            raise RouteException(f"Name {name_candidate} is a reserved name and cannot be used.")
-
-    @staticmethod
     def get_domain_names() -> List[str]:
         """Returns a list of all domain names.
 
@@ -126,57 +63,6 @@ class EmailListManager:
         except HTTPError:
             return []
 
-    @staticmethod
-    def check_name_rules(name_candidate: str) -> None:
-        """Check if name candidate complies with naming rules. The method raises a RouteException if naming rule is
-        violated. If this function doesn't raise an exception, then the name follows naming rules.
-
-        :param name_candidate: What name we are checking.
-        """
-        # Be careful when checking regex rules. Some rules allow a pattern to exist, while prohibiting others. Some
-        # rules prohibit something, but allow other things to exist. If the explanation for a rule is different than
-        # the regex, the explanation is more likely to be correct.
-
-        # Name is within length boundaries.
-        lower_bound = 5
-        upper_bound = 36
-        if not (lower_bound < len(name_candidate) < upper_bound):
-            raise RouteException(f"Name is not within length boundaries. Name has to be at least {lower_bound} and at "
-                                 f"most {upper_bound} characters long.")
-
-        # Name has to start with a lowercase letter.
-        start_with_lowercase = re.compile(r"^[a-z]")
-        if start_with_lowercase.search(name_candidate) is None:
-            raise RouteException("Name has to start with a lowercase letter.")
-
-        # Name cannot have multiple dots in sequence.
-        no_sequential_dots = re.compile(r"\.\.+")
-        if no_sequential_dots.search(name_candidate) is not None:
-            raise RouteException("Name cannot have sequential dots.")
-
-        # Name cannot end in a dot
-        if name_candidate.endswith("."):
-            raise RouteException("Name cannot end in a dot.")
-
-        # Name can have only these allowed characters. This set of characters is an import from Korppi's character
-        # limitations for email list names, and can probably be expanded in the future if desired.
-        #     lowercase letters a - z
-        #     digits 0 - 9
-        #     dot '.'
-        #     hyphen '-'
-        #     underscore '_'
-        # Notice the compliment usage of ^.
-        allowed_characters = re.compile(r"[^a-z0-9.\-_]")
-        if allowed_characters.search(name_candidate) is not None:
-            raise RouteException("Name contains forbidden characters.")
-
-        # Name has to include at least one digit.
-        required_digit = re.compile(r"\d")
-        if required_digit.search(name_candidate) is None:
-            raise RouteException("Name has to include at least one digit.")
-
-        # If we are here, then the name follows all naming rules.
-
 
 @dataclass
 class EmailList:
@@ -187,26 +73,6 @@ class EmailList:
     """
 
     # VIESTIM: Would it be polite to return something as an indication how the operation went?
-
-    @staticmethod
-    def set_archive_type(fqdn_listname: str, archive_status: bool) -> None:
-        """
-        Set list archiving on or off.
-
-        :param fqdn_listname: The email list's fully qualified domain name, e.g. list1@domain.fi.
-        :param archive_status: Models if this list is archived on Mailman's end. If True, all possible archivers are
-         used. If False, no archivers are used.
-        :return:
-        """
-        if _client is None:
-            return
-        try:
-            mail_list = _client.get_list(fqdn_listname)
-            list_archivers = mail_list.archivers
-            for archiver in list_archivers:
-                list_archivers[archiver] = archive_status
-        except HTTPError:
-            pass
 
     @staticmethod
     def set_notify_owner_on_list_change(listname: str, on_change_flag: bool) -> None:
@@ -224,55 +90,6 @@ class EmailList:
             raise NotExist("No email list server connection.")
         mlist = _client.get_list(listname)
         return mlist.settings["admin_notify_mchanges"]
-
-    @staticmethod
-    def get_archive_type(listname: str) -> bool:
-        """
-        Get the archive status of a email list.
-
-        :param listname:
-        :return: True if email list in question
-        """
-        if _client is None:
-            # TODO: Better return value/error handling here.
-            return False
-        try:
-            mail_list = _client.get_list(listname)
-            list_archivers = mail_list.archivers
-            # VIESTIM: Here we assume that set_archive_type sets all archivers on or off at the same time. If Mailman
-            #  has multiple archivers and they can be set on or off independently, then another solution is required.
-            #  We also leverage the fact that Python treats booleans as numbers under the hood.
-            archiver_status = [list_archivers[archiver] for archiver in list_archivers]
-            if sum(archiver_status) == 0:
-                return False
-            else:
-                return True
-        except HTTPError:
-            # TODO: Better return value/error handling here.
-            return False
-
-    @staticmethod
-    def get_list_ui_link(listname: str) -> str:
-        """
-        Get a link for a list to use for advanced email list options and moderation.
-        :param listname: The list we are getting the UI link for.
-        :return: A Hyperlink for list web UI on the Mailman side.
-        """
-        if _client is None:
-            return ""
-        try:
-            mail_list = _client.get_list(listname)
-            # Get the list's list id, which is basically it's address/name but '@' replaced with a dot.
-            list_id: str = mail_list.rest_data["list_id"]
-            # VIESTIM: This here is now hardcoded for Postorius Web UI. There might not be a way to just
-            #  programmatically get the specific hyperlink for non-TIM email list management needs, but is there a
-            #  way to not hard code the Postorius part in (Postorius is Mailman's default web UI and technically
-            #  we could switch to a different web UI)?
-            # Build the hyperlink.
-            link = "https://timlist.it.jyu.fi/postorius/lists/" + list_id
-            return link
-        except HTTPError:
-            return "Connection to Mailman failed while getting list's UI link."
 
     @staticmethod
     def freeze_list(listname: str) -> None:
@@ -418,17 +235,7 @@ def set_email_list_archive_policy(email_list: MailingList, archive: ArchiveType)
     """
     mlist_settings = email_list.settings
     mm_policy = mailman_archive_policy_correlate[archive]
-    if mm_policy == "none":
-        # If Archive policy is intented to be 'none', then this list isn't archived at all. Set archive
-        # policy and turn off archivers.
-        mlist_settings["archive_policy"] = mm_policy
-        list_archivers = email_list.archivers
-        for archiver in list_archivers:
-            list_archivers[archiver] = False
-    else:
-        # Unless archive policy is intented to be 'none', then we assume archiving to be on by default
-        # and we just set the appropriate archive policy.
-        mlist_settings["archive_policy"] = mm_policy
+    mlist_settings["archive_policy"] = mm_policy
     mlist_settings.save()  # This needs to be the last line, otherwise changes won't take effect.
     return
 
@@ -441,41 +248,82 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     :return:
     """
     if _client is None:
-        return
-    if EmailListManager.check_name_availability(list_options.listname, list_options.domain):
-        try:
-            domain: Domain = _client.get_domain(list_options.domain)
-            email_list: MailingList = domain.create_list(list_options.listname)
-            # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
-            #  their lists on Mailman.
-            email_list.add_owner(owner.email)
+        # VIESTIM: If someone is somehow able to start creating lists, while mailmanclient isn't configured,
+        #  it means that we failed to check for connection at some point. Would there be a way to give a kind of a
+        #  traceback here with error logging, so this would be easy to narrow down where the slip up is?
+        log_error("New list creation has been accessed, even though mailmanclient is not configured for connection.")
+        raise RouteException("No connection configured.")
+    try:
+        check_name_availability(list_options.listname, list_options.domain)
+    except HTTPError:
+        # TODO: If the name has been snatched between checking it's availability, we might want to offer name
+        #  recommendations?
+        raise
+    try:
+        domain: Domain = _client.get_domain(list_options.domain)
+        email_list: MailingList = domain.create_list(list_options.listname)
+        # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
+        #  their lists on Mailman.
+        email_list.add_owner(owner.email)
+        # Add owner automatically as a member of a list.
+        email_list.subscribe(owner.email, display_name=owner.real_name, pre_approved=True, pre_verified=True,
+                             pre_confirmed=True)
 
-            set_default_templates(email_list)
+        set_default_templates(email_list)
 
-            # settings-attribute acts like a dict.
-            mlist_settings = email_list.settings
+        # settings-attribute acts like a dict.
+        mlist_settings = email_list.settings
 
-            # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
-            # advertising on if they so choose.
-            mlist_settings["advertised"] = False
-            mlist_settings["admin_notify_mchanges"] = list_options.notifyOwnerOnListChange
+        # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
+        # advertising on if they so choose.
+        mlist_settings["advertised"] = False
+        # Ownerss / moderators don't get automatic notifications from changese on their message list. Owner
+        # switches this on if necessary.
+        mlist_settings["admin_notify_mchanges"] = False
 
-            set_email_list_description(email_list, list_options.listDescription)
-            set_email_list_info(email_list, list_options.listInfo)
+        set_email_list_description(email_list, list_options.listDescription)
+        set_email_list_info(email_list, list_options.listInfo)
 
-            set_email_list_archive_policy(email_list, list_options.archive)
+        # This is to force Mailman generate archivers into it's db. This is to fix a race condition, where creating a
+        # new list without proper engineer interface procedures might make duplicate archiver rows in to db,
+        # while Mailman's code expects there to be only one archiver row (which results in the db code breaking and
+        # the list becoming unusable, at least without manual db fixing). This might be unnecessary at some point in
+        # time in the future if the condition is remedied in Mailman Core, but since this line is only needed once on
+        # list creation it might be good enough to just leave as is.
+        _ = dict(email_list.archivers)
 
-            # This needs to be the last line, because no changes to settings take effect until save-method is
-            # called.
-            mlist_settings.save()
-            return
-        except HTTPError:
-            # TODO: exceptions to catch: domain doesn't exist, list can't be created, connection to server fails.
-            raise
-    else:
-        # VIESTIM: If a list with this name exists (it shouldn't since it's checked before allowing list creation,
-        #  but technically it could if someone can grab the name during list creation process), then what do we do?
-        return
+        set_email_list_archive_policy(email_list, list_options.archive)
+
+        # This needs to be the last line, because no changes to settings take effect until save-method is
+        # called.
+        mlist_settings.save()
+    except HTTPError:
+        # TODO: exceptions to catch: domain doesn't exist, list can't be created, connection to server fails.
+        raise
+    return
+
+
+def get_list_ui_link(listname: str) -> str:
+    """
+    Get a link for a list to use for advanced email list options and moderation.
+    :param listname: The list we are getting the UI link for.
+    :return: A Hyperlink for list web UI on the Mailman side.
+    """
+    if _client is None:
+        return ""
+    try:
+        mail_list = _client.get_list(listname)
+        # Get the list's list id, which is basically it's address/name but '@' replaced with a dot.
+        list_id: str = mail_list.rest_data["list_id"]
+        # VIESTIM: This here is now hardcoded for Postorius Web UI. There might not be a way to just
+        #  programmatically get the specific hyperlink for non-TIM email list management needs, but is there a
+        #  way to not hard code the Postorius part in (Postorius is Mailman's default web UI and technically
+        #  we could switch to a different web UI)?
+        # Build the hyperlink.
+        link = "https://timlist.it.jyu.fi/postorius/lists/" + list_id
+        return link
+    except HTTPError:
+        return "Connection to Mailman failed while getting list's UI link."
 
 
 def set_email_list_description(mlist: MailingList, new_description: str) -> None:
@@ -660,3 +508,53 @@ def get_email_list_member_send_status(member: Member) -> bool:
     # If we are here, something has gone terribly wrong.
     # VIESTIM: Is this logging worthy? If yes, what severity?
     raise RouteException(f"Member {member.address} has an invalid send status assigned to them.")
+
+
+def check_emaillist_name_requirements(name_candidate: str, domain: str) -> None:
+    """Check email list's name requirements. General message list name requirement checks are assumed to be passed
+    at this point. """
+    # We assume that name rule checks for message lists are good enough for email list name requirements. If they
+    # change to allow things that email list names aren't allowed to have, then we need a name rule check here.
+    check_name_availability(name_candidate, domain)
+    check_reserved_names(name_candidate)
+    return
+
+
+def check_name_availability(name_candidate: str, domain: str) -> None:
+    """Search for a name from the pool of used email list names.
+
+    Raises a RouteException if no connection was ever established with the Mailman server via mailmanclient.
+    Re-raises HTTPError if something went wrong with the query from the server.
+
+    :param domain: Domain to search for lists, which then are used to check name availability.
+    :param name_candidate: The name to search for.
+    """
+    if _client is None:
+        raise RouteException("No connection with email list server established.")
+    try:
+        d = _client.get_domain(domain)
+        mlists: List[MailingList] = d.get_lists()
+        fqdn_name_candidate = name_candidate + "@" + domain
+        for name in [mlist.fqdn_listname for mlist in mlists]:
+            if fqdn_name_candidate == name:
+                raise RouteException("Name is already in use.")
+    except HTTPError:
+        # VIESTIM: Should we just raise the old error or inspect it closer? Now raise old error.
+        raise  # "Connection to server failed."
+    return
+
+
+def check_reserved_names(name_candidate: str) -> None:
+    """
+    Check a name candidate against reserved names, e.g. postmaster. Raises a RouteException if the name candidate
+    is a reserved name. If name is not reserved, the method succeeds silently.
+
+    :param name_candidate: The name to be compared against reserved names.
+    """
+    # TODO: Implement a smarter query for reserved names. Now only compare against simple list for prototyping
+    #  purposes. Maybe an external config file for known reserved names or something like that?
+    #  Is it possible to query reserved names e.g. from Mailman or it's server?
+    reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
+    if name_candidate in reserved_names:
+        raise RouteException(f"Name {name_candidate} is a reserved name and cannot be used.")
+    return

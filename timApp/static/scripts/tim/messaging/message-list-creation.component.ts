@@ -7,6 +7,7 @@ import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
 import {Users} from "../user/userService";
 import {IDocument, redirectToItem} from "../item/IItem";
+import {TimUtilityModule} from "../ui/tim-utility.module";
 import {
     archivePolicyNames,
     ArchiveType,
@@ -17,23 +18,28 @@ import {
 @Component({
     selector: "message-list-creation",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame class="form-horizontal">
             <ng-container header>
                 Message list creation
             </ng-container>
             <ng-container body>
-                <div>
-                    <label for="list-name">List name: </label>
-                    <input type="text" name="list-name" id="list-name"
+               <!-- <div>{{errorrMessage}}</div> -->
+                <div class="form-group">
+                    <label for="list-name" class="list-name text-left control-label col-sm-3">List name: </label>
+                    <div class="col-sm-8">
+                        <div class="input-group">    
+                    <input type="text" class="form-control" name="list-name" id="list-name"
                            [(ngModel)]="listname"
                            (keyup)="checkNameRequirementsLocally()"/>
-                    <span>@</span>
-                    <select id="domain-select" name="domain-select" [(ngModel)]="domain">
+                            <div class="input-group-addon">@</div>
+                    <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
                         <option [disabled]="domains.length" *ngFor="let domain of domains">{{domain}}</option>
                     </select>
                 </div>
-                <div>
-                    <b>List archive policy:</b>
+                        </div>
+                    </div>
+                <div class="archive-options">
+                    <p class="list-name">List archive policy: </p>
                     <ul style="list-style-type: none">
                         <li *ngFor="let option of archiveOptions">
                             <input
@@ -49,17 +55,21 @@ import {
                 </div>
             </ng-container>
             <ng-container footer>
-                <button class="timButton" type="button" (click)="newList() ">Create</button>
+                <tim-loading *ngIf="disableCreate"></tim-loading>
+                <button [disabled]="disableCreate" class="timButton" type="button" (click)="newList() ">Create</button>
             </ng-container>
         </tim-dialog-frame>
     `,
+    styleUrls: ["message-list-creation.component.scss"],
 })
 export class MessageListComponent extends AngularDialogComponent<
     unknown,
     unknown
 > {
+    disableCreate: boolean = false;
     protected dialogName = "MessageList";
     listname: string = "";
+    errorrMessage: string = "";
 
     urlPrefix: string = "/messagelist";
 
@@ -72,7 +82,7 @@ export class MessageListComponent extends AngularDialogComponent<
 
     // For name check
     timeoutID?: number;
-    notifyOwnerOnListChange: boolean = true;
+    notifyOwnerOnListChange: boolean = false;
 
     listDescription: string = "";
     listInfo: string = "";
@@ -102,6 +112,13 @@ export class MessageListComponent extends AngularDialogComponent<
     }
 
     async newList() {
+        // if (true) {
+        // TODO: tarkista, että nimi on väärin
+        // this.errorrMessage = "List name is wrong!";
+        // return;
+        // }
+
+        this.disableCreate = true;
         const result = await this.createList({
             // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
             listname: this.listname,
@@ -119,6 +136,7 @@ export class MessageListComponent extends AngularDialogComponent<
             defaultReplyType: ReplyToListChanges.NOCHANGES,
         });
         if (!result.ok) {
+            // this.errorrMessage = result.result.error.error;
             console.error(result.result.error.error);
         } else {
             // VIESTIM Helps see that data was sent succesfully after clicking the button.
@@ -246,6 +264,6 @@ export class MessageListComponent extends AngularDialogComponent<
 
 @NgModule({
     declarations: [MessageListComponent],
-    imports: [BrowserModule, DialogModule, FormsModule],
+    imports: [BrowserModule, DialogModule, FormsModule, TimUtilityModule],
 })
 export class MessageListModule {}
