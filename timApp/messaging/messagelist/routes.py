@@ -6,21 +6,18 @@ from sqlalchemy.orm.exc import NoResultFound  # type: ignore
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.create_item import create_document
-from timApp.document.docinfo import DocInfo
 from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui_link, create_new_email_list, \
     delete_email_list, check_emaillist_name_requirements
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
-from timApp.messaging.messagelist.messagelist_models import MessageListTimMember, get_members_for_list
+from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
-    archive_message, MESSAGE_LIST_DOC_PREFIX, parse_mailman_message
+    archive_message, new_list
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import remove_path_special_chars
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
@@ -103,50 +100,6 @@ def delete_list(listname: str, domain: str) -> Response:
         # VIESTIM: Perform a soft deletion for now.
         delete_email_list(f"{listname}@{domain}")
     return ok_response()
-
-
-def new_list(list_options: ListOptions) -> DocInfo:
-    """Adds a new message list into the database and creates the list's management doc.
-
-    :param list_options: The list information for creating a new message list.
-    :return: The management document.
-    """
-    # VIESTIM: Check creation permission? Or should it be in the calling view function?
-    msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
-    if list_options.domain:
-        msg_list.email_list_domain = list_options.domain
-    db.session.add(msg_list)
-
-    doc_info = create_management_doc(msg_list, list_options)
-
-    db.session.commit()
-    return doc_info
-
-
-def create_management_doc(msg_list_model: MessageListModel, list_options: ListOptions) -> DocInfo:
-    # TODO: Document should reside in owner's personal path.
-
-    # VIESTIM: The management document is created on the message list creator's personal folder. This might be a good
-    #  default, but if the owner is someone else than the creator then we have to handle that.
-
-    # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
-    path_safe_list_name = remove_path_special_chars(list_options.listname)
-    path_to_doc = f'/{MESSAGE_LIST_DOC_PREFIX}/{path_safe_list_name}'
-
-    doc = create_document(path_to_doc, list_options.listname)
-
-    # VIESTIM: We add the admin component to the document. This might have to be changed if the component is turned
-    #  into a plugin.
-
-    admin_component = """#- {allowangular="true"}
-<tim-message-list-admin></tim-message-list-admin>
-    """
-    doc.document.add_text(admin_component)
-
-    # Set the management doc for the message list.
-    msg_list_model.manage_doc_id = doc.id
-
-    return doc
 
 
 @messagelist.route("/getlist/<int:document_id>", methods=['GET'])
@@ -276,7 +229,8 @@ def archive(message: MessageTIMversalis) -> Response:
     :param message: The message to be archived.
     :return: Return OK response if everything went smoothly.
     """
-    # VIESTIM: This view function has not been tested yet.
+    # VIESTIM: This view function might be unnecessary. Probably all different message channels have to use their own
+    #  handling routes for parsing purposes, and then possible archiving happens there.
 
     msg_list = MessageListModel.get_list_by_name_first(message.message_list_name)
     if msg_list is None:
