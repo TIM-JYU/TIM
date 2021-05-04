@@ -4,8 +4,8 @@ export interface ListOptions {
     domain: string;
     archive: ArchiveType;
     notifyOwnerOnListChange: boolean;
-    listDescription: string;
-    listInfo: string;
+    listDescription?: string;
+    listInfo?: string;
     htmlAllowed: boolean;
     defaultReplyType: ReplyToListChanges;
     emailAdminURL?: string;

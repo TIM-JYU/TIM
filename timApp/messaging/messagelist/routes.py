@@ -116,14 +116,11 @@ def get_list(document_id: int) -> Response:
     :return: ListOptions with the list's information.
     """
     verify_logged_in()
-    # TODO: Additional checks for who get's to call this route.
-
+    # TODO: Additional checks for who gets to call this route.
 
     msg_list = MessageListModel.get_list_by_manage_doc_id(document_id)
     list_options = ListOptions(
         listname=msg_list.name,
-        listInfo=msg_list.info,
-        listDescription=msg_list.description,
         notifyOwnerOnListChange=msg_list.notify_owner_on_change,
         # VIESTIM: We need a better way of either querying or inferring list's (possible) domain. For the time being,
         #  here is a placeholder.
@@ -134,6 +131,10 @@ def get_list(document_id: int) -> Response:
     )
     if msg_list.email_list_domain:
         list_options.emailAdminURL = get_list_ui_link(msg_list.name, msg_list.email_list_domain)
+    if msg_list.info:
+        list_options.listInfo = msg_list.info,
+    if msg_list.description:
+        list_options.listDescription = msg_list.description,
     return json_response(list_options)
 
 

@@ -128,8 +128,8 @@ export class MessageListAdminComponent implements OnInit {
 
     notifyOwnerOnListChange: boolean = false;
 
-    listInfo: string = "";
-    listDescription: string = "";
+    listInfo?: string;
+    listDescription?: string;
 
     emailAdminURL?: string;
 
