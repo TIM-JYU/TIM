@@ -141,16 +141,7 @@
                         <i class="glyphicon glyphicon-info-sign"></i> {{ global_notification|safe }}
                     </div>
                 {% endif %}
-                {% if tim_messages %}
-                    <tim-message></tim-message>
-                    <p>if tim_messages</p>
-                    {% for tim_message in tim_messages %}
-                        <p>for loop</p>
-                        <div class="timMessageDisplay">
-                            {{ tim_message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
+                <tim-message-view></tim-message-view>
                 {% with messages = get_flashed_messages() %}
                     {% if messages %}
                         {% for message in messages %}

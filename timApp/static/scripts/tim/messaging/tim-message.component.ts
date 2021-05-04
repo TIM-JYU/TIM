@@ -1,11 +1,6 @@
-import {Component, NgModule, OnInit} from "@angular/core";
+import {Component, Input, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {itemglobals} from "tim/util/globals";
-import {HttpClient} from "@angular/common/http";
-import {to2} from "tim/util/utils";
-import {getItem, IItem} from "tim/item/IItem";
-
-// import {TimMessage} from "tim/timApp/messaging/timMessage/timMessage";
+import {TimMessageData} from "./tim-message-view.component";
 
 @Component({
     selector: "tim-message",
@@ -55,6 +50,9 @@ import {getItem, IItem} from "tim/item/IItem";
     styleUrls: ["tim-message.component.scss"],
 })
 export class TimMessageComponent implements OnInit {
+    @Input()
+    message: TimMessageData | undefined;
+
     messageMaxLength: number = 210;
     messageOverMaxLength: boolean = false;
     showMessage: boolean = true;
@@ -71,8 +69,6 @@ export class TimMessageComponent implements OnInit {
     messageToGroup: boolean = true; // can't get from database
     group?: string; // can't get from database
     heading?: string;
-
-    constructor(private http: HttpClient) {}
 
     /**
      * Toggles between showing the full message content and the shortened version.
@@ -118,39 +114,19 @@ export class TimMessageComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        const itemId = itemglobals().curr_item.id;
-        void this.loadValues(itemId);
-
-        // TODO Read group and content from database
-        this.group = "ohj1k21";
-    }
-
-    async loadValues(itemId: number) {
-        const messages = await to2(
-            // get messages shown on current page
-            this.http
-                .get<TimMessageData>(`/timMessage/get/${itemId}`)
-                .toPromise()
-        );
-
-        if (messages.ok) {
-            const messageDoc = await getItem(messages.result.doc_id); // get message's document
-            if (!messageDoc) {
-                return;
-            }
-            this.setValues(messages.result, messageDoc);
-        } else {
-            console.error(messages.result.error.error);
+        if (this.message) {
+            this.setValues(this.message);
+            // TODO Read group from database
+            this.group = "ohj1k21";
         }
     }
 
-    setValues(options: TimMessageData, doc: IItem) {
-        // TODO set message contents
-        this.sender = doc.owners[0].name; // TODO return sender in TimMessageData from server
-        this.heading = options.message_subject;
-        this.fullContent = options.message_body; // TODO handle html properly
-        this.canMarkAsRead = options.can_mark_as_read;
-        this.canReply = options.can_reply;
+    setValues(timMessage: TimMessageData) {
+        this.sender = timMessage.sender;
+        this.heading = timMessage.message_subject;
+        this.fullContent = timMessage.message_body; // TODO handle html properly
+        this.canMarkAsRead = timMessage.can_mark_as_read;
+        this.canReply = timMessage.can_reply;
 
         if (this.fullContent.length > this.messageMaxLength) {
             this.messageOverMaxLength = true;
@@ -161,19 +137,6 @@ export class TimMessageComponent implements OnInit {
             );
         }
     }
-}
-
-interface TimMessageData {
-    // Information about the message retrieved from server
-    id: number;
-    doc_id: number;
-    par_id: string;
-    can_mark_as_read: boolean;
-    can_reply: boolean;
-    display_type: number;
-    message_body: string;
-    message_subject: string;
-    recipients: [string];
 }
 
 @NgModule({
