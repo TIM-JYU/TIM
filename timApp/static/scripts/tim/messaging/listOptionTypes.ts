@@ -1,11 +1,11 @@
-export interface CreateListOptions {
+export interface ListOptions {
     // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
     listname: string;
     domain: string;
     archive: ArchiveType;
     notifyOwnerOnListChange: boolean;
-    listDescription: string;
-    listInfo: string;
+    listDescription?: string;
+    listInfo?: string;
     htmlAllowed: boolean;
     defaultReplyType: ReplyToListChanges;
     emailAdminURL?: string;

@@ -4,11 +4,13 @@ from datetime import datetime
 from typing import Optional, List, Dict
 
 from timApp.auth.accesstype import AccessType
+from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
-from timApp.messaging.messagelist.listoptions import ArchiveType
+from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -338,5 +340,65 @@ def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[
 
 
 def get_message_list_owners(mlist: MessageListModel) -> List[UserGroup]:
+    """Get the owners of a message list.
+
+    :param mlist: The message list we want to know the owners.
+    :return: A list of owners, as their personal user group.
+    """
     manage_doc_block = Block.query.filter_by(id=mlist.manage_doc_id).one()
     return manage_doc_block.owners
+
+
+def verify_list_owner(owner_candidate_ug: UserGroup, mlist: MessageListModel) -> bool:
+    """Verify if a user is the owner of message list.
+
+    :param owner_candidate_ug:
+    :param mlist:
+    :return: Return True if the owner candidate is a owner of a message list. Otherwise return false.
+    """
+    mlist_owners = get_message_list_owners(mlist)
+    return owner_candidate_ug in mlist_owners
+
+
+def create_management_doc(msg_list_model: MessageListModel, list_options: ListOptions) -> DocInfo:
+    # TODO: Document should reside in owner's personal path.
+
+    # VIESTIM: The management document is created on the message list creator's personal folder. This might be a good
+    #  default, but if the owner is someone else than the creator then we have to handle that.
+
+    # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
+    path_safe_list_name = remove_path_special_chars(list_options.listname)
+    path_to_doc = f'/{MESSAGE_LIST_DOC_PREFIX}/{path_safe_list_name}'
+
+    doc = create_document(path_to_doc, list_options.listname)
+
+    # VIESTIM: We add the admin component to the document. This might have to be changed if the component is turned
+    #  into a plugin.
+
+    admin_component = """#- {allowangular="true"}
+<tim-message-list-admin></tim-message-list-admin>
+    """
+    doc.document.add_text(admin_component)
+
+    # Set the management doc for the message list.
+    msg_list_model.manage_doc_id = doc.id
+
+    return doc
+
+
+def new_list(list_options: ListOptions) -> DocInfo:
+    """Adds a new message list into the database and creates the list's management doc.
+
+    :param list_options: The list information for creating a new message list.
+    :return: The management document.
+    """
+    # VIESTIM: Check creation permission? Or should it be in the calling view function?
+    msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
+    if list_options.domain:
+        msg_list.email_list_domain = list_options.domain
+    db.session.add(msg_list)
+
+    doc_info = create_management_doc(msg_list, list_options)
+
+    db.session.commit()
+    return doc_info

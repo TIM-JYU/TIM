@@ -37,11 +37,15 @@ class ListOptions:
     # VIESTIM: Enums need this to help marshmallow decipher JSON values in from client side properly.
     archive: ArchiveType = field(metadata={'by_value': True})
     notifyOwnerOnListChange: bool
-    listDescription: str
-    listInfo: str
     htmlAllowed: bool
     defaultReplyType: ReplyToListChanges = field(metadata={'by_value': True})
+    listDescription: Optional[str] = None
+    listInfo: Optional[str] = None
     emailAdminURL: Optional[str] = None
+    # TODO: Add following fields to list options (and to TS side)
+    # userCanUnsubscribe: bool
+    # defaultSendRight: bool
+    # defaultDeliveryRight: bool
 
 
 reply_to_munging: Dict[ReplyToListChanges, str] = {
