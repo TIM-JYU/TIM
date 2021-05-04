@@ -102,6 +102,7 @@ import {Users} from "../user/userService";
                 <button class="btn btn-default" (click)="save()">Save changes</button>
             </div>
             <div>
+                <h2>List deletion</h2>
                 <button class="btn btn-default" (click)="deleteList()">Delete List</button>
             </div>
         </form>
