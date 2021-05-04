@@ -299,7 +299,7 @@ def check_messages_folder_path(msg_folder_path: str, tim_msg_folder_path: str) -
                                        creation_opts=FolderCreationOptions(apply_default_rights=True))
         tim_msg_block = tim_msg_folder.block
         if tim_msg_block:
-            tim_msg_block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+            tim_msg_block.add_rights([UserGroup.get_logged_in_group()], AccessType.edit)
 
     return tim_msg_folder
 
