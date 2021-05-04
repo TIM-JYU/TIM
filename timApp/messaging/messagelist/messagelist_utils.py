@@ -5,9 +5,11 @@ from typing import Optional, List, Dict
 
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
+from timApp.document.document import Document
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
-from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
+from timApp.messaging.messagelist.listoptions import ArchiveType
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -127,15 +129,86 @@ class MessageTIMversalis:
 
     timestamp: datetime = get_current_time()
 
+    # VIESTIM: Would a response depth field be usefull? It was stated, that multiple Re: and Vs: prefixes on subjects
+    #  is annoying and these should be discarded, but if we wish to do some type of inferance in the future about
+    #  what a message is responding at, it might need this information.
+
 
 MESSAGE_LIST_DOC_PREFIX = "messagelists"
 MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
 
+def message_list_tim_members_as_user_groups(tim_members: List['MessageListTimMember']) -> List[UserGroup]:
+    user_groups = []
+    for member in tim_members:
+        user_groups.append(member.user_group)
+    return user_groups
+
+
+def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str, message_list: MessageListModel,
+                                       message: MessageTIMversalis) -> DocEntry:
+    """Create archive document with permissions matching the message list's archive type.
+
+    :param archive_title: The title of the archive document.
+    :param archive_doc_path: The path where the archive document should be created.
+    :param message_list: The message list where the message belongs.
+    :param message: The message about to be archived.
+    :return: The archive document.
+    """
+    # Gather owners of the archive document.
+    # TODO: Create new document, setting the owner as either the person sending the message or message list's owner
+    message_owners: List[UserGroup] = []
+    message_sender = User.get_by_email(message.sender.email_address)
+
+    # List owners get a default ownership for the messages on a list.
+    message_owners.extend(get_message_list_owners(message_list))
+
+    # Who gets to see a message in the archives.
+    message_viewers: List[UserGroup] = []
+
+    # Gather permissions to the archive doc. The meanings of different archive settings are listed with ArchiveType
+    # class.
+    if message_list.archive_policy is ArchiveType.PUBLIC or ArchiveType.UNLISTED:
+        # Unlisted and public archiving only differs in whether or not the archive folder is in a special place
+        # where it can be found more easily. The folder is linked/aliased elsewhere and is not a concer in archiving.
+        message_viewers.append(UserGroup.get_anonymous_group())
+        if message_sender:
+            message_owners.append(message_sender.get_personal_group())
+    elif message_list.archive_policy is ArchiveType.GROUPONLY:
+        message_viewers = message_list_tim_members_as_user_groups(message_list.get_tim_members())
+        if message_sender:
+            message_owners.append(message_sender.get_personal_group())
+    elif message_list.archive_policy is ArchiveType.SECRET:
+        # VIESTIM: There shouldn't be much to do with this archive policy? The list owners get ownership,
+        #  and otherwise no one else sees it?
+        pass
+
+    # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
+    #  that, because in this context that is the anonymous user, and that raises an error.
+    archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
+
+    # Add the rest of the message owners.
+    if len(message_owners) > 1:
+        archive_doc.block.add_rights(message_owners[1:], AccessType.owner)
+
+    # Add view rights.
+    archive_doc.block.add_rights(message_viewers, AccessType.view)
+
+    return archive_doc
+
+
 def archive_message(message_list: MessageListModel, message: MessageTIMversalis) -> None:
-    """Archive a message for a message list."""
-    # TODO: If there are multiple messages with same title, differentiate them. FIXME MESSAGE TITLE IN BRACKETS
-    archive_title = f"{message.title}-{get_current_time()}"
+    """Archive a message for a message list.
+
+    :param message_list: The message list where the archived message belongs.
+    :param message: The message being archived.
+    """
+    # Archive policy of no archiving is a special case, where we abort immediately since these won't be archived at all.
+    if message_list.archive_policy is ArchiveType.NONE:
+        # VIESTIM: Do we need an exception here? Is it enough to just silently return?
+        return
+
+    archive_title = f"{message.title}-{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
     archive_folder_path = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{remove_path_special_chars(message_list.name)}"
     archive_doc_path = f"{archive_folder_path}/{remove_path_special_chars(archive_title)}"
 
@@ -153,28 +226,17 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
         owners = manage_doc_block.owners
         Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
 
-    # Find suitable name for archive document.
-    # TODO: Create new document, setting the owner as either the person sending the message or message list's owner
-    message_owners: List[UserGroup] = []
-    message_owner = User.get_by_email(message.sender.email_address)
-    if message_owner:
-        message_owners.append(message_owner.get_personal_group())
-    message_owners.extend(get_message_list_owners(message_list))
-
-    # Add create archive document and add owners for the document.
-    # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
-    #  that, because in this context that is the anonymous user, and that raises an error.
-    archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
-    if len(message_owners) > 1:
-        archive_doc.block.add_rights(message_owners[1:], AccessType.owner)
+    archive_doc = create_archive_doc_with_permission(archive_title, archive_doc_path, message_list, message)
 
     # Set header information for archived message.
-    archive_doc.document.add_text(f"Title: {message.title}")
-    archive_doc.document.add_text(f"Sender: {message.sender}")
-    archive_doc.document.add_text(f"Recipients: {message.recipients}")
+    archive_doc.document.add_text(f"""
+Title: {message.title}
+Sender: {message.sender}
+Recipients: {message.recipients}
+Message body:
+""")
 
     # Set message body for archived message.
-    archive_doc.document.add_text("Message body:")
     archive_doc.document.add_text(f"{message.message_body}")
 
     # If there is only one message, we don't need to add links to any other messages.
@@ -183,21 +245,25 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
         sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
         previous_doc = sorted_messages[0]
 
-        # Set the "Next message" link for the previous newest message.
-        next_doc_title = f"Next message: {archive_title}"
-        next_doc_link = f"{archive_doc.url}"
-        next_message_link = f"[{next_doc_title}]({next_doc_link})"
-        previous_doc.document.add_text(next_message_link)
-
-        # Set the "Previous message" link for the newest message.
-        previous_doc_title = f"Previous message: {previous_doc.title}"
-        previous_doc_link = f"{previous_doc.url}"
-        previous_message_link = f"[{previous_doc_title}]({previous_doc_link})"
-        archive_doc.document.add_text(f"{previous_message_link}")
+        # Link the previous newest message and now archived message together.
+        set_message_link(previous_doc.document, f"Next Message: {archive_doc.title}", archive_doc.url)
+        set_message_link(archive_doc.document, f"Previous message: {previous_doc.title}", previous_doc.url)
 
     # TODO: Set proper rights to the document. The message sender owns the document. Owners of the list get at least a
     #  view right. Other rights depend on the message list's archive policy.
     db.session.commit()
+    return
+
+
+def set_message_link(link_to: Document, link_text: str, link_from_url: str) -> None:
+    """Set link to a document from another document.
+
+    :param link_to: The document where the link is appended.
+    :param link_text: The text the link gets.
+    :param link_from_url: The link to another document.
+    """
+    link = f"[{link_text}]({link_from_url})"
+    link_to.add_text(link)
     return
 
 
@@ -235,7 +301,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> Message
         # Header information
         sender=sender,  # VIESTIM: Message should only have one sender?
         recipients=visible_recipients,
-        title=original["subject"],
+        title=original["subject"],  # TODO: shorten the subject, if it contains multiple Re: and Vs: prefixes?
 
         # Message body
         message_body=original["body"],

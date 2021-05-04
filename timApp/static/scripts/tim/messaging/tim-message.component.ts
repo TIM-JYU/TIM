@@ -1,9 +1,8 @@
-import {Component, NgModule, OnInit} from "@angular/core";
+import {Component, Input, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
 import {to2} from "tim/util/utils";
-
-// import {TimMessage} from "tim/timApp/messaging/timMessage/timMessage";
+import {TimMessageData} from "./tim-message-view.component";
 
 @Component({
     selector: "tim-message",
@@ -36,13 +35,13 @@ import {to2} from "tim/util/utils";
                     </div>
                 </div>
                 <div class="readReceiptArea">
-                    <input type="checkbox" name="mark-as-read" id="mark-as-read" 
+                    <input type="checkbox" name="mark-as-read" id="mark-as-read"
                            [disabled]="!canMarkAsRead || markedAsRead" (click)="markAsRead()"/>
                     <label for="mark-as-read">Mark as Read</label>
                     <span class="readReceiptLink"
                           *ngIf="markedAsRead">Read receipt can be cancelled in <a>your messages</a></span>
-                    <button class="timButton" title="Close Message" 
-                            [disabled]="(!canMarkAsRead && !replySent) || (canMarkAsRead && !markedAsRead)" 
+                    <button class="timButton" title="Close Message"
+                            [disabled]="(!canMarkAsRead && !replySent) || (canMarkAsRead && !markedAsRead)"
                             (click)="closeMessage()">
                         Close
                     </button>
@@ -53,12 +52,15 @@ import {to2} from "tim/util/utils";
     styleUrls: ["tim-message.component.scss"],
 })
 export class TimMessageComponent implements OnInit {
+    @Input()
+    message: TimMessageData | undefined;
+
     messageMaxLength: number = 210;
-    messageOverMaxLength: boolean = true;
+    messageOverMaxLength: boolean = false;
     showMessage: boolean = true;
     fullContent?: string;
     shownContent?: string;
-    showFullContent: boolean = false;
+    showFullContent: boolean = true;
     showReply: boolean = false;
     canMarkAsRead: boolean = true;
     markedAsRead: boolean = false;
@@ -66,8 +68,8 @@ export class TimMessageComponent implements OnInit {
     canReply: boolean = true; // show/hide 'Reply' button
     canSendReply: boolean = true; // enable/disable 'Send' button
     sender?: string;
-    messageToGroup: boolean = true;
-    group?: string;
+    messageToGroup: boolean = true; // can't get from database
+    group?: string; // can't get from database
     heading?: string;
 
     constructor(private http: HttpClient) {}
@@ -128,28 +130,23 @@ export class TimMessageComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // TODO Read sender, content etc. from database
-        this.sender = "Matti Meikäläinen";
-        this.group = "ohj1k21";
-        this.heading = "Puuttuvat demopisteet";
-        // this.fullContent =
-        //     "Sinulta puuttuu demo 3 ja 4 pisteitä. Miten jatketaan kurssin kanssa?";
-        this.fullContent =
-            "Sinulta puuttuu demo 3 ja 4 pisteitä. Miten jatketaan kurssin kanssa? \
-            Kullakin demokerralla 100% oikeuttava määrä on 8 pistettä. Kultakin \
-            demokerralta lasketaan jakson 1 aikana max. 10 p, eli vaikka saisit \
-            kerättyä lisätehtävillä enemmänkin pisteitä, otetaan jokaiselta demokerralta \
-            lukuun enintään 10 pistettä. Jakso 2 max 8p/kerta. Muutos: paitsi demo 12 \
-            jolloin määrällä ei ole ylärajaa. HUOM! 2 tehtävää / kerta ei kuitenkaan \
-            riitä kurssin läpäisemiseen, sillä ensinnäkään siitä ei tule yhteensä 40% \
-            ja toisekseen joka kerta jää 6 tehtävää muita jälkeen. 12 kerran jälkeen on \
-            melkoisen paljon muita jäljessä! 105 % suoritustavassa on JOKA demokerta \
-            tehtävä vähintään yksi Bonus- tai Guru-tehtävä (vuonna 2018 ekassa jaksossa, \
-            jatkossa molemmissa jaksoissa).";
-        if (this.fullContent.length < this.messageMaxLength) {
-            this.messageOverMaxLength = false;
-            this.showFullContent = true;
-        } else {
+        if (this.message) {
+            this.setValues(this.message);
+            // TODO Read group from database
+            this.group = "ohj1k21";
+        }
+    }
+
+    setValues(timMessage: TimMessageData) {
+        this.sender = timMessage.sender;
+        this.heading = timMessage.message_subject;
+        this.fullContent = timMessage.message_body; // TODO handle html properly
+        this.canMarkAsRead = timMessage.can_mark_as_read;
+        this.canReply = timMessage.can_reply;
+
+        if (this.fullContent.length > this.messageMaxLength) {
+            this.messageOverMaxLength = true;
+            this.showFullContent = false;
             this.shownContent = this.fullContent.substr(
                 0,
                 this.messageMaxLength

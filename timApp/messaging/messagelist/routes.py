@@ -12,10 +12,9 @@ from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui
     delete_email_list, check_emaillist_name_requirements
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
-from timApp.messaging.messagelist.messagelist_models import MessageListModel
-from timApp.messaging.messagelist.messagelist_models import MessageListTimMember, get_members_for_list
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
-    archive_message, MESSAGE_LIST_DOC_PREFIX, parse_mailman_message
+    archive_message, MESSAGE_LIST_DOC_PREFIX, EmailAndDisplayName
 from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -301,22 +300,17 @@ def archive(message: MessageTIMversalis) -> Response:
 
 @messagelist.route("/test", methods=['GET'])
 def test_route() -> Response:
-    # Build test message, simulating an new message event from Mailman
-    new_message = {
-        "from_": "from@example.com",
-        "to": ["to@example.com"],
-        "cc": ["cc@example.com"],
-        "bcc": ["bcc@example.com"],
-        "x-no-archive": "",
-        "body": """Testing a message.""",
-        "subject": "A subject for this message",
-        "reply_to": "vastaakkin_tanne@domain.fi"
-    }
-
-    message_list = MessageListModel.get_list_by_name_exactly_one("uuslista343463")
-
-    parsed_message = parse_mailman_message(new_message, message_list)
-
-    archive_message(message_list, parsed_message)
-
+    """A testing route."""
+    # VIESTIM: This fails if the message list doesn't exist.
+    msg_list = MessageListModel.get_list_by_name_exactly_one("uusilista293u0")
+    message = MessageTIMversalis(message_list_name="uusilista293u0",
+                                 message_channel=Channel.EMAIL_LIST,
+                                 sender=EmailAndDisplayName(email_address="tomi.t.lundberg@student.jyu.fi",
+                                                            display_name="Tomi L."),
+                                 recipients=[EmailAndDisplayName(email_address="status-check2@tim.jyu.fi",
+                                                                 display_name="Uusilista293u0")],
+                                 title="Viestin otsikko",
+                                 message_body="Hei mualima!"
+                                 )
+    archive_message(message_list=msg_list, message=message)
     return ok_response()

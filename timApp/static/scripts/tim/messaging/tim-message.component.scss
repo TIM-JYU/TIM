@@ -3,6 +3,7 @@
     border-radius: 6px;
     padding: 10px;
     background-color: var(--basic-color-inverse);
+    width: var(--paragraph-preferred-width);
 
     .message-heading {
         font-weight: bold;
@@ -44,7 +45,6 @@
         }
 
         .timButton {
-            position: absolute;
             right: 5px;
             bottom: 10px;
         }

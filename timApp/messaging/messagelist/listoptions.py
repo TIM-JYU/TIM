@@ -10,7 +10,7 @@ class ArchiveType(Enum):
 
     # No archiving at all for list. Equals to Mailman's archive policy of 'none'.
     NONE = 0
-    # Secret archive. Only for owner/moderators. No direct correlation with Mailman's archive policies.
+    # Secret archive. Only for owner(and moderators?). No direct correlation with Mailman's archive policies.
     SECRET = 1
     # For group and it's members' eyes only. Equal for Mailman's archive policy of 'private'.
     GROUPONLY = 2
