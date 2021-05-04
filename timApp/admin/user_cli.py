@@ -335,6 +335,10 @@ def import_accounts(csvfile: str, password: Optional[str]) -> None:
     help='whether to verify that the password hash matches the password',
 )
 def import_passwords(csvfile: TextIOWrapper, verify: bool) -> None:
+    return do_import_passwords(csvfile, verify)
+
+
+def do_import_passwords(csvfile: TextIOWrapper, verify: bool) -> None:
     for row in csv.reader(csvfile, delimiter=';'):
         if len(row) != 3:
             raise click.UsageError(f'Wrong amount of columns in row {row}')
@@ -343,18 +347,23 @@ def import_passwords(csvfile: TextIOWrapper, verify: bool) -> None:
             raise click.UsageError(f'Email missing in row')
         password = row[1]
         pw_hash = row[2]
-        if not pw_hash:
-            raise click.UsageError(f'Password hash missing in row')
-        if not password:
-            raise click.UsageError(f'Password missing in row')
+        if password and not pw_hash:
+            raise click.UsageError('Password hash must be given if password is given')
         if verify:
-            if not check_password_hash(password, pw_hash):
+            if not password:
+                click.echo(f'Cannot verify password for {email} because only hash was provided')
+            elif not check_password_hash(password, pw_hash):
                 raise click.UsageError(f'Password does not match hash: {password} {pw_hash}')
         u = User.get_by_email(email)
         if not u:
             raise click.UsageError(f'User not found: {email}')
-        u.pass_ = pw_hash
-        click.echo(f'Imported password {password} for {email}')
+        u.pass_ = pw_hash or None
+        if password:
+            click.echo(f'Imported password {password} for {email}')
+        elif pw_hash:
+            click.echo(f'Imported password hash {pw_hash} for {email}')
+        else:
+            click.echo(f'Cleared password for {email}')
 
     db.session.commit()
 
