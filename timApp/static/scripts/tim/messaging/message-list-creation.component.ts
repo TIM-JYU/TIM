@@ -11,7 +11,7 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
 import {
     archivePolicyNames,
     ArchiveType,
-    CreateListOptions,
+    ListOptions,
     ReplyToListChanges,
 } from "./listOptionTypes";
 
@@ -120,7 +120,7 @@ export class MessageListComponent extends AngularDialogComponent<
 
         this.disableCreate = true;
         const result = await this.createList({
-            // VIESTIM These fields have to match with interface CreateListOptions, otherwise a type error happens.
+            // VIESTIM These fields have to match with interface ListOptions, otherwise a type error happens.
             listname: this.listname,
             // We added '@' in domain name for display purposes, remove it when sending domain to the server.
             // VIESTIM: This bit is probably now obsolete, since the '@' is no longer added to the value, but is
@@ -145,7 +145,7 @@ export class MessageListComponent extends AngularDialogComponent<
     }
 
     // VIESTIM this helper function helps keeping types in check.
-    private createList(options: CreateListOptions) {
+    private createList(options: ListOptions) {
         return to2(
             this.http
                 .post<IDocument>("/messagelist/createlist", {options})
@@ -230,8 +230,8 @@ export class MessageListComponent extends AngularDialogComponent<
         );
         // Local tests have been passed. Now launch server side checks.
         this.timeoutID = window.setTimeout(
-            () => this.checkListNameAvailability(),
-            5 * 1000
+            () => this.checkServerNameRequirements(),
+            2 * 1000
         );
 
         return true;
@@ -239,9 +239,8 @@ export class MessageListComponent extends AngularDialogComponent<
 
     /**
      * Helper to check if this list name exists.
-     * VIESTIM: This is a demo function, will only probably need this when we have implemented the creation dialoque?
      */
-    async checkListNameAvailability() {
+    async checkServerNameRequirements() {
         // Name candidate depends on whether domains are configured for TIM.
         const nameCandidate: string = this.domain
             ? `${this.listname}@${this.domain}`

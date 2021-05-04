@@ -6,8 +6,9 @@ import {FormsModule} from "@angular/forms";
 import {
     archivePolicyNames,
     ArchiveType,
-    CreateListOptions,
+    ListOptions,
     MemberInfo,
+    ReplyToListChanges,
 } from "tim/messaging/listOptionTypes";
 import {documentglobals} from "tim/util/globals";
 import {Users} from "../user/userService";
@@ -20,17 +21,17 @@ import {Users} from "../user/userService";
             <div class="form-group">
                 <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
                 <div class="col-sm-9">
-                <div class="input-group">    
-                <input type="text" class="form-control" name="list-name" id="list-name"
-                       [(ngModel)]="listname"/>
-                    <div class="input-group-addon">@</div>
-                <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
-                    <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
-                </select>
-            </div>
-            </div>
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="list-name" id="list-name"
+                               [(ngModel)]="listname"/>
+                        <div class="input-group-addon">@</div>
+                        <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
+                            <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
+                        </select>
+                    </div>
                 </div>
-                
+            </div>
+
             <div>
                 <!-- TODO: Add owners here? Should we at least display owner information and give a way to change 
                       owners, or should that be done by directly changing the owner of the document? -->
@@ -40,18 +41,20 @@ import {Users} from "../user/userService";
                 -->
             </div>
             <div class="form-group">
-                <label for="list-description" class="short-description control-label col-sm-3">Short description: </label>
+                <label for="list-description" class="short-description control-label col-sm-3">Short
+                    description: </label>
                 <div class="col-sm-9">
-                <input type="text" class="form-control" name="list-description" id="list-description" [(ngModel)]="listDescription"/>
-            </div>
+                    <input type="text" class="form-control" name="list-description" id="list-description"
+                           [(ngModel)]="listDescription"/>
                 </div>
+            </div>
             <div class="form-group">
                 <label for="list-info" class="long-description control-label col-sm-3">Long description: </label>
                 <div class="col-sm-9">
-                <textarea name="list-info" class="list-info form-control" 
+                <textarea name="list-info" class="list-info form-control"
                           [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
-            </div>
                 </div>
+            </div>
             <div>
             </div>
             <div>
@@ -96,6 +99,10 @@ import {Users} from "../user/userService";
                 <a [href]="emailAdminURL">Advanced email list settings</a>
             </div>
             <div>
+                <button class="btn btn-default" (click)="save()">Save changes</button>
+            </div>
+            <div>
+                <h2>List deletion</h2>
                 <button class="btn btn-default" (click)="deleteList()">Delete List</button>
             </div>
         </form>
@@ -122,8 +129,8 @@ export class MessageListAdminComponent implements OnInit {
 
     notifyOwnerOnListChange: boolean = false;
 
-    listInfo: string = "";
-    listDescription: string = "";
+    listInfo?: string;
+    listDescription?: string;
 
     emailAdminURL?: string;
 
@@ -255,7 +262,7 @@ export class MessageListAdminComponent implements OnInit {
     async loadValues(docID: number) {
         const result = await to2(
             this.http
-                .get<CreateListOptions>(`${this.urlPrefix}/getlist/${docID}`)
+                .get<ListOptions>(`${this.urlPrefix}/getlist/${docID}`)
                 .toPromise()
         );
         if (result.ok) {
@@ -271,7 +278,7 @@ export class MessageListAdminComponent implements OnInit {
      * Helper for setting list values after loading.
      * @param listOptions
      */
-    setValues(listOptions: CreateListOptions) {
+    setValues(listOptions: ListOptions) {
         this.listname = listOptions.listname;
         this.archive = listOptions.archive;
 
@@ -286,6 +293,36 @@ export class MessageListAdminComponent implements OnInit {
         this.listDescription = listOptions.listDescription;
 
         this.emailAdminURL = listOptions.emailAdminURL;
+    }
+
+    /**
+     * Function to initiate, when the user saves the list options.
+     */
+    async save() {
+        const result = await this.saveListOptions({
+            listname: this.listname,
+            domain: this.domain,
+            listInfo: this.listInfo,
+            listDescription: this.listDescription,
+            htmlAllowed: true, // TODO: Option to ask the user.
+            defaultReplyType: ReplyToListChanges.NOCHANGES, // TODO: Option to ask the user.
+            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
+            archive: this.archive,
+        });
+        if (result.ok) {
+            console.log("save succee");
+        } else {
+            console.error("save fail");
+        }
+    }
+
+    /**
+     * Helper for list saving to keep types in check.
+     * @param options All the list options the user saves.
+     */
+    private saveListOptions(options: ListOptions) {
+        // FIXME Returns error 422, why?
+        return to2(this.http.post(`/messagelist/save`, {options}).toPromise());
     }
 }
 
