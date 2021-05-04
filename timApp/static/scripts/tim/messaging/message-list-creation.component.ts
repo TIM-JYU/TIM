@@ -185,23 +185,21 @@ export class MessageListComponent extends AngularDialogComponent<
         const regExpStartCharacter: RegExp = /^[a-z]/;
         if (!regExpStartCharacter.test(this.listname)) {
             // console.log("name doesn't start with a lowercase letter");
-            this.errorMessage.push(
-                "name doesn't start with a lowercase letter"
-            );
+            this.errorMessage.push("Name should start with a lowercase letter");
         }
 
         // Name contains at least one digit.
         const regExpAtLeastOneDigit: RegExp = /\d/;
         if (!regExpAtLeastOneDigit.test(this.listname)) {
             // console.error("name doesn't contain at least one digit.");
-            this.errorMessage.push("name doesn't contain at least one digit.");
+            this.errorMessage.push("Name should contain at least one digit");
         }
 
         // Name can't contain multiple sequential dots.
         const regExpMultipleDots: RegExp = /\.\.+/;
         if (regExpMultipleDots.test(this.listname)) {
             // console.log("name contains multiple dots");
-            this.errorMessage.push("name contains multiple dots");
+            this.errorMessage.push("Name shouldn´t contain multiple dots");
         }
 
         // Name doesn't end in a dot.
@@ -209,7 +207,7 @@ export class MessageListComponent extends AngularDialogComponent<
         // expression.
         if (this.listname.endsWith(".")) {
             // console.log("name ends in a dot");
-            this.errorMessage.push("name ends in a dot");
+            this.errorMessage.push("Name shouldn´t end in a dot");
         }
 
         // Name contains only acceptable characters, which are:
@@ -224,7 +222,7 @@ export class MessageListComponent extends AngularDialogComponent<
         const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
         if (regExpNonAllowedCharacters.test(this.listname)) {
             // console.log("Name had forbidden characters");
-            this.errorMessage.push("Name had forbidden characters");
+            this.errorMessage.push("Name has forbidden characters");
         }
 
         // Local tests have been passed. Now launch server side checks.
