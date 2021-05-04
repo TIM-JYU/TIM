@@ -335,8 +335,24 @@ def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[
 
 
 def get_message_list_owners(mlist: MessageListModel) -> List[UserGroup]:
+    """Get the owners of a message list.
+
+    :param mlist: The message list we want to know the owners.
+    :return: A list of owners, as their personal user group.
+    """
     manage_doc_block = Block.query.filter_by(id=mlist.manage_doc_id).one()
     return manage_doc_block.owners
+
+
+def verify_list_owner(owner_candidate_ug: UserGroup, mlist: MessageListModel) -> bool:
+    """Verify if a user is the owner of message list.
+
+    :param owner_candidate_ug:
+    :param mlist:
+    :return: Return True if the owner candidate is a owner of a message list. Otherwise return false.
+    """
+    mlist_owners = get_message_list_owners(mlist)
+    return owner_candidate_ug in mlist_owners
 
 
 def create_management_doc(msg_list_model: MessageListModel, list_options: ListOptions) -> DocInfo:
