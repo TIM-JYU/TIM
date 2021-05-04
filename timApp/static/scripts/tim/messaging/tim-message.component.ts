@@ -1,5 +1,7 @@
 import {Component, Input, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {HttpClient} from "@angular/common/http";
+import {to2} from "tim/util/utils";
 import {TimMessageData} from "./tim-message-view.component";
 
 @Component({
