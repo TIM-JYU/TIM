@@ -303,16 +303,17 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     return
 
 
-def get_list_ui_link(listname: str) -> str:
+def get_list_ui_link(listname: str, domain: str) -> str:
     """
     Get a link for a list to use for advanced email list options and moderation.
     :param listname: The list we are getting the UI link for.
+    :param domain: Domin for the list.
     :return: A Hyperlink for list web UI on the Mailman side.
     """
     if _client is None:
         return ""
     try:
-        mail_list = _client.get_list(listname)
+        mail_list = _client.get_list(f"{listname}@{domain}")
         # Get the list's list id, which is basically it's address/name but '@' replaced with a dot.
         list_id: str = mail_list.rest_data["list_id"]
         # VIESTIM: This here is now hardcoded for Postorius Web UI. There might not be a way to just

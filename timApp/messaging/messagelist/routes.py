@@ -170,7 +170,7 @@ def get_list(document_id: int) -> Response:
         defaultReplyType=ReplyToListChanges.NOCHANGES
     )
     if msg_list.email_list_domain:
-        list_options.emailAdminURL = get_list_ui_link(msg_list.name)
+        list_options.emailAdminURL = get_list_ui_link(msg_list.name, msg_list.email_list_domain)
     return json_response(list_options)
 
 
