@@ -11,7 +11,6 @@ from timApp.item.block import Block
 from timApp.messaging.messagelist.listoptions import ArchiveType
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.timdb.sqa import db
-from timApp.user.special_group_names import ANONYMOUS_GROUPNAME
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
@@ -130,6 +129,10 @@ class MessageTIMversalis:
 
     timestamp: datetime = get_current_time()
 
+    # VIESTIM: Would a response depth field be usefull? It was stated, that multiple Re: and Vs: prefixes on subjects
+    #  is annoying and these should be discarded, but if we wish to do some type of inferance in the future about
+    #  what a message is responding at, it might need this information.
+
 
 MESSAGE_LIST_DOC_PREFIX = "messagelists"
 MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
@@ -205,7 +208,7 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
         # VIESTIM: Do we need an exception here? Is it enough to just silently return?
         return
 
-    archive_title = f"{message.title}-{get_current_time()}"
+    archive_title = f"{message.title}-{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
     archive_folder_path = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{remove_path_special_chars(message_list.name)}"
     archive_doc_path = f"{archive_folder_path}/{remove_path_special_chars(archive_title)}"
 
@@ -226,12 +229,14 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
     archive_doc = create_archive_doc_with_permission(archive_title, archive_doc_path, message_list, message)
 
     # Set header information for archived message.
-    archive_doc.document.add_text(f"Title: {message.title}")
-    archive_doc.document.add_text(f"Sender: {message.sender}")
-    archive_doc.document.add_text(f"Recipients: {message.recipients}")
+    archive_doc.document.add_text(f"""
+Title: {message.title}
+Sender: {message.sender}
+Recipients: {message.recipients}
+Message body:
+""")
 
     # Set message body for archived message.
-    archive_doc.document.add_text("Message body:")
     archive_doc.document.add_text(f"{message.message_body}")
 
     # If there is only one message, we don't need to add links to any other messages.
@@ -259,7 +264,7 @@ def set_message_link(link_to: Document, link_text: str, link_from_url: str) -> N
     """
     link = f"[{link_text}]({link_from_url})"
     link_to.add_text(link)
-    pass
+    return
 
 
 def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> MessageTIMversalis:
@@ -296,7 +301,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> Message
         # Header information
         sender=sender,  # VIESTIM: Message should only have one sender?
         recipients=visible_recipients,
-        title=original["subject"],
+        title=original["subject"],  # TODO: shorten the subject, if it contains multiple Re: and Vs: prefixes?
 
         # Message body
         message_body=original["body"],
