@@ -58,6 +58,7 @@ import {DurationPickerComponent} from "tim/ui/duration-picker.component";
 import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {MessageListAdminComponent} from "tim/messaging/message-list-admin.component";
 import {TimMessageComponent} from "tim/messaging/tim-message.component";
+import {TimMessageViewComponent} from "tim/messaging/tim-message-view.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
@@ -122,6 +123,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timRelevanceEdit", RelevanceEditComponent);
     doDowngrade(dg, "timMessageListAdmin", MessageListAdminComponent);
     doDowngrade(dg, "timMessage", TimMessageComponent);
+    doDowngrade(dg, "timMessageView", TimMessageViewComponent);
     return dg;
 }
 

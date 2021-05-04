@@ -12,16 +12,17 @@ from timApp.auth.accesshelper import verify_edit_access
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.document import Document
+from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
-from timApp.item.block import Block
 from timApp.item.item import Item
 from timApp.messaging.timMessage.internalmessage_models import InternalMessage, DisplayType, InternalMessageDisplay, \
     InternalMessageReadReceipt
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.responsehelper import ok_response, json_response
+from timApp.util.flask.responsehelper import ok_response, json_response, error_generic
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars
 
@@ -43,11 +44,70 @@ class MessageOptions:
     senderEmail: str
     expires: Optional[datetime] = None
 
+
 @dataclass
 class MessageBody:
     messageBody: str
     messageSubject: str
     recipients: List[str]  # VIESTIM: find recipient by email or some other identifier?
+
+
+@dataclass
+class TimMessageData:
+    # Information about the message sent to browser
+    id: int
+    sender: str
+    doc_id: int
+    par_id: str
+    can_mark_as_read: bool
+    can_reply: bool
+    display_type: int
+    message_body: str
+    message_subject: str
+    recipients: List[str]
+
+
+@timMessage.route("/get/<int:item_id>", methods=['GET'])
+def get_tim_messages(item_id: int) -> Response:
+    """
+    Retrieve messages based on item id and return them in json format.
+
+    :param item_id: Identifier for document or folder where message is displayed
+    :return:
+    """
+    fullmessages = get_tim_messages_as_list(item_id)
+
+    return json_response(fullmessages)
+
+
+def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
+    """
+    Retrieve displayed messages based on item id and return them as a list.
+
+    :param item_id: Identifier for document or folder where message is displayed
+    :return:
+    """
+    displays = InternalMessageDisplay.query.filter_by(display_doc_id=item_id).all()
+    messages = []
+    recipients = []
+    for display in displays:
+        messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
+        recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
+
+    fullmessages = []
+    for message in messages:
+        document = DocEntry.find_by_id(message.doc_id)
+        if not document:
+            return error_generic('Message document not found', 404)
+        fullmessages.append(TimMessageData(id=message.id, sender=document.owners.pop().name, doc_id=message.doc_id,
+                                           par_id=message.par_id, can_mark_as_read=message.can_mark_as_read,
+                                           can_reply=message.reply, display_type=message.display_type,
+                                           message_body=Document.get_paragraph(document.document,
+                                                                               message.par_id).get_html(
+                                               default_view_ctx),
+                                           message_subject=document.title, recipients=recipients))
+
+    return fullmessages
 
 
 @timMessage.route("/url_check", methods=['POST'])
@@ -108,13 +168,15 @@ def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
     tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply)
     create_tim_message(tim_message, options, message)
     db.session.add(tim_message)
-    db.session.commit()
+    db.session.flush()
 
     pages = get_display_pages(options.pageList.splitlines())
     recipients = get_recipient_users(message.recipients)
     create_message_displays(tim_message.id, pages, recipients)
     if recipients:
         create_read_receipts(tim_message.id, recipients)
+
+    db.session.commit()
 
     return ok_response()
 
@@ -149,15 +211,14 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
     message_doc.document.add_paragraph(f'**To:** {message_body.recipients}')
     message_par = message_doc.document.add_paragraph(message_body.messageBody)
 
-    tim_message.doc_id = message_doc.id
+    tim_message.block = message_doc.block
     tim_message.par_id = message_par.get_id()
+
     if options.important:
         # Important messages are interpreted as 'sticky' display type
         tim_message.display_type = DisplayType.STICKY  # TODO actual functionality
     else:
         tim_message.display_type = DisplayType.TOP_OF_PAGE  # default display type
-
-    tim_message.block = Block(type_id=0, created=message_doc.block.created)
 
     return message_doc
 
@@ -167,12 +228,14 @@ def reply_to_tim_message(options: MessageOptions, message: MessageBody) -> Respo
     # TODO handle replying to message
     return ok_response()
 
+
 @timMessage.route("/mark_as_read", methods=['POST'])
 def mark_as_read() -> Response:
     # TODO handle marking message as read
     print("merkattiin luetuksi")
     #return json_response({"read": "true"}, 200)
     return ok_response()
+
 
 def get_recipient_users(recipients: List[str]) -> List[UserGroup]:
     """
@@ -278,8 +341,6 @@ def create_message_displays(msg_id: int, pages: List[Item], recipients: List[Use
         display.message_id = msg_id
         db.session.add(display)
 
-    db.session.commit()
-
 
 def create_read_receipts(msg_id: int, recipients: List[UserGroup]) -> None:
     """
@@ -292,5 +353,3 @@ def create_read_receipts(msg_id: int, recipients: List[UserGroup]) -> None:
     for recipient in recipients:
         readreceipt = InternalMessageReadReceipt(rcpt_id=recipient.id, message_id=msg_id)
         db.session.add(readreceipt)
-
-    db.session.commit()

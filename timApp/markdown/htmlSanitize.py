@@ -101,6 +101,7 @@ TIM_SAFE_TAGS = [
     'tim-variables',
     'tim-message-list-admin',
     'tim-message',
+    'tim-message-view',
 ]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
