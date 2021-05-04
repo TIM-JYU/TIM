@@ -23,14 +23,14 @@ import {
                 Message list creation
             </ng-container>
             <ng-container body>
-               <!-- <div>{{errorrMessage}}</div> -->
+               <div *ngIf="errorMessage.length > 0" class="alert alert-danger"><ul><li *ngFor="let error of errorMessage">{{error}}</li></ul></div>
                 <div class="form-group">
                     <label for="list-name" class="list-name text-left control-label col-sm-3">List name: </label>
                     <div class="col-sm-8">
                         <div class="input-group">    
                     <input type="text" class="form-control" name="list-name" id="list-name"
                            [(ngModel)]="listname"
-                           (keyup)="checkNameRequirementsLocally()"/>
+                            (keyup)="checkNameRequirementsLocally()"/>
                             <div class="input-group-addon">@</div>
                     <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
                         <option [disabled]="domains.length" *ngFor="let domain of domains">{{domain}}</option>
@@ -69,7 +69,7 @@ export class MessageListComponent extends AngularDialogComponent<
     disableCreate: boolean = false;
     protected dialogName = "MessageList";
     listname: string = "";
-    errorrMessage: string = "";
+    errorMessage: string[] = [];
 
     urlPrefix: string = "/messagelist";
 
@@ -112,12 +112,11 @@ export class MessageListComponent extends AngularDialogComponent<
     }
 
     async newList() {
-        // if (true) {
-        // TODO: tarkista, että nimi on väärin
-        // this.errorrMessage = "List name is wrong!";
-        // return;
-        // }
+        if (!this.checkNameRequirementsLocally()) {
+            return;
+        }
 
+        this.errorMessage = [];
         this.disableCreate = true;
         const result = await this.createList({
             // VIESTIM These fields have to match with interface ListOptions, otherwise a type error happens.
@@ -136,8 +135,8 @@ export class MessageListComponent extends AngularDialogComponent<
             defaultReplyType: ReplyToListChanges.NOCHANGES,
         });
         if (!result.ok) {
-            // this.errorrMessage = result.result.error.error;
-            console.error(result.result.error.error);
+            this.errorMessage = [result.result.error.error];
+            this.disableCreate = false;
         } else {
             // VIESTIM Helps see that data was sent succesfully after clicking the button.
             redirectToItem(result.result);
@@ -165,7 +164,8 @@ export class MessageListComponent extends AngularDialogComponent<
         // VIESTIM: Since the server has the final say for allowed names, sync these rules with the server. Maybe they
         //  could be imported from the server?
         // TODO: Replace console.logs with a better feedback system for the user.
-        console.log(`start check on listname: ${this.listname}`);
+        // console.log(`start check on listname: ${this.listname}`);
+        this.errorMessage = [];
 
         // Cancel previous timed call to server name checks.
         if (this.timeoutID) {
@@ -175,8 +175,8 @@ export class MessageListComponent extends AngularDialogComponent<
 
         // Name length is within length boundaries.
         if (this.listname.length < 5 || 36 < this.listname.length) {
-            console.log("Name not in length boundaries");
-            return false;
+            // console.log("Name not in length boundaries");
+            this.errorMessage.push("Name not in length boundaries");
         }
 
         // Name starts with a character that is a letter a - z.
@@ -184,30 +184,30 @@ export class MessageListComponent extends AngularDialogComponent<
         // The first one checks at the beginning of the string, the second is a negation.
         const regExpStartCharacter: RegExp = /^[a-z]/;
         if (!regExpStartCharacter.test(this.listname)) {
-            console.log("name doesn't start with a lowercase letter");
-            return false;
+            // console.log("name doesn't start with a lowercase letter");
+            this.errorMessage.push("Name should start with a lowercase letter");
         }
 
         // Name contains at least one digit.
         const regExpAtLeastOneDigit: RegExp = /\d/;
         if (!regExpAtLeastOneDigit.test(this.listname)) {
-            console.error("name doesn't contain at least one digit.");
-            return false;
+            // console.error("name doesn't contain at least one digit.");
+            this.errorMessage.push("Name should contain at least one digit");
         }
 
         // Name can't contain multiple sequential dots.
         const regExpMultipleDots: RegExp = /\.\.+/;
         if (regExpMultipleDots.test(this.listname)) {
-            console.log("name contains multiple dots");
-            return false;
+            // console.log("name contains multiple dots");
+            this.errorMessage.push("Name shouldn´t contain multiple dots");
         }
 
         // Name doesn't end in a dot.
         // ESLint prefers to not use regex for this. And by "prefer" we mean this won't transpile with a regular
         // expression.
         if (this.listname.endsWith(".")) {
-            console.log("name ends in a dot");
-            return false;
+            // console.log("name ends in a dot");
+            this.errorMessage.push("Name shouldn´t end in a dot");
         }
 
         // Name contains only acceptable characters, which are:
@@ -221,20 +221,18 @@ export class MessageListComponent extends AngularDialogComponent<
         // to be escaped. The dot does not have to be escaped here.
         const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
         if (regExpNonAllowedCharacters.test(this.listname)) {
-            console.log("Name had forbidden characters");
-            return false;
+            // console.log("Name had forbidden characters");
+            this.errorMessage.push("Name has forbidden characters");
         }
-        console.log("name has passed all local tests");
-        console.log(
-            "start server side tests in 5 seconds after last key down."
-        );
+
         // Local tests have been passed. Now launch server side checks.
         this.timeoutID = window.setTimeout(
             () => this.checkServerNameRequirements(),
             2 * 1000
         );
 
-        return true;
+        if (this.errorMessage.length > 0) return false;
+        else return true;
     }
 
     /**
