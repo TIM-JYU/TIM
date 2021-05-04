@@ -1,9 +1,22 @@
 .timMessageDisplay {
     border: 1px solid black;
     border-radius: 6px;
-    padding: 10px;
+    padding: 8px;
     background-color: var(--basic-color-inverse);
     width: var(--paragraph-preferred-width);
+
+    .fullMessageContent, .cutMessageContent {
+        text-align: justify;
+        text-justify: auto;
+    }
+
+    .toggleReadMore {
+        margin-top: -6px;
+    }
+
+    p {
+        margin-bottom: 4px;
+    }
 
     .message-heading {
         font-weight: bold;
@@ -14,7 +27,7 @@
     }
 
     .replyArea {
-        padding-top: 10px;
+        padding-top: 5px;
 
         textarea {
             width: 500px;
@@ -28,25 +41,32 @@
 
     .readReceiptArea {
         margin-top: 5px;
+        display: grid;
+        grid-template-columns: 3% 15% 72% 10%;
+        align-content: space-between;
 
         input[type='checkbox'] {
             margin-right: 5px;
+            justify-self: start;
+            align-self: start;
         }
 
         label {
             font-weight: normal;
-            vertical-align: top;
             margin-right: 15px;
+            justify-self: start;
+            align-self: start;
         }
 
         .readReceiptLink {
+            margin-top: 2px;
             font-size: 80%;
-            vertical-align: text-top;
+            justify-self: start;
         }
 
         .timButton {
-            right: 5px;
-            bottom: 10px;
+            justify-self: end;
+            align-self: start;
         }
     }
 }

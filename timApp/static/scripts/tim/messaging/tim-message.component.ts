@@ -16,12 +16,12 @@ import {TimMessageData} from "./tim-message-view.component";
                 </p>
                 <p class="message-heading">{{heading}}</p>
                 <div class="fullMessageContent" *ngIf="showFullContent">
-                    <p>{{fullContent}}</p>
-                    <p *ngIf="messageOverMaxLength"><a (click)="toggleDisplayedContentLength()">Read less</a></p>
+                    <div [innerHTML]="fullContent"></div>
+                    <p *ngIf="messageOverMaxLength" class="toggleReadMore"><a (click)="toggleDisplayedContentLength()">Read less</a></p>
                 </div>
                 <div class="cutMessageContent" *ngIf="!showFullContent">
-                    <p>{{shownContent}}<span>...</span></p>
-                    <p><a (click)="toggleDisplayedContentLength()">Read more</a></p>
+                    <div [innerHTML]="shownContent"></div>
+                    <p class="toggleReadMore"><a (click)="toggleDisplayedContentLength()">Read more</a></p>
                 </div>
                 <div class="buttonArea">
                     <button class="timButton" *ngIf="canReply" (click)="reply()">Reply</button>
@@ -147,10 +147,8 @@ export class TimMessageComponent implements OnInit {
         if (this.fullContent.length > this.messageMaxLength) {
             this.messageOverMaxLength = true;
             this.showFullContent = false;
-            this.shownContent = this.fullContent.substr(
-                0,
-                this.messageMaxLength
-            );
+            this.shownContent =
+                this.fullContent.substr(0, this.messageMaxLength) + "...";
         }
     }
 }
