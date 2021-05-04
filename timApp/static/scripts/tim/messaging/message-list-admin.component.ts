@@ -298,7 +298,7 @@ export class MessageListAdminComponent implements OnInit {
      * Function to initiate, when the user saves the list options.
      */
     async save() {
-        await this.saveListOptions({
+        const result = await this.saveListOptions({
             listname: this.listname,
             domain: this.domain,
             listInfo: this.listInfo,
@@ -308,22 +308,20 @@ export class MessageListAdminComponent implements OnInit {
             notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             archive: this.archive,
         });
+        if (result.ok) {
+            console.log("save succee");
+        } else {
+            console.error("save fail");
+        }
     }
 
     /**
      * Helper for list saving to keep types in check.
      * @param options All the list options the user saves.
      */
-    async saveListOptions(options: ListOptions) {
-        // FIXME Returns
-        const result = await to2(
-            this.http.post(`${this.urlPrefix}/save`, {options}).toPromise()
-        );
-        if (result.ok) {
-            console.log("save succee");
-        } else {
-            console.error("save fail");
-        }
+    private saveListOptions(options: ListOptions) {
+        // FIXME Returns error 422, why?
+        return to2(this.http.post(`/messagelist/save`, {options}).toPromise());
     }
 }
 
