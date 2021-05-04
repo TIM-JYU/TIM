@@ -15,6 +15,7 @@ from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
     archive_message, new_list
 from timApp.timdb.sqa import db
+from timApp.user.groups import verify_groupadmin
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -32,6 +33,8 @@ def create_list(options: ListOptions) -> Response:
     """
     # VIESTIM: We assume here that email list will be created alongside message list. This might not be the case.
     verify_logged_in()
+    verify_groupadmin()  # Creator of a list has to be a group admin.
+
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
@@ -91,6 +94,9 @@ def delete_list(listname: str, domain: str) -> Response:
     :return: A string describing how the operation went.
     """
     verify_logged_in()
+    # TODO: Additional checks for who get's to call this route.
+    #  Deleter has to be an owner of the list.
+
     # TODO: Verify that the deleter is an owner of the message list.
     msg_list = MessageListModel.get_list_by_name_exactly_one(listname)
     # list_domain = msg_list.email_list_domain
@@ -109,6 +115,10 @@ def get_list(document_id: int) -> Response:
     :param document_id: ID for message list's admin document.
     :return: ListOptions with the list's information.
     """
+    verify_logged_in()
+    # TODO: Additional checks for who get's to call this route.
+
+
     msg_list = MessageListModel.get_list_by_manage_doc_id(document_id)
     list_options = ListOptions(
         listname=msg_list.name,
@@ -130,6 +140,8 @@ def get_list(document_id: int) -> Response:
 @messagelist.route("/save", methods=['POST'])
 def save_list_options(options: ListOptions) -> Response:
     verify_logged_in()
+    # TODO: Additional checks for who get's to call this route.
+    #  list's owner
 
     message_list = MessageListModel.get_list_by_name_exactly_one(options.listname)
 
@@ -156,6 +168,10 @@ def save_list_options(options: ListOptions) -> Response:
 @messagelist.route("/addmember", methods=['POST'])
 def add_member(memberCandidates: List[str], msgList: str) -> Response:
     from timApp.user.user import User  # Local import to avoid cyclical imports.
+
+    # TODO: Validate access rights.
+    #  List owner.
+    verify_logged_in()
 
     try:
         msg_list = MessageListModel.get_list_by_name_exactly_one(msgList)
@@ -217,6 +233,9 @@ def get_members(list_name: str) -> Response:
     :param list_name:
     :return:
     """
+    verify_logged_in()
+    # TODO: Verify user is a owner of the list.
+
     msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
     list_members = msg_list.get_individual_members()
     return json_response(list_members)
