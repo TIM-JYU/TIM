@@ -162,6 +162,7 @@ def save_list_options(options: ListOptions) -> Response:
     # message_list.default_send_right
     # message_list.default_delivery_right
 
+    db.session.commit()
     return ok_response()
 
 
