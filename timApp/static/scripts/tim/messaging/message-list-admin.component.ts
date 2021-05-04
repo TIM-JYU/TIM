@@ -312,15 +312,12 @@ export class MessageListAdminComponent implements OnInit {
 
     /**
      * Helper for list saving to keep types in check.
-     * @param listOptions All the list options the user saves.
+     * @param options All the list options the user saves.
      */
-    async saveListOptions(listOptions: ListOptions) {
+    async saveListOptions(options: ListOptions) {
+        // FIXME Returns
         const result = await to2(
-            this.http
-                .post(`${this.urlPrefix}/save`, {
-                    list_options: listOptions,
-                })
-                .toPromise()
+            this.http.post(`${this.urlPrefix}/save`, {options}).toPromise()
         );
         if (result.ok) {
             console.log("save succee");
