@@ -175,22 +175,22 @@ def get_list(document_id: int) -> Response:
 
 
 @messagelist.route("/save", methods=['POST'])
-def save_list_options(list_options: ListOptions) -> Response:
+def save_list_options(options: ListOptions) -> Response:
     verify_logged_in()
 
-    message_list = MessageListModel.get_list_by_name_exactly_one(list_options.listname)
+    message_list = MessageListModel.get_list_by_name_exactly_one(options.listname)
 
     # TODO: Verify that user has rights to the message list.
 
-    if message_list.archive_policy != list_options.archive:
+    if message_list.archive_policy != options.archive:
         # TODO: If message list changes it's archive policy, the members on the list need to be notified.
-        message_list.archive = list_options.archive
+        message_list.archive = options.archive
         pass
 
-    message_list.description = list_options.listDescription
-    message_list.info = list_options.listInfo
+    message_list.description = options.listDescription
+    message_list.info = options.listInfo
 
-    message_list.notify_owner_on_change = list_options.notifyOwnerOnListChange
+    message_list.notify_owner_on_change = options.notifyOwnerOnListChange
 
     # TODO: save the following list options.
     # message_list.can_unsubscribe
@@ -267,36 +267,6 @@ def get_members(list_name: str) -> Response:
     msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
     list_members = msg_list.get_individual_members()
     return json_response(list_members)
-
-
-# VIESTIM: Old get_members for reference:
-"""  
-    from timApp.user.usergroup import UserGroup
-
-    msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
-    list_members: List[MemberInfo] = []
-    for member in msg_list.members:
-        if member.is_external_member():
-            pass
-        if member.is_tim_member():
-
-            if member.is_personal_user():
-                gid = member.tim_member[0].group_id
-                ug = UserGroup.query.filter_by(id=gid).one()
-                # VIESTIM: This should be the user's personal user group.
-                u = ug.users[0]
-                mi = MemberInfo(name=u.real_name, email=u.email, sendRight=member.send_right,
-                                deliveryRight=member.delivery_right)
-            else:
-                # VIESTIM: If the user group wasn't a personal user group, we have a group individuals on our hands.
-                #  We probably don't need to return it, or if we do we need to return it somehow separately.
-                pass
-        else:
-            # If we are here, we have an external member.
-            mi = MemberInfo(name="External member", email=member.external_member.email_address,
-                            sendRight=member.send_right, deliveryRight=member.delivery_right)
-        list_members.append(mi)
-"""
 
 
 @messagelist.route("/archive", methods=['POST'])
