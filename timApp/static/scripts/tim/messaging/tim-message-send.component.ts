@@ -169,6 +169,7 @@ export class TimMessageComponent {
         this.messageMsg = "Sent!";
         this.messageSubject = "";
         this.messageBody = "";
+        this.showOptions = false;
         this.emailbcc = false;
         this.emailbccme = true;
         this.email = true;
