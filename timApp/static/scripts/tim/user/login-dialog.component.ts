@@ -91,12 +91,21 @@ interface ISimpleRegistrationResponse {
                    [disabled]="simpleLoginEmailGiven"
                    #loginEmail
                    [(ngModel)]="loginForm.email"
-                   (keydown.enter)="handleEmailEnterKeyDown()"
+                   (keydown.enter)="handleEmailGiven()"
                    type="text">
         </div>
 
             <ng-container *ngIf="simpleLoginEmailGiven">
-                <p i18n>If you have not logged in to TIM before, TIM sent a password to your email now.</p>
+                <p>
+                    <ng-container *ngIf="useStudyInfoMessage; else normalHelpMsg" i18n>
+                        If you have not logged in before,
+                        and your email corresponds to the one in Studyinfo.fi,
+                        TIM sent a password to your email now.
+                    </ng-container>
+                    <ng-template #normalHelpMsg i18n>
+                        If you have not logged in to TIM before, TIM sent a password to your email now.
+                    </ng-template>
+                </p>
                 <p i18n>If you have logged in before, use your current password.</p>
             </ng-container>
 
@@ -116,7 +125,7 @@ interface ISimpleRegistrationResponse {
             <div class="flex cl align-center" *ngIf="simpleEmailLogin && !simpleLoginEmailGiven">
                 <button [disabled]="!loginForm.email || signUpRequestInProgress"
                         class="timButton"
-                        (click)="continueSimpleLogin()" i18n>Continue</button>
+                        (click)="handleEmailGiven()" i18n>Continue</button>
                 <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
             </div>
 
@@ -328,6 +337,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
     simpleEmailLogin = this.config.simpleEmailLogin;
     simpleLoginEmailGiven = false;
     focusPassword = false;
+    useStudyInfoMessage = this.config.simpleLoginUseStudyInfoMessage;
 
     ngOnInit() {
         const params = this.data;
@@ -550,7 +560,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
         this.simpleLoginEmailGiven = true;
     }
 
-    async handleEmailEnterKeyDown() {
+    async handleEmailGiven() {
         if (this.simpleEmailLogin) {
             await this.continueSimpleLogin();
         }

@@ -135,6 +135,12 @@ HAKA_ENABLED = True
 # * then the password is requested and TIM asks to check email if the user has not logged in before.
 SIMPLE_EMAIL_LOGIN = False
 
+# Whether to use a Studyinfo message for help text after email is given.
+# The point is to warn that TIM will only send the password if the account exists (and password is null)
+# and the email corresponds to the one in Studyinfo.
+# This only makes sense with EMAIL_REGISTRATION_ENABLED = False.
+SIMPLE_LOGIN_USE_STUDY_INFO_MESSAGE = False
+
 LOG_HOST = False
 
 MAX_ANSWER_CONTENT_SIZE = 200 * 1024  # bytes

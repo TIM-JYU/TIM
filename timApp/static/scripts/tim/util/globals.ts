@@ -48,6 +48,7 @@ interface IHostConfig {
 }
 
 interface IConfig {
+    simpleLoginUseStudyInfoMessage: boolean;
     gitLastestCommitTimestamp: string;
     helpEmail: string;
     gitBranch: string;
