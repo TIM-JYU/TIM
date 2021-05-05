@@ -84,16 +84,34 @@ import {Users} from "../user/userService";
                 <button (click)="addNewListMember()">Add new members</button>
             </div>
             <div>
-                <p>List members</p>
-                <ul>
-                    <li *ngFor="let member of membersList">
-                        <!-- TODO: Clean up representation. -->
-                        <span>{{member.name}}</span>
-                        <span>{{member.email}}</span>
-                        <span>send</span>
-                        <span>delivery</span>
-                    </li>
-                </ul>
+                <table>
+                    <caption>List members</caption>
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Send right</th>
+                        <th>Delivery right</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr *ngFor="let member of membersList">
+                        <td>{{member.name}}</td>
+                        <td>{{member.email}}</td>
+                        <td>
+                            <input type="checkbox" [(ngModel)]="member.sendRight" 
+                                   name="member-send-right-{{member.email}}">
+                        </td>
+                        <td>
+                            <input type="checkbox" [(ngModel)]="member.deliveryRight" 
+                                   name="member-delivery-right-{{member.email}}">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div *ngIf="archiveURL">
+                <a [href]="archiveURL">List's archive</a>
             </div>
             <div *ngIf="emailAdminURL">
                 <a [href]="emailAdminURL">Advanced email list settings</a>
@@ -133,6 +151,7 @@ export class MessageListAdminComponent implements OnInit {
     listDescription?: string;
 
     emailAdminURL?: string;
+    archiveURL?: string;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -198,6 +217,7 @@ export class MessageListAdminComponent implements OnInit {
         if (result.ok) {
             // TODO: Sending succeeded.
             console.log("Sending members succeeded.");
+            this.membersTextField = undefined; // Empty the text field.
         } else {
             // TODO: Sending failed.
             console.error(result.result.error.error);
@@ -293,6 +313,11 @@ export class MessageListAdminComponent implements OnInit {
         this.listDescription = listOptions.listDescription;
 
         this.emailAdminURL = listOptions.emailAdminURL;
+
+        // If some type of archiving exists for the list, provide a link to it.
+        if (this.archive !== ArchiveType.NONE) {
+            this.archiveURL = `/view/archives/${this.listname}`;
+        }
     }
 
     /**
@@ -314,6 +339,16 @@ export class MessageListAdminComponent implements OnInit {
         } else {
             console.error("save fail");
         }
+
+        const resultSaveMembers = await this.saveMembersCall(this.membersList);
+
+        if (resultSaveMembers.ok) {
+            // VIESTIM: Saving members' state succeeded.
+            console.log("Saving members succeeded.");
+        } else {
+            // VIESTIM: Saving members' state failed.
+            console.error("Saving members failed.");
+        }
     }
 
     /**
@@ -321,8 +356,18 @@ export class MessageListAdminComponent implements OnInit {
      * @param options All the list options the user saves.
      */
     private saveListOptions(options: ListOptions) {
-        // FIXME Returns error 422, why?
         return to2(this.http.post(`/messagelist/save`, {options}).toPromise());
+    }
+
+    private saveMembersCall(memberList: MemberInfo[]) {
+        return to2(
+            this.http
+                .post(`${this.urlPrefix}/savemembers`, {
+                    members: memberList,
+                    listname: this.listname,
+                })
+                .toPromise()
+        );
     }
 }
 

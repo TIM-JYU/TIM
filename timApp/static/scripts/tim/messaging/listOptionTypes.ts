@@ -55,9 +55,9 @@ export const archivePolicyNames: ArchivePolicyNames[] = [
 ];
 
 export interface MemberInfo {
-    // VIESTIM Keep this updates with MemberInfo at server side.
+    // VIESTIM Keep this members' db models' json representation.
     name: string;
     sendRight: boolean;
-    delivery: boolean;
+    deliveryRight: boolean;
     email: string;
 }
