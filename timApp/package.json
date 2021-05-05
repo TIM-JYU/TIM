@@ -16,7 +16,7 @@
     "lint": "eslint --report-unused-disable-directives --format codeframe --ext ts static/scripts/tim modules",
     "checkformat": "prettier --check .",
     "lintfix": "eslint --ext ts static/scripts/tim modules --fix",
-    "extract-i18n": "ng xi18n tim && ng run tim:xliffmerge"
+    "extract-i18n": "ng extract-i18n tim && ng run tim:xliffmerge"
   },
   "repository": {
     "type": "git",
