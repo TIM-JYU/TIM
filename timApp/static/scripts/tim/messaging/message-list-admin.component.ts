@@ -84,16 +84,25 @@ import {Users} from "../user/userService";
                 <button (click)="addNewListMember()">Add new members</button>
             </div>
             <div>
-                <p>List members</p>
-                <ul>
-                    <li *ngFor="let member of membersList">
-                        <!-- TODO: Clean up representation. -->
-                        <span>{{member.name}}</span>
-                        <span>{{member.email}}</span>
-                        <span>send</span>
-                        <span>delivery</span>
-                    </li>
-                </ul>
+                <table>
+                    <caption>List members</caption>
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Send right</th>
+                        <th>Delivery right</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr *ngFor="let member of membersList">
+                        <td>{{member.name}}</td>
+                        <td>{{member.email}}</td>
+                        <td><input type="checkbox" [(ngModel)]="member.sendRight" name="member-send-right"></td>
+                        <td><input type="checkbox" [(ngModel)]="member.deliveryRight" name="member-delivery-right"></td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
             <div *ngIf="archiveURL">
                 <a [href]="archiveURL">List's archive</a>
