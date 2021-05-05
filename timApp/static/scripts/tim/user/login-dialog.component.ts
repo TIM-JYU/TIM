@@ -91,7 +91,7 @@ interface ISimpleRegistrationResponse {
                    [disabled]="simpleLoginEmailGiven"
                    #loginEmail
                    [(ngModel)]="loginForm.email"
-                   (keydown.enter)="handleEmailEnterKeyDown()"
+                   (keydown.enter)="handleEmailGiven()"
                    type="text">
         </div>
 
@@ -125,7 +125,7 @@ interface ISimpleRegistrationResponse {
             <div class="flex cl align-center" *ngIf="simpleEmailLogin && !simpleLoginEmailGiven">
                 <button [disabled]="!loginForm.email || signUpRequestInProgress"
                         class="timButton"
-                        (click)="continueSimpleLogin()" i18n>Continue</button>
+                        (click)="handleEmailGiven()" i18n>Continue</button>
                 <tim-loading *ngIf="signUpRequestInProgress"></tim-loading>
             </div>
 
@@ -560,7 +560,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
         this.simpleLoginEmailGiven = true;
     }
 
-    async handleEmailEnterKeyDown() {
+    async handleEmailGiven() {
         if (this.simpleEmailLogin) {
             await this.continueSimpleLogin();
         }
