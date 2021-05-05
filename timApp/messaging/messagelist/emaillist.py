@@ -562,3 +562,14 @@ def check_reserved_names(name_candidate: str) -> None:
     if name_candidate in reserved_names:
         raise RouteException(f"Name {name_candidate} is a reserved name and cannot be used.")
     return
+
+
+def get_email_list_member(mlist: MailingList, email: str) -> Member:
+    """Get a Member object from a MailingList object.
+
+    :param mlist: MailingList object, the email list in question.
+    :param email: Email used to find the member in an email list.
+    :return: Return a Member object belonging to an email address on an email list.
+    """
+    member = mlist.get_member(email)
+    return member
