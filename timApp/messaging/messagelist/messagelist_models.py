@@ -205,24 +205,6 @@ class MessageListMember(db.Model):
         return
 
 
-# VIESTIM: to_json might be unnecessary for general member, because when getting members they come as tim members or
-#  external members.
-"""
-    def to_json(self) -> Dict[str, Any]:
-        if self.is_external_member():
-            ext_member = self.external_member[0]
-            return ext_member.to_json()
-        if self.is_tim_member():
-            if self.is_group():
-                # VIESTIM: What do we do with groups? Is there a good way to make them JSON, because group's members
-                #  are also individually part of the list?
-                return dict()
-            elif self.is_personal_user():
-                personal_user = self.tim_member[0]
-                return personal_user.to_json()
-"""
-
-
 def get_members_for_list(msg_list: MessageListModel) -> List[MessageListMember]:
     """Get all members belonging to a list.
 
@@ -253,8 +235,8 @@ class MessageListTimMember(MessageListMember):
         return {
             "name": self.get_name(),
             "email": self.get_email() if self.get_email() is not None else "",
-            "send_right": self.member.send_right,
-            "delivery_right": self.member.delivery_right
+            "sendRight": self.member.send_right,
+            "deliveryRight": self.member.delivery_right
         }
 
     def get_name(self) -> str:
@@ -292,8 +274,8 @@ class MessageListExternalMember(MessageListMember):
         return {
             "name": "External member",  # TODO: If/When a display name is added as a column, that can be used here.
             "email": self.email_address,
-            "send_right": self.member.send_right,
-            "delivery_right": self.member.delivery_right
+            "sendRight": self.member.send_right,
+            "deliveryRight": self.member.delivery_right
         }
 
 
