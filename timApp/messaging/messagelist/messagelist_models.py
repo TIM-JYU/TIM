@@ -125,6 +125,24 @@ class MessageListModel(db.Model):
                 tim_members.append(member.group_id)
         return tim_members
 
+    def get_member_by_name(self, name: Optional[str], email: Optional[str]) -> Optional['MessageListMember']:
+        """Get member of this list. Member can be searched with name and/or email. At least one has to be given. Name
+        is preferred and is used in a search first.
+        :param name: Name
+        :param email: Email address
+        :return: A message list member, if one is found with given arguments.
+        """
+        if not name and not email:
+            # TODO: Find a better exception to show no arguments were given.
+            raise Exception
+
+        for member in self.members:
+            if name == member.get_name():
+                return member
+            if email == member.get_email():
+                return member
+        return None
+
 
 class MessageListMember(db.Model):
     """Database model for members of a message list."""
