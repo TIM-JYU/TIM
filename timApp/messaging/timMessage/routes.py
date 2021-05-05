@@ -5,6 +5,7 @@ from datetime import datetime
 
 from flask import Response
 
+from timApp.util.flask.requesthelper import RouteException
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
@@ -144,7 +145,7 @@ def check_urls(urls: str) -> Response:
             verify_edit_access(document)
             valid_urls.append(shortened_url)
         except Exception:
-            error_message = "You don't have permission to post TIM message to this page"
+            error_message = "You don't have permission to post TIM message to " + url
             status_code = 401
 
     if error_message:
@@ -230,10 +231,26 @@ def reply_to_tim_message(options: MessageOptions, message: MessageBody) -> Respo
 
 
 @timMessage.route("/mark_as_read", methods=['POST'])
-def mark_as_read() -> Response:
-    # TODO handle marking message as read
-    print("merkattiin luetuksi")
-    #return json_response({"read": "true"}, 200)
+def mark_as_read(message_id: int) -> Response:
+    """
+        Marks given message as read in database.
+        Expects that message receiver and marker are the same person.
+
+        :param message_id: Id of given message
+        :return:
+        """
+    verify_logged_in()
+
+    marker = get_current_user_object().get_personal_group().id
+
+    read_receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=marker, message_id=message_id).first()
+    if read_receipt is None:
+        raise RouteException
+    read_receipt.user_id = get_current_user_object().id
+    read_receipt.marked_as_read_on = datetime.now()
+    db.session.add(read_receipt)
+    db.session.commit()
+
     return ok_response()
 
 
