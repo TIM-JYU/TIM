@@ -356,7 +356,10 @@ export class MessageListAdminComponent implements OnInit {
     private saveMembersCall(memberList: MemberInfo[]) {
         return to2(
             this.http
-                .post(`${this.urlPrefix}/save`, {members: memberList})
+                .post(`${this.urlPrefix}/savemembers`, {
+                    members: memberList,
+                    listname: this.listname,
+                })
                 .toPromise()
         );
     }
