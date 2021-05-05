@@ -333,6 +333,16 @@ export class MessageListAdminComponent implements OnInit {
         } else {
             console.error("save fail");
         }
+
+        const resultSaveMembers = await this.saveMembersCall(this.membersList);
+
+        if (resultSaveMembers.ok) {
+            // VIESTIM: Saving members' state succeeded.
+            console.log("Saving members succeeded.");
+        } else {
+            // VIESTIM: Saving members' state failed.
+            console.error("Saving members failed.");
+        }
     }
 
     /**
@@ -340,8 +350,15 @@ export class MessageListAdminComponent implements OnInit {
      * @param options All the list options the user saves.
      */
     private saveListOptions(options: ListOptions) {
-        // FIXME Returns error 422, why?
         return to2(this.http.post(`/messagelist/save`, {options}).toPromise());
+    }
+
+    private saveMembersCall(memberList: MemberInfo[]) {
+        return to2(
+            this.http
+                .post(`${this.urlPrefix}/save`, {members: memberList})
+                .toPromise()
+        );
     }
 }
 
