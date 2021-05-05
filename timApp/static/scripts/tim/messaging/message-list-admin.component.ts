@@ -98,8 +98,14 @@ import {Users} from "../user/userService";
                     <tr *ngFor="let member of membersList">
                         <td>{{member.name}}</td>
                         <td>{{member.email}}</td>
-                        <td><input type="checkbox" [(ngModel)]="member.sendRight" name="member-send-right"></td>
-                        <td><input type="checkbox" [(ngModel)]="member.deliveryRight" name="member-delivery-right"></td>
+                        <td>
+                            <input type="checkbox" [(ngModel)]="member.sendRight" 
+                                   name="member-send-right-{{member.email}}">
+                        </td>
+                        <td>
+                            <input type="checkbox" [(ngModel)]="member.deliveryRight" 
+                                   name="member-delivery-right-{{member.email}}">
+                        </td>
                     </tr>
                     </tbody>
                 </table>
