@@ -7,7 +7,8 @@ from sqlalchemy.orm.exc import NoResultFound  # type: ignore
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui_link, create_new_email_list, \
-    delete_email_list, check_emaillist_name_requirements
+    delete_email_list, check_emaillist_name_requirements, get_email_list_member, set_email_list_member_send_status, \
+    set_email_list_member_delivery_status
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
@@ -179,6 +180,9 @@ class MemberInfo:
 def save_members(listname: str, members: List[MemberInfo]) -> Response:
     """Save the state of existing list members, e.g. send and delivery rights."""
     message_list = MessageListModel.get_list_by_name_exactly_one(listname)
+    email_list = None
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
 
     # VIESTIM: This solution is probably not well optimized.
     for member in members:
@@ -186,9 +190,18 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
         # VIESTIM: In what case would we face a situation where we couldn't find this member? They are given from the
         #  db in the first place.
         if db_member:
+            # If send or delivery right has changed, then set them to db and on Mailman.
+            if db_member.send_right != member.sendRight:
+                db_member.send_right = member.sendRight
+                if email_list:
+                    mlist_member = get_email_list_member(email_list, member.email)
+                    set_email_list_member_send_status(mlist_member, member.deliveryRight)
+            if db_member.delivery_right != member.deliveryRight:
+                db_member.delivery_right = member.deliveryRight
+                if email_list:
+                    mlist_member = get_email_list_member(email_list, member.email)
+                    set_email_list_member_delivery_status(mlist_member, member.deliveryRight, by_moderator=True)
 
-            db_member.send_right = member.sendRight
-            db_member.delivery_right = member.deliveryRight
             db.session.flush()
 
     db.session.commit()
