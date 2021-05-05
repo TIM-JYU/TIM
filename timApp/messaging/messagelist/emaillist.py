@@ -17,9 +17,10 @@ class MailmanConfig:
     MAILMAN_URL: Optional[str]
     MAILMAN_USER: Optional[str]
     MAILMAN_PASS: Optional[str]
+    MAILMAN_UI_LINK_PREFIX: Optional[str]
 
     def __bool__(self) -> bool:
-        return bool(self.MAILMAN_URL and self.MAILMAN_USER and self.MAILMAN_PASS)
+        return bool(self.MAILMAN_URL and self.MAILMAN_USER and self.MAILMAN_PASS and self.MAILMAN_UI_LINK_PREFIX)
 
 
 config: MailmanConfig = class_schema(MailmanConfig)().load(app.config, unknown="EXCLUDE")
@@ -323,7 +324,7 @@ def get_list_ui_link(listname: str, domain: str) -> str:
         #  way to not hard code the Postorius part in (Postorius is Mailman's default web UI and technically
         #  we could switch to a different web UI)?
         # Build the hyperlink.
-        link = "https://timlist.it.jyu.fi/postorius/lists/" + list_id
+        link = f"{config.MAILMAN_UI_LINK_PREFIX}{list_id}"
         return link
     except HTTPError:
         return "Connection to Mailman failed while getting list's UI link."

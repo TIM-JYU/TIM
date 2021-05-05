@@ -142,6 +142,9 @@ MAILMAN_PASS = None
 MAILMAN_EVENT_API_USER= None
 MAILMAN_EVENT_API_KEY = None
 
+# Link prefix to Postorius Web-UI. If used as is, directs to the mailing lists page.
+MAILMAN_UI_LINK_PREFIX = "https://timlist.it.jyu.fi/postorius/lists/"
+
 # If true, prints all SQL statements with tracebacks.
 DEBUG_SQL = False
 
