@@ -96,7 +96,16 @@ interface ISimpleRegistrationResponse {
         </div>
 
             <ng-container *ngIf="simpleLoginEmailGiven">
-                <p i18n>If you have not logged in to TIM before, TIM sent a password to your email now.</p>
+                <p>
+                    <ng-container *ngIf="useStudyInfoMessage; else normalHelpMsg" i18n>
+                        If you have not logged in before,
+                        and your email corresponds to the one in Studyinfo.fi,
+                        TIM sent a password to your email now.
+                    </ng-container>
+                    <ng-template #normalHelpMsg i18n>
+                        If you have not logged in to TIM before, TIM sent a password to your email now.
+                    </ng-template>
+                </p>
                 <p i18n>If you have logged in before, use your current password.</p>
             </ng-container>
 
@@ -328,6 +337,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
     simpleEmailLogin = this.config.simpleEmailLogin;
     simpleLoginEmailGiven = false;
     focusPassword = false;
+    useStudyInfoMessage = this.config.simpleLoginUseStudyInfoMessage;
 
     ngOnInit() {
         const params = this.data;
