@@ -166,6 +166,35 @@ def save_list_options(options: ListOptions) -> Response:
     return ok_response()
 
 
+@dataclass
+class MemberInfo:
+    """Wrapper for information about a member on a message list."""
+    name: str
+    sendRight: bool
+    deliveryRight: bool
+    email: str
+
+
+@messagelist.route("/savemembers", methods=['POST'])
+def save_members(listname: str, members: List[MemberInfo]) -> Response:
+    """Save the state of existing list members, e.g. send and delivery rights."""
+    message_list = MessageListModel.get_list_by_name_exactly_one(listname)
+
+    # VIESTIM: This solution is probably not well optimized.
+    for member in members:
+        db_member = message_list.get_member_by_name(member.name, member.email)
+        # VIESTIM: In what case would we face a situation where we couldn't find this member? They are given from the
+        #  db in the first place.
+        if db_member:
+
+            db_member.send_right = member.sendRight
+            db_member.delivery_right = member.deliveryRight
+            db.session.flush()
+
+    db.session.commit()
+    return ok_response()
+
+
 @messagelist.route("/addmember", methods=['POST'])
 def add_member(memberCandidates: List[str], msgList: str) -> Response:
     from timApp.user.user import User  # Local import to avoid cyclical imports.
@@ -216,15 +245,6 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
     db.session.commit()
 
     return ok_response()
-
-
-@dataclass
-class MemberInfo:
-    """Wrapper for information about a member on a message list."""
-    name: str
-    sendRight: bool
-    deliveryRight: bool
-    email: str
 
 
 @messagelist.route("/getmembers/<list_name>", methods=['GET'])
