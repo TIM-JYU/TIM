@@ -202,6 +202,7 @@ export class MessageListAdminComponent implements OnInit {
         if (result.ok) {
             // TODO: Sending succeeded.
             console.log("Sending members succeeded.");
+            this.membersTextField = undefined; // Empty the text field.
         } else {
             // TODO: Sending failed.
             console.error(result.result.error.error);
