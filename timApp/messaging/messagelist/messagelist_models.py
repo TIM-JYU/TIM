@@ -272,11 +272,17 @@ class MessageListExternalMember(MessageListMember):
 
     def to_json(self) -> Dict[str, Any]:
         return {
-            "name": "External member",  # TODO: If/When a display name is added as a column, that can be used here.
+            "name": self.get_name(),  # TODO: If/When a display name is added as a column, that can be used here.
             "email": self.email_address,
             "sendRight": self.member.send_right,
             "deliveryRight": self.member.delivery_right
         }
+
+    def get_name(self) -> str:
+        return "External member"
+
+    def get_email(self) -> str:
+        return self.email_address
 
 
 class MessageListDistribution(db.Model):
