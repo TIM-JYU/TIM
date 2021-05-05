@@ -1,24 +1,40 @@
 .timMessageDisplay {
     border: 1px solid black;
     border-radius: 6px;
-    padding: 10px;
+    padding: 8px;
     background-color: var(--basic-color-inverse);
-    width: var(--paragraph-preferred-width);
+
+    @media (min-width: 1400px) {
+        margin: 0 10% 0 10%;
+    }
+
+    .fullMessageContent, .cutMessageContent {
+        text-align: justify;
+        text-justify: auto;
+    }
+
+    .toggleReadMore {
+        margin-top: -6px;
+    }
+
+    p {
+        margin-bottom: 4px;
+    }
 
     .message-heading {
         font-weight: bold;
     }
 
-    .timButton {
-        margin-right: 5px;
-    }
-
     .replyArea {
-        padding-top: 10px;
+        padding-top: 5px;
 
         textarea {
             width: 500px;
             display: block;
+        }
+
+        .timButton {
+            margin-right: 5px;
         }
 
         .sent {
@@ -28,25 +44,34 @@
 
     .readReceiptArea {
         margin-top: 5px;
+        display: grid;
+        grid-template-columns: 2% 14% 36% 48%;
+        grid-template-areas: "checkbox label link button";
 
         input[type='checkbox'] {
-            margin-right: 5px;
+            grid-area: checkbox;
+            justify-self: start;
+            align-self: start;
         }
 
         label {
+            grid-area: label;
             font-weight: normal;
-            vertical-align: top;
-            margin-right: 15px;
+            justify-self: start;
+            align-self: start;
         }
 
         .readReceiptLink {
+            grid-area: link;
+            margin-top: 2px;
             font-size: 80%;
-            vertical-align: text-top;
+            justify-self: start;
         }
 
         .timButton {
-            right: 5px;
-            bottom: 10px;
+            grid-area: button;
+            justify-self: end;
+            align-self: start;
         }
     }
 }
