@@ -12,6 +12,7 @@ import {TimMessageModule} from "./tim-message.component";
             <tim-message [message]=timMessage></tim-message>
         </ng-container>
     `,
+    styleUrls: ["tim-message-view.component.scss"],
 })
 export class TimMessageViewComponent implements OnInit {
     ngOnInit(): void {
