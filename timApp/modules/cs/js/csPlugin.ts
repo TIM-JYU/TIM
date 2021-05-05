@@ -1260,6 +1260,7 @@ export class CsController extends CsBase implements ITimComponent {
             return {saved: false, message: undefined};
         }
         await this.runCode();
+        this.cdr.detectChanges();
         return {saved: true, message: undefined};
     }
 
