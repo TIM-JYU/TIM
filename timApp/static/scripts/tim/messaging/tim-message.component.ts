@@ -88,15 +88,13 @@ export class TimMessageComponent implements OnInit {
         this.markedAsRead = true;
         const result = await to2(
             this.http
-                .post<{read: boolean}>("/timMessage/mark_as_read", {
-                    markedAsRead: this.markedAsRead,
+                .post("/timMessage/mark_as_read", {
+                    message_id: this.message?.id,
                 })
                 .toPromise()
         );
         if (!result.ok) {
             console.error(result.result.error.error);
-        } else {
-            console.log(result);
         }
     }
 
