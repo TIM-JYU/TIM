@@ -253,8 +253,11 @@ services:
   read_only: true
  redis:
   image: redis
+  command: ["redis-server", "--appendonly", "yes"]
   restart: unless-stopped
   read_only: true
+  volumes:
+  - redis_data:/data
  celery:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
   command: celery worker -A timApp.tim_celery.celery --concurrency 4
@@ -388,5 +391,6 @@ volumes:
  cache:
  caddy_data:
  caddy_config:
+ redis_data:
 networks:
  db:
