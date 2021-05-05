@@ -70,7 +70,7 @@ class TimMessageData:
 @timMessage.route("/get/<int:item_id>", methods=['GET'])
 def get_tim_messages(item_id: int) -> Response:
     """
-    Retrieve messages based on item id and return them in json format.
+    Retrieve messages displayed for current based on item id and return them in json format.
 
     :param item_id: Identifier for document or folder where message is displayed
     :return:
@@ -82,12 +82,13 @@ def get_tim_messages(item_id: int) -> Response:
 
 def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     """
-    Retrieve displayed messages based on item id and return them as a list.
+    Retrieve messages displayed for current user based on item id and return them as a list.
 
     :param item_id: Identifier for document or folder where message is displayed
     :return:
     """
-    displays = InternalMessageDisplay.query.filter_by(display_doc_id=item_id).all()
+    displays = InternalMessageDisplay.query.filter_by(usergroup_id=get_current_user_object().get_personal_group().id,
+                                                      display_doc_id=item_id).all()
     messages = []
     recipients = []
     for display in displays:
