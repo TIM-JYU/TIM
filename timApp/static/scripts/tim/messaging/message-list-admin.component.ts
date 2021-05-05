@@ -95,6 +95,9 @@ import {Users} from "../user/userService";
                     </li>
                 </ul>
             </div>
+            <div *ngIf="archiveURL">
+                <a [href]="archiveURL">List's archive</a>
+            </div>
             <div *ngIf="emailAdminURL">
                 <a [href]="emailAdminURL">Advanced email list settings</a>
             </div>
@@ -133,6 +136,7 @@ export class MessageListAdminComponent implements OnInit {
     listDescription?: string;
 
     emailAdminURL?: string;
+    archiveURL?: string;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -293,6 +297,11 @@ export class MessageListAdminComponent implements OnInit {
         this.listDescription = listOptions.listDescription;
 
         this.emailAdminURL = listOptions.emailAdminURL;
+
+        // If some type of archiving exists for the list, provide a link to it.
+        if (this.archive !== ArchiveType.NONE) {
+            this.archiveURL = `/view/archives/${this.listname}`;
+        }
     }
 
     /**
