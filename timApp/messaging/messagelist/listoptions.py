@@ -77,6 +77,9 @@ class ListOptions:
     domain: Optional[str] = None
     """The domain of the message list, if it has email list associated with it."""
 
+    non_member_message_pass: Optional[bool] = None
+    """A flag that controls if messages from non members are automatically passed to the list."""
+
 
 reply_to_munging: Dict[ReplyToListChanges, str] = {
     ReplyToListChanges.NOCHANGES: "no_munging",

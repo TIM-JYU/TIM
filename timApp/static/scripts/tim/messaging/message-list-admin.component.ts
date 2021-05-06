@@ -79,7 +79,7 @@ import {Users} from "../user/userService";
                 <label for="notify-owner-on-list-change">Notify owners on list changes (e.g. user subscribes)</label>
             </div>
             <div>
-                <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin"> 
+                <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
                 <label for="tim-users-can-join">TIM users can freely join this list.</label>
             </div>
             <div>
@@ -89,6 +89,14 @@ import {Users} from "../user/userService";
             <div>
                 <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
                 <label for="list-subject-prefix">List subject prefix.</label>
+            </div>
+            <div>
+                <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
+                <label for="only-text">No HTML messages allowed on the list.</label>
+            </div>
+            <div>
+                <input type="checkbox" name="non-members-can-send" [(ngModel)]="nonMemberMessagePass">
+                <label for="non-members-can-send">Non members can send messages to list.</label>
             </div>
             <div>
                 <label for="add-multiple-members">Add members</label> <br/>
@@ -112,11 +120,11 @@ import {Users} from "../user/userService";
                         <td>{{member.name}}</td>
                         <td>{{member.email}}</td>
                         <td>
-                            <input type="checkbox" [(ngModel)]="member.sendRight" 
+                            <input type="checkbox" [(ngModel)]="member.sendRight"
                                    name="member-send-right-{{member.email}}">
                         </td>
                         <td>
-                            <input type="checkbox" [(ngModel)]="member.deliveryRight" 
+                            <input type="checkbox" [(ngModel)]="member.deliveryRight"
                                    name="member-delivery-right-{{member.email}}">
                         </td>
                     </tr>
@@ -171,6 +179,8 @@ export class MessageListAdminComponent implements OnInit {
     defaultSendRight?: boolean;
     defaultDeliveryRight?: boolean;
     listSubjectPrefix?: string;
+    nonMemberMessagePass?: boolean;
+    onlyText?: boolean;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -305,7 +315,6 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
         if (result.ok) {
-            // TODO: After server side value loading is complete, remove the console logging and uncomment line below.
             this.setValues(result.result);
         } else {
             console.error(result.result.error.error);
@@ -344,6 +353,8 @@ export class MessageListAdminComponent implements OnInit {
         this.canUnsubscribe = listOptions.members_can_unsubscribe;
         this.defaultSendRight = listOptions.default_send_right;
         this.defaultDeliveryRight = listOptions.default_delivery_right;
+        this.nonMemberMessagePass = listOptions.non_member_message_pass;
+        this.onlyText = listOptions.only_text;
     }
 
     /**
@@ -355,7 +366,7 @@ export class MessageListAdminComponent implements OnInit {
             domain: this.domain,
             list_info: this.listInfo,
             list_description: this.listDescription,
-            only_text: true, // TODO: Option to ask the user.
+            only_text: this.onlyText,
             default_reply_type: ReplyToListChanges.NOCHANGES, // TODO: Option to ask the user.
             notify_owners_on_list_change: this.notifyOwnerOnListChange,
             archive: this.archive,
@@ -364,6 +375,7 @@ export class MessageListAdminComponent implements OnInit {
             members_can_unsubscribe: this.canUnsubscribe,
             default_delivery_right: this.defaultDeliveryRight,
             default_send_right: this.defaultSendRight,
+            non_member_message_pass: this.nonMemberMessagePass,
         });
         if (result.ok) {
             console.log("save succee");
