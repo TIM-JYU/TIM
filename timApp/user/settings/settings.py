@@ -114,6 +114,16 @@ def get_user_info(u: User, include_doc_content: bool=False) -> Dict[str, Any]:
         'readparagraphs': u.get_personal_group().readparagraphs.all(),
         'uploaded_images': images,
         'uploaded_files': files,
+        'user': {
+            **u.to_json(),
+            'given_name': u.given_name,
+            'last_name': u.last_name,
+            'prefs': u.prefs,
+            'origin': u.origin,
+            'consent': u.consent,
+            'created': u.created,
+            'modified': u.modified,
+        },
         'velps': u.velps.all(),
     }
 
