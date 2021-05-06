@@ -80,6 +80,11 @@ class ListOptions:
     non_member_message_pass: Optional[bool] = None
     """A flag that controls if messages from non members are automatically passed to the list."""
 
+    allow_attachments: Optional[bool] = None
+    """A flag controlling if attachments are allowed on the list."""
+
+
+allowed_file_type_extensions = ['pdf', 'jpg', 'png']
 
 reply_to_munging: Dict[ReplyToListChanges, str] = {
     ReplyToListChanges.NOCHANGES: "no_munging",

@@ -32,7 +32,7 @@ tim_user_can_join = False
 only_text = False
 default_reply_type = ReplyToListChanges.NOCHANGES
 non_member_message_pass = False
-# members_can_unsubscribe = True
+allow_attachments = False
 
 
 @messagelist.route('/createlist', methods=['POST'])
@@ -129,6 +129,14 @@ def get_list(document_id: int) -> Response:
     """
     verify_logged_in()
     # TODO: Additional checks for who gets to call this route.
+    global tim_user_can_join
+    global default_send_right
+    global default_delivery_right
+    global subject_prefix
+    global only_text
+    global default_reply_type
+    global non_member_message_pass
+    global allow_attachments
 
     msg_list = MessageListModel.get_list_by_manage_doc_id(document_id)
     list_options = ListOptions(
@@ -136,7 +144,6 @@ def get_list(document_id: int) -> Response:
         notify_owners_on_list_change=msg_list.notify_owner_on_change,
         domain=msg_list.email_list_domain,
         archive=msg_list.archive,
-        # htmlAllowed=True,
         default_reply_type=default_reply_type,
         # TODO: Change to get these from db.
         tim_users_can_join=tim_user_can_join,
@@ -149,6 +156,7 @@ def get_list(document_id: int) -> Response:
         email_admin_url=get_list_ui_link(msg_list.name, msg_list.email_list_domain),
         list_info=msg_list.info,
         list_description=msg_list.description,
+        allow_attachments=allow_attachments
     )
     return json_response(list_options)
 
@@ -165,6 +173,7 @@ def save_list_options(options: ListOptions) -> Response:
     global only_text
     global default_reply_type
     global non_member_message_pass
+    global allow_attachments
 
     message_list = MessageListModel.get_list_by_name_exactly_one(options.name)
 
@@ -210,6 +219,8 @@ def save_list_options(options: ListOptions) -> Response:
 
     members_can_unsubscribe = options.members_can_unsubscribe
     log_info(f"member can unsubscribe: {members_can_unsubscribe}")
+
+    allow_attachments = options.allow_attachments
 
     log_info(f"***** ***** ***** *****")
 

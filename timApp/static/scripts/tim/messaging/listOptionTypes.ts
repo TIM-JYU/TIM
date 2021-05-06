@@ -15,6 +15,7 @@ export interface ListOptions {
     default_delivery_right?: boolean;
     list_subject_prefix?: string;
     non_member_message_pass?: boolean;
+    allow_attachments?: boolean;
 }
 
 export enum ReplyToListChanges {

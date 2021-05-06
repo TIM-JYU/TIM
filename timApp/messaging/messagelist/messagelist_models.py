@@ -67,6 +67,14 @@ class MessageListModel(db.Model):
     #  is added from outside sources without direct list owner intervention.
     # default_send_right = db.Column(db.Boolean)
     # default_delivery_right = db.Column(db.Boolean)
+    # tim_user_can_join = db.Column(db.Boolean)
+    # default_send_right = db.Column(db.Boolean)
+    # default_delivery_right = db.Column(db.Boolean)
+    # subject_prefix = db.Column(db.Text)
+    # only_text = db.Column(db.Boolean)
+    # default_reply_type = db.Column(db.Enum(ReplyToListChanges))
+    # non_member_message_pass = db.Column(db.Boolean)
+    # allow_attachments = db.Column(db.Boolean)
 
     block = db.relationship("Block", back_populates="managed_messagelist", lazy="select")
     members = db.relationship("MessageListMember", back_populates="message_list", lazy="select")

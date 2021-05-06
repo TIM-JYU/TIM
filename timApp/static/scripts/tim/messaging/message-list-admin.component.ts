@@ -74,9 +74,13 @@ import {Users} from "../user/userService";
             </div>
             <h5>List options</h5>
             <div>
+                <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
+                <label for="list-subject-prefix">List subject prefix.</label>
+            </div>
+            <div>
                 <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
                        [(ngModel)]="notifyOwnerOnListChange"/>
-                <label for="notify-owner-on-list-change">Notify owners on list changes (e.g. user subscribes)</label>
+                <label for="notify-owner-on-list-change">Notify owners on list changes (e.g. user subscribes).</label>
             </div>
             <div>
                 <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
@@ -87,16 +91,16 @@ import {Users} from "../user/userService";
                 <label for="can-user-unsubscribe">Members can unsubscribe from the list on their own.</label>
             </div>
             <div>
-                <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
-                <label for="list-subject-prefix">List subject prefix.</label>
-            </div>
-            <div>
                 <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
                 <label for="only-text">No HTML messages allowed on the list.</label>
             </div>
             <div>
                 <input type="checkbox" name="non-members-can-send" [(ngModel)]="nonMemberMessagePass">
                 <label for="non-members-can-send">Non members can send messages to list.</label>
+            </div>
+            <div>
+                <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
+                <label for="allow-attachments">Allow attachments on the list.</label>
             </div>
             <div>
                 <label for="add-multiple-members">Add members</label> <br/>
@@ -181,6 +185,7 @@ export class MessageListAdminComponent implements OnInit {
     listSubjectPrefix?: string;
     nonMemberMessagePass?: boolean;
     onlyText?: boolean;
+    allowAttachments?: boolean;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -355,6 +360,7 @@ export class MessageListAdminComponent implements OnInit {
         this.defaultDeliveryRight = listOptions.default_delivery_right;
         this.nonMemberMessagePass = listOptions.non_member_message_pass;
         this.onlyText = listOptions.only_text;
+        this.allowAttachments = listOptions.allow_attachments;
     }
 
     /**
