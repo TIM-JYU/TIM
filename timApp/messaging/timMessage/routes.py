@@ -93,10 +93,9 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     messages = []
     recipients = []
     for display in displays:
-        # TODO: check if valid thru date has passed
         receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id, message_id=display.message_id).first()
-
-        if receipt.marked_as_read_on is None:
+        expires = InternalMessage.query.filter_by(id=display.message_id).first()
+        if receipt.marked_as_read_on is None and (expires.expires is None or expires.expires > datetime.now()):
             messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
             recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
 
