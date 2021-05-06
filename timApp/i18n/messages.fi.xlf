@@ -1789,7 +1789,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">376</context>
+          <context context-type="linenumber">377</context>
         </context-group>
       </trans-unit>
       <trans-unit id="25f636e6d18072dd76c5cee8e2507f75e762b293" datatype="html">
@@ -1908,16 +1908,12 @@
           <context context-type="linenumber">231</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="afec3156488bf3a3ebbc0acfcbce9163303b7fc5" datatype="html">
-        <source>
-                        Create a new password
-                    </source>
-        <target state="translated">
-                        Luo uusi salasana
-                    </target>
+      <trans-unit id="38c6485408443d7d736da22f47517035d400c65e" datatype="html">
+        <source> Create a new password (at least <x id="INTERPOLATION" equiv-text="{{ minPasswordLength }}"/> characters) </source>
+        <target state="translated"> Luo uusi salasana (vähintään <x id="INTERPOLATION" equiv-text="{{ minPasswordLength }}"/> merkkiä) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">236</context>
+          <context context-type="linenumber">235,237</context>
         </context-group>
       </trans-unit>
       <trans-unit id="30cb9d4f480427b60b5678c6f2fe576c2dca484a" datatype="html">
@@ -2083,7 +2079,7 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">378</context>
+          <context context-type="linenumber">379</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-menu.component.ts</context>
@@ -2266,7 +2262,7 @@
         <target state="translated">Lisää käyttäjä istuntoon</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">373</context>
+          <context context-type="linenumber">374</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
