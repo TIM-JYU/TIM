@@ -62,7 +62,7 @@ class ListOptions:
     timUsersCanJoin: Optional[bool] = None
     """Flag used to determine if TIM users can directly join this list."""
 
-    userCanUnsubscribe: Optional[bool] = None
+    canUnsubscribe: Optional[bool] = None
     """Flag used to determine if the TIM members of this list can leave the list on their own."""
 
     defaultSendRight: Optional[bool] = None
@@ -71,7 +71,7 @@ class ListOptions:
     defaultDeliveryRight: Optional[bool] = None
     """The list's default delivery right for (new) members."""
 
-    listSubjectPrefix: Optional[bool] = None
+    listSubjectPrefix: Optional[str] = None
     """Messages routed by a message list will have this subject prefix added to them."""
 
     domain: Optional[str] = None

@@ -13,7 +13,7 @@ export interface ListOptions {
     canUnsubscribe?: boolean;
     defaultSendRight?: boolean;
     defaultDeliveryRight?: boolean;
-    listSubjectPrefix?: boolean;
+    listSubjectPrefix?: string;
 }
 
 export enum ReplyToListChanges {
