@@ -32,6 +32,9 @@ class InternalMessage(db.Model):
     display_type = db.Column(db.Enum(DisplayType), nullable=False)
     """How the message is displayed."""
 
+    expires = db.Column(db.DateTime)
+    """"When the message display will disappear."""
+
     displays = db.relationship('InternalMessageDisplay', back_populates='message')
     readreceipts = db.relationship('InternalMessageReadReceipt', back_populates='message')
     block = db.relationship('Block', back_populates='internalmessage')
