@@ -72,10 +72,23 @@ import {Users} from "../user/userService";
                     </li>
                 </ul>
             </div>
+            <h5>List options</h5>
             <div>
                 <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
                        [(ngModel)]="notifyOwnerOnListChange"/>
-                <label for="notify-owner-on-list-change">Notify me on list changes (e.g. user subscribes)</label>
+                <label for="notify-owner-on-list-change">Notify owners on list changes (e.g. user subscribes)</label>
+            </div>
+            <div>
+                <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin"> 
+                <label for="tim-users-can-join">TIM users can freely join this list.</label>
+            </div>
+            <div>
+                <input type="checkbox" name="can-user-unsubscribe" [(ngModel)]="canUnsubscribe">
+                <label for="can-user-unsubscribe">Members can unsubscribe from the list on their own.</label>
+            </div>
+            <div>
+                <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
+                <label for="list-subject-prefix">List subject prefix.</label>
             </div>
             <div>
                 <label for="add-multiple-members">Add members</label> <br/>
@@ -157,7 +170,7 @@ export class MessageListAdminComponent implements OnInit {
     canUnsubscribe?: boolean;
     defaultSendRight?: boolean;
     defaultDeliveryRight?: boolean;
-    listSubjectPrefix?: boolean;
+    listSubjectPrefix?: string;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -326,6 +339,11 @@ export class MessageListAdminComponent implements OnInit {
         }
 
         this.timUsersCanJoin = listOptions.timUsersCanJoin;
+
+        this.listSubjectPrefix = listOptions.listSubjectPrefix;
+        this.canUnsubscribe = listOptions.canUnsubscribe;
+        this.defaultSendRight = listOptions.defaultSendRight;
+        this.defaultDeliveryRight = listOptions.defaultDeliveryRight;
     }
 
     /**
