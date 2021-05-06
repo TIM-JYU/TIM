@@ -404,7 +404,8 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
         if not logged_in():
             return render_login(doc_info.document)
         else:
-            raise AccessDenied()
+            adm = doc_info.document.get_settings().access_denied_message()
+            raise AccessDenied(*((adm,) if adm else ()))
 
     if vp.login and not logged_in():
         return render_login(doc_info.document)
