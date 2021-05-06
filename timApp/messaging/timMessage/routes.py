@@ -47,6 +47,18 @@ class MessageOptions:
 
 
 @dataclass
+class ReplyOptions:
+    archive: bool
+    messageChannel: bool
+    pageList: str
+    recipient: str
+    sender: str
+    senderEmail: str
+    isPrivate: bool = True
+    readReceipt: bool = True
+
+
+@dataclass
 class MessageBody:
     messageBody: str
     messageSubject: str
@@ -231,8 +243,12 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 
 
 @timMessage.route("/reply", methods=['POST'])
-def reply_to_tim_message(options: MessageOptions, message: MessageBody) -> Response:
+def reply_to_tim_message(message_id: int, options: ReplyOptions, message: str) -> Response:
     # TODO handle replying to message
+    print(message_id)
+    print(options)
+    print(message)
+
     return ok_response()
 
 
