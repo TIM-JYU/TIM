@@ -233,7 +233,7 @@ interface ISimpleRegistrationResponse {
                 </div>
                 <div class="form-group">
                     <label for="newpassword-signup" class="control-label" i18n>
-                        Create a new password
+                        Create a new password (at least {{ minPasswordLength }} characters)
                     </label>
                     <input class="form-control"
                            id="newpassword-signup"
@@ -312,8 +312,8 @@ export class LoginDialogComponent extends AngularDialogComponent<
     loginError: string | undefined;
     name: string | undefined;
     nameProvided = false;
-    newPassword: string | undefined;
-    rePassword: string | undefined;
+    newPassword = "";
+    rePassword = "";
     resetPassword = false;
     signUpError: string | undefined;
     signUpRequestInProgress = false;
@@ -338,6 +338,7 @@ export class LoginDialogComponent extends AngularDialogComponent<
     simpleLoginEmailGiven = false;
     focusPassword = false;
     useStudyInfoMessage = this.config.simpleLoginUseStudyInfoMessage;
+    minPasswordLength = this.config.minPasswordLength;
 
     ngOnInit() {
         const params = this.data;
