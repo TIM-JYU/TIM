@@ -131,7 +131,7 @@ export class MessageListComponent extends AngularDialogComponent<
             notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             listInfo: this.listInfo,
             listDescription: this.listDescription,
-            htmlAllowed: true,
+            onlyText: true,
             defaultReplyType: ReplyToListChanges.NOCHANGES,
         });
         if (!result.ok) {

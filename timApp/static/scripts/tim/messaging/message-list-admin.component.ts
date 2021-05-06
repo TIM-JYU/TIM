@@ -133,7 +133,7 @@ export class MessageListAdminComponent implements OnInit {
     // List has a private members only archive by default.
     archive: ArchiveType = ArchiveType.GROUPONLY;
 
-    domain: string = "";
+    domain?: string;
     domains: string[] = [];
 
     membersTextField?: string;
@@ -146,12 +146,18 @@ export class MessageListAdminComponent implements OnInit {
     archiveOptions = archivePolicyNames;
 
     notifyOwnerOnListChange: boolean = false;
+    timUsersCanJoin?: boolean = false;
 
     listInfo?: string;
     listDescription?: string;
 
     emailAdminURL?: string;
     archiveURL?: string;
+
+    canUnsubscribe?: boolean;
+    defaultSendRight?: boolean;
+    defaultDeliveryRight?: boolean;
+    listSubjectPrefix?: boolean;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -261,7 +267,7 @@ export class MessageListAdminComponent implements OnInit {
                 .delete(`/messagelist/deletelist`, {
                     params: {
                         listname: this.listname,
-                        domain: this.domain,
+                        domain: this.domain ? this.domain : "",
                     },
                 })
                 .toPromise()
@@ -318,6 +324,8 @@ export class MessageListAdminComponent implements OnInit {
         if (this.archive !== ArchiveType.NONE) {
             this.archiveURL = `/view/archives/${this.listname}`;
         }
+
+        this.timUsersCanJoin = listOptions.timUsersCanJoin;
     }
 
     /**
@@ -329,7 +337,7 @@ export class MessageListAdminComponent implements OnInit {
             domain: this.domain,
             listInfo: this.listInfo,
             listDescription: this.listDescription,
-            htmlAllowed: true, // TODO: Option to ask the user.
+            onlyText: true, // TODO: Option to ask the user.
             defaultReplyType: ReplyToListChanges.NOCHANGES, // TODO: Option to ask the user.
             notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             archive: this.archive,
