@@ -341,6 +341,11 @@ export class MessageListAdminComponent implements OnInit {
             defaultReplyType: ReplyToListChanges.NOCHANGES, // TODO: Option to ask the user.
             notifyOwnerOnListChange: this.notifyOwnerOnListChange,
             archive: this.archive,
+            timUsersCanJoin: this.timUsersCanJoin,
+            listSubjectPrefix: this.listSubjectPrefix,
+            canUnsubscribe: this.canUnsubscribe,
+            defaultDeliveryRight: this.defaultDeliveryRight,
+            defaultSendRight: this.defaultSendRight,
         });
         if (result.ok) {
             console.log("save succee");

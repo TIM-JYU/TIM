@@ -19,8 +19,18 @@ from timApp.user.groups import verify_groupadmin
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.logger import log_info
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
+
+# TODO: These are for testing to get client side UI in sync with server side. When db is updated, these are then no
+#  longer needed.
+save_default_send_right: bool = True
+save_default_delivery_right: bool = True
+save_subject_prefix = ""
+save_tim_user_can_join = False
+save_only_text = False
+save_default_reply_type = ReplyToListChanges.NOCHANGES
 
 
 @messagelist.route('/createlist', methods=['POST'])
@@ -126,8 +136,9 @@ def get_list(document_id: int) -> Response:
         #  here is a placeholder.
         domain="tim.jyu.fi",
         archive=msg_list.archive,
-        htmlAllowed=True,
-        defaultReplyType=ReplyToListChanges.NOCHANGES
+        # htmlAllowed=True,
+        defaultReplyType=ReplyToListChanges.NOCHANGES,
+        timUsersCanJoin=save_tim_user_can_join  # TODO: Change to get this from db.
     )
     if msg_list.email_list_domain:
         list_options.emailAdminURL = get_list_ui_link(msg_list.name, msg_list.email_list_domain)
@@ -143,6 +154,13 @@ def save_list_options(options: ListOptions) -> Response:
     verify_logged_in()
     # TODO: Additional checks for who get's to call this route.
     #  list's owner
+    global save_tim_user_can_join
+    global save_default_send_right
+    global save_default_delivery_right
+    global save_subject_prefix
+    global save_tim_user_can_join
+    global save_only_text
+    global save_default_reply_type
 
     message_list = MessageListModel.get_list_by_name_exactly_one(options.listname)
 
@@ -162,6 +180,27 @@ def save_list_options(options: ListOptions) -> Response:
     # message_list.can_unsubscribe
     # message_list.default_send_right
     # message_list.default_delivery_right
+
+    # TODO: remove when these can be put onto db.
+    log_info(f"***** ***** ***** *****")
+    save_tim_user_can_join = options.timUsersCanJoin
+    log_info(f"tim user can join: {save_tim_user_can_join}")
+
+    save_default_send_right = options.defaultSendRight
+    log_info(f"default send right: {save_default_send_right}")
+
+    save_default_delivery_right = options.defaultDeliveryRight
+    log_info(f"default delivery right: {save_default_delivery_right}")
+
+    save_subject_prefix = options.listSubjectPrefix
+    log_info(f"subject prefix: {save_subject_prefix}")
+
+    save_only_text = options.onlyText
+    log_info(f"only text: {save_only_text}")
+
+    save_default_reply_type = options.defaultReplyType
+    log_info(f"default reply type: {save_default_reply_type}")
+    log_info(f"***** ***** ***** *****")
 
     db.session.commit()
     return ok_response()
