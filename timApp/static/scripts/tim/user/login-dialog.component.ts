@@ -312,8 +312,8 @@ export class LoginDialogComponent extends AngularDialogComponent<
     loginError: string | undefined;
     name: string | undefined;
     nameProvided = false;
-    newPassword: string | undefined;
-    rePassword: string | undefined;
+    newPassword = "";
+    rePassword = "";
     resetPassword = false;
     signUpError: string | undefined;
     signUpRequestInProgress = false;
