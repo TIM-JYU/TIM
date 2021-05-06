@@ -130,20 +130,20 @@ def get_list(document_id: int) -> Response:
 
     msg_list = MessageListModel.get_list_by_manage_doc_id(document_id)
     list_options = ListOptions(
-        listname=msg_list.name,
-        notifyOwnerOnListChange=msg_list.notify_owner_on_change,
+        name=msg_list.name,
+        notify_owners_on_list_change=msg_list.notify_owner_on_change,
         # VIESTIM: We need a better way of either querying or inferring list's (possible) domain. For the time being,
         #  here is a placeholder.
         domain="tim.jyu.fi",
         archive=msg_list.archive,
         # htmlAllowed=True,
-        defaultReplyType=ReplyToListChanges.NOCHANGES,
+        default_reply_type=ReplyToListChanges.NOCHANGES,
         # TODO: Change to get these from db.
-        timUsersCanJoin=save_tim_user_can_join,
-        listSubjectPrefix=save_subject_prefix,
-        canUnsubscribe=msg_list.can_unsubscribe,
-        defaultSendRight=save_default_send_right,
-        defaultDeliveryRight=save_default_delivery_right
+        tim_users_can_join=save_tim_user_can_join,
+        list_subject_prefix=save_subject_prefix,
+        members_can_unsubscribe=msg_list.can_unsubscribe,
+        default_send_right=save_default_send_right,
+        default_delivery_right=save_default_delivery_right
     )
     if msg_list.email_list_domain:
         list_options.email_admin_url = get_list_ui_link(msg_list.name, msg_list.email_list_domain)

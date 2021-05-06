@@ -1,6 +1,6 @@
 export interface ListOptions {
     // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
-    listname: string;
+    name: string;
     domain?: string;
     archive: ArchiveType;
     notify_owners_on_list_change?: boolean;

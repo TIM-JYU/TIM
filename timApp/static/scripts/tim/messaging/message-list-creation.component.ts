@@ -120,7 +120,7 @@ export class MessageListComponent extends AngularDialogComponent<
         this.disableCreate = true;
         const result = await this.createList({
             // VIESTIM These fields have to match with interface ListOptions, otherwise a type error happens.
-            listname: this.listname,
+            name: this.listname,
             // We added '@' in domain name for display purposes, remove it when sending domain to the server.
             // VIESTIM: This bit is probably now obsolete, since the '@' is no longer added to the value, but is
             //  instead put directly to an HTML-element

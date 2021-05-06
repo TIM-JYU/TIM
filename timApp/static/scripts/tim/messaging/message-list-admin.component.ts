@@ -318,7 +318,7 @@ export class MessageListAdminComponent implements OnInit {
      * @param listOptions
      */
     setValues(listOptions: ListOptions) {
-        this.listname = listOptions.listname;
+        this.listname = listOptions.name;
         this.archive = listOptions.archive;
 
         this.domain = listOptions.domain;
@@ -351,7 +351,7 @@ export class MessageListAdminComponent implements OnInit {
      */
     async save() {
         const result = await this.saveListOptions({
-            listname: this.listname,
+            name: this.listname,
             domain: this.domain,
             list_info: this.listInfo,
             list_description: this.listDescription,
