@@ -326,24 +326,24 @@ export class MessageListAdminComponent implements OnInit {
         this.ownerEmail = "";
 
         this.notifyOwnerOnListChange =
-            listOptions.notifyOwnerOnListChange ?? false;
+            listOptions.notify_owners_on_list_change ?? false;
 
-        this.listInfo = listOptions.listInfo;
-        this.listDescription = listOptions.listDescription;
+        this.listInfo = listOptions.list_info;
+        this.listDescription = listOptions.list_description;
 
-        this.emailAdminURL = listOptions.emailAdminURL;
+        this.emailAdminURL = listOptions.email_admin_url;
 
         // If some type of archiving exists for the list, provide a link to it.
         if (this.archive !== ArchiveType.NONE) {
             this.archiveURL = `/view/archives/${this.listname}`;
         }
 
-        this.timUsersCanJoin = listOptions.timUsersCanJoin;
+        this.timUsersCanJoin = listOptions.tim_users_can_join;
 
-        this.listSubjectPrefix = listOptions.listSubjectPrefix;
-        this.canUnsubscribe = listOptions.canUnsubscribe;
-        this.defaultSendRight = listOptions.defaultSendRight;
-        this.defaultDeliveryRight = listOptions.defaultDeliveryRight;
+        this.listSubjectPrefix = listOptions.list_subject_prefix;
+        this.canUnsubscribe = listOptions.members_can_unsubscribe;
+        this.defaultSendRight = listOptions.default_send_right;
+        this.defaultDeliveryRight = listOptions.default_delivery_right;
     }
 
     /**
@@ -353,17 +353,17 @@ export class MessageListAdminComponent implements OnInit {
         const result = await this.saveListOptions({
             listname: this.listname,
             domain: this.domain,
-            listInfo: this.listInfo,
-            listDescription: this.listDescription,
-            onlyText: true, // TODO: Option to ask the user.
-            defaultReplyType: ReplyToListChanges.NOCHANGES, // TODO: Option to ask the user.
-            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
+            list_info: this.listInfo,
+            list_description: this.listDescription,
+            only_text: true, // TODO: Option to ask the user.
+            default_reply_type: ReplyToListChanges.NOCHANGES, // TODO: Option to ask the user.
+            notify_owners_on_list_change: this.notifyOwnerOnListChange,
             archive: this.archive,
-            timUsersCanJoin: this.timUsersCanJoin,
-            listSubjectPrefix: this.listSubjectPrefix,
-            canUnsubscribe: this.canUnsubscribe,
-            defaultDeliveryRight: this.defaultDeliveryRight,
-            defaultSendRight: this.defaultSendRight,
+            tim_users_can_join: this.timUsersCanJoin,
+            list_subject_prefix: this.listSubjectPrefix,
+            members_can_unsubscribe: this.canUnsubscribe,
+            default_delivery_right: this.defaultDeliveryRight,
+            default_send_right: this.defaultSendRight,
         });
         if (result.ok) {
             console.log("save succee");

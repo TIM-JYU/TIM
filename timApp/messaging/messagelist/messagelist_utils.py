@@ -369,10 +369,10 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     #  default, but if the owner is someone else than the creator then we have to handle that.
 
     # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
-    path_safe_list_name = remove_path_special_chars(list_options.listname)
+    path_safe_list_name = remove_path_special_chars(list_options.name)
     path_to_doc = f'/{MESSAGE_LIST_DOC_PREFIX}/{path_safe_list_name}'
 
-    doc = create_document(path_to_doc, list_options.listname)
+    doc = create_document(path_to_doc, list_options.name)
 
     # VIESTIM: We add the admin component to the document. This might have to be changed if the component is turned
     #  into a plugin.
@@ -395,7 +395,7 @@ def new_list(list_options: ListOptions) -> DocInfo:
     :return: The management document.
     """
     # VIESTIM: Check creation permission? Or should it be in the calling view function?
-    msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
+    msg_list = MessageListModel(name=list_options.name, archive=list_options.archive)
     if list_options.domain:
         msg_list.email_list_domain = list_options.domain
     db.session.add(msg_list)

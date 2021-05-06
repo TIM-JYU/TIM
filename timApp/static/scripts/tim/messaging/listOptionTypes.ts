@@ -3,17 +3,17 @@ export interface ListOptions {
     listname: string;
     domain?: string;
     archive: ArchiveType;
-    notifyOwnerOnListChange?: boolean;
-    listDescription?: string;
-    listInfo?: string;
-    onlyText?: boolean;
-    defaultReplyType?: ReplyToListChanges;
-    emailAdminURL?: string;
-    timUsersCanJoin?: boolean;
-    canUnsubscribe?: boolean;
-    defaultSendRight?: boolean;
-    defaultDeliveryRight?: boolean;
-    listSubjectPrefix?: string;
+    notify_owners_on_list_change?: boolean;
+    list_description?: string;
+    list_info?: string;
+    only_text?: boolean;
+    default_reply_type?: ReplyToListChanges;
+    email_admin_url?: string;
+    tim_users_can_join?: boolean;
+    members_can_unsubscribe?: boolean;
+    default_send_right?: boolean;
+    default_delivery_right?: boolean;
+    list_subject_prefix?: string;
 }
 
 export enum ReplyToListChanges {

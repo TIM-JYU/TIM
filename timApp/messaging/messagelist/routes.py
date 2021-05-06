@@ -48,9 +48,9 @@ def create_list(options: ListOptions) -> Response:
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
-    options.listname = options.listname.strip()
+    options.name = options.name.strip()
 
-    test_name(options.listname)  # Test the name we are creating.
+    test_name(options.name)  # Test the name we are creating.
 
     manage_doc = new_list(options)
     create_new_email_list(options, owner)
@@ -146,11 +146,11 @@ def get_list(document_id: int) -> Response:
         defaultDeliveryRight=save_default_delivery_right
     )
     if msg_list.email_list_domain:
-        list_options.emailAdminURL = get_list_ui_link(msg_list.name, msg_list.email_list_domain)
+        list_options.email_admin_url = get_list_ui_link(msg_list.name, msg_list.email_list_domain)
     if msg_list.info:
-        list_options.listInfo = msg_list.info
+        list_options.list_info = msg_list.info
     if msg_list.description:
-        list_options.listDescription = msg_list.description
+        list_options.list_description = msg_list.description
     return json_response(list_options)
 
 
@@ -167,7 +167,7 @@ def save_list_options(options: ListOptions) -> Response:
     global save_only_text
     global save_default_reply_type
 
-    message_list = MessageListModel.get_list_by_name_exactly_one(options.listname)
+    message_list = MessageListModel.get_list_by_name_exactly_one(options.name)
 
     # TODO: Verify that user has rights to the message list.
 
@@ -176,10 +176,10 @@ def save_list_options(options: ListOptions) -> Response:
         message_list.archive = options.archive
         pass
 
-    message_list.description = options.listDescription
-    message_list.info = options.listInfo
+    message_list.description = options.list_description
+    message_list.info = options.list_info
 
-    message_list.notify_owner_on_change = options.notifyOwnerOnListChange
+    message_list.notify_owner_on_change = options.notify_owners_on_list_change
 
     # TODO: save the following list options.
     # message_list.can_unsubscribe
@@ -188,22 +188,22 @@ def save_list_options(options: ListOptions) -> Response:
 
     # TODO: remove when these can be put onto db.
     log_info(f"***** ***** ***** *****")
-    save_tim_user_can_join = options.timUsersCanJoin
+    save_tim_user_can_join = options.tim_users_can_join
     log_info(f"tim user can join: {save_tim_user_can_join}")
 
-    save_default_send_right = options.defaultSendRight
+    save_default_send_right = options.default_send_right
     log_info(f"default send right: {save_default_send_right}")
 
-    save_default_delivery_right = options.defaultDeliveryRight
+    save_default_delivery_right = options.default_delivery_right
     log_info(f"default delivery right: {save_default_delivery_right}")
 
-    save_subject_prefix = options.listSubjectPrefix
+    save_subject_prefix = options.list_subject_prefix
     log_info(f"subject prefix: {save_subject_prefix}")
 
-    save_only_text = options.onlyText
+    save_only_text = options.only_text
     log_info(f"only text: {save_only_text}")
 
-    save_default_reply_type = options.defaultReplyType
+    save_default_reply_type = options.default_reply_type
     log_info(f"default reply type: {save_default_reply_type}")
     log_info(f"***** ***** ***** *****")
 

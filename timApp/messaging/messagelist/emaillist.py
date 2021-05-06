@@ -255,14 +255,14 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         log_error("New list creation has been accessed, even though mailmanclient is not configured for connection.")
         raise RouteException("No connection configured.")
     try:
-        check_name_availability(list_options.listname, list_options.domain)
+        check_name_availability(list_options.name, list_options.domain)
     except HTTPError:
         # TODO: If the name has been snatched between checking it's availability, we might want to offer name
         #  recommendations?
         raise
     try:
         domain: Domain = _client.get_domain(list_options.domain)
-        email_list: MailingList = domain.create_list(list_options.listname)
+        email_list: MailingList = domain.create_list(list_options.name)
         # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
         #  their lists on Mailman.
         email_list.add_owner(owner.email)
@@ -282,10 +282,10 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # switches this on if necessary.
         mlist_settings["admin_notify_mchanges"] = False
 
-        if list_options.listDescription:
-            set_email_list_description(email_list, list_options.listDescription)
-        if list_options.listInfo:
-            set_email_list_info(email_list, list_options.listInfo)
+        if list_options.list_description:
+            set_email_list_description(email_list, list_options.list_description)
+        if list_options.list_info:
+            set_email_list_info(email_list, list_options.list_info)
 
         # This is to force Mailman generate archivers into it's db. This is to fix a race condition, where creating a
         # new list without proper engineer interface procedures might make duplicate archiver rows in to db,

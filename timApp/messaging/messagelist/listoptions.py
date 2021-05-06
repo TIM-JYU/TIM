@@ -32,46 +32,46 @@ class ReplyToListChanges(Enum):
 @dataclass
 class ListOptions:
     """All options regarding message lists."""
-    listname: str
+    name: str
     """The name of the message list. A mandatory value when list options are concidered."""
 
     # VIESTIM: Enums need this to help marshmallow decipher JSON values in from client side properly.
     archive: ArchiveType = field(metadata={'by_value': True})
     """The type of archive policy this list uses."""
 
-    defaultReplyType: Optional[ReplyToListChanges] = field(metadata={'by_value': True})
+    default_reply_type: Optional[ReplyToListChanges] = field(metadata={'by_value': True})
     """The default reply type of the list."""
 
-    notifyOwnerOnListChange: Optional[bool] = None
+    notify_owners_on_list_change: Optional[bool] = None
     """A flag that determines if owners of the message list are notified of certain changes regarding the list, 
     e.g. a new user joins the list. """
 
-    onlyText: Optional[bool] = None
+    only_text: Optional[bool] = None
     """If only pure text is allowed on a list."""
 
-    listDescription: Optional[str] = None
+    list_description: Optional[str] = None
     """A short description of the list and it's purpose."""
 
-    listInfo: Optional[str] = None
+    list_info: Optional[str] = None
     """Additional information about the list."""
 
-    emailAdminURL: Optional[str] = None
+    email_admin_url: Optional[str] = None
     """If the message list has an email list associated with it, this is the link to Mailman's advanced list 
     controls. """
 
-    timUsersCanJoin: Optional[bool] = None
+    tim_users_can_join: Optional[bool] = None
     """Flag used to determine if TIM users can directly join this list."""
 
-    canUnsubscribe: Optional[bool] = None
+    members_can_unsubscribe: Optional[bool] = None
     """Flag used to determine if the TIM members of this list can leave the list on their own."""
 
-    defaultSendRight: Optional[bool] = None
+    default_send_right: Optional[bool] = None
     """The list's default send right for (new) members."""
 
-    defaultDeliveryRight: Optional[bool] = None
+    default_delivery_right: Optional[bool] = None
     """The list's default delivery right for (new) members."""
 
-    listSubjectPrefix: Optional[str] = None
+    list_subject_prefix: Optional[str] = None
     """Messages routed by a message list will have this subject prefix added to them."""
 
     domain: Optional[str] = None

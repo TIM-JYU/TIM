@@ -128,11 +128,11 @@ export class MessageListComponent extends AngularDialogComponent<
                 ? this.domain.slice(1)
                 : this.domain,
             archive: this.archive,
-            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
-            listInfo: this.listInfo,
-            listDescription: this.listDescription,
-            onlyText: true,
-            defaultReplyType: ReplyToListChanges.NOCHANGES,
+            notify_owners_on_list_change: this.notifyOwnerOnListChange,
+            list_info: this.listInfo,
+            list_description: this.listDescription,
+            only_text: true,
+            default_reply_type: ReplyToListChanges.NOCHANGES,
         });
         if (!result.ok) {
             this.errorMessage = [result.result.error.error];
