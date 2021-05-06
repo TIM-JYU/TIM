@@ -37,8 +37,9 @@ def register_errorhandlers(app: Flask):
                           description="Failed to load page style. The website might have been restarted recently.")
 
     @app.errorhandler(AccessDenied)
-    def handle_access_denied(error):
-        return error_generic(str(error), 403)
+    def handle_access_denied(error: AccessDenied):
+        msg = str(error) if error.args else "Sorry, you don't have permission to access this resource."
+        return error_generic(msg, 403)
 
     @app.errorhandler(NotExist)
     def handle_access_denied(error):
