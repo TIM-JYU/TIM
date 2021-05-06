@@ -167,6 +167,9 @@ export class TimMessageComponent {
     // resets form to it's initial values
     resetForm() {
         this.messageMsg = "Sent!";
+        setTimeout((): void => {
+            this.messageMsg = "";
+        }, 5000);
         this.messageSubject = "";
         this.messageBody = "";
         this.showOptions = false;

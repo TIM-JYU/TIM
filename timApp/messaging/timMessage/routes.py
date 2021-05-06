@@ -130,6 +130,8 @@ def check_urls(urls: str) -> Response:
 
     for url in url_list:
         url = url.strip()  #remove leading and trailing whitespaces
+        if url.endswith("/"):
+            url = url[:-1]
         hashtag_index = url.find("#")  #remove anchors
         if hashtag_index != -1:
             url = url[:hashtag_index]
