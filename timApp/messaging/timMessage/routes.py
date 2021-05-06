@@ -93,8 +93,11 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     messages = []
     recipients = []
     for display in displays:
-        messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
-        recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
+        receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id, message_id=display.message_id).first()
+        expires = InternalMessage.query.filter_by(id=display.message_id).first()
+        if receipt.marked_as_read_on is None and (expires.expires is None or expires.expires > datetime.now()):
+            messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
+            recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
 
     fullmessages = []
     for message in messages:
@@ -167,7 +170,7 @@ def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
     """
     verify_logged_in()
 
-    tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply)
+    tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires)
     create_tim_message(tim_message, options, message)
     db.session.add(tim_message)
     db.session.flush()
