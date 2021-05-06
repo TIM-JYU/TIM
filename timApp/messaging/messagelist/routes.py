@@ -138,7 +138,12 @@ def get_list(document_id: int) -> Response:
         archive=msg_list.archive,
         # htmlAllowed=True,
         defaultReplyType=ReplyToListChanges.NOCHANGES,
-        timUsersCanJoin=save_tim_user_can_join  # TODO: Change to get this from db.
+        # TODO: Change to get these from db.
+        timUsersCanJoin=save_tim_user_can_join,
+        listSubjectPrefix=save_subject_prefix,
+        canUnsubscribe=msg_list.can_unsubscribe,
+        defaultSendRight=save_default_send_right,
+        defaultDeliveryRight=save_default_delivery_right
     )
     if msg_list.email_list_domain:
         list_options.emailAdminURL = get_list_ui_link(msg_list.name, msg_list.email_list_domain)
