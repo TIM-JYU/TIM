@@ -1,8 +1,21 @@
 import {Component, Input, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
+import {FormsModule} from "@angular/forms";
 import {to2} from "tim/util/utils";
+import {Users} from "tim/user/userService";
 import {TimMessageData} from "./tim-message-view.component";
+
+interface ReplyOptions {
+    archive: boolean;
+    messageChannel: boolean;
+    pageList: string;
+    recipient: string | null;
+    sender: string | null;
+    senderEmail: string | null;
+    isPrivate: boolean;
+    readReceipt: boolean;
+}
 
 @Component({
     selector: "tim-message",
@@ -28,7 +41,7 @@ import {TimMessageData} from "./tim-message-view.component";
                 </div>
                 <div class="replyArea" *ngIf="showReply">
                     <p>To: {{sender}}</p>
-                    <textarea id="reply-message" name="reply-message"></textarea>
+                    <textarea id="reply-message" name="reply-message" [(ngModel)]="replyMessage"></textarea>
                     <div class="sent">
                         <button class="timButton" [disabled]="!canSendReply" (click)="sendReply()">Send</button>
                         <span *ngIf="replySent">Sent!</span>
@@ -64,6 +77,7 @@ export class TimMessageComponent implements OnInit {
     showReply: boolean = false;
     canMarkAsRead: boolean = true;
     markedAsRead: boolean = false;
+    replyMessage: string = "";
     replySent: boolean = false;
     canReply: boolean = true; // show/hide 'Reply' button
     canSendReply: boolean = true; // enable/disable 'Send' button
@@ -71,6 +85,16 @@ export class TimMessageComponent implements OnInit {
     messageToGroup: boolean = true; // can't get from database
     group?: string; // can't get from database
     heading?: string;
+    replyOptions: ReplyOptions = {
+        archive: true,
+        messageChannel: false,
+        pageList: "",
+        recipient: "",
+        sender: Users.getCurrent().real_name,
+        senderEmail: Users.getCurrent().email,
+        isPrivate: true,
+        readReceipt: true,
+    };
 
     constructor(private http: HttpClient) {}
 
@@ -113,11 +137,29 @@ export class TimMessageComponent implements OnInit {
     }
 
     /**
-     * Shows a "sent" alert after sending a reply.
+     * Sends reply to sender
+     * VIESTIM: actual functionality!
      */
-    sendReply(): void {
+    async sendReply() {
         this.replySent = true;
         this.canSendReply = false;
+        if (this.sender) {
+            this.replyOptions.recipient = this.sender;
+        } else {
+            console.log("no recipient, can't send");
+        }
+        const result = await to2(
+            this.http
+                .post("/timMessage/reply", {
+                    message_id: this.message?.id,
+                    options: this.replyOptions,
+                    message: this.replyMessage,
+                })
+                .toPromise()
+        );
+        if (!result.ok) {
+            console.error(result.result.error.error);
+        }
     }
 
     /**
@@ -154,6 +196,6 @@ export class TimMessageComponent implements OnInit {
 @NgModule({
     declarations: [TimMessageComponent],
     exports: [TimMessageComponent],
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule],
 })
 export class TimMessageModule {}
