@@ -597,3 +597,14 @@ def set_email_list_unsubscription_policy(email_list: MailingList, can_unsubscrib
         email_list.settings["unsubscription_policy"] = "confirm_then_moderate"
     email_list.settings.save()
     return
+
+
+def set_email_list_subject_prefix(email_list: MailingList, subject_prefix: str) -> None:
+    """Set the subject prefix for an email list.
+
+    :param email_list: Email list where the subject prefix is to be set.
+    :param subject_prefix: The prefix set for email list's subject.
+    """
+    email_list.settings["subject_prefix"] = subject_prefix
+    email_list.settings.save()
+    return

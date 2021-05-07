@@ -14,7 +14,7 @@ from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, D
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
     new_list, archive_message, EmailAndDisplayName, set_message_list_notify_owner_on_change, \
-    set_message_list_member_can_unsubscribe
+    set_message_list_member_can_unsubscribe, set_message_list_subject_prefix
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.util.flask.requesthelper import RouteException
@@ -163,12 +163,12 @@ def save_list_options(options: ListOptions) -> Response:
 
     set_message_list_notify_owner_on_change(message_list, options.notify_owners_on_list_change)
     set_message_list_member_can_unsubscribe(message_list, options.members_can_unsubscribe)
+    set_message_list_subject_prefix(message_list, options.list_subject_prefix)
 
     # TODO: save the following list options.
     message_list.tim_user_can_join = options.tim_users_can_join
     message_list.default_send_right = options.default_send_right
     message_list.default_delivery_right = options.default_delivery_right
-    message_list.subject_prefix = options.list_subject_prefix
     message_list.only_text = options.only_text
     message_list.default_reply_type = options.default_reply_type
     message_list.non_member_message_pass = options.non_member_message_pass

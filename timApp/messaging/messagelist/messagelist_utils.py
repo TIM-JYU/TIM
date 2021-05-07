@@ -11,7 +11,7 @@ from timApp.document.document import Document
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
-    set_email_list_unsubscription_policy
+    set_email_list_unsubscription_policy, set_email_list_subject_prefix
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.timdb.sqa import db
@@ -453,4 +453,22 @@ def set_message_list_member_can_unsubscribe(message_list: MessageListModel,
         # Email list's have their own settings for unsubscription.
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_unsubscription_policy(email_list, can_unsubscribe_flag)
+    return
+
+
+def set_message_list_subject_prefix(message_list: MessageListModel, subject_prefix: Optional[str]) -> None:
+    """Set the message list's subject prefix.
+
+    If the message list has an email list as a message list, then set the subject prefix there also.
+
+    :param message_list: The message list where the subject prefix is being set.
+    :param subject_prefix: The prefix set for messages that go through the list.
+    """
+    if subject_prefix is None or message_list.subject_prefix == subject_prefix:
+        return
+    message_list.subject_prefix = subject_prefix
+
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_subject_prefix(email_list, subject_prefix)
     return
