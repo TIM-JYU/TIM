@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
-from timApp.messaging.messagelist.listoptions import ArchiveType, Channel
+from timApp.messaging.messagelist.listoptions import ArchiveType, Channel, ReplyToListChanges
 from timApp.timdb.sqa import db
 
 
@@ -57,27 +57,27 @@ class MessageListModel(db.Model):
 
     # TODO: Maybe needs columns for default send and delivery rights for a new list member, especially if this member
     #  is added from outside sources without direct list owner intervention.
-    # default_send_right = db.Column(db.Boolean)
+    default_send_right = db.Column(db.Boolean)
     """Default send right for new members who join the list on their own."""
 
-    # default_delivery_right = db.Column(db.Boolean)
+    default_delivery_right = db.Column(db.Boolean)
     """Default delivery right for new members who join the list on their own."""
 
-    # tim_user_can_join = db.Column(db.Boolean)
+    tim_user_can_join = db.Column(db.Boolean)
     """Flag if TIM users can join the list on their own."""
 
-    # subject_prefix = db.Column(db.Text)
+    subject_prefix = db.Column(db.Text)
     """What prefix message subjects that go through the list get."""
 
-    # only_text = db.Column(db.Boolean)
+    only_text = db.Column(db.Boolean)
     """Flag if only text format messages are allowed on a list."""
-    # default_reply_type = db.Column(db.Enum(ReplyToListChanges))
+    default_reply_type = db.Column(db.Enum(ReplyToListChanges))
     """Default reply type for the list."""
 
-    # non_member_message_pass = db.Column(db.Boolean)
+    non_member_message_pass = db.Column(db.Boolean)
     """Flag if non members messages to the list are passed straight through without moderation."""
 
-    # allow_attachments = db.Column(db.Boolean)
+    allow_attachments = db.Column(db.Boolean)
     """Flag if attachments are allowed on the list. The list of allowed attachment file extensions are stored at 
     listoptions.py """
 
@@ -87,7 +87,8 @@ class MessageListModel(db.Model):
     members = db.relationship("MessageListMember", back_populates="message_list", lazy="select")
     """All the members of the list."""
 
-    # distribution = db.relationship("MessageListDistribution", back_populates="message_list", lazy="select")
+    distribution = db.relationship("MessageListDistribution", back_populates="message_list", lazy="select")
+    """The message channels the list uses."""
 
     @staticmethod
     def get_list_by_manage_doc_id(doc_id: int) -> 'MessageListModel':
@@ -185,7 +186,7 @@ class MessageListMember(db.Model):
     """When member's membership on a list ended. This is set when member is removed from a list."""
 
     # VIESTIM:  This doesn't work in migration for some reason. Maybe figure out if this is needed or fix later.
-    # join_method = db.Column(db.Enum(MemberJoinMethod))
+    join_method = db.Column(db.Enum(MemberJoinMethod))
     """How the member came to a list."""
 
     membership_verified = db.Column(db.DateTime(timezone=True))
@@ -300,7 +301,7 @@ class MessageListExternalMember(MessageListMember):
     """Email address of message list's external member."""
 
     # TODO: Add a column for display name.
-    # display_name = db.Column(db.Text)
+    display_name = db.Column(db.Text)
 
     member = db.relationship("MessageListMember", back_populates="external_member", lazy="select", uselist=False)
 
@@ -315,7 +316,7 @@ class MessageListExternalMember(MessageListMember):
         }
 
     def get_name(self) -> str:
-        return "External member"  # self.display_name
+        return self.display_name if self.display_name is not None else ""
 
     def get_email(self) -> str:
         return self.email_address
@@ -326,15 +327,21 @@ class MessageListDistribution(db.Model):
 
     __tablename__ = "messagelist_distribution"
 
-    # id = db.Column(db.Integer, primary_key=True)
-    id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    # id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
+
+    user_id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"))
+    """Message list member's id, if this row is about message list member's channel distribution."""
+
+    message_list_id = db.Column(db.Integer, db.ForeignKey("messagelist.id"))
+    """Message list's id, if this row is about message list's channel distribution."""
 
     channel = db.Column(db.Enum(Channel))
     """Which message channels are used for a message list."""
 
     # TODO: add uselist=False
     member = db.relationship("MessageListMember", back_populates="distribution", lazy="select")
-    # message_list = db.relationship("MessageListModel", back_populates="distribution", lazy="select", uselist=False)
+    message_list = db.relationship("MessageListModel", back_populates="distribution", lazy="select", uselist=False)
 
 
 class UserEmails(db.Model):
