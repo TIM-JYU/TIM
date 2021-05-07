@@ -208,17 +208,19 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
         verify_permission_edit_access(doc_entry, perm.type)
         doc_entries[perm.doc_path] = doc_entry
 
+    update_messages = []
+
     for add in model.actions.addPermission:
         doc_entry = doc_entries[add.doc_path]
         # Don't throw if we try to remove a permission from ourselves, just ignore it
         accs = add_perm(PermissionEditModel(add.type, add.time, [username], add.confirm), doc_entry)
         if accs:
-            log_right(f'added {accs[0].info_str} for {username} in {doc_entry.path}')
+            update_messages.append(f'added {accs[0].info_str} for {username} in {doc_entry.path}')
 
     for remove in model.actions.removePermission:
         doc_entry = doc_entries[remove.doc_path]
         a = remove_perm(user, doc_entry.block, remove.type)
-        log_right(f'removed {a.info_str} for {user.name} in {doc_entry.path}')
+        update_messages.append(f'removed {a.info_str} for {user.name} in {doc_entry.path}')
 
     fields_to_save = {
         set_val.taskId: set_val.value for set_val in model.actions.setValue
@@ -233,6 +235,10 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
             allow_non_teacher=False)
 
     db.session.commit()
+
+    for msg in update_messages:
+        log_right(msg)
+
     return ok_response()
 
 
