@@ -367,6 +367,7 @@ export class MessageListAdminComponent implements OnInit {
         console.log(listOptions.distribution);
         this.distribution = listOptions.distribution;
         console.log(this.distribution);
+        this.allowAttachments = listOptions.allow_attachments;
     }
 
     /**
@@ -389,6 +390,7 @@ export class MessageListAdminComponent implements OnInit {
             default_send_right: this.defaultSendRight,
             non_member_message_pass: this.nonMemberMessagePass,
             distribution: this.distribution,
+            allow_attachments: this.allowAttachments,
         });
         if (result.ok) {
             console.log("save succee");
