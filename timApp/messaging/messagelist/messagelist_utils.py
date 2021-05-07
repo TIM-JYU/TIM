@@ -472,3 +472,22 @@ def set_message_list_subject_prefix(message_list: MessageListModel, subject_pref
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_subject_prefix(email_list, subject_prefix)
     return
+
+
+def set_message_list_tim_users_can_join(message_list: MessageListModel, can_join_flag: Optional[bool]) -> None:
+    """Set the flag controlling if TIM users can directly join this list.
+
+    Because the behaviour that is controlled by the can_join_flag applies to TIM users, there is no message channel
+    spesific handling.
+
+    :param message_list: Message list where the flag is being set.
+    :param can_join_flag: If True, then TIM users can directly join this list, no moderation needed. If False, then TIM
+    users can't direclty join this list and
+    """
+    if can_join_flag is None or message_list.tim_user_can_join == can_join_flag:
+        return
+
+    message_list.tim_user_can_join = can_join_flag
+
+    return
+
