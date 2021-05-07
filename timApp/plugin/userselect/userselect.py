@@ -191,8 +191,8 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
         return ok_response()
 
     cur_user = get_current_user_object()
-    user = UserGroup.get_by_name(username)
-    if not user:
+    user_group = UserGroup.get_by_name(username)
+    if not user_group:
         raise RouteException(f"Cannot find user {username}")
 
     permission_actions: List[PermissionActionBase] = [*model.actions.addPermission, *model.actions.removePermission]
@@ -219,14 +219,14 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
 
     for remove in model.actions.removePermission:
         doc_entry = doc_entries[remove.doc_path]
-        a = remove_perm(user, doc_entry.block, remove.type)
-        update_messages.append(f'removed {a.info_str} for {user.name} in {doc_entry.path}')
+        a = remove_perm(user_group, doc_entry.block, remove.type)
+        update_messages.append(f'removed {a.info_str} for {user_group.name} in {doc_entry.path}')
 
     fields_to_save = {
         set_val.taskId: set_val.value for set_val in model.actions.setValue
     }
     if fields_to_save:
-        user_acc = User.get_by_name(user.name)
+        user_acc = User.get_by_name(user_group.name)
         assert user_acc is not None
         # Reuse existing helper for answer route to save field values quickly
         save_fields(
