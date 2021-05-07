@@ -10,7 +10,8 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
-from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change
+from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
+    set_email_list_unsubscription_policy
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.timdb.sqa import db
@@ -408,7 +409,7 @@ def new_list(list_options: ListOptions) -> DocInfo:
 
 
 def set_message_list_notify_owner_on_change(message_list: MessageListModel,
-                                            notify_owners_on_list_change_flag: bool) -> None:
+                                            notify_owners_on_list_change_flag: Optional[bool]) -> None:
     """Set the notify list owner on list change flag for a list, and update necessary channels with this information.
 
     If the message list has an email list as a message channel, this will set the equilavent flag on the email list.
@@ -417,7 +418,8 @@ def set_message_list_notify_owner_on_change(message_list: MessageListModel,
     :param notify_owners_on_list_change_flag: A boolean flag. If True, then changes on the message list sends
     notifications to list owners. If False, notifications won't be sent.
     """
-    if message_list.notify_owner_on_change == notify_owners_on_list_change_flag:
+    if notify_owners_on_list_change_flag is None \
+            or message_list.notify_owner_on_change == notify_owners_on_list_change_flag:
         return
 
     message_list.notify_owner_on_change = notify_owners_on_list_change_flag
@@ -429,4 +431,26 @@ def set_message_list_notify_owner_on_change(message_list: MessageListModel,
         #  we rely on Mailman's notifications for list changes.
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_notify_owner_on_list_change(email_list, message_list.notify_owner_on_change)
+    return
+
+
+def set_message_list_member_can_unsubscribe(message_list: MessageListModel,
+                                            can_unsubscribe_flag: Optional[bool]) -> None:
+    """Set the list member's free unsubscription flag, and propagate that setting to channels that have own handling
+    of unsubscription.
+
+    If the message list has an email list as a message channel, this will set the equilavent flag on the email list.
+
+    :param message_list: Message list where the flag is being set.
+    :param can_unsubscribe_flag: A boolean value. For True, the member can unsubscribe on their own. For False, then
+    the member can't unsubscribe from the list on their own.
+    """
+    if can_unsubscribe_flag is None or message_list.can_unsubscribe == can_unsubscribe_flag:
+        return
+    message_list.can_unsubscribe = can_unsubscribe_flag
+
+    if message_list.email_list_domain:
+        # Email list's have their own settings for unsubscription.
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_unsubscription_policy(email_list, can_unsubscribe_flag)
     return

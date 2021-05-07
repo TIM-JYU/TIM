@@ -580,3 +580,20 @@ def get_email_list_member(mlist: MailingList, email: str) -> Member:
     """
     member = mlist.get_member(email)
     return member
+
+
+def set_email_list_unsubscription_policy(email_list: MailingList, can_unsubscribe_flag: bool) -> None:
+    """Set the unsubscription policy of an email list.
+
+    :param email_list: The email list where the policy is to be set.
+    :param can_unsubscribe_flag: For True, then set the policy as 'confirm_then_moderate'. For False, set the policy as
+    'confirm'
+    """
+    # mailmanclient exposes an 'unsubscription_policy' setting, that follows SubscriptionPolicy enum values, see
+    # https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/mailinglist.py for details.
+    if can_unsubscribe_flag:
+        email_list.settings["unsubscription_policy"] = "confirm"
+    else:
+        email_list.settings["unsubscription_policy"] = "confirm_then_moderate"
+    email_list.settings.save()
+    return
