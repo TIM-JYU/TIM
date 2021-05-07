@@ -254,7 +254,7 @@ export class MessageListAdminComponent implements OnInit {
         );
         if (result.ok) {
             // TODO: Sending succeeded.
-            console.log("Sending members succeeded.");
+            // console.log("Sending members succeeded.");
             this.membersTextField = undefined; // Empty the text field.
         } else {
             // TODO: Sending failed.
@@ -280,7 +280,7 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
         if (result.ok) {
-            console.log(result.result);
+            // console.log(result.result);
             this.membersList = result.result;
         } else {
             console.error(result.result.error.error);
@@ -365,9 +365,7 @@ export class MessageListAdminComponent implements OnInit {
         this.nonMemberMessagePass = listOptions.non_member_message_pass;
         this.onlyText = listOptions.only_text;
         this.allowAttachments = listOptions.allow_attachments;
-        console.log(listOptions.distribution);
         this.distribution = listOptions.distribution;
-        console.log(this.distribution);
         this.allowAttachments = listOptions.allow_attachments;
         this.listReplyToChange = listOptions.default_reply_type;
     }
@@ -395,7 +393,7 @@ export class MessageListAdminComponent implements OnInit {
             allow_attachments: this.allowAttachments,
         });
         if (result.ok) {
-            console.log("save succee");
+            // console.log("save succee");
         } else {
             console.error("save fail");
         }
@@ -404,7 +402,7 @@ export class MessageListAdminComponent implements OnInit {
 
         if (resultSaveMembers.ok) {
             // VIESTIM: Saving members' state succeeded.
-            console.log("Saving members succeeded.");
+            // console.log("Saving members succeeded.");
         } else {
             // VIESTIM: Saving members' state failed.
             console.error("Saving members failed.");

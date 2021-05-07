@@ -23,18 +23,6 @@ from timApp.util.logger import log_info
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
-# TODO: These are for testing to get client side UI in sync with server side. When db is updated, these are then no
-#  longer needed.
-default_send_right: Optional[bool] = True
-default_delivery_right: Optional[bool] = True
-subject_prefix: Optional[str] = ""
-tim_user_can_join: Optional[bool] = False
-only_text: Optional[bool] = False
-default_reply_type: Optional[ReplyToListChanges] = ReplyToListChanges.NOCHANGES
-non_member_message_pass: Optional[bool] = False
-allow_attachments: Optional[bool] = False
-distribution: Optional[Distribution] = Distribution(tim_message=False, email_list=True)
-
 
 @messagelist.route('/createlist', methods=['POST'])
 def create_list(options: ListOptions) -> Response:
@@ -130,36 +118,27 @@ def get_list(document_id: int) -> Response:
     """
     verify_logged_in()
     # TODO: Additional checks for who gets to call this route.
-    global tim_user_can_join
-    global default_send_right
-    global default_delivery_right
-    global subject_prefix
-    global only_text
-    global default_reply_type
-    global non_member_message_pass
-    global allow_attachments
-    global distribution
 
-    msg_list = MessageListModel.get_list_by_manage_doc_id(document_id)
+    message_list = MessageListModel.get_list_by_manage_doc_id(document_id)
     list_options = ListOptions(
-        name=msg_list.name,
-        notify_owners_on_list_change=msg_list.notify_owner_on_change,
-        domain=msg_list.email_list_domain,
-        archive=msg_list.archive,
-        default_reply_type=default_reply_type,
+        name=message_list.name,
+        notify_owners_on_list_change=message_list.notify_owner_on_change,
+        domain=message_list.email_list_domain,
+        archive=message_list.archive,
+        default_reply_type=message_list.default_reply_type,
         # TODO: Change to get these from db.
-        tim_users_can_join=tim_user_can_join,
-        list_subject_prefix=subject_prefix,
-        members_can_unsubscribe=msg_list.can_unsubscribe,
-        default_send_right=default_send_right,
-        default_delivery_right=default_delivery_right,
-        only_text=only_text,
-        non_member_message_pass=non_member_message_pass,
-        email_admin_url=get_list_ui_link(msg_list.name, msg_list.email_list_domain),
-        list_info=msg_list.info,
-        list_description=msg_list.description,
-        allow_attachments=allow_attachments,
-        distribution=distribution,
+        tim_users_can_join=message_list.tim_user_can_join,
+        list_subject_prefix=message_list.subject_prefix,
+        members_can_unsubscribe=message_list.can_unsubscribe,
+        default_send_right=message_list.default_send_right,
+        default_delivery_right=message_list.default_delivery_right,
+        only_text=message_list.only_text,
+        non_member_message_pass=message_list.non_member_message_pass,
+        email_admin_url=get_list_ui_link(message_list.name, message_list.email_list_domain),
+        list_info=message_list.info,
+        list_description=message_list.description,
+        allow_attachments=message_list.allow_attachments,
+        distribution=Distribution(email_list=True, tim_message=True),
     )
     return json_response(list_options)
 
@@ -169,15 +148,6 @@ def save_list_options(options: ListOptions) -> Response:
     verify_logged_in()
     # TODO: Additional checks for who get's to call this route.
     #  list's owner
-    global tim_user_can_join
-    global default_send_right
-    global default_delivery_right
-    global subject_prefix
-    global only_text
-    global default_reply_type
-    global non_member_message_pass
-    global allow_attachments
-    global distribution
 
     message_list = MessageListModel.get_list_by_name_exactly_one(options.name)
 
@@ -195,40 +165,16 @@ def save_list_options(options: ListOptions) -> Response:
 
     # TODO: save the following list options.
     message_list.can_unsubscribe = options.members_can_unsubscribe
-    # message_list.default_send_right
-    # message_list.default_delivery_right
-
-    # TODO: remove when these can be put onto db.
-    log_info(f"***** ***** ***** *****")
-    tim_user_can_join = options.tim_users_can_join
-    log_info(f"tim user can join: {tim_user_can_join}")
-
-    default_send_right = options.default_send_right
-    log_info(f"default send right: {default_send_right}")
-
-    default_delivery_right = options.default_delivery_right
-    log_info(f"default delivery right: {default_delivery_right}")
-
-    subject_prefix = options.list_subject_prefix
-    log_info(f"subject prefix: {subject_prefix}")
-
-    only_text = options.only_text
-    log_info(f"only text: {only_text}")
-
-    default_reply_type = options.default_reply_type
-    log_info(f"default reply type: {default_reply_type}")
-
-    non_member_message_pass = options.non_member_message_pass
-    log_info(f"non member message pass: {non_member_message_pass}")
-
-    members_can_unsubscribe = options.members_can_unsubscribe
-    log_info(f"member can unsubscribe: {members_can_unsubscribe}")
-
-    allow_attachments = options.allow_attachments
-
-    distribution = options.distribution
-
-    log_info(f"***** ***** ***** *****")
+    message_list.tim_user_can_join = options.tim_users_can_join
+    message_list.default_send_right = options.default_send_right
+    message_list.default_delivery_right = options.default_delivery_right
+    message_list.subject_prefix = options.list_subject_prefix
+    message_list.only_text = options.only_text
+    message_list.default_reply_type = options.default_reply_type
+    message_list.non_member_message_pass = options.non_member_message_pass
+    message_list.members_can_unsubscribe = options.members_can_unsubscribe
+    message_list.allow_attachments = options.allow_attachments
+    # message_list.distribution = options.distribution
 
     db.session.commit()
     return ok_response()
