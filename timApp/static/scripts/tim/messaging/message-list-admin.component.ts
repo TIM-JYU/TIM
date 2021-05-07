@@ -189,6 +189,7 @@ export class MessageListAdminComponent implements OnInit {
     allowAttachments?: boolean;
     // distibution?: Channel[];
     distribution?: Distribution;
+    listReplyToChange?: ReplyToListChanges;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -368,6 +369,7 @@ export class MessageListAdminComponent implements OnInit {
         this.distribution = listOptions.distribution;
         console.log(this.distribution);
         this.allowAttachments = listOptions.allow_attachments;
+        this.listReplyToChange = listOptions.default_reply_type;
     }
 
     /**
@@ -380,7 +382,7 @@ export class MessageListAdminComponent implements OnInit {
             list_info: this.listInfo,
             list_description: this.listDescription,
             only_text: this.onlyText,
-            default_reply_type: ReplyToListChanges.NOCHANGES, // TODO: Option to ask the user.
+            default_reply_type: this.listReplyToChange, // TODO: Option to ask the user.
             notify_owners_on_list_change: this.notifyOwnerOnListChange,
             archive: this.archive,
             tim_users_can_join: this.timUsersCanJoin,
