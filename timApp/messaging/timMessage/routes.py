@@ -229,7 +229,7 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
     message_doc.block.add_rights(recipient_users, AccessType.view)
 
     update_tim_msg_doc_settings(message_doc, sender, message_body)
-    message_par = message_doc.document.get_par_ids()[0]  # TODO remove par_id completely?
+    message_par = message_doc.document.get_paragraphs()[0].get_id()  # TODO placeholder value; remove par_id completely?
     tim_message.block = message_doc.block
     tim_message.par_id = message_par
 
@@ -346,8 +346,14 @@ def check_messages_folder_path(msg_folder_path: str, tim_msg_folder_path: str) -
         tim_msg_preambles = Folder.create(f'{tim_msg_folder_path}/templates/preambles', admin_group,
                                           title='preambles',
                                           creation_opts=FolderCreationOptions(apply_default_rights=True))
-        tim_msg_templates.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
-        tim_msg_preambles.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+
+        tim_msg_templates_block = tim_msg_templates.block
+        if tim_msg_templates_block:
+            tim_msg_templates_block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+
+        tim_msg_preambles_block = tim_msg_preambles.block
+        if tim_msg_preambles_block:
+            tim_msg_preambles_block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
 
     preamble_path = f'{tim_msg_folder_path}/templates/preambles/preamble'
     tim_msg_preamble = DocEntry.find_by_path(preamble_path)

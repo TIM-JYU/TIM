@@ -59,10 +59,10 @@ import {RelevanceEditComponent} from "tim/item/relevance-edit.component";
 import {MessageListAdminComponent} from "tim/messaging/message-list-admin.component";
 import {TimMessageComponent} from "tim/messaging/tim-message.component";
 import {TimMessageViewComponent} from "tim/messaging/tim-message-view.component";
+import {ManageReadReceiptComponent} from "tim/messaging/manage-read-receipt.component";
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
-import {ManageReadReceiptComponent} from "tim/messaging/manage-read-receipt.component";
 
 BackspaceDisabler.disable();
 
