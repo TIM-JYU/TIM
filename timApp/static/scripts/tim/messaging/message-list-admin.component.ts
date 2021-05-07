@@ -6,6 +6,7 @@ import {FormsModule} from "@angular/forms";
 import {
     archivePolicyNames,
     ArchiveType,
+    Distribution,
     ListOptions,
     MemberInfo,
     ReplyToListChanges,
@@ -186,6 +187,8 @@ export class MessageListAdminComponent implements OnInit {
     nonMemberMessagePass?: boolean;
     onlyText?: boolean;
     allowAttachments?: boolean;
+    // distibution?: Channel[];
+    distribution?: Distribution;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -361,6 +364,9 @@ export class MessageListAdminComponent implements OnInit {
         this.nonMemberMessagePass = listOptions.non_member_message_pass;
         this.onlyText = listOptions.only_text;
         this.allowAttachments = listOptions.allow_attachments;
+        console.log(listOptions.distribution);
+        this.distribution = listOptions.distribution;
+        console.log(this.distribution);
     }
 
     /**
@@ -382,6 +388,7 @@ export class MessageListAdminComponent implements OnInit {
             default_delivery_right: this.defaultDeliveryRight,
             default_send_right: this.defaultSendRight,
             non_member_message_pass: this.nonMemberMessagePass,
+            distribution: this.distribution,
         });
         if (result.ok) {
             console.log("save succee");

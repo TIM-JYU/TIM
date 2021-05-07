@@ -16,6 +16,19 @@ export interface ListOptions {
     list_subject_prefix?: string;
     non_member_message_pass?: boolean;
     allow_attachments?: boolean;
+    // distribution?: Channel[];
+    distribution?: Distribution;
+}
+
+export interface Distribution {
+    tim_message: boolean;
+    email_list: boolean;
+}
+
+// See class Channel on listoptions.py for explanation.
+export enum Channel {
+    TIM_MESSAGE = "tim_message",
+    EMAIL_LIST = "email_list",
 }
 
 export enum ReplyToListChanges {

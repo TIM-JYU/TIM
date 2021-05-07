@@ -2,27 +2,19 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
-from timApp.messaging.messagelist.listoptions import ArchiveType
+from timApp.messaging.messagelist.listoptions import ArchiveType, Channel
 from timApp.timdb.sqa import db
 
 
-class Channel(Enum):
-    """The message channels TIM uses and provides for message lists."""
-    TIM_MESSAGE = 'tim_message'
-    EMAIL_LIST = 'email_list'
-    # EMAIL = 3
-
-
-class MessageListJoinMethod(Enum):
+class MemberJoinMethod(Enum):
     """How a user was added to a message list."""
     DIRECT_ADD = 1
     """The owner of the list has just added this member. The member wasn't asked."""
     INVITED = 2
     """User was invited and they confirmed joining."""
+    JOINED = 3
+    """User joined the list on their own."""
 
-
-# VIESTIM: The dabase models for message lists. Primarily follow the database plan, if you should deviate from the plan
-#  document it so after the project it's easier to update the plan for maintainers.
 
 class MessageListModel(db.Model):
     """Database model for message lists"""
@@ -66,18 +58,36 @@ class MessageListModel(db.Model):
     # TODO: Maybe needs columns for default send and delivery rights for a new list member, especially if this member
     #  is added from outside sources without direct list owner intervention.
     # default_send_right = db.Column(db.Boolean)
+    """Default send right for new members who join the list on their own."""
+
     # default_delivery_right = db.Column(db.Boolean)
+    """Default delivery right for new members who join the list on their own."""
+
     # tim_user_can_join = db.Column(db.Boolean)
-    # default_send_right = db.Column(db.Boolean)
-    # default_delivery_right = db.Column(db.Boolean)
+    """Flag if TIM users can join the list on their own."""
+
     # subject_prefix = db.Column(db.Text)
+    """What prefix message subjects that go through the list get."""
+
     # only_text = db.Column(db.Boolean)
+    """Flag if only text format messages are allowed on a list."""
     # default_reply_type = db.Column(db.Enum(ReplyToListChanges))
+    """Default reply type for the list."""
+
     # non_member_message_pass = db.Column(db.Boolean)
+    """Flag if non members messages to the list are passed straight through without moderation."""
+
     # allow_attachments = db.Column(db.Boolean)
+    """Flag if attachments are allowed on the list. The list of allowed attachment file extensions are stored at 
+    listoptions.py """
 
     block = db.relationship("Block", back_populates="managed_messagelist", lazy="select")
+    """Relationship to the document that is used to manage this message list."""
+
     members = db.relationship("MessageListMember", back_populates="message_list", lazy="select")
+    """All the members of the list."""
+
+    # distribution = db.relationship("MessageListDistribution", back_populates="message_list", lazy="select")
 
     @staticmethod
     def get_list_by_manage_doc_id(doc_id: int) -> 'MessageListModel':
@@ -175,12 +185,12 @@ class MessageListMember(db.Model):
     """When member's membership on a list ended. This is set when member is removed from a list."""
 
     # VIESTIM:  This doesn't work in migration for some reason. Maybe figure out if this is needed or fix later.
-    # join_method = db.Column(db.Enum(MessageListJoinMethod))
+    # join_method = db.Column(db.Enum(MemberJoinMethod))
     """How the member came to a list."""
 
     membership_verified = db.Column(db.DateTime(timezone=True))
     """When the user's joining was verified. If user is added e.g. by a teacher to a course's message list, 
-    this date is the date teacher added the member. If the user was invited, then this is the date they verified 
+    this date is the date teacher added the member. If the member was invited, then this is the date they verified 
     their join. """
 
     # VIESTIM: This doesn't strictly speaking exists in the original plan. This acts as an discriminator,
@@ -305,7 +315,7 @@ class MessageListExternalMember(MessageListMember):
         }
 
     def get_name(self) -> str:
-        return "External member"
+        return "External member"  # self.display_name
 
     def get_email(self) -> str:
         return self.email_address
@@ -315,12 +325,16 @@ class MessageListDistribution(db.Model):
     """Message list member's chosen distribution channels."""
 
     __tablename__ = "messagelist_distribution"
+
+    # id = db.Column(db.Integer, primary_key=True)
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
 
     channel = db.Column(db.Enum(Channel))
     """Which message channels are used for a message list."""
 
+    # TODO: add uselist=False
     member = db.relationship("MessageListMember", back_populates="distribution", lazy="select")
+    # message_list = db.relationship("MessageListModel", back_populates="distribution", lazy="select", uselist=False)
 
 
 class UserEmails(db.Model):
@@ -334,8 +348,8 @@ class UserEmails(db.Model):
     """The users another email."""
 
     is_primary_email = db.Column(db.Boolean)
-    """Which one of the additional emails is user's primary email address. If none are, the Sisu given email address 
-    is assumed to be primary email address."""
+    """Which one of the additional emails is user's primary email address. If none are, the email address in users 
+    own table is assumed to be primary email address. """
 
     address_verified = db.Column(db.DateTime(timezone=True))
     """The user has to verify they are in the possession of the email address."""

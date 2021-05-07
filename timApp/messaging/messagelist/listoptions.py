@@ -3,6 +3,20 @@ from enum import Enum
 from typing import Dict, Optional
 
 
+class Channel(Enum):
+    """The message channels TIM uses and provides for message lists."""
+    TIM_MESSAGE = 'tim_message'
+    EMAIL_LIST = 'email_list'
+    # EMAIL = 3
+
+
+@dataclass
+class Distribution:
+    """"""
+    tim_message: bool
+    email_list: bool
+
+
 class ArchiveType(Enum):
     """Different supported archive types."""
     # If you change this, make sure the mapping for Mailman's archive policies is also updated at
@@ -82,6 +96,9 @@ class ListOptions:
 
     allow_attachments: Optional[bool] = None
     """A flag controlling if attachments are allowed on the list."""
+
+    distribution: Optional[Distribution] = None  # List[Channel] = field(default_factory=list)
+    """All the message channels the list is using."""
 
 
 allowed_file_type_extensions = ['pdf', 'jpg', 'png']
