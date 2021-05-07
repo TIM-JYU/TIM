@@ -255,7 +255,11 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         log_error("New list creation has been accessed, even though mailmanclient is not configured for connection.")
         raise RouteException("No connection configured.")
     try:
-        check_name_availability(list_options.name, list_options.domain)
+        if list_options.domain:
+            check_name_availability(list_options.name, list_options.domain)
+        else:
+            log_warning("Tried to create an email list without selected domain part.")
+            raise RouteException("Tried to create an email list without selected domain part.")
     except HTTPError:
         # TODO: If the name has been snatched between checking it's availability, we might want to offer name
         #  recommendations?
