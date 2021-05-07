@@ -195,6 +195,7 @@ export class TimMessageComponent {
         // send as TIM message
         if (this.timMessage) {
             const result = await this.postTimMessage(this.TimMessageOptions);
+            console.log(this.TimMessageOptions);
             if (!result.ok) {
                 console.error(result.result.error.error);
             }

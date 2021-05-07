@@ -138,7 +138,7 @@ export class TimMessageComponent implements OnInit {
     setValues(timMessage: TimMessageData) {
         this.sender = timMessage.sender;
         this.heading = timMessage.message_subject;
-        this.fullContent = timMessage.message_body; // TODO handle html properly
+        this.fullContent = timMessage.message_body; // TODO handle paragraphs properly
         this.canMarkAsRead = timMessage.can_mark_as_read;
         this.canReply = timMessage.can_reply;
 

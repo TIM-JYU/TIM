@@ -62,6 +62,7 @@ import {TimMessageViewComponent} from "tim/messaging/tim-message-view.component"
 import {insertLogDivIfEnabled, timLogInit, timLogTime} from "./util/timTiming";
 import {genericglobals} from "./util/globals";
 import {ParCompiler} from "./editor/parCompiler";
+import {ManageReadReceiptComponent} from "tim/messaging/manage-read-receipt.component";
 
 BackspaceDisabler.disable();
 
@@ -124,6 +125,7 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timMessageListAdmin", MessageListAdminComponent);
     doDowngrade(dg, "timMessage", TimMessageComponent);
     doDowngrade(dg, "timMessageView", TimMessageViewComponent);
+    doDowngrade(dg, "manageReadReceipt", ManageReadReceiptComponent);
     return dg;
 }
 
