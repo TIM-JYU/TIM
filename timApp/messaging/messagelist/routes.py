@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 from flask import Response
 from sqlalchemy.orm.exc import NoResultFound  # type: ignore
@@ -25,15 +25,15 @@ messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
 # TODO: These are for testing to get client side UI in sync with server side. When db is updated, these are then no
 #  longer needed.
-default_send_right: bool = True
-default_delivery_right: bool = True
-subject_prefix = ""
-tim_user_can_join = False
-only_text = False
-default_reply_type = ReplyToListChanges.NOCHANGES
-non_member_message_pass = False
-allow_attachments = False
-distribution = Distribution(tim_message=False, email_list=True)
+default_send_right: Optional[bool] = True
+default_delivery_right: Optional[bool] = True
+subject_prefix: Optional[str] = ""
+tim_user_can_join: Optional[bool] = False
+only_text: Optional[bool] = False
+default_reply_type: Optional[ReplyToListChanges] = ReplyToListChanges.NOCHANGES
+non_member_message_pass: Optional[bool] = False
+allow_attachments: Optional[bool] = False
+distribution: Optional[Distribution] = Distribution(tim_message=False, email_list=True)
 
 
 @messagelist.route('/createlist', methods=['POST'])
