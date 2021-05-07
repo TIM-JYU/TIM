@@ -10,7 +10,7 @@ from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui
     delete_email_list, check_emaillist_name_requirements, get_email_list_member, set_email_list_member_send_status, \
     set_email_list_member_delivery_status
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
-from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
+from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
     new_list, archive_message, EmailAndDisplayName
@@ -33,6 +33,7 @@ only_text = False
 default_reply_type = ReplyToListChanges.NOCHANGES
 non_member_message_pass = False
 allow_attachments = False
+distribution = Distribution(tim_message=False, email_list=True)
 
 
 @messagelist.route('/createlist', methods=['POST'])
@@ -137,6 +138,7 @@ def get_list(document_id: int) -> Response:
     global default_reply_type
     global non_member_message_pass
     global allow_attachments
+    global distribution
 
     msg_list = MessageListModel.get_list_by_manage_doc_id(document_id)
     list_options = ListOptions(
@@ -156,7 +158,8 @@ def get_list(document_id: int) -> Response:
         email_admin_url=get_list_ui_link(msg_list.name, msg_list.email_list_domain),
         list_info=msg_list.info,
         list_description=msg_list.description,
-        allow_attachments=allow_attachments
+        allow_attachments=allow_attachments,
+        distribution=distribution,
     )
     return json_response(list_options)
 
@@ -174,6 +177,7 @@ def save_list_options(options: ListOptions) -> Response:
     global default_reply_type
     global non_member_message_pass
     global allow_attachments
+    global distribution
 
     message_list = MessageListModel.get_list_by_name_exactly_one(options.name)
 
@@ -221,6 +225,8 @@ def save_list_options(options: ListOptions) -> Response:
     log_info(f"member can unsubscribe: {members_can_unsubscribe}")
 
     allow_attachments = options.allow_attachments
+
+    distribution = options.distribution
 
     log_info(f"***** ***** ***** *****")
 
