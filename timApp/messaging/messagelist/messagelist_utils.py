@@ -10,6 +10,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
+from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.timdb.sqa import db
@@ -404,3 +405,28 @@ def new_list(list_options: ListOptions) -> DocInfo:
 
     db.session.commit()
     return doc_info
+
+
+def set_message_list_notify_owner_on_change(message_list: MessageListModel,
+                                            notify_owners_on_list_change_flag: bool) -> None:
+    """Set the notify list owner on list change flag for a list, and update necessary channels with this information.
+
+    If the message list has an email list as a message channel, this will set the equilavent flag on the email list.
+
+    :param message_list: The message list where the flag is being set.
+    :param notify_owners_on_list_change_flag: A boolean flag. If True, then changes on the message list sends
+    notifications to list owners. If False, notifications won't be sent.
+    """
+    if message_list.notify_owner_on_change == notify_owners_on_list_change_flag:
+        return
+
+    message_list.notify_owner_on_change = notify_owners_on_list_change_flag
+
+    if message_list.email_list_domain:
+        # Email lists have their own flag for notifying list owners for list changes.
+
+        # VIESTIM: Until there is another type of notification system for message lists similiar to document changes,
+        #  we rely on Mailman's notifications for list changes.
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_notify_owner_on_list_change(email_list, message_list.notify_owner_on_change)
+    return

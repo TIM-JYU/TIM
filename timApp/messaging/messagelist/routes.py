@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 
 from flask import Response
 from sqlalchemy.orm.exc import NoResultFound  # type: ignore
@@ -10,16 +10,15 @@ from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui
     delete_email_list, check_emaillist_name_requirements, get_email_list_member, set_email_list_member_send_status, \
     set_email_list_member_delivery_status
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
-from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges, Distribution
+from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
-    new_list, archive_message, EmailAndDisplayName
+    new_list, archive_message, EmailAndDisplayName, set_message_list_notify_owner_on_change
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.logger import log_info
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
@@ -161,7 +160,7 @@ def save_list_options(options: ListOptions) -> Response:
     message_list.description = options.list_description
     message_list.info = options.list_info
 
-    message_list.notify_owner_on_change = options.notify_owners_on_list_change
+    set_message_list_notify_owner_on_change(message_list, options.notify_owners_on_list_change)
 
     # TODO: save the following list options.
     message_list.can_unsubscribe = options.members_can_unsubscribe

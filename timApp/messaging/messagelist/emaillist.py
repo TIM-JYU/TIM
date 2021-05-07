@@ -76,16 +76,6 @@ class EmailList:
     # VIESTIM: Would it be polite to return something as an indication how the operation went?
 
     @staticmethod
-    def set_notify_owner_on_list_change(listname: str, on_change_flag: bool) -> None:
-        if _client is None:
-            raise NotExist("No email list server connection.")
-
-        mlist = _client.get_list(listname)
-        mlist.settings["admin_notify_mchanges"] = on_change_flag
-        mlist.settings.save()
-        return
-
-    @staticmethod
     def get_notify_owner_on_list_change(listname: str) -> bool:
         if _client is None:
             raise NotExist("No email list server connection.")
@@ -146,6 +136,19 @@ class EmailList:
             return lists
         except HTTPError:
             return []
+
+
+def set_notify_owner_on_list_change(mlist: MailingList, on_change_flag: bool) -> None:
+    """Set email list's notify owner on list change change flag.
+
+    :param mlist: Email list where the flag is set.
+    :param on_change_flag: For True, set the notification flag on and then the changes on a list will send
+    notifications from Mailman. For False, set the flag off and then the email list will not send notifications
+    from Mailman.
+    """
+    mlist.settings["admin_notify_mchanges"] = on_change_flag
+    mlist.settings.save()
+    return
 
 
 def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> None:
