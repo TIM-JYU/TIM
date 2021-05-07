@@ -19,19 +19,15 @@ import {
     filter,
     first,
 } from "rxjs/operators";
-import {BrowserMultiFormatReader, NotFoundException} from "@zxing/library";
+import {Result} from "@zxing/library";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {
-    formatString,
-    isMobileDevice,
-    timeout,
-    TimStorage,
-    to2,
-} from "../../util/utils";
+import {formatString, isMobileDevice, timeout, to2} from "../../util/utils";
 import {IUser} from "../../user/IUser";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
+import {CodeScannerComponent} from "./code-scanner.component";
+import {MediaDevicesSupported} from "./util";
 
 interface UserResult {
     user: IUser;
@@ -74,9 +70,10 @@ const PluginFields = t.intersection([
     selector: "user-selector",
     template: `
         <div *ngIf="enableScanner" class="barcode-video">
-            <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
+            <tim-code-scanner *ngIf="scanCode" (successfulRead)="onCodeScanned($event)"
+                              [scanInterval]="scanInterval"></tim-code-scanner>
             <button [disabled]="!supportsMediaDevices" class="timButton btn-lg"
-                    (click)="startCodeReader()">
+                    (click)="scanCode = !scanCode">
                 <span class="icon-text">
                     <i class="glyphicon glyphicon-qrcode"></i>
                     <span>/</span>
@@ -85,15 +82,6 @@ const PluginFields = t.intersection([
                 <span>Scan code</span>
             </button>
             <span *ngIf="!supportsMediaDevices" class="label label-default not-supported" i18n>Not supported in this browser</span>
-            <span *ngIf="!hasCameras" class="label label-danger not-supported" i18n>No cameras found</span>
-            <span *ngIf="supportsMediaDevices && !supportsConstraint('torch')" class="label label-default not-supported"
-                  i18n>Flashlight is not supported</span>
-            <div class="input-group" *ngIf="availableCameras.length > 1">
-                <span class="input-group-addon" i18n>Selected camera</span>
-                <select class="form-control" [(ngModel)]="selectedCamera" (ngModelChange)="cameraSelected()">
-                    <option *ngFor="let camera of availableCameras" [ngValue]="camera.id">{{camera.name}}</option>
-                </select>
-            </div>
         </div>
         <form class="search" (ngSubmit)="searchPress.next()" #searchForm="ngForm">
             <input class="form-control input-lg"
@@ -200,7 +188,6 @@ export class UserSelectComponent extends AngularPluginBase<
 > {
     @ViewChild("searchForm") searchForm!: NgForm;
     @ViewChild("searchInput") searchInput!: ElementRef<HTMLInputElement>;
-    @ViewChild("barcodeOutput") barcodeOutput!: ElementRef<HTMLVideoElement>;
 
     showErrorMessage = false;
     errorMessage?: string;
@@ -216,25 +203,16 @@ export class UserSelectComponent extends AngularPluginBase<
     selectedUser?: IUser;
     lastAddedUser?: string;
     barCodeResult: string = "";
-    videoAspectRatio: number = 1;
-    videoWidth: number = 50;
     supportsMediaDevices = true;
-    hasCameras = true;
     enableScanner = false;
-    codeReader!: BrowserMultiFormatReader;
-    codeReaderStream?: MediaStream;
     inputListener?: Subscription;
     beepAudio?: HTMLAudioElement;
-    availableCameras: {id: string; name: string}[] = [];
-    selectedCamera?: string;
-    private supportedCameraConstraints: Record<string, boolean> = {};
-    private selectedCameraStorage = new TimStorage(
-        "codeScannerCamera",
-        t.string
-    );
-
     applyButtonText!: string;
     cancelButtonText!: string;
+    scanInterval!: number;
+    processScanResults: boolean = true;
+
+    scanCode: boolean = false;
 
     get successMessage() {
         if (this.markup.text.success) {
@@ -243,18 +221,39 @@ export class UserSelectComponent extends AngularPluginBase<
         return $localize`Permissions applied to ${this.lastAddedUser}:INTERPOLATION:.`;
     }
 
-    private async playBeep() {
-        try {
-            if (!this.beepAudio) {
-                this.beepAudio = new Audio("/static/audio/beep.wav");
-            }
-            await this.beepAudio.play();
-        } catch (e) {}
+    async onCodeScanned(result: Result) {
+        if (!this.processScanResults) {
+            return;
+        }
+        this.processScanResults = false;
+        if (!this.markup.scanner.continuousMatch) {
+            this.scanCode = false;
+        }
+        this.searchString = result.getText();
+        if (this.markup.scanner.beepOnSuccess) {
+            await this.playBeep();
+        }
+        await this.doSearch();
+        if (
+            this.lastSearchResult &&
+            this.markup.scanner.applyOnMatch &&
+            this.lastSearchResult.matches.length == 1
+        ) {
+            await this.apply();
+        }
+
+        if (
+            this.markup.scanner.continuousMatch &&
+            this.markup.scanner.waitBetweenScans > 0
+        ) {
+            await timeout(this.markup.scanner.waitBetweenScans * 1000);
+        }
+        this.processScanResults = true;
     }
 
     ngOnInit() {
         super.ngOnInit();
-        void this.initMediaDevices();
+        this.supportsMediaDevices = MediaDevicesSupported;
 
         this.applyButtonText =
             this.markup.text.apply ?? $localize`Set permission`;
@@ -267,137 +266,7 @@ export class UserSelectComponent extends AngularPluginBase<
             this.selectedUser = undefined;
             this.lastSearchResult = undefined;
         });
-    }
-
-    async cameraSelected() {
-        this.selectedCameraStorage.set(this.selectedCamera!);
-        if (!this.codeReader) {
-            return;
-        }
-        await this.startCodeReader();
-    }
-
-    initMediaDevices() {
-        this.codeReader = new BrowserMultiFormatReader(
-            undefined,
-            this.markup.scanner.scanInterval * 1000
-        );
-        this.supportsMediaDevices = this.codeReader.isMediaDevicesSuported;
-        if (this.supportsMediaDevices) {
-            // There can be more constraints than what TS lib lists
-            this.supportedCameraConstraints = navigator.mediaDevices.getSupportedConstraints() as Record<
-                string,
-                boolean
-            >;
-            this.selectedCamera = this.selectedCameraStorage.get();
-        }
-    }
-
-    async hasVideoDevice() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-            });
-            // Reset the camera so that it can be used
-            stream.getVideoTracks().forEach((track) => track.stop());
-            return true;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    async startCodeReader() {
-        this.resetError();
-        this.resetView();
-        await this.resetCodeReader();
-
-        // Ask for permission first
-        this.hasCameras = await this.hasVideoDevice();
-        if (!this.hasCameras) {
-            return;
-        }
-        try {
-            const codeReader = new BrowserMultiFormatReader(
-                undefined,
-                this.markup.scanner.scanInterval * 1000
-            );
-            const devices = await codeReader.listVideoInputDevices();
-            this.availableCameras = devices.map((d) => ({
-                id: d.deviceId,
-                name: d.label,
-            }));
-            this.selectedCamera =
-                this.selectedCameraStorage.get() ?? this.availableCameras[0].id;
-
-            // Reset camera if it's missing
-            if (
-                !this.availableCameras.find((c) => c.id == this.selectedCamera)
-            ) {
-                this.selectedCamera = this.availableCameras[0].id;
-                this.selectedCameraStorage.set(this.selectedCamera);
-            }
-
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    deviceId: this.selectedCamera,
-                },
-            });
-            this.codeReader = codeReader;
-            this.codeReaderStream = stream;
-
-            this.videoAspectRatio =
-                stream.getVideoTracks()[0].getSettings().aspectRatio ?? 1;
-
-            const decoder = codeReader.decodeOnceFromStream(
-                stream,
-                this.barcodeOutput.nativeElement
-            );
-
-            // Set focus mode separately since apparently it can cause torch to not be enabled later
-            await this.setAdvancedCameraConstraints({
-                focusMode: "auto",
-            });
-            // https://github.com/zxing-js/library/issues/267
-            await this.setAdvancedCameraConstraints({
-                torch: true,
-            });
-
-            const result = await decoder;
-            this.searchString = result.getText();
-            if (this.markup.scanner.beepOnSuccess) {
-                await this.playBeep();
-            }
-            await this.doSearch();
-            if (this.lastSearchResult && this.markup.scanner.applyOnMatch) {
-                if (this.lastSearchResult.matches.length == 1) {
-                    await this.apply();
-                    if (this.markup.scanner.continuousMatch) {
-                        if (this.markup.scanner.waitBetweenScans > 0) {
-                            await timeout(
-                                this.markup.scanner.waitBetweenScans * 1000
-                            );
-                        }
-                        // noinspection ES6MissingAwait: Run the code in a new context without deepening the call stack
-                        this.startCodeReader();
-                        return;
-                    }
-                }
-            }
-        } catch (e) {
-            console.log(e);
-            const err = $localize`Could not search for the user.`;
-            // Simply reset if no code found
-            if (e instanceof NotFoundException) {
-                await this.resetCodeReader();
-                return;
-            }
-            if (e instanceof Error) {
-                this.setError(err, `${e.name}: ${e.message}`);
-            } else {
-                this.setError(err);
-            }
-        }
-        await this.resetCodeReader();
+        this.scanInterval = this.markup.scanner.scanInterval;
     }
 
     async apply() {
@@ -453,7 +322,6 @@ export class UserSelectComponent extends AngularPluginBase<
         this.lastAddedUser = undefined;
         this.lastAddedUser = undefined;
         this.resetError();
-        await this.resetCodeReader();
 
         const params = new HttpParams({
             fromString: window.location.search.replace("?", "&"),
@@ -510,49 +378,13 @@ export class UserSelectComponent extends AngularPluginBase<
         };
     }
 
-    supportsConstraint(name: string) {
-        return (
-            this.supportsMediaDevices && this.supportedCameraConstraints[name]
-        );
-    }
-
-    private async setAdvancedCameraConstraints(
-        constraints: Record<string, unknown>
-    ) {
-        if (!this.codeReaderStream) {
-            return;
-        }
-        const cleanConstraints: Record<string, unknown> = {};
-        for (const k in constraints) {
-            if (
-                Object.hasOwnProperty.call(constraints, k) &&
-                this.supportsConstraint(k)
-            ) {
-                cleanConstraints[k] = constraints[k];
+    private async playBeep() {
+        try {
+            if (!this.beepAudio) {
+                this.beepAudio = new Audio("/static/audio/beep.wav");
             }
-        }
-        if (!cleanConstraints) {
-            return;
-        }
-        // Browser *should* ignore unknown constraints, but on some browsers it appears to throw nonetheless
-        try {
-            await this.codeReaderStream.getVideoTracks()[0].applyConstraints({
-                advanced: [cleanConstraints],
-            });
-        } catch (e) {
-            // Swallow the error; the torch is just not supported
-        }
-    }
-
-    private async resetCodeReader() {
-        if (!this.codeReaderStream) {
-            return;
-        }
-        try {
-            await this.setAdvancedCameraConstraints({torch: false});
-            this.codeReader.reset();
+            await this.beepAudio.play();
         } catch (e) {}
-        this.codeReaderStream = undefined;
     }
 
     private resetError() {
@@ -586,7 +418,7 @@ export class UserSelectComponent extends AngularPluginBase<
 }
 
 @NgModule({
-    declarations: [UserSelectComponent],
+    declarations: [UserSelectComponent, CodeScannerComponent],
     imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
 })
 export class UserSelectModule implements DoBootstrap {

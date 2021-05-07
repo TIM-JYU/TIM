@@ -1,0 +1,28 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  & > *:not(:last-child) {
+    margin-bottom: 0.5rem;
+  }
+}
+
+video {
+  width: 50%;
+}
+
+.info-messages {
+  margin-bottom: 1rem;
+
+  & > span {
+    margin-bottom: 0.2rem;
+  }
+}
+
+.label.not-supported {
+  font-size: 0.7em;
+  font-weight: normal;
+  user-select: none;
+}
