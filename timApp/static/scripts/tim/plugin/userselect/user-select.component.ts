@@ -190,13 +190,6 @@ const PluginFields = t.intersection([
                 </ng-container>
             </div>
         </tim-alert>
-
-        <ng-template i18n="@@userSelectErrorNoSearchResult">Could not search for the user.</ng-template>
-        <ng-template i18n="@@userSelectScanError">Could not scan the bar code.</ng-template>
-        <ng-template i18n="@@userSelectApplyError">Could not apply the permission.</ng-template>
-        <ng-template i18n="@@userSelectButtonApply">Set permission</ng-template>
-        <ng-template i18n="@@userSelectButtonCancel">Cancel</ng-template>
-        <ng-template i18n="@@userSelectTextSuccess">Permissions applied to {{0}}.</ng-template>
     `,
     styleUrls: ["user-select.component.scss"],
 })
@@ -247,7 +240,7 @@ export class UserSelectComponent extends AngularPluginBase<
         if (this.markup.text.success) {
             return formatString(this.markup.text.success, this.lastAddedUser!);
         }
-        return $localize`:@@userSelectTextSuccess:Permissions applied to ${this.lastAddedUser}:INTERPOLATION:.`;
+        return $localize`Permissions applied to ${this.lastAddedUser}:INTERPOLATION:.`;
     }
 
     private async playBeep() {
@@ -264,11 +257,8 @@ export class UserSelectComponent extends AngularPluginBase<
         void this.initMediaDevices();
 
         this.applyButtonText =
-            this.markup.text.apply ??
-            $localize`:@@userSelectButtonApply:Set permission`;
-        this.cancelButtonText =
-            this.markup.text.cancel ??
-            $localize`:@@userSelectButtonCancel:Cancel`;
+            this.markup.text.apply ?? $localize`Set permission`;
+        this.cancelButtonText = this.markup.text.cancel ?? $localize`Cancel`;
 
         this.enableScanner = this.markup.scanner.enabled;
         this.inputMinLength = this.markup.inputMinLength;
@@ -395,7 +385,7 @@ export class UserSelectComponent extends AngularPluginBase<
             }
         } catch (e) {
             console.log(e);
-            const err = $localize`:@@userSelectErrorNoSearchResult:Could not search for the user.`;
+            const err = $localize`Could not search for the user.`;
             // Simply reset if no code found
             if (e instanceof NotFoundException) {
                 await this.resetCodeReader();
@@ -440,7 +430,7 @@ export class UserSelectComponent extends AngularPluginBase<
             this.resetView();
         } else {
             this.setError(
-                $localize`:@@userSelectApplyError:Could not apply the permission.`,
+                $localize`Could not apply the permission.`,
                 result.result.error.error
             );
         }
@@ -488,7 +478,7 @@ export class UserSelectComponent extends AngularPluginBase<
             }
         } else {
             this.setError(
-                $localize`:@@userSelectScanError:Could not scan the bar code.`,
+                $localize`Could not scan the bar code.`,
                 result.result.error.error
             );
         }

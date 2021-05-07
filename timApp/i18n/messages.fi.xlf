@@ -329,76 +329,52 @@
           <context context-type="linenumber">179</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="userSelectErrorNoSearchResult" datatype="html">
-        <source>Could not search for the user.</source>
-        <target state="translated">Käyttäjää ei voitu hakea.</target>
+      <trans-unit id="5703267131879050829" datatype="html">
+        <source>Permissions applied to <x id="INTERPOLATION" equiv-text="this.lastAddedUser"/>.</source>
+        <target state="translated">Asetettu oikeudet käyttäjälle <x id="INTERPOLATION" equiv-text="this.lastAddedUser"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">194</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">398</context>
+          <context context-type="linenumber">243</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="userSelectScanError" datatype="html">
-        <source>Could not scan the bar code.</source>
-        <target state="translated">Viivakoodia ei voitu skannata.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">195</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">491</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="userSelectApplyError" datatype="html">
-        <source>Could not apply the permission.</source>
-        <target state="translated">Oikeuksia ei voitu asettaa.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">196</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">443</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="userSelectButtonApply" datatype="html">
+      <trans-unit id="4014435728703990296" datatype="html">
         <source>Set permission</source>
         <target state="translated">Aseta oikeus</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">197</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">268</context>
+          <context context-type="linenumber">260</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="userSelectButtonCancel" datatype="html">
+      <trans-unit id="2159130950882492111" datatype="html">
         <source>Cancel</source>
         <target state="translated">Peruuta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">198</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">271</context>
+          <context context-type="linenumber">261</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="userSelectTextSuccess" datatype="html">
-        <source>Permissions applied to <x id="INTERPOLATION" equiv-text="{{0}}"/>.</source>
-        <target state="translated">Asetettu oikeudet käyttäjälle <x id="INTERPOLATION" equiv-text="{{0}}"/>.</target>
+      <trans-unit id="8241963794142258393" datatype="html">
+        <source>Could not search for the user.</source>
+        <target state="translated">Käyttäjää ei voitu hakea.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">199</context>
+          <context context-type="linenumber">388</context>
         </context-group>
+      </trans-unit>
+      <trans-unit id="7127355890937941598" datatype="html">
+        <source>Could not apply the permission.</source>
+        <target state="translated">Oikeuksia ei voitu asettaa.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">250</context>
+          <context context-type="linenumber">433</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1586783684052305634" datatype="html">
+        <source>Could not scan the bar code.</source>
+        <target state="translated">Viivakoodia ei voitu skannata.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
+          <context context-type="linenumber">481</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8aa15c4a520b71ba3537a562a1a9cdb48f3c2261" datatype="html">
