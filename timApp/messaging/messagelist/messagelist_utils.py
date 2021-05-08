@@ -243,6 +243,7 @@ Message body:
 """)
 
     # Set message body for archived message.
+    # TODO: Check message list's only_text flag. If it is set, then wrap the message body in a code block?
     archive_doc.document.add_text(f"{message.message_body}")
 
     # If there is only one message, we don't need to add links to any other messages.
@@ -478,7 +479,7 @@ def set_message_list_tim_users_can_join(message_list: MessageListModel, can_join
     """Set the flag controlling if TIM users can directly join this list.
 
     Because the behaviour that is controlled by the can_join_flag applies to TIM users, there is no message channel
-    spesific handling.
+    specific handling.
 
     :param message_list: Message list where the flag is being set.
     :param can_join_flag: If True, then TIM users can directly join this list, no moderation needed. If False, then TIM
@@ -488,6 +489,32 @@ def set_message_list_tim_users_can_join(message_list: MessageListModel, can_join
         return
 
     message_list.tim_user_can_join = can_join_flag
-
     return
 
+
+def set_message_list_default_send_right(message_list: MessageListModel,
+                                        default_send_right_flag: Optional[bool]) -> None:
+    """Set the default message list new member send right flag.
+
+    :param message_list: The message list where the flag is set.
+    :param default_send_right_flag: For True, new members on the list get default send right. For False, new members
+    don't get a send right.
+    """
+    if default_send_right_flag is None or message_list.default_send_right == default_send_right_flag:
+        return
+    message_list.default_send_right = default_send_right_flag
+    return
+
+
+def set_message_list_default_delivery_right(message_list: MessageListModel,
+                                            default_delivery_right_flag: Optional[bool]) -> None:
+    """Set the message list new member default delivery right.
+
+    :param message_list: The message list where the flag is set.
+    :param default_delivery_right_flag: For True, new members on the list get default delivery right. For False, new
+    members don't get a delivery right.
+    """
+    if default_delivery_right_flag is None or message_list.default_delivery_right == default_delivery_right_flag:
+        return
+    message_list.default_delivery_right = default_delivery_right_flag
+    return
