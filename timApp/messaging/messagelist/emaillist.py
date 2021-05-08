@@ -4,7 +4,8 @@ from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain, Member
 
-from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate, ArchiveType
+from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate, ArchiveType, \
+    ReplyToListChanges, reply_to_munging
 from timApp.tim_app import app
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
@@ -666,6 +667,19 @@ def set_email_list_allow_attachments(email_list: MailingList, allow_attachments_
         email_list.settings["pass_extensions"] = allowed_attachment_file_extensions
     else:
         email_list.settings["pass_extensions"] = []
+
+    email_list.settings.save()
+    return
+
+
+def set_email_list_default_reply_type(email_list: MailingList, default_reply_type: ReplyToListChanges) -> None:
+    """Set the email list's default reply type, i.e. perform Reply-To munging.
+
+    :param email_list: The email list where the reply type is set.
+    :param default_reply_type: See ReplyToListChanges and reply_to_munging variable.
+    :return: None.
+    """
+    email_list.settings["reply_goes_to_list"] = reply_to_munging[default_reply_type]
 
     email_list.settings.save()
     return

@@ -101,8 +101,6 @@ class ListOptions:
     """All the message channels the list is using."""
 
 
-allowed_file_type_extensions = ['pdf', 'jpg', 'png']
-
 reply_to_munging: Dict[ReplyToListChanges, str] = {
     ReplyToListChanges.NOCHANGES: "no_munging",
     ReplyToListChanges.ADDLIST: "explicit_header"

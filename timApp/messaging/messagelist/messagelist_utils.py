@@ -12,8 +12,8 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
     set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
-    set_email_list_non_member_message_pass, set_email_list_allow_attachments
-from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions
+    set_email_list_non_member_message_pass, set_email_list_allow_attachments, set_email_list_default_reply_type
+from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -564,4 +564,22 @@ def set_message_list_allow_attachments(message_list: MessageListModel, allow_att
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_allow_attachments(email_list, allow_attachments_flag)
+    return
+
+
+def set_message_list_default_reply_type(message_list: MessageListModel,
+                                        default_reply_type: Optional[ReplyToListChanges]) -> None:
+    """
+
+    :param message_list:
+    :param default_reply_type:
+    :return:
+    """
+    if default_reply_type is None or message_list.default_reply_type == default_reply_type:
+        return
+
+    message_list.default_reply_type = default_reply_type
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_default_reply_type(email_list, default_reply_type)
     return
