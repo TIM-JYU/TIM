@@ -631,7 +631,7 @@ def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
     return
 
 
-def set_email_list_non_member_message_pass(email_list, non_member_message_pass_flag) -> None:
+def set_email_list_non_member_message_pass(email_list: MailingList, non_member_message_pass_flag: bool) -> None:
     """Set email list's non member (message pass) action.
 
     :param email_list: The email list where the non member message pass action is set.
