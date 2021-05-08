@@ -73,6 +73,7 @@ class ScannerOptions:
     scanInterval: float = 1.5
     waitBetweenScans: float = 0.0
     beepOnSuccess: bool = False
+    beepOnFailure: bool = False
 
 
 @dataclass

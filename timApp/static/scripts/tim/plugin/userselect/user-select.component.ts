@@ -52,6 +52,7 @@ const PluginMarkup = t.intersection([
             continuousMatch: t.boolean,
             waitBetweenScans: t.number,
             beepOnSuccess: t.boolean,
+            beepOnFailure: t.boolean,
         }),
         text: t.type({
             apply: nullable(t.string),
@@ -206,7 +207,8 @@ export class UserSelectComponent extends AngularPluginBase<
     supportsMediaDevices = true;
     enableScanner = false;
     inputListener?: Subscription;
-    beepAudio?: HTMLAudioElement;
+    beepSuccess?: HTMLAudioElement;
+    beepFail?: HTMLAudioElement;
     applyButtonText!: string;
     cancelButtonText!: string;
     scanInterval!: number;
@@ -230,10 +232,20 @@ export class UserSelectComponent extends AngularPluginBase<
             this.scanCode = false;
         }
         this.searchString = result.getText();
-        if (this.markup.scanner.beepOnSuccess) {
-            await this.playBeep();
+        const scanOk = await this.doSearch();
+        if (
+            scanOk &&
+            this.lastSearchResult?.allMatchCount != 0 &&
+            this.markup.scanner.beepOnSuccess
+        ) {
+            this.beepSuccess = await this.playBeep("beep_ok", this.beepSuccess);
         }
-        await this.doSearch();
+        if (
+            (!scanOk || this.lastSearchResult?.allMatchCount == 0) &&
+            this.markup.scanner.beepOnFailure
+        ) {
+            this.beepFail = await this.playBeep("beep_fail", this.beepFail);
+        }
         if (
             this.lastSearchResult &&
             this.markup.scanner.applyOnMatch &&
@@ -352,6 +364,7 @@ export class UserSelectComponent extends AngularPluginBase<
         }
         this.search = false;
         this.initSearch();
+        return result.ok;
     }
 
     getAttributeType() {
@@ -367,6 +380,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 continuousMatch: false,
                 waitBetweenScans: 0,
                 beepOnSuccess: false,
+                beepOnFailure: false,
             },
             text: {
                 apply: null,
@@ -378,13 +392,16 @@ export class UserSelectComponent extends AngularPluginBase<
         };
     }
 
-    private async playBeep() {
+    private async playBeep(name: string, audio?: HTMLAudioElement) {
+        let result = audio;
+        // Loading audio may fail, browsers usually throw an exception for Audio function failure
         try {
-            if (!this.beepAudio) {
-                this.beepAudio = new Audio("/static/audio/beep.wav");
+            if (!result) {
+                result = new Audio(`/static/audio/${name}.wav`);
             }
-            await this.beepAudio.play();
+            await result.play();
         } catch (e) {}
+        return result;
     }
 
     private resetError() {
