@@ -21,7 +21,7 @@ import {
     selector: "tim-code-scanner",
     template: `
         <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
-        <a role="button" class="camera-settings-toggle" (click)="showSettings = !showSettings">
+        <a role="button" class="camera-settings-toggle" (click)="showSettings = !showSettings" *ngIf="availableCameras.length > 1 || (hasCameras && supportsConstraint('torch'))">
             <i class="glyphicon" [class.glyphicon-menu-right]="!showSettings" [class.glyphicon-menu-down]="showSettings"></i>
             <span i18n>Camera settings</span>
         </a>
