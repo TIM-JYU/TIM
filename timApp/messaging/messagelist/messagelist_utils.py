@@ -11,7 +11,8 @@ from timApp.document.document import Document
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
-    set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text
+    set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
+    set_email_list_non_member_message_pass
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.timdb.sqa import db
@@ -532,4 +533,21 @@ def set_message_list_only_text(message_list: MessageListModel, only_text: Option
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_only_text(email_list, only_text)
+    return
+
+
+def set_message_list_non_member_message_pass(message_list: MessageListModel, non_member_message_pass_flag: Optional[bool]) -> None:
+    """Set message list's non member message pass flag.
+
+    :param message_list: The message list where the flag is set.
+    :param non_member_message_pass_flag: For True, sources outside the list can send messages to this list. If False,
+     messages form sources outside the list will be hold for moderation.
+    :return: None.
+    """
+    if non_member_message_pass_flag is None or message_list.non_member_message_pass == non_member_message_pass_flag:
+        return
+    message_list.non_member_message_pass = non_member_message_pass_flag
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_non_member_message_pass(email_list, non_member_message_pass_flag)
     return

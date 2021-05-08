@@ -629,3 +629,19 @@ def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
         email_list.settings["archive_rendering_mode"] = "markdown"
     email_list.settings.save()
     return
+
+
+def set_email_list_non_member_message_pass(email_list, non_member_message_pass_flag) -> None:
+    """Set email list's non member (message pass) action.
+
+    :param email_list: The email list where the non member message pass action is set.
+    :param non_member_message_pass_flag: For True, set the default non member moderation action as 'accept'. For False,
+    set the default non member moderation action as 'hold'
+    :return: None.
+    """
+    if non_member_message_pass_flag:
+        email_list.settings["default_non_member_action"] = "accept"
+    else:
+        email_list.settings["default_non_member_action"] = "hold"
+    email_list.settings.save()
+    return

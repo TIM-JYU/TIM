@@ -15,7 +15,8 @@ from timApp.messaging.messagelist.messagelist_models import MessageListModel, Ch
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
     new_list, archive_message, EmailAndDisplayName, set_message_list_notify_owner_on_change, \
     set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
-    set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text
+    set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
+    set_message_list_non_member_message_pass
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.util.flask.requesthelper import RouteException
@@ -170,6 +171,8 @@ def save_list_options(options: ListOptions) -> Response:
 
     # These don't directly have an effect on outside channels,
     set_message_list_tim_users_can_join(message_list, options.tim_users_can_join)
+    set_message_list_non_member_message_pass(message_list, options.non_member_message_pass)
+    # message_list.non_member_message_pass = options.non_member_message_pass
 
     # Not yet implemented client side.
     set_message_list_default_send_right(message_list, options.default_send_right)
@@ -178,7 +181,6 @@ def save_list_options(options: ListOptions) -> Response:
 
     # TODO: set the following list options.
     message_list.default_reply_type = options.default_reply_type
-    message_list.non_member_message_pass = options.non_member_message_pass
     message_list.allow_attachments = options.allow_attachments
     # message_list.distribution = options.distribution
 
