@@ -28,23 +28,19 @@ import {IUser} from "../../user/IUser";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {CodeScannerComponent} from "./code-scanner.component";
 import {MediaDevicesSupported} from "./util";
-
-interface UserResult {
-    user: IUser;
-    fields: Record<string, string | number | undefined>;
-}
-
-interface SearchResult {
-    matches: UserResult[];
-    allMatchCount: number;
-    fieldNames: string[];
-}
+import {
+    IQueryHandler,
+    PrefetchedQueryHandler,
+    SearchResult,
+    ServerQueryHandler,
+} from "./searchQueryHandlers";
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         inputMinLength: t.number,
         autoSearchDelay: t.number,
+        preFetch: t.boolean,
         scanner: t.type({
             enabled: t.boolean,
             scanInterval: t.number,
@@ -67,13 +63,25 @@ const PluginFields = t.intersection([
     t.type({}),
 ]);
 
+async function playBeep(name: string, audio?: HTMLAudioElement) {
+    let result = audio;
+    // Loading audio may fail, browsers usually throw an exception for Audio function failure
+    try {
+        if (!result) {
+            result = new Audio(`/static/audio/${name}.wav`);
+        }
+        await result.play();
+    } catch (e) {}
+    return result;
+}
+
 @Component({
     selector: "user-selector",
     template: `
         <div *ngIf="enableScanner" class="barcode-video">
             <tim-code-scanner *ngIf="scanCode" (successfulRead)="onCodeScanned($event)"
                               [scanInterval]="scanInterval"></tim-code-scanner>
-            <button [disabled]="!supportsMediaDevices" class="timButton btn-lg"
+            <button [disabled]="!queryHandler || !supportsMediaDevices" class="timButton btn-lg"
                     (click)="scanCode = !scanCode">
                 <span class="icon-text">
                     <i class="glyphicon glyphicon-qrcode"></i>
@@ -92,16 +100,17 @@ const PluginFields = t.intersection([
                    type="text"
                    [(ngModel)]="searchString"
                    (ngModelChange)="inputTyped.next($event)"
+                   [disabled]="!queryHandler"
                    minlength="{{ inputMinLength }}"
                    required
                    #searchInput>
             <input class="timButton btn-lg" type="submit" value="Search" i18n-value
-                   [disabled]="!searchForm.form.valid || search">
+                   [disabled]="!queryHandler || !searchForm.form.valid || search">
         </form>
+        <div class="progress" *ngIf="!isInPreview && (search || !queryHandler)">
+            <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
+        </div>
         <div class="search-result" *ngIf="search || lastSearchResult">
-            <div class="progress" *ngIf="search">
-                <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
-            </div>
             <form>
                 <table *ngIf="lastSearchResult">
                     <thead>
@@ -213,6 +222,8 @@ export class UserSelectComponent extends AngularPluginBase<
     cancelButtonText!: string;
     scanInterval!: number;
     processScanResults: boolean = true;
+    queryHandler!: IQueryHandler;
+    isInPreview = false;
 
     scanCode: boolean = false;
 
@@ -221,6 +232,20 @@ export class UserSelectComponent extends AngularPluginBase<
             return formatString(this.markup.text.success, this.lastAddedUser!);
         }
         return $localize`Permissions applied to ${this.lastAddedUser}:INTERPOLATION:.`;
+    }
+
+    private get searchQueryStrings() {
+        // When reading Finnish personal identity numbers, code scanner can sometimes misread chars +/-
+        // Same can of course happen to a normal person doing a query by hand
+        // Therefore, we add alternative search string where we swap +/- with each other
+        const mistakePidPattern = /^(\d{6})([+-])(\d{3}[a-zA-Z])$/i;
+        const pidMatch = mistakePidPattern.exec(this.searchString);
+        const result = [this.searchString];
+        if (pidMatch) {
+            const [, pidStart, pidMark, pidEnd] = pidMatch;
+            result.push(`${pidStart}${pidMark == "-" ? "+" : "-"}${pidEnd}`);
+        }
+        return result;
     }
 
     async onCodeScanned(result: Result) {
@@ -238,13 +263,13 @@ export class UserSelectComponent extends AngularPluginBase<
             this.lastSearchResult?.allMatchCount != 0 &&
             this.markup.scanner.beepOnSuccess
         ) {
-            this.beepSuccess = await this.playBeep("beep_ok", this.beepSuccess);
+            this.beepSuccess = await playBeep("beep_ok", this.beepSuccess);
         }
         if (
             (!scanOk || this.lastSearchResult?.allMatchCount == 0) &&
             this.markup.scanner.beepOnFailure
         ) {
-            this.beepFail = await this.playBeep("beep_fail", this.beepFail);
+            this.beepFail = await playBeep("beep_fail", this.beepFail);
         }
         if (
             this.lastSearchResult &&
@@ -265,6 +290,7 @@ export class UserSelectComponent extends AngularPluginBase<
 
     ngOnInit() {
         super.ngOnInit();
+        this.isInPreview = this.isPreview();
         this.supportsMediaDevices = MediaDevicesSupported;
 
         this.applyButtonText =
@@ -273,12 +299,14 @@ export class UserSelectComponent extends AngularPluginBase<
 
         this.enableScanner = this.markup.scanner.enabled;
         this.inputMinLength = this.markup.inputMinLength;
-        this.initSearch();
+        this.listenSearchInput();
         this.inputTyped.subscribe(() => {
             this.selectedUser = undefined;
             this.lastSearchResult = undefined;
         });
         this.scanInterval = this.markup.scanner.scanInterval;
+
+        void this.initQueryHandler();
     }
 
     async apply() {
@@ -335,22 +363,9 @@ export class UserSelectComponent extends AngularPluginBase<
         this.lastAddedUser = undefined;
         this.resetError();
 
-        const params = new HttpParams({
-            fromString: window.location.search.replace("?", "&"),
-        });
-        const result = await to2(
-            this.http
-                .post<SearchResult>(
-                    "/userSelect/search",
-                    {
-                        par: this.getPar().par.getJsonForServer(),
-                        search_strings: this.searchQueryStrings,
-                    },
-                    {params}
-                )
-                .toPromise()
+        const result = await this.queryHandler.searchUser(
+            this.searchQueryStrings
         );
-
         if (result.ok) {
             this.lastSearchResult = result.result;
             if (this.lastSearchResult.matches.length > 0) {
@@ -358,27 +373,13 @@ export class UserSelectComponent extends AngularPluginBase<
             }
         } else {
             this.setError(
-                $localize`Could not scan the bar code.`,
-                result.result.error.error
+                $localize`Could not search for user.`,
+                result.result.errorMessage
             );
         }
         this.search = false;
-        this.initSearch();
+        this.listenSearchInput();
         return result.ok;
-    }
-
-    private get searchQueryStrings() {
-        // When reading Finnish personal identity numbers, code scanner can sometimes misread chars +/-
-        // Same can of course happen to a normal person doing a query by hand
-        // Therefore, we add alternative search string where we swap +/- with each other
-        const mistakePidPattern = /^(\d{6})([+-])(\d{3}[a-zA-Z])$/i;
-        const pidMatch = mistakePidPattern.exec(this.searchString);
-        const result = [this.searchString];
-        if (pidMatch) {
-            const [, pidStart, pidMark, pidEnd] = pidMatch;
-            result.push(`${pidStart}${pidMark == "-" ? "+" : "-"}${pidEnd}`);
-        }
-        return result;
     }
 
     getAttributeType() {
@@ -403,19 +404,8 @@ export class UserSelectComponent extends AngularPluginBase<
             },
             inputMinLength: 3,
             autoSearchDelay: 0,
+            preFetch: false,
         };
-    }
-
-    private async playBeep(name: string, audio?: HTMLAudioElement) {
-        let result = audio;
-        // Loading audio may fail, browsers usually throw an exception for Audio function failure
-        try {
-            if (!result) {
-                result = new Audio(`/static/audio/${name}.wav`);
-            }
-            await result.play();
-        } catch (e) {}
-        return result;
     }
 
     private resetError() {
@@ -429,7 +419,7 @@ export class UserSelectComponent extends AngularPluginBase<
         this.detailedError = details;
     }
 
-    private initSearch() {
+    private listenSearchInput() {
         if (this.inputListener && !this.inputListener.closed) {
             return;
         }
@@ -445,6 +435,34 @@ export class UserSelectComponent extends AngularPluginBase<
         this.inputListener = race(...observables)
             .pipe(first())
             .subscribe(() => this.doSearch());
+    }
+
+    private async initQueryHandler() {
+        if (this.isInPreview) {
+            return;
+        }
+
+        // FIXME: Fetch par info via task because for some reason getPar() is not properly initialized in editor or right after saving the par
+        const task = this.pluginMeta.getTaskId();
+        let par;
+        if (task?.docId && task.blockHint) {
+            par = {doc_id: task.docId, par_id: task.blockHint};
+        } else {
+            par = this.getPar().par.getJsonForServer();
+        }
+
+        const queryHandler = this.markup.preFetch
+            ? new PrefetchedQueryHandler(this.http, par)
+            : new ServerQueryHandler(this.http, par);
+        const result = await to2(queryHandler.initialize());
+        if (!result.ok) {
+            this.setError(
+                $localize`Failed to contact the server.`,
+                result.result.error.error
+            );
+        } else {
+            this.queryHandler = queryHandler;
+        }
     }
 }
 

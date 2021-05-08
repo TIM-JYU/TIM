@@ -85,6 +85,7 @@ class TextOptions:
 
 @dataclass
 class UserSelectMarkupModel(GenericMarkupModel):
+    preFetch: bool = False
     inputMinLength: int = 3
     autoSearchDelay: float = 0.0
     maxMatches: int = 10
@@ -140,8 +141,28 @@ def get_plugin_markup(task_id: Optional[str], par: Optional[GlobalParId]) \
     return model, doc, user, view_ctx
 
 
+@user_select_plugin.route('/fetchUsers')
+def fetch_users(task_id: Optional[str] = None, doc_id: Optional[int] = None, par_id: Optional[str] = None):
+    model, doc, user, view_ctx = get_plugin_markup(task_id, GlobalParId(doc_id, par_id) if doc_id and par_id else None)
+    field_data, _, field_names, _ = get_fields_and_users(
+        model.fields,
+        RequestedGroups.from_name_list(model.groups),
+        doc,
+        user,
+        view_ctx
+    )
+    return json_response([
+        {
+            "user": field_obj["user"],
+            "fields": field_obj["fields"]
+        }
+        for field_obj in field_data
+    ])
+
+
 @user_select_plugin.route('/search', methods=['POST'])
-def search_users(search_strings: List[str], task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
+def search_users(search_strings: List[str], task_id: Optional[str] = None,
+                 par: Optional[GlobalParId] = None) -> Response:
     model, doc, user, view_ctx = get_plugin_markup(task_id, par)
     field_data, _, field_names, _ = get_fields_and_users(
         model.fields,

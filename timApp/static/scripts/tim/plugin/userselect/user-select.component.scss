@@ -55,11 +55,14 @@ form.search {
 
 .search-result {
   margin-top: 0.5rem;
-
-  .progress {
-    height: 1rem;
-  }
 }
+
+.progress {
+  height: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
 
 tim-alert {
   display: block;
