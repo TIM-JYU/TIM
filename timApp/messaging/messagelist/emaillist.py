@@ -645,3 +645,27 @@ def set_email_list_non_member_message_pass(email_list, non_member_message_pass_f
         email_list.settings["default_non_member_action"] = "hold"
     email_list.settings.save()
     return
+
+
+# VIESTIM: A temporary global variable including all the file extensions that are allowed if attachments are allowed
+#  in a message/email list.
+# TODO: Move to a configuration file.
+allowed_attachment_file_extensions = ["pdf", "jpg", "png", "txt", "tex"]
+
+
+def set_email_list_allow_attachments(email_list: MailingList, allow_attachments_flag: bool) -> None:
+    """Set email list allowed attachments.
+
+    :param email_list: The email list where allowed attachment extensions are set.
+    :param allow_attachments_flag: For True, set all the allowed extensions for an email list. If False, set the allowed
+     extensions to an empty list.
+    :return: None.
+    """
+    global allowed_attachment_file_extensions  # VIESTIM Temporary use of global variable for prototyping purposes.
+    if allow_attachments_flag:
+        email_list.settings["pass_extensions"] = allowed_attachment_file_extensions
+    else:
+        email_list.settings["pass_extensions"] = []
+
+    email_list.settings.save()
+    return
