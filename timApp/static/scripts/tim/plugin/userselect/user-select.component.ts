@@ -118,8 +118,11 @@ const USER_FIELDS: Record<string, string> = {
         <div class="progress" *ngIf="!isInPreview && (search || !queryHandler)">
             <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
         </div>
-        <div class="search-result" *ngIf="search || lastSearchResult">
-            <form>
+        <div class="search-result" *ngIf="lastSearchResult">
+            <div *ngIf="lastSearchResult.matches.length == 0" class="alert alert-danger" i18n>
+                No matches for given keyword
+            </div>
+            <form *ngIf="lastSearchResult.matches.length != 0">
                 <table *ngIf="lastSearchResult">
                     <thead>
                     <tr>
@@ -129,15 +132,7 @@ const USER_FIELDS: Record<string, string> = {
                         </th>
                     </tr>
                     </thead>
-                    <tbody *ngIf="lastSearchResult.matches.length == 0">
-                    <tr>
-                        <td class="no-matches" [colSpan]="1 + fieldNames.length" i18n>
-                            No matches for given keyword
-                        </td>
-                    </tr>
-                    </tbody>
-                    <tbody *ngIf="lastSearchResult.matches.length > 0">
-
+                    <tbody>
                     <tr class="user-row" *ngFor="let match of lastSearchResult.matches"
                         [class.selected-user]="selectedUser == match.user" (click)="selectedUser = match.user">
                         <td class="select-col">

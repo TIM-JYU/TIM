@@ -150,11 +150,3 @@ table {
     }
   }
 }
-
-td.no-matches {
-  background-color: $alert-danger-bg;
-  color: $alert-danger-text;
-  border-color: $alert-danger-border;
-  padding: 2rem;
-  font-weight: bold;
-}
