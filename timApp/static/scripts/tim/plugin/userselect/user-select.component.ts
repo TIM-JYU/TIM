@@ -126,8 +126,8 @@ async function playBeep(name: string, audio?: HTMLAudioElement) {
                     </thead>
                     <tbody *ngIf="lastSearchResult.matches.length == 0">
                     <tr>
-                        <td [colSpan]="3 + lastSearchResult.fieldNames.length">
-                            <em i18n>No matches for given keyword</em>
+                        <td class="no-matches" [colSpan]="3 + lastSearchResult.fieldNames.length">
+                            No matches for given keyword
                         </td>
                     </tr>
                     </tbody>
