@@ -131,7 +131,7 @@ const USER_FIELDS: Record<string, string> = {
                     </thead>
                     <tbody *ngIf="lastSearchResult.matches.length == 0">
                     <tr>
-                        <td class="no-matches" [colSpan]="3 + lastSearchResult.fieldNames.length" i18n>
+                        <td class="no-matches" [colSpan]="1 + fieldNames.length" i18n>
                             No matches for given keyword
                         </td>
                     </tr>
