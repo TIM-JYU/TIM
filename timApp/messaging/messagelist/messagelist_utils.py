@@ -530,6 +530,8 @@ def set_message_list_only_text(message_list: MessageListModel, only_text: Option
     """
     if only_text is None or message_list.only_text == only_text:
         return
+    message_list.only_text = only_text
+
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_only_text(email_list, only_text)

@@ -640,9 +640,9 @@ def set_email_list_non_member_message_pass(email_list: MailingList, non_member_m
     :return: None.
     """
     if non_member_message_pass_flag:
-        email_list.settings["default_non_member_action"] = "accept"
+        email_list.settings["default_nonmember_action"] = "accept"
     else:
-        email_list.settings["default_non_member_action"] = "hold"
+        email_list.settings["default_nonmember_action"] = "hold"
     email_list.settings.save()
     return
 
