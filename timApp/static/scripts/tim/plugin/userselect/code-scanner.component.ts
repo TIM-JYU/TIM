@@ -23,7 +23,7 @@ import {
         <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
         <a role="button" class="camera-settings-toggle" (click)="showSettings = !showSettings">
             <i class="glyphicon" [class.glyphicon-menu-right]="!showSettings" [class.glyphicon-menu-down]="showSettings"></i>
-            Camera settings
+            <span i18n>Camera settings</span>
         </a>
         <div class="camera-settings" [class.hidden]="!showSettings">
             <div class="input-group camera-select" *ngIf="availableCameras.length > 1">
@@ -34,10 +34,10 @@ import {
             </div>
             <button class="btn btn-sm" [class.btn-default]="!enableTorch" [class.btn-warning]="enableTorch"
                     *ngIf="hasCameras && supportsConstraint('torch')" (click)="toggleFlashlight()">
-                <ng-container *ngIf="!enableTorch; else disableFlashlight">
+                <ng-container *ngIf="!enableTorch; else disableFlashlight" i18n>
                     Enable flashlight
                 </ng-container>
-                <ng-template #disableFlashlight>
+                <ng-template #disableFlashlight i18n>
                     Disable flashlight
                 </ng-template>
             </button>

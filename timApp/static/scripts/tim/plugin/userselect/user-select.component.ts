@@ -96,7 +96,7 @@ const USER_FIELDS: Record<string, string> = {
                     <span>/</span>
                     <i class="glyphicon glyphicon-barcode"></i><br>
                 </span>
-                <span>Scan code</span>
+                <span i18n>Scan code</span>
             </button>
             <span *ngIf="!supportsMediaDevices" class="label label-default not-supported" i18n>Not supported in this browser</span>
         </div>
@@ -131,7 +131,7 @@ const USER_FIELDS: Record<string, string> = {
                     </thead>
                     <tbody *ngIf="lastSearchResult.matches.length == 0">
                     <tr>
-                        <td class="no-matches" [colSpan]="3 + lastSearchResult.fieldNames.length">
+                        <td class="no-matches" [colSpan]="3 + lastSearchResult.fieldNames.length" i18n>
                             No matches for given keyword
                         </td>
                     </tr>
