@@ -151,13 +151,16 @@ def fetch_users(task_id: Optional[str] = None, doc_id: Optional[int] = None, par
         user,
         view_ctx
     )
-    return json_response([
-        {
-            "user": field_obj["user"],
-            "fields": field_obj["fields"]
-        }
-        for field_obj in field_data
-    ])
+    return json_response({
+        "users": [
+            {
+                "user": field_obj["user"],
+                "fields": field_obj["fields"]
+            }
+            for field_obj in field_data
+        ],
+        "fieldNames": field_names
+    })
 
 
 @user_select_plugin.route('/search', methods=['POST'])

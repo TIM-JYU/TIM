@@ -41,6 +41,7 @@ const PluginMarkup = t.intersection([
         inputMinLength: t.number,
         autoSearchDelay: t.number,
         preFetch: t.boolean,
+        maxMatches: t.number,
         scanner: t.type({
             enabled: t.boolean,
             scanInterval: t.number,
@@ -364,7 +365,8 @@ export class UserSelectComponent extends AngularPluginBase<
         this.resetError();
 
         const result = await this.queryHandler.searchUser(
-            this.searchQueryStrings
+            this.searchQueryStrings,
+            this.markup.maxMatches
         );
         if (result.ok) {
             this.lastSearchResult = result.result;
@@ -405,6 +407,7 @@ export class UserSelectComponent extends AngularPluginBase<
             inputMinLength: 3,
             autoSearchDelay: 0,
             preFetch: false,
+            maxMatches: 10,
         };
     }
 
