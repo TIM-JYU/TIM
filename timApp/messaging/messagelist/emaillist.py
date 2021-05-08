@@ -587,7 +587,7 @@ def set_email_list_unsubscription_policy(email_list: MailingList, can_unsubscrib
 
     :param email_list: The email list where the policy is to be set.
     :param can_unsubscribe_flag: For True, then set the policy as 'confirm_then_moderate'. For False, set the policy as
-    'confirm'
+    'confirm'.
     """
     # mailmanclient exposes an 'unsubscription_policy' setting, that follows SubscriptionPolicy enum values, see
     # https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/mailinglist.py for details.
@@ -606,5 +606,26 @@ def set_email_list_subject_prefix(email_list: MailingList, subject_prefix: str) 
     :param subject_prefix: The prefix set for email list's subject.
     """
     email_list.settings["subject_prefix"] = subject_prefix
+    email_list.settings.save()
+    return
+
+
+def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
+    """Set email list to only text mode. Affects new email sent to list and (new) HyperKitty archived messages.
+
+    :param email_list:
+    :param only_text: A boolean flag controlling list rendering mode. For True, the list is in an only text mode.
+    For False, the list is not on an only text mode, and other rendering (e.g. HTML) is allowed.
+    :return:
+    """
+    email_list.settings["convert_html_to_plaintext"] = only_text
+    # The archive_rendering_mode setting mainly has an effect on HyperKitty. If the archiver on Mailman is something
+    # else, this might have no effect. It is still exposed on mailmanclient, so it should not be harmful either,
+    # it just has no effect.
+    if only_text:
+        email_list.settings["archive_rendering_mode"] = "text"
+    else:
+
+        email_list.settings["archive_rendering_mode"] = "markdown"
     email_list.settings.save()
     return
