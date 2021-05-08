@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import List, Optional, Union, Tuple
 
 from flask import render_template_string, Response
@@ -94,6 +95,7 @@ class UserSelectMarkupModel(GenericMarkupModel):
     fields: List[str] = field(default_factory=list)
     actions: Optional[ActionCollection] = None
     text: TextOptions = field(default_factory=TextOptions)
+    displayFields: List[str] = field(default_factory=lambda: ["$.name", "$.real_name"])
 
 
 UserSelectMarkupModelSchema = class_schema(UserSelectMarkupModel, base_schema=DurationSchema)
@@ -142,7 +144,7 @@ def get_plugin_markup(task_id: Optional[str], par: Optional[GlobalParId]) \
 
 
 @user_select_plugin.route('/fetchUsers')
-def fetch_users(task_id: Optional[str] = None, doc_id: Optional[int] = None, par_id: Optional[str] = None):
+def fetch_users(task_id: Optional[str] = None, doc_id: Optional[int] = None, par_id: Optional[str] = None) -> Response:
     model, doc, user, view_ctx = get_plugin_markup(task_id, GlobalParId(doc_id, par_id) if doc_id and par_id else None)
     field_data, _, field_names, _ = get_fields_and_users(
         model.fields,

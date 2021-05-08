@@ -42,6 +42,7 @@ const PluginMarkup = t.intersection([
         autoSearchDelay: t.number,
         preFetch: t.boolean,
         maxMatches: t.number,
+        displayFields: t.array(t.string),
         scanner: t.type({
             enabled: t.boolean,
             scanInterval: t.number,
@@ -75,6 +76,12 @@ async function playBeep(name: string, audio?: HTMLAudioElement) {
     } catch (e) {}
     return result;
 }
+
+const USER_FIELDS: Record<string, string> = {
+    "$.name": $localize`Username`,
+    "$.real_name": $localize`Real name`,
+    "$.email": $localize`Email`,
+};
 
 @Component({
     selector: "user-selector",
@@ -117,9 +124,7 @@ async function playBeep(name: string, audio?: HTMLAudioElement) {
                     <thead>
                     <tr>
                         <th i18n>Select</th>
-                        <th i18n>Username</th>
-                        <th i18n>Full name</th>
-                        <th *ngFor="let fieldName of lastSearchResult.fieldNames">
+                        <th *ngFor="let fieldName of fieldNames">
                             {{fieldName}}
                         </th>
                     </tr>
@@ -146,9 +151,7 @@ async function playBeep(name: string, audio?: HTMLAudioElement) {
                                 </label>
                             </span>
                         </td>
-                        <td>{{match.user.name}}</td>
-                        <td>{{match.user.real_name}}</td>
-                        <td *ngFor="let fieldName of lastSearchResult.fieldNames">{{match.fields[fieldName]}}</td>
+                        <td *ngFor="let fieldId of displayFields">{{match.fields[fieldId]}}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -225,6 +228,8 @@ export class UserSelectComponent extends AngularPluginBase<
     processScanResults: boolean = true;
     queryHandler!: IQueryHandler;
     isInPreview = false;
+    displayFields: string[] = [];
+    fieldNames: string[] = [];
 
     scanCode: boolean = false;
 
@@ -362,6 +367,8 @@ export class UserSelectComponent extends AngularPluginBase<
         this.lastSearchResult = undefined;
         this.lastAddedUser = undefined;
         this.lastAddedUser = undefined;
+        this.displayFields = [];
+        this.fieldNames = [];
         this.resetError();
 
         const result = await this.queryHandler.searchUser(
@@ -370,6 +377,35 @@ export class UserSelectComponent extends AngularPluginBase<
         );
         if (result.ok) {
             this.lastSearchResult = result.result;
+
+            if (
+                this.markup.displayFields.some(
+                    (f) => USER_FIELDS[f] === undefined
+                )
+            ) {
+                this.displayFields = this.markup.displayFields;
+            } else {
+                this.displayFields = [
+                    ...this.markup.displayFields,
+                    ...result.result.fieldNames,
+                ];
+            }
+            this.fieldNames = this.displayFields.map(
+                (f) => USER_FIELDS[f] ?? f
+            );
+
+            this.lastSearchResult.matches = this.lastSearchResult.matches.map(
+                (ur) => ({
+                    ...ur,
+                    fields: {
+                        ...ur.fields,
+                        "$.name": ur.user.name,
+                        "$.real_name": ur.user.real_name,
+                        "$.email": ur.user.email,
+                    } as Record<string, string>, // For some reason type casting is needed here despite the destruction
+                })
+            );
+            console.log(this.lastSearchResult);
             if (this.lastSearchResult.matches.length > 0) {
                 this.selectedUser = this.lastSearchResult.matches[0].user;
             }
@@ -408,6 +444,7 @@ export class UserSelectComponent extends AngularPluginBase<
             autoSearchDelay: 0,
             preFetch: false,
             maxMatches: 10,
+            displayFields: ["$.name", "$.real_name"],
         };
     }
 
