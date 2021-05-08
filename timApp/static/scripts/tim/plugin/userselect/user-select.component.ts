@@ -344,7 +344,7 @@ export class UserSelectComponent extends AngularPluginBase<
                     "/userSelect/search",
                     {
                         par: this.getPar().par.getJsonForServer(),
-                        search_string: this.searchString,
+                        search_strings: this.searchQueryStrings,
                     },
                     {params}
                 )
@@ -365,6 +365,20 @@ export class UserSelectComponent extends AngularPluginBase<
         this.search = false;
         this.initSearch();
         return result.ok;
+    }
+
+    private get searchQueryStrings() {
+        // When reading Finnish personal identity numbers, code scanner can sometimes misread chars +/-
+        // Same can of course happen to a normal person doing a query by hand
+        // Therefore, we add alternative search string where we swap +/- with each other
+        const mistakePidPattern = /^(\d{6})([+-])(\d{3}[a-zA-Z])$/i;
+        const pidMatch = mistakePidPattern.exec(this.searchString);
+        const result = [this.searchString];
+        if (pidMatch) {
+            const [, pidStart, pidMark, pidEnd] = pidMatch;
+            result.push(`${pidStart}${pidMark == "-" ? "+" : "-"}${pidEnd}`);
+        }
+        return result;
     }
 
     getAttributeType() {

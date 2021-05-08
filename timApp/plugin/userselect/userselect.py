@@ -141,7 +141,7 @@ def get_plugin_markup(task_id: Optional[str], par: Optional[GlobalParId]) \
 
 
 @user_select_plugin.route('/search', methods=['POST'])
-def search_users(search_string: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
+def search_users(search_strings: List[str], task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
     model, doc, user, view_ctx = get_plugin_markup(task_id, par)
     field_data, _, field_names, _ = get_fields_and_users(
         model.fields,
@@ -151,7 +151,7 @@ def search_users(search_string: str, task_id: Optional[str] = None, par: Optiona
         view_ctx
     )
 
-    search_string = search_string.strip().lower()
+    search_strings = [s.strip().lower() for s in search_strings]
     matched_field_data = []
     for field_obj in field_data:
         fields = field_obj["fields"]
@@ -162,7 +162,7 @@ def search_users(search_string: str, task_id: Optional[str] = None, par: Optiona
             if not field_val:
                 continue
             val = field_val if isinstance(field_val, str) else str(field_val)
-            if search_string in val.lower():
+            if next((s for s in search_strings if s in val.lower()), None):
                 matched_field_data.append(field_obj)
                 break
 
