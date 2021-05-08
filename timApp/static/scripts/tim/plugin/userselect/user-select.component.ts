@@ -119,9 +119,9 @@ const USER_FIELDS: Record<string, string> = {
             <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
         </div>
         <div class="search-result" *ngIf="lastSearchResult">
-            <div *ngIf="lastSearchResult.matches.length == 0" class="alert alert-danger" i18n>
+            <tim-alert *ngIf="lastSearchResult.matches.length == 0" i18n>
                 No matches for given keyword
-            </div>
+            </tim-alert>
             <form *ngIf="lastSearchResult.matches.length != 0">
                 <table *ngIf="lastSearchResult">
                     <thead>
@@ -172,7 +172,7 @@ const USER_FIELDS: Record<string, string> = {
         <tim-alert *ngIf="lastAddedUser" severity="success">
             {{successMessage}}
         </tim-alert>
-        <tim-alert *ngIf="errorMessage" i18n>
+        <tim-alert class="small" *ngIf="errorMessage" i18n>
             <span>{{errorMessage}}</span>
             <div style="margin-top: 1rem;">
                 <p>Please try refreshing the page and try again.</p>

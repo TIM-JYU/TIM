@@ -67,12 +67,16 @@ form.search {
 tim-alert {
   display: block;
   margin-top: 1rem;
-  font-size: 1.2rem;
 
-  ::ng-deep div.alert {
-    padding: 0.8rem;
+  &.small {
+    font-size: 1.2rem;
+
+    ::ng-deep div.alert {
+      padding: 0.8rem;
+    }
   }
 }
+
 
 tr.user-row {
   cursor: pointer;
