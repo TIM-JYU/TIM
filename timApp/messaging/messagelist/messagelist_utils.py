@@ -591,8 +591,20 @@ def set_message_list_default_reply_type(message_list: MessageListModel,
 def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
                                   send_right: bool, delivery_right: bool,
                                   em_list: Optional[MailingList]) -> None:
+    """Add a user as a member on a message list.
+
+    Performs a duplicate check. A duplicate member will not be added again to the list.
+
+    :param msg_list: The message list where the new user will be added as a member.
+    :param user: TIM user to be added to the message list.
+    :param send_right: The send right to be set for the new member.
+    :param delivery_right: The delivery right to be set for the new member.
+    :param em_list: If not None, indicates that the user will also be added to the email list that belongs to the
+    message list.
+    :return: None.
+    """
     # Check for member duplicates.
-    if msg_list.get_member_by_name(user.name, user.email):
+    if msg_list.get_member_by_name(name=user.name, email=user.email):
         return
 
     new_tim_member = MessageListTimMember()
@@ -607,7 +619,42 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
         user_email = user.email  # TODO: Search possible additional emails.
         # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
         #  placeholder value of True.
-        add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=u.real_name,
+        add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
                   send_right=new_tim_member.send_right, delivery_right=new_tim_member.delivery_right)
+    return
 
+
+def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
+                               send_right: bool, delivery_right: bool, em_list: Optional[MailingList]) -> None:
+    """Add new (user) group to a message list.
+
+    Adding a group to a message list means that all the users in the (user) group will be added individually in the
+    message list and the group itself will be added to the list. The group being in the list means that the group
+    will be observed for changes in it's membership.
+
+    Performs checking for possible duplicates.
+
+    :param msg_list:
+    :param ug:
+    :param send_right:
+    :param delivery_right:
+    :param em_list:
+    :return: None.
+    """
+    # Check for duplicates. Groups only have their name to check against.
+    if msg_list.get_member_by_name(name=ug.name):
+        return
+    # Add the user group as a member to the message list, to be observed for changes in the group. Send and delivery
+    # right doesn't mean much for user groups, except that it is the right that all the users in the user group got
+    # added initially.
+    new_group_member = MessageListTimMember()
+    new_group_member.message_list_id = msg_list.id
+    new_group_member.group_id = ug.id
+    new_group_member.delivery_right = send_right
+    new_group_member.send_right = delivery_right
+    db.session.add(new_group_member)
+
+    # Add individual users to the message list as members.
+    for user in ug.users:
+        add_new_message_list_tim_user(msg_list, user, send_right, delivery_right, em_list)
     return

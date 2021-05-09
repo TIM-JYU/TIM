@@ -17,7 +17,7 @@ from timApp.messaging.messagelist.messagelist_utils import check_messagelist_nam
     set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
     set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
     set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
-    add_new_message_list_tim_user
+    add_new_message_list_tim_user, add_new_message_list_group
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
@@ -260,8 +260,7 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
         ug = UserGroup.get_by_name(member_candidate.strip())
         if ug is not None:
             # The name belongs to a user group.
-            pass
-            # add_new_message_list_group(msg_list, ug, sendRight, deliveryRight, em_list)
+            add_new_message_list_group(msg_list, ug, sendRight, deliveryRight, em_list)
         # TODO: If member candidate is not a user, or a user group, then we assume an external member. Add external
         #  members.
 
