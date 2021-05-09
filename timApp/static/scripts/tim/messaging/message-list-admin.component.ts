@@ -107,6 +107,12 @@ import {Users} from "../user/userService";
                 <label for="add-multiple-members">Add members</label> <br/>
                 <textarea id="add-multiple-members" name="add-multiple-members"
                           [(ngModel)]="membersTextField"></textarea>
+                <div>
+                    <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
+                    <label for="new-member-send-right">New member's send right.</label>
+                    <input type="checkbox" name="new-member-delivery-right" [(ngModel)]="newMemberDeliveryRight">
+                    <label for="new-member-delivery-right">New member's delivery right.</label>
+                </div>
                 <button (click)="addNewListMember()">Add new members</button>
             </div>
             <div>
@@ -191,6 +197,9 @@ export class MessageListAdminComponent implements OnInit {
     distribution?: Distribution;
     listReplyToChange?: ReplyToListChanges;
 
+    newMemberSendRight: boolean = true;
+    newMemberDeliveryRight: boolean = true;
+
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
             // Get domains.
@@ -249,6 +258,8 @@ export class MessageListAdminComponent implements OnInit {
                 .post(`${this.urlPrefix}/addmember`, {
                     memberCandidates: memberCandidates,
                     msgList: this.listname,
+                    sendRight: this.newMemberSendRight,
+                    deliveryRight: this.newMemberDeliveryRight,
                 })
                 .toPromise()
         );

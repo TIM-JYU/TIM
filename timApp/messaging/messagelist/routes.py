@@ -19,6 +19,7 @@ from timApp.messaging.messagelist.messagelist_utils import check_messagelist_nam
     set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
+from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -229,8 +230,8 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
 
 
 @messagelist.route("/addmember", methods=['POST'])
-def add_member(memberCandidates: List[str], msgList: str) -> Response:
-    from timApp.user.user import User  # Local import to avoid cyclical imports.
+def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliveryRight: bool) -> Response:
+
 
     # TODO: Validate access rights.
     #  List owner.
@@ -256,10 +257,8 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
             new_tim_member = MessageListTimMember()
             new_tim_member.message_list_id = msg_list.id
             new_tim_member.group_id = u.get_personal_group().id
-            # VIESTIM: For convenience sake just add these. Figure out list rights at a later date. Everyone loves a
-            #  bit of technical debt, don't they?
-            new_tim_member.delivery_right = True
-            new_tim_member.send_right = True
+            new_tim_member.delivery_right = sendRight
+            new_tim_member.send_right = deliveryRight
             db.session.add(new_tim_member)
 
             # VIESTIM: Get user's email and add it to list's email list.
