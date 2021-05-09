@@ -426,7 +426,11 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
         # Set member's send and delivery rights to email list.
         set_email_list_member_send_status(new_member, send_right)
         set_email_list_member_delivery_status(new_member, delivery_right)
-    except HTTPError:
+    except HTTPError as e:
+        if e.code == 409:
+            # With code 409, Mailman indicates that the member is already in the list. No further action might not be
+            # needed.
+            return
         raise
 
 
