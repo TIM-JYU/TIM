@@ -642,7 +642,7 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     :return: None.
     """
     # Check for duplicates. Groups only have their name to check against.
-    if msg_list.get_member_by_name(name=ug.name):
+    if msg_list.get_member_by_name(name=ug.name, email=None):
         return
     # Add the user group as a member to the message list, to be observed for changes in the group. Send and delivery
     # right doesn't mean much for user groups, except that it is the right that all the users in the user group got
