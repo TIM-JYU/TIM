@@ -254,6 +254,10 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
         u = User.get_by_name(member_candidate.strip())
         if u is not None:
             # The name given was an existing TIM user.
+
+            # Check for member duplicates.
+            if msg_list.get_member_by_name(u.name, u.email):
+                continue
             new_tim_member = MessageListTimMember()
             new_tim_member.message_list_id = msg_list.id
             new_tim_member.group_id = u.get_personal_group().id
