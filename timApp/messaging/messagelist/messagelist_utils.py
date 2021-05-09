@@ -6,6 +6,7 @@ from typing import Optional, List, Dict
 from mailmanclient import MailingList
 
 from timApp.auth.accesstype import AccessType
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -633,15 +634,18 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     message list and the group itself will be added to the list. The group being in the list means that the group
     will be observed for changes in it's membership.
 
-    Performs checking for possible duplicates.
+    Performs checking for possible duplicates. Checks that the adder has at least manage rights to group's admin doc.
 
-    :param msg_list:
-    :param ug:
-    :param send_right:
-    :param delivery_right:
+    :param msg_list: The message list where the group will be added.
+    :param ug: The user group being added the a message list.
+    :param send_right: Send right for user groups members, that will be added to the message list individually.
+    :param delivery_right: Delivery right for user groups members, that will be added to the message list individually.
     :param em_list:
     :return: None.
     """
+    if not check_group_owner_or_manage_right(ug):
+        return
+
     # Check for duplicates. Groups only have their name to check against.
     if msg_list.get_member_by_name(name=ug.name, email=None):
         return
@@ -688,3 +692,12 @@ def add_message_list_external_email_member(msg_list: MessageListModel, external_
     add_email(em_list, external_email, email_owner_pre_confirmation=True, real_name=display_name,
               send_right=send_right, delivery_right=delivery_right)
     return
+
+
+def check_group_owner_or_manage_right(ug: UserGroup) -> bool:
+    current_user_group = get_current_user_object().get_personal_group()
+    for access in ug.admin_doc.accesses:
+        ug_id, ac_t = access
+        if current_user_group.id == ug_id and (ac_t == AccessType.manage.value or ac_t == AccessType.owner.value):
+            return True
+    return False
