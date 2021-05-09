@@ -17,7 +17,8 @@ from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_n
     set_email_list_non_member_message_pass, set_email_list_allow_attachments, set_email_list_default_reply_type, \
     add_email
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
-from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember, \
+    MessageListExternalMember
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -657,4 +658,33 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     # Add individual users to the message list as members.
     for user in ug.users:
         add_new_message_list_tim_user(msg_list, user, send_right, delivery_right, em_list)
+    return
+
+
+def add_message_list_external_email_member(msg_list: MessageListModel, external_email: str,
+                                           send_right: bool, delivery_right: bool, em_list: MailingList,
+                                           display_name: Optional[str]) -> None:
+    """Add external member to a message list. External members at this moment only support external members to email
+     lists.
+
+    :param msg_list: Message list where the member is to be added.
+    :param external_email: The email address of an external member to be added to the message list.
+    :param send_right: The send right to the list by the new member.
+    :param delivery_right: The delivery right to the list by the new member.
+    :param em_list: The email list where this external member will be also added, because at this time external members
+    only make sense for an email list.
+    :param display_name: Optional name associated with the external member.
+    :return: None.
+    """
+    # Check for duplicate members.
+    if msg_list.get_member_by_name(name=None, email=external_email):
+        return
+
+    new_member = MessageListExternalMember(email_address=external_email, display_name=display_name,
+                                           delivery_right=delivery_right, send_right=send_right,
+                                           message_list_id=msg_list.id)
+    db.session.add(new_member)
+
+    add_email(em_list, external_email, email_owner_pre_confirmation=True, real_name=display_name,
+              send_right=send_right, delivery_right=delivery_right)
     return

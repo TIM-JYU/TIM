@@ -17,7 +17,7 @@ from timApp.messaging.messagelist.messagelist_utils import check_messagelist_nam
     set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
     set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
     set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
-    add_new_message_list_tim_user, add_new_message_list_group
+    add_new_message_list_tim_user, add_new_message_list_group, add_message_list_external_email_member
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
@@ -25,6 +25,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.utils import is_valid_email
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
@@ -263,6 +264,9 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
             add_new_message_list_group(msg_list, ug, sendRight, deliveryRight, em_list)
         # TODO: If member candidate is not a user, or a user group, then we assume an external member. Add external
         #  members.
+        if is_valid_email(member_candidate.strip()) and em_list:
+            add_message_list_external_email_member(msg_list, member_candidate.strip(),
+                                                   sendRight, deliveryRight, em_list, None)
 
     db.session.commit()
 
