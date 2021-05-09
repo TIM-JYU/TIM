@@ -147,18 +147,20 @@ class MessageListModel(db.Model):
     def get_member_by_name(self, name: Optional[str], email: Optional[str]) -> Optional['MessageListMember']:
         """Get member of this list. Member can be searched with name and/or email. At least one has to be given. Name
         is preferred and is used in a search first.
+
+        Raises ValueError if used with both name and email parameters as None.
+
         :param name: Name
         :param email: Email address
         :return: A message list member, if one is found with given arguments.
         """
         if not name and not email:
-            # TODO: Find a better exception to show no arguments were given.
-            raise Exception
+            raise ValueError
 
         for member in self.members:
-            if name == member.get_name():
+            if name is not None and name == member.get_name():
                 return member
-            if email == member.get_email():
+            if email is not None and email == member.get_email():
                 return member
         return None
 
