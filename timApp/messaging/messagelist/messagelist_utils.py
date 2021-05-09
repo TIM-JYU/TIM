@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, List, Dict
 
+from mailmanclient import MailingList
+
 from timApp.auth.accesstype import AccessType
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
@@ -12,7 +14,8 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
     set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
-    set_email_list_non_member_message_pass, set_email_list_allow_attachments, set_email_list_default_reply_type
+    set_email_list_non_member_message_pass, set_email_list_allow_attachments, set_email_list_default_reply_type, \
+    add_email
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.timdb.sqa import db
@@ -582,4 +585,29 @@ def set_message_list_default_reply_type(message_list: MessageListModel,
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_default_reply_type(email_list, default_reply_type)
+    return
+
+
+def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
+                                  send_right: bool, delivery_right: bool,
+                                  em_list: Optional[MailingList]) -> None:
+    # Check for member duplicates.
+    if msg_list.get_member_by_name(user.name, user.email):
+        return
+
+    new_tim_member = MessageListTimMember()
+    new_tim_member.message_list_id = msg_list.id
+    new_tim_member.group_id = user.get_personal_group().id
+    new_tim_member.delivery_right = send_right
+    new_tim_member.send_right = delivery_right
+    db.session.add(new_tim_member)
+
+    # VIESTIM: Get user's email and add it to list's email list.
+    if em_list is not None:
+        user_email = user.email  # TODO: Search possible additional emails.
+        # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
+        #  placeholder value of True.
+        add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=u.real_name,
+                  send_right=new_tim_member.send_right, delivery_right=new_tim_member.delivery_right)
+
     return

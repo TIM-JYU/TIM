@@ -16,10 +16,12 @@ from timApp.messaging.messagelist.messagelist_utils import check_messagelist_nam
     new_list, archive_message, EmailAndDisplayName, set_message_list_notify_owner_on_change, \
     set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
     set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
-    set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type
+    set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
+    add_new_message_list_tim_user
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -231,8 +233,6 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
 
 @messagelist.route("/addmember", methods=['POST'])
 def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliveryRight: bool) -> Response:
-
-
     # TODO: Validate access rights.
     #  List owner.
     verify_logged_in()
@@ -254,27 +254,14 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
         u = User.get_by_name(member_candidate.strip())
         if u is not None:
             # The name given was an existing TIM user.
-
-            # Check for member duplicates.
-            if msg_list.get_member_by_name(u.name, u.email):
-                continue
-            new_tim_member = MessageListTimMember()
-            new_tim_member.message_list_id = msg_list.id
-            new_tim_member.group_id = u.get_personal_group().id
-            new_tim_member.delivery_right = sendRight
-            new_tim_member.send_right = deliveryRight
-            db.session.add(new_tim_member)
-
-            # VIESTIM: Get user's email and add it to list's email list.
-            if em_list is not None:
-                user_email = u.email  # TODO: Search possible additional emails.
-                # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
-                #  placeholder value of True.
-                add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=u.real_name,
-                          send_right=new_tim_member.send_right, delivery_right=new_tim_member.delivery_right)
+            add_new_message_list_tim_user(msg_list, u, sendRight, deliveryRight, em_list)
 
         # TODO: If member_candidate is a user group, what do? Add as is or open it to individual users?
-
+        ug = UserGroup.get_by_name(member_candidate.strip())
+        if ug is not None:
+            # The name belongs to a user group.
+            pass
+            # add_new_message_list_group(msg_list, ug, sendRight, deliveryRight, em_list)
         # TODO: If member candidate is not a user, or a user group, then we assume an external member. Add external
         #  members.
 
