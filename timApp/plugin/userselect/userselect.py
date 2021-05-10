@@ -165,6 +165,16 @@ def fetch_users(task_id: Optional[str] = None, doc_id: Optional[int] = None, par
     })
 
 
+def match_query(query_words: List[str], keywords: List[str]):
+    kw = set(keywords)
+    for qw in query_words:
+        found = next((k for k in kw if qw in k), None)
+        if found is None:
+            return False
+        kw.remove(found)
+    return True
+
+
 @user_select_plugin.route('/search', methods=['POST'])
 def search_users(search_strings: List[str], task_id: Optional[str] = None,
                  par: Optional[GlobalParId] = None) -> Response:
@@ -177,18 +187,21 @@ def search_users(search_strings: List[str], task_id: Optional[str] = None,
         view_ctx
     )
 
-    search_strings = [s.strip().lower() for s in search_strings]
+    # If query contains spaces, split into sub-queries that all must match
+    # In each subquery, match by longest word first to ensure best match
+    search_query_words = [sorted(s.lower().split(), key=lambda s: len(s), reverse=True) for s in search_strings]
     matched_field_data = []
     for field_obj in field_data:
         fields = field_obj["fields"]
         usr = field_obj["user"]
         values_to_check: List[Optional[Union[str, float, None]]] = [usr.name, usr.real_name, usr.email,
                                                                     *fields.values()]
+
         for field_val in values_to_check:
             if not field_val:
                 continue
-            val = field_val if isinstance(field_val, str) else str(field_val)
-            if next((s for s in search_strings if s in val.lower()), None):
+            val = (field_val if isinstance(field_val, str) else str(field_val)).lower().split()
+            if next((qws for qws in search_query_words if match_query(qws, val)), None):
                 matched_field_data.append(field_obj)
                 break
 

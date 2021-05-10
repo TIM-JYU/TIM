@@ -59,7 +59,7 @@ export class ServerQueryHandler implements IQueryHandler {
 export class PrefetchedQueryHandler implements IQueryHandler {
     allUsers: {
         userResult: UserResult;
-        searchStrings: (string | undefined | null)[];
+        searchStrings: string[][];
     }[] = [];
     allFields: string[] = [];
 
@@ -85,16 +85,21 @@ export class PrefetchedQueryHandler implements IQueryHandler {
             )
             .toPromise();
 
+        const removeEmpty = (s?: string | null): s is string =>
+            s !== undefined && s != null;
+
         this.allUsers = result.users.map((userResult) => ({
             userResult,
-            searchStrings: [
-                userResult.user.name,
-                userResult.user.real_name,
-                userResult.user.email,
-                ...Object.values(userResult.fields).map((field) =>
-                    field?.toString().toLowerCase()
-                ),
-            ],
+            searchStrings: splitIntoWordSets(
+                [
+                    userResult.user.name,
+                    userResult.user.real_name,
+                    userResult.user.email,
+                    ...Object.values(userResult.fields).map((field) =>
+                        field?.toString()
+                    ),
+                ].filter(removeEmpty)
+            ),
         }));
         this.allFields = result.fieldNames;
     }
@@ -110,12 +115,16 @@ export class PrefetchedQueryHandler implements IQueryHandler {
         queryStrings: string[],
         maxMatches: number
     ): Result<SearchResult, {errorMessage: string}> {
-        queryStrings = queryStrings.map((s) => s.trim().toLowerCase());
+        const queryStringsSet = queryStrings
+            .map((s) => s.toLowerCase().trim().split(/\s/))
+            .sort((a, b) => b.length - a.length);
 
         let matches = this.allUsers
             .filter((u) =>
                 u.searchStrings.some((valueToCheck) =>
-                    queryStrings.some((s) => valueToCheck?.includes(s))
+                    queryStringsSet.some((queryWords) =>
+                        matchKeywords(queryWords, valueToCheck)
+                    )
                 )
             )
             .map((u) => u.userResult);
@@ -134,4 +143,29 @@ export class PrefetchedQueryHandler implements IQueryHandler {
             },
         };
     }
+}
+
+function matchKeywords(queryWords: string[], keywords: string[]) {
+    const keywordsSet = new Set(keywords);
+    for (const queryWord of queryWords) {
+        const found = setHas(keywordsSet, (v) => v.includes(queryWord));
+        if (found === undefined) return false;
+        keywordsSet.delete(found);
+    }
+    return true;
+}
+
+function setHas<T>(
+    set: Set<T>,
+    fn: (t: T) => boolean,
+    defaultValue: T | undefined = undefined
+) {
+    for (const val of set) {
+        if (fn(val)) return val;
+    }
+    return defaultValue;
+}
+
+function splitIntoWordSets(fields: string[]) {
+    return fields.map((f) => f.toLowerCase().trim().split(/\s/));
 }
