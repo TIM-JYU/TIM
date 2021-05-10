@@ -74,6 +74,7 @@ class TimMessageReadReceipt:
     message_id: int
     user_id: int
     marked_as_read_on: datetime
+    can_mark_as_read: bool
 
 
 @timMessage.route("/get/<int:item_id>", methods=['GET'])
@@ -133,7 +134,11 @@ def get_read_receipt(doc_id: int) -> Response:
     receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=get_current_user_object().get_personal_group().id,
                                                          message_id=message.id).first()
 
-    return json_response(receipt)
+    receipt_data = TimMessageReadReceipt(rcpt_id=receipt.rcpt_id, message_id=message.id,
+                                         user_id=receipt.user_id, marked_as_read_on=receipt.marked_as_read_on,
+                                         can_mark_as_read=message.can_mark_as_read)
+
+    return json_response(receipt_data)
 
 
 @timMessage.route("/url_check", methods=['POST'])
@@ -271,6 +276,25 @@ def mark_as_read(message_id: int) -> Response:
     read_receipt.user_id = get_current_user_object().id
     read_receipt.marked_as_read_on = datetime.now()
     db.session.add(read_receipt)
+    db.session.commit()
+
+    return ok_response()
+
+
+@timMessage.route("/cancel_read_receipt", methods=['POST'])
+def cancel_read_receipt(message_id: int) -> Response:
+    """
+    Removes read receipt date and the user who marked it from the database entry.
+
+    :param message_id: Message identifier
+    :return:
+    """
+    verify_logged_in()
+
+    receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=get_current_user_object().get_personal_group().id,
+                                                         message_id=message_id).first()
+    receipt.user_id = None
+    receipt.marked_as_read_on = None
     db.session.commit()
 
     return ok_response()

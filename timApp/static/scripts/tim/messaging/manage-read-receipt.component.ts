@@ -7,22 +7,26 @@ import {HttpClient} from "@angular/common/http";
 @Component({
     selector: "manage-read-receipt",
     template: `
-        <ng-container>
-            <button class="timButton" title="Mark as Read" *ngIf="!markedAsRead" (click)="markAsRead()">
-                Mark as Read
-            </button>
-            <div class="cancelReadReceipt" *ngIf="markedAsRead">
-                <button class="timButton" title="Cancel Read Receipt" (click)="cancelReadReceipt()">
-                    Cancel Read Receipt
+        <ng-container *ngIf="canMarkAsRead">
+            <div class="manageReadReceipt">
+                <button class="timButton" title="Mark as Read" *ngIf="!markedAsRead" (click)="markAsRead()">
+                    Mark as Read
                 </button>
-                <p>Cancelling the read receipt re-displays the message on designated TIM pages.</p>
+                <div class="cancelReadReceipt" *ngIf="markedAsRead">
+                    <button class="timButton" title="Cancel Read Receipt" (click)="cancelReadReceipt()">
+                        Cancel Read Receipt
+                    </button>
+                    <p>Cancelling the read receipt re-displays the message on designated TIM pages</p>
+                </div>
             </div>
         </ng-container>
     `,
+    styleUrls: ["manage-read-receipt.component.scss"],
 })
 export class ManageReadReceiptComponent implements OnInit {
     markedAsRead: boolean = false;
     receipt: TimMessageReadReceipt | undefined;
+    canMarkAsRead: boolean = false;
 
     constructor(private http: HttpClient) {}
 
@@ -30,9 +34,6 @@ export class ManageReadReceiptComponent implements OnInit {
         const docId = itemglobals().curr_item.id;
 
         void this.getReadReceipt(docId);
-        if (this.receipt?.marked_as_read_on != null) {
-            this.markedAsRead = true;
-        }
     }
 
     async getReadReceipt(docId: number) {
@@ -47,14 +48,43 @@ export class ManageReadReceiptComponent implements OnInit {
 
         if (message.ok) {
             this.receipt = message.result;
+            this.canMarkAsRead = message.result.can_mark_as_read;
+            if (message.result.marked_as_read_on != null) {
+                this.markedAsRead = true;
+            }
         } else {
             console.error(message.result.error.error);
         }
     }
 
-    markAsRead(): void {}
+    async markAsRead() {
+        const result = await to2(
+            this.http
+                .post("/timMessage/mark_as_read", {
+                    message_id: this.receipt?.message_id,
+                })
+                .toPromise()
+        );
+        if (!result.ok) {
+            console.error(result.result.error.error);
+        }
 
-    cancelReadReceipt(): void {}
+        this.markedAsRead = true;
+    }
+
+    async cancelReadReceipt() {
+        const result = await to2(
+            this.http.post("/timMessage/cancel_read_receipt", {
+                message_id: this.receipt?.message_id,
+            })
+                .toPromise()
+        );
+        if (!result.ok) {
+            console.error(result.result.error.error);
+        }
+
+        this.markedAsRead = false;
+    }
 }
 
 interface TimMessageReadReceipt {
@@ -63,6 +93,7 @@ interface TimMessageReadReceipt {
     message_id: number;
     user_id: number;
     marked_as_read_on: Date;
+    can_mark_as_read: boolean;
 }
 
 @NgModule({

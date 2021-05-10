@@ -39,7 +39,7 @@ import {TimMessageData} from "./tim-message-view.component";
                            [disabled]="!canMarkAsRead || markedAsRead" (click)="markAsRead()"/>
                     <label for="mark-as-read">Mark as Read</label>
                     <span class="readReceiptLink"
-                          *ngIf="markedAsRead">Read receipt can be cancelled in <a>your messages</a></span>
+                          *ngIf="markedAsRead">Read receipt can be cancelled in <a href="messages/tim-messages">your messages</a></span>
                     <button class="timButton" title="Close Message"
                             [disabled]="(!canMarkAsRead && !replySent) || (canMarkAsRead && !markedAsRead)"
                             (click)="closeMessage()">
