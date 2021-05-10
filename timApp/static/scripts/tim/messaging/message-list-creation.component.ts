@@ -39,7 +39,7 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
                 </div>
                 <div class="archive-options">
                     <p class="list-name">List archive policy: </p>
-                    <ul style="list-style-type: none">
+                    <ul class="archive-list">
                         <li *ngFor="let option of archiveOptions">
                             <input
                                     name="items-radio"
