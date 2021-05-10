@@ -1,14 +1,34 @@
 export interface ListOptions {
     // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
-    listname: string;
-    domain: string;
+    name: string;
+    domain?: string;
     archive: ArchiveType;
-    notifyOwnerOnListChange: boolean;
-    listDescription?: string;
-    listInfo?: string;
-    htmlAllowed: boolean;
-    defaultReplyType: ReplyToListChanges;
-    emailAdminURL?: string;
+    notify_owners_on_list_change?: boolean;
+    list_description?: string;
+    list_info?: string;
+    only_text?: boolean;
+    default_reply_type?: ReplyToListChanges;
+    email_admin_url?: string;
+    tim_users_can_join?: boolean;
+    members_can_unsubscribe?: boolean;
+    default_send_right?: boolean;
+    default_delivery_right?: boolean;
+    list_subject_prefix?: string;
+    non_member_message_pass?: boolean;
+    allow_attachments?: boolean;
+    // distribution?: Channel[];
+    distribution?: Distribution;
+}
+
+export interface Distribution {
+    tim_message: boolean;
+    email_list: boolean;
+}
+
+// See class Channel on listoptions.py for explanation.
+export enum Channel {
+    TIM_MESSAGE = "tim_message",
+    EMAIL_LIST = "email_list",
 }
 
 export enum ReplyToListChanges {
@@ -32,6 +52,7 @@ export interface ArchivePolicyNames {
     policyName: string;
 }
 
+// Mapping of archive policy enum to explanations given in UI.
 export const archivePolicyNames: ArchivePolicyNames[] = [
     {archiveType: ArchiveType.NONE, policyName: "No archiving."},
     {

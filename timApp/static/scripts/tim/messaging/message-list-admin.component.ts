@@ -6,6 +6,7 @@ import {FormsModule} from "@angular/forms";
 import {
     archivePolicyNames,
     ArchiveType,
+    Distribution,
     ListOptions,
     MemberInfo,
     ReplyToListChanges,
@@ -72,15 +73,46 @@ import {Users} from "../user/userService";
                     </li>
                 </ul>
             </div>
+            <h5>List options</h5>
+            <div>
+                <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
+                <label for="list-subject-prefix">List subject prefix.</label>
+            </div>
             <div>
                 <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
                        [(ngModel)]="notifyOwnerOnListChange"/>
-                <label for="notify-owner-on-list-change">Notify me on list changes (e.g. user subscribes)</label>
+                <label for="notify-owner-on-list-change">Notify owners on list changes (e.g. user subscribes).</label>
+            </div>
+            <div>
+                <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
+                <label for="tim-users-can-join">TIM users can freely join this list.</label>
+            </div>
+            <div>
+                <input type="checkbox" name="can-user-unsubscribe" [(ngModel)]="canUnsubscribe">
+                <label for="can-user-unsubscribe">Members can unsubscribe from the list on their own.</label>
+            </div>
+            <div>
+                <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
+                <label for="only-text">No HTML messages allowed on the list.</label>
+            </div>
+            <div>
+                <input type="checkbox" name="non-members-can-send" [(ngModel)]="nonMemberMessagePass">
+                <label for="non-members-can-send">Non members can send messages to list.</label>
+            </div>
+            <div>
+                <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
+                <label for="allow-attachments">Allow attachments on the list.</label>
             </div>
             <div>
                 <label for="add-multiple-members">Add members</label> <br/>
                 <textarea id="add-multiple-members" name="add-multiple-members"
                           [(ngModel)]="membersTextField"></textarea>
+                <div>
+                    <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
+                    <label for="new-member-send-right">New member's send right.</label>
+                    <input type="checkbox" name="new-member-delivery-right" [(ngModel)]="newMemberDeliveryRight">
+                    <label for="new-member-delivery-right">New member's delivery right.</label>
+                </div>
                 <button (click)="addNewListMember()">Add new members</button>
             </div>
             <div>
@@ -99,11 +131,11 @@ import {Users} from "../user/userService";
                         <td>{{member.name}}</td>
                         <td>{{member.email}}</td>
                         <td>
-                            <input type="checkbox" [(ngModel)]="member.sendRight" 
+                            <input type="checkbox" [(ngModel)]="member.sendRight"
                                    name="member-send-right-{{member.email}}">
                         </td>
                         <td>
-                            <input type="checkbox" [(ngModel)]="member.deliveryRight" 
+                            <input type="checkbox" [(ngModel)]="member.deliveryRight"
                                    name="member-delivery-right-{{member.email}}">
                         </td>
                     </tr>
@@ -133,7 +165,7 @@ export class MessageListAdminComponent implements OnInit {
     // List has a private members only archive by default.
     archive: ArchiveType = ArchiveType.GROUPONLY;
 
-    domain: string = "";
+    domain?: string;
     domains: string[] = [];
 
     membersTextField?: string;
@@ -146,12 +178,27 @@ export class MessageListAdminComponent implements OnInit {
     archiveOptions = archivePolicyNames;
 
     notifyOwnerOnListChange: boolean = false;
+    timUsersCanJoin?: boolean = false;
 
     listInfo?: string;
     listDescription?: string;
 
     emailAdminURL?: string;
     archiveURL?: string;
+
+    canUnsubscribe?: boolean;
+    defaultSendRight?: boolean;
+    defaultDeliveryRight?: boolean;
+    listSubjectPrefix?: string;
+    nonMemberMessagePass?: boolean;
+    onlyText?: boolean;
+    allowAttachments?: boolean;
+    // distibution?: Channel[];
+    distribution?: Distribution;
+    listReplyToChange?: ReplyToListChanges;
+
+    newMemberSendRight: boolean = true;
+    newMemberDeliveryRight: boolean = true;
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -211,12 +258,14 @@ export class MessageListAdminComponent implements OnInit {
                 .post(`${this.urlPrefix}/addmember`, {
                     memberCandidates: memberCandidates,
                     msgList: this.listname,
+                    sendRight: this.newMemberSendRight,
+                    deliveryRight: this.newMemberDeliveryRight,
                 })
                 .toPromise()
         );
         if (result.ok) {
             // TODO: Sending succeeded.
-            console.log("Sending members succeeded.");
+            // console.log("Sending members succeeded.");
             this.membersTextField = undefined; // Empty the text field.
         } else {
             // TODO: Sending failed.
@@ -242,7 +291,7 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
         if (result.ok) {
-            console.log(result.result);
+            // console.log(result.result);
             this.membersList = result.result;
         } else {
             console.error(result.result.error.error);
@@ -261,7 +310,7 @@ export class MessageListAdminComponent implements OnInit {
                 .delete(`/messagelist/deletelist`, {
                     params: {
                         listname: this.listname,
-                        domain: this.domain,
+                        domain: this.domain ? this.domain : "",
                     },
                 })
                 .toPromise()
@@ -286,7 +335,6 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
         if (result.ok) {
-            // TODO: After server side value loading is complete, remove the console logging and uncomment line below.
             this.setValues(result.result);
         } else {
             console.error(result.result.error.error);
@@ -299,7 +347,7 @@ export class MessageListAdminComponent implements OnInit {
      * @param listOptions
      */
     setValues(listOptions: ListOptions) {
-        this.listname = listOptions.listname;
+        this.listname = listOptions.name;
         this.archive = listOptions.archive;
 
         this.domain = listOptions.domain;
@@ -307,17 +355,30 @@ export class MessageListAdminComponent implements OnInit {
         this.ownerEmail = "";
 
         this.notifyOwnerOnListChange =
-            listOptions.notifyOwnerOnListChange ?? false;
+            listOptions.notify_owners_on_list_change ?? false;
 
-        this.listInfo = listOptions.listInfo;
-        this.listDescription = listOptions.listDescription;
+        this.listInfo = listOptions.list_info;
+        this.listDescription = listOptions.list_description;
 
-        this.emailAdminURL = listOptions.emailAdminURL;
+        this.emailAdminURL = listOptions.email_admin_url;
 
         // If some type of archiving exists for the list, provide a link to it.
         if (this.archive !== ArchiveType.NONE) {
             this.archiveURL = `/view/archives/${this.listname}`;
         }
+
+        this.timUsersCanJoin = listOptions.tim_users_can_join;
+
+        this.listSubjectPrefix = listOptions.list_subject_prefix;
+        this.canUnsubscribe = listOptions.members_can_unsubscribe;
+        this.defaultSendRight = listOptions.default_send_right;
+        this.defaultDeliveryRight = listOptions.default_delivery_right;
+        this.nonMemberMessagePass = listOptions.non_member_message_pass;
+        this.onlyText = listOptions.only_text;
+        this.allowAttachments = listOptions.allow_attachments;
+        this.distribution = listOptions.distribution;
+        this.allowAttachments = listOptions.allow_attachments;
+        this.listReplyToChange = listOptions.default_reply_type;
     }
 
     /**
@@ -325,17 +386,25 @@ export class MessageListAdminComponent implements OnInit {
      */
     async save() {
         const result = await this.saveListOptions({
-            listname: this.listname,
+            name: this.listname,
             domain: this.domain,
-            listInfo: this.listInfo,
-            listDescription: this.listDescription,
-            htmlAllowed: true, // TODO: Option to ask the user.
-            defaultReplyType: ReplyToListChanges.NOCHANGES, // TODO: Option to ask the user.
-            notifyOwnerOnListChange: this.notifyOwnerOnListChange,
+            list_info: this.listInfo,
+            list_description: this.listDescription,
+            only_text: this.onlyText,
+            default_reply_type: this.listReplyToChange, // TODO: Option to ask the user.
+            notify_owners_on_list_change: this.notifyOwnerOnListChange,
             archive: this.archive,
+            tim_users_can_join: this.timUsersCanJoin,
+            list_subject_prefix: this.listSubjectPrefix,
+            members_can_unsubscribe: this.canUnsubscribe,
+            default_delivery_right: this.defaultDeliveryRight,
+            default_send_right: this.defaultSendRight,
+            non_member_message_pass: this.nonMemberMessagePass,
+            distribution: this.distribution,
+            allow_attachments: this.allowAttachments,
         });
         if (result.ok) {
-            console.log("save succee");
+            // console.log("save succee");
         } else {
             console.error("save fail");
         }
@@ -344,7 +413,7 @@ export class MessageListAdminComponent implements OnInit {
 
         if (resultSaveMembers.ok) {
             // VIESTIM: Saving members' state succeeded.
-            console.log("Saving members succeeded.");
+            // console.log("Saving members succeeded.");
         } else {
             // VIESTIM: Saving members' state failed.
             console.error("Saving members failed.");

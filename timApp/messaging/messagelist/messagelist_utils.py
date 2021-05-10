@@ -3,15 +3,23 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, List, Dict
 
+from mailmanclient import MailingList
+
 from timApp.auth.accesstype import AccessType
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
-from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions
-from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
+from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
+    set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
+    set_email_list_non_member_message_pass, set_email_list_allow_attachments, set_email_list_default_reply_type, \
+    add_email
+from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember, \
+    MessageListExternalMember
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -241,6 +249,7 @@ Message body:
 """)
 
     # Set message body for archived message.
+    # TODO: Check message list's only_text flag. If it is set, then wrap the message body in a code block?
     archive_doc.document.add_text(f"{message.message_body}")
 
     # If there is only one message, we don't need to add links to any other messages.
@@ -369,10 +378,10 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     #  default, but if the owner is someone else than the creator then we have to handle that.
 
     # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
-    path_safe_list_name = remove_path_special_chars(list_options.listname)
+    path_safe_list_name = remove_path_special_chars(list_options.name)
     path_to_doc = f'/{MESSAGE_LIST_DOC_PREFIX}/{path_safe_list_name}'
 
-    doc = create_document(path_to_doc, list_options.listname)
+    doc = create_document(path_to_doc, list_options.name)
 
     # VIESTIM: We add the admin component to the document. This might have to be changed if the component is turned
     #  into a plugin.
@@ -395,7 +404,7 @@ def new_list(list_options: ListOptions) -> DocInfo:
     :return: The management document.
     """
     # VIESTIM: Check creation permission? Or should it be in the calling view function?
-    msg_list = MessageListModel(name=list_options.listname, archive=list_options.archive)
+    msg_list = MessageListModel(name=list_options.name, archive=list_options.archive)
     if list_options.domain:
         msg_list.email_list_domain = list_options.domain
     db.session.add(msg_list)
@@ -404,3 +413,357 @@ def new_list(list_options: ListOptions) -> DocInfo:
 
     db.session.commit()
     return doc_info
+
+
+def set_message_list_notify_owner_on_change(message_list: MessageListModel,
+                                            notify_owners_on_list_change_flag: Optional[bool]) -> None:
+    """Set the notify list owner on list change flag for a list, and update necessary channels with this information.
+
+    If the message list has an email list as a message channel, this will set the equilavent flag on the email list.
+
+    :param message_list: The message list where the flag is being set.
+    :param notify_owners_on_list_change_flag: A boolean flag. If True, then changes on the message list sends
+    notifications to list owners. If False, notifications won't be sent.
+    """
+    if notify_owners_on_list_change_flag is None \
+            or message_list.notify_owner_on_change == notify_owners_on_list_change_flag:
+        return
+
+    message_list.notify_owner_on_change = notify_owners_on_list_change_flag
+
+    if message_list.email_list_domain:
+        # Email lists have their own flag for notifying list owners for list changes.
+
+        # VIESTIM: Until there is another type of notification system for message lists similiar to document changes,
+        #  we rely on Mailman's notifications for list changes.
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_notify_owner_on_list_change(email_list, message_list.notify_owner_on_change)
+    return
+
+
+def set_message_list_member_can_unsubscribe(message_list: MessageListModel,
+                                            can_unsubscribe_flag: Optional[bool]) -> None:
+    """Set the list member's free unsubscription flag, and propagate that setting to channels that have own handling
+    of unsubscription.
+
+    If the message list has an email list as a message channel, this will set the equilavent flag on the email list.
+
+    :param message_list: Message list where the flag is being set.
+    :param can_unsubscribe_flag: A boolean value. For True, the member can unsubscribe on their own. For False, then
+    the member can't unsubscribe from the list on their own.
+    """
+    if can_unsubscribe_flag is None or message_list.can_unsubscribe == can_unsubscribe_flag:
+        return
+    message_list.can_unsubscribe = can_unsubscribe_flag
+
+    if message_list.email_list_domain:
+        # Email list's have their own settings for unsubscription.
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_unsubscription_policy(email_list, can_unsubscribe_flag)
+    return
+
+
+def set_message_list_subject_prefix(message_list: MessageListModel, subject_prefix: Optional[str]) -> None:
+    """Set the message list's subject prefix.
+
+    If the message list has an email list as a message list, then set the subject prefix there also.
+
+    :param message_list: The message list where the subject prefix is being set.
+    :param subject_prefix: The prefix set for messages that go through the list.
+    """
+    if subject_prefix is None or message_list.subject_prefix == subject_prefix:
+        return
+    message_list.subject_prefix = subject_prefix
+
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_subject_prefix(email_list, subject_prefix)
+    return
+
+
+def set_message_list_tim_users_can_join(message_list: MessageListModel, can_join_flag: Optional[bool]) -> None:
+    """Set the flag controlling if TIM users can directly join this list.
+
+    Because the behaviour that is controlled by the can_join_flag applies to TIM users, there is no message channel
+    specific handling.
+
+    :param message_list: Message list where the flag is being set.
+    :param can_join_flag: If True, then TIM users can directly join this list, no moderation needed. If False, then TIM
+    users can't direclty join this list and
+    """
+    if can_join_flag is None or message_list.tim_user_can_join == can_join_flag:
+        return
+
+    message_list.tim_user_can_join = can_join_flag
+    return
+
+
+def set_message_list_default_send_right(message_list: MessageListModel,
+                                        default_send_right_flag: Optional[bool]) -> None:
+    """Set the default message list new member send right flag.
+
+    :param message_list: The message list where the flag is set.
+    :param default_send_right_flag: For True, new members on the list get default send right. For False, new members
+    don't get a send right.
+    """
+    if default_send_right_flag is None or message_list.default_send_right == default_send_right_flag:
+        return
+    message_list.default_send_right = default_send_right_flag
+    return
+
+
+def set_message_list_default_delivery_right(message_list: MessageListModel,
+                                            default_delivery_right_flag: Optional[bool]) -> None:
+    """Set the message list new member default delivery right.
+
+    :param message_list: The message list where the flag is set.
+    :param default_delivery_right_flag: For True, new members on the list get default delivery right. For False, new
+    members don't get a delivery right.
+    """
+    if default_delivery_right_flag is None or message_list.default_delivery_right == default_delivery_right_flag:
+        return
+    message_list.default_delivery_right = default_delivery_right_flag
+    return
+
+
+def set_message_list_only_text(message_list: MessageListModel, only_text: Optional[bool]) -> None:
+    """
+
+    :param message_list:
+    :param only_text:
+    :return: None.
+    """
+    if only_text is None or message_list.only_text == only_text:
+        return
+    message_list.only_text = only_text
+
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_only_text(email_list, only_text)
+    return
+
+
+def set_message_list_non_member_message_pass(message_list: MessageListModel,
+                                             non_member_message_pass_flag: Optional[bool]) -> None:
+    """Set message list's non member message pass flag.
+
+    :param message_list: The message list where the flag is set.
+    :param non_member_message_pass_flag: For True, sources outside the list can send messages to this list. If False,
+     messages form sources outside the list will be hold for moderation.
+    :return: None.
+    """
+    if non_member_message_pass_flag is None or message_list.non_member_message_pass == non_member_message_pass_flag:
+        return
+    message_list.non_member_message_pass = non_member_message_pass_flag
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_non_member_message_pass(email_list, non_member_message_pass_flag)
+    return
+
+
+def set_message_list_allow_attachments(message_list: MessageListModel, allow_attachments_flag: Optional[bool]) -> None:
+    if allow_attachments_flag is None or message_list.allow_attachments == allow_attachments_flag:
+        return
+
+    message_list.allow_attachments = allow_attachments_flag
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_allow_attachments(email_list, allow_attachments_flag)
+    return
+
+
+def set_message_list_default_reply_type(message_list: MessageListModel,
+                                        default_reply_type: Optional[ReplyToListChanges]) -> None:
+    """
+
+    :param message_list:
+    :param default_reply_type:
+    :return:
+    """
+    if default_reply_type is None or message_list.default_reply_type == default_reply_type:
+        return
+
+    message_list.default_reply_type = default_reply_type
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_default_reply_type(email_list, default_reply_type)
+    return
+
+
+def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
+                                  send_right: bool, delivery_right: bool,
+                                  em_list: Optional[MailingList]) -> None:
+    """Add a user as a member on a message list.
+
+    Performs a duplicate check. A duplicate member will not be added again to the list.
+
+    :param msg_list: The message list where the new user will be added as a member.
+    :param user: TIM user to be added to the message list.
+    :param send_right: The send right to be set for the new member.
+    :param delivery_right: The delivery right to be set for the new member.
+    :param em_list: If not None, indicates that the user will also be added to the email list that belongs to the
+    message list.
+    :return: None.
+    """
+    # Check for member duplicates.
+    # VIESTIM: If a member has belonged to the list, but was removed, this returns True and the function returns.
+    if msg_list.get_member_by_name(name=user.name, email=user.email):
+        return
+
+    new_tim_member = MessageListTimMember()
+    new_tim_member.message_list_id = msg_list.id
+    new_tim_member.group_id = user.get_personal_group().id
+    new_tim_member.delivery_right = send_right
+    new_tim_member.send_right = delivery_right
+    db.session.add(new_tim_member)
+
+    # VIESTIM: Get user's email and add it to list's email list.
+    if em_list is not None:
+        user_email = user.email  # TODO: Search possible additional emails.
+        # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
+        #  placeholder value of True.
+        add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
+                  send_right=new_tim_member.send_right, delivery_right=new_tim_member.delivery_right)
+    return
+
+
+def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
+                               send_right: bool, delivery_right: bool, em_list: Optional[MailingList]) -> None:
+    """Add new (user) group to a message list.
+
+    Adding a group to a message list means that all the users in the (user) group will be added individually in the
+    message list and the group itself will be added to the list. The group being in the list means that the group
+    will be observed for changes in it's membership.
+
+    Performs checking for possible duplicates. Checks that the adder has at least manage rights to group's admin doc.
+
+    :param msg_list: The message list where the group will be added.
+    :param ug: The user group being added the a message list.
+    :param send_right: Send right for user groups members, that will be added to the message list individually.
+    :param delivery_right: Delivery right for user groups members, that will be added to the message list individually.
+    :param em_list:
+    :return: None.
+    """
+    # Check right to the group. Right checking is not required for personal groups, only generated user groups.
+    if not ug.is_personal_group and not check_group_owner_or_manage_right(ug):
+        return
+
+    # Check for duplicates. Groups only have their name to check against.
+    if msg_list.get_member_by_name(name=ug.name, email=None):
+        return
+    # Add the user group as a member to the message list, to be observed for changes in the group. Send and delivery
+    # right doesn't mean much for user groups, except that it is the right that all the users in the user group got
+    # added initially.
+    new_group_member = MessageListTimMember()
+    new_group_member.message_list_id = msg_list.id
+    new_group_member.group_id = ug.id
+    new_group_member.delivery_right = send_right
+    new_group_member.send_right = delivery_right
+    db.session.add(new_group_member)
+
+    # Add individual users to the message list as members.
+    for user in ug.users:
+        add_new_message_list_tim_user(msg_list, user, send_right, delivery_right, em_list)
+    return
+
+
+def add_message_list_external_email_member(msg_list: MessageListModel, external_email: str,
+                                           send_right: bool, delivery_right: bool, em_list: MailingList,
+                                           display_name: Optional[str]) -> None:
+    """Add external member to a message list. External members at this moment only support external members to email
+     lists.
+
+    :param msg_list: Message list where the member is to be added.
+    :param external_email: The email address of an external member to be added to the message list.
+    :param send_right: The send right to the list by the new member.
+    :param delivery_right: The delivery right to the list by the new member.
+    :param em_list: The email list where this external member will be also added, because at this time external members
+    only make sense for an email list.
+    :param display_name: Optional name associated with the external member.
+    :return: None.
+    """
+    # Check for duplicate members.
+    if msg_list.get_member_by_name(name=None, email=external_email):
+        return
+
+    new_member = MessageListExternalMember(email_address=external_email, display_name=display_name,
+                                           delivery_right=delivery_right, send_right=send_right,
+                                           message_list_id=msg_list.id)
+    db.session.add(new_member)
+
+    add_email(em_list, external_email, email_owner_pre_confirmation=True, real_name=display_name,
+              send_right=send_right, delivery_right=delivery_right)
+    return
+
+
+def check_group_owner_or_manage_right(ug: UserGroup) -> bool:
+    current_user_group = get_current_user_object().get_personal_group()
+    for access in ug.admin_doc.accesses:
+        ug_id, ac_t = access
+        if current_user_group.id == ug_id and (ac_t == AccessType.manage.value or ac_t == AccessType.owner.value):
+            return True
+    return False
+
+
+def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
+    """On adding a user to a new group, sync the user to user group's message lists.
+
+    :param user: The user that was added to the new_group.
+    :param new_group: The new group that the user was added to.
+    :return: None.
+    """
+    # FIXME: This does not work. Most likely there is confusin with different IDs, which results in pulling wrong
+    #  members/groups.
+    # Get the lists for the user group. Find all the TIM members that represent the new_group on message lists.
+    group_tim_members = MessageListTimMember.query.filter_by(group_id=new_group.id).all()
+    # Get the message lists that the groups have a membership in.
+    group_message_lists = [g.member.message_list for g in group_tim_members]
+
+    # Add user to the group's message lists.
+    for message_list in group_message_lists:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        add_new_message_list_tim_user(message_list, user, message_list.default_send_right,
+                                      message_list.default_delivery_right, email_list)
+    db.session.commit()  # .flush() might be enough?
+    return
+
+
+def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
+    """On removing a user from a user group, remove the user from all the message lists that watch the group.
+
+    :param user: The user who was removed from the user group.
+    :param old_group: The group where the user was removed from.
+    :return: None.
+    """
+    # FIXME: This does not work. Most likely there is confusin with different IDs, which results in pulling wrong
+    #  members/groups.
+    # Get all the message lists for the user group.
+    group_tim_members = MessageListTimMember.query.filter_by(group_id=old_group.id).all()
+    for group_tim_member in group_tim_members:
+        # For the message list, find all groups.
+        group_message_list = group_tim_member.message_list
+        member_groups: List[UserGroup] = []
+        for member_id in group_message_list.get_tim_members():
+            tim_member = MessageListTimMember.query.filter_by(id=member_id).one()
+            if tim_member.is_group():
+                member_groups.append(tim_member.user_group)
+        # Check how many groups does the user currently belong to.
+        belongs_to = []
+        for group in member_groups:
+            # belongs_to = []  # groups the user has a membership in, that belong to the message list.
+            for membership in group.current_memberships:
+                if membership.usergroup_id == old_group.id and membership.user_id == user.id:
+                    # VIESTIM: This should be a singular finding, yes? There shouldn't be multiple memberships for
+                    #  the same user to the same group?
+                    belongs_to.append(membership)
+        # VIESTIM: We assume that in the function that triggers this function the user is already removed from the
+        #  group.
+        if len(belongs_to) == 0:
+            # If the user does not belong to any other group, set them as removed from the message list as well.
+            group_tim_member.remove()
+        else:
+            # The user belongs to other groups still on the message list. They don't have to then be automatically set
+            # as removed.
+            pass
+    db.session.commit()  # .flush() might be enough?
+    return

@@ -4,7 +4,8 @@ from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain, Member
 
-from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate, ArchiveType
+from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate, ArchiveType, \
+    ReplyToListChanges, reply_to_munging
 from timApp.tim_app import app
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
@@ -76,16 +77,6 @@ class EmailList:
     # VIESTIM: Would it be polite to return something as an indication how the operation went?
 
     @staticmethod
-    def set_notify_owner_on_list_change(listname: str, on_change_flag: bool) -> None:
-        if _client is None:
-            raise NotExist("No email list server connection.")
-
-        mlist = _client.get_list(listname)
-        mlist.settings["admin_notify_mchanges"] = on_change_flag
-        mlist.settings.save()
-        return
-
-    @staticmethod
     def get_notify_owner_on_list_change(listname: str) -> bool:
         if _client is None:
             raise NotExist("No email list server connection.")
@@ -146,6 +137,19 @@ class EmailList:
             return lists
         except HTTPError:
             return []
+
+
+def set_notify_owner_on_list_change(mlist: MailingList, on_change_flag: bool) -> None:
+    """Set email list's notify owner on list change change flag.
+
+    :param mlist: Email list where the flag is set.
+    :param on_change_flag: For True, set the notification flag on and then the changes on a list will send
+    notifications from Mailman. For False, set the flag off and then the email list will not send notifications
+    from Mailman.
+    """
+    mlist.settings["admin_notify_mchanges"] = on_change_flag
+    mlist.settings.save()
+    return
 
 
 def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> None:
@@ -255,14 +259,18 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         log_error("New list creation has been accessed, even though mailmanclient is not configured for connection.")
         raise RouteException("No connection configured.")
     try:
-        check_name_availability(list_options.listname, list_options.domain)
+        if list_options.domain:
+            check_name_availability(list_options.name, list_options.domain)
+        else:
+            log_warning("Tried to create an email list without selected domain part.")
+            raise RouteException("Tried to create an email list without selected domain part.")
     except HTTPError:
         # TODO: If the name has been snatched between checking it's availability, we might want to offer name
         #  recommendations?
         raise
     try:
         domain: Domain = _client.get_domain(list_options.domain)
-        email_list: MailingList = domain.create_list(list_options.listname)
+        email_list: MailingList = domain.create_list(list_options.name)
         # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
         #  their lists on Mailman.
         email_list.add_owner(owner.email)
@@ -282,10 +290,10 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # switches this on if necessary.
         mlist_settings["admin_notify_mchanges"] = False
 
-        if list_options.listDescription:
-            set_email_list_description(email_list, list_options.listDescription)
-        if list_options.listInfo:
-            set_email_list_info(email_list, list_options.listInfo)
+        if list_options.list_description:
+            set_email_list_description(email_list, list_options.list_description)
+        if list_options.list_info:
+            set_email_list_info(email_list, list_options.list_info)
 
         # This is to force Mailman generate archivers into it's db. This is to fix a race condition, where creating a
         # new list without proper engineer interface procedures might make duplicate archiver rows in to db,
@@ -418,7 +426,11 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
         # Set member's send and delivery rights to email list.
         set_email_list_member_send_status(new_member, send_right)
         set_email_list_member_delivery_status(new_member, delivery_right)
-    except HTTPError:
+    except HTTPError as e:
+        if e.code == 409:
+            # With code 409, Mailman indicates that the member is already in the list. No further action might not be
+            # needed.
+            return
         raise
 
 
@@ -573,3 +585,107 @@ def get_email_list_member(mlist: MailingList, email: str) -> Member:
     """
     member = mlist.get_member(email)
     return member
+
+
+def set_email_list_unsubscription_policy(email_list: MailingList, can_unsubscribe_flag: bool) -> None:
+    """Set the unsubscription policy of an email list.
+
+    :param email_list: The email list where the policy is to be set.
+    :param can_unsubscribe_flag: For True, then set the policy as 'confirm_then_moderate'. For False, set the policy as
+    'confirm'.
+    """
+    # mailmanclient exposes an 'unsubscription_policy' setting, that follows SubscriptionPolicy enum values, see
+    # https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/mailinglist.py for details.
+    if can_unsubscribe_flag:
+        email_list.settings["unsubscription_policy"] = "confirm"
+    else:
+        email_list.settings["unsubscription_policy"] = "confirm_then_moderate"
+    email_list.settings.save()
+    return
+
+
+def set_email_list_subject_prefix(email_list: MailingList, subject_prefix: str) -> None:
+    """Set the subject prefix for an email list.
+
+    :param email_list: Email list where the subject prefix is to be set.
+    :param subject_prefix: The prefix set for email list's subject.
+    """
+    email_list.settings["subject_prefix"] = subject_prefix
+    email_list.settings.save()
+    return
+
+
+def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
+    """Set email list to only text mode. Affects new email sent to list and (new) HyperKitty archived messages.
+
+    :param email_list:
+    :param only_text: A boolean flag controlling list rendering mode. For True, the list is in an only text mode.
+    For False, the list is not on an only text mode, and other rendering (e.g. HTML) is allowed.
+    :return:
+    """
+    email_list.settings["convert_html_to_plaintext"] = only_text
+    # The archive_rendering_mode setting mainly has an effect on HyperKitty. If the archiver on Mailman is something
+    # else, this might have no effect. It is still exposed on mailmanclient, so it should not be harmful either,
+    # it just has no effect.
+    if only_text:
+        email_list.settings["archive_rendering_mode"] = "text"
+    else:
+
+        email_list.settings["archive_rendering_mode"] = "markdown"
+    email_list.settings.save()
+    return
+
+
+def set_email_list_non_member_message_pass(email_list: MailingList, non_member_message_pass_flag: bool) -> None:
+    """Set email list's non member (message pass) action.
+
+    :param email_list: The email list where the non member message pass action is set.
+    :param non_member_message_pass_flag: For True, set the default non member moderation action as 'accept'. For False,
+    set the default non member moderation action as 'hold'
+    :return: None.
+    """
+    if non_member_message_pass_flag:
+        email_list.settings["default_nonmember_action"] = "accept"
+    else:
+        email_list.settings["default_nonmember_action"] = "hold"
+    email_list.settings.save()
+    return
+
+
+# VIESTIM: A temporary global variable including all the file extensions that are allowed if attachments are allowed
+#  in a message/email list.
+# TODO: Move to a configuration file.
+allowed_attachment_file_extensions = ["pdf", "jpg", "png", "txt", "tex"]
+
+
+def set_email_list_allow_attachments(email_list: MailingList, allow_attachments_flag: bool) -> None:
+    """Set email list allowed attachments.
+
+    :param email_list: The email list where allowed attachment extensions are set.
+    :param allow_attachments_flag: For True, set all the allowed extensions for an email list. If False, set the allowed
+     extensions to an empty list.
+    :return: None.
+    """
+    global allowed_attachment_file_extensions  # VIESTIM Temporary use of global variable for prototyping purposes.
+    if allow_attachments_flag:
+        email_list.settings["pass_extensions"] = allowed_attachment_file_extensions
+    else:
+        # There might not be a direct option to disallow all attachments to a list. We pass a value we don't expect
+        # to find as a file extension. Then the only type of extension that would be allowed is file.no_extensions.
+        email_list.settings["pass_extensions"] = ["no_extensions"]
+
+    email_list.settings.save()
+    return
+
+
+def set_email_list_default_reply_type(email_list: MailingList, default_reply_type: ReplyToListChanges) -> None:
+    """Set the email list's default reply type, i.e. perform Reply-To munging.
+
+    :param email_list: The email list where the reply type is set.
+    :param default_reply_type: See ReplyToListChanges and reply_to_munging variable.
+    :return: None.
+    """
+    email_list.settings["reply_goes_to_list"] = reply_to_munging[default_reply_type]
+
+    email_list.settings.save()
+    return

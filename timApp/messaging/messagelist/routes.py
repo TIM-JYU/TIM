@@ -10,15 +10,22 @@ from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui
     delete_email_list, check_emaillist_name_requirements, get_email_list_member, set_email_list_member_send_status, \
     set_email_list_member_delivery_status
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
-from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, ReplyToListChanges
+from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
-    new_list, archive_message, EmailAndDisplayName
+    new_list, archive_message, EmailAndDisplayName, set_message_list_notify_owner_on_change, \
+    set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
+    set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
+    set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
+    add_new_message_list_tim_user, add_new_message_list_group, add_message_list_external_email_member
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
+from timApp.user.user import User
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.utils import is_valid_email
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
@@ -38,9 +45,9 @@ def create_list(options: ListOptions) -> Response:
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
-    options.listname = options.listname.strip()
+    options.name = options.name.strip()
 
-    test_name(options.listname)  # Test the name we are creating.
+    test_name(options.name)  # Test the name we are creating.
 
     manage_doc = new_list(options)
     create_new_email_list(options, owner)
@@ -118,23 +125,27 @@ def get_list(document_id: int) -> Response:
     verify_logged_in()
     # TODO: Additional checks for who gets to call this route.
 
-    msg_list = MessageListModel.get_list_by_manage_doc_id(document_id)
+    message_list = MessageListModel.get_list_by_manage_doc_id(document_id)
     list_options = ListOptions(
-        listname=msg_list.name,
-        notifyOwnerOnListChange=msg_list.notify_owner_on_change,
-        # VIESTIM: We need a better way of either querying or inferring list's (possible) domain. For the time being,
-        #  here is a placeholder.
-        domain="tim.jyu.fi",
-        archive=msg_list.archive,
-        htmlAllowed=True,
-        defaultReplyType=ReplyToListChanges.NOCHANGES
+        name=message_list.name,
+        notify_owners_on_list_change=message_list.notify_owner_on_change,
+        domain=message_list.email_list_domain,
+        archive=message_list.archive,
+        default_reply_type=message_list.default_reply_type,
+        # TODO: Change to get these from db.
+        tim_users_can_join=message_list.tim_user_can_join,
+        list_subject_prefix=message_list.subject_prefix,
+        members_can_unsubscribe=message_list.can_unsubscribe,
+        default_send_right=message_list.default_send_right,
+        default_delivery_right=message_list.default_delivery_right,
+        only_text=message_list.only_text,
+        non_member_message_pass=message_list.non_member_message_pass,
+        email_admin_url=get_list_ui_link(message_list.name, message_list.email_list_domain),
+        list_info=message_list.info,
+        list_description=message_list.description,
+        allow_attachments=message_list.allow_attachments,
+        distribution=Distribution(email_list=True, tim_message=True),
     )
-    if msg_list.email_list_domain:
-        list_options.emailAdminURL = get_list_ui_link(msg_list.name, msg_list.email_list_domain)
-    if msg_list.info:
-        list_options.listInfo = msg_list.info
-    if msg_list.description:
-        list_options.listDescription = msg_list.description
     return json_response(list_options)
 
 
@@ -144,7 +155,7 @@ def save_list_options(options: ListOptions) -> Response:
     # TODO: Additional checks for who get's to call this route.
     #  list's owner
 
-    message_list = MessageListModel.get_list_by_name_exactly_one(options.listname)
+    message_list = MessageListModel.get_list_by_name_exactly_one(options.name)
 
     # TODO: Verify that user has rights to the message list.
 
@@ -153,15 +164,28 @@ def save_list_options(options: ListOptions) -> Response:
         message_list.archive = options.archive
         pass
 
-    message_list.description = options.listDescription
-    message_list.info = options.listInfo
+    message_list.description = options.list_description
+    message_list.info = options.list_info
 
-    message_list.notify_owner_on_change = options.notifyOwnerOnListChange
+    # These have direct effect on an attached email list, if the message list has one configured.
+    set_message_list_notify_owner_on_change(message_list, options.notify_owners_on_list_change)
+    set_message_list_member_can_unsubscribe(message_list, options.members_can_unsubscribe)
+    set_message_list_subject_prefix(message_list, options.list_subject_prefix)
+    set_message_list_only_text(message_list, options.only_text)
+    set_message_list_allow_attachments(message_list, options.allow_attachments)
+    set_message_list_tim_users_can_join(message_list, options.tim_users_can_join)
+    set_message_list_non_member_message_pass(message_list, options.non_member_message_pass)
 
-    # TODO: save the following list options.
-    # message_list.can_unsubscribe
-    # message_list.default_send_right
-    # message_list.default_delivery_right
+    # TODO: Implemented client side.
+    set_message_list_default_send_right(message_list, options.default_send_right)
+    # TODO: Implemented client side.
+    set_message_list_default_delivery_right(message_list, options.default_delivery_right)
+
+    # TODO: Implement client side.
+    set_message_list_default_reply_type(message_list, options.default_reply_type)
+    # TODO: set the following list options.
+    # TODO: Implement client side
+    # message_list.distribution = options.distribution
 
     db.session.commit()
     return ok_response()
@@ -209,9 +233,7 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
 
 
 @messagelist.route("/addmember", methods=['POST'])
-def add_member(memberCandidates: List[str], msgList: str) -> Response:
-    from timApp.user.user import User  # Local import to avoid cyclical imports.
-
+def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliveryRight: bool) -> Response:
     # TODO: Validate access rights.
     #  List owner.
     verify_logged_in()
@@ -233,27 +255,18 @@ def add_member(memberCandidates: List[str], msgList: str) -> Response:
         u = User.get_by_name(member_candidate.strip())
         if u is not None:
             # The name given was an existing TIM user.
-            new_tim_member = MessageListTimMember()
-            new_tim_member.message_list_id = msg_list.id
-            new_tim_member.group_id = u.get_personal_group().id
-            # VIESTIM: For convenience sake just add these. Figure out list rights at a later date. Everyone loves a
-            #  bit of technical debt, don't they?
-            new_tim_member.delivery_right = True
-            new_tim_member.send_right = True
-            db.session.add(new_tim_member)
-
-            # VIESTIM: Get user's email and add it to list's email list.
-            if em_list is not None:
-                user_email = u.email  # TODO: Search possible additional emails.
-                # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
-                #  placeholder value of True.
-                add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=u.real_name,
-                          send_right=new_tim_member.send_right, delivery_right=new_tim_member.delivery_right)
+            add_new_message_list_tim_user(msg_list, u, sendRight, deliveryRight, em_list)
 
         # TODO: If member_candidate is a user group, what do? Add as is or open it to individual users?
-
+        ug = UserGroup.get_by_name(member_candidate.strip())
+        if ug is not None:
+            # The name belongs to a user group.
+            add_new_message_list_group(msg_list, ug, sendRight, deliveryRight, em_list)
         # TODO: If member candidate is not a user, or a user group, then we assume an external member. Add external
         #  members.
+        if is_valid_email(member_candidate.strip()) and em_list:
+            add_message_list_external_email_member(msg_list, member_candidate.strip(),
+                                                   sendRight, deliveryRight, em_list, None)
 
     db.session.commit()
 
