@@ -79,9 +79,6 @@ class Block(db.Model):
         uselist=False,
     )
 
-    # VIESTIM: Should we somehow disallow that the same Block is both a user group management Block and message list
-    #  management Block? Would that be even necessary?
-
     #  If this Block corresponds to a message list's manage document, indicates the message list
     #  being managed.
     managed_messagelist: Optional[MessageListModel] = db.relationship("MessageListModel", back_populates="block",
