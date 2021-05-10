@@ -172,13 +172,17 @@ def check_urls(urls: str) -> Response:
 
 @timMessage.route("/send", methods=['POST'])
 def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
-    """
-    Creates a new TIM message and saves it to database.
+    return send_message_or_reply(options, message)
 
-    :param options: Options related to the message
-    :param message: Message subject, contents and sender
-    :return:
+
+def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Response:
     """
+        Creates a new TIM message and saves it to database.
+
+        :param options: Options related to the message
+        :param message: Message subject, contents and sender
+        :return:
+        """
     verify_logged_in()
 
     tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires)
@@ -254,9 +258,7 @@ def reply_to_tim_message(message_id: int, options: ReplyOptions, messageBody: Me
     print("messageOptions: " + str(messageOptions))
     print("message: " + str(message))
 
-    reply_response = send_tim_message(messageOptions, message)
-
-    return ok_response()
+    return send_message_or_reply(messageOptions, message)
 
 
 @timMessage.route("/mark_as_read", methods=['POST'])
