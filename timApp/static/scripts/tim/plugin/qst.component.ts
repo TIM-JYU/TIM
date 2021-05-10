@@ -209,6 +209,7 @@ export class QstComponent
         if (this.changes) {
             this.result = undefined;
         }
+        this.cdr.detectChanges();
     }
 
     getQuestionTitle() {
