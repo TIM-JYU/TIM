@@ -52,9 +52,6 @@ class ReplyOptions:
     messageChannel: bool
     pageList: str
     recipient: str
-    sender: str
-    senderEmail: str
-    isPrivate: bool = True
     readReceipt: bool = True
 
 
@@ -243,11 +240,21 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 
 
 @timMessage.route("/reply", methods=['POST'])
-def reply_to_tim_message(message_id: int, options: ReplyOptions, message: str) -> Response:
+def reply_to_tim_message(message_id: int, options: ReplyOptions, messageBody: MessageBody) -> Response:
     # TODO handle replying to message
     print(message_id)
     print(options)
-    print(message)
+    print(str(messageBody))
+
+    # VIESTIM: add option is_reply to MessageOptions (and column to internalmessage table in db, save original message's id here)
+
+    messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList, options.readReceipt, False, get_current_user_object().name, get_current_user_object().email)
+
+    message = messageBody
+    print("messageOptions: " + str(messageOptions))
+    print("message: " + str(message))
+
+    reply_response = send_tim_message(messageOptions, message)
 
     return ok_response()
 

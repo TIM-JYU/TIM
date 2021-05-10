@@ -3,7 +3,6 @@ import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {to2} from "tim/util/utils";
-import {Users} from "tim/user/userService";
 import {TimMessageData} from "./tim-message-view.component";
 
 interface ReplyOptions {
@@ -11,9 +10,6 @@ interface ReplyOptions {
     messageChannel: boolean;
     pageList: string;
     recipient: string | null;
-    sender: string | null;
-    senderEmail: string | null;
-    isPrivate: boolean;
     readReceipt: boolean;
 }
 
@@ -90,9 +86,6 @@ export class TimMessageComponent implements OnInit {
         messageChannel: false,
         pageList: "",
         recipient: "",
-        sender: Users.getCurrent().real_name,
-        senderEmail: Users.getCurrent().email,
-        isPrivate: true,
         readReceipt: true,
     };
 
@@ -138,7 +131,6 @@ export class TimMessageComponent implements OnInit {
 
     /**
      * Sends reply to sender
-     * VIESTIM: actual functionality!
      */
     async sendReply() {
         this.replySent = true;
@@ -153,7 +145,11 @@ export class TimMessageComponent implements OnInit {
                 .post("/timMessage/reply", {
                     message_id: this.message?.id,
                     options: this.replyOptions,
-                    message: this.replyMessage,
+                    messageBody: {
+                        messageBody: this.replyMessage,
+                        messageSubject: this.heading + " [Re]",
+                        recipients: [this.replyOptions.recipient],
+                    },
                 })
                 .toPromise()
         );
