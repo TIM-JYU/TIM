@@ -11,6 +11,7 @@ interface ReplyOptions {
     pageList: string;
     recipient: string | null;
     readReceipt: boolean;
+    repliesTo?: number;
 }
 
 @Component({
@@ -87,6 +88,7 @@ export class TimMessageComponent implements OnInit {
         pageList: "",
         recipient: "",
         readReceipt: true,
+        repliesTo: undefined,
     };
 
     constructor(private http: HttpClient) {}
@@ -137,13 +139,13 @@ export class TimMessageComponent implements OnInit {
         this.canSendReply = false;
         if (this.sender) {
             this.replyOptions.recipient = this.sender;
+            this.replyOptions.repliesTo = this.message?.id;
         } else {
             console.log("no recipient, can't send");
         }
         const result = await to2(
             this.http
                 .post("/timMessage/reply", {
-                    message_id: this.message?.id,
                     options: this.replyOptions,
                     messageBody: {
                         messageBody: this.replyMessage,

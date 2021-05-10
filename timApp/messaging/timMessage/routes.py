@@ -43,6 +43,7 @@ class MessageOptions:
     reply: bool
     sender: str
     senderEmail: str
+    repliesTo: Optional[int] = None
     expires: Optional[datetime] = None
 
 
@@ -53,6 +54,7 @@ class ReplyOptions:
     pageList: str
     recipient: str
     readReceipt: bool = True
+    repliesTo: Optional[int] = None
 
 
 @dataclass
@@ -185,7 +187,7 @@ def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Resp
         """
     verify_logged_in()
 
-    tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires)
+    tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires, replies_to=options.repliesTo)
     create_tim_message(tim_message, options, message)
     db.session.add(tim_message)
     db.session.flush()
@@ -244,11 +246,11 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 
 
 @timMessage.route("/reply", methods=['POST'])
-def reply_to_tim_message(message_id: int, options: ReplyOptions, messageBody: MessageBody) -> Response:
+def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Response:
 
     # VIESTIM: add option replies_to to MessageOptions (and column to internalmessage table in db, save original message's id here)
 
-    messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList, options.readReceipt, False, get_current_user_object().name, get_current_user_object().email)
+    messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList, options.readReceipt, False, get_current_user_object().name, get_current_user_object().email, options.repliesTo)
     message = messageBody
 
     return send_message_or_reply(messageOptions, message)
