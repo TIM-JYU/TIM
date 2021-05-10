@@ -644,7 +644,8 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     :param em_list:
     :return: None.
     """
-    if not check_group_owner_or_manage_right(ug):
+    # Check right to the group. Right checking is not required for personal groups, only generated user groups.
+    if not ug.is_personal_group and not check_group_owner_or_manage_right(ug):
         return
 
     # Check for duplicates. Groups only have their name to check against.
