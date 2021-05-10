@@ -904,6 +904,16 @@ export function formatString(s: string, ...fmt: string[]) {
     return fmt.reduce((str, val, i) => str.replace(`{${i}}`, val), s);
 }
 
+export function templateString(
+    s: string,
+    fmtVariables: Record<string, unknown>
+) {
+    return Object.entries(fmtVariables).reduce(
+        (str, [key, val]) => str.replace(`{${key}}`, "" + val),
+        s
+    );
+}
+
 export function getViewName() {
     return document.location.pathname.split("/")[1];
 }

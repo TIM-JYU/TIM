@@ -23,7 +23,13 @@ import {Result} from "@zxing/library";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {formatString, isMobileDevice, timeout, to2} from "../../util/utils";
+import {
+    formatString,
+    isMobileDevice,
+    templateString,
+    timeout,
+    to2,
+} from "../../util/utils";
 import {IUser} from "../../user/IUser";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {CodeScannerComponent} from "./code-scanner.component";
@@ -33,6 +39,7 @@ import {
     PrefetchedQueryHandler,
     SearchResult,
     ServerQueryHandler,
+    UserResult,
 } from "./searchQueryHandlers";
 
 const PluginMarkup = t.intersection([
@@ -134,13 +141,13 @@ const USER_FIELDS: Record<string, string> = {
                     </thead>
                     <tbody>
                     <tr class="user-row" *ngFor="let match of lastSearchResult.matches"
-                        [class.selected-user]="selectedUser == match.user" (click)="selectedUser = match.user">
+                        [class.selected-user]="selectedUser == match" (click)="selectedUser = match">
                         <td class="select-col">
                             <span class="radio">
                                 <label>
                                     <input type="radio"
                                            name="userselect-radios"
-                                           [value]="match.user"
+                                           [value]="match"
                                            [(ngModel)]="selectedUser"
                                            [disabled]="applying">
                                 </label>
@@ -209,8 +216,8 @@ export class UserSelectComponent extends AngularPluginBase<
     searchPress: Subject<void> = new Subject();
     inputTyped: Subject<string> = new Subject();
     lastSearchResult?: SearchResult;
-    selectedUser?: IUser;
-    lastAddedUser?: string;
+    selectedUser?: UserResult;
+    lastAddedUser?: UserResult;
     barCodeResult: string = "";
     supportsMediaDevices = true;
     enableScanner = false;
@@ -229,10 +236,16 @@ export class UserSelectComponent extends AngularPluginBase<
     scanCode: boolean = false;
 
     get successMessage() {
-        if (this.markup.text.success) {
-            return formatString(this.markup.text.success, this.lastAddedUser!);
+        if (!this.lastAddedUser) {
+            return "";
         }
-        return $localize`Permissions applied to ${this.lastAddedUser}:INTERPOLATION:.`;
+        if (this.markup.text.success) {
+            return templateString(
+                this.markup.text.success,
+                this.lastAddedUser.fields
+            );
+        }
+        return $localize`Permissions applied to ${this.lastAddedUser?.user.real_name}:INTERPOLATION:.`;
     }
 
     private get searchQueryStrings() {
@@ -333,7 +346,7 @@ export class UserSelectComponent extends AngularPluginBase<
                     "/userSelect/apply",
                     {
                         par: this.getPar().par.getJsonForServer(),
-                        username: this.selectedUser.name,
+                        username: this.selectedUser.user.name,
                     },
                     {params}
                 )
@@ -341,8 +354,7 @@ export class UserSelectComponent extends AngularPluginBase<
         );
 
         if (result.ok) {
-            this.lastAddedUser =
-                this.selectedUser.real_name ?? this.selectedUser.name;
+            this.lastAddedUser = this.selectedUser;
             this.resetView();
         } else {
             this.setError(
@@ -407,7 +419,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 })
             );
             if (this.lastSearchResult.matches.length == 1) {
-                this.selectedUser = this.lastSearchResult.matches[0].user;
+                this.selectedUser = this.lastSearchResult.matches[0];
             }
         } else {
             this.setError(
