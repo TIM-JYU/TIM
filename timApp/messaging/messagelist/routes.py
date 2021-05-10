@@ -9,9 +9,9 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui_link, create_new_email_list, \
     delete_email_list, check_emaillist_name_requirements, get_email_list_member, set_email_list_member_send_status, \
     set_email_list_member_delivery_status
-from timApp.messaging.messagelist.emaillist import get_email_list_by_name, add_email
+from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
-from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
     new_list, archive_message, EmailAndDisplayName, set_message_list_notify_owner_on_change, \
     set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
