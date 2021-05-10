@@ -149,7 +149,9 @@ function matchKeywords(queryWords: string[], keywords: string[]) {
     const keywordsSet = new Set(keywords);
     for (const queryWord of queryWords) {
         const found = setHas(keywordsSet, (v) => v.includes(queryWord));
-        if (found === undefined) return false;
+        if (found === undefined) {
+            return false;
+        }
         keywordsSet.delete(found);
     }
     return true;
