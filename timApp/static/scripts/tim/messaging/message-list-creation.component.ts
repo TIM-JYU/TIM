@@ -76,7 +76,7 @@ export class MessageListComponent extends AngularDialogComponent<
     domain: string = "";
 
     // List has a private members only archive by default.
-    archive: ArchiveType = ArchiveType.GROUPONLY;
+    archive: ArchiveType = ArchiveType.PUBLIC;
     archiveOptions = archivePolicyNames;
 
     constructor(private http: HttpClient) {
