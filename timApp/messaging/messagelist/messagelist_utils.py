@@ -239,13 +239,12 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
     archive_doc = create_archive_doc_with_permission(archive_title, archive_doc_path, message_list, message)
 
     # Set header information for archived message. The empty lines are needed to separate headers into their own lines.
-    archive_doc.document.add_text(f"""Title: {message.title}
-    
-Sender: {message.sender}
+    archive_doc.document.add_text(f"""
+#- {{.mailheader}}\
+Title: {message.title}{{.mailtitle}}\
+Sender: {message.sender}\
+Recipients: {message.recipients}\
 
-Recipients: {message.recipients}
-
-Message body:
 """)
 
     # Set message body for archived message.
