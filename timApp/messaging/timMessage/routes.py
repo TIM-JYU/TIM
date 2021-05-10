@@ -2,6 +2,7 @@ import re
 from dataclasses import dataclass
 from typing import Optional, List
 from datetime import datetime
+from sqlalchemy.sql import column
 
 from flask import Response
 
@@ -106,6 +107,9 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     for display in displays:
         receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id, message_id=display.message_id).first()
         expires = InternalMessage.query.filter_by(id=display.message_id).first()
+        # VIESTIM: check if message has been replied to: don't show it then!
+        # reply_to_ids = InternalMessage.query.filter(InternalMessage.replies_to != None)
+        # print(str(reply_to_ids.replies_to))
         if receipt.marked_as_read_on is None and (expires.expires is None or expires.expires > datetime.now()):
             messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
             recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())

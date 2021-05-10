@@ -51,7 +51,7 @@ interface ReplyOptions {
                     <span class="readReceiptLink"
                           *ngIf="markedAsRead">Read receipt can be cancelled in <a>your messages</a></span>
                     <button class="timButton" title="Close Message"
-                            [disabled]="(!canMarkAsRead && !replySent) || (canMarkAsRead && !markedAsRead)"
+                            [disabled]="(!markedAsRead && !replySent)"
                             (click)="closeMessage()">
                         Close
                     </button>
@@ -85,7 +85,7 @@ export class TimMessageComponent implements OnInit {
     replyOptions: ReplyOptions = {
         archive: true,
         messageChannel: false,
-        pageList: "",
+        pageList: "messages/tim-messages",
         recipient: "",
         readReceipt: true,
         repliesTo: undefined,
