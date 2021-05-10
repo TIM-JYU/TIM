@@ -78,9 +78,9 @@ async function playBeep(name: string, audio?: HTMLAudioElement) {
 }
 
 const USER_FIELDS: Record<string, string> = {
-    "$.name": $localize`Username`,
-    "$.real_name": $localize`Real name`,
-    "$.email": $localize`Email`,
+    username: $localize`Username`,
+    realname: $localize`Real name`,
+    useremail: $localize`Email`,
 };
 
 @Component({
@@ -405,9 +405,9 @@ export class UserSelectComponent extends AngularPluginBase<
                     ...ur,
                     fields: {
                         ...ur.fields,
-                        "$.name": ur.user.name,
-                        "$.real_name": ur.user.real_name ?? undefined,
-                        "$.email": ur.user.email ?? undefined,
+                        username: ur.user.name,
+                        realname: ur.user.real_name ?? undefined,
+                        useremail: ur.user.email ?? undefined,
                     },
                 })
             );
@@ -449,7 +449,7 @@ export class UserSelectComponent extends AngularPluginBase<
             autoSearchDelay: 0,
             preFetch: false,
             maxMatches: 10,
-            displayFields: ["$.name", "$.real_name"],
+            displayFields: ["username", "realname"],
         };
     }
 

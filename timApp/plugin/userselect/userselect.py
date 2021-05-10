@@ -95,7 +95,7 @@ class UserSelectMarkupModel(GenericMarkupModel):
     fields: List[str] = field(default_factory=list)
     actions: Optional[ActionCollection] = None
     text: TextOptions = field(default_factory=TextOptions)
-    displayFields: List[str] = field(default_factory=lambda: ["$.name", "$.real_name"])
+    displayFields: List[str] = field(default_factory=lambda: ["username", "realname"])
 
 
 UserSelectMarkupModelSchema = class_schema(UserSelectMarkupModel, base_schema=DurationSchema)
