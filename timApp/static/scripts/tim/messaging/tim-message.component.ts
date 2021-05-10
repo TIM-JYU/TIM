@@ -3,7 +3,6 @@ import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {to2} from "tim/util/utils";
-import {Users} from "tim/user/userService";
 import {TimMessageData} from "./tim-message-view.component";
 
 interface ReplyOptions {
@@ -11,10 +10,8 @@ interface ReplyOptions {
     messageChannel: boolean;
     pageList: string;
     recipient: string | null;
-    sender: string | null;
-    senderEmail: string | null;
-    isPrivate: boolean;
     readReceipt: boolean;
+    repliesTo?: number;
 }
 
 @Component({
@@ -54,7 +51,7 @@ interface ReplyOptions {
                     <span class="readReceiptLink"
                           *ngIf="markedAsRead">Read receipt can be cancelled in <a>your messages</a></span>
                     <button class="timButton" title="Close Message"
-                            [disabled]="(!canMarkAsRead && !replySent) || (canMarkAsRead && !markedAsRead)"
+                            [disabled]="(!markedAsRead && !replySent)"
                             (click)="closeMessage()">
                         Close
                     </button>
@@ -88,12 +85,10 @@ export class TimMessageComponent implements OnInit {
     replyOptions: ReplyOptions = {
         archive: true,
         messageChannel: false,
-        pageList: "",
+        pageList: "messages/tim-messages",
         recipient: "",
-        sender: Users.getCurrent().real_name,
-        senderEmail: Users.getCurrent().email,
-        isPrivate: true,
         readReceipt: true,
+        repliesTo: undefined,
     };
 
     constructor(private http: HttpClient) {}
@@ -138,22 +133,25 @@ export class TimMessageComponent implements OnInit {
 
     /**
      * Sends reply to sender
-     * VIESTIM: actual functionality!
      */
     async sendReply() {
         this.replySent = true;
         this.canSendReply = false;
         if (this.sender) {
             this.replyOptions.recipient = this.sender;
+            this.replyOptions.repliesTo = this.message?.id;
         } else {
             console.log("no recipient, can't send");
         }
         const result = await to2(
             this.http
                 .post("/timMessage/reply", {
-                    message_id: this.message?.id,
                     options: this.replyOptions,
-                    message: this.replyMessage,
+                    messageBody: {
+                        messageBody: this.replyMessage,
+                        messageSubject: this.heading + " [Re]",
+                        recipients: [this.replyOptions.recipient],
+                    },
                 })
                 .toPromise()
         );
