@@ -606,11 +606,8 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     if msg_list.get_member_by_name(name=user.name, email=user.email):
         return
 
-    new_tim_member = MessageListTimMember()
-    new_tim_member.message_list_id = msg_list.id
-    new_tim_member.group_id = user.get_personal_group().id
-    new_tim_member.delivery_right = send_right
-    new_tim_member.send_right = delivery_right
+    new_tim_member = MessageListTimMember(message_list=msg_list, user_group=user.get_personal_group(),
+                                          delivery_right=delivery_right, send_right=send_right)
     db.session.add(new_tim_member)
 
     # VIESTIM: Get user's email and add it to list's email list.
