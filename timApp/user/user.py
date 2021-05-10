@@ -504,8 +504,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         else:
             self.memberships.append(UserGroupMember(group=ug, adder=added_by))
             new_add = True
+
+        # TODO: Enable syncing when the syncing is fixed.
         # On changing of group, sync this person to the user goup's message lists.
-        sync_message_list_on_add(self, ug)
+        # sync_message_list_on_add(self, ug)
         return new_add
 
     @staticmethod

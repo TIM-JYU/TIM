@@ -140,7 +140,10 @@ class MessageListModel(db.Model):
         return individuals
 
     def get_tim_members(self) -> List['MessageListTimMember']:
-        """Get all members that have belong to a user group, i.e. TIM users and user groups."""
+        """Get all members that have belong to a user group, i.e. TIM users and user groups.
+
+        :return: A list of MessageListTimMember IDs.
+        """
         tim_members = []
         for member in self.members:
             if member.is_tim_member():
@@ -247,7 +250,9 @@ class MessageListMember(db.Model):
         return self.membership_verified is not None
 
     def remove(self) -> None:
+        # FIXME: When syncing on removal from a group, this creates a
         self.membership_ended = datetime.now()
+        # db.session.flush()
         return
 
 
