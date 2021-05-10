@@ -606,6 +606,7 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     :return: None.
     """
     # Check for member duplicates.
+    # VIESTIM: If a member has belonged to the list, but was removed, this returns True and the function returns.
     if msg_list.get_member_by_name(name=user.name, email=user.email):
         return
 
@@ -701,3 +702,60 @@ def check_group_owner_or_manage_right(ug: UserGroup) -> bool:
         if current_user_group.id == ug_id and (ac_t == AccessType.manage.value or ac_t == AccessType.owner.value):
             return True
     return False
+
+
+def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
+    """On adding a user to a new group, sync the user to user group's message lists.
+
+    :param user: The user that was added to the new_group.
+    :param new_group: The new group that the user was added to.
+    :return: None.
+    """
+    # Get the lists for the user group. Find all the TIM members that represent the new_group on message lists.
+    group_tim_members = MessageListTimMember.query.filter_by(group_id=new_group.id).all()
+    # Get the message lists that the groups have a membership in.
+    group_message_lists = [g.member.message_list for g in group_tim_members]
+
+    # Add user to the group's message lists.
+    for message_list in group_message_lists:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        add_new_message_list_tim_user(message_list, user, message_list.default_send_right,
+                                      message_list.default_delivery_right, email_list)
+    return
+
+
+def sync_message_list_on_expire(user_id: User, old_group_id: UserGroup) -> None:
+    """On removing a user from a user group, remove the user from all the message lists that watch the group.
+
+    :param user_id: The user who was removed from the user group.
+    :param old_group_id: The group where the user was removed from.
+    :return: None.
+    """
+    # Get all the message lists for the user group.
+    group_tim_members = MessageListTimMember.query.filter_by(group_id=old_group_id).all()
+    for group_tim_member in group_tim_members:
+        # For the message list, find all groups.
+        group_message_list = group_tim_member.message_list
+        member_groups: List[UserGroup] = []
+        for member in group_message_list.get_tim_members():
+            if member.is_group():
+                member_groups.append(member.user_group)
+        # Check how many groups does the user currently belong to.
+        belongs_to = []
+        for group in member_groups:
+            # belongs_to = []  # groups the user has a membership in, that belong to the message list.
+            for membership in group.current_memberships:
+                if membership.usergroup_id == old_group_id and membership.user_id == user_id:
+                    # VIESTIM: This should be a singular finding, yes? There shouldn't be multiple memberships for
+                    #  the same user to the same group?
+                    belongs_to.append(membership)
+        # VIESTIM: We assume that in the function that triggers this function the user is already removed from the
+        #  group.
+        if len(belongs_to) == 0:
+            # If the user does not belong to any other group, set them as removed from the message list as well.
+            group_tim_member.remove()
+        else:
+            # The user belongs to other groups still on the message list. They don't have to then be automatically set
+            # as removed.
+            pass
+    return

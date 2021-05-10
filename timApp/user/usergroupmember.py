@@ -25,7 +25,10 @@ class UserGroupMember(db.Model):
     )
 
     def set_expired(self):
+        # TODO: When the membership is expired, update message lists a user has been part of via the group.
+        from timApp.messaging.messagelist.messagelist_utils import sync_message_list_on_expire
         self.membership_end = get_current_time()
+        sync_message_list_on_expire(self.user, self.group)
 
 
 membership_current = ((UserGroupMember.membership_end == None) | (

@@ -14,6 +14,9 @@ class MemberJoinMethod(Enum):
     """User was invited and they confirmed joining."""
     JOINED = 3
     """User joined the list on their own."""
+    # VIESTIM: Add a join method for being added alongside a group? This could be useful information when syncing
+    #  message lists on users removal from a user group? This way we could better differentiate if the user was in
+    #  the list before they were added alongside with a gruop. VIA_GROUP = 4
 
 
 class MessageListModel(db.Model):
@@ -201,7 +204,7 @@ class MessageListMember(db.Model):
     member_type = db.Column(db.Text)
     """Discriminator for polymorhphic members."""
 
-    message_list = db.relationship("MessageListModel", back_populates="members", lazy="select")
+    message_list = db.relationship("MessageListModel", back_populates="members", lazy="select", uselist=False)
     tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select", uselist=False)
     external_member = db.relationship("MessageListExternalMember", back_populates="member", lazy="select",
                                       uselist=False)
