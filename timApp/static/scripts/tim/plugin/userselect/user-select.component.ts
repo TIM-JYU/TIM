@@ -23,14 +23,7 @@ import {Result} from "@zxing/library";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {
-    formatString,
-    isMobileDevice,
-    templateString,
-    timeout,
-    to2,
-} from "../../util/utils";
-import {IUser} from "../../user/IUser";
+import {isMobileDevice, templateString, timeout, to2} from "../../util/utils";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {CodeScannerComponent} from "./code-scanner.component";
 import {MediaDevicesSupported} from "./util";
@@ -413,9 +406,9 @@ export class UserSelectComponent extends AngularPluginBase<
                     fields: {
                         ...ur.fields,
                         "$.name": ur.user.name,
-                        "$.real_name": ur.user.real_name,
-                        "$.email": ur.user.email,
-                    } as Record<string, string>, // For some reason type casting is needed here despite the destruction
+                        "$.real_name": ur.user.real_name ?? undefined,
+                        "$.email": ur.user.email ?? undefined,
+                    },
                 })
             );
             if (this.lastSearchResult.matches.length == 1) {
