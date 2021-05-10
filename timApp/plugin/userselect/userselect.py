@@ -165,7 +165,7 @@ def fetch_users(task_id: Optional[str] = None, doc_id: Optional[int] = None, par
     })
 
 
-def match_query(query_words: List[str], keywords: List[str]):
+def match_query(query_words: List[str], keywords: List[str]) -> bool:
     kw = set(keywords)
     for qw in query_words:
         found = next((k for k in kw if qw in k), None)
