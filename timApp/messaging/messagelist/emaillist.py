@@ -670,7 +670,9 @@ def set_email_list_allow_attachments(email_list: MailingList, allow_attachments_
     if allow_attachments_flag:
         email_list.settings["pass_extensions"] = allowed_attachment_file_extensions
     else:
-        email_list.settings["pass_extensions"] = []
+        # There might not be a direct option to disallow all attachments to a list. We pass a value we don't expect
+        # to find as a file extension. Then the only type of extension that would be allowed is file.no_extensions.
+        email_list.settings["pass_extensions"] = ["no_extensions"]
 
     email_list.settings.save()
     return
