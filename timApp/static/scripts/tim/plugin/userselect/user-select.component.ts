@@ -301,9 +301,15 @@ export class UserSelectComponent extends AngularPluginBase<
         this.enableScanner = this.markup.scanner.enabled;
         this.inputMinLength = this.markup.inputMinLength;
         this.listenSearchInput();
-        this.inputTyped.subscribe(() => {
-            this.selectedUser = undefined;
-            this.lastSearchResult = undefined;
+        this.inputTyped.subscribe((val) => {
+            if (
+                !this.markup.preFetch ||
+                (this.markup.preFetch &&
+                    (val.length == 0 || !this.searchForm.form.valid))
+            ) {
+                this.selectedUser = undefined;
+                this.lastSearchResult = undefined;
+            }
         });
         this.scanInterval = this.markup.scanner.scanInterval;
 
@@ -459,10 +465,14 @@ export class UserSelectComponent extends AngularPluginBase<
             return;
         }
         const observables: Observable<unknown>[] = [this.searchPress];
-        if (this.markup.autoSearchDelay > 0)
+        if (this.markup.autoSearchDelay > 0 || this.markup.preFetch)
             observables.push(
                 this.inputTyped.pipe(
-                    debounceTime(this.markup.autoSearchDelay * 1000),
+                    debounceTime(
+                        this.markup.preFetch
+                            ? 0
+                            : this.markup.autoSearchDelay * 1000
+                    ),
                     distinctUntilChanged(),
                     filter(() => this.searchForm.form.valid)
                 )
