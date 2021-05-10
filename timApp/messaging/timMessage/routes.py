@@ -5,7 +5,9 @@ from datetime import datetime
 
 from flask import Response
 
+from timApp.document.document import Document
 from timApp.document.documents import import_document_from_file
+from timApp.document.viewcontext import default_view_ctx
 from timApp.util.flask.requesthelper import RouteException
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
@@ -111,8 +113,9 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
         fullmessages.append(TimMessageData(id=message.id, sender=document.owners.pop().name, doc_id=message.doc_id,
                                            par_id=message.par_id, can_mark_as_read=message.can_mark_as_read,
                                            can_reply=message.reply, display_type=message.display_type,
-                                           message_body=document.document.get_settings().get_dict().get('macros', {})[
-                                               'messagebody'],
+                                           message_body=Document.get_paragraph(document.document,
+                                                                               message.par_id).get_html(
+                                               default_view_ctx),
                                            message_subject=document.title, recipients=recipients))
 
     return fullmessages
@@ -229,9 +232,10 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
     message_doc.block.add_rights(recipient_users, AccessType.view)
 
     update_tim_msg_doc_settings(message_doc, sender, message_body)
-    message_par = message_doc.document.get_paragraphs()[0].get_id()  # TODO placeholder value; remove par_id completely?
+    message_par = message_doc.document.add_paragraph(message_body.messageBody)
+    message_doc.document.add_paragraph('<manage-read-receipt></manage-read-receipt>', attrs={"allowangular": "true"})
     tim_message.block = message_doc.block
-    tim_message.par_id = message_par
+    tim_message.par_id = message_par.get_id()
 
     if options.important:
         # Important messages are interpreted as 'sticky' display type
@@ -382,7 +386,6 @@ def update_tim_msg_doc_settings(message_doc: DocInfo, sender: User, message_body
     s['sendername'] = sender.name
     s['senderemail'] = sender.email
     s['recipients'] = message_body.recipients
-    s['messagebody'] = message_body.messageBody
 
     message_doc.document.add_setting('macros', s)
 

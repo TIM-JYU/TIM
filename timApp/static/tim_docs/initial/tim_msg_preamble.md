@@ -4,7 +4,6 @@ macros:
   sendername:
   senderemail:
   recipients:
-  messagebody:
 ```
 
 # %%subject%%
@@ -13,9 +12,3 @@ macros:
 **From:** %%sendername%%, %%senderemail%%
 
 **To:** %%recipients%%
-
-#-
-%%messagebody%%
-
-#- {allowangular="true"}
-<manage-read-receipt></manage-read-receipt>
