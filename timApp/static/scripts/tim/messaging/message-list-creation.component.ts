@@ -48,7 +48,7 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
                                     [value]="option.archiveType"
                                     [(ngModel)]="archive"
                             />
-                            <label for="archive-{{option}}">{{option.policyName}}</label>
+                            <label for="archive-{{option.archiveType}}">{{option.policyName}}</label>
                         </li>
                     </ul>
                 </div>
