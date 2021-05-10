@@ -1,14 +1,15 @@
 """Update message list related tables.
 
 Revision ID: 5512ad2fb9f2
-Revises: f8f14db7dc37
+Revises: c00fceabf513
 Create Date: 2021-05-07 08:17:26.542982
 
+The creation date is before the previous migration file, because the development got forked from a common file.
 """
 
 # revision identifiers, used by Alembic.
 revision = '5512ad2fb9f2'
-down_revision = 'f8f14db7dc37'
+down_revision = 'c00fceabf513'
 
 from alembic import op
 import sqlalchemy as sa
