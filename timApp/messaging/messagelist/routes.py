@@ -49,9 +49,15 @@ def create_list(options: ListOptions) -> Response:
 
     test_name(options.name)  # Test the name we are creating.
 
-    manage_doc = new_list(options)
-    create_new_email_list(options, owner)
+    manage_doc, message_list = new_list(options)
 
+    if options.domain:
+        create_new_email_list(options, owner)
+        # Add the domain to a message list only after the email list has been created. This way if the list creation
+        # fails, we have indication that the list does not have an email list attached to it.
+        message_list.email_list_domain = options.domain
+
+    db.session.commit()
     return json_response(manage_doc)
 
 

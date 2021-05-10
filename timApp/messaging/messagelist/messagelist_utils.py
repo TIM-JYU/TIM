@@ -397,22 +397,18 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     return doc
 
 
-def new_list(list_options: ListOptions) -> DocInfo:
+def new_list(list_options: ListOptions) -> (DocInfo, MessageListModel):
     """Adds a new message list into the database and creates the list's management doc.
 
-    :param list_options: The list information for creating a new message list.
+    :param list_options: The list information for creating a new message list. Used to carry list's name and archive
+    policy.
     :return: The management document.
+    :return: The message list db model.
     """
-    # VIESTIM: Check creation permission? Or should it be in the calling view function?
     msg_list = MessageListModel(name=list_options.name, archive=list_options.archive)
-    if list_options.domain:
-        msg_list.email_list_domain = list_options.domain
     db.session.add(msg_list)
-
     doc_info = create_management_doc(msg_list, list_options)
-
-    db.session.commit()
-    return doc_info
+    return doc_info, msg_list
 
 
 def set_message_list_notify_owner_on_change(message_list: MessageListModel,
