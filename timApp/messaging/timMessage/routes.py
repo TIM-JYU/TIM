@@ -245,18 +245,11 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 
 @timMessage.route("/reply", methods=['POST'])
 def reply_to_tim_message(message_id: int, options: ReplyOptions, messageBody: MessageBody) -> Response:
-    # TODO handle replying to message
-    print(message_id)
-    print(options)
-    print(str(messageBody))
 
-    # VIESTIM: add option is_reply to MessageOptions (and column to internalmessage table in db, save original message's id here)
+    # VIESTIM: add option replies_to to MessageOptions (and column to internalmessage table in db, save original message's id here)
 
     messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList, options.readReceipt, False, get_current_user_object().name, get_current_user_object().email)
-
     message = messageBody
-    print("messageOptions: " + str(messageOptions))
-    print("message: " + str(message))
 
     return send_message_or_reply(messageOptions, message)
 
