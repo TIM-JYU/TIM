@@ -19,36 +19,30 @@ import {
     filter,
     first,
 } from "rxjs/operators";
-import {BrowserMultiFormatReader, NotFoundException} from "@zxing/library";
+import {Result} from "@zxing/library";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {
-    formatString,
-    isMobileDevice,
-    timeout,
-    TimStorage,
-    to2,
-} from "../../util/utils";
-import {IUser} from "../../user/IUser";
+import {isMobileDevice, templateString, timeout, to2} from "../../util/utils";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
-
-interface UserResult {
-    user: IUser;
-    fields: Record<string, string | number | undefined>;
-}
-
-interface SearchResult {
-    matches: UserResult[];
-    allMatchCount: number;
-    fieldNames: string[];
-}
+import {CodeScannerComponent} from "./code-scanner.component";
+import {MediaDevicesSupported} from "./util";
+import {
+    IQueryHandler,
+    PrefetchedQueryHandler,
+    SearchResult,
+    ServerQueryHandler,
+    UserResult,
+} from "./searchQueryHandlers";
 
 const PluginMarkup = t.intersection([
     GenericPluginMarkup,
     t.type({
         inputMinLength: t.number,
         autoSearchDelay: t.number,
+        preFetch: t.boolean,
+        maxMatches: t.number,
+        displayFields: t.array(t.string),
         scanner: t.type({
             enabled: t.boolean,
             scanInterval: t.number,
@@ -56,6 +50,7 @@ const PluginMarkup = t.intersection([
             continuousMatch: t.boolean,
             waitBetweenScans: t.number,
             beepOnSuccess: t.boolean,
+            beepOnFailure: t.boolean,
         }),
         text: t.type({
             apply: nullable(t.string),
@@ -70,30 +65,40 @@ const PluginFields = t.intersection([
     t.type({}),
 ]);
 
+async function playBeep(name: string, audio?: HTMLAudioElement) {
+    let result = audio;
+    // Loading audio may fail, browsers usually throw an exception for Audio function failure
+    try {
+        if (!result) {
+            result = new Audio(`/static/audio/${name}.wav`);
+        }
+        await result.play();
+    } catch (e) {}
+    return result;
+}
+
+const USER_FIELDS: Record<string, string> = {
+    username: $localize`Username`,
+    realname: $localize`Real name`,
+    useremail: $localize`Email`,
+};
+
 @Component({
     selector: "user-selector",
     template: `
         <div *ngIf="enableScanner" class="barcode-video">
-            <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
-            <button [disabled]="!supportsMediaDevices" class="timButton btn-lg"
-                    (click)="startCodeReader()">
+            <tim-code-scanner *ngIf="scanCode" (successfulRead)="onCodeScanned($event)"
+                              [scanInterval]="scanInterval"></tim-code-scanner>
+            <button [disabled]="!queryHandler || !supportsMediaDevices" class="timButton btn-lg"
+                    (click)="scanCode = !scanCode">
                 <span class="icon-text">
                     <i class="glyphicon glyphicon-qrcode"></i>
                     <span>/</span>
                     <i class="glyphicon glyphicon-barcode"></i><br>
                 </span>
-                <span>Scan code</span>
+                <span i18n>Scan code</span>
             </button>
             <span *ngIf="!supportsMediaDevices" class="label label-default not-supported" i18n>Not supported in this browser</span>
-            <span *ngIf="!hasCameras" class="label label-danger not-supported" i18n>No cameras found</span>
-            <span *ngIf="supportsMediaDevices && !supportsConstraint('torch')" class="label label-default not-supported"
-                  i18n>Flashlight is not supported</span>
-            <div class="input-group" *ngIf="availableCameras.length > 1">
-                <span class="input-group-addon" i18n>Selected camera</span>
-                <select class="form-control" [(ngModel)]="selectedCamera" (ngModelChange)="cameraSelected()">
-                    <option *ngFor="let camera of availableCameras" [ngValue]="camera.id">{{camera.name}}</option>
-                </select>
-            </div>
         </div>
         <form class="search" (ngSubmit)="searchPress.next()" #searchForm="ngForm">
             <input class="form-control input-lg"
@@ -103,53 +108,45 @@ const PluginFields = t.intersection([
                    type="text"
                    [(ngModel)]="searchString"
                    (ngModelChange)="inputTyped.next($event)"
+                   [disabled]="!queryHandler"
                    minlength="{{ inputMinLength }}"
                    required
                    #searchInput>
             <input class="timButton btn-lg" type="submit" value="Search" i18n-value
-                   [disabled]="!searchForm.form.valid || search">
+                   [disabled]="!queryHandler || !searchForm.form.valid || search">
         </form>
-        <div class="search-result" *ngIf="search || lastSearchResult">
-            <div class="progress" *ngIf="search">
-                <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
-            </div>
-            <form>
+        <div class="progress" *ngIf="!isInPreview && (search || !queryHandler)">
+            <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
+        </div>
+        <div class="search-result" *ngIf="lastSearchResult">
+            <tim-alert *ngIf="lastSearchResult.matches.length == 0" i18n>
+                No matches for given keyword
+            </tim-alert>
+            <form *ngIf="lastSearchResult.matches.length != 0">
                 <table *ngIf="lastSearchResult">
                     <thead>
                     <tr>
                         <th i18n>Select</th>
-                        <th i18n>Username</th>
-                        <th i18n>Full name</th>
-                        <th *ngFor="let fieldName of lastSearchResult.fieldNames">
+                        <th *ngFor="let fieldName of fieldNames">
                             {{fieldName}}
                         </th>
                     </tr>
                     </thead>
-                    <tbody *ngIf="lastSearchResult.matches.length == 0">
-                    <tr>
-                        <td [colSpan]="3 + lastSearchResult.fieldNames.length">
-                            <em i18n>No matches for given keyword</em>
-                        </td>
-                    </tr>
-                    </tbody>
-                    <tbody *ngIf="lastSearchResult.matches.length > 0">
-
+                    <tbody>
                     <tr class="user-row" *ngFor="let match of lastSearchResult.matches"
-                        [class.selected-user]="selectedUser == match.user" (click)="selectedUser = match.user">
+                        [class.selected-user]="selectedUser == match" (click)="selectedUser = match">
                         <td class="select-col">
                             <span class="radio">
                                 <label>
                                     <input type="radio"
                                            name="userselect-radios"
-                                           [value]="match.user"
+                                           [value]="match"
                                            [(ngModel)]="selectedUser"
                                            [disabled]="applying">
                                 </label>
                             </span>
                         </td>
-                        <td>{{match.user.name}}</td>
-                        <td>{{match.user.real_name}}</td>
-                        <td *ngFor="let fieldName of lastSearchResult.fieldNames">{{match.fields[fieldName]}}</td>
+                        <td *ngFor="let fieldId of displayFields">{{match.fields[fieldId]}}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -175,7 +172,7 @@ const PluginFields = t.intersection([
         <tim-alert *ngIf="lastAddedUser" severity="success">
             {{successMessage}}
         </tim-alert>
-        <tim-alert *ngIf="errorMessage" i18n>
+        <tim-alert class="small" *ngIf="errorMessage" i18n>
             <span>{{errorMessage}}</span>
             <div style="margin-top: 1rem;">
                 <p>Please try refreshing the page and try again.</p>
@@ -190,13 +187,6 @@ const PluginFields = t.intersection([
                 </ng-container>
             </div>
         </tim-alert>
-
-        <ng-template i18n="@@userSelectErrorNoSearchResult">Could not search for the user.</ng-template>
-        <ng-template i18n="@@userSelectScanError">Could not scan the bar code.</ng-template>
-        <ng-template i18n="@@userSelectApplyError">Could not apply the permission.</ng-template>
-        <ng-template i18n="@@userSelectButtonApply">Set permission</ng-template>
-        <ng-template i18n="@@userSelectButtonCancel">Cancel</ng-template>
-        <ng-template i18n="@@userSelectTextSuccess">Permissions applied to {{0}}.</ng-template>
     `,
     styleUrls: ["user-select.component.scss"],
 })
@@ -207,7 +197,6 @@ export class UserSelectComponent extends AngularPluginBase<
 > {
     @ViewChild("searchForm") searchForm!: NgForm;
     @ViewChild("searchInput") searchInput!: ElementRef<HTMLInputElement>;
-    @ViewChild("barcodeOutput") barcodeOutput!: ElementRef<HTMLVideoElement>;
 
     showErrorMessage = false;
     errorMessage?: string;
@@ -220,194 +209,117 @@ export class UserSelectComponent extends AngularPluginBase<
     searchPress: Subject<void> = new Subject();
     inputTyped: Subject<string> = new Subject();
     lastSearchResult?: SearchResult;
-    selectedUser?: IUser;
-    lastAddedUser?: string;
+    selectedUser?: UserResult;
+    lastAddedUser?: UserResult;
     barCodeResult: string = "";
-    videoAspectRatio: number = 1;
-    videoWidth: number = 50;
     supportsMediaDevices = true;
-    hasCameras = true;
     enableScanner = false;
-    codeReader!: BrowserMultiFormatReader;
-    codeReaderStream?: MediaStream;
     inputListener?: Subscription;
-    beepAudio?: HTMLAudioElement;
-    availableCameras: {id: string; name: string}[] = [];
-    selectedCamera?: string;
-    private supportedCameraConstraints: Record<string, boolean> = {};
-    private selectedCameraStorage = new TimStorage(
-        "codeScannerCamera",
-        t.string
-    );
-
+    beepSuccess?: HTMLAudioElement;
+    beepFail?: HTMLAudioElement;
     applyButtonText!: string;
     cancelButtonText!: string;
+    scanInterval!: number;
+    processScanResults: boolean = true;
+    queryHandler!: IQueryHandler;
+    isInPreview = false;
+    displayFields: string[] = [];
+    fieldNames: string[] = [];
+
+    scanCode: boolean = false;
 
     get successMessage() {
-        if (this.markup.text.success) {
-            return formatString(this.markup.text.success, this.lastAddedUser!);
+        if (!this.lastAddedUser) {
+            return "";
         }
-        return $localize`:@@userSelectTextSuccess:Permissions applied to ${this.lastAddedUser}:INTERPOLATION:.`;
+        if (this.markup.text.success) {
+            return templateString(
+                this.markup.text.success,
+                this.lastAddedUser.fields
+            );
+        }
+        return $localize`Permissions applied to ${this.lastAddedUser?.user.real_name}:INTERPOLATION:.`;
     }
 
-    private async playBeep() {
-        try {
-            if (!this.beepAudio) {
-                this.beepAudio = new Audio("/static/audio/beep.wav");
-            }
-            await this.beepAudio.play();
-        } catch (e) {}
+    private get searchQueryStrings() {
+        // When reading Finnish personal identity numbers, code scanner can sometimes misread chars +/-
+        // Same can of course happen to a normal person doing a query by hand
+        // Therefore, we add alternative search string where we swap +/- with each other
+        const mistakePidPattern = /^(\d{6})([+-])(\d{3}[a-zA-Z])$/i;
+        const pidMatch = mistakePidPattern.exec(this.searchString);
+        const result = [this.searchString];
+        if (pidMatch) {
+            const [, pidStart, pidMark, pidEnd] = pidMatch;
+            result.push(`${pidStart}${pidMark == "-" ? "+" : "-"}${pidEnd}`);
+        }
+        return result;
+    }
+
+    async onCodeScanned(result: Result) {
+        if (!this.processScanResults) {
+            return;
+        }
+        this.processScanResults = false;
+        if (!this.markup.scanner.continuousMatch) {
+            this.scanCode = false;
+        }
+        this.searchString = result.getText();
+        const scanOk = await this.doSearch();
+        if (
+            scanOk &&
+            this.lastSearchResult?.allMatchCount != 0 &&
+            this.markup.scanner.beepOnSuccess
+        ) {
+            this.beepSuccess = await playBeep("beep_ok", this.beepSuccess);
+        }
+        if (
+            (!scanOk || this.lastSearchResult?.allMatchCount == 0) &&
+            this.markup.scanner.beepOnFailure
+        ) {
+            this.beepFail = await playBeep("beep_fail", this.beepFail);
+        }
+        if (
+            this.lastSearchResult &&
+            this.markup.scanner.applyOnMatch &&
+            this.lastSearchResult.matches.length == 1
+        ) {
+            await this.apply();
+        }
+
+        if (
+            this.markup.scanner.continuousMatch &&
+            this.markup.scanner.waitBetweenScans > 0
+        ) {
+            await timeout(this.markup.scanner.waitBetweenScans * 1000);
+        }
+        this.processScanResults = true;
     }
 
     ngOnInit() {
         super.ngOnInit();
-        void this.initMediaDevices();
+        this.isInPreview = this.isPreview();
+        this.supportsMediaDevices = MediaDevicesSupported;
 
         this.applyButtonText =
-            this.markup.text.apply ??
-            $localize`:@@userSelectButtonApply:Set permission`;
-        this.cancelButtonText =
-            this.markup.text.cancel ??
-            $localize`:@@userSelectButtonCancel:Cancel`;
+            this.markup.text.apply ?? $localize`Set permission`;
+        this.cancelButtonText = this.markup.text.cancel ?? $localize`Cancel`;
 
         this.enableScanner = this.markup.scanner.enabled;
         this.inputMinLength = this.markup.inputMinLength;
-        this.initSearch();
-        this.inputTyped.subscribe(() => {
-            this.selectedUser = undefined;
-            this.lastSearchResult = undefined;
-        });
-    }
-
-    async cameraSelected() {
-        this.selectedCameraStorage.set(this.selectedCamera!);
-        if (!this.codeReader) {
-            return;
-        }
-        await this.startCodeReader();
-    }
-
-    initMediaDevices() {
-        this.codeReader = new BrowserMultiFormatReader(
-            undefined,
-            this.markup.scanner.scanInterval * 1000
-        );
-        this.supportsMediaDevices = this.codeReader.isMediaDevicesSuported;
-        if (this.supportsMediaDevices) {
-            // There can be more constraints than what TS lib lists
-            this.supportedCameraConstraints = navigator.mediaDevices.getSupportedConstraints() as Record<
-                string,
-                boolean
-            >;
-            this.selectedCamera = this.selectedCameraStorage.get();
-        }
-    }
-
-    async hasVideoDevice() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-            });
-            // Reset the camera so that it can be used
-            stream.getVideoTracks().forEach((track) => track.stop());
-            return true;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    async startCodeReader() {
-        this.resetError();
-        this.resetView();
-        await this.resetCodeReader();
-
-        // Ask for permission first
-        this.hasCameras = await this.hasVideoDevice();
-        if (!this.hasCameras) {
-            return;
-        }
-        try {
-            const codeReader = new BrowserMultiFormatReader(
-                undefined,
-                this.markup.scanner.scanInterval * 1000
-            );
-            const devices = await codeReader.listVideoInputDevices();
-            this.availableCameras = devices.map((d) => ({
-                id: d.deviceId,
-                name: d.label,
-            }));
-            this.selectedCamera =
-                this.selectedCameraStorage.get() ?? this.availableCameras[0].id;
-
-            // Reset camera if it's missing
+        this.listenSearchInput();
+        this.inputTyped.subscribe((val) => {
             if (
-                !this.availableCameras.find((c) => c.id == this.selectedCamera)
+                !this.markup.preFetch ||
+                (this.markup.preFetch &&
+                    (val.length == 0 || !this.searchForm.form.valid))
             ) {
-                this.selectedCamera = this.availableCameras[0].id;
-                this.selectedCameraStorage.set(this.selectedCamera);
+                this.selectedUser = undefined;
+                this.lastSearchResult = undefined;
             }
+        });
+        this.scanInterval = this.markup.scanner.scanInterval;
 
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    deviceId: this.selectedCamera,
-                },
-            });
-            this.codeReader = codeReader;
-            this.codeReaderStream = stream;
-
-            this.videoAspectRatio =
-                stream.getVideoTracks()[0].getSettings().aspectRatio ?? 1;
-
-            const decoder = codeReader.decodeOnceFromStream(
-                stream,
-                this.barcodeOutput.nativeElement
-            );
-
-            // Set focus mode separately since apparently it can cause torch to not be enabled later
-            await this.setAdvancedCameraConstraints({
-                focusMode: "auto",
-            });
-            // https://github.com/zxing-js/library/issues/267
-            await this.setAdvancedCameraConstraints({
-                torch: true,
-            });
-
-            const result = await decoder;
-            this.searchString = result.getText();
-            if (this.markup.scanner.beepOnSuccess) {
-                await this.playBeep();
-            }
-            await this.doSearch();
-            if (this.lastSearchResult && this.markup.scanner.applyOnMatch) {
-                if (this.lastSearchResult.matches.length == 1) {
-                    await this.apply();
-                    if (this.markup.scanner.continuousMatch) {
-                        if (this.markup.scanner.waitBetweenScans > 0) {
-                            await timeout(
-                                this.markup.scanner.waitBetweenScans * 1000
-                            );
-                        }
-                        // noinspection ES6MissingAwait: Run the code in a new context without deepening the call stack
-                        this.startCodeReader();
-                        return;
-                    }
-                }
-            }
-        } catch (e) {
-            console.log(e);
-            const err = $localize`:@@userSelectErrorNoSearchResult:Could not search for the user.`;
-            // Simply reset if no code found
-            if (e instanceof NotFoundException) {
-                await this.resetCodeReader();
-                return;
-            }
-            if (e instanceof Error) {
-                this.setError(err, `${e.name}: ${e.message}`);
-            } else {
-                this.setError(err);
-            }
-        }
-        await this.resetCodeReader();
+        void this.initQueryHandler();
     }
 
     async apply() {
@@ -427,7 +339,7 @@ export class UserSelectComponent extends AngularPluginBase<
                     "/userSelect/apply",
                     {
                         par: this.getPar().par.getJsonForServer(),
-                        username: this.selectedUser.name,
+                        username: this.selectedUser.user.name,
                     },
                     {params}
                 )
@@ -435,12 +347,11 @@ export class UserSelectComponent extends AngularPluginBase<
         );
 
         if (result.ok) {
-            this.lastAddedUser =
-                this.selectedUser.real_name ?? this.selectedUser.name;
+            this.lastAddedUser = this.selectedUser;
             this.resetView();
         } else {
             this.setError(
-                $localize`:@@userSelectApplyError:Could not apply the permission.`,
+                $localize`Could not apply the permission.`,
                 result.result.error.error
             );
         }
@@ -462,38 +373,56 @@ export class UserSelectComponent extends AngularPluginBase<
         this.lastSearchResult = undefined;
         this.lastAddedUser = undefined;
         this.lastAddedUser = undefined;
+        this.displayFields = [];
+        this.fieldNames = [];
         this.resetError();
-        await this.resetCodeReader();
 
-        const params = new HttpParams({
-            fromString: window.location.search.replace("?", "&"),
-        });
-        const result = await to2(
-            this.http
-                .post<SearchResult>(
-                    "/userSelect/search",
-                    {
-                        par: this.getPar().par.getJsonForServer(),
-                        search_string: this.searchString,
-                    },
-                    {params}
-                )
-                .toPromise()
+        const result = await this.queryHandler.searchUser(
+            this.searchQueryStrings,
+            this.markup.maxMatches
         );
-
         if (result.ok) {
             this.lastSearchResult = result.result;
-            if (this.lastSearchResult.matches.length > 0) {
-                this.selectedUser = this.lastSearchResult.matches[0].user;
+
+            if (
+                this.markup.displayFields.some(
+                    (f) => USER_FIELDS[f] === undefined
+                )
+            ) {
+                this.displayFields = this.markup.displayFields;
+            } else {
+                this.displayFields = [
+                    ...this.markup.displayFields,
+                    ...result.result.fieldNames,
+                ];
+            }
+            this.fieldNames = this.displayFields.map(
+                (f) => USER_FIELDS[f] ?? f
+            );
+
+            this.lastSearchResult.matches = this.lastSearchResult.matches.map(
+                (ur) => ({
+                    ...ur,
+                    fields: {
+                        ...ur.fields,
+                        username: ur.user.name,
+                        realname: ur.user.real_name ?? undefined,
+                        useremail: ur.user.email ?? undefined,
+                    },
+                })
+            );
+            if (this.lastSearchResult.matches.length == 1) {
+                this.selectedUser = this.lastSearchResult.matches[0];
             }
         } else {
             this.setError(
-                $localize`:@@userSelectScanError:Could not scan the bar code.`,
-                result.result.error.error
+                $localize`Could not search for user.`,
+                result.result.errorMessage
             );
         }
         this.search = false;
-        this.initSearch();
+        this.listenSearchInput();
+        return result.ok;
     }
 
     getAttributeType() {
@@ -509,6 +438,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 continuousMatch: false,
                 waitBetweenScans: 0,
                 beepOnSuccess: false,
+                beepOnFailure: false,
             },
             text: {
                 apply: null,
@@ -517,52 +447,10 @@ export class UserSelectComponent extends AngularPluginBase<
             },
             inputMinLength: 3,
             autoSearchDelay: 0,
+            preFetch: false,
+            maxMatches: 10,
+            displayFields: ["username", "realname"],
         };
-    }
-
-    supportsConstraint(name: string) {
-        return (
-            this.supportsMediaDevices && this.supportedCameraConstraints[name]
-        );
-    }
-
-    private async setAdvancedCameraConstraints(
-        constraints: Record<string, unknown>
-    ) {
-        if (!this.codeReaderStream) {
-            return;
-        }
-        const cleanConstraints: Record<string, unknown> = {};
-        for (const k in constraints) {
-            if (
-                Object.hasOwnProperty.call(constraints, k) &&
-                this.supportsConstraint(k)
-            ) {
-                cleanConstraints[k] = constraints[k];
-            }
-        }
-        if (!cleanConstraints) {
-            return;
-        }
-        // Browser *should* ignore unknown constraints, but on some browsers it appears to throw nonetheless
-        try {
-            await this.codeReaderStream.getVideoTracks()[0].applyConstraints({
-                advanced: [cleanConstraints],
-            });
-        } catch (e) {
-            // Swallow the error; the torch is just not supported
-        }
-    }
-
-    private async resetCodeReader() {
-        if (!this.codeReaderStream) {
-            return;
-        }
-        try {
-            await this.setAdvancedCameraConstraints({torch: false});
-            this.codeReader.reset();
-        } catch (e) {}
-        this.codeReaderStream = undefined;
     }
 
     private resetError() {
@@ -576,15 +464,19 @@ export class UserSelectComponent extends AngularPluginBase<
         this.detailedError = details;
     }
 
-    private initSearch() {
+    private listenSearchInput() {
         if (this.inputListener && !this.inputListener.closed) {
             return;
         }
         const observables: Observable<unknown>[] = [this.searchPress];
-        if (this.markup.autoSearchDelay > 0)
+        if (this.markup.autoSearchDelay > 0 || this.markup.preFetch)
             observables.push(
                 this.inputTyped.pipe(
-                    debounceTime(this.markup.autoSearchDelay * 1000),
+                    debounceTime(
+                        this.markup.preFetch
+                            ? 0
+                            : this.markup.autoSearchDelay * 1000
+                    ),
                     distinctUntilChanged(),
                     filter(() => this.searchForm.form.valid)
                 )
@@ -593,10 +485,38 @@ export class UserSelectComponent extends AngularPluginBase<
             .pipe(first())
             .subscribe(() => this.doSearch());
     }
+
+    private async initQueryHandler() {
+        if (this.isInPreview) {
+            return;
+        }
+
+        // FIXME: Fetch par info via task because for some reason getPar() is not properly initialized in editor or right after saving the par
+        const task = this.pluginMeta.getTaskId();
+        let par;
+        if (task?.docId && task.blockHint) {
+            par = {doc_id: task.docId, par_id: task.blockHint};
+        } else {
+            par = this.getPar().par.getJsonForServer();
+        }
+
+        const queryHandler = this.markup.preFetch
+            ? new PrefetchedQueryHandler(this.http, par)
+            : new ServerQueryHandler(this.http, par);
+        const result = await to2(queryHandler.initialize());
+        if (!result.ok) {
+            this.setError(
+                $localize`Failed to contact the server.`,
+                result.result.error.error
+            );
+        } else {
+            this.queryHandler = queryHandler;
+        }
+    }
 }
 
 @NgModule({
-    declarations: [UserSelectComponent],
+    declarations: [UserSelectComponent, CodeScannerComponent],
     imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
 })
 export class UserSelectModule implements DoBootstrap {

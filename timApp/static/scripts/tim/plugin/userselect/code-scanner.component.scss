@@ -1,0 +1,44 @@
+:host {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+
+  & > *:not(:last-child) {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.camera-settings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  & > *:not(:last-child) {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.camera-settings-toggle {
+  width: 100%;
+  font-size: 1.2em;
+}
+
+video {
+  width: 50%;
+}
+
+.info-messages {
+  margin-bottom: 1rem;
+
+  & > span {
+    margin-bottom: 0.2rem;
+  }
+}
+
+.label.not-supported {
+  font-size: 0.7em;
+  font-weight: normal;
+  user-select: none;
+}

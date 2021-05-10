@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import List, Optional, Union, Tuple
 
 from flask import render_template_string, Response
@@ -73,6 +74,7 @@ class ScannerOptions:
     scanInterval: float = 1.5
     waitBetweenScans: float = 0.0
     beepOnSuccess: bool = False
+    beepOnFailure: bool = False
 
 
 @dataclass
@@ -84,6 +86,7 @@ class TextOptions:
 
 @dataclass
 class UserSelectMarkupModel(GenericMarkupModel):
+    preFetch: bool = False
     inputMinLength: int = 3
     autoSearchDelay: float = 0.0
     maxMatches: int = 10
@@ -92,6 +95,7 @@ class UserSelectMarkupModel(GenericMarkupModel):
     fields: List[str] = field(default_factory=list)
     actions: Optional[ActionCollection] = None
     text: TextOptions = field(default_factory=TextOptions)
+    displayFields: List[str] = field(default_factory=lambda: ["username", "realname"])
 
 
 UserSelectMarkupModelSchema = class_schema(UserSelectMarkupModel, base_schema=DurationSchema)
@@ -139,8 +143,41 @@ def get_plugin_markup(task_id: Optional[str], par: Optional[GlobalParId]) \
     return model, doc, user, view_ctx
 
 
+@user_select_plugin.route('/fetchUsers')
+def fetch_users(task_id: Optional[str] = None, doc_id: Optional[int] = None, par_id: Optional[str] = None) -> Response:
+    model, doc, user, view_ctx = get_plugin_markup(task_id, GlobalParId(doc_id, par_id) if doc_id and par_id else None)
+    field_data, _, field_names, _ = get_fields_and_users(
+        model.fields,
+        RequestedGroups.from_name_list(model.groups),
+        doc,
+        user,
+        view_ctx
+    )
+    return json_response({
+        "users": [
+            {
+                "user": field_obj["user"],
+                "fields": field_obj["fields"]
+            }
+            for field_obj in field_data
+        ],
+        "fieldNames": field_names
+    })
+
+
+def match_query(query_words: List[str], keywords: List[str]) -> bool:
+    kw = set(keywords)
+    for qw in query_words:
+        found = next((k for k in kw if qw in k), None)
+        if found is None:
+            return False
+        kw.remove(found)
+    return True
+
+
 @user_select_plugin.route('/search', methods=['POST'])
-def search_users(search_string: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
+def search_users(search_strings: List[str], task_id: Optional[str] = None,
+                 par: Optional[GlobalParId] = None) -> Response:
     model, doc, user, view_ctx = get_plugin_markup(task_id, par)
     field_data, _, field_names, _ = get_fields_and_users(
         model.fields,
@@ -150,18 +187,21 @@ def search_users(search_string: str, task_id: Optional[str] = None, par: Optiona
         view_ctx
     )
 
-    search_string = search_string.strip().lower()
+    # If query contains spaces, split into sub-queries that all must match
+    # In each subquery, match by longest word first to ensure best match
+    search_query_words = [sorted(s.lower().split(), key=lambda s: len(s), reverse=True) for s in search_strings]
     matched_field_data = []
     for field_obj in field_data:
         fields = field_obj["fields"]
         usr = field_obj["user"]
         values_to_check: List[Optional[Union[str, float, None]]] = [usr.name, usr.real_name, usr.email,
                                                                     *fields.values()]
+
         for field_val in values_to_check:
             if not field_val:
                 continue
-            val = field_val if isinstance(field_val, str) else str(field_val)
-            if search_string in val.lower():
+            val = (field_val if isinstance(field_val, str) else str(field_val)).lower().split()
+            if next((qws for qws in search_query_words if match_query(qws, val)), None):
                 matched_field_data.append(field_obj)
                 break
 
@@ -191,8 +231,8 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
         return ok_response()
 
     cur_user = get_current_user_object()
-    user = UserGroup.get_by_name(username)
-    if not user:
+    user_group = UserGroup.get_by_name(username)
+    if not user_group:
         raise RouteException(f"Cannot find user {username}")
 
     permission_actions: List[PermissionActionBase] = [*model.actions.addPermission, *model.actions.removePermission]
@@ -208,23 +248,25 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
         verify_permission_edit_access(doc_entry, perm.type)
         doc_entries[perm.doc_path] = doc_entry
 
+    update_messages = []
+
     for add in model.actions.addPermission:
         doc_entry = doc_entries[add.doc_path]
         # Don't throw if we try to remove a permission from ourselves, just ignore it
         accs = add_perm(PermissionEditModel(add.type, add.time, [username], add.confirm), doc_entry)
         if accs:
-            log_right(f'added {accs[0].info_str} for {username} in {doc_entry.path}')
+            update_messages.append(f'added {accs[0].info_str} for {username} in {doc_entry.path}')
 
     for remove in model.actions.removePermission:
         doc_entry = doc_entries[remove.doc_path]
-        a = remove_perm(user, doc_entry.block, remove.type)
-        log_right(f'removed {a.info_str} for {user.name} in {doc_entry.path}')
+        a = remove_perm(user_group, doc_entry.block, remove.type)
+        update_messages.append(f'removed {a.info_str} for {user_group.name} in {doc_entry.path}')
 
     fields_to_save = {
         set_val.taskId: set_val.value for set_val in model.actions.setValue
     }
     if fields_to_save:
-        user_acc = User.get_by_name(user.name)
+        user_acc = User.get_by_name(user_group.name)
         assert user_acc is not None
         # Reuse existing helper for answer route to save field values quickly
         save_fields(
@@ -233,6 +275,10 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
             allow_non_teacher=False)
 
     db.session.commit()
+
+    for msg in update_messages:
+        log_right(msg)
+
     return ok_response()
 
 
