@@ -2,7 +2,6 @@ import re
 from dataclasses import dataclass
 from typing import Optional, List
 from datetime import datetime
-from sqlalchemy.sql import column
 
 from flask import Response
 
