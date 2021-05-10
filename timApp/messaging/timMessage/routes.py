@@ -43,6 +43,7 @@ class MessageOptions:
     reply: bool
     sender: str
     senderEmail: str
+    repliesTo: Optional[int] = None
     expires: Optional[datetime] = None
 
 
@@ -52,10 +53,8 @@ class ReplyOptions:
     messageChannel: bool
     pageList: str
     recipient: str
-    sender: str
-    senderEmail: str
-    isPrivate: bool = True
     readReceipt: bool = True
+    repliesTo: Optional[int] = None
 
 
 @dataclass
@@ -107,6 +106,9 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     for display in displays:
         receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id, message_id=display.message_id).first()
         expires = InternalMessage.query.filter_by(id=display.message_id).first()
+        # VIESTIM: check if message has been replied to: don't show it then!
+        # reply_to_ids = InternalMessage.query.filter(InternalMessage.replies_to != None)
+        # print(str(reply_to_ids.replies_to))
         if receipt.marked_as_read_on is None and (expires.expires is None or expires.expires > datetime.now()):
             messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
             recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
@@ -175,16 +177,20 @@ def check_urls(urls: str) -> Response:
 
 @timMessage.route("/send", methods=['POST'])
 def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
-    """
-    Creates a new TIM message and saves it to database.
+    return send_message_or_reply(options, message)
 
-    :param options: Options related to the message
-    :param message: Message subject, contents and sender
-    :return:
+
+def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Response:
     """
+        Creates a new TIM message and saves it to database.
+
+        :param options: Options related to the message
+        :param message: Message subject, contents and sender
+        :return:
+        """
     verify_logged_in()
 
-    tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires)
+    tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires, replies_to=options.repliesTo)
     create_tim_message(tim_message, options, message)
     db.session.add(tim_message)
     db.session.flush()
@@ -243,13 +249,14 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 
 
 @timMessage.route("/reply", methods=['POST'])
-def reply_to_tim_message(message_id: int, options: ReplyOptions, message: str) -> Response:
-    # TODO handle replying to message
-    print(message_id)
-    print(options)
-    print(message)
+def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Response:
 
-    return ok_response()
+    # VIESTIM: add option replies_to to MessageOptions (and column to internalmessage table in db, save original message's id here)
+
+    messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList, options.readReceipt, False, get_current_user_object().name, get_current_user_object().email, options.repliesTo)
+    message = messageBody
+
+    return send_message_or_reply(messageOptions, message)
 
 
 @timMessage.route("/mark_as_read", methods=['POST'])
