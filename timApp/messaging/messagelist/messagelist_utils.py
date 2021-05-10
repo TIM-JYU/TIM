@@ -240,11 +240,10 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
 
     # Set header information for archived message. The empty lines are needed to separate headers into their own lines.
     archive_doc.document.add_text(f"""
-#- {{.mailheader}}\
-Title: {message.title}{{.mailtitle}}\
-Sender: {message.sender}\
-Recipients: {message.recipients}\
-
+#- {{.mailheader}}\r\n
+Title: [{message.title}]{{.mailtitle}}\r\n
+Sender: {message.sender}\r\n
+Recipients: {message.recipients}\r\n
 """)
 
     # Set message body for archived message.
@@ -274,7 +273,8 @@ def set_message_link(link_to: Document, link_text: str, link_from_url: str) -> N
     :param link_text: The text the link gets.
     :param link_from_url: The link to another document.
     """
-    link = f"[{link_text}]({link_from_url})"
+    link = f"""#- {{.mailfooter}}\r\n
+[{link_text}]({link_from_url})"""
     link_to.add_text(link)
     return
 

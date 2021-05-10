@@ -326,7 +326,7 @@ def test_route() -> Response:
     """A testing route."""
     # VIESTIM: This fails if the message list doesn't exist.
     msg_list = MessageListModel.get_list_by_name_exactly_one("uusilista293u0")
-    message = MessageTIMversalis(message_list_name="uusilista293u0",
+    message = MessageTIMversalis(message_list_name=msg_list.name,
                                  message_channel=Channel.EMAIL_LIST,
                                  sender=EmailAndDisplayName(email_address="tomi.t.lundberg@student.jyu.fi",
                                                             display_name="Tomi L."),
