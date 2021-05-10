@@ -406,8 +406,7 @@ export class UserSelectComponent extends AngularPluginBase<
                     } as Record<string, string>, // For some reason type casting is needed here despite the destruction
                 })
             );
-            console.log(this.lastSearchResult);
-            if (this.lastSearchResult.matches.length > 0) {
+            if (this.lastSearchResult.matches.length == 1) {
                 this.selectedUser = this.lastSearchResult.matches[0].user;
             }
         } else {
