@@ -28,8 +28,7 @@ export class ManageReadReceiptComponent implements OnInit {
     receipt: TimMessageReadReceipt | undefined;
     canMarkAsRead: boolean = false;
 
-    constructor(private http: HttpClient) {
-    }
+    constructor(private http: HttpClient) {}
 
     ngOnInit(): void {
         const docId = itemglobals().curr_item.id;
@@ -39,7 +38,6 @@ export class ManageReadReceiptComponent implements OnInit {
 
     async getReadReceipt(docId: number) {
         const message = await to2(
-            // get messages shown on current page
             this.http
                 .get<TimMessageReadReceipt>(
                     `/timMessage/get_read_receipt/${docId}`
@@ -75,9 +73,10 @@ export class ManageReadReceiptComponent implements OnInit {
 
     async cancelReadReceipt() {
         const result = await to2(
-            this.http.post("/timMessage/cancel_read_receipt", {
-                message_id: this.receipt?.message_id,
-            })
+            this.http
+                .post("/timMessage/cancel_read_receipt", {
+                    message_id: this.receipt?.message_id,
+                })
                 .toPromise()
         );
         if (!result.ok) {
@@ -89,7 +88,7 @@ export class ManageReadReceiptComponent implements OnInit {
 }
 
 interface TimMessageReadReceipt {
-    // Information about the message retrieved from server
+    // Information about the read receipt retrieved from server
     rcpt_id: number;
     message_id: number;
     user_id: number;
@@ -102,5 +101,4 @@ interface TimMessageReadReceipt {
     exports: [ManageReadReceiptComponent],
     imports: [CommonModule],
 })
-export class ManageReadReceiptModule {
-}
+export class ManageReadReceiptModule {}
