@@ -129,7 +129,8 @@ import {Users} from "../user/userService";
                 </div>
                 <button (click)="addNewListMember()" class="btn-default">Add new members</button>
                 <div id="member-add-feedback">
-                    <tim-alert *ngIf="memberAddSucceededResponse" severity="success">{{memberAddSucceededResponse}}</tim-alert>
+                    <tim-alert *ngIf="memberAddSucceededResponse"
+                               severity="success">{{memberAddSucceededResponse}}</tim-alert>
                     <tim-alert *ngIf="memberAddFailedResponse" severity="danger">{{memberAddFailedResponse}}</tim-alert>
                 </div>
             </div>
@@ -161,7 +162,9 @@ import {Users} from "../user/userService";
                 </table>
             </div>
             <div id="email-send">
-                <tim-message-send [recipientList]="listAddress()" [docId]="getDocId()"></tim-message-send>
+                <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"
+                                  on ></tim-message-send>
+                <button (click)="openEmail()" *ngIf="!recipients">Painike</button>
             </div>
             <div class="section">
                 <h2>List deletion</h2>
@@ -216,6 +219,8 @@ export class MessageListAdminComponent implements OnInit {
     memberAddSucceededResponse: string = "";
     memberAddFailedResponse: string = "";
 
+    recipients = "";
+
     getDocId() {
         return documentglobals().curr_item.id;
     }
@@ -249,6 +254,15 @@ export class MessageListAdminComponent implements OnInit {
                 void this.getListMembers();
             }
         }
+    }
+
+    /**
+     * Opens the email sending view by adding the list's address to the string of recipients.
+     *
+     * The email sending view will be closed by emptying the list of recipients by the component(?)
+     */
+    openEmail() {
+        this.recipients = this.listAddress();
     }
 
     private async getDomains() {
