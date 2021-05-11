@@ -108,10 +108,14 @@ import {Users} from "../user/userService";
                 <textarea id="add-multiple-members" name="add-multiple-members"
                           [(ngModel)]="membersTextField"></textarea>
                 <div>
-                    <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
-                    <label for="new-member-send-right">New member's send right.</label>
-                    <input type="checkbox" name="new-member-delivery-right" [(ngModel)]="newMemberDeliveryRight">
-                    <label for="new-member-delivery-right">New member's delivery right.</label>
+                    <div>
+                        <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
+                        <label for="new-member-send-right">New member's send right.</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="new-member-delivery-right" [(ngModel)]="newMemberDeliveryRight">
+                        <label for="new-member-delivery-right">New member's delivery right.</label>
+                    </div>
                 </div>
                 <button (click)="addNewListMember()">Add new members</button>
             </div>
