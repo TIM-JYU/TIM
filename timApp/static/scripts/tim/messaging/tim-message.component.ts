@@ -1,7 +1,7 @@
 import {Component, Input, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
-import {to2} from "tim/util/utils";
+import {markAsRead} from "tim/messaging/messagingUtils";
 import {TimMessageData} from "./tim-message-view.component";
 
 @Component({
@@ -85,16 +85,13 @@ export class TimMessageComponent implements OnInit {
      * Hides the message view; shows an alert about sending a read receipt and an option to cancel.
      */
     async markAsRead() {
-        this.markedAsRead = true;
-        const result = await to2(
-            this.http
-                .post("/timMessage/mark_as_read", {
-                    message_id: this.message?.id,
-                })
-                .toPromise()
-        );
-        if (!result.ok) {
-            console.error(result.result.error.error);
+        if (!this.message) {
+            return;
+        }
+
+        const result = await markAsRead(this.http, this.message.id);
+        if (result.ok) {
+            this.markedAsRead = true;
         }
     }
 

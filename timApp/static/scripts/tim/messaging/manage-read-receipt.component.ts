@@ -3,6 +3,7 @@ import {CommonModule} from "@angular/common";
 import {itemglobals} from "tim/util/globals";
 import {to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
+import {markAsRead} from "tim/messaging/messagingUtils";
 
 @Component({
     selector: "manage-read-receipt",
@@ -36,6 +37,13 @@ export class ManageReadReceiptComponent implements OnInit {
         void this.getReadReceipt(docId);
     }
 
+    /**
+     * Retrieves information about the read receipt from database;
+     * displays the read receipt component if marking the message as read
+     * is allowed and sets the read receipt status correctly.
+     *
+     * @param docId Identifier for the message's document
+     */
     async getReadReceipt(docId: number) {
         const message = await to2(
             this.http
@@ -56,21 +64,23 @@ export class ManageReadReceiptComponent implements OnInit {
         }
     }
 
+    /**
+     * Marks the message as read and displays the option to cancel read receipt.
+     */
     async markAsRead() {
-        const result = await to2(
-            this.http
-                .post("/timMessage/mark_as_read", {
-                    message_id: this.receipt?.message_id,
-                })
-                .toPromise()
-        );
-        if (!result.ok) {
-            console.error(result.result.error.error);
+        if (!this.receipt) {
+            return;
         }
 
-        this.markedAsRead = true;
+        const result = await markAsRead(this.http, this.receipt.message_id);
+        if (result.ok) {
+            this.markedAsRead = true;
+        }
     }
 
+    /**
+     * Cancels the read receipt and displays the option to mark the message as read.
+     */
     async cancelReadReceipt() {
         const result = await to2(
             this.http
