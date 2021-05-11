@@ -30,6 +30,7 @@ import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
 import {TimepickerModule} from "ngx-bootstrap/timepicker";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
+import {documentglobals} from "tim/util/globals";
 import {ViewCtrl} from "../document/viewctrl";
 import {widenFields} from "../util/common";
 import {
@@ -255,7 +256,7 @@ const sortLang = "fi";
                     Copy
                 </button>
             </div>
-            <tim-message-send [recipientList]="recipientList" [taskId]="getTaskId()"></tim-message-send>
+            <tim-message-send [recipientList]="recipientList" [docId]="currentDocumentID()"></tim-message-send>
             <pre *ngIf="result">{{result}}</pre>
             <pre *ngIf="error" [innerHtml]="error"></pre>
             <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
@@ -331,6 +332,10 @@ export class TableFormComponent
     timTable?: TimTableComponent;
     recipientList = "";
     loading = false;
+
+    currentDocumentID() {
+        return documentglobals().curr_item.id;
+    }
 
     getDefaultMarkup() {
         return {};

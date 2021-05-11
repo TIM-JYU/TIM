@@ -2,7 +2,6 @@ import {Component, Input} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {$http} from "../util/ngimport";
 import {to, to2} from "../util/utils";
-import {TaskId} from "../plugin/taskid";
 import {Users} from "../user/userService";
 
 interface TimMessageOptions {
@@ -114,7 +113,7 @@ export class TimMessageComponent {
         senderEmail: Users.getCurrent().email,
     };
     @Input()
-    taskId?: TaskId;
+    docId?: number;
 
     constructor(private http: HttpClient) {}
 
@@ -249,12 +248,12 @@ export class TimMessageComponent {
     }
 
     async sendEmailTim() {
-        if (!this.taskId) {
-            this.messageMsg = "Cannot send email without taskId";
+        if (!this.docId) {
+            this.messageMsg = "Cannot send email without docId";
             return;
         }
         this.messageMsg = ""; // JSON.stringify(response);
-        const url = `/multiSendEmail/${this.taskId.docTask().toString()}`;
+        const url = `/multiSendEmail/${this.docId}`;
         let response;
         // if reply all is chosen
         if (this.replyAll) {

@@ -209,11 +209,12 @@ export class MessageListAdminComponent implements OnInit {
     newMemberSendRight: boolean = true;
     newMemberDeliveryRight: boolean = true;
 
+    // Response strings used in giving feedback to the user on adding new members to the message list.
     memberAddSucceededResponse: string = "";
     memberAddFailedResponse: string = "";
 
-    getTaskId() {
-        return undefined;
+    getDocId() {
+        return documentglobals().curr_item.id;
     }
 
     ngOnInit(): void {
@@ -222,7 +223,7 @@ export class MessageListAdminComponent implements OnInit {
             void this.getDomains();
 
             // Load message list options.
-            const docId = documentglobals().curr_item.id;
+            const docId = this.getDocId();
             void this.loadValues(docId);
 
             // Load message list's members.
