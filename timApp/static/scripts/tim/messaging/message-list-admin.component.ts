@@ -12,6 +12,7 @@ import {
     ReplyToListChanges,
 } from "tim/messaging/listOptionTypes";
 import {documentglobals} from "tim/util/globals";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {Users} from "../user/userService";
 
 @Component({
@@ -59,7 +60,7 @@ import {Users} from "../user/userService";
             </div>
             <div>
                 <p class="list-archive-policy-header">List archive policy:</p>
-                <ul style="list-style-type: none">
+                <ul id="archive-policy-list">
                     <li *ngFor="let option of archiveOptions">
                         <input
                                 name="items-radio"
@@ -111,7 +112,7 @@ import {Users} from "../user/userService";
             <div>
                 <button class="btn btn-default" (click)="save()">Save changes</button>
             </div>
-            <div style="padding-top: 5em">
+            <div id="add-members-section" class="section">
                 <label for="add-multiple-members">Add members</label> <br/>
                 <textarea id="add-multiple-members" name="add-multiple-members"
                           [(ngModel)]="membersTextField"></textarea>
@@ -125,7 +126,11 @@ import {Users} from "../user/userService";
                         <label for="new-member-delivery-right">New member's delivery right.</label>
                     </div>
                 </div>
-                <button (click)="addNewListMember()">Add new members</button>
+                <button (click)="addNewListMember()" class="btn-default">Add new members</button>
+                <div id="member-add-feedback">
+                    <tim-alert *ngIf="memberAddSucceededResponse" severity="success">{{memberAddSucceededResponse}}</tim-alert>
+                    <tim-alert *ngIf="memberAddFailedResponse" severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                </div>
             </div>
             <div>
                 <table>
@@ -154,7 +159,7 @@ import {Users} from "../user/userService";
                     </tbody>
                 </table>
             </div>
-            <div>
+            <div class="section">
                 <h2>List deletion</h2>
                 <button class="btn btn-default" (click)="deleteList()">Delete List</button>
             </div>
@@ -202,6 +207,9 @@ export class MessageListAdminComponent implements OnInit {
 
     newMemberSendRight: boolean = true;
     newMemberDeliveryRight: boolean = true;
+
+    memberAddSucceededResponse: string = "";
+    memberAddFailedResponse: string = "";
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -270,9 +278,11 @@ export class MessageListAdminComponent implements OnInit {
             // TODO: Sending succeeded.
             // console.log("Sending members succeeded.");
             this.membersTextField = undefined; // Empty the text field.
+            this.memberAddSucceededResponse = "New members added.";
         } else {
             // TODO: Sending failed.
-            console.error(result.result.error.error);
+            // console.error(result.result.error.error);
+            this.memberAddFailedResponse = `Adding new members failed: ${result.result.error.error}`;
         }
     }
 
@@ -446,6 +456,6 @@ export class MessageListAdminComponent implements OnInit {
 @NgModule({
     declarations: [MessageListAdminComponent],
     exports: [MessageListAdminComponent],
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, TimUtilityModule],
 })
 export class NewMsgListModule {}
