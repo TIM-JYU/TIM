@@ -28,7 +28,8 @@ export class ManageReadReceiptComponent implements OnInit {
     receipt: TimMessageReadReceipt | undefined;
     canMarkAsRead: boolean = false;
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {
+    }
 
     ngOnInit(): void {
         const docId = itemglobals().curr_item.id;
@@ -101,4 +102,5 @@ interface TimMessageReadReceipt {
     exports: [ManageReadReceiptComponent],
     imports: [CommonModule],
 })
-export class ManageReadReceiptModule {}
+export class ManageReadReceiptModule {
+}
