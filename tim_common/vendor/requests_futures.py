@@ -29,10 +29,11 @@ Copyright 2013 Ross McFarland
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, Future
 from functools import partial
 from logging import getLogger
 from pickle import dumps, PickleError
+from threading import local
 
 from requests import Session
 from requests.adapters import DEFAULT_POOLSIZE, HTTPAdapter
@@ -50,8 +51,9 @@ PICKLE_ERROR = ('Cannot pickle function. Refer to documentation: https://'
 
 class FuturesSession(Session):
 
-    def __init__(self, executor=None, max_workers=8, session=None,
-                 adapter_kwargs=None, *args, **kwargs):
+    def __init__(self, executor=None, max_workers=8,
+                 session_factory=Session,
+                 adapter_kwargs=None, *args, **kwargs) -> None:
         """Creates a FuturesSession
         Notes
         ~~~~~
@@ -77,7 +79,11 @@ class FuturesSession(Session):
             self.mount('http://', HTTPAdapter(**_adapter_kwargs))
 
         self.executor = executor
-        self.session = session
+        self.session_factory = session_factory
+        self.tls = local()
+        self.sessions = []
+        self.session_args = args
+        self.session_kwargs = kwargs
 
     def request(self, *args, **kwargs):
         """Maintains the existing api for Session.request.
@@ -87,11 +93,14 @@ class FuturesSession(Session):
         happens in the background thread.
         :rtype : concurrent.futures.Future
         """
-        if self.session:
-            func = self.session.request
-        else:
-            # avoid calling super to not break pickled method
-            func = partial(Session.request, self)
+
+        def func(*args, **kwargs):
+            session = getattr(self.tls, "session", None)
+            if session is None:
+                session = self.session_factory(*self.session_args, **self.session_kwargs)
+                self.tls.session = session
+                self.sessions.append(session)
+            return session.request(*args, **kwargs)
 
         background_callback = kwargs.pop('background_callback', None)
         if background_callback:
@@ -113,6 +122,8 @@ class FuturesSession(Session):
         super(FuturesSession, self).close()
         if self._owned_executor:
             self.executor.shutdown()
+        for session in self.sessions:
+            session.close()
 
     def get(self, url, **kwargs):
         r"""
@@ -150,7 +161,7 @@ class FuturesSession(Session):
         """
         return super(FuturesSession, self).post(url, data=data, json=json, **kwargs)
 
-    def put(self, url, data=None, **kwargs):
+    def put(self, url, data=None, **kwargs) -> Future:
         r"""Sends a PUT request. Returns :class:`Future` object.
         :param url: URL for the new :class:`Request` object.
         :param data: (optional) Dictionary, list of tuples, bytes, or file-like

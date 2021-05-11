@@ -55,6 +55,7 @@ from typing import (
 )
 
 import marshmallow
+import marshmallow.validate
 import typing_inspect
 
 __all__ = ["dataclass", "add_schema", "class_schema", "field_for_schema", "NewType"]
@@ -406,6 +407,17 @@ def field_for_schema(
             field = SemiStrictIntegerField
         check_default(clazz, default, typ, name)
         return field(**metadata)
+
+    if typing_inspect.is_literal_type(typ):
+        arguments = typing_inspect.get_args(typ)
+        return marshmallow.fields.Raw(
+            validate=(
+                marshmallow.validate.Equal(arguments[0])
+                if len(arguments) == 1
+                else marshmallow.validate.OneOf(arguments)
+            ),
+            **metadata,
+        )
 
     # Generic types
     origin = typing_inspect.get_origin(typ)

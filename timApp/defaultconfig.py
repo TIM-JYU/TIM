@@ -159,11 +159,34 @@ INTERNAL_PLUGIN_DOMAIN = 'tim'
 # When sending an answer to another host, use this secret for authentication.
 BACKUP_ANSWER_SEND_SECRET = None
 
-# When receiving an answer from another host, make sure that the given token matches this one.
+# When receiving an answer from another host, make sure that the given secret matches this one.
 BACKUP_ANSWER_RECEIVE_SECRET = None
 
 # In the receiving host, the filename where the answers will be stored, one JSON string per line.
 BACKUP_ANSWER_FILE = 'answers.backup'
 
-# The host where to back up the answers. Should start with "https://".
-BACKUP_ANSWER_HOST = None
+# The hosts where to back up the answers. Every entry should start with "https://".
+BACKUP_ANSWER_HOSTS = None
+
+# DIST_RIGHTS_* variables are related to distributing rights.
+
+# A mapping of target identifiers to lists of hosts.
+# Example:
+# {
+#     'some_exam': {
+#         'hosts': ['https://machine1.example.com', 'https://machine2.example.com'],
+#         'item': 'path/to/some/exam/here',
+#     },
+# }
+DIST_RIGHTS_HOSTS = {
+
+}
+
+# When registering a right that is going to be distributed, make sure that the given secret matches this one.
+DIST_RIGHTS_REGISTER_SECRET = None
+
+# When sending a right to another host, send this secret.
+DIST_RIGHTS_SEND_SECRET = None
+
+# When receiving a right from the distributor host, make sure that the given secret matches this one.
+DIST_RIGHTS_RECEIVE_SECRET = None
