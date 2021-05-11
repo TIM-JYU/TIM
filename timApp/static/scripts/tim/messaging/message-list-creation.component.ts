@@ -8,12 +8,7 @@ import {to2} from "../util/utils";
 import {Users} from "../user/userService";
 import {IDocument, redirectToItem} from "../item/IItem";
 import {TimUtilityModule} from "../ui/tim-utility.module";
-import {
-    archivePolicyNames,
-    ArchiveType,
-    ListOptions,
-    ReplyToListChanges,
-} from "./listOptionTypes";
+import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
 
 @Component({
     selector: "message-list-creation",
@@ -23,24 +18,28 @@ import {
                 Message list creation
             </ng-container>
             <ng-container body>
-               <div *ngIf="errorMessage.length > 0" class="alert alert-danger"><ul><li *ngFor="let error of errorMessage">{{error}}</li></ul></div>
+                <div *ngIf="errorMessage.length > 0" class="alert alert-danger">
+                    <ul>
+                        <li *ngFor="let error of errorMessage">{{error}}</li>
+                    </ul>
+                </div>
                 <div class="form-group">
                     <label for="list-name" class="list-name text-left control-label col-sm-3">List name: </label>
                     <div class="col-sm-8">
-                        <div class="input-group">    
-                    <input type="text" class="form-control" name="list-name" id="list-name"
-                           [(ngModel)]="listname"
-                            (keyup)="checkNameRequirementsLocally()"/>
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="list-name" id="list-name"
+                                   [(ngModel)]="listname"
+                                   (keyup)="checkNameRequirementsLocally()"/>
                             <div class="input-group-addon">@</div>
-                    <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
-                        <option [disabled]="domains.length" *ngFor="let domain of domains">{{domain}}</option>
-                    </select>
-                </div>
+                            <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
+                                <option [disabled]="domains.length" *ngFor="let domain of domains">{{domain}}</option>
+                            </select>
                         </div>
                     </div>
+                </div>
                 <div class="archive-options">
                     <p class="list-name">List archive policy: </p>
-                    <ul style="list-style-type: none">
+                    <ul class="archive-list">
                         <li *ngFor="let option of archiveOptions">
                             <input
                                     name="items-radio"
@@ -49,7 +48,7 @@ import {
                                     [value]="option.archiveType"
                                     [(ngModel)]="archive"
                             />
-                            <label for="archive-{{option}}">{{option.policyName}}</label>
+                            <label for="archive-{{option.archiveType}}">{{option.policyName}}</label>
                         </li>
                     </ul>
                 </div>
@@ -77,15 +76,8 @@ export class MessageListComponent extends AngularDialogComponent<
     domain: string = "";
 
     // List has a private members only archive by default.
-    archive: ArchiveType = ArchiveType.GROUPONLY;
+    archive: ArchiveType = ArchiveType.PUBLIC;
     archiveOptions = archivePolicyNames;
-
-    // For name check
-    timeoutID?: number;
-    notifyOwnerOnListChange: boolean = false;
-
-    listDescription: string = "";
-    listInfo: string = "";
 
     constructor(private http: HttpClient) {
         super();
@@ -121,18 +113,8 @@ export class MessageListComponent extends AngularDialogComponent<
         const result = await this.createList({
             // VIESTIM These fields have to match with interface ListOptions, otherwise a type error happens.
             name: this.listname,
-            // We added '@' in domain name for display purposes, remove it when sending domain to the server.
-            // VIESTIM: This bit is probably now obsolete, since the '@' is no longer added to the value, but is
-            //  instead put directly to an HTML-element
-            domain: this.domain.startsWith("@")
-                ? this.domain.slice(1)
-                : this.domain,
+            domain: this.domain,
             archive: this.archive,
-            notify_owners_on_list_change: this.notifyOwnerOnListChange,
-            list_info: this.listInfo,
-            list_description: this.listDescription,
-            only_text: true,
-            default_reply_type: ReplyToListChanges.NOCHANGES,
         });
         if (!result.ok) {
             this.errorMessage = [result.result.error.error];
@@ -147,7 +129,7 @@ export class MessageListComponent extends AngularDialogComponent<
     private createList(options: ListOptions) {
         return to2(
             this.http
-                .post<IDocument>("/messagelist/createlist", {options})
+                .post<IDocument>(`${this.urlPrefix}/createlist`, {options})
                 .toPromise()
         );
     }
@@ -163,15 +145,7 @@ export class MessageListComponent extends AngularDialogComponent<
     checkNameRequirementsLocally(): boolean {
         // VIESTIM: Since the server has the final say for allowed names, sync these rules with the server. Maybe they
         //  could be imported from the server?
-        // TODO: Replace console.logs with a better feedback system for the user.
-        // console.log(`start check on listname: ${this.listname}`);
         this.errorMessage = [];
-
-        // Cancel previous timed call to server name checks.
-        if (this.timeoutID) {
-            clearTimeout(this.timeoutID);
-        }
-        this.timeoutID = undefined;
 
         // Name length is within length boundaries.
         if (this.listname.length < 5 || 36 < this.listname.length) {
@@ -225,14 +199,7 @@ export class MessageListComponent extends AngularDialogComponent<
             this.errorMessage.push("Name has forbidden characters");
         }
 
-        // Local tests have been passed. Now launch server side checks.
-        this.timeoutID = window.setTimeout(
-            () => this.checkServerNameRequirements(),
-            2 * 1000
-        );
-
-        if (this.errorMessage.length > 0) return false;
-        else return true;
+        return this.errorMessage.length == 0;
     }
 
     /**

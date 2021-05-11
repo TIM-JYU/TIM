@@ -73,7 +73,7 @@ export const archivePolicyNames: ArchivePolicyNames[] = [
         policyName:
             "Public archive. Everyone with link can access and the archive is advertised.",
     },
-];
+].reverse();
 
 export interface MemberInfo {
     // VIESTIM Keep this members' db models' json representation.
