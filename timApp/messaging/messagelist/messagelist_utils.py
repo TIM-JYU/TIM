@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 
 from mailmanclient import MailingList
 
@@ -396,7 +396,7 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     return doc
 
 
-def new_list(list_options: ListOptions) -> (DocInfo, MessageListModel):
+def new_list(list_options: ListOptions) -> Tuple[DocInfo, MessageListModel]:
     """Adds a new message list into the database and creates the list's management doc.
 
     :param list_options: The list information for creating a new message list. Used to carry list's name and archive
