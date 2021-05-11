@@ -53,7 +53,7 @@ class ListOptions:
     archive: ArchiveType = field(metadata={'by_value': True})
     """The type of archive policy this list uses."""
 
-    default_reply_type: Optional[ReplyToListChanges] = field(metadata={'by_value': True})
+    default_reply_type: Optional[ReplyToListChanges] = field(metadata={'by_value': True}, default=None)
     """The default reply type of the list."""
 
     notify_owners_on_list_change: Optional[bool] = None

@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 
 from mailmanclient import MailingList
 
@@ -239,13 +239,11 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
     archive_doc = create_archive_doc_with_permission(archive_title, archive_doc_path, message_list, message)
 
     # Set header information for archived message. The empty lines are needed to separate headers into their own lines.
-    archive_doc.document.add_text(f"""Title: {message.title}
-    
-Sender: {message.sender}
-
-Recipients: {message.recipients}
-
-Message body:
+    archive_doc.document.add_text(f"""
+#- {{.mailheader}}\r\n
+Title: [{message.title}]{{.mailtitle}}\r\n
+Sender: {message.sender}\r\n
+Recipients: {message.recipients}\r\n
 """)
 
     # Set message body for archived message.
@@ -275,7 +273,8 @@ def set_message_link(link_to: Document, link_text: str, link_from_url: str) -> N
     :param link_text: The text the link gets.
     :param link_from_url: The link to another document.
     """
-    link = f"[{link_text}]({link_from_url})"
+    link = f"""#- {{.mailfooter}}\r\n
+[{link_text}]({link_from_url})"""
     link_to.add_text(link)
     return
 
@@ -397,22 +396,18 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     return doc
 
 
-def new_list(list_options: ListOptions) -> DocInfo:
+def new_list(list_options: ListOptions) -> Tuple[DocInfo, MessageListModel]:
     """Adds a new message list into the database and creates the list's management doc.
 
-    :param list_options: The list information for creating a new message list.
+    :param list_options: The list information for creating a new message list. Used to carry list's name and archive
+    policy.
     :return: The management document.
+    :return: The message list db model.
     """
-    # VIESTIM: Check creation permission? Or should it be in the calling view function?
     msg_list = MessageListModel(name=list_options.name, archive=list_options.archive)
-    if list_options.domain:
-        msg_list.email_list_domain = list_options.domain
     db.session.add(msg_list)
-
     doc_info = create_management_doc(msg_list, list_options)
-
-    db.session.commit()
-    return doc_info
+    return doc_info, msg_list
 
 
 def set_message_list_notify_owner_on_change(message_list: MessageListModel,
@@ -610,11 +605,8 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     if msg_list.get_member_by_name(name=user.name, email=user.email):
         return
 
-    new_tim_member = MessageListTimMember()
-    new_tim_member.message_list_id = msg_list.id
-    new_tim_member.group_id = user.get_personal_group().id
-    new_tim_member.delivery_right = send_right
-    new_tim_member.send_right = delivery_right
+    new_tim_member = MessageListTimMember(message_list=msg_list, user_group=user.get_personal_group(),
+                                          delivery_right=delivery_right, send_right=send_right)
     db.session.add(new_tim_member)
 
     # VIESTIM: Get user's email and add it to list's email list.

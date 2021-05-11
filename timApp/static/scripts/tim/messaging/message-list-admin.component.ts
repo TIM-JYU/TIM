@@ -12,6 +12,7 @@ import {
     ReplyToListChanges,
 } from "tim/messaging/listOptionTypes";
 import {documentglobals} from "tim/util/globals";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TableFormModule} from "tim/plugin/tableForm";
 import {Users} from "../user/userService";
 
@@ -24,7 +25,7 @@ import {Users} from "../user/userService";
                 <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
                 <div class="col-sm-9">
                     <div class="input-group">
-                        <input type="text" class="form-control" name="list-name" id="list-name"
+                        <input type="text" class="form-control" name="list-name" id="list-name" disabled
                                [(ngModel)]="listname"/>
                         <div class="input-group-addon">@</div>
                         <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
@@ -34,13 +35,12 @@ import {Users} from "../user/userService";
                 </div>
             </div>
 
-            <div>
-                <!-- TODO: Add owners here? Should we at least display owner information and give a way to change 
-                      owners, or should that be done by directly changing the owner of the document? -->
-                <!--
-                <label for="owner-address">List owner's adress</label>
-                <input type="text" name="owner-address" id="owner-adress" [(ngModel)]="ownerEmail"/>
-                -->
+            <div class="form-group" *ngIf="domain">
+                <label for="list-description" class="short-description control-label col-sm-3">List address: </label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" name="list-description" id="list-description"
+                           value="{{listname}}@{{domain}}" disabled/>
+                </div>
             </div>
             <div class="form-group">
                 <label for="list-description" class="short-description control-label col-sm-3">Short
@@ -61,7 +61,7 @@ import {Users} from "../user/userService";
             </div>
             <div>
                 <p class="list-archive-policy-header">List archive policy:</p>
-                <ul style="list-style-type: none">
+                <ul id="archive-policy-list">
                     <li *ngFor="let option of archiveOptions">
                         <input
                                 name="items-radio"
@@ -70,7 +70,7 @@ import {Users} from "../user/userService";
                                 [value]="option.archiveType"
                                 [(ngModel)]="archive"
                         />
-                        <label for="archive-{{option}}">{{option.policyName}}</label>
+                        <label for="archive-{{option.archiveType}}">{{option.policyName}}</label>
                     </li>
                 </ul>
             </div>
@@ -104,17 +104,34 @@ import {Users} from "../user/userService";
                 <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
                 <label for="allow-attachments">Allow attachments on the list.</label>
             </div>
+            <div *ngIf="archiveURL">
+                <a [href]="archiveURL">List's archive</a>
+            </div>
+            <div *ngIf="emailAdminURL">
+                <a [href]="emailAdminURL">Advanced email list settings</a>
+            </div>
             <div>
+                <button class="btn btn-default" (click)="save()">Save changes</button>
+            </div>
+            <div id="add-members-section" class="section">
                 <label for="add-multiple-members">Add members</label> <br/>
                 <textarea id="add-multiple-members" name="add-multiple-members"
                           [(ngModel)]="membersTextField"></textarea>
                 <div>
-                    <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
-                    <label for="new-member-send-right">New member's send right.</label>
-                    <input type="checkbox" name="new-member-delivery-right" [(ngModel)]="newMemberDeliveryRight">
-                    <label for="new-member-delivery-right">New member's delivery right.</label>
+                    <div>
+                        <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
+                        <label for="new-member-send-right">New member's send right.</label>
+                    </div>
+                    <div>
+                        <input type="checkbox" name="new-member-delivery-right" [(ngModel)]="newMemberDeliveryRight">
+                        <label for="new-member-delivery-right">New member's delivery right.</label>
+                    </div>
                 </div>
-                <button (click)="addNewListMember()">Add new members</button>
+                <button (click)="addNewListMember()" class="btn-default">Add new members</button>
+                <div id="member-add-feedback">
+                    <tim-alert *ngIf="memberAddSucceededResponse" severity="success">{{memberAddSucceededResponse}}</tim-alert>
+                    <tim-alert *ngIf="memberAddFailedResponse" severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                </div>
             </div>
             <div>
                 <table>
@@ -143,19 +160,7 @@ import {Users} from "../user/userService";
                     </tbody>
                 </table>
             </div>
-            <div *ngIf="archiveURL">
-                <a [href]="archiveURL">List's archive</a>
-            </div>
-            <div *ngIf="emailAdminURL">
-                <a [href]="emailAdminURL">Advanced email list settings</a>
-            </div>
-            <div>
-                <button class="btn btn-default" (click)="save()">Save changes</button>
-            </div>
-            <div>
-                <tim-message-send [recipientList]="recipientList()" [taskId]="getTaskId()"></tim-message-send>
-            </div>
-            <div>
+            <div class="section">
                 <h2>List deletion</h2>
                 <button class="btn btn-default" (click)="deleteList()">Delete List</button>
             </div>
@@ -204,8 +209,8 @@ export class MessageListAdminComponent implements OnInit {
     newMemberSendRight: boolean = true;
     newMemberDeliveryRight: boolean = true;
 
-    taskId = 0;
-    // recipientList = [];
+    memberAddSucceededResponse: string = "";
+    memberAddFailedResponse: string = "";
 
     getTaskId() {
         return undefined;
@@ -278,9 +283,11 @@ export class MessageListAdminComponent implements OnInit {
             // TODO: Sending succeeded.
             // console.log("Sending members succeeded.");
             this.membersTextField = undefined; // Empty the text field.
+            this.memberAddSucceededResponse = "New members added.";
         } else {
             // TODO: Sending failed.
-            console.error(result.result.error.error);
+            // console.error(result.result.error.error);
+            this.memberAddFailedResponse = `Adding new members failed: ${result.result.error.error}`;
         }
     }
 
@@ -462,6 +469,6 @@ export class MessageListAdminComponent implements OnInit {
 @NgModule({
     declarations: [MessageListAdminComponent],
     exports: [MessageListAdminComponent],
-    imports: [CommonModule, FormsModule, TableFormModule],
+    imports: [CommonModule, FormsModule, TimUtilityModule, TableFormModule],
 })
 export class NewMsgListModule {}
