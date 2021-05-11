@@ -23,7 +23,7 @@ import {Users} from "../user/userService";
                 <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
                 <div class="col-sm-9">
                     <div class="input-group">
-                        <input type="text" class="form-control" name="list-name" id="list-name"
+                        <input type="text" class="form-control" name="list-name" id="list-name" disabled
                                [(ngModel)]="listname"/>
                         <div class="input-group-addon">@</div>
                         <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
@@ -33,13 +33,12 @@ import {Users} from "../user/userService";
                 </div>
             </div>
 
-            <div>
-                <!-- TODO: Add owners here? Should we at least display owner information and give a way to change 
-                      owners, or should that be done by directly changing the owner of the document? -->
-                <!--
-                <label for="owner-address">List owner's adress</label>
-                <input type="text" name="owner-address" id="owner-adress" [(ngModel)]="ownerEmail"/>
-                -->
+            <div class="form-group" *ngIf="domain">
+                <label for="list-description" class="short-description control-label col-sm-3">List address: </label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" name="list-description" id="list-description"
+                           value="{{listname}}@{{domain}}" disabled/>
+                </div>
             </div>
             <div class="form-group">
                 <label for="list-description" class="short-description control-label col-sm-3">Short
