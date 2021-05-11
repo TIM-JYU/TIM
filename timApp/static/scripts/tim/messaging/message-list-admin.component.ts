@@ -39,7 +39,7 @@ import {Users} from "../user/userService";
                 <label for="list-description" class="short-description control-label col-sm-3">List address: </label>
                 <div class="col-sm-9">
                     <input type="text" class="form-control" name="list-email-address" id="list-email-address"
-                           value="{{listname}}@{{domain}}" disabled/>
+                           [ngModel]="listAddress()" disabled/>
                 </div>
             </div>
             <div class="form-group">
@@ -160,6 +160,9 @@ import {Users} from "../user/userService";
                     </tbody>
                 </table>
             </div>
+            <div id="email-send">
+                <tim-message-send [recipientList]="listAddress()" [docId]="getDocId()"></tim-message-send>
+            </div>
             <div class="section">
                 <h2>List deletion</h2>
                 <button class="btn btn-default" (click)="deleteList()">Delete List</button>
@@ -215,6 +218,16 @@ export class MessageListAdminComponent implements OnInit {
 
     getDocId() {
         return documentglobals().curr_item.id;
+    }
+
+    /**
+     * Build this list's email address, if there is a domain configured.
+     */
+    listAddress() {
+        if (this.domain) {
+            return `${this.listname}@${this.domain}`;
+        }
+        return "";
     }
 
     ngOnInit(): void {
