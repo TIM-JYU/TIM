@@ -102,7 +102,16 @@ import {Users} from "../user/userService";
                 <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
                 <label for="allow-attachments">Allow attachments on the list.</label>
             </div>
+            <div *ngIf="archiveURL">
+                <a [href]="archiveURL">List's archive</a>
+            </div>
+            <div *ngIf="emailAdminURL">
+                <a [href]="emailAdminURL">Advanced email list settings</a>
+            </div>
             <div>
+                <button class="btn btn-default" (click)="save()">Save changes</button>
+            </div>
+            <div style="padding-top: 5em">
                 <label for="add-multiple-members">Add members</label> <br/>
                 <textarea id="add-multiple-members" name="add-multiple-members"
                           [(ngModel)]="membersTextField"></textarea>
@@ -144,15 +153,6 @@ import {Users} from "../user/userService";
                     </tr>
                     </tbody>
                 </table>
-            </div>
-            <div *ngIf="archiveURL">
-                <a [href]="archiveURL">List's archive</a>
-            </div>
-            <div *ngIf="emailAdminURL">
-                <a [href]="emailAdminURL">Advanced email list settings</a>
-            </div>
-            <div>
-                <button class="btn btn-default" (click)="save()">Save changes</button>
             </div>
             <div>
                 <h2>List deletion</h2>
