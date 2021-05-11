@@ -12,6 +12,7 @@ import {
     ReplyToListChanges,
 } from "tim/messaging/listOptionTypes";
 import {documentglobals} from "tim/util/globals";
+import {TableFormModule} from "tim/plugin/tableForm";
 import {Users} from "../user/userService";
 
 @Component({
@@ -152,6 +153,9 @@ import {Users} from "../user/userService";
                 <button class="btn btn-default" (click)="save()">Save changes</button>
             </div>
             <div>
+                <tim-message-send [recipientList]="recipientList()" [taskId]="getTaskId()"></tim-message-send>
+            </div>
+            <div>
                 <h2>List deletion</h2>
                 <button class="btn btn-default" (click)="deleteList()">Delete List</button>
             </div>
@@ -199,6 +203,13 @@ export class MessageListAdminComponent implements OnInit {
 
     newMemberSendRight: boolean = true;
     newMemberDeliveryRight: boolean = true;
+
+    taskId = 0;
+    // recipientList = [];
+
+    getTaskId() {
+        return undefined;
+    }
 
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
@@ -438,11 +449,19 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
     }
+
+    recipientList() {
+        if (this.domain) {
+            return `${this.listname}@${this.domain}`;
+        } else {
+            return "";
+        }
+    }
 }
 
 @NgModule({
     declarations: [MessageListAdminComponent],
     exports: [MessageListAdminComponent],
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, TableFormModule],
 })
 export class NewMsgListModule {}

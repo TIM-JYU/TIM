@@ -1555,6 +1555,7 @@ export class TableFormComponent
         TimepickerModule.forRoot(),
         DatetimePickerModule,
     ],
+    exports: [TimMessageComponent],
 })
 export class TableFormModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
