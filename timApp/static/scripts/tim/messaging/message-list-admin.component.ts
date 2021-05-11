@@ -38,7 +38,7 @@ import {Users} from "../user/userService";
             <div class="form-group" *ngIf="domain">
                 <label for="list-description" class="short-description control-label col-sm-3">List address: </label>
                 <div class="col-sm-9">
-                    <input type="text" class="form-control" name="list-description" id="list-description"
+                    <input type="text" class="form-control" name="list-email-address" id="list-email-address"
                            value="{{listname}}@{{domain}}" disabled/>
                 </div>
             </div>
