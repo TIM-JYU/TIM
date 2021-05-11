@@ -164,7 +164,7 @@ import {Users} from "../user/userService";
             <div id="email-send">
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"
                                   on ></tim-message-send>
-                <button (click)="openEmail()" *ngIf="!recipients">Painike</button>
+                <button (click)="openEmail()" *ngIf="!recipients">Send email to list</button>
             </div>
             <div class="section">
                 <h2>List deletion</h2>
