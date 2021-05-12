@@ -191,9 +191,9 @@ class MessageListMember(db.Model):
     point. """
 
     membership_ended = db.Column(db.DateTime(timezone=True))
-    """When member's membership on a list ended. This is set when member is removed from a list."""
+    """When member's membership on a list ended. This is set when member is removed from a list. A value of None means 
+    the member is still on the list."""
 
-    # VIESTIM:  This doesn't work in migration for some reason. Maybe figure out if this is needed or fix later.
     join_method = db.Column(db.Enum(MemberJoinMethod))
     """How the member came to a list."""
 
@@ -250,7 +250,9 @@ class MessageListMember(db.Model):
         return self.membership_verified is not None
 
     def remove(self) -> None:
-        # FIXME: When syncing on removal from a group, this creates a
+        # FIXME: When syncing on removal from a group, this creates an error about "circular dependency detected". A
+        #  fix should be https://docs.sqlalchemy.org/en/14/orm/relationship_persistence.html#post-update to a
+        #  relationship, but why would changing this value cause this? All the other values are fine.
         self.membership_ended = datetime.now()
         # db.session.flush()
         return
@@ -278,7 +280,10 @@ class MessageListTimMember(MessageListMember):
     """A UserGroup id for a member."""
 
     member = db.relationship("MessageListMember", back_populates="tim_member", lazy="select", uselist=False)
-    user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select", uselist=False)
+    # The post_update argument is given to combat this scenario:
+    # https://docs.sqlalchemy.org/en/14/orm/relationship_persistence.html#post-update
+    user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select", uselist=False,
+                                 post_update=True)
 
     __mapper_args__ = {"polymorphic_identity": "tim_member"}
 
@@ -287,16 +292,21 @@ class MessageListTimMember(MessageListMember):
             "name": self.get_name(),
             "email": self.get_email() if self.get_email() is not None else "",
             "sendRight": self.member.send_right,
-            "deliveryRight": self.member.delivery_right
+            "deliveryRight": self.member.delivery_right,
+            "removed": self.membership_ended
         }
 
     def get_name(self) -> str:
+        # from timApp.user.usergroup import UserGroup
+        # ug = UserGroup.query.filter_by(id=self.group_id).one()
         ug = self.user_group
         return ug.name
 
     def get_email(self) -> Optional[str]:
         if self.is_group():
             return None
+        # from timApp.user.usergroup import UserGroup
+        # ug = UserGroup.query.filter_by(id=self.group_id).one()
         ug = self.user_group
         user = ug.personal_user
         return user.email
@@ -326,7 +336,8 @@ class MessageListExternalMember(MessageListMember):
             "name": self.get_name(),  # TODO: If/When a display name is added as a column, that can be used here.
             "email": self.email_address,
             "sendRight": self.member.send_right,
-            "deliveryRight": self.member.delivery_right
+            "deliveryRight": self.member.delivery_right,
+            "removed": self.membership_ended
         }
 
     def get_name(self) -> str:
