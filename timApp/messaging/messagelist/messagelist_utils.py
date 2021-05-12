@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Union
 
 from mailmanclient import MailingList
 
@@ -16,7 +16,8 @@ from timApp.item.block import Block
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
     set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
     set_email_list_non_member_message_pass, set_email_list_allow_attachments, set_email_list_default_reply_type, \
-    add_email
+    add_email, get_email_list_member, remove_email_list_membership, set_email_list_member_send_status, \
+    set_email_list_member_delivery_status
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember, \
     MessageListExternalMember
@@ -653,6 +654,7 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     new_group_member.send_right = delivery_right
     db.session.add(new_group_member)
 
+    # TODO: Don't automatically open group's members to the list.
     # Add individual users to the message list as members.
     for user in ug.users:
         add_new_message_list_tim_user(msg_list, user, send_right, delivery_right, em_list)
@@ -759,3 +761,35 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
             pass
     db.session.commit()  # .flush() might be enough?
     return
+
+
+def set_message_list_member_membership(member: Union[MessageListTimMember,MessageListExternalMember],
+                                       removed: Optional[datetime], email_list: Optional[MailingList]) -> None:
+    """Set the message list member's membership status.
+
+    :param member: The member who's membership status is being set.
+    :param removed: Member's date of removal from the message list. If None, then the member is an active member on the
+    list.
+    :param email_list:
+    :return:
+    """
+    # Check if membership status has changed.
+    if not (member.membership_ended is None and removed is None) and \
+            not (member.membership_ended and removed):
+        # TODO: Check if the removed member is a group.
+        #  If yes, then remove all the groups members also (who are not members of another group)
+        #  If no, then just remove the member.
+        if member.is_group():
+            pass
+        else:
+            member.membership_ended = removed
+            # Make changes to member's status on the email list.
+            if email_list:
+                mlist_member = get_email_list_member(email_list, member.get_email())
+                # If there is an email list and the member is removed, do a soft removal on the email list.
+                if removed:
+                    remove_email_list_membership(mlist_member)
+                else:
+                    # Re-set the member's send and delivery rights on the email list.
+                    set_email_list_member_send_status(mlist_member, member.send_right)
+                    set_email_list_member_delivery_status(mlist_member, member.delivery_right)

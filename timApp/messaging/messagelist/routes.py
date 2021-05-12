@@ -18,7 +18,8 @@ from timApp.messaging.messagelist.messagelist_utils import check_messagelist_nam
     set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
     set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
     set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
-    add_new_message_list_tim_user, add_new_message_list_group, add_message_list_external_email_member
+    add_new_message_list_tim_user, add_new_message_list_group, add_message_list_external_email_member, \
+    set_message_list_member_membership
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
@@ -210,7 +211,12 @@ class MemberInfo:
 
 @messagelist.route("/savemembers", methods=['POST'])
 def save_members(listname: str, members: List[MemberInfo]) -> Response:
-    """Save the state of existing list members, e.g. send and delivery rights."""
+    """Save the state of existing list members, e.g. send and delivery rights.
+
+    :param listname: The name of the message list where the members will be saved.
+    :param members: The members to be saved.
+    :return: Response for the client. The Response is a simple ok_response().
+    """
     message_list = MessageListModel.get_list_by_name_exactly_one(listname)
     email_list = None
     if message_list.email_list_domain:
@@ -233,28 +239,7 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
                 if email_list:
                     mlist_member = get_email_list_member(email_list, member.email)
                     set_email_list_member_delivery_status(mlist_member, member.deliveryRight, by_moderator=True)
-            # Check if the member's removed status has changed.
-            if not (db_member.membership_ended is None and member.removed is None) and \
-                    not (db_member.membership_ended and member.removed):
-                # TODO: Check if the removed member is a group.
-                #  If yes, then remove all the groups members also (who are not members of another group)
-                #  If no, then just remove the member.
-                if db_member.is_group():
-                    pass
-                else:
-                    db_member.membership_ended = member.removed
-                    # db_member.remove()
-                    if email_list:
-                        mlist_member = get_email_list_member(email_list, member.email)
-                        # If there is an email list and the member is removed, do a soft removal in the email list.
-                        if member.removed:
-                            remove_email_list_membership(mlist_member)
-                        else:
-                            # Re-set the member's send and delivery rights on the email list.
-                            set_email_list_member_send_status(mlist_member, member.sendRight)
-                            set_email_list_member_delivery_status(mlist_member, member.deliveryRight)
-            # db.session.flush()
-
+            set_message_list_member_membership(member=db_member, removed=member.removed)
     db.session.commit()
     return ok_response()
 
