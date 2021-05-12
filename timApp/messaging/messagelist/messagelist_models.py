@@ -208,7 +208,7 @@ class MessageListMember(db.Model):
     """Discriminator for polymorhphic members."""
 
     message_list = db.relationship("MessageListModel", back_populates="members", lazy="select", uselist=False)
-    tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select", uselist=False)
+    tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select", uselist=False, post_update=True)
     external_member = db.relationship("MessageListExternalMember", back_populates="member", lazy="select",
                                       uselist=False)
     distribution = db.relationship("MessageListDistribution", back_populates="member", lazy="select")
@@ -254,7 +254,6 @@ class MessageListMember(db.Model):
         #  fix should be https://docs.sqlalchemy.org/en/14/orm/relationship_persistence.html#post-update to a
         #  relationship, but why would changing this value cause this? All the other values are fine.
         self.membership_ended = datetime.now()
-        # db.session.flush()
         return
 
 
