@@ -283,7 +283,7 @@ def get_members(list_name: str) -> Response:
     # TODO: Verify user is a owner of the list.
 
     msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
-    list_members = msg_list.get_individual_members()
+    list_members = msg_list.get_tim_members()
     return json_response(list_members)
 
 

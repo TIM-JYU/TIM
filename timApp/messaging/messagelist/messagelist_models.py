@@ -147,7 +147,7 @@ class MessageListModel(db.Model):
         tim_members = []
         for member in self.members:
             if member.is_tim_member():
-                tim_members.append(member.group_id)
+                tim_members.append(member.tim_member)
         return tim_members
 
     def get_member_by_name(self, name: Optional[str], email: Optional[str]) -> Optional['MessageListMember']:
