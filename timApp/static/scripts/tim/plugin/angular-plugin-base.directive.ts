@@ -14,6 +14,7 @@ import {
     PluginMeta,
 } from "tim/plugin/util";
 import {DomSanitizer} from "@angular/platform-browser";
+import {JsonValue} from "tim/util/jsonvalue";
 import {
     handleAnswerResponse,
     prepareAnswerRequest,
@@ -126,13 +127,13 @@ export abstract class AngularPluginBase<
         );
     }
 
-    protected httpPost<U>(url: string, body: unknown) {
+    protected httpPost<U>(url: string, body: JsonValue) {
         return to2(this.http.post<U>(url, body).toPromise());
     }
 
     protected httpPut<U>(
         url: string,
-        body: unknown,
+        body: JsonValue,
         headers: HttpHeaders = new HttpHeaders()
     ) {
         return to2(
@@ -143,7 +144,7 @@ export abstract class AngularPluginBase<
     }
 
     protected async postAnswer<U>(
-        answerdata: {input: unknown},
+        answerdata: {input: JsonValue},
         headers: HttpHeaders = new HttpHeaders()
     ) {
         const tid = this.pluginMeta.getTaskId();

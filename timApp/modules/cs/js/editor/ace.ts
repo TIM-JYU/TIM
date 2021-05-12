@@ -19,6 +19,8 @@ export class AceEditorComponent implements IEditor {
     private minRows_: number = 1;
     private maxRows_: number = 100;
     private content_?: string;
+    private editorreadonly: boolean = false;
+
     @ViewChild("area") area!: ElementRef;
     @Input() placeholder: string = ""; // TODO: make this work
 
@@ -39,11 +41,17 @@ export class AceEditorComponent implements IEditor {
         this.aceEditor?.setOption("maxLines", rows);
     }
 
+    setReadOnly(b: boolean) {
+        this.aceEditor?.setReadOnly(b);
+        this.editorreadonly = b;
+    }
+
     async ngAfterViewInit() {
         const ace = (await import("tim/editor/ace")).ace;
 
         const editor = ace.edit(this.area.nativeElement);
         this.aceEditor = editor;
+        this.aceEditor.setReadOnly(this.editorreadonly);
 
         const session = editor.getSession();
         session.setUndoManager(new ace.UndoManager());
@@ -83,10 +91,12 @@ export class AceEditorComponent implements IEditor {
         let cursor;
         if (strPos) {
             cursor = sess.getDocument().indexToPosition(strPos, 0);
+            sess.insert(cursor, str); // TODO: might have to move cursor
         } else {
-            cursor = this.aceEditor.getCursorPosition();
+            sess.replace(sess.selection.getRange(), str);
+            // cursor = this.aceEditor.getCursorPosition();
         }
-        sess.insert(cursor, str); // TODO: might have to move cursor
+        // sess.insert(cursor, str); // TODO: might have to move cursor
     }
 
     doWrap(wrap: number) {

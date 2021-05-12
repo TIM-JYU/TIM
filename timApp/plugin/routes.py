@@ -94,7 +94,7 @@ def plugin_tid_call(plugintype: str, task_id_ext: str):
                     "fetchExternal",
                     json.dumps(call_data, cls=TimJsonEncoder),
                     headers={'Content-type': 'application/json'},
-                    read_timeout=30)
+                    read_timeout=30).text
     try:
         jsonresp = json.loads(plugin_response)
     except ValueError as e:

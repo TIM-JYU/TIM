@@ -58,16 +58,6 @@ def verify_json_params(*args: str, require: bool=True, default: Any=None, error_
     return result
 
 
-def get_referenced_pars_from_req(par: DocParagraph) -> List[DocParagraph]:
-    if par.is_reference() and not par.is_translation():
-        try:
-            return [ref_par for ref_par in par.get_referenced_pars()]
-        except InvalidReferenceException as e:
-            raise NotExist(str(e))
-    else:
-        return [par]
-
-
 def get_option(req: Union[Request, ViewContext], name: str, default: Any, cast: Optional[Type]=None) -> Any:
     if name not in req.args:
         return default
@@ -92,13 +82,6 @@ def get_option(req: Union[Request, ViewContext], name: str, default: Any, cast: 
         except ValueError:
             return default
     return result
-
-
-def is_xhr(req: BaseRequest) -> bool:
-    """Same as req.is_xhr but without the deprecation warning."""
-    return req.environ.get(
-        'HTTP_X_REQUESTED_WITH', ''
-    ).lower() == 'xmlhttprequest'
 
 
 def is_testing() -> bool:

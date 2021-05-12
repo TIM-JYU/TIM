@@ -188,6 +188,7 @@ class TimRouteTest(TimDbTest):
                 url: str,
                 method: str,
                 as_tree: bool = False,
+                as_response: bool = False,
                 expect_status: Optional[int] = 200,
                 expect_content: Union[None, str, Dict, List] = None,
                 expect_contains: Union[None, str, List[str]] = None,
@@ -253,6 +254,8 @@ class TimRouteTest(TimDbTest):
             return resp_data
         if expect_status >= 400 and json_key is None and (isinstance(expect_content, str) or isinstance(expect_contains, str)):
             json_key = 'error'
+        if as_response:
+            return resp
         if as_tree:
             if json_key is not None:
                 resp_data = json.loads(resp_data)[json_key]
@@ -407,6 +410,7 @@ class TimRouteTest(TimDbTest):
                  json_key: Optional[str] = None,
                  headers: Optional[List[Tuple[str, str]]] = None,
                  auth: Optional[BasicAuthParams] = None,
+                 content_type: Optional[str] = None,
                  **kwargs):
         """Performs a JSON request.
 
@@ -420,7 +424,7 @@ class TimRouteTest(TimDbTest):
         return self.request(url,
                             method=method,
                             data=json.dumps(json_data, cls=TimJsonEncoder),
-                            content_type='application/json',
+                            content_type=content_type or 'application/json',
                             as_tree=as_tree,
                             expect_status=expect_status,
                             expect_content=expect_content,
@@ -638,7 +642,7 @@ class TimRouteTest(TimDbTest):
             with self.client.session_transaction() as s:
                 s.pop('last_doc', None)
                 s.pop('came_from', None)
-        return self.post('/altlogin',
+        return self.post('/emailLogin',
                          data={'email': email, 'password': passw, 'add_user': add},
                          follow_redirects=True, **kwargs)
 
@@ -826,17 +830,26 @@ class TimRouteTest(TimDbTest):
         u.add_to_group(gr, added_by=None)
         db.session.commit()
 
-    def post_comment(self, par, public, text, **kwargs):
+    def post_comment(self, par: DocParagraph, public: bool, text: str, orig: Optional[DocParagraph] = None, **kwargs):
+        glob_id = dict(doc_id=par.doc.doc_id, par_id=par.get_id())
+        orig_glob_id = glob_id if not orig else dict(doc_id=orig.doc.doc_id, par_id=orig.get_id())
         return self.json_post('/postNote', {'text': text,
                                             'access': 'everyone' if public else 'justme',
-                                            'docId': par.doc.doc_id,
-                                            'par': par.get_id()}, **kwargs)
+                                            'ctx': {
+                                                'curr': glob_id,
+                                                'orig': orig_glob_id,
+                                            }}, **kwargs)
 
-    def edit_comment(self, note_id, public, text, **kwargs):
+    def edit_comment(self, note_id, par, public, text, **kwargs):
+        glob_id = dict(doc_id=par.doc.doc_id, par_id=par.get_id())
         return self.json_post('/editNote',
                               {'text': text,
                                'id': note_id,
                                'access': 'everyone' if public else 'justme',
+                               'ctx': {
+                                   'curr': glob_id,
+                                   'orig': glob_id,
+                               },
                                }, **kwargs)
 
     def post_preview(self, d: DocInfo, text: str, spellcheck=False, par_next=None, par=None, **kwargs):
@@ -958,6 +971,38 @@ class TimRouteTest(TimDbTest):
         self.client.__enter__()
 
     @contextmanager
+    def internal_container_ctx(self):
+        """Redirects internal container requests to go through Flask test client.
+         Otherwise such requests would fail during test, unless BrowserTest class is used.
+
+        TODO: Using BrowserTest in cases where it's not actually a browser test should be fixed to
+         use this method instead.
+        """
+        with responses.RequestsMock(assert_all_requests_are_fired=False) as m:
+            def rq_cb(request: PreparedRequest, fn):
+                r: Response = fn(
+                    request.path_url,
+                    json_data=json.loads(request.body),
+                    as_response=True,
+                    content_type=request.headers.get('content-type', 'application/octet-stream'),
+                )
+                return r.status_code, {}, r.data
+
+            def rq_cb_put(request: PreparedRequest):
+                return rq_cb(request, self.json_put)
+
+            def rq_cb_post(request: PreparedRequest):
+                return rq_cb(request, self.json_post)
+
+            host = current_app.config['INTERNAL_PLUGIN_DOMAIN']
+            m.add_callback('PUT', re.compile(f'http://{host}:5001/'), callback=rq_cb_put)
+            m.add_callback('POST', re.compile(f'http://{host}:5001/'), callback=rq_cb_post)
+            m.add_passthru('http://csplugin:5000')
+            m.add_passthru('http://jsrunner:5000')
+            m.add_passthru('http://fields:5000')
+            yield
+
+    @contextmanager
     def importdata_ctx(self, aalto_return=None):
         with responses.RequestsMock() as m:
             if aalto_return:
@@ -976,6 +1021,15 @@ class TimRouteTest(TimDbTest):
             m.add_callback('PUT', f'http://{host}:5001/importData/answer', callback=rq_cb)
             m.add_passthru('http://jsrunner:5000')
             yield
+
+    @contextmanager
+    def temp_config(self, settings: Dict[str, Any]):
+        old_settings = {k: current_app.config[k] for k in settings.keys()}
+        for k, v in settings.items():
+            current_app.config[k] = v
+        yield
+        for k, v in old_settings.items():
+            current_app.config[k] = v
 
 
 class TimPluginFix(TimRouteTest):

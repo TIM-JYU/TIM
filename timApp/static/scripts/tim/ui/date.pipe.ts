@@ -1,5 +1,5 @@
 import {Pipe, PipeTransform} from "@angular/core";
-import {ReadonlyMoment} from "tim/util/utils";
+import {ReadonlyMoment} from "tim/util/readonlymoment";
 
 @Pipe({name: "timdate"})
 export class DatePipe implements PipeTransform {

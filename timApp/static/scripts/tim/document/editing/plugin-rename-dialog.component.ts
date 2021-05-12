@@ -105,10 +105,6 @@ export class PluginRenameDialogComponent extends AngularDialogComponent<
 
     ngOnInit() {}
 
-    getExtraData() {
-        return isFromPar(this.data) ? this.data.extraData : {};
-    }
-
     getDuplicates() {
         return this.data.duplicates;
     }
@@ -125,8 +121,7 @@ export class PluginRenameDialogComponent extends AngularDialogComponent<
                         docId: this.data.extraData.docId,
                         newPars: this.data.new_par_ids,
                         originalPar: this.data.original_par,
-                        parId: this.data.extraData.par,
-                        ...this.getExtraData(),
+                        parId: this.data.extraData.par?.originalPar.id,
                     })
                     .toPromise()
             );
@@ -164,7 +159,7 @@ export class PluginRenameDialogComponent extends AngularDialogComponent<
             this.http
                 .post<IParResponse | IManageResponse>("/postNewTaskNames/", {
                     duplicates: duplicateData,
-                    ...this.getExtraData(),
+                    docId: this.data.extraData?.docId,
                 })
                 .toPromise()
         );

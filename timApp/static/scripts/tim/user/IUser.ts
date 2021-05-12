@@ -22,7 +22,7 @@ export interface IUserListEntry {
 export interface IFullUser extends IUser {
     groups: IGroup[];
     consent: ConsentType | undefined;
-    folder: IFolder;
+    folder: IFolder | null; // Folder is null only when not logged in.
     last_name: string | null;
 }
 

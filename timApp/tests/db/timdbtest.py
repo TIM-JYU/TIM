@@ -1,6 +1,9 @@
 import glob
 import os
+import sys
 import unittest
+from contextlib import contextmanager
+from io import StringIO
 from typing import Union, List
 
 import sqlalchemy.exc
@@ -114,6 +117,13 @@ class TimDbTest(unittest.TestCase):
     def assert_list_of_dicts_subset(self, datalist, subsetlist):
         for d, s in zip(datalist, subsetlist):
             self.assert_dict_subset(d, s)
+
+    @contextmanager
+    def suppress_stdout(self):
+        old_io = sys.stdout
+        sys.stdout = StringIO()
+        yield
+        sys.stdout = old_io
 
 
 TEST_USER_1_ID = 2

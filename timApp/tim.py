@@ -23,6 +23,7 @@ from werkzeug.middleware.profiler import ProfilerMiddleware
 from timApp.admin.cli import register_clis
 from timApp.admin.global_notification import global_notification
 from timApp.admin.routes import admin_bp
+from timApp.backup.backup_routes import backup
 from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
 from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
@@ -62,6 +63,7 @@ from timApp.plugin.tableform.tableForm import tableForm_plugin
 from timApp.plugin.tape.tape import tape_plugin
 from timApp.plugin.timmenu.timMenu import timMenu_plugin
 from timApp.plugin.timtable.timTable import timTable_plugin
+from timApp.plugin.userselect.userselect import user_select_plugin
 from timApp.printing.print import print_blueprint
 from timApp.readmark.routes import readings
 from timApp.scheduling.scheduling_routes import scheduling
@@ -89,6 +91,7 @@ blueprints = [
     admin_bp,
     annotations,
     answers,
+    backup,
     clipboard,
     course_blueprint,
     doc_bp,
@@ -127,6 +130,7 @@ blueprints = [
     cbcountfield_route,
     timMenu_plugin,
     timTable_plugin,
+    user_select_plugin,
     messagelist,
     timMessage,
 ]
@@ -345,7 +349,7 @@ def install_sql_hook():
         print(f'--------------------------------------TIMING: {curr} ({curr - prev_exec_time})')
         prev_exec_time = curr
         for r in traceback.format_stack():
-            if r.startswith('  File "/service/'):
+            if r.startswith('  File "/service/') and not receive_before_execute.__name__ in r:
                 print(r, end='')
         print(clauseelement)
 

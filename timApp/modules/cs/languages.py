@@ -1,8 +1,13 @@
+from base64 import b64encode
+from io import BytesIO
+from zipfile import ZipFile
+
 import requests
 
 from subprocess import check_output
 from typing import Optional
 
+from tim_common.cs_sanitizer import cs_min_sanitize
 from points import *
 from run import *
 from os.path import splitext
@@ -78,6 +83,7 @@ class Language:
         self.stdin = None
         self.query = query
         self.user_id = '--'
+        self.nofilesave = False  # if no need to save files
         if query.jso:
             self.user_id = df(query.jso.get('info'), {}).get('user_id', '--')
             self.markup = query.jso.get('markup', {})
@@ -380,7 +386,7 @@ class Language:
         return subclasses + [i for sc in subclasses for i in sc.all_subclasses()]
 
     @classmethod
-    def get_client_ttype(cls, ttype):
+    def get_client_ttype(cls, _ttype):
         """Returns the ttype of this class that should be given to client"""
         if isinstance(cls.ttype, list):
             return cls.ttype[0]
@@ -667,7 +673,9 @@ class Java(Language):
         self.sourcefilename = self.javaname
 
     def get_cmdline(self):
-        return f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath} {self.javaname}"
+        return f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib" + \
+               f" --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath}" +\
+               f" {self.javaname}"
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "--module-path", f"/javafx-sdk-{JAVAFX_VERSION}/lib",
@@ -1117,7 +1125,6 @@ class Processing(JS):
     pass
 
 
-
 class WeScheme(JS):
     ttype = "wescheme"
 
@@ -1516,6 +1523,107 @@ class Mathcheck(Language):
         if correct_text:
             out = out.replace("No errors found. MathCheck is convinced that there are no errors.", correct_text)
             out = out.replace("No errors found. Please notice that the check was not complete.", correct_text)
+        return 0, out, "", ""
+
+# Pre sentences to make maxima plot2d etc possible in TIM
+MAXIMA_T_PLOT = """
+plotcnt: 1$
+plottmpf: ""$
+openplot() := block(
+    filename: concat("plot",plotcnt), 
+    plotcnt: plotcnt+1,
+    afn: concat(IMAGE_DIR, filename, ".", PLOT_TERMINAL),
+    tmpf: concat(maxima_tempdir, concat(filename, ".plt")),
+    set_plot_option([svg_file, afn], [gnuplot_out_file, tmpf]),
+    plottmpf: [tmpf, afn]
+)$
+closeplot() := block(
+    system(concat(GNUPLOT_CMD, " ", plottmpf[1])),
+    system(concat(DEL_CMD, " ", plottmpf[1])),
+    return (plottmpf)
+)$
+gplt(f,a) := block(
+    system(concat(GNUPLOT_CMD, " ", a[1])),
+    system(concat(DEL_CMD, " ", a[1])),
+    return (a)
+)$
+
+t_plot2d([args]) := block(openplot(), apply(plot2d, args),  closeplot())$
+t_contour_plot([args]) := block(openplot(), apply(contour_plot, args),  closeplot())$
+t_plot3d([args]) := block(openplot(), apply(plot3d, args),  closeplot())$
+t_julia([args]) := block(openplot(), apply(julia, args),  closeplot())$
+t_mandelbrot([args]) := block(openplot(), apply(mandelbrot, args),  closeplot())$
+alias(plot2d, t_plot2d, contour_plot, t_contour_plot, plot3d, t_plot3d, julia, t_julia, mandelbrot, t_mandelbrot)$
+"""
+
+class Maxima(Language):
+    ttype = "maxima"
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.sourcefilename = "/tmp/%s/%s.mc" % (self.basename, self.filename)
+        # self.dir = "/tmp/%s/" % self.basename
+        self.fileext = "mc"
+        self.nofilesave = True
+
+    def run(self, result, sourcelines, points_rule):
+        def maxima_option(name):
+            res = get_value(self.query.jso, False, 'markup', "-maxima", name) or \
+                  name in sourcelines
+            return res
+
+        timplot = maxima_option("timplot")
+        if timplot:
+            sourcelines = MAXIMA_T_PLOT + sourcelines
+
+        r = requests.post("http://maxima:8080/maxima", data={
+                "input": sourcelines.strip(),
+                "timeout": 10000,
+             })
+
+
+        htmldata = ""
+        result["web"]["md"] = ""
+        out = ""
+        if r.text.startswith("PK"):  # TODO: is there a better wy to check zip?
+            all_image_attributes = cs_min_sanitize(get_param(self.query, "imageAttributes", ""))
+
+            with ZipFile(BytesIO(r.content)) as zipObj:
+                for fn in zipObj.filelist:
+                    image_attributes = all_image_attributes
+                    data = zipObj.read(fn.filename)
+                    if fn.filename == "OUTPUT":
+                        out = data.decode().strip()
+                    else:
+                        if image_attributes == "":
+                            sdata = data[:100].decode()  # take svg viewBox
+                            match = re.search(r'viewBox="0 0 ([0-9]+) ([0-9]+)', sdata)
+                            if match:
+                                image_attributes = ' style="width: '+match.group(1)+'px;"'
+                        pngenc = b64encode(data)
+                        # _,imgext = splitext(fn.filename)
+                        # imgext = imgext[1:]
+                        imgext = 'svg+xml'  # pure svg is not enough
+                        htmldata += '<img src="data:image/'+imgext+';base64, ' + \
+                                    pngenc.decode() + '" ' + image_attributes + '/>'
+                result["web"]["md"] = htmldata
+        else:
+            out = r.text.strip()
+
+        showinput = maxima_option("showinput")
+        showtex = maxima_option("showtex")
+
+        # s = out.replace("\n", " ")
+        p = re.compile(r'\$\$.*?\$\$', flags=re.DOTALL)
+        tex = "\n".join(p.findall(out))
+        if tex:
+            result["web"]["md"] = tex + result["web"]["md"]
+            if not showtex:
+                out = re.sub(r'\$\$.*?\$\$', '', out, flags=re.DOTALL)
+        if not showinput:
+            out = re.sub(r'^\(%i[^)]*\) *\n', '', out, flags=re.M)
+            out = re.sub(r'^\(%i[^)]*\)$', '', out, flags=re.M)
+
         return 0, out, "", ""
 
 

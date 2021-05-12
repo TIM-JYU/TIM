@@ -3,10 +3,11 @@ import $ from "jquery";
 import {EditPosition, EditType} from "tim/document/editing/edittypes";
 import {showQuestionEditDialog} from "tim/document/question/showQuestionEditDialog";
 import {fetchAndEditQuestion} from "tim/document/question/fetchQuestion";
-import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {getNextId} from "tim/document/editing/editing";
+import {ParContext} from "tim/document/structure/parContext";
+import {getMinimalUnbrokenSelection} from "tim/document/editing/unbrokenSelection";
 import {documentglobals} from "../../util/globals";
 import {$timeout} from "../../util/ngimport";
-import {getParId, Paragraph} from "../parhelpers";
 import {ViewCtrl} from "../viewctrl";
 
 export class QuestionHandler {
@@ -23,40 +24,34 @@ export class QuestionHandler {
     }
 
     // Opens pop-up window to create question.
-    async addQuestionQst(e: MouseEvent, par: Paragraph) {
-        const parNextId = getParId(par);
-        if (!parNextId) {
-            showMessageDialog("Not a valid paragraph.");
-            return;
-        }
+    async addQuestionQst(e: MouseEvent, pos: EditPosition) {
+        const parNextId = getNextId(pos);
         const result = await showQuestionEditDialog({
-            par_id_next: parNextId,
+            par_id_next: parNextId ?? null,
             qst: true,
             docId: this.viewctrl.docId,
         });
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
-        this.viewctrl.editingHandler.addSavedParToDom(result.data, {
-            type: EditType.AddAbove,
-            par: par,
-        });
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, pos);
     }
 
-    async editQst(e: MouseEvent, par: Paragraph) {
-        const parId = getParId(par);
-        if (!parId) {
-            showMessageDialog("Not a valid paragraph.");
-            return;
-        }
-        const result = await fetchAndEditQuestion(this.viewctrl.docId, parId);
+    async editQst(e: MouseEvent, par: ParContext) {
+        const result = await fetchAndEditQuestion(
+            this.viewctrl.docId,
+            par.originalPar.id
+        );
         if (!result) {
             return;
         }
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
-        const position: EditPosition = {type: EditType.Edit, pars: par};
+        const position: EditPosition = {
+            type: EditType.Edit,
+            pars: getMinimalUnbrokenSelection(par, par),
+        };
         if (result.deleted) {
             this.viewctrl.editingHandler.handleDelete(position);
         } else {
@@ -69,24 +64,17 @@ export class QuestionHandler {
 
     // Event handler for "Add question below"
     // Opens pop-up window to create question.
-    async addQuestion(e: MouseEvent, par: Paragraph) {
-        const parNextId = getParId(par.next());
-        if (!parNextId) {
-            showMessageDialog("Not a valid paragraph.");
-            return;
-        }
+    async addQuestion(e: MouseEvent, pos: EditPosition) {
+        const parNextId = getNextId(pos);
         const result = await showQuestionEditDialog({
-            par_id_next: parNextId,
+            par_id_next: parNextId ?? null,
             qst: false,
             docId: this.viewctrl.docId,
         });
         if (result.type === "points") {
             throw new Error("unexpected result type from dialog");
         }
-        this.viewctrl.editingHandler.addSavedParToDom(result.data, {
-            type: EditType.AddBelow,
-            par: par,
-        });
+        this.viewctrl.editingHandler.addSavedParToDom(result.data, pos);
     }
 
     async processQuestions() {

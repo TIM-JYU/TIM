@@ -5,6 +5,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_USERNAMES
 from timApp.user.user import User, UserInfo
+from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 
 
@@ -46,6 +47,34 @@ class MergeTest(TimRouteTest):
         d = self.create_doc(initial_par="#- {plugin=textfield #t}")
         self.post_answer('textfield', f'{d.id}.t', user_input={'c': 'x'})
         path = d.path
+        tg1 = UserGroup.create('tg1')
+        tg2 = UserGroup.create('tg2')
+        self.test_user_1.add_to_group(tg1, added_by=self.test_user_3)
+        self.test_user_1.add_to_group(tg2, added_by=None)
+        t1pg = self.test_user_1.get_personal_group()
+        t2pg = self.test_user_2.get_personal_group()
+        db.session.commit()
+
+        def membership_set(user: User):
+            return set((m.usergroup_id, m.added_by) for m in user.memberships)
+
+        def check_memberships(
+                primary: User,
+                secondary: User,
+                primary_personal: UserGroup,
+                secondary_personal: UserGroup,
+        ):
+            db.session.refresh(primary)
+            db.session.refresh(secondary)
+            self.assertEqual(
+                {(primary_personal.id, None), (tg1.id, TEST_USER_3_ID), (tg2.id, None)},
+                membership_set(primary)
+            )
+            self.assertEqual(
+                {(secondary_personal.id, None)},
+                membership_set(secondary)
+            )
+
         r = find_and_merge_users('testuser2', 'testuser1')
         self.assertEqual(2, r.accesses)
         self.assertEqual(0, r.annotations)
@@ -56,10 +85,11 @@ class MergeTest(TimRouteTest):
         self.assertEqual(0, r.owned_lectures)
         self.assertEqual(0, r.readparagraphs)
         self.assertEqual(0, r.velps)
+        self.assertEqual(2, r.groups)
         db.session.commit()
         self.assertIsNone(DocEntry.find_by_path(path))
-        #db.session.refresh(self.test_user_1.get_personal_group())
-        #db.session.refresh(self.test_user_2.get_personal_group())
+        check_memberships(self.test_user_2, self.test_user_1, t2pg, t1pg)
+
         r = find_and_merge_users('testuser2', 'testuser1')
         self.assertEqual(0, r.accesses)
         self.assertEqual(0, r.annotations)
@@ -70,9 +100,10 @@ class MergeTest(TimRouteTest):
         self.assertEqual(0, r.owned_lectures)
         self.assertEqual(0, r.readparagraphs)
         self.assertEqual(0, r.velps)
+        self.assertEqual(0, r.groups)
         db.session.commit()
-        db.session.refresh(self.test_user_1.get_personal_group())
-        db.session.refresh(self.test_user_2.get_personal_group())
+        check_memberships(self.test_user_2, self.test_user_1, t2pg, t1pg)
+
         r = find_and_merge_users('testuser1', 'testuser2')
         self.assertEqual(2, r.accesses)
         self.assertEqual(0, r.annotations)
@@ -83,8 +114,11 @@ class MergeTest(TimRouteTest):
         self.assertEqual(0, r.owned_lectures)
         self.assertEqual(0, r.readparagraphs)
         self.assertEqual(0, r.velps)
+        self.assertEqual(2, r.groups)
         db.session.commit()
+        check_memberships(self.test_user_1, self.test_user_2, t1pg, t2pg)
         self.assertIsNotNone(DocEntry.find_by_path(path))
+
         r = find_and_merge_users('testuser1', 'testuser2')
         self.assertEqual(0, r.accesses)
         self.assertEqual(0, r.annotations)
@@ -95,7 +129,9 @@ class MergeTest(TimRouteTest):
         self.assertEqual(0, r.owned_lectures)
         self.assertEqual(0, r.readparagraphs)
         self.assertEqual(0, r.velps)
+        self.assertEqual(0, r.groups)
         db.session.commit()
+        check_memberships(self.test_user_1, self.test_user_2, t1pg, t2pg)
 
         find_and_soft_delete('testuser2')
         self.assertIsNone(User.get_by_name('testuser2'))

@@ -30,7 +30,7 @@ export async function openEditorSimple(
         await openEditor({
             defaultSize: "lg",
             initialText: text,
-            extraData: {docId, tags: {markread: false}, par: "nothing"},
+            extraData: {docId, tags: {markread: false}},
             options: {
                 caption: caption,
                 choices: undefined,

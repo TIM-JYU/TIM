@@ -35,7 +35,7 @@
 	}
 }
 
-{$CADDY_DOMAINS} {
+(tim_server) {
 	import common
 	@nobuffering {
 		query caddy_nobuffering=1
@@ -48,6 +48,16 @@
 	handle {
 		reverse_proxy * http://tim:5000
 	}
+	log {
+		output file /logs/access.log {
+			roll_keep 100
+			roll_keep_for 365d
+		}
+	}
+}
+
+{$CADDY_DOMAINS} {
+	import tim_server
 }
 
 # For running tests (from IDE).

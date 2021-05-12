@@ -1,10 +1,15 @@
 import * as t from "io-ts";
+import {nullable} from "tim/plugin/attributes";
 import {JsrunnerMarkup} from "../shared/jsrunnertypes";
 
 export const UserFieldData = t.intersection([
     t.type({
         fields: t.record(t.string, t.unknown),
-        user: t.type({id: t.Int, name: t.string, real_name: t.string}),
+        user: t.type({
+            id: t.Int,
+            name: t.string,
+            real_name: nullable(t.string),
+        }),
     }),
     t.partial({
         groupinfo: t.type({

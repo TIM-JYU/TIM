@@ -1335,9 +1335,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             if not language.can_give_task() and query.jso.get("input",{}).get("getTask", False):
                 raise Exception(f"Give task not allowed for {ttype}")
 
-            mkdirs(language.prgpath)
 
-            nofilesave = get_param(query, 'nofilesave', False)
+            nofilesave = get_param(query, 'nofilesave', language.nofilesave)
+            if not nofilesave:
+                mkdirs(language.prgpath)
             filesaveattribute = get_param(query, "filesaveattribute", None)
             errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
             warncondition = get_json_param(query.jso, "markup", "warncondition", False)

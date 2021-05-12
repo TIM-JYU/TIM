@@ -9,6 +9,6 @@ import {AngularDraggableModule} from "angular2-draggable";
 @NgModule({
     declarations: [DialogContainerComponent, DialogHostDirective, DialogFrame],
     imports: [TimUtilityModule, BrowserModule, AngularDraggableModule],
-    exports: [DialogFrame],
+    exports: [DialogFrame, DialogContainerComponent],
 })
 export class DialogModule {}

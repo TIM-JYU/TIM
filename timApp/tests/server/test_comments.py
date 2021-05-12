@@ -7,6 +7,7 @@ from lxml.html import HtmlElement
 from timApp.auth.accesstype import AccessType
 from timApp.document.docparagraph import DocParagraph
 from timApp.item.item import Item
+from timApp.note.usernote import UserNote
 from timApp.notification.notify import process_pending_notifications, sent_mails_in_testing
 from timApp.tests.server.test_notify import NotifyTestBase
 from timApp.tests.server.timroutetest import get_note_id_from_json
@@ -190,7 +191,7 @@ class CommentTest(NotifyTestBase):
                           expect_content='Only private comments can be posted on this document.',
                           )
         c = self.post_comment(par, public=False, text='test')
-        self.edit_comment(get_note_id_from_json(c), True, 'edited', expect_status=403)
+        self.edit_comment(get_note_id_from_json(c), par, True, 'edited', expect_status=403)
 
     def test_comment_at_area_start(self):
         self.login_test1()
@@ -244,9 +245,99 @@ hi
     def test_comment_in_translation(self):
         self.login_test1()
         d = self.create_doc(initial_par="test")
-        d = self.create_translation(d)
-        par = d.document.get_paragraphs()[0]
-        r = self.post_comment(par, public=True, text='test')
+        tr = self.create_translation(d)
+        par = tr.document.get_paragraphs()[0]
+        r = self.post_comment(d.document.get_paragraphs()[0], public=True, text='test', orig=par)
         note_id = get_note_id_from_json(r)
         note = self.get(f'/note/{note_id}')
         self.assertEqual('test', note['text'])
+
+    def test_comment_in_referenced_area(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {area=a}
+
+#-
+a
+#-
+b
+#-
+c
+
+#- {area_end=a}
+        """)
+        d2 = self.create_doc(initial_par=f"""
+#- {{rd={d.id} ra=a}}
+        """)
+        area_a_start = d.document.get_paragraphs()[0]
+        area_a_middle = d.document.get_paragraphs()[2]
+        orig_par = d2.document.get_paragraphs()[0]
+        r = self.post_comment(area_a_middle, public=True, text='test', orig=orig_par)
+        note: UserNote = UserNote.query.order_by(UserNote.id.desc()).first()
+        self.assert_same_html(html.fromstring(r['texts']), f"""
+<div class="par"
+     id="{orig_par.get_id()}"
+     t="{orig_par.get_hash()}"
+     attrs='{{&#34;ra&#34;: &#34;a&#34;, &#34;rd&#34;: &#34;{d.id}&#34;}}'
+     ref-id="{area_a_middle.get_id()}"
+     ref-t="{area_a_middle.get_hash()}"
+     ref-attrs="{{}}"
+     ref-doc-id="{d.id}"
+>
+    <div ng-non-bindable tabindex="0" class="parContent">
+        <p>b</p>
+    </div>
+    <tim-par-ref
+            docid="{d.id}"
+            parid="{area_a_middle.get_id()}">
+    </tim-par-ref>
+    <div class="editline" tabindex="0" title="Click to edit this paragraph"></div>
+    <div class="readline"
+         title="Click to mark this paragraph as read"
+    ></div>
+    <div class="notes">
+        <div class="note editable"
+             ng-non-bindable
+             note-id="{note.id}">
+            <p>test</p>
+            &mdash; <a class="username" title="Test user 1" href="mailto:test1@example.com"
+        >testuser1</a> <span class="timestamp" title="{note.created}">just now</span></div>
+    </div>
+</div>
+        """)
+
+        # Posting a comment to an area boundary paragraph should return just the paragraph element and no stray area
+        # start/end tags.
+        r = self.post_comment(area_a_start, public=True, text='test', orig=orig_par)
+        note: UserNote = UserNote.query.order_by(UserNote.id.desc()).first()
+        self.assert_same_html(html.fromstring(r['texts']), f"""
+<div class="par"
+     id="{orig_par.get_id()}"
+     t="{orig_par.get_hash()}"
+     attrs='{{&#34;ra&#34;: &#34;a&#34;, &#34;rd&#34;: &#34;{d.id}&#34;}}'
+     ref-id="{area_a_start.get_id()}"
+     ref-t="{area_a_start.get_hash()}"
+     ref-attrs="{{&#34;area&#34;: &#34;a&#34;}}"
+     ref-doc-id="{d.id}"
+>
+    <div ng-non-bindable tabindex="0" class="parContent">
+
+    </div>
+    <tim-par-ref
+            docid="{d.id}"
+            parid="{area_a_start.get_id()}">
+    </tim-par-ref>
+    <div class="editline" tabindex="0" title="Click to edit this paragraph"></div>
+    <div class="readline"
+         title="Click to mark this paragraph as read"
+    ></div>
+    <div class="notes">
+        <div class="note editable"
+             ng-non-bindable
+             note-id="{note.id}">
+            <p>test</p>
+            &mdash; <a class="username" title="Test user 1" href="mailto:test1@example.com"
+        >testuser1</a> <span class="timestamp" title="{note.created}">just now</span></div>
+    </div>
+</div>
+        """)

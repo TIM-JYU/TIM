@@ -7,8 +7,10 @@ x-caddy:
  volumes:
   - caddy_data:/data
   - caddy_config:/config
+  - ./certs/caddy:/certs:ro
   - ./Caddyfile:/etc/caddy/Caddyfile:ro
   - ./timApp/static:/tim/timApp/static:ro
+  - ${LOG_DIR:?}/caddy:/logs
   - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
   - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
  depends_on:
@@ -251,8 +253,11 @@ services:
   read_only: true
  redis:
   image: redis
+  command: ["redis-server", "--appendonly", "yes"]
   restart: unless-stopped
   read_only: true
+  volumes:
+  - redis_data:/data
  celery:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
   command: celery worker -A timApp.tim_celery.celery --concurrency 4
@@ -314,6 +319,7 @@ services:
    - prod_multi
    - dev
   image: timimages/goemaxima:2020113001-latest
+  restart: unless-stopped
  stack-api-server:
   profiles:
    - prod
@@ -385,5 +391,6 @@ volumes:
  cache:
  caddy_data:
  caddy_config:
+ redis_data:
 networks:
  db:

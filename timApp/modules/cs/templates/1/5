@@ -1,23 +1,22 @@
-Stack-tehtävä
-Stack-tehtävä johon pitää lisätä vielä etsi tehtävän koodi
-``` {plugin="csPlugin" #PLUGINNAMEHERE rnd="1,20000"}
-type: stack
--pointsRule: {}
-header: "Tehtävän otsikko"
-open: true
-beforeOpen: |!!
-md:Type in an algebraic expression which has the graph shown below.\
-Your answers:\
-<pre>{@USERCODE@}</pre>
-!!
-autopeek: true
--stackData:
-    seed: %%rnd[0]%%
-    readOnly: false
-    feedback: true
-    score: true
-    lang: 'fi'
-    question: |!!
-// TÄHÄN KOHTI KOPIOI MUUNTIMEN TULOS MUOKATTUNA JA POISTA TÄMÄ
+Järjestely
+Tehtävä jossa käyttäjä järjestelee tekstejä
+``` {plugin="csPlugin" #PLUGINNAMEHERE}
+type: text
+-pointsRule:
+    code: 1.0
+    expectCode: byCode
+wrap: -1
+lazy: false
+editorModes: 2
+header: "Järjestä suuruusjärjestykseen"
+stem: Järjestä suuruusjärjestykseen pienen ensin
+style-words: "font-size: 1.5em;font-weight: bold;"
+#words: true
+byCode: |!!
+Pieni
+Keskikokoinen
+Suuri
+Jättimäinen
 !!
 ```
+

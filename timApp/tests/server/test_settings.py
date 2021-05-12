@@ -1,8 +1,9 @@
 import json
 
+from timApp.tests.db.timdbtest import TEST_USER_2_ID, TEST_USER_1_ID
 from timApp.tests.server.timroutetest import TimRouteTest
-from timApp.user.usergroup import UserGroup
 from timApp.timdb.sqa import db
+from timApp.user.usergroup import UserGroup
 
 
 class SettingsTest(TimRouteTest):
@@ -81,6 +82,17 @@ class SettingsTest(TimRouteTest):
                                  'readparagraphs': [],
                                  'uploaded_files': [],
                                  'uploaded_images': [],
+                                 'user': {'consent': None,
+                                          'created': self.test_user_1.created.isoformat(),
+                                          'email': 'test1@example.com',
+                                          'given_name': None,
+                                          'id': TEST_USER_1_ID,
+                                          'last_name': None,
+                                          'modified': self.test_user_1.modified.isoformat(),
+                                          'name': 'testuser1',
+                                          'origin': None,
+                                          'prefs': None,
+                                          'real_name': 'Test user 1'},
                                  'velps': []})
         self.get('/settings/info/testuser2', expect_status=403)
         u = self.test_user_1
@@ -99,6 +111,17 @@ class SettingsTest(TimRouteTest):
                                  'readparagraphs': [],
                                  'uploaded_files': [],
                                  'uploaded_images': [],
+                                 'user': {'consent': None,
+                                          'created': self.test_user_2.created.isoformat(),
+                                          'email': 'test2@example.com',
+                                          'given_name': None,
+                                          'id': TEST_USER_2_ID,
+                                          'last_name': None,
+                                          'modified': self.test_user_2.modified.isoformat(),
+                                          'name': 'testuser2',
+                                          'origin': None,
+                                          'prefs': None,
+                                          'real_name': 'Test user 2'},
                                  'velps': []})
 
     def test_info_no_points(self):

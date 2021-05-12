@@ -7,21 +7,21 @@ import {DrawObject} from "tim/plugin/drawCanvas";
 
 export type VelpGroupSelectionType = "show" | "default";
 
-export interface IUIFields {
+export type IUIFields = {
     show?: boolean;
     selected?: boolean;
     edit?: boolean;
     valid?: boolean;
-}
+};
 
-export interface IAnnotationCoordinate {
+export type IAnnotationCoordinate = {
     par_id: string;
     t?: string;
     offset?: number;
     el_path?: number[];
     node?: number;
     depth?: number;
-}
+};
 
 export function isFullCoord(
     c: IAnnotationCoordinate
@@ -35,10 +35,10 @@ export function isFullCoord(
     );
 }
 
-export interface IAnnotationInterval {
+export type IAnnotationInterval = {
     start: IAnnotationCoordinate;
     end: IAnnotationCoordinate;
-}
+};
 
 export interface IAnnotationComment {
     id: number;
@@ -93,11 +93,11 @@ export class Annotation implements IAnnotation {
     }
 }
 
-export interface IAnnotationEditableValues {
+export type IAnnotationEditableValues = {
     points: number | null;
     color: string | null;
     visible_to: number;
-}
+};
 
 export class NewAnnotation implements IAnnotation {
     constructor(
@@ -145,7 +145,7 @@ export interface IAnnotation {
     getEditableValues(): Readonly<IAnnotationEditableValues>;
 }
 
-export interface IVelp {
+export type IVelp = {
     content: string;
     default_comment: string;
     points: number | null;
@@ -156,21 +156,21 @@ export interface IVelp {
     color: string | null;
     language_id: string;
     valid_until: string | null;
-}
+};
 
-export interface ILabel {
+export type ILabel = {
     content: string;
     id: number;
     language_id?: string;
-}
+};
 
-export interface IVelpGroup {
+export type IVelpGroup = {
     name: string;
     target_type: number | null;
     id: number;
     default: boolean;
     edit_access?: boolean;
-}
+};
 
 export type INewLabel = Overwrite<ILabel, {id: null | number}> & IUIFields;
 export type INewVelp = Overwrite<

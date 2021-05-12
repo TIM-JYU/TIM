@@ -566,11 +566,11 @@ export class VelpSelectionController implements IController {
             ) {
                 g.show = this.isVelpGroupShownHere(
                     g.id,
-                    this.rctrl.selectedElement.id
+                    this.rctrl.selectedElement.par.id
                 );
                 g.default = this.isVelpGroupDefaultHere(
                     g.id,
-                    this.rctrl.selectedElement.id
+                    this.rctrl.selectedElement.par.id
                 );
             } else {
                 g.show = this.isVelpGroupShownHere(g.id, "0");
@@ -756,7 +756,7 @@ export class VelpSelectionController implements IController {
             this.isAttachedToParagraph() &&
             this.rctrl.selectedElement != null
         ) {
-            targetId = this.rctrl.selectedElement.id;
+            targetId = this.rctrl.selectedElement.par.id;
             targetType = 1;
         } else {
             targetId = "0";
@@ -851,7 +851,7 @@ export class VelpSelectionController implements IController {
             this.isAttachedToParagraph() &&
             this.rctrl.selectedElement != null
         ) {
-            targetID = this.rctrl.selectedElement.id;
+            targetID = this.rctrl.selectedElement.par.id;
             targetType = 1;
         } else {
             targetID = "0";
@@ -937,7 +937,7 @@ export class VelpSelectionController implements IController {
             this.isAttachedToParagraph() &&
             this.rctrl.selectedElement != null
         ) {
-            targetID = this.rctrl.selectedElement.id;
+            targetID = this.rctrl.selectedElement.par.id;
         } else {
             targetID = "0";
         }
@@ -985,7 +985,7 @@ export class VelpSelectionController implements IController {
             this.isAttachedToParagraph() &&
             this.rctrl.selectedElement != null
         ) {
-            targetID = this.rctrl.selectedElement.id;
+            targetID = this.rctrl.selectedElement.par.id;
         } else {
             targetID = "0";
         }

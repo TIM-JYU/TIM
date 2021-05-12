@@ -1,11 +1,17 @@
 import deepEqual from "deep-equal";
-import {ApplicationRef, Component, DoBootstrap, NgModule} from "@angular/core";
+import {
+    ApplicationRef,
+    ChangeDetectorRef,
+    Component,
+    DoBootstrap,
+    ElementRef,
+    NgModule,
+} from "@angular/core";
 import {FormsModule} from "@angular/forms";
-import {HttpClientModule} from "@angular/common/http";
-import {BrowserModule} from "@angular/platform-browser";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import * as t from "io-ts";
-import {getParId} from "../document/parhelpers";
 import {
     AnswerSheetModule,
     IPreviewParams,
@@ -23,7 +29,6 @@ import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {vctrlInstance} from "../document/viewctrlinstance";
 import {PurifyModule} from "../util/purify.module";
 import {showQuestionAskDialog} from "../lecture/showLectureDialogs";
-import {showMessageDialog} from "../ui/showMessageDialog";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "./attributes";
 import {AngularPluginBase} from "./angular-plugin-base.directive";
 
@@ -59,7 +64,7 @@ const PluginFields = t.intersection([
             <button class="timButton" [innerHtml]="button" *ngIf="button"
                     [disabled]="isRunning || isInvalid() || (disableUnchanged && !isUnSaved())"
                     (click)="saveText()"></button>
-            <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges()">
+            <a href="" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}" (click)="tryResetChanges($event)">
                 &nbsp;{{undoButton}}
             </a>
 
@@ -98,6 +103,15 @@ export class QstComponent
     private savedAnswer?: AnswerTable;
     private newAnswer?: AnswerTable;
     private changes = false;
+
+    constructor(
+        el: ElementRef<HTMLElement>,
+        http: HttpClient,
+        domSanitizer: DomSanitizer,
+        private cdr: ChangeDetectorRef
+    ) {
+        super(el, http, domSanitizer);
+    }
 
     getContent() {
         return JSON.stringify(this.newAnswer);
@@ -166,6 +180,7 @@ export class QstComponent
                 this.changes ? ChangeType.Modified : ChangeType.Saved
             );
         }
+        this.cdr.detectChanges();
     }
 
     updateListeners(state: ChangeType) {
@@ -194,6 +209,7 @@ export class QstComponent
         if (this.changes) {
             this.result = undefined;
         }
+        this.cdr.detectChanges();
     }
 
     getQuestionTitle() {
@@ -205,13 +221,7 @@ export class QstComponent
     }
 
     questionClicked() {
-        const par = this.element.parents(".par");
-        const parId = getParId(par);
-        if (!parId) {
-            showMessageDialog("Not a valid paragraph.");
-            return;
-        }
-        this.showQuestionNew(parId);
+        this.showQuestionNew(this.getPar().originalPar.id);
     }
 
     private async showQuestionNew(parId: string) {
@@ -305,7 +315,10 @@ export class QstComponent
         return {saved: true, message: undefined};
     }
 
-    tryResetChanges(): void {
+    tryResetChanges(e?: Event): void {
+        if (e) {
+            e.preventDefault();
+        }
         if (this.undoConfirmation && !window.confirm(this.undoConfirmation)) {
             return;
         }

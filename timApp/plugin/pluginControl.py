@@ -325,8 +325,7 @@ def pluginify(doc: Document,
               pluginwrap=PluginWrap.Full,
               output_format: PluginOutputFormat = PluginOutputFormat.HTML,
               user_print: bool = False,
-              target_format: PrintFormat = PrintFormat.LATEX,
-              dereference=True) -> PluginifyResult:
+              target_format: PrintFormat = PrintFormat.LATEX) -> PluginifyResult:
     """
     "Pluginifies" the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
@@ -343,13 +342,10 @@ def pluginify(doc: Document,
     :param output_format: Desired output format (html/md) for plugins
     :param user_print: Whether the plugins should output the original values or user's input (when exporting markdown).
     :param target_format: for MD-print what exact format to use
-    :param dereference: should pars be checked id dereference is needed
     :return: Processed HTML blocks along with JavaScript and CSS stylesheet dependencies.
     """
 
     taketime("answ", "start")
-    if dereference:
-        pars = dereference_pars(pars, context_doc=doc, view_ctx=view_ctx)
     if not view_ctx.preview and has_edit_access(doc.get_docinfo()):
         for p in pars:
             if p.is_translation_out_of_date():
@@ -386,6 +382,7 @@ def pluginify(doc: Document,
         # TODO: could this return also the plugins, then there is no need for other iteration
         task_ids, _, _ = find_task_ids(pars, view_ctx, user_ctx, check_access=user_ctx.is_different)
         get_answers(user_ctx.user, task_ids, answer_map)
+        # get_answers(User.get_by_id(user_ctx.user.id), task_ids, answer_map)
         # db.session.close()
         # TODO: RND_SEED get all users rand_seeds for this doc's tasks. New table?
 
@@ -447,6 +444,7 @@ def pluginify(doc: Document,
     for plugin_name, plugin_block_map in plugins.items():
         for _, plugin in plugin_block_map.items():
             plugin.values.pop('postprogram', None)
+            plugin.values.pop('preprogram', None)
             if not plugin.task_id:
                 continue
             if plugin.task_id.is_global:

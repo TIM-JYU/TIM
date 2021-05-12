@@ -1,12 +1,14 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule, NgZone} from "@angular/core";
-import $ from "jquery";
 import {watchEditMode} from "tim/document/editing/editmode";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {$rootScope} from "tim/util/ngimport";
+import {PurifyModule} from "tim/util/purify.module";
+import {HelpPar} from "tim/document/structure/helpPar";
+import {ParContext} from "tim/document/structure/parContext";
 import {documentglobals} from "../util/globals";
 import {to2} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
@@ -20,7 +22,7 @@ export interface IPopupParams {
     editbutton: boolean;
     editcontext?: EditMode;
     save: boolean;
-    srcid: string;
+    srcid: ParContext | HelpPar;
     vctrl: ViewCtrl;
 }
 
@@ -37,7 +39,7 @@ export interface IPopupParams {
             <ng-container body>
                 <div class="flex cl">
                     <div class="error" *ngIf="vctrl.notification" [innerText]="vctrl.notification"></div>
-                    <div class="pastePreview" *ngIf="content" [innerHtml]="content"></div>
+                    <div class="paragraphs pastePreview" *ngIf="content" [innerHtml]="content | purify"></div>
 
                     <div class="flex rw align-center" *ngFor="let f of actions; let first = first">
                         <button class="timButton btn-sm flex-grow-5"
@@ -61,14 +63,8 @@ export interface IPopupParams {
                         <button class="timButton parEditButton flex-grow-5"
                                 (click)="parModeClicked()"
                                 [class.btn-toggled]="editState === 'par'"
-                                title="Toggle paragraph edit mode">
+                                title="Toggle advanced edit mode">
                             <i class="glyphicon glyphicon-minus"></i>
-                            <i class="glyphicon glyphicon-pencil"></i>
-                        </button>
-                        <button class="timButton areaEditButton flex-grow-5"
-                                [disabled]="true"
-                                title="Toggle area edit mode">
-                            <i class="glyphicon glyphicon-align-justify"></i>
                             <i class="glyphicon glyphicon-pencil"></i>
                         </button>
                     </div>
@@ -130,7 +126,7 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
         }
         if (this.editState != this.olds.editState) {
             this.olds.editState = this.editState;
-            watchEditMode(this.editState, this.olds.editState);
+            watchEditMode(this.editState);
         }
     }
 
@@ -148,7 +144,7 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
          The last step (run plugin) would fail to update plugin UI.
         */
         this.zone.runOutsideAngular(() => {
-            f.func(e, $(this.p.srcid));
+            f.func(e);
         });
 
         if (f.closeAfter || f.closeAfter == null) {
@@ -173,14 +169,11 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
         if (!this.p.save) {
             return;
         }
-        if (
-            this.vctrl.defaultAction &&
-            this.vctrl.defaultAction.desc === f.desc
-        ) {
+        if (this.vctrl.defaultAction === f.desc) {
             this.vctrl.defaultAction = undefined;
             this.vctrl.defaultActionStorage.set(null);
         } else {
-            this.vctrl.defaultAction = f;
+            this.vctrl.defaultAction = f.desc;
             this.vctrl.defaultActionStorage.set(f.desc);
         }
     }
@@ -211,10 +204,20 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
         }
         $rootScope.$evalAsync();
     }
+
+    getCtx() {
+        return this.p.srcid;
+    }
 }
 
 @NgModule({
     declarations: [PopupMenuDialogComponent],
-    imports: [BrowserModule, DialogModule, TimUtilityModule, HttpClientModule],
+    imports: [
+        BrowserModule,
+        DialogModule,
+        TimUtilityModule,
+        HttpClientModule,
+        PurifyModule,
+    ],
 })
 export class PopupMenuDialogModule {}

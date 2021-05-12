@@ -23,7 +23,6 @@ class QuestionTest(BrowserTest):
                 toplevel={'show_result': False},
                 markup={
                     'answerFieldType': 'radio',
-                    'defaultPoints': 0.5,
                     'headers': [],
                     'isTask': False,
                     'questionText': 'What day is it today?',
@@ -132,23 +131,25 @@ points: '2:1'</code></pre>
 #- {#t plugin=qst dquestion=true}
 answerFieldType: radio
 answerLimit: 1
+defaultPoints: -0.5
 expl: {}
 headers:
 - a
 - b
 matrixType: radiobutton-horizontal
-points: '2:1'
+points: '2:1|2:1'
 questionText: test
 questionTitle: test
 questionType: matrix
 rows:
 - x
+- def
 """)
         d.document.set_settings({'global_plugin_attrs': {'qst': {'showPoints': False}}})
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
         db.session.refresh(d)
-        r = self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"]]})
+        r = self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"], ["1"]]})
         self.assertEqual(
             {'markup': {'answerFieldType': 'radio',
                         'answerLimit': 1,
@@ -157,16 +158,16 @@ rows:
                         'questionText': 'test',
                         'questionTitle': 'test',
                         'questionType': 'matrix',
-                        'rows': ['x'],
+                        'rows': ['x', 'def'],
                         'showPoints': False},
              'result': 'Saved',
              'show_result': True,
-             'state': [['2']]}, r['web'])
+             'state': [['2'], ['1']]}, r['web'])
         self.assertTrue('error' not in r)
         answers = self.get_task_answers(f'{d.id}.t', self.current_user)
-        self.assertEqual(1, answers[0]['points'])
+        self.assertEqual(0.5, answers[0]['points'])
         self.login_test2()
-        r = self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"]]})
+        r = self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"], ["1"]]})
         self.assertEqual(
             {'markup': {'answerFieldType': 'radio',
                         'answerLimit': 1,
@@ -175,11 +176,11 @@ rows:
                         'questionText': 'test',
                         'questionTitle': 'test',
                         'questionType': 'matrix',
-                        'rows': ['x'],
+                        'rows': ['x', 'def'],
                         'showPoints': False},
              'result': 'Saved',
              'show_result': True,
-             'state': [['2']]}, r['web'])
+             'state': [['2'], ['1']]}, r['web'])
         self.assertTrue('error' not in r)
         answers = self.get_task_answers(f'{d.id}.t', self.current_user)
         self.assertEqual(None, answers[0]['points'])  # Should be hidden.
@@ -257,8 +258,8 @@ rows:
     def test_question_default_points(self):
         self.login_test1()
         d = self.create_doc()
-        pars = d.document.add_text("""
-#- {#t plugin="qst" dquestion="true"}
+        d.document.add_text("""
+#- {#checkbox plugin="qst" dquestion="true"}
 answerFieldType: checkbox
 expl: {}
 headers:
@@ -275,13 +276,8 @@ rows:
 - First
 - Second
 - Third
-        """)
-        self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["1"], ["1", "2"], ["2", "3"]]})
-        answers = self.get_task_answers(f'{d.id}.t', self.current_user)
-        self.assertEqual(1, answers[0]['points'])
-        d.document.delete_paragraph(pars[0].get_id())
-        d.document.add_text("""
-#- {#t dquestion="true" plugin="qst"}
+
+#- {#radio dquestion="true" plugin="qst"}
 answerFieldType: radio
 expl: {}
 headers: []
@@ -294,10 +290,77 @@ rows:
 - Right
 - Wrong
 - No answer
-                """)
-        self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["3"]]})
-        answers = self.get_task_answers(f'{d.id}.t', self.current_user)
+
+#- {#onlydefault dquestion="true" plugin="qst"}
+answerFieldType: radio
+expl: {}
+headers: []
+questionText: Answer the survey
+questionTitle: Earn free points
+questionType: radio-vertical
+defaultPoints: 3
+rows:
+- Good
+- Neutral
+- Negative
+
+        """)
+        # defaultPoints vs checkbox point format, also explicit 0 overrides defaultpoints
+        self.post_answer('qst', f'{d.id}.checkbox', user_input={"answers": [["1", "2"], ["1", "2"], ["2", "3"]]})
+        answers = self.get_task_answers(f'{d.id}.checkbox', self.current_user)
+        self.assertEqual(1, answers[0]['points'])
+        # defaultPoints vs radio point format
+        self.post_answer('qst', f'{d.id}.radio', user_input={"answers": [["3"]]})
+        answers = self.get_task_answers(f'{d.id}.radio', self.current_user)
         self.assertEqual(0, answers[0]['points'])
-        self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"]]})
-        answers = self.get_task_answers(f'{d.id}.t', self.current_user)
+        self.post_answer('qst', f'{d.id}.radio', user_input={"answers": [["2"]]})
+        answers = self.get_task_answers(f'{d.id}.radio', self.current_user)
         self.assertEqual(-2, answers[0]['points'])
+        # default points work even without regular points
+        self.post_answer('qst', f'{d.id}.onlydefault', user_input={"answers": [["3"]]})
+        answers = self.get_task_answers(f'{d.id}.onlydefault', self.current_user)
+        self.assertEqual(3, answers[0]['points'])
+
+    def test_question_answer_markdown_html(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+``` {#t plugin="qst"}
+answerFieldType: radio
+answerLimit: 1
+expl:
+ 1: '**wrong**'
+headers:
+ - '*h1*'
+ - '*h2*'
+points: '2:1'
+questionText: '*test*'
+questionTitle: test
+stem: '*hello*'
+questionType: matrix
+matrixType: radiobutton-horizontal
+rows:
+- '*a*'
+- '*b*'
+```""")
+        r = self.post_answer('qst', f'{d.id}.t', user_input={"answers": [["2"], []]})
+        ans_id = r['savedNew']
+        self.assertEqual({
+            'savedNew': ans_id,
+            'web': {
+                'markup': {
+                    'answerFieldType': 'radio',
+                    'answerLimit': 1,
+                    'expl': {'1': '<strong>wrong</strong>'},
+                    'headers': ['<em>h1</em>', '<em>h2</em>'],
+                    'matrixType': 'radiobutton-horizontal',
+                    'points': '2:1',
+                    'questionText': '<em>test</em>',
+                    'questionTitle': 'test',
+                    'questionType': 'matrix',
+                    'rows': ['<em>a</em>', '<em>b</em>'],
+                    'stem': '<em>hello</em>'},
+                'result': 'Saved',
+                'show_result': True,
+                'state': [['2'], []],
+            }
+        }, r)

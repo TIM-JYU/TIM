@@ -16,7 +16,7 @@
     "lint": "eslint --report-unused-disable-directives --format codeframe --ext ts static/scripts/tim modules",
     "checkformat": "prettier --check .",
     "lintfix": "eslint --ext ts static/scripts/tim modules --fix",
-    "extract-i18n": "ng xi18n tim && ng run tim:xliffmerge"
+    "extract-i18n": "ng extract-i18n tim && ng run tim:xliffmerge"
   },
   "repository": {
     "type": "git",
@@ -39,6 +39,7 @@
     "@angular/router": "~11.1.0",
     "@angular/upgrade": "^11.1.0",
     "@ngx-i18nsupport/tooling": "^8.0.3",
+    "@zxing/library": "^0.18.5",
     "ace-builds": "^1.4.12",
     "angular": "^1.8.0",
     "angular-diff-match-patch": "^0.7.78",

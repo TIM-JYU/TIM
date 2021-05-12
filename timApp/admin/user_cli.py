@@ -21,6 +21,7 @@ from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.user import User, UserInfo, deleted_user_suffix
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.user.userutils import check_password_hash
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.utils import approximate_real_name
@@ -97,6 +98,7 @@ class MergeResult:
     readparagraphs: int = 0
     notes: int = 0
     accesses: int = 0
+    groups: int = 0
 
 
 @user_cli.command()
@@ -146,6 +148,20 @@ def do_merge_users(u_prim: User, u_sec: User) -> MergeResult:
     u_prim_folder = u_prim.get_personal_folder()
     u_sec_folder = u_sec.get_personal_folder()
     docs = u_sec_folder.get_all_documents(include_subdirs=True)
+
+    # Move group memberships.
+    curr_prim_memberships = set(m.usergroup_id for m in u_prim.memberships)
+    for m in u_sec.memberships:
+        # Skip personal usergroup.
+        if m.usergroup_id == u_sec_group.id:
+            continue
+
+        if m.usergroup_id not in curr_prim_memberships:
+            ugm = UserGroupMember(usergroup_id=m.usergroup_id, added_by=m.added_by, membership_end=m.membership_end)
+            u_prim.memberships.append(ugm)
+            moved_data.groups += 1
+        db.session.delete(m)
+
     for d in docs:
         move_document(d, u_prim_folder)
     for a in ('readparagraphs', 'notes', 'accesses'):
@@ -319,6 +335,10 @@ def import_accounts(csvfile: str, password: Optional[str]) -> None:
     help='whether to verify that the password hash matches the password',
 )
 def import_passwords(csvfile: TextIOWrapper, verify: bool) -> None:
+    return do_import_passwords(csvfile, verify)
+
+
+def do_import_passwords(csvfile: TextIOWrapper, verify: bool) -> None:
     for row in csv.reader(csvfile, delimiter=';'):
         if len(row) != 3:
             raise click.UsageError(f'Wrong amount of columns in row {row}')
@@ -327,18 +347,23 @@ def import_passwords(csvfile: TextIOWrapper, verify: bool) -> None:
             raise click.UsageError(f'Email missing in row')
         password = row[1]
         pw_hash = row[2]
-        if not pw_hash:
-            raise click.UsageError(f'Password hash missing in row')
-        if not password:
-            raise click.UsageError(f'Password missing in row')
+        if password and not pw_hash:
+            raise click.UsageError('Password hash must be given if password is given')
         if verify:
-            if not check_password_hash(password, pw_hash):
+            if not password:
+                click.echo(f'Cannot verify password for {email} because only hash was provided')
+            elif not check_password_hash(password, pw_hash):
                 raise click.UsageError(f'Password does not match hash: {password} {pw_hash}')
         u = User.get_by_email(email)
         if not u:
             raise click.UsageError(f'User not found: {email}')
-        u.pass_ = pw_hash
-        click.echo(f'Imported password {password} for {email}')
+        u.pass_ = pw_hash or None
+        if password:
+            click.echo(f'Imported password {password} for {email}')
+        elif pw_hash:
+            click.echo(f'Imported password hash {pw_hash} for {email}')
+        else:
+            click.echo(f'Cleared password for {email}')
 
     db.session.commit()
 

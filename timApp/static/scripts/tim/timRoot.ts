@@ -129,7 +129,6 @@ export function getVisibilityVars() {
 
     if (!g.config.emailRegistrationEnabled) {
         hide.signup = true;
-        hide.passwordRecovery = true;
     }
 
     if (params.get("hide_top_buttons")) {

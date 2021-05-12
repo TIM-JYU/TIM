@@ -7,7 +7,7 @@ import {FormsModule} from "@angular/forms";
 import moment from "moment";
 import humanizeDuration from "humanize-duration";
 import {IItem} from "../../item/IItem";
-import {ReadonlyMoment, to2} from "../../util/utils";
+import {to2} from "../../util/utils";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {DatetimePickerModule} from "../../ui/datetime-picker/datetime-picker.component";
 import {DurationChoice} from "../../ui/duration-picker.component";
@@ -15,6 +15,7 @@ import {showInputDialog} from "../../ui/showInputDialog";
 import {InputDialogKind} from "../../ui/input-dialog.kind";
 import {IGroup} from "../../user/IUser";
 import {isAdmin} from "../../user/userService";
+import {ReadonlyMoment} from "../../util/readonlymoment";
 
 interface IInterval {
     every: number;

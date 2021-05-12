@@ -16,7 +16,7 @@ class Combinations {
         this.chars = chars;
         this.n = n;
         this.full = full;
-        this.state = undefined;
+        this.state = [];
         this.end = false;
     }
 
@@ -30,7 +30,7 @@ class Combinations {
     */
 
     /*!
-     * return next combination array or "" if no next exists
+     * return next combination array or null if no next exists
      */
     next() {
         let chars = this.chars;
@@ -53,7 +53,7 @@ class Combinations {
             while (si >= 0) {
                 let c = s[si];
                 let ci = chars.indexOf(c);
-                if (ci < 0) return Combinations.noNore; // something wrong
+                if (ci < 0) return Combinations.noMore; // something wrong
                 if (ci < chars.length - 1) {
                     c = chars[ci + 1];
                     // s = setCharAt(s, si, c);
@@ -67,7 +67,7 @@ class Combinations {
             }
             combi.end = true;
             combi.state = undefined;
-            return Combinations.noNore;
+            return Combinations.noMore;
         }
 
         function nextFull() {
@@ -76,11 +76,11 @@ class Combinations {
             s = nextN(s);
             if (s) return s;
             len++;
-            if (len > combi.n) return Combinations.noNore;
+            if (len > combi.n) return Combinations.noMore;
             return first(len);
         }
 
-        if ( this.end ) return Combinations.noNore;
+        if ( this.end ) return Combinations.noMore;
 
         if (!this.state) {
             if (this.full) return first(1);
@@ -93,7 +93,16 @@ class Combinations {
 
     current() {
         if (this.state) return this.state;
-        if (this.end) return Combinations.noNore;
-        return next();
+        if (this.end) return Combinations.noMore;
+        return [];
     }
 }
+/*
+let chars ="ab";
+let combi = new Combinations(chars, 3, true);
+let toCheck = combi.current();
+while (toCheck) {
+    console.log(toCheck);
+    toCheck = combi.next();
+}
+*/

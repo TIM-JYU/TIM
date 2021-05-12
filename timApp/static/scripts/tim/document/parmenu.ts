@@ -2,26 +2,19 @@ import {IScope} from "angular";
 import $ from "jquery";
 import {showPopupMenu} from "tim/document/showPopupMenu";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {SelectionUpdateType} from "tim/document/editing/editing";
+import {HelpPar} from "tim/document/structure/helpPar";
+import {ParContext} from "tim/document/structure/parContext";
+import {
+    createParContextOrHelp,
+    fromParents,
+} from "tim/document/structure/parsing";
 import {Coords, dist, getPageXY, to} from "../util/utils";
 import {onClick} from "./eventhandlers";
-import {
-    getCitePar,
-    getParId,
-    getPreambleDocId,
-    isActionablePar,
-    isPreamble,
-    Paragraph,
-} from "./parhelpers";
+import {getCitePar} from "./parhelpers";
 import {EditMode} from "./popup-menu-dialog.component";
 import {ViewCtrl} from "./viewctrl";
 import {getEmptyCoords, MenuFunctionList} from "./viewutils";
-
-function selectionToStr(selection: JQuery) {
-    return selection
-        .toArray()
-        .map((e) => "#" + e.id)
-        .join(",");
-}
 
 function checkIfIgnored(
     ignoredTags: string[],
@@ -41,6 +34,7 @@ export class ParmenuHandler {
     public viewctrl: ViewCtrl;
     public lastclicktime: number | undefined;
     public lastclickplace: Coords | undefined;
+    public currCtx?: ParContext | HelpPar;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
@@ -53,10 +47,11 @@ export class ParmenuHandler {
                 }
 
                 const target = $(e.target) as JQuery;
-                const par = $this.parents(".par");
-                if (!isActionablePar(par)) {
+                const par = createParContextOrHelp($this.parents(".par")[0]);
+                if (par.isHelp || !par.isActionable()) {
                     return;
                 }
+                this.viewctrl.notesHandler.updateNoteBadge(par);
 
                 // Don't show paragraph menu on these specific tags or classes
                 if (
@@ -77,8 +72,12 @@ export class ParmenuHandler {
                     return false;
                 }
 
-                if (this.viewctrl.selection.start != null) {
-                    this.viewctrl.editingHandler.extendSelection(par, true);
+                if (this.viewctrl.editingHandler.selection != null) {
+                    this.viewctrl.editingHandler.updateSelection(
+                        par,
+                        this.viewctrl.editingHandler.selection,
+                        SelectionUpdateType.AllowShrink
+                    );
                 } else {
                     const offset = par.offset() ?? getEmptyCoords();
                     const coords = {
@@ -101,40 +100,39 @@ export class ParmenuHandler {
                         coords
                     );
                 }
-                this.viewctrl.reviewCtrl.selectText(par[0]);
+                this.viewctrl.reviewCtrl.selectText(par);
                 sc.$apply();
                 return true;
             },
             true
         );
 
-        this.viewctrl.defaultAction = {
-            desc: "Show options window",
-            func: (e, p) => this.showOptionsWindow(e, p),
-            show: true,
-        };
-
         onClick(
             ".editline",
             async ($this, e) => {
                 await this.viewctrl.closePopupIfOpen();
-                const par = $this.parent().filter(".par");
-                if (isPreamble(par)) {
-                    const parId = getParId(par) ?? "";
-                    showMessageDialog(`
-<p>This paragraph is from a preamble document.
-To comment or edit this, go to the corresponding <a href="/view/${getPreambleDocId(
-                        par
-                    )!}">preamble document</a>.</p>
-
-<p>Citation help: <code>${getCitePar(this.viewctrl.item.id, parId)}</code></p>
-`);
-                }
-                if (!isActionablePar(par)) {
-                    return;
-                }
-                if (this.viewctrl.selection.start != null) {
-                    this.viewctrl.editingHandler.extendSelection(par);
+                const par = fromParents($this);
+                if (!par.isHelp) {
+                    if (par.preamble) {
+                        showMessageDialog(`
+    <p>This paragraph is from a preamble document.
+    To comment or edit this, go to the corresponding <a href="/view/${
+        par.preamble
+    }">preamble document</a>.</p>
+    
+    <p>Citation help: <code>${getCitePar(this.viewctrl.item.id, par)}</code></p>
+    `);
+                    }
+                    if (!par.isActionable()) {
+                        return;
+                    }
+                    if (this.viewctrl.editingHandler.selection != null) {
+                        this.viewctrl.editingHandler.updateSelection(
+                            par,
+                            this.viewctrl.editingHandler.selection,
+                            SelectionUpdateType.DontAllowShrink
+                        );
+                    }
                 }
 
                 if (!this.viewctrl.actionsDisabled) {
@@ -147,15 +145,12 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
     }
 
     private isCloseMenuDefault() {
-        return (
-            this.viewctrl.defaultAction &&
-            this.viewctrl.defaultAction.desc === "Close menu"
-        );
+        return this.viewctrl.defaultAction === "Close menu";
     }
 
     async showPopupMenu(
         e: MouseEvent,
-        $pars: Paragraph,
+        par: ParContext | HelpPar,
         attrs: {
             actions: MenuFunctionList;
             save: boolean;
@@ -167,28 +162,29 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         const pos = getPageXY(e);
         const p = {
             actions: attrs.actions,
-            areaEditButton: $(".area").length > 0,
             contenturl: attrs.contenturl,
             editbutton: attrs.editbutton,
             editcontext: editcontext,
             save: attrs.save,
-            srcid: selectionToStr($pars),
+            srcid: par,
             vctrl: this.viewctrl,
         };
+        this.currCtx = par;
         if (this.updatePopupMenuIfOpen(p)) {
             return;
         }
+        par.par.getEditLine().classList.add("menuopen");
         const mi = showPopupMenu(p, pos);
         const dlg = await mi;
         this.viewctrl.registerPopupMenu(dlg);
         await to(dlg.result);
-        const editline = $(".menuopen");
-        editline.removeClass("menuopen");
+        this.currCtx = undefined;
+        dlg.getCtx().par.getEditLine().classList.remove("menuopen");
     }
 
     toggleActionButtons(
         e: MouseEvent,
-        par: Paragraph,
+        par: ParContext,
         toggle1: boolean,
         toggle2: boolean,
         coords: Coords
@@ -211,13 +207,13 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
             const clickdelta = dist(coords, this.lastclickplace);
             par.addClass("selected");
 
+            const defAct = this.viewctrl.getDefaultAction(par);
             if (clickdelta > 10) {
                 // Selecting text
-                par.removeClass("selected");
-                par.removeClass("lightselect");
-            } else if (clicktime < 500 && this.viewctrl.defaultAction != null) {
+                par.removeClass("selected", "lightselect");
+            } else if (clicktime < 500 && defAct) {
                 // Double click
-                this.viewctrl.defaultAction.func(e, par, coords);
+                defAct.func(e, coords);
             } else {
                 // Two clicks but they were too slow; do nothing.
             }
@@ -232,9 +228,8 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         }
     }
 
-    showOptionsWindow(e: MouseEvent, par: Paragraph) {
+    showOptionsWindow(e: MouseEvent, par: ParContext | HelpPar) {
         const result = this.getPopupAttrs(par);
-        par.children(".editline").addClass("menuopen");
         this.showPopupMenu(e, par, result, "par");
     }
 
@@ -251,7 +246,7 @@ To comment or edit this, go to the corresponding <a href="/view/${getPreambleDoc
         return false;
     }
 
-    getPopupAttrs(par?: Paragraph) {
+    getPopupAttrs(par: ParContext | HelpPar) {
         const fns = this.viewctrl.editingHandler.getEditorFunctions(par);
         const hasSelectionAndEditMode = this.viewctrl.item.rights.editable;
         return {

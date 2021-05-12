@@ -115,13 +115,13 @@ class Clipboard:
         def cut_pars(self, doc: Document, par_start: str, par_end: str,
                      area_name: Optional[str] = None) -> List[DocParagraph]:
 
-            pars = self.copy_pars(doc, par_start, par_end, area_name, doc, disable_ref=True)
+            pars = self.copy_pars(doc, par_start, par_end, area_name, disable_ref=True)
             doc.delete_section(par_start, par_end)
             self.update_metadata(last_action='cut')
             return pars
 
         def copy_pars(self, doc: Document, par_start: str, par_end: str, area_name: Optional[str] = None,
-                      ref_doc: Optional[Document] = None, disable_ref: bool = False) -> List[DocParagraph]:
+                      disable_ref: bool = False) -> List[DocParagraph]:
 
             par_objs = doc.get_section(par_start, par_end)
             pars = [p.dict() for p in par_objs]

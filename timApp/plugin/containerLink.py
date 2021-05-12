@@ -7,6 +7,7 @@ from typing import List, Optional, Any, Dict, Union
 
 import requests
 from flask import current_app
+from requests import Response
 
 from timApp.document.docsettings import DocSettings
 from timApp.document.timjsonencoder import TimJsonEncoder
@@ -82,16 +83,19 @@ def get_plugins() -> Dict[str, PluginReg]:
         PluginReg(name="cbcountfield", domain=internal_domain, port=qst_port, path="/cbcountfield/", regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="rbfield", domain=FIELDPLUGIN_DOMAIN, path="/rb/", regexattrs=TEXTFIELDATTRS, automd=True),
         PluginReg(name="numericfield", domain=FIELDPLUGIN_DOMAIN, path="/nf/", regexattrs=TEXTFIELDATTRS, automd=True),
-        PluginReg(name="goaltable", domain=FIELDPLUGIN_DOMAIN, path="/goaltable/", regexattrs=GOALTABLEATTRS, automd=True),
+        PluginReg(name="goaltable", domain=FIELDPLUGIN_DOMAIN, path="/goaltable/", regexattrs=GOALTABLEATTRS,
+                  automd=True),
         PluginReg(name="multisave", domain=FIELDPLUGIN_DOMAIN, path="/ms/"),
         PluginReg(name="dropdown", domain=FIELDPLUGIN_DOMAIN, path="/dropdown/"),
         PluginReg(name="jsrunner", domain=JSRUNNERPLUGIN_DOMAIN),
         PluginReg(name="imagex", domain=IMAGEXPLUGIN_DOMAIN),
         PluginReg(name="qst", domain=internal_domain, port=qst_port, path="/qst/", regexattrs=QSTMDATTRS, automd=True),
         PluginReg(name="timMenu", domain=internal_domain, port=qst_port, path="/timMenu/"),
-        PluginReg(name="timTable", domain=internal_domain, port=qst_port, path="/timTable/", instance=timTable.TimTable(), lazy=False),
+        PluginReg(name="timTable", domain=internal_domain, port=qst_port, path="/timTable/",
+                  instance=timTable.TimTable(), lazy=False),
         PluginReg(name="tableForm", domain=internal_domain, port=qst_port, path="/tableForm/", lazy=False),
         PluginReg(name="importData", domain=internal_domain, port=qst_port, path="/importData/"),
+        PluginReg(name="userSelect", domain=internal_domain, port=qst_port, path="/userSelect/"),
         PluginReg(name="tape", domain=internal_domain, port=qst_port, path="/tape/"),
         PluginReg(name="echo", domain="tim", path="/echoRequest/", skip_reqs=True),
         PluginReg(name="feedback", domain=FEEDBACKPLUGIN_DOMAIN, regexattrs=FBMDATTRS, automd=True),
@@ -120,7 +124,7 @@ def call_plugin_generic(
         headers: Any=None,
         params: Any=None,
         read_timeout: int=30,
-) -> str:
+) -> Response:
     plug = get_plugin(plugin)
     host = plug.host
     if route == 'multimd' and (plugin == "mmcq" or plugin == "mcq"):  # hack to handle mcq and mmcq in tim by qst
@@ -138,7 +142,7 @@ def call_plugin_generic(
     else:
         if r.status_code >= 500:
             raise PluginException(f'Got response with status code {r.status_code}')
-        return r.text
+        return r
 
 
 def do_request(
@@ -176,7 +180,7 @@ def render_plugin(docsettings: DocSettings, plugin: Plugin, output_format: Plugi
                                output_format.value,
                                data=json.dumps(plugin_data,
                                                cls=TimJsonEncoder),
-                               headers={'Content-type': 'application/json'})
+                               headers={'Content-type': 'application/json'}).text
 
 
 def call_mock_dumbo_s(s: str) -> str:
@@ -311,7 +315,7 @@ def render_plugin_multi(docsettings: DocSettings, plugin: str, plugin_data: List
                                 'post',
                                 ('multimd' if plugin_output_format == PluginOutputFormat.MD else 'multihtml'),
                                 data=json.dumps(plugin_dicts, cls=TimJsonEncoder),
-                                headers={'Content-type': 'application/json'})
+                                headers={'Content-type': 'application/json'}).text
 
 
 def has_auto_md(data: Dict, default: bool) -> bool:
@@ -322,7 +326,7 @@ def call_plugin_resource(plugin: str, filename: str, args: Any=None) -> requests
     try:
         plug = get_plugin(plugin)
         # We need to avoid calling ourselves to avoid infinite request loop.
-        if plug.host.startswith('http://localhost'):
+        if plug.host.startswith(f'http://{current_app.config["INTERNAL_PLUGIN_DOMAIN"]}'):
             raise PluginException('Plugin route not found')
         resp = requests.get(plug.host + filename, timeout=5, stream=True, params=args)
         resp.encoding = 'utf-8'
@@ -345,13 +349,13 @@ def call_plugin_answer(plugin: str, answer_data: Dict) -> str:
                                'answer',
                                json.dumps(answer_data, cls=TimJsonEncoder),
                                headers={'Content-type': 'application/json'},
-                               read_timeout=min(timeout + 5, 120))
+                               read_timeout=min(timeout + 5, 120)).text
 
 
 # Get lists of js and css files required by plugin, as well as list of Angular modules they define.
 @lru_cache(maxsize=100)
 def plugin_reqs(plugin: str) -> str:
-    return call_plugin_generic(plugin, 'get', 'reqs')
+    return call_plugin_generic(plugin, 'get', 'reqs').text
 
 
 # Gets plugin info (host)

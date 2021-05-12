@@ -29,6 +29,7 @@ export function handleAnswerResponse(
 
 export function prepareAnswerRequest(taskIdFull: string, url: string) {
     const parts = taskIdFull.split(".");
+    const isFull = parts.length === 3;
     const docId = parseInt(parts[0], 10);
     const taskName = parts[1];
     const taskId = docId + "." + taskName;
@@ -46,7 +47,13 @@ export function prepareAnswerRequest(taskIdFull: string, url: string) {
             d.abData = ab.getBrowserData();
         }
     }
-    const e = document.getElementById(taskIdFull);
+    let e;
+    if (isFull) {
+        e = document.getElementById(taskIdFull);
+    } else {
+        e = document.querySelector(`[id^='${CSS.escape(taskIdFull)}.']`);
+    }
+
     if (e) {
         const par = angular.element(e).parents(".par");
         d.ref_from = {docId: v.item.id, par: par.attr("id")};

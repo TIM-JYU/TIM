@@ -129,6 +129,18 @@ ALLOW_CREATE_DOCUMENTS = True
 EMAIL_REGISTRATION_ENABLED = True
 HAKA_ENABLED = True
 
+# When enabled, the email login and signup processes are unified so that:
+#
+# * only email is asked first
+# * then the password is requested and TIM asks to check email if the user has not logged in before.
+SIMPLE_EMAIL_LOGIN = False
+
+# Whether to use a Studyinfo message for help text after email is given.
+# The point is to warn that TIM will only send the password if the account exists (and password is null)
+# and the email corresponds to the one in Studyinfo.
+# This only makes sense with EMAIL_REGISTRATION_ENABLED = False.
+SIMPLE_LOGIN_USE_STUDY_INFO_MESSAGE = False
+
 LOG_HOST = False
 
 MAX_ANSWER_CONTENT_SIZE = 200 * 1024  # bytes
@@ -151,3 +163,17 @@ DEBUG_SQL = False
 MINIMUM_SCHEDULED_FUNCTION_INTERVAL = 3600
 
 INTERNAL_PLUGIN_DOMAIN = 'tim'
+
+# BACKUP_ANSWER_* variables are related to backing up answers by sending them to another host on the fly.
+
+# When sending an answer to another host, use this secret for authentication.
+BACKUP_ANSWER_SEND_SECRET = None
+
+# When receiving an answer from another host, make sure that the given token matches this one.
+BACKUP_ANSWER_RECEIVE_SECRET = None
+
+# In the receiving host, the filename where the answers will be stored, one JSON string per line.
+BACKUP_ANSWER_FILE = 'answers.backup'
+
+# The host where to back up the answers. Should start with "https://".
+BACKUP_ANSWER_HOST = None

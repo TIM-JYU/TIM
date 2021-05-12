@@ -94,17 +94,14 @@ class TimTest(TimRouteTest):
         first_id = pars[0].get_id()
         comment_of_test1 = 'This is a comment.'
         comment_of_test1_html = md_to_html(comment_of_test1)
-        json = self.json_post('/postNote', {'text': comment_of_test1,
-                                            'access': 'everyone',
-                                            'docId': doc_id,
-                                            'par': first_id})
+        json = self.post_comment(pars[0], public=True, text=comment_of_test1)
         note_id = get_note_id_from_json(json)
 
         self.assertTrue(comment_of_test1_html in json['texts'])
         self.get(f'/view/{doc_name}', expect_contains=comment_of_test1_html)
         edited_comment = 'was edited!'
         edited_comment_html = md_to_html(edited_comment)
-        json = self.edit_comment(note_id, True, edited_comment)
+        json = self.edit_comment(note_id, pars[0], True, edited_comment)
         self.assertTrue(edited_comment_html in json['texts'])
         self.assertFalse(comment_of_test1_html in json['texts'])
 
@@ -147,10 +144,13 @@ class TimTest(TimRouteTest):
         self.get('/view/not_exist', expect_status=404)
 
         comment_of_test2 = 'g8t54h954hy95hg54h'
-        self.json_post('/postNote', {'text': comment_of_test2,
-                                     'access': 'everyone',
-                                     'docId': doc_id,
-                                     'par': first_id}, expect_contains=comment_of_test2, json_key='texts')
+        self.post_comment(
+            pars[0],
+            public=True,
+            text=comment_of_test2,
+            expect_contains=comment_of_test2,
+            json_key='texts',
+        )
 
         ug = self.current_group().id
         notes = get_notes(ug, Document(doc_id), include_public=False)
@@ -171,10 +171,16 @@ class TimTest(TimRouteTest):
                               'type': AccessType.teacher.value,
                               'id': i,
                           })
-
-        self.json_post('/deleteNote', {'id': test2_note_id,
-                                       'docId': doc_id,
-                                       'par': first_id})
+        glob_id = dict(doc_id=doc_id, par_id=first_id)
+        self.json_post(
+            '/deleteNote',
+            {
+                'id': test2_note_id,
+                'ctx': {
+                    'orig': glob_id,
+                    'curr': glob_id,
+                },
+            })
         ug = self.current_group().id
         notes = get_notes(ug, Document(doc_id), include_public=True)
         self.assertEqual(1, len(notes))

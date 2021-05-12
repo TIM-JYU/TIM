@@ -1,11 +1,11 @@
 import angular, {IHttpResponse, IPromise} from "angular";
 import * as t from "io-ts";
-import moment, {Moment, MomentInput, unitOfTime} from "moment";
+import {Props} from "io-ts";
+import moment from "moment";
 import {AbstractControl, ValidatorFn} from "@angular/forms";
 import humanizeDuration from "humanize-duration";
 import {isLeft} from "fp-ts/lib/Either";
 import {Pos} from "tim/ui/pos";
-import {Props} from "io-ts";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
@@ -322,6 +322,16 @@ interface Failure<T> {
 }
 
 export type Result<T, U> = Success<T> | Failure<U>;
+
+export function mapSuccess<T, U, M>(
+    r: Result<T, U>,
+    f: (p: T) => M
+): Result<M, U> {
+    if (!r.ok) {
+        return r;
+    }
+    return {ok: true, result: f(r.result)};
+}
 
 /**
  * Wraps the given promise so that it always gets fulfilled.
@@ -894,6 +904,16 @@ export function formatString(s: string, ...fmt: string[]) {
     return fmt.reduce((str, val, i) => str.replace(`{${i}}`, val), s);
 }
 
+export function templateString(
+    s: string,
+    fmtVariables: Record<string, unknown>
+) {
+    return Object.entries(fmtVariables).reduce(
+        (str, [key, val]) => str.replace(`{${key}}`, "" + val),
+        s
+    );
+}
+
 export function getViewName() {
     return document.location.pathname.split("/")[1];
 }
@@ -921,18 +941,6 @@ export function secondsToShortTime(
 export function timeout(ms?: number) {
     return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
-
-/**
- * Represents an immutable Moment object. Not perfect, but prevents some bugs.
- */
-export type ReadonlyMoment = Omit<Moment, "add" | "subtract" | "set"> & {
-    isSame(m: ReadonlyMoment | MomentInput): boolean;
-    diff(
-        b: ReadonlyMoment | MomentInput,
-        unitOfTime?: unitOfTime.Diff,
-        precise?: boolean
-    ): number;
-};
 
 /**
  * Shortcut function for defining a codec with mandatory and optional properties.

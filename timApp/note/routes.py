@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Dict, Any, Union
+from typing import Optional, Dict, Any, Union, Tuple
 
 from flask import Response
 from sqlalchemy import true
@@ -13,7 +13,9 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
+from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.editing.routes import par_response
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
@@ -26,7 +28,7 @@ from timApp.notification.pending_notification import PendingNotification
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.util.flask.requesthelper import get_referenced_pars_from_req, RouteException, NotExist
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import get_current_time
@@ -178,12 +180,21 @@ def clear_doc_cache_after_comment(docinfo: DocInfo, user: User, is_public: bool)
         clear_doc_cache(docinfo, user)
 
 
+@dataclass
+class ParContext:
+    """This roughly corresponds to the ParContext TypeScript class."""
+    curr: GlobalParId
+    orig: GlobalParId
+
+    def has_diff_orig(self) -> bool:
+        return self.curr != self.orig
+
+
 @notes.route("/postNote", methods=['POST'])
 def post_note(
         text: str,
         access: str,
-        docId: int,
-        par: str,
+        ctx: ParContext,
         tags: Optional[Dict[str, bool]] = None,
 ) -> Response:
     is_public = access == "everyone"
@@ -191,17 +202,8 @@ def post_note(
     for tag in KNOWN_TAGS:
         if tags and tags.get(tag):
             got_tags.append(tag)
-    doc_id = docId
-    docinfo = get_doc_or_abort(doc_id)
-    verify_comment_right(docinfo)
-    doc = docinfo.document
-    check_note_access_ok(is_public, doc)
-    try:
-        p = doc.get_paragraph(par)
-    except TimDbException as e:
-        raise NotExist(str(e))
+    orig_docinfo, p = check_permissions_and_get_orig(ctx, is_public)
 
-    p = get_referenced_pars_from_req(p)[0]
     curr_user = get_current_user_object()
     n = UserNote(usergroup=curr_user.get_personal_group(),
                  doc_id=p.get_doc_id(),
@@ -214,15 +216,38 @@ def post_note(
     db.session.add(n)
 
     if is_public:
-        notify_doc_watchers(docinfo, text, NotificationType.CommentAdded, p)
-    clear_doc_cache_after_comment(docinfo, curr_user, is_public)
-    return par_response([doc.get_paragraph(par)],
-                        docinfo)
+        notify_doc_watchers(orig_docinfo, text, NotificationType.CommentAdded, p)
+    clear_doc_cache_after_comment(orig_docinfo, curr_user, is_public)
+    return comment_response(ctx, orig_docinfo, p)
+
+
+def check_permissions_and_get_orig(ctx: ParContext, is_public: bool) -> Tuple[DocInfo, DocParagraph]:
+    orig_docinfo = get_doc_or_abort(ctx.orig.doc_id)
+    orig_doc = orig_docinfo.document
+    check_note_access_ok(is_public, orig_doc)
+    verify_comment_right(orig_docinfo)
+    try:
+        orig_p = orig_doc.get_paragraph(ctx.orig.par_id)
+    except TimDbException as e:
+        raise NotExist(str(e))
+    if ctx.has_diff_orig() and not orig_p.is_translation():
+        docinfo = get_doc_or_abort(ctx.curr.doc_id)
+        doc = docinfo.document
+        try:
+            p = doc.get_paragraph(ctx.curr.par_id)
+        except TimDbException as e:
+            raise NotExist(str(e))
+        check_note_access_ok(is_public, doc)
+        verify_comment_right(docinfo)
+    else:
+        p = orig_p
+    return orig_docinfo, p
 
 
 @notes.route("/editNote", methods=['POST'])
 def edit_note(
         id: int,
+        ctx: ParContext,
         text: str,
         access: str,
         tags: Optional[Dict[str, bool]] = None,
@@ -232,14 +257,10 @@ def edit_note(
     n = get_comment_and_check_exists(note_id)
     d = get_doc_or_abort(n.doc_id)
     verify_view_access(d)
-    par_id = n.par_id
     is_public = access == "everyone"
-    check_note_access_ok(is_public, d.document)
-    try:
-        par = d.document.get_paragraph(par_id)
-    except TimDbException as e:
-        raise RouteException(str(e))
-
+    orig_docinfo, p = check_permissions_and_get_orig(ctx, is_public)
+    check_note_ctx_match(n, p)
+    par = p
     got_tags = []
     for tag in KNOWN_TAGS:
         if tags and tags.get(tag):
@@ -256,32 +277,43 @@ def edit_note(
     if n.is_public:
         notify_doc_watchers(d, text, NotificationType.CommentModified, par)
     clear_doc_cache_after_comment(d, get_current_user_object(), is_public or was_public)
-    doc = d.document
-    return par_response([doc.get_paragraph(par_id)],
-                        d)
+    return comment_response(ctx, orig_docinfo, p)
 
 
 @notes.route("/deleteNote", methods=['POST'])
 def delete_note(
-        docId: int,
         id: int,
-        par: str,
+        ctx: ParContext,
 ) -> Response:
-    doc_id, note_id, paragraph_id = docId, id, par
+    note_id = id
     note = get_comment_and_check_exists(note_id)
-    d = get_doc_or_abort(doc_id)
+    orig_docinfo, p = check_permissions_and_get_orig(ctx, is_public=False)
     if not has_note_edit_access(note):
         raise AccessDenied("Sorry, you don't have permission to remove this note.")
-    par_id = note.par_id
+    check_note_ctx_match(note, p)
     try:
-        p = d.document.get_paragraph(par_id)
+        orig_p = orig_docinfo.document.get_paragraph(ctx.orig.par_id)
     except TimDbException:
         raise RouteException('Cannot delete the note because the paragraph has been deleted.')
     db.session.delete(note)
     is_public = note.is_public
     if is_public:
-        notify_doc_watchers(d, note.content, NotificationType.CommentDeleted, p)
-    clear_doc_cache_after_comment(d, get_current_user_object(), is_public)
-    doc = d.document
-    return par_response([doc.get_paragraph(paragraph_id)],
-                        d)
+        notify_doc_watchers(orig_docinfo, note.content, NotificationType.CommentDeleted, orig_p)
+    clear_doc_cache_after_comment(orig_docinfo, get_current_user_object(), is_public)
+    return comment_response(ctx, orig_docinfo, p)
+
+
+def comment_response(ctx: ParContext, orig_docinfo: DocInfo, p: DocParagraph) -> Response:
+    return par_response(
+        [orig_docinfo.document.get_paragraph(ctx.orig.par_id)],
+        orig_docinfo,
+        filter_return=ctx.curr if not p.is_translation() else GlobalParId(doc_id=ctx.orig.doc_id,
+                                                                          par_id=ctx.curr.par_id),
+    )
+
+
+def check_note_ctx_match(n: UserNote, p: DocParagraph) -> None:
+    if n.par_id != p.get_id():
+        raise RouteException('par_id mismatch')
+    if n.doc_id != p.get_doc_id():
+        raise RouteException('doc_id mismatch')

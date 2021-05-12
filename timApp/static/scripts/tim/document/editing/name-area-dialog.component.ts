@@ -5,7 +5,7 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 
-export interface INameAreaOptions {
+export type INameAreaOptions = {
     alttext?: string;
     collapse: boolean;
     collapsible: boolean;
@@ -14,7 +14,7 @@ export interface INameAreaOptions {
     starttime?: Date;
     timed?: boolean;
     title?: string;
-}
+};
 
 @Component({
     selector: "tim-name-area-dialog",

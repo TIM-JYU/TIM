@@ -9,11 +9,7 @@ import {showRestampDialog} from "tim/editor/showRestampDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
-import {
-    getCitePar,
-    getElementByParId,
-    getParAttributes,
-} from "../document/parhelpers";
+import {getCitePar} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {registerDialogComponentForModule} from "../ui/dialog";
 import {documentglobals, genericglobals} from "../util/globals";
@@ -471,7 +467,7 @@ ${backTicks}
                                         "Teksti",
                                         "bgred"
                                     ),
-                                name: "Red",
+                                name: "Red bg",
                             },
                             {
                                 title: "Blue background",
@@ -1044,7 +1040,11 @@ ${backTicks}
     }
 
     getCiteText(): string {
-        return getCitePar(this.getExtraData().docId, this.getExtraData().par);
+        const par = this.getExtraData().par;
+        if (!par) {
+            return "";
+        }
+        return getCitePar(this.getExtraData().docId, par);
     }
 
     selectAllText(evt: Event) {
@@ -1317,11 +1317,8 @@ ${backTicks}
     }
 
     showUnread() {
-        return (
-            this.getExtraData().par !== "NEW_PAR" &&
-            getElementByParId(this.getExtraData().par).find(".readline.read")
-                .length > 0
-        );
+        const par = this.getExtraData().par;
+        return par?.getReadline()?.classList.contains("read");
     }
 
     async unreadClicked() {
@@ -1913,11 +1910,9 @@ ${backTicks}
     getSourceDocumentLink() {
         const trs = documentglobals().translations;
         const orig = trs.find((tab) => tab.id === tab.src_docid);
-        if (orig) {
-            const parId = this.getExtraData().par;
-            const par = getElementByParId(parId);
-            const rp = getParAttributes(par).rp;
-            return `/view/${orig.path}#${rp}`;
+        const par = this.getExtraData().par;
+        if (orig && par) {
+            return `/view/${orig.path}#${par.originalPar.attrs.rp}`;
         }
     }
 

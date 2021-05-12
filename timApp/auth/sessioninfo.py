@@ -62,7 +62,7 @@ def get_users_objs(lis) -> List[User]:
     return User.query.filter(User.id.in_([u['id'] for u in lis])).all()
 
 
-def get_session_users_ids():
+def get_session_users_ids() -> List[int]:
     return [u['id'] for u in get_session_users()]
 
 
