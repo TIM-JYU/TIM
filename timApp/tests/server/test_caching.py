@@ -4,9 +4,9 @@ from unittest.mock import patch, Mock
 from timApp.auth.accesstype import AccessType
 from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
+from timApp.item import routes
 from timApp.item.routes import render_doc_view
 from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
-from timApp.item import routes
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
@@ -103,6 +103,17 @@ class CachingTest(TimRouteTest):
 2/2 testuser2: already cached
                 """.strip() + '\n')
         self.check_is_cached(d)
+        self.get(
+            f'/generateCache/{d.path}',
+            query_string={'print_diffs': True},
+            expect_content="""
+1/2 testuser1: already cached
+2/2 testuser2: already cached
+
+---Start of diffs---
+-----------------
+---End of diffs---
+                        """.strip() + '\n')
 
         ug = UserGroup.create('testgroup1')
         self.test_user_3.add_to_group(ug, added_by=None)

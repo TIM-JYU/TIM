@@ -1,7 +1,8 @@
 """Routes for document view."""
 import html
 import time
-from typing import Tuple, Optional, List, Union, Any, ValuesView
+from difflib import ndiff, context_diff
+from typing import Tuple, Optional, List, Union, Any, ValuesView, Generator
 
 import attr
 import filelock
@@ -258,11 +259,14 @@ def gen_cache(
         doc_path: str,
         same_for_all: bool = False,
         force: bool = False,
+        print_diffs: bool = False,
 ):
     """Pre-generates document cache for the users with non-expired rights.
 
     Useful for exam documents to reduce server load at the beginning of the exam.
 
+    :param print_diffs: Whether to output diff information about cache content. Each cache entry is compared with
+     the first cache entry.
     :param doc_path: Path of the document for which to generate the cache.
     :param same_for_all: Whether to use same cache for all users.
      This speeds up cache generation significantly.
@@ -293,13 +297,20 @@ def gen_cache(
     users_uniq = list(sorted(set(u for u, _ in users), key=lambda u: u.name))
     total = len(users_uniq)
     digits = len(str(total))
-    def generate():
+
+    # Make sure tags attribute is always loaded.
+    # Otherwise the "translations" variable (in doc_head.jinja2) will first not have "tags" and
+    # after encountering someone with manage access, it is loaded and all subsequent users will get it too.
+    # This wouldn't cause any user-facing bugs, but it makes it easier to compare cached HTMLs.
+    _ = doc_info.block.tags
+
+    def generate() -> Generator[Tuple[str, Optional[DocRenderResult]], None, None]:
         first_cache = None
         for i, u in enumerate(users_uniq):
-            yield f'{i + 1:>{digits}}/{total} {u.name}: '
+            start = f'{i + 1:>{digits}}/{total} {u.name}: '
             cr = check_doc_cache(doc_info, u, view_ctx, m, vp.nocache)
             if cr.doc and not force:
-                yield f'already cached'
+                yield f'{start}already cached\n', cr.doc
             else:
                 if first_cache is None or not same_for_all:
                     dr = render_doc_view(doc_info, m, view_ctx, u, False)
@@ -308,16 +319,36 @@ def gen_cache(
                     dr = first_cache
                 if dr.allowed_to_cache:
                     set_doc_cache(cr.key, dr)
-                    yield 'ok'
+                    yield f'{start}ok\n', dr
                 else:
-                    yield 'not allowed to cache (one or more plugins had errors)'
-            yield '\n'
+                    yield f'{start}not allowed to cache (one or more plugins had errors)\n', None
 
     def generate_with_lock():
         try:
+            results = []
             with filelock.FileLock(f'/tmp/generateCache_{doc_info.id}', timeout=0):
-                for r in generate():
+                for r, cache_result in generate():
+                    if cache_result:
+                        results.append(cache_result)
                     yield r
+
+            if not print_diffs:
+                return
+            if not results:
+                return
+            yield '\n'
+
+            yield '---Start of diffs---\n'
+            # For checking cache correctness, print cache differences compared to the first cached result.
+            compare_head = results[0].head_html.splitlines(keepends=True)
+            compare_content = results[0].content_html.splitlines(keepends=True)
+            for r in results[1:]:
+                diff = context_diff(compare_head, r.head_html.splitlines(keepends=True), n=0)
+                yield ''.join(diff)
+                diff = context_diff(compare_content, r.content_html.splitlines(keepends=True), n=0)
+                yield ''.join(diff)
+                yield '-----------------\n'
+            yield '---End of diffs---\n'
         except filelock.Timeout:
             yield 'Cache generation for this document is already in progress.\n'
 
