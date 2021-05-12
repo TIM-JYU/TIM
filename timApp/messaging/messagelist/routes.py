@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 from flask import Response
 from sqlalchemy.orm.exc import NoResultFound  # type: ignore
@@ -204,6 +205,7 @@ class MemberInfo:
     sendRight: bool
     deliveryRight: bool
     email: str
+    removed: Optional[datetime] = None
 
 
 @messagelist.route("/savemembers", methods=['POST'])
