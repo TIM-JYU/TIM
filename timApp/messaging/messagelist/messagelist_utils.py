@@ -767,9 +767,9 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
     return
 
 
-def set_message_list_member_membership(member: MessageListMember,
-                                       removed: Optional[datetime], email_list: Optional[MailingList]) -> None:
-    """Set the message list member's membership status.
+def set_message_list_member_removed_status(member: MessageListMember,
+                                           removed: Optional[datetime], email_list: Optional[MailingList]) -> None:
+    """Set the message list member's membership removed status.
 
     :param member: The member who's membership status is being set.
     :param removed: Member's date of removal from the message list. If None, then the member is an active member on the
@@ -781,13 +781,13 @@ def set_message_list_member_membership(member: MessageListMember,
     # Check if membership status has changed.
     if not (member.membership_ended is None and removed is None) and \
             not (member.membership_ended and removed):
-        # TODO: Check if the removed member is a group.
-        #  If yes, then remove all the groups members also (who are not members of another group)
-        #  If no, then just remove the member.
+        member.membership_ended = removed
+
         if member.is_group():
+            # TODO: Check if the removed member is a group. If yes, then remove all the groups members also from
+            #  message channels (who are not members of another group).
             pass
         else:
-            member.membership_ended = removed
             # Make changes to member's status on the email list.
             if email_list:
                 mlist_member = get_email_list_member(email_list, member.get_email())
