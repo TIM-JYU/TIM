@@ -3,13 +3,11 @@ from datetime import datetime
 from typing import List, Optional
 
 from flask import Response
-from sqlalchemy.orm.exc import NoResultFound  # type: ignore
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui_link, create_new_email_list, \
-    delete_email_list, check_emaillist_name_requirements, get_email_list_member, set_email_list_member_send_status, \
-    set_email_list_member_delivery_status, remove_email_list_membership
+    delete_email_list, check_emaillist_name_requirements
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel

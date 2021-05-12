@@ -113,7 +113,8 @@ class MessageListModel(db.Model):
             m = MessageListModel.query.filter_by(name=name).one()
             return m
         except (MultipleResultsFound, NoResultFound):
-            raise  # FIXME: NotExist creates a circular import. NotExist
+            from timApp.util.flask.requesthelper import NotExist
+            raise NotExist
 
     @staticmethod
     def get_list_by_name_first(name_candidate: str) -> 'MessageListModel':
