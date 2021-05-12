@@ -1,3 +1,5 @@
+import {Moment} from "moment";
+
 export interface ListOptions {
     // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
     name: string;
@@ -81,4 +83,5 @@ export interface MemberInfo {
     sendRight: boolean;
     deliveryRight: boolean;
     email: string;
+    removed?: Moment;
 }
