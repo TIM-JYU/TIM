@@ -19,7 +19,7 @@ from timApp.messaging.messagelist.messagelist_utils import check_messagelist_nam
     set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
     set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
     add_new_message_list_tim_user, add_new_message_list_group, add_message_list_external_email_member, \
-    set_message_list_member_membership
+    set_message_list_member_membership, set_member_send_delivery
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
@@ -229,17 +229,8 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
         #  db in the first place.
         if db_member:
             # If send or delivery right has changed, then set them to db and on Mailman.
-            if db_member.send_right != member.sendRight:
-                db_member.send_right = member.sendRight
-                if email_list:
-                    mlist_member = get_email_list_member(email_list, member.email)
-                    set_email_list_member_send_status(mlist_member, member.deliveryRight)
-            if db_member.delivery_right != member.deliveryRight:
-                db_member.delivery_right = member.deliveryRight
-                if email_list:
-                    mlist_member = get_email_list_member(email_list, member.email)
-                    set_email_list_member_delivery_status(mlist_member, member.deliveryRight, by_moderator=True)
-            set_message_list_member_membership(member=db_member, removed=member.removed)
+            set_member_send_delivery(db_member, member.sendRight, member.deliveryRight, email_list=email_list)
+            set_message_list_member_membership(db_member, member.removed, email_list=email_list)
     db.session.commit()
     return ok_response()
 

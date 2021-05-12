@@ -257,6 +257,16 @@ class MessageListMember(db.Model):
         self.membership_ended = datetime.now()
         return
 
+    def get_email(self) -> str:
+        """The process of obtaining member's address varies depending on if the member
+        is a TIM user or not. Child classes have their own implementation depending on how they obtain the
+        information.
+
+        :return: This particular instance raises NotImplementedError. The supposed return value is the user's email
+        address.
+        """
+        raise NotImplementedError
+
 
 def get_members_for_list(msg_list: MessageListModel) -> List[MessageListMember]:
     """Get all members belonging to a list.
@@ -345,6 +355,10 @@ class MessageListExternalMember(MessageListMember):
         return self.display_name if self.display_name is not None else ""
 
     def get_email(self) -> str:
+        """Get message list's external member's email.
+
+        :return: The email address.
+        """
         return self.email_address
 
 

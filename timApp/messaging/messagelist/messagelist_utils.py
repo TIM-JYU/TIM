@@ -20,7 +20,7 @@ from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_n
     set_email_list_member_delivery_status
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember, \
-    MessageListExternalMember
+    MessageListExternalMember, MessageListMember
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -763,15 +763,16 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
     return
 
 
-def set_message_list_member_membership(member: Union[MessageListTimMember,MessageListExternalMember],
+def set_message_list_member_membership(member: MessageListMember,
                                        removed: Optional[datetime], email_list: Optional[MailingList]) -> None:
     """Set the message list member's membership status.
 
     :param member: The member who's membership status is being set.
     :param removed: Member's date of removal from the message list. If None, then the member is an active member on the
     list.
-    :param email_list:
-    :return:
+    :param email_list: An email list belonging to the message list. If None, the message list does not have an email
+    list.
+    :return: None.
     """
     # Check if membership status has changed.
     if not (member.membership_ended is None and removed is None) and \
@@ -793,3 +794,26 @@ def set_message_list_member_membership(member: Union[MessageListTimMember,Messag
                     # Re-set the member's send and delivery rights on the email list.
                     set_email_list_member_send_status(mlist_member, member.send_right)
                     set_email_list_member_delivery_status(mlist_member, member.delivery_right)
+
+
+def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bool,
+                             email_list: Optional[MailingList] = None) -> None:
+    """Set message list member's send and delivery rights.
+
+    :param member: Member who's rights are being set.
+    :param send: Member's new send right.
+    :param delivery: Member's new delivery right.
+    :param email_list: If the message list has email list as one of it's message channels, set the send and delivery
+     rights there also.
+    :return: None.
+    """
+    if member.send_right != send:
+        member.send_right = send
+        if email_list:
+            mlist_member = get_email_list_member(email_list, member.get_email())
+            set_email_list_member_send_status(mlist_member, delivery)
+    if member.delivery_right != delivery:
+        member.delivery_right = delivery
+        if email_list:
+            mlist_member = get_email_list_member(email_list, member.get_email())
+            set_email_list_member_delivery_status(mlist_member, delivery, by_moderator=True)
