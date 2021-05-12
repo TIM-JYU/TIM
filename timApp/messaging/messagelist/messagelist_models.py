@@ -1,9 +1,9 @@
-from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
 from timApp.messaging.messagelist.listoptions import ArchiveType, Channel, ReplyToListChanges
 from timApp.timdb.sqa import db
+from timApp.util.utils import get_current_time
 
 
 class MemberJoinMethod(Enum):
@@ -251,16 +251,14 @@ class MessageListMember(db.Model):
         return self.membership_verified is not None
 
     def remove(self) -> None:
-        # FIXME: When syncing on removal from a group, this creates an error about "circular dependency detected". A
-        #  fix should be https://docs.sqlalchemy.org/en/14/orm/relationship_persistence.html#post-update to a
-        #  relationship, but why would changing this value cause this? All the other values are fine.
-        self.membership_ended = datetime.now()
+        """Shorthand for removing a member out of the group, by setting the membership_ended attribute."""
+        self.membership_ended = get_current_time()  # datetime.now()
         return
 
     def get_email(self) -> str:
         """The process of obtaining member's address varies depending on if the member
         is a TIM user or not. Child classes have their own implementation depending on how they obtain the
-        information.
+        information. This is mostly for helping with types.
 
         :return: This particular instance raises NotImplementedError. The supposed return value is the user's email
         address.
@@ -291,8 +289,7 @@ class MessageListTimMember(MessageListMember):
 
     member = db.relationship("MessageListMember", back_populates="tim_member", lazy="select",
                              uselist=False, post_update=True)
-    # The post_update argument is given to combat this scenario:
-    # https://docs.sqlalchemy.org/en/14/orm/relationship_persistence.html#post-update
+
     user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select", uselist=False,
                                  post_update=True)
 
@@ -313,9 +310,10 @@ class MessageListTimMember(MessageListMember):
         ug = self.user_group
         return ug.name
 
-    def get_email(self) -> Optional[str]:
+    def get_email(self) -> str:  # Optional[str]:
+        """Get TIM user group's email. Email makes sense only for personal user groups. Groups """
         if self.is_group():
-            return None
+            return ""  # None
         # from timApp.user.usergroup import UserGroup
         # ug = UserGroup.query.filter_by(id=self.group_id).one()
         ug = self.user_group

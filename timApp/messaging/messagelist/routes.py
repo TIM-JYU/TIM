@@ -249,7 +249,6 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
     # TODO: Implement checking whether or not users are just added to a list (like they are now) or they are invited
     #  to a list (requires link generation and other things).
 
-    # TODO: Check if there is an email list attached to the message list.
     em_list = None
     if msg_list.email_list_domain is not None:
         em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
@@ -265,14 +264,11 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
         if ug is not None:
             # The name belongs to a user group.
             add_new_message_list_group(msg_list, ug, sendRight, deliveryRight, em_list)
-        # TODO: If member candidate is not a user, or a user group, then we assume an external member. Add external
-        #  members.
+        # If member candidate is not a user, or a user group, then we assume an external member. Add external members.
         if is_valid_email(member_candidate.strip()) and em_list:
             add_message_list_external_email_member(msg_list, member_candidate.strip(),
                                                    sendRight, deliveryRight, em_list, None)
-
     db.session.commit()
-
     return ok_response()
 
 
@@ -280,8 +276,8 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
 def get_members(list_name: str) -> Response:
     """Get members belonging to a certain list.
 
-    :param list_name:
-    :return:
+    :param list_name: The list where we are querying all the members.
+    :return: A Response object, including all the members of a list.
     """
     verify_logged_in()
     # TODO: Verify user is a owner of the list.

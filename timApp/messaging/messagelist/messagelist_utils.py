@@ -654,10 +654,14 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     new_group_member.send_right = delivery_right
     db.session.add(new_group_member)
 
-    # TODO: Don't automatically open group's members to the list.
-    # Add individual users to the message list as members.
-    for user in ug.users:
-        add_new_message_list_tim_user(msg_list, user, send_right, delivery_right, em_list)
+    # Add individual users to message channels.
+    if em_list is not None:
+        for user in ug.users:
+            user_email = user.email  # TODO: Search possible additional emails.
+            # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
+            #  placeholder value of True.
+            add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
+                      send_right=send_right, delivery_right=delivery_right)
     return
 
 
