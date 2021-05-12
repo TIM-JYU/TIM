@@ -775,26 +775,25 @@ def set_message_list_member_removed_status(member: MessageListMember,
     list.
     :return: None.
     """
-    # Check if membership status has changed.
-    if not (member.membership_ended is None and removed is None) and \
-            not (member.membership_ended and removed):
-        member.membership_ended = removed
+    if (member.membership_ended is None and removed is None) or (member.membership_ended and removed):
+        return
 
-        if member.is_group():
-            # TODO: Check if the removed member is a group. If yes, then remove all the groups members also from
-            #  message channels (who are not members of another group).
-            pass
-        else:
-            # Make changes to member's status on the email list.
-            if email_list:
-                mlist_member = get_email_list_member(email_list, member.get_email())
-                # If there is an email list and the member is removed, do a soft removal on the email list.
-                if removed:
-                    remove_email_list_membership(mlist_member)
-                else:
-                    # Re-set the member's send and delivery rights on the email list.
-                    set_email_list_member_send_status(mlist_member, member.send_right)
-                    set_email_list_member_delivery_status(mlist_member, member.delivery_right)
+    member.membership_ended = removed
+    if member.is_group():
+        # TODO: Check if the removed member is a group. If yes, then remove all the groups members also from
+        #  message channels (who are not members of another group).
+        pass
+    else:
+        # Make changes to member's status on the email list.
+        if email_list:
+            mlist_member = get_email_list_member(email_list, member.get_email())
+            # If there is an email list and the member is removed, do a soft removal on the email list.
+            if removed:
+                remove_email_list_membership(mlist_member)
+            else:
+                # Re-set the member's send and delivery rights on the email list.
+                set_email_list_member_send_status(mlist_member, member.send_right)
+                set_email_list_member_delivery_status(mlist_member, member.delivery_right)
 
 
 def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bool,
