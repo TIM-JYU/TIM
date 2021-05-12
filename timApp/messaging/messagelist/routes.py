@@ -9,7 +9,7 @@ from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui_link, create_new_email_list, \
     delete_email_list, check_emaillist_name_requirements, get_email_list_member, set_email_list_member_send_status, \
-    set_email_list_member_delivery_status
+    set_email_list_member_delivery_status, remove_email_list_membership
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
@@ -225,16 +225,38 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
             # If send or delivery right has changed, then set them to db and on Mailman.
             if db_member.send_right != member.sendRight:
                 db_member.send_right = member.sendRight
+                db.session.flush()  # VIESTIM: Testing
                 if email_list:
                     mlist_member = get_email_list_member(email_list, member.email)
                     set_email_list_member_send_status(mlist_member, member.deliveryRight)
             if db_member.delivery_right != member.deliveryRight:
                 db_member.delivery_right = member.deliveryRight
+                db.session.flush()  # VIESTIM: Testing
                 if email_list:
                     mlist_member = get_email_list_member(email_list, member.email)
                     set_email_list_member_delivery_status(mlist_member, member.deliveryRight, by_moderator=True)
-
-            db.session.flush()
+            # Check if the member's removed status has changed.
+            if not (db_member.membership_ended is None and member.removed is None) and \
+                    not (db_member.membership_ended and member.removed):
+                # TODO: Check if the removed member is a group.
+                #  If yes, then remove all the groups members also (who are not members of another group)
+                #  If no, then just remove the member.
+                if db_member.is_group():
+                    pass
+                else:
+                    # db_member.membership_ended = member.removed
+                    db_member.remove()
+                    db.session.flush()  # VIESTIM: Testing
+                    if email_list:
+                        mlist_member = get_email_list_member(email_list, member.email)
+                        # If there is an email list and the member is removed, do a soft removal in the email list.
+                        if member.removed:
+                            remove_email_list_membership(mlist_member)
+                        else:
+                            # Re-set the member's send and delivery rights on the email list.
+                            set_email_list_member_send_status(mlist_member, member.sendRight)
+                            set_email_list_member_delivery_status(mlist_member, member.deliveryRight)
+            # db.session.flush()
 
     db.session.commit()
     return ok_response()
