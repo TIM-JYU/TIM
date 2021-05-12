@@ -4,9 +4,10 @@ Note: Add new tasks here. For scheduling add parameters to defaultconfig as well
 """
 import json
 import logging
+from concurrent.futures import Future
 from copy import copy
 from logging import Logger
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import requests
 from celery import Celery
@@ -25,6 +26,8 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.tim_app import app
 from timApp.user.user import User
 from timApp.util.flask.search import create_search_files
+from timApp.util.utils import wait_response_and_collect_error
+from tim_common.vendor.requests_futures import FuturesSession
 
 logger: Logger = get_task_logger(__name__)
 
@@ -163,9 +166,16 @@ def send_answer_backup(
 
 
 def do_send_answer_backup(exported_answer: Dict[str, Any]):
-    backup_host = app.config["BACKUP_ANSWER_HOST"]
-    r = requests.post(
-        f'{backup_host}/backup/answer',
-        json={'answer': exported_answer, 'token': app.config['BACKUP_ANSWER_SEND_SECRET']},
-    )
-    return r.status_code
+    backup_hosts = app.config["BACKUP_ANSWER_HOSTS"]
+    session = FuturesSession()
+    futures: List[Future] = []
+    for h in backup_hosts:
+        f = session.post(
+            f'{h}/backup/answer',
+            json={'answer': exported_answer, 'token': app.config['BACKUP_ANSWER_SEND_SECRET']},
+        )
+        futures.append(f)
+    errors = []
+    for f, h in zip(futures, backup_hosts):
+        wait_response_and_collect_error(f, h, errors)
+    return errors

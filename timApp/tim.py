@@ -45,6 +45,7 @@ from timApp.document.translation.routes import tr_bp
 from timApp.errorhandlers import register_errorhandlers
 from timApp.gamification.generateMap import generateMap
 from timApp.item.block import Block
+from timApp.item.distribute_rights import dist_bp
 from timApp.item.manage import manage_page
 from timApp.item.routes import view_page
 from timApp.item.routes_tags import tags_blueprint
@@ -91,6 +92,7 @@ blueprints = [
     backup,
     clipboard,
     course_blueprint,
+    dist_bp,
     doc_bp,
     edit_page,
     feedback,

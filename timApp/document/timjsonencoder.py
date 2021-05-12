@@ -4,6 +4,7 @@ from dataclasses import is_dataclass, fields
 from enum import Enum
 
 from isodate import duration_isoformat
+from isodate.duration import Duration
 from jinja2 import Undefined
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
@@ -16,7 +17,7 @@ class TimJsonEncoder(json.JSONEncoder):
                 o = o.replace(tzinfo=datetime.timezone.utc)
             return o.isoformat()
 
-        if isinstance(o, datetime.timedelta):
+        if isinstance(o, (datetime.timedelta, Duration)):
             return duration_isoformat(o)
 
         if isinstance(o, Undefined):

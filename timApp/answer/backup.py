@@ -6,21 +6,17 @@ from flask import current_app, Response
 from timApp.answer.answer import Answer
 from timApp.answer.exportedanswer import ExportedAnswer
 from timApp.document.docentry import DocEntry
-from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import to_json_str, ok_response
 from timApp.util.logger import log_error
+from timApp.util.secret import check_secret
 
 
 def get_backup_answer_file() -> Path:
     return Path(current_app.config['FILES_PATH']) / current_app.config['BACKUP_ANSWER_FILE']
 
 
-def save_answer_backup(answer: ExportedAnswer, token: str) -> Response:
-    expected_token = current_app.config['BACKUP_ANSWER_RECEIVE_SECRET']
-    if expected_token is None:
-        raise RouteException('BACKUP_ANSWER_RECEIVE_SECRET not configured.')
-    if token != expected_token:
-        raise RouteException('Wrong token')
+def save_answer_backup(answer: ExportedAnswer, secret: str) -> Response:
+    check_secret(secret, 'BACKUP_ANSWER_RECEIVE_SECRET')
     with filelock.FileLock(f'/tmp/answer_backup'):
         with get_backup_answer_file().open('a') as f:
             f.write(to_json_str(answer) + '\n')
