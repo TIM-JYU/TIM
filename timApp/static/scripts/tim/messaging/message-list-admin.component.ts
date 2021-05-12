@@ -161,7 +161,8 @@ import {Users} from "../user/userService";
                                    name="member-delivery-right-{{member.email}}">
                         </td>
                         <td>{{member.removed}}</td>
-                        <td><input type="checkbox" (click)="membershipChange(member)" [value]="member.removed"/></td>
+                        <td><input type="checkbox" (click)="membershipChange(member)" [ngModel]="!!member.removed" 
+                                   name="removed-{{member.email}}"/></td>
                     </tr>
                     </tbody>
                 </table>

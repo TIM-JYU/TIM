@@ -135,7 +135,7 @@ class MessageListModel(db.Model):
         for member in self.members:
             # VIESTIM: When user's verification is done, replace 'not member.membership_ended' with the commented out
             #  predicate.
-            if not member.is_group() and not member.membership_ended:  # member.is_active():
+            if not member.is_group():  # and not member.membership_ended:  # member.is_active():
                 individuals.append(member)
         return individuals
 
@@ -208,7 +208,8 @@ class MessageListMember(db.Model):
     """Discriminator for polymorhphic members."""
 
     message_list = db.relationship("MessageListModel", back_populates="members", lazy="select", uselist=False)
-    tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select", uselist=False, post_update=True)
+    tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select",
+                                 uselist=False, post_update=True)
     external_member = db.relationship("MessageListExternalMember", back_populates="member", lazy="select",
                                       uselist=False)
     distribution = db.relationship("MessageListDistribution", back_populates="member", lazy="select")
@@ -278,7 +279,8 @@ class MessageListTimMember(MessageListMember):
     group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
     """A UserGroup id for a member."""
 
-    member = db.relationship("MessageListMember", back_populates="tim_member", lazy="select", uselist=False)
+    member = db.relationship("MessageListMember", back_populates="tim_member", lazy="select",
+                             uselist=False, post_update=True)
     # The post_update argument is given to combat this scenario:
     # https://docs.sqlalchemy.org/en/14/orm/relationship_persistence.html#post-update
     user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select", uselist=False,
@@ -323,9 +325,9 @@ class MessageListExternalMember(MessageListMember):
     email_address = db.Column(db.Text, unique=True)
     """Email address of message list's external member."""
 
-    # TODO: Add a column for display name.
     display_name = db.Column(db.Text)
 
+    # VIESTIM: The other member relationships have needed post_update=True argument. This might need one too.
     member = db.relationship("MessageListMember", back_populates="external_member", lazy="select", uselist=False)
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}

@@ -225,13 +225,11 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
             # If send or delivery right has changed, then set them to db and on Mailman.
             if db_member.send_right != member.sendRight:
                 db_member.send_right = member.sendRight
-                db.session.flush()  # VIESTIM: Testing
                 if email_list:
                     mlist_member = get_email_list_member(email_list, member.email)
                     set_email_list_member_send_status(mlist_member, member.deliveryRight)
             if db_member.delivery_right != member.deliveryRight:
                 db_member.delivery_right = member.deliveryRight
-                db.session.flush()  # VIESTIM: Testing
                 if email_list:
                     mlist_member = get_email_list_member(email_list, member.email)
                     set_email_list_member_delivery_status(mlist_member, member.deliveryRight, by_moderator=True)
@@ -244,9 +242,8 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
                 if db_member.is_group():
                     pass
                 else:
-                    # db_member.membership_ended = member.removed
-                    db_member.remove()
-                    db.session.flush()  # VIESTIM: Testing
+                    db_member.membership_ended = member.removed
+                    # db_member.remove()
                     if email_list:
                         mlist_member = get_email_list_member(email_list, member.email)
                         # If there is an email list and the member is removed, do a soft removal in the email list.
