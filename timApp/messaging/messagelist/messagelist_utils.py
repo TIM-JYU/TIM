@@ -808,13 +808,37 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
      rights there also.
     :return: None.
     """
+    # Send right
     if member.send_right != send:
         member.send_right = send
         if email_list:
-            mlist_member = get_email_list_member(email_list, member.get_email())
-            set_email_list_member_send_status(mlist_member, delivery)
+            if member.is_personal_user():
+                mlist_member = get_email_list_member(email_list, member.get_email())
+                set_email_list_member_send_status(mlist_member, delivery)
+            elif member.is_group():
+                # For group, set the delivery status for it's members on the email list.
+                ug = member.tim_member.user_group
+                ug_members = ug.users  # ug.current_memberships
+                for ug_member in ug_members:
+                    # user = ug_member.personal_user
+                    email_list_member = get_email_list_member(email_list, ug_member.email)
+                    set_email_list_member_send_status(email_list_member, delivery)
+
+    # Delivery right.
     if member.delivery_right != delivery:
         member.delivery_right = delivery
         if email_list:
-            mlist_member = get_email_list_member(email_list, member.get_email())
-            set_email_list_member_delivery_status(mlist_member, delivery, by_moderator=True)
+            # If message list has an email list associated with it, set delivery rights there.
+            if member.is_personal_user():
+                mlist_member = get_email_list_member(email_list, member.get_email())
+                set_email_list_member_delivery_status(mlist_member, delivery)
+            elif member.is_group():
+                # For group, set the delivery status for it's members on the email list.
+                ug = member.tim_member.user_group
+                ug_members = ug.users  # ug.current_memberships
+                for ug_member in ug_members:
+                    # user = ug_member.personal_user
+                    email_list_member = get_email_list_member(email_list, ug_member.email)
+                    set_email_list_member_delivery_status(email_list_member, delivery)
+
+
