@@ -68,7 +68,6 @@ def test_name(name_candidate: str) -> None:
     if sep:
         # If character '@' is found, we check email list specific name requirements.
         check_emaillist_name_requirements(name, domain)
-    return
 
 
 @messagelist.route("/checkname/<string:name_candidate>", methods=['GET'])

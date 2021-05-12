@@ -266,7 +266,6 @@ class MessageListMember(db.Model):
         # FIXME: When syncing on removal from a group, this creates a
         self.membership_ended = datetime.now()
         # db.session.flush()
-        return
 
 
 def get_members_for_list(msg_list: MessageListModel) -> List[MessageListMember]:
