@@ -727,7 +727,7 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
     :param old_group: The group where the user was removed from.
     :return: None.
     """
-    # FIXME: This does not work. Most likely there is confusin with different IDs, which results in pulling wrong
+    # FIXME: This does not work. Most likely there is confusion with different IDs, which results in pulling wrong
     #  members/groups.
     # Get all the message lists for the user group.
     group_tim_members = MessageListTimMember.query.filter_by(group_id=old_group.id).all()

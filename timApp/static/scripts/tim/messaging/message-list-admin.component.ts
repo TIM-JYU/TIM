@@ -14,6 +14,7 @@ import {
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TableFormModule} from "tim/plugin/tableForm";
+import moment from "moment";
 import {Users} from "../user/userService";
 
 @Component({
@@ -143,6 +144,8 @@ import {Users} from "../user/userService";
                         <th>Email</th>
                         <th>Send right</th>
                         <th>Delivery right</th>
+                        <th>Membership ended</th>
+                        <th>Removed</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -157,6 +160,8 @@ import {Users} from "../user/userService";
                             <input type="checkbox" [(ngModel)]="member.deliveryRight"
                                    name="member-delivery-right-{{member.email}}">
                         </td>
+                        <td>{{member.removed}}</td>
+                        <td><input type="checkbox" (click)="membershipChange(member)" [value]="member.removed"/></td>
                     </tr>
                     </tbody>
                 </table>
@@ -220,6 +225,25 @@ export class MessageListAdminComponent implements OnInit {
     memberAddFailedResponse: string = "";
 
     recipients = "";
+
+    /**
+     *
+     * @param member Who's membership on the list is changed.
+     */
+    membershipChange(member: MemberInfo) {
+        // console.log(member.name);
+        // console.log(member.email);
+        // console.log(member.removed);
+        if (member.removed) {
+            member.removed = undefined;
+        } else {
+            member.removed = moment();
+        }
+
+        // console.log(member.name);
+        // console.log(member.email);
+        // console.log(member.removed);
+    }
 
     getDocId() {
         return documentglobals().curr_item.id;
