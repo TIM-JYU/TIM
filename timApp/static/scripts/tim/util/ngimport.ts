@@ -1,5 +1,19 @@
 // idea from https://github.com/bcherny/ngimport
 import * as angular from "angular";
+import {IHttpPromise, IRequestShortcutConfig} from "angular";
+import {JsonValue} from "tim/util/jsonvalue";
+
+/**
+ * Restricts AngularJS HTTP POST data to contain only JSON serializable types.
+ * TODO: Add also other methods such as PUT.
+ */
+export interface ISaferHttpService extends angular.IHttpService {
+    post<T>(
+        url: string,
+        data: JsonValue,
+        config?: IRequestShortcutConfig
+    ): IHttpPromise<T>;
+}
 
 // These MUST be initialized to non-undefined values. Otherwise lazy loading plugins won't work if the plugin imports
 // and uses some of these.
@@ -10,7 +24,7 @@ export let $controller: angular.IControllerService = (null as unknown) as angula
 export let $document: angular.IDocumentService = (null as unknown) as angular.IDocumentService;
 export let $exceptionHandler: angular.IExceptionHandlerService = (null as unknown) as angular.IExceptionHandlerService;
 export let $filter: angular.IFilterService = (null as unknown) as angular.IFilterService;
-export let $http: angular.IHttpService = (null as unknown) as angular.IHttpService;
+export let $http: ISaferHttpService = (null as unknown) as angular.IHttpService;
 export let $httpBackend: angular.IHttpBackendService = (null as unknown) as angular.IHttpBackendService;
 export let $httpParamSerializer: angular.IHttpParamSerializer = (null as unknown) as angular.IHttpParamSerializer;
 export let $httpParamSerializerJQLike: angular.IHttpParamSerializer = (null as unknown) as angular.IHttpParamSerializer;

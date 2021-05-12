@@ -1,24 +1,14 @@
 Yksi monesta
-Kysmys jossa valitaan yksi monesta (Radiobutton)
-``` {#PLUGINNAMEHERE plugin="mcq"}
+Kysymys jossa valitaan yksi monesta (Radiobutton)
+``` {#PLUGINNAMEHERE dquestion="true" plugin="qst"}
+answerFieldType: radio
 answerLimit: 1
-headerText: 'Kysymyksen otsikko'
-stem: 'Kysymyksen varsinainen kysymys'
-choices:
-  -
-    correct: true
-    text: 'Ensimmäisen kysymyksen teksti'
-    reason: '1. kysymyksen selitys oikeasta vastauksesta'
-  -
-    correct: false
-    text: 'Toisen kysymyksen teksti'
-    reason: '2. kysymyksen selitys oikeasta vastauksesta'
-  -
-    correct: false
-    text: 'Kolmannen kysymyksen teksti'
-    reason: '3. kysymyksen selitys oikeasta vastauksesta'
-  -
-    correct: false
-    text: ''
-    reason: ''
+expl: {}
+headers: []
+questionText: Kysymyksen otsikko
+questionTitle: Kysymys1
+questionType: radio-vertical
+rows:
+- Ensimmäisen kysymyksen teksti
+- Toisen kysymyksen teksti
 ```

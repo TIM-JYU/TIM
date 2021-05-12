@@ -2,7 +2,18 @@ import {Component, Input, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";
+import {FormsModule} from "@angular/forms";
+import {to2} from "tim/util/utils";
 import {TimMessageData} from "./tim-message-view.component";
+
+interface ReplyOptions {
+    archive: boolean;
+    messageChannel: boolean;
+    pageList: string;
+    recipient: string | null;
+    readReceipt: boolean;
+    repliesTo?: number;
+}
 
 @Component({
     selector: "tim-message",
@@ -28,7 +39,7 @@ import {TimMessageData} from "./tim-message-view.component";
                 </div>
                 <div class="replyArea" *ngIf="showReply">
                     <p>To: {{sender}}</p>
-                    <textarea id="reply-message" name="reply-message"></textarea>
+                    <textarea id="reply-message" name="reply-message" [(ngModel)]="replyMessage"></textarea>
                     <div class="sent">
                         <button class="timButton" [disabled]="!canSendReply" (click)="sendReply()">Send</button>
                         <span *ngIf="replySent">Sent!</span>
@@ -41,7 +52,7 @@ import {TimMessageData} from "./tim-message-view.component";
                     <span class="readReceiptLink"
                           *ngIf="markedAsRead">Read receipt can be cancelled in <a href="messages/tim-messages">your messages</a></span>
                     <button class="timButton" title="Close Message"
-                            [disabled]="(!canMarkAsRead && !replySent) || (canMarkAsRead && !markedAsRead)"
+                            [disabled]="(!markedAsRead && !replySent)"
                             (click)="closeMessage()">
                         Close
                     </button>
@@ -64,6 +75,7 @@ export class TimMessageComponent implements OnInit {
     showReply: boolean = false;
     canMarkAsRead: boolean = true;
     markedAsRead: boolean = false;
+    replyMessage: string = "";
     replySent: boolean = false;
     canReply: boolean = true; // show/hide 'Reply' button
     canSendReply: boolean = true; // enable/disable 'Send' button
@@ -71,6 +83,14 @@ export class TimMessageComponent implements OnInit {
     messageToGroup: boolean = true; // can't get from database
     group?: string; // can't get from database
     heading?: string;
+    replyOptions: ReplyOptions = {
+        archive: true,
+        messageChannel: false,
+        pageList: "messages/tim-messages",
+        recipient: "",
+        readReceipt: true,
+        repliesTo: undefined,
+    };
 
     constructor(private http: HttpClient) {}
 
@@ -110,11 +130,32 @@ export class TimMessageComponent implements OnInit {
     }
 
     /**
-     * Shows a "sent" alert after sending a reply.
+     * Sends reply to sender
      */
-    sendReply(): void {
+    async sendReply() {
         this.replySent = true;
         this.canSendReply = false;
+        if (this.sender) {
+            this.replyOptions.recipient = this.sender;
+            this.replyOptions.repliesTo = this.message?.id;
+        } else {
+            console.log("no recipient, can't send");
+        }
+        const result = await to2(
+            this.http
+                .post("/timMessage/reply", {
+                    options: this.replyOptions,
+                    messageBody: {
+                        messageBody: this.replyMessage,
+                        messageSubject: this.heading + " [Re]",
+                        recipients: [this.replyOptions.recipient],
+                    },
+                })
+                .toPromise()
+        );
+        if (!result.ok) {
+            console.error(result.result.error.error);
+        }
     }
 
     /**
@@ -151,6 +192,6 @@ export class TimMessageComponent implements OnInit {
 @NgModule({
     declarations: [TimMessageComponent],
     exports: [TimMessageComponent],
-    imports: [CommonModule],
+    imports: [CommonModule, FormsModule],
 })
 export class TimMessageModule {}

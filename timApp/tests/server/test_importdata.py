@@ -241,7 +241,7 @@ aplus:
             },
             {
                 'web': field_result(
-                    changed=6,
+                    changed=5,  # Fields with zero values are skipped, so that's why 5 and not 6 here.
                     created_users=[
                         {'email': 'matti.meikalainen@aalto.fi',
                          'id': 5,
@@ -258,7 +258,7 @@ aplus:
                 "1 Count": 5,
                 "1 Total": 200,
                 "1 Ratio": 1.0,
-                "2 Count": 4,
+                "2 Count": 0,
                 "2 Total": 700,
                 "2 Ratio": 1.0,
             }],
@@ -268,7 +268,7 @@ aplus:
         self.verify_answer_content(f'{d.id}.count1', 'c', '5', matti_user)
         self.verify_answer_content(f'{d.id}.total1', 'c', '200', matti_user)
         self.verify_answer_content(f'{d.id}.ratio1', 'c', '1.0', matti_user)
-        self.verify_answer_content(f'{d.id}.count2', 'c', '4', matti_user)
+        self.verify_answer_content(f'{d.id}.count2', 'c', None, matti_user, expected_count=0)
         self.verify_answer_content(f'{d.id}.total2', 'c', '700', matti_user)
         self.verify_answer_content(f'{d.id}.ratio2', 'c', '1.0', matti_user)
         self.imp(
@@ -278,7 +278,7 @@ aplus:
                 'token': 'xxx',
             },
             {
-                'web': field_result(unchanged=6),
+                'web': field_result(unchanged=5),
             }
             ,
             200,
@@ -290,7 +290,7 @@ aplus:
                 "1 Count": 5,
                 "1 Total": 200,
                 "1 Ratio": 1.0,
-                "2 Count": 4,
+                "2 Count": 0,
                 "2 Total": 700,
                 "2 Ratio": 1.0,
             }],

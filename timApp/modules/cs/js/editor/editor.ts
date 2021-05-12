@@ -48,6 +48,7 @@ export interface IEditor {
     setSelection?(): void;
     doWrap?(wrap: number): void;
     insert?(str: string): void;
+    setReadOnly(b: boolean): void;
 }
 
 export interface IEditorFile {
@@ -110,6 +111,7 @@ export class EditorFile {
 })
 export class JSParsonsEditorComponent implements IEditor {
     content: string = "";
+    setReadOnly(b: boolean) {}
 }
 
 @Component({
@@ -140,7 +142,8 @@ export class JSParsonsEditorComponent implements IEditor {
                     [base]="base"
                     [words]="parsonsWords"
                     [styleWords]="parsonsStyleWords"
-                    [notordermatters]="parsonsNotordermatters">
+                    [notordermatters]="parsonsNotordermatters"
+                    (change)="onEditorContentChanged($event)">
             </cs-parsons-editor>
             <cs-jsparsons-editor *ngIf="mode == Mode.JSParsons"></cs-jsparsons-editor>
             <cs-ace-editor *ngIf="mode == Mode.ACE"
@@ -173,6 +176,7 @@ export class EditorComponent implements IMultiEditor {
     private normalEditor?: NormalEditorComponent;
     private aceEditor?: AceEditorComponent;
     parsonsEditor?: ParsonsEditorComponent;
+    editorreadonly: boolean = false;
 
     @Input() disabled: boolean = false;
 
@@ -215,6 +219,11 @@ export class EditorComponent implements IMultiEditor {
         );
     }
 
+    setReadOnly(b: boolean) {
+        this.editor?.setReadOnly(b);
+        this.editorreadonly = b;
+    }
+
     ngOnInit() {
         if (this.minRows_ < 1) {
             this.minRows_ = 1;
@@ -226,6 +235,9 @@ export class EditorComponent implements IMultiEditor {
 
     ngDoCheck() {
         // TODO: make editors emit an event instead of ngDoCheck
+        if (this.mode == Mode.Parsons) {
+            return;
+        }
         const content = this.content;
         if (content !== this.oldContent) {
             this.oldContent = content;
@@ -238,10 +250,18 @@ export class EditorComponent implements IMultiEditor {
         }
     }
 
+    onEditorContentChanged(args: {content: string; init: boolean}) {
+        if (!args.init && this.oldContent !== args.content) {
+            this.contentChange.emit(args.content);
+        }
+        this.oldContent = args.content;
+    }
+
     private initEditor(oldContent: string) {
         if (!this.editor) {
             this.content_ = oldContent;
         } else {
+            this.editor.setReadOnly(this.editorreadonly);
             this.content = oldContent;
             this.content_ = undefined;
         }

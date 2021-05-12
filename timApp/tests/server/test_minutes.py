@@ -78,7 +78,7 @@ class MinutesHandling(BrowserTest):
              'Pöytäkirjan asiakohtien otteet',
              'Lista 1, (PDF) - Ilmoitusasiat\n'
              'Lista 2, (PDF) - Jaska Jokusen väitöskirjan arvostelu',
-             '{"area_end": "kokous9"}'])
+             ''])
         ote_index.document.clear_mem_cache()
         self.assertEqual("""## Pöytäkirjan asiakohtien otteet {area="kokous9"}
 
@@ -113,7 +113,7 @@ class MinutesHandling(BrowserTest):
             ote_html,
             ['Kokoukset | Seuraava esityslista | pdf | Ohjeet | Keskustelu | Ylläpito',
              'PÖYTÄKIRJANOTE - Lista 1 - Ilmoitusasiat',
-             '{"ra": "ETUSIVU", "rd": "5"}',
+             '',
              'JYVÄSKYLÄN YLIOPISTO\n'
              'KOKOUSKUTSU\n'
              '\n'
@@ -131,7 +131,7 @@ class MinutesHandling(BrowserTest):
              'Paikka Jossakin Agoralla',
              '',
              '',
-             '{"ra": "ETUSIVU", "rd": "5"}',
+             '',
              '!================!Page Break!================!\n'
              '\n'
              '\n'
@@ -167,7 +167,7 @@ class MinutesHandling(BrowserTest):
              '1.1.2 Arvostellut pro gradu –tutkielmat (liite B/ lista 1)',
              '',
              'Esitys\nTodetaan ilmoitusasiat.',
-             '%%ALLEKIRJOITUKSET%%'])
+             ''])
         plugins = ote_html.cssselect('tim-video')
         self.assertEqual(
             {'doclink': 'https://tim.jyu.fi/files/xxx/tutkinnot.pdf',

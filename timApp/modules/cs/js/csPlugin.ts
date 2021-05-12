@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access,no-underscore-dangle */
 import {
-    Component,
-    ViewChild,
     ChangeDetectorRef,
-    ElementRef,
+    Component,
     Directive,
+    ElementRef,
+    ViewChild,
 } from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {DomSanitizer, SafeResourceUrl} from "@angular/platform-browser";
@@ -32,11 +32,11 @@ import {
     defaultErrorMessage,
     defaultTimeout,
     getClipboardHelper,
-    to2,
+    timeout,
     to,
+    to2,
     valueDefu,
     valueOr,
-    timeout,
 } from "tim/util/utils";
 import {TimDefer} from "tim/util/timdefer";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
@@ -44,15 +44,15 @@ import deepEqual from "deep-equal";
 import {SimcirConnectorDef, SimcirDeviceInstance} from "../simcir/simcir-all";
 import {CellInfo} from "./embedded_sagecell";
 import {getIFrameDataUrl} from "./iframeutils";
-import {Mode, EditorComponent, EditorFile} from "./editor/editor";
+import {EditorComponent, EditorFile, Mode} from "./editor/editor";
 import {CountBoardComponent} from "./editor/countboard";
 import {getInt} from "./util/util";
 import {
-    IFile,
     FileSelectManagerComponent,
+    IFile,
     IFileSpecification,
 } from "./util/file-select";
-import {Set, OrderedSet} from "./util/set";
+import {OrderedSet, Set} from "./util/set";
 
 // TODO better name?
 interface Vid {
@@ -205,6 +205,7 @@ class LanguageTypes {
         "vars",
         "r",
         "ts",
+        "maxima",
     ];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
@@ -256,6 +257,7 @@ class LanguageTypes {
         "text",
         "r",
         "typescript",
+        "matlab",
     ];
 
     // What are known test types (be careful not to include partial word):
@@ -322,10 +324,7 @@ class LanguageTypes {
         if (!type.startsWith("all")) {
             return false;
         }
-        if (type.match(/^all[^a-z0-9]?/)) {
-            return true;
-        }
-        return false;
+        return !!type.match(/^all[^a-z0-9]?/);
     }
 
     getRunType(type: string, def: string) {
@@ -557,7 +556,7 @@ const FileSubmission = t.intersection([
         type: t.string,
     }),
 ]);
-export interface IFileSubmission extends t.TypeOf<typeof FileSubmission> {}
+export type IFileSubmission = t.TypeOf<typeof FileSubmission>;
 
 const UploadedFile = t.type({
     path: t.string,
@@ -627,6 +626,7 @@ const CsMarkupOptional = t.partial({
     buttons: t.string,
     byCode: t.string,
     docurl: t.string,
+    editorreadonly: t.boolean,
     examples: t.array(Example),
     file: t.string,
     filename: t.string,
@@ -665,7 +665,7 @@ const CsMarkupOptional = t.partial({
     useSameFrame: t.boolean,
     variables: t.string,
     width: t.union([t.number, t.string]),
-    wrap: t.Integer,
+    wrap: t.number,
     borders: withDefault(t.boolean, true),
     iframeopts: t.string,
     count: CountType,
@@ -832,6 +832,7 @@ interface IRunResponseWeb {
     console?: string;
     runtime?: string;
     language?: unknown; // determined by language
+    md?: string;
     "-replyImage"?: string;
     "-replyHTML"?: string;
     "-replyMD"?: string;
@@ -847,7 +848,7 @@ interface IFetchResponse {
     files: IFileSubmission[];
 }
 
-interface IRunRequestInput extends Partial<IExtraMarkup> {
+type IRunRequestInput = Partial<IExtraMarkup> & {
     usercode?: string;
     submittedFiles?: IFileSubmission[];
     userinput: string;
@@ -859,7 +860,7 @@ interface IRunRequestInput extends Partial<IExtraMarkup> {
     nosave: boolean;
     type: string;
     selectedLanguage?: string;
-}
+};
 
 export interface IRunRequest {
     input: IRunRequestInput;
@@ -1002,6 +1003,7 @@ export class CsController extends CsBase implements ITimComponent {
             return;
         }
 
+        this.editor.setReadOnly(this.markup.editorreadonly === true);
         if (this.attrsall.submittedFiles || this.markup.files) {
             const files = new OrderedSet<EditorFile>((f) => f.path);
             const defaultMode =
@@ -1209,7 +1211,7 @@ export class CsController extends CsBase implements ITimComponent {
 
         this.errors = [];
         this.result = "";
-        this.htmlresult = "";
+        this.htmlresult = ""; // '<span class="math display">\\[-\\]</span>';
         this.imgURL = "";
         this.runSuccess = false;
         this.copyingFromTauno = false;
@@ -1258,6 +1260,7 @@ export class CsController extends CsBase implements ITimComponent {
             return {saved: false, message: undefined};
         }
         await this.runCode();
+        this.cdr.detectChanges();
         return {saved: true, message: undefined};
     }
 
@@ -1432,7 +1435,7 @@ export class CsController extends CsBase implements ITimComponent {
         return this.english ? "copy from SimCir" : "kopioi SimCiristä";
     }
 
-    get copyToSimCirText() {
+    public get copyToSimCirText() {
         return this.english ? "copy to SimCir" : "kopioi SimCiriin";
     }
 
@@ -1524,6 +1527,10 @@ export class CsController extends CsBase implements ITimComponent {
     handleHTML(s: string): string {
         const regex = /<!-- DELETEBEGIN -->(.|\n)*?<!-- DELETEEND -->/gm;
         s = s.replace(regex, "");
+        s = s.replace(
+            /http:\/\/localhost\/csstatic\//g,
+            window.origin + "/csstatic/"
+        );
         return s;
     }
 
@@ -2058,6 +2065,7 @@ ${fhtml}
         }
 
         this.anyChanged();
+        this.cdr.detectChanges();
     }
 
     anyChanged() {
@@ -2121,12 +2129,13 @@ ${fhtml}
     }
 
     async processPluginMath() {
-        if (!this.isMathCheck) {
-            return;
+        if (this.isMathCheck) {
+            await timeout();
+            await ParCompiler.processMathJaxAsciiMath(this.element[0]);
+        } else if (this.type === "maxima") {
+            await timeout();
+            await ParCompiler.processMathJaxTeX(this.element[0]);
         }
-
-        await timeout();
-        await ParCompiler.processMathJaxAsciiMath(this.element[0]);
     }
 
     runCodeIfCR(event: KeyboardEvent) {
@@ -2135,7 +2144,7 @@ ${fhtml}
         }
     }
 
-    async runCodeCommon(nosave: boolean, extraMarkUp?: IExtraMarkup) {
+    async runCodeCommon(nosave: boolean, _extraMarkUp?: IExtraMarkup) {
         this.runned = true;
         const ty = languageTypes.getRunType(this.selectedLanguage, "cs");
         if (ty === "md") {
@@ -2412,7 +2421,9 @@ ${fhtml}
             // if ( !imgURL ) imgURL = data.web["-replyImage"];
             this.imgURL = data.web["-replyImage"] ?? "";
             this.htmlresult =
-                (data.web["-replyHTML"] ?? "") + (data.web["-replyMD"] ?? "");
+                (data.web.md ?? "") +
+                (data.web["-replyHTML"] ?? "") +
+                (data.web["-replyMD"] ?? "");
             const wavURL = data.web.wav;
             if (data.web.testGreen) {
                 this.runTestGreen = true;
@@ -3264,6 +3275,13 @@ ${fhtml}
             await this.runCode();
         }
     }
+
+    get runChanged(): boolean {
+        if (this.editor?.parsonsEditor) {
+            return false;
+        }
+        return this.byCode !== this.usercode;
+    }
 }
 
 @Component({
@@ -3337,7 +3355,7 @@ ${fhtml}
                     [parsonsWords]="words"
                     (content)="onContentChange($event)">
             </cs-editor>
-            <div class="csRunChanged" *ngIf="usercode !== byCode && !hide.changed"></div>
+            <div class="csRunChanged" *ngIf="runChanged && !hide.changed"></div>
             <div class="csRunNotSaved" *ngIf="isUnSaved()"></div>
         </div>
         <pre class="csRunPost" *ngIf="viewCode && !codeunder && !codeover">{{postcode}}</pre>

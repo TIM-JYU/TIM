@@ -319,8 +319,19 @@ temp_folder_path = Path('/tmp')
 cache_folder_path = Path('/cache')
 
 
+# TODO: Use an email validation library.
 def is_valid_email(email: str) -> bool:
-    return re.match('^[\w.-]+@([\w-]+\.)+[\w-]+$', email) is not None
+    parts = email.split('@')
+    if len(parts) != 2:
+        return False
+    username, domain = parts
+    if username.startswith('.') or username.endswith('.') or '..' in username:
+        return False
+    return (
+            re.match('^[\w.+-]+$', username) is not None
+            and
+            re.match('^([\w-]+\.)+[\w-]{2,}$', domain) is not None
+    )
 
 
 def approximate_real_name(email: str) -> str:

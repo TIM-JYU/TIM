@@ -215,7 +215,7 @@ Koira
 10
 """)
         tree = self.get(d.url, as_tree=True)
-        self.assert_content(tree, ["1", '{"area": "test"}', "Kissa", "3", "4", "5", "6", "Koira",'{"area_end": "test"}'])
+        self.assert_content(tree, ["1", '', "Kissa", "3", "4", "5", "6", "Koira", ''])
 
         # Area inside area.
         d2 = self.create_doc(initial_par="""
@@ -257,9 +257,9 @@ Koira
 #-
 10
 """)
-        self.assert_content(self.get(d2.url, as_tree=True), ["1", '{"area": "test"}', "Kissa", "3",
-                                                             '{"area": "test2"}', "4", '{"area_end": "test2"}',
-                                                             "5", "6", "Koira",'{"area_end": "test"}'])
+        self.assert_content(self.get(d2.url, as_tree=True), ["1", '', "Kissa", "3",
+                                                             '', "4", '',
+                                                             "5", "6", "Koira", ''])
         # Whole document wide area.
         d3 = self.create_doc(initial_par="""
 #- {area="test"}
@@ -284,7 +284,7 @@ Koira
 
 #- {area_end="test"}
 """)
-        self.assert_content(self.get(d3.url, as_tree=True), ['{"area": "test"}', '1', '2', '3', '4', '5', '6', '{"area_end": "test"}'])
+        self.assert_content(self.get(d3.url, as_tree=True), ['', '1', '2', '3', '4', '5', '6', ''])
 
         # Two separate areas, the latter is partially within document part range.
         d3 = self.create_doc(initial_par="""
@@ -312,8 +312,8 @@ Koira
 5
 
 """)
-        self.assert_content(self.get(d3.url, as_tree=True), ['1', '{"area": "test1"}', '2', '{"area_end": "test1"}',
-                                                             '3', '{"area": "test2"}', '4', '{"area_end": "test2"}'])
+        self.assert_content(self.get(d3.url, as_tree=True), ['1', '', '2', '',
+                                                             '3', '', '4', ''])
 
         # Empty area within document.
         d3 = self.create_doc(initial_par="""
@@ -339,7 +339,7 @@ Koira
 #-
 7
 """)
-        self.assert_content(self.get(d3.url, as_tree=True), ['1', '2', '3', '{"area": "test"}', '{"area_end": "test"}', ])
+        self.assert_content(self.get(d3.url, as_tree=True), ['1', '2', '3', '', '', ])
 
         # Broken area within document; handled like a normal par.
         d3 = self.create_doc(initial_par="""
@@ -366,7 +366,7 @@ Koira
 #-
 8
 """)
-        self.assert_content(self.get(d3.url, as_tree=True), ['1', '2', '3', '{"area": "test"}', '5', ])
+        self.assert_content(self.get(d3.url, as_tree=True), ['1', '2', '3', '', '5', ])
 
     # TODO: Test areas + preambles & areas.
 

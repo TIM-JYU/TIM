@@ -7,16 +7,12 @@ import {
     Output,
 } from "@angular/core";
 import humanizeDuration from "humanize-duration";
-import {
-    formatString,
-    ReadonlyMoment,
-    secondsToShortTime,
-    to2,
-} from "tim/util/utils";
+import {formatString, secondsToShortTime, to2} from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import moment from "moment";
 import {HttpClient} from "@angular/common/http";
 import {Changes} from "tim/util/angularchanges";
+import {ReadonlyMoment} from "tim/util/readonlymoment";
 
 // Most browsers don't report precise time to mitigate potential time-based attacks/tracking:
 // https://developer.mozilla.org/en-US/docs/Web/API/Performance/now#Reduced_time_precision

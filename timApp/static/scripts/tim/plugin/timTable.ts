@@ -31,7 +31,6 @@
 // TODO: Use Angular's HTTP service instead of AngularJS $http
 
 import * as t from "io-ts";
-import {getParId} from "tim/document/parhelpers";
 import {
     AfterViewChecked,
     AfterViewInit,
@@ -78,6 +77,7 @@ import {
     showTableEditorToolbar,
 } from "tim/plugin/toolbarUtils";
 import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
+import {createParContext} from "tim/document/structure/parsing";
 import {onClick, OnClickArg} from "../document/eventhandlers";
 import {
     ChangeType,
@@ -150,19 +150,19 @@ export interface CellResponse {
     cellHtml: string;
 }
 
-export interface CellToSave {
+export type CellToSave = {
     row: number;
     col: number;
     c: string;
     key?: undefined;
-}
+};
 
-export interface CellAttrToSave {
+export type CellAttrToSave = {
     row: number;
     col: number;
     c: string;
     key: string;
-}
+};
 
 export interface IRectLimits {
     minx: number;
@@ -976,12 +976,7 @@ export class TimTableComponent
             }
 
             await $timeout(0);
-            const parId = this.getOwnParId();
-            if (parId == null) {
-                console.log("parid null in timtable");
-                return;
-            }
-            this.viewctrl.addTable(this, parId);
+            this.viewctrl.addTable(this, this.getPar());
         }
         this.currentHiddenRows = new Set(this.data.hiddenRows);
         onClick("body", ($this, e) => {
@@ -3596,7 +3591,7 @@ export class TimTableComponent
      * Returns the ID of the paragraph related to the current table instance.
      */
     private getOwnParId() {
-        return getParId(this.element.parents(".par"));
+        return this.getPar().originalPar.id;
     }
 
     /**
@@ -4449,7 +4444,7 @@ export class TimTableComponent
     }
 
     public getPar() {
-        return this.element.parents(".par");
+        return createParContext(this.element.parents(".par")[0]);
     }
 
     resetField() {

@@ -9,8 +9,9 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import * as t from "io-ts";
 import {CommonDialogOptions} from "tim/answer/commondialogoptions";
+import {ReadonlyMoment} from "tim/util/readonlymoment";
 import {$httpParamSerializer} from "../util/ngimport";
-import {ReadonlyMoment, TimStorage, to2} from "../util/utils";
+import {TimStorage, to2} from "../util/utils";
 
 const AnswersDialogOptions = t.intersection([
     t.type({

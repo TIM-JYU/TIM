@@ -208,11 +208,6 @@ a .glyphicon {
         right: 0;
     }
 
-    .mdcontent {
-        color: #DCDCDC;
-        display: none;
-    }
-
     table {
         @extend .table, .table-condensed, .table-bordered;
         width: auto;
@@ -477,7 +472,7 @@ p.caption {
     border-radius: 5px;
     background: inherit;
 
-    .editline, .readline, .arealine, .areaeditline1, .areaeditline2, .areaeditline3 {
+    .editline, .readline {
         display: none;
     }
 
@@ -558,10 +553,6 @@ a.timButton {
     border-color: $readline-color;
 }
 
-.areareadline {
-    @extend .readline
-}
-
 .readsection {
     position: absolute;
     right: $readline-offset - 1em;
@@ -599,57 +590,68 @@ a.timButton {
     }
 }
 
-.areaeditline {
-    opacity: 0;
-    position: absolute;
-    left: -$areaeditline-width;
-    width: $areaeditline-width;
-    height: 100%;
-    top: 0;
-
-    &.show {
-        opacity: 0.2;
+.editmode {
+    [data-area]::before {
+        content: "Area name: " attr(data-area);
+        color: gray;
     }
 
-    &:hover, &.manualhover, &.menuopen, &.show.menuopen {
-        opacity: 0.5;
+    .areaContent {
+        border: 1px solid $basic-color;
+        border-radius: 5px;
+
+        .parContent {
+            min-height: 20px;
+        }
+
+        & > .par:first-child > .parContent::before {
+            content: 'Area start paragraph';
+            font-size: $font-size-base;
+            font-style: italic;
+            color: gray;
+        }
+
+        & > .par:last-child > .parContent::before {
+            content: 'Area end paragraph';
+            font-size: $font-size-base;
+            font-style: italic;
+            color: gray;
+        }
+
+        margin-bottom: 3px;
     }
-}
 
-.areaeditline1 {
-    @extend .areaeditline;
-    background: #d874ff; /* rgb(236,103,27); */
-
-    @media (max-width: $screen-xs-max) {
-        left: 0;
+    .areaexpand {
+        border: 1px solid $basic-color;
+        border-radius: 5px;
+        margin-bottom: 3px;
     }
-}
 
-.areaeditline2 {
-    @extend .areaeditline;
-    background: #b2aaff; /* rgb(236,103,27); */
-    left: -2 * $areaeditline-width;
-    width: $areaeditline-width;
+    .areacollapse {
+        border: 1px solid $basic-color;
+        border-bottom: none;
+        border-radius: 5px 5px 0 0;
 
-    @media (max-width: $screen-xs-max) {
-        left: $areaeditline-width;
+        .areatitle p {
+            margin: 0;
+        }
+
+        & + .area {
+            .areaContent::before {
+                content: unset;
+            }
+
+            .par:first-child > .parContent::before {
+                content: unset;
+            }
+
+            .areaContent {
+                border-top: none;
+                border-top-left-radius: 0;
+                border-top-right-radius: 0;
+            }
+        }
     }
-}
-
-.areaeditline3 {
-    @extend .areaeditline;
-    left: -3 * $areaeditline-width;
-    width: $areaeditline-width;
-    background: #ff9851; /* rgb(236,103,27); */
-
-    @media (max-width: $screen-xs-max) {
-        left: 2 * $areaeditline-width;
-    }
-}
-
-.area {
-    // required for correct positioning of area edit line
-    position: relative;
 }
 
 .areacollapse, .areaexpand {
@@ -665,30 +667,6 @@ a.timButton {
         color: $areacollapse-color;
         z-index: 5; /* to be top of editline */
     }
-}
-
-.areapartline::before {
-    color: #D8D8D8;
-    content: "|";
-}
-
-.arealine {
-    position: absolute;
-    left: -4.5em;
-    z-index: 2;
-    width: 1.5em;
-    height: 100%;
-    top: 0;
-    cursor: pointer;
-}
-
-.areapartline {
-    position: absolute;
-    left: -2.25em;
-    z-index: 2;
-    width: 0.2em;
-    height: 100%;
-    top: 0;
 }
 
 .par {
@@ -711,32 +689,6 @@ a.timButton {
 
     &.marked {
         background-color: rgba(134, 217, 209, 0.35);
-    }
-
-    &.editmode.deleted {
-        background-color: #ffc7c7;
-    }
-
-    &.editmode.deleted.lightselect {
-        background-color: #ffb5b3;
-    }
-
-    &.editmode.deleted.selected {
-        background-color: #ffa594;
-    }
-
-    &.deleted {
-        background-color: #fff7f7;
-    }
-
-    &.deleted.lightselect {
-    }
-
-    &.deleted.selected {
-    }
-
-    &.deleted.marked {
-        background-color: #92D1CE;
     }
 
     .readline {
@@ -1005,11 +957,6 @@ pre.sagecell_pyout {
 
 pre.sagecell_stdout {
     border: none;
-}
-
-button:disabled, input[type="submit"]:disabled, input[type="button"]:disabled, .areaEditButton[disabled]:hover {
-    background: #AAA;
-    color: #CCC;
 }
 
 .borderless {

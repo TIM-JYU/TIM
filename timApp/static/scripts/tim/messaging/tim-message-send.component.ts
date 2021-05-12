@@ -106,8 +106,6 @@ export class TimMessageComponent {
         archive: false,
         important: false,
         isPrivate: false,
-        /* VIESTIM: check that urls listed in pageList exist in TIM (and user has at least edit permission to them) and inform user if not.*/
-        /* VIESTIM: shorten urls listed in pageList and show them to user */
         pageList: "",
         readReceipt: false,
         reply: false,
@@ -167,6 +165,9 @@ export class TimMessageComponent {
     // resets form to it's initial values
     resetForm() {
         this.messageMsg = "Sent!";
+        setTimeout((): void => {
+            this.messageMsg = "";
+        }, 5000);
         this.messageSubject = "";
         this.messageBody = "";
         this.showOptions = false;

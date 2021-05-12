@@ -1,11 +1,16 @@
+import json
 from datetime import datetime
 from typing import List
+from unittest.mock import patch
 
+from timApp import tim_celery
 from timApp.admin.answer_cli import delete_old_answers
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_users_for_tasks, save_answer, get_existing_answers_info
+from timApp.answer.backup import get_backup_answer_file
 from timApp.plugin.taskid import TaskId
 from timApp.tests.server.timroutetest import TimRouteTest
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 
@@ -76,29 +81,30 @@ class AnswerTest(TimRouteTest):
         db.session.commit()
 
         exported = self.get(f'/exportAnswers/{d.path}')
-
+        old_path = d.path
         d = self.create_doc()
+        path_map = {old_path: d.path}
         self.json_post(
-            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            f'/importAnswers', {'answers': exported, 'doc_map': path_map},
             expect_content='This action requires administrative rights.',
             expect_status=403,
         )
         self.make_admin(self.current_user)
         self.json_post(
-            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            f'/importAnswers', {'answers': exported, 'doc_map': path_map},
             expect_content={'imported': 3, 'skipped_duplicates': 0, 'missing_users': []},
         )
         self.json_post(
-            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            f'/importAnswers', {'answers': exported, 'doc_map': path_map},
             expect_content={'imported': 0, 'skipped_duplicates': 3, 'missing_users': []},
         )
         exported[0]['email'] = 'xxx'
         self.json_post(
-            f'/importAnswers', {'answers': exported, 'doc': d.path, 'allow_missing_users': True},
+            f'/importAnswers', {'answers': exported, 'doc_map': path_map, 'allow_missing_users': True},
             expect_content={'imported': 0, 'skipped_duplicates': 2, 'missing_users': ['xxx']},
         )
         self.json_post(
-            f'/importAnswers', {'answers': exported, 'doc': d.path},
+            f'/importAnswers', {'answers': exported, 'doc_map': path_map},
             expect_content='Email(s) not found: xxx',
             expect_status=400,
         )
@@ -174,3 +180,35 @@ class AnswerTest(TimRouteTest):
         self.assertEqual(2, len(anss))
         self.assertEqual('y2inv', anss[0].content_as_json.get('c'))
         self.assertEqual('y2', anss[1].content_as_json.get('c'))
+
+    def test_answer_backup(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=textfield #t}
+        """)
+        task_id = f'{d.id}.t'
+        with self.temp_config({
+            'BACKUP_ANSWER_SEND_SECRET': 'xxx',
+            'BACKUP_ANSWER_RECEIVE_SECRET': 'xxx',
+            'BACKUP_ANSWER_HOST': f'http://{app.config["INTERNAL_PLUGIN_DOMAIN"]}:5001',
+        }):
+            with patch.object(tim_celery.send_answer_backup, 'delay', wraps=tim_celery.do_send_answer_backup) as m:  # type: Mock
+                with self.internal_container_ctx():
+                    self.post_answer('textfield', task_id, user_input={'c': '1'})
+                    self.post_answer('textfield', task_id, user_input={'c': '2'})
+                self.assertEqual(2, m.call_count)
+        anss: List[Answer] = self.test_user_1.answers.filter_by(task_id=task_id).order_by(Answer.id.asc()).all()
+        with get_backup_answer_file().open() as f:
+            backup_content = f.read()
+        json_str = f'[{",".join(backup_content.splitlines())}]'
+        for a, backup in zip(anss, json.loads(json_str)):
+            self.assertEqual({
+                'content': a.content,
+                'email': self.test_user_1.email,
+                'points': None,
+                'task': 't',
+                'time': a.answered_on.isoformat(),
+                'valid': True,
+                'doc': d.path,
+                'host': 'http://localhost',
+            }, backup)

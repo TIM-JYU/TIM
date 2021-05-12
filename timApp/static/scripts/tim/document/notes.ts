@@ -6,6 +6,8 @@ import {getCurrentEditor} from "tim/editor/editorScope";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
+import {ParContext} from "tim/document/structure/parContext";
+import {fromParents} from "tim/document/structure/parsing";
 import {IPluginInfoResponse} from "../editor/parCompiler";
 import {PareditorController} from "../editor/pareditor";
 import {IModalInstance} from "../ui/dialog";
@@ -15,17 +17,12 @@ import {isMobileDevice, TimStorage, to} from "../util/utils";
 import {
     EditPosition,
     EditType,
+    extraDataForServer,
     IExtraData,
     IParResponse,
 } from "./editing/edittypes";
 import {onClick} from "./eventhandlers";
-import {
-    addElementToParagraphMargin,
-    getFirstParId,
-    isActionablePar,
-    Paragraph,
-    ParOrArea,
-} from "./parhelpers";
+import {addElementToParagraphMargin} from "./parhelpers";
 import {handleUnread, markParRead, ReadingType} from "./readings";
 import {ViewCtrl} from "./viewctrl";
 
@@ -51,7 +48,7 @@ export class NotesHandler {
     private hideVars: IVisibilityVars = getVisibilityVars();
     public sc: IScope;
     public viewctrl: ViewCtrl;
-    public noteBadgePar: JQuery | undefined;
+    public noteBadgePar: ParContext | undefined;
     public noteBadge: HTMLElement | undefined;
     private editorInstance?: IModalInstance<PareditorController>;
     public editor?: PareditorController;
@@ -71,15 +68,16 @@ export class NotesHandler {
                 );
                 return;
             }
-            this.toggleNoteEditor($this.parents(".par"), {noteData: {id: id}});
+            const par = fromParents($this);
+            if (par.isHelp) {
+                return;
+            }
+            this.toggleNoteEditor(par, {noteData: {id: id}});
             return true;
         });
     }
 
-    async toggleNoteEditor(
-        parOrArea: ParOrArea,
-        options: INoteEditorOptions = {}
-    ) {
+    async toggleNoteEditor(par: ParContext, options: INoteEditorOptions = {}) {
         if (getCurrentEditor() || this.editorInstance || this.editorLoad) {
             // Double-clicking a comment will trigger this message, but it seems like on Chrome, the message dialog
             // interferes with the editor dialog if it opens first, making the editor invisible.
@@ -90,10 +88,6 @@ export class NotesHandler {
         }
         let caption = "Edit comment";
         if (!this.viewctrl.item.rights.can_comment) {
-            return;
-        }
-        const parId = getFirstParId(parOrArea);
-        if (!parId) {
             return;
         }
         let url: string;
@@ -138,10 +132,13 @@ export class NotesHandler {
         const extraData: IExtraData = {
             docId: this.viewctrl.docId,
             isComment: true,
-            par: parId,
+            par: par,
             ...data,
         };
-        const params: EditPosition = {type: EditType.Edit, pars: parOrArea};
+        const params: EditPosition = {
+            type: EditType.CommentAction,
+            par: par,
+        };
         this.viewctrl.editing = true;
         this.editorLoad = openEditor({
             extraData,
@@ -179,7 +176,10 @@ export class NotesHandler {
             },
             deleteCb: async () => {
                 const r = await to(
-                    $http.post<IParResponse>(`/deleteNote`, extraData)
+                    $http.post<IParResponse>(`/deleteNote`, {
+                        id: options.noteData?.id,
+                        ctx: par.getJsonForServer(),
+                    })
                 );
                 if (!r.ok) {
                     return {error: r.result.data.error};
@@ -195,7 +195,7 @@ export class NotesHandler {
                 const r = await to(
                     $http.post<IPluginInfoResponse>(
                         `/preview/${this.viewctrl.docId}`,
-                        {text, proofread, ...extraData}
+                        {text, proofread, ...extraDataForServer(extraData)}
                     )
                 );
                 if (!r.ok) {
@@ -205,7 +205,13 @@ export class NotesHandler {
             },
             saveCb: async (text, eData) => {
                 const r = await to(
-                    $http.post<IParResponse>(url, {text, ...eData})
+                    $http.post<IParResponse>(url, {
+                        id: options.noteData?.id,
+                        text: text,
+                        access: eData.access,
+                        tags: eData.tags,
+                        ctx: par.getJsonForServer(),
+                    })
                 );
                 if (!r.ok) {
                     return {error: r.result.data.error};
@@ -230,7 +236,7 @@ export class NotesHandler {
         this.viewctrl.editing = false;
     }
 
-    showNoteWindow(e: MouseEvent, par: Paragraph) {
+    showNoteWindow(e: MouseEvent, par: ParContext) {
         this.toggleNoteEditor(par);
     }
 
@@ -238,7 +244,7 @@ export class NotesHandler {
      * Creates the note badge button (the button with letter 'C' on it).
      * @param par - Element where the badge needs to be attached
      */
-    createNoteBadge(par: Paragraph) {
+    createNoteBadge(par: ParContext) {
         this.noteBadgePar = par;
         if (this.noteBadge) {
             // var parent = getElementParent(sc.noteBadge);
@@ -274,41 +280,19 @@ export class NotesHandler {
         }
     }
 
-    setNotePadge($event: Event) {
-        if (!$event.target || this.viewctrl.actionsDisabled) {
-            return;
-        }
-        $event.stopPropagation();
-        let par = $($event.target as HTMLElement);
-        if (!par.hasClass("par")) {
-            par = par.parents(".par");
-        }
-        this.updateNoteBadge(par);
-    }
-
     /**
      * Moves the note badge to the correct element.
      * @param par - Element where the badge needs to be attached
      */
-    updateNoteBadge(par: Paragraph) {
-        if (this.hideVars.noteBadgeButton) {
+    updateNoteBadge(par: ParContext) {
+        if (this.hideVars.noteBadgeButton || this.viewctrl.actionsDisabled) {
             return;
         }
-        if (!par) {
-            return;
-        }
-        if (!isActionablePar(par)) {
-            return;
-        }
-        if (par.parents(".previewcontent").length > 0) {
+        if (!par.isActionable()) {
             return;
         }
         markParRead(par, ReadingType.ClickPar);
-        const newElement = par[0];
-        if (!newElement) {
-            return;
-        }
-        addElementToParagraphMargin(newElement, this.createNoteBadge(par));
+        addElementToParagraphMargin(par, this.createNoteBadge(par));
     }
 
     /**

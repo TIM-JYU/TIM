@@ -357,7 +357,7 @@ class FeedbackController
             const name = this.attrs.questionItems[index].pluginNames[0];
             const plugin = this.vctrl.getTimComponentByName(name);
             if (plugin) {
-                const node = plugin.getPar().children(".parContent")[0];
+                const node = plugin.getPar().getContent();
                 this.changeVisibility(node, show);
             }
         }
@@ -387,7 +387,7 @@ class FeedbackController
      * @param component The component and paragraph around it to be hidden.
      */
     hideComponent(component: ITimComponent) {
-        const node = component.getPar().children(".parContent")[0];
+        const node = component.getPar().getContent();
         this.changeVisibility(node, false);
     }
 
@@ -1009,10 +1009,10 @@ class FeedbackController
 
         if (timComponent) {
             const par = timComponent.getPar();
-            const content = par.children(".parContent");
+            const content = par.getContent();
             // Add additional nodes to be accepted if the need arises.
             const treeWalker = document.createTreeWalker(
-                content[0],
+                content,
                 NodeFilter.SHOW_ALL,
                 {
                     acceptNode: (node) => {
@@ -1230,7 +1230,7 @@ class FeedbackController
                         );
                         if (plugin) {
                             const par = plugin.getPar();
-                            this.showParagraph(par.children(".parContent")[0]);
+                            this.showParagraph(par.getContent());
                         }
                     }
                 }
@@ -1244,7 +1244,7 @@ class FeedbackController
                         );
                         if (plugin) {
                             const par = plugin.getPar();
-                            this.hideParagraph(par.children(".parContent")[0]);
+                            this.hideParagraph(par.getContent());
                         }
                     }
                 }

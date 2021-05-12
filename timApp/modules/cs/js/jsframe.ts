@@ -37,7 +37,6 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
-import {getParId} from "tim/document/parhelpers";
 import {TimDefer} from "tim/util/timdefer";
 import {
     ICtrlWithMenuFunctionEntry,
@@ -380,10 +379,7 @@ export class JsframeComponent
             })();
         }
         if (this.isDrawio()) {
-            const parId = getParId(this.getPar());
-            if (parId) {
-                this.viewctrl.addParMenuEntry(this, parId);
-            }
+            this.viewctrl.addParMenuEntry(this, this.getPar());
             if (this.isTask() && !this.getTaskId()) {
                 this.error = "Task-mode on but TaskId is missing!";
             }
@@ -527,7 +523,7 @@ export class JsframeComponent
             url = "/jsframe/drawIOData";
             params = {
                 data: unwrapAllC(data).c,
-                par_id: getParId(this.getPar()),
+                par_id: this.getPar().originalPar.id,
                 doc_id: this.viewctrl.docId,
             };
         }

@@ -1,9 +1,16 @@
-Luku
-Luku jolle voidaan antaa arvoväli
-``` {#PLUGINNAMEHERE plugin="csPlugin"}
-type: text/tiny
--pointsRule:
-    numberRule: "pisteitä 1 jos yli 3 mutta alle 6"
-cols: 3
-stem: "Anna luku väliltä 3-6"
+True/False
+Kysymys jossa on monta True/False tyyppistä vaihtoehto
+``` {#PLUGINNAMEHERE dquestion="true" plugin="qst"}
+answerFieldType: radio
+answerLimit: 1
+expl: {}
+headers:
+- 'True'
+- 'False'
+questionText: Kysymyksen otsikko
+questionTitle: kysymys1
+questionType: true-false
+rows:
+- Ensimmäisen kysymyksen teksti
+- Toisen kysymyksen teksti
 ```

@@ -31,10 +31,9 @@ const RectangleOrEllipse = t.intersection([
 
 export type TuplePoint = t.TypeOf<typeof TuplePointR>;
 
-export interface ILineSegment extends t.TypeOf<typeof LineSegment> {}
+export type ILineSegment = t.TypeOf<typeof LineSegment>;
 
-export interface IRectangleOrEllipse
-    extends t.TypeOf<typeof RectangleOrEllipse> {}
+export type IRectangleOrEllipse = t.TypeOf<typeof RectangleOrEllipse>;
 
 export interface IFakeVideo {
     currentTime: number;

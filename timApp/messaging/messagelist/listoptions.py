@@ -3,6 +3,20 @@ from enum import Enum
 from typing import Dict, Optional
 
 
+class Channel(Enum):
+    """The message channels TIM uses and provides for message lists."""
+    TIM_MESSAGE = 'tim_message'
+    EMAIL_LIST = 'email_list'
+    # EMAIL = 3
+
+
+@dataclass
+class Distribution:
+    """"""
+    tim_message: bool
+    email_list: bool
+
+
 class ArchiveType(Enum):
     """Different supported archive types."""
     # If you change this, make sure the mapping for Mailman's archive policies is also updated at
@@ -14,9 +28,9 @@ class ArchiveType(Enum):
     SECRET = 1
     # For group and it's members' eyes only. Equal for Mailman's archive policy of 'private'.
     GROUPONLY = 2
-    # Anyone with a link can access archive. No direct correlation with Mailman's archive policies.
-    UNLISTED = 3
-    # Completely public (and advertised) archive. Equals to Mailman's archive policy of 'public'.
+    # Logged in TIM users can see the list.
+    UNLISTED = 3  # TODO: Maybe refactor the name to be more descriptive?
+    # Completely public archive. Equals to Mailman's archive policy of 'public'.
     PUBLIC = 4
 
 
@@ -32,20 +46,59 @@ class ReplyToListChanges(Enum):
 @dataclass
 class ListOptions:
     """All options regarding message lists."""
-    listname: str
-    domain: str
+    name: str
+    """The name of the message list. A mandatory value when list options are concidered."""
+
     # VIESTIM: Enums need this to help marshmallow decipher JSON values in from client side properly.
     archive: ArchiveType = field(metadata={'by_value': True})
-    notifyOwnerOnListChange: bool
-    htmlAllowed: bool
-    defaultReplyType: ReplyToListChanges = field(metadata={'by_value': True})
-    listDescription: Optional[str] = None
-    listInfo: Optional[str] = None
-    emailAdminURL: Optional[str] = None
-    # TODO: Add following fields to list options (and to TS side)
-    # userCanUnsubscribe: bool
-    # defaultSendRight: bool
-    # defaultDeliveryRight: bool
+    """The type of archive policy this list uses."""
+
+    default_reply_type: Optional[ReplyToListChanges] = field(metadata={'by_value': True}, default=None)
+    """The default reply type of the list."""
+
+    notify_owners_on_list_change: Optional[bool] = None
+    """A flag that determines if owners of the message list are notified of certain changes regarding the list, 
+    e.g. a new user joins the list. """
+
+    only_text: Optional[bool] = None
+    """If only pure text is allowed on a list."""
+
+    list_description: Optional[str] = None
+    """A short description of the list and it's purpose."""
+
+    list_info: Optional[str] = None
+    """Additional information about the list."""
+
+    email_admin_url: Optional[str] = None
+    """If the message list has an email list associated with it, this is the link to Mailman's advanced list 
+    controls. """
+
+    tim_users_can_join: Optional[bool] = None
+    """Flag used to determine if TIM users can directly join this list."""
+
+    members_can_unsubscribe: Optional[bool] = None
+    """Flag used to determine if the TIM members of this list can leave the list on their own."""
+
+    default_send_right: Optional[bool] = None
+    """The list's default send right for (new) members."""
+
+    default_delivery_right: Optional[bool] = None
+    """The list's default delivery right for (new) members."""
+
+    list_subject_prefix: Optional[str] = None
+    """Messages routed by a message list will have this subject prefix added to them."""
+
+    domain: Optional[str] = None
+    """The domain of the message list, if it has email list associated with it."""
+
+    non_member_message_pass: Optional[bool] = None
+    """A flag that controls if messages from non members are automatically passed to the list."""
+
+    allow_attachments: Optional[bool] = None
+    """A flag controlling if attachments are allowed on the list."""
+
+    distribution: Optional[Distribution] = None  # List[Channel] = field(default_factory=list)
+    """All the message channels the list is using."""
 
 
 reply_to_munging: Dict[ReplyToListChanges, str] = {

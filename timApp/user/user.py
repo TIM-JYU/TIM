@@ -2,7 +2,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from typing import Optional, Union, Set
 
 from sqlalchemy import func
@@ -493,15 +493,22 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             )
         return q
 
-    def add_to_group(self, ug: UserGroup, added_by: Optional['User']):
+    def add_to_group(self, ug: UserGroup, added_by: Optional['User']) -> bool:
+        # Local import to avoid cyclical importing.
+        from timApp.messaging.messagelist.messagelist_utils import sync_message_list_on_add
         existing: UserGroupMember = self.id is not None and self.memberships_dyn.filter_by(group=ug).first()
         if existing:
             existing.membership_end = None
             existing.adder = added_by
-            return False
+            new_add = False
         else:
             self.memberships.append(UserGroupMember(group=ug, adder=added_by))
-            return True
+            new_add = True
+
+        # TODO: Enable syncing when the syncing is fixed.
+        # On changing of group, sync this person to the user goup's message lists.
+        # sync_message_list_on_add(self, ug)
+        return new_add
 
     @staticmethod
     def get_scimuser() -> 'User':
@@ -699,11 +706,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 'email': f'user{self.id}@example.com',
             }
 
-    def to_json(self, full=False):
+    def to_json(self, full: bool=False) -> Dict:
         return {**self.basic_info_dict,
                 'group': self.get_personal_group(),
                 'groups': self.groups,
-                'folder': self.get_personal_folder(),
+                'folder': self.get_personal_folder() if self.logged_in else None,
                 'consent': self.consent,
                 'last_name': self.last_name,
                 } if full else self.basic_info_dict

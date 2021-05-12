@@ -673,3 +673,11 @@ class PermissionTest(TimRouteTest):
         db.session.rollback()
         d = DocEntry.find_by_id(d.id)
         self.assertFalse(self.test_user_2.has_view_access(d))
+
+    def test_access_denied_message(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.login_test2()
+        self.get(d.url, expect_status=403, expect_contains="Sorry, you don't have permission to access this resource.")
+        d.document.set_settings({'access_denied_message': 'You cannot see this.'})
+        self.get(d.url, expect_status=403, expect_contains="You cannot see this.")

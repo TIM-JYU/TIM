@@ -18,6 +18,8 @@ import {
     isCoordWithinDrawing,
 } from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {ParContext} from "tim/document/structure/parContext";
+import {createParContext} from "tim/document/structure/parsing";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
@@ -87,7 +89,7 @@ function tryCreateRange(
  */
 export class ReviewController {
     private selectedArea?: Range;
-    public selectedElement?: Element;
+    public selectedElement?: ParContext;
     private selectionIsDrawing = false; // whether the review area is for drawn annotations or not
     private selectedCanvas?: DrawCanvasComponent; // drawn annotation area
     private drawMinDimensions = 10; // minimum width/height for drawn velp. If less then add extra padding
@@ -96,7 +98,7 @@ export class ReviewController {
     public zIndex: number;
     private scope: IScope;
     private velpBadge?: HTMLInputElement;
-    private velpBadgePar?: string;
+    private velpBadgePar?: ParContext;
     private velpSelection?: VelpSelectionController; // initialized through onInit
     public velpMode: boolean;
     public velps?: IVelpUI[];
@@ -120,7 +122,9 @@ export class ReviewController {
             if (range && range.toString().length > 0) {
                 this.selectionIsDrawing = false;
                 this.selectText(
-                    $(range.startContainer).parents(".par")[0] as Element
+                    createParContext(
+                        $(range.startContainer).parents(".par")[0] as Element
+                    )
                 );
                 $rootScope.$applyAsync();
             }
@@ -147,38 +151,28 @@ export class ReviewController {
 
         for (const a of this.annotations) {
             const placeInfo = a.coord;
-            const parent = document.getElementById(placeInfo.start.par_id);
+            const e = document.getElementById(placeInfo.start.par_id);
 
-            if (parent == null) {
+            if (e == null) {
                 // TODO: Decide what to do, when parent element has been deleted, for now remove annotation from list
                 annotationsToRemove.push(a);
                 continue;
             }
-
+            const parent = createParContext(e);
             if (a.answer != null) {
-                if (!parent.classList.contains("has-annotation")) {
-                    parent.classList.add("has-annotation");
+                if (!parent.hasClass("has-annotation")) {
+                    parent.addClass("has-annotation");
                 }
                 continue;
             }
 
             if (
-                parent.getAttribute("t") === placeInfo.start.t &&
+                parent.par.hash === placeInfo.start.t &&
                 isFullCoord(placeInfo.start) &&
                 isFullCoord(placeInfo.end)
             ) {
                 try {
-                    let elements = parent.querySelector(".parContent");
-                    if (elements == null) {
-                        this.addAnnotationToMargin(
-                            parent,
-                            a,
-                            AnnotationAddReason.LoadingExisting,
-                            AnnotationPlacement.InMarginOnly
-                        );
-                        return;
-                    }
-
+                    let elements = parent.getContent();
                     const startElpath = placeInfo.start.el_path;
 
                     for (const p of startElpath) {
@@ -309,8 +303,10 @@ export class ReviewController {
      * Removes answer annotations from the paragraph margin
      * @param par Paragraph to inspect
      */
-    clearAnswerAnnotationsFromParMargin(par: Element): void {
-        const oldAnnotations = par.querySelectorAll(".notes [aid]");
+    clearAnswerAnnotationsFromParMargin(par: ParContext): void {
+        const oldAnnotations = par.par.htmlElement.querySelectorAll(
+            ".notes [aid]"
+        );
         for (const ele of oldAnnotations) {
             // aid cannot be null here because the above selector has [aid]
             const aid = ele.getAttribute("aid")!;
@@ -329,7 +325,10 @@ export class ReviewController {
      * @param answerId - Optional answer ID
      * @param par - Paragraph element
      */
-    loadAnnotationsToAnswer(answerId: number | undefined, par: Element): void {
+    loadAnnotationsToAnswer(
+        answerId: number | undefined,
+        par: ParContext
+    ): void {
         this.clearAnswerAnnotationsFromParMargin(par);
         if (answerId == undefined) {
             return;
@@ -339,7 +338,9 @@ export class ReviewController {
             const placeInfo = a.coord;
             let added = false;
             if (a.draw_data) {
-                const targ = par.querySelector(".canvasObjectContainer");
+                const targ = par.par.htmlElement.querySelector(
+                    ".canvasObjectContainer"
+                );
                 if (targ) {
                     const rect = getDrawingDimensions(
                         a.draw_data,
@@ -377,7 +378,8 @@ export class ReviewController {
             } else {
                 // end if (a.draw_data)
 
-                const element = par.querySelector(".review pre")?.firstChild;
+                const element = par.par.htmlElement.querySelector(".review pre")
+                    ?.firstChild;
 
                 if (
                     !isFullCoord(placeInfo.start) ||
@@ -499,7 +501,7 @@ export class ReviewController {
      * @param reason - The reason why the annotation is put here (not implemented yet)
      */
     addAnnotationToMargin(
-        el: Element,
+        el: ParContext,
         annotation: Annotation,
         show: AnnotationAddReason,
         reason: AnnotationPlacement
@@ -520,7 +522,7 @@ export class ReviewController {
     /**
      * Creates the velp badge button (the button with letter 'V' on it).
      */
-    createVelpBadge(par: string): HTMLInputElement {
+    createVelpBadge(par: ParContext): HTMLInputElement {
         this.velpBadgePar = par;
         if (this.velpBadge) {
             // $compile(this.velpBadge)(this);
@@ -547,21 +549,19 @@ export class ReviewController {
      * @param newElement - Element where the badge needs to be attached
      */
     updateVelpBadge(
-        oldElement: Element | undefined,
-        newElement: Element | null
+        oldElement: ParContext | undefined,
+        newElement: ParContext
     ): void {
-        if (newElement == null) {
-            return;
-        } else if (oldElement == null) {
+        if (oldElement == null) {
             addElementToParagraphMargin(
                 newElement,
-                this.createVelpBadge(newElement.id)
+                this.createVelpBadge(newElement)
             );
-        } else if (oldElement.id !== newElement.id) {
+        } else if (oldElement.equals(newElement)) {
             this.clearVelpBadge(null);
             addElementToParagraphMargin(
                 newElement,
-                this.createVelpBadge(newElement.id)
+                this.createVelpBadge(newElement)
             );
         }
     }
@@ -641,7 +641,7 @@ export class ReviewController {
      * Selects text range or just the element.
      * @todo When annotations can break tags, check annotations from all elements in the selection.
      */
-    selectText(par: Element): void {
+    selectText(par: ParContext): void {
         if (!this.velpSelection) {
             return;
         }
@@ -666,7 +666,7 @@ export class ReviewController {
         }
 
         const newElement = this.selectedElement;
-        this.updateVelpBadge(oldElement, newElement ?? null);
+        this.updateVelpBadge(oldElement, newElement);
         if (newElement != null) {
             this.velpSelection.updateVelpList();
         }
@@ -800,12 +800,7 @@ export class ReviewController {
         if (!this.selectedElement) {
             return;
         }
-        return truncate(
-            this.selectedElement
-                .querySelector(".parContent")
-                ?.textContent?.trim() ?? "",
-            20
-        );
+        return truncate(this.selectedElement.textContent()?.trim() ?? "", 20);
     }
 
     /**
@@ -837,7 +832,7 @@ export class ReviewController {
         const newAnnotation = new NewAnnotation(velp, Users.getCurrent(), null);
         let coord: IAnnotationInterval;
         if (this.selectionIsDrawing) {
-            const targ = this.selectedElement.querySelector(
+            const targ = this.selectedElement.par.htmlElement.querySelector(
                 ".canvasObjectContainer"
             );
             if (!this.selectedCanvas || !targ) {
@@ -855,10 +850,7 @@ export class ReviewController {
                 corners.w,
                 corners.h
             );
-            let parelement: Element | null = this.selectedElement;
-            while (parelement && !parelement.hasAttribute("t")) {
-                parelement = getElementParent(parelement);
-            }
+            const parelement = this.selectedElement;
             if (!parelement) {
                 showMessageDialog(
                     "Could not add annotation (parelement missing)"
@@ -877,7 +869,10 @@ export class ReviewController {
             targ.appendChild(borderElement);
             const ann = await this.addAnnotation(
                 newAnnotation,
-                {start: {par_id: parelement.id}, end: {par_id: parelement.id}},
+                {
+                    start: {par_id: parelement.par.id},
+                    end: {par_id: parelement.par.id},
+                },
                 velp
             );
             ann.draw_data = velpDrawing;
@@ -894,12 +889,12 @@ export class ReviewController {
 
             coord = {
                 start: {
-                    par_id: parelement.id,
-                    t: parelement.getAttribute("t") ?? undefined,
+                    par_id: parelement.par.id,
+                    t: parelement.par.hash,
                 },
                 end: {
-                    par_id: parelement.id,
-                    t: parelement.getAttribute("t") ?? undefined,
+                    par_id: parelement.par.id,
+                    t: parelement.par.hash,
                 },
             };
             this.addAnnotationToMargin(
@@ -1018,12 +1013,12 @@ export class ReviewController {
         } else {
             coord = {
                 start: {
-                    par_id: this.selectedElement.id,
-                    t: this.selectedElement.getAttribute("t") ?? undefined,
+                    par_id: this.selectedElement.par.id,
+                    t: this.selectedElement.par.hash,
                 },
                 end: {
-                    par_id: this.selectedElement.id,
-                    t: this.selectedElement.getAttribute("t") ?? undefined,
+                    par_id: this.selectedElement.par.id,
+                    t: this.selectedElement.par.hash,
                 },
             };
 
@@ -1084,9 +1079,11 @@ export class ReviewController {
      * @param start - Paragraph where the answerbrowser element is searched for.
      * @returns {Element|null} answerbrowser element or null.
      */
-    getAnswerInfo(start: Element): IAnswer | undefined {
-        if (start.hasAttribute("attrs") && start.hasAttribute("t")) {
-            const answ = start.getElementsByTagName("tim-plugin-loader");
+    getAnswerInfo(start: ParContext | Element): IAnswer | undefined {
+        if (start instanceof ParContext) {
+            const answ = start.par.htmlElement.getElementsByTagName(
+                "tim-plugin-loader"
+            );
             if (answ.length > 0) {
                 const first = answ[0];
                 const isInline = first.classList.contains("inlineplugin");
@@ -1490,7 +1487,7 @@ export class ReviewController {
                 const par = $(canvas.canvas.nativeElement).parents(
                     ".par"
                 )[0] as Element;
-                this.selectedElement = par;
+                this.selectedElement = createParContext(par);
                 this.selectedCanvas = canvas;
             } else if (this.selectedCanvas == canvas) {
                 this.selectionIsDrawing = false;

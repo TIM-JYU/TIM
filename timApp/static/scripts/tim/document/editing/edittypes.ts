@@ -1,3 +1,7 @@
+import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
+import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
+import {ParContext} from "tim/document/structure/parContext";
+
 export type PendingCollection = Map<string, string>;
 
 export interface IParResponse {
@@ -13,28 +17,23 @@ export interface IParResponse {
 
 export interface IManageResponse {
     duplicates: Duplicate[];
-    versions: Array<unknown>; // TODO give accurate type
+    versions: Array<IChangelogEntry>;
     fulltext: string;
 }
 
 export interface IParInfo {
-    "ref-id"?: string;
-    "ref-doc-id"?: string;
-    "ref-t"?: string;
-    "ref-attrs"?: string;
-    par: string;
+    par?: ParContext;
     par_next?: string;
     area_start?: string;
     area_end?: string;
 }
 
-export interface ITags {
+export type ITags = {
     markread: boolean;
     marktranslated?: boolean;
-}
+};
 
 export interface IExtraData extends IParInfo {
-    // attrs: {classes: string[], [i: string]: any};
     docId: number;
     isComment?: boolean;
     id?: string; // note id
@@ -45,17 +44,21 @@ export interface IExtraData extends IParInfo {
 
 export type Duplicate = [string, string] | [string, string, "hasAnswers"];
 
-export interface IChangelogEntry {}
-
 export enum EditType {
     Edit,
     AddAbove,
     AddBelow,
     AddBottom,
+    CommentAction,
 }
 
 export type EditPosition =
-    | {type: EditType.Edit; pars: JQuery}
-    | {type: EditType.AddAbove; par: JQuery}
-    | {type: EditType.AddBelow; par: JQuery}
+    | {type: EditType.CommentAction; par: ParContext}
+    | {type: EditType.Edit; pars: UnbrokenSelection}
+    | {type: EditType.AddAbove; par: ParContext}
+    | {type: EditType.AddBelow; par: ParContext}
     | {type: EditType.AddBottom};
+
+export function extraDataForServer(data: IExtraData) {
+    return {...data, par: data.par?.originalPar.id};
+}

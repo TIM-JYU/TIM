@@ -1,22 +1,9 @@
-Järjestely
-Tehtävä jossa käyttäjä järjestelee tekstejä
-``` {plugin="csPlugin" #PLUGINNAMEHERE}
-type: text
+Luku
+Luku jolle voidaan antaa arvoväli
+``` {#PLUGINNAMEHERE plugin="csPlugin"}
+type: text/tiny
 -pointsRule:
-    code: 1.0
-    expectCode: byCode
-wrap: -1
-lazy: false
-editorModes: 2
-header: "Järjestä suuruusjärjestykseen"
-stem: Järjestä suuruusjärjestykseen pienen ensin
-style-words: "font-size: 1.5em;font-weight: bold;"
-#words: true
-byCode: |!!
-Pieni
-Keskikokoinen
-Suuri
-Jättimäinen
-!!
+    numberRule: "pisteitä 1 jos yli 3 mutta alle 6"
+cols: 3
+stem: "Anna luku väliltä 3-6"
 ```
-

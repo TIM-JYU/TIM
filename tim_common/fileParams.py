@@ -96,6 +96,19 @@ def normalize_bool(value):
     return value
 
 
+def get_value(jso, default, *keys):
+    d = jso
+    for key in keys:
+        if not d:
+            return default
+        if not isinstance(d, dict):
+            return default
+        d = d.get(key, None)
+    if d == None:
+        return default
+    return d
+
+
 def get_param(query: QueryClass, key, default):
     key = check_key(query, key)
     dvalue = default

@@ -1,10 +1,14 @@
+/* eslint-disable no-bitwise */
 import {IScope} from "angular";
 import $ from "jquery";
 import {CURSOR} from "tim/editor/BaseParEditor";
 import {
+    afterAction,
+    beforeAction,
     compileWithViewctrl,
     IPluginInfoResponse,
     ParCompiler,
+    replaceAction,
 } from "tim/editor/parCompiler";
 import {PareditorController} from "tim/editor/pareditor";
 import {IModalInstance} from "tim/ui/dialog";
@@ -27,32 +31,37 @@ import {
 } from "tim/document/editing/showRenameDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
-import {onClick} from "../eventhandlers";
+import {UserSelection} from "tim/document/editing/userSelection";
+import {Paragraph} from "tim/document/structure/paragraph";
+import {Area} from "tim/document/structure/area";
+import {BrokenArea} from "tim/document/structure/brokenArea";
+import {HelpPar} from "tim/document/structure/helpPar";
+import {ParSelection} from "tim/document/editing/parSelection";
 import {
-    canEditPar,
-    canSeeSource,
-    createNewPar,
-    getElementByParId,
-    getFirstParId,
-    getLastParId,
-    getNextPar,
-    getParAttributes,
-    getParId,
-    getParIndex,
-    getPars,
-    getRefAttrs,
-    isActionablePar,
-    isHelpPar,
-    isReference,
-    isSettingsPar,
-    Paragraph,
-} from "../parhelpers";
-import {handleUnread} from "../readings";
-import {ViewCtrl} from "../viewctrl";
+    getMinimalUnbrokenSelection,
+    UnbrokenSelection,
+} from "tim/document/editing/unbrokenSelection";
+import {ParContext} from "tim/document/structure/parContext";
+import {DerefOption} from "tim/document/structure/derefOption";
+import {
+    enumDocParts,
+    enumPars,
+    nextParContext,
+    PreambleIteration,
+} from "tim/document/structure/iteration";
+import {
+    createParContext,
+    getParContainerElem,
+} from "tim/document/structure/parsing";
 import {IMenuFunctionEntry, MenuFunctionList} from "../viewutils";
+import {ViewCtrl} from "../viewctrl";
+import {handleUnread} from "../readings";
+import {canEditPar, canSeeSource, getElementByParId} from "../parhelpers";
+import {onClick} from "../eventhandlers";
 import {
     EditPosition,
     EditType,
+    extraDataForServer,
     IExtraData,
     IParResponse,
     ITags,
@@ -61,19 +70,23 @@ import {
 export interface IParEditorOptions {
     forcedClasses?: string[];
     showDelete?: boolean;
-    area?: boolean;
     localSaveTag?: string;
     texts?: {beforeText: string; initialText: string; afterText: string};
+}
+
+export enum SelectionUpdateType {
+    AllowShrink,
+    DontAllowShrink,
 }
 
 function prepareOptions(
     $this: HTMLElement,
     saveTag: string
-): [JQuery, IParEditorOptions] {
-    const par = $($this).closest(".par");
-    const text = par.find("pre").text();
+): [ParContext, IParEditorOptions] {
+    const par = createParContext($($this).closest(".par")[0]);
+    const text = par.par.htmlElement.querySelector("pre")?.textContent;
     let forcedClasses: string[] = [];
-    const forceAttr = getParAttributes(par).forceclass;
+    const forceAttr = par.par.attrs.forceclass;
     if (forceAttr) {
         forcedClasses = forceAttr.split(" ");
     }
@@ -81,7 +94,7 @@ function prepareOptions(
         localSaveTag: saveTag,
         texts: {
             beforeText: "alkuun",
-            initialText: text,
+            initialText: text ?? "",
             afterText: "loppuun",
         },
         forcedClasses: forcedClasses,
@@ -89,47 +102,27 @@ function prepareOptions(
     return [par, options];
 }
 
+export function getNextId(params: EditPosition) {
+    return params.type === EditType.Edit
+        ? params.pars.next()?.originalPar.id
+        : params.type === EditType.AddAbove
+        ? params.par.originalPar.id
+        : params.type === EditType.AddBelow
+        ? nextParContext(params.par)?.originalPar.id
+        : undefined;
+}
+
 export class EditingHandler {
     public viewctrl: ViewCtrl;
     public sc: IScope;
     private currentEditor?: PareditorController;
     private editorLoad?: Promise<IModalInstance<PareditorController>>;
+    selection?: UserSelection;
 
     constructor(sc: IScope, view: ViewCtrl) {
         this.sc = sc;
         this.viewctrl = view;
         this.viewctrl.editing = false;
-
-        this.viewctrl.selection = {};
-
-        sc.$watchGroup(
-            [
-                () => this.viewctrl.selection.start,
-                () => this.viewctrl.selection.end,
-            ],
-            (newValues, oldValues, scope) => {
-                $(".par.lightselect").removeClass("lightselect");
-                $(".par.selected").removeClass("selected");
-                $(".par.marked").removeClass("marked");
-                if (this.viewctrl.selection.start != null) {
-                    const start = this.viewctrl.selection.start;
-                    if (
-                        this.viewctrl.selection.end != null &&
-                        !this.viewctrl.selection.end.is(
-                            this.viewctrl.selection.start
-                        )
-                    ) {
-                        const end = this.viewctrl.selection.end;
-                        this.viewctrl.selection.pars = getPars(start, end);
-                    } else {
-                        this.viewctrl.selection.pars = start;
-                    }
-                    if (this.viewctrl.selection.pars) {
-                        this.viewctrl.selection.pars.addClass("marked");
-                    }
-                }
-            }
-        );
 
         if (this.viewctrl.item.rights.editable) {
             onClick(".addBottom", ($this, e) => {
@@ -177,6 +170,18 @@ export class EditingHandler {
         }
     }
 
+    setSelection(s: UserSelection | undefined) {
+        this.selection = s;
+        $(".par.lightselect").removeClass("lightselect");
+        $(".par.selected").removeClass("selected");
+        $(".par.marked").removeClass("marked");
+        if (s) {
+            getMinimalUnbrokenSelection(s.sel.start, s.sel.end).addClass(
+                "marked"
+            );
+        }
+    }
+
     async toggleParEditor(params: EditPosition, options: IParEditorOptions) {
         if (getCurrentEditor() || this.viewctrl.editing || this.editorLoad) {
             await showMessageDialog("Some editor is already open.");
@@ -187,42 +192,23 @@ export class EditingHandler {
         const caption =
             params.type === EditType.Edit ? "Edit paragraph" : "Add paragraph";
         let url: string;
-        const parId =
-            params.type === EditType.Edit ? getParId(params.pars) : undefined;
-        let parNextId =
-            params.type === EditType.Edit
-                ? getParId(getNextPar(params.pars))
-                : params.type === EditType.AddAbove
-                ? getParId(params.par)
-                : params.type === EditType.AddBelow
-                ? getParId(getNextPar(params.par))
-                : undefined;
-        if (parNextId === "HELP_PAR") {
-            parNextId = undefined;
-        }
+        const ctx = params.type === EditType.Edit ? params.pars : undefined;
+        const parNextId = getNextId(params);
 
-        if (params.type === EditType.Edit && params.pars.length > 1) {
-            areaStart = getFirstParId(params.pars);
-            areaEnd = getLastParId(params.pars);
+        if (params.type === EditType.Edit && params.pars.hasMultiple()) {
+            areaStart = params.pars.start.originalPar.id;
+            areaEnd = params.pars.end.originalPar.id;
             url = "/postParagraph/";
             options.showDelete = true;
         } else {
             // TODO: Use same route (postParagraph) for both cases, determine logic based on given parameters
-            if (parId === "HELP_PAR" || params.type !== EditType.Edit) {
+            if (params.type !== EditType.Edit) {
                 url = "/newParagraph/";
                 options.showDelete = false;
             } else {
                 url = "/postParagraph/";
                 options.showDelete = true;
             }
-        }
-
-        if (options.area) {
-            areaEnd = getParId(this.viewctrl.selection.end);
-            areaStart = getParId(this.viewctrl.selection.start);
-        } else {
-            areaStart = undefined;
-            areaEnd = undefined;
         }
 
         const tagKeys: Array<keyof ITags> = ["markread"];
@@ -246,14 +232,9 @@ export class EditingHandler {
             area_start: areaStart,
             docId: this.viewctrl.docId, // current document id
             forced_classes: options.forcedClasses,
-            par: parId ?? "NEW_PAR", // the id of paragraph on which the editor was opened
+            par: ctx?.start, // the id of paragraph on which the editor was opened
             par_next: parNextId, // the id of the paragraph that follows par or null if par is the last one
             tags,
-            ...(params.type === EditType.Edit
-                ? isReference(params.pars)
-                    ? getRefAttrs(params.pars)
-                    : {}
-                : {}),
         };
         let initialText = "";
         let cursorPos;
@@ -261,8 +242,8 @@ export class EditingHandler {
             initialText = options.texts.initialText;
             cursorPos = initialText.indexOf(CURSOR);
             initialText = initialText.replace(CURSOR, "");
-        } else if (options.showDelete && parId !== "HELP_PAR" && parId) {
-            const r = await this.getBlock(parId, extraData);
+        } else if (options.showDelete && ctx) {
+            const r = await this.getBlock(ctx);
             if (r.ok) {
                 initialText = r.result.data.text;
             } else {
@@ -282,7 +263,7 @@ export class EditingHandler {
                 caption,
                 deleteMsg: `
 This will delete the whole ${
-                    options.area ? "area" : "paragraph"
+                    ctx?.hasMultiple() ? "area" : "paragraph"
                 } from the document. Are you sure?
 
 (If you only want to remove selected text, use backspace.)`,
@@ -293,7 +274,7 @@ This will delete the whole ${
                 cursorPosition: cursorPos,
                 showSettings:
                     params.type === EditType.Edit
-                        ? isSettingsPar(params.pars)
+                        ? params.pars.start.isSetting()
                         : false,
                 tags: tagsDescs,
                 touchDevice: isMobileDevice(),
@@ -302,7 +283,7 @@ This will delete the whole ${
                 const r = await to(
                     $http.post<IParResponse>(
                         `/deleteParagraph/${this.viewctrl.docId}`,
-                        extraData
+                        extraDataForServer(extraData)
                     )
                 );
                 if (!r.ok) {
@@ -316,7 +297,11 @@ This will delete the whole ${
                 const r = await to(
                     $http.post<IPluginInfoResponse>(
                         `/preview/${this.viewctrl.docId}`,
-                        {text, proofread, ...extraData}
+                        {
+                            text,
+                            proofread,
+                            ...extraDataForServer(extraData),
+                        }
                     )
                 );
                 if (!r.ok) {
@@ -328,7 +313,7 @@ This will delete the whole ${
                 const r = await to(
                     $http.post<IParResponse>(url, {
                         text,
-                        ...data,
+                        ...extraDataForServer(data),
                         view: getViewName(),
                     })
                 );
@@ -372,38 +357,57 @@ This will delete the whole ${
         this.viewctrl.editing = false;
     }
 
-    private async getBlock(parId: string, extraData?: IExtraData) {
+    private async getBlock(sel: ParSelection) {
         return await to(
             $http.get<{text: string}>(
-                `/getBlock/${this.viewctrl.docId}/${parId}`,
-                {params: extraData}
+                `/getBlock/${this.viewctrl.docId}/${sel.start.originalPar.id}`,
+                {
+                    params: sel.hasMultiple()
+                        ? {
+                              area_start: sel.start.originalPar.id,
+                              area_end: sel.end.originalPar.id,
+                          }
+                        : undefined,
+                }
             )
         );
     }
 
     findSettingsPars() {
-        const pars = $(".par");
-        return pars.filter((index, elem) => {
-            const p = $(elem);
-            return isActionablePar(p) && isSettingsPar(p);
-        });
+        const pars = enumDocParts(PreambleIteration.Exclude);
+        const found = [];
+        for (const p of pars) {
+            if (p instanceof Paragraph) {
+                if (p.isSetting()) {
+                    found.push(p);
+                }
+            } else {
+                break;
+            }
+        }
+        if (found.length > 0) {
+            const first = found[0];
+            const last = found[found.length - 1];
+            return getMinimalUnbrokenSelection(
+                new ParContext(first, first),
+                new ParContext(last, last)
+            );
+        }
     }
 
     hasNonSettingsPars() {
         let has = false;
-        $(".par").each((index, elem) => {
-            const p = $(elem);
-            if (!isSettingsPar(p) && !isHelpPar(p)) {
+        for (const p of enumPars(DerefOption.Deref)) {
+            if (!p.isSetting() && !p.preamblePath) {
                 has = true;
-                return false;
+                break;
             }
-        });
+        }
         return has;
     }
 
     async insertHelpPar() {
         await $timeout();
-        const spars = this.findSettingsPars();
         const helpPar = $(`
 <div class="par"
      id="HELP_PAR"
@@ -412,27 +416,38 @@ This will delete the whole ${
     <div class="parContent">
         <tim-help-par-content></tim-help-par-content>
     </div>
-    <div class="editline" title="Click to edit this paragraph"></div>
+    <div class="editline" title="Click to open edit menu"></div>
+    <div class="readline read"></div>
 </div>
 `);
-        if (spars.length === 0) {
-            $("#pars").prepend(helpPar);
-        } else {
-            spars.last().after(helpPar);
-        }
+        getParContainerElem()!.prepend(helpPar[0]);
         await compileWithViewctrl(helpPar, this.viewctrl.scope, this.viewctrl);
     }
 
     async editSettingsPars(recursiveCall: boolean = false) {
         const pars = this.findSettingsPars();
-        if (pars.length === 0) {
+        if (!pars) {
             if (recursiveCall) {
                 throw new Error(
                     "Faulty recursion stopped, there should be a settings paragraph already"
                 );
             }
-            const first = $(".par:not(.preamble):not(#HELP_PAR):first");
-            const parNext = getParId(first);
+            const iter = enumDocParts(PreambleIteration.Exclude).next();
+            let parNext: string | undefined;
+            if (!iter.done) {
+                if (iter.value instanceof BrokenArea) {
+                    parNext = iter.value.getFirstOrigPar()?.id;
+                    if (!parNext) {
+                        // TODO: Not sure if this is ever practically reachable. Leave this unimplemented for now.
+                        await showMessageDialog(
+                            "Document start has a broken/nested area; cannot open settings"
+                        );
+                        return;
+                    }
+                } else {
+                    parNext = iter.value.getFirstOrigPar().id;
+                }
+            }
 
             const r = await to(
                 $http.post<IParResponse>("/newParagraph/", {
@@ -449,57 +464,24 @@ This will delete the whole ${
                 type: EditType.AddBottom,
             });
             this.editSettingsPars(true);
-        } else if (pars.length === 1) {
-            this.toggleParEditor(
-                {type: EditType.Edit, pars: pars.first()},
-                {area: false}
-            );
         } else {
-            const start = pars.first();
-            const end = pars.last();
-            this.viewctrl.selection.start = start;
-            this.viewctrl.selection.end = end;
-            pars.addClass("selected");
-            this.toggleParEditor(
-                {type: EditType.Edit, pars: pars},
-                {area: true}
-            );
-            pars.removeClass("selected");
-            this.viewctrl.areaHandler.cancelArea();
+            this.toggleParEditor({type: EditType.Edit, pars: pars}, {});
         }
     }
 
-    showEditWindow(e: MouseEvent, par: Paragraph) {
-        this.toggleParEditor({type: EditType.Edit, pars: par}, {area: false});
+    showEditWindow(e: MouseEvent, sel: UnbrokenSelection) {
+        this.toggleParEditor({type: EditType.Edit, pars: sel}, {});
     }
 
-    beginAreaEditing(e: MouseEvent, par: Paragraph) {
-        if (!this.viewctrl.selection.pars) {
-            showMessageDialog(
-                "Selection was null when trying to edit an area."
-            );
-            return;
-        }
-        this.toggleParEditor(
-            {type: EditType.Edit, pars: $(this.viewctrl.selection.pars)},
-            {area: true}
-        );
+    editSelection(e: MouseEvent, sel: UnbrokenSelection) {
+        this.toggleParEditor({type: EditType.Edit, pars: sel}, {});
     }
 
     /**
      * Toggles the edit mode of a table in a given table paragraph.
-     * @param {Event} e
-     * @param {Paragraph} par The table paragraph.
      */
-    toggleTableEditor(e: MouseEvent, par: Paragraph) {
-        const parId = getParId(par);
-
-        if (parId == null) {
-            void showMessageDialog("Could not find paragraph");
-            return;
-        }
-
-        const tableCtrl = this.viewctrl.getTableControllerFromParId(parId);
+    toggleTableEditor(e: MouseEvent, par: ParContext) {
+        const tableCtrl = this.viewctrl.getTableControllerFromParId(par);
 
         if (tableCtrl == null) {
             void showMessageDialog("Could not find table controller");
@@ -513,68 +495,62 @@ This will delete the whole ${
         if (position.type === EditType.Edit) {
             position.pars.remove();
         }
-        this.viewctrl.areaHandler.cancelArea();
+        this.viewctrl.areaHandler.cancelSelection();
         this.viewctrl.beginUpdate();
     }
 
     showAddParagraphAbove(
         e: MouseEvent,
-        par: Paragraph,
+        par: ParContext,
         options: IParEditorOptions = {}
     ) {
-        options.area = false;
         this.toggleParEditor({type: EditType.AddAbove, par: par}, options);
     }
 
     showAddParagraphBelow(
         e: MouseEvent,
-        par: Paragraph,
+        par: ParContext,
         options: IParEditorOptions = {}
     ) {
-        options.area = false;
         this.toggleParEditor({type: EditType.AddBelow, par: par}, options);
     }
 
     async addSavedParToDom(data: IParResponse, position: EditPosition) {
         let par: JQuery;
-        if (position.type === EditType.Edit) {
-            par = position.pars;
-        } else {
-            const newpar = createNewPar();
-            if (position.type === EditType.AddBottom) {
-                $(".par").last().after(newpar);
-            } else if (position.type === EditType.AddAbove) {
-                position.par.before(newpar);
-            } else {
-                position.par.after(newpar);
-            }
-            par = newpar;
+        let action: (e: JQuery, c: JQuery) => void;
+        switch (position.type) {
+            case EditType.Edit:
+                action = replaceAction;
+                par = $(position.pars.removeAllButFirst());
+                break;
+            case EditType.CommentAction:
+                action = replaceAction;
+                par = $(position.par.par.htmlElement);
+                break;
+            case EditType.AddBottom:
+                action = afterAction;
+                par = $(".addBottomContainer").prev();
+                break;
+            case EditType.AddAbove:
+                par = $(position.par.getElementForInsert(EditType.AddAbove));
+                action = beforeAction;
+                break;
+            default:
+                par = $(position.par.getElementForInsert(EditType.AddBelow));
+                action = afterAction;
+                break;
         }
 
-        // check if we were editing an area
-        if (position.type === EditType.Edit && position.pars.length > 1) {
-            par = position.pars.first();
-
-            // remove all but the first element of the area because it'll be used
-            // when replacing
-            const endpar = position.pars.last();
-            par.nextUntil(endpar).add(endpar).remove();
-        }
-        const newPars = await ParCompiler.compileAndReplace(
+        await ParCompiler.compileAndDOMAction(
+            action,
             par,
             data,
             this.viewctrl.scope,
             this.viewctrl
         );
-        if (documentglobals().editMode === "area") {
-            newPars
-                .find(".editline")
-                .removeClass("editline")
-                .addClass("editline-disabled");
-        }
 
         this.viewctrl.docVersion = data.version;
-        this.viewctrl.areaHandler.cancelArea();
+        this.viewctrl.areaHandler.cancelSelection();
         this.removeDefaultPars();
         markPageDirty();
         this.viewctrl.beginUpdate();
@@ -597,7 +573,7 @@ This will delete the whole ${
         editor.scrollIntoView();
     }
 
-    closeAndSave(e: MouseEvent, par: Paragraph) {
+    closeAndSave(e: MouseEvent, par: ParContext) {
         const editor = this.getParEditor();
         if (!editor) {
             void showMessageDialog("Editor is no longer open.");
@@ -607,7 +583,7 @@ This will delete the whole ${
         this.viewctrl.parmenuHandler.showOptionsWindow(e, par);
     }
 
-    closeWithoutSaving(e: MouseEvent, par: Paragraph) {
+    closeWithoutSaving(e: MouseEvent, par: ParContext) {
         const editor = this.getParEditor();
         if (!editor) {
             void showMessageDialog("Editor is no longer open.");
@@ -619,23 +595,13 @@ This will delete the whole ${
 
     /**
      * Checks whether the given paragraph is a table paragraph and in edit mode.
-     * @param {Paragraph} par The paragraph.
-     * @returns {boolean | undefined} True if the paragraph is a table paragraph in edit mode, false
+     * @param par The paragraph.
+     * @returns True if the paragraph is a table paragraph in edit mode, false
      * if the paragraph is a table paragraph but not in edit mode, undefined if the paragraph is not a table paragraph
      * at all or the table has forced edit mode.
      */
-    isTimTableInEditMode(par: Paragraph | undefined): boolean | undefined {
-        if (par == null) {
-            return undefined;
-        }
-
-        const parId = getParId(par);
-
-        if (parId == null) {
-            return undefined;
-        }
-
-        const tableCtrl = this.viewctrl.getTableControllerFromParId(parId);
+    isTimTableInEditMode(par: ParContext): boolean | undefined {
+        const tableCtrl = this.viewctrl.getTableControllerFromParId(par);
 
         if (tableCtrl == null) {
             return undefined;
@@ -648,11 +614,8 @@ This will delete the whole ${
         return tableCtrl.isInEditMode();
     }
 
-    isQST(par: Paragraph | undefined): boolean {
-        if (par == null) {
-            return false;
-        }
-        return getParAttributes(par).plugin === "qst";
+    isQST(par: ParContext): boolean {
+        return par.par.attrs.plugin === "qst";
     }
 
     /**
@@ -662,295 +625,328 @@ This will delete the whole ${
      * TODO: Add support for multiple options per controller
      */
     getParMenuEntry(
-        par: Paragraph,
+        par: ParContext,
         editable: boolean
     ): IMenuFunctionEntry | undefined {
-        if (par == null || !editable) {
+        if (!editable) {
             return undefined;
         }
+        return this.viewctrl.getParMenuEntry(par)?.getMenuEntry();
+    }
 
-        const parId = getParId(par);
+    getViewSourceEditorMenuEntry(par: ParContext): IMenuFunctionEntry {
+        return {
+            desc: "View source",
+            func: async () => {
+                const r = await this.getBlock(new ParSelection(par, par));
+                if (r.ok) {
+                    const text = r.result.data.text;
+                    await showDiffDialog({
+                        left: text,
+                        right: text,
+                        title: "Source",
+                        showToolbar: false,
+                    });
+                } else {
+                    await showMessageDialog("Failed to get paragraph markdown");
+                }
+            },
+            show: canSeeSource(this.viewctrl.item, par),
+        };
+    }
 
-        if (parId == null) {
-            return undefined;
+    getEditorFunctions(par: ParContext | HelpPar): MenuFunctionList {
+        if (par.isHelp) {
+            return [
+                this.getAddParagraphItem({type: EditType.AddBottom}),
+                this.getAddQuestionItem({type: EditType.AddBottom}),
+                this.getAddLectureQuestionItem({type: EditType.AddBottom}),
+            ];
         }
-
-        return this.viewctrl.getParMenuEntry(parId)?.getMenuEntry();
-    }
-
-    getViewSourceEditorMenuEntry(par?: Paragraph): IMenuFunctionEntry {
-        const entry: IMenuFunctionEntry = {
-            desc: "",
-            func: empty,
-            show: false,
-        };
-        entry.desc = "View source";
-        entry.show =
-            par != null &&
-            !isHelpPar(par) &&
-            canSeeSource(this.viewctrl.item, par);
-        entry.func = async (e: MouseEvent, p: Paragraph) => {
-            const parId = getParId(p);
-            if (!parId) {
-                await showMessageDialog("Could not get paragraph id");
-                return;
-            }
-            const r = await this.getBlock(parId);
-            if (r.ok) {
-                const text = r.result.data.text;
-                await showDiffDialog({
-                    left: text,
-                    right: text,
-                    title: "Source",
-                    showToolbar: false,
-                });
-            } else {
-                await showMessageDialog("Failed to get paragraph markdown");
-            }
-        };
-        return entry;
-    }
-
-    getEditorFunctions(par?: Paragraph): MenuFunctionList {
-        const parEditable =
-            (!par && this.viewctrl.item.rights.editable) ||
-            (par && canEditPar(this.viewctrl.item, par)) ||
-            false;
+        const parEditable = canEditPar(this.viewctrl.item, par);
         const timTableEditMode = this.isTimTableInEditMode(par);
         const qstPar = this.isQST(par);
-        const customParMenuEntry = par
-            ? this.getParMenuEntry(par, parEditable)
-            : undefined;
+        const customParMenuEntry = this.getParMenuEntry(par, parEditable);
+        const fns: MenuFunctionList = [];
+        fns.push(this.getViewSourceEditorMenuEntry(par));
+        const showSingleParFns = par.isDeletableOnItsOwn();
+        const ctx = par.context;
+        let areaWithSel:
+            | {sel: UserSelection<UnbrokenSelection>; area: Area}
+            | undefined;
+        if (ctx instanceof Area && ctx.isStartOrEnd(par.par)) {
+            areaWithSel = {
+                sel: new UserSelection(
+                    getMinimalUnbrokenSelection(
+                        new ParContext(ctx.startPar.par, ctx),
+                        new ParContext(ctx.endPar.par, ctx)
+                    ),
+                    par
+                ),
+                area: ctx,
+            };
+        }
         if (this.viewctrl.editing) {
-            return [
-                this.getViewSourceEditorMenuEntry(par),
+            fns.push(
                 {
                     func: () => this.goToEditor(),
                     desc: "Go to editor",
                     show: true,
                 },
                 {
-                    func: (e, p) => this.closeAndSave(e, p),
+                    func: (e) => this.closeAndSave(e, par),
                     desc: "Close editor and save",
                     show: true,
                 },
                 {
-                    func: (e, p) => this.closeWithoutSaving(e, p),
+                    func: (e) => this.closeWithoutSaving(e, par),
                     desc: "Close editor and cancel",
                     show: true,
-                },
-                {func: empty, desc: "Close menu", show: true},
-            ];
-        } else if (
-            this.viewctrl.selection.start != null &&
-            documentglobals().editMode
-        ) {
-            return [
+                }
+            );
+        } else if (this.selection != null && documentglobals().editMode) {
+            const s = this.selection;
+            const minSel = getMinimalUnbrokenSelection(s.sel.start, s.sel.end);
+            fns.push(
                 {
-                    func: (e, p) => this.beginAreaEditing(e, p),
-                    desc: "Edit area",
+                    func: (e) => this.editSelection(e, minSel),
+                    desc: "Edit selection",
                     show: true,
                 },
                 {
-                    func: (e, p) => this.viewctrl.areaHandler.nameArea(e, p),
-                    desc: "Name area",
+                    func: (e) =>
+                        this.viewctrl.areaHandler.createArea(e, minSel),
+                    desc: "Create area",
                     show: true,
                 },
                 {
-                    func: (e, p) =>
-                        this.viewctrl.clipboardHandler.cutArea(e, p),
-                    desc: "Cut area",
+                    func: (e) =>
+                        this.viewctrl.clipboardHandler.cutSelection(e, minSel),
+                    desc: "Cut selection",
                     show: parEditable,
                 },
                 {
-                    func: (e, p) =>
-                        this.viewctrl.clipboardHandler.copyArea(e, p),
-                    desc: "Copy area",
+                    func: (e) =>
+                        this.viewctrl.clipboardHandler.copySelection(e, minSel),
+                    desc: "Copy selection",
                     show: true,
                 },
                 {
-                    func: (e, p) => this.viewctrl.areaHandler.cancelArea(),
-                    desc: "Cancel area",
+                    func: () => this.viewctrl.areaHandler.cancelSelection(),
+                    desc: "Cancel selection",
                     show: true,
-                },
-                {func: empty, desc: "Close menu", show: true},
-            ];
+                }
+            );
         } else {
-            return [
+            const addAbovePos: EditPosition = {
+                par: par,
+                type: EditType.AddAbove,
+            };
+            fns.push(
                 {
-                    func: (e, p) =>
-                        this.viewctrl.notesHandler.showNoteWindow(e, p),
+                    func: (e) =>
+                        this.viewctrl.notesHandler.showNoteWindow(e, par),
                     desc: "Comment/note",
-                    show:
-                        this.viewctrl.item.rights.can_comment &&
-                        par != null &&
-                        !isHelpPar(par),
+                    show: this.viewctrl.item.rights.can_comment,
                 },
-                this.getViewSourceEditorMenuEntry(par),
                 {
-                    func: (e, p) => {
-                        if (!par) {
-                            return;
-                        }
-                        const attrs = getRefAttrs(par);
-                        const docId = attrs["ref-doc-id"];
-                        const refId = attrs["ref-id"];
-                        if (docId && refId) {
-                            const w = window.open(`/view/${docId}#${refId}`);
-                            if (w) {
-                                w.focus();
-                            }
+                    func: () => {
+                        const w = window.open(
+                            `/view/${par.par.docId}#${par.par.id}`
+                        );
+                        if (w) {
+                            w.focus();
                         }
                     },
                     desc: "Follow reference",
-                    show: par != null && isReference(par),
+                    show: par.isReference(),
                 },
-                {
-                    func: (e, p) => this.showAddParagraphAbove(e, p),
-                    desc: "Add paragraph above",
-                    show: this.viewctrl.item.rights.editable,
-                },
-                {
-                    func: (e, p) => this.showEditWindow(e, p),
+                this.getAddParagraphItem(addAbovePos)
+            );
+            if (showSingleParFns) {
+                fns.push({
+                    func: (e) =>
+                        this.showEditWindow(
+                            e,
+                            getMinimalUnbrokenSelection(par, par)
+                        ),
                     desc: "Edit",
                     show: parEditable,
-                },
+                });
+            } else if (areaWithSel) {
+                const temp = areaWithSel;
+                fns.push({
+                    func: (e) => {
+                        this.showEditWindow(e, temp.sel.sel);
+                    },
+                    desc: `Edit area '${areaWithSel.area.areaname}'`,
+                    show: parEditable,
+                });
+            }
+            fns.push(
                 {
-                    func: (e, p) => this.toggleTableEditor(e, p),
+                    func: (e) => this.toggleTableEditor(e, par),
                     desc: "Edit table",
                     show:
                         parEditable &&
                         timTableEditMode === false &&
-                        par != null &&
-                        !isReference(par),
+                        !par.isReference(),
                 },
                 {
-                    func: (e, p) => this.toggleTableEditor(e, p),
+                    func: (e) => this.toggleTableEditor(e, par),
                     desc: "Close table editor",
                     show: parEditable && timTableEditMode === true,
-                },
-                ...(customParMenuEntry ? [customParMenuEntry] : []),
+                }
+            );
+            if (customParMenuEntry) {
+                fns.push(customParMenuEntry);
+            }
+            if (showSingleParFns) {
+                fns.push(
+                    {
+                        func: (e) =>
+                            this.viewctrl.clipboardHandler.cutPar(e, par),
+                        desc: "Cut",
+                        show:
+                            documentglobals().editMode === "par" && parEditable,
+                    },
+                    {
+                        func: (e) =>
+                            this.viewctrl.clipboardHandler.copyPar(e, par),
+                        desc: "Copy",
+                        show: documentglobals().editMode !== "area",
+                    }
+                );
+            } else if (areaWithSel) {
+                const temp = areaWithSel;
+                fns.push(
+                    {
+                        func: (e) => {
+                            this.viewctrl.clipboardHandler.cutSelection(
+                                e,
+                                temp.sel.sel
+                            );
+                        },
+                        desc: `Cut area '${areaWithSel.area.areaname}'`,
+                        show: parEditable,
+                    },
+                    {
+                        func: (e) => {
+                            this.viewctrl.clipboardHandler.copySelection(
+                                e,
+                                temp.sel.sel
+                            );
+                        },
+                        desc: `Copy area '${areaWithSel.area.areaname}'`,
+                        show: parEditable,
+                    }
+                );
+            }
+            fns.push(
                 {
-                    func: (e, p) => this.viewctrl.clipboardHandler.cutPar(e, p),
-                    desc: "Cut",
-                    show: documentglobals().editMode === "par" && parEditable,
-                },
-                {
-                    func: (e, p) =>
-                        this.viewctrl.clipboardHandler.copyPar(e, p),
-                    desc: "Copy",
-                    show:
-                        documentglobals().editMode !== "area" &&
-                        par != null &&
-                        !isHelpPar(par),
-                },
-                // {func: (e, par) => this.cutArea(e, par), desc: 'Cut area', show: $window.editMode === 'area'},
-                // {func: (e, par) => this.copyArea(e, par), desc: 'Copy area', show: $window.editMode === 'area'},
-                {
-                    func: (e, p: Paragraph) =>
-                        this.viewctrl.clipboardHandler.showPasteMenu(e, p),
+                    func: (e) =>
+                        this.viewctrl.clipboardHandler.showPasteMenu(e, par),
                     desc: "Paste...",
                     show: documentglobals().editMode != null,
                     closeAfter: false,
                 },
                 {
-                    func: (e, p: Paragraph) =>
-                        this.viewctrl.clipboardHandler.showMoveMenu(e, p),
+                    func: (e) =>
+                        this.viewctrl.clipboardHandler.showMoveMenu(e, par),
                     desc: "Move here...",
                     show: documentglobals().allowMove,
                 },
                 {
-                    func: (e, p) =>
-                        this.viewctrl.areaHandler.removeAreaMarking(e, p),
+                    func: (e) =>
+                        this.viewctrl.areaHandler.removeAreaMarking(e, par),
                     desc: "Remove area marking",
                     show: documentglobals().editMode === "area",
                 },
+                this.getAddQuestionItem(addAbovePos),
                 {
-                    func: (e, p) =>
-                        this.viewctrl.questionHandler.addQuestionQst(e, p),
-                    desc: "Add question above",
-                    show: /* this.viewctrl.lectureMode && */ this.viewctrl.item
-                        .rights.editable,
-                },
-                {
-                    func: (e, p) => this.viewctrl.questionHandler.editQst(e, p),
+                    func: (e) => this.viewctrl.questionHandler.editQst(e, par),
                     desc: "Edit question",
                     show:
                         /* this.viewctrl.lectureMode && */ parEditable &&
                         qstPar, // TODO: Condition also that par is a question
                 },
+                this.getAddLectureQuestionItem(addAbovePos),
                 {
-                    func: (e, p) =>
-                        this.viewctrl.questionHandler.addQuestion(e, p),
-                    desc: "Create lecture question",
-                    show:
-                        this.viewctrl.lectureCtrl.lectureSettings.lectureMode &&
-                        this.viewctrl.item.rights.editable,
-                },
-                {
-                    func: (e, p) => this.viewctrl.areaHandler.startArea(e, p),
-                    desc: "Start selecting area",
+                    func: (e) =>
+                        this.viewctrl.areaHandler.startSelection(e, par),
+                    desc: "Start selection",
                     show:
                         documentglobals().editMode === "par" &&
-                        this.viewctrl.selection.start == null,
-                },
-                {func: empty, desc: "Close menu", show: true},
-            ];
+                        this.selection == null,
+                }
+            );
         }
+        fns.push({func: empty, desc: "Close menu", show: true});
+        return fns;
     }
 
-    getAddParagraphFunctions(): MenuFunctionList {
-        return [
-            {
-                func: (e, p) => this.showAddParagraphAbove(e, p),
-                desc: "Above",
-                show: true,
-            },
-            {
-                func: (e, p) => this.showAddParagraphBelow(e, p),
-                desc: "Below",
-                show: true,
-            },
-            {func: empty, desc: "Cancel", show: true},
-        ];
+    private getAddParagraphItem(pos: EditPosition) {
+        return {
+            func: () => this.toggleParEditor(pos, {}),
+            desc: "Add paragraph above",
+            show: this.viewctrl.item.rights.editable,
+        };
+    }
+
+    private getAddLectureQuestionItem(pos: EditPosition): IMenuFunctionEntry {
+        return {
+            func: (e) => this.viewctrl.questionHandler.addQuestion(e, pos),
+            desc: "Add lecture question above",
+            show:
+                this.viewctrl.lectureCtrl.lectureSettings.lectureMode &&
+                this.viewctrl.item.rights.editable,
+        };
+    }
+
+    private getAddQuestionItem(pos: EditPosition): IMenuFunctionEntry {
+        return {
+            func: (e) => this.viewctrl.questionHandler.addQuestionQst(e, pos),
+            desc: "Add question above",
+            show: /* this.viewctrl.lectureMode && */ this.viewctrl.item.rights
+                .editable,
+        };
     }
 
     removeDefaultPars() {
         getElementByParId("HELP_PAR").remove();
     }
 
-    extendSelection(par: Paragraph, allowShrink = false) {
-        if (this.viewctrl.selection.start == null) {
-            this.viewctrl.selection.start = par;
-            this.viewctrl.selection.end = par;
-        } else if (this.viewctrl.selection.pars) {
-            const n = this.viewctrl.selection.pars.length;
-            const startIndex = getParIndex(this.viewctrl.selection.pars.eq(0));
-            const endIndex = getParIndex(
-                this.viewctrl.selection.pars.eq(n - 1)
+    updateSelection(
+        par: ParContext,
+        userSelection: UserSelection,
+        type: SelectionUpdateType
+    ) {
+        const anchor = userSelection.anchor;
+        const sortFn = (a: ParContext, b: ParContext) => {
+            const mask = b.par.htmlElement.compareDocumentPosition(
+                a.par.htmlElement
             );
-            const newIndex = getParIndex(par);
-            if (endIndex == null || startIndex == null || newIndex == null) {
-                return;
+            if (mask & Node.DOCUMENT_POSITION_PRECEDING) {
+                return -1;
             }
-            const areaLength = endIndex - startIndex + 1;
-            if (newIndex < startIndex) {
-                this.viewctrl.selection.start = par;
-            } else if (newIndex > endIndex) {
-                this.viewctrl.selection.end = par;
-            } else if (
-                allowShrink &&
-                areaLength > 1 &&
-                newIndex === startIndex
-            ) {
-                this.viewctrl.selection.start = $(
-                    this.viewctrl.selection.pars[1]
-                );
-            } else if (allowShrink && areaLength > 1 && newIndex === endIndex) {
-                this.viewctrl.selection.end = $(
-                    this.viewctrl.selection.pars[n - 2]
-                );
+            if (mask & Node.DOCUMENT_POSITION_FOLLOWING) {
+                return 1;
             }
+            return 0;
+        };
+
+        let newsel;
+        if (type === SelectionUpdateType.DontAllowShrink) {
+            const ctxs = [
+                userSelection.sel.start,
+                userSelection.sel.end,
+                par,
+            ].sort(sortFn);
+            newsel = new ParSelection(ctxs[0], ctxs[2]);
+        } else {
+            const ctxs = [anchor, par].sort(sortFn);
+            newsel = new ParSelection(ctxs[0], ctxs[1]);
         }
+        this.setSelection(new UserSelection(newsel, anchor));
     }
 }

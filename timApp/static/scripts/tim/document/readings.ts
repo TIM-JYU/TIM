@@ -8,7 +8,12 @@ import {
     setDiffDialog,
     showDiffDialog,
 } from "tim/document/showDiffDialog";
-import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {ParContext} from "tim/document/structure/parContext";
+import {
+    createParContextNoPreview,
+    createParContextOrHelp,
+    fromParents,
+} from "tim/document/structure/parsing";
 import {IItem} from "../item/IItem";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout} from "../util/ngimport";
@@ -27,7 +32,7 @@ import {
     onMouseOver,
     onMouseOverOut,
 } from "./eventhandlers";
-import {canSeeSource, dereferencePar, getArea, getParId} from "./parhelpers";
+import {canSeeSource} from "./parhelpers";
 
 export const readClasses = {
     1: "screen",
@@ -43,31 +48,23 @@ export enum ReadingType {
     ClickRed = 4,
 }
 
-function isAlreadyRead(readline: JQuery, readingType: ReadingType) {
+function isAlreadyRead(par: ParContext, readingType: ReadingType) {
     const readClassName = readClasses[readingType];
-    if (!readline.hasClass(readClassName)) {
+    const readline = par.getReadline();
+    if (!readline) {
+        return true;
+    }
+    if (!readline.classList.contains(readClassName)) {
         return false;
     }
-    const lastReadTime = moment(readline.attr(`time-${readClassName}`));
+    const lastReadTime = moment(readline.getAttribute(`time-${readClassName}`));
     const timeSinceLastRead = moment.duration(moment().diff(lastReadTime));
     return timeSinceLastRead < getActiveDocument().readExpiry();
 }
 
-export async function markParRead(par: JQuery, readingType: ReadingType) {
-    const readline = par.find(".readline");
-    if (readline.length === 0) {
-        return;
-    }
+export async function markParRead(par: ParContext, readingType: ReadingType) {
     const readClassName = readClasses[readingType];
-    if (isAlreadyRead(readline, readingType)) {
-        return;
-    }
-
-    // If the paragraph is only a preview, ignore it.
-    if (
-        par.parents(".previewcontent").length > 0 ||
-        par.parents(".csrunPreview").length > 0
-    ) {
+    if (isAlreadyRead(par, readingType)) {
         return;
     }
 
@@ -80,43 +77,37 @@ export async function markParRead(par: JQuery, readingType: ReadingType) {
         return;
     }
 
-    const d = dereferencePar(par);
-    if (!d) {
+    const [docId, parId] = [par.par.docId, par.par.id];
+    const readline = par.getReadline();
+    if (!readline) {
         return;
     }
-    const [docId, parId] = d;
-    if (parId === "NEW_PAR" || !parId || parId === "HELP_PAR") {
-        return;
-    }
-    readline.addClass(readClassName);
-    readline.attr(`time-${readClassName}`, moment().toISOString());
+    readline.classList.add(readClassName);
+    readline.setAttribute(`time-${readClassName}`, moment().toISOString());
     if (!Users.isLoggedIn() || !docId) {
         return;
     }
     const r = await to($http.put(`/read/${docId}/${parId}/${readingType}`, {}));
     if (!r.ok) {
-        readline.removeClass(readClassName);
+        readline.classList.remove(readClassName);
         return;
     }
-    readline.removeClass(readClassName + "-modified");
+    readline.classList.remove(readClassName + "-modified");
     if (readingType === ReadingType.ClickRed) {
         markPageDirty();
         getActiveDocument().refreshSectionReadMarks();
     }
 }
 
-async function markParsRead($pars: JQuery) {
-    const parIds = $pars
-        .toArray()
-        .map((e) => $(e))
-        .filter(
-            (e) => !isAlreadyRead(e.find(".readline"), ReadingType.ClickRed)
-        )
+async function markParsRead(pars: ParContext[]) {
+    const parIds = pars
+        .filter((e) => !isAlreadyRead(e, ReadingType.ClickRed))
         .map((e) => {
-            const d = dereferencePar(e)!;
-            return [d[0], d[1]];
+            return [e.par.docId, e.par.id];
         });
-    $pars.find(".readline").addClass(readClasses[ReadingType.ClickRed]);
+    pars.forEach((p) =>
+        p.getReadline()?.classList.add(readClasses[ReadingType.ClickRed])
+    );
     const doc = getActiveDocument();
     const r = await to(
         $http.put(
@@ -137,26 +128,29 @@ let readingParId: string | undefined;
 function queueParagraphForReading() {
     const visiblePars = $(".par:not('.preamble')")
         .filter((i, e) => isInViewport(e))
-        .find(".readline")
-        .not((i, e) => isAlreadyRead($(e), ReadingType.OnScreen));
-    const parToRead = visiblePars.first().parents(".par");
-    const parId = getParId(parToRead);
+        .toArray()
+        .map((e) => createParContextOrHelp(e))
+        .filter((e) => !e.isHelp && isAlreadyRead(e, ReadingType.OnScreen));
+    if (visiblePars.length === 0) {
+        return;
+    }
+    const parToRead = visiblePars[0];
+    if (parToRead.isHelp) {
+        return;
+    }
+    const parId = parToRead.originalPar.id;
 
     if (readPromise != null && readingParId !== parId) {
         $timeout.cancel(readPromise);
     } else if (readingParId === parId) {
         return;
     }
-
-    if (parToRead.length === 0) {
-        return;
-    }
     readingParId = parId;
-    const numWords = parToRead
-        .find(".parContent")
-        .text()
-        .trim()
-        .split(/[\s\n]+/).length;
+    const numWords =
+        parToRead
+            .textContent()
+            ?.trim()
+            .split(/[\s\n]+/).length ?? 1;
     readPromise = $timeout(async () => {
         await markParRead(parToRead, ReadingType.OnScreen);
         queueParagraphForReading();
@@ -164,15 +158,8 @@ function queueParagraphForReading() {
 }
 
 async function handleSeeChanges(elem: JQuery, e: OnClickArg) {
-    const par = elem.parents(".par");
-    const derefData = dereferencePar(par);
-    if (!derefData) {
-        return;
-    }
-    const [id, blockId, t] = derefData;
-    if (!id || !blockId) {
-        return;
-    }
+    const par = fromParents(elem);
+    const [id, blockId, t] = [par.par.docId, par.par.id, par.par.hash];
     const parData = await to(
         $http.get<Array<{par_hash: string}>>(`/read/${id}/${blockId}`)
     );
@@ -215,7 +202,11 @@ async function readlineHandler(elem: JQuery, e: OnClickArg) {
     if ((e.target as HTMLElement).tagName === "BUTTON") {
         return;
     }
-    await markParRead(elem.parents(".par"), ReadingType.ClickRed);
+    const par = fromParents(elem);
+    if (par.isHelp) {
+        return;
+    }
+    await markParRead(par, ReadingType.ClickRed);
 }
 
 export async function initReadings(item: IItem) {
@@ -225,7 +216,11 @@ export async function initReadings(item: IItem) {
         const ev = e.originalEvent as MouseEvent | TouchEvent;
         const pos = posToRelative(p[0], ev);
         const children = p.children();
-        if (children.length === 0 && canSeeSource(item, p.parents(".par"))) {
+        const par = fromParents(p);
+        if (par.isHelp) {
+            return;
+        }
+        if (children.length === 0 && canSeeSource(item, par)) {
             const x = document.createElement("button");
             x.classList.add("timButton", "btn-xs");
             x.title = "See changes";
@@ -237,56 +232,18 @@ export async function initReadings(item: IItem) {
         }
     });
 
-    onClick(".areareadline", function areareadlineHandler($this, e) {
-        const oldClass = $this.attr("class") ?? null;
-        $this.attr("class", "readline read");
-
-        if (!Users.isLoggedIn()) {
-            return true;
-        }
-
-        // Collapsible area
-        const areaId = $this.parent().attr("data-area");
-        if (!areaId) {
-            return;
-        }
-        $log.info($this);
-
-        (async () => {
-            const r = await to(
-                $http.put("/read/" + item.id + "/" + areaId, {})
-            );
-            if (r.ok) {
-                getArea(areaId)
-                    .find(".readline")
-                    .attr("class", "areareadline read");
-                markPageDirty();
-            } else {
-                await showMessageDialog("Could not save the read marking.");
-                $this.attr("class", oldClass);
-            }
-        })();
-
-        return false;
-    });
-
     $(window).scroll(queueParagraphForReading);
 
     queueParagraphForReading();
 
     onClick(".readsection", function readSectionHandler($readsection, e) {
         const doc = getActiveDocument();
-        const par = $readsection.parents(".par");
-        const parId = getParId(par);
-        if (par.length === 0 || !parId) {
-            void showMessageDialog("Unable to mark this section as read");
-            return;
-        }
-        const pars = doc.getSections().get(parId);
+        const par = fromParents($readsection);
+        const pars = doc.getSections().get(par.par.htmlElement);
         if (!pars) {
             return;
         }
-        markParsRead($(pars.map((p: JQuery) => p[0])));
+        markParsRead(pars);
         $readsection.remove();
     });
 
@@ -295,8 +252,9 @@ export async function initReadings(item: IItem) {
         e,
         select
     ) {
-        if (select) {
-            markParRead($this, ReadingType.HoverPar);
+        const ctx = createParContextNoPreview($this[0]);
+        if (select && ctx) {
+            markParRead(ctx, ReadingType.HoverPar);
         }
     });
 
@@ -314,21 +272,24 @@ export async function handleUnread(pos: EditPosition) {
     if (pos.type !== EditType.Edit) {
         return;
     }
-    const first = pos.pars.first();
-    const [docid, parid] = dereferencePar(first)!;
+    const first = pos.pars.start;
+    const [docid, parid] = [first.par.docId, first.par.id];
     const result = await to(
         $http.put<IOkResponse & {latest?: unknown}>(
-            `/unread/${docid!}/${parid!}`,
+            `/unread/${docid}/${parid}`,
             {}
         )
     );
     if (!result.ok) {
         return;
     }
-    const rline = first.find(".readline");
-    rline.removeClass("read read-modified");
+    const rline = first.getReadline();
+    if (!rline) {
+        return;
+    }
+    rline.classList.remove("read", "read-modified");
     if (result.result.data.latest) {
-        rline.addClass("read-modified");
+        rline.classList.add("read-modified");
     }
     getActiveDocument().refreshSectionReadMarks();
 }

@@ -13,13 +13,13 @@ from timApp.auth.accesshelper import verify_edit_access, verify_view_access, get
     verify_teacher_access, verify_manage_access, verify_ownership, verify_seeanswers_access
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_current_user_group, \
     user_context_with_logged_in
-from timApp.bookmark.bookmarks import Bookmarks
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document, get_duplicate_id_msg
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
+from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.editing.proofread import proofread_pars, process_spelling_errors
 from timApp.document.exceptions import ValidationException, ValidationWarning
 from timApp.document.hide_names import is_hide_names
@@ -375,12 +375,15 @@ def update_associated_uploads(pars: List[DocParagraph], doc: DocInfo):
                 doc.children.append(up.block)
 
 
-def par_response(pars: List[DocParagraph],
-                 docu: DocInfo,
-                 spellcheck=False,
-                 update_cache=False,
-                 edit_request: Optional[EditRequest] = None,
-                 edit_result: Optional[DocumentEditResult] = None):
+def par_response(
+        pars: List[DocParagraph],
+        docu: DocInfo,
+        spellcheck=False,
+        update_cache=False,
+        edit_request: Optional[EditRequest] = None,
+        edit_result: Optional[DocumentEditResult] = None,
+        filter_return: Optional[GlobalParId] = None,
+):
     user_ctx = user_context_with_logged_in(None)
     doc = docu.document
     new_doc_version = doc.get_version()
@@ -452,7 +455,7 @@ def par_response(pars: List[DocParagraph],
                         else:
                             old_exported = old_par.get_exported_markdown()
                     trdiff = {'old': old_exported, 'new': newest_exported}
-    post_process_result = post_process_pars(doc, pars, user_ctx, view_ctx)
+    post_process_result = post_process_pars(doc, pars, user_ctx, view_ctx, filter_return=filter_return)
 
     changed_post_process_result = post_process_pars(doc, changed_pars, user_ctx, view_ctx)
     original_par = edit_request.original_par if edit_request else None
@@ -462,18 +465,25 @@ def par_response(pars: List[DocParagraph],
         for p, r in zip(post_process_result.texts, proofed_text):
             p['html'] = r.new_html
 
+    final_texts = post_process_result.texts
+    if filter_return:
+        # We might be posting/editing a note that is in the start or end paragraph of an area,
+        # so we need to make sure that the server won't return stray start/end area markers.
+        final_texts = [t for t in final_texts if not is_area_start_or_end(t)]
+
     r = json_response({'texts': render_template('partials/paragraphs.jinja2',
-                                                text=post_process_result.texts,
+                                                text=final_texts,
                                                 item={'rights': get_rights(doc.get_docinfo())},
                                                 preview=preview),
                        'js': post_process_result.js_paths,
                        'css': post_process_result.css_paths,
                        'trdiff': trdiff,
-                       'changed_pars': {p['id']: render_template('partials/paragraphs.jinja2',
-                                                                 text=[p],
-                                                                 item={'rights': get_rights(doc.get_docinfo())}) for p
-                                        in
-                                        changed_post_process_result.texts},
+                       'changed_pars': {p['id']: render_template(
+                           'partials/paragraphs.jinja2',
+                           text=[p],
+                           item={'rights': get_rights(doc.get_docinfo())}) for p
+                           in
+                           changed_post_process_result.texts if not is_area_start_or_end(p)},
                        'version': new_doc_version,
                        'duplicates': duplicates,
                        'original_par': {'md': original_par.get_markdown(),
@@ -482,6 +492,10 @@ def par_response(pars: List[DocParagraph],
                        })
     db.session.commit()
     return r
+
+
+def is_area_start_or_end(p):
+    return p.get('start_areas') or p.get('end_areas')
 
 
 # Gets next available name for plugin
@@ -802,7 +816,11 @@ def name_area(doc_id, area_name):
     doc.insert_paragraph(area_title + after_title, insert_before_id=area_start, attrs=area_attrs)
     doc.insert_paragraph('', insert_after_id=area_end, attrs={'area_end': area_name})
 
-    return ok_response()
+    return par_response(
+        doc.get_named_section(area_name),
+        docentry,
+        update_cache=current_app.config['IMMEDIATE_PRELOAD'],
+    )
 
 
 @edit_page.route("/unwrap_area/<int:doc_id>/<area_name>", methods=["POST"])

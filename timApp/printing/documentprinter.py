@@ -210,7 +210,7 @@ class DocumentPrinter:
         # render markdown for plugins
         presult = pluginify(doc=self._doc_entry.document, pars=pars_to_print, user_ctx=user_ctx, view_ctx=default_view_ctx,
                             pluginwrap=PluginWrap.Nothing, output_format=PluginOutputFormat.MD,
-                            user_print=plugins_user_print, target_format=tformat, dereference=False)
+                            user_print=plugins_user_print, target_format=tformat)
         pars_to_print = presult.pars
 
         export_pars = []

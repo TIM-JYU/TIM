@@ -7,7 +7,9 @@ import {
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as snv from "tim/ui/shortNameValidator";
 import * as tem from "tim/ui/formErrorMessage";
-import {IChangelogEntry, IManageResponse} from "../document/editing/edittypes";
+import {JsonValue} from "tim/util/jsonvalue";
+import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
+import {IManageResponse} from "../document/editing/edittypes";
 import * as copyFolder from "../folder/copyFolder";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
@@ -60,7 +62,7 @@ export class PermCtrl implements IController {
     private readUpdating: boolean = false;
     private file?: File;
     private newAliasForm!: IFormController; // initialized in the template
-    private notifySettings: unknown = {}; // TODO proper type
+    private notifySettings: JsonValue = {}; // TODO proper type
     private objName: string;
     private progress?: number;
     private result?: boolean;
@@ -545,7 +547,7 @@ export class PermCtrl implements IController {
         if (!this.loggedIn()) {
             return;
         }
-        const r = await to($http.get<unknown>("/notify/" + this.item.id));
+        const r = await to($http.get<JsonValue>("/notify/" + this.item.id));
         if (r.ok) {
             this.notifySettings = r.result.data;
         } else {

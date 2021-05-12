@@ -1,18 +1,16 @@
-"""Routes for login view."""
+"""Routes related to email signup and login."""
 import random
 import re
 import string
-import urllib.parse
-from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Dict, Union
 
-from flask import Blueprint, render_template
-from flask import current_app
+from flask import current_app, Response
 from flask import flash
-from flask import redirect
+from flask import render_template
 from flask import request
 from flask import session
 from flask import url_for
+from flask.sessions import SecureCookieSession
 
 from timApp.admin.user_cli import do_merge_users, do_soft_delete
 from timApp.auth.accesshelper import verify_admin, AccessDenied
@@ -28,17 +26,20 @@ from timApp.user.user import User, UserOrigin, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.users import create_anonymous_user
 from timApp.user.userutils import create_password_hash, check_password_hash
-from timApp.util.flask.requesthelper import verify_json_params, is_xhr, use_model, RouteException, NotExist
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import safe_redirect, json_response, ok_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_error, log_warning, log_info
 from timApp.util.utils import is_valid_email
 
-login_page = Blueprint('login_page',
-                       __name__,
-                       url_prefix='')  # TODO: Better URL prefix.
+login_page = TypedBlueprint(
+    'login_page',
+    __name__,
+    url_prefix='',  # TODO: Better URL prefix.
+)
 
 
-def get_real_name(email):
+def get_real_name(email: str) -> str:
     atindex = email.index('@')
     if atindex <= 0:
         return email
@@ -48,8 +49,7 @@ def get_real_name(email):
 
 
 @login_page.route("/logout", methods=['POST'])
-def logout():
-    user_id, = verify_json_params('user_id', require=False)
+def logout(user_id: Optional[int] = None) -> Response:
     if user_id is not None and user_id != get_current_user_id():
         group = get_other_users()
         group.pop(str(user_id), None)
@@ -59,20 +59,26 @@ def logout():
     return login_response()
 
 
-def login_response():
-    return json_response(dict(current_user=get_current_user_object().to_json(full=True),
-                              other_users=get_other_users_as_list()))
+def login_response() -> Response:
+    return json_response(login_user_data())
+
+
+def login_user_data() -> Dict:
+    return dict(
+        current_user=get_current_user_object().to_json(full=True),
+        other_users=get_other_users_as_list(),
+    )
 
 
 @login_page.route("/login")
-def login():
+def login(anchor: Optional[str] = None) -> Union[Response, str]:
     save_came_from()
     if logged_in():
         flash('You are already logged in.')
         return safe_redirect(session.get('came_from', '/'))
     return render_template('loginpage.jinja2',
                            text='Please use the above button to log in.',
-                           anchor=request.args.get('anchor'))
+                           anchor=anchor)
 
 
 def create_or_update_user(
@@ -80,6 +86,7 @@ def create_or_update_user(
         group_to_add: Optional[UserGroup]=None,
         update_username: bool = True,
 ) -> User:
+    assert info.username is not None
     user = User.get_by_name(info.username)
 
     if user is None and info.email:
@@ -112,10 +119,7 @@ def create_or_update_user(
     return user
 
 
-username_parse_error = 'Could not parse username from OpenID response.'
-
-
-def set_user_to_session(user: User):
+def set_user_to_session(user: User) -> None:
     adding = session.pop('adding_user', None)
     if adding:
         if user.id in get_session_users_ids():
@@ -128,7 +132,7 @@ def set_user_to_session(user: User):
         set_single_user_to_session(user)
 
 
-def set_single_user_to_session(user: User):
+def set_single_user_to_session(user: User) -> None:
     session['user_id'] = user.id
 
     # We also store user name to session because we don't want to have to access the database every request
@@ -143,32 +147,46 @@ test_pws = []
 
 
 @login_page.route("/checkTempPass", methods=['POST'])
-def check_temp_password():
+def check_temp_password(email: str, token: str) -> Response:
     """Checks that the temporary password provided by user is correct.
     Sends the real name of the user if the email already exists so that the name field can be prefilled.
     """
-    email_or_username, token, = verify_json_params('email', 'token')
+    email_or_username = email
     nu = check_temp_pw(convert_email_to_lower(email_or_username), token)
     u = User.get_by_email(nu.email)
     if u:
-        return json_response({'status': 'name', 'name': u.real_name, 'can_change_name': u.is_email_user})
+        return json_response({'status': 'name', 'name': u.real_name, 'can_change_name': u.real_name is None})
     else:
         return ok_response()
 
 
-@dataclass
-class AltSignupModel:
-    email: str
-    url: Optional[str] = None
+@login_page.route("/emailSignup", methods=['POST'])
+def email_signup(email: str, url: Optional[str] = None, reset_password: bool = False) -> Response:
+    """Begins email signup process or resets a password for a user.
 
-
-@login_page.route("/altsignup", methods=['POST'])
-@use_model(AltSignupModel)
-def alt_signup(m: AltSignupModel):
-    if not current_app.config['EMAIL_REGISTRATION_ENABLED']:
+    :param email: Email or username.
+    :param url: A fake parameter that should not be provided by human users.
+      This is a primitive method for catching bots.
+    :param reset_password: Whether the user is resetting a password.
+    :return: ok_response()
+    """
+    if not is_email_registration_enabled() and not reset_password:
         raise AccessDenied('Email registration is disabled.')
-    email_or_username = m.email.strip()
-    fail = False
+    return do_email_signup_or_password_reset(email, url, only_password_reset=reset_password)
+
+
+def is_email_registration_enabled() -> bool:
+    return current_app.config['EMAIL_REGISTRATION_ENABLED']
+
+
+def do_email_signup_or_password_reset(
+        email_or_u: str,
+        url: Optional[str] = None,
+        force_fail: bool = False,
+        only_password_reset: bool = False,
+) -> Response:
+    email_or_username = email_or_u.strip()
+    fail = force_fail
     is_email = False
     if not is_valid_email(email_or_username):
         u = User.get_by_name(email_or_username)
@@ -182,6 +200,8 @@ def alt_signup(m: AltSignupModel):
     else:
         is_email = True
         email = email_or_username.lower()
+        if only_password_reset and not User.get_by_email_case_insensitive(email):
+            fail = True
 
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
@@ -195,8 +215,8 @@ def alt_signup(m: AltSignupModel):
 
     # Real users should never submit the url parameter.
     # It is meant for catching bots.
-    if is_email and m.url and not (email.endswith('.fi') or email.endswith('@gmail.com')):
-        log_warning(f'Bot registration attempt: {email}, URL: {m.url}')
+    if is_email and url and not (email.endswith('.fi') or email.endswith('@gmail.com')):
+        log_warning(f'Bot registration attempt: {email}, URL: {url}')
         fail = True
 
     if fail:
@@ -230,33 +250,38 @@ def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
     return nu
 
 
-@dataclass
-class AltSignup2Model:
-    email: str
-    passconfirm: str
-    password: str
-    realname: str
-    token: str
+@login_page.route("/emailSignupFinish", methods=['POST'])
+def email_signup_finish(
+        email: str,
+        passconfirm: str,
+        password: str,
+        realname: Optional[str],
+        token: str,
+) -> Response:
+    """Finished the email signup or password reset process.
 
-
-@login_page.route("/altsignup2", methods=['POST'])
-@use_model(AltSignup2Model)
-def alt_signup_after(m: AltSignup2Model):
-    if m.password != m.passconfirm:
+    :param email: Email or username.
+    :param passconfirm: New password.
+    :param password: New password again.
+    :param realname: Full name of the user. Will be disregarded if the user already has a name set.
+    :param token: The temporary password provided by TIM.
+    :return: {'status': 'updated' | 'registered'}
+    """
+    if password != passconfirm:
         raise RouteException('PasswordsNotMatch')
 
     min_pass_len = current_app.config['MIN_PASSWORD_LENGTH']
-    if len(m.password) < min_pass_len:
+    if len(password) < min_pass_len:
         raise RouteException(f'PasswordTooShort')
 
     save_came_from()
-    email_or_username = convert_email_to_lower(m.email)
+    email_or_username = convert_email_to_lower(email)
 
-    nu = check_temp_pw(email_or_username, m.token)
-    email = nu.email
-    username = email
-    real_name = m.realname
-    user = User.get_by_email(email)
+    nu = check_temp_pw(email_or_username, token)
+    nu_email = nu.email
+    username = nu_email
+    real_name = realname
+    user = User.get_by_email(nu_email)
     if user is not None:
         # User with this email already exists
         user_id = user.id
@@ -269,12 +294,11 @@ def alt_signup_after(m: AltSignup2Model):
         username = user.name
         success_status = 'updated'
 
-        # If the user isn't an email user, don't let them change name
-        # (because it has been provided by other system such as Haka).
-        if not user.is_email_user:
+        # We disallow name change if the name has already been set.
+        if user.real_name is not None:
             real_name = user.real_name
 
-        user.update_info(UserInfo(username=username, full_name=real_name, email=email, password=m.password))
+        user.update_info(UserInfo(username=username, full_name=real_name, email=nu_email, password=password))
     else:
         if User.get_by_name(username) is not None:
             raise RouteException('UserAlreadyExists')
@@ -283,8 +307,8 @@ def alt_signup_after(m: AltSignup2Model):
             UserInfo(
                 username=username,
                 full_name=real_name,
-                email=email,
-                password=m.password,
+                email=nu_email,
+                password=password,
                 origin=UserOrigin.Email,
             )
         )
@@ -297,9 +321,9 @@ def alt_signup_after(m: AltSignup2Model):
     return json_response({'status': success_status})
 
 
-def is_possibly_home_org_account(email_or_username: str):
+def is_possibly_home_org_account(email_or_username: str) -> bool:
     return bool(re.fullmatch(
-        '[a-z]{2,8}|.+@([a-z]+\.)*' + re.escape(current_app.config['HOME_ORGANIZATION']),
+        r'[a-z]{2,8}|.+@([a-z]+\.)*' + re.escape(current_app.config['HOME_ORGANIZATION']),
         email_or_username,
     ))
 
@@ -310,14 +334,29 @@ def check_password_and_stripped(user: User, password: str) -> bool:
     return user.check_password(password.strip(), allow_old=True, update_if_old=True)
 
 
-@login_page.route("/altlogin", methods=['POST'])
-def alt_login():
-    save_came_from()
-    email_or_username = request.form['email']
-    password = request.form['password']
-    session['adding_user'] = request.form.get('add_user', 'false').lower() == 'true'
+@login_page.route("/emailLogin", methods=['POST'])
+def email_login(
+        email: str,
+        password: str,
+        add_user: bool = False,
+) -> Response:
+    """Logs a user in.
 
-    email_or_username = convert_email_to_lower(email_or_username)
+    :param email: Email or username.
+    :param password: Password.
+    :param add_user: Whether the user is adding a user to the session.
+    :return: See login_user_data().
+    """
+    save_came_from()
+    session['adding_user'] = add_user
+    return json_response(do_email_login(email, password))
+
+
+def do_email_login(
+        email_or_u: str,
+        password: str,
+) -> Dict:
+    email_or_username = convert_email_to_lower(email_or_u)
 
     users = User.get_by_email_case_insensitive_or_username(email_or_username)
     if len(users) == 1:
@@ -336,7 +375,7 @@ def alt_login():
             # if password hash was updated, save it
             if old_hash != user.pass_:
                 db.session.commit()
-            return finish_login()
+            return login_user_data()
         else:
             log_warning(f'Failed login (wrong password): {email_or_username}')
     elif not users:
@@ -351,46 +390,79 @@ def alt_login():
     error_msg = "EmailOrPasswordNotMatch"
     if is_possibly_home_org_account(email_or_username) and current_app.config['HAKA_ENABLED']:
         error_msg = 'EmailOrPasswordNotMatchUseHaka'
-    if is_xhr(request):
-        raise AccessDenied(error_msg)
+    raise AccessDenied(error_msg)
+
+
+@login_page.route("/simpleLogin/email", methods=['POST'])
+def simple_login(email: str) -> Response:
+    """Begins simple email login process if simple email login is enabled.
+
+    :param email: Email or username.
+    :return: ok_response().
+    """
+    verify_simple_email_login_enabled()
+    users = User.get_by_email_case_insensitive_or_username(convert_email_to_lower(email))
+
+    if len(users) == 0:
+        return do_email_signup_or_password_reset(email, force_fail=not is_email_registration_enabled())
+    elif len(users) == 1 and users[0].pass_ is None:
+        return do_email_signup_or_password_reset(email)
+    elif len(users) > 1:
+        raise RouteException('AmbiguousAccount')
     else:
-        flash(error_msg, 'loginmsg')
-    return finish_login(ready=False)
+        # The user already has a password - no need to do anything.
+        return ok_response()
 
 
-def convert_email_to_lower(email_or_username: str):
+@login_page.route("/simpleLogin/password", methods=['post'])
+def simple_login_password(email: str, password: str) -> Response:
+    """Continues simple email login process if simple email login is enabled.
+
+    :param email: Email or username.
+    :param password: Password. If the user is signing up, this is the temporary password provided by TIM. Otherwise,
+      it is the user's self-made password.
+    """
+    verify_simple_email_login_enabled()
+    users = User.get_by_email_case_insensitive_or_username(convert_email_to_lower(email))
+    if len(users) == 1 and users[0].pass_ is not None:
+        return json_response({'type': 'login', 'data': do_email_login(email, password)})
+    elif len(users) <= 1:
+        can_change_name = len(users) == 0 or users[0].real_name is None
+        name = None
+        if users and users[0].real_name:
+            name = users[0].real_name
+        try:
+            check_temp_pw(email, password)
+        except RouteException:
+            raise AccessDenied('EmailOrPasswordNotMatch')
+        else:
+            return json_response({
+                'type': 'registration',
+                'data': {'can_change_name': can_change_name, 'name': name},
+            })
+    else:
+        raise RouteException('AmbiguousAccount')
+
+
+def verify_simple_email_login_enabled() -> None:
+    if not current_app.config['SIMPLE_EMAIL_LOGIN']:
+        raise RouteException('Simple email login is not enabled.')
+
+
+def convert_email_to_lower(email_or_username: str) -> str:
     email_or_username = email_or_username.strip()
     if is_valid_email(email_or_username):
         return email_or_username.lower()
     return email_or_username
 
 
-def save_came_from():
-    came_from = request.args.get('came_from') or request.form.get('came_from')
-    if came_from:
-        session['came_from'] = came_from
-        session['last_doc'] = came_from
-    else:
-        session['came_from'] = session.get('last_doc', '/')
+def save_came_from() -> None:
+    session['came_from'] = session.get('last_doc', '/')
     session['anchor'] = request.args.get('anchor') or request.form.get('anchor') or ''
 
 
-def finish_login(ready=True):
-    if not ready:
-        return safe_redirect(url_for('start_page'))
-
-    anchor = session.get('anchor', '')
-    if anchor:
-        anchor = "#" + anchor
-    came_from = session.get('came_from', '/')
-    if not is_xhr(request):
-        return safe_redirect(urllib.parse.unquote(came_from) + anchor)
-    else:
-        return login_response()
-
-
 @login_page.route("/quickLogin/<username>")
-def quick_login(username):
+def quick_login(username: str) -> Response:
     """A debug helping method for logging in as another user.
 
     For developer use only.
@@ -402,10 +474,10 @@ def quick_login(username):
         raise NotExist('User not found.')
     set_single_user_to_session(user)
     flash(f"Logged in as: {username}")
-    return redirect(url_for('view_page.index_page'))
+    return safe_redirect(url_for('view_page.index_page'))
 
 
-def log_in_as_anonymous(sess) -> User:
+def log_in_as_anonymous(sess: SecureCookieSession) -> User:
     user_name = 'Anonymous'
     user_real_name = 'Guest'
     user = create_anonymous_user(user_name, user_real_name)

@@ -107,7 +107,7 @@ class TimMenuController extends PluginBase<
 
     $onInit() {
         super.$onInit();
-        if (this.vctrl == null || this.vctrl.isSlideView()) {
+        if (this.vctrl == null || this.vctrl.isSlideOrShowSlideView()) {
             return;
         }
         if (!this.attrsall.menu) {

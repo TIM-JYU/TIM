@@ -1,24 +1,14 @@
 Monivalinta
-True/False tyyppinen monivalintakysymys
-``` {#PLUGINNAMEHERE plugin="mmcq"}
-headerText: 'Kysymyksen otsikko'
-buttonText: 'Tallenna'
-stem: 'Kysymyksen varsinainen kysymys'
-choices:
-  -
-    correct: true
-    text: 'Ensimmäisen kysymyksen teksti'
-    reason: '1. kysymyksen selitys oikeasta vastauksesta'
-  -
-    correct: false
-    text: 'Toisen kysymyksen teksti'
-    reason: '2. kysymyksen selitys oikeasta vastauksesta'
-  -
-    correct: false
-    text: 'Kolmannen kysymyksen teksti'
-    reason: '3. kysymyksen selitys oikeasta vastauksesta'
-  -
-    correct: false
-    text: ''
-    reason: ''
+Ruksi ruutuun tyyppinen monivalinta
+``` {#PLUGINNAMEHERE dquestion="true" plugin="qst"}
+answerFieldType: checkbox
+answerLimit: 1
+expl: {}
+headers: []
+questionText: Kysymyksen otsikko
+questionTitle: Kysymys1
+questionType: checkbox-vertical
+rows:
+- Ensimmäisen kysymyksen teksti
+- Toisen kysymyksen teksti
 ```

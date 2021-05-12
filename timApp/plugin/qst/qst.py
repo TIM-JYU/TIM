@@ -166,6 +166,7 @@ def qst_answer_jso(m: QstAnswerModel):
     tim_info = {}
     answers = m.input.answers
     spoints = m.markup.points
+    default_points = m.markup.defaultPoints
     markup = m.markup
     info = m.info
     rand_arr = None
@@ -185,13 +186,15 @@ def qst_answer_jso(m: QstAnswerModel):
             locks = [locks]
         seed_string = info.user_id + m.taskID
         rand_arr = qst_rand_array(len(m.markup.rows), m.markup.randomizedRows, seed_string, random_seed, locks)
-    if spoints:
-        if rand_arr:
-            question_type = m.markup.questionType
-            spoints = qst_filter_markup_points(spoints, question_type, rand_arr)
-            m.markup.points = spoints
-        points_table = create_points_table(spoints)
-        default_points = m.markup.defaultPoints
+    if spoints or default_points:
+        if spoints:
+            if rand_arr:
+                question_type = m.markup.questionType
+                spoints = qst_filter_markup_points(spoints, question_type, rand_arr)
+                m.markup.points = spoints
+            points_table = create_points_table(spoints)
+        else:
+            points_table = None
         points = calculate_points_from_json_answer(answers, points_table, default_points)
         minpoints = markup.minpoints if markup.minpoints is not missing else -1e20
         maxpoints = markup.maxpoints if markup.maxpoints is not missing else 1e20
@@ -212,11 +215,12 @@ def qst_answer_jso(m: QstAnswerModel):
     if info and info.max_answers and info.max_answers <= info.earlier_answers + 1 and prev_state != answers:
         result = True
     jsonmarkup = m.markup.get_visible_data()
-    convert_md([jsonmarkup], options=DumboOptions.default())  # TODO get mathtype from doc settings?
+    convert_qst_md(jsonmarkup)  # TODO get mathtype from doc settings?
     save = answers
     if not markup.show_points():
         jsonmarkup.pop('expl', None)
         jsonmarkup.pop('points', None)
+        jsonmarkup.pop('defaultPoints', None)
 
     savedText = "Saved"  # markup.savedText or "Saved"
 
@@ -392,9 +396,7 @@ def get_question_md():
     md, = verify_json_params('text')
     markup = json.loads(md)
     plugin_data = {'markup': markup}
-    prepare_for_dumbo_attr_list_recursive(get_plugin_regex_obj('qst'), plugin_data)
-    convert_md([plugin_data], options=DumboOptions.default())
-
+    convert_qst_md(plugin_data)
     return json_response({'md': plugin_data['markup']})
 
 
@@ -656,6 +658,7 @@ def qst_try_hide_points(jso):
     if not limit_reached or not show_points:
         markup.pop('points', None)
         markup.pop('expl', None)
+        markup.pop('defaultPoints', None)
     return limit_reached
 
 
@@ -841,8 +844,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
         convert_mcq_to_qst(plugindata, par.get_attr('plugin', '').find('mmcq') == 0)
     if not edit or edit == 'false':
         settings = d.document.get_settings()
-        prepare_for_dumbo_attr_list_recursive(get_plugin_regex_obj('qst'), plugindata)
-        convert_md([plugindata], options=par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
+        convert_qst_md(plugindata, par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
     markup = plugindata.get('markup')
     return QuestionInDocument(
         markup=normalize_question_json(markup),
@@ -852,6 +854,13 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
         parId=par_id,
         isPreamble=bool(par.from_preamble()),
     )
+
+
+def convert_qst_md(plugindata: Dict, dumbo_opts: Optional[DumboOptions] = None) -> None:
+    if not dumbo_opts:
+        dumbo_opts = DumboOptions.default()
+    prepare_for_dumbo_attr_list_recursive(get_plugin_regex_obj('qst'), plugindata)
+    convert_md([plugindata], options=dumbo_opts)
 
 
 def render_static_qst(m: QstHtmlModel):
