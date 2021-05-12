@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict, Tuple
+from typing import Optional, List, Dict, Tuple, Union
 
 from mailmanclient import MailingList
 
@@ -16,10 +16,11 @@ from timApp.item.block import Block
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
     set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
     set_email_list_non_member_message_pass, set_email_list_allow_attachments, set_email_list_default_reply_type, \
-    add_email
+    add_email, get_email_list_member, remove_email_list_membership, set_email_list_member_send_status, \
+    set_email_list_member_delivery_status
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember, \
-    MessageListExternalMember
+    MessageListExternalMember, MessageListMember
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -623,16 +624,19 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     # Add the user group as a member to the message list, to be observed for changes in the group. Send and delivery
     # right doesn't mean much for user groups, except that it is the right that all the users in the user group got
     # added initially.
-    new_group_member = MessageListTimMember()
-    new_group_member.message_list_id = msg_list.id
-    new_group_member.group_id = ug.id
-    new_group_member.delivery_right = send_right
-    new_group_member.send_right = delivery_right
+    new_group_member = MessageListTimMember(message_list_id=msg_list.id, group_id=ug.id,
+                                            delivery_right=delivery_right, send_right=send_right)
     db.session.add(new_group_member)
 
-    # Add individual users to the message list as members.
-    for user in ug.users:
-        add_new_message_list_tim_user(msg_list, user, send_right, delivery_right, em_list)
+    # Add individual users to message channels.
+    if em_list is not None:
+        for user in ug.users:
+            user_email = user.email  # TODO: Search possible additional emails.
+            # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
+            #  placeholder value of True.
+            add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
+                      send_right=send_right, delivery_right=delivery_right)
+    return
 
 
 def add_message_list_external_email_member(msg_list: MessageListModel, external_email: str,
@@ -701,7 +705,7 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
     :param old_group: The group where the user was removed from.
     :return: None.
     """
-    # FIXME: This does not work. Most likely there is confusin with different IDs, which results in pulling wrong
+    # FIXME: This does not work. Most likely there is confusion with different IDs, which results in pulling wrong
     #  members/groups.
     # Get all the message lists for the user group.
     group_tim_members = MessageListTimMember.query.filter_by(group_id=old_group.id).all()
@@ -732,4 +736,90 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
             # as removed.
             pass
     db.session.commit()  # .flush() might be enough?
+
+
+def set_message_list_member_removed_status(member: MessageListMember,
+                                           removed: Optional[datetime], email_list: Optional[MailingList]) -> None:
+    """Set the message list member's membership removed status.
+
+    :param member: The member who's membership status is being set.
+    :param removed: Member's date of removal from the message list. If None, then the member is an active member on the
+    list.
+    :param email_list: An email list belonging to the message list. If None, the message list does not have an email
+    list.
+    :return: None.
+    """
+    if (member.membership_ended is None and removed is None) or (member.membership_ended and removed):
+        return
+
+    member.membership_ended = removed
+    # Remove members from email list or return them there.
+    if email_list:
+        if member.is_group():
+            ug = member.tim_member.user_group
+            ug_members = ug.users
+            for ug_member in ug_members:
+                mlist_member = get_email_list_member(email_list, ug_member.email)
+                if removed:
+                    remove_email_list_membership(mlist_member)
+                else:
+                    # Re-set the member's send and delivery rights on the email list.
+                    set_email_list_member_send_status(mlist_member, member.send_right)
+                    set_email_list_member_delivery_status(mlist_member, member.delivery_right)
+        elif member.is_personal_user():
+            # Make changes to member's status on the email list.
+            mlist_member = get_email_list_member(email_list, member.get_email())
+            # If there is an email list and the member is removed, do a soft removal on the email list.
+            if removed:
+                remove_email_list_membership(mlist_member)
+            else:
+                # Re-set the member's send and delivery rights on the email list.
+                set_email_list_member_send_status(mlist_member, member.send_right)
+                set_email_list_member_delivery_status(mlist_member, member.delivery_right)
+
+
+def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bool,
+                             email_list: Optional[MailingList] = None) -> None:
+    """Set message list member's send and delivery rights.
+
+    :param member: Member who's rights are being set.
+    :param send: Member's new send right.
+    :param delivery: Member's new delivery right.
+    :param email_list: If the message list has email list as one of it's message channels, set the send and delivery
+     rights there also.
+    :return: None.
+    """
+    # Send right
+    if member.send_right != send:
+        member.send_right = send
+        if email_list:
+            if member.is_personal_user():
+                mlist_member = get_email_list_member(email_list, member.get_email())
+                set_email_list_member_send_status(mlist_member, delivery)
+            elif member.is_group():
+                # For group, set the delivery status for it's members on the email list.
+                ug = member.tim_member.user_group
+                ug_members = ug.users  # ug.current_memberships
+                for ug_member in ug_members:
+                    # user = ug_member.personal_user
+                    email_list_member = get_email_list_member(email_list, ug_member.email)
+                    set_email_list_member_send_status(email_list_member, delivery)
+
+    # Delivery right.
+    if member.delivery_right != delivery:
+        member.delivery_right = delivery
+        if email_list:
+            # If message list has an email list associated with it, set delivery rights there.
+            if member.is_personal_user():
+                mlist_member = get_email_list_member(email_list, member.get_email())
+                set_email_list_member_delivery_status(mlist_member, delivery)
+            elif member.is_group():
+                # For group, set the delivery status for it's members on the email list.
+                ug = member.tim_member.user_group
+                ug_members = ug.users  # ug.current_memberships
+                for ug_member in ug_members:
+                    # user = ug_member.personal_user
+                    email_list_member = get_email_list_member(email_list, ug_member.email)
+                    set_email_list_member_delivery_status(email_list_member, delivery)
+
 

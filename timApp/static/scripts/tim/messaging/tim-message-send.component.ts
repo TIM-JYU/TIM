@@ -1,8 +1,7 @@
-import {Component, Input} from "@angular/core";
+import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {$http} from "../util/ngimport";
 import {to, to2} from "../util/utils";
-import {TaskId} from "../plugin/taskid";
 import {Users} from "../user/userService";
 
 interface TimMessageOptions {
@@ -23,7 +22,7 @@ interface TimMessageOptions {
     selector: "tim-message-send",
     template: `
         <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="recipientList">
-            <tim-close-button (click)="recipientList=''"></tim-close-button>
+            <tim-close-button (click)="closeComponent()"></tim-close-button>
             <p>Recipients:</p>
             <p><textarea [(ngModel)]="recipientList" rows="4" cols="40"></textarea>
             </p>
@@ -88,8 +87,17 @@ interface TimMessageOptions {
     styleUrls: ["./tim-message-send.scss"],
 })
 export class TimMessageComponent {
+    /**
+     * VIESTIM: This component has a minor bug. If the textfield of recipients is emptied by hand, the component closes
+     *  and it can't be reopened unless the recipientList variable changes. A hypothetical fix would be to use a
+     *  separate flag in the *ngIf, instead of just the recipientList variable. Then this flag would only be operated to
+     *  close when  the component is closed from the x. It would propably requrie change detection for the recipientList
+     *  variable, as it's length grows beoynd 0 the the flag is set on?
+     */
+
     @Input()
     recipientList: string = "";
+    @Output() recipientListChange = new EventEmitter<string>();
     messageSubject: string = "";
     messageBody: string = "";
     showOptions: boolean = false;
@@ -114,9 +122,17 @@ export class TimMessageComponent {
         senderEmail: Users.getCurrent().email,
     };
     @Input()
-    taskId?: TaskId;
+    docId?: number;
 
     constructor(private http: HttpClient) {}
+
+    /**
+     * Close the component and propagate the information to parent component.
+     */
+    closeComponent() {
+        this.recipientList = "";
+        this.recipientListChange.emit(this.recipientList);
+    }
 
     toggleOptions() {
         this.showOptions = !this.showOptions;
@@ -250,12 +266,12 @@ export class TimMessageComponent {
     }
 
     async sendEmailTim() {
-        if (!this.taskId) {
-            this.messageMsg = "Cannot send email without taskId";
+        if (!this.docId) {
+            this.messageMsg = "Cannot send email without docId";
             return;
         }
         this.messageMsg = ""; // JSON.stringify(response);
-        const url = `/multiSendEmail/${this.taskId.docTask().toString()}`;
+        const url = `/multiSendEmail/${this.docId}`;
         let response;
         // if reply all is chosen
         if (this.replyAll) {

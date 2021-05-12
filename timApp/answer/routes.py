@@ -475,10 +475,9 @@ def send_email(args: SendEmailModel):
     return ok_response()
 
 
-@answers.route("/multiSendEmail/<task_id_ext>", methods=['POST'])
-def multisendemail(task_id_ext: str):
-    tid = TaskId.parse(task_id_ext)
-    d = get_doc_or_abort(tid.doc_id)
+@answers.route("/multiSendEmail/<doc_id>", methods=['POST'])
+def multisendemail(doc_id: int):
+    d = get_doc_or_abort(doc_id)
     verify_teacher_access(d)
     mail_from = get_current_user_object().email
     bcc = ""

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 from flask import Response
 from sqlalchemy.orm.exc import NoResultFound  # type: ignore
@@ -8,7 +9,7 @@ from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui_link, create_new_email_list, \
     delete_email_list, check_emaillist_name_requirements, get_email_list_member, set_email_list_member_send_status, \
-    set_email_list_member_delivery_status
+    set_email_list_member_delivery_status, remove_email_list_membership
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
@@ -17,7 +18,8 @@ from timApp.messaging.messagelist.messagelist_utils import check_messagelist_nam
     set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
     set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
     set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
-    add_new_message_list_tim_user, add_new_message_list_group, add_message_list_external_email_member
+    add_new_message_list_tim_user, add_new_message_list_group, add_message_list_external_email_member, \
+    set_message_list_member_removed_status, set_member_send_delivery
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
@@ -203,11 +205,17 @@ class MemberInfo:
     sendRight: bool
     deliveryRight: bool
     email: str
+    removed: Optional[datetime] = None
 
 
 @messagelist.route("/savemembers", methods=['POST'])
 def save_members(listname: str, members: List[MemberInfo]) -> Response:
-    """Save the state of existing list members, e.g. send and delivery rights."""
+    """Save the state of existing list members, e.g. send and delivery rights.
+
+    :param listname: The name of the message list where the members will be saved.
+    :param members: The members to be saved.
+    :return: Response for the client. The Response is a simple ok_response().
+    """
     message_list = MessageListModel.get_list_by_name_exactly_one(listname)
     email_list = None
     if message_list.email_list_domain:
@@ -220,19 +228,8 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
         #  db in the first place.
         if db_member:
             # If send or delivery right has changed, then set them to db and on Mailman.
-            if db_member.send_right != member.sendRight:
-                db_member.send_right = member.sendRight
-                if email_list:
-                    mlist_member = get_email_list_member(email_list, member.email)
-                    set_email_list_member_send_status(mlist_member, member.deliveryRight)
-            if db_member.delivery_right != member.deliveryRight:
-                db_member.delivery_right = member.deliveryRight
-                if email_list:
-                    mlist_member = get_email_list_member(email_list, member.email)
-                    set_email_list_member_delivery_status(mlist_member, member.deliveryRight, by_moderator=True)
-
-            db.session.flush()
-
+            set_member_send_delivery(db_member, member.sendRight, member.deliveryRight, email_list=email_list)
+            set_message_list_member_removed_status(db_member, member.removed, email_list=email_list)
     db.session.commit()
     return ok_response()
 
@@ -248,7 +245,6 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
     # TODO: Implement checking whether or not users are just added to a list (like they are now) or they are invited
     #  to a list (requires link generation and other things).
 
-    # TODO: Check if there is an email list attached to the message list.
     em_list = None
     if msg_list.email_list_domain is not None:
         em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
@@ -264,14 +260,11 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
         if ug is not None:
             # The name belongs to a user group.
             add_new_message_list_group(msg_list, ug, sendRight, deliveryRight, em_list)
-        # TODO: If member candidate is not a user, or a user group, then we assume an external member. Add external
-        #  members.
+        # If member candidate is not a user, or a user group, then we assume an external member. Add external members.
         if is_valid_email(member_candidate.strip()) and em_list:
             add_message_list_external_email_member(msg_list, member_candidate.strip(),
                                                    sendRight, deliveryRight, em_list, None)
-
     db.session.commit()
-
     return ok_response()
 
 
@@ -279,14 +272,14 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
 def get_members(list_name: str) -> Response:
     """Get members belonging to a certain list.
 
-    :param list_name:
-    :return:
+    :param list_name: The list where we are querying all the members.
+    :return: A Response object, including all the members of a list.
     """
     verify_logged_in()
     # TODO: Verify user is a owner of the list.
 
     msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
-    list_members = msg_list.get_individual_members()
+    list_members = msg_list.get_tim_members()
     return json_response(list_members)
 
 
