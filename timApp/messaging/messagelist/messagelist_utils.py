@@ -647,11 +647,8 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     # Add the user group as a member to the message list, to be observed for changes in the group. Send and delivery
     # right doesn't mean much for user groups, except that it is the right that all the users in the user group got
     # added initially.
-    new_group_member = MessageListTimMember()
-    new_group_member.message_list_id = msg_list.id
-    new_group_member.group_id = ug.id
-    new_group_member.delivery_right = send_right
-    new_group_member.send_right = delivery_right
+    new_group_member = MessageListTimMember(message_list_id=msg_list.id, group_id=ug.id,
+                                            delivery_right=delivery_right, send_right=send_right)
     db.session.add(new_group_member)
 
     # Add individual users to message channels.
