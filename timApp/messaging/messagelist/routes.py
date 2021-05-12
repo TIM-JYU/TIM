@@ -244,10 +244,7 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
     #  List owner.
     verify_logged_in()
 
-    try:
-        msg_list = MessageListModel.get_list_by_name_exactly_one(msgList)
-    except NoResultFound:
-        raise RouteException(f"There is no list named {msgList}")
+    msg_list = MessageListModel.get_list_by_name_exactly_one(msgList)
 
     # TODO: Implement checking whether or not users are just added to a list (like they are now) or they are invited
     #  to a list (requires link generation and other things).

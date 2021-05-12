@@ -2,8 +2,11 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
+
 from timApp.messaging.messagelist.listoptions import ArchiveType, Channel, ReplyToListChanges
 from timApp.timdb.sqa import db
+from timApp.util.flask.requesthelper import NotExist
 
 
 class MemberJoinMethod(Enum):
@@ -100,8 +103,18 @@ class MessageListModel(db.Model):
 
     @staticmethod
     def get_list_by_name_exactly_one(name: str) -> 'MessageListModel':
-        m = MessageListModel.query.filter_by(name=name).one()
-        return m
+        """Get a message list. Use this when the list is expected to exist.
+
+        Raise NotExist exception, if the message list is not found (or technically if multiple ones are found).
+
+        :param name: The name of the list.
+        :return: MessageListModel object, if a MessageListModel with attribute name is found.
+        """
+        try:
+            m = MessageListModel.query.filter_by(name=name).one()
+            return m
+        except (MultipleResultsFound, NoResultFound):
+            raise NotExist
 
     @staticmethod
     def get_list_by_name_first(name_candidate: str) -> 'MessageListModel':
