@@ -1,6 +1,7 @@
 import {Component, Input, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
+import {markAsRead} from "tim/messaging/messagingUtils";
 import {FormsModule} from "@angular/forms";
 import {to2} from "tim/util/utils";
 import {TimMessageData} from "./tim-message-view.component";
@@ -49,7 +50,7 @@ interface ReplyOptions {
                            [disabled]="!canMarkAsRead || markedAsRead" (click)="markAsRead()"/>
                     <label for="mark-as-read">Mark as Read</label>
                     <span class="readReceiptLink"
-                          *ngIf="markedAsRead">Read receipt can be cancelled in <a>your messages</a></span>
+                          *ngIf="markedAsRead">Read receipt can be cancelled in <a href="messages/tim-messages">your messages</a></span>
                     <button class="timButton" title="Close Message"
                             [disabled]="(!markedAsRead && !replySent)"
                             (click)="closeMessage()">
@@ -104,16 +105,13 @@ export class TimMessageComponent implements OnInit {
      * Hides the message view; shows an alert about sending a read receipt and an option to cancel.
      */
     async markAsRead() {
-        this.markedAsRead = true;
-        const result = await to2(
-            this.http
-                .post("/timMessage/mark_as_read", {
-                    message_id: this.message?.id,
-                })
-                .toPromise()
-        );
-        if (!result.ok) {
-            console.error(result.result.error.error);
+        if (!this.message) {
+            return;
+        }
+
+        const result = await markAsRead(this.http, this.message.id);
+        if (result.ok) {
+            this.markedAsRead = true;
         }
     }
 
@@ -178,7 +176,7 @@ export class TimMessageComponent implements OnInit {
     setValues(timMessage: TimMessageData) {
         this.sender = timMessage.sender;
         this.heading = timMessage.message_subject;
-        this.fullContent = timMessage.message_body; // TODO handle html properly
+        this.fullContent = timMessage.message_body; // TODO handle paragraphs properly
         this.canMarkAsRead = timMessage.can_mark_as_read;
         this.canReply = timMessage.can_reply;
 

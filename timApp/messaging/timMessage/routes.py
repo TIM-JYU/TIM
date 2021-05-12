@@ -5,6 +5,9 @@ from datetime import datetime
 
 from flask import Response
 
+from timApp.document.document import Document
+from timApp.document.documents import import_document_from_file
+from timApp.document.viewcontext import default_view_ctx
 from timApp.util.flask.requesthelper import RouteException
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
@@ -13,8 +16,6 @@ from timApp.auth.accesshelper import verify_edit_access
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.document.document import Document
-from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
@@ -25,8 +26,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.responsehelper import ok_response, json_response, error_generic
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import remove_path_special_chars
-
+from timApp.util.utils import remove_path_special_chars, static_tim_doc
 
 timMessage = TypedBlueprint('timMessage', __name__, url_prefix='/timMessage')
 
@@ -79,6 +79,15 @@ class TimMessageData:
     recipients: List[str]
 
 
+@dataclass
+class TimMessageReadReceipt:
+    rcpt_id: int
+    message_id: int
+    user_id: int
+    marked_as_read_on: datetime
+    can_mark_as_read: bool
+
+
 @timMessage.route("/get/<int:item_id>", methods=['GET'])
 def get_tim_messages(item_id: int) -> Response:
     """
@@ -120,6 +129,7 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
         document = DocEntry.find_by_id(message.doc_id)
         if not document:
             return error_generic('Message document not found', 404)
+
         fullmessages.append(TimMessageData(id=message.id, sender=document.owners.pop().name, doc_id=message.doc_id,
                                            par_id=message.par_id, can_mark_as_read=message.can_mark_as_read,
                                            can_reply=message.reply, display_type=message.display_type,
@@ -131,6 +141,25 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     return fullmessages
 
 
+@timMessage.route("/get_read_receipt/<int:doc_id>", methods=['GET'])
+def get_read_receipt(doc_id: int) -> Response:
+    """
+    Retrieve read receipt object for the current user and message related to the given document id
+
+    :param doc_id: Id of the message document
+    :return:
+    """
+    message = InternalMessage.query.filter_by(doc_id=doc_id).first()
+    receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=get_current_user_object().get_personal_group().id,
+                                                         message_id=message.id).first()
+
+    receipt_data = TimMessageReadReceipt(rcpt_id=receipt.rcpt_id, message_id=message.id,
+                                         user_id=receipt.user_id, marked_as_read_on=receipt.marked_as_read_on,
+                                         can_mark_as_read=message.can_mark_as_read)
+
+    return json_response(receipt_data)
+
+
 @timMessage.route("/url_check", methods=['POST'])
 def check_urls(urls: str) -> Response:
     """
@@ -139,7 +168,8 @@ def check_urls(urls: str) -> Response:
     :param urls: Urls where user wishes to post TIM message
     :return: Shortened urls to show the user in the UI, or an error message
     """
-    url_list = list(filter(None, urls.splitlines()))  # turn URL string into a list with empty values (new lines) removed
+    url_list = list(
+        filter(None, urls.splitlines()))  # turn URL string into a list with empty values (new lines) removed
     valid_urls: List[str] = []
     error_message: str = ""
     status_code: int
@@ -156,14 +186,14 @@ def check_urls(urls: str) -> Response:
             shortened_url = re.sub(regex, "", url)
         else:
             shortened_url = url
-        document = DocEntry.find_by_path(shortened_url) # check if url exists in TIM
+        document = DocEntry.find_by_path(shortened_url)  # check if url exists in TIM
         if document is None:
             document = Folder.find_by_path(shortened_url)
         if document is None:
             error_message = url + " was not found in TIM"
             status_code = 404
             break
-        try: # check if user has permission to edit the url
+        try:  # check if user has permission to edit the url
             verify_edit_access(document)
             valid_urls.append(shortened_url)
         except Exception:
@@ -219,25 +249,21 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
     """
     sender = get_current_user_object()
     recipient_users = get_recipient_users(message_body.recipients)
-    message_folder_path = '/messages/tim-messages'
+    message_folder_path = 'messages/tim-messages'
 
     message_subject = message_body.messageSubject
     timestamp = datetime.now()  # add timestamp to document path to make it unique
     message_path = remove_path_special_chars(f'{timestamp}-{message_subject}')
 
-    check_messages_folder_path('/messages', message_folder_path)
-
+    check_messages_folder_path('messages', message_folder_path)
     message_doc = create_document(f'{message_folder_path}/{message_path}',
                                   message_subject)
-
     message_doc.block.add_rights([sender.get_personal_group()], AccessType.owner)
     message_doc.block.add_rights(recipient_users, AccessType.view)
 
-    message_doc.document.add_paragraph(f'# {message_subject}')
-    message_doc.document.add_paragraph(f'**From:** {sender.name}, {sender.email}')
-    message_doc.document.add_paragraph(f'**To:** {message_body.recipients}')
+    update_tim_msg_doc_settings(message_doc, sender, message_body)
     message_par = message_doc.document.add_paragraph(message_body.messageBody)
-
+    message_doc.document.add_paragraph('<manage-read-receipt></manage-read-receipt>', attrs={"allowangular": "true"})
     tim_message.block = message_doc.block
     tim_message.par_id = message_par.get_id()
 
@@ -285,6 +311,25 @@ def mark_as_read(message_id: int) -> Response:
     return ok_response()
 
 
+@timMessage.route("/cancel_read_receipt", methods=['POST'])
+def cancel_read_receipt(message_id: int) -> Response:
+    """
+    Removes read receipt date and the user who marked it from the database entry.
+
+    :param message_id: Message identifier
+    :return:
+    """
+    verify_logged_in()
+
+    receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=get_current_user_object().get_personal_group().id,
+                                                         message_id=message_id).first()
+    receipt.user_id = None
+    receipt.marked_as_read_on = None
+    db.session.commit()
+
+    return ok_response()
+
+
 def get_recipient_users(recipients: List[str]) -> List[UserGroup]:
     """
     Finds UserGroup objects of recipients based on their email
@@ -325,16 +370,17 @@ def get_display_pages(pagelist: List[str]) -> List[Item]:
 def check_messages_folder_path(msg_folder_path: str, tim_msg_folder_path: str) -> Folder:
     """
     Checks if the /messages/tim-messages folder exists and if not, creates it and
-    adds view rights to logged in users.
+    adds view rights to logged in users. Also creates the preamble for message documents.
 
     :param msg_folder_path: path for /messages
     :param tim_msg_folder_path: path for /messages/tim-messages
     :return: /messages/tim-messages folder
     """
     msg_folder = Folder.find_by_location(msg_folder_path, 'messages')
+    admin_group = UserGroup.get_admin_group()
 
     if not msg_folder:
-        msg_folder = Folder.create(msg_folder_path, UserGroup.get_admin_group(), title='Messages',
+        msg_folder = Folder.create(msg_folder_path, admin_group, title='Messages',
                                    creation_opts=FolderCreationOptions(apply_default_rights=True))
         msg_block = msg_folder.block
         if msg_block:
@@ -343,13 +389,59 @@ def check_messages_folder_path(msg_folder_path: str, tim_msg_folder_path: str) -
     tim_msg_folder = Folder.find_by_location(tim_msg_folder_path, 'tim-messages')
 
     if not tim_msg_folder:
-        tim_msg_folder = Folder.create(tim_msg_folder_path, UserGroup.get_admin_group(), title='TIM messages',
+        tim_msg_folder = Folder.create(tim_msg_folder_path, admin_group, title='TIM messages',
                                        creation_opts=FolderCreationOptions(apply_default_rights=True))
         tim_msg_block = tim_msg_folder.block
         if tim_msg_block:
             tim_msg_block.add_rights([UserGroup.get_logged_in_group()], AccessType.edit)
 
+    tim_msg_preambles = Folder.find_by_location(f'{tim_msg_folder_path}/templates/preambles', 'preambles')
+
+    if not tim_msg_preambles:
+        tim_msg_templates = Folder.create(f'{tim_msg_folder_path}/templates', admin_group,
+                                          title='templates',
+                                          creation_opts=FolderCreationOptions(apply_default_rights=True))
+        tim_msg_preambles = Folder.create(f'{tim_msg_folder_path}/templates/preambles', admin_group,
+                                          title='preambles',
+                                          creation_opts=FolderCreationOptions(apply_default_rights=True))
+
+        tim_msg_templates_block = tim_msg_templates.block
+        if tim_msg_templates_block:
+            tim_msg_templates_block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+
+        tim_msg_preambles_block = tim_msg_preambles.block
+        if tim_msg_preambles_block:
+            tim_msg_preambles_block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+
+    preamble_path = f'{tim_msg_folder_path}/templates/preambles/preamble'
+    tim_msg_preamble = DocEntry.find_by_path(preamble_path)
+
+    if not tim_msg_preamble:
+        tim_msg_preamble = import_document_from_file(
+            static_tim_doc('initial/tim_msg_preamble.md'), preamble_path, admin_group, title='preamble',
+        )
+
+        tim_msg_preamble.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+
     return tim_msg_folder
+
+
+def update_tim_msg_doc_settings(message_doc: DocInfo, sender: User, message_body: MessageBody) -> None:
+    """
+    Sets the message information into the preamble macros.
+
+    :param message_doc: TIM message document
+    :param sender: Sender user
+    :param message_body: Message body
+    :return:
+    """
+    s = message_doc.document.get_settings().get_dict().get('macros', {})
+    s['subject'] = message_body.messageSubject
+    s['sendername'] = sender.name
+    s['senderemail'] = sender.email
+    s['recipients'] = message_body.recipients
+
+    message_doc.document.add_setting('macros', s)
 
 
 def create_message_displays(msg_id: int, pages: List[Item], recipients: List[UserGroup]) -> None:

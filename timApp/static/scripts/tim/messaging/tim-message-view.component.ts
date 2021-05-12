@@ -34,7 +34,6 @@ export class TimMessageViewComponent implements OnInit {
 
         if (messages.ok) {
             this.timMessages = messages.result;
-            console.log(this.timMessages);
         } else {
             console.error(messages.result.error.error);
         }

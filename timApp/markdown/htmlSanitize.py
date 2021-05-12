@@ -102,6 +102,7 @@ TIM_SAFE_TAGS = [
     'tim-message-list-admin',
     'tim-message',
     'tim-message-view',
+    'manage-read-receipt',
 ]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
