@@ -317,7 +317,8 @@ def get_list_ui_link(listname: str, domain: Optional[str]) -> Optional[str]:
 
     :param listname: The list we are getting the UI link for.
     :param domain: Domain for the list.
-    :return: A Hyperlink for list web UI on the Mailman side. If there is no email list for
+    :return: A Hyperlink for list web UI on the Mailman side. If there is no email list for (parameter domain is None)
+    then return None. Return None if no connection to Mailman is configured.
     """
     if domain is None or not config.MAILMAN_UI_LINK_PREFIX:
         return None

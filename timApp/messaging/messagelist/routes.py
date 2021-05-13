@@ -22,7 +22,7 @@ from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.requesthelper import RouteException, is_localhost
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import is_valid_email
@@ -38,7 +38,6 @@ def create_list(options: ListOptions) -> Response:
     :return: A Response with the list's management doc included. This way the creator can re-directed to the list's
     management page directly.
     """
-    # VIESTIM: We assume here that email list will be created alongside message list. This might not be the case.
     verify_logged_in()
     verify_groupadmin()  # Creator of a list has to be a group admin.
 
@@ -62,6 +61,13 @@ def create_list(options: ListOptions) -> Response:
 
 
 def test_name(name_candidate: str) -> None:
+    """Check new message list's name candidate's name. The name has to meet naming rules, it has to be not already be
+    in use and it cannot be a reserved name.
+
+    :param name_candidate: The name candidate to check.
+    :return: None. If the function retuns control to it's caller, then name is viable to use for a message list. If at
+    some point the name is not viable, then an exception is raised.
+    """
     normalized_name = name_candidate.strip()
     name, sep, domain = normalized_name.partition("@")
     check_messagelist_name_requirements(name)
@@ -79,6 +85,7 @@ def check_name(name_candidate: str) -> Response:
 
     :param name_candidate: Possible name for message/email list. Should either be a name for a list or a fully qualifed
     domain name for (email) list. In the latter case we also check email list specific name requirements.
+    :return: OK response.
     """
     test_name(name_candidate)
     return ok_response()
@@ -137,7 +144,6 @@ def get_list(document_id: int) -> Response:
         domain=message_list.email_list_domain,
         archive=message_list.archive,
         default_reply_type=message_list.default_reply_type,
-        # TODO: Change to get these from db.
         tim_users_can_join=message_list.tim_user_can_join,
         list_subject_prefix=message_list.subject_prefix,
         members_can_unsubscribe=message_list.can_unsubscribe,
@@ -156,6 +162,11 @@ def get_list(document_id: int) -> Response:
 
 @messagelist.route("/save", methods=['POST'])
 def save_list_options(options: ListOptions) -> Response:
+    """Save message list's options.
+
+    :param options: The options to be saved.
+    :return: OK response.
+    """
     verify_logged_in()
     # TODO: Additional checks for who get's to call this route.
     #  list's owner
@@ -234,6 +245,14 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
 
 @messagelist.route("/addmember", methods=['POST'])
 def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliveryRight: bool) -> Response:
+    """Add new members to a message list.
+
+    :param memberCandidates: Names of member candidates.
+    :param msgList: The message list where we are trying to add new members.
+    :param sendRight: The send right on a list for all the member candidates.
+    :param deliveryRight: The delivery right on a list for all the member candidates.
+    :return: OK response.
+    """
     # TODO: Validate access rights.
     #  List owner.
     verify_logged_in()
@@ -271,7 +290,7 @@ def get_members(list_name: str) -> Response:
     """Get members belonging to a certain list.
 
     :param list_name: The list where we are querying all the members.
-    :return: A Response object, including all the members of a list.
+    :return: All the members of a list.
     """
     verify_logged_in()
     # TODO: Verify user is a owner of the list.
@@ -286,7 +305,7 @@ def archive(message: MessageTIMversalis) -> Response:
     """Archive a message sent to a message list.
 
     :param message: The message to be archived.
-    :return: Return OK response if everything went smoothly.
+    :return: OK response
     """
     # VIESTIM: This view function might be unnecessary. Probably all different message channels have to use their own
     #  handling routes for parsing purposes, and then possible archiving happens there.
@@ -310,7 +329,9 @@ def archive(message: MessageTIMversalis) -> Response:
 
 @messagelist.route("/test", methods=['GET'])
 def test_route() -> Response:
-    """A testing route."""
+    """A testing route. Only allow calls here during development, i.e. when operating from localhost."""
+    if not is_localhost():
+        raise RouteException()
     # VIESTIM: This fails if the message list doesn't exist.
     msg_list = MessageListModel.get_list_by_name_exactly_one("uusilista293u0")
     message = MessageTIMversalis(message_list_name=msg_list.name,

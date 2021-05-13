@@ -143,7 +143,7 @@ class MessageListModel(db.Model):
         return self.archive
 
     def get_individual_members(self) -> List['MessageListMember']:
-        """Get all the members that are not user groups."""
+        """Get all the members that are not groups."""
         individuals = []
         for member in self.members:
             # VIESTIM: When user's verification is done, replace 'not member.membership_ended' with the commented out
