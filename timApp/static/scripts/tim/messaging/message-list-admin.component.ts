@@ -112,7 +112,7 @@ import {Users} from "../user/userService";
                 <a [href]="emailAdminURL">Advanced email list settings</a>
             </div>
             <div>
-                <button class="btn btn-default" (click)="save()">Save changes</button>
+                <button class="timButton" (click)="saveOptions()">Save changes</button>
             </div>
             <div id="add-members-section" class="section">
                 <label for="add-multiple-members">Add members</label> <br/>
@@ -128,7 +128,7 @@ import {Users} from "../user/userService";
                         <label for="new-member-delivery-right">New member's delivery right.</label>
                     </div>
                 </div>
-                <button (click)="addNewListMember()" class="btn-default">Add new members</button>
+                <button (click)="addNewListMember()" class="timButton">Add new members</button>
                 <div id="member-add-feedback">
                     <tim-alert *ngIf="memberAddSucceededResponse"
                                severity="success">{{memberAddSucceededResponse}}</tim-alert>
@@ -161,20 +161,20 @@ import {Users} from "../user/userService";
                                    name="member-delivery-right-{{member.email}}">
                         </td>
                         <td>{{member.removed}}</td>
-                        <td><input type="checkbox" (click)="membershipChange(member)" [ngModel]="!!member.removed" 
+                        <td><input type="checkbox" (click)="membershipChange(member)" [ngModel]="!!member.removed"
                                    name="removed-{{member.email}}"/></td>
                     </tr>
                     </tbody>
                 </table>
+                <button class="timButton" (click)="saveMembers()">Save</button>
             </div>
             <div id="email-send">
-                <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"
-                                  on ></tim-message-send>
-                <button (click)="openEmail()" *ngIf="!recipients">Send email to list</button>
+                <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
+                <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send email to list</button>
             </div>
             <div class="section">
                 <h2>List deletion</h2>
-                <button class="btn btn-default" (click)="deleteList()">Delete List</button>
+                <button class="timButton" (click)="deleteList()">Delete List</button>
             </div>
         </form>
     `,
@@ -232,18 +232,11 @@ export class MessageListAdminComponent implements OnInit {
      * @param member Who's membership on the list is changed.
      */
     membershipChange(member: MemberInfo) {
-        // console.log(member.name);
-        // console.log(member.email);
-        // console.log(member.removed);
         if (member.removed) {
             member.removed = undefined;
         } else {
             member.removed = moment();
         }
-
-        // console.log(member.name);
-        // console.log(member.email);
-        // console.log(member.removed);
     }
 
     getDocId() {
@@ -455,8 +448,8 @@ export class MessageListAdminComponent implements OnInit {
     /**
      * Function to initiate, when the user saves the list options.
      */
-    async save() {
-        const result = await this.saveListOptions({
+    async saveOptions() {
+        const result = await this.saveOptionsCall({
             name: this.listname,
             domain: this.domain,
             list_info: this.listInfo,
@@ -479,7 +472,20 @@ export class MessageListAdminComponent implements OnInit {
         } else {
             console.error("save fail");
         }
+    }
 
+    /**
+     * Helper for list saving to keep types in check.
+     * @param options All the list options the user saves.
+     */
+    private saveOptionsCall(options: ListOptions) {
+        return to2(this.http.post(`/messagelist/save`, {options}).toPromise());
+    }
+
+    /**
+     * Save the lists members' state.
+     */
+    async saveMembers() {
         const resultSaveMembers = await this.saveMembersCall(this.membersList);
 
         if (resultSaveMembers.ok) {
@@ -492,14 +498,10 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     /**
-     * Helper for list saving to keep types in check.
-     * @param options All the list options the user saves.
+     * Makes the actual REST call to save the state of list members'.
+     * @param memberList
      */
-    private saveListOptions(options: ListOptions) {
-        return to2(this.http.post(`/messagelist/save`, {options}).toPromise());
-    }
-
-    private saveMembersCall(memberList: MemberInfo[]) {
+    saveMembersCall(memberList: MemberInfo[]) {
         return to2(
             this.http
                 .post(`${this.urlPrefix}/savemembers`, {

@@ -135,4 +135,3 @@ def handle_new_message(event: NewMessageEvent) -> None:
     parsed_message = parse_mailman_message(event.message, message_list)
     archive_message(message_list, parsed_message)
     # TODO: Relay this message forward, if there are other message channels in use for a message list.
-    return

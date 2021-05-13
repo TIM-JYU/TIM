@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict, Tuple, Union
+from typing import Optional, List, Dict, Tuple
 
 from mailmanclient import MailingList
 
@@ -36,24 +36,16 @@ def check_messagelist_name_requirements(name_candidate: str) -> None:
 
     :param name_candidate: Name to check against naming rules.
     """
-    # Check name against name rules. These rules should also be checked client-side.
-    check_name_rules(name_candidate)
-
-    # Check name is available.
-    check_name_availability(name_candidate)
-
     # There might become a time when we also check here if name is some message list specific reserved name. We
     # haven't got a source of those reserved names, not including names that already exists, so no check at this time.
-
-    # If we are here, name can be used by the user.
-    return
+    check_name_rules(name_candidate)
+    check_name_availability(name_candidate)
 
 
 def check_name_availability(name: str) -> None:
     msg_list_exists = MessageListModel.name_exists(name)
     if msg_list_exists:
         raise RouteException(f"Message list with name {name} already exists.")
-    return
 
 
 def check_name_rules(name_candidate: str) -> None:
@@ -103,9 +95,6 @@ def check_name_rules(name_candidate: str) -> None:
     required_digit = re.compile(r"\d")
     if required_digit.search(name_candidate) is None:
         raise RouteException("Name has to include at least one digit.")
-
-    # If we are here, then the name follows all naming rules.
-    return
 
 
 @dataclass
@@ -264,7 +253,6 @@ Recipients: {message.recipients}\r\n
     # TODO: Set proper rights to the document. The message sender owns the document. Owners of the list get at least a
     #  view right. Other rights depend on the message list's archive policy.
     db.session.commit()
-    return
 
 
 def set_message_link(link_to: Document, link_text: str, link_from_url: str) -> None:
@@ -277,7 +265,6 @@ def set_message_link(link_to: Document, link_text: str, link_from_url: str) -> N
     link = f"""#- {{.mailfooter}}\r\n
 [{link_text}]({link_from_url})"""
     link_to.add_text(link)
-    return
 
 
 def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> MessageTIMversalis:
@@ -434,7 +421,6 @@ def set_message_list_notify_owner_on_change(message_list: MessageListModel,
         #  we rely on Mailman's notifications for list changes.
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_notify_owner_on_list_change(email_list, message_list.notify_owner_on_change)
-    return
 
 
 def set_message_list_member_can_unsubscribe(message_list: MessageListModel,
@@ -456,7 +442,6 @@ def set_message_list_member_can_unsubscribe(message_list: MessageListModel,
         # Email list's have their own settings for unsubscription.
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_unsubscription_policy(email_list, can_unsubscribe_flag)
-    return
 
 
 def set_message_list_subject_prefix(message_list: MessageListModel, subject_prefix: Optional[str]) -> None:
@@ -474,7 +459,6 @@ def set_message_list_subject_prefix(message_list: MessageListModel, subject_pref
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_subject_prefix(email_list, subject_prefix)
-    return
 
 
 def set_message_list_tim_users_can_join(message_list: MessageListModel, can_join_flag: Optional[bool]) -> None:
@@ -491,7 +475,6 @@ def set_message_list_tim_users_can_join(message_list: MessageListModel, can_join
         return
 
     message_list.tim_user_can_join = can_join_flag
-    return
 
 
 def set_message_list_default_send_right(message_list: MessageListModel,
@@ -505,7 +488,6 @@ def set_message_list_default_send_right(message_list: MessageListModel,
     if default_send_right_flag is None or message_list.default_send_right == default_send_right_flag:
         return
     message_list.default_send_right = default_send_right_flag
-    return
 
 
 def set_message_list_default_delivery_right(message_list: MessageListModel,
@@ -519,7 +501,6 @@ def set_message_list_default_delivery_right(message_list: MessageListModel,
     if default_delivery_right_flag is None or message_list.default_delivery_right == default_delivery_right_flag:
         return
     message_list.default_delivery_right = default_delivery_right_flag
-    return
 
 
 def set_message_list_only_text(message_list: MessageListModel, only_text: Optional[bool]) -> None:
@@ -536,7 +517,6 @@ def set_message_list_only_text(message_list: MessageListModel, only_text: Option
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_only_text(email_list, only_text)
-    return
 
 
 def set_message_list_non_member_message_pass(message_list: MessageListModel,
@@ -554,7 +534,6 @@ def set_message_list_non_member_message_pass(message_list: MessageListModel,
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_non_member_message_pass(email_list, non_member_message_pass_flag)
-    return
 
 
 def set_message_list_allow_attachments(message_list: MessageListModel, allow_attachments_flag: Optional[bool]) -> None:
@@ -565,7 +544,6 @@ def set_message_list_allow_attachments(message_list: MessageListModel, allow_att
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_allow_attachments(email_list, allow_attachments_flag)
-    return
 
 
 def set_message_list_default_reply_type(message_list: MessageListModel,
@@ -583,7 +561,6 @@ def set_message_list_default_reply_type(message_list: MessageListModel,
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_default_reply_type(email_list, default_reply_type)
-    return
 
 
 def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
@@ -617,7 +594,6 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
         #  placeholder value of True.
         add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
                   send_right=new_tim_member.send_right, delivery_right=new_tim_member.delivery_right)
-    return
 
 
 def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
@@ -688,7 +664,6 @@ def add_message_list_external_email_member(msg_list: MessageListModel, external_
 
     add_email(em_list, external_email, email_owner_pre_confirmation=True, real_name=display_name,
               send_right=send_right, delivery_right=delivery_right)
-    return
 
 
 def check_group_owner_or_manage_right(ug: UserGroup) -> bool:
@@ -720,7 +695,6 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
         add_new_message_list_tim_user(message_list, user, message_list.default_send_right,
                                       message_list.default_delivery_right, email_list)
     db.session.commit()  # .flush() might be enough?
-    return
 
 
 def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
@@ -761,7 +735,6 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
             # as removed.
             pass
     db.session.commit()  # .flush() might be enough?
-    return
 
 
 def set_message_list_member_removed_status(member: MessageListMember,
@@ -847,5 +820,3 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
                     # user = ug_member.personal_user
                     email_list_member = get_email_list_member(email_list, ug_member.email)
                     set_email_list_member_delivery_status(email_list_member, delivery)
-
-

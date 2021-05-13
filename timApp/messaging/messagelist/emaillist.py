@@ -87,7 +87,7 @@ class EmailList:
     def freeze_list(listname: str) -> None:
         """
         Freeze an email list. No posts are allowed on the list after freezing. Think a course specific email list and
-        the course ends, but it's mail archive is kept intact for later potential use. This stops (or at least
+        the course ends, but  mail archive is kept intact for later potential use. This stops (or at least
         mitigates) that the mail archive on that list changes after the freezing.
 
         :param listname: The list about the be frozen.
@@ -112,7 +112,7 @@ class EmailList:
             mail_list_settings["default_nonmember_action"] = "discard"
             mail_list_settings.save()
         except HTTPError:
-            return
+            raise
 
     @staticmethod
     def unfreeze_list(listname: str) -> None:
@@ -149,7 +149,6 @@ def set_notify_owner_on_list_change(mlist: MailingList, on_change_flag: bool) ->
     """
     mlist.settings["admin_notify_mchanges"] = on_change_flag
     mlist.settings.save()
-    return
 
 
 def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> None:
@@ -159,7 +158,7 @@ def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> N
     :param fqdn_listname: The fully qualified domain name for the list, e.g. testlist1@domain.fi.
     """
     if _client is None:
-        raise RouteException("No connection to Mailman, email list is not deleted.")
+        raise NotExist("No connection to Mailman, email list is not deleted.")
     try:
         # get_list() may raise HTTPError
         list_to_delete: MailingList = _client.get_list(fqdn_listname)
@@ -181,7 +180,6 @@ def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> N
             #  future moderation requests from messages and subscriptions to just discard?
         except HTTPError:
             raise
-    return
 
 
 def remove_email_list_membership(member: Member, permanent_deletion: bool = False) -> None:
@@ -229,7 +227,6 @@ def set_default_templates(email_list: MailingList) -> None:
     #  empty strings and that should still fix the broken coding leading to attachments issue.
     email_list.set_template("list:member:regular:footer", footer_uri)
     email_list.set_template("list:member:regular:header", header_uri)
-    return
 
 
 def set_email_list_archive_policy(email_list: MailingList, archive: ArchiveType) -> None:
@@ -242,7 +239,6 @@ def set_email_list_archive_policy(email_list: MailingList, archive: ArchiveType)
     mm_policy = mailman_archive_policy_correlate[archive]
     mlist_settings["archive_policy"] = mm_policy
     mlist_settings.save()  # This needs to be the last line, otherwise changes won't take effect.
-    return
 
 
 def create_new_email_list(list_options: ListOptions, owner: User) -> None:
@@ -256,8 +252,8 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # VIESTIM: If someone is somehow able to start creating lists, while mailmanclient isn't configured,
         #  it means that we failed to check for connection at some point. Would there be a way to give a kind of a
         #  traceback here with error logging, so this would be easy to narrow down where the slip up is?
-        log_error("New list creation has been accessed, even though mailmanclient is not configured for connection.")
-        raise RouteException("No connection configured.")
+        #
+        raise NotExist("No connection configured.")
     try:
         if list_options.domain:
             check_name_availability(list_options.name, list_options.domain)
@@ -311,31 +307,32 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     except HTTPError:
         # TODO: exceptions to catch: domain doesn't exist, list can't be created, connection to server fails.
         raise
-    return
 
 
-def get_list_ui_link(listname: str, domain: str) -> str:
-    """
-    Get a link for a list to use for advanced email list options and moderation.
+def get_list_ui_link(listname: str, domain: Optional[str]) -> Optional[str]:
+    """Get a link for a list to use for advanced email list options and moderation.
+
+    The function assumes that Mailman uses Postorius as it's web-UI. There exists no guarantee that other web-UIs would
+    use the exact form for their links. If Postorius is changed to some other web-UI, this needs to be updated.
+
     :param listname: The list we are getting the UI link for.
-    :param domain: Domin for the list.
-    :return: A Hyperlink for list web UI on the Mailman side.
+    :param domain: Domain for the list.
+    :return: A Hyperlink for list web UI on the Mailman side. If there is no email list for (parameter domain is None)
+    then return None. Return None if no connection to Mailman is configured.
     """
+    if domain is None or not config.MAILMAN_UI_LINK_PREFIX:
+        return None
     if _client is None:
-        return ""
+        return None
     try:
         mail_list = _client.get_list(f"{listname}@{domain}")
         # Get the list's list id, which is basically it's address/name but '@' replaced with a dot.
         list_id: str = mail_list.rest_data["list_id"]
-        # VIESTIM: This here is now hardcoded for Postorius Web UI. There might not be a way to just
-        #  programmatically get the specific hyperlink for non-TIM email list management needs, but is there a
-        #  way to not hard code the Postorius part in (Postorius is Mailman's default web UI and technically
-        #  we could switch to a different web UI)?
         # Build the hyperlink.
         link = f"{config.MAILMAN_UI_LINK_PREFIX}{list_id}"
         return link
     except HTTPError:
-        return "Connection to Mailman failed while getting list's UI link."
+        raise RouteException("Connection to Mailman failed while getting list's UI link.")
 
 
 def set_email_list_description(mlist: MailingList, new_description: str) -> None:
@@ -453,7 +450,6 @@ def set_email_list_member_send_status(member: Member, status: bool) -> None:
     # Changing the moderation_action requires saving, otherwise change won't take effect.
     try:
         member.save()
-        return
     except HTTPError:
         # Saving can fail if connection is lost to Mailman or it's server.
         raise
@@ -486,7 +482,6 @@ def set_email_list_member_delivery_status(member: Member, status: bool, by_moder
     # If changed, preferences have to be saved for them to take effect on Mailman.
     try:
         member.preferences.save()
-        return
     except HTTPError:
         # Saving can fail if connection is lost to Mailman or it's server.
         raise
@@ -533,7 +528,6 @@ def check_emaillist_name_requirements(name_candidate: str, domain: str) -> None:
     # change to allow things that email list names aren't allowed to have, then we need a name rule check here.
     check_name_availability(name_candidate, domain)
     check_reserved_names(name_candidate)
-    return
 
 
 def check_name_availability(name_candidate: str, domain: str) -> None:
@@ -557,7 +551,6 @@ def check_name_availability(name_candidate: str, domain: str) -> None:
     except HTTPError:
         # VIESTIM: Should we just raise the old error or inspect it closer? Now raise old error.
         raise  # "Connection to server failed."
-    return
 
 
 def check_reserved_names(name_candidate: str) -> None:
@@ -573,7 +566,6 @@ def check_reserved_names(name_candidate: str) -> None:
     reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
     if name_candidate in reserved_names:
         raise RouteException(f"Name {name_candidate} is a reserved name and cannot be used.")
-    return
 
 
 def get_email_list_member(mlist: MailingList, email: str) -> Member:
@@ -601,7 +593,6 @@ def set_email_list_unsubscription_policy(email_list: MailingList, can_unsubscrib
     else:
         email_list.settings["unsubscription_policy"] = "confirm_then_moderate"
     email_list.settings.save()
-    return
 
 
 def set_email_list_subject_prefix(email_list: MailingList, subject_prefix: str) -> None:
@@ -612,7 +603,6 @@ def set_email_list_subject_prefix(email_list: MailingList, subject_prefix: str) 
     """
     email_list.settings["subject_prefix"] = subject_prefix
     email_list.settings.save()
-    return
 
 
 def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
@@ -633,7 +623,6 @@ def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
 
         email_list.settings["archive_rendering_mode"] = "markdown"
     email_list.settings.save()
-    return
 
 
 def set_email_list_non_member_message_pass(email_list: MailingList, non_member_message_pass_flag: bool) -> None:
@@ -649,7 +638,6 @@ def set_email_list_non_member_message_pass(email_list: MailingList, non_member_m
     else:
         email_list.settings["default_nonmember_action"] = "hold"
     email_list.settings.save()
-    return
 
 
 # VIESTIM: A temporary global variable including all the file extensions that are allowed if attachments are allowed
@@ -675,7 +663,6 @@ def set_email_list_allow_attachments(email_list: MailingList, allow_attachments_
         email_list.settings["pass_extensions"] = ["no_extensions"]
 
     email_list.settings.save()
-    return
 
 
 def set_email_list_default_reply_type(email_list: MailingList, default_reply_type: ReplyToListChanges) -> None:
@@ -688,4 +675,3 @@ def set_email_list_default_reply_type(email_list: MailingList, default_reply_typ
     email_list.settings["reply_goes_to_list"] = reply_to_munging[default_reply_type]
 
     email_list.settings.save()
-    return
