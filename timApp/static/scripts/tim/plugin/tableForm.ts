@@ -1326,9 +1326,6 @@ export class TableFormComponent
         cellsToSave: CellToSave[] | CellAttrToSave[],
         colValuesAreSame: boolean
     ) {
-        // TODO make better implementation so singleCellSave is not called one by one
-        // TODO: maybe done so that push cells to chengedCells and call save
-        // TODO: but first check if saved to person or group and to that column by column
         if (this.attrsall.markup.sisugroups) {
             return;
         }
@@ -1338,7 +1335,6 @@ export class TableFormComponent
         for (const c of cellsToSave) {
             const coli = c.col;
             const rowi = c.row;
-            const content = c.c;
             const changedStyle = c.key;
             if (changedStyle) {
                 if (changedStyle == "CLEAR") {
@@ -1351,16 +1347,10 @@ export class TableFormComponent
                     );
                 }
             }
-            if (this.markup.autosave) {
-                await this.singleCellSave(
-                    rowi,
-                    coli,
-                    content,
-                    globalChangedFields
-                );
-            } else {
-                this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
-            }
+            this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
+        }
+        if (this.markup.autosave) {
+            await this.doSaveText([]);
         }
         if (this.viewctrl && globalChangedFields.size > 0) {
             if (this.markup.autoUpdateFields) {

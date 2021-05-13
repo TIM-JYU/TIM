@@ -1565,7 +1565,7 @@ export class TimTableComponent
     }
 
     /**
-     * Set's edited flag to false
+     * Sets edited flag to false
      * Used to keep track of unsaved state when table is used as component
      * in another plugin
      */
