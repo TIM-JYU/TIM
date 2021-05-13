@@ -4,7 +4,12 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
-import {clone, maxContentOrFitContent, to} from "tim/util/utils";
+import {
+    clone,
+    defaultErrorMessage,
+    maxContentOrFitContent,
+    to,
+} from "tim/util/utils";
 import {
     ApplicationRef,
     ChangeDetectorRef,
@@ -386,7 +391,6 @@ export class TableFormComponent
         userdata: {type: "Relative", cells: {}},
         nonUserSpecific: true,
         isPreview: false,
-        // saveCallBack: this.singleCellSave
     };
     // TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
     private rows!: IRowsType;
@@ -654,11 +658,10 @@ export class TableFormComponent
 
         this.setDataMatrix();
 
-        this.data.saveCallBack = (cellsTosave, colValuesAreSame) =>
-            this.cellChanged(cellsTosave, colValuesAreSame);
+        this.data.saveCallBack = (cellsTosave) => this.cellChanged(cellsTosave);
         if (this.markup.saveStyles) {
-            this.data.saveStyleCallBack = (cellsTosave, colValuesAreSame) =>
-                this.cellChanged(cellsTosave, colValuesAreSame);
+            this.data.saveStyleCallBack = (cellsTosave) =>
+                this.cellChanged(cellsTosave);
         }
         this.data.cbCallBack = (cbs, n, index) => this.cbChanged(cbs, n, index);
 
@@ -1033,7 +1036,7 @@ export class TableFormComponent
             return;
         }
         await timTable.saveAndCloseSmallEditor();
-        this.doSaveText([]);
+        this.doSaveText();
     }
 
     /**
@@ -1319,26 +1322,16 @@ export class TableFormComponent
 
     /**
      * Callback function that gets called when timTable saves a cell
+     * Collects information about which cells have changed and which ones want to clear their style attributes
      * @param cellsToSave list of cells that needs to be saved
-     * @param colValuesAreSame if all values in on column has same value
      */
-    async cellChanged(
-        cellsToSave: CellToSave[] | CellAttrToSave[],
-        colValuesAreSame: boolean
-    ) {
-        // TODO make better implementation so singleCellSave is not called one by one
-        // TODO: maybe done so that push cells to chengedCells and call save
-        // TODO: but first check if saved to person or group and to that column by column
+    async cellChanged(cellsToSave: CellToSave[] | CellAttrToSave[]) {
         if (this.attrsall.markup.sisugroups) {
             return;
         }
-
-        const globalChangedFields = new Set<string>();
-
         for (const c of cellsToSave) {
             const coli = c.col;
             const rowi = c.row;
-            const content = c.c;
             const changedStyle = c.key;
             if (changedStyle) {
                 if (changedStyle == "CLEAR") {
@@ -1351,42 +1344,11 @@ export class TableFormComponent
                     );
                 }
             }
-            if (this.markup.autosave) {
-                await this.singleCellSave(
-                    rowi,
-                    coli,
-                    content,
-                    globalChangedFields
-                );
-            } else {
-                this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
-            }
+            this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
         }
-        if (this.viewctrl && globalChangedFields.size > 0) {
-            if (this.markup.autoUpdateFields) {
-                this.viewctrl.updateFields(Array.from(globalChangedFields));
-            }
-            if (this.markup.autoUpdateTables) {
-                this.viewctrl.updateAllTables(Array.from(globalChangedFields));
-            }
+        if (this.markup.autosave) {
+            await this.doSaveText();
         }
-    }
-
-    /**
-     * Calls the actual save function with given cell
-     * @param rowi row number
-     * @param coli col number
-     * @param content unused
-     * @param globalChangedFields set where save fields than should be updated
-     */
-    async singleCellSave(
-        rowi: number,
-        coli: number,
-        content: string,
-        globalChangedFields: Set<string> | undefined = undefined
-    ) {
-        const cells = [colnumToLetters(coli) + (rowi + 1)];
-        await this.doSaveText(cells, globalChangedFields);
     }
 
     async openTable() {
@@ -1416,23 +1378,10 @@ export class TableFormComponent
 
     /**
      * Transforms the cell format back to row format and saves the table input
-     * @param cells to save
-     * @param globalChangedFields set where save fields than should be updated
      */
-    async doSaveText(
-        cells: string[],
-        globalChangedFields: Set<string> | undefined = undefined
-    ) {
+    async doSaveText() {
         // this.error = "... saving ...";
-        let keys: string[];
-        if (cells && cells.length > 0) {
-            keys = cells;
-        } else {
-            // TODO: Force save all?
-            // keys = Object.keys(this.data.userdata.cells);
-            keys = this.changedCells;
-        }
-        if (keys.length == 0) {
+        if (this.changedCells.length == 0) {
             return;
         }
         const replyRows: Record<
@@ -1440,8 +1389,9 @@ export class TableFormComponent
             Record<string, string | null | Record<string, unknown>>
         > = {};
         const changedFields = new Set<string>();
+        const changedFieldsForTables = new Set<string>();
         try {
-            for (const coord of keys) {
+            for (const coord of this.changedCells) {
                 const alphaRegExp = new RegExp("([A-Z]*)");
                 const alpha = alphaRegExp.exec(coord);
                 if (alpha == null) {
@@ -1480,24 +1430,23 @@ export class TableFormComponent
                 // else if (typeof cellContent === "boolean") {
                 //     throw new Error("cell was boolean?");
 
-                // TODO: If attr (auto)updatefields...
-                if (this.viewctrl) {
+                if (
+                    (this.markup.autoUpdateFields ||
+                        this.markup.autoUpdateTables) &&
+                    this.viewctrl
+                ) {
+                    const taskWithField = this.taskLocations[columnPlace].split(
+                        "."
+                    );
+                    const docTask = taskWithField[0] + "." + taskWithField[1];
                     if (
                         this.viewctrl.selectedUser.name ==
                         this.userLocations[numberPlace]
                     ) {
-                        const taskWithField = this.taskLocations[
-                            columnPlace
-                        ].split(".");
-                        const docTask =
-                            taskWithField[0] + "." + taskWithField[1];
-                        if (globalChangedFields) {
-                            // if call from cellChanged update global
-                            globalChangedFields.add(docTask);
-                        } else {
-                            changedFields.add(docTask);
-                        }
+                        // TODO: Should check for global / useCurrentUser fields here
+                        changedFields.add(docTask);
                     }
+                    changedFieldsForTables.add(docTask);
                 }
                 try {
                     replyRows[this.userLocations[numberPlace]][
@@ -1555,20 +1504,25 @@ export class TableFormComponent
             this.error = data.web.error;
             // this.result = "Saved";
         } else {
-            this.error = r.result.data.error; // "Infinite loop or some other error?";
+            this.error = r.result.data.error ?? defaultErrorMessage;
         }
         const timtab = this.getTimTable();
         if (!timtab) {
             return;
         }
         timtab.confirmSaved();
-        if (this.viewctrl && changedFields.size > 0) {
-            // if this.globalChangedFields then this is empty
-            if (this.markup.autoUpdateFields) {
+        if (this.viewctrl) {
+            if (this.markup.autoUpdateFields && changedFields.size > 0) {
                 this.viewctrl.updateFields(Array.from(changedFields));
             }
-            if (this.markup.autoUpdateTables) {
-                this.viewctrl.updateAllTables(Array.from(changedFields));
+            if (
+                this.markup.autoUpdateTables &&
+                changedFieldsForTables.size > 0
+            ) {
+                this.viewctrl.updateAllTables(
+                    Array.from(changedFieldsForTables),
+                    this.getTaskId()
+                );
             }
         }
         this.clearStylesCells.clear();
