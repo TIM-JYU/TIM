@@ -1520,7 +1520,8 @@ export class TableFormComponent
                 changedFieldsForTables.size > 0
             ) {
                 this.viewctrl.updateAllTables(
-                    Array.from(changedFieldsForTables)
+                    Array.from(changedFieldsForTables),
+                    this.getTaskId()
                 );
             }
         }
