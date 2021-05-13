@@ -2791,7 +2791,11 @@ export class TimTableComponent
                 this.editInput.nativeElement.value = value;
             }
         }
-        this.setActiveCell(rowi, coli, forceOne);
+        try {
+            this.setActiveCell(rowi, coli, forceOne);
+        } catch {
+            // TODO: why here, see DataViewComponent.getDataCell  get negative rows???
+        }
     }
 
     /**
