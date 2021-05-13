@@ -248,6 +248,57 @@ def create(
 
 
 @user_cli.command()
+@click.option('--username', prompt='Username prefix', default='mass')
+@click.option('--firstname', prompt='First name prefix', default='')
+@click.option('--lastname', prompt='Last name prefix', default='')
+@click.option('--email', prompt='Email suffix', default='')
+@click.option('--password', prompt='Password', default='')
+@click.option('--lowerlimit', prompt='First user number', default=1)
+@click.option('--higherlimit', prompt='Last user number', default=1)
+def create_mass_users(
+        username: str,
+        firstname: str,
+        lastname: str,
+        email: str,
+        password: str,
+        lowerlimit: int,
+        higherlimit: int,
+) -> None:
+    click.echo(f"""
+Creating/overwriting users: {username}1, {username}2...
+Full names: {firstname}1 {lastname}1, {firstname}2 {lastname}2...
+Emails: {username}1{email}, {username}2{email}...
+With password (same for every user): {password}
+From {lowerlimit} to {higherlimit}.
+    """)
+    ok = click.confirm("Ok?")
+    if not ok:
+        return
+    if username != "mass":
+        print("Usernames limited to 'mass' for now")
+        return
+    for i in range(lowerlimit, higherlimit + 1):
+        strnum = str(i)
+        user = User.query.filter_by(name=username + strnum).first()
+        # print(i)
+        info = UserInfo(
+            username=username + strnum,
+            email=username + strnum + email or None,
+            full_name=f'{lastname + strnum} {firstname + strnum}'.strip() or None,
+            given_name=firstname + strnum or None,
+            last_name=lastname + strnum or None,
+            password=password or None,
+        )
+        if user:
+            user.update_info(info)
+            click.echo(f'User {username + strnum} updated.')
+        else:
+            User.create_with_group(info)
+            click.echo(f'User {username + strnum} created.')
+    db.session.commit()
+
+
+@user_cli.command()
 def fix_aalto_student_ids() -> None:
     users_to_fix: List[User] = UserGroup.query.filter(
         UserGroup.name.in_(['aalto19test', 'cs-a1141-2017-2018'])).join(User, UserGroup.users).with_entities(
