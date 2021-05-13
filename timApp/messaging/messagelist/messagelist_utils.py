@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List, Dict, Tuple, Union
+from typing import Optional, List, Dict, Tuple
 
 from mailmanclient import MailingList
 
@@ -95,7 +95,6 @@ def check_name_rules(name_candidate: str) -> None:
     required_digit = re.compile(r"\d")
     if required_digit.search(name_candidate) is None:
         raise RouteException("Name has to include at least one digit.")
-
 
 
 @dataclass
@@ -821,5 +820,3 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
                     # user = ug_member.personal_user
                     email_list_member = get_email_list_member(email_list, ug_member.email)
                     set_email_list_member_delivery_status(email_list_member, delivery)
-
-

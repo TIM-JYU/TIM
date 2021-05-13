@@ -87,7 +87,7 @@ class EmailList:
     def freeze_list(listname: str) -> None:
         """
         Freeze an email list. No posts are allowed on the list after freezing. Think a course specific email list and
-        the course ends, but it's mail archive is kept intact for later potential use. This stops (or at least
+        the course ends, but  mail archive is kept intact for later potential use. This stops (or at least
         mitigates) that the mail archive on that list changes after the freezing.
 
         :param listname: The list about the be frozen.
@@ -158,7 +158,7 @@ def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> N
     :param fqdn_listname: The fully qualified domain name for the list, e.g. testlist1@domain.fi.
     """
     if _client is None:
-        raise RouteException("No connection to Mailman, email list is not deleted.")
+        raise NotExist("No connection to Mailman, email list is not deleted.")
     try:
         # get_list() may raise HTTPError
         list_to_delete: MailingList = _client.get_list(fqdn_listname)
@@ -252,8 +252,8 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # VIESTIM: If someone is somehow able to start creating lists, while mailmanclient isn't configured,
         #  it means that we failed to check for connection at some point. Would there be a way to give a kind of a
         #  traceback here with error logging, so this would be easy to narrow down where the slip up is?
-        log_error("New list creation has been accessed, even though mailmanclient is not configured for connection.")
-        raise RouteException("No connection configured.")
+        #
+        raise NotExist("No connection configured.")
     try:
         if list_options.domain:
             check_name_availability(list_options.name, list_options.domain)

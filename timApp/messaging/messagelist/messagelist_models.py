@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
-from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound  # type: ignore
 
 from timApp.messaging.messagelist.listoptions import ArchiveType, Channel, ReplyToListChanges
 from timApp.timdb.sqa import db
@@ -114,7 +114,7 @@ class MessageListModel(db.Model):
             return m
         except (MultipleResultsFound, NoResultFound):
             from timApp.util.flask.requesthelper import NotExist
-            raise NotExist
+            raise NotExist(f"No message list named {name}")
 
     @staticmethod
     def get_list_by_name_first(name_candidate: str) -> 'MessageListModel':
@@ -155,7 +155,7 @@ class MessageListModel(db.Model):
     def get_tim_members(self) -> List['MessageListTimMember']:
         """Get all members that have belong to a user group, i.e. TIM users and user groups.
 
-        :return: A list of MessageListTimMember IDs.
+        :return: A list of MessageListTimMember objects.
         """
         tim_members = []
         for member in self.members:
@@ -258,9 +258,15 @@ class MessageListMember(db.Model):
         return not self.is_personal_user()
 
     def is_active(self) -> bool:
+        """Check if the message list's member is an active member of the list. A member is an active member if they have
+         been verified and have not been removed from the list.
+
+        :return: True if the member is both verified and not removed. Otherwise returns False.
+        """
         return self.membership_ended is None and self.is_verified()
 
     def is_verified(self) -> bool:
+        """If the member is verified to be on the list. """
         return self.membership_verified is not None
 
     def remove(self) -> None:
@@ -317,8 +323,7 @@ class MessageListTimMember(MessageListMember):
         }
 
     def get_name(self) -> str:
-        # from timApp.user.usergroup import UserGroup
-        # ug = UserGroup.query.filter_by(id=self.group_id).one()
+        """Get the TIM user group's name."""
         ug = self.user_group
         return ug.name
 
@@ -362,6 +367,10 @@ class MessageListExternalMember(MessageListMember):
         }
 
     def get_name(self) -> str:
+        """Get the external member's name, if one has been specified.
+
+        :return:The display name or an empty string.
+        """
         return self.display_name if self.display_name is not None else ""
 
     def get_email(self) -> str:
