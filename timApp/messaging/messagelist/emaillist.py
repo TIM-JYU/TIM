@@ -309,28 +309,29 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         raise
 
 
-def get_list_ui_link(listname: str, domain: str) -> str:
-    """
-    Get a link for a list to use for advanced email list options and moderation.
+def get_list_ui_link(listname: str, domain: Optional[str]) -> Optional[str]:
+    """Get a link for a list to use for advanced email list options and moderation.
+
+    The function assumes that Mailman uses Postorius as it's web-UI. There exists no guarantee that other web-UIs would
+    use the exact form for their links. If Postorius is changed to some other web-UI, this needs to be updated.
+
     :param listname: The list we are getting the UI link for.
-    :param domain: Domin for the list.
-    :return: A Hyperlink for list web UI on the Mailman side.
+    :param domain: Domain for the list.
+    :return: A Hyperlink for list web UI on the Mailman side. If there is no email list for
     """
+    if domain is None or not config.MAILMAN_UI_LINK_PREFIX:
+        return None
     if _client is None:
-        return ""
+        return None
     try:
         mail_list = _client.get_list(f"{listname}@{domain}")
         # Get the list's list id, which is basically it's address/name but '@' replaced with a dot.
         list_id: str = mail_list.rest_data["list_id"]
-        # VIESTIM: This here is now hardcoded for Postorius Web UI. There might not be a way to just
-        #  programmatically get the specific hyperlink for non-TIM email list management needs, but is there a
-        #  way to not hard code the Postorius part in (Postorius is Mailman's default web UI and technically
-        #  we could switch to a different web UI)?
         # Build the hyperlink.
         link = f"{config.MAILMAN_UI_LINK_PREFIX}{list_id}"
         return link
     except HTTPError:
-        return "Connection to Mailman failed while getting list's UI link."
+        raise RouteException("Connection to Mailman failed while getting list's UI link.")
 
 
 def set_email_list_description(mlist: MailingList, new_description: str) -> None:
