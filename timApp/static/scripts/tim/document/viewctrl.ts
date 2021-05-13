@@ -1056,12 +1056,15 @@ export class ViewCtrl implements IController {
         }
     }
 
-    public updateAllTables(fields?: string[]) {
+    public updateAllTables(fields?: string[], callerTaskId?: TaskId) {
         // TODO: Should probably check groups
         //  currently it is assumed that caller used same groups as tableForm
         for (const table of this.tableForms.values()) {
             const taskId = table.getTaskId();
             if (taskId) {
+                if (callerTaskId && callerTaskId == taskId) {
+                    continue;
+                }
                 const tid = taskId.docTask();
                 const comptab = this.getTimComponentByName(tid.toString());
                 if (comptab?.isUnSaved()) {
