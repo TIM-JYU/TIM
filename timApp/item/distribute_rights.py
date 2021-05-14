@@ -16,6 +16,7 @@ from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
 from timApp.tim_app import app, csrf
+from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
@@ -299,4 +300,5 @@ def receive_right(
             duration_to=right.duration_to,
             require_confirm=right.require_confirm,
         )
+    db.session.commit()
     return ok_response()
