@@ -89,6 +89,7 @@ class UserSelectMarkupModel(GenericMarkupModel):
     preFetch: bool = False
     inputMinLength: int = 3
     autoSearchDelay: float = 0.0
+    selectOnce: bool = False
     maxMatches: int = 10
     scanner: ScannerOptions = field(default_factory=ScannerOptions)
     groups: List[str] = field(default_factory=list)

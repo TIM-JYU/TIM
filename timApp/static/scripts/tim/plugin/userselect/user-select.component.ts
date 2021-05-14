@@ -42,6 +42,7 @@ const PluginMarkup = t.intersection([
         autoSearchDelay: t.number,
         preFetch: t.boolean,
         maxMatches: t.number,
+        selectOnce: t.boolean,
         displayFields: t.array(t.string),
         scanner: t.type({
             enabled: t.boolean,
@@ -134,7 +135,7 @@ const USER_FIELDS: Record<string, string> = {
                     </thead>
                     <tbody>
                     <tr class="user-row" *ngFor="let match of lastSearchResult.matches"
-                        [class.selected-user]="selectedUser == match" (click)="selectedUser = match">
+                        [class.selected-user]="selectedUser == match" (click)="selectedUser = match; onUserSelected()">
                         <td class="select-col">
                             <span class="radio">
                                 <label>
@@ -142,6 +143,7 @@ const USER_FIELDS: Record<string, string> = {
                                            name="userselect-radios"
                                            [value]="match"
                                            [(ngModel)]="selectedUser"
+                                           (ngModelChange)="onUserSelected()"
                                            [disabled]="applying">
                                 </label>
                             </span>
@@ -209,6 +211,7 @@ export class UserSelectComponent extends AngularPluginBase<
     searchPress: Subject<void> = new Subject();
     inputTyped: Subject<string> = new Subject();
     lastSearchResult?: SearchResult;
+    cachedSearchResult?: SearchResult;
     selectedUser?: UserResult;
     lastAddedUser?: UserResult;
     barCodeResult: string = "";
@@ -239,6 +242,17 @@ export class UserSelectComponent extends AngularPluginBase<
             );
         }
         return $localize`Permissions applied to ${this.lastAddedUser?.user.real_name}:INTERPOLATION:.`;
+    }
+
+    onUserSelected() {
+        if (
+            !this.markup.selectOnce ||
+            !this.lastSearchResult ||
+            !this.selectedUser
+        ) {
+            return;
+        }
+        this.lastSearchResult.matches = [this.selectedUser];
     }
 
     private get searchQueryStrings() {
@@ -449,6 +463,7 @@ export class UserSelectComponent extends AngularPluginBase<
             autoSearchDelay: 0,
             preFetch: false,
             maxMatches: 10,
+            selectOnce: false,
             displayFields: ["username", "realname"],
         };
     }
