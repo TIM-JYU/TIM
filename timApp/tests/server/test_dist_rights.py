@@ -178,3 +178,43 @@ class DistRightsTest(TimRouteTest):
                 )
         r, _ = get_current_rights(target_name)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 4 * h + 5 * m + unlock_time + 20 + 15 + 5 + 5 + 4)
+
+    def test_receive_rights(self):
+        target_name = "test2"
+        dt = datetime.now()
+        fp = Path(app.config['FILES_PATH']) / f'{target_name}.rights.initial'
+        with fp.open('w') as f:
+            f.write(to_json_str(Right(
+                require_confirm=False,
+                duration_from=None,
+                duration_to=None,
+                duration=None,
+                accessible_from=dt,
+                accessible_to=dt + timedelta(minutes=10),
+            )) + '\n')
+
+        self.login_test2()
+        d = self.create_doc()
+        self.login_test1()
+        self.get(f'/view/{d.id}', expect_status=403)
+        with self.temp_config({
+            'DIST_RIGHTS_REGISTER_SECRET': 'xxx',
+            'DIST_RIGHTS_SEND_SECRET': 'yyy',
+            'DIST_RIGHTS_RECEIVE_SECRET': 'yyy',
+            'DIST_RIGHTS_HOSTS': {target_name: {
+                'hosts': [f'http://{app.config["INTERNAL_PLUGIN_DOMAIN"]}:5001'],
+                'item': d.path,
+            }},
+        }):
+            with self.internal_container_ctx():
+                self.json_post(
+                    '/distRights/register',
+                    {'op': {'email': self.test_user_1.email,
+                            'type': 'confirm',
+                            'timestamp': get_current_time(),
+                            },
+                     'target': target_name, 'secret': 'xxx'},
+                    expect_content={'host_errors': []},
+                )
+
+        self.get(f'/view/{d.id}', expect_status=200)
