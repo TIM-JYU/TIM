@@ -20,7 +20,6 @@ import {
 @Component({
     selector: "tim-code-scanner",
     template: `
-        <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
         <a role="button" class="camera-settings-toggle" (click)="showSettings = !showSettings" *ngIf="availableCameras.length > 1 || (hasCameras && supportsConstraint('torch'))">
             <i class="glyphicon" [class.glyphicon-menu-right]="!showSettings" [class.glyphicon-menu-down]="showSettings"></i>
             <span i18n>Camera settings</span>
@@ -46,6 +45,7 @@ import {
             <span *ngIf="!hasCameras" class="label label-danger not-supported" i18n>No cameras found</span>
             <span *ngIf="hasCameras && !supportsConstraint('torch')" class="label label-default not-supported" i18n>Flashlight is not supported</span>
         </div>
+        <video [class.hidden]="!codeReaderStream" #barcodeOutput></video>
     `,
     styleUrls: ["./code-scanner.component.scss"],
 })

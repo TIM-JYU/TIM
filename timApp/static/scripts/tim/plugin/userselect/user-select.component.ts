@@ -87,8 +87,6 @@ const USER_FIELDS: Record<string, string> = {
     selector: "user-selector",
     template: `
         <div *ngIf="enableScanner" class="barcode-video">
-            <tim-code-scanner *ngIf="scanCode" (successfulRead)="onCodeScanned($event)"
-                              [scanInterval]="scanInterval"></tim-code-scanner>
             <button [disabled]="!queryHandler || !supportsMediaDevices" class="timButton btn-lg"
                     (click)="scanCode = !scanCode">
                 <span class="icon-text">
@@ -99,6 +97,8 @@ const USER_FIELDS: Record<string, string> = {
                 <span i18n>Scan code</span>
             </button>
             <span *ngIf="!supportsMediaDevices" class="label label-default not-supported" i18n>Not supported in this browser</span>
+            <tim-code-scanner *ngIf="scanCode" (successfulRead)="onCodeScanned($event)"
+                              [scanInterval]="scanInterval"></tim-code-scanner>
         </div>
         <form class="search" (ngSubmit)="searchPress.next()" #searchForm="ngForm">
             <input class="form-control input-lg"
