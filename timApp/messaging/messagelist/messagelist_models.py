@@ -1,9 +1,11 @@
-from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound  # type: ignore
+
 from timApp.messaging.messagelist.listoptions import ArchiveType, Channel, ReplyToListChanges
 from timApp.timdb.sqa import db
+from timApp.util.utils import get_current_time
 
 
 class MemberJoinMethod(Enum):
@@ -100,8 +102,19 @@ class MessageListModel(db.Model):
 
     @staticmethod
     def get_list_by_name_exactly_one(name: str) -> 'MessageListModel':
-        m = MessageListModel.query.filter_by(name=name).one()
-        return m
+        """Get a message list. Use this when the list is expected to exist.
+
+        Raise NotExist exception, if the message list is not found (or technically if multiple ones are found).
+
+        :param name: The name of the list.
+        :return: MessageListModel object, if a MessageListModel with attribute name is found.
+        """
+        try:
+            m = MessageListModel.query.filter_by(name=name).one()
+            return m
+        except (MultipleResultsFound, NoResultFound):
+            from timApp.util.flask.requesthelper import NotExist
+            raise NotExist(f"No message list named {name}")
 
     @staticmethod
     def get_list_by_name_first(name_candidate: str) -> 'MessageListModel':
@@ -130,24 +143,24 @@ class MessageListModel(db.Model):
         return self.archive
 
     def get_individual_members(self) -> List['MessageListMember']:
-        """Get all the members that are not user groups."""
+        """Get all the members that are not groups."""
         individuals = []
         for member in self.members:
             # VIESTIM: When user's verification is done, replace 'not member.membership_ended' with the commented out
             #  predicate.
-            if not member.is_group() and not member.membership_ended:  # member.is_active():
+            if not member.is_group():  # and not member.membership_ended:  # member.is_active():
                 individuals.append(member)
         return individuals
 
     def get_tim_members(self) -> List['MessageListTimMember']:
         """Get all members that have belong to a user group, i.e. TIM users and user groups.
 
-        :return: A list of MessageListTimMember IDs.
+        :return: A list of MessageListTimMember objects.
         """
         tim_members = []
         for member in self.members:
             if member.is_tim_member():
-                tim_members.append(member.group_id)
+                tim_members.append(member.tim_member)
         return tim_members
 
     def get_member_by_name(self, name: Optional[str], email: Optional[str]) -> Optional['MessageListMember']:
@@ -191,9 +204,9 @@ class MessageListMember(db.Model):
     point. """
 
     membership_ended = db.Column(db.DateTime(timezone=True))
-    """When member's membership on a list ended. This is set when member is removed from a list."""
+    """When member's membership on a list ended. This is set when member is removed from a list. A value of None means 
+    the member is still on the list."""
 
-    # VIESTIM:  This doesn't work in migration for some reason. Maybe figure out if this is needed or fix later.
     join_method = db.Column(db.Enum(MemberJoinMethod))
     """How the member came to a list."""
 
@@ -208,7 +221,8 @@ class MessageListMember(db.Model):
     """Discriminator for polymorhphic members."""
 
     message_list = db.relationship("MessageListModel", back_populates="members", lazy="select", uselist=False)
-    tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select", uselist=False)
+    tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select",
+                                 uselist=False, post_update=True)
     external_member = db.relationship("MessageListExternalMember", back_populates="member", lazy="select",
                                       uselist=False)
     distribution = db.relationship("MessageListDistribution", back_populates="member", lazy="select")
@@ -244,16 +258,30 @@ class MessageListMember(db.Model):
         return not self.is_personal_user()
 
     def is_active(self) -> bool:
+        """Check if the message list's member is an active member of the list. A member is an active member if they have
+         been verified and have not been removed from the list.
+
+        :return: True if the member is both verified and not removed. Otherwise returns False.
+        """
         return self.membership_ended is None and self.is_verified()
 
     def is_verified(self) -> bool:
+        """If the member is verified to be on the list. """
         return self.membership_verified is not None
 
     def remove(self) -> None:
-        # FIXME: When syncing on removal from a group, this creates a
-        self.membership_ended = datetime.now()
-        # db.session.flush()
-        return
+        """Shorthand for removing a member out of the group, by setting the membership_ended attribute."""
+        self.membership_ended = get_current_time()  # datetime.now()
+
+    def get_email(self) -> str:
+        """The process of obtaining member's address varies depending on if the member
+        is a TIM user or not. Child classes have their own implementation depending on how they obtain the
+        information. This is mostly for helping with types.
+
+        :return: This particular instance raises NotImplementedError. The supposed return value is the user's email
+        address.
+        """
+        raise NotImplementedError
 
 
 def get_members_for_list(msg_list: MessageListModel) -> List[MessageListMember]:
@@ -277,8 +305,11 @@ class MessageListTimMember(MessageListMember):
     group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
     """A UserGroup id for a member."""
 
-    member = db.relationship("MessageListMember", back_populates="tim_member", lazy="select", uselist=False)
-    user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select", uselist=False)
+    member = db.relationship("MessageListMember", back_populates="tim_member", lazy="select",
+                             uselist=False, post_update=True)
+
+    user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select", uselist=False,
+                                 post_update=True)
 
     __mapper_args__ = {"polymorphic_identity": "tim_member"}
 
@@ -287,16 +318,21 @@ class MessageListTimMember(MessageListMember):
             "name": self.get_name(),
             "email": self.get_email() if self.get_email() is not None else "",
             "sendRight": self.member.send_right,
-            "deliveryRight": self.member.delivery_right
+            "deliveryRight": self.member.delivery_right,
+            "removed": self.membership_ended
         }
 
     def get_name(self) -> str:
+        """Get the TIM user group's name."""
         ug = self.user_group
         return ug.name
 
-    def get_email(self) -> Optional[str]:
+    def get_email(self) -> str:  # Optional[str]:
+        """Get TIM user group's email. Email makes sense only for personal user groups. Groups """
         if self.is_group():
-            return None
+            return ""  # None
+        # from timApp.user.usergroup import UserGroup
+        # ug = UserGroup.query.filter_by(id=self.group_id).one()
         ug = self.user_group
         user = ug.personal_user
         return user.email
@@ -314,9 +350,9 @@ class MessageListExternalMember(MessageListMember):
     email_address = db.Column(db.Text, unique=True)
     """Email address of message list's external member."""
 
-    # TODO: Add a column for display name.
     display_name = db.Column(db.Text)
 
+    # VIESTIM: The other member relationships have needed post_update=True argument. This might need one too.
     member = db.relationship("MessageListMember", back_populates="external_member", lazy="select", uselist=False)
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
@@ -326,13 +362,22 @@ class MessageListExternalMember(MessageListMember):
             "name": self.get_name(),  # TODO: If/When a display name is added as a column, that can be used here.
             "email": self.email_address,
             "sendRight": self.member.send_right,
-            "deliveryRight": self.member.delivery_right
+            "deliveryRight": self.member.delivery_right,
+            "removed": self.membership_ended
         }
 
     def get_name(self) -> str:
+        """Get the external member's name, if one has been specified.
+
+        :return:The display name or an empty string.
+        """
         return self.display_name if self.display_name is not None else ""
 
     def get_email(self) -> str:
+        """Get message list's external member's email.
+
+        :return: The email address.
+        """
         return self.email_address
 
 
