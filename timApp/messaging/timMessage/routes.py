@@ -111,16 +111,19 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     displays = InternalMessageDisplay.query.filter_by(usergroup_id=get_current_user_object().get_personal_group().id,
                                                       display_doc_id=item_id).all()
 
-    replies = InternalMessage.query.filter(InternalMessage.replies_to.isnot(None)).with_entities(InternalMessage.replies_to).all()
-    replies_to_ids =  [a for a, in replies] # list of messages that have been replied to
+    replies = InternalMessage.query.filter(InternalMessage.replies_to.isnot(None)).with_entities(
+        InternalMessage.replies_to).all()
+    replies_to_ids = [a for a, in replies]  # list of messages that have been replied to
 
     messages = []
     recipients = []
     for display in displays:
-        receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id, message_id=display.message_id).first()
+        receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id,
+                                                             message_id=display.message_id).first()
         expires = InternalMessage.query.filter_by(id=display.message_id).first()
         # message is shown if it has not been marked as read or replied to, and has not expired
-        if receipt.marked_as_read_on is None and display.message_id not in replies_to_ids and (expires.expires is None or expires.expires > datetime.now()):
+        if receipt.marked_as_read_on is None and display.message_id not in replies_to_ids and (
+                expires.expires is None or expires.expires > datetime.now()):
             messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
             recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
 
@@ -130,13 +133,18 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
         if not document:
             return error_generic('Message document not found', 404)
 
-        fullmessages.append(TimMessageData(id=message.id, sender=document.owners.pop().name, doc_id=message.doc_id,
-                                           par_id=message.par_id, can_mark_as_read=message.can_mark_as_read,
-                                           can_reply=message.reply, display_type=message.display_type,
+        fullmessages.append(TimMessageData(id=message.id,
+                                           sender=document.owners.pop().name,
+                                           doc_id=message.doc_id,
+                                           par_id=message.par_id,
+                                           can_mark_as_read=message.can_mark_as_read,
+                                           can_reply=message.reply,
+                                           display_type=message.display_type,
                                            message_body=Document.get_paragraph(document.document,
                                                                                message.par_id).get_html(
                                                default_view_ctx),
-                                           message_subject=document.title, recipients=recipients))
+                                           message_subject=document.title,
+                                           recipients=recipients))
 
     return fullmessages
 
@@ -177,10 +185,10 @@ def check_urls(urls: str) -> Response:
     status_code: int
 
     for url in url_list:
-        url = url.strip()  #remove leading and trailing whitespaces
+        url = url.strip()  # remove leading and trailing whitespaces
         if url.endswith("/"):
             url = url[:-1]
-        hashtag_index = url.find("#")  #remove anchors
+        hashtag_index = url.find("#")  # remove anchors
         if hashtag_index != -1:
             url = url[:hashtag_index]
         regex = "https?://[a-z0-9.-]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/"
@@ -224,7 +232,8 @@ def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Resp
         """
     verify_logged_in()
 
-    tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires, replies_to=options.repliesTo)
+    tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires,
+                                  replies_to=options.repliesTo)
     create_tim_message(tim_message, options, message)
     db.session.add(tim_message)
     db.session.flush()
@@ -280,10 +289,11 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 
 @timMessage.route("/reply", methods=['POST'])
 def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Response:
-
     # VIESTIM: add option replies_to to MessageOptions (and column to internalmessage table in db, save original message's id here)
 
-    messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList, options.readReceipt, False, get_current_user_object().name, get_current_user_object().email, options.repliesTo)
+    messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList,
+                                    options.readReceipt, False, get_current_user_object().name,
+                                    get_current_user_object().email, options.repliesTo)
     message = messageBody
 
     return send_message_or_reply(messageOptions, message)
