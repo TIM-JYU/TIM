@@ -239,6 +239,16 @@ def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> List[str]:
     return errors
 
 
+def register_right_impl(op: RightOp, target: str) -> List[str]:
+    target_s = secure_filename(target)
+    if not target_s:
+        raise RouteException(f'invalid target: {target}')
+    with filelock.FileLock(f'/tmp/log_right_{target_s}'):
+        rights = do_register_right(op, target_s)
+    with filelock.FileLock(f'/tmp/dist_right_{target_s}'):
+        return do_dist_rights(op, rights, target_s)
+
+
 @dist_bp.route('/register', methods=['post'])
 @csrf.exempt
 def register_right(
@@ -247,13 +257,7 @@ def register_right(
         secret: str,
 ) -> Response:
     check_secret(secret, 'DIST_RIGHTS_REGISTER_SECRET')
-    target_s = secure_filename(target)
-    if not target_s:
-        raise RouteException(f'invalid target: {target}')
-    with filelock.FileLock(f'/tmp/log_right_{target_s}'):
-        rights = do_register_right(op, target_s)
-    with filelock.FileLock(f'/tmp/dist_right_{target_s}'):
-        errors = do_dist_rights(op, rights, target_s)
+    errors = register_right_impl(op, target)
     return json_response({'host_errors': errors})
 
 

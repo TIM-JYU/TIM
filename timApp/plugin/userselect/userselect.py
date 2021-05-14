@@ -1,11 +1,12 @@
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional, Union, Tuple, Literal, Dict, Callable
 
-from flask import render_template_string, Response
+from flask import render_template_string, Response, current_app
 
 from timApp.answer.routes import save_fields, FieldSaveRequest, FieldSaveUserEntry
-from timApp.auth.accesshelper import verify_logged_in
+from timApp.auth.accesshelper import verify_logged_in, verify_view_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
@@ -13,6 +14,8 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext
+from timApp.item.distribute_rights import RightOp, ConfirmOp, QuitOp, UnlockOp, ChangeTimeOp, register_right_impl, \
+    UndoConfirmOp, UndoQuitOp
 from timApp.item.manage import TimeOpt, verify_permission_edit_access, PermissionEditModel, add_perm, \
     log_right, remove_perm
 from timApp.plugin.plugin import Plugin
@@ -60,9 +63,26 @@ class SetTaskValueAction:
 
 
 @dataclass
+class DistributeRightAction:
+    operation: Literal["confirm", "quit", "unlock", "changetime"]
+    target: str
+    timestamp: datetime = field(default_factory=datetime.now)
+    secs: int = 0
+
+
+RIGHT_TO_OP: Dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
+    "confirm": lambda r, usr: ConfirmOp(type="confirm", email=usr, timestamp=r.timestamp),
+    "quit": lambda r, usr: QuitOp(type="quit", email=usr, timestamp=r.timestamp),
+    "unlock": lambda r, usr: UnlockOp(type="unlock", email=usr, timestamp=r.timestamp),
+    "changetime": lambda r, usr: ChangeTimeOp(type="changetime", email=usr, secs=r.secs, timestamp=r.timestamp)
+}
+
+
+@dataclass
 class ActionCollection:
     addPermission: List[AddPermission] = field(default_factory=list)
     removePermission: List[RemovePermission] = field(default_factory=list)
+    distributeRight: List[DistributeRightAction] = field(default_factory=list)
     setValue: List[SetTaskValueAction] = field(default_factory=list)
 
 
@@ -180,6 +200,7 @@ def match_query(query_words: List[str], keywords: List[str]) -> bool:
 def search_users(search_strings: List[str], task_id: Optional[str] = None,
                  par: Optional[GlobalParId] = None) -> Response:
     model, doc, user, view_ctx = get_plugin_markup(task_id, par)
+    verify_view_access(doc)
     field_data, _, field_names, _ = get_fields_and_users(
         model.fields,
         RequestedGroups.from_name_list(model.groups),
@@ -223,18 +244,73 @@ def search_users(search_strings: List[str], task_id: Optional[str] = None,
     })
 
 
-@user_select_plugin.route("/apply", methods=["POST"])
-def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
-    verify_logged_in()
-    model, _, _, _ = get_plugin_markup(task_id, par)
+def has_distribution_moderation_access(doc: DocInfo):
+    allowed_docs = current_app.config.get("DIST_RIGHTS_MODERATION_DOCS", [])
+    return doc.path in allowed_docs
+
+
+def get_plugin_info(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None):
+    model, doc, _, _ = get_plugin_markup(task_id, par)
+    # Ensure user actually has access to document with the plugin
+    verify_view_access(doc)
     # No permissions to apply, simply remove
     if not model.actions:
         return ok_response()
 
     cur_user = get_current_user_object()
     user_group = UserGroup.get_by_name(username)
+    user_acc = User.get_by_name(user_group.name)
+    assert user_acc is not None
     if not user_group:
         raise RouteException(f"Cannot find user {username}")
+
+    if model.actions.distributeRight and not has_distribution_moderation_access(doc):
+        raise RouteException("distributeRight is not allowed in this document")
+
+    return model, cur_user, user_group, user_acc
+
+
+@user_select_plugin.route("/undo", methods=["POST"])
+def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
+    model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
+
+    # TODO: Implement undoing for local permissions
+    undoable_dists = [dist for dist in model.actions.distributeRight if dist.operation in ("confirm", "quit")]
+    errors = []
+    for distribution in undoable_dists:
+        if distribution.operation == "confirm":
+            errors.extend(register_right_impl(
+                UndoConfirmOp(type="undoconfirm", email=user_acc.email, timestamp=distribution.timestamp),
+                distribution.target))
+        elif distribution.operation == "quit":
+            errors.extend(register_right_impl(
+                UndoQuitOp(type="undoquit", email=user_acc, timestamp=distribution.timestamp),
+                distribution.target))
+
+    # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
+    if errors:
+        return json_response({
+            "distributionErrors": errors
+        })
+
+    fields_to_save = {
+        set_val.taskId: "" for set_val in model.actions.setValue
+    }
+    if fields_to_save:
+        # Reuse existing helper for answer route to save field values quickly
+        save_fields(
+            FieldSaveRequest(savedata=[FieldSaveUserEntry(user=user_acc.id, fields=fields_to_save)]),
+            cur_user,
+            allow_non_teacher=False)
+
+    return json_response({
+        "distributionErrors": errors
+    })
+
+
+@user_select_plugin.route("/apply", methods=["POST"])
+def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
+    model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
 
     permission_actions: List[PermissionActionBase] = [*model.actions.addPermission, *model.actions.removePermission]
     doc_entries = {}
@@ -267,20 +343,25 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
         set_val.taskId: set_val.value for set_val in model.actions.setValue
     }
     if fields_to_save:
-        user_acc = User.get_by_name(user_group.name)
-        assert user_acc is not None
         # Reuse existing helper for answer route to save field values quickly
         save_fields(
             FieldSaveRequest(savedata=[FieldSaveUserEntry(user=user_acc.id, fields=fields_to_save)]),
             cur_user,
             allow_non_teacher=False)
 
+    errors = []
+    for distribute in model.actions.distributeRight:
+        convert = RIGHT_TO_OP[distribute.operation]
+        errors.extend(register_right_impl(convert(distribute, user_acc.email), distribute.target))
+
     db.session.commit()
 
     for msg in update_messages:
         log_right(msg)
 
-    return ok_response()
+    return json_response({
+        "distributionErrors": errors
+    })
 
 
 register_html_routes(
