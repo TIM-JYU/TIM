@@ -118,7 +118,7 @@ class MessageTIMversalis:
     # Header information. Mandatory values for all messages.
     sender: EmailAndDisplayName
     recipients: List[EmailAndDisplayName]
-    title: str
+    subject: str
 
     # Message body. Mandatory value for all messages.
     message_body: str
@@ -145,11 +145,11 @@ def message_list_tim_members_as_user_groups(tim_members: List['MessageListTimMem
     return user_groups
 
 
-def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str, message_list: MessageListModel,
+def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: str, message_list: MessageListModel,
                                        message: MessageTIMversalis) -> DocEntry:
     """Create archive document with permissions matching the message list's archive type.
 
-    :param archive_title: The title of the archive document.
+    :param archive_subject: The subject of the archive document.
     :param archive_doc_path: The path where the archive document should be created.
     :param message_list: The message list where the message belongs.
     :param message: The message about to be archived.
@@ -185,7 +185,7 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
 
     # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
     #  that, because in this context that is the anonymous user, and that raises an error.
-    archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
+    archive_doc = DocEntry.create(title=archive_subject, path=archive_doc_path, owner_group=message_owners[0])
 
     # Add the rest of the message owners.
     if len(message_owners) > 1:
@@ -208,9 +208,9 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
         # VIESTIM: Do we need an exception here? Is it enough to just silently return?
         return
 
-    archive_title = f"{message.title}-{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
+    archive_subject = f"{message.subject}-{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
     archive_folder_path = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{remove_path_special_chars(message_list.name)}"
-    archive_doc_path = f"{archive_folder_path}/{remove_path_special_chars(archive_title)}"
+    archive_doc_path = f"{archive_folder_path}/{remove_path_special_chars(archive_subject)}"
 
     # From the archive folder, query all documents, sort them by created attribute. We do this to get the previously
     # newest archived message, before we create a archive document for newest message.
@@ -226,12 +226,12 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
         owners = manage_doc_block.owners
         Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
 
-    archive_doc = create_archive_doc_with_permission(archive_title, archive_doc_path, message_list, message)
+    archive_doc = create_archive_doc_with_permission(archive_subject, archive_doc_path, message_list, message)
 
     # Set header information for archived message. The empty lines are needed to separate headers into their own lines.
     archive_doc.document.add_text(f"""
 #- {{.mailheader}}\r\n
-Title: [{message.title}]{{.mailtitle}}\r\n
+[{message.subject}]{{.mailtitle}}\r\n
 Sender: {message.sender}\r\n
 Recipients: {message.recipients}\r\n
 """)

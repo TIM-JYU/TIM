@@ -340,7 +340,7 @@ def test_route() -> Response:
                                                             display_name="Tomi L."),
                                  recipients=[EmailAndDisplayName(email_address="status-check2@tim.jyu.fi",
                                                                  display_name="Uusilista293u0")],
-                                 title="Viestin otsikko",
+                                 subject="Viestin otsikko",
                                  message_body="Hei mualima!"
                                  )
     archive_message(message_list=msg_list, message=message)
