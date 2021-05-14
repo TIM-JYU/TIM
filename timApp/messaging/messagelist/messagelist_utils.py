@@ -183,8 +183,8 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
         #  and otherwise no one else sees it?
         pass
 
-    # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
-    #  that, because in this context that is the anonymous user, and that raises an error.
+    # If we don't provide at least one owner up front, then current user is set as owner. We don't want
+    # that, because in this context that is the anonymous user, and that raises an error.
     archive_doc = DocEntry.create(title=archive_subject, path=archive_doc_path, owner_group=message_owners[0])
 
     # Add the rest of the message owners.
@@ -205,12 +205,12 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
     """
     # Archive policy of no archiving is a special case, where we abort immediately since these won't be archived at all.
     if message_list.archive_policy is ArchiveType.NONE:
-        # VIESTIM: Do we need an exception here? Is it enough to just silently return?
         return
 
-    archive_subject = f"{message.subject}-{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
+    archive_subject = f"{message.subject}"
     archive_folder_path = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{remove_path_special_chars(message_list.name)}"
-    archive_doc_path = f"{archive_folder_path}/{remove_path_special_chars(archive_subject)}"
+    archive_doc_path = remove_path_special_chars(f"{archive_folder_path}/{archive_subject}-"
+                                                 f"{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}")
 
     # From the archive folder, query all documents, sort them by created attribute. We do this to get the previously
     # newest archived message, before we create a archive document for newest message.
