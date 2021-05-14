@@ -333,7 +333,7 @@ def test_route() -> Response:
     if not is_localhost():
         raise RouteException()
     # VIESTIM: This fails if the message list doesn't exist.
-    msg_list = MessageListModel.get_list_by_name_exactly_one("uusilista293u0")
+    msg_list = MessageListModel.get_list_by_name_exactly_one("yet_another_list3")
     message = MessageTIMversalis(message_list_name=msg_list.name,
                                  message_channel=Channel.EMAIL_LIST,
                                  sender=EmailAndDisplayName(email_address="tomi.t.lundberg@student.jyu.fi",

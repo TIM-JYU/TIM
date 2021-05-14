@@ -42,17 +42,21 @@ def check_messagelist_name_requirements(name_candidate: str) -> None:
     check_name_availability(name_candidate)
 
 
-def check_name_availability(name: str) -> None:
-    msg_list_exists = MessageListModel.name_exists(name)
+def check_name_availability(name_candidate: str) -> None:
+    """Check if a message list with a given name already exists.
+
+    :param name_candidate: The name to be checked if it already exists.
+    """
+    msg_list_exists = MessageListModel.name_exists(name_candidate)
     if msg_list_exists:
-        raise RouteException(f"Message list with name {name} already exists.")
+        raise RouteException(f"Message list with name {name_candidate} already exists.")
 
 
 def check_name_rules(name_candidate: str) -> None:
     """Check if name candidate complies with naming rules. The method raises a RouteException if naming rule is
-    violated. If this function doesn't raise an exception, then the name follows naming rules.
+    violated. If this function doesn't raise an exception, then the name candidate follows naming rules.
 
-    :param name_candidate: What name we are checking.
+    :param name_candidate: What name we are checking against the rules.
     """
     # Be careful when checking regex rules. Some rules allow a pattern to exist, while prohibiting others. Some
     # rules prohibit something, but allow other things to exist. If the explanation for a rule is different than
@@ -61,7 +65,7 @@ def check_name_rules(name_candidate: str) -> None:
     # Name is within length boundaries.
     lower_bound = 5
     upper_bound = 36
-    if not (lower_bound < len(name_candidate) < upper_bound):
+    if not (lower_bound <= len(name_candidate) <= upper_bound):
         raise RouteException(f"Name is not within length boundaries. Name has to be at least {lower_bound} and at "
                              f"most {upper_bound} characters long.")
 
@@ -75,7 +79,7 @@ def check_name_rules(name_candidate: str) -> None:
     if no_sequential_dots.search(name_candidate) is not None:
         raise RouteException("Name cannot have sequential dots.")
 
-    # Name cannot end in a dot
+    # Name cannot end in a dot.
     if name_candidate.endswith("."):
         raise RouteException("Name cannot end in a dot.")
 
@@ -99,10 +103,21 @@ def check_name_rules(name_candidate: str) -> None:
 
 @dataclass
 class EmailAndDisplayName:
+    """Wrapper for parsed email messages containing sender/receiver email and display name."""
     email_address: str
     display_name: str
 
     def __repr__(self) -> str:
+        """The representation of an email and display name for an email message is
+
+        Jane Doe <jane.doe@domain.com>
+
+        or just
+
+        <john.doe@domain.com>
+
+        if no name is associated with the email address.
+        """
         if self.display_name:
             return f"{self.display_name} <{self.email_address}>"
         return f"<{self.email_address}>"
@@ -127,6 +142,8 @@ class MessageTIMversalis:
     domain: Optional[str] = None
     reply_to: Optional[EmailAndDisplayName] = None
 
+    # Timestamp for the message is a mandatory value. If the message comes from an outside source, it should already
+    # have a time stamp. The default value is mostly for messages that would be generated inside TIM.
     timestamp: datetime = get_current_time()
 
     # VIESTIM: Would a response depth field be usefull? It was stated, that multiple Re: and Vs: prefixes on subjects
@@ -134,6 +151,7 @@ class MessageTIMversalis:
     #  what a message is responding at, it might need this information.
 
 
+# Path prefixes for documents and folders.
 MESSAGE_LIST_DOC_PREFIX = "messagelists"
 MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
@@ -147,7 +165,7 @@ def message_list_tim_members_as_user_groups(tim_members: List['MessageListTimMem
 
 def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: str, message_list: MessageListModel,
                                        message: MessageTIMversalis) -> DocEntry:
-    """Create archive document with permissions matching the message list's archive type.
+    """Create archive document with permissions matching the message list's archive policy.
 
     :param archive_subject: The subject of the archive document.
     :param archive_doc_path: The path where the archive document should be created.
@@ -169,22 +187,20 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     # Gather permissions to the archive doc. The meanings of different archive settings are listed with ArchiveType
     # class.
     if message_list.archive_policy is ArchiveType.PUBLIC or ArchiveType.UNLISTED:
-        # Unlisted and public archiving only differs in whether or not the archive folder is in a special place
-        # where it can be found more easily. The folder is linked/aliased elsewhere and is not a concer in archiving.
         message_viewers.append(UserGroup.get_anonymous_group())
         if message_sender:
             message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.GROUPONLY:
+        # TODO: Replace function call with a list comprehension.
         message_viewers = message_list_tim_members_as_user_groups(message_list.get_tim_members())
         if message_sender:
             message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.SECRET:
-        # VIESTIM: There shouldn't be much to do with this archive policy? The list owners get ownership,
-        #  and otherwise no one else sees it?
+        # As the message list's owners already have been set, no action needed here.
         pass
 
-    # If we don't provide at least one owner up front, then current user is set as owner. We don't want
-    # that, because in this context that is the anonymous user, and that raises an error.
+    # If we don't provide at least one owner up front, then current user is set as owner. We don't want that,
+    # because in this context that is the anonymous user, which raises an error in document creation.
     archive_doc = DocEntry.create(title=archive_subject, path=archive_doc_path, owner_group=message_owners[0])
 
     # Add the rest of the message owners.
@@ -228,7 +244,7 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
 
     archive_doc = create_archive_doc_with_permission(archive_subject, archive_doc_path, message_list, message)
 
-    # Set header information for archived message. The empty lines are needed to separate headers into their own lines.
+    # Set header information for archived message.
     archive_doc.document.add_text(f"""
 #- {{.mailheader}}\\
 [{message.subject}]{{.mailtitle}}\\
@@ -237,12 +253,12 @@ Recipients: {message.recipients}
 """)
 
     # Set message body for archived message.
-    # TODO: Check message list's only_text flag. If it is set, then wrap the message body in a code block?
+    # VIESTIM: Check message list's only_text flag. If it is set, then wrap the message body in a code block?
     archive_doc.document.add_text(f"{message.message_body}")
 
     # If there is only one message, we don't need to add links to any other messages.
     if len(all_archived_messages):
-        # TODO: Extract linkings to their own functions.
+        # TODO: Linkings should not generate two different paragraphs. Only one footer paragraph is desired.
         sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
         previous_doc = sorted_messages[0]
 
@@ -301,7 +317,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> Message
         # Header information
         sender=sender,  # VIESTIM: Message should only have one sender?
         recipients=visible_recipients,
-        title=original["subject"],  # TODO: shorten the subject, if it contains multiple Re: and Vs: prefixes?
+        subject=original["subject"],  # TODO: shorten the subject, if it contains multiple Re: and Vs: prefixes?
 
         # Message body
         message_body=original["body"],
@@ -326,15 +342,15 @@ def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[
     if header not in ["from", "to", "cc", "bcc"]:
         return None
 
-    list_of_emails: List[EmailAndDisplayName] = []
+    email_name_pairs: List[EmailAndDisplayName] = []
 
     if header in original:
         for email_name_pair in original[header]:
             new_email_name_pair = EmailAndDisplayName(email_address=email_name_pair[1],
                                                       display_name=email_name_pair[0])
-            list_of_emails.append(new_email_name_pair)
+            email_name_pairs.append(new_email_name_pair)
 
-    return list_of_emails
+    return email_name_pairs
 
 
 def get_message_list_owners(mlist: MessageListModel) -> List[UserGroup]:
@@ -348,21 +364,25 @@ def get_message_list_owners(mlist: MessageListModel) -> List[UserGroup]:
 
 
 def verify_list_owner(owner_candidate_ug: UserGroup, mlist: MessageListModel) -> bool:
-    """Verify if a user is the owner of message list.
+    """Verify if a user group is a owner of a message list.
 
-    :param owner_candidate_ug:
-    :param mlist:
+    :param owner_candidate_ug: The user group who's ownership of a list is checked.
+    :param mlist: The message list where we are checking ownership.
     :return: Return True if the owner candidate is a owner of a message list. Otherwise return false.
     """
+    # VIESTIM: If single user's ownership is checked, is this enough if they are not an owner alone, but are part of an
+    #  owner group?
     mlist_owners = get_message_list_owners(mlist)
     return owner_candidate_ug in mlist_owners
 
 
 def create_management_doc(msg_list_model: MessageListModel, list_options: ListOptions) -> DocInfo:
-    # TODO: Document should reside in owner's personal path.
+    """Create management doc for a new message list.
 
-    # VIESTIM: The management document is created on the message list creator's personal folder. This might be a good
-    #  default, but if the owner is someone else than the creator then we have to handle that.
+    :param msg_list_model: The message list the management document is created for.
+    :param list_options: Options for creating the management document.
+    :return: Newly created management document.
+    """
 
     # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
     path_safe_list_name = remove_path_special_chars(list_options.name)
@@ -389,7 +409,7 @@ def new_list(list_options: ListOptions) -> Tuple[DocInfo, MessageListModel]:
 
     :param list_options: The list information for creating a new message list. Used to carry list's name and archive
     policy.
-    :return: The management document.
+    :return: The management document of the message list.
     :return: The message list db model.
     """
     msg_list = MessageListModel(name=list_options.name, archive=list_options.archive)
@@ -405,8 +425,8 @@ def set_message_list_notify_owner_on_change(message_list: MessageListModel,
     If the message list has an email list as a message channel, this will set the equilavent flag on the email list.
 
     :param message_list: The message list where the flag is being set.
-    :param notify_owners_on_list_change_flag: A boolean flag. If True, then changes on the message list sends
-    notifications to list owners. If False, notifications won't be sent.
+    :param notify_owners_on_list_change_flag: An optional boolean flag. If True, then changes on the message list sends
+    notifications to list owners. If False, notifications won't be sent. If None, nothing is set.
     """
     if notify_owners_on_list_change_flag is None \
             or message_list.notify_owner_on_change == notify_owners_on_list_change_flag:
@@ -416,9 +436,6 @@ def set_message_list_notify_owner_on_change(message_list: MessageListModel,
 
     if message_list.email_list_domain:
         # Email lists have their own flag for notifying list owners for list changes.
-
-        # VIESTIM: Until there is another type of notification system for message lists similiar to document changes,
-        #  we rely on Mailman's notifications for list changes.
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_notify_owner_on_list_change(email_list, message_list.notify_owner_on_change)
 
@@ -431,8 +448,8 @@ def set_message_list_member_can_unsubscribe(message_list: MessageListModel,
     If the message list has an email list as a message channel, this will set the equilavent flag on the email list.
 
     :param message_list: Message list where the flag is being set.
-    :param can_unsubscribe_flag: A boolean value. For True, the member can unsubscribe on their own. For False, then
-    the member can't unsubscribe from the list on their own.
+    :param can_unsubscribe_flag: An optional boolean flag. For True, the member can unsubscribe on their own. For False,
+     then the member can't unsubscribe from the list on their own. If None, then the current value is kept.
     """
     if can_unsubscribe_flag is None or message_list.can_unsubscribe == can_unsubscribe_flag:
         return
@@ -450,7 +467,8 @@ def set_message_list_subject_prefix(message_list: MessageListModel, subject_pref
     If the message list has an email list as a message list, then set the subject prefix there also.
 
     :param message_list: The message list where the subject prefix is being set.
-    :param subject_prefix: The prefix set for messages that go through the list.
+    :param subject_prefix: The prefix set for messages that go through the list. If None, then the current value is
+    kept.
     """
     if subject_prefix is None or message_list.subject_prefix == subject_prefix:
         return
@@ -468,8 +486,8 @@ def set_message_list_tim_users_can_join(message_list: MessageListModel, can_join
     specific handling.
 
     :param message_list: Message list where the flag is being set.
-    :param can_join_flag: If True, then TIM users can directly join this list, no moderation needed. If False, then TIM
-    users can't direclty join this list and
+    :param can_join_flag: An optional boolean flag. If True, then TIM users can directly join this list, no moderation
+    needed. If False, then TIM users can't direclty join the message list. If None, the current value is kept.
     """
     if can_join_flag is None or message_list.tim_user_can_join == can_join_flag:
         return
@@ -482,8 +500,8 @@ def set_message_list_default_send_right(message_list: MessageListModel,
     """Set the default message list new member send right flag.
 
     :param message_list: The message list where the flag is set.
-    :param default_send_right_flag: For True, new members on the list get default send right. For False, new members
-    don't get a send right.
+    :param default_send_right_flag: An optional boolean flag. For True, new members on the list get default send right.
+    For False, new members don't get a send right. For None, the current value is kept.
     """
     if default_send_right_flag is None or message_list.default_send_right == default_send_right_flag:
         return
@@ -495,8 +513,8 @@ def set_message_list_default_delivery_right(message_list: MessageListModel,
     """Set the message list new member default delivery right.
 
     :param message_list: The message list where the flag is set.
-    :param default_delivery_right_flag: For True, new members on the list get default delivery right. For False, new
-    members don't get a delivery right.
+    :param default_delivery_right_flag: An optional boolean flag. For True, new members on the list get default delivery
+    right. For False, new members don't automatically get a delivery right. For None, the current value is kept.
     """
     if default_delivery_right_flag is None or message_list.default_delivery_right == default_delivery_right_flag:
         return
@@ -504,11 +522,11 @@ def set_message_list_default_delivery_right(message_list: MessageListModel,
 
 
 def set_message_list_only_text(message_list: MessageListModel, only_text: Optional[bool]) -> None:
-    """
+    """Set the flag controlling if message list is to accept text-only messages.
 
-    :param message_list:
-    :param only_text:
-    :return: None.
+    :param message_list: The message list where the flag is to be set.
+    :param only_text: An optional boolean flag. For True, the message list is set to text-only mode. For False, the
+    message list accepts HTML-based messages. For None, the current value is kept.
     """
     if only_text is None or message_list.only_text == only_text:
         return
@@ -524,9 +542,9 @@ def set_message_list_non_member_message_pass(message_list: MessageListModel,
     """Set message list's non member message pass flag.
 
     :param message_list: The message list where the flag is set.
-    :param non_member_message_pass_flag: For True, sources outside the list can send messages to this list. If False,
-     messages form sources outside the list will be hold for moderation.
-    :return: None.
+    :param non_member_message_pass_flag: An optional boolean flag. For True, sources outside the list can send messages
+    to this list. If False, messages form sources outside the list will be hold for moderation. For None, the current
+    value is kept.
     """
     if non_member_message_pass_flag is None or message_list.non_member_message_pass == non_member_message_pass_flag:
         return
@@ -537,6 +555,12 @@ def set_message_list_non_member_message_pass(message_list: MessageListModel,
 
 
 def set_message_list_allow_attachments(message_list: MessageListModel, allow_attachments_flag: Optional[bool]) -> None:
+    """Set the flag controlling if a message list accepts messages with attachments.
+
+    :param message_list: The message list where the flag is to be set.
+    :param allow_attachments_flag: An optional boolean flag. For True, the list will allow a pre-determined set of
+    attachments. For False, no attachments are allowed. For None, the current value is kept.
+    """
     if allow_attachments_flag is None or message_list.allow_attachments == allow_attachments_flag:
         return
 
@@ -548,11 +572,17 @@ def set_message_list_allow_attachments(message_list: MessageListModel, allow_att
 
 def set_message_list_default_reply_type(message_list: MessageListModel,
                                         default_reply_type: Optional[ReplyToListChanges]) -> None:
-    """
+    """Set a value controlling how replies to a message list are steered.
 
-    :param message_list:
-    :param default_reply_type:
-    :return:
+    The reply type is analogous to email lists' operation of "Reply-To munging". Reply-To munging is a process where
+    messages sent to list may be subject to having their Reply-To header changed from what the sender of the message
+    initially used. This is mainly used (and sometimes abused) to steer conversation from announce-only lists (which
+    don't accept posts from anyone except few select individuals) to separate discussion lists.
+
+    :param message_list: The message list where the value is to be set.
+    :param default_reply_type: An optional enumeration. For value NOCHANGES the user is completely left the control
+    how to respond to messages sent from the list. For value ADDLIST the replies will be primarily steered towards
+    the message list. For None, the current value is kept.
     """
     if default_reply_type is None or message_list.default_reply_type == default_reply_type:
         return
@@ -566,9 +596,10 @@ def set_message_list_default_reply_type(message_list: MessageListModel,
 def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
                                   send_right: bool, delivery_right: bool,
                                   em_list: Optional[MailingList]) -> None:
-    """Add a user as a member on a message list.
+    """Add a TIM user as a member on a message list.
 
-    Performs a duplicate check. A duplicate member will not be added again to the list.
+    Performs a duplicate check. A duplicate member will not be added again to the list. This process is different to
+    re-activating a removed member of a list.
 
     :param msg_list: The message list where the new user will be added as a member.
     :param user: TIM user to be added to the message list.
@@ -576,7 +607,6 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     :param delivery_right: The delivery right to be set for the new member.
     :param em_list: If not None, indicates that the user will also be added to the email list that belongs to the
     message list.
-    :return: None.
     """
     # Check for member duplicates.
     # VIESTIM: If a member has belonged to the list, but was removed, this returns True and the function returns.
@@ -587,9 +617,8 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
                                           delivery_right=delivery_right, send_right=send_right)
     db.session.add(new_tim_member)
 
-    # VIESTIM: Get user's email and add it to list's email list.
     if em_list is not None:
-        user_email = user.email  # TODO: Search possible additional emails.
+        user_email = user.email  # In the future, we can search for a set of emails and a primary email here.
         # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
         #  placeholder value of True.
         add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
@@ -610,8 +639,8 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     :param ug: The user group being added the a message list.
     :param send_right: Send right for user groups members, that will be added to the message list individually.
     :param delivery_right: Delivery right for user groups members, that will be added to the message list individually.
-    :param em_list:
-    :return: None.
+    :param em_list: An optional email list. If given, then all the members of the user group will also be subscribed to
+    the email list.
     """
     # Check right to the group. Right checking is not required for personal groups, only generated user groups.
     if not ug.is_personal_group and not check_group_owner_or_manage_right(ug):
@@ -630,12 +659,11 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     # Add individual users to message channels.
     if em_list is not None:
         for user in ug.users:
-            user_email = user.email  # TODO: Search possible additional emails.
+            user_email = user.email  # In the future, we can search for a set of emails and a primary email here.
             # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
             #  placeholder value of True.
             add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
                       send_right=send_right, delivery_right=delivery_right)
-    return
 
 
 def add_message_list_external_email_member(msg_list: MessageListModel, external_email: str,
@@ -651,7 +679,6 @@ def add_message_list_external_email_member(msg_list: MessageListModel, external_
     :param em_list: The email list where this external member will be also added, because at this time external members
     only make sense for an email list.
     :param display_name: Optional name associated with the external member.
-    :return: None.
     """
     # Check for duplicate members.
     if msg_list.get_member_by_name(name=None, email=external_email):
@@ -680,7 +707,6 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
 
     :param user: The user that was added to the new_group.
     :param new_group: The new group that the user was added to.
-    :return: None.
     """
     # FIXME: This does not work. Most likely there is confusin with different IDs, which results in pulling wrong
     #  members/groups.
@@ -746,7 +772,6 @@ def set_message_list_member_removed_status(member: MessageListMember,
     list.
     :param email_list: An email list belonging to the message list. If None, the message list does not have an email
     list.
-    :return: None.
     """
     if (member.membership_ended is None and removed is None) or (member.membership_ended and removed):
         return
