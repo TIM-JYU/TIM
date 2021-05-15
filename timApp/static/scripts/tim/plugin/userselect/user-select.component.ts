@@ -498,7 +498,6 @@ export class UserSelectComponent extends AngularPluginBase<
         }
         if (this.markup.selectOnce) {
             const el = this.codeScanner?.nativeElement ?? this.getRootElement();
-            console.log(el);
             el.scrollIntoView();
         }
     }
