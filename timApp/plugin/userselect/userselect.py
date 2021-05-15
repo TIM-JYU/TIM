@@ -289,7 +289,6 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
     undoable_dists = [dist for dist in model.actions.distributeRight if dist.operation in ("confirm", "quit")]
     errors = []
     for distribute in undoable_dists:
-        targets: List[str] = [distribute.target] if isinstance(distribute.target, str) else distribute.target
         if distribute.operation == "confirm":
             undo_op: Union[UndoConfirmOp, UndoQuitOp] = UndoConfirmOp(type="undoconfirm",
                                                                       email=user_acc.email,
@@ -299,8 +298,7 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
         else:
             continue
 
-        for target in targets:
-            errors.extend(register_right_impl(undo_op, target))
+        errors.extend(register_right_impl(undo_op, distribute.target))
 
     # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
     if errors:
@@ -370,10 +368,8 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
     errors = []
     for distribute in model.actions.distributeRight:
         convert = RIGHT_TO_OP[distribute.operation]
-        targets: List[str] = [distribute.target] if isinstance(distribute.target, str) else distribute.target
         right_op = convert(distribute, user_acc.email)
-        for target in targets:
-            errors.extend(register_right_impl(right_op, target))
+        errors.extend(register_right_impl(right_op, distribute.target))
 
     db.session.commit()
 
