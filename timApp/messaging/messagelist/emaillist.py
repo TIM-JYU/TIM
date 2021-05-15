@@ -59,78 +59,6 @@ def check_mailman_connection() -> bool:
 
 # TODO: Handle situations where we can't contact Mailman server.
 
-@dataclass
-class EmailList:
-    """Class to aid with email list specific functionality, such as attribute checking and changes.
-
-    This class is designed to be used when an email list is expected to exits. Think operations like adding
-    an email to an existing list etc. For operations other than that, use EmailListManager.
-    """
-
-    # VIESTIM: Would it be polite to return something as an indication how the operation went?
-
-    @staticmethod
-    def get_notify_owner_on_list_change(listname: str) -> bool:
-        if _client is None:
-            raise NotExist("No email list server connection.")
-        mlist = _client.get_list(listname)
-        return mlist.settings["admin_notify_mchanges"]
-
-    @staticmethod
-    def freeze_list(listname: str) -> None:
-        """
-        Freeze an email list. No posts are allowed on the list after freezing. Think a course specific email list and
-        the course ends, but  mail archive is kept intact for later potential use. This stops (or at least
-        mitigates) that the mail archive on that list changes after the freezing.
-
-        :param listname: The list about the be frozen.
-        :return:
-        """
-        if _client is None:
-            return
-        try:
-            mail_list = _client.get_list(listname)
-
-            # VIESTIM: Another possible way would be to iterate over all members and set their individual moderation
-            #  action accordingly. How does Mailman's rule propagation matter here? The rule propagation goes from
-            #  user -> member -> list -> system (maybe domain in between list and system). So if member's default
-            #  moderation action is 'accept' and we set list's default member action as 'discard', which one wins?
-            #  Should we double-tap just to make sure and do both?
-
-            # We freeze a list by simply setting list's moderation to 'discard'. It could also be 'reject'. Holding
-            # the messages isn't probably a reasonable choice, since the point of freezing is to not allow posts on
-            # the list.
-            mail_list_settings = mail_list.settings
-            mail_list_settings["default_member_action"] = "discard"
-            mail_list_settings["default_nonmember_action"] = "discard"
-            mail_list_settings.save()
-        except HTTPError:
-            raise
-
-    @staticmethod
-    def unfreeze_list(listname: str) -> None:
-        """
-        The opposite of freezing a list. Sets some default values for delivery and send status of each member.
-
-        :param listname: The list to bring back into function.
-        :return:
-        """
-        pass
-
-    @staticmethod
-    def find_email_lists(email: str) -> List[MailingList]:
-        if _client is None:
-            return []
-        try:
-            # VIESTIM: This may or may not be enough. Function find_lists can take optional argument for role on the
-            #  list ('member', 'owner' or 'moderator'). This returns them all, but might return duplicates if email
-            #  is in different roles in a list. Is it better to ask them from Mailman separated by role, or do role
-            #  checking and grouping here?
-            lists = _client.find_lists(email)
-            return lists
-        except HTTPError:
-            return []
-
 
 def set_notify_owner_on_list_change(mlist: MailingList, on_change_flag: bool) -> None:
     """Set email list's notify owner on list change change flag.
@@ -675,3 +603,64 @@ def get_domain_names() -> List[str]:
         return domain_names
     except HTTPError:
         raise
+
+
+def get_notify_owner_on_list_change(listname: str) -> bool:
+    if _client is None:
+        raise NotExist("No email list server connection.")
+    mlist = _client.get_list(listname)
+    return mlist.settings["admin_notify_mchanges"]
+
+
+def freeze_list(listname: str) -> None:
+    """Freeze an email list. No posts are allowed on the list after freezing.
+
+    Think a course specific email list and the course ends, but  mail archive is kept intact for later potential
+    use. This stops (or at least mitigates) that the mail archive on that list changes after the freezing.
+
+    :param listname: The list about the be frozen.
+    """
+    if _client is None:
+        return
+    try:
+        mail_list = _client.get_list(listname)
+
+        # VIESTIM: Another possible way would be to iterate over all members and set their individual moderation
+        #  action accordingly. How does Mailman's rule propagation matter here? The rule propagation goes from
+        #  user -> member -> list -> system (maybe domain in between list and system). So if member's default
+        #  moderation action is 'accept' and we set list's default member action as 'discard', which one wins?
+        #  Should we double-tap just to make sure and do both?
+
+        # We freeze a list by simply setting list's moderation to 'discard'. It could also be 'reject'. Holding
+        # the messages isn't probably a reasonable choice, since the point of freezing is to not allow posts on
+        # the list.
+        mail_list_settings = mail_list.settings
+        mail_list_settings["default_member_action"] = "discard"
+        mail_list_settings["default_nonmember_action"] = "discard"
+        mail_list_settings.save()
+    except HTTPError:
+        raise
+
+
+def unfreeze_list(listname: str) -> None:
+    """
+    The opposite of freezing a list. Sets some default values for delivery and send status of each member.
+
+    :param listname: The list to bring back into function.
+    :return:
+    """
+    pass
+
+
+def find_email_lists(email: str) -> List[MailingList]:
+    if _client is None:
+        return []
+    try:
+        # VIESTIM: This may or may not be enough. Function find_lists can take optional argument for role on the
+        #  list ('member', 'owner' or 'moderator'). This returns them all, but might return duplicates if email
+        #  is in different roles in a list. Is it better to ask them from Mailman separated by role, or do role
+        #  checking and grouping here?
+        lists = _client.find_lists(email)
+        return lists
+    except HTTPError:
+        return []
