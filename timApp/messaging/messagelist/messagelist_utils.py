@@ -307,19 +307,21 @@ def set_message_link_next(doc: Document, link_text: str, url_next: str, archive_
         # needed for the directional button to appear on the document. The text for the directional button will be
         # there regardless, but it won't show on the document. So don't remove the trailing whitespace unless you
         # know that you get the link button to appear on the first archvie document some other way.
-        button_first = f"{direct_button}\n\n{header_md} "
+        button_first = f"{direct_button}\n\n{header_md}"
         header.set_markdown(button_first)
         header.save()
 
-        footer_text = f"""#- {{.mailfooter}}\n
-{link_footer}"""
+        footer_text = f"""
+#- {{ .mailfooter}}\n
+{link_footer}
+"""
         doc.add_text(footer_text)
     else:
         # Find the index of character combination of ']{.ma'. That denotes the closing of the area of class
         # mailbrowsebuttons defined in the else part of this conditional statement. Inject the button to next
         # document there.
         limit = header_md.find("]{.ma")
-        new_button_set = f"{header_md[0:limit]}{direct_button}\n{header_md[limit:]}"
+        new_button_set = f"{header_md[0:limit]}\n{direct_button}{header_md[limit:]}"
         header.set_markdown(new_button_set)
         header.save()
 
@@ -343,10 +345,11 @@ def set_message_link_previous(doc: Document, link_text: str, url_previous: str) 
     :param url_previous: The link to another document.
     """
     # Add footer for link to previous document.
-    link_footer = f"""#- {{.mailfooter}}\\
-[Previous message: {link_text}]({url_previous})"""
+    link_footer = f"""
+#- {{ .mailfooter}}\n
+[Previous message: {link_text}]({url_previous})
+"""
     doc.add_text(link_footer)
-
     # Add a directional button at the start of the header section of document.
     direct_button = f"[[[<]{{.timButton}}]({url_previous})]{{.mailbrowsebuttons}}\n\n"
     header = doc.get_paragraphs()[0]
