@@ -288,15 +288,19 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
     # TODO: Implement undoing for local permissions
     undoable_dists = [dist for dist in model.actions.distributeRight if dist.operation in ("confirm", "quit")]
     errors = []
-    for distribution in undoable_dists:
-        if distribution.operation == "confirm":
-            errors.extend(register_right_impl(
-                UndoConfirmOp(type="undoconfirm", email=user_acc.email, timestamp=distribution.timestamp),
-                distribution.target))
-        elif distribution.operation == "quit":
-            errors.extend(register_right_impl(
-                UndoQuitOp(type="undoquit", email=user_acc.email, timestamp=distribution.timestamp),
-                distribution.target))
+    for distribute in undoable_dists:
+        targets: List[str] = [distribute.target] if isinstance(distribute.target, str) else distribute.target
+        if distribute.operation == "confirm":
+            undo_op = UndoConfirmOp(type="undoconfirm", email=user_acc.email, timestamp=distribute.timestamp)
+        elif distribute.operation == "quit":
+            undo_op = UndoQuitOp(type="undoquit", email=user_acc.email, timestamp=distribute.timestamp)
+        else:
+            continue
+
+        for target in targets:
+            errors.extend(register_right_impl(undo_op, target))
+
+
 
     # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
     if errors:
