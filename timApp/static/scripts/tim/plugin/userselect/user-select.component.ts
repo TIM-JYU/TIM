@@ -20,6 +20,8 @@ import {
     first,
 } from "rxjs/operators";
 import {Result} from "@zxing/library";
+import {BsDropdownModule} from "ngx-bootstrap/dropdown";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
@@ -67,6 +69,11 @@ const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkup),
     t.type({}),
 ]);
+
+interface SearchOptionToggle {
+    name: string;
+    value: boolean;
+}
 
 async function playBeep(name: string, audio?: HTMLAudioElement) {
     let result = audio;
@@ -116,8 +123,34 @@ const USER_FIELDS: Record<string, string> = {
                    minlength="{{ inputMinLength }}"
                    required
                    #searchInput>
-            <input class="timButton btn-lg" type="submit" value="Search" i18n-value
-                   [disabled]="!queryHandler || !searchForm.form.valid || search || undoing">
+
+            <ng-template #submitButton>
+                <button class="timButton btn-lg" i18n
+                        [disabled]="!queryHandler || !searchForm.form.valid || search || undoing">Search
+                </button>
+            </ng-template>
+
+            <ng-container *ngIf="optionToggles.length == 0; else withSearchOptions">
+                <ng-container *ngTemplateOutlet="submitButton"></ng-container>
+            </ng-container>
+            <ng-template #withSearchOptions>
+                <div class="btn-group" dropdown>
+                    <ng-container *ngTemplateOutlet="submitButton"></ng-container>
+                    <button type="button" class="timButton btn-lg dropdown-toggle dropdown-toggle-split" dropdownToggle>
+                        <span class="caret"></span>
+                        <span class="sr-only">Split button</span>
+                    </button>
+                    <ul *dropdownMenu class="dropdown-menu" role="menu">
+                        <li role="menuitem" *ngFor="let option of optionToggles">
+                            <a class="dropdown-item" (click)="option.value = !option.value">
+                                <i class="glyphicon glyphicon-ok" style="margin-right: 1rem;" *ngIf="option.value"></i>
+                                <span>{{option.name}}</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </ng-template>
+
         </form>
         <div class="progress" *ngIf="!isInPreview && (search || !queryHandler)">
             <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
@@ -163,7 +196,6 @@ const USER_FIELDS: Record<string, string> = {
                 shown.
                 Please give more specific keywords to show all results.
             </div>
-
             <div class="action-buttons" *ngIf="selectedUser">
                 <tim-loading *ngIf="applying"></tim-loading>
                 <button type="button" class="btn btn-success btn-lg" [disabled]="applying" (click)="apply()">
@@ -190,11 +222,12 @@ const USER_FIELDS: Record<string, string> = {
             <p>You can reapply permissions or fix them manually.</p>
             <p>Detailed error messages:</p>
             <div class="alert-details">
-                <a (click)="showErrorMessage = !showErrorMessage"><i class="glyphicon glyphicon-chevron-down"></i>Show details</a>
+                <a (click)="showErrorMessage = !showErrorMessage"><i class="glyphicon glyphicon-chevron-down"></i>Show
+                    details</a>
                 <ng-container *ngIf="showErrorMessage">
                     <ul *ngFor="let error of undoErrors">
                         <li>{{error}}</li>
-                    </ul>    
+                    </ul>
                 </ng-container>
             </div>
         </tim-alert>
@@ -256,8 +289,12 @@ export class UserSelectComponent extends AngularPluginBase<
     undoing: boolean = false;
     undone: boolean = false;
     undoErrors: string[] = [];
-
     scanCode: boolean = false;
+    optionToggles: SearchOptionToggle[] = [];
+    keyboardMode: SearchOptionToggle = {
+        name: $localize`Keyboard mode`,
+        value: false,
+    };
 
     get successMessage() {
         if (!this.lastAddedUser) {
@@ -325,6 +362,7 @@ export class UserSelectComponent extends AngularPluginBase<
     onUserSelected() {
         if (
             !this.markup.selectOnce ||
+            this.keyboardMode.value ||
             !this.lastSearchResult ||
             !this.selectedUser
         ) {
@@ -377,6 +415,7 @@ export class UserSelectComponent extends AngularPluginBase<
         super.ngOnInit();
         this.isInPreview = this.isPreview();
         this.supportsMediaDevices = MediaDevicesSupported;
+        this.initToggleOptions();
 
         this.applyButtonText =
             this.markup.text.apply ?? $localize`Set permission`;
@@ -537,6 +576,12 @@ export class UserSelectComponent extends AngularPluginBase<
         };
     }
 
+    private initToggleOptions() {
+        if (this.markup.selectOnce) {
+            this.optionToggles.push(this.keyboardMode);
+        }
+    }
+
     private resetError() {
         this.undoErrors = [];
         this.showErrorMessage = false;
@@ -602,7 +647,14 @@ export class UserSelectComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [UserSelectComponent, CodeScannerComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        BrowserAnimationsModule,
+        BsDropdownModule.forRoot(),
+    ],
 })
 export class UserSelectModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
