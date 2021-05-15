@@ -60,6 +60,7 @@ class DataViewSettingsModel:
     tableWidth: Union[str, Missing] = missing
     fixedColumns: Union[int, Missing] = missing
 
+
 @dataclass
 class RunScriptModel:
      script: Optional[str] = None
@@ -124,7 +125,7 @@ TableFormMarkupSchema = class_schema(TableFormMarkupModel)
 @dataclass
 class TableFormInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    replyRows: Dict[str, Any]
+    replyRows: Dict[int, Any]
     nosave: Union[bool, Missing] = missing
 
 
@@ -163,11 +164,12 @@ def get_sisugroups(user: User, sisu_id: Optional[str]) -> 'TableFormObj':
                 'Kurssisivu': get_course_page(g),
             } for g in gs
         },
-        realnamemap={
-            g.external_id.external_id: get_sisu_group_desc_for_table(g) if sisu_id else g.display_name for g in gs
-        },
-        emailmap={
-            g.external_id.external_id: '' for g in gs
+        users={
+            g.external_id.external_id: TableFormUserInfo(
+                id=0,
+                real_name=get_sisu_group_desc_for_table(g) if sisu_id else g.display_name,
+                email='',
+            ) for g in gs
         },
         fields=['Jäseniä', 'TIM-nimi', 'URL', 'Kurssisivu'],
         aliases={
@@ -266,12 +268,8 @@ class TableformAnswerResp(PluginAnswerResp):
 def answer(args: TableFormAnswerModel) -> PluginAnswerResp:
     rows = args.input.replyRows
     save_rows = []
-    for u, r in rows.items():
-        user = User.get_by_name(u)
-        if not user:
-            return args.make_answer_error(f'User not found: {u}')
-        save_rows.append({'user': user.id, 'fields': r})
-
+    for uid, r in rows.items():
+        save_rows.append({'user': uid, 'fields': r})
     web: PluginAnswerWeb = {}
     result: TableformAnswerResp = {'web': web, 'savedata': save_rows}
     web['result'] = "saved"
@@ -416,8 +414,11 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
 
     for rowkey, row in sorted(r['rows'].items()):
         row_data: List[Union[str, float, None]] = []
+        u = r['users'].get(rowkey)
         if show_real_names:
-            val = r['realnamemap'].get(rowkey)
+            if u is None:
+                continue
+            val = u.get('real_name')
             row_data.append(val)
             if not check_field_filtering(regs.get("realname"), val):
                 continue
@@ -427,7 +428,9 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
             if not check_field_filtering(regs.get("username"), val):
                 continue
         if show_emails:
-            val = r['emailmap'].get(rowkey)
+            if u is None:
+                continue
+            val = u.get('email')
             row_data.append(val)
             if not check_field_filtering(regs.get("email"), val):
                 continue
@@ -589,10 +592,15 @@ def update_fields(m: UpdateFieldsModel) -> Response:
     return json_response(r)
 
 
+class TableFormUserInfo(TypedDict):
+    id: int
+    real_name: str
+    email: str
+
+
 class TableFormObj(TypedDict):
     rows: Dict[str, UserFields]
-    realnamemap: Dict[str, str]
-    emailmap: Dict[str, str]
+    users: Dict[str, TableFormUserInfo]
     membershipmap: Dict[str, Union[datetime.datetime, None]]
     fields: List[str]
     aliases: Dict[str, str]
@@ -624,8 +632,7 @@ def tableform_get_fields(
             user_filter=User.name.in_(user_filter) if user_filter else None,
         )
     rows = {}
-    realnames: Dict[str, str] = {}
-    emails = {}
+    users: Dict[str, TableFormUserInfo] = {}
     styles = {}
     group_ids = set(g.id for g in groups) if groups else None
     membershipmap = {}
@@ -637,11 +644,12 @@ def tableform_get_fields(
             if type(content) is dict:
                 rows[username][key] = json.dumps(content)
         rn = f['user'].real_name
-        if rn is not None:
-            realnames[username] = rn
         email = f['user'].email
-        if email is not None:
-            emails[username] = email
+        users[username] = TableFormUserInfo(
+            id=u.id,
+            real_name=rn if rn is not None else '',
+            email=email if email is not None else ''
+        )
         styles[username] = dict(f['styles'])
         if group_ids and group_filter_type != MembershipFilter.Current:
             membership_end = get_membership_end(u, group_ids)
@@ -650,8 +658,7 @@ def tableform_get_fields(
             membershipmap[username] = membership_end
     r = TableFormObj(
         rows=rows,
-        realnamemap=realnames,
-        emailmap=emails,
+        users=users,
         membershipmap=membershipmap,
         fields=field_names,
         aliases=aliases,
