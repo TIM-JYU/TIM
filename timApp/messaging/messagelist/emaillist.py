@@ -207,10 +207,9 @@ def set_default_templates(email_list: MailingList) -> None:
 
     :param: email_list: The email list we are setting templates for.
     """
-    # VIESTIM: Sometimes Mailman gets confused how mail is supposed to be interpreted, and with some
-    #  email client's different interpretation with Mailman's email coding templates (e.g. list
-    #  information footers) may appear as attachments. We fix it by setting header and footer for all new
-    #  lists explicitly.
+    # Sometimes Mailman gets confused how mail is supposed to be interpreted, and with some  email client's different
+    # interpretation with Mailman's email coding templates (e.g. list information footers) may appear as attachments.
+    # We fix it by setting header and footer for all new lists explicitly.
 
     # VIESTIM: We build the URI in case because not giving one is interpreted by Mailman as deleting the
     #  template form the list.
@@ -267,8 +266,8 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     try:
         domain: Domain = _client.get_domain(list_options.domain)
         email_list: MailingList = domain.create_list(list_options.name)
-        # VIESTIM: All lists created through TIM need an owner, and owners need email addresses to control
-        #  their lists on Mailman.
+        # All lists created through TIM need an owner, and owners need email addresses to control their lists on
+        # Mailman.
         email_list.add_owner(owner.email)
         # Add owner automatically as a member of a list.
         email_list.subscribe(owner.email, display_name=owner.real_name, pre_approved=True, pre_verified=True,
@@ -291,17 +290,17 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         if list_options.list_info:
             set_email_list_info(email_list, list_options.list_info)
 
-        # This is to force Mailman generate archivers into it's db. This is to fix a race condition, where creating a
-        # new list without proper engineer interface procedures might make duplicate archiver rows in to db,
-        # while Mailman's code expects there to be only one archiver row (which results in the db code breaking and
-        # the list becoming unusable, at least without manual db fixing). This might be unnecessary at some point in
-        # time in the future if the condition is remedied in Mailman Core, but since this line is only needed once on
-        # list creation it might be good enough to just leave as is.
+        # This is to force Mailman generate archivers into it's db. It exists is to fix a race condition,
+        # where creating a new list without proper engineer interface procedures might make duplicate archiver rows
+        # in to db, while Mailman's code expects there to be only one archiver row (which results in the db code
+        # breaking and the list becoming unusable, at least without manual db fixing). This might be unnecessary at
+        # some point in time in the future if the condition is remedied in Mailman Core, but since this line is only
+        # needed once on list creation it might be good enough to just leave as is.
         _ = dict(email_list.archivers)
 
         set_email_list_archive_policy(email_list, list_options.archive)
 
-        # This needs to be the last line, because no changes to settings take effect until save-method is
+        # This needs to be the last line, because no changes to settings take effect until save() method is
         # called.
         mlist_settings.save()
     except HTTPError:
@@ -336,19 +335,18 @@ def get_list_ui_link(listname: str, domain: Optional[str]) -> Optional[str]:
 
 
 def set_email_list_description(mlist: MailingList, new_description: str) -> None:
-    """
-    Set mailing list's (short) description.
+    """Set mailing list's (short) description.
+
     :param mlist: Email list we wish to set description for.
     :param new_description: A new (short) description for the email list.
-    :return:
     """
     mlist.settings["description"] = new_description
     mlist.settings.save()
 
 
 def get_email_list_description(mlist: MailingList) -> str:
-    """
-    Get email list's (short) description.
+    """Get email list's (short) description.
+
     :param mlist: Email list we wish to get description from.
     :return: A string for email list's description.
     """
@@ -356,20 +354,19 @@ def get_email_list_description(mlist: MailingList) -> str:
 
 
 def set_email_list_info(mlist: MailingList, new_info: str) -> None:
-    """
-    Set email list's info, A.K.A. long description.
-    :param mlist: Email list
+    """Set email list's info, A.K.A. long description.
+
+    :param mlist: Email list where the info is set.
     :param new_info: New info for the email list.
-    :return:
     """
     mlist.settings["info"] = new_info
     mlist.settings.save()
 
 
 def get_email_list_info(mlist: MailingList) -> str:
-    """
-    Get email list's info, A.K.A. long description.
-    :param mlist: Email list
+    """Get email list's info, A.K.A. long description.
+
+    :param mlist: Email list where we are querying for the info.
     :return: Email list's info as a string.
     """
     return mlist.settings["info"]
@@ -380,7 +377,7 @@ def get_email_list_by_name(list_name: str, list_domain: str) -> MailingList:
 
     :param list_name: List's name.
     :param list_domain: A domain we use to search an email list.
-    :return: Return email list as MailingList object
+    :return: Return email list as an MailingList object.
     """
     try:
         mlist = _client.get_list(fqdn_listname=f"{list_name}@{list_domain}")
@@ -405,7 +402,6 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     can't.
     :param delivery_right: Whether email list delivers mail to email. For True, mail is delivered to email. For False,
     no mail is delivered.
-    :return:
     """
     # VIESTIM: Check if email belongs to an existing User object? If it does, subscribe the user instead?
 
@@ -428,7 +424,8 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
             # With code 409, Mailman indicates that the member is already in the list. No further action might not be
             # needed.
             return
-        raise
+        else:
+            raise
 
 
 def set_email_list_member_send_status(member: Member, status: bool) -> None:
@@ -464,7 +461,7 @@ def set_email_list_member_delivery_status(member: Member, status: bool, by_moder
     :param status: If True, then this member receives email list's messages. If false, member does not receive messages
     from the email list.
     :param by_moderator: Who initiated the change in delivery right. If True, then the change was initiated by a
-    moderator or owner. If False, then the change was initiated by the member themselves.
+    moderator or owner of a list. If False, then the change was initiated by the member themselves.
     """
     # Viestim: This is just an idea how to go about changing user's delivery options. There exists
     #  frustratingly little documentation about this kind of thing, so this might not work. The idea
@@ -488,17 +485,17 @@ def set_email_list_member_delivery_status(member: Member, status: bool, by_moder
 
 
 def get_email_list_member_delivery_status(member: Member) -> bool:
-    """Get member's delivery status.
+    """Get email list member's delivery status.
 
     :param member: Member who's delivery status / right on a list we are interested in.
-    :return: A string 'enabled' or 'disabled'.
+    :return: True if the member has an equivalent of a delivery right. Otherwise return False.
     """
     member_preferences = member.preferences
     if member_preferences["delivery_status"] == "enabled":
         return True
     # VIESTIM: If delivery status is "by_bounces", then something is wrong with member's email address as it cannot
     #  properly receive email. Is there anything meaningful we can do about it here?
-    if member_preferences["delivery_status"] in ["by_user", "by_moderator", "by_bounces"]:
+    elif member_preferences["delivery_status"] in ["by_user", "by_moderator", "by_bounces"]:
         return False
     # If we are here, something has gone terribly wrong.
     # VIESTIM: Is this logging worthy? If yes, what severity?
@@ -523,9 +520,11 @@ def get_email_list_member_send_status(member: Member) -> bool:
 
 def check_emaillist_name_requirements(name_candidate: str, domain: str) -> None:
     """Check email list's name requirements. General message list name requirement checks are assumed to be passed
-    at this point. """
-    # We assume that name rule checks for message lists are good enough for email list name requirements. If they
-    # change to allow things that email list names aren't allowed to have, then we need a name rule check here.
+    at this point and that those requirements encompass email list name requirements.
+
+    :param name_candidate: A possible name for an email list name to check.
+    :param domain: Domain where name availability is to be checked.
+    """
     check_name_availability(name_candidate, domain)
     check_reserved_names(name_candidate)
 
@@ -608,10 +607,9 @@ def set_email_list_subject_prefix(email_list: MailingList, subject_prefix: str) 
 def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
     """Set email list to only text mode. Affects new email sent to list and (new) HyperKitty archived messages.
 
-    :param email_list:
+    :param email_list: Email list which is to be set into text only mode.
     :param only_text: A boolean flag controlling list rendering mode. For True, the list is in an only text mode.
     For False, the list is not on an only text mode, and other rendering (e.g. HTML) is allowed.
-    :return:
     """
     email_list.settings["convert_html_to_plaintext"] = only_text
     # The archive_rendering_mode setting mainly has an effect on HyperKitty. If the archiver on Mailman is something
@@ -631,7 +629,6 @@ def set_email_list_non_member_message_pass(email_list: MailingList, non_member_m
     :param email_list: The email list where the non member message pass action is set.
     :param non_member_message_pass_flag: For True, set the default non member moderation action as 'accept'. For False,
     set the default non member moderation action as 'hold'
-    :return: None.
     """
     if non_member_message_pass_flag:
         email_list.settings["default_nonmember_action"] = "accept"
@@ -652,7 +649,6 @@ def set_email_list_allow_attachments(email_list: MailingList, allow_attachments_
     :param email_list: The email list where allowed attachment extensions are set.
     :param allow_attachments_flag: For True, set all the allowed extensions for an email list. If False, set the allowed
      extensions to an empty list.
-    :return: None.
     """
     global allowed_attachment_file_extensions  # VIESTIM Temporary use of global variable for prototyping purposes.
     if allow_attachments_flag:
@@ -670,7 +666,6 @@ def set_email_list_default_reply_type(email_list: MailingList, default_reply_typ
 
     :param email_list: The email list where the reply type is set.
     :param default_reply_type: See ReplyToListChanges and reply_to_munging variable.
-    :return: None.
     """
     email_list.settings["reply_goes_to_list"] = reply_to_munging[default_reply_type]
 
