@@ -20,6 +20,8 @@ import {
     first,
 } from "rxjs/operators";
 import {Result} from "@zxing/library";
+import {BsDropdownModule} from "ngx-bootstrap/dropdown";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
@@ -42,7 +44,9 @@ const PluginMarkup = t.intersection([
         autoSearchDelay: t.number,
         preFetch: t.boolean,
         maxMatches: t.number,
+        selectOnce: t.boolean,
         displayFields: t.array(t.string),
+        allowUndo: t.boolean,
         scanner: t.type({
             enabled: t.boolean,
             scanInterval: t.number,
@@ -56,6 +60,7 @@ const PluginMarkup = t.intersection([
             apply: nullable(t.string),
             cancel: nullable(t.string),
             success: nullable(t.string),
+            undone: nullable(t.string),
         }),
     }),
 ]);
@@ -64,6 +69,11 @@ const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkup),
     t.type({}),
 ]);
+
+interface SearchOptionToggle {
+    name: string;
+    value: boolean;
+}
 
 async function playBeep(name: string, audio?: HTMLAudioElement) {
     let result = audio;
@@ -105,15 +115,43 @@ const USER_FIELDS: Record<string, string> = {
                    placeholder="Search for user"
                    i18n-placeholder
                    name="search-string"
-                   type="text"
+                   type="search"
+                   autocomplete="off"
                    [(ngModel)]="searchString"
                    (ngModelChange)="inputTyped.next($event)"
-                   [disabled]="!queryHandler"
+                   [disabled]="!queryHandler || undoing"
                    minlength="{{ inputMinLength }}"
                    required
                    #searchInput>
-            <input class="timButton btn-lg" type="submit" value="Search" i18n-value
-                   [disabled]="!queryHandler || !searchForm.form.valid || search">
+
+            <ng-template #submitButton>
+                <button class="timButton btn-lg" i18n
+                        [disabled]="!queryHandler || !searchForm.form.valid || search || undoing">
+                    Search
+                </button>
+            </ng-template>
+
+            <ng-container *ngIf="optionToggles.length == 0; else withSearchOptions">
+                <ng-container *ngTemplateOutlet="submitButton"></ng-container>
+            </ng-container>
+            <ng-template #withSearchOptions>
+                <div class="btn-group" dropdown>
+                    <ng-container *ngTemplateOutlet="submitButton"></ng-container>
+                    <button type="button" class="timButton btn-lg dropdown-toggle dropdown-toggle-split" dropdownToggle>
+                        <span class="caret"></span>
+                        <span class="sr-only">Split button</span>
+                    </button>
+                    <ul *dropdownMenu class="dropdown-menu" role="menu">
+                        <li role="menuitem" *ngFor="let option of optionToggles">
+                            <a class="dropdown-item" (click)="option.value = !option.value">
+                                <i class="glyphicon glyphicon-ok" style="margin-right: 1rem;" *ngIf="option.value"></i>
+                                <span>{{option.name}}</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </ng-template>
+
         </form>
         <div class="progress" *ngIf="!isInPreview && (search || !queryHandler)">
             <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
@@ -134,7 +172,7 @@ const USER_FIELDS: Record<string, string> = {
                     </thead>
                     <tbody>
                     <tr class="user-row" *ngFor="let match of lastSearchResult.matches"
-                        [class.selected-user]="selectedUser == match" (click)="selectedUser = match">
+                        [class.selected-user]="selectedUser == match" (click)="selectedUser = match; onUserSelected()">
                         <td class="select-col">
                             <span class="radio">
                                 <label>
@@ -142,6 +180,7 @@ const USER_FIELDS: Record<string, string> = {
                                            name="userselect-radios"
                                            [value]="match"
                                            [(ngModel)]="selectedUser"
+                                           (ngModelChange)="onUserSelected()"
                                            [disabled]="applying">
                                 </label>
                             </span>
@@ -158,7 +197,6 @@ const USER_FIELDS: Record<string, string> = {
                 shown.
                 Please give more specific keywords to show all results.
             </div>
-
             <div class="action-buttons" *ngIf="selectedUser">
                 <tim-loading *ngIf="applying"></tim-loading>
                 <button type="button" class="btn btn-success btn-lg" [disabled]="applying" (click)="apply()">
@@ -169,12 +207,37 @@ const USER_FIELDS: Record<string, string> = {
                 </button>
             </div>
         </div>
-        <tim-alert *ngIf="lastAddedUser" severity="success">
-            {{successMessage}}
+        <tim-alert *ngIf="lastAddedUser" severity="success" class="success-message">
+            <div>
+                <span class="success-text">{{successMessage}}</span>
+                <span class="undo-button" *ngIf="allowUndo && !undone">
+                    <tim-loading *ngIf="undoing"></tim-loading>
+                    <button (click)="undoLast()" class="btn btn-danger" [disabled]="undoing" i18n>Undo</button>
+                </span>
+            </div>
+        </tim-alert>
+        <tim-alert class="small" *ngIf="undoErrors.length > 0" severity="warning">
+            <ng-container i18n>
+                <p>
+                    There were problems while undoing. Someone might have edited the permissions at the same time as
+                    you.
+                </p>
+                <p>You can reapply permissions or fix them manually.</p>
+                <p>Detailed error messages:</p>
+            </ng-container>
+            <div class="alert-details">
+                <a (click)="showErrorMessage = !showErrorMessage" i18n><i class="glyphicon glyphicon-chevron-down"></i>Show
+                    details</a>
+                <ng-container *ngIf="showErrorMessage">
+                    <ul *ngFor="let error of undoErrors">
+                        <li>{{error}}</li>
+                    </ul>
+                </ng-container>
+            </div>
         </tim-alert>
         <tim-alert class="small" *ngIf="errorMessage" i18n>
             <span>{{errorMessage}}</span>
-            <div style="margin-top: 1rem;">
+            <div class="alert-details">
                 <p>Please try refreshing the page and try again.</p>
                 <ng-container *ngIf="detailedError">
                     <div>
@@ -209,6 +272,7 @@ export class UserSelectComponent extends AngularPluginBase<
     searchPress: Subject<void> = new Subject();
     inputTyped: Subject<string> = new Subject();
     lastSearchResult?: SearchResult;
+    cachedSearchResult?: SearchResult;
     selectedUser?: UserResult;
     lastAddedUser?: UserResult;
     barCodeResult: string = "";
@@ -225,20 +289,30 @@ export class UserSelectComponent extends AngularPluginBase<
     isInPreview = false;
     displayFields: string[] = [];
     fieldNames: string[] = [];
-
+    allowUndo!: boolean;
+    undoing: boolean = false;
+    undone: boolean = false;
+    undoErrors: string[] = [];
     scanCode: boolean = false;
+    optionToggles: SearchOptionToggle[] = [];
+    keyboardMode: SearchOptionToggle = {
+        name: $localize`Keyboard mode`,
+        value: false,
+    };
 
     get successMessage() {
         if (!this.lastAddedUser) {
             return "";
         }
-        if (this.markup.text.success) {
-            return templateString(
-                this.markup.text.success,
-                this.lastAddedUser.fields
-            );
+        const template = this.undone
+            ? this.markup.text.undone
+            : this.markup.text.success;
+        if (template) {
+            return templateString(template, this.lastAddedUser.fields);
         }
-        return $localize`Permissions applied to ${this.lastAddedUser?.user.real_name}:INTERPOLATION:.`;
+        return this.undone
+            ? $localize`Undone permissions for ${this.lastAddedUser?.user.real_name}:INTERPOLATION:.`
+            : $localize`Permissions applied to ${this.lastAddedUser?.user.real_name}:INTERPOLATION:.`;
     }
 
     private get searchQueryStrings() {
@@ -253,6 +327,53 @@ export class UserSelectComponent extends AngularPluginBase<
             result.push(`${pidStart}${pidMark == "-" ? "+" : "-"}${pidEnd}`);
         }
         return result;
+    }
+
+    async undoLast() {
+        if (!this.lastAddedUser) {
+            return;
+        }
+        this.undoing = true;
+
+        // Pass possible urlmacros
+        const params = new HttpParams({
+            fromString: window.location.search.replace("?", "&"),
+        });
+        const result = await to2(
+            this.http
+                .post<{distributionErrors: string[]}>(
+                    "/userSelect/undo",
+                    {
+                        username: this.lastAddedUser.user.name,
+                        par: this.getPar().par.getJsonForServer(),
+                    },
+                    {params}
+                )
+                .toPromise()
+        );
+
+        if (result.ok) {
+            this.undoErrors = result.result.distributionErrors;
+            // Don't allow to reapply undo on fail to prevent further potential data races
+            this.undone = true;
+        } else {
+            this.undoErrors = [result.result.error.error];
+        }
+
+        this.undoing = false;
+    }
+
+    onUserSelected() {
+        if (
+            !this.markup.selectOnce ||
+            this.keyboardMode.value ||
+            !this.lastSearchResult ||
+            !this.selectedUser
+        ) {
+            return;
+        }
+        this.lastSearchResult.matches = [this.selectedUser];
+        this.getRootElement().scrollIntoView();
     }
 
     async onCodeScanned(result: Result) {
@@ -299,10 +420,12 @@ export class UserSelectComponent extends AngularPluginBase<
         super.ngOnInit();
         this.isInPreview = this.isPreview();
         this.supportsMediaDevices = MediaDevicesSupported;
+        this.initToggleOptions();
 
         this.applyButtonText =
             this.markup.text.apply ?? $localize`Set permission`;
         this.cancelButtonText = this.markup.text.cancel ?? $localize`Cancel`;
+        this.allowUndo = this.markup.allowUndo;
 
         this.enableScanner = this.markup.scanner.enabled;
         this.inputMinLength = this.markup.inputMinLength;
@@ -335,7 +458,7 @@ export class UserSelectComponent extends AngularPluginBase<
         });
         const result = await to2(
             this.http
-                .post(
+                .post<{distributionErrors: string[]}>(
                     "/userSelect/apply",
                     {
                         par: this.getPar().par.getJsonForServer(),
@@ -366,9 +489,13 @@ export class UserSelectComponent extends AngularPluginBase<
         if (!isMobileDevice()) {
             this.searchInput.nativeElement.focus();
         }
+        if (this.markup.selectOnce) {
+            this.getRootElement().scrollIntoView();
+        }
     }
 
     async doSearch() {
+        this.undone = false;
         this.search = true;
         this.lastSearchResult = undefined;
         this.lastAddedUser = undefined;
@@ -429,7 +556,8 @@ export class UserSelectComponent extends AngularPluginBase<
         return PluginFields;
     }
 
-    getDefaultMarkup() {
+    // Specify full return type for better IDE type checking
+    getDefaultMarkup(): t.TypeOf<typeof PluginMarkup> {
         return {
             scanner: {
                 enabled: false,
@@ -444,16 +572,26 @@ export class UserSelectComponent extends AngularPluginBase<
                 apply: null,
                 cancel: null,
                 success: null,
+                undone: null,
             },
             inputMinLength: 3,
             autoSearchDelay: 0,
             preFetch: false,
             maxMatches: 10,
+            selectOnce: false,
+            allowUndo: false,
             displayFields: ["username", "realname"],
         };
     }
 
+    private initToggleOptions() {
+        if (this.markup.selectOnce) {
+            this.optionToggles.push(this.keyboardMode);
+        }
+    }
+
     private resetError() {
+        this.undoErrors = [];
         this.showErrorMessage = false;
         this.errorMessage = undefined;
         this.detailedError = undefined;
@@ -517,7 +655,14 @@ export class UserSelectComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [UserSelectComponent, CodeScannerComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        NoopAnimationsModule,
+        BsDropdownModule.forRoot(),
+    ],
 })
 export class UserSelectModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}
