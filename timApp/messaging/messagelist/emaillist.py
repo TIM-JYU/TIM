@@ -59,16 +59,6 @@ def check_mailman_connection() -> bool:
 
 # TODO: Handle situations where we can't contact Mailman server.
 
-
-@dataclass
-class EmailListManager:
-    """Functionality for chosen email list management system Mailman 3. Handels everything else except things
-    specific to existing email lists."""
-
-    domains: List[str]
-    """Possible domains which can be used with our instance of Mailman."""
-
-
 @dataclass
 class EmailList:
     """Class to aid with email list specific functionality, such as attribute checking and changes.
