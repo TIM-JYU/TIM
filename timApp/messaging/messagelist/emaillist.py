@@ -9,7 +9,7 @@ from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archiv
 from timApp.tim_app import app
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
-from timApp.util.logger import log_warning, log_info, log_error
+from timApp.util.logger import log_warning, log_info
 from tim_common.marshmallow_dataclass import class_schema
 
 
@@ -26,10 +26,8 @@ class MailmanConfig:
 
 config: MailmanConfig = class_schema(MailmanConfig)().load(app.config, unknown="EXCLUDE")
 _client = Client(config.MAILMAN_URL, config.MAILMAN_USER, config.MAILMAN_PASS) if config else None
-"""
-A client object to utilize Mailman's REST API. Poke directly only when necessary, otherwise use via EmailListManager 
-class. If this is None, mailmanclient-library has not been configured for use.
-"""
+"""A client object to utilize Mailman's REST API. If this is None, mailmanclient-library has not been configured for 
+use. """
 
 # Test mailmanclient's initialization.
 if not _client:
@@ -39,9 +37,22 @@ else:
 
 
 def verify_mailman_connection() -> None:
-    """Verifies if the connection to Mailman is possible. Aborts if connection is not possible."""
+    """Verifies if the connection to Mailman is possible. Aborts if connection is not possible due to connection not
+    being configured in the first place. Used for operations that are meaningless without configured connection to
+    Mailman. """
     if not _client:
         raise NotExist("No connection to Mailman configured.")
+
+
+def check_mailman_connection() -> bool:
+    """Checks if the connection to Mailman is possible. Used for operations where the ability to connect to Mailman
+    is optional, and other meaningful operations can resume in case the connection is not available.
+
+    :return: True if connection is possible.
+    """
+    if not _client:
+        return False
+    return True
 
 
 # TODO: Test connection somehow?
@@ -619,8 +630,7 @@ def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
     """
     email_list.settings["convert_html_to_plaintext"] = only_text
     # The archive_rendering_mode setting mainly has an effect on HyperKitty. If the archiver on Mailman is something
-    # else, this might have no effect. It is still exposed on mailmanclient, so it should not be harmful either,
-    # it just has no effect.
+    # else, this might have no effect. It is still exposed on mailmanclient, so it should not be harmful either.
     if only_text:
         email_list.settings["archive_rendering_mode"] = "text"
     else:
