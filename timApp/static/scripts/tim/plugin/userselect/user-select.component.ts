@@ -44,6 +44,7 @@ const PluginMarkup = t.intersection([
         maxMatches: t.number,
         selectOnce: t.boolean,
         displayFields: t.array(t.string),
+        allowUndo: t.boolean,
         scanner: t.type({
             enabled: t.boolean,
             scanInterval: t.number,
@@ -106,7 +107,8 @@ const USER_FIELDS: Record<string, string> = {
                    placeholder="Search for user"
                    i18n-placeholder
                    name="search-string"
-                   type="text"
+                   type="search"
+                   autocomplete="off"
                    [(ngModel)]="searchString"
                    (ngModelChange)="inputTyped.next($event)"
                    [disabled]="!queryHandler"
@@ -443,7 +445,8 @@ export class UserSelectComponent extends AngularPluginBase<
         return PluginFields;
     }
 
-    getDefaultMarkup() {
+    // Specify full return type for better IDE type checking
+    getDefaultMarkup(): t.TypeOf<typeof PluginMarkup> {
         return {
             scanner: {
                 enabled: false,
@@ -464,6 +467,7 @@ export class UserSelectComponent extends AngularPluginBase<
             preFetch: false,
             maxMatches: 10,
             selectOnce: false,
+            allowUndo: false,
             displayFields: ["username", "realname"],
         };
     }
