@@ -21,7 +21,7 @@ import {
 } from "rxjs/operators";
 import {Result} from "@zxing/library";
 import {BsDropdownModule} from "ngx-bootstrap/dropdown";
-import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
+import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
@@ -660,7 +660,7 @@ export class UserSelectComponent extends AngularPluginBase<
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
-        BrowserAnimationsModule,
+        NoopAnimationsModule,
         BsDropdownModule.forRoot(),
     ],
 })
