@@ -392,3 +392,10 @@ def wait_response_and_collect_error(f: Future, h: str, errors: List[str]) -> Non
     else:
         if resp.status_code != 200:
             errors.append(f'{resp.request.url} returned status {resp.status_code} and text {resp.text}')
+
+
+def collect_errors_from_hosts(futures: List[Future], hosts: List[str]) -> List[str]:
+    errors: List[str] = []
+    for f, h in zip(futures, hosts):
+        wait_response_and_collect_error(f, h, errors)
+    return errors

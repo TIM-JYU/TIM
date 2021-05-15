@@ -196,6 +196,17 @@ DIST_RIGHTS_MODERATION_DOCS = [
 
 ]
 
+# Map of items that should trigger rights distribution when unlocking the item.
+DIST_RIGHTS_UNLOCK_TARGETS = {
+    # 'path/to/item': ['some_target'],
+}
+
+# List of hosts to send /register calls.
+DIST_RIGHTS_REGISTER_HOSTS = []
+
+# When calling /register, send this secret.
+DIST_RIGHTS_REGISTER_SEND_SECRET = None
+
 # The set of allowed IP networks. The following actions are restricted:
 # * Login and email registration are denied for non-admins.
 # * Answer route is blocked.
