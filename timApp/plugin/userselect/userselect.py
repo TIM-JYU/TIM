@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 from typing import List, Optional, Union, Tuple, Literal, Dict, Callable
 
 from flask import render_template_string, Response, current_app
@@ -106,6 +105,7 @@ class TextOptions:
 
 @dataclass
 class UserSelectMarkupModel(GenericMarkupModel):
+    allowUndo: bool = False
     preFetch: bool = False
     inputMinLength: int = 3
     autoSearchDelay: float = 0.0
