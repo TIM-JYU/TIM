@@ -270,7 +270,7 @@
         <target state="translated">Ei kameraa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/code-scanner.component.ts</context>
-          <context context-type="linenumber">46</context>
+          <context context-type="linenumber">45</context>
         </context-group>
       </trans-unit>
       <trans-unit id="d19763b3ecbf3e446e2b2e08dc2bd6df57804549" datatype="html">
@@ -743,7 +743,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="a75ca887f809e6410834a31724e69d230ccbba1d" datatype="html">
-        <source> You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }             "/> in <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;>"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>. </source>
+        <source> You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }
+            "/> in <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;
+                              [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;
+                              (onFinish)=&quot;this.countDown = false&quot;>"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>. </source>
         <target state="translated">
             Tämä <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/>
             aukeaa ajassa: <x id="START_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;tim-countdown>"/><x id="CLOSE_TAG_TIM-COUNTDOWN" ctype="x-tim-countdown" equiv-text="&lt;/tim-countdown>"/>.
