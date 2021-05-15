@@ -25,7 +25,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, is_localhost
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import is_valid_email
+from timApp.util.utils import is_valid_email, get_current_time
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
@@ -332,15 +332,15 @@ def test_route() -> Response:
     """A testing route. Only allow calls here during development, i.e. when operating from localhost."""
     if not is_localhost():
         raise RouteException()
-    # VIESTIM: This fails if the message list doesn't exist.
+
     msg_list = MessageListModel.get_list_by_name_exactly_one("yet_another_list3")
     message = MessageTIMversalis(message_list_name=msg_list.name,
                                  message_channel=Channel.EMAIL_LIST,
                                  sender=EmailAndDisplayName(email_address="tomi.t.lundberg@student.jyu.fi",
                                                             display_name="Tomi L."),
-                                 recipients=[EmailAndDisplayName(email_address="status-check2@tim.jyu.fi",
+                                 recipients=[EmailAndDisplayName(email_address="yet_another_list3@tim.jyu.fi",
                                                                  display_name="Uusilista293u0")],
-                                 subject="Viestin otsikko",
+                                 subject=f"Viestin otsikko {get_current_time()}",
                                  message_body="Hei mualima!"
                                  )
     archive_message(message_list=msg_list, message=message)
