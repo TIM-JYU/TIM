@@ -9,7 +9,6 @@ from copy import copy
 from logging import Logger
 from typing import Any, Dict, List
 
-import requests
 from celery import Celery
 from celery.signals import after_setup_logger
 from celery.utils.log import get_task_logger
@@ -25,8 +24,9 @@ from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
 from timApp.tim_app import app
 from timApp.user.user import User
+from timApp.util.flask.responsehelper import to_json_str
 from timApp.util.flask.search import create_search_files
-from timApp.util.utils import wait_response_and_collect_error
+from timApp.util.utils import get_current_time, collect_errors_from_hosts
 from tim_common.vendor.requests_futures import FuturesSession
 
 logger: Logger = get_task_logger(__name__)
@@ -159,6 +159,32 @@ def handle_exportdata(result: AnswerRouteResult, u: User, wod: WithOutData) -> N
 
 
 @celery.task
+def send_unlock_op(
+        email: str,
+        target: List[str],
+):
+    register_hosts = app.config['DIST_RIGHTS_REGISTER_HOSTS']
+    session = FuturesSession()
+    futures: List[Future] = []
+    for h in register_hosts:
+        f = session.post(
+            f'{h}/distRights/register',
+            to_json_str({
+                'op': {
+                    'type': 'unlock',
+                    'email': email,
+                    'timestamp': get_current_time(),
+                },
+                'target': target,
+                'secret': app.config['DIST_RIGHTS_REGISTER_SEND_SECRET'],
+            }),
+            headers={'Content-type': 'application/json'},
+        )
+        futures.append(f)
+    return collect_errors_from_hosts(futures, register_hosts)
+
+
+@celery.task
 def send_answer_backup(
         exported_answer: Dict[str, Any]
 ):
@@ -175,7 +201,4 @@ def do_send_answer_backup(exported_answer: Dict[str, Any]):
             json={'answer': exported_answer, 'token': app.config['BACKUP_ANSWER_SEND_SECRET']},
         )
         futures.append(f)
-    errors = []
-    for f, h in zip(futures, backup_hosts):
-        wait_response_and_collect_error(f, h, errors)
-    return errors
+    return collect_errors_from_hosts(futures, backup_hosts)
