@@ -294,6 +294,7 @@ export class UserSelectComponent extends AngularPluginBase<
     undone: boolean = false;
     undoErrors: string[] = [];
     scanCode: boolean = false;
+    scrollOnce: boolean = false;
     optionToggles: SearchOptionToggle[] = [];
     keyboardMode: SearchOptionToggle = {
         name: $localize`Keyboard mode`,
@@ -373,6 +374,8 @@ export class UserSelectComponent extends AngularPluginBase<
             return;
         }
         this.lastSearchResult.matches = [this.selectedUser];
+        // Force to not show "there are more matches" text
+        this.lastSearchResult.allMatchCount = 1;
         this.getRootElement().scrollIntoView();
     }
 
