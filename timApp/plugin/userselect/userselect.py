@@ -291,7 +291,9 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
     for distribute in undoable_dists:
         targets: List[str] = [distribute.target] if isinstance(distribute.target, str) else distribute.target
         if distribute.operation == "confirm":
-            undo_op = UndoConfirmOp(type="undoconfirm", email=user_acc.email, timestamp=distribute.timestamp)
+            undo_op: Union[UndoConfirmOp, UndoQuitOp] = UndoConfirmOp(type="undoconfirm",
+                                                                      email=user_acc.email,
+                                                                      timestamp=distribute.timestamp)
         elif distribute.operation == "quit":
             undo_op = UndoQuitOp(type="undoquit", email=user_acc.email, timestamp=distribute.timestamp)
         else:
