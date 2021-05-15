@@ -25,7 +25,7 @@ from timApp.item.block import Block, BlockType
 from timApp.item.validation import ItemValidationRule, validate_item_and_create_intermediate_folders, validate_item
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.utils import Missing
-from timApp.notification.notify import send_email
+from timApp.notification.send_email import send_email
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
 from timApp.sisu.parse_display_name import SisuDisplayName, parse_sisu_group_display_name

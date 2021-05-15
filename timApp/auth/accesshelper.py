@@ -1,8 +1,10 @@
+import ipaddress
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 from typing import Optional, Tuple, List
 
-from flask import flash
+from flask import flash, current_app
 from flask import request, g
 from sqlalchemy import inspect
 
@@ -18,6 +20,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, OriginInfo
 from timApp.folder.folder import Folder
 from timApp.item.item import Item, ItemBase
+from timApp.notification.send_email import send_email
 from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
@@ -27,6 +30,7 @@ from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
+from timApp.util.logger import log_warning
 from timApp.util.utils import get_current_time
 
 
@@ -439,3 +443,59 @@ def get_single_view_access(i: Item, allow_group: bool = False) -> BlockAccess:
     if acc.expired:
         raise AccessDenied(f"Access is already expired for {i.path}.")
     return acc
+
+
+def is_allowed_ip() -> bool:
+    ip_allowlist = current_app.config['IP_BLOCK_ALLOWLIST']
+    if ip_allowlist is None:
+        return True
+    return any(ipaddress.ip_address(request.remote_addr) in network for network in ip_allowlist)
+
+
+def is_blocked_ip() -> bool:
+    ip = request.remote_addr
+    fp = get_ipblocklist_path()
+    try:
+        with fp.open('r') as f:
+            ip_blocklist = f.read()
+    except FileNotFoundError:
+        return False
+    ip_lines = ip_blocklist.splitlines()
+    return ip in ip_lines
+
+
+def get_ipblocklist_path() -> Path:
+    return Path(current_app.config['FILES_PATH']) / 'ipblocklist'
+
+
+def verify_ip_ok(user: Optional[User], msg: str = 'IPNotAllowed'):
+    if (not user or not user.is_admin) and not is_allowed_ip():
+        username = user.name if user else 'Anonymous'
+        log_warning(f'IP not allowed for {username}: {request.remote_addr}')
+        cfg = current_app.config
+        ip_block_log_only = cfg['IP_BLOCK_LOG_ONLY']
+        is_in_blocklist = is_blocked_ip()
+        should_block = not ip_block_log_only or is_in_blocklist
+        msg_end = 'Request was blocked.' if should_block else 'Request was allowed.'
+        reply_tos = [cfg['ERROR_EMAIL']]
+        if user:
+            reply_tos.append(user.email)
+        if not is_in_blocklist:
+            send_email(
+                rcpt=cfg['ERROR_EMAIL'],
+                subject=f'{cfg["TIM_HOST"]}: '
+                        f'IP {request.remote_addr} outside allowlist ({username}) '
+                        f'- {"blocked" if should_block else "allowed"}',
+                mail_from=cfg['WUFF_EMAIL'],
+                reply_to=','.join(reply_tos),
+                msg=f"""
+IP {request.remote_addr} was outside allowlist.
+
+URL: {request.url}
+
+User: {username}
+
+{msg_end}
+                """.strip())
+        if should_block:
+            raise AccessDenied(msg)

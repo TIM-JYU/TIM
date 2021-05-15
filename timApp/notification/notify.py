@@ -1,11 +1,9 @@
-import smtplib
 import urllib.parse
 from collections import defaultdict
-from email.mime.text import MIMEText
 from threading import Thread
 from typing import Optional, List, DefaultDict, Set
 
-from flask import current_app, Flask
+from flask import current_app
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import verify_logged_in, verify_view_access, get_item_or_abort
@@ -18,14 +16,13 @@ from timApp.item.block import Block
 from timApp.notification.notification import NotificationType, Notification
 from timApp.notification.pending_notification import DocumentNotification, CommentNotification, \
     PendingNotification, get_pending_notifications, GroupingKey
+from timApp.notification.send_email import send_email
 from timApp.tim_app import app
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.util.flask.requesthelper import is_testing, is_localhost
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.logger import log_error
 from timApp.util.utils import get_current_time, seq_to_str
 
 notify = TypedBlueprint(
@@ -33,8 +30,6 @@ notify = TypedBlueprint(
     __name__,
     url_prefix='/notify',
 )
-
-sent_mails_in_testing = []
 
 
 @notify.route('/<int:doc_id>', methods=['GET'])
@@ -86,122 +81,6 @@ def get_current_user_notifications(limit: Optional[int] = None):
         q = q.limit(limit)
     nots = q.all()
     return nots
-
-
-def send_email(
-        rcpt: str,
-        subject: str,
-        msg: str,
-        mail_from: str = app.config['HELP_EMAIL'],
-        reply_to: str = app.config['NOREPLY_EMAIL'],
-) -> Optional[Thread]:
-    if is_testing():
-        sent_mails_in_testing.append(locals())
-        return None
-
-    if is_localhost():
-        # don't use log_* function because this is typically run in Celery
-        print(f'Skipping mail send on localhost, rcpt: {rcpt}, message: {msg}')
-        return None
-
-    return Thread(target=send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to)).start()
-
-
-def send_email_impl(
-        flask_app: Flask,
-        rcpt: str,
-        subject: str,
-        msg: str,
-        mail_from: str = app.config['HELP_EMAIL'],
-        reply_to: str = app.config['NOREPLY_EMAIL'],
-):
-    with flask_app.app_context():
-        mime_msg = MIMEText(msg + flask_app.config['MAIL_SIGNATURE'])
-        mime_msg['Subject'] = subject
-        mime_msg['From'] = mail_from
-        mime_msg['To'] = rcpt
-
-        if reply_to:
-            mime_msg.add_header('Reply-To', reply_to)
-
-        s = smtplib.SMTP(flask_app.config['MAIL_HOST'])
-        try:
-            s.sendmail(mail_from, [rcpt], mime_msg.as_string())
-        except (smtplib.SMTPSenderRefused,
-                smtplib.SMTPRecipientsRefused,
-                smtplib.SMTPHeloError,
-                smtplib.SMTPDataError,
-                smtplib.SMTPNotSupportedError) as e:
-            log_error(str(e))
-        else:
-            pass
-        finally:
-            s.quit()
-
-def multi_send_email(
-        rcpt: str,
-        subject: str,
-        msg: str,
-        mail_from: str = app.config['HELP_EMAIL'],
-        reply_to: str = app.config['NOREPLY_EMAIL'],
-        bcc: str = ''
-) -> Optional[Thread]:
-    if is_testing():
-        sent_mails_in_testing.append(locals())
-        return None
-
-    if is_localhost():
-        # don't use log_* function because this is typically run in Celery
-        print(f'Skipping mail send on localhost, rcpt: {rcpt}, message: {msg}')
-        return None
-
-    return Thread(target=multi_send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to, bcc)).start()
-
-
-def multi_send_email_impl(
-        flask_app: Flask,
-        rcpt: str,
-        subject: str,
-        msg: str,
-        mail_from: str = app.config['HELP_EMAIL'],
-        reply_to: str = app.config['NOREPLY_EMAIL'],
-        bcc: str = ''
-):
-    with flask_app.app_context():
-        s = smtplib.SMTP(flask_app.config['MAIL_HOST'])
-        rcpts = rcpt.split(";")
-        bccmail = bcc
-        extra = ''
-        if bcc:
-            if len(rcpts) > 3:
-                rcpts.append(bcc)
-                bccmail = ''
-                extra = "\n\n" + "\n".join(rcpts)
-        try:
-            for rcp in rcpts:
-                try:
-                    # TODO: Mailmerge here possible templates.
-                    send_extra = ''
-                    if rcp == bcc:
-                        send_extra = extra
-                    mime_msg = MIMEText(msg + send_extra)  # + flask_app.config['MAIL_SIGNATURE'])
-                    mime_msg['Subject'] = subject
-                    mime_msg['From'] = mail_from
-                    mime_msg['Bcc'] = bccmail
-                    mime_msg['To'] = rcp
-                    if reply_to:
-                        mime_msg.add_header('Reply-To', reply_to)
-                    s.sendmail(mail_from, [rcp, bccmail], mime_msg.as_string() )
-                except (smtplib.SMTPSenderRefused,
-                        smtplib.SMTPRecipientsRefused,
-                        smtplib.SMTPHeloError,
-                        smtplib.SMTPDataError,
-                        smtplib.SMTPNotSupportedError) as e:
-                    log_error(str(e))
-                else:
-                    pass
-        finally:
-            s.quit()
 
 
 def notify_doc_watchers(doc: DocInfo, content_msg: str, notify_type: NotificationType,
