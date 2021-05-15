@@ -108,7 +108,7 @@ const USER_FIELDS: Record<string, string> = {
             </button>
             <span *ngIf="!supportsMediaDevices" class="label label-default not-supported" i18n>Not supported in this browser</span>
             <tim-code-scanner *ngIf="scanCode" (successfulRead)="onCodeScanned($event)"
-                              [scanInterval]="scanInterval"></tim-code-scanner>
+                              [scanInterval]="scanInterval" #codeScanner></tim-code-scanner>
         </div>
         <form class="search" (ngSubmit)="searchPress.next()" #searchForm="ngForm">
             <input class="form-control input-lg"
@@ -260,6 +260,9 @@ export class UserSelectComponent extends AngularPluginBase<
 > {
     @ViewChild("searchForm") searchForm!: NgForm;
     @ViewChild("searchInput") searchInput!: ElementRef<HTMLInputElement>;
+    @ViewChild("codeScanner", {read: ElementRef}) codeScanner?: ElementRef<
+        HTMLElement
+    >;
 
     showErrorMessage = false;
     errorMessage?: string;
@@ -294,6 +297,7 @@ export class UserSelectComponent extends AngularPluginBase<
     undone: boolean = false;
     undoErrors: string[] = [];
     scanCode: boolean = false;
+    scrollOnce: boolean = false;
     optionToggles: SearchOptionToggle[] = [];
     keyboardMode: SearchOptionToggle = {
         name: $localize`Keyboard mode`,
@@ -373,7 +377,10 @@ export class UserSelectComponent extends AngularPluginBase<
             return;
         }
         this.lastSearchResult.matches = [this.selectedUser];
-        this.getRootElement().scrollIntoView();
+        // Force to not show "there are more matches" text
+        this.lastSearchResult.allMatchCount = 1;
+        const el = this.codeScanner?.nativeElement ?? this.getRootElement();
+        el.scrollIntoView();
     }
 
     async onCodeScanned(result: Result) {
@@ -490,7 +497,8 @@ export class UserSelectComponent extends AngularPluginBase<
             this.searchInput.nativeElement.focus();
         }
         if (this.markup.selectOnce) {
-            this.getRootElement().scrollIntoView();
+            const el = this.codeScanner?.nativeElement ?? this.getRootElement();
+            el.scrollIntoView();
         }
     }
 
