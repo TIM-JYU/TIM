@@ -323,7 +323,7 @@ def set_message_link_next(doc: Document, link_text: str, url_next: str, archive_
         header.set_markdown(new_button_set)
         header.save()
 
-        last_par = doc.get_last_par()
+        last_par = doc.get_paragraphs()[-1]
         last_par_md = last_par.get_markdown()
         # Add a \ and a line break after the previous link, then the new link.
         modified_footer = f"""{last_par_md}\\
