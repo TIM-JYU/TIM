@@ -6,9 +6,9 @@ from flask import Response
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui_link, create_new_email_list, \
-    delete_email_list, check_emaillist_name_requirements, get_domain_names, verify_mailman_connection
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
+from timApp.messaging.messagelist.emaillist import get_list_ui_link, create_new_email_list, \
+    delete_email_list, check_emaillist_name_requirements, get_domain_names, verify_mailman_connection
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
@@ -61,18 +61,20 @@ def create_list(options: ListOptions) -> Response:
 
 
 def test_name(name_candidate: str) -> None:
-    """Check new message list's name candidate's name. The name has to meet naming rules, it has to be not already be
-    in use and it cannot be a reserved name.
+    """Check new message list's name candidate's name.
+
+     The name has to meet naming rules, it has to be not already be in use and it cannot be a reserved name. If the
+     function retuns control to it's caller, then name is viable to use for a message list. If at some point the name
+     is not viable, then an exception is raised.
 
     :param name_candidate: The name candidate to check.
-    :return: None. If the function retuns control to it's caller, then name is viable to use for a message list. If at
-    some point the name is not viable, then an exception is raised.
     """
     normalized_name = name_candidate.strip()
     name, sep, domain = normalized_name.partition("@")
     check_messagelist_name_requirements(name)
     if sep:
         # If character '@' is found, we check email list specific name requirements.
+        verify_mailman_connection()
         check_emaillist_name_requirements(name, domain)
 
 
@@ -107,9 +109,8 @@ def delete_list(listname: str, domain: str) -> Response:
     """Delete message/email list. List name is provided in the request body.
 
     :param domain: If an empty string, message list is not considered to have a domain associated and therefore doesn't
-     have an email list. If this is an unempty string, then an email list is excpected to also exist.
-    :param listname: The list to be deleted. If the name does not contain '@', just delete  a message list. If it
-     contains '@', we delete a message list and the corresponding email list.
+     have an email list. If this is an nonempty string, then an email list is excpected to also exist.
+    :param listname: The list to be deleted.
     :return: A string describing how the operation went.
     """
     verify_logged_in()
