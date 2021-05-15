@@ -7,7 +7,8 @@ from flask import Blueprint, Response
 from flask import current_app
 from flask import url_for
 
-from timApp.auth.accesshelper import verify_admin_no_ret
+from timApp.auth.accesshelper import verify_admin_no_ret, is_allowed_ip
+from timApp.auth.sessioninfo import logged_in
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.util.flask.responsehelper import safe_redirect
 
@@ -19,13 +20,19 @@ global_notification.before_request(verify_admin_no_ret)
 
 
 @global_notification.app_context_processor
-def inject_global_notification() -> dict:
+def inject_global_notifications() -> dict:
     """"Injects global notification message (if the file exists) to all templates."""
-    if not os.path.exists(current_app.config['GLOBAL_NOTIFICATION_FILE']):
-        return {}
-    with open(current_app.config['GLOBAL_NOTIFICATION_FILE'], 'r') as f:
-        notification = f.read()
-    return dict(global_notification=notification)
+    notifications = []
+    try:
+        with open(current_app.config['GLOBAL_NOTIFICATION_FILE'], 'r') as f:
+            notifications.append(f.read())
+    except FileNotFoundError:
+        pass
+    if not logged_in() and not is_allowed_ip():
+        ip_block_msg = current_app.config['IP_BLOCK_MESSAGE']
+        if ip_block_msg:
+            notifications.append(ip_block_msg)
+    return dict(global_notifications=notifications)
 
 
 @global_notification.route('/set/<path:message>')
