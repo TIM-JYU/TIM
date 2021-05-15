@@ -191,6 +191,11 @@ DIST_RIGHTS_SEND_SECRET = None
 # When receiving a right from the distributor host, make sure that the given secret matches this one.
 DIST_RIGHTS_RECEIVE_SECRET = None
 
+# A list of documents on this TIM instance that can register and distribute rights directly
+DIST_RIGHTS_MODERATION_DOCS = [
+
+]
+
 # The set of allowed IP networks. The following actions are restricted:
 # * Login and email registration are denied for non-admins.
 # * Answer route is blocked.
