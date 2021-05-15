@@ -74,7 +74,10 @@ RIGHT_TO_OP: Dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
     "confirm": lambda r, usr: ConfirmOp(type="confirm", email=usr, timestamp=r.timestamp),
     "quit": lambda r, usr: QuitOp(type="quit", email=usr, timestamp=r.timestamp),
     "unlock": lambda r, usr: UnlockOp(type="unlock", email=usr, timestamp=r.timestamp),
-    "changetime": lambda r, usr: ChangeTimeOp(type="changetime", email=usr, secs=r.minutes * 60, timestamp=r.timestamp)
+    "changetime": lambda r, usr: ChangeTimeOp(type="changetime",
+                                              email=usr,
+                                              secs=int(r.minutes * 60),
+                                              timestamp=r.timestamp)
 }
 
 
@@ -246,18 +249,16 @@ def search_users(search_strings: List[str], task_id: Optional[str] = None,
     })
 
 
-def has_distribution_moderation_access(doc: DocInfo):
+def has_distribution_moderation_access(doc: DocInfo) -> bool:
     allowed_docs = current_app.config.get("DIST_RIGHTS_MODERATION_DOCS", [])
     return doc.path in allowed_docs
 
 
-def get_plugin_info(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None):
+def get_plugin_info(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) \
+        -> Tuple[UserSelectMarkupModel, User, UserGroup, User]:
     model, doc, _, _ = get_plugin_markup(task_id, par)
     # Ensure user actually has access to document with the plugin
     verify_view_access(doc)
-    # No permissions to apply, simply remove
-    if not model.actions:
-        return ok_response()
 
     cur_user = get_current_user_object()
     user_group = UserGroup.get_by_name(username)
@@ -275,6 +276,9 @@ def get_plugin_info(username: str, task_id: Optional[str] = None, par: Optional[
 @user_select_plugin.route("/undo", methods=["POST"])
 def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
+    # No permissions to undo
+    if not model.actions:
+        return ok_response()
 
     # TODO: Implement undoing for local permissions
     undoable_dists = [dist for dist in model.actions.distributeRight if dist.operation in ("confirm", "quit")]
@@ -313,6 +317,9 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
 @user_select_plugin.route("/apply", methods=["POST"])
 def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
+    # No permissions to apply, simply return
+    if not model.actions:
+        return ok_response()
 
     permission_actions: List[PermissionActionBase] = [*model.actions.addPermission, *model.actions.removePermission]
     doc_entries = {}
