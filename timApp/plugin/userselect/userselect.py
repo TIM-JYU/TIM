@@ -101,6 +101,7 @@ class TextOptions:
     apply: Optional[str] = None
     cancel: Optional[str] = None
     success: Optional[str] = None
+    undone: Optional[str] = None
 
 
 @dataclass
@@ -284,7 +285,7 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
                 distribution.target))
         elif distribution.operation == "quit":
             errors.extend(register_right_impl(
-                UndoQuitOp(type="undoquit", email=user_acc, timestamp=distribution.timestamp),
+                UndoQuitOp(type="undoquit", email=user_acc.email, timestamp=distribution.timestamp),
                 distribution.target))
 
     # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
