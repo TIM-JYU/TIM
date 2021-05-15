@@ -48,7 +48,7 @@ def check_mailman_connection() -> bool:
     """Checks if the connection to Mailman is possible. Used for operations where the ability to connect to Mailman
     is optional, and other meaningful operations can resume in case the connection is not available.
 
-    :return: True if connection is possible.
+    :return: True if connection is possible, i.e. _client is configured. Otherwise False.
     """
     if not _client:
         return False
@@ -59,6 +59,7 @@ def check_mailman_connection() -> bool:
 
 # TODO: Handle situations where we can't contact Mailman server.
 
+
 @dataclass
 class EmailListManager:
     """Functionality for chosen email list management system Mailman 3. Handels everything else except things
@@ -66,21 +67,6 @@ class EmailListManager:
 
     domains: List[str]
     """Possible domains which can be used with our instance of Mailman."""
-
-    @staticmethod
-    def get_domain_names() -> List[str]:
-        """Returns a list of all domain names.
-
-        :return: A list of possible domain names.
-        """
-        if _client is None:
-            return []
-        try:
-            domains: List[Domain] = _client.domains
-            domain_names: List[str] = [domain.mail_host for domain in domains]
-            return domain_names
-        except HTTPError:
-            return []
 
 
 @dataclass
@@ -686,3 +672,16 @@ def set_email_list_default_reply_type(email_list: MailingList, default_reply_typ
     email_list.settings["reply_goes_to_list"] = reply_to_munging[default_reply_type]
 
     email_list.settings.save()
+
+
+def get_domain_names() -> List[str]:
+    """Returns a list of all domain names, that are configured for our instance of Mailman.
+
+    :return: A list of possible domain names.
+    """
+    try:
+        domains: List[Domain] = _client.domains
+        domain_names: List[str] = [domain.mail_host for domain in domains]
+        return domain_names
+    except HTTPError:
+        raise
