@@ -26,6 +26,7 @@ from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups
 from timApp.util.logger import log_warning
+from timApp.util.utils import get_current_time
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import GenericHtmlModel, PluginReqs, register_html_routes
@@ -65,8 +66,8 @@ class SetTaskValueAction:
 @dataclass
 class DistributeRightAction:
     operation: Literal["confirm", "quit", "unlock", "changetime"]
-    target: str
-    timestamp: datetime = field(default_factory=datetime.now)
+    target: Union[str, List[str]]
+    timestamp: datetime = field(default_factory=get_current_time)
     minutes: float = 0.0
 
 
@@ -365,7 +366,10 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
     errors = []
     for distribute in model.actions.distributeRight:
         convert = RIGHT_TO_OP[distribute.operation]
-        errors.extend(register_right_impl(convert(distribute, user_acc.email), distribute.target))
+        targets: List[str] = [distribute.target] if isinstance(distribute.target, str) else distribute.target
+        right_op = convert(distribute, user_acc.email)
+        for target in targets:
+            errors.extend(register_right_impl(right_op, target))
 
     db.session.commit()
 
