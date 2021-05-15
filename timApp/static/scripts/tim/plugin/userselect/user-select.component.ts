@@ -126,7 +126,8 @@ const USER_FIELDS: Record<string, string> = {
 
             <ng-template #submitButton>
                 <button class="timButton btn-lg" i18n
-                        [disabled]="!queryHandler || !searchForm.form.valid || search || undoing">Search
+                        [disabled]="!queryHandler || !searchForm.form.valid || search || undoing">
+                    Search
                 </button>
             </ng-template>
 
@@ -211,18 +212,21 @@ const USER_FIELDS: Record<string, string> = {
                 <span class="success-text">{{successMessage}}</span>
                 <span class="undo-button" *ngIf="allowUndo && !undone">
                     <tim-loading *ngIf="undoing"></tim-loading>
-                    <button (click)="undoLast()" class="btn btn-danger" [disabled]="undoing">Undo</button>
+                    <button (click)="undoLast()" class="btn btn-danger" [disabled]="undoing" i18n>Undo</button>
                 </span>
             </div>
         </tim-alert>
         <tim-alert class="small" *ngIf="undoErrors.length > 0" severity="warning">
-            <p>
-                There were problems while undoing. Someone might have edited the permissions at the same time as you.
-            </p>
-            <p>You can reapply permissions or fix them manually.</p>
-            <p>Detailed error messages:</p>
+            <ng-container i18n>
+                <p>
+                    There were problems while undoing. Someone might have edited the permissions at the same time as
+                    you.
+                </p>
+                <p>You can reapply permissions or fix them manually.</p>
+                <p>Detailed error messages:</p>
+            </ng-container>
             <div class="alert-details">
-                <a (click)="showErrorMessage = !showErrorMessage"><i class="glyphicon glyphicon-chevron-down"></i>Show
+                <a (click)="showErrorMessage = !showErrorMessage" i18n><i class="glyphicon glyphicon-chevron-down"></i>Show
                     details</a>
                 <ng-container *ngIf="showErrorMessage">
                     <ul *ngFor="let error of undoErrors">

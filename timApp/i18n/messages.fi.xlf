@@ -254,7 +254,7 @@
         <target state="translated">Kameran asetukset</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/code-scanner.component.ts</context>
-          <context context-type="linenumber">26</context>
+          <context context-type="linenumber">25</context>
         </context-group>
       </trans-unit>
       <trans-unit id="dcdf7e0ced7d13bd17f8d19435fdd9e2f2d8eb7d" datatype="html">
@@ -262,7 +262,7 @@
         <target state="translated">Ei tuettu tässä selaimessa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">101</context>
+          <context context-type="linenumber">109</context>
         </context-group>
       </trans-unit>
       <trans-unit id="aed231839ed905a9df105fdf1eb4e4017ce6c319" datatype="html">
@@ -278,7 +278,7 @@
         <target state="translated">Kameravalon säätö ei onnistu</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/code-scanner.component.ts</context>
-          <context context-type="linenumber">47</context>
+          <context context-type="linenumber">46</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5248717555542428023" datatype="html">
@@ -286,7 +286,7 @@
         <target state="translated">Käyttäjätunnus</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">81</context>
+          <context context-type="linenumber">91</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8097628895036343135" datatype="html">
@@ -294,7 +294,7 @@
         <target state="translated">Nimi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">82</context>
+          <context context-type="linenumber">92</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4768749765465246664" datatype="html">
@@ -302,7 +302,7 @@
         <target state="translated">Sähköpostiosoite</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">83</context>
+          <context context-type="linenumber">93</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4fd4bba925396e5b9347f3be7db5f156fab01c19" datatype="html">
@@ -310,7 +310,7 @@
         <target state="translated">Skannaa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">99</context>
+          <context context-type="linenumber">107</context>
         </context-group>
       </trans-unit>
       <trans-unit id="582e23c100754b26f822b830989a5c7b58e5babf" datatype="html">
@@ -318,7 +318,7 @@
         <target state="translated">Valittu kamera</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/code-scanner.component.ts</context>
-          <context context-type="linenumber">30</context>
+          <context context-type="linenumber">29</context>
         </context-group>
       </trans-unit>
       <trans-unit id="83387ea327315fdcb2d3b2ffea34a20815a225be" datatype="html">
@@ -326,7 +326,7 @@
         <target state="translated"> Käynnistä salamavalo </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/code-scanner.component.ts</context>
-          <context context-type="linenumber">38,39</context>
+          <context context-type="linenumber">37</context>
         </context-group>
       </trans-unit>
       <trans-unit id="9475df47b8b1c4e5f5121d1ddb93aa70fc7a8698" datatype="html">
@@ -334,7 +334,7 @@
         <target state="translated"> Sammuta salamavalo </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/code-scanner.component.ts</context>
-          <context context-type="linenumber">41,42</context>
+          <context context-type="linenumber">40</context>
         </context-group>
       </trans-unit>
       <trans-unit id="ca2e0b7114350948727db2cff3022f0f02021d8d" datatype="html">
@@ -342,7 +342,15 @@
         <target state="translated">Hae käyttäjää</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">105</context>
+          <context context-type="linenumber">115</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2930d2a488033de5062cc2567a4ec71601c440ca" datatype="html">
+        <source> Search </source>
+        <target state="translated"> Hae </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
+          <context context-type="linenumber">130,131</context>
         </context-group>
       </trans-unit>
       <trans-unit id="fafdade5d0f543d51e6c9f6592a9aec94f53fceb" datatype="html">
@@ -350,7 +358,7 @@
         <target state="translated"> Ei osumia annetulla hakusanalla </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">123,124</context>
+          <context context-type="linenumber">161</context>
         </context-group>
       </trans-unit>
       <trans-unit id="9ca82952a6bc860b5391d5975322d8af8ceddfa4" datatype="html">
@@ -358,7 +366,7 @@
         <target state="translated">Valitse</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">129</context>
+          <context context-type="linenumber">167</context>
         </context-group>
       </trans-unit>
       <trans-unit id="13c0b88c19f4d53f0935e91a181477a04306b522" datatype="html">
@@ -366,7 +374,31 @@
         <target state="translated"> Löytyi <x id="INTERPOLATION" equiv-text="{{lastSearchResult.allMatchCount}}"/> osumaa. Vain <x id="INTERPOLATION_1" equiv-text="{{lastSearchResult.matches.length}}"/> ensimmäistä osumaa näytetään. Anna tarkempi hakusana nähdäksesi kaikki tulokset. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">156</context>
+          <context context-type="linenumber">195</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4f26c54d5c3edadf92756d7d3ce466dde1f01e2a" datatype="html">
+        <source>Undo</source>
+        <target state="translated">Peruuta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
+          <context context-type="linenumber">215</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5e60774780732928b528b2b81b7494cd21c8b053" datatype="html">
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> There were problems while undoing. Someone might have edited the permissions at the same time as you. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>You can reapply permissions or fix them manually.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Detailed error messages:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Peruuttamisen ei onnistunut täydellisesti. Joku toinen on saattanut muokata oikeuksia samanaikaisesti. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Voit asettaa oikeudet uudelleen tai korjata ne manuaalisesti.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Yksityiskohdat:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
+          <context context-type="linenumber">221</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="e775498b30b5b2f04c8de41a228ecc4d6a437b2b" datatype="html">
+        <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Show details</source>
+        <target state="translated"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Näytä yksityiskohdat</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
+          <context context-type="linenumber">229</context>
         </context-group>
       </trans-unit>
       <trans-unit id="e6067a07ebcbe6d6cc2802d3793f03f2b46c22a3" datatype="html">
@@ -374,7 +406,23 @@
         <target state="translated"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{errorMessage}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div style=&quot;margin-top: 1rem;&quot;>                 "/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Päivitä sivu ja kokeile uudelleen.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;>                     "/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div>                         "/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;>                             "/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>                             "/> Näytä yksityiskohdat <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;>"/><x id="INTERPOLATION_1" equiv-text="{{detailedError}}"/><x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">176</context>
+          <context context-type="linenumber">239</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8722403967811278226" datatype="html">
+        <source>Keyboard mode</source>
+        <target state="translated">Vain näppäimistö -tila</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
+          <context context-type="linenumber">299</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9159869723463881627" datatype="html">
+        <source>Undone permissions for <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</source>
+        <target state="translated">Oikeudet peruutettu käyttäjältä <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
+          <context context-type="linenumber">314</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5703267131879050829" datatype="html">
@@ -383,6 +431,7 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">241</context>
+          <context context-type="linenumber">315</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4014435728703990296" datatype="html">
@@ -391,6 +440,7 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">304</context>
+          <context context-type="linenumber">425</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2159130950882492111" datatype="html">
@@ -399,6 +449,7 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">305</context>
+          <context context-type="linenumber">426</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7127355890937941598" datatype="html">
@@ -407,6 +458,7 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">354</context>
+          <context context-type="linenumber">476</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2369555589256522210" datatype="html">
@@ -415,6 +467,7 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">419</context>
+          <context context-type="linenumber">542</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1073782821840614775" datatype="html">
@@ -422,7 +475,7 @@
         <target state="translated">Palvelimeen ei saatu yhteyttä.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">509</context>
+          <context context-type="linenumber">643</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8aa15c4a520b71ba3537a562a1a9cdb48f3c2261" datatype="html">
@@ -872,10 +925,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/header/site-header.component.ts</context>
           <context context-type="linenumber">23</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">115</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
