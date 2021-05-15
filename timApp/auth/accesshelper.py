@@ -471,11 +471,12 @@ def get_ipblocklist_path() -> Path:
 def verify_ip_ok(user: Optional[User], msg: str = 'IPNotAllowed'):
     if (not user or not user.is_admin) and not is_allowed_ip():
         username = user.name if user else 'Anonymous'
-        log_warning(f'IP not allowed for {username}: {request.remote_addr}')
         cfg = current_app.config
         ip_block_log_only = cfg['IP_BLOCK_LOG_ONLY']
         is_in_blocklist = is_blocked_ip()
         should_block = not ip_block_log_only or is_in_blocklist
+        blocked_or_allowed = "blocked" if should_block else "allowed"
+        log_warning(f'IP {request.remote_addr} outside allowlist ({username}) - {blocked_or_allowed}')
         msg_end = 'Request was blocked.' if should_block else 'Request was allowed.'
         reply_tos = [cfg['ERROR_EMAIL']]
         if user:
@@ -485,7 +486,7 @@ def verify_ip_ok(user: Optional[User], msg: str = 'IPNotAllowed'):
                 rcpt=cfg['ERROR_EMAIL'],
                 subject=f'{cfg["TIM_HOST"]}: '
                         f'IP {request.remote_addr} outside allowlist ({username}) '
-                        f'- {"blocked" if should_block else "allowed"}',
+                        f'- {blocked_or_allowed}',
                 mail_from=cfg['WUFF_EMAIL'],
                 reply_to=','.join(reply_tos),
                 msg=f"""
