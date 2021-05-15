@@ -24,7 +24,7 @@ from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import ok_response, to_json_str, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.secret import check_secret, get_secret_or_abort
-from timApp.util.utils import read_json_lines, wait_response_and_collect_error
+from timApp.util.utils import read_json_lines, collect_errors_from_hosts
 from tim_common.marshmallow_dataclass import field_for_schema, class_schema
 from tim_common.utils import DurationSchema
 from tim_common.vendor.requests_futures import FuturesSession
@@ -233,27 +233,28 @@ def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> List[str]:
             timeout=5,
         )
         futures.append(r)
-    errors: List[str] = []
-    for f, h in zip(futures, hosts):
-        wait_response_and_collect_error(f, h, errors)
+    return collect_errors_from_hosts(futures, hosts)
+
+
+def register_right_impl(op: RightOp, target: Union[str, List[str]]) -> List[str]:
+    targets = [target] if isinstance(target, str) else target
+    errors = []
+    for tgt in targets:
+        target_s = secure_filename(tgt)
+        if not target_s:
+            raise RouteException(f'invalid target: {tgt}')
+        with filelock.FileLock(f'/tmp/log_right_{target_s}'):
+            rights = do_register_right(op, target_s)
+        with filelock.FileLock(f'/tmp/dist_right_{target_s}'):
+            errors.extend(do_dist_rights(op, rights, target_s))
     return errors
-
-
-def register_right_impl(op: RightOp, target: str) -> List[str]:
-    target_s = secure_filename(target)
-    if not target_s:
-        raise RouteException(f'invalid target: {target}')
-    with filelock.FileLock(f'/tmp/log_right_{target_s}'):
-        rights = do_register_right(op, target_s)
-    with filelock.FileLock(f'/tmp/dist_right_{target_s}'):
-        return do_dist_rights(op, rights, target_s)
 
 
 @dist_bp.route('/register', methods=['post'])
 @csrf.exempt
 def register_right(
         op: RightOp,
-        target: str,
+        target: Union[str, List[str]],
         secret: str,
 ) -> Response:
     check_secret(secret, 'DIST_RIGHTS_REGISTER_SECRET')

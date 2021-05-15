@@ -171,6 +171,12 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
                 if inspect(ba).transient:
                     db.session.add(ba)
                 db.session.commit()  # TODO ensure nothing else gets committed than the above
+                if isinstance(block, Item):
+                    targets = current_app.config['DIST_RIGHTS_UNLOCK_TARGETS']
+                    curr_targets = targets.get(block.path)
+                    if curr_targets:
+                        from timApp.tim_celery import send_unlock_op
+                        send_unlock_op.delay(get_current_user_object().email, curr_targets)
                 flash('Item was unlocked successfully.')
                 if ba.accessible_from < ba.accessible_to:
                     return ba
