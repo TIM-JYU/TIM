@@ -313,9 +313,8 @@ export class UserSelectComponent extends AngularPluginBase<
 
         if (result.ok) {
             this.undoErrors = result.result.distributionErrors;
-            if (this.undoErrors.length == 0) {
-                this.undone = true;
-            }
+            // Don't allow to reapply undo on fail to prevent further potential data races
+            this.undone = true;
         } else {
             this.undoErrors = [result.result.error.error];
         }
@@ -415,7 +414,7 @@ export class UserSelectComponent extends AngularPluginBase<
         });
         const result = await to2(
             this.http
-                .post(
+                .post<{distributionErrors: string[]}>(
                     "/userSelect/apply",
                     {
                         par: this.getPar().par.getJsonForServer(),

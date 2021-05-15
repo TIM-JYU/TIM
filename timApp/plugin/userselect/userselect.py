@@ -25,10 +25,11 @@ from timApp.util.flask.requesthelper import NotExist, RouteException, view_ctx_w
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups
+from timApp.util.logger import log_warning
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import GenericHtmlModel, PluginReqs, register_html_routes
-from tim_common.utils import DurationSchema, Missing
+from tim_common.utils import DurationSchema
 
 user_select_plugin = TypedBlueprint("userSelect", __name__, url_prefix="/userSelect")
 
@@ -360,9 +361,16 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
     for msg in update_messages:
         log_right(msg)
 
-    return json_response({
-        "distributionErrors": errors
-    })
+    for error in errors:
+        log_warning(f"RIGHT_DIST: problem distributing rights for user {user_acc.email}: {error}")
+
+    # Better throw an error here. This should prompt the user to at least try again
+    # Unlike with undoing, it's better to get the user to reapply the rights or properly fix them
+    # Moreover, this should encourage the user to report the problem with distribution ASAP
+    if errors:
+        raise RouteException("\n".join([f"* {error}" for error in errors]))
+
+    return ok_response()
 
 
 register_html_routes(
