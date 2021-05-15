@@ -24,7 +24,7 @@ from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_existing_answers_info, save_answer, get_all_answers, \
     valid_answers_query, valid_taskid_filter
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access, AccessDenied, \
-    verify_admin, get_origin_from_request
+    verify_admin, get_origin_from_request, is_allowed_ip, verify_ip_ok
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
     verify_view_access, get_plugin_from_request
@@ -43,7 +43,7 @@ from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from tim_common.marshmallow_dataclass import class_schema
-from timApp.notification.notify import multi_send_email
+from timApp.notification.send_email import multi_send_email
 from timApp.peerreview.peerreview_utils import has_review_access, get_reviews_for_user, is_peerreview_enabled
 from timApp.plugin.containerLink import call_plugin_answer
 from timApp.plugin.importdata.importData import MissingUser
@@ -509,6 +509,7 @@ def post_answer(plugintype: str, task_id_ext: str):
     answerdata, = verify_json_params('input')
     answer_browser_data, answer_options = verify_json_params('abData', 'options', require=False, default={})
     curr_user = get_current_user_object()
+    verify_ip_ok(user=curr_user, msg='Answering is not allowed from this IP address.')
     return json_response(
         post_answer_impl(
             task_id_ext,

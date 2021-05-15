@@ -8,7 +8,8 @@ from timApp.auth.accesstype import AccessType
 from timApp.document.docparagraph import DocParagraph
 from timApp.item.item import Item
 from timApp.note.usernote import UserNote
-from timApp.notification.notify import process_pending_notifications, sent_mails_in_testing
+from timApp.notification.notify import process_pending_notifications
+from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.test_notify import NotifyTestBase
 from timApp.tests.server.timroutetest import get_note_id_from_json
 from timApp.timdb.sqa import db

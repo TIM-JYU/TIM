@@ -66,12 +66,20 @@
           <context context-type="linenumber">16</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="1127c50bd9169919fcf68f6d8c89312d801b6553" datatype="html">
+        <source>Login is not allowed from this IP address.</source>
+        <target state="translated">Kirjautuminen ei ole sallittu tästä IP-osoitteesta.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
+          <context context-type="linenumber">18</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="820123f94067dd237fe9e9be74f7b073ec7c5a5d" datatype="html">
         <source>Unknown error: <x id="INTERPOLATION" equiv-text="{{error}}"/></source>
         <target state="translated">Tuntematon virhe: <x id="INTERPOLATION" equiv-text="{{error}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
-          <context context-type="linenumber">18</context>
+          <context context-type="linenumber">19</context>
         </context-group>
       </trans-unit>
       <trans-unit id="gotoOpensIn" datatype="html">
@@ -374,7 +382,7 @@
         <target state="translated">Asetettu oikeudet käyttäjälle <x id="INTERPOLATION" equiv-text="this.lastAddedUser"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">235</context>
+          <context context-type="linenumber">241</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4014435728703990296" datatype="html">
@@ -382,7 +390,7 @@
         <target state="translated">Aseta oikeus</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">298</context>
+          <context context-type="linenumber">304</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2159130950882492111" datatype="html">
@@ -390,7 +398,7 @@
         <target state="translated">Peruuta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">299</context>
+          <context context-type="linenumber">305</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7127355890937941598" datatype="html">
@@ -398,7 +406,7 @@
         <target state="translated">Oikeuksia ei voitu asettaa.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">343</context>
+          <context context-type="linenumber">354</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2369555589256522210" datatype="html">
@@ -406,7 +414,7 @@
         <target state="translated">Käyttäjää ei voitu hakea.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">409</context>
+          <context context-type="linenumber">419</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1073782821840614775" datatype="html">
@@ -414,7 +422,7 @@
         <target state="translated">Palvelimeen ei saatu yhteyttä.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">495</context>
+          <context context-type="linenumber">509</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8aa15c4a520b71ba3537a562a1a9cdb48f3c2261" datatype="html">

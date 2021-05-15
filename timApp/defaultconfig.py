@@ -190,3 +190,17 @@ DIST_RIGHTS_SEND_SECRET = None
 
 # When receiving a right from the distributor host, make sure that the given secret matches this one.
 DIST_RIGHTS_RECEIVE_SECRET = None
+
+# The set of allowed IP networks. The following actions are restricted:
+# * Login and email registration are denied for non-admins.
+# * Answer route is blocked.
+IP_BLOCK_ALLOWLIST = None
+
+# The informational message to display in TIM header if the IP is outside the allowlist.
+IP_BLOCK_MESSAGE = None
+
+# If true, IPs that are:
+# * outside allowed networks and
+# * not in blocklist
+# are not blocked but only logged.
+IP_BLOCK_LOG_ONLY = False

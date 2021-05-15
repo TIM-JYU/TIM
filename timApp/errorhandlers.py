@@ -14,7 +14,7 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docsettings import get_minimal_visibility_settings
 from timApp.folder.folder import Folder
 from timApp.markdown.dumboclient import DumboHTMLException
-from timApp.notification.notify import send_email
+from timApp.notification.send_email import send_email
 from timApp.plugin.pluginexception import PluginException
 from timApp.sisu.sisu import IncorrectSettings, SisuError
 from timApp.timdb.exceptions import ItemAlreadyExistsException

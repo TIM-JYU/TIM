@@ -1027,9 +1027,11 @@ class TimRouteTest(TimDbTest):
         old_settings = {k: current_app.config[k] for k in settings.keys()}
         for k, v in settings.items():
             current_app.config[k] = v
-        yield
-        for k, v in old_settings.items():
-            current_app.config[k] = v
+        try:
+            yield
+        finally:
+            for k, v in old_settings.items():
+                current_app.config[k] = v
 
 
 class TimPluginFix(TimRouteTest):

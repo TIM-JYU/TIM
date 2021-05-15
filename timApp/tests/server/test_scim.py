@@ -10,7 +10,7 @@ from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
 from timApp.document.docentry import DocEntry
-from timApp.notification.notify import sent_mails_in_testing
+from timApp.notification.send_email import sent_mails_in_testing
 from timApp.sisu.scim import SISU_GROUP_PREFIX
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.sisu.sisu import call_sisu_assessments
