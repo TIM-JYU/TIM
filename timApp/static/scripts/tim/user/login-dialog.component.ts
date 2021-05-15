@@ -101,6 +101,10 @@ interface ISimpleRegistrationResponse {
                         If you have not logged in before,
                         and your email corresponds to the one in Studyinfo.fi,
                         TIM sent a password to your email now.
+                        Please read the email in a separate browser tab,
+                        and please wait for the email at least 5 minutes
+                        if you don't get the email right away.
+                        Check your spam folder too.
                     </ng-container>
                     <ng-template #normalHelpMsg i18n>
                         If you have not logged in to TIM before, TIM sent a password to your email now.
