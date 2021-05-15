@@ -263,9 +263,13 @@ def get_plugin_info(username: str, task_id: Optional[str] = None, par: Optional[
     cur_user = get_current_user_object()
     user_group = UserGroup.get_by_name(username)
     user_acc = User.get_by_name(user_group.name)
+
     assert user_acc is not None
     if not user_group:
         raise RouteException(f"Cannot find user {username}")
+
+    if not model.actions:
+        return model, cur_user, user_group, user_acc
 
     if model.actions.distributeRight and not has_distribution_moderation_access(doc):
         raise RouteException("distributeRight is not allowed in this document")
