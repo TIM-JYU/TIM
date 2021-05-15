@@ -38,6 +38,12 @@ else:
     log_info("Mailman connection configured.")
 
 
+def verify_mailman_connection() -> None:
+    """Verifies if the connection to Mailman is possible. Aborts if connection is not possible."""
+    if not _client:
+        raise NotExist("No connection to Mailman configured.")
+
+
 # TODO: Test connection somehow?
 
 # TODO: Handle situations where we can't contact Mailman server.

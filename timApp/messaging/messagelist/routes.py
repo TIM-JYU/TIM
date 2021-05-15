@@ -7,7 +7,7 @@ from flask import Response
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui_link, create_new_email_list, \
-    delete_email_list, check_emaillist_name_requirements
+    delete_email_list, check_emaillist_name_requirements, get_domain_names, verify_mailman_connection
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
@@ -93,12 +93,12 @@ def check_name(name_candidate: str) -> Response:
 
 @messagelist.route("/domains", methods=['GET'])
 def domains() -> Response:
-    """ Send possible domains for a client, if such exists.
+    """Send possible domains for a client, if such exists.
 
-    :return: If domains exists, return them as an array. If there are no domains, return an empty array.
+    :return: If domains exists, return them as an array.
     """
-    possible_domains: List[str] = EmailListManager.get_domain_names()
-
+    verify_mailman_connection()
+    possible_domains: List[str] = get_domain_names()
     return json_response(possible_domains)
 
 
