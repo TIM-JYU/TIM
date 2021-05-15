@@ -300,8 +300,6 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
         for target in targets:
             errors.extend(register_right_impl(undo_op, target))
 
-
-
     # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
     if errors:
         return json_response({
