@@ -373,6 +373,7 @@ export class UserSelectComponent extends AngularPluginBase<
             return;
         }
         this.lastSearchResult.matches = [this.selectedUser];
+        this.getRootElement().scrollIntoView();
     }
 
     async onCodeScanned(result: Result) {
@@ -487,6 +488,9 @@ export class UserSelectComponent extends AngularPluginBase<
         this.searchString = "";
         if (!isMobileDevice()) {
             this.searchInput.nativeElement.focus();
+        }
+        if (this.markup.selectOnce) {
+            this.getRootElement().scrollIntoView();
         }
     }
 
