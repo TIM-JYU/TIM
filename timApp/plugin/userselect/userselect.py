@@ -67,14 +67,14 @@ class DistributeRightAction:
     operation: Literal["confirm", "quit", "unlock", "changetime"]
     target: str
     timestamp: datetime = field(default_factory=datetime.now)
-    secs: int = 0
+    minutes: float = 0.0
 
 
 RIGHT_TO_OP: Dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
     "confirm": lambda r, usr: ConfirmOp(type="confirm", email=usr, timestamp=r.timestamp),
     "quit": lambda r, usr: QuitOp(type="quit", email=usr, timestamp=r.timestamp),
     "unlock": lambda r, usr: UnlockOp(type="unlock", email=usr, timestamp=r.timestamp),
-    "changetime": lambda r, usr: ChangeTimeOp(type="changetime", email=usr, secs=r.secs, timestamp=r.timestamp)
+    "changetime": lambda r, usr: ChangeTimeOp(type="changetime", email=usr, secs=r.minutes * 60, timestamp=r.timestamp)
 }
 
 
