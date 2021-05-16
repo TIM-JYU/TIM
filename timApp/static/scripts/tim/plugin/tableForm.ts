@@ -4,7 +4,12 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
-import {clone, defaultErrorMessage, maxContentOrFitContent, to,} from "tim/util/utils";
+import {
+    clone,
+    defaultErrorMessage,
+    maxContentOrFitContent,
+    to,
+} from "tim/util/utils";
 import {
     ApplicationRef,
     ChangeDetectorRef,
@@ -31,7 +36,13 @@ import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {ViewCtrl} from "../document/viewctrl";
 import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
-import {GenericPluginMarkup, getTopLevelFields, IncludeUsersOption, nullable, withDefault,} from "./attributes";
+import {
+    GenericPluginMarkup,
+    getTopLevelFields,
+    IncludeUsersOption,
+    nullable,
+    withDefault,
+} from "./attributes";
 import {
     CellAttrToSave,
     CellToSave,
@@ -138,7 +149,7 @@ const Styles = t.record(
 
 interface IRowsType extends t.TypeOf<typeof Rows> {}
 
-interface ITableFormUser{
+interface ITableFormUser {
     id: number;
     real_name: string;
     email: string;
@@ -148,7 +159,10 @@ const TableFormAll = t.intersection([
     t.partial({
         aliases: t.record(t.string, t.string),
         fields: t.array(t.string),
-        users:  t.record(t.string, t.type({id: t.number, email: t.string, real_name: t.string})),
+        users: t.record(
+            t.string,
+            t.type({id: t.number, email: t.string, real_name: t.string})
+        ),
         membershipmap: t.record(t.string, nullable(t.string)),
         rows: Rows,
         styles: Styles,
@@ -711,7 +725,10 @@ export class TableFormComponent
 
     sortByEmail(a: string, b: string) {
         try {
-            return (this.users[a].email).localeCompare((this.users[b].email), sortLang);
+            return this.users[a].email.localeCompare(
+                this.users[b].email,
+                sortLang
+            );
         } catch (e) {
             return 0;
         }
@@ -1440,7 +1457,9 @@ export class TableFormComponent
                         this.taskLocations[columnPlace]
                     ] = cellContent;
                 } catch (e) {
-                    replyRows[this.users[this.userLocations[numberPlace]].id] = {};
+                    replyRows[
+                        this.users[this.userLocations[numberPlace]].id
+                    ] = {};
                     replyRows[this.users[this.userLocations[numberPlace]].id][
                         this.taskLocations[columnPlace]
                     ] = cellContent;
