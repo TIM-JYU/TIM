@@ -1458,9 +1458,7 @@ export class TableFormComponent
                         this.taskLocations[columnPlace]
                     ] = cellContent;
                 } catch (e) {
-                    replyRows[
-                        userId
-                    ] = {};
+                    replyRows[userId] = {};
                     replyRows[userId][
                         this.taskLocations[columnPlace]
                     ] = cellContent;
@@ -1474,9 +1472,7 @@ export class TableFormComponent
                     );
                     const docTaskStyles =
                         taskWithField[0] + "." + taskWithField[1] + ".styles";
-                    replyRows[userId][
-                        docTaskStyles
-                    ] = null;
+                    replyRows[userId][docTaskStyles] = null;
                 } else if (
                     cellStyle != null &&
                     Object.keys(cellStyle).length != 0
@@ -1486,9 +1482,7 @@ export class TableFormComponent
                     );
                     const docTaskStyles =
                         taskWithField[0] + "." + taskWithField[1] + ".styles";
-                    replyRows[userId][
-                        docTaskStyles
-                    ] = cellStyle;
+                    replyRows[userId][docTaskStyles] = cellStyle;
                 }
             }
         } catch (e) {
