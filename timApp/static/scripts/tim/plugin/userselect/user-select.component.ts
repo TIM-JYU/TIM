@@ -310,7 +310,7 @@ export class UserSelectComponent extends AngularPluginBase<
         value: false,
     };
     t9Mode: SearchOptionToggle = {
-        name: $localize`T9 mode`,
+        name: "T9", // $localize`T9 mode`,
         value: false,
     };
 

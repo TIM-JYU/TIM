@@ -180,6 +180,10 @@ function matchT9Keywords(queryWords: string[], keywordsSet: Set<string>) {
     if (setHas(keywordsSet, (v) => isT9match(v, qw))) {
         return true;
     }
+    if (qw.startsWith("0") || qw.endsWith("0")) {
+        // id 0 in any end, do not use 0 as space
+        return false;
+    }
     // split from 0's and trim
     let qw1 = qw.replace(/0+/, " ");
     qw1 = qw1.trim();
