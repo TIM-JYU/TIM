@@ -1452,15 +1452,16 @@ export class TableFormComponent
                     }
                     changedFieldsForTables.add(docTask);
                 }
+                const userId = this.users[this.userLocations[numberPlace]].id;
                 try {
-                    replyRows[this.users[this.userLocations[numberPlace]].id][
+                    replyRows[userId][
                         this.taskLocations[columnPlace]
                     ] = cellContent;
                 } catch (e) {
                     replyRows[
-                        this.users[this.userLocations[numberPlace]].id
+                        userId
                     ] = {};
-                    replyRows[this.users[this.userLocations[numberPlace]].id][
+                    replyRows[userId][
                         this.taskLocations[columnPlace]
                     ] = cellContent;
                 }
@@ -1473,7 +1474,7 @@ export class TableFormComponent
                     );
                     const docTaskStyles =
                         taskWithField[0] + "." + taskWithField[1] + ".styles";
-                    replyRows[this.users[this.userLocations[numberPlace]].id][
+                    replyRows[userId][
                         docTaskStyles
                     ] = null;
                 } else if (
@@ -1485,7 +1486,7 @@ export class TableFormComponent
                     );
                     const docTaskStyles =
                         taskWithField[0] + "." + taskWithField[1] + ".styles";
-                    replyRows[this.users[this.userLocations[numberPlace]].id][
+                    replyRows[userId][
                         docTaskStyles
                     ] = cellStyle;
                 }

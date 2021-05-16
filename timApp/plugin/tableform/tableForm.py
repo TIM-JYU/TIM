@@ -166,8 +166,10 @@ def get_sisugroups(user: User, sisu_id: Optional[str]) -> 'TableFormObj':
         },
         users={
             g.external_id.external_id: TableFormUserInfo(
-                id=0,
                 real_name=get_sisu_group_desc_for_table(g) if sisu_id else g.display_name,
+                # The rows are not supposed to match any real user when handling sisu groups,
+                # so we try to use an id value that does not match anyone.
+                id=-100000,
                 email='',
             ) for g in gs
         },
