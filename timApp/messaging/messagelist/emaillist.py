@@ -6,6 +6,7 @@ from mailmanclient import Client, MailingList, Domain, Member
 
 from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate, ArchiveType, \
     ReplyToListChanges, reply_to_munging
+from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.tim_app import app
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
@@ -109,25 +110,23 @@ def remove_email_list_membership(member: Member, permanent_deletion: bool = Fals
 def set_default_templates(email_list: MailingList) -> None:
     """Set default templates for email list.
 
+    Sometimes Mailman gets confused how mail is supposed to be interpreted, and with some  email client's different
+    interpretation with Mailman's email coding templates (e.g. list information footers) may appear as attachments.
+    We fix it by setting header and footer for all new lists explicitly.
+
     :param: email_list: The email list we are setting templates for.
     """
-    # Sometimes Mailman gets confused how mail is supposed to be interpreted, and with some  email client's different
-    # interpretation with Mailman's email coding templates (e.g. list information footers) may appear as attachments.
-    # We fix it by setting header and footer for all new lists explicitly.
 
-    # VIESTIM: We build the URI in case because not giving one is interpreted by Mailman as deleting the
-    #  template form the list.
+    # Build the URI in case because not giving one is interpreted by Mailman as deleting the template form the list.
 
     list_id = email_list.rest_data['list_id']
-    # TODO: Check this URI, it should be plausible if we wished to change default templates to be something other
-    #  than empty strings.
     template_base_uri = "http://localhost/postorius/api/templates/list/" \
                         f"{list_id}"
     footer_uri = f"{template_base_uri}/list:member:regular:footer"
     header_uri = f"{template_base_uri}/list:member:regular:header"
 
-    # VIESTIM: These templates don't actually exist, but non-existing templates are substituted with
-    #  empty strings and that should still fix the broken coding leading to attachments issue.
+    # These templates don't actually exist, but non-existing templates are substituted with empty strings and that
+    # should still fix the broken coding leading to attachments issue.
     email_list.set_template("list:member:regular:footer", footer_uri)
     email_list.set_template("list:member:regular:header", header_uri)
 
@@ -557,15 +556,15 @@ def get_notify_owner_on_list_change(listname: str) -> bool:
     return mlist.settings["admin_notify_mchanges"]
 
 
-def freeze_list(listname: str) -> None:
+def freeze_list(mlist: MailingList) -> None:
     """Freeze an email list. No posts are allowed on the list after freezing.
 
     Think a course specific email list and the course ends, but  mail archive is kept intact for later potential
     use. This stops (or at least mitigates) that the mail archive on that list changes after the freezing.
 
-    :param listname: The list about the be frozen.
+    :param mlist: The list about the be frozen.
     """
-    mail_list = _client.get_list(listname)
+    # Not in use at the moment.
 
     # VIESTIM: Another possible way would be to iterate over all members and set their individual moderation
     #  action accordingly. How does Mailman's rule propagation matter here? The rule propagation goes from
@@ -576,21 +575,26 @@ def freeze_list(listname: str) -> None:
     # We freeze a list by simply setting list's moderation to 'discard'. It could also be 'reject'. Holding
     # the messages isn't probably a reasonable choice, since the point of freezing is to not allow posts on
     # the list.
-    mail_list_settings = mail_list.settings
+    mail_list_settings = mlist.settings
     mail_list_settings["default_member_action"] = "discard"
     mail_list_settings["default_nonmember_action"] = "discard"
     mail_list_settings.save()
 
 
-def unfreeze_list(listname: str) -> None:
+def unfreeze_list(mlist: MailingList, msg_list: MessageListModel) -> None:
     """The opposite of freezing a list.
 
-    Sets some default values for delivery and send status of each member.
+    Sets default values for delivery and send status of each member, depending on message lists options.
 
-    :param listname: The list to bring back into function.
-    :return:
+    :param msg_list: The message list the email list belongs to.
+    :param mlist: The list to bring back into function.
     """
-    pass
+    # Not in use at the moment.
+    mail_list_settings = mlist.settings
+    mail_list_settings["default_member_action"] = "accept"
+    set_email_list_non_member_message_pass(mlist, msg_list.non_member_message_pass)
+
+    mail_list_settings.save()
 
 
 def find_email_lists(email: str) -> List[MailingList]:
@@ -600,4 +604,3 @@ def find_email_lists(email: str) -> List[MailingList]:
     #  checking and grouping here?
     lists = _client.find_lists(email)
     return lists
-
