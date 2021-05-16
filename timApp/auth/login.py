@@ -203,6 +203,9 @@ def do_email_signup_or_password_reset(
         if only_password_reset and not User.get_by_email_case_insensitive(email):
             fail = True
 
+    if only_password_reset and not current_app.config['PASSWORD_RESET_ENABLED']:
+        raise AccessDenied('PasswordResetDisabled')
+
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
     nu = NewUser.query.get(email)

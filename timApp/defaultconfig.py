@@ -129,6 +129,9 @@ ALLOW_CREATE_DOCUMENTS = True
 EMAIL_REGISTRATION_ENABLED = True
 HAKA_ENABLED = True
 
+# If False, resetting password is not allowed.
+PASSWORD_RESET_ENABLED = True
+
 # When enabled, the email login and signup processes are unified so that:
 #
 # * only email is asked first
