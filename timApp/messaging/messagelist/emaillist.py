@@ -78,46 +78,29 @@ def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> N
     :param permanent_deletion: If True, then the list is permanently gone. If False, perform a soft deletion.
     :param fqdn_listname: The fully qualified domain name for the list, e.g. testlist1@domain.fi.
     """
-    if _client is None:
-        raise NotExist("No connection to Mailman, email list is not deleted.")
-    try:
-        # get_list() may raise HTTPError
-        list_to_delete: MailingList = _client.get_list(fqdn_listname)
-    except HTTPError:
-        raise
+    list_to_delete: MailingList = _client.get_list(fqdn_listname)
     if permanent_deletion:
-        try:
-            list_to_delete.delete()
-        except HTTPError:
-            raise
+        list_to_delete.delete()
     else:
         # Perform a soft deletion on a list.
-        try:
-            for member in list_to_delete.members:
-                # All members have their send and delivery rights revoked.
-                set_email_list_member_delivery_status(member, False)
-                set_email_list_member_send_status(member, False)
-            # TODO: Probably needs other changes as well. Should we drop all moderator requests and set all
-            #  future moderation requests from messages and subscriptions to just discard?
-        except HTTPError:
-            raise
+        for member in list_to_delete.members:
+            # All members have their send and delivery rights revoked.
+            set_email_list_member_delivery_status(member, False)
+            set_email_list_member_send_status(member, False)
+        # TODO: Probably needs other changes as well. Should we drop all moderator requests and set all
+        #  future moderation requests from messages and subscriptions to just discard?
 
 
 def remove_email_list_membership(member: Member, permanent_deletion: bool = False) -> None:
-    """
-    Remove membership from an email list.
+    """Remove membership from an email list.
 
     :param member: The membership to be terminated on a list.
     :param permanent_deletion: If True, unsubscribes the user from the list permanently. If False, membership is
-     "deleted" in a soft manner by removing delivery and send rights. Membership is kept, but emails from
-      member aren't automatically let through nor does the member receive mail from the list.
+    "deleted" in a soft manner by removing delivery and send rights. Membership is kept, but emails from
+    member aren't automatically let through nor does the member receive mail from the list.
     """
-
     if permanent_deletion:
-        try:
-            member.unsubscribe()
-        except HTTPError:
-            raise
+        member.unsubscribe()
     else:
         set_email_list_member_send_status(member, False)
         set_email_list_member_delivery_status(member, False)
@@ -168,65 +151,51 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     :param list_options: Options for message lists, here we use the options necessary for email list creation.
     :return:
     """
-    if _client is None:
-        # VIESTIM: If someone is somehow able to start creating lists, while mailmanclient isn't configured,
-        #  it means that we failed to check for connection at some point. Would there be a way to give a kind of a
-        #  traceback here with error logging, so this would be easy to narrow down where the slip up is?
-        #
-        raise NotExist("No connection configured.")
-    try:
-        if list_options.domain:
-            check_name_availability(list_options.name, list_options.domain)
-        else:
-            log_warning("Tried to create an email list without selected domain part.")
-            raise RouteException("Tried to create an email list without selected domain part.")
-    except HTTPError:
-        # TODO: If the name has been snatched between checking it's availability, we might want to offer name
-        #  recommendations?
-        raise
-    try:
-        domain: Domain = _client.get_domain(list_options.domain)
-        email_list: MailingList = domain.create_list(list_options.name)
-        # All lists created through TIM need an owner, and owners need email addresses to control their lists on
-        # Mailman.
-        email_list.add_owner(owner.email)
-        # Add owner automatically as a member of a list.
-        email_list.subscribe(owner.email, display_name=owner.real_name, pre_approved=True, pre_verified=True,
-                             pre_confirmed=True)
+    if list_options.domain:
+        check_name_availability(list_options.name, list_options.domain)
+    else:
+        log_warning("Tried to create an email list without selected domain part.")
+        raise RouteException("Tried to create an email list without selected domain part.")
 
-        set_default_templates(email_list)
+    domain: Domain = _client.get_domain(list_options.domain)
+    email_list: MailingList = domain.create_list(list_options.name)
+    # All lists created through TIM need an owner, and owners need email addresses to control their lists on
+    # Mailman.
+    email_list.add_owner(owner.email)
+    # Add owner automatically as a member of a list.
+    email_list.subscribe(owner.email, display_name=owner.real_name, pre_approved=True, pre_verified=True,
+                         pre_confirmed=True)
 
-        # settings-attribute acts like a dict.
-        mlist_settings = email_list.settings
+    set_default_templates(email_list)
 
-        # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
-        # advertising on if they so choose.
-        mlist_settings["advertised"] = False
-        # Ownerss / moderators don't get automatic notifications from changese on their message list. Owner
-        # switches this on if necessary.
-        mlist_settings["admin_notify_mchanges"] = False
+    # settings-attribute acts like a dict.
+    mlist_settings = email_list.settings
 
-        if list_options.list_description:
-            set_email_list_description(email_list, list_options.list_description)
-        if list_options.list_info:
-            set_email_list_info(email_list, list_options.list_info)
+    # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
+    # advertising on if they so choose.
+    mlist_settings["advertised"] = False
+    # Ownerss / moderators don't get automatic notifications from changes on their message list. Owner switches
+    # this on if necessary.
+    mlist_settings["admin_notify_mchanges"] = False
 
-        # This is to force Mailman generate archivers into it's db. It exists is to fix a race condition,
-        # where creating a new list without proper engineer interface procedures might make duplicate archiver rows
-        # in to db, while Mailman's code expects there to be only one archiver row (which results in the db code
-        # breaking and the list becoming unusable, at least without manual db fixing). This might be unnecessary at
-        # some point in time in the future if the condition is remedied in Mailman Core, but since this line is only
-        # needed once on list creation it might be good enough to just leave as is.
-        _ = dict(email_list.archivers)
+    if list_options.list_description:
+        set_email_list_description(email_list, list_options.list_description)
+    if list_options.list_info:
+        set_email_list_info(email_list, list_options.list_info)
 
-        set_email_list_archive_policy(email_list, list_options.archive)
+    # This is to force Mailman generate archivers into it's db. It exists is to fix a race condition,
+    # where creating a new list without proper engineer interface procedures might make duplicate archiver rows
+    # in to db, while Mailman's code expects there to be only one archiver row (which results in the db code
+    # breaking and the list becoming unusable, at least without manual db fixing). This might be unnecessary at
+    # some point in time in the future if the condition is remedied in Mailman Core, but since this line is only
+    # needed once on list creation it might be good enough to just leave as is.
+    _ = dict(email_list.archivers)
 
-        # This needs to be the last line, because no changes to settings take effect until save() method is
-        # called.
-        mlist_settings.save()
-    except HTTPError:
-        # TODO: exceptions to catch: domain doesn't exist, list can't be created, connection to server fails.
-        raise
+    set_email_list_archive_policy(email_list, list_options.archive)
+
+    # This needs to be the last line, because no changes to settings take effect until save() method is
+    # called.
+    mlist_settings.save()
 
 
 def get_list_ui_link(listname: str, domain: Optional[str]) -> Optional[str]:
@@ -300,13 +269,8 @@ def get_email_list_by_name(list_name: str, list_domain: str) -> MailingList:
     :param list_domain: A domain we use to search an email list.
     :return: Return email list as an MailingList object.
     """
-    try:
-        mlist = _client.get_list(fqdn_listname=f"{list_name}@{list_domain}")
-        return mlist
-    except HTTPError:
-        # VIESTIM: Should we give some additional information, or are we satisfied with just re-raising the HTTPError
-        #  from mailmanclient? This can fail in not getting contact to the server or Mailman not finding a list.
-        raise
+    mlist = _client.get_list(fqdn_listname=f"{list_name}@{list_domain}")
+    return mlist
 
 
 def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool, real_name: Optional[str],
@@ -366,11 +330,7 @@ def set_email_list_member_send_status(member: Member, status: bool) -> None:
     else:
         member.moderation_action = "reject"
     # Changing the moderation_action requires saving, otherwise change won't take effect.
-    try:
-        member.save()
-    except HTTPError:
-        # Saving can fail if connection is lost to Mailman or it's server.
-        raise
+    member.save()
 
 
 def set_email_list_member_delivery_status(member: Member, status: bool, by_moderator: bool = True) -> None:
@@ -398,11 +358,7 @@ def set_email_list_member_delivery_status(member: Member, status: bool, by_moder
         else:
             member.preferences["delivery_status"] = "by_user"
     # If changed, preferences have to be saved for them to take effect on Mailman.
-    try:
-        member.preferences.save()
-    except HTTPError:
-        # Saving can fail if connection is lost to Mailman or it's server.
-        raise
+    member.preferences.save()
 
 
 def get_email_list_member_delivery_status(member: Member) -> bool:
@@ -419,7 +375,6 @@ def get_email_list_member_delivery_status(member: Member) -> bool:
     elif member_preferences["delivery_status"] in ["by_user", "by_moderator", "by_bounces"]:
         return False
     # If we are here, something has gone terribly wrong.
-    # VIESTIM: Is this logging worthy? If yes, what severity?
     raise RouteException(f"Member {member.address} has an invalid delivery status assigned to them.")
 
 
@@ -435,7 +390,6 @@ def get_email_list_member_send_status(member: Member) -> bool:
     if member.moderation_action in ["discard", "reject", "hold"]:
         return False
     # If we are here, something has gone terribly wrong.
-    # VIESTIM: Is this logging worthy? If yes, what severity?
     raise RouteException(f"Member {member.address} has an invalid send status assigned to them.")
 
 
@@ -454,29 +408,23 @@ def check_name_availability(name_candidate: str, domain: str) -> None:
     """Search for a name from the pool of used email list names.
 
     Raises a RouteException if no connection was ever established with the Mailman server via mailmanclient.
-    Re-raises HTTPError if something went wrong with the query from the server.
 
     :param domain: Domain to search for lists, which then are used to check name availability.
     :param name_candidate: The name to search for.
     """
-    if _client is None:
-        raise RouteException("No connection with email list server established.")
-    try:
-        d = _client.get_domain(domain)
-        mlists: List[MailingList] = d.get_lists()
-        fqdn_name_candidate = name_candidate + "@" + domain
-        for name in [mlist.fqdn_listname for mlist in mlists]:
-            if fqdn_name_candidate == name:
-                raise RouteException("Name is already in use.")
-    except HTTPError:
-        # VIESTIM: Should we just raise the old error or inspect it closer? Now raise old error.
-        raise  # "Connection to server failed."
+    checked_domain = _client.get_domain(domain)
+    mlists: List[MailingList] = checked_domain.get_lists()
+    fqdn_name_candidate = name_candidate + "@" + domain
+    for name in [mlist.fqdn_listname for mlist in mlists]:
+        if fqdn_name_candidate == name:
+            raise RouteException("Name is already in use.")
 
 
 def check_reserved_names(name_candidate: str) -> None:
-    """
-    Check a name candidate against reserved names, e.g. postmaster. Raises a RouteException if the name candidate
-    is a reserved name. If name is not reserved, the method succeeds silently.
+    """Check a name candidate against reserved names, e.g. postmaster.
+
+    Raises a RouteException if the name candidate is a reserved name. If name is not reserved, the method completes
+    silently.
 
     :param name_candidate: The name to be compared against reserved names.
     """
@@ -526,7 +474,7 @@ def set_email_list_subject_prefix(email_list: MailingList, subject_prefix: str) 
 
 
 def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
-    """Set email list to only text mode. Affects new email sent to list and (new) HyperKitty archived messages.
+    """Set email list to only text mode. Affects new email sent to list and HyperKitty archived messages.
 
     :param email_list: Email list which is to be set into text only mode.
     :param only_text: A boolean flag controlling list rendering mode. For True, the list is in an only text mode.
@@ -597,12 +545,9 @@ def get_domain_names() -> List[str]:
 
     :return: A list of possible domain names.
     """
-    try:
-        domains: List[Domain] = _client.domains
-        domain_names: List[str] = [domain.mail_host for domain in domains]
-        return domain_names
-    except HTTPError:
-        raise
+    domains: List[Domain] = _client.domains
+    domain_names: List[str] = [domain.mail_host for domain in domains]
+    return domain_names
 
 
 def get_notify_owner_on_list_change(listname: str) -> bool:
@@ -620,31 +565,27 @@ def freeze_list(listname: str) -> None:
 
     :param listname: The list about the be frozen.
     """
-    if _client is None:
-        return
-    try:
-        mail_list = _client.get_list(listname)
+    mail_list = _client.get_list(listname)
 
-        # VIESTIM: Another possible way would be to iterate over all members and set their individual moderation
-        #  action accordingly. How does Mailman's rule propagation matter here? The rule propagation goes from
-        #  user -> member -> list -> system (maybe domain in between list and system). So if member's default
-        #  moderation action is 'accept' and we set list's default member action as 'discard', which one wins?
-        #  Should we double-tap just to make sure and do both?
+    # VIESTIM: Another possible way would be to iterate over all members and set their individual moderation
+    #  action accordingly. How does Mailman's rule propagation matter here? The rule propagation goes from
+    #  user -> member -> list -> system (maybe domain in between list and system). So if member's default
+    #  moderation action is 'accept' and we set list's default member action as 'discard', which one wins?
+    #  Should we double-tap just to make sure and do both?
 
-        # We freeze a list by simply setting list's moderation to 'discard'. It could also be 'reject'. Holding
-        # the messages isn't probably a reasonable choice, since the point of freezing is to not allow posts on
-        # the list.
-        mail_list_settings = mail_list.settings
-        mail_list_settings["default_member_action"] = "discard"
-        mail_list_settings["default_nonmember_action"] = "discard"
-        mail_list_settings.save()
-    except HTTPError:
-        raise
+    # We freeze a list by simply setting list's moderation to 'discard'. It could also be 'reject'. Holding
+    # the messages isn't probably a reasonable choice, since the point of freezing is to not allow posts on
+    # the list.
+    mail_list_settings = mail_list.settings
+    mail_list_settings["default_member_action"] = "discard"
+    mail_list_settings["default_nonmember_action"] = "discard"
+    mail_list_settings.save()
 
 
 def unfreeze_list(listname: str) -> None:
-    """
-    The opposite of freezing a list. Sets some default values for delivery and send status of each member.
+    """The opposite of freezing a list.
+
+    Sets some default values for delivery and send status of each member.
 
     :param listname: The list to bring back into function.
     :return:
@@ -653,14 +594,10 @@ def unfreeze_list(listname: str) -> None:
 
 
 def find_email_lists(email: str) -> List[MailingList]:
-    if _client is None:
-        return []
-    try:
-        # VIESTIM: This may or may not be enough. Function find_lists can take optional argument for role on the
-        #  list ('member', 'owner' or 'moderator'). This returns them all, but might return duplicates if email
-        #  is in different roles in a list. Is it better to ask them from Mailman separated by role, or do role
-        #  checking and grouping here?
-        lists = _client.find_lists(email)
-        return lists
-    except HTTPError:
-        return []
+    # VIESTIM: This may or may not be enough. Function find_lists can take optional argument for role on the
+    #  list ('member', 'owner' or 'moderator'). This returns them all, but might return duplicates if email
+    #  is in different roles in a list. Is it better to ask them from Mailman separated by role, or do role
+    #  checking and grouping here?
+    lists = _client.find_lists(email)
+    return lists
+
