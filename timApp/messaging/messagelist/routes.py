@@ -41,6 +41,9 @@ def create_list(options: ListOptions) -> Response:
     verify_logged_in()
     verify_groupadmin()  # Creator of a list has to be a group admin.
 
+    if options.domain:
+        verify_mailman_connection()
+
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
@@ -97,7 +100,7 @@ def check_name(name_candidate: str) -> Response:
 def domains() -> Response:
     """Send possible domains for a client, if such exists.
 
-    :return: If domains exists, return them as an array.
+    :return: If domains are configured, return them as an array.
     """
     verify_mailman_connection()
     possible_domains: List[str] = get_domain_names()
