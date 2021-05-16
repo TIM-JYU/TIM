@@ -149,12 +149,20 @@ const Styles = t.record(
 
 interface IRowsType extends t.TypeOf<typeof Rows> {}
 
+interface ITableFormUser {
+    id: number;
+    real_name: string;
+    email: string;
+}
+
 const TableFormAll = t.intersection([
     t.partial({
         aliases: t.record(t.string, t.string),
         fields: t.array(t.string),
-        realnamemap: t.record(t.string, t.string),
-        emailmap: t.record(t.string, t.string),
+        users: t.record(
+            t.string,
+            t.type({id: t.number, email: t.string, real_name: t.string})
+        ),
         membershipmap: t.record(t.string, nullable(t.string)),
         rows: Rows,
         styles: Styles,
@@ -397,8 +405,7 @@ export class TableFormComponent
     private styles?: t.TypeOf<typeof Styles>;
     private fields!: string[];
     private lockedFields!: string[];
-    private realnamemap!: Record<string, string>;
-    private emailmap!: Record<string, string>;
+    private users!: Record<string, ITableFormUser>;
     private membershipmap!: Record<string, string | null>;
     private aliases!: Record<string, string>;
     private realnames = false;
@@ -651,8 +658,7 @@ export class TableFormComponent
         this.styles = this.attrsall.styles;
         this.fields = this.attrsall.fields ?? [];
         this.lockedFields = this.markup.lockedFields ?? [];
-        this.realnamemap = this.attrsall.realnamemap ?? {};
-        this.emailmap = this.attrsall.emailmap ?? {};
+        this.users = this.attrsall.users ?? {};
         this.membershipmap = this.attrsall.membershipmap ?? {};
         this.aliases = this.attrsall.aliases ?? {};
 
@@ -699,17 +705,17 @@ export class TableFormComponent
     }
 
     /**
-     * Sorts row key values (usernames) by their real name attribute in this.realnamemap
+     * Sorts row key values (usernames) by their real name attribute in this.users
      * @param a username to compare with b
      * @param b username to compare with a
      */
     sortByRealName(a: string, b: string) {
-        if (!this.realnamemap) {
+        if (!this.users) {
             return 0;
         }
         try {
-            return this.realnamemap[a].localeCompare(
-                this.realnamemap[b],
+            return this.users[a].real_name.localeCompare(
+                this.users[b].real_name,
                 sortLang
             );
         } catch (e) {
@@ -718,11 +724,11 @@ export class TableFormComponent
     }
 
     sortByEmail(a: string, b: string) {
-        if (!this.emailmap) {
-            return 0;
-        }
         try {
-            return this.emailmap[a].localeCompare(this.emailmap[b], sortLang);
+            return this.users[a].email.localeCompare(
+                this.users[b].email,
+                sortLang
+            );
         } catch (e) {
             return 0;
         }
@@ -740,9 +746,8 @@ export class TableFormComponent
         interface TableFetchResponse {
             aliases: Record<string, string>;
             fields: string[];
-            realnamemap: Record<string, string>;
+            users: Record<string, ITableFormUser>;
             membershipmap: Record<string, string>;
-            emailmap: Record<string, string>;
             rows: IRowsType;
             styles: t.TypeOf<typeof Styles>;
         }
@@ -783,8 +788,7 @@ export class TableFormComponent
             this.rows = tableResponse.data.rows || {};
             this.rowKeys = Object.keys(tableResponse.data.rows);
             this.fields = tableResponse.data.fields || [];
-            this.realnamemap = tableResponse.data.realnamemap || {};
-            this.emailmap = tableResponse.data.emailmap || {};
+            this.users = tableResponse.data.users;
             this.styles = tableResponse.data.styles || {};
             this.userLocations = {};
             this.taskLocations = {};
@@ -918,9 +922,8 @@ export class TableFormComponent
                 this.rowKeys.sort((a, b) => this.sortByEmail(a, b));
             }
             this.data.lockedColumns.push(userNameColumn);
-            if (this.emailmap) {
-                this.data.lockedColumns.push(emailColumn);
-            }
+            this.data.lockedColumns.push(emailColumn);
+            // }
             if (this.attrsall.markup.sisugroups) {
                 // These require unique names, otherwise could just use empty strings in place of "invisibleX".
                 this.data.headers = [
@@ -953,9 +956,16 @@ export class TableFormComponent
                     backgroundColor: this.fixedColor,
                 };
                 this.userLocations[y] = r;
+                const userInfo = this.users[r];
+                this.data.userdata.cells[realNameColumn + y] = {
+                    cell: userInfo.real_name,
+                    backgroundColor: this.fixedColor,
+                };
+                this.data.userdata.cells[emailColumn + y] = {
+                    cell: userInfo.email,
+                    backgroundColor: this.fixedColor,
+                };
                 for (const [map, col] of [
-                    [this.realnamemap, realNameColumn],
-                    [this.emailmap, emailColumn],
                     [this.membershipmap, membershipColumn],
                 ] as const) {
                     if (map) {
@@ -1248,17 +1258,11 @@ export class TableFormComponent
         const selUsers = timTable.getCheckedRows(0, true);
         const ulist = [];
         let usep = "";
-        if (!this.realnamemap) {
-            return;
-        }
-        if (!this.emailmap) {
-            return;
-        }
         for (const u of selUsers) {
             const un = u[userNameColIndex];
             let s = "";
             if (this.listName) {
-                s = this.realnamemap[un];
+                s = this.users[un].real_name;
                 usep = ", ";
             }
             if (this.listUsername) {
@@ -1266,7 +1270,7 @@ export class TableFormComponent
                 usep = ", ";
             }
             if (this.listEmail) {
-                s += usep + this.emailmap[un];
+                s += usep + this.users[un].email;
                 usep = ", ";
             }
             usep = "";
@@ -1385,7 +1389,7 @@ export class TableFormComponent
             return;
         }
         const replyRows: Record<
-            string,
+            number,
             Record<string, string | null | Record<string, unknown>>
         > = {};
         const changedFields = new Set<string>();
@@ -1448,13 +1452,14 @@ export class TableFormComponent
                     }
                     changedFieldsForTables.add(docTask);
                 }
+                const userId = this.users[this.userLocations[numberPlace]].id;
                 try {
-                    replyRows[this.userLocations[numberPlace]][
+                    replyRows[userId][
                         this.taskLocations[columnPlace]
                     ] = cellContent;
                 } catch (e) {
-                    replyRows[this.userLocations[numberPlace]] = {};
-                    replyRows[this.userLocations[numberPlace]][
+                    replyRows[userId] = {};
+                    replyRows[userId][
                         this.taskLocations[columnPlace]
                     ] = cellContent;
                 }
@@ -1467,9 +1472,7 @@ export class TableFormComponent
                     );
                     const docTaskStyles =
                         taskWithField[0] + "." + taskWithField[1] + ".styles";
-                    replyRows[this.userLocations[numberPlace]][
-                        docTaskStyles
-                    ] = null;
+                    replyRows[userId][docTaskStyles] = null;
                 } else if (
                     cellStyle != null &&
                     Object.keys(cellStyle).length != 0
@@ -1479,9 +1482,7 @@ export class TableFormComponent
                     );
                     const docTaskStyles =
                         taskWithField[0] + "." + taskWithField[1] + ".styles";
-                    replyRows[this.userLocations[numberPlace]][
-                        docTaskStyles
-                    ] = cellStyle;
+                    replyRows[userId][docTaskStyles] = cellStyle;
                 }
             }
         } catch (e) {
