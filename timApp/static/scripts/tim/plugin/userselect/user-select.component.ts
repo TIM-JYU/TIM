@@ -122,7 +122,7 @@ const USER_FIELDS: Record<string, string> = {
                    [disabled]="!queryHandler || undoing"
                    minlength="{{ inputMinLength }}"
                    required
-                   #searchInput>
+                   #searchInputsearchInput>
 
             <ng-template #submitButton>
                 <button class="timButton btn-lg" i18n
@@ -250,6 +250,12 @@ const USER_FIELDS: Record<string, string> = {
                 </ng-container>
             </div>
         </tim-alert>
+<table class="t9kbd" *ngIf="t9Mode.value" i18n>
+<tr><td><button (click)="applyT9('1')">1<br>&nbsp;</button></td><td><button (click)="applyT9('2')">2<br>ABC</button><td><button (click)="applyT9('3')">3<br>DEF</button></td></tr>
+<tr><td><button (click)="applyT9('4')">4<br>GHI</button></td><td><button (click)="applyT9('5')">5<br>JKL</button><td><button (click)="applyT9('6')">6<br>MNO</button></td></tr>
+<tr><td><button (click)="applyT9('7')">7<br>PQRS</button></td><td><button (click)="applyT9('8')">8<br>TUV</button><td><button (click)="applyT9('9')">9<br>WXYZ</button></td></tr>
+<tr><td><button (click)="applyT9('clr')">clr<br>&nbsp;</button></td><td><button (click)="applyT9('0')">0<br>space</button><td><button (click)="applyT9('<=')"><=<br>&nbsp;</button></td></tr>
+</table>        
     `,
     styleUrls: ["user-select.component.scss"],
 })
@@ -301,6 +307,10 @@ export class UserSelectComponent extends AngularPluginBase<
     optionToggles: SearchOptionToggle[] = [];
     keyboardMode: SearchOptionToggle = {
         name: $localize`Keyboard mode`,
+        value: false,
+    };
+    t9Mode: SearchOptionToggle = {
+        name: $localize`T9 mode`,
         value: false,
     };
 
@@ -514,7 +524,8 @@ export class UserSelectComponent extends AngularPluginBase<
 
         const result = await this.queryHandler.searchUser(
             this.searchQueryStrings,
-            this.markup.maxMatches
+            this.markup.maxMatches,
+            this.t9Mode.value
         );
         if (result.ok) {
             this.lastSearchResult = result.result;
@@ -560,6 +571,29 @@ export class UserSelectComponent extends AngularPluginBase<
         return result.ok;
     }
 
+    applyT9(s: string) {
+        if (s === "clr") {
+            this.resetView();
+            return;
+        }
+        if (s === "<=") {
+            // bs
+            if (this.searchString.length > 0) {
+                this.searchString = this.searchString.substr(
+                    0,
+                    this.searchString.length - 1
+                );
+            }
+        } else {
+            this.searchString += s;
+        }
+        if (this.searchString.length >= this.inputMinLength) {
+            this.doSearch();
+        } else {
+            // this.inputTyped.next(); // TODO: Should empty found list
+        }
+    }
+
     getAttributeType() {
         return PluginFields;
     }
@@ -595,6 +629,7 @@ export class UserSelectComponent extends AngularPluginBase<
     private initToggleOptions() {
         if (this.markup.selectOnce) {
             this.optionToggles.push(this.keyboardMode);
+            this.optionToggles.push(this.t9Mode);
         }
     }
 

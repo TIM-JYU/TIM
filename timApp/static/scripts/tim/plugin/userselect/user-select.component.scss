@@ -196,3 +196,14 @@ pre {
 .btn-group {
   display: flex;
 }
+
+table.t9kbd {
+    position: fixed;
+    bottom: 10px;
+    width: auto;
+    z-index: 1000;
+}
+
+.t9kbd button {
+    width: 5em;
+}
