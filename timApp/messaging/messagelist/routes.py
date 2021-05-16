@@ -266,6 +266,7 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
 
     em_list = None
     if msg_list.email_list_domain is not None:
+        verify_mailman_connection()
         em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
 
     for member_candidate in memberCandidates:
