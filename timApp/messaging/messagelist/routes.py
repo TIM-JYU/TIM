@@ -229,6 +229,7 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
     message_list = MessageListModel.get_list_by_name_exactly_one(listname)
     email_list = None
     if message_list.email_list_domain:
+        verify_mailman_connection()
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
 
     # VIESTIM: This solution is probably not well optimized.
