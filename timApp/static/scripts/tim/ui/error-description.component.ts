@@ -16,6 +16,7 @@ import {Input, Component} from "@angular/core";
                 Two different accounts for this email were found. Please contact TIM administrators to merge them.
             </ng-container>
             <ng-container *ngSwitchCase="'IPNotAllowed'" i18n>Login is not allowed from this IP address.</ng-container>
+            <ng-container *ngSwitchCase="'PasswordResetDisabled'" i18n>Password reset is disabled.</ng-container>
             <ng-container *ngSwitchDefault i18n>Unknown error: {{error}}</ng-container>
         </ng-container>
     `,
