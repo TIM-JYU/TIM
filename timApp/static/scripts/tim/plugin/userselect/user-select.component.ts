@@ -122,7 +122,7 @@ const USER_FIELDS: Record<string, string> = {
                    [disabled]="!queryHandler || undoing"
                    minlength="{{ inputMinLength }}"
                    required
-                   #searchInputsearchInput>
+                   #searchInput>
 
             <ng-template #submitButton>
                 <button class="timButton btn-lg" i18n
@@ -591,6 +591,7 @@ export class UserSelectComponent extends AngularPluginBase<
             this.doSearch();
         } else {
             // this.inputTyped.next(); // TODO: Should empty found list
+            this.lastSearchResult = undefined;
         }
     }
 

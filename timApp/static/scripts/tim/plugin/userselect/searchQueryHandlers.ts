@@ -180,10 +180,13 @@ function matchT9Keywords(queryWords: string[], keywordsSet: Set<string>) {
     if (setHas(keywordsSet, (v) => isT9match(v, qw))) {
         return true;
     }
-    if (qw.startsWith("0") || qw.endsWith("0")) {
-        // id 0 in any end, do not use 0 as space
-        return false;
-    }
+    // if (qw.startsWith("0") || qw.endsWith("0")) {
+    // finds too much without this, but works not so good when 0 is
+    // last number, because if not used as space, says not found
+    // in most normal cases.  This would be needed to find mass30
+    // id 0 in any end, do not use 0 as space
+    //  return false;
+    // }
     // split from 0's and trim
     let qw1 = qw.replace(/0+/, " ");
     qw1 = qw1.trim();
