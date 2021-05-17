@@ -8,7 +8,7 @@ from flask import Response
 from timApp.document.document import Document
 from timApp.document.documents import import_document_from_file
 from timApp.document.viewcontext import default_view_ctx
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
@@ -152,6 +152,8 @@ def get_read_receipt(doc_id: int) -> Response:
     message = InternalMessage.query.filter_by(doc_id=doc_id).first()
     receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=get_current_user_object().get_personal_group().id,
                                                          message_id=message.id).first()
+    if not receipt:
+        raise NotExist('Read receipt not found')
 
     receipt_data = TimMessageReadReceipt(rcpt_id=receipt.rcpt_id, message_id=message.id,
                                          user_id=receipt.user_id, marked_as_read_on=receipt.marked_as_read_on,
