@@ -100,13 +100,14 @@ import {Users} from "../user/userService";
                 <label for="can-user-unsubscribe">Members can unsubscribe from the list on their own.</label>
             </div>
             <div>
-                <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
-                <label for="only-text">No HTML messages allowed on the list.</label>
-            </div>
-            <div>
                 <input type="checkbox" name="non-members-can-send" [(ngModel)]="nonMemberMessagePass">
                 <label for="non-members-can-send">Non members can send messages to list.</label>
             </div>
+            <div>
+                <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
+                <label for="only-text">No HTML messages allowed on the list.</label>
+            </div>
+
             <div>
                 <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
                 <label for="allow-attachments">Allow attachments on the list.</label>
