@@ -194,6 +194,7 @@ export class MessageListAdminComponent implements OnInit {
 
     urlPrefix: string = "/messagelist";
 
+    // Not in use at the moment.
     ownerEmail: string = "";
 
     archiveOptions = archivePolicyNames;
@@ -228,17 +229,21 @@ export class MessageListAdminComponent implements OnInit {
     recipients = "";
 
     /**
-     *
+     * Modifies the member's removed attribute if the member's state is changed.
      * @param member Who's membership on the list is changed.
      */
     membershipChange(member: MemberInfo) {
         if (member.removed) {
             member.removed = undefined;
         } else {
+            // Set time stamp when the member was removed.
             member.removed = moment();
         }
     }
 
+    /**
+     * The current documents document ID.
+     */
     getDocId() {
         return documentglobals().curr_item.id;
     }
@@ -253,23 +258,33 @@ export class MessageListAdminComponent implements OnInit {
         return "";
     }
 
-    ngOnInit(): void {
+    /**
+     * Initialization procedures.
+     */
+    async ngOnInit() {
         if (Users.isLoggedIn()) {
             // Get domains.
-            void this.getDomains();
+            await this.getDomains();
 
             // Load message list options.
             const docId = this.getDocId();
-            void this.loadValues(docId);
+            const result1 = await this.loadValues(docId);
 
-            // Load message list's members.
-            if (!this.listname) {
-                // getListmembers() might launch it's HTTP call before loadValues() finishes with setting listname,
-                // so if this happens we schedule the call for list members. The time is a so called sleeve constant,
-                // and it is not based on anything other than it seems to work on small scale testing.
-                window.setTimeout(() => this.getListMembers(), 2 * 1000);
+            if (result1.ok) {
+                this.setValues(result1.result);
             } else {
-                void this.getListMembers();
+                console.error(result1.result.error.error);
+                // TODO: Check what went wrong.
+            }
+
+            // Load list members.
+            const result2 = await this.getListMembers();
+
+            if (result2.ok) {
+                console.log(result2.result);
+                this.membersList = result2.result;
+            } else {
+                console.error(result2.result.error.error);
             }
         }
     }
@@ -283,6 +298,9 @@ export class MessageListAdminComponent implements OnInit {
         this.recipients = this.listAddress();
     }
 
+    /**
+     * Get domains ccondigured for email list use.
+     */
     private async getDomains() {
         const result = await to2(
             this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
@@ -310,6 +328,9 @@ export class MessageListAdminComponent implements OnInit {
         return this.membersTextField.split("\n").filter((e) => e);
     }
 
+    /**
+     * Add new members to message list.
+     */
     async addNewListMember() {
         const memberCandidates = this.parseMembers();
         if (memberCandidates.length == 0) {
@@ -326,13 +347,9 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
         if (result.ok) {
-            // TODO: Sending succeeded.
-            // console.log("Sending members succeeded.");
             this.membersTextField = undefined; // Empty the text field.
             this.memberAddSucceededResponse = "New members added.";
         } else {
-            // TODO: Sending failed.
-            // console.error(result.result.error.error);
             this.memberAddFailedResponse = `Adding new members failed: ${result.result.error.error}`;
         }
     }
@@ -341,25 +358,13 @@ export class MessageListAdminComponent implements OnInit {
      * Get all list members.
      */
     async getListMembers() {
-        const result = await to2(
+        return to2(
             this.http
                 .get<MemberInfo[]>(
                     `${this.urlPrefix}/getmembers/${this.listname}`
                 )
-                /** .map(response => {
-                const array = JSON.parse(response.json()) as any[];
-                const memberinfos = array.map(data => new MemberInfo(data));
-                return memberinfos;
-            )
-    }*/
                 .toPromise()
         );
-        if (result.ok) {
-            // console.log(result.result);
-            this.membersList = result.result;
-        } else {
-            console.error(result.result.error.error);
-        }
     }
 
     /**
@@ -389,25 +394,19 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     /**
-     * Load values for message list.
+     * Get values for message list's options.
      * @param docID List is defined by it's management document, so we get list's options and members with it.
      */
     async loadValues(docID: number) {
-        const result = await to2(
+        return to2(
             this.http
                 .get<ListOptions>(`${this.urlPrefix}/getlist/${docID}`)
                 .toPromise()
         );
-        if (result.ok) {
-            this.setValues(result.result);
-        } else {
-            console.error(result.result.error.error);
-            // TODO: Check what went wrong.
-        }
     }
 
     /**
-     * Helper for setting list values after loading.
+     * Setting list values after loading.
      * @param listOptions
      */
     setValues(listOptions: ListOptions) {
@@ -416,7 +415,8 @@ export class MessageListAdminComponent implements OnInit {
 
         this.domain = listOptions.domain;
 
-        this.ownerEmail = "";
+        // No use at the moment.
+        // this.ownerEmail = "";
 
         this.notifyOwnerOnListChange =
             listOptions.notify_owners_on_list_change ?? false;
@@ -446,7 +446,7 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     /**
-     * Function to initiate, when the user saves the list options.
+     * Save the list options.
      */
     async saveOptions() {
         const result = await this.saveOptionsCall({
@@ -489,17 +489,15 @@ export class MessageListAdminComponent implements OnInit {
         const resultSaveMembers = await this.saveMembersCall(this.membersList);
 
         if (resultSaveMembers.ok) {
-            // VIESTIM: Saving members' state succeeded.
             // console.log("Saving members succeeded.");
         } else {
-            // VIESTIM: Saving members' state failed.
             console.error("Saving members failed.");
         }
     }
 
     /**
      * Makes the actual REST call to save the state of list members'.
-     * @param memberList
+     * @param memberList A list of message list members with their information.
      */
     saveMembersCall(memberList: MemberInfo[]) {
         return to2(
@@ -512,6 +510,9 @@ export class MessageListAdminComponent implements OnInit {
         );
     }
 
+    /**
+     * Modify the recipient list for tim-message-send component. Adds the message list's email list as the recipient.
+     */
     recipientList() {
         if (this.domain) {
             return `${this.listname}@${this.domain}`;
