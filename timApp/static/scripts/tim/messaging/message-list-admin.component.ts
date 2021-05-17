@@ -64,6 +64,7 @@ import {Users} from "../user/userService";
                 <p class="list-archive-policy-header">Archive policy:</p>
                 <ul id="archive-policy-list">
                     <li *ngFor="let option of archiveOptions">
+                        <label for="archive-{{option.archiveType}}">
                         <input
                                 name="items-radio"
                                 type="radio"
@@ -71,7 +72,7 @@ import {Users} from "../user/userService";
                                 [value]="option.archiveType"
                                 [(ngModel)]="archive"
                         />
-                        <label for="archive-{{option.archiveType}}">{{option.policyName}}</label>
+                        {{option.policyName}}</label>
                     </li>
                 </ul>
             </div>
