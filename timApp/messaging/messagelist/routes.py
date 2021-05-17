@@ -6,9 +6,9 @@ from flask import Response
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.messaging.messagelist.emaillist import EmailListManager, get_list_ui_link, create_new_email_list, \
-    delete_email_list, check_emaillist_name_requirements
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
+from timApp.messaging.messagelist.emaillist import get_list_ui_link, create_new_email_list, \
+    delete_email_list, check_emaillist_name_requirements, get_domain_names, verify_mailman_connection
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
@@ -41,6 +41,10 @@ def create_list(options: ListOptions) -> Response:
     verify_logged_in()
     verify_groupadmin()  # Creator of a list has to be a group admin.
 
+    # Until other message channels make email list's optional, it is required that connection to Mailman is
+    # configured when creating message lists.
+    verify_mailman_connection()
+
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
@@ -61,18 +65,20 @@ def create_list(options: ListOptions) -> Response:
 
 
 def test_name(name_candidate: str) -> None:
-    """Check new message list's name candidate's name. The name has to meet naming rules, it has to be not already be
-    in use and it cannot be a reserved name.
+    """Check new message list's name candidate's name.
+
+     The name has to meet naming rules, it has to be not already be in use and it cannot be a reserved name. If the
+     function retuns control to it's caller, then name is viable to use for a message list. If at some point the name
+     is not viable, then an exception is raised.
 
     :param name_candidate: The name candidate to check.
-    :return: None. If the function retuns control to it's caller, then name is viable to use for a message list. If at
-    some point the name is not viable, then an exception is raised.
     """
     normalized_name = name_candidate.strip()
     name, sep, domain = normalized_name.partition("@")
     check_messagelist_name_requirements(name)
     if sep:
         # If character '@' is found, we check email list specific name requirements.
+        verify_mailman_connection()
         check_emaillist_name_requirements(name, domain)
 
 
@@ -93,12 +99,12 @@ def check_name(name_candidate: str) -> Response:
 
 @messagelist.route("/domains", methods=['GET'])
 def domains() -> Response:
-    """ Send possible domains for a client, if such exists.
+    """Send possible domains for a client, if such exists.
 
-    :return: If domains exists, return them as an array. If there are no domains, return an empty array.
+    :return: If domains are configured, return them as an array.
     """
-    possible_domains: List[str] = EmailListManager.get_domain_names()
-
+    verify_mailman_connection()
+    possible_domains: List[str] = get_domain_names()
     return json_response(possible_domains)
 
 
@@ -107,9 +113,8 @@ def delete_list(listname: str, domain: str) -> Response:
     """Delete message/email list. List name is provided in the request body.
 
     :param domain: If an empty string, message list is not considered to have a domain associated and therefore doesn't
-     have an email list. If this is an unempty string, then an email list is excpected to also exist.
-    :param listname: The list to be deleted. If the name does not contain '@', just delete  a message list. If it
-     contains '@', we delete a message list and the corresponding email list.
+     have an email list. If this is an nonempty string, then an email list is excpected to also exist.
+    :param listname: The list to be deleted.
     :return: A string describing how the operation went.
     """
     verify_logged_in()
@@ -228,6 +233,7 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
     message_list = MessageListModel.get_list_by_name_exactly_one(listname)
     email_list = None
     if message_list.email_list_domain:
+        verify_mailman_connection()
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
 
     # VIESTIM: This solution is probably not well optimized.
@@ -264,6 +270,7 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
 
     em_list = None
     if msg_list.email_list_domain is not None:
+        verify_mailman_connection()
         em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
 
     for member_candidate in memberCandidates:
