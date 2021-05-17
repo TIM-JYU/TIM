@@ -129,10 +129,6 @@ class MessageTIMversalis:
 
     timestamp: datetime = get_current_time()
 
-    # VIESTIM: Would a response depth field be usefull? It was stated, that multiple Re: and Vs: prefixes on subjects
-    #  is annoying and these should be discarded, but if we wish to do some type of inferance in the future about
-    #  what a message is responding at, it might need this information.
-
 
 MESSAGE_LIST_DOC_PREFIX = "messagelists"
 MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
@@ -153,7 +149,7 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
     message_owners: List[UserGroup] = []
     message_sender = User.get_by_email(message.sender.email_address)
 
-    # List owners get a default ownership for the messages on a list.
+    # List owners get a default ownership for the messages on a list. This covers the archive policy of SECRET.
     message_owners.extend(get_message_list_owners(message_list))
 
     # Who gets to see a message in the archives.
@@ -161,23 +157,21 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
 
     # Gather permissions to the archive doc. The meanings of different archive settings are listed with ArchiveType
     # class.
-    if message_list.archive_policy is ArchiveType.PUBLIC or ArchiveType.UNLISTED:
-        # Unlisted and public archiving only differs in whether or not the archive folder is in a special place
-        # where it can be found more easily. The folder is linked/aliased elsewhere and is not a concer in archiving.
+    if message_list.archive_policy is ArchiveType.PUBLIC:
         message_viewers.append(UserGroup.get_anonymous_group())
+        if message_sender:
+            message_owners.append(message_sender.get_personal_group())
+    elif message_list.archive_policy is ArchiveType.UNLISTED:
+        message_viewers.append(UserGroup.get_logged_in_group())
         if message_sender:
             message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.GROUPONLY:
         message_viewers = [m.user_group for m in message_list.get_tim_members()]
         if message_sender:
             message_owners.append(message_sender.get_personal_group())
-    elif message_list.archive_policy is ArchiveType.SECRET:
-        # VIESTIM: There shouldn't be much to do with this archive policy? The list owners get ownership,
-        #  and otherwise no one else sees it?
-        pass
 
-    # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
-    #  that, because in this context that is the anonymous user, and that raises an error.
+    # If we don't provide at least one owner up front, then current user is set as owner. We don't want that,
+    # because in this context that is the anonymous user, and that raises an error.
     archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
 
     # Add the rest of the message owners.

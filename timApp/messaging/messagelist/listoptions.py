@@ -12,7 +12,7 @@ class Channel(Enum):
 
 @dataclass
 class Distribution:
-    """"""
+    """A class to wrap information about the message channels used by a message list or TIM users."""
     tim_message: bool
     email_list: bool
 
@@ -29,7 +29,7 @@ class ArchiveType(Enum):
     # For group and it's members' eyes only. Equal for Mailman's archive policy of 'private'.
     GROUPONLY = 2
     # Logged in TIM users can see the list.
-    UNLISTED = 3  # TODO: Maybe refactor the name to be more descriptive?
+    UNLISTED = 3
     # Completely public archive. Equals to Mailman's archive policy of 'public'.
     PUBLIC = 4
 
@@ -49,7 +49,6 @@ class ListOptions:
     name: str
     """The name of the message list. A mandatory value when list options are concidered."""
 
-    # VIESTIM: Enums need this to help marshmallow decipher JSON values in from client side properly.
     archive: ArchiveType = field(metadata={'by_value': True})
     """The type of archive policy this list uses."""
 
