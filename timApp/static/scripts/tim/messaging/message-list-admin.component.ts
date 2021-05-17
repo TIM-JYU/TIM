@@ -61,9 +61,14 @@ import {Users} from "../user/userService";
             <div>
             </div>
             <div>
-                <p class="list-archive-policy-header">List archive policy:</p>
+                <p class="list-archive-policy-header">Archive policy:</p>
+                <!-- Variable archiveoptions is reversed, so indexing for display has to accommodate. -->
+                <p>{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
+                <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
+                <!--
                 <ul id="archive-policy-list">
                     <li *ngFor="let option of archiveOptions">
+                        <label for="archive-{{option.archiveType}}">
                         <input
                                 name="items-radio"
                                 type="radio"
@@ -71,14 +76,16 @@ import {Users} from "../user/userService";
                                 [value]="option.archiveType"
                                 [(ngModel)]="archive"
                         />
-                        <label for="archive-{{option.archiveType}}">{{option.policyName}}</label>
+                        {{option.policyName}}</label>
                     </li>
                 </ul>
+                -->
             </div>
-            <h5>List options</h5>
-            <div>
+            
+            <div class="section">
+                <h3>Options</h3>
                 <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
-                <label for="list-subject-prefix">List subject prefix.</label>
+                <label for="list-subject-prefix">Subject prefix.</label>
             </div>
             <div>
                 <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
@@ -94,79 +101,79 @@ import {Users} from "../user/userService";
                 <label for="can-user-unsubscribe">Members can unsubscribe from the list on their own.</label>
             </div>
             <div>
-                <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
-                <label for="only-text">No HTML messages allowed on the list.</label>
-            </div>
-            <div>
                 <input type="checkbox" name="non-members-can-send" [(ngModel)]="nonMemberMessagePass">
                 <label for="non-members-can-send">Non members can send messages to list.</label>
             </div>
             <div>
+                <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
+                <label for="only-text">No HTML messages allowed on the list.</label>
+            </div>
+
+            <div>
                 <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
                 <label for="allow-attachments">Allow attachments on the list.</label>
-            </div>
-            <div *ngIf="archiveURL">
-                <a [href]="archiveURL">List's archive</a>
-            </div>
-            <div *ngIf="emailAdminURL">
-                <a [href]="emailAdminURL">Advanced email list settings</a>
             </div>
             <div>
                 <button class="timButton" (click)="saveOptions()">Save changes</button>
             </div>
-            <div id="add-members-section" class="section">
-                <label for="add-multiple-members">Add members</label> <br/>
-                <textarea id="add-multiple-members" name="add-multiple-members"
-                          [(ngModel)]="membersTextField"></textarea>
-                <div>
+            <div id="members-section" class="section">
+                <h3>Members</h3>
+                <div id="add-members-section">
+                    <label for="add-multiple-members">Add members</label> <br/>
+                    <textarea id="add-multiple-members" name="add-multiple-members"
+                              [(ngModel)]="membersTextField"></textarea>
                     <div>
-                        <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
-                        <label for="new-member-send-right">New member's send right.</label>
+                        <div>
+                            <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
+                            <label for="new-member-send-right">New member's send right.</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" name="new-member-delivery-right"
+                                   [(ngModel)]="newMemberDeliveryRight">
+                            <label for="new-member-delivery-right">New member's delivery right.</label>
+                        </div>
                     </div>
-                    <div>
-                        <input type="checkbox" name="new-member-delivery-right" [(ngModel)]="newMemberDeliveryRight">
-                        <label for="new-member-delivery-right">New member's delivery right.</label>
+                    <button (click)="addNewListMember()" class="timButton">Add new members</button>
+                    <div id="member-add-feedback">
+                        <tim-alert *ngIf="memberAddSucceededResponse"
+                                   severity="success">{{memberAddSucceededResponse}}</tim-alert>
+                        <tim-alert *ngIf="memberAddFailedResponse"
+                                   severity="danger">{{memberAddFailedResponse}}</tim-alert>
                     </div>
                 </div>
-                <button (click)="addNewListMember()" class="timButton">Add new members</button>
-                <div id="member-add-feedback">
-                    <tim-alert *ngIf="memberAddSucceededResponse"
-                               severity="success">{{memberAddSucceededResponse}}</tim-alert>
-                    <tim-alert *ngIf="memberAddFailedResponse" severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                <div class="section">
+                    <table>
+                        <caption>List members</caption>
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Send right</th>
+                            <th>Delivery right</th>
+                            <th>Membership ended</th>
+                            <th>Removed</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr *ngFor="let member of membersList">
+                            <td>{{member.name}}</td>
+                            <td>{{member.email}}</td>
+                            <td>
+                                <input type="checkbox" [(ngModel)]="member.sendRight"
+                                       name="member-send-right-{{member.email}}">
+                            </td>
+                            <td>
+                                <input type="checkbox" [(ngModel)]="member.deliveryRight"
+                                       name="member-delivery-right-{{member.email}}">
+                            </td>
+                            <td>{{member.removed}}</td>
+                            <td><input type="checkbox" (click)="membershipChange(member)" [ngModel]="!!member.removed"
+                                       name="removed-{{member.email}}"/></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <button class="timButton" (click)="saveMembers()">Save</button>
                 </div>
-            </div>
-            <div>
-                <table>
-                    <caption>List members</caption>
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Send right</th>
-                        <th>Delivery right</th>
-                        <th>Membership ended</th>
-                        <th>Removed</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr *ngFor="let member of membersList">
-                        <td>{{member.name}}</td>
-                        <td>{{member.email}}</td>
-                        <td>
-                            <input type="checkbox" [(ngModel)]="member.sendRight"
-                                   name="member-send-right-{{member.email}}">
-                        </td>
-                        <td>
-                            <input type="checkbox" [(ngModel)]="member.deliveryRight"
-                                   name="member-delivery-right-{{member.email}}">
-                        </td>
-                        <td>{{member.removed}}</td>
-                        <td><input type="checkbox" (click)="membershipChange(member)" [ngModel]="!!member.removed"
-                                   name="removed-{{member.email}}"/></td>
-                    </tr>
-                    </tbody>
-                </table>
-                <button class="timButton" (click)="saveMembers()">Save</button>
             </div>
             <div id="email-send">
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
@@ -175,6 +182,15 @@ import {Users} from "../user/userService";
             <div class="section">
                 <h2>List deletion</h2>
                 <button class="timButton" (click)="deleteList()">Delete List</button>
+            </div>
+            <div>
+                <h3>Links</h3>
+                <div *ngIf="archiveURL">
+                    <a [href]="archiveURL">List's archive</a>
+                </div>
+                <div *ngIf="emailAdminURL">
+                    <a [href]="emailAdminURL">Advanced email list settings</a>
+                </div>
             </div>
         </form>
     `,
@@ -194,6 +210,7 @@ export class MessageListAdminComponent implements OnInit {
 
     urlPrefix: string = "/messagelist";
 
+    // Not in use at the moment.
     ownerEmail: string = "";
 
     archiveOptions = archivePolicyNames;
@@ -228,17 +245,21 @@ export class MessageListAdminComponent implements OnInit {
     recipients = "";
 
     /**
-     *
+     * Modifies the member's removed attribute if the member's state is changed.
      * @param member Who's membership on the list is changed.
      */
     membershipChange(member: MemberInfo) {
         if (member.removed) {
             member.removed = undefined;
         } else {
+            // Set time stamp when the member was removed.
             member.removed = moment();
         }
     }
 
+    /**
+     * The current documents document ID.
+     */
     getDocId() {
         return documentglobals().curr_item.id;
     }
@@ -253,23 +274,33 @@ export class MessageListAdminComponent implements OnInit {
         return "";
     }
 
-    ngOnInit(): void {
+    /**
+     * Initialization procedures.
+     */
+    async ngOnInit() {
         if (Users.isLoggedIn()) {
             // Get domains.
-            void this.getDomains();
+            await this.getDomains();
 
             // Load message list options.
             const docId = this.getDocId();
-            void this.loadValues(docId);
+            const result1 = await this.loadValues(docId);
 
-            // Load message list's members.
-            if (!this.listname) {
-                // getListmembers() might launch it's HTTP call before loadValues() finishes with setting listname,
-                // so if this happens we schedule the call for list members. The time is a so called sleeve constant,
-                // and it is not based on anything other than it seems to work on small scale testing.
-                window.setTimeout(() => this.getListMembers(), 2 * 1000);
+            if (result1.ok) {
+                this.setValues(result1.result);
             } else {
-                void this.getListMembers();
+                console.error(result1.result.error.error);
+                // TODO: Check what went wrong.
+            }
+
+            // Load list members.
+            const result2 = await this.getListMembers();
+
+            if (result2.ok) {
+                console.log(result2.result);
+                this.membersList = result2.result;
+            } else {
+                console.error(result2.result.error.error);
             }
         }
     }
@@ -283,6 +314,9 @@ export class MessageListAdminComponent implements OnInit {
         this.recipients = this.listAddress();
     }
 
+    /**
+     * Get domains ccondigured for email list use.
+     */
     private async getDomains() {
         const result = await to2(
             this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
@@ -310,6 +344,9 @@ export class MessageListAdminComponent implements OnInit {
         return this.membersTextField.split("\n").filter((e) => e);
     }
 
+    /**
+     * Add new members to message list.
+     */
     async addNewListMember() {
         const memberCandidates = this.parseMembers();
         if (memberCandidates.length == 0) {
@@ -326,13 +363,9 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
         if (result.ok) {
-            // TODO: Sending succeeded.
-            // console.log("Sending members succeeded.");
             this.membersTextField = undefined; // Empty the text field.
             this.memberAddSucceededResponse = "New members added.";
         } else {
-            // TODO: Sending failed.
-            // console.error(result.result.error.error);
             this.memberAddFailedResponse = `Adding new members failed: ${result.result.error.error}`;
         }
     }
@@ -341,25 +374,13 @@ export class MessageListAdminComponent implements OnInit {
      * Get all list members.
      */
     async getListMembers() {
-        const result = await to2(
+        return to2(
             this.http
                 .get<MemberInfo[]>(
                     `${this.urlPrefix}/getmembers/${this.listname}`
                 )
-                /** .map(response => {
-                const array = JSON.parse(response.json()) as any[];
-                const memberinfos = array.map(data => new MemberInfo(data));
-                return memberinfos;
-            )
-    }*/
                 .toPromise()
         );
-        if (result.ok) {
-            // console.log(result.result);
-            this.membersList = result.result;
-        } else {
-            console.error(result.result.error.error);
-        }
     }
 
     /**
@@ -389,25 +410,19 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     /**
-     * Load values for message list.
+     * Get values for message list's options.
      * @param docID List is defined by it's management document, so we get list's options and members with it.
      */
     async loadValues(docID: number) {
-        const result = await to2(
+        return to2(
             this.http
                 .get<ListOptions>(`${this.urlPrefix}/getlist/${docID}`)
                 .toPromise()
         );
-        if (result.ok) {
-            this.setValues(result.result);
-        } else {
-            console.error(result.result.error.error);
-            // TODO: Check what went wrong.
-        }
     }
 
     /**
-     * Helper for setting list values after loading.
+     * Setting list values after loading.
      * @param listOptions
      */
     setValues(listOptions: ListOptions) {
@@ -416,7 +431,8 @@ export class MessageListAdminComponent implements OnInit {
 
         this.domain = listOptions.domain;
 
-        this.ownerEmail = "";
+        // No use at the moment.
+        // this.ownerEmail = "";
 
         this.notifyOwnerOnListChange =
             listOptions.notify_owners_on_list_change ?? false;
@@ -446,7 +462,7 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     /**
-     * Function to initiate, when the user saves the list options.
+     * Save the list options.
      */
     async saveOptions() {
         const result = await this.saveOptionsCall({
@@ -489,17 +505,15 @@ export class MessageListAdminComponent implements OnInit {
         const resultSaveMembers = await this.saveMembersCall(this.membersList);
 
         if (resultSaveMembers.ok) {
-            // VIESTIM: Saving members' state succeeded.
             // console.log("Saving members succeeded.");
         } else {
-            // VIESTIM: Saving members' state failed.
             console.error("Saving members failed.");
         }
     }
 
     /**
      * Makes the actual REST call to save the state of list members'.
-     * @param memberList
+     * @param memberList A list of message list members with their information.
      */
     saveMembersCall(memberList: MemberInfo[]) {
         return to2(
@@ -512,6 +526,9 @@ export class MessageListAdminComponent implements OnInit {
         );
     }
 
+    /**
+     * Modify the recipient list for tim-message-send component. Adds the message list's email list as the recipient.
+     */
     recipientList() {
         if (this.domain) {
             return `${this.listname}@${this.domain}`;

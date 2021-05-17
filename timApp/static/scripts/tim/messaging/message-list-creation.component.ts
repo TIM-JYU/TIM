@@ -41,6 +41,7 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
                     <p class="list-name">List archive policy: </p>
                     <ul class="archive-list">
                         <li *ngFor="let option of archiveOptions">
+                            <label class="radio" for="archive-{{option.archiveType}}">
                             <input
                                     name="items-radio"
                                     type="radio"
@@ -48,7 +49,8 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
                                     [value]="option.archiveType"
                                     [(ngModel)]="archive"
                             />
-                            <label for="archive-{{option.archiveType}}">{{option.policyName}}</label>
+                            {{option.policyName}}
+                            </label>
                         </li>
                     </ul>
                 </div>
@@ -111,7 +113,6 @@ export class MessageListComponent extends AngularDialogComponent<
         this.errorMessage = [];
         this.disableCreate = true;
         const result = await this.createList({
-            // VIESTIM These fields have to match with interface ListOptions, otherwise a type error happens.
             name: this.listname,
             domain: this.domain,
             archive: this.archive,
@@ -120,12 +121,15 @@ export class MessageListComponent extends AngularDialogComponent<
             this.errorMessage = [result.result.error.error];
             this.disableCreate = false;
         } else {
-            // VIESTIM Helps see that data was sent succesfully after clicking the button.
             redirectToItem(result.result);
         }
     }
 
-    // VIESTIM this helper function helps keeping types in check.
+    /**
+     * The call to create new list.
+     * @param options
+     * @private
+     */
     private createList(options: ListOptions) {
         return to2(
             this.http
@@ -143,8 +147,6 @@ export class MessageListComponent extends AngularDialogComponent<
      * @returns {boolean} Returns true if name requirements are met. Otherwise returns false.
      */
     checkNameRequirementsLocally(): boolean {
-        // VIESTIM: Since the server has the final say for allowed names, sync these rules with the server. Maybe they
-        //  could be imported from the server?
         this.errorMessage = [];
 
         // Name length is within length boundaries.
