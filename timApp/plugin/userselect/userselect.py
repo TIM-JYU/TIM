@@ -353,7 +353,8 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
     for remove in model.actions.removePermission:
         doc_entry = doc_entries[remove.doc_path]
         a = remove_perm(user_group, doc_entry.block, remove.type)
-        update_messages.append(f'removed {a.info_str} for {user_group.name} in {doc_entry.path}')
+        if a:
+            update_messages.append(f'removed {a.info_str} for {user_group.name} in {doc_entry.path}')
 
     fields_to_save = {
         set_val.taskId: set_val.value for set_val in model.actions.setValue
