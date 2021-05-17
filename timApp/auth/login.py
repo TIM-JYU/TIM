@@ -248,7 +248,8 @@ def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
         if u:
             nu = NewUser.query.get(u.email)
     if not (nu and nu.check_password(oldpass)):
-        log_warning(f'Wrong temp password for "{email_or_username}": "{oldpass}"')
+        masked = oldpass[0] + '*****' if oldpass else ''
+        log_warning(f'Wrong temp password for "{email_or_username}": "{masked}"')
         raise RouteException('WrongTempPassword')
     return nu
 
