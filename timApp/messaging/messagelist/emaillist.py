@@ -5,7 +5,7 @@ from urllib.error import HTTPError
 from mailmanclient import Client, MailingList, Domain, Member
 
 from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate, ArchiveType, \
-    ReplyToListChanges, reply_to_munging
+    ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.tim_app import app
 from timApp.user.user import User
@@ -534,7 +534,7 @@ def set_email_list_default_reply_type(email_list: MailingList, default_reply_typ
     :param email_list: The email list where the reply type is set.
     :param default_reply_type: See ReplyToListChanges and reply_to_munging variable.
     """
-    email_list.settings["reply_goes_to_list"] = reply_to_munging[default_reply_type]
+    email_list.settings["reply_goes_to_list"] = default_reply_type.value
 
     email_list.settings.save()
 

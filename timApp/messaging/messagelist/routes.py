@@ -41,8 +41,9 @@ def create_list(options: ListOptions) -> Response:
     verify_logged_in()
     verify_groupadmin()  # Creator of a list has to be a group admin.
 
-    if options.domain:
-        verify_mailman_connection()
+    # Until other message channels make email list's optional, it is required that connection to Mailman is
+    # configured when creating message lists.
+    verify_mailman_connection()
 
     # Current user is set as the default owner.
     owner = get_current_user_object()

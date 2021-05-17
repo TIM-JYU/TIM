@@ -36,11 +36,11 @@ class ArchiveType(Enum):
 
 class ReplyToListChanges(Enum):
     """Options for email list's own address to be added to the Reply-To header for emails that are sent through the
-    list. See reply_to_munging for mapping to Mailman's options"""
+    list. See reply_to_munging for mapping to Mailman's options."""
     # Don't meddle with the Reply-To header.
-    NOCHANGES = 0
-    # Add an explicit Reply-To header to messages.
-    ADDLIST = 1
+    NOCHANGES = "no_munging"
+    # Change the Reply-To header so that the message/email list is preferred(/forced) to be included in the replies.
+    ADDLIST = "point_to_list"
 
 
 @dataclass
@@ -100,11 +100,6 @@ class ListOptions:
     distribution: Optional[Distribution] = None  # List[Channel] = field(default_factory=list)
     """All the message channels the list is using."""
 
-
-reply_to_munging: Dict[ReplyToListChanges, str] = {
-    ReplyToListChanges.NOCHANGES: "no_munging",
-    ReplyToListChanges.ADDLIST: "explicit_header"
-}
 
 # A mapping of TIM's archive policies to Mailman's archive policies. Mailman's archive policies are listed here:
 # https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/archiver.py
