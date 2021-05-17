@@ -61,7 +61,7 @@ import {Users} from "../user/userService";
             <div>
             </div>
             <div>
-                <p class="list-archive-policy-header">List archive policy:</p>
+                <p class="list-archive-policy-header">Archive policy:</p>
                 <ul id="archive-policy-list">
                     <li *ngFor="let option of archiveOptions">
                         <input
@@ -75,7 +75,7 @@ import {Users} from "../user/userService";
                     </li>
                 </ul>
             </div>
-            <h5>List options</h5>
+            <h3>Options</h3>
             <div>
                 <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
                 <label for="list-subject-prefix">List subject prefix.</label>
@@ -105,68 +105,66 @@ import {Users} from "../user/userService";
                 <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
                 <label for="allow-attachments">Allow attachments on the list.</label>
             </div>
-            <div *ngIf="archiveURL">
-                <a [href]="archiveURL">List's archive</a>
-            </div>
-            <div *ngIf="emailAdminURL">
-                <a [href]="emailAdminURL">Advanced email list settings</a>
-            </div>
             <div>
                 <button class="timButton" (click)="saveOptions()">Save changes</button>
             </div>
-            <div id="add-members-section" class="section">
-                <label for="add-multiple-members">Add members</label> <br/>
-                <textarea id="add-multiple-members" name="add-multiple-members"
-                          [(ngModel)]="membersTextField"></textarea>
+            <div id="members-section">
+                <div id="add-members-section" class="section">
+                    <label for="add-multiple-members">Add members</label> <br/>
+                    <textarea id="add-multiple-members" name="add-multiple-members"
+                              [(ngModel)]="membersTextField"></textarea>
+                    <div>
+                        <div>
+                            <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
+                            <label for="new-member-send-right">New member's send right.</label>
+                        </div>
+                        <div>
+                            <input type="checkbox" name="new-member-delivery-right"
+                                   [(ngModel)]="newMemberDeliveryRight">
+                            <label for="new-member-delivery-right">New member's delivery right.</label>
+                        </div>
+                    </div>
+                    <button (click)="addNewListMember()" class="timButton">Add new members</button>
+                    <div id="member-add-feedback">
+                        <tim-alert *ngIf="memberAddSucceededResponse"
+                                   severity="success">{{memberAddSucceededResponse}}</tim-alert>
+                        <tim-alert *ngIf="memberAddFailedResponse"
+                                   severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                    </div>
+                </div>
                 <div>
-                    <div>
-                        <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
-                        <label for="new-member-send-right">New member's send right.</label>
-                    </div>
-                    <div>
-                        <input type="checkbox" name="new-member-delivery-right" [(ngModel)]="newMemberDeliveryRight">
-                        <label for="new-member-delivery-right">New member's delivery right.</label>
-                    </div>
+                    <table>
+                        <caption>List members</caption>
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Send right</th>
+                            <th>Delivery right</th>
+                            <th>Membership ended</th>
+                            <th>Removed</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr *ngFor="let member of membersList">
+                            <td>{{member.name}}</td>
+                            <td>{{member.email}}</td>
+                            <td>
+                                <input type="checkbox" [(ngModel)]="member.sendRight"
+                                       name="member-send-right-{{member.email}}">
+                            </td>
+                            <td>
+                                <input type="checkbox" [(ngModel)]="member.deliveryRight"
+                                       name="member-delivery-right-{{member.email}}">
+                            </td>
+                            <td>{{member.removed}}</td>
+                            <td><input type="checkbox" (click)="membershipChange(member)" [ngModel]="!!member.removed"
+                                       name="removed-{{member.email}}"/></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <button class="timButton" (click)="saveMembers()">Save</button>
                 </div>
-                <button (click)="addNewListMember()" class="timButton">Add new members</button>
-                <div id="member-add-feedback">
-                    <tim-alert *ngIf="memberAddSucceededResponse"
-                               severity="success">{{memberAddSucceededResponse}}</tim-alert>
-                    <tim-alert *ngIf="memberAddFailedResponse" severity="danger">{{memberAddFailedResponse}}</tim-alert>
-                </div>
-            </div>
-            <div>
-                <table>
-                    <caption>List members</caption>
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Send right</th>
-                        <th>Delivery right</th>
-                        <th>Membership ended</th>
-                        <th>Removed</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr *ngFor="let member of membersList">
-                        <td>{{member.name}}</td>
-                        <td>{{member.email}}</td>
-                        <td>
-                            <input type="checkbox" [(ngModel)]="member.sendRight"
-                                   name="member-send-right-{{member.email}}">
-                        </td>
-                        <td>
-                            <input type="checkbox" [(ngModel)]="member.deliveryRight"
-                                   name="member-delivery-right-{{member.email}}">
-                        </td>
-                        <td>{{member.removed}}</td>
-                        <td><input type="checkbox" (click)="membershipChange(member)" [ngModel]="!!member.removed"
-                                   name="removed-{{member.email}}"/></td>
-                    </tr>
-                    </tbody>
-                </table>
-                <button class="timButton" (click)="saveMembers()">Save</button>
             </div>
             <div id="email-send">
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
@@ -175,6 +173,15 @@ import {Users} from "../user/userService";
             <div class="section">
                 <h2>List deletion</h2>
                 <button class="timButton" (click)="deleteList()">Delete List</button>
+            </div>
+            <div>
+                <h3>Links</h3>
+                <div *ngIf="archiveURL">
+                    <a [href]="archiveURL">List's archive</a>
+                </div>
+                <div *ngIf="emailAdminURL">
+                    <a [href]="emailAdminURL">Advanced email list settings</a>
+                </div>
             </div>
         </form>
     `,
