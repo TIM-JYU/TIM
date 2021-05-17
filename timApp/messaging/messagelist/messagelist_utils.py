@@ -5,8 +5,8 @@ from typing import Optional, List, Dict, Tuple
 
 from mailmanclient import MailingList
 
+from timApp.auth.accesshelper import has_manage_access
 from timApp.auth.accesstype import AccessType
-from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -614,7 +614,7 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     :return: None.
     """
     # Check right to the group. Right checking is not required for personal groups, only generated user groups.
-    if not ug.is_personal_group and not check_group_owner_or_manage_right(ug):
+    if not ug.is_personal_group and not has_manage_access(ug.admin_doc):
         return
 
     # Check for duplicates. Groups only have their name to check against.
@@ -664,15 +664,6 @@ def add_message_list_external_email_member(msg_list: MessageListModel, external_
 
     add_email(em_list, external_email, email_owner_pre_confirmation=True, real_name=display_name,
               send_right=send_right, delivery_right=delivery_right)
-
-
-def check_group_owner_or_manage_right(ug: UserGroup) -> bool:
-    current_user_group = get_current_user_object().get_personal_group()
-    for access in ug.admin_doc.accesses:
-        ug_id, ac_t = access
-        if current_user_group.id == ug_id and (ac_t == AccessType.manage.value or ac_t == AccessType.owner.value):
-            return True
-    return False
 
 
 def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:

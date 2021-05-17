@@ -183,7 +183,6 @@ def save_list_options(options: ListOptions) -> Response:
     if message_list.archive_policy != options.archive:
         # TODO: If message list changes it's archive policy, the members on the list need to be notified.
         message_list.archive = options.archive
-        pass
 
     message_list.description = options.list_description
     message_list.info = options.list_info
