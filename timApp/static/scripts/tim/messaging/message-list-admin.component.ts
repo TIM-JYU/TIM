@@ -81,8 +81,9 @@ import {Users} from "../user/userService";
                 </ul>
                 -->
             </div>
-            <h3>Options</h3>
-            <div>
+            
+            <div class="section">
+                <h3>Options</h3>
                 <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
                 <label for="list-subject-prefix">Subject prefix.</label>
             </div>
@@ -115,8 +116,9 @@ import {Users} from "../user/userService";
             <div>
                 <button class="timButton" (click)="saveOptions()">Save changes</button>
             </div>
-            <div id="members-section">
-                <div id="add-members-section" class="section">
+            <div id="members-section" class="section">
+                <h3>Members</h3>
+                <div id="add-members-section">
                     <label for="add-multiple-members">Add members</label> <br/>
                     <textarea id="add-multiple-members" name="add-multiple-members"
                               [(ngModel)]="membersTextField"></textarea>
@@ -139,7 +141,7 @@ import {Users} from "../user/userService";
                                    severity="danger">{{memberAddFailedResponse}}</tim-alert>
                     </div>
                 </div>
-                <div>
+                <div class="section">
                     <table>
                         <caption>List members</caption>
                         <thead>
