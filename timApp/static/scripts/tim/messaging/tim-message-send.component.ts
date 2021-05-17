@@ -189,7 +189,6 @@ export class TimMessageComponent {
         setTimeout((): void => {
             this.messageMsg = "";
         }, 5000);
-        this.messageSubject = "";
         this.showOptions = false;
         this.emailbcc = false;
         this.emailbccme = true;
@@ -205,7 +204,7 @@ export class TimMessageComponent {
             isPrivate: false,
             pageList: "",
             readReceipt: false,
-            reply: true,
+            reply: false,
             expires: undefined,
             sender: Users.getCurrent().real_name,
             senderEmail: Users.getCurrent().email,
