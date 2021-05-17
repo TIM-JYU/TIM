@@ -62,6 +62,10 @@ import {Users} from "../user/userService";
             </div>
             <div>
                 <p class="list-archive-policy-header">Archive policy:</p>
+                <!-- Variable archiveoptions is reversed, so indexing for display has to accommodate. -->
+                <p>{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
+                <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
+                <!--
                 <ul id="archive-policy-list">
                     <li *ngFor="let option of archiveOptions">
                         <label for="archive-{{option.archiveType}}">
@@ -75,11 +79,12 @@ import {Users} from "../user/userService";
                         {{option.policyName}}</label>
                     </li>
                 </ul>
+                -->
             </div>
             <h3>Options</h3>
             <div>
                 <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
-                <label for="list-subject-prefix">List subject prefix.</label>
+                <label for="list-subject-prefix">Subject prefix.</label>
             </div>
             <div>
                 <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
