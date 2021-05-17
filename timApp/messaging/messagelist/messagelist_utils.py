@@ -138,13 +138,6 @@ MESSAGE_LIST_DOC_PREFIX = "messagelists"
 MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
 
-def message_list_tim_members_as_user_groups(tim_members: List['MessageListTimMember']) -> List[UserGroup]:
-    user_groups = []
-    for member in tim_members:
-        user_groups.append(member.user_group)
-    return user_groups
-
-
 def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str, message_list: MessageListModel,
                                        message: MessageTIMversalis) -> DocEntry:
     """Create archive document with permissions matching the message list's archive type.
@@ -175,7 +168,7 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
         if message_sender:
             message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.GROUPONLY:
-        message_viewers = message_list_tim_members_as_user_groups(message_list.get_tim_members())
+        message_viewers = [m.user_group for m in message_list.get_tim_members()]
         if message_sender:
             message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.SECRET:
