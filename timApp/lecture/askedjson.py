@@ -130,6 +130,8 @@ def find_json(q):
 
 
 def normalize_rows(rows):
+    if not rows:
+        return [], ''
     for r in rows:
         if isinstance(r, str):
             continue
