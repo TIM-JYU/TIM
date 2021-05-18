@@ -61,6 +61,7 @@ const PluginMarkup = t.intersection([
             cancel: nullable(t.string),
             success: nullable(t.string),
             undone: nullable(t.string),
+            undo: nullable(t.string),
         }),
     }),
 ]);
@@ -212,7 +213,7 @@ const USER_FIELDS: Record<string, string> = {
                 <span class="success-text">{{successMessage}}</span>
                 <span class="undo-button" *ngIf="allowUndo && !undone">
                     <tim-loading *ngIf="undoing"></tim-loading>
-                    <button (click)="undoLast()" class="btn btn-danger" [disabled]="undoing" i18n>Undo</button>
+                    <button (click)="undoLast()" class="btn btn-danger" [disabled]="undoing">{{undoButtonLabel}}</button>
                 </span>
             </div>
         </tim-alert>
@@ -363,6 +364,10 @@ export class UserSelectComponent extends AngularPluginBase<
         return this.undone
             ? $localize`Undone permissions for ${this.lastAddedUser?.user.real_name}:INTERPOLATION:.`
             : $localize`Permissions applied to ${this.lastAddedUser?.user.real_name}:INTERPOLATION:.`;
+    }
+
+    get undoButtonLabel() {
+        return this.markup.text.undo ?? $localize`Undo`;
     }
 
     private get searchQueryStrings() {
@@ -652,6 +657,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 cancel: null,
                 success: null,
                 undone: null,
+                undo: null,
             },
             inputMinLength: 3,
             autoSearchDelay: 0,
