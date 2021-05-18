@@ -105,6 +105,9 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     """
     Retrieve messages displayed for current user based on item id and return them as a list.
 
+    TODO: Once global messages are implemented, verify that user has view access
+     to the document before displaying messages.
+
     :param item_id: Identifier for document or folder where message is displayed
     :return:
     """
@@ -236,13 +239,12 @@ def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Resp
                                   replies_to=options.repliesTo)
     create_tim_message(tim_message, options, message)
     db.session.add(tim_message)
-    db.session.flush()
 
     pages = get_display_pages(options.pageList.splitlines())
     recipients = get_recipient_users(message.recipients)
-    create_message_displays(tim_message.id, pages, recipients)
+    create_message_displays(tim_message, pages, recipients)
     if recipients:
-        create_read_receipts(tim_message.id, recipients)
+        create_read_receipts(tim_message, recipients)
 
     db.session.commit()
 
@@ -289,7 +291,8 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 
 @timMessage.route("/reply", methods=['POST'])
 def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Response:
-    # VIESTIM: add option replies_to to MessageOptions (and column to internalmessage table in db, save original message's id here)
+    # VIESTIM: add option replies_to to MessageOptions (and column to internalmessage
+    #  table in db, save original message's id here)
 
     messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList,
                                     options.readReceipt, False, get_current_user_object().name,
@@ -381,8 +384,10 @@ def get_display_pages(pagelist: List[str]) -> List[Item]:
 
 def check_messages_folder_path(msg_folder_path: str, tim_msg_folder_path: str) -> Folder:
     """
-    Checks if the /messages/tim-messages folder exists and if not, creates it and
-    adds view rights to logged in users. Also creates the preamble for message documents.
+    Checks if the /messages/tim-messages folder exists and if not, creates it. All users
+     get view access to /messages folder and edit access to /messages/tim-messages folder
+     so that documents for sent messages can be created. Also creates the preamble for
+     message documents.
 
     :param msg_folder_path: path for /messages
     :param tim_msg_folder_path: path for /messages/tim-messages
@@ -456,11 +461,11 @@ def update_tim_msg_doc_settings(message_doc: DocInfo, sender: User, message_body
     message_doc.document.add_setting('macros', s)
 
 
-def create_message_displays(msg_id: int, pages: List[Item], recipients: List[UserGroup]) -> None:
+def create_message_displays(msg: InternalMessage, pages: List[Item], recipients: List[UserGroup]) -> None:
     """
     Creates InternalMessageDisplay entries for all recipients and display pages.
 
-    :param msg_id: Message identifier
+    :param msg: Message
     :param pages: List of pages where message is displayed
     :param recipients: List of message recipients
     :return:
@@ -468,40 +473,32 @@ def create_message_displays(msg_id: int, pages: List[Item], recipients: List[Use
     if pages and recipients:
         for page in pages:
             for rcpt in recipients:
-                display = InternalMessageDisplay()
-                display.message_id = msg_id
-                display.usergroup_id = rcpt.id
-                display.display_doc_id = page.id
+                display = InternalMessageDisplay(message=msg, usergroup=rcpt, display_block=page)
                 db.session.add(display)
 
     if pages and not recipients:
         for page in pages:
-            display = InternalMessageDisplay()
-            display.message_id = msg_id
-            display.display_doc_id = page.id
+            display = InternalMessageDisplay(message=msg, display_block=page)
             db.session.add(display)
 
     if not pages and recipients:
         for rcpt in recipients:
-            display = InternalMessageDisplay()
-            display.message_id = msg_id
-            display.usergroup_id = rcpt.id
+            display = InternalMessageDisplay(message=msg, usergroup=rcpt)
             db.session.add(display)
 
     if not pages and not recipients:
-        display = InternalMessageDisplay()
-        display.message_id = msg_id
+        display = InternalMessageDisplay(message=msg)
         db.session.add(display)
 
 
-def create_read_receipts(msg_id: int, recipients: List[UserGroup]) -> None:
+def create_read_receipts(msg: InternalMessage, recipients: List[UserGroup]) -> None:
     """
     Create InternalMessageReadReceipt entries for all recipients.
 
-    :param msg_id: Message identifier
+    :param msg: Message
     :param recipients: Message recipients
     :return:
     """
     for recipient in recipients:
-        readreceipt = InternalMessageReadReceipt(rcpt_id=recipient.id, message_id=msg_id)
+        readreceipt = InternalMessageReadReceipt(recipient=recipient, message=msg)
         db.session.add(readreceipt)
