@@ -77,7 +77,7 @@ def normalize_question_json(q: Dict[str, Any]):
     missing_keys = MANDATORY_FIELDS - set(normalized.keys())
     if missing_keys:
         return make_error_question(f'Missing fields: {", ".join(sorted(list(missing_keys)))}')
-    result, err = normalize_rows(normalized['rows'])
+    result, err = normalize_rows(normalized['rows'] or [])
     if not result:
         return make_error_question(err)
     if normalized.get('matrixType') == '':

@@ -163,7 +163,7 @@ def qst_handle_randomization(jso: Dict) -> None:
     if prev_state and isinstance(prev_state, dict):
         rand_arr = prev_state.get('order')
         jso['state'] = prev_state.get('c')
-    rows = markup.get('rows', [])
+    rows = markup.get('rows', []) or []
     if not prev_state and rand_arr is None:  # no previous answer, check markup for new order
         rcount = markup.get('randomizedRows', 0)
         # TODO: try to convert string
