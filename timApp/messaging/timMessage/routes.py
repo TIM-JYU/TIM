@@ -105,22 +105,28 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     """
     Retrieve messages displayed for current user based on item id and return them as a list.
 
+    TODO: Once global messages are implemented, verify that user has view access
+     to the document before displaying messages.
+
     :param item_id: Identifier for document or folder where message is displayed
     :return:
     """
     displays = InternalMessageDisplay.query.filter_by(usergroup_id=get_current_user_object().get_personal_group().id,
                                                       display_doc_id=item_id).all()
 
-    replies = InternalMessage.query.filter(InternalMessage.replies_to.isnot(None)).with_entities(InternalMessage.replies_to).all()
-    replies_to_ids =  [a for a, in replies] # list of messages that have been replied to
+    replies = InternalMessage.query.filter(InternalMessage.replies_to.isnot(None)).with_entities(
+        InternalMessage.replies_to).all()
+    replies_to_ids = [a for a, in replies]  # list of messages that have been replied to
 
     messages = []
     recipients = []
     for display in displays:
-        receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id, message_id=display.message_id).first()
+        receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id,
+                                                             message_id=display.message_id).first()
         expires = InternalMessage.query.filter_by(id=display.message_id).first()
         # message is shown if it has not been marked as read or replied to, and has not expired
-        if receipt.marked_as_read_on is None and display.message_id not in replies_to_ids and (expires.expires is None or expires.expires > datetime.now()):
+        if receipt.marked_as_read_on is None and display.message_id not in replies_to_ids and (
+                expires.expires is None or expires.expires > datetime.now()):
             messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
             recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
 
@@ -130,13 +136,18 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
         if not document:
             return error_generic('Message document not found', 404)
 
-        fullmessages.append(TimMessageData(id=message.id, sender=document.owners.pop().name, doc_id=message.doc_id,
-                                           par_id=message.par_id, can_mark_as_read=message.can_mark_as_read,
-                                           can_reply=message.reply, display_type=message.display_type,
+        fullmessages.append(TimMessageData(id=message.id,
+                                           sender=document.owners.pop().name,
+                                           doc_id=message.doc_id,
+                                           par_id=message.par_id,
+                                           can_mark_as_read=message.can_mark_as_read,
+                                           can_reply=message.reply,
+                                           display_type=message.display_type,
                                            message_body=Document.get_paragraph(document.document,
                                                                                message.par_id).get_html(
                                                default_view_ctx),
-                                           message_subject=document.title, recipients=recipients))
+                                           message_subject=document.title,
+                                           recipients=recipients))
 
     return fullmessages
 
@@ -177,10 +188,10 @@ def check_urls(urls: str) -> Response:
     status_code: int
 
     for url in url_list:
-        url = url.strip()  #remove leading and trailing whitespaces
+        url = url.strip()  # remove leading and trailing whitespaces
         if url.endswith("/"):
             url = url[:-1]
-        hashtag_index = url.find("#")  #remove anchors
+        hashtag_index = url.find("#")  # remove anchors
         if hashtag_index != -1:
             url = url[:hashtag_index]
         regex = "https?://[a-z0-9.-]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/"
@@ -224,16 +235,16 @@ def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Resp
         """
     verify_logged_in()
 
-    tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires, replies_to=options.repliesTo)
+    tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires,
+                                  replies_to=options.repliesTo)
     create_tim_message(tim_message, options, message)
     db.session.add(tim_message)
-    db.session.flush()
 
     pages = get_display_pages(options.pageList.splitlines())
     recipients = get_recipient_users(message.recipients)
-    create_message_displays(tim_message.id, pages, recipients)
+    create_message_displays(tim_message, pages, recipients)
     if recipients:
-        create_read_receipts(tim_message.id, recipients)
+        create_read_receipts(tim_message, recipients)
 
     db.session.commit()
 
@@ -280,10 +291,12 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 
 @timMessage.route("/reply", methods=['POST'])
 def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Response:
+    # VIESTIM: add option replies_to to MessageOptions (and column to internalmessage
+    #  table in db, save original message's id here)
 
-    # VIESTIM: add option replies_to to MessageOptions (and column to internalmessage table in db, save original message's id here)
-
-    messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList, options.readReceipt, False, get_current_user_object().name, get_current_user_object().email, options.repliesTo)
+    messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList,
+                                    options.readReceipt, False, get_current_user_object().name,
+                                    get_current_user_object().email, options.repliesTo)
     message = messageBody
 
     return send_message_or_reply(messageOptions, message)
@@ -371,8 +384,10 @@ def get_display_pages(pagelist: List[str]) -> List[Item]:
 
 def check_messages_folder_path(msg_folder_path: str, tim_msg_folder_path: str) -> Folder:
     """
-    Checks if the /messages/tim-messages folder exists and if not, creates it and
-    adds view rights to logged in users. Also creates the preamble for message documents.
+    Checks if the /messages/tim-messages folder exists and if not, creates it. All users
+     get view access to /messages folder and edit access to /messages/tim-messages folder
+     so that documents for sent messages can be created. Also creates the preamble for
+     message documents.
 
     :param msg_folder_path: path for /messages
     :param tim_msg_folder_path: path for /messages/tim-messages
@@ -446,11 +461,11 @@ def update_tim_msg_doc_settings(message_doc: DocInfo, sender: User, message_body
     message_doc.document.add_setting('macros', s)
 
 
-def create_message_displays(msg_id: int, pages: List[Item], recipients: List[UserGroup]) -> None:
+def create_message_displays(msg: InternalMessage, pages: List[Item], recipients: List[UserGroup]) -> None:
     """
     Creates InternalMessageDisplay entries for all recipients and display pages.
 
-    :param msg_id: Message identifier
+    :param msg: Message
     :param pages: List of pages where message is displayed
     :param recipients: List of message recipients
     :return:
@@ -458,40 +473,32 @@ def create_message_displays(msg_id: int, pages: List[Item], recipients: List[Use
     if pages and recipients:
         for page in pages:
             for rcpt in recipients:
-                display = InternalMessageDisplay()
-                display.message_id = msg_id
-                display.usergroup_id = rcpt.id
-                display.display_doc_id = page.id
+                display = InternalMessageDisplay(message=msg, usergroup=rcpt, display_block=page.block)
                 db.session.add(display)
 
     if pages and not recipients:
         for page in pages:
-            display = InternalMessageDisplay()
-            display.message_id = msg_id
-            display.display_doc_id = page.id
+            display = InternalMessageDisplay(message=msg, display_block=page.block)
             db.session.add(display)
 
     if not pages and recipients:
         for rcpt in recipients:
-            display = InternalMessageDisplay()
-            display.message_id = msg_id
-            display.usergroup_id = rcpt.id
+            display = InternalMessageDisplay(message=msg, usergroup=rcpt)
             db.session.add(display)
 
     if not pages and not recipients:
-        display = InternalMessageDisplay()
-        display.message_id = msg_id
+        display = InternalMessageDisplay(message=msg)
         db.session.add(display)
 
 
-def create_read_receipts(msg_id: int, recipients: List[UserGroup]) -> None:
+def create_read_receipts(msg: InternalMessage, recipients: List[UserGroup]) -> None:
     """
     Create InternalMessageReadReceipt entries for all recipients.
 
-    :param msg_id: Message identifier
+    :param msg: Message
     :param recipients: Message recipients
     :return:
     """
     for recipient in recipients:
-        readreceipt = InternalMessageReadReceipt(rcpt_id=recipient.id, message_id=msg_id)
+        readreceipt = InternalMessageReadReceipt(recipient=recipient, message=msg)
         db.session.add(readreceipt)

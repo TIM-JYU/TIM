@@ -42,8 +42,8 @@
     .readReceiptArea {
         margin-top: 5px;
         display: grid;
-        grid-template-columns: 2% 14% 36% 48%;
-        grid-template-areas: "checkbox label link button";
+        grid-template-columns: 12% 40% 48%;
+        grid-template-areas: "checkbox link button";
 
         input[type='checkbox'] {
             grid-area: checkbox;
@@ -52,7 +52,7 @@
         }
 
         label {
-            grid-area: label;
+            grid-area: checkbox;
             font-weight: normal;
             justify-self: start;
             align-self: start;
@@ -60,9 +60,10 @@
 
         .readReceiptLink {
             grid-area: link;
-            margin-top: 2px;
+            margin-top: 5px;
             font-size: 80%;
             justify-self: start;
+            align-self: start;
         }
 
         .timButton {
