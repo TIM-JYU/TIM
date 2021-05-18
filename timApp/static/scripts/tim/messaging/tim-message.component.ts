@@ -65,7 +65,7 @@ interface ReplyOptions {
 })
 export class TimMessageComponent implements OnInit {
     @Input()
-    message: TimMessageData | undefined;
+    message?: TimMessageData;
 
     messageMaxLength: number = 210;
     messageOverMaxLength: boolean = false;
