@@ -208,7 +208,7 @@ const USER_FIELDS: Record<string, string> = {
                 </button>
             </div>
         </div>
-        <tim-alert *ngIf="lastAddedUser" severity="success" class="success-message">
+        <tim-alert *ngIf="lastAddedUser" severity="success" class="success-message" [closeable]="true">
             <div>
                 <span class="success-text">{{successMessage}}</span>
                 <span class="undo-button" *ngIf="allowUndo && !undone">
