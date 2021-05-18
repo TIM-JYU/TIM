@@ -35,7 +35,6 @@ import {Users} from "../user/userService";
                     </div>
                 </div>
             </div>
-
             <div class="form-group" *ngIf="domain">
                 <label for="list-description" class="short-description control-label col-sm-3">List address: </label>
                 <div class="col-sm-9">
@@ -57,8 +56,6 @@ import {Users} from "../user/userService";
                 <textarea name="list-info" class="list-info form-control"
                           [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
                 </div>
-            </div>
-            <div>
             </div>
             <div>
                 <p class="list-archive-policy-header">Archive policy:</p>
@@ -83,69 +80,69 @@ import {Users} from "../user/userService";
             </div>
             <div class="section">
                 <h3>Options</h3>
-                <div>
+                <div class="indented">
                     <label for="list-subject-prefix">
                         <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
                         Subject prefix.</label>
                 </div>
-            </div>
-            <div>
-                <label for="notify-owner-on-list-change">
-                    <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
-                           [(ngModel)]="notifyOwnerOnListChange"/>
-                    Notify owners on list changes (e.g. user subscribes).</label>
-            </div>
-            <div>
-                <label for="tim-users-can-join">
-                    <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
-                    TIM users can freely join this list.</label>
-            </div>
-            <div>
-                <label for="can-user-unsubscribe">
-                    <input type="checkbox" name="can-user-unsubscribe" [(ngModel)]="canUnsubscribe">
-                    Members can unsubscribe from the list on their own.</label>
-            </div>
-            <div>
-                <label for="non-members-can-send">
-                    <input type="checkbox" name="non-members-can-send" [(ngModel)]="nonMemberMessagePass">
-                    Non members can send messages to list.</label>
-            </div>
-            <div>
-                <label for="only-text">
-                    <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
-                    No HTML messages allowed on the list.</label>
-            </div>
-            <div>
-                <label for="allow-attachments">
-                    <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
-                    Allow attachments on the list.</label>
-            </div>
-            <div>
-                <button class="timButton" (click)="saveOptions()">Save changes</button>
-            </div>
-            <div id="members-section" class="section">
-                <h3>Members</h3>
-                <div id="add-members-section">
-                    <label for="add-multiple-members">Add members</label> <br/>
-                    <textarea id="add-multiple-members" name="add-multiple-members"
-                              [(ngModel)]="membersTextField"></textarea>
-                    <div>
+                <div class="indented">
+                    <label for="notify-owner-on-list-change">
+                        <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
+                               [(ngModel)]="notifyOwnerOnListChange"/>
+                        Notify owners on list changes (e.g. user subscribes).</label>
+                </div>
+                <div class="indented">
+                    <label for="tim-users-can-join">
+                        <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
+                        TIM users can freely join this list.</label>
+                </div>
+                <div class="indented">
+                    <label for="can-user-unsubscribe">
+                        <input type="checkbox" name="can-user-unsubscribe" [(ngModel)]="canUnsubscribe">
+                        Members can unsubscribe from the list on their own.</label>
+                </div>
+                <div class="indented">
+                    <label for="non-members-can-send">
+                        <input type="checkbox" name="non-members-can-send" [(ngModel)]="nonMemberMessagePass">
+                        Non members can send messages to list.</label>
+                </div>
+                <div class="indented">
+                    <label for="only-text">
+                        <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
+                        No HTML messages allowed on the list.</label>
+                </div>
+                <div class="indented">
+                    <label for="allow-attachments">
+                        <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
+                        Allow attachments on the list.</label>
+                </div>
+                <div>
+                    <button class="timButton" (click)="saveOptions()">Save changes</button>
+                </div>
+                <div id="members-section" class="section">
+                    <h3>Members</h3>
+                    <div id="add-members-section">
+                        <label for="add-multiple-members">Add members</label> <br/>
+                        <textarea id="add-multiple-members" name="add-multiple-members"
+                                  [(ngModel)]="membersTextField"></textarea>
                         <div>
-                            <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
-                            <label for="new-member-send-right">New member's send right.</label>
+                            <div>
+                                <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
+                                <label for="new-member-send-right">New member's send right.</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" name="new-member-delivery-right"
+                                       [(ngModel)]="newMemberDeliveryRight">
+                                <label for="new-member-delivery-right">New member's delivery right.</label>
+                            </div>
                         </div>
-                        <div>
-                            <input type="checkbox" name="new-member-delivery-right"
-                                   [(ngModel)]="newMemberDeliveryRight">
-                            <label for="new-member-delivery-right">New member's delivery right.</label>
+                        <button (click)="addNewListMember()" class="timButton">Add new members</button>
+                        <div id="member-add-feedback">
+                            <tim-alert *ngIf="memberAddSucceededResponse"
+                                       severity="success">{{memberAddSucceededResponse}}</tim-alert>
+                            <tim-alert *ngIf="memberAddFailedResponse"
+                                       severity="danger">{{memberAddFailedResponse}}</tim-alert>
                         </div>
-                    </div>
-                    <button (click)="addNewListMember()" class="timButton">Add new members</button>
-                    <div id="member-add-feedback">
-                        <tim-alert *ngIf="memberAddSucceededResponse"
-                                   severity="success">{{memberAddSucceededResponse}}</tim-alert>
-                        <tim-alert *ngIf="memberAddFailedResponse"
-                                   severity="danger">{{memberAddFailedResponse}}</tim-alert>
                     </div>
                 </div>
                 <div class="section">
@@ -265,7 +262,7 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     /**
-     * The current documents document ID.
+     * The current document's document ID.
      */
     getDocId() {
         return documentglobals().curr_item.id;
