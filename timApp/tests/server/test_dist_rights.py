@@ -4,7 +4,7 @@ from pathlib import Path
 from isodate import Duration
 
 from timApp.item.distribute_rights import get_current_rights, do_register_right, ChangeTimeOp, ConfirmOp, \
-    ChangeTimeGroupOp, UnlockOp, QuitOp, UndoQuitOp, UndoConfirmOp, Right
+    ChangeTimeGroupOp, UnlockOp, QuitOp, UndoQuitOp, UndoConfirmOp, Right, ChangeStartTimeGroupOp
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
@@ -37,6 +37,14 @@ class DistRightsTest(TimRouteTest):
             return do_register_right(ChangeTimeGroupOp(type='changetimegroup', group=group, timestamp=dt, secs=secs),
                                      target_name)
 
+        def changestarttimegroup(group: str, incr: timedelta, newtime: datetime):
+            nonlocal dt
+            dt = dt + incr
+            return do_register_right(
+                ChangeStartTimeGroupOp(type='changestarttimegroup', group=group, timestamp=dt, starttime=newtime),
+                target_name,
+            )
+
         def unlock(i: int, incr: timedelta):
             nonlocal dt
             dt = dt + incr
@@ -59,8 +67,8 @@ class DistRightsTest(TimRouteTest):
             return do_register_right(UndoConfirmOp(type='undoconfirm', email=f'test{i}@example.com', timestamp=dt),
                                      target_name)
 
+        base_date = datetime(2021, 5, 25, 10, 0, tzinfo=tz)
         def check(rights, i, rq, d_f, d_t, d_secs, acc_f, acc_t):
-            base_date = datetime(2021, 5, 25, 10, 0, tzinfo=tz)
             self.assertEqual(Right(
                 require_confirm=rq,
                 duration_from=base_date + timedelta(seconds=d_f),
@@ -115,8 +123,18 @@ class DistRightsTest(TimRouteTest):
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, None, None)
         check(r, 2, True, 0, 10 * m, 4 * h + 20, None, None)
         check(r, 3, False, 0, 10 * m, 4 * h, None, None)
+        halfhour = timedelta(minutes=30)
+        r = changestarttimegroup('tg1', twosecs, base_date + halfhour)
+        halfhoursecs = halfhour.total_seconds()
+        check(r, 1, False, halfhoursecs, halfhoursecs + 10 * m, 4 * h + 5 * m, None, None)
+        check(r, 2, True, halfhoursecs, halfhoursecs + 10 * m, 4 * h + 20, None, None)
+        check(r, 3, False, 0, 10 * m, 4 * h, None, None)
+        r = changestarttimegroup('tg1', twosecs, base_date)
+        check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, None, None)
+        check(r, 2, True, 0, 10 * m, 4 * h + 20, None, None)
+        check(r, 3, False, 0, 10 * m, 4 * h, None, None)
         r = unlock(1, twosecs)
-        unlock_time = 2 * 6
+        unlock_time = 2 * 8
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 4 * h + 5 * m + unlock_time)
         r = changetime(1, twosecs, 20)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 4 * h + 5 * m + unlock_time + 20)
@@ -130,7 +148,7 @@ class DistRightsTest(TimRouteTest):
         with self.assertRaises(RouteException):
             r = undoquit(1, twosecs)
         r = quit(1, twosecs)
-        check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 2 * 11)
+        check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 2 * 13)
         with self.assertRaises(RouteException):
             quit(1, twosecs)
         with self.assertRaises(RouteException):
@@ -178,6 +196,31 @@ class DistRightsTest(TimRouteTest):
                 )
         r, _ = get_current_rights(target_name)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 4 * h + 5 * m + unlock_time + 20 + 15 + 5 + 5 + 4)
+        r = changestarttimegroup('testuser1', twosecs, base_date + halfhour)
+        check(r, 1, False, 0, 10 * m, 4 * h + 5 * m,
+              halfhoursecs, halfhoursecs + 4 * h + 5 * m + 20 + 15 + 5 + 5 + 4)
+
+        self.get(
+            '/distRights/changeStartTime',
+            query_string={'target': 'test', 'group': 'tg1', 'minutes': 0, 'redir': '/'},
+            expect_status=400,
+            expect_content='DIST_RIGHTS_START_TIME_GROUP not configured.',
+        )
+        with self.temp_config({
+            'DIST_RIGHTS_START_TIME_GROUP': 'testuser1',
+            'DIST_RIGHTS_SEND_SECRET': 'yyy',
+            'DIST_RIGHTS_RECEIVE_SECRET': 'yyy',
+            'DIST_RIGHTS_HOSTS': {'test': {
+                'hosts': [f'http://{app.config["INTERNAL_PLUGIN_DOMAIN"]}:5001'],
+                'item': d.path,
+            }},
+        }):
+            self.get(
+                '/distRights/changeStartTime',
+                query_string={'target': 'test', 'group': 'tg1', 'minutes': 0, 'redir': 'view/somedoc'},
+                expect_status=302,
+                expect_content='view/somedoc',
+            )
 
     def test_receive_rights(self):
         target_name = "test2"
