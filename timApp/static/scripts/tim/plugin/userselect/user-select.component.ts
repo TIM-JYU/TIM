@@ -61,6 +61,8 @@ const PluginMarkup = t.intersection([
             cancel: nullable(t.string),
             success: nullable(t.string),
             undone: nullable(t.string),
+            undo: nullable(t.string),
+            undoWarning: nullable(t.string),
         }),
     }),
 ]);
@@ -207,12 +209,21 @@ const USER_FIELDS: Record<string, string> = {
                 </button>
             </div>
         </div>
-        <tim-alert *ngIf="lastAddedUser" severity="success" class="success-message">
-            <div>
-                <span class="success-text">{{successMessage}}</span>
+        <tim-alert *ngIf="lastAddedUser" severity="success" [closeable]="!undoing" (closing)="resetView()">
+            <div class="undoable-message">
+                <span class="undoable-text">{{successMessage}}</span>
                 <span class="undo-button" *ngIf="allowUndo && !undone">
                     <tim-loading *ngIf="undoing"></tim-loading>
-                    <button (click)="undoLast()" class="btn btn-danger" [disabled]="undoing" i18n>Undo</button>
+                    <button (click)="verifyUndo = true" class="btn btn-danger"
+                            [disabled]="undoing">{{undoButtonLabel}}</button>
+                </span>
+            </div>
+        </tim-alert>
+        <tim-alert severity="warning" *ngIf="verifyUndo" [closeable]="!undoing" (closing)="resetView()">
+            <div class="undoable-message">
+                <span class="undoable-text">{{undoWarningText}}</span>
+                <span class="undo-button">
+                    <button (click)="undoLast()" class="btn btn-danger">{{undoButtonLabel}}</button>
                 </span>
             </div>
         </tim-alert>
@@ -250,12 +261,48 @@ const USER_FIELDS: Record<string, string> = {
                 </ng-container>
             </div>
         </tim-alert>
-<table class="t9kbd" *ngIf="t9Mode.value">
-<tr><td><button (click)="applyT9('1')">1<br>&nbsp;</button></td><td><button (click)="applyT9('2')">2<br>ABC</button><td><button (click)="applyT9('3')">3<br>DEF</button></td></tr>
-<tr><td><button (click)="applyT9('4')">4<br>GHI</button></td><td><button (click)="applyT9('5')">5<br>JKL</button><td><button (click)="applyT9('6')">6<br>MNO</button></td></tr>
-<tr><td><button (click)="applyT9('7')">7<br>PQRS</button></td><td><button (click)="applyT9('8')">8<br>TUV</button><td><button (click)="applyT9('9')">9<br>WXYZ</button></td></tr>
-<tr><td><button (click)="applyT9('clr')">clr<br>&nbsp;</button></td><td><button (click)="applyT9('0')">0<br>space</button><td><button (click)="applyT9('<=')"><=<br>&nbsp;</button></td></tr>
-</table>        
+        <table class="t9kbd" *ngIf="t9Mode.value">
+            <tr>
+                <td>
+                    <button (click)="applyT9('1')">1<br>&nbsp;</button>
+                </td>
+                <td>
+                    <button (click)="applyT9('2')">2<br>ABC</button>
+                <td>
+                    <button (click)="applyT9('3')">3<br>DEF</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button (click)="applyT9('4')">4<br>GHI</button>
+                </td>
+                <td>
+                    <button (click)="applyT9('5')">5<br>JKL</button>
+                <td>
+                    <button (click)="applyT9('6')">6<br>MNO</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button (click)="applyT9('7')">7<br>PQRS</button>
+                </td>
+                <td>
+                    <button (click)="applyT9('8')">8<br>TUV</button>
+                <td>
+                    <button (click)="applyT9('9')">9<br>WXYZ</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button (click)="applyT9('clr')">clr<br>&nbsp;</button>
+                </td>
+                <td>
+                    <button (click)="applyT9('0')">0<br>space</button>
+                <td>
+                    <button (click)="applyT9('<=')"><=<br>&nbsp;</button>
+                </td>
+            </tr>
+        </table>
     `,
     styleUrls: ["user-select.component.scss"],
 })
@@ -313,6 +360,7 @@ export class UserSelectComponent extends AngularPluginBase<
         name: "T9", // $localize`T9 mode`,
         value: false,
     };
+    verifyUndo: boolean = false;
 
     get successMessage() {
         if (!this.lastAddedUser) {
@@ -327,6 +375,17 @@ export class UserSelectComponent extends AngularPluginBase<
         return this.undone
             ? $localize`Undone permissions for ${this.lastAddedUser?.user.real_name}:INTERPOLATION:.`
             : $localize`Permissions applied to ${this.lastAddedUser?.user.real_name}:INTERPOLATION:.`;
+    }
+
+    get undoButtonLabel() {
+        return this.markup.text.undo ?? $localize`Undo`;
+    }
+
+    get undoWarningText() {
+        return (
+            this.markup.text.undoWarning ??
+            $localize`Are you sure you want to undo the last action?`
+        );
     }
 
     private get searchQueryStrings() {
@@ -348,6 +407,7 @@ export class UserSelectComponent extends AngularPluginBase<
             return;
         }
         this.undoing = true;
+        this.verifyUndo = false;
 
         // Pass possible urlmacros
         const params = new HttpParams({
@@ -503,6 +563,7 @@ export class UserSelectComponent extends AngularPluginBase<
         this.selectedUser = undefined;
         this.lastSearchResult = undefined;
         this.searchString = "";
+        this.verifyUndo = false;
         if (!isMobileDevice()) {
             this.searchInput.nativeElement.focus();
         }
@@ -587,12 +648,7 @@ export class UserSelectComponent extends AngularPluginBase<
         } else {
             this.searchString += s;
         }
-        if (this.searchString.length >= this.inputMinLength) {
-            this.doSearch();
-        } else {
-            // this.inputTyped.next(); // TODO: Should empty found list
-            this.lastSearchResult = undefined;
-        }
+        this.inputTyped.next(this.searchString);
     }
 
     getAttributeType() {
@@ -616,6 +672,8 @@ export class UserSelectComponent extends AngularPluginBase<
                 cancel: null,
                 success: null,
                 undone: null,
+                undo: null,
+                undoWarning: null,
             },
             inputMinLength: 3,
             autoSearchDelay: 0,
