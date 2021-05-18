@@ -28,7 +28,7 @@ import {Users} from "../user/userService";
                     <div class="input-group">
                         <input type="text" class="form-control" name="list-name" id="list-name" disabled
                                [(ngModel)]="listname"/>
-                        <div class="input-group-addon">@</div>
+                        <div class="input-group-addon" id="domain-indicator">@</div>
                         <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
                             <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
                         </select>
@@ -60,7 +60,7 @@ import {Users} from "../user/userService";
             <div>
                 <p class="list-archive-policy-header">Archive policy:</p>
                 <!-- Variable archiveoptions is reversed, so indexing for display has to accommodate. -->
-                <p>{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
+                <p class="indented">{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
                 <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
                 <!--
                 <ul id="archive-policy-list">
