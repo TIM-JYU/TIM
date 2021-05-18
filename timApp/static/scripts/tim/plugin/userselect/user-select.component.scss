@@ -53,35 +53,29 @@ form.search {
   }
 }
 
-.success-message {
-  ::ng-deep > div {
-    display: flex;
-    align-items: baseline;
+.undoable-message {
+  flex-grow: 1;
+  align-items: center;
+  display: flex;
+  @media (max-width: $screen-xs-max) {
+    flex-direction: column;
+  }
 
-    & > div {
-      flex-grow: 1;
-      align-items: center;
-      display: flex;
-      @media (max-width: $screen-xs-max) {
-        flex-direction: column;
-      }
+  .undoable-text {
+    flex-grow: 1;
+  }
 
-      .success-text {
-        flex-grow: 1;
-      }
+  .undo-button {
+    tim-loading {
+      margin-right: 0.5rem;
+    }
 
-      .undo-button {
-        tim-loading {
-          margin-right: 0.5rem;
-        }
-
-        @media (max-width: $screen-xs-max) {
-          margin-top: 1rem;
-        }
-      }
+    @media (max-width: $screen-xs-max) {
+      margin-top: 1rem;
     }
   }
 }
+
 
 .search-result {
   margin-top: 0.5rem;
@@ -198,12 +192,13 @@ pre {
 }
 
 table.t9kbd {
-    position: fixed;
-    bottom: 10px;
-    width: auto;
-    z-index: 1000;
+  position: fixed;
+  bottom: 10px;
+  width: auto;
+  z-index: 1000;
+  touch-action: manipulation;
 }
 
 .t9kbd button {
-    width: 5em;
+  width: 5em;
 }
