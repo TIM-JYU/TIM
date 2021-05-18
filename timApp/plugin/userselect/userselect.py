@@ -318,6 +318,9 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
             cur_user,
             allow_non_teacher=False)
 
+        # For now there is only need to commit on field save
+        db.session.commit()
+
     return json_response({
         "distributionErrors": errors
     })
