@@ -1,4 +1,4 @@
-import {Component, Input} from "@angular/core";
+import {Component, EventEmitter, Input, Output} from "@angular/core";
 import {AlertSeverity} from "tim/ui/formErrorMessage";
 
 @Component({
@@ -6,8 +6,8 @@ import {AlertSeverity} from "tim/ui/formErrorMessage";
     template: `
         <div *ngIf="open" class="alert alert-{{ severity }}">
             <span class="glyphicon glyphicon-{{getIcon()}}"></span>&nbsp;
-            <ng-content></ng-content>
-            <i *ngIf="closeable" role="button" class="glyphicon glyphicon-remove" (click)="open = false"></i>
+            <div class="content"><ng-content></ng-content></div>
+            <i *ngIf="closeable" role="button" class="glyphicon glyphicon-remove" (click)="onClose()"></i>
         </div>
     `,
     styleUrls: ["tim-alert.component.scss"],
@@ -15,7 +15,13 @@ import {AlertSeverity} from "tim/ui/formErrorMessage";
 export class TimAlertComponent {
     @Input() severity: AlertSeverity = "danger";
     @Input() closeable: boolean = false;
+    @Output() closing: EventEmitter<void> = new EventEmitter<void>();
     open = true;
+
+    onClose() {
+        this.closing.emit();
+        this.open = false;
+    }
 
     getIcon() {
         switch (this.severity) {

@@ -3,6 +3,10 @@ div.alert {
   align-items: baseline;
 }
 
+div.content {
+  flex-grow: 1;
+}
+
 i.glyphicon-remove {
   margin-left: 1em;
 }
