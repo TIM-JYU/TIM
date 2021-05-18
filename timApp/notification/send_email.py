@@ -15,7 +15,7 @@ def send_email(
         rcpt: str,
         subject: str,
         msg: str,
-        mail_from: str = app.config['HELP_EMAIL'],
+        mail_from: str = app.config['MAIL_FROM'],
         reply_to: str = app.config['NOREPLY_EMAIL'],
 ) -> None:
     if is_testing():
@@ -35,7 +35,7 @@ def send_email_impl(
         rcpt: str,
         subject: str,
         msg: str,
-        mail_from: str = app.config['HELP_EMAIL'],
+        mail_from: str = app.config['MAIL_FROM'],
         reply_to: str = app.config['NOREPLY_EMAIL'],
 ) -> None:
     with flask_app.app_context():
@@ -66,7 +66,7 @@ def multi_send_email(
         rcpt: str,
         subject: str,
         msg: str,
-        mail_from: str = app.config['HELP_EMAIL'],
+        mail_from: str = app.config['MAIL_FROM'],
         reply_to: str = app.config['NOREPLY_EMAIL'],
         bcc: str = ''
 ) -> None:
@@ -87,7 +87,7 @@ def multi_send_email_impl(
         rcpt: str,
         subject: str,
         msg: str,
-        mail_from: str = app.config['HELP_EMAIL'],
+        mail_from: str = app.config['MAIL_FROM'],
         reply_to: str = app.config['NOREPLY_EMAIL'],
         bcc: str = ''
 ) -> None:
