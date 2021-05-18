@@ -62,6 +62,7 @@ const PluginMarkup = t.intersection([
             success: nullable(t.string),
             undone: nullable(t.string),
             undo: nullable(t.string),
+            undoWarning: nullable(t.string),
         }),
     }),
 ]);
@@ -208,12 +209,20 @@ const USER_FIELDS: Record<string, string> = {
                 </button>
             </div>
         </div>
-        <tim-alert *ngIf="lastAddedUser" severity="success" class="success-message" [closeable]="true">
-            <div>
-                <span class="success-text">{{successMessage}}</span>
+        <tim-alert *ngIf="lastAddedUser" severity="success" [closeable]="!undoing" (closing)="resetView()">
+            <div class="undoable-message">
+                <span class="undoable-text">{{successMessage}}</span>
                 <span class="undo-button" *ngIf="allowUndo && !undone">
                     <tim-loading *ngIf="undoing"></tim-loading>
-                    <button (click)="undoLast()" class="btn btn-danger" [disabled]="undoing">{{undoButtonLabel}}</button>
+                    <button (click)="verifyUndo = true" class="btn btn-danger" [disabled]="undoing">{{undoButtonLabel}}</button>
+                </span>
+            </div>
+        </tim-alert>
+        <tim-alert severity="warning" *ngIf="verifyUndo" [closeable]="!undoing" (closing)="resetView()">
+            <div class="undoable-message">
+                <span class="undoable-text">{{undoWarningText}}</span>
+                <span class="undo-button">
+                    <button (click)="undoLast()" class="btn btn-danger">{{undoButtonLabel}}</button>
                 </span>
             </div>
         </tim-alert>
@@ -350,6 +359,7 @@ export class UserSelectComponent extends AngularPluginBase<
         name: "T9", // $localize`T9 mode`,
         value: false,
     };
+    verifyUndo: boolean = false;
 
     get successMessage() {
         if (!this.lastAddedUser) {
@@ -368,6 +378,13 @@ export class UserSelectComponent extends AngularPluginBase<
 
     get undoButtonLabel() {
         return this.markup.text.undo ?? $localize`Undo`;
+    }
+
+    get undoWarningText() {
+        return (
+            this.markup.text.undoWarning ??
+            $localize`Are you sure you want to undo the last action?`
+        );
     }
 
     private get searchQueryStrings() {
@@ -389,6 +406,7 @@ export class UserSelectComponent extends AngularPluginBase<
             return;
         }
         this.undoing = true;
+        this.verifyUndo = false;
 
         // Pass possible urlmacros
         const params = new HttpParams({
@@ -544,6 +562,7 @@ export class UserSelectComponent extends AngularPluginBase<
         this.selectedUser = undefined;
         this.lastSearchResult = undefined;
         this.searchString = "";
+        this.verifyUndo = false;
         if (!isMobileDevice()) {
             this.searchInput.nativeElement.focus();
         }
@@ -658,6 +677,7 @@ export class UserSelectComponent extends AngularPluginBase<
                 success: null,
                 undone: null,
                 undo: null,
+                undoWarning: null,
             },
             inputMinLength: 3,
             autoSearchDelay: 0,

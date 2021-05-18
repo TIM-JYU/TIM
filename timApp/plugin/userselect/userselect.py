@@ -108,6 +108,7 @@ class TextOptions:
     success: Optional[str] = None
     undone: Optional[str] = None
     undo: Optional[str] = None
+    undoWarning: Optional[str] = None
 
 
 @dataclass
