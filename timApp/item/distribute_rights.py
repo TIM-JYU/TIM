@@ -3,15 +3,18 @@ from collections import defaultdict
 from dataclasses import dataclass, replace, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Literal, Union, Tuple, List, Dict, Optional, DefaultDict
+from typing import Literal, Union, Tuple, List, Dict, Optional, DefaultDict, Callable, TypeVar
+from urllib.parse import urlparse
 
 import filelock
-from flask import Response
+from flask import Response, flash, request
 from isodate import Duration
 from werkzeug.utils import secure_filename
 
+from timApp.auth.accesshelper import AccessDenied
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import get_duration_now, do_confirm
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
@@ -21,10 +24,10 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import RouteException
-from timApp.util.flask.responsehelper import ok_response, to_json_str, json_response
+from timApp.util.flask.responsehelper import ok_response, to_json_str, json_response, safe_redirect
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.secret import check_secret, get_secret_or_abort
-from timApp.util.utils import read_json_lines, collect_errors_from_hosts
+from timApp.util.utils import read_json_lines, collect_errors_from_hosts, get_current_time
 from tim_common.marshmallow_dataclass import field_for_schema, class_schema
 from tim_common.utils import DurationSchema
 from tim_common.vendor.requests_futures import FuturesSession
@@ -84,6 +87,14 @@ class UndoQuitOp:
 
 
 @dataclass
+class ChangeStartTimeGroupOp:
+    type: Literal['changestarttimegroup']
+    group: str
+    starttime: datetime
+    timestamp: datetime
+
+
+@dataclass
 class Right:
     require_confirm: bool
     duration_from: Optional[datetime]
@@ -93,7 +104,7 @@ class Right:
     accessible_to: Optional[datetime]
 
 
-RightOp = Union[ConfirmOp, UnlockOp, ChangeTimeOp, QuitOp, UndoConfirmOp, UndoQuitOp, ChangeTimeGroupOp]
+RightOp = Union[ConfirmOp, UnlockOp, ChangeTimeOp, QuitOp, UndoConfirmOp, UndoQuitOp, ChangeTimeGroupOp, ChangeStartTimeGroupOp]
 RightOpSchema = field_for_schema(RightOp)  # type: ignore[arg-type]
 
 RightSchema = class_schema(Right, base_schema=DurationSchema)()
@@ -107,6 +118,9 @@ class RightLogEntry:
     right: Right
 
 
+T = TypeVar('T', bound=RightOp)
+
+
 @dataclass
 class RightLog:
     initial_right: Right
@@ -114,30 +128,17 @@ class RightLog:
     op_history: DefaultDict[Email, List[RightLogEntry]] = field(default_factory=lambda: defaultdict(list))
 
     def add_op(self, r: RightOp) -> None:
-        op_history = self.op_history
         if isinstance(r, ChangeTimeGroupOp):
-            emails = self.group_cache.get(r.group)
-            if not emails:
-                emails = [e for e, in (
-                    UserGroup.query
-                        .join(User, UserGroup.users)
-                        .filter(UserGroup.name == r.group)
-                        .with_entities(User.email)
-                )]
-            if not emails:
-                raise Exception(f'Usergroup {r.group} not found or it has no members')
-            self.group_cache[r.group] = [e for e in emails]
-            for e in emails:
-                l_op = self.latest_op(e)
-                if l_op and isinstance(l_op.op, QuitOp):
-                    continue
-                rig = self.get_right(e)
-                change_time(rig, r)
-                op_history[e].append(RightLogEntry(r, rig))
+            emails = self.get_group_emails(r)
+            self.process_group_rights(emails, change_time, r)
+            return
+        if isinstance(r, ChangeStartTimeGroupOp):
+            emails = self.get_group_emails(r)
+            self.process_group_rights(emails, change_starttime, r)
             return
         email = r.email
         curr_right = self.get_right(email)
-        curr_hist = op_history[email]
+        curr_hist = self.op_history[email]
         if isinstance(r, ConfirmOp):
             do_confirm(curr_right, r.timestamp)
         elif isinstance(r, UnlockOp):
@@ -161,6 +162,35 @@ class RightLog:
             raise Exception('unknown op')
         curr_hist.append(RightLogEntry(r, curr_right))
 
+    def process_group_rights(
+            self,
+            emails: List[Email],
+            fn: Callable[[Right, T], None],
+            r: T,
+    ) -> None:
+        op_history = self.op_history
+        for e in emails:
+            l_op = self.latest_op(e)
+            if l_op and isinstance(l_op.op, QuitOp):
+                continue
+            rig = self.get_right(e)
+            fn(rig, r)
+            op_history[e].append(RightLogEntry(r, rig))
+
+    def get_group_emails(self, r: Union[ChangeTimeGroupOp, ChangeStartTimeGroupOp]) -> List[Email]:
+        emails = self.group_cache.get(r.group)
+        if not emails:
+            emails = [e for e, in (
+                UserGroup.query
+                    .join(User, UserGroup.users)
+                    .filter(UserGroup.name == r.group)
+                    .with_entities(User.email)
+            )]
+        if not emails:
+            raise Exception(f'Usergroup {r.group} not found or it has no members')
+        self.group_cache[r.group] = [e for e in emails]
+        return emails
+
     def get_right(self, email: Email) -> Right:
         latest = self.latest_op(email)
         # Make a copy of the right so we keep it immutable.
@@ -178,6 +208,24 @@ def change_time(right: Right, op: Union[ChangeTimeOp, ChangeTimeGroupOp]) -> Non
         right.accessible_to += timedelta(seconds=op.secs)
     if right.duration and not right.accessible_from:
         right.duration += timedelta(seconds=op.secs)
+
+
+def change_starttime(right: Right, op: ChangeStartTimeGroupOp) -> None:
+    if right.accessible_from:
+        # non-duration right (or an unlocked duration)
+        old_acc_from = right.accessible_from
+        right.accessible_from = op.starttime
+        # Keep the difference (accessible_to - accessible_from) constant.
+        # It's not necessarily always desired, but makes sense in exams with non-duration rights.
+        if right.accessible_to:
+            dur = right.accessible_to - old_acc_from
+            right.accessible_to = right.accessible_from + dur
+    elif right.duration_from:
+        dur_to = right.duration_to
+        # Keep the difference (duration_to - duration_from) constant.
+        unlock_period = dur_to - right.duration_from if dur_to else None
+        right.duration_from = op.starttime
+        right.duration_to = right.duration_from + unlock_period if unlock_period else None
 
 
 def get_current_rights(target: str) -> Tuple[RightLog, Path]:
@@ -202,7 +250,7 @@ def read_rights(path: Path, index: int) -> Tuple[List[RightOp], List[Dict]]:
 
 def do_register_right(op: RightOp, target: str) -> RightLog:
     rights, right_log_path = get_current_rights(target)
-    if not isinstance(op, ChangeTimeGroupOp):
+    if not isinstance(op, (ChangeTimeGroupOp, ChangeStartTimeGroupOp)):
         latest_op = rights.latest_op(op.email)
         if latest_op and isinstance(latest_op.op, QuitOp) and not isinstance(op, UndoQuitOp):
             raise RouteException('Cannot register a non-UndoQuitOp after QuitOp')
@@ -215,7 +263,7 @@ def do_register_right(op: RightOp, target: str) -> RightLog:
 
 
 def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> List[str]:
-    emails = rights.group_cache[op.group] if isinstance(op, ChangeTimeGroupOp) else [op.email]
+    emails = rights.group_cache[op.group] if isinstance(op, (ChangeTimeGroupOp, ChangeStartTimeGroupOp)) else [op.email]
     session = FuturesSession()
     futures = []
     host_config = app.config['DIST_RIGHTS_HOSTS'][target]
@@ -307,3 +355,35 @@ def receive_right(
         )
     db.session.commit()
     return ok_response()
+
+
+@dist_bp.route('/changeStartTime')
+def change_starttime_route(
+        group: str,
+        target: str,  # comma-separated; TODO: List[str] doesn't work for GET requests
+        minutes: int,
+        redir: str,
+) -> Response:
+    targets = target.split(',')
+    u = get_current_user_object()
+    conf_name = 'DIST_RIGHTS_START_TIME_GROUP'
+    start_time_group = app.config[conf_name]
+    if not start_time_group:
+        raise RouteException(f'{conf_name} not configured.')
+    ug = UserGroup.get_by_name(start_time_group)
+    if u not in ug.users and not u.is_admin:
+        raise AccessDenied('You are not in the group that can change the start time.')
+    curr_time = get_current_time()
+    op = ChangeStartTimeGroupOp(
+        type='changestarttimegroup',
+        timestamp=curr_time,
+        group=group,
+        starttime=curr_time + timedelta(minutes=minutes)
+    )
+    errors = register_right_impl(op, targets)
+    if errors:
+        flash(str(errors))
+    parsed = urlparse(redir)
+    if parsed.scheme or parsed.netloc:
+        raise RouteException('redir must be relative')
+    return safe_redirect(request.host_url + redir)

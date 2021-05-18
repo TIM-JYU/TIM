@@ -214,6 +214,9 @@ DIST_RIGHTS_REGISTER_HOSTS = []
 # When calling /register, send this secret.
 DIST_RIGHTS_REGISTER_SEND_SECRET = None
 
+# The group that is allowed to call /changeStartTime.
+DIST_RIGHTS_START_TIME_GROUP = None
+
 # The set of allowed IP networks. The following actions are restricted:
 # * Login and email registration are denied for non-admins.
 # * Answer route is blocked.
