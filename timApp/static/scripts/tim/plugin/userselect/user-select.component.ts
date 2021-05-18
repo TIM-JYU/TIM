@@ -649,12 +649,6 @@ export class UserSelectComponent extends AngularPluginBase<
             this.searchString += s;
         }
         this.inputTyped.next(this.searchString);
-        // if (this.searchString.length >= this.inputMinLength) {
-        //     void this.doSearch();
-        // } else {
-        //     // this.inputTyped.next(); // TODO: Should empty found list
-        //     this.lastSearchResult = undefined;
-        // }
     }
 
     getAttributeType() {
