@@ -250,12 +250,48 @@ const USER_FIELDS: Record<string, string> = {
                 </ng-container>
             </div>
         </tim-alert>
-<table class="t9kbd" *ngIf="t9Mode.value">
-<tr><td><button (click)="applyT9('1')">1<br>&nbsp;</button></td><td><button (click)="applyT9('2')">2<br>ABC</button><td><button (click)="applyT9('3')">3<br>DEF</button></td></tr>
-<tr><td><button (click)="applyT9('4')">4<br>GHI</button></td><td><button (click)="applyT9('5')">5<br>JKL</button><td><button (click)="applyT9('6')">6<br>MNO</button></td></tr>
-<tr><td><button (click)="applyT9('7')">7<br>PQRS</button></td><td><button (click)="applyT9('8')">8<br>TUV</button><td><button (click)="applyT9('9')">9<br>WXYZ</button></td></tr>
-<tr><td><button (click)="applyT9('clr')">clr<br>&nbsp;</button></td><td><button (click)="applyT9('0')">0<br>space</button><td><button (click)="applyT9('<=')"><=<br>&nbsp;</button></td></tr>
-</table>        
+        <table class="t9kbd" *ngIf="t9Mode.value">
+            <tr>
+                <td>
+                    <button (click)="applyT9('1')">1<br>&nbsp;</button>
+                </td>
+                <td>
+                    <button (click)="applyT9('2')">2<br>ABC</button>
+                <td>
+                    <button (click)="applyT9('3')">3<br>DEF</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button (click)="applyT9('4')">4<br>GHI</button>
+                </td>
+                <td>
+                    <button (click)="applyT9('5')">5<br>JKL</button>
+                <td>
+                    <button (click)="applyT9('6')">6<br>MNO</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button (click)="applyT9('7')">7<br>PQRS</button>
+                </td>
+                <td>
+                    <button (click)="applyT9('8')">8<br>TUV</button>
+                <td>
+                    <button (click)="applyT9('9')">9<br>WXYZ</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <button (click)="applyT9('clr')">clr<br>&nbsp;</button>
+                </td>
+                <td>
+                    <button (click)="applyT9('0')">0<br>space</button>
+                <td>
+                    <button (click)="applyT9('<=')"><=<br>&nbsp;</button>
+                </td>
+            </tr>
+        </table>
     `,
     styleUrls: ["user-select.component.scss"],
 })
