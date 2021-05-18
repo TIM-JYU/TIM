@@ -81,37 +81,44 @@ import {Users} from "../user/userService";
                 </ul>
                 -->
             </div>
-            
             <div class="section">
                 <h3>Options</h3>
-                <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
-                <label for="list-subject-prefix">Subject prefix.</label>
+                <div>
+                    <label for="list-subject-prefix">
+                        <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
+                        Subject prefix.</label>
+                </div>
             </div>
             <div>
-                <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
-                       [(ngModel)]="notifyOwnerOnListChange"/>
-                <label for="notify-owner-on-list-change">Notify owners on list changes (e.g. user subscribes).</label>
+                <label for="notify-owner-on-list-change">
+                    <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
+                           [(ngModel)]="notifyOwnerOnListChange"/>
+                    Notify owners on list changes (e.g. user subscribes).</label>
             </div>
             <div>
-                <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
-                <label for="tim-users-can-join">TIM users can freely join this list.</label>
+                <label for="tim-users-can-join">
+                    <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
+                    TIM users can freely join this list.</label>
             </div>
             <div>
-                <input type="checkbox" name="can-user-unsubscribe" [(ngModel)]="canUnsubscribe">
-                <label for="can-user-unsubscribe">Members can unsubscribe from the list on their own.</label>
+                <label for="can-user-unsubscribe">
+                    <input type="checkbox" name="can-user-unsubscribe" [(ngModel)]="canUnsubscribe">
+                    Members can unsubscribe from the list on their own.</label>
             </div>
             <div>
-                <input type="checkbox" name="non-members-can-send" [(ngModel)]="nonMemberMessagePass">
-                <label for="non-members-can-send">Non members can send messages to list.</label>
+                <label for="non-members-can-send">
+                    <input type="checkbox" name="non-members-can-send" [(ngModel)]="nonMemberMessagePass">
+                    Non members can send messages to list.</label>
             </div>
             <div>
-                <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
-                <label for="only-text">No HTML messages allowed on the list.</label>
+                <label for="only-text">
+                    <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
+                    No HTML messages allowed on the list.</label>
             </div>
-
             <div>
-                <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
-                <label for="allow-attachments">Allow attachments on the list.</label>
+                <label for="allow-attachments">
+                    <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
+                    Allow attachments on the list.</label>
             </div>
             <div>
                 <button class="timButton" (click)="saveOptions()">Save changes</button>
