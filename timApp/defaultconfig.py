@@ -57,6 +57,10 @@ PLUGIN_CONNECT_TIMEOUT = 0.5
 # When enabled, the readingtypes on_screen and hover_par will not be saved in the database.
 DISABLE_AUTOMATIC_READINGS = False
 HELP_EMAIL = 'tim@jyu.fi'
+
+# Default sender address for email.
+MAIL_FROM = 'tim@jyu.fi'
+
 ERROR_EMAIL = 'timwuff.group@korppi.jyu.fi'
 WUFF_EMAIL = 'wuff@tim.jyu.fi'
 NOREPLY_EMAIL = 'no-reply@tim.jyu.fi'
