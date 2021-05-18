@@ -28,7 +28,8 @@ interface ReplyOptions {
                 <p class="message-heading">{{heading}}</p>
                 <div class="fullMessageContent" *ngIf="showFullContent">
                     <div [innerHTML]="fullContent"></div>
-                    <p *ngIf="messageOverMaxLength" class="toggleReadMore"><a (click)="toggleDisplayedContentLength()">Read less</a></p>
+                    <p *ngIf="messageOverMaxLength" class="toggleReadMore"><a (click)="toggleDisplayedContentLength()">Read
+                        less</a></p>
                 </div>
                 <div class="cutMessageContent" *ngIf="!showFullContent">
                     <div [innerHTML]="shownContent"></div>
@@ -45,10 +46,10 @@ interface ReplyOptions {
                         <span *ngIf="replySent">Sent!</span>
                     </div>
                 </div>
-                <div class="readReceiptArea">
-                    <input type="checkbox" name="mark-as-read" id="mark-as-read"
-                           [disabled]="!canMarkAsRead || markedAsRead" (click)="markAsRead()"/>
-                    <label for="mark-as-read">Mark as Read</label>
+                <form class="readReceiptArea">
+                    <label><input type="checkbox" name="mark-as-read" id="mark-as-read"
+                                  [disabled]="!canMarkAsRead || markedAsRead" (click)="markAsRead()"/> Mark as
+                        Read</label>
                     <span class="readReceiptLink"
                           *ngIf="markedAsRead">Read receipt can be cancelled in <a href="messages/tim-messages">your messages</a></span>
                     <button class="timButton" title="Close Message"
@@ -56,7 +57,7 @@ interface ReplyOptions {
                             (click)="closeMessage()">
                         Close
                     </button>
-                </div>
+                </form>
             </div>
         </ng-container>
     `,
@@ -64,7 +65,7 @@ interface ReplyOptions {
 })
 export class TimMessageComponent implements OnInit {
     @Input()
-    message: TimMessageData | undefined;
+    message?: TimMessageData;
 
     messageMaxLength: number = 210;
     messageOverMaxLength: boolean = false;
