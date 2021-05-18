@@ -88,6 +88,8 @@ def qst_pick_expls(orig_expls: Dict[str, T], order_array: List[int]) -> Dict[str
     pick items from dict where keys are str converted integers in order given by order_array
     indices start from 1
     """
+    if orig_expls is None:
+        orig_expls = {}
     ret = {}
     for i, val in enumerate(order_array):
         pos = str(val)
@@ -111,7 +113,10 @@ def create_points_table(points: str) -> List[Dict[str, float]]:
                     if len(col_points) == 1:
                         row_points_dict[col_points[0]] = 1.0
                     else:
-                        row_points_dict[col_points[0]] = float(col_points[1])
+                        try:
+                            row_points_dict[col_points[0]] = float(col_points[1])
+                        except ValueError:
+                            pass
             points_table.append(row_points_dict)
     return points_table
 
