@@ -473,12 +473,12 @@ def create_message_displays(msg: InternalMessage, pages: List[Item], recipients:
     if pages and recipients:
         for page in pages:
             for rcpt in recipients:
-                display = InternalMessageDisplay(message=msg, usergroup=rcpt, display_block=page)
+                display = InternalMessageDisplay(message=msg, usergroup=rcpt, display_block=page.block)
                 db.session.add(display)
 
     if pages and not recipients:
         for page in pages:
-            display = InternalMessageDisplay(message=msg, display_block=page)
+            display = InternalMessageDisplay(message=msg, display_block=page.block)
             db.session.add(display)
 
     if not pages and recipients:
