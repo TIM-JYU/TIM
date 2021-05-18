@@ -196,6 +196,7 @@ table.t9kbd {
   bottom: 10px;
   width: auto;
   z-index: 1000;
+  touch-action: manipulation;
 }
 
 .t9kbd button {

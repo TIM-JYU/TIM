@@ -214,7 +214,8 @@ const USER_FIELDS: Record<string, string> = {
                 <span class="undoable-text">{{successMessage}}</span>
                 <span class="undo-button" *ngIf="allowUndo && !undone">
                     <tim-loading *ngIf="undoing"></tim-loading>
-                    <button (click)="verifyUndo = true" class="btn btn-danger" [disabled]="undoing">{{undoButtonLabel}}</button>
+                    <button (click)="verifyUndo = true" class="btn btn-danger"
+                            [disabled]="undoing">{{undoButtonLabel}}</button>
                 </span>
             </div>
         </tim-alert>
@@ -647,12 +648,13 @@ export class UserSelectComponent extends AngularPluginBase<
         } else {
             this.searchString += s;
         }
-        if (this.searchString.length >= this.inputMinLength) {
-            this.doSearch();
-        } else {
-            // this.inputTyped.next(); // TODO: Should empty found list
-            this.lastSearchResult = undefined;
-        }
+        this.inputTyped.next(this.searchString);
+        // if (this.searchString.length >= this.inputMinLength) {
+        //     void this.doSearch();
+        // } else {
+        //     // this.inputTyped.next(); // TODO: Should empty found list
+        //     this.lastSearchResult = undefined;
+        // }
     }
 
     getAttributeType() {
