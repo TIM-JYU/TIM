@@ -129,7 +129,7 @@ const USER_FIELDS: Record<string, string> = {
 
             <ng-template #submitButton>
                 <button class="timButton btn-lg" i18n
-                        [disabled]="!queryHandler || !searchForm.form.valid || search || undoing">
+                        [disabled]="!queryHandler || !searchForm.form.valid || searching || undoing">
                     Search
                 </button>
             </ng-template>
@@ -156,7 +156,7 @@ const USER_FIELDS: Record<string, string> = {
             </ng-template>
 
         </form>
-        <div class="progress" *ngIf="!isInPreview && (search || !queryHandler)">
+        <div class="progress" *ngIf="!isInPreview && (searching || !queryHandler)">
             <div class="progress-bar progress-bar-striped active" style="width: 100%;"></div>
         </div>
         <div class="search-result" *ngIf="lastSearchResult">
@@ -324,7 +324,7 @@ export class UserSelectComponent extends AngularPluginBase<
 
     searchString: string = "";
     inputMinLength!: number;
-    search: boolean = false;
+    searching: boolean = false;
     applying: boolean = false;
     searchPress: Subject<void> = new Subject();
     inputTyped: Subject<string> = new Subject();
@@ -358,7 +358,11 @@ export class UserSelectComponent extends AngularPluginBase<
         value: false,
     };
     t9Mode: SearchOptionToggle = {
-        name: "T9", // $localize`T9 mode`,
+        name: $localize`T9 keyboard`,
+        value: false,
+    };
+    autoApplyOnFullMatch: SearchOptionToggle = {
+        name: $localize`Auto apply on match`,
         value: false,
     };
     verifyUndo: boolean = false;
@@ -463,27 +467,12 @@ export class UserSelectComponent extends AngularPluginBase<
             this.scanCode = false;
         }
         this.searchString = result.getText();
-        const scanOk = await this.doSearch();
-        if (
-            scanOk &&
-            this.lastSearchResult?.allMatchCount != 0 &&
-            this.markup.scanner.beepOnSuccess
-        ) {
-            this.beepSuccess = await playBeep("beep_ok", this.beepSuccess);
-        }
-        if (
-            (!scanOk || this.lastSearchResult?.allMatchCount == 0) &&
+
+        await this.search(
+            this.markup.scanner.applyOnMatch,
+            this.markup.scanner.beepOnSuccess,
             this.markup.scanner.beepOnFailure
-        ) {
-            this.beepFail = await playBeep("beep_fail", this.beepFail);
-        }
-        if (
-            this.lastSearchResult &&
-            this.markup.scanner.applyOnMatch &&
-            this.lastSearchResult.matches.length == 1
-        ) {
-            await this.apply();
-        }
+        );
 
         if (
             this.markup.scanner.continuousMatch &&
@@ -574,9 +563,91 @@ export class UserSelectComponent extends AngularPluginBase<
         }
     }
 
-    async doSearch() {
+    applyT9(s: string) {
+        if (s === "clr") {
+            this.resetView();
+            return;
+        }
+        if (s === "<=") {
+            // bs
+            if (this.searchString.length > 0) {
+                this.searchString = this.searchString.substr(
+                    0,
+                    this.searchString.length - 1
+                );
+            }
+        } else {
+            this.searchString += s;
+        }
+        this.inputTyped.next(this.searchString);
+    }
+
+    getAttributeType() {
+        return PluginFields;
+    }
+
+    // Specify full return type for better IDE type checking
+    getDefaultMarkup(): t.TypeOf<typeof PluginMarkup> {
+        return {
+            scanner: {
+                enabled: false,
+                scanInterval: 1.5,
+                applyOnMatch: false,
+                continuousMatch: false,
+                waitBetweenScans: 0,
+                beepOnSuccess: false,
+                beepOnFailure: false,
+            },
+            text: {
+                apply: null,
+                cancel: null,
+                success: null,
+                undone: null,
+                undo: null,
+                undoWarning: null,
+            },
+            inputMinLength: 3,
+            autoSearchDelay: 0,
+            preFetch: false,
+            maxMatches: 10,
+            selectOnce: false,
+            allowUndo: false,
+            sortBy: [],
+            displayFields: ["username", "realname"],
+        };
+    }
+
+    private async search(
+        applyOnMatch: boolean = false,
+        beepOnSuccess: boolean = false,
+        beepOnFailure: boolean = false
+    ) {
+        const scanOk = await this.doSearch();
+        if (
+            scanOk &&
+            this.lastSearchResult?.allMatchCount != 0 &&
+            beepOnSuccess
+        ) {
+            this.beepSuccess = await playBeep("beep_ok", this.beepSuccess);
+        }
+        if (
+            (!scanOk || this.lastSearchResult?.allMatchCount == 0) &&
+            beepOnFailure
+        ) {
+            this.beepFail = await playBeep("beep_fail", this.beepFail);
+        }
+        if (
+            this.lastSearchResult &&
+            applyOnMatch &&
+            this.lastSearchResult.matches.length == 1
+        ) {
+            await this.apply();
+        }
+    }
+
+    private async doSearch() {
         this.undone = false;
-        this.search = true;
+        this.searching = true;
         this.lastSearchResult = undefined;
         this.lastAddedUser = undefined;
         this.lastAddedUser = undefined;
@@ -635,63 +706,9 @@ export class UserSelectComponent extends AngularPluginBase<
                 result.result.errorMessage
             );
         }
-        this.search = false;
+        this.searching = false;
         this.listenSearchInput();
         return result.ok;
-    }
-
-    applyT9(s: string) {
-        if (s === "clr") {
-            this.resetView();
-            return;
-        }
-        if (s === "<=") {
-            // bs
-            if (this.searchString.length > 0) {
-                this.searchString = this.searchString.substr(
-                    0,
-                    this.searchString.length - 1
-                );
-            }
-        } else {
-            this.searchString += s;
-        }
-        this.inputTyped.next(this.searchString);
-    }
-
-    getAttributeType() {
-        return PluginFields;
-    }
-
-    // Specify full return type for better IDE type checking
-    getDefaultMarkup(): t.TypeOf<typeof PluginMarkup> {
-        return {
-            scanner: {
-                enabled: false,
-                scanInterval: 1.5,
-                applyOnMatch: false,
-                continuousMatch: false,
-                waitBetweenScans: 0,
-                beepOnSuccess: false,
-                beepOnFailure: false,
-            },
-            text: {
-                apply: null,
-                cancel: null,
-                success: null,
-                undone: null,
-                undo: null,
-                undoWarning: null,
-            },
-            inputMinLength: 3,
-            autoSearchDelay: 0,
-            preFetch: false,
-            maxMatches: 10,
-            selectOnce: false,
-            allowUndo: false,
-            sortBy: [],
-            displayFields: ["username", "realname"],
-        };
     }
 
     private compareUsers(firstUser: UserResult, secondUser: UserResult) {
@@ -719,6 +736,9 @@ export class UserSelectComponent extends AngularPluginBase<
         if (this.markup.selectOnce) {
             this.optionToggles.push(this.keyboardMode);
             this.optionToggles.push(this.t9Mode);
+        }
+        if (this.markup.scanner.applyOnMatch) {
+            this.optionToggles.push(this.autoApplyOnFullMatch);
         }
     }
 
@@ -753,7 +773,7 @@ export class UserSelectComponent extends AngularPluginBase<
             );
         this.inputListener = race(...observables)
             .pipe(first())
-            .subscribe(() => this.doSearch());
+            .subscribe(() => this.search(this.autoApplyOnFullMatch.value));
     }
 
     private async initQueryHandler() {
