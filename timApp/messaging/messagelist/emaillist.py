@@ -10,7 +10,7 @@ from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.tim_app import app
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import NotExist, RouteException
-from timApp.util.logger import log_warning, log_info
+from timApp.util.logger import log_warning, log_info, log_error
 from tim_common.marshmallow_dataclass import class_schema
 
 
@@ -35,6 +35,32 @@ if not _client:
     log_warning("No mailman configuration found, no email support will be enabled.")
 else:
     log_info("Mailman connection configured.")
+
+
+def log_mailman(err: HTTPError, optional_message: str = "") -> None:
+    """Log potentially troublesome Mailman activity when mailmanclient raises HTTPErrors.
+
+    mailmanclient library raises liburl HTTPError messages for non 2xx status code responses for backward
+    compatibility. Some of these indicate actual trouble that should be investigated, and some are just information
+    about the operation (e.g. subscribe() method for MailinList objects raises HTTPError with a code 409 if the
+    address we are trying to subscribe already exists on the list).
+
+    The general idea is to use log_error() for 5Xxx status codes and log_warning() for 4xx status codes. Technically
+    3xx codes should not happen for TIM, but they get log_info().
+
+    :param err: The HTTPError to be logged.
+    :param optional_message: Optional, additional message for logging.
+    """
+    code_category = err.code // 100
+    log_message = f"Mailman log: {optional_message}; Mailman returned status code {err}"
+    if code_category == 5:
+        log_error(log_message)
+    elif code_category == 4:
+        log_warning(log_message)
+    elif code_category == 3:
+        log_info(log_message)
+    else:
+        log_warning(f"Mailman log: Error that should not have happened, happened: {err}")
 
 
 def verify_mailman_connection() -> None:
