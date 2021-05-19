@@ -22,6 +22,7 @@ import {Users} from "../user/userService";
     template: `
         <form class="form-horizontal">
             <h1>Message list management</h1>
+            <tim-alert *ngIf="permanentErrorMessage" [(ngModel)]="permanentErrorMessage" severity="danger"></tim-alert>
             <div class="form-group">
                 <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
                 <div class="col-sm-9">
@@ -246,6 +247,9 @@ export class MessageListAdminComponent implements OnInit {
     memberAddSucceededResponse: string = "";
     memberAddFailedResponse: string = "";
 
+    // Permanent error messages, e.g. loading failed and reload is needed.
+    permanentErrorMessage?: string;
+
     recipients = "";
 
     /**
@@ -293,8 +297,9 @@ export class MessageListAdminComponent implements OnInit {
             if (result1.ok) {
                 this.setValues(result1.result);
             } else {
-                console.error(result1.result.error.error);
-                // TODO: Check what went wrong.
+                this.permanentErrorMessage = `Loading list options failed: ${result1.result.error.error}`;
+                // Loading options failed. Short circuit here.
+                return;
             }
 
             // Load list members.
@@ -304,7 +309,7 @@ export class MessageListAdminComponent implements OnInit {
                 console.log(result2.result);
                 this.membersList = result2.result;
             } else {
-                console.error(result2.result.error.error);
+                this.permanentErrorMessage = `Loading list's members failed: ${result2.result.error.error}`;
             }
         }
     }
