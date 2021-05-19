@@ -22,7 +22,7 @@ import {Users} from "../user/userService";
     template: `
         <form class="form-horizontal">
             <h1>Message list management</h1>
-            <tim-alert *ngIf="permanentErrorMessage" [(ngModel)]="permanentErrorMessage" severity="danger"></tim-alert>
+            <tim-alert *ngIf="permanentErrorMessage" severity="danger">{{permanentErrorMessage}}</tim-alert>
             <div class="form-group">
                 <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
                 <div class="col-sm-9">
@@ -298,7 +298,7 @@ export class MessageListAdminComponent implements OnInit {
                 this.setValues(result1.result);
             } else {
                 this.permanentErrorMessage = `Loading list options failed: ${result1.result.error.error}`;
-                // Loading options failed. Short circuit here.
+                // Loading options failed. Short circuit here, no reason to continue.
                 return;
             }
 
@@ -316,8 +316,6 @@ export class MessageListAdminComponent implements OnInit {
 
     /**
      * Opens the email sending view by adding the list's address to the string of recipients.
-     *
-     * The email sending view will be closed by emptying the list of recipients by the component(?)
      */
     openEmail() {
         this.recipients = this.listAddress();
@@ -336,7 +334,8 @@ export class MessageListAdminComponent implements OnInit {
                 this.domain = this.domains[0];
             }
         } else {
-            console.error(result.result.error.error);
+            // Getting an error here is not a problem, since these domains are not (yet) in use other than displaying
+            // them in the UI. The UI will probably look a bit funky, but it does not affect functionality right now.
         }
     }
 
@@ -372,7 +371,8 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
         if (result.ok) {
-            this.membersTextField = undefined; // Empty the text field.
+            // Empty the text field.
+            this.membersTextField = undefined;
             this.memberAddSucceededResponse = "New members added.";
         } else {
             this.memberAddFailedResponse = `Adding new members failed: ${result.result.error.error}`;
