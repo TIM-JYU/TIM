@@ -125,6 +125,7 @@ class UserSelectMarkupModel(GenericMarkupModel):
     actions: Optional[ActionCollection] = None
     text: TextOptions = field(default_factory=TextOptions)
     displayFields: List[str] = field(default_factory=lambda: ["username", "realname"])
+    sortBy: List[str] = field(default_factory=list)
 
 
 UserSelectMarkupModelSchema = class_schema(UserSelectMarkupModel, base_schema=DurationSchema)

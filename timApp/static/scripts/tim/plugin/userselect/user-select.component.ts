@@ -47,6 +47,7 @@ const PluginMarkup = t.intersection([
         selectOnce: t.boolean,
         displayFields: t.array(t.string),
         allowUndo: t.boolean,
+        sortBy: t.array(t.string),
         scanner: t.type({
             enabled: t.boolean,
             scanInterval: t.number,
@@ -618,6 +619,13 @@ export class UserSelectComponent extends AngularPluginBase<
                     },
                 })
             );
+
+            if (this.markup.sortBy.length > 0) {
+                this.lastSearchResult.matches = this.lastSearchResult.matches.sort(
+                    (a, b) => this.compareUsers(a, b)
+                );
+            }
+
             if (this.lastSearchResult.matches.length == 1) {
                 this.selectedUser = this.lastSearchResult.matches[0];
             }
@@ -681,8 +689,30 @@ export class UserSelectComponent extends AngularPluginBase<
             maxMatches: 10,
             selectOnce: false,
             allowUndo: false,
+            sortBy: [],
             displayFields: ["username", "realname"],
         };
+    }
+
+    private compareUsers(firstUser: UserResult, secondUser: UserResult) {
+        for (const fieldName of this.markup.sortBy) {
+            const a = firstUser.fields[fieldName];
+            const b = secondUser.fields[fieldName];
+
+            let index = 0;
+            if (typeof a == "string" && typeof b == "string") {
+                index = a.localeCompare(b);
+            } else if (typeof a == "number" && typeof b == "number") {
+                index = b - a;
+            } else if (a !== undefined && b !== undefined) {
+                index = a.toString().localeCompare(b.toString());
+            }
+
+            if (index != 0) {
+                return index;
+            }
+        }
+        return 0;
     }
 
     private initToggleOptions() {
