@@ -17,6 +17,7 @@ from marshmallow import EXCLUDE, ValidationError
 from timApp.answer.routes import post_answer_impl, AnswerRouteResult
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
+from timApp.item.distribute_rights import UnlockOp, register_op_to_hosts
 from timApp.notification.notify import process_pending_notifications
 from timApp.plugin.containerLink import call_plugin_generic
 from timApp.plugin.exportdata import WithOutData, WithOutDataSchema
@@ -24,7 +25,6 @@ from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
 from timApp.tim_app import app
 from timApp.user.user import User
-from timApp.util.flask.responsehelper import to_json_str
 from timApp.util.flask.search import create_search_files
 from timApp.util.utils import get_current_time, collect_errors_from_hosts
 from tim_common.vendor.requests_futures import FuturesSession
@@ -163,25 +163,8 @@ def send_unlock_op(
         email: str,
         target: List[str],
 ):
-    register_hosts = app.config['DIST_RIGHTS_REGISTER_HOSTS']
-    session = FuturesSession()
-    futures: List[Future] = []
-    for h in register_hosts:
-        f = session.post(
-            f'{h}/distRights/register',
-            to_json_str({
-                'op': {
-                    'type': 'unlock',
-                    'email': email,
-                    'timestamp': get_current_time(),
-                },
-                'target': target,
-                'secret': app.config['DIST_RIGHTS_REGISTER_SEND_SECRET'],
-            }),
-            headers={'Content-type': 'application/json'},
-        )
-        futures.append(f)
-    return collect_errors_from_hosts(futures, register_hosts)
+    op = UnlockOp(type='unlock', email=email, timestamp=get_current_time())
+    return register_op_to_hosts(op, target, is_receiving_backup=False)
 
 
 @celery.task
