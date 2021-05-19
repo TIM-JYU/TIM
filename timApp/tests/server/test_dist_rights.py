@@ -244,6 +244,7 @@ class DistRightsTest(TimRouteTest):
             'DIST_RIGHTS_REGISTER_SECRET': 'xxx',
             'DIST_RIGHTS_SEND_SECRET': 'yyy',
             'DIST_RIGHTS_RECEIVE_SECRET': 'yyy',
+            'DIST_RIGHTS_IS_DISTRIBUTOR': True,
             'DIST_RIGHTS_HOSTS': {target_name: {
                 'hosts': [f'http://{app.config["INTERNAL_PLUGIN_DOMAIN"]}:5001'],
                 'item': d.path,
