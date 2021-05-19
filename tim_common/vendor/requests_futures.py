@@ -150,7 +150,7 @@ class FuturesSession(Session):
         """
         return super(FuturesSession, self).head(url, **kwargs)
 
-    def post(self, url, data=None, json=None, **kwargs):
+    def post(self, url, data=None, json=None, **kwargs) -> Future:
         r"""Sends a POST request. Returns :class:`Future` object.
         :param url: URL for the new :class:`Request` object.
         :param data: (optional) Dictionary, list of tuples, bytes, or file-like

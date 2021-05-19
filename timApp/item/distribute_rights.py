@@ -1,5 +1,6 @@
 import itertools
 from collections import defaultdict
+from concurrent.futures import Future
 from dataclasses import dataclass, replace, field
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -26,6 +27,7 @@ from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import ok_response, to_json_str, json_response, safe_redirect
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.logger import log_warning
 from timApp.util.secret import check_secret, get_secret_or_abort
 from timApp.util.utils import read_json_lines, collect_errors_from_hosts, get_current_time
 from tim_common.marshmallow_dataclass import field_for_schema, class_schema
@@ -284,7 +286,12 @@ def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> List[str]:
     return collect_errors_from_hosts(futures, hosts)
 
 
-def register_right_impl(op: RightOp, target: Union[str, List[str]]) -> List[str]:
+def register_right_impl(
+        op: RightOp,
+        target: Union[str, List[str]],
+        backup: bool = True,
+        distribute: bool = True,
+) -> List[str]:
     targets = [target] if isinstance(target, str) else target
     errors = []
     for tgt in targets:
@@ -293,8 +300,13 @@ def register_right_impl(op: RightOp, target: Union[str, List[str]]) -> List[str]
             raise RouteException(f'invalid target: {tgt}')
         with filelock.FileLock(f'/tmp/log_right_{target_s}'):
             rights = do_register_right(op, target_s)
-        with filelock.FileLock(f'/tmp/dist_right_{target_s}'):
-            errors.extend(do_dist_rights(op, rights, target_s))
+        if distribute:
+            with filelock.FileLock(f'/tmp/dist_right_{target_s}'):
+                errors.extend(do_dist_rights(op, rights, target_s))
+    if backup:
+        backup_errors = register_op_to_hosts(op, target, is_receiving_backup=True)
+        if backup_errors:
+            log_warning(f'Right backup failed for some hosts: {backup_errors}')
     return errors
 
 
@@ -304,9 +316,11 @@ def register_right(
         op: RightOp,
         target: Union[str, List[str]],
         secret: str,
+        is_receiving_backup: bool = False,
 ) -> Response:
     check_secret(secret, 'DIST_RIGHTS_REGISTER_SECRET')
-    errors = register_right_impl(op, target)
+    is_active_distributor = app.config['DIST_RIGHTS_IS_DISTRIBUTOR']
+    errors = register_right_impl(op, target, backup=False, distribute=not is_receiving_backup and is_active_distributor)
     return json_response({'host_errors': errors})
 
 
@@ -387,3 +401,23 @@ def change_starttime_route(
     if parsed.scheme or parsed.netloc:
         raise RouteException('redir must be relative')
     return safe_redirect(request.host_url + redir)
+
+
+def register_op_to_hosts(op: RightOp, target: Union[str, List[str]], is_receiving_backup: bool) -> List[str]:
+    curr_host = app.config['TIM_HOST']
+    register_hosts = [h for h in app.config['DIST_RIGHTS_REGISTER_HOSTS'] if h != curr_host]
+    session = FuturesSession()
+    futures: List[Future] = []
+    for h in register_hosts:
+        f = session.post(
+            f'{h}/distRights/register',
+            to_json_str({
+                'op': op,
+                'target': target,
+                'secret': app.config['DIST_RIGHTS_REGISTER_SEND_SECRET'],
+                'is_receiving_backup': is_receiving_backup,
+            }),
+            headers={'Content-type': 'application/json'},
+        )
+        futures.append(f)
+    return collect_errors_from_hosts(futures, register_hosts)
