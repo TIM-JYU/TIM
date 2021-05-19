@@ -17,7 +17,7 @@ from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_n
     set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
     set_email_list_non_member_message_pass, set_email_list_allow_attachments, set_email_list_default_reply_type, \
     add_email, get_email_list_member, remove_email_list_membership, set_email_list_member_send_status, \
-    set_email_list_member_delivery_status
+    set_email_list_member_delivery_status, set_email_list_description, set_email_list_info
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember, \
     MessageListExternalMember, MessageListMember
@@ -798,3 +798,31 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
                     # user = ug_member.personal_user
                     email_list_member = get_email_list_member(email_list, ug_member.email)
                     set_email_list_member_delivery_status(email_list_member, delivery)
+
+
+def set_message_list_description(message_list: MessageListModel, description: Optional[str]) -> None:
+    """Set a (short) description to a message list and it's associated message channels.
+
+    :param message_list: The message list where the description is set.
+    :param description: The new description. If None, keep the current value.
+    """
+    if description is None or message_list.description == description:
+        return
+    message_list.description = description
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_description(email_list, description)
+
+
+def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -> None:
+    """Set a long description (called 'info' on Mailman) to a message list and it's associated message channels.
+
+    :param message_list: The message list where the (long) description is set.
+    :param info: The new long description. If None, keep the current value.
+    """
+    if info is None or message_list.info == info:
+        return
+    message_list.info = info
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_info(email_list, info)
