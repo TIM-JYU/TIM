@@ -703,7 +703,7 @@ export class UserSelectComponent extends AngularPluginBase<
             if (typeof a == "string" && typeof b == "string") {
                 index = a.localeCompare(b);
             } else if (typeof a == "number" && typeof b == "number") {
-                index = b - a;
+                index = a - b;
             } else if (a !== undefined && b !== undefined) {
                 index = a.toString().localeCompare(b.toString());
             }
