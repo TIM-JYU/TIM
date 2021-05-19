@@ -260,11 +260,14 @@ def gen_cache(
         same_for_all: bool = False,
         force: bool = False,
         print_diffs: bool = False,
+        group: Optional[str] = None,
 ):
     """Pre-generates document cache for the users with non-expired rights.
 
     Useful for exam documents to reduce server load at the beginning of the exam.
 
+    :param group: The usergroup for which to generate the cache. If omitted, the users are computed from the
+      currently active (or upcoming) rights.
     :param print_diffs: Whether to output diff information about cache content. Each cache entry is compared with
      the first cache entry.
     :param doc_path: Path of the document for which to generate the cache.
@@ -280,21 +283,30 @@ def gen_cache(
     s = doc_info.document.get_settings()
     if not s.is_cached():
         raise RouteException('Document does not have caching enabled.')
-    accesses: ValuesView[BlockAccess] = doc_info.block.accesses.values()
-    group_ids = set(a.usergroup_id for a in accesses if not a.expired)
-    users: List[Tuple[User, UserGroup]] = (
-        User.query
-            .join(UserGroup, User.groups)
-            .filter(UserGroup.id.in_(group_ids))
-            .with_entities(User, UserGroup).all()
-    )
-    groups_that_need_access_check = set(g for u, g in users if u.get_personal_group() != g)
+    if group:
+        ug = UserGroup.get_by_name(group)
+        if not ug:
+            raise RouteException('usergroup not found')
+        groups_that_need_access_check = {ug}
+        user_set = set(ug.users)
+    else:
+        # Compute users from the current rights.
+        accesses: ValuesView[BlockAccess] = doc_info.block.accesses.values()
+        group_ids = set(a.usergroup_id for a in accesses if not a.expired)
+        users: List[Tuple[User, UserGroup]] = (
+            User.query
+                .join(UserGroup, User.groups)
+                .filter(UserGroup.id.in_(group_ids))
+                .with_entities(User, UserGroup).all()
+        )
+        groups_that_need_access_check = set(g for u, g in users if u.get_personal_group() != g)
+        user_set = set(u for u, _ in users)
     for g in groups_that_need_access_check:
         verify_group_view_access(g)
     view_ctx = default_view_ctx
     m = DocViewParams()
     vp = ViewParams()
-    users_uniq = list(sorted(set(u for u, _ in users), key=lambda u: u.name))
+    users_uniq = list(sorted(user_set, key=lambda u: u.name))
     total = len(users_uniq)
     digits = len(str(total))
 
