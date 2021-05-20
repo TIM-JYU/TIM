@@ -356,7 +356,8 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     :param delivery_right: Whether email list delivers mail to email. For True, mail is delivered to email. For False,
     no mail is delivered.
     """
-    # VIESTIM: Check if email belongs to an existing User object? If it does, subscribe the user instead?
+    # VIESTIM: Check if email belongs to an existing mailmanclient.User object? If it does, subscribe the
+    #  mailmanclient.User instead?
 
     # VIESTIM:
     #  We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise

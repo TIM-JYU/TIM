@@ -182,7 +182,7 @@ import {Users} from "../user/userService";
             </div>
             <div id="email-send">
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
-                <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send email to list</button>
+                <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
             </div>
             <div class="section">
                 <h2>List deletion</h2>
