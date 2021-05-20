@@ -125,8 +125,7 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
                                                              message_id=display.message_id).first()
         expires = InternalMessage.query.filter_by(id=display.message_id).first()
         # message is shown if it has not been marked as read or replied to, and has not expired
-        if receipt.marked_as_read_on is None and display.message_id not in replies_to_ids and (
-                expires.expires is None or expires.expires > datetime.now()):
+        if receipt.marked_as_read_on is None and (expires.expires is None or expires.expires > datetime.now()):
             messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
             recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
 
