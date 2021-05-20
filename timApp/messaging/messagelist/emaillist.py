@@ -131,8 +131,9 @@ def remove_email_list_membership(member: Member, permanent_deletion: bool = Fals
 
     :param member: The membership to be terminated on a list.
     :param permanent_deletion: If True, unsubscribes the user from the list permanently. If False, membership is
-    "deleted" in a soft manner by removing delivery and send rights. Membership is kept, but emails from
-    member aren't automatically let through nor does the member receive mail from the list.
+    "deleted" in a soft manner by removing delivery and send rights, conforming to TIM's policy in deleting objects.
+    Membership is kept, but emails from member aren't automatically let through nor does the member receive mail from
+    the list.
     """
     try:
         if permanent_deletion:
@@ -288,19 +289,6 @@ def set_email_list_description(mlist: MailingList, new_description: str) -> None
         raise
 
 
-def get_email_list_description(mlist: MailingList) -> str:
-    """Get email list's (short) description.
-
-    :param mlist: Email list we wish to get description from.
-    :return: A string for email list's description.
-    """
-    try:
-        return mlist.settings["description"]
-    except HTTPError as e:
-        log_mailman(e, "In get_email_list_description()")
-        raise
-
-
 def set_email_list_info(mlist: MailingList, new_info: str) -> None:
     """Set email list's info, A.K.A. long description.
 
@@ -312,19 +300,6 @@ def set_email_list_info(mlist: MailingList, new_info: str) -> None:
         mlist.settings.save()
     except HTTPError as e:
         log_mailman(e, "In set_email_list_info()")
-        raise
-
-
-def get_email_list_info(mlist: MailingList) -> str:
-    """Get email list's info, A.K.A. long description.
-
-    :param mlist: Email list where we are querying for the info.
-    :return: Email list's info as a string.
-    """
-    try:
-        return mlist.settings["info"]
-    except HTTPError as e:
-        log_mailman(e, "In get_email_list_info()")
         raise
 
 
@@ -516,7 +491,7 @@ def check_reserved_names(name_candidate: str) -> None:
 
 
 def get_email_list_member(mlist: MailingList, email: str) -> Member:
-    """Get a Member object from a MailingList object.
+    """Get a Member object with an email address from a MailingList object (i.e. from an email list).
 
     :param mlist: MailingList object, the email list in question.
     :param email: Email used to find the member in an email list.
@@ -648,17 +623,6 @@ def get_domain_names() -> List[str]:
         return domain_names
     except HTTPError as e:
         log_mailman(e, "In get_domain_names()")
-        raise
-
-
-def get_notify_owner_on_list_change(listname: str) -> bool:
-    if _client is None:
-        raise NotExist("No email list server connection.")
-    try:
-        mlist = _client.get_list(listname)
-        return mlist.settings["admin_notify_mchanges"]
-    except HTTPError as e:
-        log_mailman(e, "In get_notify_owner_on_list_change()")
         raise
 
 
