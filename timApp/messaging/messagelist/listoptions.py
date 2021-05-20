@@ -7,7 +7,6 @@ class Channel(Enum):
     """The message channels TIM uses and provides for message lists."""
     TIM_MESSAGE = 'tim_message'
     EMAIL_LIST = 'email_list'
-    # EMAIL = 3
 
 
 @dataclass

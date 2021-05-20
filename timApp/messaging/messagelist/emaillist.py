@@ -30,7 +30,7 @@ _client = Client(config.MAILMAN_URL, config.MAILMAN_USER, config.MAILMAN_PASS) i
 """A client object to utilize Mailman's REST API. If this is None, mailmanclient-library has not been configured for 
 use. """
 
-# Test mailmanclient's initialization.
+# Test mailmanclient's initialization on TIM's boot up.
 if not _client:
     log_warning("No mailman configuration found, no email support will be enabled.")
 else:
@@ -52,10 +52,12 @@ def log_mailman(err: HTTPError, optional_message: str = "") -> None:
     :param optional_message: Optional, additional message for logging.
     """
     code_category = err.code // 100
+    # If an optional message is given, it sets a slightly different format for the message.
     if optional_message:
         log_message = f"Mailman log: {optional_message}; Mailman returned status code {err}"
     else:
         log_message = f"Mailman log: Mailman returned status code {err}"
+    # Check for 5xx, 4xx and 3xx status codes, they are logged with different severity.
     if code_category == 5:
         log_error(log_message)
     elif code_category == 4:
@@ -356,14 +358,10 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     :param delivery_right: Whether email list delivers mail to email. For True, mail is delivered to email. For False,
     no mail is delivered.
     """
-    # VIESTIM: Check if email belongs to an existing mailmanclient.User object? If it does, subscribe the
-    #  mailmanclient.User instead?
-
-    # VIESTIM:
-    #  We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise
-    #  they have to verify themselves for Mailman. Note that this is different from confirming to join a list.
-    #  We use pre_approved flag, because we assume that who adds an email to a list also wants that email onto
-    #  a list. Otherwise they would have to afterwards manually moderate their subscription request.
+    # We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise
+    # they have to verify themselves for Mailman. Note that this is different from confirming to join a list.
+    # We use pre_approved flag, because we assume that who adds an email to a list also wants that email onto
+    # a list. Otherwise they would have to afterwards manually moderate their subscription request.
     try:
         new_member = mlist.subscribe(email,
                                      pre_verified=True,
@@ -375,8 +373,7 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
         set_email_list_member_delivery_status(new_member, delivery_right)
     except HTTPError as e:
         if e.code == 409:
-            # With code 409, Mailman indicates that the member is already in the list. No further action might not be
-            # needed.
+            # With code 409, Mailman indicates that the member is already in the list. No further action is needed.
             return
         else:
             log_mailman(e, "In add_email()")
@@ -395,12 +392,9 @@ def set_email_list_member_send_status(member: Member, status: bool) -> None:
     """
     try:
         if status:
-            # This could also be e.g. "discard", but then there would be no information whether or not the email ever
-            # made it to moderation.
             member.moderation_action = "accept"
         else:
             member.moderation_action = "reject"
-        # Changing the moderation_action requires saving, otherwise change won't take effect.
         member.save()
     except HTTPError as e:
         log_mailman(e, "In set_email_list_member_send_status()")
@@ -418,12 +412,6 @@ def set_email_list_member_delivery_status(member: Member, status: bool, by_moder
     :param by_moderator: Who initiated the change in delivery right. If True, then the change was initiated by a
     moderator or owner of a list. If False, then the change was initiated by the member themselves.
     """
-    # Viestim: This is just an idea how to go about changing user's delivery options. There exists
-    #  frustratingly little documentation about this kind of thing, so this might not work. The idea
-    #  originates from
-    #  https://docs.mailman3.org/projects/mailman/en/latest/src/mailman/handlers/docs/owner-recips.html
-    #  More information also at
-    #  https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/member.py
     try:
         if status:
             member.preferences["delivery_status"] = "enabled"
@@ -432,7 +420,6 @@ def set_email_list_member_delivery_status(member: Member, status: bool, by_moder
                 member.preferences["delivery_status"] = "by_moderator"
             else:
                 member.preferences["delivery_status"] = "by_user"
-        # If changed, preferences have to be saved for them to take effect on Mailman.
         member.preferences.save()
     except HTTPError as e:
         log_mailman(e, "In set_email_list_member_delivery_status()")
@@ -449,8 +436,8 @@ def get_email_list_member_delivery_status(member: Member) -> bool:
         member_preferences = member.preferences
         if member_preferences["delivery_status"] == "enabled":
             return True
-        # VIESTIM: If delivery status is "by_bounces", then something is wrong with member's email address as it cannot
-        #  properly receive email. Is there anything meaningful we can do about it here?
+        # If delivery status is "by_bounces", then something is wrong with member's email address as it cannot
+        # properly receive email. Fot this context, it's still taken as the member not having a delivery right.
         elif member_preferences["delivery_status"] in ["by_user", "by_moderator", "by_bounces"]:
             return False
         # If we are here, something has gone terribly wrong.
@@ -465,8 +452,8 @@ def get_email_list_member_send_status(member: Member) -> bool:
     """Get email list's member's send status / right in an email list.
 
     :param member: Member who's send status we wish to know.
-    :return: Return True, if member has a send right to a list (moderation action is set as "accept"). Otherwise return
-    False.
+    :return: Return True, if member has a send right to a list (moderation action is set as "accept"). Return
+    False if moderation action is one of 'discard', 'reject', or 'hold'.
     """
     try:
         if member.moderation_action == "accept":
@@ -503,7 +490,7 @@ def check_name_availability(name_candidate: str, domain: str) -> None:
     try:
         checked_domain = _client.get_domain(domain)
         mlists: List[MailingList] = checked_domain.get_lists()
-        fqdn_name_candidate = name_candidate + "@" + domain
+        fqdn_name_candidate = f"{name_candidate}@{domain}"
         for name in [mlist.fqdn_listname for mlist in mlists]:
             if fqdn_name_candidate == name:
                 raise RouteException("Name is already in use.")
@@ -616,12 +603,6 @@ def set_email_list_non_member_message_pass(email_list: MailingList, non_member_m
         raise
 
 
-# VIESTIM: A temporary global variable including all the file extensions that are allowed if attachments are allowed
-#  in a message/email list.
-# TODO: Move to a configuration file.
-allowed_attachment_file_extensions = ["pdf", "jpg", "png", "txt", "tex"]
-
-
 def set_email_list_allow_attachments(email_list: MailingList, allow_attachments_flag: bool) -> None:
     """Set email list allowed attachments.
 
@@ -630,9 +611,8 @@ def set_email_list_allow_attachments(email_list: MailingList, allow_attachments_
      extensions to an empty list.
     """
     try:
-        global allowed_attachment_file_extensions  # VIESTIM Temporary use of global variable for prototyping purposes.
         if allow_attachments_flag:
-            email_list.settings["pass_extensions"] = allowed_attachment_file_extensions
+            email_list.settings["pass_extensions"] = app.config.get("PERMITTED_ATTACHMENTS")
         else:
             # There might not be a direct option to disallow all attachments to a list. We pass a value we don't expect
             # to find as a file extension. Then the only type of extension that would be allowed is file.no_extensions.
@@ -731,10 +711,10 @@ def unfreeze_list(mlist: MailingList, msg_list: MessageListModel) -> None:
 
 
 def find_email_lists(email: str) -> List[MailingList]:
-    # VIESTIM: This may or may not be enough. Function find_lists can take optional argument for role on the
-    #  list ('member', 'owner' or 'moderator'). This returns them all, but might return duplicates if email
-    #  is in different roles in a list. Is it better to ask them from Mailman separated by role, or do role
-    #  checking and grouping here?
+    # VIESTIM: This may or may not be enough. Function find_lists can take optional argument for role on the list (
+    #  'member', 'owner' or 'moderator'). WIthout argument for role, it returns all the lists but not indicating what
+    #  the person's role is or roles are on the list. Is it better to ask them from Mailman separated by role,
+    #  or do role checking and grouping here?
     try:
         lists = _client.find_lists(email)
         return lists
