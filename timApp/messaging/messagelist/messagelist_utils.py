@@ -5,8 +5,8 @@ from typing import Optional, List, Dict, Tuple
 
 from mailmanclient import MailingList
 
+from timApp.auth.accesshelper import has_manage_access
 from timApp.auth.accesstype import AccessType
-from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -17,7 +17,7 @@ from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_n
     set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
     set_email_list_non_member_message_pass, set_email_list_allow_attachments, set_email_list_default_reply_type, \
     add_email, get_email_list_member, remove_email_list_membership, set_email_list_member_send_status, \
-    set_email_list_member_delivery_status
+    set_email_list_member_delivery_status, set_email_list_description, set_email_list_info
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember, \
     MessageListExternalMember, MessageListMember
@@ -129,20 +129,9 @@ class MessageTIMversalis:
 
     timestamp: datetime = get_current_time()
 
-    # VIESTIM: Would a response depth field be usefull? It was stated, that multiple Re: and Vs: prefixes on subjects
-    #  is annoying and these should be discarded, but if we wish to do some type of inferance in the future about
-    #  what a message is responding at, it might need this information.
-
 
 MESSAGE_LIST_DOC_PREFIX = "messagelists"
 MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
-
-
-def message_list_tim_members_as_user_groups(tim_members: List['MessageListTimMember']) -> List[UserGroup]:
-    user_groups = []
-    for member in tim_members:
-        user_groups.append(member.user_group)
-    return user_groups
 
 
 def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str, message_list: MessageListModel,
@@ -160,7 +149,7 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
     message_owners: List[UserGroup] = []
     message_sender = User.get_by_email(message.sender.email_address)
 
-    # List owners get a default ownership for the messages on a list.
+    # List owners get a default ownership for the messages on a list. This covers the archive policy of SECRET.
     message_owners.extend(get_message_list_owners(message_list))
 
     # Who gets to see a message in the archives.
@@ -168,23 +157,21 @@ def create_archive_doc_with_permission(archive_title: str, archive_doc_path: str
 
     # Gather permissions to the archive doc. The meanings of different archive settings are listed with ArchiveType
     # class.
-    if message_list.archive_policy is ArchiveType.PUBLIC or ArchiveType.UNLISTED:
-        # Unlisted and public archiving only differs in whether or not the archive folder is in a special place
-        # where it can be found more easily. The folder is linked/aliased elsewhere and is not a concer in archiving.
+    if message_list.archive_policy is ArchiveType.PUBLIC:
         message_viewers.append(UserGroup.get_anonymous_group())
         if message_sender:
             message_owners.append(message_sender.get_personal_group())
-    elif message_list.archive_policy is ArchiveType.GROUPONLY:
-        message_viewers = message_list_tim_members_as_user_groups(message_list.get_tim_members())
+    elif message_list.archive_policy is ArchiveType.UNLISTED:
+        message_viewers.append(UserGroup.get_logged_in_group())
         if message_sender:
             message_owners.append(message_sender.get_personal_group())
-    elif message_list.archive_policy is ArchiveType.SECRET:
-        # VIESTIM: There shouldn't be much to do with this archive policy? The list owners get ownership,
-        #  and otherwise no one else sees it?
-        pass
+    elif message_list.archive_policy is ArchiveType.GROUPONLY:
+        message_viewers = [m.user_group for m in message_list.get_tim_members()]
+        if message_sender:
+            message_owners.append(message_sender.get_personal_group())
 
-    # VIESTIM: If we don't provide at least one owner up front, then current user is set as owner. We don't want
-    #  that, because in this context that is the anonymous user, and that raises an error.
+    # If we don't provide at least one owner up front, then current user is set as owner. We don't want that,
+    # because in this context that is the anonymous user, and that raises an error.
     archive_doc = DocEntry.create(title=archive_title, path=archive_doc_path, owner_group=message_owners[0])
 
     # Add the rest of the message owners.
@@ -614,7 +601,7 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     :return: None.
     """
     # Check right to the group. Right checking is not required for personal groups, only generated user groups.
-    if not ug.is_personal_group and not check_group_owner_or_manage_right(ug):
+    if not ug.is_personal_group and not has_manage_access(ug.admin_doc):
         return
 
     # Check for duplicates. Groups only have their name to check against.
@@ -666,15 +653,6 @@ def add_message_list_external_email_member(msg_list: MessageListModel, external_
               send_right=send_right, delivery_right=delivery_right)
 
 
-def check_group_owner_or_manage_right(ug: UserGroup) -> bool:
-    current_user_group = get_current_user_object().get_personal_group()
-    for access in ug.admin_doc.accesses:
-        ug_id, ac_t = access
-        if current_user_group.id == ug_id and (ac_t == AccessType.manage.value or ac_t == AccessType.owner.value):
-            return True
-    return False
-
-
 def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
     """On adding a user to a new group, sync the user to user group's message lists.
 
@@ -682,19 +660,14 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
     :param new_group: The new group that the user was added to.
     :return: None.
     """
-    # FIXME: This does not work. Most likely there is confusin with different IDs, which results in pulling wrong
-    #  members/groups.
-    # Get the lists for the user group. Find all the TIM members that represent the new_group on message lists.
-    group_tim_members = MessageListTimMember.query.filter_by(group_id=new_group.id).all()
-    # Get the message lists that the groups have a membership in.
-    group_message_lists = [g.member.message_list for g in group_tim_members]
-
-    # Add user to the group's message lists.
-    for message_list in group_message_lists:
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
-        add_new_message_list_tim_user(message_list, user, message_list.default_send_right,
-                                      message_list.default_delivery_right, email_list)
-    db.session.commit()  # .flush() might be enough?
+    # Get all the message lists for the user group.
+    for group_tim_member in new_group.messagelist_membership:
+        group_message_list: MessageListModel = group_tim_member.message_list
+        # Propagate the adding on message list's message channels.
+        if group_message_list.email_list_domain:
+            email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
+            add_email(email_list, user.email, True, user.real_name,
+                      group_tim_member.member.send_right, group_tim_member.member.delivery_right)
 
 
 def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
@@ -704,37 +677,14 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
     :param old_group: The group where the user was removed from.
     :return: None.
     """
-    # FIXME: This does not work. Most likely there is confusion with different IDs, which results in pulling wrong
-    #  members/groups.
     # Get all the message lists for the user group.
-    group_tim_members = MessageListTimMember.query.filter_by(group_id=old_group.id).all()
-    for group_tim_member in group_tim_members:
-        # For the message list, find all groups.
-        group_message_list = group_tim_member.message_list
-        member_groups: List[UserGroup] = []
-        for member_id in group_message_list.get_tim_members():
-            tim_member = MessageListTimMember.query.filter_by(id=member_id).one()
-            if tim_member.is_group():
-                member_groups.append(tim_member.user_group)
-        # Check how many groups does the user currently belong to.
-        belongs_to = []
-        for group in member_groups:
-            # belongs_to = []  # groups the user has a membership in, that belong to the message list.
-            for membership in group.current_memberships:
-                if membership.usergroup_id == old_group.id and membership.user_id == user.id:
-                    # VIESTIM: This should be a singular finding, yes? There shouldn't be multiple memberships for
-                    #  the same user to the same group?
-                    belongs_to.append(membership)
-        # VIESTIM: We assume that in the function that triggers this function the user is already removed from the
-        #  group.
-        if len(belongs_to) == 0:
-            # If the user does not belong to any other group, set them as removed from the message list as well.
-            group_tim_member.remove()
-        else:
-            # The user belongs to other groups still on the message list. They don't have to then be automatically set
-            # as removed.
-            pass
-    db.session.commit()  # .flush() might be enough?
+    for group_tim_member in old_group.messagelist_membership:
+        group_message_list: MessageListModel = group_tim_member.message_list
+        # Propagate the deletion on message list's message channels.
+        if group_message_list.email_list_domain:
+            email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
+            email_list_member = get_email_list_member(email_list, user.email)
+            remove_email_list_membership(email_list_member)
 
 
 def set_message_list_member_removed_status(member: MessageListMember,
@@ -820,3 +770,31 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
                     # user = ug_member.personal_user
                     email_list_member = get_email_list_member(email_list, ug_member.email)
                     set_email_list_member_delivery_status(email_list_member, delivery)
+
+
+def set_message_list_description(message_list: MessageListModel, description: Optional[str]) -> None:
+    """Set a (short) description to a message list and it's associated message channels.
+
+    :param message_list: The message list where the description is set.
+    :param description: The new description. If None, keep the current value.
+    """
+    if description is None or message_list.description == description:
+        return
+    message_list.description = description
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_description(email_list, description)
+
+
+def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -> None:
+    """Set a long description (called 'info' on Mailman) to a message list and it's associated message channels.
+
+    :param message_list: The message list where the (long) description is set.
+    :param info: The new long description. If None, keep the current value.
+    """
+    if info is None or message_list.info == info:
+        return
+    message_list.info = info
+    if message_list.email_list_domain:
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        set_email_list_info(email_list, info)

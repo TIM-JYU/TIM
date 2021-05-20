@@ -17,7 +17,8 @@ from timApp.messaging.messagelist.messagelist_utils import check_messagelist_nam
     set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
     set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
     add_new_message_list_tim_user, add_new_message_list_group, add_message_list_external_email_member, \
-    set_message_list_member_removed_status, set_member_send_delivery
+    set_message_list_member_removed_status, set_member_send_delivery, set_message_list_description, \
+    set_message_list_info
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
@@ -183,12 +184,9 @@ def save_list_options(options: ListOptions) -> Response:
     if message_list.archive_policy != options.archive:
         # TODO: If message list changes it's archive policy, the members on the list need to be notified.
         message_list.archive = options.archive
-        pass
 
-    message_list.description = options.list_description
-    message_list.info = options.list_info
-
-    # These have direct effect on an attached email list, if the message list has one configured.
+    set_message_list_description(message_list, options.list_description)
+    set_message_list_info(message_list, options.list_info)
     set_message_list_notify_owner_on_change(message_list, options.notify_owners_on_list_change)
     set_message_list_member_can_unsubscribe(message_list, options.members_can_unsubscribe)
     set_message_list_subject_prefix(message_list, options.list_subject_prefix)
