@@ -144,14 +144,23 @@ class RightLog:
         if isinstance(r, ConfirmOp):
             do_confirm(curr_right, r.timestamp)
         elif isinstance(r, UnlockOp):
-            curr_right.accessible_from = r.timestamp
-            curr_right.accessible_to = curr_right.accessible_from + get_duration_now(curr_right, r.timestamp)
+            if curr_right.duration:
+                curr_right.accessible_from = r.timestamp
+                curr_right.accessible_to = curr_right.accessible_from + get_duration_now(curr_right, r.timestamp)
+            else:
+                # TODO: This shouldn't happen in practice because non-duration rights cannot be unlocked.
+                #  Perhaps log a warning etc.
+                pass
         elif isinstance(r, ChangeTimeOp):
             change_time(curr_right, r)
         elif isinstance(r, QuitOp):
             curr_right.accessible_to = r.timestamp
         elif isinstance(r, UndoConfirmOp):
-            curr_right.accessible_from = None
+            # We _don't_ want to assign "accessible_from = None" here.
+            # Otherwise, if the right is reconfirmed, the start time will be wrong (it gets current timestamp).
+            # If a Right with require_confirm = True is distributed, accessible_from will be saved as None in the
+            # receiving end, meaning that the right is not active.
+            # curr_right.accessible_from = None
             curr_right.require_confirm = True
         elif isinstance(r, UndoQuitOp):
             if isinstance(curr_hist[-1].op, QuitOp):
@@ -360,7 +369,9 @@ def receive_right(
             ug,
             item,
             AccessType.view,
-            accessible_from=right.accessible_from,
+            # In TIM, a right is considered active whenever accessible_from is set, so if the right still requires
+            # confirmation, we must set accessible_from to be null.
+            accessible_from=right.accessible_from if not right.require_confirm else None,
             accessible_to=right.accessible_to,
             duration=right.duration,
             duration_from=right.duration_from,
