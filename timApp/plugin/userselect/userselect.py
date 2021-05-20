@@ -67,18 +67,22 @@ class SetTaskValueAction:
 class DistributeRightAction:
     operation: Literal["confirm", "quit", "unlock", "changetime"]
     target: Union[str, List[str]]
-    timestamp: datetime = field(default_factory=get_current_time)
+    timestamp: Optional[datetime] = None
     minutes: float = 0.0
+
+    @property
+    def timestamp_or_now(self) -> datetime:
+        return self.timestamp or get_current_time()
 
 
 RIGHT_TO_OP: Dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
-    "confirm": lambda r, usr: ConfirmOp(type="confirm", email=usr, timestamp=r.timestamp),
-    "quit": lambda r, usr: QuitOp(type="quit", email=usr, timestamp=r.timestamp),
-    "unlock": lambda r, usr: UnlockOp(type="unlock", email=usr, timestamp=r.timestamp),
+    "confirm": lambda r, usr: ConfirmOp(type="confirm", email=usr, timestamp=r.timestamp_or_now),
+    "quit": lambda r, usr: QuitOp(type="quit", email=usr, timestamp=r.timestamp_or_now),
+    "unlock": lambda r, usr: UnlockOp(type="unlock", email=usr, timestamp=r.timestamp_or_now),
     "changetime": lambda r, usr: ChangeTimeOp(type="changetime",
                                               email=usr,
                                               secs=int(r.minutes * 60),
-                                              timestamp=r.timestamp)
+                                              timestamp=r.timestamp_or_now)
 }
 
 
@@ -295,9 +299,9 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
         if distribute.operation == "confirm":
             undo_op: Union[UndoConfirmOp, UndoQuitOp] = UndoConfirmOp(type="undoconfirm",
                                                                       email=user_acc.email,
-                                                                      timestamp=distribute.timestamp)
+                                                                      timestamp=distribute.timestamp_or_now)
         elif distribute.operation == "quit":
-            undo_op = UndoQuitOp(type="undoquit", email=user_acc.email, timestamp=distribute.timestamp)
+            undo_op = UndoQuitOp(type="undoquit", email=user_acc.email, timestamp=distribute.timestamp_or_now)
         else:
             continue
 
