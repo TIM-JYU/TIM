@@ -161,5 +161,7 @@ def get_duration_now(a: Union[BlockAccess, Right], curr_time: datetime):
 
 def do_confirm(a: Union[BlockAccess, Right], curr_time: datetime):
     a.require_confirm = False
-    if not a.duration:
+    # When confirming a distributable Right, it is possible that accessible_from is set.
+    # In that case, we don't want to reset it.
+    if not a.duration and not a.accessible_from:
         a.accessible_from = curr_time
