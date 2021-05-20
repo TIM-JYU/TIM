@@ -22,13 +22,13 @@ export class TimMessageViewComponent implements OnInit {
 
     constructor(private http: HttpClient) {}
 
-    timMessages: [TimMessageData] | undefined;
+    timMessages?: TimMessageData[];
 
     async loadValues(itemId: number) {
         const messages = await to2(
             // get messages shown on current page
             this.http
-                .get<[TimMessageData]>(`/timMessage/get/${itemId}`)
+                .get<TimMessageData[]>(`/timMessage/get/${itemId}`)
                 .toPromise()
         );
 

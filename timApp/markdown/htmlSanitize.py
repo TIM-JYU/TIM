@@ -100,7 +100,6 @@ TIM_SAFE_TAGS = [
     'tim-graph-viz',
     'tim-variables',
     'tim-message-list-admin',
-    'tim-message',
     'tim-message-view',
     'manage-read-receipt',
 ]

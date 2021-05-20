@@ -22,20 +22,20 @@ import {Users} from "../user/userService";
     template: `
         <form class="form-horizontal">
             <h1>Message list management</h1>
+            <tim-alert *ngIf="permanentErrorMessage" severity="danger">{{permanentErrorMessage}}</tim-alert>
             <div class="form-group">
                 <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
                 <div class="col-sm-9">
                     <div class="input-group">
                         <input type="text" class="form-control" name="list-name" id="list-name" disabled
                                [(ngModel)]="listname"/>
-                        <div class="input-group-addon">@</div>
+                        <div class="input-group-addon" id="domain-indicator">@</div>
                         <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
                             <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
                         </select>
                     </div>
                 </div>
             </div>
-
             <div class="form-group" *ngIf="domain">
                 <label for="list-description" class="short-description control-label col-sm-3">List address: </label>
                 <div class="col-sm-9">
@@ -59,11 +59,9 @@ import {Users} from "../user/userService";
                 </div>
             </div>
             <div>
-            </div>
-            <div>
                 <p class="list-archive-policy-header">Archive policy:</p>
                 <!-- Variable archiveoptions is reversed, so indexing for display has to accommodate. -->
-                <p>{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
+                <p class="indented">{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
                 <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
                 <!--
                 <ul id="archive-policy-list">
@@ -81,64 +79,71 @@ import {Users} from "../user/userService";
                 </ul>
                 -->
             </div>
-            
             <div class="section">
                 <h3>Options</h3>
-                <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
-                <label for="list-subject-prefix">Subject prefix.</label>
-            </div>
-            <div>
-                <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
-                       [(ngModel)]="notifyOwnerOnListChange"/>
-                <label for="notify-owner-on-list-change">Notify owners on list changes (e.g. user subscribes).</label>
-            </div>
-            <div>
-                <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
-                <label for="tim-users-can-join">TIM users can freely join this list.</label>
-            </div>
-            <div>
-                <input type="checkbox" name="can-user-unsubscribe" [(ngModel)]="canUnsubscribe">
-                <label for="can-user-unsubscribe">Members can unsubscribe from the list on their own.</label>
-            </div>
-            <div>
-                <input type="checkbox" name="non-members-can-send" [(ngModel)]="nonMemberMessagePass">
-                <label for="non-members-can-send">Non members can send messages to list.</label>
-            </div>
-            <div>
-                <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
-                <label for="only-text">No HTML messages allowed on the list.</label>
-            </div>
-
-            <div>
-                <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
-                <label for="allow-attachments">Allow attachments on the list.</label>
-            </div>
-            <div>
-                <button class="timButton" (click)="saveOptions()">Save changes</button>
-            </div>
-            <div id="members-section" class="section">
-                <h3>Members</h3>
-                <div id="add-members-section">
-                    <label for="add-multiple-members">Add members</label> <br/>
-                    <textarea id="add-multiple-members" name="add-multiple-members"
-                              [(ngModel)]="membersTextField"></textarea>
-                    <div>
+                <div class="indented">
+                    <label for="list-subject-prefix">
+                        <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
+                        Subject prefix.</label>
+                </div>
+                <div class="indented">
+                    <label for="notify-owner-on-list-change">
+                        <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
+                               [(ngModel)]="notifyOwnerOnListChange"/>
+                        Notify owners on list changes (e.g. user subscribes).</label>
+                </div>
+                <div class="indented">
+                    <label for="tim-users-can-join">
+                        <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
+                        TIM users can freely join this list.</label>
+                </div>
+                <div class="indented">
+                    <label for="can-user-unsubscribe">
+                        <input type="checkbox" name="can-user-unsubscribe" [(ngModel)]="canUnsubscribe">
+                        Members can unsubscribe from the list on their own.</label>
+                </div>
+                <div class="indented">
+                    <label for="non-members-can-send">
+                        <input type="checkbox" name="non-members-can-send" [(ngModel)]="nonMemberMessagePass">
+                        Non members can send messages to list.</label>
+                </div>
+                <div class="indented">
+                    <label for="only-text">
+                        <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
+                        No HTML messages allowed on the list.</label>
+                </div>
+                <div class="indented">
+                    <label for="allow-attachments">
+                        <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
+                        Allow attachments on the list.</label>
+                </div>
+                <div>
+                    <button class="timButton" (click)="saveOptions()">Save changes</button>
+                </div>
+                <div id="members-section" class="section">
+                    <h3>Members</h3>
+                    <div id="add-members-section">
+                        <label for="add-multiple-members">Add members</label> <br/>
+                        <textarea id="add-multiple-members" name="add-multiple-members"
+                                  [(ngModel)]="membersTextField"></textarea>
                         <div>
-                            <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
-                            <label for="new-member-send-right">New member's send right.</label>
+                            <div>
+                                <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
+                                <label for="new-member-send-right">New member's send right.</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" name="new-member-delivery-right"
+                                       [(ngModel)]="newMemberDeliveryRight">
+                                <label for="new-member-delivery-right">New member's delivery right.</label>
+                            </div>
                         </div>
-                        <div>
-                            <input type="checkbox" name="new-member-delivery-right"
-                                   [(ngModel)]="newMemberDeliveryRight">
-                            <label for="new-member-delivery-right">New member's delivery right.</label>
+                        <button (click)="addNewListMember()" class="timButton">Add new members</button>
+                        <div id="member-add-feedback">
+                            <tim-alert *ngIf="memberAddSucceededResponse"
+                                       severity="success">{{memberAddSucceededResponse}}</tim-alert>
+                            <tim-alert *ngIf="memberAddFailedResponse"
+                                       severity="danger">{{memberAddFailedResponse}}</tim-alert>
                         </div>
-                    </div>
-                    <button (click)="addNewListMember()" class="timButton">Add new members</button>
-                    <div id="member-add-feedback">
-                        <tim-alert *ngIf="memberAddSucceededResponse"
-                                   severity="success">{{memberAddSucceededResponse}}</tim-alert>
-                        <tim-alert *ngIf="memberAddFailedResponse"
-                                   severity="danger">{{memberAddFailedResponse}}</tim-alert>
                     </div>
                 </div>
                 <div class="section">
@@ -242,6 +247,9 @@ export class MessageListAdminComponent implements OnInit {
     memberAddSucceededResponse: string = "";
     memberAddFailedResponse: string = "";
 
+    // Permanent error messages, e.g. loading failed and reload is needed.
+    permanentErrorMessage?: string;
+
     recipients = "";
 
     /**
@@ -258,7 +266,7 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     /**
-     * The current documents document ID.
+     * The current document's document ID.
      */
     getDocId() {
         return documentglobals().curr_item.id;
@@ -289,8 +297,9 @@ export class MessageListAdminComponent implements OnInit {
             if (result1.ok) {
                 this.setValues(result1.result);
             } else {
-                console.error(result1.result.error.error);
-                // TODO: Check what went wrong.
+                this.permanentErrorMessage = `Loading list options failed: ${result1.result.error.error}`;
+                // Loading options failed. Short circuit here, no reason to continue.
+                return;
             }
 
             // Load list members.
@@ -300,15 +309,13 @@ export class MessageListAdminComponent implements OnInit {
                 console.log(result2.result);
                 this.membersList = result2.result;
             } else {
-                console.error(result2.result.error.error);
+                this.permanentErrorMessage = `Loading list's members failed: ${result2.result.error.error}`;
             }
         }
     }
 
     /**
      * Opens the email sending view by adding the list's address to the string of recipients.
-     *
-     * The email sending view will be closed by emptying the list of recipients by the component(?)
      */
     openEmail() {
         this.recipients = this.listAddress();
@@ -327,7 +334,8 @@ export class MessageListAdminComponent implements OnInit {
                 this.domain = this.domains[0];
             }
         } else {
-            console.error(result.result.error.error);
+            // Getting an error here is not a problem, since these domains are not (yet) in use other than displaying
+            // them in the UI. The UI will probably look a bit funky, but it does not affect functionality right now.
         }
     }
 
@@ -363,7 +371,8 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
         if (result.ok) {
-            this.membersTextField = undefined; // Empty the text field.
+            // Empty the text field.
+            this.membersTextField = undefined;
             this.memberAddSucceededResponse = "New members added.";
         } else {
             this.memberAddFailedResponse = `Adding new members failed: ${result.result.error.error}`;
