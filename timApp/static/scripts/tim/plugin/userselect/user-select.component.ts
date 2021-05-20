@@ -622,6 +622,8 @@ export class UserSelectComponent extends AngularPluginBase<
         beepOnSuccess: boolean = false,
         beepOnFailure: boolean = false
     ) {
+        // Cache the search query strings for later check
+        const searchQueryStrings = this.searchQueryStrings;
         const scanOk = await this.doSearch();
         if (
             scanOk &&
@@ -639,10 +641,20 @@ export class UserSelectComponent extends AngularPluginBase<
         if (
             this.lastSearchResult &&
             applyOnMatch &&
-            this.lastSearchResult.matches.length == 1
+            this.lastSearchResult.matches.length == 1 &&
+            this.isFullMatch(
+                this.lastSearchResult.matches[0],
+                searchQueryStrings
+            )
         ) {
             await this.apply();
         }
+    }
+
+    private isFullMatch(user: UserResult, keywords: string[]) {
+        return Object.values(user.fields).some((v) =>
+            keywords.some((q) => q === v)
+        );
     }
 
     private async doSearch() {
