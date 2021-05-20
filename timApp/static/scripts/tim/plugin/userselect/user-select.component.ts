@@ -656,7 +656,11 @@ export class UserSelectComponent extends AngularPluginBase<
 
     private isFullMatch(user: UserResult, keywords: string[]) {
         return Object.values(user.fields).some((v) =>
-            keywords.some((q) => q === v)
+            keywords.some((q) =>
+                typeof v == "string" && typeof q == "string"
+                    ? v.toLowerCase() == q.toLowerCase()
+                    : q === v
+            )
         );
     }
 
