@@ -70,15 +70,19 @@ class DistributeRightAction:
     timestamp: Optional[datetime] = None
     minutes: float = 0.0
 
+    @property
+    def timestamp_or_now(self) -> datetime:
+        return self.timestamp or get_current_time()
+
 
 RIGHT_TO_OP: Dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
-    "confirm": lambda r, usr: ConfirmOp(type="confirm", email=usr, timestamp=r.timestamp),
-    "quit": lambda r, usr: QuitOp(type="quit", email=usr, timestamp=r.timestamp),
-    "unlock": lambda r, usr: UnlockOp(type="unlock", email=usr, timestamp=r.timestamp),
+    "confirm": lambda r, usr: ConfirmOp(type="confirm", email=usr, timestamp=r.timestamp_or_now),
+    "quit": lambda r, usr: QuitOp(type="quit", email=usr, timestamp=r.timestamp_or_now),
+    "unlock": lambda r, usr: UnlockOp(type="unlock", email=usr, timestamp=r.timestamp_or_now),
     "changetime": lambda r, usr: ChangeTimeOp(type="changetime",
                                               email=usr,
                                               secs=int(r.minutes * 60),
-                                              timestamp=r.timestamp)
+                                              timestamp=r.timestamp_or_now)
 }
 
 
@@ -292,13 +296,12 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
     undoable_dists = [dist for dist in model.actions.distributeRight if dist.operation in ("confirm", "quit")]
     errors = []
     for distribute in undoable_dists:
-        distribute.timestamp = distribute.timestamp or get_current_time()
         if distribute.operation == "confirm":
             undo_op: Union[UndoConfirmOp, UndoQuitOp] = UndoConfirmOp(type="undoconfirm",
                                                                       email=user_acc.email,
-                                                                      timestamp=distribute.timestamp)
+                                                                      timestamp=distribute.timestamp_or_now)
         elif distribute.operation == "quit":
-            undo_op = UndoQuitOp(type="undoquit", email=user_acc.email, timestamp=distribute.timestamp)
+            undo_op = UndoQuitOp(type="undoquit", email=user_acc.email, timestamp=distribute.timestamp_or_now)
         else:
             continue
 
@@ -375,7 +378,6 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
 
     errors = []
     for distribute in model.actions.distributeRight:
-        distribute.timestamp = distribute.timestamp or get_current_time()
         convert = RIGHT_TO_OP[distribute.operation]
         right_op = convert(distribute, user_acc.email)
         errors.extend(register_right_impl(right_op, distribute.target))
