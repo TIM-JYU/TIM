@@ -394,12 +394,15 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     private get searchQueryStrings() {
+        // Preliminarily strip whitespace
+        const searchString = this.searchString.trim();
+        const result = [searchString];
+
         // When reading Finnish personal identity numbers, code scanner can sometimes misread chars +/-
         // Same can of course happen to a normal person doing a query by hand
         // Therefore, we add alternative search string where we swap +/- with each other
         const mistakePidPattern = /^(\d{6})([+-])(\d{3}[a-zA-Z])$/i;
-        const pidMatch = mistakePidPattern.exec(this.searchString);
-        const result = [this.searchString];
+        const pidMatch = mistakePidPattern.exec(searchString);
         if (pidMatch) {
             const [, pidStart, pidMark, pidEnd] = pidMatch;
             result.push(`${pidStart}${pidMark == "-" ? "+" : "-"}${pidEnd}`);
