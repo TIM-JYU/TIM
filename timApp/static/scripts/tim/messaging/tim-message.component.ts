@@ -164,10 +164,19 @@ export class TimMessageComponent implements OnInit {
     }
 
     /**
-     * Hides the entire message.
+     * Hides the entire message. If the message can't be replied to or marked as read
+     * by recipient, closing it hides it permanently by marking it as read in database.
      */
-    closeMessage(): void {
+    async closeMessage() {
+        if (!this.message) {
+            return;
+        }
+
         this.showMessage = false;
+
+        if (!this.canReply && !this.canMarkAsRead) {
+            await markAsRead(this.http, this.message.id);
+        }
     }
 
     ngOnInit(): void {
@@ -181,7 +190,7 @@ export class TimMessageComponent implements OnInit {
     setValues(timMessage: TimMessageData) {
         this.sender = timMessage.sender;
         this.heading = timMessage.message_subject;
-        this.fullContent = timMessage.message_body; // TODO handle paragraphs properly
+        this.fullContent = timMessage.message_body;
         this.canMarkAsRead = timMessage.can_mark_as_read;
         this.canReply = timMessage.can_reply;
 
