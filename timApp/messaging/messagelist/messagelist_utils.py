@@ -660,19 +660,14 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
     :param new_group: The new group that the user was added to.
     :return: None.
     """
-    # FIXME: This does not work. Most likely there is confusin with different IDs, which results in pulling wrong
-    #  members/groups.
-    # Get the lists for the user group. Find all the TIM members that represent the new_group on message lists.
-    group_tim_members = MessageListTimMember.query.filter_by(group_id=new_group.id).all()
-    # Get the message lists that the groups have a membership in.
-    group_message_lists = [g.member.message_list for g in group_tim_members]
-
-    # Add user to the group's message lists.
-    for message_list in group_message_lists:
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
-        add_new_message_list_tim_user(message_list, user, message_list.default_send_right,
-                                      message_list.default_delivery_right, email_list)
-    db.session.commit()  # .flush() might be enough?
+    # Get all the message lists for the user group.
+    for group_tim_member in new_group.messagelist_membership:
+        group_message_list: MessageListModel = group_tim_member.message_list
+        # Propagate the adding on message list's message channels.
+        if group_message_list.email_list_domain:
+            email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
+            add_email(email_list, user.email, True, user.real_name,
+                      group_tim_member.member.send_right, group_tim_member.member.delivery_right)
 
 
 def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
@@ -682,37 +677,14 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
     :param old_group: The group where the user was removed from.
     :return: None.
     """
-    # FIXME: This does not work. Most likely there is confusion with different IDs, which results in pulling wrong
-    #  members/groups.
     # Get all the message lists for the user group.
-    group_tim_members = MessageListTimMember.query.filter_by(group_id=old_group.id).all()
-    for group_tim_member in group_tim_members:
-        # For the message list, find all groups.
-        group_message_list = group_tim_member.message_list
-        member_groups: List[UserGroup] = []
-        for member_id in group_message_list.get_tim_members():
-            tim_member = MessageListTimMember.query.filter_by(id=member_id).one()
-            if tim_member.is_group():
-                member_groups.append(tim_member.user_group)
-        # Check how many groups does the user currently belong to.
-        belongs_to = []
-        for group in member_groups:
-            # belongs_to = []  # groups the user has a membership in, that belong to the message list.
-            for membership in group.current_memberships:
-                if membership.usergroup_id == old_group.id and membership.user_id == user.id:
-                    # VIESTIM: This should be a singular finding, yes? There shouldn't be multiple memberships for
-                    #  the same user to the same group?
-                    belongs_to.append(membership)
-        # VIESTIM: We assume that in the function that triggers this function the user is already removed from the
-        #  group.
-        if len(belongs_to) == 0:
-            # If the user does not belong to any other group, set them as removed from the message list as well.
-            group_tim_member.remove()
-        else:
-            # The user belongs to other groups still on the message list. They don't have to then be automatically set
-            # as removed.
-            pass
-    db.session.commit()  # .flush() might be enough?
+    for group_tim_member in old_group.messagelist_membership:
+        group_message_list: MessageListModel = group_tim_member.message_list
+        # Propagate the deletion on message list's message channels.
+        if group_message_list.email_list_domain:
+            email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
+            email_list_member = get_email_list_member(email_list, user.email)
+            remove_email_list_membership(email_list_member)
 
 
 def set_message_list_member_removed_status(member: MessageListMember,
