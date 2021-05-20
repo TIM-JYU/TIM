@@ -394,12 +394,15 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     private get searchQueryStrings() {
+        // Preliminarily strip whitespace
+        const searchString = this.searchString.trim();
+        const result = [searchString];
+
         // When reading Finnish personal identity numbers, code scanner can sometimes misread chars +/-
         // Same can of course happen to a normal person doing a query by hand
         // Therefore, we add alternative search string where we swap +/- with each other
         const mistakePidPattern = /^(\d{6})([+-])(\d{3}[a-zA-Z])$/i;
-        const pidMatch = mistakePidPattern.exec(this.searchString);
-        const result = [this.searchString];
+        const pidMatch = mistakePidPattern.exec(searchString);
         if (pidMatch) {
             const [, pidStart, pidMark, pidEnd] = pidMatch;
             result.push(`${pidStart}${pidMark == "-" ? "+" : "-"}${pidEnd}`);
@@ -622,6 +625,8 @@ export class UserSelectComponent extends AngularPluginBase<
         beepOnSuccess: boolean = false,
         beepOnFailure: boolean = false
     ) {
+        // Cache the search query strings for later check
+        const searchQueryStrings = this.searchQueryStrings;
         const scanOk = await this.doSearch();
         if (
             scanOk &&
@@ -639,10 +644,20 @@ export class UserSelectComponent extends AngularPluginBase<
         if (
             this.lastSearchResult &&
             applyOnMatch &&
-            this.lastSearchResult.matches.length == 1
+            this.lastSearchResult.matches.length == 1 &&
+            this.isFullMatch(
+                this.lastSearchResult.matches[0],
+                searchQueryStrings
+            )
         ) {
             await this.apply();
         }
+    }
+
+    private isFullMatch(user: UserResult, keywords: string[]) {
+        return Object.values(user.fields).some((v) =>
+            keywords.some((q) => q === v)
+        );
     }
 
     private async doSearch() {
