@@ -67,7 +67,7 @@ class SetTaskValueAction:
 class DistributeRightAction:
     operation: Literal["confirm", "quit", "unlock", "changetime"]
     target: Union[str, List[str]]
-    timestamp: datetime = field(default_factory=get_current_time)
+    timestamp: Optional[datetime] = None
     minutes: float = 0.0
 
 
@@ -292,6 +292,7 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
     undoable_dists = [dist for dist in model.actions.distributeRight if dist.operation in ("confirm", "quit")]
     errors = []
     for distribute in undoable_dists:
+        distribute.timestamp = distribute.timestamp or get_current_time()
         if distribute.operation == "confirm":
             undo_op: Union[UndoConfirmOp, UndoQuitOp] = UndoConfirmOp(type="undoconfirm",
                                                                       email=user_acc.email,
@@ -374,6 +375,7 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
 
     errors = []
     for distribute in model.actions.distributeRight:
+        distribute.timestamp = distribute.timestamp or get_current_time()
         convert = RIGHT_TO_OP[distribute.operation]
         right_op = convert(distribute, user_acc.email)
         errors.extend(register_right_impl(right_op, distribute.target))
