@@ -20,41 +20,45 @@ interface ReplyOptions {
     template: `
         <ng-container *ngIf="showMessage">
             <div class="timMessageDisplay">
-                <p>
-                    <span>From: </span>
-                    <span>{{sender}}</span>
-                    <span *ngIf="messageToGroup">, {{group}}</span>
+                <p class="messageInformation">
+                    <span class="from">From: </span>
+                    <span class="sender">{{sender}}</span>
+                    <span class="group" *ngIf="messageToGroup">, {{group}}</span>
                 </p>
-                <p class="message-heading">{{heading}}</p>
+                <p class="messageHeading">{{heading}}</p>
                 <div class="fullMessageContent" *ngIf="showFullContent">
-                    <div [innerHTML]="fullContent"></div>
-                    <p *ngIf="messageOverMaxLength" class="toggleReadMore"><a (click)="toggleDisplayedContentLength()">Read
-                        less</a></p>
+                    <div class="fullContentText" [innerHTML]="fullContent"></div>
+                    <p class="toggleReadMore" *ngIf="messageOverMaxLength">
+                        <a (click)="toggleDisplayedContentLength()">Read less</a>
+                    </p>
                 </div>
                 <div class="cutMessageContent" *ngIf="!showFullContent">
-                    <div [innerHTML]="shownContent"></div>
+                    <div class="shownContentText" [innerHTML]="shownContent"></div>
                     <p class="toggleReadMore"><a (click)="toggleDisplayedContentLength()">Read more</a></p>
                 </div>
                 <div class="buttonArea">
                     <button class="timButton" *ngIf="canReply" (click)="reply()">Reply</button>
                 </div>
                 <div class="replyArea" *ngIf="showReply">
-                    <p>To: {{sender}}</p>
-                    <textarea id="reply-message" name="reply-message" [(ngModel)]="replyMessage"></textarea>
+                    <p class="replyTo">To: {{sender}}</p>
+                    <textarea class="replyTextarea" id="reply-message" name="reply-message"
+                              [(ngModel)]="replyMessage"></textarea>
                     <div class="sent">
                         <button class="timButton" [disabled]="!canSendReply" (click)="sendReply()">Send</button>
-                        <span *ngIf="replySent">Sent!</span>
+                        <span class="replySent" *ngIf="replySent">Sent!</span>
                     </div>
                 </div>
                 <form class="readReceiptArea">
-                    <label><input type="checkbox" name="mark-as-read" id="mark-as-read"
-                                  [disabled]="!canMarkAsRead || markedAsRead" (click)="markAsRead()"/> Mark as
-                        Read</label>
-                    <span class="readReceiptLink"
-                          *ngIf="markedAsRead">Read receipt can be cancelled in <a href="/view/messages/tim-messages">your messages</a></span>
-                    <button class="timButton" title="Close Message"
-                            [disabled]="(!markedAsRead && !replySent)"
-                            (click)="closeMessage()">
+                    <label class="markAsReadLabel"><input class="markAsReadCheckbox" 
+                                                          type="checkbox" 
+                                                          name="mark-as-read"
+                                                          id="mark-as-read"
+                                                          [disabled]="!canMarkAsRead || markedAsRead"
+                                                          (click)="markAsRead()"/> Mark as Read</label>
+                    <span class="readReceiptLink" *ngIf="markedAsRead">
+                        Read receipt can be cancelled in <a href="/view/messages/tim-messages">your messages</a>
+                    </span>
+                    <button class="timButton" title="Close Message" (click)="closeMessage()">
                         Close
                     </button>
                 </form>

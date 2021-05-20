@@ -1,7 +1,7 @@
 .timMessageDisplay {
     border: 1px solid black;
     border-radius: 6px;
-    padding: 8px;
+    padding: 6px 8px 8px 8px;
     background-color: var(--basic-color-inverse);
 
     @media (min-width: 1400px) {
@@ -18,7 +18,7 @@
         margin-bottom: 4px;
     }
 
-    .message-heading {
+    .messageHeading {
         font-weight: bold;
     }
 
