@@ -58,7 +58,7 @@ import {Users} from "../user/userService";
                           [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
                 </div>
             </div>
-            <div>
+            <div *ngIf="archiveOptions && archive">
                 <p class="list-archive-policy-header">Archive policy:</p>
                 <!-- Variable archiveoptions is reversed, so indexing for display has to accommodate. -->
                 <p class="indented">{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
