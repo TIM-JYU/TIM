@@ -139,7 +139,8 @@ export class MessageListComponent extends AngularDialogComponent<
 
     /**
      * The call to create new list.
-     * @param options
+     * @param options Required amount of options to create a new message list. Here the necessary arguments are list's
+     * name and archive policy.
      * @private
      */
     private createList(options: ListOptions) {
@@ -159,34 +160,29 @@ export class MessageListComponent extends AngularDialogComponent<
      * @returns {boolean} Returns true if name requirements are met. Otherwise returns false.
      */
     checkNameRequirementsLocally(): boolean {
+        // Clear old error messages.
         this.errorMessage = [];
 
         // Name length is within length boundaries.
-        if (this.listname.length < 5 || 36 < this.listname.length) {
-            // console.log("Name not in length boundaries");
+        if (this.listname.length <= 5 || 36 <= this.listname.length) {
             this.errorMessage.push("Name not in length boundaries");
         }
 
         // Name starts with a character that is a letter a - z.
-        // Notice that ^ serves two different purposes in the following regular expression.
-        // The first one checks at the beginning of the string, the second is a negation.
         const regExpStartCharacter: RegExp = /^[a-z]/;
         if (!regExpStartCharacter.test(this.listname)) {
-            // console.log("name doesn't start with a lowercase letter");
             this.errorMessage.push("Name should start with a lowercase letter");
         }
 
         // Name contains at least one digit.
         const regExpAtLeastOneDigit: RegExp = /\d/;
         if (!regExpAtLeastOneDigit.test(this.listname)) {
-            // console.error("name doesn't contain at least one digit.");
             this.errorMessage.push("Name should contain at least one digit");
         }
 
-        // Name can't contain multiple sequential dots.
+        // Name can't contain sequential dots.
         const regExpMultipleDots: RegExp = /\.\.+/;
         if (regExpMultipleDots.test(this.listname)) {
-            // console.log("name contains multiple dots");
             this.errorMessage.push("Name shouldn´t contain multiple dots");
         }
 
@@ -194,7 +190,6 @@ export class MessageListComponent extends AngularDialogComponent<
         // ESLint prefers to not use regex for this. And by "prefer" we mean this won't transpile with a regular
         // expression.
         if (this.listname.endsWith(".")) {
-            // console.log("name ends in a dot");
             this.errorMessage.push("Name shouldn´t end in a dot");
         }
 
@@ -209,7 +204,6 @@ export class MessageListComponent extends AngularDialogComponent<
         // to be escaped. The dot does not have to be escaped here.
         const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
         if (regExpNonAllowedCharacters.test(this.listname)) {
-            // console.log("Name had forbidden characters");
             this.errorMessage.push("Name has forbidden characters");
         }
         return this.errorMessage.length == 0;
