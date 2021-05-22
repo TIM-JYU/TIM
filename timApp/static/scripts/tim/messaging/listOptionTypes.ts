@@ -1,7 +1,8 @@
 import {Moment} from "moment";
 
 export interface ListOptions {
-    // VIESTIM Keep this updated with ListOptions class (at the Python side of things)
+    // Keep this updated with ListOptions Python class. That class also provides further information about these
+    // variables.
     name: string;
     domain?: string;
     archive?: ArchiveType;
@@ -22,6 +23,7 @@ export interface ListOptions {
     distribution?: Distribution;
 }
 
+// Interface to express what message channels the message list has in use.
 export interface Distribution {
     tim_message: boolean;
     email_list: boolean;
@@ -33,14 +35,14 @@ export enum Channel {
     EMAIL_LIST = "email_list",
 }
 
+// See ReplyToListChanges Python class.
 export enum ReplyToListChanges {
-    // See ReplyToListChanges Python class.
     NOCHANGES,
     ADDLIST,
 }
 
+// See ArchiveType class on Python side of things for explanations.
 export enum ArchiveType {
-    // See ArchiveType class on Python side of things for explanations.
     NONE,
     SECRET,
     GROUPONLY,
@@ -77,8 +79,8 @@ export const archivePolicyNames: ArchivePolicyNames[] = [
     },
 ].reverse();
 
+// See MemberInfo Python class for further details.
 export interface MemberInfo {
-    // VIESTIM Keep this members' db models' json representation.
     name: string;
     sendRight: boolean;
     deliveryRight: boolean;

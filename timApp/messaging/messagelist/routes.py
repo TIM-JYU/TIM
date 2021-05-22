@@ -233,20 +233,20 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
 
 
 @messagelist.route("/addmember", methods=['POST'])
-def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliveryRight: bool) -> Response:
+def add_member(member_candidates: List[str], msg_list: str, send_right: bool, delivery_right: bool) -> Response:
     """Add new members to a message list.
 
-    :param memberCandidates: Names of member candidates.
-    :param msgList: The message list where we are trying to add new members.
-    :param sendRight: The send right on a list for all the member candidates.
-    :param deliveryRight: The delivery right on a list for all the member candidates.
+    :param member_candidates: Names of member candidates.
+    :param msg_list: The message list where we are trying to add new members.
+    :param send_right: The send right on a list for all the member candidates.
+    :param delivery_right: The delivery right on a list for all the member candidates.
     :return: OK response.
     """
     # TODO: Validate access rights.
     #  List owner.
     verify_logged_in()
 
-    msg_list = MessageListModel.get_list_by_name_exactly_one(msgList)
+    msg_list = MessageListModel.get_list_by_name_exactly_one(msg_list)
 
     # TODO: Implement checking whether or not users are just added to a list (like they are now) or they are invited
     #  to a list (requires link generation and other things).
@@ -256,21 +256,21 @@ def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliv
         verify_mailman_connection()
         em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
 
-    for member_candidate in memberCandidates:
+    for member_candidate in member_candidates:
         u = User.get_by_name(member_candidate.strip())
         if u is not None:
             # The name given was an existing TIM user.
-            add_new_message_list_tim_user(msg_list, u, sendRight, deliveryRight, em_list)
+            add_new_message_list_tim_user(msg_list, u, send_right, delivery_right, em_list)
 
         # TODO: If member_candidate is a user group, what do? Add as is or open it to individual users?
         ug = UserGroup.get_by_name(member_candidate.strip())
         if ug is not None:
             # The name belongs to a user group.
-            add_new_message_list_group(msg_list, ug, sendRight, deliveryRight, em_list)
+            add_new_message_list_group(msg_list, ug, send_right, delivery_right, em_list)
         # If member candidate is not a user, or a user group, then we assume an external member. Add external members.
         if is_valid_email(member_candidate.strip()) and em_list:
             add_message_list_external_email_member(msg_list, member_candidate.strip(),
-                                                   sendRight, deliveryRight, em_list, None)
+                                                   send_right, delivery_right, em_list, None)
     db.session.commit()
     return ok_response()
 

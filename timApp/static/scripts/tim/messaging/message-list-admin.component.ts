@@ -363,10 +363,10 @@ export class MessageListAdminComponent implements OnInit {
         const result = await to2(
             this.http
                 .post(`${this.urlPrefix}/addmember`, {
-                    memberCandidates: memberCandidates,
-                    msgList: this.listname,
-                    sendRight: this.newMemberSendRight,
-                    deliveryRight: this.newMemberDeliveryRight,
+                    member_candidates: memberCandidates,
+                    msg_list: this.listname,
+                    send_right: this.newMemberSendRight,
+                    delivery_right: this.newMemberDeliveryRight,
                 })
                 .toPromise()
         );
