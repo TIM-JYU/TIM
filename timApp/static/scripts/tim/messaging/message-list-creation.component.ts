@@ -77,7 +77,7 @@ export class MessageListComponent extends AngularDialogComponent<
     domains: string[] = [];
     domain: string = "";
 
-    // List has a private members only archive by default.
+    // List has a public archive by default.
     archive: ArchiveType = ArchiveType.PUBLIC;
     archiveOptions = archivePolicyNames;
 
@@ -91,6 +91,10 @@ export class MessageListComponent extends AngularDialogComponent<
         }
     }
 
+    /**
+     * Fetch possible domains to be used for email lists.
+     * @private
+     */
     private async getDomains() {
         const result = await to2(
             this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
@@ -101,7 +105,12 @@ export class MessageListComponent extends AngularDialogComponent<
             // Set default domain.
             this.domain = this.domains[0];
         } else {
-            console.error(result.result.error.error);
+            this.errorMessage = [
+                `Failed to load domains, list creation can't continue. The following error provides details: ${result.result.error.error}`,
+            ];
+            // Creating a message list isn't possible at this time if domains are not given. Therefore disable creation
+            // button.
+            this.disableCreate = true;
         }
     }
 
