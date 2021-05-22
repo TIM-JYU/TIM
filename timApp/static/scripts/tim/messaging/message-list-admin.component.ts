@@ -205,7 +205,7 @@ export class MessageListAdminComponent implements OnInit {
     listname: string = "";
 
     // List has a private members only archive by default.
-    archive: ArchiveType = ArchiveType.GROUPONLY;
+    archive?: ArchiveType; // = ArchiveType.GROUPONLY;
 
     domain?: string;
     domains: string[] = [];
@@ -230,14 +230,14 @@ export class MessageListAdminComponent implements OnInit {
     archiveURL?: string;
 
     canUnsubscribe?: boolean;
-    defaultSendRight?: boolean;
-    defaultDeliveryRight?: boolean;
+    defaultSendRight?: boolean; // TODO: Not in UI at the moment. Add this.
+    defaultDeliveryRight?: boolean; // TODO: Not in the UI at the moment. Add this.
     listSubjectPrefix?: string;
     nonMemberMessagePass?: boolean;
     onlyText?: boolean;
     allowAttachments?: boolean;
     // distibution?: Channel[];
-    distribution?: Distribution;
+    distribution?: Distribution; // TODO: Not in use at the moment. Add this.
     listReplyToChange?: ReplyToListChanges;
 
     newMemberSendRight: boolean = true;
@@ -247,7 +247,7 @@ export class MessageListAdminComponent implements OnInit {
     memberAddSucceededResponse: string = "";
     memberAddFailedResponse: string = "";
 
-    // Permanent error messages, e.g. loading failed and reload is needed.
+    // Permanent error messages that cannot be recovered from, e.g. loading failed and reload is needed.
     permanentErrorMessage?: string;
 
     recipients = "";
@@ -273,7 +273,7 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     /**
-     * Build this list's email address, if there is a domain configured.
+     * Build this list's email address, if there is a domain configured. Otherwise return an empty string.
      */
     listAddress() {
         if (this.domain) {
@@ -412,6 +412,7 @@ export class MessageListAdminComponent implements OnInit {
         if (result.ok) {
             // TODO: Inform the user deletion was succesfull.
             console.log(result.result);
+            // TODO: Redirect the user somewhere. Maybe the front page or the general message list directory.
         } else {
             // TODO: Inform the user deletion was not succesfull.
             console.error(result.result);
@@ -432,11 +433,18 @@ export class MessageListAdminComponent implements OnInit {
 
     /**
      * Setting list values after loading.
-     * @param listOptions
+     * @param listOptions All the options of the list returned from the server.
      */
     setValues(listOptions: ListOptions) {
         this.listname = listOptions.name;
         this.archive = listOptions.archive;
+        // Without archive value, there is no reason to continue. Show error and short circuit here.
+        if (this.archive === undefined) {
+            this.permanentErrorMessage =
+                "Loading the archive value failed. Please reload the page. If reloading the page does not fix the " +
+                "problem, then please contact TIM's support and tell about this error.";
+            return;
+        }
 
         this.domain = listOptions.domain;
 
