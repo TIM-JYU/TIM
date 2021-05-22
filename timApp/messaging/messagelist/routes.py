@@ -49,10 +49,10 @@ def create_list(options: ListOptions) -> Response:
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
+    # Options object is given directly to new_list, so we don't want to use temporary variable for stripped name.
     options.name = options.name.strip()
 
-    test_name(options.name)  # Test the name we are creating.
-
+    test_name(options.name)
     manage_doc, message_list = new_list(options)
 
     if options.domain:
@@ -81,21 +81,6 @@ def test_name(name_candidate: str) -> None:
         # If character '@' is found, we check email list specific name requirements.
         verify_mailman_connection()
         check_emaillist_name_requirements(name, domain)
-
-
-@messagelist.route("/checkname/<string:name_candidate>", methods=['GET'])
-def check_name(name_candidate: str) -> Response:
-    """Check if name candidate meets requirements.
-
-    If name checking fails at any point, an exception is raised and that exception is delivered to the client. If all
-    checks succeed, then just return an OK response.
-
-    :param name_candidate: Possible name for message/email list. Should either be a name for a list or a fully qualifed
-    domain name for (email) list. In the latter case we also check email list specific name requirements.
-    :return: OK response.
-    """
-    test_name(name_candidate)
-    return ok_response()
 
 
 @messagelist.route("/domains", methods=['GET'])

@@ -105,6 +105,9 @@ export class MessageListComponent extends AngularDialogComponent<
         }
     }
 
+    /**
+     * Launching the creation of a new list. Verifies the basic name rules in the client before involving the server.
+     */
     async newList() {
         if (!this.checkNameRequirementsLocally()) {
             return;
@@ -200,31 +203,7 @@ export class MessageListComponent extends AngularDialogComponent<
             // console.log("Name had forbidden characters");
             this.errorMessage.push("Name has forbidden characters");
         }
-
         return this.errorMessage.length == 0;
-    }
-
-    /**
-     * Helper to check if this list name exists.
-     */
-    async checkServerNameRequirements() {
-        // Name candidate depends on whether domains are configured for TIM.
-        const nameCandidate: string = this.domain
-            ? `${this.listname}@${this.domain}`
-            : this.listname;
-
-        const result = await to2(
-            this.http
-                .get(`${this.urlPrefix}/checkname/${nameCandidate}`)
-                .toPromise()
-        );
-        if (result.ok) {
-            // VIESTIM: we need a better indication that the name is available to the user.
-            console.log("Name check done. Name is available.");
-        } else {
-            // VIESTIM: We need a better indication that the name is not available to the user.
-            console.error(result.result.error.error);
-        }
     }
 }
 
