@@ -117,6 +117,11 @@ import {Users} from "../user/userService";
                         <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
                         Allow attachments on the list.</label>
                 </div>
+                <div class="indented">
+                    <label>
+                        <input type="checkbox" name="list-answer-guidance" [(ngModel)]="listAnswerGuidance">
+                        Guide answers to message list.</label>
+                </div>
                 <div>
                     <button class="timButton" (click)="saveOptions()">Save changes</button>
                 </div>
@@ -204,8 +209,7 @@ import {Users} from "../user/userService";
 export class MessageListAdminComponent implements OnInit {
     listname: string = "";
 
-    // List has a private members only archive by default.
-    archive?: ArchiveType; // = ArchiveType.GROUPONLY;
+    archive?: ArchiveType;
 
     domain?: string;
     domains: string[] = [];
@@ -238,7 +242,9 @@ export class MessageListAdminComponent implements OnInit {
     allowAttachments?: boolean;
     // distibution?: Channel[];
     distribution?: Distribution; // TODO: Not in use at the moment. Add this.
+
     listReplyToChange?: ReplyToListChanges;
+    listAnswerGuidance?: boolean; // Track above enum value in a checkbox.
 
     newMemberSendRight: boolean = true;
     newMemberDeliveryRight: boolean = true;
@@ -475,7 +481,12 @@ export class MessageListAdminComponent implements OnInit {
         this.allowAttachments = listOptions.allow_attachments;
         this.distribution = listOptions.distribution;
         this.allowAttachments = listOptions.allow_attachments;
-        this.listReplyToChange = listOptions.default_reply_type;
+        // Convert enum to boolean for tracking this on a checkbox.
+        if (listOptions.default_reply_type != null) {
+            this.listAnswerGuidance =
+                listOptions.default_reply_type !== ReplyToListChanges.NOCHANGES;
+            this.listReplyToChange = listOptions.default_reply_type;
+        }
     }
 
     /**
@@ -488,7 +499,9 @@ export class MessageListAdminComponent implements OnInit {
             list_info: this.listInfo,
             list_description: this.listDescription,
             only_text: this.onlyText,
-            default_reply_type: this.listReplyToChange, // TODO: Option to ask the user.
+            default_reply_type: this.listAnswerGuidance
+                ? ReplyToListChanges.ADDLIST
+                : ReplyToListChanges.NOCHANGES,
             notify_owners_on_list_change: this.notifyOwnerOnListChange,
             archive: this.archive,
             tim_users_can_join: this.timUsersCanJoin,

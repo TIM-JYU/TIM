@@ -37,8 +37,8 @@ export enum Channel {
 
 // See ReplyToListChanges Python class.
 export enum ReplyToListChanges {
-    NOCHANGES,
-    ADDLIST,
+    NOCHANGES = "no_munging",
+    ADDLIST = "point_to_list",
 }
 
 // See ArchiveType class on Python side of things for explanations.
