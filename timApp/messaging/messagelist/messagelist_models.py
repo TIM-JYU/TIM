@@ -318,12 +318,11 @@ class MessageListTimMember(MessageListMember):
         ug = self.user_group
         return ug.name
 
-    def get_email(self) -> str:  # Optional[str]:
-        """Get TIM user group's email. Email makes sense only for personal user groups. Groups """
+    def get_email(self) -> str:
+        """Get TIM user group's email. Email makes sense only for personal user groups. Using this method for groups
+        returns an empty string"""
         if self.is_group():
-            return ""  # None
-        # from timApp.user.usergroup import UserGroup
-        # ug = UserGroup.query.filter_by(id=self.group_id).one()
+            return ""
         ug = self.user_group
         user = ug.personal_user
         return user.email
@@ -338,7 +337,7 @@ class MessageListExternalMember(MessageListMember):
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
 
     # VIESTIM: Does this unique constraint block same external member from being part of more than one message list?
-    email_address = db.Column(db.Text, unique=True)
+    email_address = db.Column(db.Text)
     """Email address of message list's external member."""
 
     display_name = db.Column(db.Text)
