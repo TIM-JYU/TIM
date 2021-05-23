@@ -1,7 +1,7 @@
 import {HttpClient} from "@angular/common/http";
 import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {to2} from "tim/util/utils";
+import {to, to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {
     archivePolicyNames,
@@ -15,6 +15,9 @@ import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TableFormModule} from "tim/plugin/tableForm";
 import moment from "moment";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {$http} from "tim/util/ngimport";
 import {Users} from "../user/userService";
 
 @Component({
@@ -340,8 +343,11 @@ export class MessageListAdminComponent implements OnInit {
                 this.domain = this.domains[0];
             }
         } else {
-            // Getting an error here is not a problem, since these domains are not (yet) in use other than displaying
-            // them in the UI. The UI will probably look a bit funky, but it does not affect functionality right now.
+            /* Getting an error here is not a problem, since these domains are not (yet) in use other than displaying
+             * them in the UI. The UI will probably look a bit funky, but it does not affect functionality right now.
+             * In the future, this is a problem if email list could be taken into use after the message list already
+             * exists.
+             */
         }
     }
 
@@ -405,24 +411,30 @@ export class MessageListAdminComponent implements OnInit {
         // TODO: Confirm with user if they are really sure they want to delete the entire message list. Technically it
         //  could be reversible, but such an hassle that not letting it happen by a single button press should be
         //  allowed.
-        const result = await to2(
-            this.http
-                .delete(`/messagelist/deletelist`, {
-                    params: {
-                        listname: this.listname,
-                        domain: this.domain ? this.domain : "",
-                    },
-                })
-                .toPromise()
-        );
-        if (result.ok) {
-            // TODO: Inform the user deletion was succesfull.
-            console.log(result.result);
-            // TODO: Redirect the user somewhere. Maybe the front page or the general message list directory.
-        } else {
-            // TODO: Inform the user deletion was not succesfull.
-            console.error(result.result);
-        }
+        await showInputDialog({
+            title: "Confirm list deletion",
+            text: "Confirm you really want to delete this list.",
+            isInput: InputDialogKind.ValidatorOnly,
+            validator: async () => {
+                const result = await to(
+                    $http.delete(`/messagelist/deletelist`, {
+                        params: {
+                            listname: this.listname,
+                            domain: this.domain ? this.domain : "",
+                        },
+                    })
+                );
+                if (result.ok) {
+                    return {ok: true, result: result.result} as const;
+                } else {
+                    return {
+                        ok: false,
+                        result: result.result.data.error,
+                    } as const;
+                }
+            },
+        });
+        location.assign("/view/messagelists");
     }
 
     /**
