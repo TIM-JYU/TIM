@@ -42,11 +42,8 @@ class MessageListModel(db.Model):
     attached email list. This is a tad silly at this point in time, because JYU TIM only has one domain. However, 
     this allows quick adaptation if more domains are added or otherwise changed in the future. """
 
-    # VIESTIM: archive is type bool in the original plan.
     archive = db.Column(db.Enum(ArchiveType))
     """The archive policy of a message list."""
-
-    # VIESTIM: New values.
 
     notify_owner_on_change = db.Column(db.Boolean)
     """Should the owner of the message list be notified if there are changes on message list members."""
@@ -60,8 +57,6 @@ class MessageListModel(db.Model):
     removed = db.Column(db.DateTime(timezone=True))
     """When this list has been marked for removal."""
 
-    # TODO: Maybe needs columns for default send and delivery rights for a new list member, especially if this member
-    #  is added from outside sources without direct list owner intervention.
     default_send_right = db.Column(db.Boolean)
     """Default send right for new members who join the list on their own."""
 
@@ -194,11 +189,9 @@ class MessageListMember(db.Model):
     message_list_id = db.Column(db.Integer, db.ForeignKey("messagelist.id"))
     """What message list a member belongs to."""
 
-    # VIESTIM: This is can_send in the original database plan.
     send_right = db.Column(db.Boolean)
     """If a member can send messages to a message list. Send right for a user group is meaningless at this point"""
 
-    # VIESTIM: delivery_right doesn't exist in the original plan.
     delivery_right = db.Column(db.Boolean)
     """If a member can get messages from a message list. Delivery right for a user group is meaningless at this 
     point. """
@@ -215,8 +208,6 @@ class MessageListMember(db.Model):
     this date is the date teacher added the member. If the member was invited, then this is the date they verified 
     their join. """
 
-    # VIESTIM: This doesn't strictly speaking exists in the original plan. This acts as an discriminator,
-    #  see SQLAlchemy's documentation's term list.
     member_type = db.Column(db.Text)
     """Discriminator for polymorhphic members."""
 
@@ -352,14 +343,13 @@ class MessageListExternalMember(MessageListMember):
 
     display_name = db.Column(db.Text)
 
-    # VIESTIM: The other member relationships have needed post_update=True argument. This might need one too.
     member = db.relationship("MessageListMember", back_populates="external_member", lazy="select", uselist=False)
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
 
     def to_json(self) -> Dict[str, Any]:
         return {
-            "name": self.get_name(),  # TODO: If/When a display name is added as a column, that can be used here.
+            "name": self.get_name(),
             "email": self.email_address,
             "sendRight": self.member.send_right,
             "deliveryRight": self.member.delivery_right,
@@ -398,8 +388,7 @@ class MessageListDistribution(db.Model):
     channel = db.Column(db.Enum(Channel))
     """Which message channels are used for a message list."""
 
-    # TODO: add uselist=False
-    member = db.relationship("MessageListMember", back_populates="distribution", lazy="select")
+    member = db.relationship("MessageListMember", back_populates="distribution", lazy="select", uselist=False)
     message_list = db.relationship("MessageListModel", back_populates="distribution", lazy="select", uselist=False)
 
 
@@ -419,8 +408,6 @@ class UserEmails(db.Model):
 
     address_verified = db.Column(db.DateTime(timezone=True))
     """The user has to verify they are in the possession of the email address."""
-
-    # VIESTIM: Do we need a relationship to useraccount table?
 
 
 class VerificationType(Enum):
