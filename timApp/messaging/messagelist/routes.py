@@ -218,16 +218,16 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
 
     email_list = None
     if message_list.email_list_domain:
+        # If there is a domain configured for a list and the Mailman connection is not configured, we can't continue
+        # at this time.
         verify_mailman_connection()
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
 
-    # VIESTIM: This solution is probably not well optimized.
     for member in members:
         db_member = message_list.get_member_by_name(member.name, member.email)
-        # VIESTIM: In what case would we face a situation where we couldn't find this member? They are given from the
-        #  db in the first place.
+        # This if mostly guards against type errors, but what if we legitimely can't find them? They are given from
+        # the db in the first place. Is there a reasonable way to communicate this state?
         if db_member:
-            # If send or delivery right has changed, then set them to db and on Mailman.
             set_member_send_delivery(db_member, member.sendRight, member.deliveryRight, email_list=email_list)
             set_message_list_member_removed_status(db_member, member.removed, email_list=email_list)
     db.session.commit()
@@ -244,10 +244,8 @@ def add_member(member_candidates: List[str], msg_list: str, send_right: bool, de
     :param delivery_right: The delivery right on a list for all the member candidates.
     :return: OK response.
     """
-    # TODO: Validate access rights.
-    #  List owner.
+    # Check access right.
     verify_logged_in()
-
     message_list = MessageListModel.get_list_by_name_exactly_one(msg_list)
     if not has_manage_access(message_list.block):
         raise RouteException("You need at least a manage access to the list to do this action.")
@@ -261,16 +259,19 @@ def add_member(member_candidates: List[str], msg_list: str, send_right: bool, de
         em_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
 
     for member_candidate in member_candidates:
+        # For individual users
         u = User.get_by_name(member_candidate.strip())
         if u is not None:
             # The name given was an existing TIM user.
             add_new_message_list_tim_user(message_list, u, send_right, delivery_right, em_list)
 
-        # TODO: If member_candidate is a user group, what do? Add as is or open it to individual users?
+        # For user groups.
         ug = UserGroup.get_by_name(member_candidate.strip())
         if ug is not None:
             # The name belongs to a user group.
             add_new_message_list_group(message_list, ug, send_right, delivery_right, em_list)
+
+        # For external members.
         # If member candidate is not a user, or a user group, then we assume an external member. Add external members.
         if is_valid_email(member_candidate.strip()) and em_list:
             add_message_list_external_email_member(message_list, member_candidate.strip(),
