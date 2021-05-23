@@ -8,6 +8,7 @@ from flask import Response
 from timApp.document.document import Document
 from timApp.document.documents import import_document_from_file
 from timApp.document.viewcontext import default_view_ctx
+from timApp.item.manage import get_trash_folder
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
@@ -150,7 +151,8 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
             return error_generic('Message document not found', 404)
 
         # Hides the message if the corresponding document has been deleted
-        if document.name.startswith('roskis/'):
+        trash_folder_path = get_trash_folder().path
+        if document.name.startswith(trash_folder_path):
             continue
 
         fullmessages.append(TimMessageData(id=message.id,
