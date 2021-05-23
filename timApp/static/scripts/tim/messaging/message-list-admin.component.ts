@@ -138,6 +138,8 @@ import {Users} from "../user/userService";
                 </div>
                 <div>
                     <button class="timButton" (click)="saveOptions()">Save changes</button>
+                    <tim-alert severity="success" *ngIf="saveSuccessMessage">{{saveSuccessMessage}}</tim-alert>
+                    <tim-alert severity="danger" *ngIf="saveFailMessage">{{saveFailMessage}}</tim-alert>
                 </div>
                 <div id="members-section" class="section">
                     <h3>Members</h3>
@@ -262,6 +264,9 @@ export class MessageListAdminComponent implements OnInit {
 
     newMemberSendRight: boolean = true;
     newMemberDeliveryRight: boolean = true;
+
+    saveSuccessMessage: string = "";
+    saveFailMessage: string = "";
 
     // Response strings used in giving feedback to the user on adding new members to the message list.
     memberAddSucceededResponse: string = "";
@@ -517,12 +522,16 @@ export class MessageListAdminComponent implements OnInit {
      * Save the list options.
      */
     async saveOptions() {
+        // Reset a failed saving message.
+        this.saveFailMessage = "";
         const result = await this.saveOptionsCall({
             name: this.listname,
             domain: this.domain,
             list_info: this.listInfo,
             list_description: this.listDescription,
             only_text: this.onlyText,
+            // If the checkbox for guiding messages to message list is checked, put ADDLIST enum, otherwise NOCHANGES
+            // enum as default_reply_type
             default_reply_type: this.listAnswerGuidance
                 ? ReplyToListChanges.ADDLIST
                 : ReplyToListChanges.NOCHANGES,
@@ -538,8 +547,9 @@ export class MessageListAdminComponent implements OnInit {
             allow_attachments: this.allowAttachments,
         });
         if (result.ok) {
+            this.showTempSaveSuccess();
         } else {
-            console.error("save fail");
+            this.saveFailMessage = `Save failed with an error: ${result.result.error.error}`;
         }
     }
 
@@ -588,6 +598,15 @@ export class MessageListAdminComponent implements OnInit {
         } else {
             return "";
         }
+    }
+
+    /**
+     * Shows a timed save success message.
+     */
+    showTempSaveSuccess() {
+        console.log("showTempSaveSuccess()");
+        this.saveSuccessMessage = "Save success!";
+        window.setTimeout(() => (this.saveSuccessMessage = ""), 5 * 1000);
     }
 }
 
