@@ -408,12 +408,12 @@ export class MessageListAdminComponent implements OnInit {
      * Helper for list deletion.
      */
     async deleteList() {
-        // TODO: Confirm with user if they are really sure they want to delete the entire message list. Technically it
-        //  could be reversible, but such an hassle that not letting it happen by a single button press should be
-        //  allowed.
+        // TODO: If cancelled, the dialog logs to console an error:
+        //  ERROR Error: Uncaught (in promise): Dialog was closed from the X button
         await showInputDialog({
             title: "Confirm list deletion",
             text: "Confirm you really want to delete this list.",
+            okText: "Delete",
             isInput: InputDialogKind.ValidatorOnly,
             validator: async () => {
                 const result = await to(
