@@ -57,7 +57,7 @@ import {Users} from "../user/userService";
             <div class="form-group">
                 <label for="list-info" class="long-description control-label col-sm-3">Long description: </label>
                 <div class="col-sm-9">
-                <textarea name="list-info" class="list-info form-control"
+                <textarea name="list-info" class="list-info form-control" id="list-info"
                           [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
                 </div>
             </div>
@@ -85,12 +85,12 @@ import {Users} from "../user/userService";
             <div class="section">
                 <h3>Options</h3>
                 <div class="indented">
-                    <label for="list-subject-prefix">
+                    <label>
                         <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
                         Subject prefix.</label>
                 </div>
                 <div class="indented">
-                    <label for="notify-owner-on-list-change">
+                    <label>
                         <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
                                [(ngModel)]="notifyOwnerOnListChange"/>
                         Notify owners on list changes (e.g. user subscribes).</label>
@@ -99,6 +99,17 @@ import {Users} from "../user/userService";
                     <label for="tim-users-can-join">
                         <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
                         TIM users can freely join this list.</label>
+                    <div class="indented-more">
+                        <label>
+                            <input type="checkbox" name="default-send-right" [(ngModel)]="defaultSendRight" disabled>
+                            Default send right for new members.</label>
+                    </div>
+                    <div class="indented-more">
+                        <label>
+                            <input type="checkbox" name="default-delivery-right" [(ngModel)]="defaultDeliveryRight"
+                                   disabled>
+                            Default delivery right for new members.</label>
+                    </div>
                 </div>
                 <div class="indented">
                     <label for="can-user-unsubscribe">
@@ -237,14 +248,14 @@ export class MessageListAdminComponent implements OnInit {
     archiveURL?: string;
 
     canUnsubscribe?: boolean;
-    defaultSendRight?: boolean; // TODO: Not in UI at the moment. Add this.
-    defaultDeliveryRight?: boolean; // TODO: Not in the UI at the moment. Add this.
+    defaultSendRight?: boolean;
+    defaultDeliveryRight?: boolean;
     listSubjectPrefix?: string;
     nonMemberMessagePass?: boolean;
     onlyText?: boolean;
     allowAttachments?: boolean;
     // distibution?: Channel[];
-    distribution?: Distribution; // TODO: Not in use at the moment. Add this.
+    distribution?: Distribution; // TODO: Not in use at the moment. Add this to the UI.
 
     listReplyToChange?: ReplyToListChanges;
     listAnswerGuidance?: boolean; // Track above enum value in a checkbox.
@@ -409,7 +420,8 @@ export class MessageListAdminComponent implements OnInit {
      */
     async deleteList() {
         // TODO: If cancelled, the dialog logs to console an error:
-        //  ERROR Error: Uncaught (in promise): Dialog was closed from the X button
+        //  ERROR Error: Uncaught (in promise): Dialog was closed from the X button. This does not affect functionality,
+        //  it's just a tad embarassing. Fix this, low priority.
         await showInputDialog({
             title: "Confirm list deletion",
             text: "Confirm you really want to delete this list.",
@@ -526,7 +538,6 @@ export class MessageListAdminComponent implements OnInit {
             allow_attachments: this.allowAttachments,
         });
         if (result.ok) {
-            // console.log("save succee");
         } else {
             console.error("save fail");
         }
