@@ -131,9 +131,13 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
 
     fullmessages = []
     for message in messages:
-        document = DocEntry.find_by_id(message.doc_id)
+        document = DocEntry.query.filter_by(id=message.doc_id).first()
         if not document:
             return error_generic('Message document not found', 404)
+
+        # Hides the message if the corresponding document has been deleted
+        if document.name.startswith('roskis/'):
+            continue
 
         fullmessages.append(TimMessageData(id=message.id,
                                            sender=document.owners.pop().name,
