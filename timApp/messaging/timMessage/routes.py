@@ -111,6 +111,20 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     :param item_id: Identifier for document or folder where message is displayed
     :return:
     """
+    current_page_obj = DocEntry.query.filter_by(id=item_id).first()
+    if not current_page_obj:
+        current_page_obj = Folder.query.filter_by(id=item_id).first()
+        if not current_page_obj:
+            raise NotExist('No document or folder found')
+
+    current_page_path = current_page_obj.path
+    parents = current_page_obj.parents_to_root()  # parent folders
+    parent_paths = []
+    for p in parents:
+        parent_paths.append(p.path)
+
+    print(parent_paths)
+
     displays = InternalMessageDisplay.query.filter_by(usergroup_id=get_current_user_object().get_personal_group().id,
                                                       display_doc_id=item_id).all()
 
