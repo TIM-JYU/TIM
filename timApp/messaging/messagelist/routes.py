@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from flask import Response
 
-from timApp.auth.accesshelper import verify_logged_in
+from timApp.auth.accesshelper import verify_logged_in, has_manage_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.emaillist import get_list_ui_link, create_new_email_list, \
@@ -39,8 +39,9 @@ def create_list(options: ListOptions) -> Response:
     :return: A Response with the list's management doc included. This way the creator can re-directed to the list's
     management page directly.
     """
+    # Access right checks. The creator of the list has to be a group admin. This probably changes in the future.
     verify_logged_in()
-    verify_groupadmin()  # Creator of a list has to be a group admin.
+    verify_groupadmin()
 
     # Until other message channels make email list's optional, it is required that connection to Mailman is
     # configured when creating message lists.
@@ -103,12 +104,12 @@ def delete_list(listname: str, domain: str) -> Response:
     :param listname: The list to be deleted.
     :return: A string describing how the operation went.
     """
+    # Check access rights.
     verify_logged_in()
-    # TODO: Additional checks for who get's to call this route.
-    #  Deleter has to be an owner of the list.
-
-    # TODO: Verify that the deleter is an owner of the message list.
     msg_list = MessageListModel.get_list_by_name_exactly_one(listname)
+    if not has_manage_access(msg_list.block):
+        raise RouteException("You need at least a manage access to the list in order to do this action.")
+
     # list_domain = msg_list.email_list_domain
     # TODO: Put message list deletion here.
     if domain:
@@ -126,7 +127,6 @@ def get_list(document_id: int) -> Response:
     :return: ListOptions with the list's information.
     """
     verify_logged_in()
-    # TODO: Additional checks for who gets to call this route.
 
     message_list = MessageListModel.get_list_by_manage_doc_id(document_id)
     list_options = ListOptions(
@@ -158,16 +158,15 @@ def save_list_options(options: ListOptions) -> Response:
     :param options: The options to be saved.
     :return: OK response.
     """
+    # Check access rights.
     verify_logged_in()
-    # TODO: Additional checks for who get's to call this route.
-    #  list's owner
-
     message_list = MessageListModel.get_list_by_name_exactly_one(options.name)
-
-    # TODO: Verify that user has rights to the message list.
+    if not has_manage_access(message_list.block):
+        raise RouteException("You need at least a manange access to the list in order to do this action.")
 
     if message_list.archive_policy != options.archive:
-        # TODO: If message list changes it's archive policy, the members on the list need to be notified.
+        # TODO: If message list changes it's archive policy, the members on the list need to be notified. Insert
+        #  messaging here.
         message_list.archive = options.archive
 
     set_message_list_description(message_list, options.list_description)
@@ -185,9 +184,7 @@ def save_list_options(options: ListOptions) -> Response:
     # TODO: Implemented client side.
     set_message_list_default_delivery_right(message_list, options.default_delivery_right)
 
-    # TODO: Implement client side.
     set_message_list_default_reply_type(message_list, options.default_reply_type)
-    # TODO: set the following list options.
     # TODO: Implement client side
     # message_list.distribution = options.distribution
 
@@ -213,7 +210,12 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
     :param members: The members to be saved.
     :return: Response for the client. The Response is a simple ok_response().
     """
+    # Check access rights.
+    verify_logged_in()
     message_list = MessageListModel.get_list_by_name_exactly_one(listname)
+    if not has_manage_access(message_list.block):
+        raise RouteException("You need at least a manage access to the list to do this action.")
+
     email_list = None
     if message_list.email_list_domain:
         verify_mailman_connection()
@@ -246,30 +248,32 @@ def add_member(member_candidates: List[str], msg_list: str, send_right: bool, de
     #  List owner.
     verify_logged_in()
 
-    msg_list = MessageListModel.get_list_by_name_exactly_one(msg_list)
+    message_list = MessageListModel.get_list_by_name_exactly_one(msg_list)
+    if not has_manage_access(message_list.block):
+        raise RouteException("You need at least a manage access to the list to do this action.")
 
     # TODO: Implement checking whether or not users are just added to a list (like they are now) or they are invited
     #  to a list (requires link generation and other things).
 
     em_list = None
-    if msg_list.email_list_domain is not None:
+    if message_list.email_list_domain is not None:
         verify_mailman_connection()
-        em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
+        em_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
 
     for member_candidate in member_candidates:
         u = User.get_by_name(member_candidate.strip())
         if u is not None:
             # The name given was an existing TIM user.
-            add_new_message_list_tim_user(msg_list, u, send_right, delivery_right, em_list)
+            add_new_message_list_tim_user(message_list, u, send_right, delivery_right, em_list)
 
         # TODO: If member_candidate is a user group, what do? Add as is or open it to individual users?
         ug = UserGroup.get_by_name(member_candidate.strip())
         if ug is not None:
             # The name belongs to a user group.
-            add_new_message_list_group(msg_list, ug, send_right, delivery_right, em_list)
+            add_new_message_list_group(message_list, ug, send_right, delivery_right, em_list)
         # If member candidate is not a user, or a user group, then we assume an external member. Add external members.
         if is_valid_email(member_candidate.strip()) and em_list:
-            add_message_list_external_email_member(msg_list, member_candidate.strip(),
+            add_message_list_external_email_member(message_list, member_candidate.strip(),
                                                    send_right, delivery_right, em_list, None)
     db.session.commit()
     return ok_response()
