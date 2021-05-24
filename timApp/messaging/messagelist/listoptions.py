@@ -30,7 +30,8 @@ class ArchiveType(Enum):
     GROUPONLY = 2
     # Logged in TIM users can see the list.
     UNLISTED = 3
-    # Completely public archive. Equals to Mailman's archive policy of 'public'.
+    # Completely public archive, people don't have to be logged in to see the archive. Equals to Mailman's archive
+    # policy of 'public'.
     PUBLIC = 4
 
 
@@ -47,7 +48,7 @@ class ReplyToListChanges(Enum):
 class ListOptions:
     """All options regarding message lists."""
     name: str
-    """The name of the message list. A mandatory value when list options are concidered."""
+    """The name of the message list. A mandatory value when list options are considered."""
 
     archive: ArchiveType = field(metadata={'by_value': True})
     """The type of archive policy this list uses."""

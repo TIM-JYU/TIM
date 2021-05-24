@@ -101,13 +101,14 @@ import {Users} from "../user/userService";
                         TIM users can freely join this list.</label>
                     <div class="indented-more">
                         <label>
-                            <input type="checkbox" name="default-send-right" [(ngModel)]="defaultSendRight" disabled>
+                            <input type="checkbox" name="default-send-right" [(ngModel)]="defaultSendRight"
+                                   [disabled]="!timUsersCanJoin">
                             Default send right for new members.</label>
                     </div>
                     <div class="indented-more">
                         <label>
                             <input type="checkbox" name="default-delivery-right" [(ngModel)]="defaultDeliveryRight"
-                                   disabled>
+                                   [disabled]="!timUsersCanJoin">
                             Default delivery right for new members.</label>
                     </div>
                 </div>
@@ -542,7 +543,7 @@ export class MessageListAdminComponent implements OnInit {
             list_description: this.listDescription,
             only_text: this.onlyText,
             // If the checkbox for guiding messages to message list is checked, put ADDLIST enum, otherwise NOCHANGES
-            // enum as default_reply_type
+            // enum as default_reply_type.
             default_reply_type: this.listAnswerGuidance
                 ? ReplyToListChanges.ADDLIST
                 : ReplyToListChanges.NOCHANGES,
