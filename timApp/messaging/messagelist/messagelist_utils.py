@@ -264,8 +264,6 @@ Recipients: {message.recipients}
         set_message_link_next(previous_doc.document, archive_doc.title, archive_doc.url)
     set_message_link_previous(archive_doc.document, previous_doc.title, previous_doc.url)
 
-    # TODO: Set proper rights to the document. The message sender owns the document. Owners of the list get at least a
-    #  view right. Other rights depend on the message list's archive policy.
     db.session.commit()
 
 
@@ -345,7 +343,7 @@ def set_message_link_previous(doc: Document, link_text: str, url_previous: str) 
 
 def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> MessageTIMversalis:
     """Modify an email message sent from Mailman to TIM's universal message format."""
-    # VIESTIM: original message is of form specified in https://pypi.org/project/mail-parser/
+    # original message is of form specified in https://pypi.org/project/mail-parser/
     # TODO: Get 'content-type' field, e.g. 'text/plain; charset="UTF-8"'
     # TODO: Get 'date' field, e.g. '2021-05-01T19:09:07'
     # VIESTIM: Get 'message-id-hash' field (maybe to check for duplicate messages), e.g.
