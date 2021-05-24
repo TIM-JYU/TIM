@@ -259,18 +259,18 @@ def read_rights(path: Path, index: int) -> Tuple[List[RightOp], List[Dict]]:
     return [RightOpSchema.deserialize(line) for line in lines[index:]], lines
 
 
-def do_register_right(op: RightOp, target: str) -> RightLog:
+def do_register_right(op: RightOp, target: str) -> Tuple[Optional[RightLog], Optional[str]]:
     rights, right_log_path = get_current_rights(target)
     if not isinstance(op, (ChangeTimeGroupOp, ChangeStartTimeGroupOp)):
         latest_op = rights.latest_op(op.email)
         if latest_op and isinstance(latest_op.op, QuitOp) and not isinstance(op, UndoQuitOp):
-            raise RouteException('Cannot register a non-UndoQuitOp after QuitOp')
+            return None, f'{target}: Cannot register a non-UndoQuitOp after QuitOp'
         if isinstance(op, UndoQuitOp) and (not latest_op or not isinstance(latest_op.op, QuitOp)):
-            raise RouteException('There is no QuitOp to undo')
+            return None, f'{target}: There is no QuitOp to undo'
     rights.add_op(op)
     with right_log_path.open('a') as f:
         f.write(to_json_str(op) + '\n')
-    return rights
+    return rights, None
 
 
 def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> List[str]:
@@ -308,8 +308,10 @@ def register_right_impl(
         if not target_s:
             raise RouteException(f'invalid target: {tgt}')
         with filelock.FileLock(f'/tmp/log_right_{target_s}'):
-            rights = do_register_right(op, target_s)
-        if distribute:
+            rights, err = do_register_right(op, target_s)
+            if err:
+                errors.append(err)
+        if distribute and rights:
             with filelock.FileLock(f'/tmp/dist_right_{target_s}'):
                 errors.extend(do_dist_rights(op, rights, target_s))
     if backup:
