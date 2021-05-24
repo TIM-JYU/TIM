@@ -807,7 +807,9 @@ export class ViewCtrl implements IController {
         if (opt == RegexOption.DontPrependCurrentDocId) {
             reg = new RegExp(`^${re}$`);
         } else if (opt == RegexOption.PrependCurrentDocId) {
-            reg = new RegExp(`^${this.item.id}\.${re}$`);
+            // If the current document is a translation, the plugin IDs always have the doc id of the original document.
+            // So we need to check for src_docid first.
+            reg = new RegExp(`^${this.item.src_docid ?? this.item.id}\.${re}$`);
         } else {
             throw new Error("unreachable");
         }
