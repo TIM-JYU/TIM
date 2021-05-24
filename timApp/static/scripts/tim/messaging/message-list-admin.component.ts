@@ -424,9 +424,10 @@ export class MessageListAdminComponent implements OnInit {
      * Helper for list deletion.
      */
     async deleteList() {
-        // TODO: If cancelled, the dialog logs to console an error:
-        //  ERROR Error: Uncaught (in promise): Dialog was closed from the X button. This does not affect functionality,
-        //  it's just a tad embarassing. Fix this, low priority.
+        // FIXME: If cancelled, the dialog logs to console an error:
+        //  'ERROR Error: Uncaught (in promise): Dialog was closed from the X button.' This does not affect
+        //  functionality, it's just a tad embarassing. Fix this sometime, low priority.
+        // Ask confirmation from the user.
         await showInputDialog({
             title: "Confirm list deletion",
             text: "Confirm you really want to delete this list.",
@@ -438,6 +439,7 @@ export class MessageListAdminComponent implements OnInit {
                         params: {
                             listname: this.listname,
                             domain: this.domain ? this.domain : "",
+                            permanent: false,
                         },
                     })
                 );
@@ -451,6 +453,7 @@ export class MessageListAdminComponent implements OnInit {
                 }
             },
         });
+        // If the user has confirmed deletion,
         location.assign("/view/messagelists");
     }
 

@@ -6,7 +6,8 @@ from flask import Response
 
 from timApp.auth.accesshelper import verify_logged_in, has_manage_access
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.messaging.messagelist.emaillist import get_email_list_by_name
+from timApp.document.document import Document
+from timApp.messaging.messagelist.emaillist import get_email_list_by_name, freeze_list
 from timApp.messaging.messagelist.emaillist import get_list_ui_link, create_new_email_list, \
     delete_email_list, check_emaillist_name_requirements, get_domain_names, verify_mailman_connection
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
@@ -26,6 +27,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, is_localhost
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.logger import log_error
 from timApp.util.utils import is_valid_email, get_current_time
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
@@ -96,26 +98,40 @@ def domains() -> Response:
 
 
 @messagelist.route("/deletelist", methods=['DELETE'])
-def delete_list(listname: str, domain: str) -> Response:
+def delete_list(listname: str, domain: str, permanent: bool) -> Response:
     """Delete message/email list. List name is provided in the request body.
 
     :param domain: If an empty string, message list is not considered to have a domain associated and therefore doesn't
      have an email list. If this is an nonempty string, then an email list is excpected to also exist.
     :param listname: The list to be deleted.
+    :param permanent: A boolean flag indicating if the deletion is meant to be permanent.
     :return: A string describing how the operation went.
     """
     # Check access rights.
     verify_logged_in()
-    msg_list = MessageListModel.get_list_by_name_exactly_one(listname)
-    if not has_manage_access(msg_list.block):
+    message_list = MessageListModel.get_list_by_name_exactly_one(listname)
+    if not has_manage_access(message_list.block):
         raise RouteException("You need at least a manage access to the list in order to do this action.")
 
-    # list_domain = msg_list.email_list_domain
-    # TODO: Put message list deletion here.
+    # The amount of docentries a message list's block relationship refers to should be one. If not, something is
+    # terribly wrong.
+    if len(message_list.block.docentries) > 1:
+        log_error(f"Message list '{listname}' has multiple docentries to it's block relationship.")
+        raise RouteException("Can't perform deletion at this time. The problem has been logged for admins.")
+
+    # Perform deletion.
+    if permanent:
+        manage_doc: Document = message_list.block.docentries[0].document
+        # If the deletion is permanent, move the admin doc to bin.
+        Document.remove(manage_doc.doc_id)
+    # Set the db entry as removed
+    message_list.removed = get_current_time()
+
     if domain:
         # A domain is given, so we are also looking to delete an email list.
-        # VIESTIM: Perform a soft deletion for now.
-        delete_email_list(f"{listname}@{domain}")
+        delete_email_list(f"{listname}@{domain}", permanent_deletion=permanent)
+
+    db.session.commit()
     return ok_response()
 
 
@@ -178,10 +194,7 @@ def save_list_options(options: ListOptions) -> Response:
     set_message_list_allow_attachments(message_list, options.allow_attachments)
     set_message_list_tim_users_can_join(message_list, options.tim_users_can_join)
     set_message_list_non_member_message_pass(message_list, options.non_member_message_pass)
-
-    # TODO: Implemented client side.
     set_message_list_default_send_right(message_list, options.default_send_right)
-    # TODO: Implemented client side.
     set_message_list_default_delivery_right(message_list, options.default_delivery_right)
 
     set_message_list_default_reply_type(message_list, options.default_reply_type)

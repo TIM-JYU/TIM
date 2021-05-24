@@ -114,9 +114,8 @@ def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> N
         if permanent_deletion:
             list_to_delete.delete()
         else:
+            # Soft deletion.
             freeze_list(list_to_delete)
-            # TODO: Probably needs other changes as well. Should we drop all moderator requests and set all
-            #  future moderation requests from messages and subscriptions to just discard?
     except HTTPError as e:
         log_mailman(e, "In delete_email_list()")
         raise
