@@ -14,7 +14,7 @@ from timApp.util.flask.responsehelper import to_json_str
 from timApp.util.utils import get_current_time
 
 
-def register_right_or_raise(self, op: RightOp, target_name: str) -> RightLog:
+def register_right_or_raise(op: RightOp, target_name: str) -> RightLog:
     res, err = do_register_right(op, target_name)
     if err:
         raise RouteException(err)
@@ -292,7 +292,7 @@ class DistRightsTest(TimRouteTest):
             return register_right_or_raise(
                 UndoConfirmOp(type='undoconfirm', email=f'test{i}@example.com', timestamp=dt),
                 target_name)
-        
+
         base_date = datetime(2021, 5, 25, 10, 0, tzinfo=tz)
 
         self.login_test1()
