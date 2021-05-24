@@ -114,11 +114,7 @@ def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> N
         if permanent_deletion:
             list_to_delete.delete()
         else:
-            # Perform a soft deletion on a list.
-            for member in list_to_delete.members:
-                # All members have their send and delivery rights revoked.
-                set_email_list_member_delivery_status(member, False)
-                set_email_list_member_send_status(member, False)
+            freeze_list(list_to_delete)
             # TODO: Probably needs other changes as well. Should we drop all moderator requests and set all
             #  future moderation requests from messages and subscriptions to just discard?
     except HTTPError as e:
@@ -629,26 +625,22 @@ def get_domain_names() -> List[str]:
 def freeze_list(mlist: MailingList) -> None:
     """Freeze an email list. No posts are allowed on the list after freezing.
 
-    Think a course specific email list and the course ends, but  mail archive is kept intact for later potential
-    use. This stops (or at least mitigates) that the mail archive on that list changes after the freezing.
+    Think a course specific email list and the course ends, but mail archive is kept intact for later potential use.
+    This stops (or at least mitigates) that the mail archive on that list changes after the freezing.
 
     :param mlist: The list about the be frozen.
     """
-    # Not in use at the moment.
-
-    # VIESTIM: Another possible way would be to iterate over all members and set their individual moderation
-    #  action accordingly. How does Mailman's rule propagation matter here? The rule propagation goes from
-    #  user -> member -> list -> system (maybe domain in between list and system). So if member's default
-    #  moderation action is 'accept' and we set list's default member action as 'discard', which one wins?
-    #  Should we double-tap just to make sure and do both?
-
-    # We freeze a list by simply setting list's moderation to 'discard'. It could also be 'reject'. Holding
-    # the messages isn't probably a reasonable choice, since the point of freezing is to not allow posts on
-    # the list.
     try:
+        for member in mlist.members:
+            # All members have their send and delivery rights revoked. We need this, because individual members
+            # settings, when set, take precedence over list settings.
+            set_email_list_member_delivery_status(member, False, by_moderator=True)
+            set_email_list_member_send_status(member, False)
+
+        # Also set list's default moderation actions for good measure.
         mail_list_settings = mlist.settings
-        mail_list_settings["default_member_action"] = "discard"
-        mail_list_settings["default_nonmember_action"] = "discard"
+        mail_list_settings["default_member_action"] = "reject"
+        mail_list_settings["default_nonmember_action"] = "reject"
         mail_list_settings.save()
     except HTTPError as e:
         log_mailman(e, "In freeze_list()")
