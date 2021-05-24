@@ -666,16 +666,3 @@ def unfreeze_list(mlist: MailingList, msg_list: MessageListModel) -> None:
     except HTTPError as e:
         log_mailman(e, "In unfreeze_list()")
         raise
-
-
-def find_email_lists(email: str) -> List[MailingList]:
-    # VIESTIM: This may or may not be enough. Function find_lists can take optional argument for role on the list (
-    #  'member', 'owner' or 'moderator'). WIthout argument for role, it returns all the lists but not indicating what
-    #  the person's role is or roles are on the list. Is it better to ask them from Mailman separated by role,
-    #  or do role checking and grouping here?
-    try:
-        lists = _client.find_lists(email)
-        return lists
-    except HTTPError as e:
-        log_mailman(e, "In find_email_lists()")
-        raise
