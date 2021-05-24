@@ -19,7 +19,7 @@ from timApp.document.document import Document, dereference_pars
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, OriginInfo
 from timApp.folder.folder import Folder
-from timApp.item.item import Item, ItemBase
+from timApp.item.item import Item
 from timApp.notification.send_email import send_email
 from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
 from timApp.plugin.pluginexception import PluginException
@@ -278,20 +278,6 @@ def check_admin_access(block_id=None, user=None):
                            type=AccessType.owner.value,
                            usergroup_id=curr_user.get_personal_group().id)
     return None
-
-
-def get_rights(d: ItemBase):
-    u = get_current_user_object()
-    return {'editable': bool(u.has_edit_access(d)),
-            'can_mark_as_read': bool(logged_in() and u.has_view_access(d)),
-            'can_comment': bool(logged_in() and u.has_view_access(d)),
-            'copy': bool(logged_in() and u.has_copy_access(d)),
-            'browse_own_answers': logged_in(),
-            'teacher': bool(u.has_teacher_access(d)),
-            'see_answers': bool(u.has_seeanswers_access(d)),
-            'manage': bool(u.has_manage_access(d)),
-            'owner': bool(u.has_ownership(d))
-            }
 
 
 def verify_logged_in() -> None:

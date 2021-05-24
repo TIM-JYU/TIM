@@ -736,14 +736,15 @@ class TimRouteTest(TimDbTest):
         self.assertEqual(expect_content, var)
 
     def get_js_variable(self, element, variable_name):
-        variables = element.cssselect('script[class="global-vars"]')[0].text
-        # '\s*' are zero or more whitespaces, '(.*)' is variable content between '=' and ';'.
-        matches = re.findall(f"{variable_name}\s*=\s*(.*);", variables)
-        if matches:
-            var = json.loads(matches[0])
-            return var
-        else:
-            raise AssertionError(f"'{variable_name}' not found")
+        scripts = element.cssselect('script[class="global-vars"]')
+        for s in scripts:
+            variables = s.text
+            # '\s*' are zero or more whitespaces, '(.*)' is variable content between '=' and ';'.
+            matches = re.findall(f"{variable_name}\s*=\s*(.*);", variables)
+            if matches:
+                var = json.loads(matches[0])
+                return var
+        raise AssertionError(f"'{variable_name}' not found")
 
     def assert_elements_equal(self, e1, e2):
         try:

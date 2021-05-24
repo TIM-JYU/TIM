@@ -18,7 +18,7 @@ from sqlalchemy.orm import joinedload, defaultload
 
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_rights, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
+    get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
 from timApp.auth.sessioninfo import get_session_usergroup_ids
@@ -62,6 +62,7 @@ from timApp.user.groups import verify_group_view_access
 from timApp.user.settings.theme import Theme, theme_exists
 from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
 from timApp.user.user import User, check_rights
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
 from timApp.user.userutils import DeletedUserException
@@ -565,7 +566,7 @@ def render_doc_view(
     if src_doc is not None:
         DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), view_ctx, clear_cache)
 
-    rights = doc_info.rights
+    rights = get_user_rights_for_item(doc_info, current_user)
     word_list = (doc_info.document.get_word_list()
                  if rights['editable'] and current_user.get_prefs().use_document_word_list
                  else [])
@@ -768,7 +769,10 @@ def render_doc_view(
             ]
 
     if post_process_result.should_mark_all_read:
-        for group_id in get_session_usergroup_ids():
+        # TODO: Support multiple logged in users without using globals.
+        #  On the other hand, should_mark_all_read is used only in exam mode,
+        #  so we know there's only one user.
+        for group_id in [current_user.get_personal_group().id]:
             mark_all_read(group_id, doc)
         db.session.commit()
 
@@ -789,6 +793,7 @@ def render_doc_view(
         hide_sidemenu=should_hide_sidemenu(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
         exam_mode=is_exam_mode(doc_settings, rights),
+        rights=rights,
         route=view_ctx.route.value,
         edit_mode=(m.edit if current_user.has_edit_access(doc_info) else None),
         item=doc_info,
@@ -802,7 +807,7 @@ def render_doc_view(
         doc_css=doc_css,
         start_index=view_range.start_index,
         group=usergroup,
-        translations=doc_info.translations,
+        translations=[tr.to_json(curr_user=current_user) for tr in doc_info.translations],
         reqs=reqs,
         no_browser=hide_answers,
         no_question_auto_numbering=no_question_auto_numbering,
@@ -917,20 +922,21 @@ def check_updated_pars(doc_id, major, minor):
     view_ctx = default_view_ctx
     diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, view_ctx))  # TODO cache this, about <5 ms
     # taketime("after diffs")
-    rights = get_rights(doc)  # about 30-40 ms # TODO: this is the slowest part
+    curr_user = get_current_user_object()
+    rights = get_user_rights_for_item(doc, curr_user)  # about 30-40 ms # TODO: this is the slowest part
     # taketime("after rights")
     for diff in diffs:  # about < 1 ms
         if diff.get('content'):
             post_process_result = post_process_pars(
                 d,
                 diff['content'],
-                UserContext.from_one_user(get_current_user_object()),
+                UserContext.from_one_user(curr_user),
                 view_ctx,
             )
             diff['content'] = {
                 'texts': render_template('partials/paragraphs.jinja2',
                                          text=post_process_result.texts,
-                                         item={'rights': rights},
+                                         rights=rights,
                                          preview=False),
                 'js': post_process_result.js_paths,
                 'css': post_process_result.css_paths,
