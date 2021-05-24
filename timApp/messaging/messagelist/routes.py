@@ -286,9 +286,20 @@ def add_member(member_candidates: List[str], msg_list: str, send_right: bool, de
 
         # For external members.
         # If member candidate is not a user, or a user group, then we assume an external member. Add external members.
-        if is_valid_email(member_candidate.strip()) and em_list:
-            add_message_list_external_email_member(message_list, member_candidate.strip(),
-                                                   send_right, delivery_right, em_list, None)
+        external_member = member_candidate.strip().split(' ')
+        # We assume that the email is given first, and display name, if given, is after the email separated by at
+        # least one white space.
+        if is_valid_email(external_member[0]) and em_list:
+            if len(external_member) == 1:
+                # There is no display name given for external member.
+                dname = None
+            else:
+                # Construct an optional display name by joining all the other words given on the line that are not
+                # the email address. Remove possible white space between the email address and the first part of a
+                # display name. Other white space within the name is left as is.
+                dname = ' '.join(external_member[1:]).lstrip()
+            add_message_list_external_email_member(message_list, external_member[0],
+                                                   send_right, delivery_right, em_list, display_name=dname)
     db.session.commit()
     return ok_response()
 
