@@ -380,7 +380,14 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
     for distribute in model.actions.distributeRight:
         convert = RIGHT_TO_OP[distribute.operation]
         right_op = convert(distribute, user_acc.email)
-        errors.extend(register_right_impl(right_op, distribute.target))
+        apply_errors = register_right_impl(right_op, distribute.target)
+
+        if isinstance(right_op, QuitOp):
+            # Ignore failing to undo twice. It is an error but it's not strictly an issue for UserSelect
+            # However, do this only for QuitOp to prevent other issues like trying to confirm users who has already quit
+            apply_errors = [e for e in apply_errors if "Cannot register a non-UndoQuitOp" not in e]
+
+        errors.extend(apply_errors)
 
     db.session.commit()
 
