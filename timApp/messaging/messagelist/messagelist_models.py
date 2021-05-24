@@ -140,9 +140,7 @@ class MessageListModel(db.Model):
         """Get all the members that are not groups."""
         individuals = []
         for member in self.members:
-            # VIESTIM: When user's verification is done, replace 'not member.membership_ended' with the commented out
-            #  predicate.
-            if not member.is_group():  # and not member.membership_ended:  # member.is_active():
+            if not member.is_group():
                 individuals.append(member)
         return individuals
 
