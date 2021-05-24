@@ -21,6 +21,7 @@ export interface ListOptions {
     allow_attachments?: boolean;
     // distribution?: Channel[];
     distribution?: Distribution;
+    removed?: Moment;
 }
 
 // Interface to express what message channels the message list has in use.

@@ -14,7 +14,7 @@ import {
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TableFormModule} from "tim/plugin/tableForm";
-import moment from "moment";
+import moment, {Moment} from "moment";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import {$http} from "tim/util/ngimport";
@@ -277,6 +277,8 @@ export class MessageListAdminComponent implements OnInit {
 
     recipients = "";
 
+    removed?: Moment;
+
     /**
      * Modifies the member's removed attribute if the member's state is changed.
      * @param member Who's membership on the list is changed.
@@ -477,7 +479,7 @@ export class MessageListAdminComponent implements OnInit {
         this.listname = listOptions.name;
         this.archive = listOptions.archive;
         // Without archive value, there is no reason to continue. Show error and short circuit here.
-        if (this.archive === undefined) {
+        if (this.archive == null) {
             this.permanentErrorMessage =
                 "Loading the archive value failed. Please reload the page. If reloading the page does not fix the " +
                 "problem, then please contact TIM's support and tell about this error.";
@@ -519,6 +521,11 @@ export class MessageListAdminComponent implements OnInit {
                 listOptions.default_reply_type !== ReplyToListChanges.NOCHANGES;
             this.listReplyToChange = listOptions.default_reply_type;
         }
+        this.removed = listOptions.removed;
+        if (this.removed) {
+            this.permanentErrorMessage =
+                "This message list is not currently in use.";
+        }
     }
 
     /**
@@ -527,6 +534,7 @@ export class MessageListAdminComponent implements OnInit {
     async saveOptions() {
         // Reset a failed saving message.
         this.saveFailMessage = "";
+        // There is no reason to send this.removed back to server.
         const result = await this.saveOptionsCall({
             name: this.listname,
             domain: this.domain,
@@ -607,7 +615,6 @@ export class MessageListAdminComponent implements OnInit {
      * Shows a timed save success message.
      */
     showTempSaveSuccess() {
-        console.log("showTempSaveSuccess()");
         this.saveSuccessMessage = "Save success!";
         window.setTimeout(() => (this.saveSuccessMessage = ""), 5 * 1000);
     }

@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import Dict, Optional
 
@@ -97,6 +98,10 @@ class ListOptions:
 
     distribution: Optional[Distribution] = None  # List[Channel] = field(default_factory=list)
     """All the message channels the list is using."""
+
+    removed: Optional[datetime] = None
+    """If set, shows the date the message list is set to not be in use. If a user has access to the admin document 
+    even if this is set, it means that the message list is frozen, but not completely deleted. """
 
 
 # A mapping of TIM's archive policies to Mailman's archive policies. Mailman's archive policies are listed here:
