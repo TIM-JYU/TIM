@@ -297,11 +297,16 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
     errors = []
     for distribute in undoable_dists:
         if distribute.operation == "confirm":
-            undo_op: Union[UndoConfirmOp, UndoQuitOp] = UndoConfirmOp(type="undoconfirm",
-                                                                      email=user_acc.email,
-                                                                      timestamp=distribute.timestamp_or_now)
+            undo_op: Union[UndoConfirmOp, UndoQuitOp, ChangeTimeOp] = UndoConfirmOp(type="undoconfirm",
+                                                                                    email=user_acc.email,
+                                                                                    timestamp=distribute.timestamp_or_now)
         elif distribute.operation == "quit":
             undo_op = UndoQuitOp(type="undoquit", email=user_acc.email, timestamp=distribute.timestamp_or_now)
+        elif distribute.operation == "changetime":
+            undo_op = ChangeTimeOp(type="changetime",
+                                   email=user_acc.email,
+                                   timestamp=distribute.timestamp_or_now,
+                                   secs=-int(distribute.minutes * 60))
         else:
             continue
 
