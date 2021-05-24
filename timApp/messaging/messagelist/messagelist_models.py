@@ -11,14 +11,12 @@ from timApp.util.utils import get_current_time
 class MemberJoinMethod(Enum):
     """How a user was added to a message list."""
     DIRECT_ADD = 1
-    """The owner of the list has just added this member. The member wasn't asked."""
+    """The owner of the list has just added this member. The member wasn't asked. This is the only join method that 
+    makes sense for groups. """
     INVITED = 2
     """User was invited and they confirmed joining."""
     JOINED = 3
     """User joined the list on their own."""
-    # VIESTIM: Add a join method for being added alongside a group? This could be useful information when syncing
-    #  message lists on users removal from a user group? This way we could better differentiate if the user was in
-    #  the list before they were added alongside with a gruop. VIA_GROUP = 4
 
 
 class MessageListModel(db.Model):
@@ -71,6 +69,7 @@ class MessageListModel(db.Model):
 
     only_text = db.Column(db.Boolean)
     """Flag if only text format messages are allowed on a list."""
+
     default_reply_type = db.Column(db.Enum(ReplyToListChanges))
     """Default reply type for the list."""
 
@@ -336,7 +335,6 @@ class MessageListExternalMember(MessageListMember):
 
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
 
-    # VIESTIM: Does this unique constraint block same external member from being part of more than one message list?
     email_address = db.Column(db.Text)
     """Email address of message list's external member."""
 
@@ -376,7 +374,6 @@ class MessageListDistribution(db.Model):
     __tablename__ = "messagelist_distribution"
 
     id = db.Column(db.Integer, primary_key=True)
-    # id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
 
     user_id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"))
     """Message list member's id, if this row is about message list member's channel distribution."""
