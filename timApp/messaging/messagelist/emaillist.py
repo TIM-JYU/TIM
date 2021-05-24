@@ -343,8 +343,11 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
         set_email_list_member_delivery_status(new_member, delivery_right)
     except HTTPError as e:
         if e.code == 409:
-            # With code 409, Mailman indicates that the member is already in the list. No further action is needed.
-            return
+            # With code 409, Mailman indicates that the member is already in the list. We assume that a member has
+            # been 'removed' previously, and is now re-added to email list. Set send and delivery rights.
+            member = get_email_list_member(mlist, email)
+            set_email_list_member_send_status(member, send_right)
+            set_email_list_member_delivery_status(member, delivery_right)
         else:
             log_mailman(e, "In add_email()")
             raise
