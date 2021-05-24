@@ -4,7 +4,7 @@ from pathlib import Path
 from isodate import Duration
 
 from timApp.item.distribute_rights import get_current_rights, do_register_right, ChangeTimeOp, ConfirmOp, \
-    ChangeTimeGroupOp, UnlockOp, QuitOp, UndoQuitOp, UndoConfirmOp, Right, ChangeStartTimeGroupOp
+    ChangeTimeGroupOp, UnlockOp, QuitOp, UndoQuitOp, UndoConfirmOp, Right, ChangeStartTimeGroupOp, RightOp, RightLog
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
@@ -12,6 +12,13 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import to_json_str
 from timApp.util.utils import get_current_time
+
+
+def register_right_or_raise(self, op: RightOp, target_name: str) -> RightLog:
+    res, err = do_register_right(op, target_name)
+    if err:
+        raise RouteException(err)
+    return res
 
 
 class DistRightsTest(TimRouteTest):
@@ -33,24 +40,26 @@ class DistRightsTest(TimRouteTest):
         def confirm(i: int, incr: timedelta):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(ConfirmOp(type='confirm', email=f'test{i}@example.com', timestamp=dt), target_name)
+            return register_right_or_raise(ConfirmOp(type='confirm', email=f'test{i}@example.com', timestamp=dt),
+                                           target_name)
 
         def changetime(i: int, incr: timedelta, secs: int):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(
+            return register_right_or_raise(
                 ChangeTimeOp(type='changetime', email=f'test{i}@example.com', timestamp=dt, secs=secs), target_name)
 
         def changetimegroup(group: str, incr: timedelta, secs: int):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(ChangeTimeGroupOp(type='changetimegroup', group=group, timestamp=dt, secs=secs),
-                                     target_name)
+            return register_right_or_raise(
+                ChangeTimeGroupOp(type='changetimegroup', group=group, timestamp=dt, secs=secs),
+                target_name)
 
         def changestarttimegroup(group: str, incr: timedelta, newtime: datetime):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(
+            return register_right_or_raise(
                 ChangeStartTimeGroupOp(type='changestarttimegroup', group=group, timestamp=dt, starttime=newtime),
                 target_name,
             )
@@ -58,24 +67,26 @@ class DistRightsTest(TimRouteTest):
         def unlock(i: int, incr: timedelta):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(UnlockOp(type='unlock', email=f'test{i}@example.com', timestamp=dt), target_name)
+            return register_right_or_raise(UnlockOp(type='unlock', email=f'test{i}@example.com', timestamp=dt),
+                                           target_name)
 
         def quit(i: int, incr: timedelta):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(QuitOp(type='quit', email=f'test{i}@example.com', timestamp=dt), target_name)
+            return register_right_or_raise(QuitOp(type='quit', email=f'test{i}@example.com', timestamp=dt), target_name)
 
         def undoquit(i: int, incr: timedelta):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(UndoQuitOp(type='undoquit', email=f'test{i}@example.com', timestamp=dt),
-                                     target_name)
+            return register_right_or_raise(UndoQuitOp(type='undoquit', email=f'test{i}@example.com', timestamp=dt),
+                                           target_name)
 
         def undoconfirm(i: int, incr: timedelta):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(UndoConfirmOp(type='undoconfirm', email=f'test{i}@example.com', timestamp=dt),
-                                     target_name)
+            return register_right_or_raise(
+                UndoConfirmOp(type='undoconfirm', email=f'test{i}@example.com', timestamp=dt),
+                target_name)
 
         base_date = datetime(2021, 5, 25, 10, 0, tzinfo=tz)
 
@@ -234,24 +245,26 @@ class DistRightsTest(TimRouteTest):
         def confirm(i: int, incr: timedelta):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(ConfirmOp(type='confirm', email=f'test{i}@example.com', timestamp=dt), target_name)
+            return register_right_or_raise(ConfirmOp(type='confirm', email=f'test{i}@example.com', timestamp=dt),
+                                           target_name)
 
         def changetime(i: int, incr: timedelta, secs: int):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(
+            return register_right_or_raise(
                 ChangeTimeOp(type='changetime', email=f'test{i}@example.com', timestamp=dt, secs=secs), target_name)
 
         def changetimegroup(group: str, incr: timedelta, secs: int):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(ChangeTimeGroupOp(type='changetimegroup', group=group, timestamp=dt, secs=secs),
-                                     target_name)
+            return register_right_or_raise(
+                ChangeTimeGroupOp(type='changetimegroup', group=group, timestamp=dt, secs=secs),
+                target_name)
 
         def changestarttimegroup(group: str, incr: timedelta, newtime: datetime):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(
+            return register_right_or_raise(
                 ChangeStartTimeGroupOp(type='changestarttimegroup', group=group, timestamp=dt, starttime=newtime),
                 target_name,
             )
@@ -259,25 +272,27 @@ class DistRightsTest(TimRouteTest):
         def unlock(i: int, incr: timedelta):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(UnlockOp(type='unlock', email=f'test{i}@example.com', timestamp=dt), target_name)
+            return register_right_or_raise(UnlockOp(type='unlock', email=f'test{i}@example.com', timestamp=dt),
+                                           target_name)
 
         def quit(i: int, incr: timedelta):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(QuitOp(type='quit', email=f'test{i}@example.com', timestamp=dt), target_name)
+            return register_right_or_raise(QuitOp(type='quit', email=f'test{i}@example.com', timestamp=dt), target_name)
 
         def undoquit(i: int, incr: timedelta):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(UndoQuitOp(type='undoquit', email=f'test{i}@example.com', timestamp=dt),
-                                     target_name)
+            return register_right_or_raise(UndoQuitOp(type='undoquit', email=f'test{i}@example.com', timestamp=dt),
+                                           target_name)
 
         def undoconfirm(i: int, incr: timedelta):
             nonlocal dt
             dt = dt + incr
-            return do_register_right(UndoConfirmOp(type='undoconfirm', email=f'test{i}@example.com', timestamp=dt),
-                                     target_name)
-
+            return register_right_or_raise(
+                UndoConfirmOp(type='undoconfirm', email=f'test{i}@example.com', timestamp=dt),
+                target_name)
+        
         base_date = datetime(2021, 5, 25, 10, 0, tzinfo=tz)
 
         self.login_test1()
