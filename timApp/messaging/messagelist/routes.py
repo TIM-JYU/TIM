@@ -301,10 +301,10 @@ def get_members(list_name: str) -> Response:
     :return: All the members of a list.
     """
     verify_logged_in()
-    # TODO: Verify user is a owner of the list.
-
     msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
-    list_members = msg_list.get_tim_members()
+    if not has_manage_access(msg_list.block):
+        raise RouteException("You are not authorized to see the members of this list.")
+    list_members = msg_list.members
     return json_response(list_members)
 
 
