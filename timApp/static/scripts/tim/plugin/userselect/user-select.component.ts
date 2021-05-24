@@ -240,12 +240,12 @@ class ToggleOption {
                 <span class="undoable-text">{{successMessage}}</span>
                 <span class="undo-button" *ngIf="allowUndo && !undone">
                     <tim-loading *ngIf="undoing"></tim-loading>
-                    <button (click)="verifyUndo = true" class="btn btn-danger"
+                    <button *ngIf="!verifyUndo" (click)="verifyUndo = true" class="btn btn-danger"
                             [disabled]="undoing">{{undoButtonLabel}}</button>
                 </span>
             </div>
         </tim-alert>
-        <tim-alert severity="warning" *ngIf="verifyUndo" [closeable]="!undoing" (closing)="resetView()">
+        <tim-alert severity="warning" *ngIf="verifyUndo" [closeable]="!undoing" (closing)="verifyUndo = false">
             <div class="undoable-message">
                 <span class="undoable-text">{{undoWarningText}}</span>
                 <span class="undo-button">
