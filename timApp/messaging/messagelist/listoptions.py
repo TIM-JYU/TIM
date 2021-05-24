@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import Dict, Optional
 
@@ -7,7 +8,6 @@ class Channel(Enum):
     """The message channels TIM uses and provides for message lists."""
     TIM_MESSAGE = 'tim_message'
     EMAIL_LIST = 'email_list'
-    # EMAIL = 3
 
 
 @dataclass
@@ -30,7 +30,8 @@ class ArchiveType(Enum):
     GROUPONLY = 2
     # Logged in TIM users can see the list.
     UNLISTED = 3
-    # Completely public archive. Equals to Mailman's archive policy of 'public'.
+    # Completely public archive, people don't have to be logged in to see the archive. Equals to Mailman's archive
+    # policy of 'public'.
     PUBLIC = 4
 
 
@@ -47,7 +48,7 @@ class ReplyToListChanges(Enum):
 class ListOptions:
     """All options regarding message lists."""
     name: str
-    """The name of the message list. A mandatory value when list options are concidered."""
+    """The name of the message list. A mandatory value when list options are considered."""
 
     archive: ArchiveType = field(metadata={'by_value': True})
     """The type of archive policy this list uses."""
@@ -98,6 +99,10 @@ class ListOptions:
 
     distribution: Optional[Distribution] = None  # List[Channel] = field(default_factory=list)
     """All the message channels the list is using."""
+
+    removed: Optional[datetime] = None
+    """If set, shows the date the message list is set to not be in use. If a user has access to the admin document 
+    even if this is set, it means that the message list is frozen, but not completely deleted. """
 
 
 # A mapping of TIM's archive policies to Mailman's archive policies. Mailman's archive policies are listed here:

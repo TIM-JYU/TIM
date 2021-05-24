@@ -151,11 +151,13 @@ SCIM_ALLOWED_IP = '127.0.0.1'
 MAILMAN_URL = None
 MAILMAN_USER = None
 MAILMAN_PASS = None
-MAILMAN_EVENT_API_USER= None
+MAILMAN_EVENT_API_USER = None
 MAILMAN_EVENT_API_KEY = None
-
 # Link prefix to Postorius Web-UI. If used as is, directs to the mailing lists page.
 MAILMAN_UI_LINK_PREFIX = "https://timlist.it.jyu.fi/postorius/lists/"
+# Permitted file extensions allowed on message lists. If this grows large, maybe move to an external file and modify
+# getting attachments from the file instead.
+PERMITTED_ATTACHMENTS = ["jpg", "pdf", "png", "tex", "txt"]
 
 # If true, prints all SQL statements with tracebacks.
 DEBUG_SQL = False

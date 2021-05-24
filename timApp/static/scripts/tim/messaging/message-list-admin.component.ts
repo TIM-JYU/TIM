@@ -1,7 +1,7 @@
 import {HttpClient} from "@angular/common/http";
 import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {to2} from "tim/util/utils";
+import {to, to2} from "tim/util/utils";
 import {FormsModule} from "@angular/forms";
 import {
     archivePolicyNames,
@@ -14,7 +14,10 @@ import {
 import {documentglobals} from "tim/util/globals";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TableFormModule} from "tim/plugin/tableForm";
-import moment from "moment";
+import moment, {Moment} from "moment";
+import {showInputDialog} from "tim/ui/showInputDialog";
+import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {$http} from "tim/util/ngimport";
 import {Users} from "../user/userService";
 
 @Component({
@@ -54,11 +57,11 @@ import {Users} from "../user/userService";
             <div class="form-group">
                 <label for="list-info" class="long-description control-label col-sm-3">Long description: </label>
                 <div class="col-sm-9">
-                <textarea name="list-info" class="list-info form-control"
+                <textarea name="list-info" class="list-info form-control" id="list-info"
                           [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
                 </div>
             </div>
-            <div>
+            <div *ngIf="archiveOptions && archive">
                 <p class="list-archive-policy-header">Archive policy:</p>
                 <!-- Variable archiveoptions is reversed, so indexing for display has to accommodate. -->
                 <p class="indented">{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
@@ -82,12 +85,12 @@ import {Users} from "../user/userService";
             <div class="section">
                 <h3>Options</h3>
                 <div class="indented">
-                    <label for="list-subject-prefix">
+                    <label>
                         <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
                         Subject prefix.</label>
                 </div>
                 <div class="indented">
-                    <label for="notify-owner-on-list-change">
+                    <label>
                         <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
                                [(ngModel)]="notifyOwnerOnListChange"/>
                         Notify owners on list changes (e.g. user subscribes).</label>
@@ -96,6 +99,18 @@ import {Users} from "../user/userService";
                     <label for="tim-users-can-join">
                         <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
                         TIM users can freely join this list.</label>
+                    <div class="indented-more">
+                        <label>
+                            <input type="checkbox" name="default-send-right" [(ngModel)]="defaultSendRight"
+                                   [disabled]="!timUsersCanJoin">
+                            Default send right for new members.</label>
+                    </div>
+                    <div class="indented-more">
+                        <label>
+                            <input type="checkbox" name="default-delivery-right" [(ngModel)]="defaultDeliveryRight"
+                                   [disabled]="!timUsersCanJoin">
+                            Default delivery right for new members.</label>
+                    </div>
                 </div>
                 <div class="indented">
                     <label for="can-user-unsubscribe">
@@ -117,8 +132,15 @@ import {Users} from "../user/userService";
                         <input type="checkbox" name="allow-attachments" [(ngModel)]="allowAttachments">
                         Allow attachments on the list.</label>
                 </div>
+                <div class="indented">
+                    <label>
+                        <input type="checkbox" name="list-answer-guidance" [(ngModel)]="listAnswerGuidance">
+                        Guide answers to message list.</label>
+                </div>
                 <div>
                     <button class="timButton" (click)="saveOptions()">Save changes</button>
+                    <tim-alert severity="success" *ngIf="saveSuccessMessage">{{saveSuccessMessage}}</tim-alert>
+                    <tim-alert severity="danger" *ngIf="saveFailMessage">{{saveFailMessage}}</tim-alert>
                 </div>
                 <div id="members-section" class="section">
                     <h3>Members</h3>
@@ -204,8 +226,7 @@ import {Users} from "../user/userService";
 export class MessageListAdminComponent implements OnInit {
     listname: string = "";
 
-    // List has a private members only archive by default.
-    archive: ArchiveType = ArchiveType.GROUPONLY;
+    archive?: ArchiveType;
 
     domain?: string;
     domains: string[] = [];
@@ -237,20 +258,27 @@ export class MessageListAdminComponent implements OnInit {
     onlyText?: boolean;
     allowAttachments?: boolean;
     // distibution?: Channel[];
-    distribution?: Distribution;
+    distribution?: Distribution; // TODO: Not in use at the moment. Add this to the UI.
+
     listReplyToChange?: ReplyToListChanges;
+    listAnswerGuidance?: boolean; // Track above enum value in a checkbox.
 
     newMemberSendRight: boolean = true;
     newMemberDeliveryRight: boolean = true;
+
+    saveSuccessMessage: string = "";
+    saveFailMessage: string = "";
 
     // Response strings used in giving feedback to the user on adding new members to the message list.
     memberAddSucceededResponse: string = "";
     memberAddFailedResponse: string = "";
 
-    // Permanent error messages, e.g. loading failed and reload is needed.
+    // Permanent error messages that cannot be recovered from, e.g. loading failed and reload is needed.
     permanentErrorMessage?: string;
 
     recipients = "";
+
+    removed?: Moment;
 
     /**
      * Modifies the member's removed attribute if the member's state is changed.
@@ -273,7 +301,7 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     /**
-     * Build this list's email address, if there is a domain configured.
+     * Build this list's email address, if there is a domain configured. Otherwise return an empty string.
      */
     listAddress() {
         if (this.domain) {
@@ -334,8 +362,11 @@ export class MessageListAdminComponent implements OnInit {
                 this.domain = this.domains[0];
             }
         } else {
-            // Getting an error here is not a problem, since these domains are not (yet) in use other than displaying
-            // them in the UI. The UI will probably look a bit funky, but it does not affect functionality right now.
+            /* Getting an error here is not a problem, since these domains are not (yet) in use other than displaying
+             * them in the UI. The UI will probably look a bit funky, but it does not affect functionality right now.
+             * In the future, this is a problem if email list could be taken into use after the message list already
+             * exists.
+             */
         }
     }
 
@@ -363,10 +394,10 @@ export class MessageListAdminComponent implements OnInit {
         const result = await to2(
             this.http
                 .post(`${this.urlPrefix}/addmember`, {
-                    memberCandidates: memberCandidates,
-                    msgList: this.listname,
-                    sendRight: this.newMemberSendRight,
-                    deliveryRight: this.newMemberDeliveryRight,
+                    member_candidates: memberCandidates,
+                    msg_list: this.listname,
+                    send_right: this.newMemberSendRight,
+                    delivery_right: this.newMemberDeliveryRight,
                 })
                 .toPromise()
         );
@@ -396,26 +427,34 @@ export class MessageListAdminComponent implements OnInit {
      * Helper for list deletion.
      */
     async deleteList() {
-        // TODO: Confirm with user if they are really sure they want to delete the entire message list. Technically it
-        //  could be reversible, but such an hassle that not letting it happen by a single button press should be
-        //  allowed.
-        const result = await to2(
-            this.http
-                .delete(`/messagelist/deletelist`, {
-                    params: {
-                        listname: this.listname,
-                        domain: this.domain ? this.domain : "",
-                    },
-                })
-                .toPromise()
-        );
-        if (result.ok) {
-            // TODO: Inform the user deletion was succesfull.
-            console.log(result.result);
-        } else {
-            // TODO: Inform the user deletion was not succesfull.
-            console.error(result.result);
-        }
+        // Ask confirmation from the user.
+        await showInputDialog({
+            title: "Confirm list deletion",
+            text: "Confirm you really want to delete this list.",
+            okText: "Delete",
+            isInput: InputDialogKind.ValidatorOnly,
+            validator: async () => {
+                const result = await to(
+                    $http.delete(`/messagelist/deletelist`, {
+                        params: {
+                            listname: this.listname,
+                            domain: this.domain ? this.domain : "",
+                            permanent: false,
+                        },
+                    })
+                );
+                if (result.ok) {
+                    return {ok: true, result: result.result} as const;
+                } else {
+                    return {
+                        ok: false,
+                        result: result.result.data.error,
+                    } as const;
+                }
+            },
+        });
+        // If the user has confirmed deletion,
+        location.assign("/view/messagelists");
     }
 
     /**
@@ -432,11 +471,18 @@ export class MessageListAdminComponent implements OnInit {
 
     /**
      * Setting list values after loading.
-     * @param listOptions
+     * @param listOptions All the options of the list returned from the server.
      */
     setValues(listOptions: ListOptions) {
         this.listname = listOptions.name;
         this.archive = listOptions.archive;
+        // Without archive value, there is no reason to continue. Show error and short circuit here.
+        if (this.archive == null) {
+            this.permanentErrorMessage =
+                "Loading the archive value failed. Please reload the page. If reloading the page does not fix the " +
+                "problem, then please contact TIM's support and tell about this error.";
+            return;
+        }
 
         this.domain = listOptions.domain;
 
@@ -467,20 +513,37 @@ export class MessageListAdminComponent implements OnInit {
         this.allowAttachments = listOptions.allow_attachments;
         this.distribution = listOptions.distribution;
         this.allowAttachments = listOptions.allow_attachments;
-        this.listReplyToChange = listOptions.default_reply_type;
+        // Convert enum to boolean for tracking this on a checkbox.
+        if (listOptions.default_reply_type != null) {
+            this.listAnswerGuidance =
+                listOptions.default_reply_type !== ReplyToListChanges.NOCHANGES;
+            this.listReplyToChange = listOptions.default_reply_type;
+        }
+        this.removed = listOptions.removed;
+        if (this.removed) {
+            this.permanentErrorMessage =
+                "This message list is not currently in use.";
+        }
     }
 
     /**
      * Save the list options.
      */
     async saveOptions() {
+        // Reset a failed saving message.
+        this.saveFailMessage = "";
+        // There is no reason to send this.removed back to server.
         const result = await this.saveOptionsCall({
             name: this.listname,
             domain: this.domain,
             list_info: this.listInfo,
             list_description: this.listDescription,
             only_text: this.onlyText,
-            default_reply_type: this.listReplyToChange, // TODO: Option to ask the user.
+            // If the checkbox for guiding messages to message list is checked, put ADDLIST enum, otherwise NOCHANGES
+            // enum as default_reply_type.
+            default_reply_type: this.listAnswerGuidance
+                ? ReplyToListChanges.ADDLIST
+                : ReplyToListChanges.NOCHANGES,
             notify_owners_on_list_change: this.notifyOwnerOnListChange,
             archive: this.archive,
             tim_users_can_join: this.timUsersCanJoin,
@@ -493,9 +556,9 @@ export class MessageListAdminComponent implements OnInit {
             allow_attachments: this.allowAttachments,
         });
         if (result.ok) {
-            // console.log("save succee");
+            this.showTempSaveSuccess();
         } else {
-            console.error("save fail");
+            this.saveFailMessage = `Save failed with an error: ${result.result.error.error}`;
         }
     }
 
@@ -544,6 +607,14 @@ export class MessageListAdminComponent implements OnInit {
         } else {
             return "";
         }
+    }
+
+    /**
+     * Shows a timed save success message.
+     */
+    showTempSaveSuccess() {
+        this.saveSuccessMessage = "Save success!";
+        window.setTimeout(() => (this.saveSuccessMessage = ""), 5 * 1000);
     }
 }
 

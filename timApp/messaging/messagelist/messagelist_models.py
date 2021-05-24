@@ -11,14 +11,12 @@ from timApp.util.utils import get_current_time
 class MemberJoinMethod(Enum):
     """How a user was added to a message list."""
     DIRECT_ADD = 1
-    """The owner of the list has just added this member. The member wasn't asked."""
+    """The owner of the list has just added this member. The member wasn't asked. This is the only join method that 
+    makes sense for groups. """
     INVITED = 2
     """User was invited and they confirmed joining."""
     JOINED = 3
     """User joined the list on their own."""
-    # VIESTIM: Add a join method for being added alongside a group? This could be useful information when syncing
-    #  message lists on users removal from a user group? This way we could better differentiate if the user was in
-    #  the list before they were added alongside with a gruop. VIA_GROUP = 4
 
 
 class MessageListModel(db.Model):
@@ -42,11 +40,8 @@ class MessageListModel(db.Model):
     attached email list. This is a tad silly at this point in time, because JYU TIM only has one domain. However, 
     this allows quick adaptation if more domains are added or otherwise changed in the future. """
 
-    # VIESTIM: archive is type bool in the original plan.
     archive = db.Column(db.Enum(ArchiveType))
     """The archive policy of a message list."""
-
-    # VIESTIM: New values.
 
     notify_owner_on_change = db.Column(db.Boolean)
     """Should the owner of the message list be notified if there are changes on message list members."""
@@ -60,8 +55,6 @@ class MessageListModel(db.Model):
     removed = db.Column(db.DateTime(timezone=True))
     """When this list has been marked for removal."""
 
-    # TODO: Maybe needs columns for default send and delivery rights for a new list member, especially if this member
-    #  is added from outside sources without direct list owner intervention.
     default_send_right = db.Column(db.Boolean)
     """Default send right for new members who join the list on their own."""
 
@@ -76,6 +69,7 @@ class MessageListModel(db.Model):
 
     only_text = db.Column(db.Boolean)
     """Flag if only text format messages are allowed on a list."""
+
     default_reply_type = db.Column(db.Enum(ReplyToListChanges))
     """Default reply type for the list."""
 
@@ -146,9 +140,7 @@ class MessageListModel(db.Model):
         """Get all the members that are not groups."""
         individuals = []
         for member in self.members:
-            # VIESTIM: When user's verification is done, replace 'not member.membership_ended' with the commented out
-            #  predicate.
-            if not member.is_group():  # and not member.membership_ended:  # member.is_active():
+            if not member.is_group():
                 individuals.append(member)
         return individuals
 
@@ -194,11 +186,9 @@ class MessageListMember(db.Model):
     message_list_id = db.Column(db.Integer, db.ForeignKey("messagelist.id"))
     """What message list a member belongs to."""
 
-    # VIESTIM: This is can_send in the original database plan.
     send_right = db.Column(db.Boolean)
     """If a member can send messages to a message list. Send right for a user group is meaningless at this point"""
 
-    # VIESTIM: delivery_right doesn't exist in the original plan.
     delivery_right = db.Column(db.Boolean)
     """If a member can get messages from a message list. Delivery right for a user group is meaningless at this 
     point. """
@@ -215,8 +205,6 @@ class MessageListMember(db.Model):
     this date is the date teacher added the member. If the member was invited, then this is the date they verified 
     their join. """
 
-    # VIESTIM: This doesn't strictly speaking exists in the original plan. This acts as an discriminator,
-    #  see SQLAlchemy's documentation's term list.
     member_type = db.Column(db.Text)
     """Discriminator for polymorhphic members."""
 
@@ -327,12 +315,11 @@ class MessageListTimMember(MessageListMember):
         ug = self.user_group
         return ug.name
 
-    def get_email(self) -> str:  # Optional[str]:
-        """Get TIM user group's email. Email makes sense only for personal user groups. Groups """
+    def get_email(self) -> str:
+        """Get TIM user group's email. Email makes sense only for personal user groups. Using this method for groups
+        returns an empty string"""
         if self.is_group():
-            return ""  # None
-        # from timApp.user.usergroup import UserGroup
-        # ug = UserGroup.query.filter_by(id=self.group_id).one()
+            return ""
         ug = self.user_group
         user = ug.personal_user
         return user.email
@@ -346,20 +333,18 @@ class MessageListExternalMember(MessageListMember):
 
     id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
 
-    # VIESTIM: Does this unique constraint block same external member from being part of more than one message list?
-    email_address = db.Column(db.Text, unique=True)
+    email_address = db.Column(db.Text)
     """Email address of message list's external member."""
 
     display_name = db.Column(db.Text)
 
-    # VIESTIM: The other member relationships have needed post_update=True argument. This might need one too.
     member = db.relationship("MessageListMember", back_populates="external_member", lazy="select", uselist=False)
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
 
     def to_json(self) -> Dict[str, Any]:
         return {
-            "name": self.get_name(),  # TODO: If/When a display name is added as a column, that can be used here.
+            "name": self.get_name(),
             "email": self.email_address,
             "sendRight": self.member.send_right,
             "deliveryRight": self.member.delivery_right,
@@ -387,7 +372,6 @@ class MessageListDistribution(db.Model):
     __tablename__ = "messagelist_distribution"
 
     id = db.Column(db.Integer, primary_key=True)
-    # id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"), primary_key=True)
 
     user_id = db.Column(db.Integer, db.ForeignKey("messagelist_member.id"))
     """Message list member's id, if this row is about message list member's channel distribution."""
@@ -398,8 +382,7 @@ class MessageListDistribution(db.Model):
     channel = db.Column(db.Enum(Channel))
     """Which message channels are used for a message list."""
 
-    # TODO: add uselist=False
-    member = db.relationship("MessageListMember", back_populates="distribution", lazy="select")
+    member = db.relationship("MessageListMember", back_populates="distribution", lazy="select", uselist=False)
     message_list = db.relationship("MessageListModel", back_populates="distribution", lazy="select", uselist=False)
 
 
@@ -419,8 +402,6 @@ class UserEmails(db.Model):
 
     address_verified = db.Column(db.DateTime(timezone=True))
     """The user has to verify they are in the possession of the email address."""
-
-    # VIESTIM: Do we need a relationship to useraccount table?
 
 
 class VerificationType(Enum):

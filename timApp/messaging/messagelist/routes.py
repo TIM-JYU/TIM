@@ -4,9 +4,10 @@ from typing import List, Optional
 
 from flask import Response
 
-from timApp.auth.accesshelper import verify_logged_in
+from timApp.auth.accesshelper import verify_logged_in, has_manage_access
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.messaging.messagelist.emaillist import get_email_list_by_name
+from timApp.document.document import Document
+from timApp.messaging.messagelist.emaillist import get_email_list_by_name, freeze_list
 from timApp.messaging.messagelist.emaillist import get_list_ui_link, create_new_email_list, \
     delete_email_list, check_emaillist_name_requirements, get_domain_names, verify_mailman_connection
 from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
@@ -26,6 +27,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, is_localhost
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.logger import log_error
 from timApp.util.utils import is_valid_email, get_current_time
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
@@ -39,8 +41,9 @@ def create_list(options: ListOptions) -> Response:
     :return: A Response with the list's management doc included. This way the creator can re-directed to the list's
     management page directly.
     """
+    # Access right checks. The creator of the list has to be a group admin. This probably changes in the future.
     verify_logged_in()
-    verify_groupadmin()  # Creator of a list has to be a group admin.
+    verify_groupadmin()
 
     # Until other message channels make email list's optional, it is required that connection to Mailman is
     # configured when creating message lists.
@@ -49,10 +52,10 @@ def create_list(options: ListOptions) -> Response:
     # Current user is set as the default owner.
     owner = get_current_user_object()
 
+    # Options object is given directly to new_list, so we don't want to use temporary variable for stripped name.
     options.name = options.name.strip()
 
-    test_name(options.name)  # Test the name we are creating.
-
+    test_name(options.name)
     manage_doc, message_list = new_list(options)
 
     if options.domain:
@@ -83,21 +86,6 @@ def test_name(name_candidate: str) -> None:
         check_emaillist_name_requirements(name, domain)
 
 
-@messagelist.route("/checkname/<string:name_candidate>", methods=['GET'])
-def check_name(name_candidate: str) -> Response:
-    """Check if name candidate meets requirements.
-
-    If name checking fails at any point, an exception is raised and that exception is delivered to the client. If all
-    checks succeed, then just return an OK response.
-
-    :param name_candidate: Possible name for message/email list. Should either be a name for a list or a fully qualifed
-    domain name for (email) list. In the latter case we also check email list specific name requirements.
-    :return: OK response.
-    """
-    test_name(name_candidate)
-    return ok_response()
-
-
 @messagelist.route("/domains", methods=['GET'])
 def domains() -> Response:
     """Send possible domains for a client, if such exists.
@@ -110,26 +98,40 @@ def domains() -> Response:
 
 
 @messagelist.route("/deletelist", methods=['DELETE'])
-def delete_list(listname: str, domain: str) -> Response:
+def delete_list(listname: str, domain: str, permanent: bool) -> Response:
     """Delete message/email list. List name is provided in the request body.
 
     :param domain: If an empty string, message list is not considered to have a domain associated and therefore doesn't
      have an email list. If this is an nonempty string, then an email list is excpected to also exist.
     :param listname: The list to be deleted.
+    :param permanent: A boolean flag indicating if the deletion is meant to be permanent.
     :return: A string describing how the operation went.
     """
+    # Check access rights.
     verify_logged_in()
-    # TODO: Additional checks for who get's to call this route.
-    #  Deleter has to be an owner of the list.
+    message_list = MessageListModel.get_list_by_name_exactly_one(listname)
+    if not has_manage_access(message_list.block):
+        raise RouteException("You need at least a manage access to the list in order to do this action.")
 
-    # TODO: Verify that the deleter is an owner of the message list.
-    msg_list = MessageListModel.get_list_by_name_exactly_one(listname)
-    # list_domain = msg_list.email_list_domain
-    # TODO: Put message list deletion here.
+    # The amount of docentries a message list's block relationship refers to should be one. If not, something is
+    # terribly wrong.
+    if len(message_list.block.docentries) > 1:
+        log_error(f"Message list '{listname}' has multiple docentries to it's block relationship.")
+        raise RouteException("Can't perform deletion at this time. The problem has been logged for admins.")
+
+    # Perform deletion.
+    if permanent:
+        manage_doc: Document = message_list.block.docentries[0].document
+        # If the deletion is permanent, move the admin doc to bin.
+        Document.remove(manage_doc.doc_id)
+    # Set the db entry as removed
+    message_list.removed = get_current_time()
+
     if domain:
         # A domain is given, so we are also looking to delete an email list.
-        # VIESTIM: Perform a soft deletion for now.
-        delete_email_list(f"{listname}@{domain}")
+        delete_email_list(f"{listname}@{domain}", permanent_deletion=permanent)
+
+    db.session.commit()
     return ok_response()
 
 
@@ -141,7 +143,6 @@ def get_list(document_id: int) -> Response:
     :return: ListOptions with the list's information.
     """
     verify_logged_in()
-    # TODO: Additional checks for who gets to call this route.
 
     message_list = MessageListModel.get_list_by_manage_doc_id(document_id)
     list_options = ListOptions(
@@ -173,16 +174,15 @@ def save_list_options(options: ListOptions) -> Response:
     :param options: The options to be saved.
     :return: OK response.
     """
+    # Check access rights.
     verify_logged_in()
-    # TODO: Additional checks for who get's to call this route.
-    #  list's owner
-
     message_list = MessageListModel.get_list_by_name_exactly_one(options.name)
-
-    # TODO: Verify that user has rights to the message list.
+    if not has_manage_access(message_list.block):
+        raise RouteException("You need at least a manange access to the list in order to do this action.")
 
     if message_list.archive_policy != options.archive:
-        # TODO: If message list changes it's archive policy, the members on the list need to be notified.
+        # TODO: If message list changes it's archive policy, the members on the list need to be notified. Insert
+        #  messaging here.
         message_list.archive = options.archive
 
     set_message_list_description(message_list, options.list_description)
@@ -194,15 +194,10 @@ def save_list_options(options: ListOptions) -> Response:
     set_message_list_allow_attachments(message_list, options.allow_attachments)
     set_message_list_tim_users_can_join(message_list, options.tim_users_can_join)
     set_message_list_non_member_message_pass(message_list, options.non_member_message_pass)
-
-    # TODO: Implemented client side.
     set_message_list_default_send_right(message_list, options.default_send_right)
-    # TODO: Implemented client side.
     set_message_list_default_delivery_right(message_list, options.default_delivery_right)
 
-    # TODO: Implement client side.
     set_message_list_default_reply_type(message_list, options.default_reply_type)
-    # TODO: set the following list options.
     # TODO: Implement client side
     # message_list.distribution = options.distribution
 
@@ -228,19 +223,24 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
     :param members: The members to be saved.
     :return: Response for the client. The Response is a simple ok_response().
     """
+    # Check access rights.
+    verify_logged_in()
     message_list = MessageListModel.get_list_by_name_exactly_one(listname)
+    if not has_manage_access(message_list.block):
+        raise RouteException("You need at least a manage access to the list to do this action.")
+
     email_list = None
     if message_list.email_list_domain:
+        # If there is a domain configured for a list and the Mailman connection is not configured, we can't continue
+        # at this time.
         verify_mailman_connection()
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
 
-    # VIESTIM: This solution is probably not well optimized.
     for member in members:
         db_member = message_list.get_member_by_name(member.name, member.email)
-        # VIESTIM: In what case would we face a situation where we couldn't find this member? They are given from the
-        #  db in the first place.
+        # This if mostly guards against type errors, but what if we legitimely can't find them? They are given from
+        # the db in the first place. Is there a reasonable way to communicate this state?
         if db_member:
-            # If send or delivery right has changed, then set them to db and on Mailman.
             set_member_send_delivery(db_member, member.sendRight, member.deliveryRight, email_list=email_list)
             set_message_list_member_removed_status(db_member, member.removed, email_list=email_list)
     db.session.commit()
@@ -248,44 +248,58 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
 
 
 @messagelist.route("/addmember", methods=['POST'])
-def add_member(memberCandidates: List[str], msgList: str, sendRight: bool, deliveryRight: bool) -> Response:
+def add_member(member_candidates: List[str], msg_list: str, send_right: bool, delivery_right: bool) -> Response:
     """Add new members to a message list.
 
-    :param memberCandidates: Names of member candidates.
-    :param msgList: The message list where we are trying to add new members.
-    :param sendRight: The send right on a list for all the member candidates.
-    :param deliveryRight: The delivery right on a list for all the member candidates.
+    :param member_candidates: Names of member candidates.
+    :param msg_list: The message list where we are trying to add new members.
+    :param send_right: The send right on a list for all the member candidates.
+    :param delivery_right: The delivery right on a list for all the member candidates.
     :return: OK response.
     """
-    # TODO: Validate access rights.
-    #  List owner.
+    # Check access right.
     verify_logged_in()
-
-    msg_list = MessageListModel.get_list_by_name_exactly_one(msgList)
+    message_list = MessageListModel.get_list_by_name_exactly_one(msg_list)
+    if not has_manage_access(message_list.block):
+        raise RouteException("You need at least a manage access to the list to do this action.")
 
     # TODO: Implement checking whether or not users are just added to a list (like they are now) or they are invited
     #  to a list (requires link generation and other things).
 
     em_list = None
-    if msg_list.email_list_domain is not None:
+    if message_list.email_list_domain is not None:
         verify_mailman_connection()
-        em_list = get_email_list_by_name(msg_list.name, msg_list.email_list_domain)
+        em_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
 
-    for member_candidate in memberCandidates:
+    for member_candidate in member_candidates:
+        # For individual users
         u = User.get_by_name(member_candidate.strip())
         if u is not None:
             # The name given was an existing TIM user.
-            add_new_message_list_tim_user(msg_list, u, sendRight, deliveryRight, em_list)
+            add_new_message_list_tim_user(message_list, u, send_right, delivery_right, em_list)
 
-        # TODO: If member_candidate is a user group, what do? Add as is or open it to individual users?
+        # For user groups.
         ug = UserGroup.get_by_name(member_candidate.strip())
         if ug is not None:
             # The name belongs to a user group.
-            add_new_message_list_group(msg_list, ug, sendRight, deliveryRight, em_list)
+            add_new_message_list_group(message_list, ug, send_right, delivery_right, em_list)
+
+        # For external members.
         # If member candidate is not a user, or a user group, then we assume an external member. Add external members.
-        if is_valid_email(member_candidate.strip()) and em_list:
-            add_message_list_external_email_member(msg_list, member_candidate.strip(),
-                                                   sendRight, deliveryRight, em_list, None)
+        external_member = member_candidate.strip().split(' ')
+        # We assume that the email is given first, and display name, if given, is after the email separated by at
+        # least one white space.
+        if is_valid_email(external_member[0]) and em_list:
+            if len(external_member) == 1:
+                # There is no display name given for external member.
+                dname = None
+            else:
+                # Construct an optional display name by joining all the other words given on the line that are not
+                # the email address. Remove possible white space between the email address and the first part of a
+                # display name. Other white space within the name is left as is.
+                dname = ' '.join(external_member[1:]).lstrip()
+            add_message_list_external_email_member(message_list, external_member[0],
+                                                   send_right, delivery_right, em_list, display_name=dname)
     db.session.commit()
     return ok_response()
 
@@ -298,38 +312,11 @@ def get_members(list_name: str) -> Response:
     :return: All the members of a list.
     """
     verify_logged_in()
-    # TODO: Verify user is a owner of the list.
-
     msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
-    list_members = msg_list.get_tim_members()
+    if not has_manage_access(msg_list.block):
+        raise RouteException("You are not authorized to see the members of this list.")
+    list_members = msg_list.members
     return json_response(list_members)
-
-
-@messagelist.route("/archive", methods=['POST'])
-def archive(message: MessageTIMversalis) -> Response:
-    """Archive a message sent to a message list.
-
-    :param message: The message to be archived.
-    :return: OK response
-    """
-    # VIESTIM: This view function might be unnecessary. Probably all different message channels have to use their own
-    #  handling routes for parsing purposes, and then possible archiving happens there.
-
-    msg_list = MessageListModel.get_list_by_name_first(message.message_list_name)
-    if msg_list is None:
-        raise RouteException(f"No message list with name {message.message_list_name} exists.")
-
-    # TODO: Check rights to message list?
-
-    # TODO: Check if this message list is archived at all in the first place, or if the message has had some special
-    #  value that blocks archiving. Think X-No-Archive header on emails.
-    archive_policy = msg_list.archive_policy
-    if archive_policy is ArchiveType.NONE:
-        raise RouteException("This list doesn't archive messages.")
-
-    archive_message(msg_list, message)
-
-    return ok_response()
 
 
 @messagelist.route("/test", methods=['GET'])

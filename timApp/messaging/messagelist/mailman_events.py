@@ -40,14 +40,11 @@ class MailmanMessageList:
 @dataclass
 class MailmanMemberAddress:
     email: str
-    # name: str
     name: Optional[str]  # name seemed to be empty at least at some point.
 
 
 @dataclass
 class MailmanMember:
-    # user_id: str
-    # name: str
     user_id: int
     address: MailmanMemberAddress
 
@@ -89,29 +86,21 @@ def handle_event() -> Response:
         raise RouteException("Body must be JSON")
 
     data = request.json
-    log_info("Request data:")
-    log_info(data)
     if "event" not in data or data["event"] not in EVENTS:
-        # VIESTIM: Should we log if an unhandled event happened?
-        #  e.g. log_error("A call without any event field has occured.")
-        #  and/or log_error(f"Unhandled event {data['event']}.")
         raise RouteException("Event not handled")
 
     evt = EVENTS[data["event"]].load(data)
 
-    log_info(f"Got event: {evt}")
     if isinstance(evt, SubscriptionEvent):
         if evt.event == "user_subscribed":
-            log_info("Subscription event captured.")
             # TODO: Handle subscription event.
+            pass
         elif evt.event == "user_unsubscribed":
             # TODO: Handle unsubscription event.
-            log_info("Unsubscription event captured.")
-    # TODO: Check if this message is a duplicate. If it is, then handle (e.g. drop) it.
-    # VIESTIM: How to check if the message is a duplicate?
-    # VIESTIM: If we are checking for a duplicate, should we be counting how "manyeth" duplicate the message is, so
-    #  we can e.g. catch if there is a spammer channel that bombards with duplicate messages?
-    # TODO: Archive this message, if it is intended for a message list that has archiving on.
+            pass
+    # TODO: Check if this message is a duplicate. If it is, then handle (e.g. drop) it. How to check if the message
+    #  is a duplicate? If we are checking for a duplicate, should we be counting how "manyeth" duplicate the message
+    #  is, so we can e.g. catch if there is a spammer channel that bombards with duplicate messages?
     elif isinstance(evt, NewMessageEvent):
         handle_new_message(evt)
 
@@ -119,16 +108,18 @@ def handle_event() -> Response:
 
 
 def handle_new_message(event: NewMessageEvent) -> None:
-    # VIESTIM: logging are used for testing, when everything works they can be removed.
+    """Handles an event raised by a new message.
+
+    :param event: Contains information about a new message sent to Mailman's list.
+    """
     message_list, sep, domain = event.mlist.name.partition("@")
     message_list = MessageListModel.get_list_by_name_first(message_list)
 
     if message_list is None:
-        log_warning("Tried to get a list that does not exist.")
         raise RouteException("Message list does not exist.")
     if not message_list.email_list_domain == event.mlist.host:
-        # VIESTIM: If we are here, something is now funky. Message list doesn't have a email list (domain)
-        #  configured, but messages are directed at it. Not sure what do exactly do here, honestly.
+        # If we are here, something is now funky. Message list doesn't have a email list (domain) configured,
+        # but messages are directed at it. Not sure what do exactly do here, honestly, except log the event.
         log_warning(f"Message list '{message_list.name}' with id '{message_list.id}' doesn't have a domain "
                     f"configured properly. Domain '{event.mlist.host}' was expected.")
         raise RouteException("List not configured properly.")

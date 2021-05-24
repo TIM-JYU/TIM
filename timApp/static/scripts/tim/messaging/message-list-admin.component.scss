@@ -71,6 +71,11 @@ label {
   margin-left: 2em;
 }
 
+.indented-more {
+  // Some elemenents are sub-elements, those are indented a bit more.
+  margin-left: 4em;
+}
+
 #domain-indicator {
   padding: 0 0.25em;
 }

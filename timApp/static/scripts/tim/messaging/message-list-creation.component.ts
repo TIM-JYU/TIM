@@ -77,7 +77,7 @@ export class MessageListComponent extends AngularDialogComponent<
     domains: string[] = [];
     domain: string = "";
 
-    // List has a private members only archive by default.
+    // List has a public archive by default.
     archive: ArchiveType = ArchiveType.PUBLIC;
     archiveOptions = archivePolicyNames;
 
@@ -91,6 +91,10 @@ export class MessageListComponent extends AngularDialogComponent<
         }
     }
 
+    /**
+     * Fetch possible domains to be used for email lists.
+     * @private
+     */
     private async getDomains() {
         const result = await to2(
             this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
@@ -101,10 +105,18 @@ export class MessageListComponent extends AngularDialogComponent<
             // Set default domain.
             this.domain = this.domains[0];
         } else {
-            console.error(result.result.error.error);
+            this.errorMessage = [
+                `Failed to load domains, list creation can't continue. The following error provides details: ${result.result.error.error}`,
+            ];
+            // Creating a message list isn't possible at this time if domains are not given. Therefore disable creation
+            // button.
+            this.disableCreate = true;
         }
     }
 
+    /**
+     * Launching the creation of a new list. Verifies the basic name rules in the client before involving the server.
+     */
     async newList() {
         if (!this.checkNameRequirementsLocally()) {
             return;
@@ -127,7 +139,8 @@ export class MessageListComponent extends AngularDialogComponent<
 
     /**
      * The call to create new list.
-     * @param options
+     * @param options Required amount of options to create a new message list. Here the necessary arguments are list's
+     * name and archive policy.
      * @private
      */
     private createList(options: ListOptions) {
@@ -147,34 +160,29 @@ export class MessageListComponent extends AngularDialogComponent<
      * @returns {boolean} Returns true if name requirements are met. Otherwise returns false.
      */
     checkNameRequirementsLocally(): boolean {
+        // Clear old error messages.
         this.errorMessage = [];
 
         // Name length is within length boundaries.
-        if (this.listname.length < 5 || 36 < this.listname.length) {
-            // console.log("Name not in length boundaries");
+        if (this.listname.length <= 5 || 36 <= this.listname.length) {
             this.errorMessage.push("Name not in length boundaries");
         }
 
         // Name starts with a character that is a letter a - z.
-        // Notice that ^ serves two different purposes in the following regular expression.
-        // The first one checks at the beginning of the string, the second is a negation.
         const regExpStartCharacter: RegExp = /^[a-z]/;
         if (!regExpStartCharacter.test(this.listname)) {
-            // console.log("name doesn't start with a lowercase letter");
             this.errorMessage.push("Name should start with a lowercase letter");
         }
 
         // Name contains at least one digit.
         const regExpAtLeastOneDigit: RegExp = /\d/;
         if (!regExpAtLeastOneDigit.test(this.listname)) {
-            // console.error("name doesn't contain at least one digit.");
             this.errorMessage.push("Name should contain at least one digit");
         }
 
-        // Name can't contain multiple sequential dots.
+        // Name can't contain sequential dots.
         const regExpMultipleDots: RegExp = /\.\.+/;
         if (regExpMultipleDots.test(this.listname)) {
-            // console.log("name contains multiple dots");
             this.errorMessage.push("Name shouldn´t contain multiple dots");
         }
 
@@ -182,7 +190,6 @@ export class MessageListComponent extends AngularDialogComponent<
         // ESLint prefers to not use regex for this. And by "prefer" we mean this won't transpile with a regular
         // expression.
         if (this.listname.endsWith(".")) {
-            // console.log("name ends in a dot");
             this.errorMessage.push("Name shouldn´t end in a dot");
         }
 
@@ -197,34 +204,9 @@ export class MessageListComponent extends AngularDialogComponent<
         // to be escaped. The dot does not have to be escaped here.
         const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
         if (regExpNonAllowedCharacters.test(this.listname)) {
-            // console.log("Name had forbidden characters");
             this.errorMessage.push("Name has forbidden characters");
         }
-
         return this.errorMessage.length == 0;
-    }
-
-    /**
-     * Helper to check if this list name exists.
-     */
-    async checkServerNameRequirements() {
-        // Name candidate depends on whether domains are configured for TIM.
-        const nameCandidate: string = this.domain
-            ? `${this.listname}@${this.domain}`
-            : this.listname;
-
-        const result = await to2(
-            this.http
-                .get(`${this.urlPrefix}/checkname/${nameCandidate}`)
-                .toPromise()
-        );
-        if (result.ok) {
-            // VIESTIM: we need a better indication that the name is available to the user.
-            console.log("Name check done. Name is available.");
-        } else {
-            // VIESTIM: We need a better indication that the name is not available to the user.
-            console.error(result.result.error.error);
-        }
     }
 }
 
