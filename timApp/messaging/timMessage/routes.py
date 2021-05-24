@@ -61,7 +61,7 @@ class ReplyOptions:
 class MessageBody:
     messageBody: str
     messageSubject: str
-    recipients: List[str]  # VIESTIM: find recipient by email or some other identifier?
+    recipients: List[str]
 
 
 @dataclass
@@ -291,9 +291,6 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
 
 @timMessage.route("/reply", methods=['POST'])
 def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Response:
-    # VIESTIM: add option replies_to to MessageOptions (and column to internalmessage
-    #  table in db, save original message's id here)
-
     messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList,
                                     options.readReceipt, False, get_current_user_object().name,
                                     get_current_user_object().email, options.repliesTo)

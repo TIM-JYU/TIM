@@ -5,7 +5,6 @@ import {to, to2} from "../util/utils";
 import {Users} from "../user/userService";
 
 interface TimMessageOptions {
-    // VIESTIM Keep this updated with MessageOptions class (at timMessage/routes.py). BUT recipients, messageSubject and messageBody are added later at postTimMessage()
     archive: boolean;
     important: boolean;
     messageChannel: boolean;
@@ -88,7 +87,7 @@ interface TimMessageOptions {
 })
 export class TimMessageComponent {
     /**
-     * VIESTIM: This component has a minor bug. If the textfield of recipients is emptied by hand, the component closes
+     *  TODO: This component has a minor bug. If the textfield of recipients is emptied by hand, the component closes
      *  and it can't be reopened unless the recipientList variable changes. A hypothetical fix would be to use a
      *  separate flag in the *ngIf, instead of just the recipientList variable. Then this flag would only be operated to
      *  close when  the component is closed from the x. It would propably requrie change detection for the recipientList
@@ -211,7 +210,6 @@ export class TimMessageComponent {
         };
     }
 
-    // VIESTIM: make it possible to send as TIM message and email at the same time
     public async sendMessage() {
         // send as TIM message
         if (this.timMessage) {
@@ -257,7 +255,6 @@ export class TimMessageComponent {
         this.resetForm();
     }
 
-    // VIESTIM this helper function helps keeping types in check.
     private postTimMessage(options: TimMessageOptions) {
         const message = {
             messageBody: this.messageBody,
