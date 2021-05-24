@@ -427,9 +427,6 @@ export class MessageListAdminComponent implements OnInit {
      * Helper for list deletion.
      */
     async deleteList() {
-        // FIXME: If cancelled, the dialog logs to console an error:
-        //  'ERROR Error: Uncaught (in promise): Dialog was closed from the X button.' This does not affect
-        //  functionality, it's just a tad embarassing. Fix this sometime, low priority.
         // Ask confirmation from the user.
         await showInputDialog({
             title: "Confirm list deletion",
