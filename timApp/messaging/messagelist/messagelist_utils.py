@@ -163,7 +163,6 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     :return: The archive document.
     """
     # Gather owners of the archive document.
-    # TODO: Create new document, setting the owner as either the person sending the message or message list's owner
     message_owners: List[UserGroup] = []
     message_sender = User.get_by_email(message.sender.email_address)
 
@@ -225,9 +224,7 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
     if archive_folder is not None:
         all_archived_messages = archive_folder.get_all_documents()
     else:
-        # TODO: Set folder's owners to be message list's owners.
-        # FIXME USE BETTER METHOD HERE
-        manage_doc_block = Block.query.filter_by(id=message_list.manage_doc_id).one()
+        manage_doc_block = message_list.block
         owners = manage_doc_block.owners
         Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
 
