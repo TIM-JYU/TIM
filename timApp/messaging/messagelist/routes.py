@@ -308,33 +308,6 @@ def get_members(list_name: str) -> Response:
     return json_response(list_members)
 
 
-@messagelist.route("/archive", methods=['POST'])
-def archive(message: MessageTIMversalis) -> Response:
-    """Archive a message sent to a message list.
-
-    :param message: The message to be archived.
-    :return: OK response
-    """
-    # VIESTIM: This view function might be unnecessary. Probably all different message channels have to use their own
-    #  handling routes for parsing purposes, and then possible archiving happens there.
-
-    msg_list = MessageListModel.get_list_by_name_first(message.message_list_name)
-    if msg_list is None:
-        raise RouteException(f"No message list with name {message.message_list_name} exists.")
-
-    # TODO: Check rights to message list?
-
-    # TODO: Check if this message list is archived at all in the first place, or if the message has had some special
-    #  value that blocks archiving. Think X-No-Archive header on emails.
-    archive_policy = msg_list.archive_policy
-    if archive_policy is ArchiveType.NONE:
-        raise RouteException("This list doesn't archive messages.")
-
-    archive_message(msg_list, message)
-
-    return ok_response()
-
-
 @messagelist.route("/test", methods=['GET'])
 def test_route() -> Response:
     """A testing route. Only allow calls here during development, i.e. when operating from localhost."""
