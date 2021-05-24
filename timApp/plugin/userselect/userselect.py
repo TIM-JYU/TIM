@@ -297,11 +297,16 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
     errors = []
     for distribute in undoable_dists:
         if distribute.operation == "confirm":
-            undo_op: Union[UndoConfirmOp, UndoQuitOp] = UndoConfirmOp(type="undoconfirm",
-                                                                      email=user_acc.email,
-                                                                      timestamp=distribute.timestamp_or_now)
+            undo_op: Union[UndoConfirmOp, UndoQuitOp, ChangeTimeOp] = UndoConfirmOp(type="undoconfirm",
+                                                                                    email=user_acc.email,
+                                                                                    timestamp=distribute.timestamp_or_now)
         elif distribute.operation == "quit":
             undo_op = UndoQuitOp(type="undoquit", email=user_acc.email, timestamp=distribute.timestamp_or_now)
+        elif distribute.operation == "changetime":
+            undo_op = ChangeTimeOp(type="changetime",
+                                   email=user_acc.email,
+                                   timestamp=distribute.timestamp_or_now,
+                                   secs=-int(distribute.minutes * 60))
         else:
             continue
 
@@ -380,7 +385,15 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
     for distribute in model.actions.distributeRight:
         convert = RIGHT_TO_OP[distribute.operation]
         right_op = convert(distribute, user_acc.email)
-        errors.extend(register_right_impl(right_op, distribute.target))
+        apply_errors = register_right_impl(right_op, distribute.target)
+
+        if isinstance(right_op, QuitOp):
+            # Ignore failing to undo twice. It is an error but it's not strictly an issue for UserSelect
+            # However, do this only for QuitOp to prevent other issues like trying to confirm users who has already quit
+            # TODO: Don't depend on string matching to filter out the error
+            apply_errors = [e for e in apply_errors if "Cannot register a non-UndoQuitOp" not in e]
+
+        errors.extend(apply_errors)
 
     db.session.commit()
 

@@ -25,7 +25,13 @@ import {NoopAnimationsModule} from "@angular/platform-browser/animations";
 import {createDowngradedModule, doDowngrade} from "../../downgrade";
 import {AngularPluginBase} from "../angular-plugin-base.directive";
 import {GenericPluginMarkup, getTopLevelFields, nullable} from "../attributes";
-import {isMobileDevice, templateString, timeout, to2} from "../../util/utils";
+import {
+    isMobileDevice,
+    templateString,
+    timeout,
+    TimStorage,
+    to2,
+} from "../../util/utils";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {CodeScannerComponent} from "./code-scanner.component";
 import {MediaDevicesSupported} from "./util";
@@ -73,11 +79,6 @@ const PluginFields = t.intersection([
     t.type({}),
 ]);
 
-interface SearchOptionToggle {
-    name: string;
-    value: boolean;
-}
-
 async function playBeep(name: string, audio?: HTMLAudioElement) {
     let result = audio;
     // Loading audio may fail, browsers usually throw an exception for Audio function failure
@@ -95,6 +96,30 @@ const USER_FIELDS: Record<string, string> = {
     realname: $localize`Real name`,
     useremail: $localize`Email`,
 };
+
+class ToggleOption {
+    private storageValue!: TimStorage<boolean>;
+    private val = false;
+    enabled = false;
+
+    constructor(key: string, private toggleName: string) {
+        this.storageValue = new TimStorage(key, t.boolean);
+        this.val = this.storageValue.get() ?? false;
+    }
+
+    get value() {
+        return this.val && this.enabled;
+    }
+
+    set value(v: boolean) {
+        this.val = v;
+        this.storageValue.set(this.val);
+    }
+
+    get name() {
+        return this.toggleName;
+    }
+}
 
 @Component({
     selector: "user-selector",
@@ -215,12 +240,12 @@ const USER_FIELDS: Record<string, string> = {
                 <span class="undoable-text">{{successMessage}}</span>
                 <span class="undo-button" *ngIf="allowUndo && !undone">
                     <tim-loading *ngIf="undoing"></tim-loading>
-                    <button (click)="verifyUndo = true" class="btn btn-danger"
+                    <button *ngIf="!verifyUndo" (click)="verifyUndo = true" class="btn btn-danger"
                             [disabled]="undoing">{{undoButtonLabel}}</button>
                 </span>
             </div>
         </tim-alert>
-        <tim-alert severity="warning" *ngIf="verifyUndo" [closeable]="!undoing" (closing)="resetView()">
+        <tim-alert severity="warning" *ngIf="verifyUndo" [closeable]="!undoing" (closing)="verifyUndo = false">
             <div class="undoable-message">
                 <span class="undoable-text">{{undoWarningText}}</span>
                 <span class="undo-button">
@@ -352,19 +377,16 @@ export class UserSelectComponent extends AngularPluginBase<
     undoErrors: string[] = [];
     scanCode: boolean = false;
     scrollOnce: boolean = false;
-    optionToggles: SearchOptionToggle[] = [];
-    keyboardMode: SearchOptionToggle = {
-        name: $localize`Keyboard mode`,
-        value: false,
-    };
-    t9Mode: SearchOptionToggle = {
-        name: $localize`T9 keyboard`,
-        value: false,
-    };
-    autoApplyOnFullMatch: SearchOptionToggle = {
-        name: $localize`Auto apply on match`,
-        value: false,
-    };
+    optionToggles: ToggleOption[] = [];
+    keyboardMode = new ToggleOption(
+        "userSelect_keyboardMode",
+        $localize`Keyboard mode`
+    );
+    t9Mode = new ToggleOption("userSelect_t9Mode", $localize`T9 keyboard`);
+    autoApplyOnFullMatch = new ToggleOption(
+        "userSelect_autoApplyOnFullMatch",
+        $localize`Auto apply on match`
+    );
     verifyUndo: boolean = false;
 
     get successMessage() {
@@ -752,12 +774,17 @@ export class UserSelectComponent extends AngularPluginBase<
     }
 
     private initToggleOptions() {
+        const addOption = (to: ToggleOption) => {
+            to.enabled = true;
+            this.optionToggles.push(to);
+        };
+
         if (this.markup.selectOnce) {
-            this.optionToggles.push(this.keyboardMode);
-            this.optionToggles.push(this.t9Mode);
+            addOption(this.keyboardMode);
+            addOption(this.t9Mode);
         }
         if (this.markup.scanner.applyOnMatch) {
-            this.optionToggles.push(this.autoApplyOnFullMatch);
+            addOption(this.autoApplyOnFullMatch);
         }
     }
 
