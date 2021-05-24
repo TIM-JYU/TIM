@@ -7,10 +7,10 @@ from flask import Response
 from timApp.auth.accesshelper import verify_logged_in, has_manage_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.document import Document
-from timApp.messaging.messagelist.emaillist import get_email_list_by_name, freeze_list
+from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.emaillist import get_list_ui_link, create_new_email_list, \
     delete_email_list, check_emaillist_name_requirements, get_domain_names, verify_mailman_connection
-from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
+from timApp.messaging.messagelist.listoptions import ListOptions, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
     new_list, archive_message, EmailAndDisplayName, set_message_list_notify_owner_on_change, \
