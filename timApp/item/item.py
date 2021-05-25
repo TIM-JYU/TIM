@@ -1,21 +1,26 @@
 from __future__ import annotations
 
 from itertools import accumulate
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from flask import current_app
 from sqlalchemy import tuple_, func
 from sqlalchemy.orm import defaultload
 
 from timApp.auth.auth_models import BlockAccess
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.item.block import Block, BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import include_if_loaded
+
+
 from timApp.util.utils import split_location, date_to_relative, cached_property
 
 if TYPE_CHECKING:
     from timApp.folder.folder import Folder
+    from timApp.user.user import User
+
 
 class ItemBase:
     """An item that can be assigned permissions."""
@@ -23,11 +28,6 @@ class ItemBase:
     @property
     def owners(self):
         return self.block.owners if self.block else None
-
-    @property
-    def rights(self):
-        from timApp.auth.accesshelper import get_rights
-        return get_rights(self)
 
     @property
     def block(self) -> Block:
@@ -156,7 +156,10 @@ class Item(ItemBase):
     def public(self):
         return True
 
-    def to_json(self):
+    def to_json(self, curr_user: Optional[User] = None):
+        if curr_user is None:
+            from timApp.auth.sessioninfo import get_current_user_object
+            curr_user = get_current_user_object()
         return {'name': self.short_name,
                 'path': self.path,
                 'title': self.title,
@@ -164,7 +167,7 @@ class Item(ItemBase):
                 'id': self.id,
                 'modified': date_to_relative(self.last_modified) if self.last_modified else None,
                 'owners': self.owners,
-                'rights': self.rights,
+                'rights': get_user_rights_for_item(self, curr_user),
                 'unpublished': self.block.is_unpublished() if self.block else False,
                 'public': self.public,
                 # We only add tags if they've already been loaded.

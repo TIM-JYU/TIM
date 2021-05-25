@@ -165,8 +165,8 @@ class DocInfo(Item):
         d = DocEntry(id=self.src_docid, name=new_name, public=is_public)
         db.session.add(d)
 
-    def to_json(self):
-        return {**super().to_json(),
+    def to_json(self, **kwargs):
+        return {**super().to_json(**kwargs),
                 'isFolder': False,
                 **({'versions': self.get_changelog_with_names(),
                     'fulltext': self.document.export_markdown()} if getattr(self, 'serialize_content', False) else {})

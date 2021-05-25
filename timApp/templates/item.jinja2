@@ -1,7 +1,7 @@
 {% extends 'base.jinja2' %}
 {% block head %}
     {{ super() }}
-    <script>
+    <script class="global-vars">
         var curr_item = {{item|tojson}};
         var breadcrumbs = {{item.parents_to_root_eager|tojson}};
     </script>

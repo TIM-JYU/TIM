@@ -9,8 +9,9 @@ from flask import request
 
 from timApp.admin.associate_old_uploads import upload_regexes
 from timApp.answer.answer import Answer
-from timApp.auth.accesshelper import verify_edit_access, verify_view_access, get_rights, get_doc_or_abort, \
+from timApp.auth.accesshelper import verify_edit_access, verify_view_access, get_doc_or_abort, \
     verify_teacher_access, verify_manage_access, verify_ownership, verify_seeanswers_access
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_current_user_group, \
     user_context_with_logged_in
 from timApp.document.docentry import DocEntry
@@ -473,7 +474,7 @@ def par_response(
 
     r = json_response({'texts': render_template('partials/paragraphs.jinja2',
                                                 text=final_texts,
-                                                item={'rights': get_rights(doc.get_docinfo())},
+                                                rights=get_user_rights_for_item(doc.get_docinfo(), user_ctx.logged_user),
                                                 preview=preview),
                        'js': post_process_result.js_paths,
                        'css': post_process_result.css_paths,
@@ -481,7 +482,7 @@ def par_response(
                        'changed_pars': {p['id']: render_template(
                            'partials/paragraphs.jinja2',
                            text=[p],
-                           item={'rights': get_rights(doc.get_docinfo())}) for p
+                           rights=get_user_rights_for_item(doc.get_docinfo(), user_ctx.logged_user)) for p
                            in
                            changed_post_process_result.texts if not is_area_start_or_end(p)},
                        'version': new_doc_version,

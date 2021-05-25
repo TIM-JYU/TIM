@@ -50,8 +50,8 @@ class Translation(db.Model, DocInfo):
     def translations(self) -> List['Translation']:
         return self.docentry.trs
 
-    def to_json(self):
-        return {**super(Translation, self).to_json(),
+    def to_json(self, **kwargs):
+        return {**super(Translation, self).to_json(**kwargs),
                 'src_docid': self.src_docid,
                 'lang_id': self.lang_id}
 
