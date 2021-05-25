@@ -348,10 +348,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
     :return: A BaseMessage object corresponding the original email message.
     """
     # original message is of form specified in https://pypi.org/project/mail-parser/
-    # TODO: Get 'content-type' field, e.g. 'text/plain; charset="UTF-8"'
     # TODO: Get 'date' field, e.g. '2021-05-01T19:09:07'
-    # VIESTIM: Get 'message-id-hash' field (maybe to check for duplicate messages), e.g.
-    #  'H5IULFLU3PXSUPCBEXZ5IKTHX4SMCFHJ'
     visible_recipients: List[EmailAndDisplayName] = []
     maybe_to_addresses = parse_mailman_message_address(original, "to")
     if maybe_to_addresses is not None:
@@ -360,15 +357,13 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
     if maybe_cc_addresses is not None:
         visible_recipients.extend(maybe_cc_addresses)
 
-    # VIESTIM: How should we differentiate with cc and bcc in TIM's context? bcc recipients should still get messages
-    #  intented for them.
     sender: Optional[EmailAndDisplayName] = None
     maybe_from_address = parse_mailman_message_address(original, "from")
     if maybe_from_address is not None:
+        # Expect only one sender.
         sender = maybe_from_address[0]
     if sender is None:
-        # VIESTIM: Should there be a reasonable exception that messages always have to have a sender (and only one
-        #  sender), and if not then they are dropped? What good can be a (email) message if there is no sender field?
+        # If no sender is found on a message, we don't archive the message.
         raise RouteException("No sender found in the message.")
 
     message = BaseMessage(
@@ -377,7 +372,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
         message_channel=Channel.EMAIL_LIST,
 
         # Header information
-        sender=sender,  # VIESTIM: Message should only have one sender?
+        sender=sender,
         recipients=visible_recipients,
         subject=original["subject"],  # TODO: shorten the subject, if it contains multiple Re: and Vs: prefixes?
 
