@@ -235,7 +235,8 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
 #- {{ .mailheader}}\n
 [{message.subject}]{{.mailtitle}}\\
 Sender: {message.sender}\\
-Recipients: {message.recipients}
+Recipients: {message.recipients}\\
+Date: {message.timestamp.strftime('%Y-%m-%d %H:%M:%S')}
 """)
 
     # Set message body for archived message.
