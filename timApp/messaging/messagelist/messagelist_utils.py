@@ -427,19 +427,6 @@ def get_message_list_owners(mlist: MessageListModel) -> List[UserGroup]:
     return manage_doc_block.owners
 
 
-def verify_list_owner(owner_candidate_ug: UserGroup, mlist: MessageListModel) -> bool:
-    """Verify if a user group is a owner of a message list.
-
-    :param owner_candidate_ug: The user group who's ownership of a list is checked.
-    :param mlist: The message list where we are checking ownership.
-    :return: Return True if the owner candidate is a owner of a message list. Otherwise return false.
-    """
-    # VIESTIM: If single user's ownership is checked, is this enough if they are not an owner alone, but are part of an
-    #  owner group?
-    mlist_owners = get_message_list_owners(mlist)
-    return owner_candidate_ug in mlist_owners
-
-
 def create_management_doc(msg_list_model: MessageListModel, list_options: ListOptions) -> DocInfo:
     """Create management doc for a new message list.
 
