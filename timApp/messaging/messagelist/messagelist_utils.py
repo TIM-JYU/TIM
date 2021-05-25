@@ -28,7 +28,7 @@ from timApp.util.flask.requesthelper import RouteException
 from timApp.util.utils import remove_path_special_chars, get_current_time
 
 
-def check_messagelist_name_requirements(name_candidate: str) -> None:
+def verify_messagelist_name_requirements(name_candidate: str) -> None:
     """Checks name requirements specific for email list.
 
     If at any point a name requirement check fails, then an exception is raised an carried to the client. If all
