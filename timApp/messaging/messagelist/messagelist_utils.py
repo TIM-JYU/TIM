@@ -224,8 +224,7 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
     if archive_folder is not None:
         all_archived_messages = archive_folder.get_all_documents()
     else:
-        manage_doc_block = message_list.block
-        owners = manage_doc_block.owners
+        owners = get_message_list_owners(message_list)
         Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
 
     archive_doc = create_archive_doc_with_permission(archive_subject, archive_doc_path, message_list, message)

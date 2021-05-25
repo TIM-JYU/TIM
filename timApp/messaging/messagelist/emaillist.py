@@ -625,7 +625,7 @@ def get_domain_names() -> List[str]:
 
 
 def freeze_list(mlist: MailingList) -> None:
-    """Freeze an email list. No posts are allowed on the list after freezing.
+    """Freeze an email list. No posts are allowed on the list after freezing (owner might be an exception).
 
     Think a course specific email list and the course ends, but mail archive is kept intact for later potential use.
     This stops (or at least mitigates) that the mail archive on that list changes after the freezing.
