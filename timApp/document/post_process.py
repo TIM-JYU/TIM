@@ -157,10 +157,10 @@ def post_process_pars(
         # taketime("readings begin")
 
         # TODO: UserContext should support multiple users like in group login.
-        usergroup_ids = [user_ctx.user.get_personal_group().id]
+        usergroup_ids = [user_ctx.logged_user.get_personal_group().id]
 
         # If we're in exam mode and we're visiting the page for the first time, mark everything read
-        if should_auto_read(doc, usergroup_ids, user_ctx.user):
+        if should_auto_read(doc, usergroup_ids, user_ctx.logged_user):
             should_mark_all_read = True
             readings = []
         else:
