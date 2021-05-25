@@ -337,6 +337,7 @@ class MessageListExternalMember(MessageListMember):
     """Email address of message list's external member."""
 
     display_name = db.Column(db.Text)
+    """Display name for external user, which in most cases should be the external member's address' owner's name."""
 
     member = db.relationship("MessageListMember", back_populates="external_member", lazy="select", uselist=False)
 
@@ -380,7 +381,7 @@ class MessageListDistribution(db.Model):
     """Message list's id, if this row is about message list's channel distribution."""
 
     channel = db.Column(db.Enum(Channel))
-    """Which message channels are used for a message list."""
+    """Which message channels are used by a message list or a user."""
 
     member = db.relationship("MessageListMember", back_populates="distribution", lazy="select", uselist=False)
     message_list = db.relationship("MessageListModel", back_populates="distribution", lazy="select", uselist=False)

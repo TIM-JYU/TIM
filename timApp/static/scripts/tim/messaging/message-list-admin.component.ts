@@ -439,13 +439,16 @@ export class MessageListAdminComponent implements OnInit {
                         params: {
                             listname: this.listname,
                             domain: this.domain ? this.domain : "",
-                            permanent: false,
+                            permanent: false, // Only non-permanent deletion at this point.
                         },
                     })
                 );
                 if (result.ok) {
+                    // Deletion was successful. Beam us up.
+                    location.assign("/view/messagelists");
                     return {ok: true, result: result.result} as const;
                 } else {
+                    this.permanentErrorMessage = "Deleting the list failed.";
                     return {
                         ok: false,
                         result: result.result.data.error,
@@ -453,8 +456,6 @@ export class MessageListAdminComponent implements OnInit {
                 }
             },
         });
-        // If the user has confirmed deletion,
-        location.assign("/view/messagelists");
     }
 
     /**

@@ -4,13 +4,15 @@ from typing import List, Optional
 
 from flask import Response
 
-from timApp.auth.accesshelper import verify_logged_in, has_manage_access
+from timApp.auth.accesshelper import verify_logged_in, has_manage_access, get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.document import Document
-from timApp.messaging.messagelist.emaillist import get_email_list_by_name, freeze_list
+from timApp.document.docinfo import move_document
+from timApp.folder.folder import Folder
+from timApp.item.manage import get_trash_folder
+from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.emaillist import get_list_ui_link, create_new_email_list, \
     delete_email_list, check_emaillist_name_requirements, get_domain_names, verify_mailman_connection
-from timApp.messaging.messagelist.listoptions import ListOptions, ArchiveType, Distribution
+from timApp.messaging.messagelist.listoptions import ListOptions, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
     new_list, archive_message, EmailAndDisplayName, set_message_list_notify_owner_on_change, \
@@ -99,7 +101,7 @@ def domains() -> Response:
 
 @messagelist.route("/deletelist", methods=['DELETE'])
 def delete_list(listname: str, domain: str, permanent: bool) -> Response:
-    """Delete message/email list. List name is provided in the request body.
+    """Delete message and it's associated message channels.
 
     :param domain: If an empty string, message list is not considered to have a domain associated and therefore doesn't
      have an email list. If this is an nonempty string, then an email list is excpected to also exist.
@@ -121,9 +123,11 @@ def delete_list(listname: str, domain: str, permanent: bool) -> Response:
 
     # Perform deletion.
     if permanent:
-        manage_doc: Document = message_list.block.docentries[0].document
-        # If the deletion is permanent, move the admin doc to bin.
-        Document.remove(manage_doc.doc_id)
+        # If the deletion is (more) permanent, move the admin doc to bin.
+        # manage_doc: Document = message_list.block.docentries[0].document
+        manage_doc = get_doc_or_abort(message_list.manage_doc_id)
+        trash_folder: Folder = get_trash_folder()
+        move_document(manage_doc, trash_folder)
     # Set the db entry as removed
     message_list.removed = get_current_time()
 
@@ -163,6 +167,7 @@ def get_list(document_id: int) -> Response:
         list_description=message_list.description,
         allow_attachments=message_list.allow_attachments,
         distribution=Distribution(email_list=True, tim_message=True),
+        removed=message_list.removed
     )
     return json_response(list_options)
 
