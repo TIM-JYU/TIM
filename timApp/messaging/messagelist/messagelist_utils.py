@@ -804,7 +804,7 @@ def set_message_list_member_removed_status(member: MessageListMember,
     if (member.membership_ended is None and removed is None) or (member.membership_ended and removed):
         return
 
-    member.membership_ended = removed
+    member.remove(removed)
     # Remove members from email list or return them there.
     if email_list:
         if member.is_group():

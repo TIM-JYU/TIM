@@ -137,7 +137,11 @@ class MessageListModel(db.Model):
         return self.archive
 
     def get_individual_members(self) -> List['MessageListMember']:
-        """Get all the members that are not groups."""
+        """Get all the members that are not groups.
+
+        :return: A list of message list's members, who are individual TIM users (MessageListTimMember objects) or
+        external members (MessageListExternalMember objects).
+        """
         individuals = []
         for member in self.members:
             if not member.is_group():
@@ -156,14 +160,14 @@ class MessageListModel(db.Model):
         return tim_members
 
     def get_member_by_name(self, name: Optional[str], email: Optional[str]) -> Optional['MessageListMember']:
-        """Get member of this list. Member can be searched with name and/or email. At least one has to be given. Name
-        is preferred and is used in a search first.
+        """Get member of this list. Member can be searched with name and/or email. At least one has to be given. If
+        both are given, name is preferred and is used in a search first.
 
         Raises ValueError if used with both name and email parameters as None.
 
-        :param name: Name
-        :param email: Email address
-        :return: A message list member, if one is found with given arguments.
+        :param name: Name of the member.
+        :param email: Member's email address
+        :return: A message list member, if one is found with given arguments. Otherwise return None.
         """
         if not name and not email:
             raise ValueError
@@ -257,9 +261,9 @@ class MessageListMember(db.Model):
         """If the member is verified to be on the list. """
         return self.membership_verified is not None
 
-    def remove(self) -> None:
+    def remove(self, end_time=get_current_time()) -> None:
         """Shorthand for removing a member out of the group, by setting the membership_ended attribute."""
-        self.membership_ended = get_current_time()  # datetime.now()
+        self.membership_ended = end_time
 
     def get_email(self) -> str:
         """The process of obtaining member's address varies depending on if the member

@@ -328,10 +328,11 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     :param delivery_right: Whether email list delivers mail to email. For True, mail is delivered to email. For False,
     no mail is delivered.
     """
-    # We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise
-    # they have to verify themselves for Mailman. Note that this is different from confirming to join a list.
-    # We use pre_approved flag, because we assume that who adds an email to a list also wants that email onto
-    # a list. Otherwise they would have to afterwards manually moderate their subscription request.
+    # We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise they have
+    # to verify themselves for Mailman through an additional verification process. Note that this is different from
+    # confirming to join a list. We use pre_approved flag, because we assume that who adds an email to a list also
+    # wants that email onto a list. Otherwise they would have to afterwards manually moderate their subscription
+    # request.
     try:
         new_member = mlist.subscribe(email,
                                      pre_verified=True,
