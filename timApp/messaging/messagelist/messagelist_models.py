@@ -272,16 +272,6 @@ class MessageListMember(db.Model):
         raise NotImplementedError
 
 
-def get_members_for_list(msg_list: MessageListModel) -> List[MessageListMember]:
-    """Get all members belonging to a list.
-
-    :param msg_list:
-    :return:
-    """
-    list_members = MessageListMember.query.filter_by(message_list_id=msg_list.id).all()
-    return list_members
-
-
 class MessageListTimMember(MessageListMember):
     """A member of message list who is also a TIM user(group). This can be one person in their own personal user
     group or this can be e.g. a course's group."""
