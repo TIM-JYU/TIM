@@ -124,7 +124,7 @@ class EmailAndDisplayName:
 
 
 @dataclass
-class MessageTIMversalis:
+class BaseMessage:
     """A unified datastructure for messages TIM handles."""
     # Meta information about where this message belongs to and where it's from. Mandatory values for all messages.
     message_list_name: str
@@ -153,7 +153,7 @@ MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
 
 def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: str, message_list: MessageListModel,
-                                       message: MessageTIMversalis) -> DocEntry:
+                                       message: BaseMessage) -> DocEntry:
     """Create archive document with permissions matching the message list's archive policy.
 
     :param archive_subject: The subject of the archive document.
@@ -201,7 +201,7 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     return archive_doc
 
 
-def archive_message(message_list: MessageListModel, message: MessageTIMversalis) -> None:
+def archive_message(message_list: MessageListModel, message: BaseMessage) -> None:
     """Archive a message for a message list.
 
     :param message_list: The message list where the archived message belongs.
@@ -340,7 +340,7 @@ def set_message_link_previous(doc: Document, link_text: str, url_previous: str) 
     header.save()
 
 
-def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> MessageTIMversalis:
+def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMessage:
     """Modify an email message sent from Mailman to TIM's universal message format."""
     # original message is of form specified in https://pypi.org/project/mail-parser/
     # TODO: Get 'content-type' field, e.g. 'text/plain; charset="UTF-8"'
@@ -366,7 +366,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> Message
         #  sender), and if not then they are dropped? What good can be a (email) message if there is no sender field?
         raise RouteException("No sender found in the message.")
 
-    message = MessageTIMversalis(
+    message = BaseMessage(
         message_list_name=msg_list.name,
         domain=msg_list.email_list_domain,
         message_channel=Channel.EMAIL_LIST,
