@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 from typing import Optional, List, Dict, Tuple
 
 from mailmanclient import MailingList
@@ -375,6 +376,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
         sender=sender,
         recipients=visible_recipients,
         subject=original["subject"],  # TODO: shorten the subject, if it contains multiple Re: and Vs: prefixes?
+        timestamp=parsedate_to_datetime(original["date"]),
 
         # Message body
         message_body=original["body"],
