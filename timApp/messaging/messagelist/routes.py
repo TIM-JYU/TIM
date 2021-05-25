@@ -7,6 +7,7 @@ from flask import Response
 from timApp.auth.accesshelper import verify_logged_in, has_manage_access, get_doc_or_abort
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import move_document
+from timApp.folder.folder import Folder
 from timApp.item.manage import get_trash_folder
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.emaillist import get_list_ui_link, create_new_email_list, \
@@ -125,7 +126,7 @@ def delete_list(listname: str, domain: str, permanent: bool) -> Response:
         # If the deletion is (more) permanent, move the admin doc to bin.
         # manage_doc: Document = message_list.block.docentries[0].document
         manage_doc = get_doc_or_abort(message_list.manage_doc_id)
-        trash_folder = get_trash_folder()
+        trash_folder: Folder = get_trash_folder()
         move_document(manage_doc, trash_folder)
     # Set the db entry as removed
     message_list.removed = get_current_time()
