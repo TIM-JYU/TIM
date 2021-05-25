@@ -205,6 +205,12 @@ import {Users} from "../user/userService";
             <div id="email-send">
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
                 <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
+                <div>
+                    <tim-alert *ngIf="memberSaveSuccessResponse"
+                               severity="success">{{memberSaveSuccessResponse}}</tim-alert>
+                    <tim-alert *ngIf="memberSaveFailResponse"
+                               severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                </div>
             </div>
             <div class="section">
                 <h2>List deletion</h2>
@@ -272,6 +278,9 @@ export class MessageListAdminComponent implements OnInit {
     // Response strings used in giving feedback to the user on adding new members to the message list.
     memberAddSucceededResponse: string = "";
     memberAddFailedResponse: string = "";
+
+    memberSaveSuccessResponse: string = "";
+    memberSaveFailResponse: string = "";
 
     // Permanent error messages that cannot be recovered from, e.g. loading failed and reload is needed.
     permanentErrorMessage?: string;
@@ -576,11 +585,19 @@ export class MessageListAdminComponent implements OnInit {
      */
     async saveMembers() {
         const resultSaveMembers = await this.saveMembersCall(this.membersList);
-
+        // Give timed feedback to user.
         if (resultSaveMembers.ok) {
-            // console.log("Saving members succeeded.");
+            this.memberSaveSuccessResponse = "Saving members succeeded!";
+            window.setTimeout(
+                () => (this.memberSaveSuccessResponse = ""),
+                5 * 1000
+            );
         } else {
-            console.error("Saving members failed.");
+            this.memberSaveFailResponse = "Saving members failed.";
+            window.setTimeout(
+                () => (this.memberSaveFailResponse = ""),
+                5 * 1000
+            );
         }
     }
 
