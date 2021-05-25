@@ -560,7 +560,7 @@ def del_document(doc_id):
     return ok_response()
 
 
-def get_trash_folder():
+def get_trash_folder() -> Folder:
     trash_folder_path = f'roskis'
     f = Folder.find_by_path(trash_folder_path)
     if not f:
