@@ -38,7 +38,7 @@ def verify_messagelist_name_requirements(name_candidate: str) -> None:
     """
     # There might become a time when we also check here if name is some message list specific reserved name. We
     # haven't got a source of those reserved names, not including names that already exists, so no check at this time.
-    check_name_rules(name_candidate)
+    verify_name_rules(name_candidate)
     check_name_availability(name_candidate)
 
 
@@ -52,7 +52,7 @@ def check_name_availability(name_candidate: str) -> None:
         raise RouteException(f"Message list with name {name_candidate} already exists.")
 
 
-def check_name_rules(name_candidate: str) -> None:
+def verify_name_rules(name_candidate: str) -> None:
     """Check if name candidate complies with naming rules. The method raises a RouteException if naming rule is
     violated. If this function doesn't raise an exception, then the name candidate follows naming rules.
 
