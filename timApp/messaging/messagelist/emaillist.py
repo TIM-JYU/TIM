@@ -449,7 +449,7 @@ def verify_emaillist_name_requirements(name_candidate: str, domain: str) -> None
     :param domain: Domain where name availability is to be checked.
     """
     verify_name_availability(name_candidate, domain)
-    check_reserved_names(name_candidate)
+    verify_reserved_names(name_candidate)
 
 
 def verify_name_availability(name_candidate: str, domain: str) -> None:
@@ -472,7 +472,7 @@ def verify_name_availability(name_candidate: str, domain: str) -> None:
         raise
 
 
-def check_reserved_names(name_candidate: str) -> None:
+def verify_reserved_names(name_candidate: str) -> None:
     """Check a name candidate against reserved names, e.g. postmaster.
 
     Raises a RouteException if the name candidate is a reserved name. If name is not reserved, the method completes
