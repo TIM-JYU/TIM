@@ -60,7 +60,7 @@ interface TimMessageOptions {
                 <li><tim-alert *ngIf="urlError" severity="danger">
                     {{ urlError }}
                 </tim-alert></li>
-            <li><p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="timMessageOptions.pageList" (change)="checkUrls()" rows="4" cols="70"></textarea></p></li>
+            <li><p *ngIf="timMessage && !defaultEmail"><textarea [(ngModel)]="timMessageOptions.pageList" (input)="checkUrls()" rows="4" cols="70"></textarea></p></li>
             <li><p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
                                       [(ngModel)]="timMessageOptions.isPrivate" disabled>Recipient sees TIM message as private</label></p></li>
             <li><p *ngIf="timMessage && !defaultEmail"><label><input type="checkbox"
