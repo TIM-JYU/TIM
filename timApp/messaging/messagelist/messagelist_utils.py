@@ -341,7 +341,12 @@ def set_message_link_previous(doc: Document, link_text: str, url_previous: str) 
 
 
 def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMessage:
-    """Modify an email message sent from Mailman to TIM's universal message format."""
+    """Modify an email message sent from Mailman to TIM's universal message format.
+
+    :param original: An email message sent from Mailman.
+    :param msg_list: The message list where original is meant to go.
+    :return: A BaseMessage object corresponding the original email message.
+    """
     # original message is of form specified in https://pypi.org/project/mail-parser/
     # TODO: Get 'content-type' field, e.g. 'text/plain; charset="UTF-8"'
     # TODO: Get 'date' field, e.g. '2021-05-01T19:09:07'
@@ -394,6 +399,8 @@ def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[
 
     :param original: Original message.
     :param header: One of "from", "to", "cc" or "bcc".
+    :return: Return None if the header is not one of "from", "to", "cc" or "bcc". Otherwise return a list of
+    EmailAndDisplayName objects.
     """
 
     if header not in ["from", "to", "cc", "bcc"]:
