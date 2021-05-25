@@ -39,10 +39,10 @@ def verify_messagelist_name_requirements(name_candidate: str) -> None:
     # There might become a time when we also check here if name is some message list specific reserved name. We
     # haven't got a source of those reserved names, not including names that already exists, so no check at this time.
     verify_name_rules(name_candidate)
-    check_name_availability(name_candidate)
+    verify_name_availability(name_candidate)
 
 
-def check_name_availability(name_candidate: str) -> None:
+def verify_name_availability(name_candidate: str) -> None:
     """Check if a message list with a given name already exists.
 
     :param name_candidate: The name to be checked if it already exists.
