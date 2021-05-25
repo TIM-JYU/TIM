@@ -193,7 +193,7 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     :return:
     """
     if list_options.domain:
-        check_name_availability(list_options.name, list_options.domain)
+        verify_name_availability(list_options.name, list_options.domain)
     else:
         log_warning("Tried to create an email list without selected domain part.")
         raise RouteException("Tried to create an email list without selected domain part.")
@@ -448,11 +448,11 @@ def verify_emaillist_name_requirements(name_candidate: str, domain: str) -> None
     :param name_candidate: A possible name for an email list name to check.
     :param domain: Domain where name availability is to be checked.
     """
-    check_name_availability(name_candidate, domain)
+    verify_name_availability(name_candidate, domain)
     check_reserved_names(name_candidate)
 
 
-def check_name_availability(name_candidate: str, domain: str) -> None:
+def verify_name_availability(name_candidate: str, domain: str) -> None:
     """Search for a name from the pool of used email list names.
 
     Raises a RouteException if no connection was ever established with the Mailman server via mailmanclient.
