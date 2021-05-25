@@ -441,7 +441,7 @@ def get_email_list_member_send_status(member: Member) -> bool:
         raise
 
 
-def check_emaillist_name_requirements(name_candidate: str, domain: str) -> None:
+def verify_emaillist_name_requirements(name_candidate: str, domain: str) -> None:
     """Check email list's name requirements. General message list name requirement checks are assumed to be passed
     at this point and that those requirements encompass email list name requirements.
 

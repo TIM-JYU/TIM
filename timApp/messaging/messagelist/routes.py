@@ -11,7 +11,7 @@ from timApp.folder.folder import Folder
 from timApp.item.manage import get_trash_folder
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.emaillist import get_list_ui_link, create_new_email_list, \
-    delete_email_list, check_emaillist_name_requirements, get_domain_names, verify_mailman_connection
+    delete_email_list, verify_emaillist_name_requirements, get_domain_names, verify_mailman_connection
 from timApp.messaging.messagelist.listoptions import ListOptions, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
 from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_name_requirements, MessageTIMversalis, \
@@ -85,7 +85,7 @@ def test_name(name_candidate: str) -> None:
     if sep:
         # If character '@' is found, we check email list specific name requirements.
         verify_mailman_connection()
-        check_emaillist_name_requirements(name, domain)
+        verify_emaillist_name_requirements(name, domain)
 
 
 @messagelist.route("/domains", methods=['GET'])
