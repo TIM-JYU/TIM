@@ -663,7 +663,8 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     """Add a TIM user as a member on a message list.
 
     Performs a duplicate check. A duplicate member will not be added again to the list. This process is different to
-    re-activating a removed member of a list.
+    re-activating a removed member of a list. For re-activating an already existing member, use
+    set_message_list_member_removed_status function.
 
     :param msg_list: The message list where the new user will be added as a member.
     :param user: TIM user to be added to the message list.
@@ -673,8 +674,8 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     message list.
     """
     # Check for member duplicates.
-    # VIESTIM: If a member has belonged to the list, but was removed, this returns True and the function returns.
-    if msg_list.get_member_by_name(name=user.name, email=user.email):
+    member = msg_list.get_member_by_name(name=user.name, email=user.email)
+    if member and not member.membership_ended:
         return
 
     new_tim_member = MessageListTimMember(message_list=msg_list, user_group=user.get_personal_group(),
