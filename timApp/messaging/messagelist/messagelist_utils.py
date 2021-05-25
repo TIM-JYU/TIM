@@ -666,6 +666,9 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     re-activating a removed member of a list. For re-activating an already existing member, use
     set_message_list_member_removed_status function.
 
+    This is a direct add, meaning member's membership_verified attribute is set in this function. Use other means to
+    invite members.
+
     :param msg_list: The message list where the new user will be added as a member.
     :param user: TIM user to be added to the message list.
     :param send_right: The send right to be set for the new member.
@@ -679,7 +682,8 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
         return
 
     new_tim_member = MessageListTimMember(message_list=msg_list, user_group=user.get_personal_group(),
-                                          delivery_right=delivery_right, send_right=send_right)
+                                          delivery_right=delivery_right, send_right=send_right,
+                                          membership_verified=get_current_time())
     db.session.add(new_tim_member)
 
     if em_list is not None:
@@ -714,19 +718,16 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     # Check for duplicates. Groups only have their name to check against.
     if msg_list.get_member_by_name(name=ug.name, email=None):
         return
-    # Add the user group as a member to the message list, to be observed for changes in the group. Send and delivery
-    # right doesn't mean much for user groups, except that it is the right that all the users in the user group got
-    # added initially.
+    # Add the user group as a member to the message list.
     new_group_member = MessageListTimMember(message_list_id=msg_list.id, group_id=ug.id,
-                                            delivery_right=delivery_right, send_right=send_right)
+                                            delivery_right=delivery_right, send_right=send_right,
+                                            membership_verified=get_current_time())
     db.session.add(new_group_member)
 
-    # Add individual users to message channels.
+    # Add group's individual members to message channels.
     if em_list is not None:
         for user in ug.users:
             user_email = user.email  # In the future, we can search for a set of emails and a primary email here.
-            # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
-            #  placeholder value of True.
             add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
                       send_right=send_right, delivery_right=delivery_right)
 
@@ -753,7 +754,6 @@ def add_message_list_external_email_member(msg_list: MessageListModel, external_
                                            delivery_right=delivery_right, send_right=send_right,
                                            message_list_id=msg_list.id)
     db.session.add(new_member)
-
     add_email(em_list, external_email, email_owner_pre_confirmation=True, real_name=display_name,
               send_right=send_right, delivery_right=delivery_right)
 
@@ -779,7 +779,6 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
 
     :param user: The user who was removed from the user group.
     :param old_group: The group where the user was removed from.
-    :return: None.
     """
     # Get all the message lists for the user group.
     for group_tim_member in old_group.messagelist_membership:
