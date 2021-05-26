@@ -262,7 +262,7 @@ class MessageListMember(db.Model):
         """If the member is verified to be on the list. """
         return self.membership_verified is not None
 
-    def remove(self, end_time: datetime = get_current_time()) -> None:
+    def remove(self, end_time: datetime = Optional[get_current_time()]) -> None:
         """Shorthand for removing a member out of the group, by setting the membership_ended attribute."""
         self.membership_ended = end_time
 
