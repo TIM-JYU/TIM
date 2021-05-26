@@ -63,6 +63,9 @@
              t="{{ t.t }}"
              attrs="{{ t.attrs_str }}"
              data-area="{{ t.collapse_area }}"
+        {% if t.from_preamble %}
+             data-from-preamble="{{ t.from_preamble|safe }}"
+        {% endif %}
         {% if t.ref_id %}
              ref-id="{{ t.ref_id }}"
              ref-t="{{ t.ref_t }}"
