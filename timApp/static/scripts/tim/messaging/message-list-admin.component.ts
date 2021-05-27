@@ -26,7 +26,7 @@ import {Users} from "../user/userService";
         <form class="form-horizontal">
             <h1>Message list management</h1>
             <tim-alert *ngIf="permanentErrorMessage" severity="danger">{{permanentErrorMessage}}</tim-alert>
-            <div id="email-send" style="margin: 1em">
+            <div id="email-send" style="padding-bottom: 1em">
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
                 <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
                 <div>
@@ -148,14 +148,14 @@ import {Users} from "../user/userService";
                         <input type="checkbox" name="list-answer-guidance" [(ngModel)]="listAnswerGuidance">
                         Guide answers to message list.</label>
                 </div>
-                <div>
-                    <button class="timButton" (click)="saveOptions()">Save changes</button>
+                <div class="indented">
+                    <button class="timButton" (click)="saveOptions()">Save options</button>
                     <tim-alert severity="success" *ngIf="saveSuccessMessage">{{saveSuccessMessage}}</tim-alert>
                     <tim-alert severity="danger" *ngIf="saveFailMessage">{{saveFailMessage}}</tim-alert>
                 </div>
                 <div id="members-section" class="section">
                     <h3>Members</h3>
-                    <div id="add-members-section">
+                    <div class="indented" id="add-members-section">
                         <label for="add-multiple-members">Add members</label> <br/>
                         <textarea id="add-multiple-members" name="add-multiple-members"
                                   [(ngModel)]="membersTextField"></textarea>
@@ -210,19 +210,19 @@ import {Users} from "../user/userService";
                         </tr>
                         </tbody>
                     </table>
-                    <button class="timButton" (click)="saveMembers()">Save</button>
+                    <button class="indented timButton" (click)="saveMembers()">Save members</button>
                 </div>
             </div>
-            <div class="section indented">
+            <div class="section">
                 <h2>List deletion</h2>
-                <button class="timButton" (click)="deleteList()">Delete List</button>
+                <button class=" indented timButton" (click)="deleteList()">Delete List</button>
             </div>
-            <div class="indented">
+            <div>
                 <h3>Links</h3>
-                <div *ngIf="archiveURL">
+                <div class="indented" *ngIf="archiveURL">
                     <a [href]="archiveURL">List's archive</a>
                 </div>
-                <div *ngIf="emailAdminURL">
+                <div class="indented" *ngIf="emailAdminURL">
                     <a [href]="emailAdminURL">Advanced email list settings</a>
                 </div>
             </div>
