@@ -66,6 +66,8 @@ def create_list(options: ListOptions) -> Response:
         # fails, we have indication that the list does not have an email list attached to it.
         message_list.email_list_domain = options.domain
 
+    set_message_list_subject_prefix(message_list, f"[{message_list.name}]")
+
     db.session.commit()
     return json_response(manage_doc)
 
