@@ -144,7 +144,8 @@ class BaseMessage:
     reply_to: Optional[EmailAndDisplayName] = None
 
     # Timestamp for the message is a mandatory value. If the message comes from an outside source, it should already
-    # have a time stamp. The default value is mostly for messages that would be generated inside TIM.
+    # have a time stamp. The default value is mostly for messages that would be generated inside TIM. It can also be
+    # set for messages which for some reason don't already have any form of timestamp present.
     timestamp: datetime = get_current_time()
 
 
@@ -377,7 +378,6 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
         sender=sender,
         recipients=visible_recipients,
         subject=original["subject"],  # TODO: shorten the subject, if it contains multiple Re: and Vs: prefixes?
-        timestamp=parsedate_to_datetime(original["date"]),
 
         # Message body
         message_body=original["body"],
@@ -386,6 +386,8 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
     # Try parsing the rest of email spesific fields.
     if "reply_to" in original:
         message.reply_to = original["reply_to"]
+    if "date" in original:
+        message.timestamp = parsedate_to_datetime(original["date"])
 
     return message
 
