@@ -86,7 +86,9 @@ def verify_access(
         user: Optional[User] = None,
 ):
     u = user or get_current_user_object()
-    has_access = u.has_access(b, access_type, grace_period)
+    has_access = check_inherited_right(u, b, access_type, grace_period)
+    if not has_access:
+        has_access = u.has_access(b, access_type, grace_period)
     if not has_access and check_parents:
         # Only uploaded files and images have a parent so far.
         for x in (u.has_access(p, access_type, grace_period) for p in b.parents):
@@ -101,6 +103,19 @@ def verify_access(
         message,
         check_duration=check_duration,
     )
+
+
+def check_inherited_right(
+        u: User,
+        b: ItemOrBlock,
+        access_type: AccessType,
+        grace_period: timedelta,
+) -> Optional[BlockAccess]:
+    has_access = None
+    if isinstance(b, DocInfo):
+        if b.path_without_lang in current_app.config['INHERIT_FOLDER_RIGHTS_DOCS']:
+            has_access = u.has_access(b.parent, access_type, grace_period)
+    return has_access
 
 
 def verify_view_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False, user=None):
@@ -237,7 +252,7 @@ def maybe_auto_confirm(block: ItemOrBlock):
 
 def has_view_access(b: ItemOrBlock):
     u = get_current_user_object()
-    return u.has_view_access(b)
+    return check_inherited_right(u, b, AccessType.view, grace_period=timedelta(seconds=0)) or u.has_view_access(b)
 
 
 def has_edit_access(b: ItemOrBlock):
