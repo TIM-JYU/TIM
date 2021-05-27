@@ -108,7 +108,7 @@ import {Users} from "../user/userService";
                 </div>
                 <div class="indented">
                     <label for="tim-users-can-join">
-                        <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin">
+                        <input type="checkbox" name="tim-users-can-join" [(ngModel)]="timUsersCanJoin" disabled>
                         TIM users can freely join this list.</label>
                     <div class="indented-more">
                         <label>
