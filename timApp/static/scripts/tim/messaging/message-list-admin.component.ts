@@ -223,7 +223,7 @@ import {Users} from "../user/userService";
                     <a [href]="archiveURL">List's archive</a>
                 </div>
                 <div class="indented" *ngIf="emailAdminURL">
-                    <a [href]="emailAdminURL">Advanced email list settings</a>
+                    <a [href]="emailAdminURL">Advanced email list settings (takes to Mailman).</a>
                 </div>
             </div>
         </form>
