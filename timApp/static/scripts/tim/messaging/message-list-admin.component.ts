@@ -26,6 +26,16 @@ import {Users} from "../user/userService";
         <form class="form-horizontal">
             <h1>Message list management</h1>
             <tim-alert *ngIf="permanentErrorMessage" severity="danger">{{permanentErrorMessage}}</tim-alert>
+            <div id="email-send" style="margin: 1em">
+                <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
+                <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
+                <div>
+                    <tim-alert *ngIf="memberSaveSuccessResponse"
+                               severity="success">{{memberSaveSuccessResponse}}</tim-alert>
+                    <tim-alert *ngIf="memberSaveFailResponse"
+                               severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                </div>
+            </div>
             <div class="form-group">
                 <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
                 <div class="col-sm-9">
@@ -202,21 +212,11 @@ import {Users} from "../user/userService";
                     <button class="timButton" (click)="saveMembers()">Save</button>
                 </div>
             </div>
-            <div id="email-send">
-                <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
-                <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
-                <div>
-                    <tim-alert *ngIf="memberSaveSuccessResponse"
-                               severity="success">{{memberSaveSuccessResponse}}</tim-alert>
-                    <tim-alert *ngIf="memberSaveFailResponse"
-                               severity="danger">{{memberAddFailedResponse}}</tim-alert>
-                </div>
-            </div>
-            <div class="section">
+            <div class="section indented">
                 <h2>List deletion</h2>
                 <button class="timButton" (click)="deleteList()">Delete List</button>
             </div>
-            <div>
+            <div class="indented">
                 <h3>Links</h3>
                 <div *ngIf="archiveURL">
                     <a [href]="archiveURL">List's archive</a>
