@@ -49,6 +49,12 @@ import {Users} from "../user/userService";
                     </div>
                 </div>
             </div>
+            <div class="form-group">
+                <label for="list-subject-prefix" class="subject-prefix control-label col-sm-3">Subject prefix: </label>
+                <div class="col-sm-9">
+                    <input type="text" name="list-subject-prefix" class="form-control" [(ngModel)]="listSubjectPrefix">
+                </div>
+            </div>
             <div class="form-group" *ngIf="domain">
                 <label for="list-description" class="short-description control-label col-sm-3">List address: </label>
                 <div class="col-sm-9">
@@ -94,11 +100,6 @@ import {Users} from "../user/userService";
             </div>
             <div class="section">
                 <h3>Options</h3>
-                <div class="indented">
-                    <label>
-                        <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
-                        Subject prefix.</label>
-                </div>
                 <div class="indented">
                     <label>
                         <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
