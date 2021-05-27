@@ -26,6 +26,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
+from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars, get_current_time
 
 
@@ -383,12 +384,24 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
         message_body=original["body"],
     )
 
-    # Try parsing the rest of email spesific fields.
+    # Try parsing the rest of email specific fields.
     if "reply_to" in original:
         message.reply_to = original["reply_to"]
     if "date" in original:
-        message.timestamp = parsedate_to_datetime(original["date"])
-
+        try:
+            # At first we except RFC5322 format Date header.
+            message.timestamp = parsedate_to_datetime(original["date"])
+        except (TypeError, ValueError):
+            # Being here means that the date field is not in RFC5322 format. Testing has shown that ISO8601 format is
+            # then a likely candidate format for Date header. Try parsing that format.
+            try:
+                message.timestamp = datetime.fromisoformat(original["date"])
+            except ValueError:
+                # Being here means that the date field was none of tried formats after all. We'll log the format the
+                # date was in so that it can be fixed.
+                log_warning(
+                    f"Function parse_mailman_message has encountered a Date header format it cannot handle. The "
+                    f"date is of format {original['date']}. Please handle this at earliest convenience.")
     return message
 
 
