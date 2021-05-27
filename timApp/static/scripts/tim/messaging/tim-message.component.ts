@@ -51,7 +51,7 @@ interface ReplyOptions {
                                   [disabled]="!canMarkAsRead || markedAsRead" (click)="markAsRead()"/> Mark as
                         Read</label>
                     <span class="readReceiptLink"
-                          *ngIf="markedAsRead">Read receipt can be cancelled in <a href="messages/tim-messages">your messages</a></span>
+                          *ngIf="markedAsRead">Read receipt can be cancelled in <a href="/view/messages/tim-messages">your messages</a></span>
                     <button class="timButton" title="Close Message"
                             [disabled]="(!markedAsRead && !replySent)"
                             (click)="closeMessage()">
