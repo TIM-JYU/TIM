@@ -193,7 +193,7 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     :return:
     """
     if list_options.domain:
-        check_name_availability(list_options.name, list_options.domain)
+        verify_name_availability(list_options.name, list_options.domain)
     else:
         log_warning("Tried to create an email list without selected domain part.")
         raise RouteException("Tried to create an email list without selected domain part.")
@@ -328,10 +328,11 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     :param delivery_right: Whether email list delivers mail to email. For True, mail is delivered to email. For False,
     no mail is delivered.
     """
-    # We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise
-    # they have to verify themselves for Mailman. Note that this is different from confirming to join a list.
-    # We use pre_approved flag, because we assume that who adds an email to a list also wants that email onto
-    # a list. Otherwise they would have to afterwards manually moderate their subscription request.
+    # We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise they have
+    # to verify themselves for Mailman through an additional verification process. Note that this is different from
+    # confirming to join a list. We use pre_approved flag, because we assume that who adds an email to a list also
+    # wants that email onto a list. Otherwise they would have to afterwards manually moderate their subscription
+    # request.
     try:
         new_member = mlist.subscribe(email,
                                      pre_verified=True,
@@ -441,18 +442,18 @@ def get_email_list_member_send_status(member: Member) -> bool:
         raise
 
 
-def check_emaillist_name_requirements(name_candidate: str, domain: str) -> None:
+def verify_emaillist_name_requirements(name_candidate: str, domain: str) -> None:
     """Check email list's name requirements. General message list name requirement checks are assumed to be passed
     at this point and that those requirements encompass email list name requirements.
 
     :param name_candidate: A possible name for an email list name to check.
     :param domain: Domain where name availability is to be checked.
     """
-    check_name_availability(name_candidate, domain)
-    check_reserved_names(name_candidate)
+    verify_name_availability(name_candidate, domain)
+    verify_reserved_names(name_candidate)
 
 
-def check_name_availability(name_candidate: str, domain: str) -> None:
+def verify_name_availability(name_candidate: str, domain: str) -> None:
     """Search for a name from the pool of used email list names.
 
     Raises a RouteException if no connection was ever established with the Mailman server via mailmanclient.
@@ -472,7 +473,7 @@ def check_name_availability(name_candidate: str, domain: str) -> None:
         raise
 
 
-def check_reserved_names(name_candidate: str) -> None:
+def verify_reserved_names(name_candidate: str) -> None:
     """Check a name candidate against reserved names, e.g. postmaster.
 
     Raises a RouteException if the name candidate is a reserved name. If name is not reserved, the method completes
@@ -625,7 +626,7 @@ def get_domain_names() -> List[str]:
 
 
 def freeze_list(mlist: MailingList) -> None:
-    """Freeze an email list. No posts are allowed on the list after freezing.
+    """Freeze an email list. No posts are allowed on the list after freezing (owner might be an exception).
 
     Think a course specific email list and the course ends, but mail archive is kept intact for later potential use.
     This stops (or at least mitigates) that the mail archive on that list changes after the freezing.

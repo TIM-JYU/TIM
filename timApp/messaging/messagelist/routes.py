@@ -11,10 +11,10 @@ from timApp.folder.folder import Folder
 from timApp.item.manage import get_trash_folder
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.emaillist import get_list_ui_link, create_new_email_list, \
-    delete_email_list, check_emaillist_name_requirements, get_domain_names, verify_mailman_connection
+    delete_email_list, verify_emaillist_name_requirements, get_domain_names, verify_mailman_connection
 from timApp.messaging.messagelist.listoptions import ListOptions, Distribution
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel
-from timApp.messaging.messagelist.messagelist_utils import check_messagelist_name_requirements, MessageTIMversalis, \
+from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_name_requirements, BaseMessage, \
     new_list, archive_message, EmailAndDisplayName, set_message_list_notify_owner_on_change, \
     set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
     set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
@@ -66,6 +66,8 @@ def create_list(options: ListOptions) -> Response:
         # fails, we have indication that the list does not have an email list attached to it.
         message_list.email_list_domain = options.domain
 
+    set_message_list_subject_prefix(message_list, f"[{message_list.name}]")
+
     db.session.commit()
     return json_response(manage_doc)
 
@@ -81,11 +83,11 @@ def test_name(name_candidate: str) -> None:
     """
     normalized_name = name_candidate.strip()
     name, sep, domain = normalized_name.partition("@")
-    check_messagelist_name_requirements(name)
+    verify_messagelist_name_requirements(name)
     if sep:
         # If character '@' is found, we check email list specific name requirements.
         verify_mailman_connection()
-        check_emaillist_name_requirements(name, domain)
+        verify_emaillist_name_requirements(name, domain)
 
 
 @messagelist.route("/domains", methods=['GET'])
@@ -331,14 +333,14 @@ def test_route() -> Response:
         raise RouteException()
 
     msg_list = MessageListModel.get_list_by_name_exactly_one("yet_another_list3")
-    message = MessageTIMversalis(message_list_name=msg_list.name,
-                                 message_channel=Channel.EMAIL_LIST,
-                                 sender=EmailAndDisplayName(email_address="tomi.t.lundberg@student.jyu.fi",
-                                                            display_name="Tomi L."),
-                                 recipients=[EmailAndDisplayName(email_address="yet_another_list3@tim.jyu.fi",
-                                                                 display_name="Uusilista293u0")],
-                                 subject=f"Viestin otsikko {get_current_time()}",
-                                 message_body="Hei mualima!"
-                                 )
+    message = BaseMessage(message_list_name=msg_list.name,
+                          message_channel=Channel.EMAIL_LIST,
+                          sender=EmailAndDisplayName(email_address="tomi.t.lundberg@student.jyu.fi",
+                                                     display_name="Tomi L."),
+                          recipients=[EmailAndDisplayName(email_address="yet_another_list3@tim.jyu.fi",
+                                                          display_name="Uusilista293u0")],
+                          subject=f"Viestin otsikko {get_current_time()}",
+                          message_body="Hei mualima!"
+                          )
     archive_message(message_list=msg_list, message=message)
     return ok_response()

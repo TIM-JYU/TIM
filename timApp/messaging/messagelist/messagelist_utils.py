@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 from typing import Optional, List, Dict, Tuple
 
 from mailmanclient import MailingList
@@ -28,7 +29,7 @@ from timApp.util.flask.requesthelper import RouteException
 from timApp.util.utils import remove_path_special_chars, get_current_time
 
 
-def check_messagelist_name_requirements(name_candidate: str) -> None:
+def verify_messagelist_name_requirements(name_candidate: str) -> None:
     """Checks name requirements specific for email list.
 
     If at any point a name requirement check fails, then an exception is raised an carried to the client. If all
@@ -38,11 +39,11 @@ def check_messagelist_name_requirements(name_candidate: str) -> None:
     """
     # There might become a time when we also check here if name is some message list specific reserved name. We
     # haven't got a source of those reserved names, not including names that already exists, so no check at this time.
-    check_name_rules(name_candidate)
-    check_name_availability(name_candidate)
+    verify_name_rules(name_candidate)
+    verify_name_availability(name_candidate)
 
 
-def check_name_availability(name_candidate: str) -> None:
+def verify_name_availability(name_candidate: str) -> None:
     """Check if a message list with a given name already exists.
 
     :param name_candidate: The name to be checked if it already exists.
@@ -52,7 +53,7 @@ def check_name_availability(name_candidate: str) -> None:
         raise RouteException(f"Message list with name {name_candidate} already exists.")
 
 
-def check_name_rules(name_candidate: str) -> None:
+def verify_name_rules(name_candidate: str) -> None:
     """Check if name candidate complies with naming rules. The method raises a RouteException if naming rule is
     violated. If this function doesn't raise an exception, then the name candidate follows naming rules.
 
@@ -124,7 +125,7 @@ class EmailAndDisplayName:
 
 
 @dataclass
-class MessageTIMversalis:
+class BaseMessage:
     """A unified datastructure for messages TIM handles."""
     # Meta information about where this message belongs to and where it's from. Mandatory values for all messages.
     message_list_name: str
@@ -153,7 +154,7 @@ MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
 
 def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: str, message_list: MessageListModel,
-                                       message: MessageTIMversalis) -> DocEntry:
+                                       message: BaseMessage) -> DocEntry:
     """Create archive document with permissions matching the message list's archive policy.
 
     :param archive_subject: The subject of the archive document.
@@ -201,7 +202,7 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     return archive_doc
 
 
-def archive_message(message_list: MessageListModel, message: MessageTIMversalis) -> None:
+def archive_message(message_list: MessageListModel, message: BaseMessage) -> None:
     """Archive a message for a message list.
 
     :param message_list: The message list where the archived message belongs.
@@ -224,8 +225,7 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
     if archive_folder is not None:
         all_archived_messages = archive_folder.get_all_documents()
     else:
-        manage_doc_block = message_list.block
-        owners = manage_doc_block.owners
+        owners = get_message_list_owners(message_list)
         Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
 
     archive_doc = create_archive_doc_with_permission(archive_subject, archive_doc_path, message_list, message)
@@ -235,7 +235,8 @@ def archive_message(message_list: MessageListModel, message: MessageTIMversalis)
 #- {{ .mailheader}}\n
 [{message.subject}]{{.mailtitle}}\\
 Sender: {message.sender}\\
-Recipients: {message.recipients}
+Recipients: {message.recipients}\\
+Date: {message.timestamp.strftime('%Y-%m-%d %H:%M:%S')}
 """)
 
     # Set message body for archived message.
@@ -341,13 +342,15 @@ def set_message_link_previous(doc: Document, link_text: str, url_previous: str) 
     header.save()
 
 
-def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> MessageTIMversalis:
-    """Modify an email message sent from Mailman to TIM's universal message format."""
+def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMessage:
+    """Modify an email message sent from Mailman to TIM's universal message format.
+
+    :param original: An email message sent from Mailman.
+    :param msg_list: The message list where original is meant to go.
+    :return: A BaseMessage object corresponding the original email message.
+    """
     # original message is of form specified in https://pypi.org/project/mail-parser/
-    # TODO: Get 'content-type' field, e.g. 'text/plain; charset="UTF-8"'
     # TODO: Get 'date' field, e.g. '2021-05-01T19:09:07'
-    # VIESTIM: Get 'message-id-hash' field (maybe to check for duplicate messages), e.g.
-    #  'H5IULFLU3PXSUPCBEXZ5IKTHX4SMCFHJ'
     visible_recipients: List[EmailAndDisplayName] = []
     maybe_to_addresses = parse_mailman_message_address(original, "to")
     if maybe_to_addresses is not None:
@@ -356,26 +359,25 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> Message
     if maybe_cc_addresses is not None:
         visible_recipients.extend(maybe_cc_addresses)
 
-    # VIESTIM: How should we differentiate with cc and bcc in TIM's context? bcc recipients should still get messages
-    #  intented for them.
     sender: Optional[EmailAndDisplayName] = None
     maybe_from_address = parse_mailman_message_address(original, "from")
     if maybe_from_address is not None:
+        # Expect only one sender.
         sender = maybe_from_address[0]
     if sender is None:
-        # VIESTIM: Should there be a reasonable exception that messages always have to have a sender (and only one
-        #  sender), and if not then they are dropped? What good can be a (email) message if there is no sender field?
+        # If no sender is found on a message, we don't archive the message.
         raise RouteException("No sender found in the message.")
 
-    message = MessageTIMversalis(
+    message = BaseMessage(
         message_list_name=msg_list.name,
         domain=msg_list.email_list_domain,
         message_channel=Channel.EMAIL_LIST,
 
         # Header information
-        sender=sender,  # VIESTIM: Message should only have one sender?
+        sender=sender,
         recipients=visible_recipients,
         subject=original["subject"],  # TODO: shorten the subject, if it contains multiple Re: and Vs: prefixes?
+        timestamp=parsedate_to_datetime(original["date"]),
 
         # Message body
         message_body=original["body"],
@@ -395,6 +397,8 @@ def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[
 
     :param original: Original message.
     :param header: One of "from", "to", "cc" or "bcc".
+    :return: Return None if the header is not one of "from", "to", "cc" or "bcc". Otherwise return a list of
+    EmailAndDisplayName objects.
     """
 
     if header not in ["from", "to", "cc", "bcc"]:
@@ -419,19 +423,6 @@ def get_message_list_owners(mlist: MessageListModel) -> List[UserGroup]:
     """
     manage_doc_block = Block.query.filter_by(id=mlist.manage_doc_id).one()
     return manage_doc_block.owners
-
-
-def verify_list_owner(owner_candidate_ug: UserGroup, mlist: MessageListModel) -> bool:
-    """Verify if a user group is a owner of a message list.
-
-    :param owner_candidate_ug: The user group who's ownership of a list is checked.
-    :param mlist: The message list where we are checking ownership.
-    :return: Return True if the owner candidate is a owner of a message list. Otherwise return false.
-    """
-    # VIESTIM: If single user's ownership is checked, is this enough if they are not an owner alone, but are part of an
-    #  owner group?
-    mlist_owners = get_message_list_owners(mlist)
-    return owner_candidate_ug in mlist_owners
 
 
 def create_management_doc(msg_list_model: MessageListModel, list_options: ListOptions) -> DocInfo:
@@ -657,7 +648,11 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     """Add a TIM user as a member on a message list.
 
     Performs a duplicate check. A duplicate member will not be added again to the list. This process is different to
-    re-activating a removed member of a list.
+    re-activating a removed member of a list. For re-activating an already existing member, use
+    set_message_list_member_removed_status function.
+
+    This is a direct add, meaning member's membership_verified attribute is set in this function. Use other means to
+    invite members.
 
     :param msg_list: The message list where the new user will be added as a member.
     :param user: TIM user to be added to the message list.
@@ -667,12 +662,13 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     message list.
     """
     # Check for member duplicates.
-    # VIESTIM: If a member has belonged to the list, but was removed, this returns True and the function returns.
-    if msg_list.get_member_by_name(name=user.name, email=user.email):
+    member = msg_list.get_member_by_name(name=user.name, email=user.email)
+    if member and not member.membership_ended:
         return
 
     new_tim_member = MessageListTimMember(message_list=msg_list, user_group=user.get_personal_group(),
-                                          delivery_right=delivery_right, send_right=send_right)
+                                          delivery_right=delivery_right, send_right=send_right,
+                                          membership_verified=get_current_time())
     db.session.add(new_tim_member)
 
     if em_list is not None:
@@ -707,19 +703,16 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     # Check for duplicates. Groups only have their name to check against.
     if msg_list.get_member_by_name(name=ug.name, email=None):
         return
-    # Add the user group as a member to the message list, to be observed for changes in the group. Send and delivery
-    # right doesn't mean much for user groups, except that it is the right that all the users in the user group got
-    # added initially.
+    # Add the user group as a member to the message list.
     new_group_member = MessageListTimMember(message_list_id=msg_list.id, group_id=ug.id,
-                                            delivery_right=delivery_right, send_right=send_right)
+                                            delivery_right=delivery_right, send_right=send_right,
+                                            membership_verified=get_current_time())
     db.session.add(new_group_member)
 
-    # Add individual users to message channels.
+    # Add group's individual members to message channels.
     if em_list is not None:
         for user in ug.users:
             user_email = user.email  # In the future, we can search for a set of emails and a primary email here.
-            # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
-            #  placeholder value of True.
             add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
                       send_right=send_right, delivery_right=delivery_right)
 
@@ -746,7 +739,6 @@ def add_message_list_external_email_member(msg_list: MessageListModel, external_
                                            delivery_right=delivery_right, send_right=send_right,
                                            message_list_id=msg_list.id)
     db.session.add(new_member)
-
     add_email(em_list, external_email, email_owner_pre_confirmation=True, real_name=display_name,
               send_right=send_right, delivery_right=delivery_right)
 
@@ -772,7 +764,6 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
 
     :param user: The user who was removed from the user group.
     :param old_group: The group where the user was removed from.
-    :return: None.
     """
     # Get all the message lists for the user group.
     for group_tim_member in old_group.messagelist_membership:
@@ -797,7 +788,7 @@ def set_message_list_member_removed_status(member: MessageListMember,
     if (member.membership_ended is None and removed is None) or (member.membership_ended and removed):
         return
 
-    member.membership_ended = removed
+    member.remove(removed)
     # Remove members from email list or return them there.
     if email_list:
         if member.is_group():
@@ -840,7 +831,7 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
         if email_list:
             if member.is_personal_user():
                 mlist_member = get_email_list_member(email_list, member.get_email())
-                set_email_list_member_send_status(mlist_member, delivery)
+                set_email_list_member_send_status(mlist_member, send)
             elif member.is_group():
                 # For group, set the delivery status for it's members on the email list.
                 ug = member.tim_member.user_group
@@ -848,7 +839,7 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
                 for ug_member in ug_members:
                     # user = ug_member.personal_user
                     email_list_member = get_email_list_member(email_list, ug_member.email)
-                    set_email_list_member_send_status(email_list_member, delivery)
+                    set_email_list_member_send_status(email_list_member, send)
 
     # Delivery right.
     if member.delivery_right != delivery:

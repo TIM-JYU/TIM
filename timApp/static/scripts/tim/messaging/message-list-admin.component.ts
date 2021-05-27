@@ -26,6 +26,16 @@ import {Users} from "../user/userService";
         <form class="form-horizontal">
             <h1>Message list management</h1>
             <tim-alert *ngIf="permanentErrorMessage" severity="danger">{{permanentErrorMessage}}</tim-alert>
+            <div id="email-send" style="padding-bottom: 1em">
+                <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
+                <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
+                <div>
+                    <tim-alert *ngIf="memberSaveSuccessResponse"
+                               severity="success">{{memberSaveSuccessResponse}}</tim-alert>
+                    <tim-alert *ngIf="memberSaveFailResponse"
+                               severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                </div>
+            </div>
             <div class="form-group">
                 <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
                 <div class="col-sm-9">
@@ -37,6 +47,12 @@ import {Users} from "../user/userService";
                             <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
                         </select>
                     </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="list-subject-prefix" class="subject-prefix control-label col-sm-3">Subject prefix: </label>
+                <div class="col-sm-9">
+                    <input type="text" name="list-subject-prefix" class="form-control" [(ngModel)]="listSubjectPrefix">
                 </div>
             </div>
             <div class="form-group" *ngIf="domain">
@@ -86,11 +102,6 @@ import {Users} from "../user/userService";
                 <h3>Options</h3>
                 <div class="indented">
                     <label>
-                        <input type="text" name="list-subject-prefix" [(ngModel)]="listSubjectPrefix">
-                        Subject prefix.</label>
-                </div>
-                <div class="indented">
-                    <label>
                         <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
                                [(ngModel)]="notifyOwnerOnListChange"/>
                         Notify owners on list changes (e.g. user subscribes).</label>
@@ -137,14 +148,14 @@ import {Users} from "../user/userService";
                         <input type="checkbox" name="list-answer-guidance" [(ngModel)]="listAnswerGuidance">
                         Guide answers to message list.</label>
                 </div>
-                <div>
-                    <button class="timButton" (click)="saveOptions()">Save changes</button>
+                <div class="indented">
+                    <button class="timButton" (click)="saveOptions()">Save options</button>
                     <tim-alert severity="success" *ngIf="saveSuccessMessage">{{saveSuccessMessage}}</tim-alert>
                     <tim-alert severity="danger" *ngIf="saveFailMessage">{{saveFailMessage}}</tim-alert>
                 </div>
                 <div id="members-section" class="section">
                     <h3>Members</h3>
-                    <div id="add-members-section">
+                    <div class="indented" id="add-members-section">
                         <label for="add-multiple-members">Add members</label> <br/>
                         <textarea id="add-multiple-members" name="add-multiple-members"
                                   [(ngModel)]="membersTextField"></textarea>
@@ -199,23 +210,19 @@ import {Users} from "../user/userService";
                         </tr>
                         </tbody>
                     </table>
-                    <button class="timButton" (click)="saveMembers()">Save</button>
+                    <button class="indented timButton" (click)="saveMembers()">Save members</button>
                 </div>
-            </div>
-            <div id="email-send">
-                <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
-                <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
             </div>
             <div class="section">
                 <h2>List deletion</h2>
-                <button class="timButton" (click)="deleteList()">Delete List</button>
+                <button class=" indented timButton" (click)="deleteList()">Delete List</button>
             </div>
             <div>
                 <h3>Links</h3>
-                <div *ngIf="archiveURL">
+                <div class="indented" *ngIf="archiveURL">
                     <a [href]="archiveURL">List's archive</a>
                 </div>
-                <div *ngIf="emailAdminURL">
+                <div class="indented" *ngIf="emailAdminURL">
                     <a [href]="emailAdminURL">Advanced email list settings</a>
                 </div>
             </div>
@@ -272,6 +279,9 @@ export class MessageListAdminComponent implements OnInit {
     // Response strings used in giving feedback to the user on adding new members to the message list.
     memberAddSucceededResponse: string = "";
     memberAddFailedResponse: string = "";
+
+    memberSaveSuccessResponse: string = "";
+    memberSaveFailResponse: string = "";
 
     // Permanent error messages that cannot be recovered from, e.g. loading failed and reload is needed.
     permanentErrorMessage?: string;
@@ -576,11 +586,19 @@ export class MessageListAdminComponent implements OnInit {
      */
     async saveMembers() {
         const resultSaveMembers = await this.saveMembersCall(this.membersList);
-
+        // Give timed feedback to user.
         if (resultSaveMembers.ok) {
-            // console.log("Saving members succeeded.");
+            this.memberSaveSuccessResponse = "Saving members succeeded!";
+            window.setTimeout(
+                () => (this.memberSaveSuccessResponse = ""),
+                5 * 1000
+            );
         } else {
-            console.error("Saving members failed.");
+            this.memberSaveFailResponse = "Saving members failed.";
+            window.setTimeout(
+                () => (this.memberSaveFailResponse = ""),
+                5 * 1000
+            );
         }
     }
 
