@@ -254,6 +254,41 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
     return ok_response()
 
 
+def parse_external_member(external_member_candidate: str) -> Optional[List[str]]:
+    """Parse the information of an external member.
+
+    There are two supported ways to give external members. The user can write
+
+        user.userington@domain.fi User Userington
+    or
+        User Userington <user.userington@domain.fi>
+
+    :param external_member_candidate: A string represeting the external member.
+    :return: Return a list of the form [email, name_part_1, name_part_2, ...] if parsing was successful. Otherwise
+    return None.
+    """
+    # Split the name candidate to a list for processing.
+    words = external_member_candidate.strip().split(' ')
+
+    # Check if the first word is the email.
+    if is_valid_email(words[0]):
+        return words
+
+    # If the first word was not an email, then check if the email is at the last word, in angle brackets.
+    open_bracket_index = words[-1].find("<")
+    closing_bracket_index = words[-1].find(">")
+    if open_bracket_index != -1 and closing_bracket_index != -1:
+        # Remove angle brackets around the email.
+        email = words[-1].strip("<").strip(">")
+        if is_valid_email(email):
+            return_list = [email]
+            return_list.extend(words[0:-1])
+            return return_list
+
+    # If we are here, then no applicable version of external member's information was given.
+    return None
+
+
 @messagelist.route("/addmember", methods=['POST'])
 def add_member(member_candidates: List[str], msg_list: str, send_right: bool, delivery_right: bool) -> Response:
     """Add new members to a message list.
@@ -293,10 +328,8 @@ def add_member(member_candidates: List[str], msg_list: str, send_right: bool, de
 
         # For external members.
         # If member candidate is not a user, or a user group, then we assume an external member. Add external members.
-        external_member = member_candidate.strip().split(' ')
-        # We assume that the email is given first, and display name, if given, is after the email separated by at
-        # least one white space.
-        if is_valid_email(external_member[0]) and em_list:
+        external_member = parse_external_member(member_candidate)
+        if external_member and em_list:
             if len(external_member) == 1:
                 # There is no display name given for external member.
                 dname = None

@@ -155,6 +155,16 @@ import {Users} from "../user/userService";
                 </div>
                 <div id="members-section" class="section">
                     <h3>Members</h3>
+                    <div class="indented">
+                        <p>Instructions:</p>
+                        <p>Add new members by setting each member on their own separate lines. The members are only 
+                            added after you click the "Add new members" button.</p>
+                        <p>Add individual TIM users by writing their username.</p>
+                        <p>Add a group by writing it's name. You need to be the owner of the group for the adding to 
+                            succeed.</p>
+                        <p>Add an external member (someone who is not a TIM user) by writing their email address (mandatory) and name (optional) either in the form <code>john.doe@domain.fi John Doe</code> or <code>Jane Doe &lt;jane.doe@domain.fi&gt;</code></p>
+                        <p>Send right means that a member's message should not be caught up in a moderation process. Delivery right means that the member receives messages sent to the list. For a group, the send and delivery right affect all the members of a group.</p>
+                    </div>
                     <div class="indented" id="add-members-section">
                         <label for="add-multiple-members">Add members</label> <br/>
                         <textarea id="add-multiple-members" name="add-multiple-members"
@@ -223,7 +233,7 @@ import {Users} from "../user/userService";
                     <a [href]="archiveURL">List's archive</a>
                 </div>
                 <div class="indented" *ngIf="emailAdminURL">
-                    <a [href]="emailAdminURL">Advanced email list settings</a>
+                    <a [href]="emailAdminURL">Advanced email list settings (takes to Mailman).</a>
                 </div>
             </div>
         </form>
