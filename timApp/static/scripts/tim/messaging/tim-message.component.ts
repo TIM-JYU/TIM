@@ -4,6 +4,7 @@ import {HttpClient} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";
 import {FormsModule} from "@angular/forms";
 import {to2} from "tim/util/utils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimMessageData} from "./tim-message-view.component";
 
 interface ReplyOptions {
@@ -20,6 +21,7 @@ interface ReplyOptions {
     template: `
         <ng-container *ngIf="showMessage">
             <div class="timMessageDisplay">
+                <tim-close-button class="closeButton" (click)="closeMessage()"></tim-close-button>
                 <p class="messageInformation">
                     <span class="from">From: </span>
                     <span class="sender">{{sender}}</span>
@@ -198,6 +200,6 @@ export class TimMessageComponent implements OnInit {
 @NgModule({
     declarations: [TimMessageComponent],
     exports: [TimMessageComponent],
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, TimUtilityModule],
 })
 export class TimMessageModule {}
