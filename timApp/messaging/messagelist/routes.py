@@ -281,7 +281,8 @@ def parse_external_member(external_member_candidate: str) -> Optional[List[str]]
         # Remove angle brackets around the email.
         email = words[-1].strip("<").strip(">")
         if is_valid_email(email):
-            return [email].extend(words[0:-1])
+            return_list = [email].extend(words[0:-1])
+            return return_list
 
     # If we are here, then no applicable version of external member's information was given.
     return None
