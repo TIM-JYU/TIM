@@ -65,7 +65,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.answerutil import period_handling
 from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model, \
-    get_urlmacros_from_request, NotExist
+    get_urlmacros_from_request, NotExist, get_from_url
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, \
     ALL_ANSWERED_WILDCARD, GetFieldsAccess
@@ -763,13 +763,6 @@ def post_answer_impl(
         postlibraries_name, postlibraries = get_name_and_val("postlibraries")
 
         postoutput = plugin.values.get("postoutput", 'feedback')
-
-        def get_from_url(url):
-            try:
-                r = requests.get(url)
-            except Exception as ex:
-                raise RouteException(str(ex) + " " + url)
-            return r.content.decode("utf-8")
 
         if postprogram and postlibraries:
             libs = ""

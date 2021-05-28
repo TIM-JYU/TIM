@@ -6,7 +6,9 @@ import time
 import warnings
 from dataclasses import is_dataclass, dataclass
 from typing import Optional, Type, TypeVar, Callable, Any, List, Tuple, Union
+from urllib.parse import urlparse
 
+import requests
 from flask import Request, current_app, g, Response
 from flask import request
 from marshmallow import ValidationError, Schema
@@ -189,3 +191,15 @@ def view_ctx_with_urlmacros(route: ViewRoute, hide_names_requested: bool = False
         hide_names_requested=hide_names_requested,
         urlmacros=get_urlmacros_from_request(),
     )
+
+
+def get_from_url(url: str) -> str:
+    parsed = urlparse(url)
+    if not parsed.netloc and not parsed.scheme:
+        host = f'http://caddy'
+        url = host + url
+    try:
+        r = requests.get(url)
+    except Exception as ex:
+        raise RouteException(str(ex) + " " + url)
+    return r.content.decode("utf-8")
