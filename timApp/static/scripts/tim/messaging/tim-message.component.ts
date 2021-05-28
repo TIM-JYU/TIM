@@ -69,7 +69,7 @@ interface ReplyOptions {
 })
 export class TimMessageComponent implements OnInit {
     @Input()
-    message?: TimMessageData;
+    message!: TimMessageData;
 
     messageMaxLength: number = 210;
     messageOverMaxLength: boolean = false;
@@ -110,10 +110,6 @@ export class TimMessageComponent implements OnInit {
      * Hides the message view; shows an alert about sending a read receipt and an option to cancel.
      */
     async markAsRead() {
-        if (!this.message) {
-            return;
-        }
-
         const result = await markAsRead(this.http, this.message.id);
         if (result.ok) {
             this.markedAsRead = true;
@@ -142,7 +138,7 @@ export class TimMessageComponent implements OnInit {
         this.canSendReply = false;
         if (this.sender) {
             this.replyOptions.recipient = this.sender;
-            this.replyOptions.repliesTo = this.message?.id;
+            this.replyOptions.repliesTo = this.message.id;
         } else {
             console.log("no recipient, can't send");
         }
@@ -168,10 +164,6 @@ export class TimMessageComponent implements OnInit {
      * by recipient, closing it hides it permanently by marking it as read in database.
      */
     async closeMessage() {
-        if (!this.message) {
-            return;
-        }
-
         this.showMessage = false;
 
         if (!this.canReply && !this.canMarkAsRead) {
@@ -180,11 +172,9 @@ export class TimMessageComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        if (this.message) {
-            this.setValues(this.message);
-            // TODO Read group from database
-            this.group = "ohj1k21";
-        }
+        this.setValues(this.message);
+        // TODO Read group from database
+        this.group = "ohj1k21";
     }
 
     setValues(timMessage: TimMessageData) {
