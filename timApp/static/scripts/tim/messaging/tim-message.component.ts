@@ -23,7 +23,9 @@ interface ReplyOptions {
                 <p class="messageInformation">
                     <span class="from">From: </span>
                     <span class="sender">{{sender}}</span>
-                    <span class="group" *ngIf="messageToGroup">, {{group}}</span>
+                    <!-- TODO Display what group the message is related to
+                    <span class="group" *ngIf="messageToGroup">, {{group}}</span> 
+                    -->
                 </p>
                 <p class="messageHeading">{{heading}}</p>
                 <div class="fullMessageContent" *ngIf="showFullContent">
@@ -173,12 +175,12 @@ export class TimMessageComponent implements OnInit {
 
     ngOnInit(): void {
         this.setValues(this.message);
-        // TODO Read group from database
-        this.group = "ohj1k21";
     }
 
     setValues(timMessage: TimMessageData) {
         this.sender = timMessage.sender;
+        // TODO Display what group the message is related to; currently can't retrieve from database
+        // this.group = "ohj1k21";
         this.heading = timMessage.message_subject;
         this.fullContent = timMessage.message_body;
         this.canMarkAsRead = timMessage.can_mark_as_read;

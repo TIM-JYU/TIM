@@ -42,10 +42,6 @@ class InternalMessage(db.Model):
     readreceipts = db.relationship('InternalMessageReadReceipt', back_populates='message')
     block = db.relationship('Block', back_populates='internalmessage')
 
-    # TODO: Expiration date and sender if necessary
-    #  Expiration date: use Block's BlockAccess: accessible_from and accessible_to?
-    #  Sender: use Block's BlockAccess: usergroup_id (owner?)
-
     def to_json(self) -> Dict[str, Any]:
         return {'id': self.id,
                 'doc_id': self.doc_id,
