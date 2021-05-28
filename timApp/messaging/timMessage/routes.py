@@ -120,7 +120,6 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
             raise NotExist('No document or folder found')
 
     parent_paths = current_page_obj.parent_paths()  # parent folders
-    print(parent_paths)
 
     # get message displays shown on current page or in parent folders
     displays = InternalMessageDisplay.query \
