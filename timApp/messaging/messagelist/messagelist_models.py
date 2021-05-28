@@ -217,7 +217,7 @@ class MessageListMember(db.Model):
     tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select",
                                  uselist=False, post_update=True)
     external_member = db.relationship("MessageListExternalMember", back_populates="member", lazy="select",
-                                      uselist=False)
+                                      uselist=False, post_update=True)
     distribution = db.relationship("MessageListDistribution", back_populates="member", lazy="select")
 
     __mapper_args__ = {"polymorphic_identity": "member", "polymorphic_on": member_type}
