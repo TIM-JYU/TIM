@@ -216,6 +216,7 @@ def save_list_options(options: ListOptions) -> Response:
 class MemberInfo:
     """Wrapper for information about a member on a message list."""
     name: str
+    username: str
     sendRight: bool
     deliveryRight: bool
     email: str
@@ -244,7 +245,7 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
 
     for member in members:
-        db_member = message_list.get_member_by_name(member.name, member.email)
+        db_member = message_list.find_member(member.name, member.email)
         # This if mostly guards against type errors, but what if we legitimely can't find them? They are given from
         # the db in the first place. Is there a reasonable way to communicate this state?
         if db_member:

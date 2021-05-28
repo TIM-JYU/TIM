@@ -195,6 +195,7 @@ import {Users} from "../user/userService";
                         <thead>
                         <tr>
                             <th>Name</th>
+                            <th>Username</th>
                             <th>Email</th>
                             <th>Send right</th>
                             <th>Delivery right</th>
@@ -205,6 +206,7 @@ import {Users} from "../user/userService";
                         <tbody>
                         <tr *ngFor="let member of membersList">
                             <td>{{member.name}}</td>
+                            <td>{{member.username}}</td>
                             <td>{{member.email}}</td>
                             <td>
                                 <input type="checkbox" [(ngModel)]="member.sendRight"

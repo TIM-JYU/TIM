@@ -83,6 +83,7 @@ export const archivePolicyNames: ArchivePolicyNames[] = [
 // See MemberInfo Python class for further details.
 export interface MemberInfo {
     name: string;
+    username: string;
     sendRight: boolean;
     deliveryRight: boolean;
     email: string;
