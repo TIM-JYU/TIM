@@ -677,7 +677,7 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     message list.
     """
     # Check for member duplicates.
-    member = msg_list.find_member(name=user.name, email=user.email)
+    member = msg_list.find_member(username=user.name, email=user.email)
     if member and not member.membership_ended:
         return
 
@@ -716,7 +716,7 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
         return
 
     # Check for duplicates. Groups only have their name to check against.
-    if msg_list.find_member(name=ug.name, email=None):
+    if msg_list.find_member(username=ug.name, email=None):
         return
     # Add the user group as a member to the message list.
     new_group_member = MessageListTimMember(message_list_id=msg_list.id, group_id=ug.id,
@@ -747,7 +747,7 @@ def add_message_list_external_email_member(msg_list: MessageListModel, external_
     :param display_name: Optional name associated with the external member.
     """
     # Check for duplicate members.
-    if msg_list.find_member(name=None, email=external_email):
+    if msg_list.find_member(username=None, email=external_email):
         return
 
     new_member = MessageListExternalMember(email_address=external_email, display_name=display_name,
