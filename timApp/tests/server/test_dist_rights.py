@@ -47,7 +47,7 @@ class DistRightsTest(TimRouteTest):
         def confirmgroup(group: str, incr: timedelta):
             nonlocal dt
             dt = dt + incr
-            return register_right_or_raise(ConfirmGroupOp(type='confirm', group=group, timestamp=dt),
+            return register_right_or_raise(ConfirmGroupOp(type='confirmgroup', group=group, timestamp=dt),
                                            target_name)
 
         def changetime(i: int, incr: timedelta, secs: int):
