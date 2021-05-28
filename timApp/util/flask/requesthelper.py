@@ -196,7 +196,7 @@ def view_ctx_with_urlmacros(route: ViewRoute, hide_names_requested: bool = False
 def get_from_url(url: str) -> str:
     parsed = urlparse(url)
     if not parsed.netloc and not parsed.scheme:
-        host = f'http://caddy'
+        host = f'http://caddy' if is_localhost() else current_app.config['TIM_HOST']
         url = host + url
     try:
         r = requests.get(url)
