@@ -361,9 +361,13 @@ export class MessageListAdminComponent implements OnInit {
 
             if (result2.ok) {
                 this.membersList = result2.result;
-                // Set the UI value for removed for.
+                // Set the UI value for removed attribute.
                 for (const member of this.membersList) {
-                    member.removedDisplay = member.removed;
+                    if (member.removed) {
+                        member.removedDisplay = moment(member.removed).format(
+                            "DD.MM.YYYY hh:mm"
+                        );
+                    }
                 }
             } else {
                 this.permanentErrorMessage = `Loading list's members failed: ${result2.result.error.error}`;

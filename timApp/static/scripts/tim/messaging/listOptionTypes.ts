@@ -89,5 +89,5 @@ export interface MemberInfo {
     email: string;
     removed?: Moment;
     // The member's removed status at the time of loading. Used only for display purposes.
-    removedDisplay?: Moment;
+    removedDisplay?: string;
 }
