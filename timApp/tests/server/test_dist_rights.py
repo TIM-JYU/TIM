@@ -4,7 +4,8 @@ from pathlib import Path
 from isodate import Duration
 
 from timApp.item.distribute_rights import get_current_rights, do_register_right, ChangeTimeOp, ConfirmOp, \
-    ChangeTimeGroupOp, UnlockOp, QuitOp, UndoQuitOp, UndoConfirmOp, Right, ChangeStartTimeGroupOp, RightOp, RightLog
+    ChangeTimeGroupOp, UnlockOp, QuitOp, UndoQuitOp, UndoConfirmOp, Right, ChangeStartTimeGroupOp, RightOp, RightLog, \
+    ConfirmGroupOp
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
@@ -41,6 +42,12 @@ class DistRightsTest(TimRouteTest):
             nonlocal dt
             dt = dt + incr
             return register_right_or_raise(ConfirmOp(type='confirm', email=f'test{i}@example.com', timestamp=dt),
+                                           target_name)
+
+        def confirmgroup(group: str, incr: timedelta):
+            nonlocal dt
+            dt = dt + incr
+            return register_right_or_raise(ConfirmGroupOp(type='confirm', group=group, timestamp=dt),
                                            target_name)
 
         def changetime(i: int, incr: timedelta, secs: int):
@@ -97,6 +104,7 @@ class DistRightsTest(TimRouteTest):
         ug = UserGroup.create('tg1')
         self.test_user_1.add_to_group(ug, None)
         self.test_user_2.add_to_group(ug, None)
+        empty = UserGroup.create('some_empty_group1')
         db.session.commit()
         fp = Path(app.config['FILES_PATH']) / f'{target_name}.rights.initial'
         with fp.open('w') as f:
@@ -119,6 +127,14 @@ class DistRightsTest(TimRouteTest):
         r, _ = get_current_rights(target_name)
         h = 3600
         m = 60
+        check(r, 1, True, 0, 10 * m, 4 * h + 5 * m, None, None)
+        check(r, 2, True, 0, 10 * m, 4 * h, None, None)
+        r = confirmgroup('tg1', twosecs)
+        check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, None, None)
+        check(r, 2, False, 0, 10 * m, 4 * h, None, None)
+        check(r, 3, True, 0, 10 * m, 4 * h, None, None)
+        r = undoconfirm(1, twosecs)
+        r = undoconfirm(2, twosecs)
         check(r, 1, True, 0, 10 * m, 4 * h + 5 * m, None, None)
         check(r, 2, True, 0, 10 * m, 4 * h, None, None)
         r = confirm(1, twosecs)
@@ -149,7 +165,7 @@ class DistRightsTest(TimRouteTest):
         check(r, 2, True, 0, 10 * m, 4 * h + 20, None, None)
         check(r, 3, False, 0, 10 * m, 4 * h, None, None)
         r = unlock(1, twosecs)
-        unlock_time = 2 * 8
+        unlock_time = 2 * 11
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 4 * h + 5 * m + unlock_time)
         r = changetime(1, twosecs, 20)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 4 * h + 5 * m + unlock_time + 20)
@@ -163,7 +179,7 @@ class DistRightsTest(TimRouteTest):
         with self.assertRaises(RouteException):
             r = undoquit(1, twosecs)
         r = quit(1, twosecs)
-        check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 2 * 13)
+        check(r, 1, False, 0, 10 * m, 4 * h + 5 * m, unlock_time, 2 * 16)
         with self.assertRaises(RouteException):
             quit(1, twosecs)
         with self.assertRaises(RouteException):
@@ -214,6 +230,13 @@ class DistRightsTest(TimRouteTest):
         r = changestarttimegroup('testuser1', twosecs, base_date + halfhour)
         check(r, 1, False, 0, 10 * m, 4 * h + 5 * m,
               halfhoursecs, halfhoursecs + 4 * h + 5 * m + 20 + 15 + 5 + 5 + 4)
+
+        # An operation on an empty group should not raise an exception.
+        confirmgroup('some_empty_group1', twosecs)
+
+        # An operation on a non-existent group should raise an exception.
+        with self.assertRaises(Exception):
+            confirmgroup('this_does_not_exist', twosecs)
 
         self.get(
             '/distRights/changeStartTime',

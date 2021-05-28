@@ -45,6 +45,13 @@ class ConfirmOp:
 
 
 @dataclass
+class ConfirmGroupOp:
+    type: Literal['confirm']
+    group: str
+    timestamp: datetime
+
+
+@dataclass
 class QuitOp:
     type: Literal['quit']
     email: str
@@ -106,7 +113,28 @@ class Right:
     accessible_to: Optional[datetime]
 
 
-RightOp = Union[ConfirmOp, UnlockOp, ChangeTimeOp, QuitOp, UndoConfirmOp, UndoQuitOp, ChangeTimeGroupOp, ChangeStartTimeGroupOp]
+RightOp = Union[
+    ConfirmOp,
+    UnlockOp,
+    ChangeTimeOp,
+    QuitOp,
+    UndoConfirmOp,
+    UndoQuitOp,
+    ChangeTimeGroupOp,
+    ChangeStartTimeGroupOp,
+    ConfirmGroupOp,
+]
+GroupOp = Union[
+    ChangeTimeGroupOp,
+    ChangeStartTimeGroupOp,
+    ConfirmGroupOp,
+]
+GroupOps = (
+    ChangeTimeGroupOp,
+    ChangeStartTimeGroupOp,
+    ConfirmGroupOp,
+)
+
 RightOpSchema = field_for_schema(RightOp)  # type: ignore[arg-type]
 
 RightSchema = class_schema(Right, base_schema=DurationSchema)()
@@ -137,6 +165,10 @@ class RightLog:
         if isinstance(r, ChangeStartTimeGroupOp):
             emails = self.get_group_emails(r)
             self.process_group_rights(emails, change_starttime, r)
+            return
+        if isinstance(r, ConfirmGroupOp):
+            emails = self.get_group_emails(r)
+            self.process_group_rights(emails, confirm_group, r)
             return
         email = r.email
         curr_right = self.get_right(email)
@@ -188,7 +220,7 @@ class RightLog:
             fn(rig, r)
             op_history[e].append(RightLogEntry(r, rig))
 
-    def get_group_emails(self, r: Union[ChangeTimeGroupOp, ChangeStartTimeGroupOp]) -> List[Email]:
+    def get_group_emails(self, r: GroupOp) -> List[Email]:
         emails = self.group_cache.get(r.group)
         if not emails:
             emails = [e for e, in (
@@ -198,7 +230,8 @@ class RightLog:
                     .with_entities(User.email)
             )]
         if not emails:
-            raise Exception(f'Usergroup {r.group} not found or it has no members')
+            if not UserGroup.get_by_name(r.group):
+                raise Exception(f'Usergroup {r.group} not found')
         self.group_cache[r.group] = [e for e in emails]
         return emails
 
@@ -239,6 +272,10 @@ def change_starttime(right: Right, op: ChangeStartTimeGroupOp) -> None:
         right.duration_to = right.duration_from + unlock_period if unlock_period else None
 
 
+def confirm_group(right: Right, op: ConfirmGroupOp) -> None:
+    do_confirm(right, op.timestamp)
+
+
 def get_current_rights(target: str) -> Tuple[RightLog, Path]:
     fp = Path(app.config['FILES_PATH'])
     initial_rights, lines = read_rights(fp / f'{target}.rights.initial', 1)
@@ -261,7 +298,7 @@ def read_rights(path: Path, index: int) -> Tuple[List[RightOp], List[Dict]]:
 
 def do_register_right(op: RightOp, target: str) -> Tuple[Optional[RightLog], Optional[str]]:
     rights, right_log_path = get_current_rights(target)
-    if not isinstance(op, (ChangeTimeGroupOp, ChangeStartTimeGroupOp)):
+    if not isinstance(op, GroupOps):
         latest_op = rights.latest_op(op.email)
         if latest_op and isinstance(latest_op.op, QuitOp) and not isinstance(op, UndoQuitOp):
             return None, f'{target}: Cannot register a non-UndoQuitOp after QuitOp'
@@ -274,7 +311,7 @@ def do_register_right(op: RightOp, target: str) -> Tuple[Optional[RightLog], Opt
 
 
 def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> List[str]:
-    emails = rights.group_cache[op.group] if isinstance(op, (ChangeTimeGroupOp, ChangeStartTimeGroupOp)) else [op.email]
+    emails = rights.group_cache[op.group] if isinstance(op, GroupOps) else [op.email]
     session = FuturesSession()
     futures = []
     host_config = app.config['DIST_RIGHTS_HOSTS'][target]
