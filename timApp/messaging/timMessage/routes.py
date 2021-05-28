@@ -4,6 +4,7 @@ from typing import Optional, List
 from datetime import datetime
 
 from flask import Response
+from sqlalchemy import tuple_
 
 from timApp.document.document import Document
 from timApp.document.documents import import_document_from_file
@@ -118,12 +119,15 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
         if not current_page_obj:
             raise NotExist('No document or folder found')
 
-    current_page_path = current_page_obj.path
-    parent_paths = current_page_obj.parent_folder_paths()  # parent folders
+    parent_paths = current_page_obj.parent_paths()  # parent folders
     print(parent_paths)
 
-    displays = InternalMessageDisplay.query.filter_by(usergroup_id=get_current_user_object().get_personal_group().id,
-                                                      display_doc_id=item_id).all()
+    # get message displays shown on current page or in parent folders
+    displays = InternalMessageDisplay.query \
+        .outerjoin(Folder, Folder.id == InternalMessageDisplay.display_doc_id) \
+        .filter((InternalMessageDisplay.usergroup == get_current_user_object().get_personal_group())
+                & ((InternalMessageDisplay.display_block == current_page_obj)
+                   | (tuple_(Folder.location, Folder.name).in_(parent_paths))))
 
     replies = InternalMessage.query.filter(InternalMessage.replies_to.isnot(None)).with_entities(
         InternalMessage.replies_to).all()
