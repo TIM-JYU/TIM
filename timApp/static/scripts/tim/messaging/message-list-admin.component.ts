@@ -29,12 +29,6 @@ import {Users} from "../user/userService";
             <div id="email-send" style="padding-bottom: 1em">
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
                 <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
-                <div>
-                    <tim-alert *ngIf="memberSaveSuccessResponse"
-                               severity="success">{{memberSaveSuccessResponse}}</tim-alert>
-                    <tim-alert *ngIf="memberSaveFailResponse"
-                               severity="danger">{{memberAddFailedResponse}}</tim-alert>
-                </div>
             </div>
             <div class="form-group">
                 <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
@@ -157,13 +151,17 @@ import {Users} from "../user/userService";
                     <h3>Members</h3>
                     <div class="indented">
                         <p>Instructions:</p>
-                        <p>Add new members by setting each member on their own separate lines. The members are only 
+                        <p>Add new members by setting each member on their own separate lines. The members are only
                             added after you click the "Add new members" button.</p>
                         <p>Add individual TIM users by writing their username.</p>
-                        <p>Add a group by writing it's name. You need to be the owner of the group for the adding to 
+                        <p>Add a group by writing it's name. You need to be the owner of the group for the adding to
                             succeed.</p>
-                        <p>Add an external member (someone who is not a TIM user) by writing their email address (mandatory) and name (optional) either in the form <code>john.doe@domain.fi John Doe</code> or <code>Jane Doe &lt;jane.doe@domain.fi&gt;</code></p>
-                        <p>Send right means that a member's message should not be caught up in a moderation process. Delivery right means that the member receives messages sent to the list. For a group, the send and delivery right affect all the members of a group.</p>
+                        <p>Add an external member (someone who is not a TIM user) by writing their email address
+                            (mandatory) and name (optional) either in the form <code>john.doe@domain.fi John Doe</code>
+                            or <code>Jane Doe &lt;jane.doe@domain.fi&gt;</code></p>
+                        <p>Send right means that a member's message should not be caught up in a moderation process.
+                            Delivery right means that the member receives messages sent to the list. For a group, the
+                            send and delivery right affect all the members of a group.</p>
                     </div>
                     <div class="indented" id="add-members-section">
                         <label for="add-multiple-members">Add members</label> <br/>
@@ -223,6 +221,12 @@ import {Users} from "../user/userService";
                         </tbody>
                     </table>
                     <button class="indented timButton" (click)="saveMembers()">Save members</button>
+                    <div>
+                        <tim-alert *ngIf="memberSaveSuccessResponse"
+                                   severity="success">{{memberSaveSuccessResponse}}</tim-alert>
+                        <tim-alert *ngIf="memberSaveFailResponse"
+                                   severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                    </div>
                 </div>
             </div>
             <div class="section">
