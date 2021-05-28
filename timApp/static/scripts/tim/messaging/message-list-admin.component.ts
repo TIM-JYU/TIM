@@ -214,7 +214,7 @@ import {Users} from "../user/userService";
                                 <input type="checkbox" [(ngModel)]="member.deliveryRight"
                                        name="member-delivery-right-{{member.email}}">
                             </td>
-                            <td>{{member.removed}}</td>
+                            <td>{{member.removedDisplay}}</td>
                             <td><input type="checkbox" (click)="membershipChange(member)" [ngModel]="!!member.removed"
                                        name="removed-{{member.email}}"/></td>
                         </tr>
@@ -360,8 +360,11 @@ export class MessageListAdminComponent implements OnInit {
             const result2 = await this.getListMembers();
 
             if (result2.ok) {
-                console.log(result2.result);
                 this.membersList = result2.result;
+                // Set the UI value for removed for.
+                for (const member of this.membersList) {
+                    member.removedDisplay = member.removed;
+                }
             } else {
                 this.permanentErrorMessage = `Loading list's members failed: ${result2.result.error.error}`;
             }
@@ -601,7 +604,13 @@ export class MessageListAdminComponent implements OnInit {
      * Save the lists members' state.
      */
     async saveMembers() {
-        const resultSaveMembers = await this.saveMembersCall(this.membersList);
+        const tempMembersList = this.membersList;
+        // Get rid of removedDisplay property for the members being send to server, as the server does not need it for
+        // anything.
+        for (const tempMember of tempMembersList) {
+            delete tempMember.removedDisplay;
+        }
+        const resultSaveMembers = await this.saveMembersCall(tempMembersList);
         // Give timed feedback to user.
         if (resultSaveMembers.ok) {
             this.memberSaveSuccessResponse = "Saving members succeeded!";
