@@ -46,7 +46,7 @@ class ConfirmOp:
 
 @dataclass
 class ConfirmGroupOp:
-    type: Literal['confirm']
+    type: Literal['confirmgroup']
     group: str
     timestamp: datetime
 
