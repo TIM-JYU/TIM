@@ -20,41 +20,47 @@ interface ReplyOptions {
     template: `
         <ng-container *ngIf="showMessage">
             <div class="timMessageDisplay">
-                <p>
-                    <span>From: </span>
-                    <span>{{sender}}</span>
-                    <span *ngIf="messageToGroup">, {{group}}</span>
+                <p class="messageInformation">
+                    <span class="from">From: </span>
+                    <span class="sender">{{sender}}</span>
+                    <!-- TODO Display what group the message is related to
+                    <span class="group" *ngIf="messageToGroup">, {{group}}</span> 
+                    -->
                 </p>
-                <p class="message-heading">{{heading}}</p>
+                <p class="messageHeading">{{heading}}</p>
                 <div class="fullMessageContent" *ngIf="showFullContent">
-                    <div [innerHTML]="fullContent"></div>
-                    <p *ngIf="messageOverMaxLength" class="toggleReadMore"><a (click)="toggleDisplayedContentLength()">Read
-                        less</a></p>
+                    <div class="fullContentText" [innerHTML]="fullContent"></div>
+                    <p class="toggleReadMore" *ngIf="messageOverMaxLength">
+                        <a (click)="toggleDisplayedContentLength()">Read less</a>
+                    </p>
                 </div>
                 <div class="cutMessageContent" *ngIf="!showFullContent">
-                    <div [innerHTML]="shownContent"></div>
+                    <div class="shownContentText" [innerHTML]="shownContent"></div>
                     <p class="toggleReadMore"><a (click)="toggleDisplayedContentLength()">Read more</a></p>
                 </div>
                 <div class="buttonArea">
                     <button class="timButton" *ngIf="canReply" (click)="reply()">Reply</button>
                 </div>
                 <div class="replyArea" *ngIf="showReply">
-                    <p>To: {{sender}}</p>
-                    <textarea id="reply-message" name="reply-message" [(ngModel)]="replyMessage"></textarea>
+                    <p class="replyTo">To: {{sender}}</p>
+                    <textarea class="replyTextarea" id="reply-message" name="reply-message"
+                              [(ngModel)]="replyMessage"></textarea>
                     <div class="sent">
                         <button class="timButton" [disabled]="!canSendReply" (click)="sendReply()">Send</button>
-                        <span *ngIf="replySent">Sent!</span>
+                        <span class="replySent" *ngIf="replySent">Sent!</span>
                     </div>
                 </div>
                 <form class="readReceiptArea">
-                    <label><input type="checkbox" name="mark-as-read" id="mark-as-read"
-                                  [disabled]="!canMarkAsRead || markedAsRead" (click)="markAsRead()"/> Mark as
-                        Read</label>
-                    <span class="readReceiptLink"
-                          *ngIf="markedAsRead">Read receipt can be cancelled in <a href="/view/messages/tim-messages">your messages</a></span>
-                    <button class="timButton" title="Close Message"
-                            [disabled]="(!markedAsRead && !replySent)"
-                            (click)="closeMessage()">
+                    <label class="markAsReadLabel"><input class="markAsReadCheckbox" 
+                                                          type="checkbox" 
+                                                          name="mark-as-read"
+                                                          id="mark-as-read"
+                                                          [disabled]="!canMarkAsRead || markedAsRead"
+                                                          (click)="markAsRead()"/> Mark as Read</label>
+                    <span class="readReceiptLink" *ngIf="markedAsRead">
+                        Read receipt can be cancelled in <a href="/view/messages/tim-messages">your messages</a>
+                    </span>
+                    <button class="timButton" title="Close Message" (click)="closeMessage()">
                         Close
                     </button>
                 </form>
@@ -65,7 +71,7 @@ interface ReplyOptions {
 })
 export class TimMessageComponent implements OnInit {
     @Input()
-    message?: TimMessageData;
+    message!: TimMessageData;
 
     messageMaxLength: number = 210;
     messageOverMaxLength: boolean = false;
@@ -106,10 +112,6 @@ export class TimMessageComponent implements OnInit {
      * Hides the message view; shows an alert about sending a read receipt and an option to cancel.
      */
     async markAsRead() {
-        if (!this.message) {
-            return;
-        }
-
         const result = await markAsRead(this.http, this.message.id);
         if (result.ok) {
             this.markedAsRead = true;
@@ -138,7 +140,7 @@ export class TimMessageComponent implements OnInit {
         this.canSendReply = false;
         if (this.sender) {
             this.replyOptions.recipient = this.sender;
-            this.replyOptions.repliesTo = this.message?.id;
+            this.replyOptions.repliesTo = this.message.id;
         } else {
             console.log("no recipient, can't send");
         }
@@ -160,24 +162,27 @@ export class TimMessageComponent implements OnInit {
     }
 
     /**
-     * Hides the entire message.
+     * Hides the entire message. If the message can't be replied to or marked as read
+     * by recipient, closing it hides it permanently by marking it as read in database.
      */
-    closeMessage(): void {
+    async closeMessage() {
         this.showMessage = false;
+
+        if (!this.canReply && !this.canMarkAsRead) {
+            await markAsRead(this.http, this.message.id);
+        }
     }
 
     ngOnInit(): void {
-        if (this.message) {
-            this.setValues(this.message);
-            // TODO Read group from database
-            this.group = "ohj1k21";
-        }
+        this.setValues(this.message);
     }
 
     setValues(timMessage: TimMessageData) {
         this.sender = timMessage.sender;
+        // TODO Display what group the message is related to; currently can't retrieve from database
+        // this.group = "ohj1k21";
         this.heading = timMessage.message_subject;
-        this.fullContent = timMessage.message_body; // TODO handle paragraphs properly
+        this.fullContent = timMessage.message_body;
         this.canMarkAsRead = timMessage.can_mark_as_read;
         this.canReply = timMessage.can_reply;
 
