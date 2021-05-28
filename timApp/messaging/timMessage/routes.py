@@ -4,10 +4,12 @@ from typing import Optional, List
 from datetime import datetime
 
 from flask import Response
+from sqlalchemy import tuple_
 
 from timApp.document.document import Document
 from timApp.document.documents import import_document_from_file
 from timApp.document.viewcontext import default_view_ctx
+from timApp.item.manage import get_trash_folder
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
@@ -111,8 +113,20 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     :param item_id: Identifier for document or folder where message is displayed
     :return:
     """
-    displays = InternalMessageDisplay.query.filter_by(usergroup_id=get_current_user_object().get_personal_group().id,
-                                                      display_doc_id=item_id).all()
+    current_page_obj = DocEntry.query.filter_by(id=item_id).first()
+    if not current_page_obj:
+        current_page_obj = Folder.query.filter_by(id=item_id).first()
+        if not current_page_obj:
+            raise NotExist('No document or folder found')
+
+    parent_paths = current_page_obj.parent_paths()  # parent folders
+
+    # get message displays shown on current page or in parent folders
+    displays = InternalMessageDisplay.query \
+        .outerjoin(Folder, Folder.id == InternalMessageDisplay.display_doc_id) \
+        .filter((InternalMessageDisplay.usergroup == get_current_user_object().get_personal_group())
+                & ((InternalMessageDisplay.display_block == current_page_obj)
+                   | (tuple_(Folder.location, Folder.name).in_(parent_paths))))
 
     replies = InternalMessage.query.filter(InternalMessage.replies_to.isnot(None)).with_entities(
         InternalMessage.replies_to).all()
@@ -125,16 +139,20 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
                                                              message_id=display.message_id).first()
         expires = InternalMessage.query.filter_by(id=display.message_id).first()
         # message is shown if it has not been marked as read or replied to, and has not expired
-        if receipt.marked_as_read_on is None and display.message_id not in replies_to_ids and (
-                expires.expires is None or expires.expires > datetime.now()):
+        if receipt.marked_as_read_on is None and (expires.expires is None or expires.expires > datetime.now()):
             messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
             recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
 
     fullmessages = []
     for message in messages:
-        document = DocEntry.find_by_id(message.doc_id)
+        document = DocEntry.query.filter_by(id=message.doc_id).first()
         if not document:
             return error_generic('Message document not found', 404)
+
+        # Hides the message if the corresponding document has been deleted
+        trash_folder_path = get_trash_folder().path
+        if document.name.startswith(trash_folder_path):
+            continue
 
         fullmessages.append(TimMessageData(id=message.id,
                                            sender=document.owners.pop().name,

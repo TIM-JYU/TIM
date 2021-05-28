@@ -76,6 +76,8 @@ export class ManageReadReceiptComponent implements OnInit {
         if (result.ok) {
             this.markedAsRead = true;
         }
+
+        window.location.reload();
     }
 
     /**
@@ -94,6 +96,7 @@ export class ManageReadReceiptComponent implements OnInit {
         }
 
         this.markedAsRead = false;
+        window.location.reload();
     }
 }
 
