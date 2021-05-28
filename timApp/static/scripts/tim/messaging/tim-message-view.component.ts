@@ -16,8 +16,11 @@ import {TimMessageModule} from "./tim-message.component";
 })
 export class TimMessageViewComponent implements OnInit {
     ngOnInit(): void {
-        const itemId = itemglobals().curr_item.id;
-        void this.loadValues(itemId);
+        const current_item = itemglobals().curr_item;
+        if (current_item) {
+            const itemId = current_item.id;
+            void this.loadValues(itemId);
+        }
     }
 
     constructor(private http: HttpClient) {}
