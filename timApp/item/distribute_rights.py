@@ -317,16 +317,17 @@ def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> List[str]:
     host_config = app.config['DIST_RIGHTS_HOSTS'][target]
     dist_rights_send_secret = get_secret_or_abort('DIST_RIGHTS_SEND_SECRET')
     hosts = host_config['hosts']
+    rights_to_send = [{'email': e, 'right': rights.get_right(e)} for e in emails]
     for m in hosts:
         r = session.put(
             f'{m}/distRights/receive',
             data=to_json_str({
-                'rights': [{'email': e, 'right': rights.get_right(e)} for e in emails],
+                'rights': rights_to_send,
                 'secret': dist_rights_send_secret,
                 'item_path': host_config['item'],
             }),
             headers={'Content-Type': 'application/json'},
-            timeout=5,
+            timeout=10,
         )
         futures.append(r)
     return collect_errors_from_hosts(futures, hosts)
@@ -468,6 +469,7 @@ def register_op_to_hosts(op: RightOp, target: Union[str, List[str]], is_receivin
                 'is_receiving_backup': is_receiving_backup,
             }),
             headers={'Content-type': 'application/json'},
+            timeout=10,
         )
         futures.append(f)
     return collect_errors_from_hosts(futures, register_hosts)
