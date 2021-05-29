@@ -353,6 +353,30 @@ def remove_permission(m: PermissionRemoveModel):
 
 
 @dataclass
+class PermissionClearModel:
+    paths: List[str]
+    type: AccessType = field(metadata={'by_value': True})
+
+
+@manage_page.route("/permissions/clear", methods=["PUT"])
+@use_model(PermissionClearModel)
+def clear_permissions(m: PermissionClearModel):
+    for p in m.paths:
+        i = DocEntry.find_by_path(p, try_translation=True)
+        if not i:
+            i = Folder.find_by_path(p)
+        if not i:
+            raise RouteException(f'Item not found: {p}')
+        verify_ownership(i)
+        i.block.accesses = {
+            (ugid, permtype): v for (ugid, permtype), v in i.block.accesses.items() if
+            permtype != m.type.value
+        }
+    db.session.commit()
+    return ok_response()
+
+
+@dataclass
 class SelfExpireModel:
     id: int
 
