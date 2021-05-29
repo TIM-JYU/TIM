@@ -29,12 +29,6 @@ import {Users} from "../user/userService";
             <div id="email-send" style="padding-bottom: 1em">
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
                 <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
-                <div>
-                    <tim-alert *ngIf="memberSaveSuccessResponse"
-                               severity="success">{{memberSaveSuccessResponse}}</tim-alert>
-                    <tim-alert *ngIf="memberSaveFailResponse"
-                               severity="danger">{{memberAddFailedResponse}}</tim-alert>
-                </div>
             </div>
             <div class="form-group">
                 <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
@@ -157,13 +151,17 @@ import {Users} from "../user/userService";
                     <h3>Members</h3>
                     <div class="indented">
                         <p>Instructions:</p>
-                        <p>Add new members by setting each member on their own separate lines. The members are only 
+                        <p>Add new members by setting each member on their own separate lines. The members are only
                             added after you click the "Add new members" button.</p>
                         <p>Add individual TIM users by writing their username.</p>
-                        <p>Add a group by writing it's name. You need to be the owner of the group for the adding to 
+                        <p>Add a group by writing it's name. You need to be the owner of the group for the adding to
                             succeed.</p>
-                        <p>Add an external member (someone who is not a TIM user) by writing their email address (mandatory) and name (optional) either in the form <code>john.doe@domain.fi John Doe</code> or <code>Jane Doe &lt;jane.doe@domain.fi&gt;</code></p>
-                        <p>Send right means that a member's message should not be caught up in a moderation process. Delivery right means that the member receives messages sent to the list. For a group, the send and delivery right affect all the members of a group.</p>
+                        <p>Add an external member (someone who is not a TIM user) by writing their email address
+                            (mandatory) and name (optional) either in the form <code>john.doe@domain.fi John Doe</code>
+                            or <code>Jane Doe &lt;jane.doe@domain.fi&gt;</code></p>
+                        <p>Send right means that a member's message should not be caught up in a moderation process.
+                            Delivery right means that the member receives messages sent to the list. For a group, the
+                            send and delivery right affect all the members of a group.</p>
                     </div>
                     <div class="indented" id="add-members-section">
                         <label for="add-multiple-members">Add members</label> <br/>
@@ -195,6 +193,7 @@ import {Users} from "../user/userService";
                         <thead>
                         <tr>
                             <th>Name</th>
+                            <th>Username</th>
                             <th>Email</th>
                             <th>Send right</th>
                             <th>Delivery right</th>
@@ -205,6 +204,7 @@ import {Users} from "../user/userService";
                         <tbody>
                         <tr *ngFor="let member of membersList">
                             <td>{{member.name}}</td>
+                            <td>{{member.username}}</td>
                             <td>{{member.email}}</td>
                             <td>
                                 <input type="checkbox" [(ngModel)]="member.sendRight"
@@ -214,13 +214,19 @@ import {Users} from "../user/userService";
                                 <input type="checkbox" [(ngModel)]="member.deliveryRight"
                                        name="member-delivery-right-{{member.email}}">
                             </td>
-                            <td>{{member.removed}}</td>
+                            <td>{{member.removedDisplay}}</td>
                             <td><input type="checkbox" (click)="membershipChange(member)" [ngModel]="!!member.removed"
                                        name="removed-{{member.email}}"/></td>
                         </tr>
                         </tbody>
                     </table>
                     <button class="indented timButton" (click)="saveMembers()">Save members</button>
+                    <div>
+                        <tim-alert *ngIf="memberSaveSuccessResponse"
+                                   severity="success">{{memberSaveSuccessResponse}}</tim-alert>
+                        <tim-alert *ngIf="memberSaveFailResponse"
+                                   severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                    </div>
                 </div>
             </div>
             <div class="section">
@@ -354,8 +360,15 @@ export class MessageListAdminComponent implements OnInit {
             const result2 = await this.getListMembers();
 
             if (result2.ok) {
-                console.log(result2.result);
                 this.membersList = result2.result;
+                // Set the UI value for removed attribute.
+                for (const member of this.membersList) {
+                    if (member.removed) {
+                        member.removedDisplay = moment(member.removed).format(
+                            "DD.MM.YYYY hh:mm"
+                        );
+                    }
+                }
             } else {
                 this.permanentErrorMessage = `Loading list's members failed: ${result2.result.error.error}`;
             }
@@ -595,7 +608,13 @@ export class MessageListAdminComponent implements OnInit {
      * Save the lists members' state.
      */
     async saveMembers() {
-        const resultSaveMembers = await this.saveMembersCall(this.membersList);
+        const tempMembersList = this.membersList;
+        // Get rid of removedDisplay property for the members being send to server, as the server does not need it for
+        // anything.
+        for (const tempMember of tempMembersList) {
+            delete tempMember.removedDisplay;
+        }
+        const resultSaveMembers = await this.saveMembersCall(tempMembersList);
         // Give timed feedback to user.
         if (resultSaveMembers.ok) {
             this.memberSaveSuccessResponse = "Saving members succeeded!";

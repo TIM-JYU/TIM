@@ -83,8 +83,11 @@ export const archivePolicyNames: ArchivePolicyNames[] = [
 // See MemberInfo Python class for further details.
 export interface MemberInfo {
     name: string;
+    username: string;
     sendRight: boolean;
     deliveryRight: boolean;
     email: string;
     removed?: Moment;
+    // The member's removed status at the time of loading. Used only for display purposes.
+    removedDisplay?: string;
 }

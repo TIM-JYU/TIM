@@ -160,21 +160,21 @@ class MessageListModel(db.Model):
                 tim_members.append(member.tim_member)
         return tim_members
 
-    def get_member_by_name(self, name: Optional[str], email: Optional[str]) -> Optional['MessageListMember']:
-        """Get member of this list. Member can be searched with name and/or email. At least one has to be given. If
-        both are given, name is preferred and is used in a search first.
+    def find_member(self, username: Optional[str], email: Optional[str]) -> Optional['MessageListMember']:
+        """Get member of this list. Member can be searched with username and/or email. At least one has to be given. If
+        both are given, username is preferred and is used in a search first.
 
         Raises ValueError if used with both name and email parameters as None.
 
-        :param name: Name of the member.
+        :param username: Userame of the member.
         :param email: Member's email address
         :return: A message list member, if one is found with given arguments. Otherwise return None.
         """
-        if not name and not email:
+        if not username and not email:
             raise ValueError
 
         for member in self.members:
-            if name is not None and name == member.get_name():
+            if username is not None and username == member.get_username():
                 return member
             if email is not None and email == member.get_email():
                 return member
@@ -217,7 +217,7 @@ class MessageListMember(db.Model):
     tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select",
                                  uselist=False, post_update=True)
     external_member = db.relationship("MessageListExternalMember", back_populates="member", lazy="select",
-                                      uselist=False)
+                                      uselist=False, post_update=True)
     distribution = db.relationship("MessageListDistribution", back_populates="member", lazy="select")
 
     __mapper_args__ = {"polymorphic_identity": "member", "polymorphic_on": member_type}
@@ -299,13 +299,14 @@ class MessageListTimMember(MessageListMember):
     def to_json(self) -> Dict[str, Any]:
         return {
             "name": self.get_name(),
+            "username": self.get_username(),
             "email": self.get_email() if self.get_email() is not None else "",
             "sendRight": self.member.send_right,
             "deliveryRight": self.member.delivery_right,
             "removed": self.membership_ended
         }
 
-    def get_name(self) -> str:
+    def get_username(self) -> str:
         """Get the TIM user group's name."""
         ug = self.user_group
         return ug.name
@@ -318,6 +319,16 @@ class MessageListTimMember(MessageListMember):
         ug = self.user_group
         user = ug.personal_user
         return user.email
+
+    def get_name(self) -> str:
+        """Get TIM user's name. For group, this is the '-'. For a user, this is their full name."""
+        # ug = self.user_group
+        if not self.is_group():
+            ug = self.user_group
+            user = ug.personal_user
+            return user.pretty_full_name
+        return "-"
+        # return ug.name
 
 
 class MessageListExternalMember(MessageListMember):
@@ -341,6 +352,7 @@ class MessageListExternalMember(MessageListMember):
     def to_json(self) -> Dict[str, Any]:
         return {
             "name": self.get_name(),
+            "username": self.get_username(),
             "email": self.email_address,
             "sendRight": self.member.send_right,
             "deliveryRight": self.member.delivery_right,
@@ -360,6 +372,10 @@ class MessageListExternalMember(MessageListMember):
         :return: The email address.
         """
         return self.email_address
+
+    def get_username(self) -> str:
+        """External member's don't have usernames, but this is for consistency when using other methods."""
+        return ""
 
 
 class MessageListDistribution(db.Model):
