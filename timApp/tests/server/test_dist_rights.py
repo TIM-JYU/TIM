@@ -238,6 +238,40 @@ class DistRightsTest(TimRouteTest):
         with self.assertRaises(Exception):
             confirmgroup('this_does_not_exist', twosecs)
 
+        self.make_admin(self.test_user_3)
+        self.login_test3()
+        resp = self.get('/distRights/current', query_string={'target': target_name, 'groups': 'tg1,testuser3'})
+        self.assertEqual(
+            [{'email': 'test1@example.com',
+              'right': {'accessible_from': '2021-05-25T10:30:00+00:00',
+                        'accessible_to': '2021-05-25T14:35:49+00:00',
+                        'duration': 'PT4H5M',
+                        'duration_from': '2021-05-25T10:00:00+00:00',
+                        'duration_to': '2021-05-25T10:10:00+00:00',
+                        'require_confirm': False}},
+             {'email': 'test2@example.com',
+              'right': {'accessible_from': None,
+                        'accessible_to': None,
+                        'duration': 'PT4H40S',
+                        'duration_from': '2021-05-25T10:00:00+00:00',
+                        'duration_to': '2021-05-25T10:10:00+00:00',
+                        'require_confirm': True}},
+             {'email': 'test3@example.com',
+              'right': {'accessible_from': None,
+                        'accessible_to': None,
+                        'duration': 'PT4H',
+                        'duration_from': '2021-05-25T10:00:00+00:00',
+                        'duration_to': '2021-05-25T10:10:00+00:00',
+                        'require_confirm': False}}],
+            resp,
+        )
+        self.get(
+            '/distRights/current',
+            query_string={'target': 'not_exist', 'groups': 'tg1,testuser3'},
+            expect_status=400,
+            expect_content='Unknown target: not_exist',
+        )
+
         self.get(
             '/distRights/changeStartTime',
             query_string={'target': 'test', 'group': 'tg1', 'minutes': 0, 'redir': '/'},
