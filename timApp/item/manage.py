@@ -12,7 +12,7 @@ from isodate import Duration
 
 from timApp.auth.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
     verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort, verify_copy_access, AccessDenied, \
-    get_single_view_access
+    get_single_view_access, has_edit_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
 from timApp.auth.sessioninfo import get_current_user_group_object
@@ -55,7 +55,7 @@ def manage(path):
     verify_view_access(item)
 
     is_folder = isinstance(item, Folder)
-    if not is_folder:
+    if not is_folder and has_edit_access(item):
         item.serialize_content = True
         item.changelog_length = get_option(request, 'history', 100)
 

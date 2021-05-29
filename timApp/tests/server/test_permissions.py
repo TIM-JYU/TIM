@@ -700,3 +700,16 @@ class PermissionTest(TimRouteTest):
             self.get(tr.url)
             self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
             self.post_answer('textfield', f'{d.id}.t', user_input={'c': 'x'})
+
+    def test_no_fulltext_in_manage_with_view(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin}
+-pointsRule: 
+  expectCode: "secret answer"
+""")
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.login_test2()
+        r = self.get(d.get_url_for_view('manage'))
+        self.assertNotIn('secret answer', r)
