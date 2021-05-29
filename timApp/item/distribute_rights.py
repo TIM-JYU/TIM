@@ -12,7 +12,7 @@ from flask import Response, flash, request
 from isodate import Duration
 from werkzeug.utils import secure_filename
 
-from timApp.auth.accesshelper import AccessDenied
+from timApp.auth.accesshelper import AccessDenied, verify_admin
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import get_duration_now, do_confirm
 from timApp.auth.sessioninfo import get_current_user_object
@@ -473,3 +473,25 @@ def register_op_to_hosts(op: RightOp, target: Union[str, List[str]], is_receivin
         )
         futures.append(f)
     return collect_errors_from_hosts(futures, register_hosts)
+
+
+@dist_bp.route('/current')
+def get_current_rights_route(
+        groups: str,  # comma-separated; TODO: List[str] doesn't work for GET requests
+        target: str,
+) -> Response:
+    verify_admin()
+    try:
+        rights, _ = get_current_rights(target)
+    except FileNotFoundError:
+        raise RouteException(f'Unknown target: {target}')
+    groups_list = groups.split(',')
+    emails = (
+        User.query
+            .join(UserGroup, User.groups)
+            .filter(UserGroup.name.in_(groups_list))
+            .with_entities(User.email)
+            .order_by(User.email)
+            .all()
+    )
+    return json_response([{'email': e, 'right': rights.get_right(e)} for e, in emails])
