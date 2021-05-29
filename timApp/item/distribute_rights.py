@@ -327,7 +327,7 @@ def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> List[str]:
                 'item_path': host_config['item'],
             }),
             headers={'Content-Type': 'application/json'},
-            timeout=5,
+            timeout=10,
         )
         futures.append(r)
     return collect_errors_from_hosts(futures, hosts)
@@ -469,6 +469,7 @@ def register_op_to_hosts(op: RightOp, target: Union[str, List[str]], is_receivin
                 'is_receiving_backup': is_receiving_backup,
             }),
             headers={'Content-type': 'application/json'},
+            timeout=10,
         )
         futures.append(f)
     return collect_errors_from_hosts(futures, register_hosts)
