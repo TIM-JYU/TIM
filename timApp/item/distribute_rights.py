@@ -317,11 +317,12 @@ def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> List[str]:
     host_config = app.config['DIST_RIGHTS_HOSTS'][target]
     dist_rights_send_secret = get_secret_or_abort('DIST_RIGHTS_SEND_SECRET')
     hosts = host_config['hosts']
+    rights_to_send = [{'email': e, 'right': rights.get_right(e)} for e in emails]
     for m in hosts:
         r = session.put(
             f'{m}/distRights/receive',
             data=to_json_str({
-                'rights': [{'email': e, 'right': rights.get_right(e)} for e in emails],
+                'rights': rights_to_send,
                 'secret': dist_rights_send_secret,
                 'item_path': host_config['item'],
             }),
