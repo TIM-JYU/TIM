@@ -227,6 +227,25 @@ import {Users} from "../user/userService";
                         <tim-alert *ngIf="memberSaveFailResponse"
                                    severity="danger">{{memberAddFailedResponse}}</tim-alert>
                     </div>
+                    <div *ngIf="hasGroups">
+                        <select [ngModel]="memberGroups" name="usergroups"></select>
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr *ngFor="let gMember of groupMembers">
+                                <td>{{gMember.name}}</td>
+                                <td>{{gMember.username}}</td>
+                                <td>{{gMember.email}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
             <div class="section">
@@ -306,7 +325,9 @@ export class MessageListAdminComponent implements OnInit {
 
     removed?: Moment;
 
-    groupMembers: MemberInfo[] = [];
+    groupMembers?: MemberInfo[];
+    hasGroups: boolean = false;
+    memberGroups?: string[];
 
     /**
      * Modifies the member's removed attribute if the member's state is changed.
@@ -669,7 +690,7 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     /**
-     * Get the members of a user group.
+     * Call for members of a user group.
      * @param group The group we are querying members for.
      */
     getGroupMembersCall(group: string) {
@@ -682,6 +703,10 @@ export class MessageListAdminComponent implements OnInit {
         );
     }
 
+    /**
+     * Get the members of a user group.
+     * @param group The user group for which we want to get members.
+     */
     async getGroupMembers(group?: string) {
         if (group == undefined) {
             return;
