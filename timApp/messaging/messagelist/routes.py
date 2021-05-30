@@ -360,7 +360,7 @@ def get_members(list_name: str) -> Response:
     return json_response(list_members)
 
 
-@messagelist.route("", methods=['GET'])
+@messagelist.route("/getgroupmembers/<list_name>/<group_name>", methods=['GET'])
 def get_group_members(list_name: str, group_name: str) -> Response:
     """View function for getting members of a group that itself is a member of a message list.
 

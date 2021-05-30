@@ -306,6 +306,8 @@ export class MessageListAdminComponent implements OnInit {
 
     removed?: Moment;
 
+    groupMembers: MemberInfo[] = [];
+
     /**
      * Modifies the member's removed attribute if the member's state is changed.
      * @param member Who's membership on the list is changed.
@@ -360,6 +362,7 @@ export class MessageListAdminComponent implements OnInit {
             const result2 = await this.getListMembers();
 
             if (result2.ok) {
+                // TODO order members by name.
                 this.membersList = result2.result;
                 // Set the UI value for removed attribute.
                 for (const member of this.membersList) {
@@ -663,6 +666,31 @@ export class MessageListAdminComponent implements OnInit {
     showTempSaveSuccess() {
         this.saveSuccessMessage = "Save success!";
         window.setTimeout(() => (this.saveSuccessMessage = ""), 5 * 1000);
+    }
+
+    /**
+     * Get the members of a user group.
+     * @param group The group we are querying members for.
+     */
+    getGroupMembersCall(group: string) {
+        return to2(
+            this.http
+                .get<MemberInfo[]>(
+                    `${this.urlPrefix}/getgroupmembers/${this.listname}/${group}`
+                )
+                .toPromise()
+        );
+    }
+
+    async getGroupMembers(group?: string) {
+        if (group == undefined) {
+            return;
+        }
+        const result = await this.getGroupMembersCall(group);
+        if (result.ok) {
+            // TODO Order members by name.
+            this.groupMembers = result.result;
+        }
     }
 }
 
