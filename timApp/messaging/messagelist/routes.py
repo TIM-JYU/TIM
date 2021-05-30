@@ -360,13 +360,19 @@ def get_members(list_name: str) -> Response:
     return json_response(list_members)
 
 
-@messagelist.route("/getgroupmembers/<list_name>/<group_name>", methods=['GET'])
-def get_group_members(list_name: str, group_name: str) -> Response:
-    """View function for getting members of a group that itself is a member of a message list.
+@dataclass
+class GroupAndMembers:
+    """Helper class for querying user group and it's members."""
+    groupName: str
+    members: List[MemberInfo]
+
+
+@messagelist.route("/getgroupmembers/<list_name>", methods=['GET'])
+def get_group_members(list_name: str) -> Response:
+    """View function for getting members of groups that are on a message list.
 
     :param list_name: Message list.
-    :param group_name: Group where we want to know it's members.
-    :return: Current members of a group as a list of MemberInfo objects.
+    :return: All members of groups associated in a message list as a list of GroupAndMembers objects.
     """
     # Check rights.
     verify_logged_in()
@@ -375,20 +381,20 @@ def get_group_members(list_name: str, group_name: str) -> Response:
         raise RouteException("Only an owner of this list can see the members of this group.")
 
     # Get group.
-    group = message_list.find_member(group_name, None)
-    if group is None:
-        raise RouteException(f"Could not find member {group_name} on a list.")
-    if not group.is_group():
-        raise RouteException("Tried to get members of a user who is not a group.")
+    groups = [member for member in message_list.members if member.is_group()]
 
     # At this point we assume we have a user that is a TIM user group.
-    user_group: UserGroup = group.user_group
-    # Create a MemberInfo object for every current user in the group.
-    group_members = [MemberInfo(name=user.real_name, username=user.name,
-                                sendRight=group.send_right, deliveryRight=group.delivery_right,
-                                removed=None, email="")
-                     for user in user_group.users]
-    return json_response(group_members)
+    groups_and_members = []
+    for group in groups:
+        user_group: UserGroup = group.user_group
+        # Create a MemberInfo object for every current user in the group.
+        group_members = [MemberInfo(name=user.real_name, username=user.name,
+                                    sendRight=group.send_right, deliveryRight=group.delivery_right,
+                                    removed=None, email=user.email)
+                         for user in user_group.users]
+        gm = GroupAndMembers(groupName=user_group.name, members=group_members)
+        groups_and_members.append(gm)
+    return json_response(groups_and_members)
 
 
 @messagelist.route("/test", methods=['GET'])
