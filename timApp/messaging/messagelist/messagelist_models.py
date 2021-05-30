@@ -236,7 +236,7 @@ class MessageListMember(db.Model):
         return False
 
     def is_personal_user(self) -> bool:
-        """If this member is an individual user, i.e. a personal user group."""
+        """If this member is an individual user, i.e. a personal user group or an external member."""
         try:
             gid = self.tim_member.group_id
         except AttributeError:

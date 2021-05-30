@@ -360,6 +360,43 @@ def get_members(list_name: str) -> Response:
     return json_response(list_members)
 
 
+@dataclass
+class GroupAndMembers:
+    """Helper class for querying user group and it's members."""
+    groupName: str
+    members: List[MemberInfo]
+
+
+@messagelist.route("/getgroupmembers/<list_name>", methods=['GET'])
+def get_group_members(list_name: str) -> Response:
+    """View function for getting members of groups that are on a message list.
+
+    :param list_name: Message list.
+    :return: All members of groups associated in a message list as a list of GroupAndMembers objects.
+    """
+    # Check rights.
+    verify_logged_in()
+    message_list = MessageListModel.get_list_by_name_exactly_one(list_name)
+    if not has_manage_access(message_list.block):
+        raise RouteException("Only an owner of this list can see the members of this group.")
+
+    # Get group.
+    groups = [member for member in message_list.members if member.is_group()]
+
+    # At this point we assume we have a user that is a TIM user group.
+    groups_and_members = []
+    for group in groups:
+        user_group: UserGroup = group.user_group
+        # Create a MemberInfo object for every current user in the group.
+        group_members = [MemberInfo(name=user.real_name, username=user.name,
+                                    sendRight=group.send_right, deliveryRight=group.delivery_right,
+                                    removed=None, email=user.email)
+                         for user in user_group.users]
+        gm = GroupAndMembers(groupName=user_group.name, members=group_members)
+        groups_and_members.append(gm)
+    return json_response(groups_and_members)
+
+
 @messagelist.route("/test", methods=['GET'])
 def test_route() -> Response:
     """A testing route. Only allow calls here during development, i.e. when operating from localhost."""

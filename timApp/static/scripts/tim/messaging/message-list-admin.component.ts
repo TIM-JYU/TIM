@@ -7,6 +7,7 @@ import {
     archivePolicyNames,
     ArchiveType,
     Distribution,
+    GroupAndMembers,
     ListOptions,
     MemberInfo,
     ReplyToListChanges,
@@ -188,8 +189,8 @@ import {Users} from "../user/userService";
                     </div>
                 </div>
                 <div class="section">
+                    <h3>Members</h3>
                     <table>
-                        <caption>List members</caption>
                         <thead>
                         <tr>
                             <th>Name</th>
@@ -226,6 +227,29 @@ import {Users} from "../user/userService";
                                    severity="success">{{memberSaveSuccessResponse}}</tim-alert>
                         <tim-alert *ngIf="memberSaveFailResponse"
                                    severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                    </div>
+                    <div class="section" *ngIf="hasGroups">
+                        <h3>Show members of a group {{currentGroup}}</h3>
+                        <select [(ngModel)]="currentGroup" name="usergroups" (change)="setGroupMembers()">
+                            <option></option>
+                            <option *ngFor="let memberGroup of memberGroups">{{memberGroup}}</option>
+                        </select>
+                        <table *ngIf="currentGroup">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr *ngFor="let gMember of groupMembers">
+                                <td>{{gMember.name}}</td>
+                                <td>{{gMember.username}}</td>
+                                <td>{{gMember.email}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -296,15 +320,25 @@ export class MessageListAdminComponent implements OnInit {
     memberAddSucceededResponse: string = "";
     memberAddFailedResponse: string = "";
 
+    // Response strings for saving members' state.
     memberSaveSuccessResponse: string = "";
     memberSaveFailResponse: string = "";
 
     // Permanent error messages that cannot be recovered from, e.g. loading failed and reload is needed.
     permanentErrorMessage?: string;
 
+    // For using tim-message-send component.
     recipients = "";
 
+    // Timestamp if this message list has been removed.
     removed?: Moment;
+
+    // If groups are members part of list, these hold information about the members of said groups.
+    groupMembers?: MemberInfo[];
+    hasGroups: boolean = false; // Flag if this list has any group members.
+    memberGroups?: string[];
+    groupsAndMembers?: GroupAndMembers[];
+    currentGroup?: string;
 
     /**
      * Modifies the member's removed attribute if the member's state is changed.
@@ -360,6 +394,7 @@ export class MessageListAdminComponent implements OnInit {
             const result2 = await this.getListMembers();
 
             if (result2.ok) {
+                // TODO order members by name.
                 this.membersList = result2.result;
                 // Set the UI value for removed attribute.
                 for (const member of this.membersList) {
@@ -372,6 +407,8 @@ export class MessageListAdminComponent implements OnInit {
             } else {
                 this.permanentErrorMessage = `Loading list's members failed: ${result2.result.error.error}`;
             }
+
+            await this.getGroupMembers();
         }
     }
 
@@ -663,6 +700,54 @@ export class MessageListAdminComponent implements OnInit {
     showTempSaveSuccess() {
         this.saveSuccessMessage = "Save success!";
         window.setTimeout(() => (this.saveSuccessMessage = ""), 5 * 1000);
+    }
+
+    /**
+     * Call for members of a user group.
+     */
+    getGroupMembersCall() {
+        return to2(
+            this.http
+                .get<GroupAndMembers[]>(
+                    `${this.urlPrefix}/getgroupmembers/${this.listname}`
+                )
+                .toPromise()
+        );
+    }
+
+    /**
+     * Get the members of a user group.
+     */
+    async getGroupMembers() {
+        const result = await this.getGroupMembersCall();
+        if (result.ok) {
+            // TODO Order members by name.
+            this.groupsAndMembers = result.result;
+            // If there are no groups on this list, then we short circuit here.
+            if (this.groupsAndMembers == []) {
+                return;
+            }
+            this.memberGroups = [];
+            this.hasGroups = true;
+            // Set the names of all groups.
+            for (const gm of this.groupsAndMembers) {
+                this.memberGroups.push(gm.groupName);
+            }
+        } else {
+        }
+    }
+
+    /**
+     * Helper for setting members of a group to a table.
+     */
+    setGroupMembers() {
+        if (this.currentGroup) {
+            // Find the currently selected group where we want to see members.
+            const groupAndMembers = this.groupsAndMembers?.find(
+                (g) => g.groupName === this.currentGroup
+            );
+            if (groupAndMembers) this.groupMembers = groupAndMembers.members;
+        }
     }
 }
 
