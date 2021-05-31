@@ -352,7 +352,6 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
     :return: A BaseMessage object corresponding the original email message.
     """
     # original message is of form specified in https://pypi.org/project/mail-parser/
-    # TODO: Get 'date' field, e.g. '2021-05-01T19:09:07'
     visible_recipients: List[EmailAndDisplayName] = []
     maybe_to_addresses = parse_mailman_message_address(original, "to")
     if maybe_to_addresses is not None:
@@ -448,15 +447,13 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     :return: Newly created management document.
     """
 
-    # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
+    # We'll err on the side of caution and make sure the path is safe for the management doc.
     path_safe_list_name = remove_path_special_chars(list_options.name)
     path_to_doc = f'/{MESSAGE_LIST_DOC_PREFIX}/{path_safe_list_name}'
 
     doc = create_document(path_to_doc, list_options.name)
 
-    # VIESTIM: We add the admin component to the document. This might have to be changed if the component is turned
-    #  into a plugin.
-
+    # We add the admin component to the document.
     admin_component = """#- {allowangular="true"}
 <tim-message-list-admin></tim-message-list-admin>
     """
@@ -764,6 +761,12 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
     :param user: The user that was added to the new_group.
     :param new_group: The new group that the user was added to.
     """
+    # TODO: This might become a bottle neck, as adding to group is often done in a loop and every sync is a potential
+    #  call to different message channels (now just Mailman). In order to rid ourselves of that, we might need to
+    #  revamp the syncing. A solution might be a call to (Mailman's) server (sidelining mailmanclient-library) with a
+    #  batch of users we want to add with necessary information, and then let the server handle adding in a loop
+    #  locally.
+
     # Get all the message lists for the user group.
     for group_tim_member in new_group.messagelist_membership:
         group_message_list: MessageListModel = group_tim_member.message_list
@@ -780,6 +783,12 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
     :param user: The user who was removed from the user group.
     :param old_group: The group where the user was removed from.
     """
+    # TODO: This might become a bottle neck, as removing from group is often done in a loop and every sync is a
+    #  potential call to different message channels (now just Mailman). In order to rid ourselves of that,
+    #  we might need to revamp the syncing. A solution might be a call to (Mailman's) server (sidelining
+    #  mailmanclient-library) with a batch of users we want to add with necessary information, and then let the
+    #  server handle removing in a loop locally.
+
     # Get all the message lists for the user group.
     for group_tim_member in old_group.messagelist_membership:
         group_message_list: MessageListModel = group_tim_member.message_list

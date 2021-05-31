@@ -328,6 +328,12 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     :param delivery_right: Whether email list delivers mail to email. For True, mail is delivered to email. For False,
     no mail is delivered.
     """
+    # TODO: The email_owner_pre_confirmation flag was made available for caller with the idea that when inviting to
+    #  message list would be implemented, this would control whether the new user was invited or directly added.
+    #  However, inviting will most likely be implemented with other means than Mailman's invite system, so the flag
+    #  might be unnecessary. When the invite to a messge list is implemented, check if this is still needed or if the
+    #  flag is given the same constant value of True as the other two flags for pre_something.
+
     # We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise they have
     # to verify themselves for Mailman through an additional verification process. Note that this is different from
     # confirming to join a list. We use pre_approved flag, because we assume that who adds an email to a list also
@@ -345,7 +351,7 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     except HTTPError as e:
         if e.code == 409:
             # With code 409, Mailman indicates that the member is already in the list. We assume that a member has
-            # been 'removed' previously, and is now re-added to email list. Set send and delivery rights.
+            # been soft removed previously, and is now re-added to email list. Set send and delivery rights.
             member = get_email_list_member(mlist, email)
             set_email_list_member_send_status(member, send_right)
             set_email_list_member_delivery_status(member, delivery_right)
