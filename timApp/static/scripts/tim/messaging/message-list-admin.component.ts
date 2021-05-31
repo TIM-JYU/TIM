@@ -724,7 +724,7 @@ export class MessageListAdminComponent implements OnInit {
             // TODO Order members by name.
             this.groupsAndMembers = result.result;
             // If there are no groups on this list, then we short circuit here.
-            if (this.groupsAndMembers == []) {
+            if (this.groupsAndMembers.length === 0) {
                 return;
             }
             this.memberGroups = [];
