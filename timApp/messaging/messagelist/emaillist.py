@@ -103,14 +103,14 @@ def set_notify_owner_on_list_change(mlist: MailingList, on_change_flag: bool) ->
         raise
 
 
-def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> None:
+def delete_email_list(list_to_delete: MailingList, permanent_deletion: bool = False) -> None:
     """Delete a mailing list.
 
     :param permanent_deletion: If True, then the list is permanently gone. If False, perform a soft deletion.
-    :param fqdn_listname: The fully qualified domain name for the list, e.g. testlist1@domain.fi.
+    :param list_to_delete: MailingList object of the email list to be deleted.
     """
     try:
-        list_to_delete: MailingList = _client.get_list(fqdn_listname)
+        # list_to_delete: MailingList = _client.get_list(fqdn_listname)
         if permanent_deletion:
             list_to_delete.delete()
         else:
@@ -210,7 +210,12 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
 
         set_default_templates(email_list)
 
-        # settings-attribute acts like a dict.
+        if list_options.list_description:
+            set_email_list_description(email_list, list_options.list_description)
+        if list_options.list_info:
+            set_email_list_info(email_list, list_options.list_info)
+
+        # settings-attribute acts like a dict. Set default settings.
         mlist_settings = email_list.settings
 
         # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
@@ -219,11 +224,9 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # Ownerss / moderators don't get automatic notifications from changes on their message list. Owner switches
         # this on if necessary.
         mlist_settings["admin_notify_mchanges"] = False
-
-        if list_options.list_description:
-            set_email_list_description(email_list, list_options.list_description)
-        if list_options.list_info:
-            set_email_list_info(email_list, list_options.list_info)
+        # Turn off automatic welcome and goodbye messages.
+        mlist_settings["send_welcome_message"] = False
+        mlist_settings["send_goodbye_message"] = False
 
         # This is to force Mailman generate archivers into it's db. It exists is to fix a race condition,
         # where creating a new list without proper engineer interface procedures might make duplicate archiver rows
@@ -328,6 +331,12 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     :param delivery_right: Whether email list delivers mail to email. For True, mail is delivered to email. For False,
     no mail is delivered.
     """
+    # TODO: The email_owner_pre_confirmation flag was made available for caller with the idea that when inviting to
+    #  message list would be implemented, this would control whether the new user was invited or directly added.
+    #  However, inviting will most likely be implemented with other means than Mailman's invite system, so the flag
+    #  might be unnecessary. When the invite to a messge list is implemented, check if this is still needed or if the
+    #  flag is given the same constant value of True as the other two flags for pre_something.
+
     # We use pre_verify flag, because we assume email adder knows the address they are adding in. Otherwise they have
     # to verify themselves for Mailman through an additional verification process. Note that this is different from
     # confirming to join a list. We use pre_approved flag, because we assume that who adds an email to a list also
@@ -345,7 +354,7 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     except HTTPError as e:
         if e.code == 409:
             # With code 409, Mailman indicates that the member is already in the list. We assume that a member has
-            # been 'removed' previously, and is now re-added to email list. Set send and delivery rights.
+            # been soft removed previously, and is now re-added to email list. Set send and delivery rights.
             member = get_email_list_member(mlist, email)
             set_email_list_member_send_status(member, send_right)
             set_email_list_member_delivery_status(member, delivery_right)
@@ -422,26 +431,6 @@ def get_email_list_member_delivery_status(member: Member) -> bool:
         raise
 
 
-def get_email_list_member_send_status(member: Member) -> bool:
-    """Get email list's member's send status / right in an email list.
-
-    :param member: Member who's send status we wish to know.
-    :return: Return True, if member has a send right to a list (moderation action is set as "accept"). Return
-    False if moderation action is one of 'discard', 'reject', or 'hold'.
-    """
-    try:
-        if member.moderation_action == "accept":
-            return True
-        if member.moderation_action in ["discard", "reject", "hold"]:
-            return False
-        # If we are here, something has gone terribly wrong.
-        log_warning(f"Member {member.address} has an invalid send status assigned to them.")
-        raise RouteException(f"Member {member.address} has an invalid send status assigned to them.")
-    except HTTPError as e:
-        log_mailman(e, "In get_email_list_member_send_status()")
-        raise
-
-
 def verify_emaillist_name_requirements(name_candidate: str, domain: str) -> None:
     """Check email list's name requirements. General message list name requirement checks are assumed to be passed
     at this point and that those requirements encompass email list name requirements.
@@ -479,13 +468,12 @@ def verify_reserved_names(name_candidate: str) -> None:
     Raises a RouteException if the name candidate is a reserved name. If name is not reserved, the method completes
     silently.
 
+    If reserved names are not configured, we assume that there are no reserved names.
+
     :param name_candidate: The name to be compared against reserved names.
     """
-    # TODO: Implement a smarter query for reserved names. Now only compare against simple list for prototyping
-    #  purposes. Maybe an external config file for known reserved names or something like that?
-    #  Is it possible to query reserved names e.g. from Mailman or it's server?
-    reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
-    if name_candidate in reserved_names:
+    reserved_names = app.config.get("RESERVED_NAMES")
+    if reserved_names and name_candidate in reserved_names:
         raise RouteException(f"Name '{name_candidate}' is a reserved name and cannot be used.")
 
 
@@ -559,7 +547,7 @@ def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
         raise
 
 
-def set_email_list_non_member_message_pass(email_list: MailingList, non_member_message_pass_flag: bool) -> None:
+def set_email_list_allow_nonmember(email_list: MailingList, non_member_message_pass_flag: bool) -> None:
     """Set email list's non member (message pass) action.
 
     :param email_list: The email list where the non member message pass action is set.
@@ -662,7 +650,7 @@ def unfreeze_list(mlist: MailingList, msg_list: MessageListModel) -> None:
     try:
         mail_list_settings = mlist.settings
         mail_list_settings["default_member_action"] = "accept"
-        set_email_list_non_member_message_pass(mlist, msg_list.non_member_message_pass)
+        set_email_list_allow_nonmember(mlist, msg_list.non_member_message_pass)
         mail_list_settings.save()
     except HTTPError as e:
         log_mailman(e, "In unfreeze_list()")

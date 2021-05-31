@@ -102,11 +102,9 @@ def domains() -> Response:
 
 
 @messagelist.route("/deletelist", methods=['DELETE'])
-def delete_list(listname: str, domain: str, permanent: bool) -> Response:
+def delete_list(listname: str, permanent: bool) -> Response:
     """Delete message and it's associated message channels.
 
-    :param domain: If an empty string, message list is not considered to have a domain associated and therefore doesn't
-     have an email list. If this is an nonempty string, then an email list is excpected to also exist.
     :param listname: The list to be deleted.
     :param permanent: A boolean flag indicating if the deletion is meant to be permanent.
     :return: A string describing how the operation went.
@@ -126,16 +124,17 @@ def delete_list(listname: str, domain: str, permanent: bool) -> Response:
     # Perform deletion.
     if permanent:
         # If the deletion is (more) permanent, move the admin doc to bin.
-        # manage_doc: Document = message_list.block.docentries[0].document
         manage_doc = get_doc_or_abort(message_list.manage_doc_id)
         trash_folder: Folder = get_trash_folder()
         move_document(manage_doc, trash_folder)
     # Set the db entry as removed
     message_list.removed = get_current_time()
 
-    if domain:
-        # A domain is given, so we are also looking to delete an email list.
-        delete_email_list(f"{listname}@{domain}", permanent_deletion=permanent)
+    if message_list.email_list_domain:
+        # A message list has a domain, so we are also looking to delete an email list.
+        verify_mailman_connection()
+        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        delete_email_list(email_list, permanent_deletion=permanent)
 
     db.session.commit()
     return ok_response()

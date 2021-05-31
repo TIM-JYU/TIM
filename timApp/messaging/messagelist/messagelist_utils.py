@@ -16,7 +16,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
     set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
-    set_email_list_non_member_message_pass, set_email_list_allow_attachments, set_email_list_default_reply_type, \
+    set_email_list_allow_nonmember, set_email_list_allow_attachments, set_email_list_default_reply_type, \
     add_email, get_email_list_member, remove_email_list_membership, set_email_list_member_send_status, \
     set_email_list_member_delivery_status, set_email_list_description, set_email_list_info
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
@@ -352,7 +352,6 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
     :return: A BaseMessage object corresponding the original email message.
     """
     # original message is of form specified in https://pypi.org/project/mail-parser/
-    # TODO: Get 'date' field, e.g. '2021-05-01T19:09:07'
     visible_recipients: List[EmailAndDisplayName] = []
     maybe_to_addresses = parse_mailman_message_address(original, "to")
     if maybe_to_addresses is not None:
@@ -378,7 +377,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
         # Header information
         sender=sender,
         recipients=visible_recipients,
-        subject=original["subject"],  # TODO: shorten the subject, if it contains multiple Re: and Vs: prefixes?
+        subject=original["subject"],
 
         # Message body
         message_body=original["body"],
@@ -448,15 +447,13 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     :return: Newly created management document.
     """
 
-    # VIESTIM: We'll err on the side of caution and make sure the path is safe for the management doc.
+    # We'll err on the side of caution and make sure the path is safe for the management doc.
     path_safe_list_name = remove_path_special_chars(list_options.name)
     path_to_doc = f'/{MESSAGE_LIST_DOC_PREFIX}/{path_safe_list_name}'
 
     doc = create_document(path_to_doc, list_options.name)
 
-    # VIESTIM: We add the admin component to the document. This might have to be changed if the component is turned
-    #  into a plugin.
-
+    # We add the admin component to the document.
     admin_component = """#- {allowangular="true"}
 <tim-message-list-admin></tim-message-list-admin>
     """
@@ -615,7 +612,7 @@ def set_message_list_non_member_message_pass(message_list: MessageListModel,
     message_list.non_member_message_pass = non_member_message_pass_flag
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
-        set_email_list_non_member_message_pass(email_list, non_member_message_pass_flag)
+        set_email_list_allow_nonmember(email_list, non_member_message_pass_flag)
 
 
 def set_message_list_allow_attachments(message_list: MessageListModel, allow_attachments_flag: Optional[bool]) -> None:
@@ -687,9 +684,8 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     db.session.add(new_tim_member)
 
     if em_list is not None:
-        user_email = user.email  # In the future, we can search for a set of emails and a primary email here.
-        # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
-        #  placeholder value of True.
+        # TODO: Search for a set of emails and a primary email here when users' additional emails are implemented.
+        user_email = user.email
         add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
                   send_right=new_tim_member.send_right, delivery_right=new_tim_member.delivery_right)
 
@@ -764,6 +760,12 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
     :param user: The user that was added to the new_group.
     :param new_group: The new group that the user was added to.
     """
+    # TODO: This might become a bottle neck, as adding to group is often done in a loop and every sync is a potential
+    #  call to different message channels (now just Mailman). In order to rid ourselves of that, we might need to
+    #  revamp the syncing. A solution might be a call to (Mailman's) server (sidelining mailmanclient-library) with a
+    #  batch of users we want to add with necessary information, and then let the server handle adding in a loop
+    #  locally.
+
     # Get all the message lists for the user group.
     for group_tim_member in new_group.messagelist_membership:
         group_message_list: MessageListModel = group_tim_member.message_list
@@ -780,6 +782,12 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
     :param user: The user who was removed from the user group.
     :param old_group: The group where the user was removed from.
     """
+    # TODO: This might become a bottle neck, as removing from group is often done in a loop and every sync is a
+    #  potential call to different message channels (now just Mailman). In order to rid ourselves of that,
+    #  we might need to revamp the syncing. A solution might be a call to (Mailman's) server (sidelining
+    #  mailmanclient-library) with a batch of users we want to add with necessary information, and then let the
+    #  server handle removing in a loop locally.
+
     # Get all the message lists for the user group.
     for group_tim_member in old_group.messagelist_membership:
         group_message_list: MessageListModel = group_tim_member.message_list

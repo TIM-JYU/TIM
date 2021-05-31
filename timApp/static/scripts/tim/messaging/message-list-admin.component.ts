@@ -283,13 +283,10 @@ export class MessageListAdminComponent implements OnInit {
 
     urlPrefix: string = "/messagelist";
 
-    // Not in use at the moment.
-    ownerEmail: string = "";
-
     archiveOptions = archivePolicyNames;
 
-    notifyOwnerOnListChange: boolean = false;
-    timUsersCanJoin?: boolean = false;
+    notifyOwnerOnListChange?: boolean;
+    timUsersCanJoin?: boolean;
 
     listInfo?: string;
     listDescription?: string;
@@ -310,9 +307,11 @@ export class MessageListAdminComponent implements OnInit {
     listReplyToChange?: ReplyToListChanges;
     listAnswerGuidance?: boolean; // Track above enum value in a checkbox.
 
+    // Flags for new members' rights on the list.
     newMemberSendRight: boolean = true;
     newMemberDeliveryRight: boolean = true;
 
+    // Response strings for saving list options.
     saveSuccessMessage: string = "";
     saveFailMessage: string = "";
 
@@ -335,9 +334,13 @@ export class MessageListAdminComponent implements OnInit {
 
     // If groups are members part of list, these hold information about the members of said groups.
     groupMembers?: MemberInfo[];
-    hasGroups: boolean = false; // Flag if this list has any group members.
+    // Flag if the UI shows the additional group member area.
+    hasGroups: boolean = false;
+    // Names of groups to set as selectable.
     memberGroups?: string[];
+    // List members which are groups and the members of those groups.
     groupsAndMembers?: GroupAndMembers[];
+    // Current group to view on the UI. If undefined, shows no group on the UI.
     currentGroup?: string;
 
     /**
@@ -508,7 +511,6 @@ export class MessageListAdminComponent implements OnInit {
                     $http.delete(`/messagelist/deletelist`, {
                         params: {
                             listname: this.listname,
-                            domain: this.domain ? this.domain : "",
                             permanent: false, // Only non-permanent deletion at this point.
                         },
                     })
@@ -557,11 +559,7 @@ export class MessageListAdminComponent implements OnInit {
 
         this.domain = listOptions.domain;
 
-        // No use at the moment.
-        // this.ownerEmail = "";
-
-        this.notifyOwnerOnListChange =
-            listOptions.notify_owners_on_list_change ?? false;
+        this.notifyOwnerOnListChange = listOptions.notify_owners_on_list_change; // ?? false;
 
         this.listInfo = listOptions.list_info;
         this.listDescription = listOptions.list_description;
@@ -724,12 +722,13 @@ export class MessageListAdminComponent implements OnInit {
             // TODO Order members by name.
             this.groupsAndMembers = result.result;
             // If there are no groups on this list, then we short circuit here.
-            if (this.groupsAndMembers == []) {
+            if (this.groupsAndMembers.length === 0) {
                 return;
             }
             this.memberGroups = [];
+            // Set the groups members are to show on UI.
             this.hasGroups = true;
-            // Set the names of all groups.
+            // Set the names of all groups to select element.
             for (const gm of this.groupsAndMembers) {
                 this.memberGroups.push(gm.groupName);
             }
