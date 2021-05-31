@@ -431,26 +431,6 @@ def get_email_list_member_delivery_status(member: Member) -> bool:
         raise
 
 
-def get_email_list_member_send_status(member: Member) -> bool:
-    """Get email list's member's send status / right in an email list.
-
-    :param member: Member who's send status we wish to know.
-    :return: Return True, if member has a send right to a list (moderation action is set as "accept"). Return
-    False if moderation action is one of 'discard', 'reject', or 'hold'.
-    """
-    try:
-        if member.moderation_action == "accept":
-            return True
-        if member.moderation_action in ["discard", "reject", "hold"]:
-            return False
-        # If we are here, something has gone terribly wrong.
-        log_warning(f"Member {member.address} has an invalid send status assigned to them.")
-        raise RouteException(f"Member {member.address} has an invalid send status assigned to them.")
-    except HTTPError as e:
-        log_mailman(e, "In get_email_list_member_send_status()")
-        raise
-
-
 def verify_emaillist_name_requirements(name_candidate: str, domain: str) -> None:
     """Check email list's name requirements. General message list name requirement checks are assumed to be passed
     at this point and that those requirements encompass email list name requirements.
