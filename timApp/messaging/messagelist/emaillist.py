@@ -490,10 +490,7 @@ def verify_reserved_names(name_candidate: str) -> None:
 
     :param name_candidate: The name to be compared against reserved names.
     """
-    # TODO: Implement a smarter query for reserved names. Now only compare against simple list for prototyping
-    #  purposes. Maybe an external config file for known reserved names or something like that?
-    #  Is it possible to query reserved names e.g. from Mailman or it's server?
-    reserved_names: List[str] = ["postmaster", "listmaster", "admin"]
+    reserved_names: List[str] = app.config.get("RESERVED_NAMES")
     if name_candidate in reserved_names:
         raise RouteException(f"Name '{name_candidate}' is a reserved name and cannot be used.")
 

@@ -158,6 +158,9 @@ MAILMAN_UI_LINK_PREFIX = "https://timlist.it.jyu.fi/postorius/lists/"
 # Permitted file extensions allowed on message lists. If this grows large, maybe move to an external file and modify
 # getting attachments from the file instead.
 PERMITTED_ATTACHMENTS = ["jpg", "pdf", "png", "tex", "txt"]
+# These names are reserved from the pool of names for message lists. If need arises, split into TIM and message
+# channel specific reserved names.
+RESERVED_NAMES = ["postmaster", "listmaster", "admin"]
 
 # If true, prints all SQL statements with tracebacks.
 DEBUG_SQL = False
