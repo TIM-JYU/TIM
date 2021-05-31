@@ -210,6 +210,11 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
 
         set_default_templates(email_list)
 
+        if list_options.list_description:
+            set_email_list_description(email_list, list_options.list_description)
+        if list_options.list_info:
+            set_email_list_info(email_list, list_options.list_info)
+
         # settings-attribute acts like a dict. Set default settings.
         mlist_settings = email_list.settings
 
@@ -219,13 +224,9 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # Ownerss / moderators don't get automatic notifications from changes on their message list. Owner switches
         # this on if necessary.
         mlist_settings["admin_notify_mchanges"] = False
-        # Turn off automatic welcome messages.
+        # Turn off automatic welcome and goodbye messages.
         mlist_settings["send_welcome_message"] = False
-
-        if list_options.list_description:
-            set_email_list_description(email_list, list_options.list_description)
-        if list_options.list_info:
-            set_email_list_info(email_list, list_options.list_info)
+        mlist_settings["send_goodbye_message"] = False
 
         # This is to force Mailman generate archivers into it's db. It exists is to fix a race condition,
         # where creating a new list without proper engineer interface procedures might make duplicate archiver rows
