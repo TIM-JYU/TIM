@@ -210,7 +210,7 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
 
         set_default_templates(email_list)
 
-        # settings-attribute acts like a dict.
+        # settings-attribute acts like a dict. Set default settings.
         mlist_settings = email_list.settings
 
         # Make sure lists aren't advertised by accident by defaulting to not advertising them. Owner switches
@@ -219,6 +219,8 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # Ownerss / moderators don't get automatic notifications from changes on their message list. Owner switches
         # this on if necessary.
         mlist_settings["admin_notify_mchanges"] = False
+        # Turn off automatic welcome messages.
+        mlist_settings["send_welcome_message"] = False
 
         if list_options.list_description:
             set_email_list_description(email_list, list_options.list_description)

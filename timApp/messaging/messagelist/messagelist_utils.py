@@ -377,7 +377,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
         # Header information
         sender=sender,
         recipients=visible_recipients,
-        subject=original["subject"],  # TODO: shorten the subject, if it contains multiple Re: and Vs: prefixes?
+        subject=original["subject"],
 
         # Message body
         message_body=original["body"],
@@ -684,9 +684,8 @@ def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
     db.session.add(new_tim_member)
 
     if em_list is not None:
-        user_email = user.email  # In the future, we can search for a set of emails and a primary email here.
-        # TODO: Needs pre confirmation check from whoever adds members to a list on the client side. Now a
-        #  placeholder value of True.
+        # TODO: Search for a set of emails and a primary email here when users' additional emails are implemented.
+        user_email = user.email
         add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
                   send_right=new_tim_member.send_right, delivery_right=new_tim_member.delivery_right)
 
