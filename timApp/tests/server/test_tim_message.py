@@ -1,4 +1,7 @@
 from timApp.auth.accesstype import AccessType
+from timApp.document.docentry import DocEntry
+from timApp.folder.folder import Folder
+from timApp.messaging.timMessage.internalmessage_models import InternalMessageDisplay
 from timApp.tests.server.timroutetest import TimRouteTest
 
 
@@ -44,9 +47,8 @@ class SendMessageTest(TimRouteTest):
     def test_send_message(self):
         self.login_test1()
 
-        d = self.create_doc(self.get_personal_item_path('testdoc'))
-        # f = self.create_folder(self.get_personal_item_path('testfolder'))
-        self.test_user_2.grant_access(d, AccessType.edit)
+        f = self.create_folder(self.get_personal_item_path('testfolder'))
+        self.test_user_2.grant_access(Folder.get_by_id(f['id']), AccessType.edit)
 
         self.login_test2()
         self.json_post('/timMessage/send',
@@ -55,7 +57,7 @@ class SendMessageTest(TimRouteTest):
                            'archive': False,
                            'important': False,
                            'isPrivate': False,
-                           'pageList': "users/test-user-2/testfolder",
+                           'pageList': "users/test-user-1/testfolder",
                            'readReceipt': True,
                            'reply': True,
                            'sender': self.test_user_2.name,
@@ -67,4 +69,13 @@ class SendMessageTest(TimRouteTest):
                            }},
                        expect_status=200)
 
-        self.get('messages/tim-messages', expect_status=200)
+        self.login_test1()
+        self.get('/view/users/test-user-1/testfolder', expect_status=200)
+        self.get('/view/messages/tim-messages', expect_status=200)
+
+        display = InternalMessageDisplay.query.filter_by(usergroup_id=self.get_test_user_1_group_id()).first()
+        print(display.display_doc_id)
+        print(display.usergroup_id)
+        msg_doc = DocEntry.query.filter_by(id=display.display_doc_id).first()
+        if msg_doc:
+            print(msg_doc.name)
