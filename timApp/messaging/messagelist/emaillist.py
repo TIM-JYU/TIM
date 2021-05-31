@@ -468,10 +468,12 @@ def verify_reserved_names(name_candidate: str) -> None:
     Raises a RouteException if the name candidate is a reserved name. If name is not reserved, the method completes
     silently.
 
+    If reserved names are not configured, we assume that there are no reserved names.
+
     :param name_candidate: The name to be compared against reserved names.
     """
-    reserved_names: List[str] = app.config.get("RESERVED_NAMES")
-    if name_candidate in reserved_names:
+    reserved_names = app.config.get("RESERVED_NAMES")
+    if reserved_names and name_candidate in reserved_names:
         raise RouteException(f"Name '{name_candidate}' is a reserved name and cannot be used.")
 
 
