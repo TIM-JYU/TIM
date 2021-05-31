@@ -103,14 +103,14 @@ def set_notify_owner_on_list_change(mlist: MailingList, on_change_flag: bool) ->
         raise
 
 
-def delete_email_list(fqdn_listname: str, permanent_deletion: bool = False) -> None:
+def delete_email_list(list_to_delete: MailingList, permanent_deletion: bool = False) -> None:
     """Delete a mailing list.
 
     :param permanent_deletion: If True, then the list is permanently gone. If False, perform a soft deletion.
-    :param fqdn_listname: The fully qualified domain name for the list, e.g. testlist1@domain.fi.
+    :param list_to_delete: MailingList object of the email list to be deleted.
     """
     try:
-        list_to_delete: MailingList = _client.get_list(fqdn_listname)
+        # list_to_delete: MailingList = _client.get_list(fqdn_listname)
         if permanent_deletion:
             list_to_delete.delete()
         else:

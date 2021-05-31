@@ -511,7 +511,6 @@ export class MessageListAdminComponent implements OnInit {
                     $http.delete(`/messagelist/deletelist`, {
                         params: {
                             listname: this.listname,
-                            domain: this.domain ? this.domain : "",
                             permanent: false, // Only non-permanent deletion at this point.
                         },
                     })
