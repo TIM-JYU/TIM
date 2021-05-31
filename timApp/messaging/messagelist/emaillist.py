@@ -565,7 +565,7 @@ def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
         raise
 
 
-def set_email_list_non_member_message_pass(email_list: MailingList, non_member_message_pass_flag: bool) -> None:
+def set_email_list_allow_nonmember(email_list: MailingList, non_member_message_pass_flag: bool) -> None:
     """Set email list's non member (message pass) action.
 
     :param email_list: The email list where the non member message pass action is set.
@@ -668,7 +668,7 @@ def unfreeze_list(mlist: MailingList, msg_list: MessageListModel) -> None:
     try:
         mail_list_settings = mlist.settings
         mail_list_settings["default_member_action"] = "accept"
-        set_email_list_non_member_message_pass(mlist, msg_list.non_member_message_pass)
+        set_email_list_allow_nonmember(mlist, msg_list.non_member_message_pass)
         mail_list_settings.save()
     except HTTPError as e:
         log_mailman(e, "In unfreeze_list()")

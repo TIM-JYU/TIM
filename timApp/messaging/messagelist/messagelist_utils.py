@@ -16,7 +16,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
     set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
-    set_email_list_non_member_message_pass, set_email_list_allow_attachments, set_email_list_default_reply_type, \
+    set_email_list_allow_nonmember, set_email_list_allow_attachments, set_email_list_default_reply_type, \
     add_email, get_email_list_member, remove_email_list_membership, set_email_list_member_send_status, \
     set_email_list_member_delivery_status, set_email_list_description, set_email_list_info
 from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
@@ -612,7 +612,7 @@ def set_message_list_non_member_message_pass(message_list: MessageListModel,
     message_list.non_member_message_pass = non_member_message_pass_flag
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
-        set_email_list_non_member_message_pass(email_list, non_member_message_pass_flag)
+        set_email_list_allow_nonmember(email_list, non_member_message_pass_flag)
 
 
 def set_message_list_allow_attachments(message_list: MessageListModel, allow_attachments_flag: Optional[bool]) -> None:
