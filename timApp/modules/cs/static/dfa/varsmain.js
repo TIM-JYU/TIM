@@ -73,6 +73,7 @@ r t
 a $4 rv $1 $2 $3
 t -> $4
 */
+
 const code = `
 val a=5
 val b=1
@@ -84,6 +85,9 @@ $1.n = 4
 n $2 kissa
 $1.b -> $2
 .n -> $2
+a.=5
+[,] t v3x3
+t[1,1] = 2
 `;
 setData({
     code: code, args: "1001", params: {
