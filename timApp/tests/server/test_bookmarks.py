@@ -6,6 +6,7 @@ from timApp.item.tag import Tag, TagType
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup
 
 
@@ -26,8 +27,6 @@ class BookmarkTest(BookmarkTestBase):
         f = Folder.find_by_location(self.current_user.get_personal_folder().path, '')
         self.assertIsNone(f)
 
-        d = DocEntry.query.filter_by(name=self.current_user.get_personal_folder().path + '/Bookmarks').first()
-        self.assertEqual('Bookmarks', d.title)
         self.assertEqual([], bookmarks)
         group_name = 'mygroup'
         group_name2 = 'mygroup2'
@@ -100,6 +99,41 @@ class BookmarkTest(BookmarkTestBase):
                            'editable': False}],
                          self.get_bookmarks())
 
+    def test_bookmark_migration_to_db(self):
+        adm, _ = User.create_with_group(info=UserInfo(username='someadmin'), is_admin=True)
+        db.session.commit()
+        self.get('/ping')
+        self.login(username='someadmin')
+        d = self.create_doc(
+            path=f'{self.test_user_3.get_personal_folder().path}/Bookmarks',
+            initial_par="""
+``` {settings=""}
+bookmarks:
+- testgroup:
+  - testlink: https://example.com
+```"""
+        )
+        b = Bookmarks(self.test_user_3)
+        self.assertEqual([{'editable': True,
+                           'items': [{'link': 'https://example.com', 'name': 'testlink'}],
+                           'name': 'testgroup'}], b.as_dict())
+        b.add_bookmark('testgroup', 'testlink2', 'https://example.com/2')
+        b.save_bookmarks()
+        db.session.commit()
+        md = d.document.export_markdown(export_ids=False)
+        self.assertEqual("""
+``` {settings=""}
+bookmarks:
+- testgroup:
+  - testlink: https://example.com
+```""".strip() + '\n', md)
+        b = Bookmarks(self.test_user_3)
+        self.assertEqual([
+            {'editable': True,
+             'items': [{'link': 'https://example.com/2', 'name': 'testlink2'},
+                       {'link': 'https://example.com', 'name': 'testlink'}],
+             'name': 'testgroup'}], b.as_dict())
+
 
 class BookmarkTest2(BookmarkTestBase):
     def test_automatic_course_bookmark_update(self):
@@ -123,6 +157,7 @@ class BookmarkTest2(BookmarkTestBase):
         ug.external_id = ScimUserGroup(external_id='jy-CUR-4669-students')
         db.session.commit()
         self.get('/')
+        tu1 = self.test_user_1
         b = Bookmarks(tu1)
         self.assertEqual(
             {'editable': True,

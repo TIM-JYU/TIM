@@ -76,7 +76,7 @@ class MergeTest(TimRouteTest):
             )
 
         r = find_and_merge_users('testuser2', 'testuser1')
-        self.assertEqual(2, r.accesses)
+        self.assertEqual(1, r.accesses)
         self.assertEqual(0, r.annotations)
         self.assertEqual(1, r.answers)
         self.assertEqual(0, r.lectureanswers)
@@ -105,7 +105,7 @@ class MergeTest(TimRouteTest):
         check_memberships(self.test_user_2, self.test_user_1, t2pg, t1pg)
 
         r = find_and_merge_users('testuser1', 'testuser2')
-        self.assertEqual(2, r.accesses)
+        self.assertEqual(1, r.accesses)
         self.assertEqual(0, r.annotations)
         self.assertEqual(1, r.answers)
         self.assertEqual(0, r.lectureanswers)

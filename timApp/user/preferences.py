@@ -24,6 +24,7 @@ class Preferences:
     last_answer_fetch: Dict[str, str] = attr.Factory(dict)
     css_combined: str = attr.ib(init=False)
     auto_mark_all_read: bool = False
+    bookmarks: Optional[List[Dict[str, List[Dict[str, str]]]]] = None
 
     @staticmethod
     def from_json(j: Dict) -> 'Preferences':

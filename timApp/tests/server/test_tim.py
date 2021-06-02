@@ -34,7 +34,7 @@ class TimTest(TimRouteTest):
                      personal_folder + '/testing4',
                      personal_folder + '/testing5']
         doc_name = doc_names[0]
-        doc_id_list = [4, 6, 7, 8, 9]
+        doc_id_list = [3, 4, 5, 6, 7]
         doc_id = doc_id_list[0]
         doc_ids = set()
         for idx, n in enumerate(doc_names):
