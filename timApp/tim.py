@@ -330,6 +330,7 @@ def update_user_course_bookmarks():
 @app.route("/")
 def start_page():
     update_user_course_bookmarks()
+    db.session.commit()
     return render_template(
         'start.jinja2',
     )

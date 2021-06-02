@@ -49,6 +49,7 @@ class BookmarkModel(BookmarkNoLink):
 @use_model(BookmarkModel)
 def add_bookmark(m: BookmarkModel):
     wb.bookmarks.add_bookmark(m.group, m.name, m.link).save_bookmarks()
+    db.session.commit()
     return get_bookmarks()
 
 
@@ -75,8 +76,8 @@ def add_course_bookmark(m: AddCourseModel):
         u = get_current_user_object()
         u.add_to_group(ug, added_by=u)
         added_to_group = True
-        db.session.commit()
     add_to_course_bookmark(wb.bookmarks, d)
+    db.session.commit()
     return {
         'bookmarks': g.bookmarks.as_dict(),
         'added_to_group': added_to_group,
@@ -102,12 +103,14 @@ def edit_bookmark(args: EditBookmarkModel):
     item_name = args.new.name
     item_path = args.new.link
     wb.bookmarks.delete_bookmark(old_group, old_name).add_bookmark(groupname, item_name, item_path).save_bookmarks()
+    db.session.commit()
     return get_bookmarks()
 
 
 @bookmarks.route('/createGroup/<groupname>', methods=['POST'])
 def create_bookmark_group(groupname):
     wb.bookmarks.add_group(groupname).save_bookmarks()
+    db.session.commit()
     return get_bookmarks()
 
 
@@ -120,6 +123,7 @@ class DeleteBookmarkGroupModel:
 @use_model(DeleteBookmarkGroupModel)
 def delete_bookmark_group(args: DeleteBookmarkGroupModel):
     wb.bookmarks.delete_group(args.group).save_bookmarks()
+    db.session.commit()
     return get_bookmarks()
 
 
@@ -148,8 +152,8 @@ def delete_bookmark(args: BookmarkNoLink):
                             if m.usergroup_id == ug.id and m.adder == u:
                                 m.set_expired()
                                 break
-                        db.session.commit()
     wb.bookmarks.delete_bookmark(args.group, args.name).save_bookmarks()
+    db.session.commit()
     return get_bookmarks()
 
 
@@ -170,6 +174,7 @@ def mark_last_read(doc_id):
                              d.get_relative_url_for_view(mlrm.view),
                              move_to_top=True,
                              limit=current_app.config['LAST_READ_BOOKMARK_LIMIT']).save_bookmarks()
+    db.session.commit()
     return get_bookmarks()
 
 
