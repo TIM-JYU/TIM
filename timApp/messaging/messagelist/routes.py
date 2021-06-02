@@ -39,17 +39,13 @@ messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 def create_list(options: ListOptions) -> Response:
     """Handles creating a new message list.
 
-    :param options All options regarding establishing a new message list.
+    :param options All options necessary for establishing a new message list.
     :return: A Response with the list's management doc included. This way the creator can re-directed to the list's
     management page directly.
     """
     # Access right checks. The creator of the list has to be a group admin. This probably changes in the future.
     verify_logged_in()
     verify_groupadmin()
-
-    # Until other message channels make email list's optional, it is required that connection to Mailman is
-    # configured when creating message lists.
-    verify_mailman_connection()
 
     # Current user is set as the default owner.
     owner = get_current_user_object()
@@ -61,6 +57,7 @@ def create_list(options: ListOptions) -> Response:
     manage_doc, message_list = new_list(options)
 
     if options.domain:
+        verify_mailman_connection()
         create_new_email_list(options, owner)
         # Add the domain to a message list only after the email list has been created. This way if the list creation
         # fails, we have indication that the list does not have an email list attached to it.
