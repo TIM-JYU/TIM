@@ -151,6 +151,7 @@ SCIM_ALLOWED_IP = '127.0.0.1'
 MAILMAN_URL = None
 MAILMAN_USER = None
 MAILMAN_PASS = None
+# Settings for mailman-rest-events library. Set properly in production.
 MAILMAN_EVENT_API_USER = None
 MAILMAN_EVENT_API_KEY = None
 # Link prefix to Postorius Web-UI. If used as is, directs to the mailing lists page.

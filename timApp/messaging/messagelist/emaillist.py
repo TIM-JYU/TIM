@@ -409,28 +409,6 @@ def set_email_list_member_delivery_status(member: Member, status: bool, by_moder
         raise
 
 
-def get_email_list_member_delivery_status(member: Member) -> bool:
-    """Get email list member's delivery status.
-
-    :param member: Member who's delivery status / right on a list we are interested in.
-    :return: True if the member has an equivalent of a delivery right. Otherwise return False.
-    """
-    try:
-        member_preferences = member.preferences
-        if member_preferences["delivery_status"] == "enabled":
-            return True
-        # If delivery status is "by_bounces", then something is wrong with member's email address as it cannot
-        # properly receive email. Fot this context, it's still taken as the member not having a delivery right.
-        elif member_preferences["delivery_status"] in ["by_user", "by_moderator", "by_bounces"]:
-            return False
-        # If we are here, something has gone terribly wrong.
-        log_warning(f"Member {member.address} has an invalid delivery status assigned to them.")
-        raise RouteException(f"Member {member.address} has an invalid delivery status assigned to them.")
-    except HTTPError as e:
-        log_mailman(e, "In get_email_list_member_delivery_status()")
-        raise
-
-
 def verify_emaillist_name_requirements(name_candidate: str, domain: str) -> None:
     """Check email list's name requirements. General message list name requirement checks are assumed to be passed
     at this point and that those requirements encompass email list name requirements.
