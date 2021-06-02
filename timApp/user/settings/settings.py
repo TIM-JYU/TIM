@@ -54,14 +54,23 @@ def get_settings() -> Response:
 
 @settings_page.route('/save', methods=['POST'])
 def save_settings() -> Response:
+    user = get_current_user_object()
+
+    # Don't overwrite bookmarks. If the user has multiple tabs open, the latest bookmarks might get overwritten.
+    attrs_to_preserve = {'bookmarks'}
+
     try:
         j = request.get_json()
-        get_current_user_object().set_prefs(Preferences.from_json(j))
+        curr_prefs = user.get_prefs()
+        for attr in attrs_to_preserve:
+            val = getattr(curr_prefs, attr)
+            j[attr] = val
+        user.set_prefs(Preferences.from_json(j))
     except TypeError:
         raise RouteException(f'Invalid settings: {j}')
     db.session.commit()
     show()  # Regenerate CSS
-    return json_response(get_current_user_object().get_prefs())
+    return json_response(user.get_prefs())
 
 
 @dataclass

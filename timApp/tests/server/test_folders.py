@@ -43,8 +43,6 @@ class FolderTest(TimRouteTest):
         self.get(f'/folders/{f2.id}', expect_status=404)
         d2 = DocEntry.find_by_path(doc_path)
         d2.name = 'asd'
-        d = DocEntry.find_by_path(self.get_personal_item_path('Bookmarks'))
-        d.name = 'asd2'
         db.session.commit()
         f2 = Folder.find_by_path(self.get_personal_item_path('delete'))
         self.delete(f'/folders/{f2.id}', expect_content=self.ok_resp)
@@ -161,7 +159,7 @@ class FolderTest(TimRouteTest):
         self.get('/view/' + self.get_personal_item_path('perf'))
         event.remove(eng, 'before_cursor_execute', before_cursor_execute)
 
-        self.assertEqual(stmts, 11)
+        self.assertEqual(stmts, 10)
 
 
 class FolderCopyTest(TimRouteTest):
