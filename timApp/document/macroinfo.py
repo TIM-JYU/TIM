@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from html import escape
 from typing import Dict, Optional, TYPE_CHECKING, Any, Union, Mapping
 
-from flask import current_app
 from jinja2.sandbox import SandboxedEnvironment
 
 from timApp.document.usercontext import UserContext
@@ -36,8 +35,9 @@ class MacroInfo:
      (instead of replacing them with empty values)."""
 
     def __post_init__(self) -> None:
+        from timApp.tim_app import app
         doc = self.doc
-        self.macro_map['host'] = current_app.config["TIM_HOST"]
+        self.macro_map['host'] = app.config["TIM_HOST"]
         if doc is not None:
             docinfo = doc.get_docinfo()
             self.macro_map.update({
