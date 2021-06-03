@@ -63,7 +63,7 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
     `,
     styleUrls: ["message-list-creation.component.scss"],
 })
-export class MessageListComponent extends AngularDialogComponent<
+export class MessageListCreateDialogComponent extends AngularDialogComponent<
     unknown,
     unknown
 > {
@@ -211,7 +211,7 @@ export class MessageListComponent extends AngularDialogComponent<
 }
 
 @NgModule({
-    declarations: [MessageListComponent],
+    declarations: [MessageListCreateDialogComponent],
     imports: [BrowserModule, DialogModule, FormsModule, TimUtilityModule],
 })
 export class MessageListModule {}
