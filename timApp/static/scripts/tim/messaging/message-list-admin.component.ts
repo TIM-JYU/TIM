@@ -26,6 +26,7 @@ import {Users} from "../user/userService";
     template: `
         <form class="form-horizontal">
             <h1>Message list management</h1>
+            <h2>{{listname}}</h2>
             <tim-alert *ngIf="permanentErrorMessage" severity="danger">{{permanentErrorMessage}}</tim-alert>
             <div id="email-send" style="padding-bottom: 1em">
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
