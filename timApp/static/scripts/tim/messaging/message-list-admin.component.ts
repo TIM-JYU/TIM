@@ -192,7 +192,7 @@ import {Users} from "../user/userService";
                     <h3>Members</h3>
                     <table>
                         <thead>
-                        <tr>
+                        <tr class="member-table-row">
                             <th>Name</th>
                             <th>Username</th>
                             <th>Email</th>
@@ -203,7 +203,7 @@ import {Users} from "../user/userService";
                         </tr>
                         </thead>
                         <tbody>
-                        <tr *ngFor="let member of membersList">
+                        <tr class="member-table-row" *ngFor="let member of membersList">
                             <td>{{member.name}}</td>
                             <td>{{member.username}}</td>
                             <td>{{member.email}}</td>
@@ -230,20 +230,21 @@ import {Users} from "../user/userService";
                     </div>
                     <div class="section" *ngIf="hasGroups">
                         <h3>Show members of a group {{currentGroup}}</h3>
-                        <select [(ngModel)]="currentGroup" name="usergroups" (change)="setGroupMembers()">
+                        <select class="indented" [(ngModel)]="currentGroup" name="usergroups"
+                                (change)="setGroupMembers()">
                             <option></option>
                             <option *ngFor="let memberGroup of memberGroups">{{memberGroup}}</option>
                         </select>
                         <table *ngIf="currentGroup">
                             <thead>
-                            <tr>
+                            <tr class="member-table-row">
                                 <th>Name</th>
                                 <th>Username</th>
                                 <th>Email</th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr *ngFor="let gMember of groupMembers">
+                            <tr class="member-table-row" *ngFor="let gMember of groupMembers">
                                 <td>{{gMember.name}}</td>
                                 <td>{{gMember.username}}</td>
                                 <td>{{gMember.email}}</td>
@@ -559,7 +560,7 @@ export class MessageListAdminComponent implements OnInit {
 
         this.domain = listOptions.domain;
 
-        this.notifyOwnerOnListChange = listOptions.notify_owners_on_list_change; // ?? false;
+        this.notifyOwnerOnListChange = listOptions.notify_owners_on_list_change;
 
         this.listInfo = listOptions.list_info;
         this.listDescription = listOptions.list_description;
