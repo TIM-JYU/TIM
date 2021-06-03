@@ -32,75 +32,81 @@ import {Users} from "../user/userService";
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
                 <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
             </div>
-            <!--
-            <div class="form-group">
-            
-                <label for="list-name" class="list-name control-label col-sm-3">List name: </label> 
-                <div class="col-sm-9">
-                    
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="list-name" id="list-name" disabled
-                               [(ngModel)]="listname"/>
-                        <div class="input-group-addon" id="domain-indicator">@</div>
-                        <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
-                            <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            -->
-            <div class="form-group"
-                 title="To be added in front of message subjects for all messages that pass through this list.">
-                <label for="list-subject-prefix" class="subject-prefix control-label col-sm-3">Subject prefix: </label>
-                <div class="col-sm-9">
-                    <input type="text" name="list-subject-prefix" class="form-control" [(ngModel)]="listSubjectPrefix">
-                </div>
-            </div>
-            <div class="form-group" *ngIf="domain">
-                <label for="list-description" class="short-description control-label col-sm-3">List address: </label>
-                <div class="col-sm-9">
-                    <input type="text" class="form-control" name="list-email-address" id="list-email-address"
-                           [ngModel]="listAddress()" disabled/>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="list-description" class="short-description control-label col-sm-3">Short
-                    description: </label>
-                <div class="col-sm-9">
-                    <input type="text" class="form-control" name="list-description" id="list-description"
-                           [(ngModel)]="listDescription"/>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="list-info" class="long-description control-label col-sm-3">Long description: </label>
-                <div class="col-sm-9">
-                <textarea name="list-info" class="list-info form-control" id="list-info"
-                          [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
-                </div>
-            </div>
-            <div *ngIf="archiveOptions && archive">
-                <p class="list-archive-policy-header">Archive policy:</p>
-                <!-- Variable archiveoptions is reversed, so indexing for display has to accommodate. -->
-                <p class="indented">{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
-                <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
-                <!--
-                <ul id="archive-policy-list">
-                    <li *ngFor="let option of archiveOptions">
-                        <label for="archive-{{option.archiveType}}">
-                        <input
-                                name="items-radio"
-                                type="radio"
-                                id="archive-{{option.archiveType}}"
-                                [value]="option.archiveType"
-                                [(ngModel)]="archive"
-                        />
-                        {{option.policyName}}</label>
-                    </li>
-                </ul>
-                -->
-            </div>
             <div class="section">
                 <h3>Options</h3>
+
+                <!--
+                <div class="form-group">
+                
+                    <label for="list-name" class="list-name control-label col-sm-3">List name: </label> 
+                    <div class="col-sm-9">
+                        
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="list-name" id="list-name" disabled
+                                   [(ngModel)]="listname"/>
+                            <div class="input-group-addon" id="domain-indicator">@</div>
+                            <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
+                                <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                -->
+                <div class="form-group"
+                     title="To be added in front of message subjects for all messages that pass through this list.">
+                    <label for="list-subject-prefix" class="subject-prefix control-label col-sm-3">Subject
+                        prefix: </label>
+                    <div class="col-sm-9">
+                        <input type="text" name="list-subject-prefix" class="form-control"
+                               [(ngModel)]="listSubjectPrefix">
+                    </div>
+                </div>
+                <div class="form-group" *ngIf="domain">
+                    <label for="list-description" class="short-description control-label col-sm-3">Email
+                        address: </label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" name="list-email-address" id="list-email-address"
+                               [ngModel]="listAddress()" disabled/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="list-description" class="short-description control-label col-sm-3">Short
+                        description: </label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" name="list-description" id="list-description"
+                               [(ngModel)]="listDescription"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="list-info" class="long-description control-label col-sm-3">Long description: <br>
+                        (Info)</label>
+                    <div class="col-sm-9">
+                <textarea name="list-info" class="list-info form-control" id="list-info"
+                          [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
+                    </div>
+                </div>
+                <div *ngIf="archiveOptions && archive">
+                    <p class="list-archive-policy-header">Archive policy:</p>
+                    <!-- Variable archiveoptions is reversed, so indexing for display has to accommodate. -->
+                    <p class="indented">{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
+                    <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
+                    <!--
+                    <ul id="archive-policy-list">
+                        <li *ngFor="let option of archiveOptions">
+                            <label for="archive-{{option.archiveType}}">
+                            <input
+                                    name="items-radio"
+                                    type="radio"
+                                    id="archive-{{option.archiveType}}"
+                                    [value]="option.archiveType"
+                                    [(ngModel)]="archive"
+                            />
+                            {{option.policyName}}</label>
+                        </li>
+                    </ul>
+                    -->
+                </div>
+
                 <div class="indented">
                     <label>
                         <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
@@ -195,7 +201,7 @@ import {Users} from "../user/userService";
                     </div>
                 </div>
                 <div class="section">
-                    <h3>Members</h3>
+                    <h3>Current members</h3>
                     <table>
                         <thead>
                         <tr class="member-table-row">
@@ -234,37 +240,37 @@ import {Users} from "../user/userService";
                         <tim-alert *ngIf="memberSaveFailResponse"
                                    severity="danger">{{memberAddFailedResponse}}</tim-alert>
                     </div>
-                    <div class="section" *ngIf="hasGroups">
-                        <h3>Show members of a group {{currentGroup}}</h3>
-                        <select class="indented" [(ngModel)]="currentGroup" name="usergroups"
-                                (change)="setGroupMembers()">
-                            <option></option>
-                            <option *ngFor="let memberGroup of memberGroups">{{memberGroup}}</option>
-                        </select>
-                        <table *ngIf="currentGroup">
-                            <thead>
-                            <tr class="member-table-row">
-                                <th>Name</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr class="member-table-row" *ngFor="let gMember of groupMembers">
-                                <td>{{gMember.name}}</td>
-                                <td>{{gMember.username}}</td>
-                                <td>{{gMember.email}}</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
+            </div>
+            <div class="section" *ngIf="hasGroups">
+                <h3>Show members of a group {{currentGroup}}</h3>
+                <select class="indented" [(ngModel)]="currentGroup" name="usergroups"
+                        (change)="setGroupMembers()">
+                    <option></option>
+                    <option *ngFor="let memberGroup of memberGroups">{{memberGroup}}</option>
+                </select>
+                <table *ngIf="currentGroup">
+                    <thead>
+                    <tr class="member-table-row">
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr class="member-table-row" *ngFor="let gMember of groupMembers">
+                        <td>{{gMember.name}}</td>
+                        <td>{{gMember.username}}</td>
+                        <td>{{gMember.email}}</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="section">
                 <h2>List deletion</h2>
                 <button class=" indented timButton" (click)="deleteList()">Delete List</button>
             </div>
-            <div>
+            <div class="section">
                 <h3>Links</h3>
                 <div class="indented" *ngIf="archiveURL">
                     <a [href]="archiveURL">List's archive</a>
