@@ -12,6 +12,7 @@ from timApp.readmark.readparagraph import ReadParagraph
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.velp.velp_models import VelpGroupsInDocument
 
 item_cli = AppGroup('item')
 
@@ -54,6 +55,7 @@ def cleanup_bookmark_docs(dry_run: bool) -> None:
         Translation.query.filter_by(doc_id=bm_doc.id).delete()
         ReadParagraph.query.filter_by(doc_id=bm_doc.id).delete()
         PendingNotification.query.filter_by(doc_id=bm_doc.id).delete()
+        VelpGroupsInDocument.query.filter_by(doc_id=bm_doc.id).delete()
         db.session.delete(bm_doc)
         db.session.delete(block)
     if dry_run:
