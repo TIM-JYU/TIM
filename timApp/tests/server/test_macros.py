@@ -1,6 +1,4 @@
 """Server tests for macros."""
-import os
-
 from timApp.auth.accesstype import AccessType
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
 from timApp.document.usercontext import UserContext
