@@ -61,7 +61,7 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
             </ng-container>
         </tim-dialog-frame>
     `,
-    styleUrls: ["message-list-creation.component.scss"],
+    styleUrls: ["message-list-create-dialog.component.scss"],
 })
 export class MessageListCreateDialogComponent extends AngularDialogComponent<
     unknown,

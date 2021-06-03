@@ -3,7 +3,7 @@ import {angularDialog} from "../ui/angulardialog/dialog.service";
 
 export async function showMessageListCreation() {
     const {MessageListCreateDialogComponent} = await import(
-        "./message-list-creation.component"
+        "./message-list-create-dialog.component"
     );
     return (
         await angularDialog.open(MessageListCreateDialogComponent, unknown, {
