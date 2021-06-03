@@ -62,21 +62,20 @@ export const archivePolicyNames: ArchivePolicyNames[] = [
     {archiveType: ArchiveType.NONE, policyName: "No archiving."},
     {
         archiveType: ArchiveType.SECRET,
-        policyName: "Secret archive, only for owner.",
+        policyName: "Secret archive. Only for owners of the list.",
     },
     {
         archiveType: ArchiveType.GROUPONLY,
         policyName:
-            "Members only archive. Only members of this list can access.",
+            "Members only archive. Only logged-in members of this list can access.",
     },
     {
         archiveType: ArchiveType.UNLISTED,
-        policyName: "Unlisted archive. Everyone with link can access.",
+        policyName: "Unlisted archive. TIM-users with link can access.",
     },
     {
         archiveType: ArchiveType.PUBLIC,
-        policyName:
-            "Public archive. Everyone with link can access and the archive is advertised.",
+        policyName: "Public archive. Everyone with link can access.",
     },
 ].reverse();
 
@@ -88,7 +87,8 @@ export interface MemberInfo {
     deliveryRight: boolean;
     email: string;
     removed?: Moment;
-    // The member's removed status at the time of loading. Used only for display purposes.
+    // The member's removed status at the time of loading. Used only for display purposes. This is removed on save,
+    // since this is not used on server side.
     removedDisplay?: string;
 }
 
