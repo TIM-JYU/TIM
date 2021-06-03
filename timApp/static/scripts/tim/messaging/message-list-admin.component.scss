@@ -85,4 +85,10 @@ label {
 
 
 
-
+tbody {
+  // Tables, especially the one showing group's members, might be hundreds of rows long. We don't want that to make the
+  // table and by extension the page unnecessarily long, so add scrolling to table's body.
+  overflow: scroll;
+  max-height: 40em;
+  size: auto;
+}
