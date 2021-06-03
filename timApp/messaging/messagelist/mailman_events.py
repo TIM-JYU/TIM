@@ -12,7 +12,7 @@ from timApp.messaging.messagelist.messagelist_utils import parse_mailman_message
 from timApp.tim_app import app, csrf
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import ok_response
-from timApp.util.logger import log_warning, log_info
+from timApp.util.logger import log_warning
 from tim_common.marshmallow_dataclass import class_schema
 
 mailman_events = Blueprint("mailman_events", __name__, url_prefix="/mailman/event")
@@ -40,7 +40,7 @@ class MailmanMessageList:
 @dataclass
 class MailmanMemberAddress:
     email: str
-    name: Optional[str]  # name seemed to be empty at least at some point.
+    name: Optional[str]  # Names associated with an (member) email addresses are optional in Mailman.
 
 
 @dataclass
@@ -78,7 +78,7 @@ EVENTS = {
 @mailman_events.route("", methods=["POST"])
 @csrf.exempt
 def handle_event() -> Response:
-    """Handle events send by Mailman."""
+    """Handle events sent by Mailman."""
     if not check_auth():
         return Response(status=401, headers={"WWW-Authenticate": "Basic realm=\"Needs auth\""})
 
@@ -112,14 +112,15 @@ def handle_new_message(event: NewMessageEvent) -> None:
 
     :param event: Contains information about a new message sent to Mailman's list.
     """
-    message_list, sep, domain = event.mlist.name.partition("@")
-    message_list = MessageListModel.get_list_by_name_first(message_list)
+    m_list_name, _, _ = event.mlist.name.partition("@")
+    message_list = MessageListModel.get_list_by_name_first(m_list_name)
 
     if message_list is None:
         raise RouteException("Message list does not exist.")
     if not message_list.email_list_domain == event.mlist.host:
         # If we are here, something is now funky. Message list doesn't have a email list (domain) configured,
-        # but messages are directed at it. Not sure what do exactly do here, honestly, except log the event.
+        # but messages are directed at it. Not sure what do exactly do here, honestly, except log the event for
+        # further investigation.
         log_warning(f"Message list '{message_list.name}' with id '{message_list.id}' doesn't have a domain "
                     f"configured properly. Domain '{event.mlist.host}' was expected.")
         raise RouteException("List not configured properly.")
