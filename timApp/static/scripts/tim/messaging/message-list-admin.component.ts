@@ -32,9 +32,12 @@ import {Users} from "../user/userService";
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
                 <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
             </div>
+            <!--
             <div class="form-group">
-                <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
+            
+                <label for="list-name" class="list-name control-label col-sm-3">List name: </label> 
                 <div class="col-sm-9">
+                    
                     <div class="input-group">
                         <input type="text" class="form-control" name="list-name" id="list-name" disabled
                                [(ngModel)]="listname"/>
@@ -45,7 +48,9 @@ import {Users} from "../user/userService";
                     </div>
                 </div>
             </div>
-            <div class="form-group">
+            -->
+            <div class="form-group"
+                 title="To be added in front of message subjects for all messages that pass through this list.">
                 <label for="list-subject-prefix" class="subject-prefix control-label col-sm-3">Subject prefix: </label>
                 <div class="col-sm-9">
                     <input type="text" name="list-subject-prefix" class="form-control" [(ngModel)]="listSubjectPrefix">
