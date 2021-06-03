@@ -116,8 +116,7 @@ I am %%username%%.
 
     def test_host_macros(self):
         self.login_test1()
-        d = self.create_doc()
-        d.document.add_paragraph('%%host%%')
+        d = self.create_doc(initial_par='%%host%%')
         e = self.get(d.url, as_tree=True)
         self.assert_content(e, [app.config["TIM_HOST"]])
 
