@@ -19,10 +19,17 @@ input[type='radio'] {
 
 
 input[type='checkbox'] {
+  // For checkboxes in options.
   margin-right: 2em;
   margin-bottom: 2em;
 }
 
+
+td > input[type='checkbox'] {
+  // For checkboxes in tables.
+  margin-right: 0;
+  margin-bottom: 0;
+}
 
 .list-name {
   font-weight: bold;
