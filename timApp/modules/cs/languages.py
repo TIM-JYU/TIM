@@ -462,7 +462,7 @@ class CS(Language):
         options = ""
         if self.just_compile:
             options = "/target:library"
-        cmdline = "%s /r:System.Numerics.dll /out:%s %s %s /cs/jypeli/TIMconsole.cs" % (
+        cmdline = "%s /nologo /r:System.Numerics.dll /out:%s %s %s /cs/jypeli/TIMconsole.cs" % (
             self.compiler, self.exename, options, self.get_sourcefiles())
         return cmdline
 
@@ -510,7 +510,7 @@ class Jypeli(CS, Modifier):
         # /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll
         # /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll
         # /cs/jypeli/Ohjelma.cs %s" % (
-        cmdline = ("%s /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
+        cmdline = ("%s /nologo /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
                    "/r:/cs/jypeli/Jypeli.Physics2d.dll  "
                    "/r:System.Numerics.dll /r:System.Drawing.dll %s %s") % (
                       self.compiler, self.exename, options, self.get_sourcefiles(mainfile))
@@ -1485,7 +1485,7 @@ class FS(Language):
         self.fileext = "fs"
 
     def get_cmdline(self):
-        return "fsharpc --out:%s %s" % (self.exename, self.sourcefilename)
+        return "fsharpc --nologo --out:%s %s" % (self.exename, self.sourcefilename)
 
     def run(self, result, sourcelines, points_rule):
         return self.runself(["mono", self.pure_exename])
@@ -1530,7 +1530,7 @@ MAXIMA_T_PLOT = """
 plotcnt: 1$
 plottmpf: ""$
 openplot() := block(
-    filename: concat("plot",plotcnt), 
+    filename: concat("plot",plotcnt),
     plotcnt: plotcnt+1,
     afn: concat(IMAGE_DIR, filename, ".", PLOT_TERMINAL),
     tmpf: concat(maxima_tempdir, concat(filename, ".plt")),
