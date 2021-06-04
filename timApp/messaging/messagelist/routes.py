@@ -199,10 +199,7 @@ def save_list_options(options: ListOptions) -> Response:
     set_message_list_non_member_message_pass(message_list, options.non_member_message_pass)
     set_message_list_default_send_right(message_list, options.default_send_right)
     set_message_list_default_delivery_right(message_list, options.default_delivery_right)
-
     set_message_list_default_reply_type(message_list, options.default_reply_type)
-    # TODO: Implement client side
-    # message_list.distribution = options.distribution
 
     db.session.commit()
     return ok_response()
