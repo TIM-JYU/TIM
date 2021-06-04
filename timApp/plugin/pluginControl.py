@@ -427,7 +427,7 @@ def pluginify(doc: Document,
                 # if block.get_nocache():
                 texts = [block.get_expanded_markdown(macroinfo)]
                 htmls = call_dumbo(texts, options=block.get_dumbo_options(base_opts=settings.get_dumbo_options()))
-                html_pars[idx][output_format.value] = htmls[0]  # to collect all together before dumbo
+                html_pars[idx][output_format.value] = sanitize_html(htmls[0])  # to collect all together before dumbo
 
                 # taketime("answ", "markup", len(plugins))
 
