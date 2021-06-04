@@ -28,7 +28,7 @@ import {Users} from "../user/userService";
             <h1>Message list management</h1>
             <h2>{{listname}}</h2>
             <tim-alert *ngIf="permanentErrorMessage" severity="danger">{{permanentErrorMessage}}</tim-alert>
-            <div class="indented" id="email-send">
+            <div id="email-send">
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
                 <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
             </div>
@@ -162,25 +162,29 @@ import {Users} from "../user/userService";
                 </div>
                 <div id="members-section" class="section">
                     <h3>Members</h3>
-                    <div class="indented">
-                        <p>Instructions:</p>
-                        <p>Add new members by setting each member on their own separate lines. The members are only
+                    <div>
+                        <p class="indented">Instructions:</p>
+                        <p class="indented">Add new members by setting each member on their own separate lines. The
+                            members are only
                             added after you click the "Add new members" button.</p>
-                        <p>Add individual TIM users by writing their username.</p>
-                        <p>Add a group by writing it's name. You need to be the owner of the group for the adding to
+                        <p class="indented">Add individual TIM users by writing their username.</p>
+                        <p class="indented">Add a group by writing it's name. You need to be the owner of the group for
+                            the adding to
                             succeed.</p>
-                        <p>Add an external member (someone who is not a TIM user) by writing their email address
+                        <p class="indented">Add an external member (someone who is not a TIM user) by writing their
+                            email address
                             (mandatory) and name (optional) either in the form <code>john.doe@domain.fi John Doe</code>
                             or <code>Jane Doe &lt;jane.doe@domain.fi&gt;</code></p>
-                        <p>Send right means that a member's message should not be caught up in a moderation process.
+                        <p class="indented">Send right means that a member's message should not be caught up in a
+                            moderation process.
                             Delivery right means that the member receives messages sent to the list. For a group, the
                             send and delivery right affect all the members of a group.</p>
                     </div>
-                    <div class="indented" id="add-members-section">
-                        <label for="add-multiple-members">Add members</label> <br/>
-                        <textarea id="add-multiple-members" name="add-multiple-members"
+                    <div id="add-members-section">
+                        <label class="indented" for="add-multiple-members">Add members</label> <br/>
+                        <textarea class="indented" id="add-multiple-members" name="add-multiple-members"
                                   [(ngModel)]="membersTextField"></textarea>
-                        <div>
+                        <div class="indented-more">
                             <div>
                                 <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
                                 <label for="new-member-send-right">New member's send right.</label>
@@ -191,7 +195,11 @@ import {Users} from "../user/userService";
                                 <label for="new-member-delivery-right">New member's delivery right.</label>
                             </div>
                         </div>
-                        <button (click)="addNewListMember()" class="timButton">Add new members</button>
+                        <div class="indented">
+                            <button class="indented-more" (click)="addNewListMember()" class="timButton">Add new
+                                members
+                            </button>
+                        </div>
                         <div id="member-add-feedback">
                             <tim-alert *ngIf="memberAddSucceededResponse"
                                        severity="success">{{memberAddSucceededResponse}}</tim-alert>
