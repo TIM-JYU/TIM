@@ -53,6 +53,7 @@ import {
     createParContext,
     getParContainerElem,
 } from "tim/document/structure/parsing";
+import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 import {IMenuFunctionEntry, MenuFunctionList} from "../viewutils";
 import {ViewCtrl} from "../viewctrl";
 import {handleUnread} from "../readings";
@@ -377,10 +378,14 @@ This will delete the whole ${
         const pars = enumDocParts(PreambleIteration.Exclude);
         const found = [];
         for (const p of pars) {
-            if (p instanceof Paragraph) {
-                if (p.isSetting()) {
-                    found.push(p);
-                }
+            if (p instanceof Paragraph && p.isSetting()) {
+                found.push(p);
+            } else if (
+                p instanceof ReferenceParagraph &&
+                p.original.isTranslation() &&
+                p.original.isSetting()
+            ) {
+                found.push(p.original);
             } else {
                 break;
             }
