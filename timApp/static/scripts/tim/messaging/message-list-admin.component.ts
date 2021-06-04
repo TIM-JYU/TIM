@@ -64,7 +64,7 @@ import {Users} from "../user/userService";
                 <div class="form-group" *ngIf="domain">
                     <label for="list-description" class="short-description control-label col-sm-3">Email
                         address: </label>
-                    <div class="col-sm-9">
+                    <div class="col-sm-9" *ngIf="distribution && distribution.email_list">
                         <input type="text" class="form-control" name="list-email-address" id="list-email-address"
                                [ngModel]="listAddress()" disabled/>
                     </div>
@@ -82,7 +82,7 @@ import {Users} from "../user/userService";
                         (Info)</label>
                     <div class="col-sm-9">
                 <textarea name="list-info" class="list-info form-control" id="list-info"
-                          [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
+                          [(ngModel)]="listInfo"></textarea>
                     </div>
                 </div>
                 <div *ngIf="archiveOptions && archive">
@@ -196,7 +196,7 @@ import {Users} from "../user/userService";
                             </div>
                         </div>
                         <div class="indented">
-                            <button class="indented-more" (click)="addNewListMember()" class="timButton">Add new
+                            <button class="indented-more timButton" (click)="addNewListMember()">Add new
                                 members
                             </button>
                         </div>
@@ -281,7 +281,7 @@ import {Users} from "../user/userService";
             <div class="section">
                 <h3>Links</h3>
                 <div class="indented" *ngIf="archiveURL">
-                    <a [href]="archiveURL">List's archive</a>
+                    <a [href]="archiveURL">List's archive.</a>
                 </div>
                 <div class="indented" *ngIf="emailAdminURL">
                     <a [href]="emailAdminURL">Advanced email list settings (takes to Mailman).</a>
@@ -322,9 +322,7 @@ export class MessageListAdminComponent implements OnInit {
     nonMemberMessagePass?: boolean;
     onlyText?: boolean;
     allowAttachments?: boolean;
-    // distibution?: Channel[];
-    distribution?: Distribution; // TODO: Not in use at the moment. Add this to the UI.
-
+    distribution?: Distribution;
     listReplyToChange?: ReplyToListChanges;
     listAnswerGuidance?: boolean; // Track above enum value in a checkbox.
 
@@ -642,7 +640,6 @@ export class MessageListAdminComponent implements OnInit {
             default_delivery_right: this.defaultDeliveryRight,
             default_send_right: this.defaultSendRight,
             non_member_message_pass: this.nonMemberMessagePass,
-            distribution: this.distribution,
             allow_attachments: this.allowAttachments,
         });
         if (result.ok) {
