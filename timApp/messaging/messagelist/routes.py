@@ -380,7 +380,8 @@ def get_group_members(list_name: str) -> Response:
     groups_and_members = []
     for group in groups:
         user_group: UserGroup = group.user_group
-        # Create a MemberInfo object for every current user in the group.
+        # Create a MemberInfo object for every current user in the group. As these are current members of the user
+        # group, removed is None.
         group_members = [MemberInfo(name=user.real_name, username=user.name,
                                     sendRight=group.send_right, deliveryRight=group.delivery_right,
                                     removed=None, email=user.email)
