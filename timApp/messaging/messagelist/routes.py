@@ -396,16 +396,5 @@ def test_route() -> Response:
     """A testing route. Only allow calls here during development, i.e. when operating from localhost."""
     if not is_localhost():
         raise RouteException()
-
-    msg_list = MessageListModel.get_list_by_name_exactly_one("yet_another_list3")
-    message = BaseMessage(message_list_name=msg_list.name,
-                          message_channel=Channel.EMAIL_LIST,
-                          sender=EmailAndDisplayName(email_address="tomi.t.lundberg@student.jyu.fi",
-                                                     display_name="Tomi L."),
-                          recipients=[EmailAndDisplayName(email_address="yet_another_list3@tim.jyu.fi",
-                                                          display_name="Uusilista293u0")],
-                          subject=f"Viestin otsikko {get_current_time()}",
-                          message_body="Hei mualima!"
-                          )
-    archive_message(message_list=msg_list, message=message)
+    # Add possible testing code here.
     return ok_response()
