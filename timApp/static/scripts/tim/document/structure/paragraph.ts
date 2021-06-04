@@ -41,6 +41,10 @@ export class Paragraph implements IDocumentPart {
         return this.attrs.settings !== undefined;
     }
 
+    isTranslation() {
+        return this.attrs.r === "tr";
+    }
+
     getFirstOrigPar() {
         return this;
     }
