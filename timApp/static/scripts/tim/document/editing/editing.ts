@@ -438,36 +438,44 @@ This will delete the whole ${
                 );
             }
             const iter = enumDocParts(PreambleIteration.Exclude).next();
-            let parNext: string | undefined;
-            if (!iter.done) {
-                if (iter.value instanceof BrokenArea) {
-                    parNext = iter.value.getFirstOrigPar()?.id;
-                    if (!parNext) {
-                        // TODO: Not sure if this is ever practically reachable. Leave this unimplemented for now.
-                        await showMessageDialog(
-                            "Document start has a broken/nested area; cannot open settings"
-                        );
-                        return;
-                    }
-                } else {
-                    parNext = iter.value.getFirstOrigPar().id;
+            let ctx;
+            const docPart = (!iter.done && iter.value) || undefined;
+            if (docPart instanceof BrokenArea) {
+                const first = docPart.getFirstOrigPar();
+                if (!first) {
+                    // TODO: Not sure if this is ever practically reachable. Leave this unimplemented for now.
+                    await showMessageDialog(
+                        "Document start has a broken/nested area; cannot open settings"
+                    );
+                    return;
                 }
+                ctx = new ParContext(first, docPart);
+            } else if (docPart) {
+                ctx = new ParContext(docPart.getFirstOrigPar(), docPart);
             }
 
             const r = await to(
                 $http.post<IParResponse>("/newParagraph/", {
                     text: '``` {settings=""}\nauto_number_headings: 0\n```',
                     docId: this.viewctrl.docId,
-                    par_next: parNext,
+                    par_next: ctx?.par.id,
                 })
             );
             if (!r.ok) {
                 await showMessageDialog(r.result.data.error);
                 return;
             }
-            await this.addSavedParToDom(r.result.data, {
-                type: EditType.AddBottom,
-            });
+            await this.addSavedParToDom(
+                r.result.data,
+                ctx
+                    ? {
+                          type: EditType.AddAbove,
+                          par: ctx,
+                      }
+                    : {
+                          type: EditType.AddBottom,
+                      }
+            );
             this.editSettingsPars(true);
         } else {
             this.toggleParEditor({type: EditType.Edit, pars: pars}, {});
