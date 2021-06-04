@@ -34,24 +34,6 @@ import {Users} from "../user/userService";
             </div>
             <div class="section">
                 <h3>Options</h3>
-
-                <!--
-                <div class="form-group">
-                
-                    <label for="list-name" class="list-name control-label col-sm-3">List name: </label> 
-                    <div class="col-sm-9">
-                        
-                        <div class="input-group">
-                            <input type="text" class="form-control" name="list-name" id="list-name" disabled
-                                   [(ngModel)]="listname"/>
-                            <div class="input-group-addon" id="domain-indicator">@</div>
-                            <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
-                                <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                -->
                 <div class="form-group"
                      title="To be added in front of message subjects for all messages that pass through this list.">
                     <label for="list-subject-prefix" class="subject-prefix control-label col-sm-3">Subject
@@ -106,7 +88,6 @@ import {Users} from "../user/userService";
                     </ul>
                     -->
                 </div>
-
                 <div class="indented">
                     <label>
                         <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
