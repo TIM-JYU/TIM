@@ -527,12 +527,19 @@ def set_message_list_subject_prefix(message_list: MessageListModel, subject_pref
 
     If the message list has an email list as a message list, then set the subject prefix there also.
 
+    Sets one extra space automatically to offset prefix from the actual title.
+
     :param message_list: The message list where the subject prefix is being set.
     :param subject_prefix: The prefix set for messages that go through the list. If None, then the current value is
     kept.
     """
     if subject_prefix is None or message_list.subject_prefix == subject_prefix:
         return
+
+    # Add an extra space, if there is none.
+    if not subject_prefix.endswith(" "):
+        subject_prefix = f"{subject_prefix} "
+
     message_list.subject_prefix = subject_prefix
 
     if message_list.email_list_domain:

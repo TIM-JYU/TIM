@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 
 class Channel(Enum):
@@ -103,6 +103,24 @@ class ListOptions:
     removed: Optional[datetime] = None
     """If set, shows the date the message list is set to not be in use. If a user has access to the admin document 
     even if this is set, it means that the message list is frozen, but not completely deleted. """
+
+
+@dataclass
+class MemberInfo:
+    """Wrapper for information about a member on a message list."""
+    name: str
+    username: str
+    sendRight: bool
+    deliveryRight: bool
+    email: str
+    removed: Optional[datetime] = None
+
+
+@dataclass
+class GroupAndMembers:
+    """Helper class for querying user group and it's members."""
+    groupName: str
+    members: List[MemberInfo]
 
 
 # A mapping of TIM's archive policies to Mailman's archive policies. Mailman's archive policies are listed here:

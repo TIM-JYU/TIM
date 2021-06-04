@@ -26,75 +26,68 @@ import {Users} from "../user/userService";
     template: `
         <form class="form-horizontal">
             <h1>Message list management</h1>
+            <h2>{{listname}}</h2>
             <tim-alert *ngIf="permanentErrorMessage" severity="danger">{{permanentErrorMessage}}</tim-alert>
-            <div id="email-send" style="padding-bottom: 1em">
+            <div id="email-send">
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
                 <button class="timButton" (click)="openEmail()" *ngIf="!recipients">Send message to list</button>
             </div>
-            <div class="form-group">
-                <label for="list-name" class="list-name control-label col-sm-3">List name: </label>
-                <div class="col-sm-9">
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="list-name" id="list-name" disabled
-                               [(ngModel)]="listname"/>
-                        <div class="input-group-addon" id="domain-indicator">@</div>
-                        <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
-                            <option [disabled]="domains.length < 2" *ngFor="let domain of domains">{{domain}}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="list-subject-prefix" class="subject-prefix control-label col-sm-3">Subject prefix: </label>
-                <div class="col-sm-9">
-                    <input type="text" name="list-subject-prefix" class="form-control" [(ngModel)]="listSubjectPrefix">
-                </div>
-            </div>
-            <div class="form-group" *ngIf="domain">
-                <label for="list-description" class="short-description control-label col-sm-3">List address: </label>
-                <div class="col-sm-9">
-                    <input type="text" class="form-control" name="list-email-address" id="list-email-address"
-                           [ngModel]="listAddress()" disabled/>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="list-description" class="short-description control-label col-sm-3">Short
-                    description: </label>
-                <div class="col-sm-9">
-                    <input type="text" class="form-control" name="list-description" id="list-description"
-                           [(ngModel)]="listDescription"/>
-                </div>
-            </div>
-            <div class="form-group">
-                <label for="list-info" class="long-description control-label col-sm-3">Long description: </label>
-                <div class="col-sm-9">
-                <textarea name="list-info" class="list-info form-control" id="list-info"
-                          [(ngModel)]="listInfo">A more detailed information thingy for this list.</textarea>
-                </div>
-            </div>
-            <div *ngIf="archiveOptions && archive">
-                <p class="list-archive-policy-header">Archive policy:</p>
-                <!-- Variable archiveoptions is reversed, so indexing for display has to accommodate. -->
-                <p class="indented">{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
-                <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
-                <!--
-                <ul id="archive-policy-list">
-                    <li *ngFor="let option of archiveOptions">
-                        <label for="archive-{{option.archiveType}}">
-                        <input
-                                name="items-radio"
-                                type="radio"
-                                id="archive-{{option.archiveType}}"
-                                [value]="option.archiveType"
-                                [(ngModel)]="archive"
-                        />
-                        {{option.policyName}}</label>
-                    </li>
-                </ul>
-                -->
-            </div>
             <div class="section">
                 <h3>Options</h3>
+                <div class="form-group"
+                     title="To be added in front of message subjects for all messages that pass through this list.">
+                    <label for="list-subject-prefix" class="subject-prefix control-label col-sm-3">Subject
+                        prefix: </label>
+                    <div class="col-sm-9">
+                        <input type="text" name="list-subject-prefix" class="form-control"
+                               [(ngModel)]="listSubjectPrefix">
+                    </div>
+                </div>
+                <div class="form-group" *ngIf="domain">
+                    <label for="list-description" class="short-description control-label col-sm-3">Email
+                        address: </label>
+                    <div class="col-sm-9" *ngIf="distribution && distribution.email_list">
+                        <input type="text" class="form-control" name="list-email-address" id="list-email-address"
+                               [ngModel]="listAddress()" disabled/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="list-description" class="short-description control-label col-sm-3">Short
+                        description: </label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" name="list-description" id="list-description"
+                               [(ngModel)]="listDescription"/>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="list-info" class="long-description control-label col-sm-3">Long description: <br>
+                        (Info)</label>
+                    <div class="col-sm-9">
+                <textarea name="list-info" class="list-info form-control" id="list-info"
+                          [(ngModel)]="listInfo"></textarea>
+                    </div>
+                </div>
+                <div *ngIf="archiveOptions && archive">
+                    <p class="list-archive-policy-header">Archive policy:</p>
+                    <!-- Variable archiveoptions is reversed, so indexing for display has to accommodate. -->
+                    <p class="indented">{{archiveOptions[archiveOptions.length - (archive + 1)].policyName}}</p>
+                    <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
+                    <!--
+                    <ul id="archive-policy-list">
+                        <li *ngFor="let option of archiveOptions">
+                            <label for="archive-{{option.archiveType}}">
+                            <input
+                                    name="items-radio"
+                                    type="radio"
+                                    id="archive-{{option.archiveType}}"
+                                    [value]="option.archiveType"
+                                    [(ngModel)]="archive"
+                            />
+                            {{option.policyName}}</label>
+                        </li>
+                    </ul>
+                    -->
+                </div>
                 <div class="indented">
                     <label>
                         <input type="checkbox" name="notify-owner-on-list-change" id="notify-owner-on-list-change"
@@ -150,25 +143,29 @@ import {Users} from "../user/userService";
                 </div>
                 <div id="members-section" class="section">
                     <h3>Members</h3>
-                    <div class="indented">
-                        <p>Instructions:</p>
-                        <p>Add new members by setting each member on their own separate lines. The members are only
+                    <div>
+                        <p class="indented">Instructions:</p>
+                        <p class="indented">Add new members by setting each member on their own separate lines. The
+                            members are only
                             added after you click the "Add new members" button.</p>
-                        <p>Add individual TIM users by writing their username.</p>
-                        <p>Add a group by writing it's name. You need to be the owner of the group for the adding to
+                        <p class="indented">Add individual TIM users by writing their username.</p>
+                        <p class="indented">Add a group by writing it's name. You need to be the owner of the group for
+                            the adding to
                             succeed.</p>
-                        <p>Add an external member (someone who is not a TIM user) by writing their email address
+                        <p class="indented">Add an external member (someone who is not a TIM user) by writing their
+                            email address
                             (mandatory) and name (optional) either in the form <code>john.doe@domain.fi John Doe</code>
                             or <code>Jane Doe &lt;jane.doe@domain.fi&gt;</code></p>
-                        <p>Send right means that a member's message should not be caught up in a moderation process.
+                        <p class="indented">Send right means that a member's message should not be caught up in a
+                            moderation process.
                             Delivery right means that the member receives messages sent to the list. For a group, the
                             send and delivery right affect all the members of a group.</p>
                     </div>
-                    <div class="indented" id="add-members-section">
-                        <label for="add-multiple-members">Add members</label> <br/>
-                        <textarea id="add-multiple-members" name="add-multiple-members"
+                    <div id="add-members-section">
+                        <label class="indented" for="add-multiple-members">Add members</label> <br/>
+                        <textarea class="indented" id="add-multiple-members" name="add-multiple-members"
                                   [(ngModel)]="membersTextField"></textarea>
-                        <div>
+                        <div class="indented-more">
                             <div>
                                 <input type="checkbox" name="new-member-send-right" [(ngModel)]="newMemberSendRight">
                                 <label for="new-member-send-right">New member's send right.</label>
@@ -179,7 +176,11 @@ import {Users} from "../user/userService";
                                 <label for="new-member-delivery-right">New member's delivery right.</label>
                             </div>
                         </div>
-                        <button (click)="addNewListMember()" class="timButton">Add new members</button>
+                        <div class="indented">
+                            <button class="indented-more timButton" (click)="addNewListMember()">Add new
+                                members
+                            </button>
+                        </div>
                         <div id="member-add-feedback">
                             <tim-alert *ngIf="memberAddSucceededResponse"
                                        severity="success">{{memberAddSucceededResponse}}</tim-alert>
@@ -189,10 +190,10 @@ import {Users} from "../user/userService";
                     </div>
                 </div>
                 <div class="section">
-                    <h3>Members</h3>
+                    <h3>Current members</h3>
                     <table>
                         <thead>
-                        <tr>
+                        <tr class="member-table-row">
                             <th>Name</th>
                             <th>Username</th>
                             <th>Email</th>
@@ -203,7 +204,7 @@ import {Users} from "../user/userService";
                         </tr>
                         </thead>
                         <tbody>
-                        <tr *ngFor="let member of membersList">
+                        <tr class="member-table-row" *ngFor="let member of membersList">
                             <td>{{member.name}}</td>
                             <td>{{member.username}}</td>
                             <td>{{member.email}}</td>
@@ -228,39 +229,40 @@ import {Users} from "../user/userService";
                         <tim-alert *ngIf="memberSaveFailResponse"
                                    severity="danger">{{memberAddFailedResponse}}</tim-alert>
                     </div>
-                    <div class="section" *ngIf="hasGroups">
-                        <h3>Show members of a group {{currentGroup}}</h3>
-                        <select [(ngModel)]="currentGroup" name="usergroups" (change)="setGroupMembers()">
-                            <option></option>
-                            <option *ngFor="let memberGroup of memberGroups">{{memberGroup}}</option>
-                        </select>
-                        <table *ngIf="currentGroup">
-                            <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr *ngFor="let gMember of groupMembers">
-                                <td>{{gMember.name}}</td>
-                                <td>{{gMember.username}}</td>
-                                <td>{{gMember.email}}</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
+            </div>
+            <div class="section" *ngIf="hasGroups">
+                <h3>Show members of a group {{currentGroup}}</h3>
+                <select class="indented" [(ngModel)]="currentGroup" name="usergroups"
+                        (change)="setGroupMembers()">
+                    <option></option>
+                    <option *ngFor="let memberGroup of memberGroups">{{memberGroup}}</option>
+                </select>
+                <table *ngIf="currentGroup">
+                    <thead>
+                    <tr class="member-table-row">
+                        <th>Name</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr class="member-table-row" *ngFor="let gMember of groupMembers">
+                        <td>{{gMember.name}}</td>
+                        <td>{{gMember.username}}</td>
+                        <td>{{gMember.email}}</td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="section">
                 <h2>List deletion</h2>
                 <button class=" indented timButton" (click)="deleteList()">Delete List</button>
             </div>
-            <div>
+            <div class="section">
                 <h3>Links</h3>
                 <div class="indented" *ngIf="archiveURL">
-                    <a [href]="archiveURL">List's archive</a>
+                    <a [href]="archiveURL">List's archive.</a>
                 </div>
                 <div class="indented" *ngIf="emailAdminURL">
                     <a [href]="emailAdminURL">Advanced email list settings (takes to Mailman).</a>
@@ -301,9 +303,7 @@ export class MessageListAdminComponent implements OnInit {
     nonMemberMessagePass?: boolean;
     onlyText?: boolean;
     allowAttachments?: boolean;
-    // distibution?: Channel[];
-    distribution?: Distribution; // TODO: Not in use at the moment. Add this to the UI.
-
+    distribution?: Distribution;
     listReplyToChange?: ReplyToListChanges;
     listAnswerGuidance?: boolean; // Track above enum value in a checkbox.
 
@@ -559,7 +559,7 @@ export class MessageListAdminComponent implements OnInit {
 
         this.domain = listOptions.domain;
 
-        this.notifyOwnerOnListChange = listOptions.notify_owners_on_list_change; // ?? false;
+        this.notifyOwnerOnListChange = listOptions.notify_owners_on_list_change;
 
         this.listInfo = listOptions.list_info;
         this.listDescription = listOptions.list_description;
@@ -621,7 +621,6 @@ export class MessageListAdminComponent implements OnInit {
             default_delivery_right: this.defaultDeliveryRight,
             default_send_right: this.defaultSendRight,
             non_member_message_pass: this.nonMemberMessagePass,
-            distribution: this.distribution,
             allow_attachments: this.allowAttachments,
         });
         if (result.ok) {

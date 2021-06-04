@@ -321,14 +321,12 @@ class MessageListTimMember(MessageListMember):
         return user.email
 
     def get_name(self) -> str:
-        """Get TIM user's name. For group, this is the '-'. For a user, this is their full name."""
-        # ug = self.user_group
+        """Get TIM user's name. For group, this is an empty string. For a user, this is their full name."""
         if not self.is_group():
             ug = self.user_group
             user = ug.personal_user
             return user.pretty_full_name
-        return "-"
-        # return ug.name
+        return ""
 
 
 class MessageListExternalMember(MessageListMember):
