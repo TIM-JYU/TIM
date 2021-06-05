@@ -1,5 +1,5 @@
 {% set editline = '' %}
-{%- if not exam_mode and (item.rights.editable or item.rights.can_comment) -%}
+{%- if not exam_mode and (rights.editable or rights.can_comment) -%}
     {%- set editline = '<div class="editline" tabindex="0" title="Click to edit this paragraph"></div>' -%}
 {%- endif -%}
 
@@ -63,6 +63,9 @@
              t="{{ t.t }}"
              attrs="{{ t.attrs_str }}"
              data-area="{{ t.collapse_area }}"
+        {% if t.from_preamble %}
+             data-from-preamble="{{ t.from_preamble|safe }}"
+        {% endif %}
         {% if t.ref_id %}
              ref-id="{{ t.ref_id }}"
              ref-t="{{ t.ref_t }}"

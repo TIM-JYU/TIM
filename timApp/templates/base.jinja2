@@ -139,11 +139,11 @@
                         col-md-{{ col_2_md }} col-md-offset-{{ col_1_md }}
                         col-xs-{{ col_2_xs }} col-xs-offset-{{ col_1_xs }}
                         col-sm-{{ col_2_sm }} col-sm-offset-{{ col_1_sm }}">
-                {% if global_notification %}
+                {% for n in global_notifications %}
                     <div class="global-notification alert alert-info">
-                        <i class="glyphicon glyphicon-info-sign"></i> {{ global_notification|safe }}
+                        <i class="glyphicon glyphicon-info-sign"></i> {{ n|safe }}
                     </div>
-                {% endif %}
+                {% endfor %}
                 <tim-message-view></tim-message-view>
                 {% with messages = get_flashed_messages() %}
                     {% if messages %}

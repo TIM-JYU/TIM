@@ -1,7 +1,8 @@
 """Routes for document view."""
 import html
 import time
-from typing import Tuple, Optional, List, Union, Any, ValuesView
+from difflib import ndiff, context_diff
+from typing import Tuple, Optional, List, Union, Any, ValuesView, Generator
 
 import attr
 import filelock
@@ -17,7 +18,7 @@ from sqlalchemy.orm import joinedload, defaultload
 
 from timApp.answer.answers import add_missing_users_from_group, get_points_by_rule
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
-    get_rights, get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
+    get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
 from timApp.auth.sessioninfo import get_session_usergroup_ids
@@ -61,6 +62,7 @@ from timApp.user.groups import verify_group_view_access
 from timApp.user.settings.theme import Theme, theme_exists
 from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
 from timApp.user.user import User, check_rights
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
 from timApp.user.userutils import DeletedUserException
@@ -258,11 +260,17 @@ def gen_cache(
         doc_path: str,
         same_for_all: bool = False,
         force: bool = False,
+        print_diffs: bool = False,
+        group: Optional[str] = None,
 ):
     """Pre-generates document cache for the users with non-expired rights.
 
     Useful for exam documents to reduce server load at the beginning of the exam.
 
+    :param group: The usergroup for which to generate the cache. If omitted, the users are computed from the
+      currently active (or upcoming) rights.
+    :param print_diffs: Whether to output diff information about cache content. Each cache entry is compared with
+     the first cache entry.
     :param doc_path: Path of the document for which to generate the cache.
     :param same_for_all: Whether to use same cache for all users.
      This speeds up cache generation significantly.
@@ -276,30 +284,46 @@ def gen_cache(
     s = doc_info.document.get_settings()
     if not s.is_cached():
         raise RouteException('Document does not have caching enabled.')
-    accesses: ValuesView[BlockAccess] = doc_info.block.accesses.values()
-    group_ids = set(a.usergroup_id for a in accesses if not a.expired)
-    users: List[Tuple[User, UserGroup]] = (
-        User.query
-            .join(UserGroup, User.groups)
-            .filter(UserGroup.id.in_(group_ids))
-            .with_entities(User, UserGroup).all()
-    )
-    groups_that_need_access_check = set(g for u, g in users if u.get_personal_group() != g)
+    if group:
+        ug = UserGroup.get_by_name(group)
+        if not ug:
+            raise RouteException('usergroup not found')
+        groups_that_need_access_check = {ug}
+        user_set = set(ug.users)
+    else:
+        # Compute users from the current rights.
+        accesses: ValuesView[BlockAccess] = doc_info.block.accesses.values()
+        group_ids = set(a.usergroup_id for a in accesses if not a.expired)
+        users: List[Tuple[User, UserGroup]] = (
+            User.query
+                .join(UserGroup, User.groups)
+                .filter(UserGroup.id.in_(group_ids))
+                .with_entities(User, UserGroup).all()
+        )
+        groups_that_need_access_check = set(g for u, g in users if u.get_personal_group() != g)
+        user_set = set(u for u, _ in users)
     for g in groups_that_need_access_check:
         verify_group_view_access(g)
     view_ctx = default_view_ctx
     m = DocViewParams()
     vp = ViewParams()
-    users_uniq = list(sorted(set(u for u, _ in users), key=lambda u: u.name))
+    users_uniq = list(sorted(user_set, key=lambda u: u.name))
     total = len(users_uniq)
     digits = len(str(total))
-    def generate():
+
+    # Make sure tags attribute is always loaded.
+    # Otherwise the "translations" variable (in doc_head.jinja2) will first not have "tags" and
+    # after encountering someone with manage access, it is loaded and all subsequent users will get it too.
+    # This wouldn't cause any user-facing bugs, but it makes it easier to compare cached HTMLs.
+    _ = doc_info.block.tags
+
+    def generate() -> Generator[Tuple[str, Optional[DocRenderResult]], None, None]:
         first_cache = None
         for i, u in enumerate(users_uniq):
-            yield f'{i + 1:>{digits}}/{total} {u.name}: '
+            start = f'{i + 1:>{digits}}/{total} {u.name}: '
             cr = check_doc_cache(doc_info, u, view_ctx, m, vp.nocache)
             if cr.doc and not force:
-                yield f'already cached'
+                yield f'{start}already cached\n', cr.doc
             else:
                 if first_cache is None or not same_for_all:
                     dr = render_doc_view(doc_info, m, view_ctx, u, False)
@@ -308,16 +332,36 @@ def gen_cache(
                     dr = first_cache
                 if dr.allowed_to_cache:
                     set_doc_cache(cr.key, dr)
-                    yield 'ok'
+                    yield f'{start}ok\n', dr
                 else:
-                    yield 'not allowed to cache (one or more plugins had errors)'
-            yield '\n'
+                    yield f'{start}not allowed to cache (one or more plugins had errors)\n', None
 
     def generate_with_lock():
         try:
+            results = []
             with filelock.FileLock(f'/tmp/generateCache_{doc_info.id}', timeout=0):
-                for r in generate():
+                for r, cache_result in generate():
+                    if cache_result:
+                        results.append(cache_result)
                     yield r
+
+            if not print_diffs:
+                return
+            if not results:
+                return
+            yield '\n'
+
+            yield '---Start of diffs---\n'
+            # For checking cache correctness, print cache differences compared to the first cached result.
+            compare_head = results[0].head_html.splitlines(keepends=True)
+            compare_content = results[0].content_html.splitlines(keepends=True)
+            for r in results[1:]:
+                diff = context_diff(compare_head, r.head_html.splitlines(keepends=True), n=0)
+                yield ''.join(diff)
+                diff = context_diff(compare_content, r.content_html.splitlines(keepends=True), n=0)
+                yield ''.join(diff)
+                yield '-----------------\n'
+            yield '---End of diffs---\n'
         except filelock.Timeout:
             yield 'Cache generation for this document is already in progress.\n'
 
@@ -522,7 +566,7 @@ def render_doc_view(
     if src_doc is not None:
         DocParagraph.preload_htmls(src_doc.get_paragraphs(), src_doc.get_settings(), view_ctx, clear_cache)
 
-    rights = doc_info.rights
+    rights = get_user_rights_for_item(doc_info, current_user)
     word_list = (doc_info.document.get_word_list()
                  if rights['editable'] and current_user.get_prefs().use_document_word_list
                  else [])
@@ -725,7 +769,10 @@ def render_doc_view(
             ]
 
     if post_process_result.should_mark_all_read:
-        for group_id in get_session_usergroup_ids():
+        # TODO: Support multiple logged in users without using globals.
+        #  On the other hand, should_mark_all_read is used only in exam mode,
+        #  so we know there's only one user.
+        for group_id in [current_user.get_personal_group().id]:
             mark_all_read(group_id, doc)
         db.session.commit()
 
@@ -746,6 +793,7 @@ def render_doc_view(
         hide_sidemenu=should_hide_sidemenu(doc_settings, rights),
         show_unpublished_bg=show_unpublished_bg,
         exam_mode=is_exam_mode(doc_settings, rights),
+        rights=rights,
         route=view_ctx.route.value,
         edit_mode=(m.edit if current_user.has_edit_access(doc_info) else None),
         item=doc_info,
@@ -759,7 +807,7 @@ def render_doc_view(
         doc_css=doc_css,
         start_index=view_range.start_index,
         group=usergroup,
-        translations=doc_info.translations,
+        translations=[tr.to_json(curr_user=current_user) for tr in doc_info.translations],
         reqs=reqs,
         no_browser=hide_answers,
         no_question_auto_numbering=no_question_auto_numbering,
@@ -874,20 +922,21 @@ def check_updated_pars(doc_id, major, minor):
     view_ctx = default_view_ctx
     diffs = list(d.get_doc_version((major, minor)).parwise_diff(d, view_ctx))  # TODO cache this, about <5 ms
     # taketime("after diffs")
-    rights = get_rights(doc)  # about 30-40 ms # TODO: this is the slowest part
+    curr_user = get_current_user_object()
+    rights = get_user_rights_for_item(doc, curr_user)  # about 30-40 ms # TODO: this is the slowest part
     # taketime("after rights")
     for diff in diffs:  # about < 1 ms
         if diff.get('content'):
             post_process_result = post_process_pars(
                 d,
                 diff['content'],
-                UserContext.from_one_user(get_current_user_object()),
+                UserContext.from_one_user(curr_user),
                 view_ctx,
             )
             diff['content'] = {
                 'texts': render_template('partials/paragraphs.jinja2',
                                          text=post_process_result.texts,
-                                         item={'rights': rights},
+                                         rights=rights,
                                          preview=False),
                 'js': post_process_result.js_paths,
                 'css': post_process_result.css_paths,

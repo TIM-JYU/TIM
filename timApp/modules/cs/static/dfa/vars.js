@@ -1298,7 +1298,8 @@ class AssignTo extends Command {
     // see: https://regex101.com/r/bPn7zX/latest
     // syntax: a = 5
     static isMy(s) {
-        let re = /^([^.][$.\w\d]*) *(<-|=|:=) *(.*)$/;
+        //let re = /^([^.][$.\w\d]*) *(<-|=|:=) *(.*)$/;
+        let re = /^([$[\]\w\d]+[$[\].,\w\d]*) *(<-|=|:=) *(.*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         return [new AssignTo(r[1], r[3])];

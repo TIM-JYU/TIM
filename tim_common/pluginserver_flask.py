@@ -153,7 +153,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         """
         Whether the login prompt is shown to anonymous users.
         """
-        return True
+        return not self.markup.anonymous
 
     def get_browser_json(self) -> Dict:
         r = dict(list_not_missing_fields(self))

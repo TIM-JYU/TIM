@@ -807,7 +807,9 @@ export class ViewCtrl implements IController {
         if (opt == RegexOption.DontPrependCurrentDocId) {
             reg = new RegExp(`^${re}$`);
         } else if (opt == RegexOption.PrependCurrentDocId) {
-            reg = new RegExp(`^${this.item.id}\.${re}$`);
+            // If the current document is a translation, the plugin IDs always have the doc id of the original document.
+            // So we need to check for src_docid first.
+            reg = new RegExp(`^${this.item.src_docid ?? this.item.id}\.${re}$`);
         } else {
             throw new Error("unreachable");
         }
@@ -1056,12 +1058,15 @@ export class ViewCtrl implements IController {
         }
     }
 
-    public updateAllTables(fields?: string[]) {
+    public updateAllTables(fields?: string[], callerTaskId?: TaskId) {
         // TODO: Should probably check groups
         //  currently it is assumed that caller used same groups as tableForm
         for (const table of this.tableForms.values()) {
             const taskId = table.getTaskId();
             if (taskId) {
+                if (callerTaskId && callerTaskId == taskId) {
+                    continue;
+                }
                 const tid = taskId.docTask();
                 const comptab = this.getTimComponentByName(tid.toString());
                 if (comptab?.isUnSaved()) {

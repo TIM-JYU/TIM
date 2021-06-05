@@ -4,11 +4,11 @@ Note: Add new tasks here. For scheduling add parameters to defaultconfig as well
 """
 import json
 import logging
+from concurrent.futures import Future
 from copy import copy
 from logging import Logger
-from typing import Any, Dict
+from typing import Any, Dict, List
 
-import requests
 from celery import Celery
 from celery.signals import after_setup_logger
 from celery.utils.log import get_task_logger
@@ -17,6 +17,7 @@ from marshmallow import EXCLUDE, ValidationError
 from timApp.answer.routes import post_answer_impl, AnswerRouteResult
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx
+from timApp.item.distribute_rights import UnlockOp, register_op_to_hosts
 from timApp.notification.notify import process_pending_notifications
 from timApp.plugin.containerLink import call_plugin_generic
 from timApp.plugin.exportdata import WithOutData, WithOutDataSchema
@@ -25,6 +26,8 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.tim_app import app
 from timApp.user.user import User
 from timApp.util.flask.search import create_search_files
+from timApp.util.utils import get_current_time, collect_errors_from_hosts
+from tim_common.vendor.requests_futures import FuturesSession
 
 logger: Logger = get_task_logger(__name__)
 
@@ -156,6 +159,15 @@ def handle_exportdata(result: AnswerRouteResult, u: User, wod: WithOutData) -> N
 
 
 @celery.task
+def send_unlock_op(
+        email: str,
+        target: List[str],
+):
+    op = UnlockOp(type='unlock', email=email, timestamp=get_current_time())
+    return register_op_to_hosts(op, target, is_receiving_backup=False)
+
+
+@celery.task
 def send_answer_backup(
         exported_answer: Dict[str, Any]
 ):
@@ -163,9 +175,13 @@ def send_answer_backup(
 
 
 def do_send_answer_backup(exported_answer: Dict[str, Any]):
-    backup_host = app.config["BACKUP_ANSWER_HOST"]
-    r = requests.post(
-        f'{backup_host}/backup/answer',
-        json={'answer': exported_answer, 'token': app.config['BACKUP_ANSWER_SEND_SECRET']},
-    )
-    return r.status_code
+    backup_hosts = app.config["BACKUP_ANSWER_HOSTS"]
+    session = FuturesSession()
+    futures: List[Future] = []
+    for h in backup_hosts:
+        f = session.post(
+            f'{h}/backup/answer',
+            json={'answer': exported_answer, 'token': app.config['BACKUP_ANSWER_SEND_SECRET']},
+        )
+        futures.append(f)
+    return collect_errors_from_hosts(futures, backup_hosts)

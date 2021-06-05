@@ -1,6 +1,13 @@
-from typing import Optional
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Optional, Union, TYPE_CHECKING
 
 from timApp.auth.accesstype import AccessType
+
+if TYPE_CHECKING:
+    from timApp.item.distribute_rights import Right
+
 from timApp.timdb.sqa import db, include_if_loaded
 from timApp.util.utils import get_current_time
 
@@ -42,9 +49,7 @@ class BlockAccess(db.Model):
 
     @property
     def duration_now(self):
-        if self.duration_from and self.accessible_to:
-            return min(self.duration, self.accessible_to - get_current_time())
-        return self.duration
+        return get_duration_now(self, get_current_time())
 
     @property
     def group_collection_key(self):
@@ -115,9 +120,7 @@ class BlockAccess(db.Model):
         return f'{self.access_type.name}({attrs})'
 
     def do_confirm(self):
-        self.require_confirm = False
-        if not self.duration:
-            self.accessible_from = get_current_time()
+        do_confirm(self, get_current_time())
 
     def __hash__(self):
         return hash((self.block_id,
@@ -148,3 +151,17 @@ class BlockAccess(db.Model):
             'require_confirm': self.require_confirm,
             **include_if_loaded('usergroup', self),
         }
+
+
+def get_duration_now(a: Union[BlockAccess, Right], curr_time: datetime):
+    if a.duration_from and a.accessible_to:
+        return min(a.duration, a.accessible_to - curr_time)
+    return a.duration
+
+
+def do_confirm(a: Union[BlockAccess, Right], curr_time: datetime):
+    a.require_confirm = False
+    # When confirming a distributable Right, it is possible that accessible_from is set.
+    # In that case, we don't want to reset it.
+    if not a.duration and not a.accessible_from:
+        a.accessible_from = curr_time

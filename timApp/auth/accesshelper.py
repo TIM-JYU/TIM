@@ -1,8 +1,10 @@
+import ipaddress
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
+from pathlib import Path
 from typing import Optional, Tuple, List
 
-from flask import flash
+from flask import flash, current_app
 from flask import request, g
 from sqlalchemy import inspect
 
@@ -17,7 +19,8 @@ from timApp.document.document import Document, dereference_pars
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, OriginInfo
 from timApp.folder.folder import Folder
-from timApp.item.item import Item, ItemBase
+from timApp.item.item import Item
+from timApp.notification.send_email import send_email
 from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
@@ -27,6 +30,7 @@ from timApp.user.user import ItemOrBlock, User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
+from timApp.util.logger import log_warning
 from timApp.util.utils import get_current_time
 
 
@@ -82,7 +86,9 @@ def verify_access(
         user: Optional[User] = None,
 ):
     u = user or get_current_user_object()
-    has_access = u.has_access(b, access_type, grace_period)
+    has_access = check_inherited_right(u, b, access_type, grace_period)
+    if not has_access:
+        has_access = u.has_access(b, access_type, grace_period)
     if not has_access and check_parents:
         # Only uploaded files and images have a parent so far.
         for x in (u.has_access(p, access_type, grace_period) for p in b.parents):
@@ -97,6 +103,19 @@ def verify_access(
         message,
         check_duration=check_duration,
     )
+
+
+def check_inherited_right(
+        u: User,
+        b: ItemOrBlock,
+        access_type: AccessType,
+        grace_period: timedelta,
+) -> Optional[BlockAccess]:
+    has_access = None
+    if isinstance(b, DocInfo):
+        if b.path_without_lang in current_app.config['INHERIT_FOLDER_RIGHTS_DOCS']:
+            has_access = u.has_access(b.parent, access_type, grace_period)
+    return has_access
 
 
 def verify_view_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False, user=None):
@@ -167,6 +186,12 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
                 if inspect(ba).transient:
                     db.session.add(ba)
                 db.session.commit()  # TODO ensure nothing else gets committed than the above
+                if isinstance(block, Item):
+                    targets = current_app.config['DIST_RIGHTS_UNLOCK_TARGETS']
+                    curr_targets = targets.get(block.path)
+                    if curr_targets:
+                        from timApp.tim_celery import send_unlock_op
+                        send_unlock_op.delay(get_current_user_object().email, curr_targets)
                 flash('Item was unlocked successfully.')
                 if ba.accessible_from < ba.accessible_to:
                     return ba
@@ -227,7 +252,7 @@ def maybe_auto_confirm(block: ItemOrBlock):
 
 def has_view_access(b: ItemOrBlock):
     u = get_current_user_object()
-    return u.has_view_access(b)
+    return check_inherited_right(u, b, AccessType.view, grace_period=timedelta(seconds=0)) or u.has_view_access(b)
 
 
 def has_edit_access(b: ItemOrBlock):
@@ -268,20 +293,6 @@ def check_admin_access(block_id=None, user=None):
                            type=AccessType.owner.value,
                            usergroup_id=curr_user.get_personal_group().id)
     return None
-
-
-def get_rights(d: ItemBase):
-    u = get_current_user_object()
-    return {'editable': bool(u.has_edit_access(d)),
-            'can_mark_as_read': bool(logged_in() and u.has_view_access(d)),
-            'can_comment': bool(logged_in() and u.has_view_access(d)),
-            'copy': bool(logged_in() and u.has_copy_access(d)),
-            'browse_own_answers': logged_in(),
-            'teacher': bool(u.has_teacher_access(d)),
-            'see_answers': bool(u.has_seeanswers_access(d)),
-            'manage': bool(u.has_manage_access(d)),
-            'owner': bool(u.has_ownership(d))
-            }
 
 
 def verify_logged_in() -> None:
@@ -439,3 +450,60 @@ def get_single_view_access(i: Item, allow_group: bool = False) -> BlockAccess:
     if acc.expired:
         raise AccessDenied(f"Access is already expired for {i.path}.")
     return acc
+
+
+def is_allowed_ip() -> bool:
+    ip_allowlist = current_app.config['IP_BLOCK_ALLOWLIST']
+    if ip_allowlist is None:
+        return True
+    return any(ipaddress.ip_address(request.remote_addr) in network for network in ip_allowlist)
+
+
+def is_blocked_ip() -> bool:
+    ip = request.remote_addr
+    fp = get_ipblocklist_path()
+    try:
+        with fp.open('r') as f:
+            ip_blocklist = f.read()
+    except FileNotFoundError:
+        return False
+    ip_lines = ip_blocklist.splitlines()
+    return ip in ip_lines
+
+
+def get_ipblocklist_path() -> Path:
+    return Path(current_app.config['FILES_PATH']) / 'ipblocklist'
+
+
+def verify_ip_ok(user: Optional[User], msg: str = 'IPNotAllowed'):
+    if (not user or not user.is_admin) and not is_allowed_ip():
+        username = user.name if user else 'Anonymous'
+        cfg = current_app.config
+        ip_block_log_only = cfg['IP_BLOCK_LOG_ONLY']
+        is_in_blocklist = is_blocked_ip()
+        should_block = not ip_block_log_only or is_in_blocklist
+        blocked_or_allowed = "blocked" if should_block else "allowed"
+        log_warning(f'IP {request.remote_addr} outside allowlist ({username}) - {blocked_or_allowed}')
+        msg_end = 'Request was blocked.' if should_block else 'Request was allowed.'
+        reply_tos = [cfg['ERROR_EMAIL']]
+        if user:
+            reply_tos.append(user.email)
+        if not is_in_blocklist:
+            send_email(
+                rcpt=cfg['ERROR_EMAIL'],
+                subject=f'{cfg["TIM_HOST"]}: '
+                        f'IP {request.remote_addr} outside allowlist ({username}) '
+                        f'- {blocked_or_allowed}',
+                mail_from=cfg['WUFF_EMAIL'],
+                reply_to=','.join(reply_tos),
+                msg=f"""
+IP {request.remote_addr} was outside allowlist.
+
+URL: {request.url}
+
+User: {username}
+
+{msg_end}
+                """.strip())
+        if should_block:
+            raise AccessDenied(msg)

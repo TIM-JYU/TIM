@@ -250,16 +250,8 @@ export interface TimTable {
     lockedCells?: string[];
     lockedColumns?: string[];
     // cellsTosave may include un-rect area (not at the moment but maybe in future
-    // colValuesAreSame means in one column all values are same,
-    // so that it is possible to save them to one group
-    saveCallBack?: (
-        cellsTosave: CellToSave[],
-        colValuesAreSame: boolean
-    ) => void;
-    saveStyleCallBack?: (
-        cellsTosave: CellAttrToSave[],
-        colValuesAreSame: boolean
-    ) => void;
+    saveCallBack?: (cellsTosave: CellToSave[]) => void;
+    saveStyleCallBack?: (cellsTosave: CellAttrToSave[]) => void;
     cbCallBack?: (cbs: boolean[], n: number, index: number) => void;
     maxWidth?: string; // Possibly obsolete if cell/column layout can be given in data.table.colums
     minWidth?: string;
@@ -1565,7 +1557,7 @@ export class TimTableComponent
     }
 
     /**
-     * Set's edited flag to false
+     * Sets edited flag to false
      * Used to keep track of unsaved state when table is used as component
      * in another plugin
      */
@@ -1744,7 +1736,7 @@ export class TimTableComponent
                 this.setUserContent(c.y, c.x, cellContent);
             }
             if (this.data.saveCallBack) {
-                this.data.saveCallBack(cellsToSave, true);
+                this.data.saveCallBack(cellsToSave);
             }
             this.edited = true;
             this.updateListeners();
@@ -2799,7 +2791,11 @@ export class TimTableComponent
                 this.editInput.nativeElement.value = value;
             }
         }
-        this.setActiveCell(rowi, coli, forceOne);
+        try {
+            this.setActiveCell(rowi, coli, forceOne);
+        } catch {
+            // TODO: why here, see DataViewComponent.getDataCell  get negative rows???
+        }
     }
 
     /**
@@ -4075,7 +4071,7 @@ export class TimTableComponent
             this.selectedCells.cells
         ); // , this.selectedCells);
         if (cellsToSave) {
-            await this.setCellStyleAttribute(cellsToSave, true);
+            await this.setCellStyleAttribute(cellsToSave);
         }
         if (this.selectedCells.cells.length === 1 && value.delta) {
             //
@@ -4237,12 +4233,8 @@ export class TimTableComponent
     /**
      * Tells the server to set a cell style attribute.
      * @param cellsToSave list of cells to save
-     * @param colValuesAreSame if all values in same col are same
      */
-    async setCellStyleAttribute(
-        cellsToSave: CellAttrToSave[],
-        colValuesAreSame: boolean
-    ) {
+    async setCellStyleAttribute(cellsToSave: CellAttrToSave[]) {
         if (!this.viewctrl || !this.activeCell) {
             return;
         }
@@ -4276,7 +4268,7 @@ export class TimTableComponent
             }
 
             if (this.data.saveStyleCallBack) {
-                this.data.saveStyleCallBack(cellsToSave, colValuesAreSame);
+                this.data.saveStyleCallBack(cellsToSave);
             }
             this.edited = true;
             this.updateListeners();

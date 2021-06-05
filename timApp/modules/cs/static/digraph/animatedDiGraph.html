@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="fi">
+<head>
+ <script src="https://tim.jyu.fi/csstatic/vizjs/viz.js"></script>
+ <script src="https://tim.jyu.fi/csstatic/vizjs/full.render.js"></script>
+<!-- <script src="https://tim.jyu.fi/csstatic/digraph/digraph.js"></script>-->
+<!-- Next localhost/csstatic works, because csPlugin converts it to real host -->
+ <script src="http://localhost/csstatic/digraph/digraph.js"></script>
+ <style>
+  .argsdiv {font-size: xx-large; margin-left: 1em;}
+  .selarg {background-color: yellow; border-style: inset;}
+  .buttondiv {margin-top: 1em; margin-left: 2em;}
+  .buttondiv button {font-size: x-large;}
+  .hidden {visibility: hidden;}
+  .accept {background-color: lime;}
+  .reject {background-color: red;}
+  .accepttext {position: relative; top: -15px;}
+ </style>
+ <title>DiGraph</title>
+</head>
+<body>
+<div style="margin-bottom: 3px"><span id="error" style="color: red;"></span>
+</div>
+<span id="argsdiv" class="argsdiv"></span>&nbsp;&nbsp;
+<span id="accepttext" class="accepttext" ></span>
+<div id="vizdiv"></div>
+<div id="buttondiv" class="buttondiv hidden">
+  <button onclick="jumpToStart()" title="reset">|&lt;</button>
+  <button onclick="animateBack()" title="animate back to start">&lt;&lt;&lt;</button>
+  <button onclick="animateBack(1)" title="animate one step back">&lt;&lt;</button>
+  <button onclick="stepBack()" title="back minor step">&lt;</button>
+  <button onclick="stepFwd()" title="do minor step">&gt;</button>
+  <button onclick="animateFwd(1)" title="animate one step">&gt;&gt;</button>
+  <button onclick="animateFwd()" title="animate to end">&gt;&gt;&gt;</button>
+  <button onclick="jumpToEnd()" title="run to end">&gt;|</button>
+</div>
+<script>
+  let vizdiv = document.getElementById('vizdiv');
+  let vizChild = document.createElement("p");
+  vizdiv.appendChild(vizChild);
+  let argsdiv = document.getElementById('argsdiv');
+  let buttondiv = document.getElementById('buttondiv');
+  let errspan = document.getElementById('error');
+  let accepttext = document.getElementById('accepttext');
+
+  let viz = new Viz();
+  function drawimage(vizcmd, options, errors)  {
+    viz.renderSVGElement(vizcmd, options)
+      .then(function(element) {
+        vizChild.replaceWith(element);
+        vizChild = element;
+        errspan.innerText = errors;
+      })
+     .catch(error => {
+        // Create a new Viz instance (@see Caveats page for more info)
+        viz = new Viz();
+        errspan.innerText = error.message;
+     });
+  }
+
+
+  class DiGraphState {
+      reset() {
+          this.step = -1;
+          this.error = false;
+          this.active = null;
+          this.activeArc = null;
+          for (const node of Object.values(this.digraph.nodes)) node.cnt = 0;
+          for (const arc of Object.values(this.digraph.arcs)) arc.cnt = 0;
+          this.digraph.cnt = 0;
+      }
+
+      constructor(digraph, args) {
+          this.digraph = digraph;
+          this.args = args;
+          this.params = digraph.params;
+          this.reset();
+      }
+
+      /*!
+       * Take one step forward in digraphState
+       * \fn boolean forward()
+       * \return boolean could it go forward
+       */
+      forward() {
+          let step = this.step;
+          if (this.step >= 0 && this.error) return false;
+          if (this.step < 0) {
+              this.step = 0;
+              this.error = false;
+              this.activeArc = null;
+              this.active = this.digraph.first;
+              this.digraph.cnt = 1;
+              this.digraph.first.cnt = 1;
+              return true;
+          }
+          step++;
+          const minStep = step % 3;
+          const index = (step / 3) | 0;
+          let result = true;
+          // if (index < digraph.args.length)
+          if (step <= this.args.length * 3) this.step = step;
+          if (step >= this.args.length * 3) result = false; // can not forward anymmore
+
+          // index = digraph.args.length-1-index;    // if RL
+          const value = this.args[index];
+          if (minStep === 0) {
+              this.activeArc = null;
+              return result;
+          }
+          if (minStep === 1) {
+              if (!this.active) return false;
+              this.activeArc = this.active.arcs[value];
+              if (!this.activeArc) this.activeArc = this.active.arcs['*'];
+              if (this.activeArc) {this.activeArc.cnt++;  return result; }
+              this.error = true;
+              return false;
+          }
+          if (minStep === 2)
+              if (this.activeArc && this.activeArc.to !== undefined) {
+                  this.active = this.digraph.nodes[this.activeArc.to];
+                  if (this.active.cnt === 0) this.digraph.cnt++;
+                  this.active.cnt++;
+              }
+              else result = false;
+          return result;
+      }
+
+      backward() {
+          let step = this.step - 1;
+          if (step < -1) return false;
+          this.reset();
+          while (this.step < step) this.forward();
+          return true;
+      }
+  } // DiGraphState
+
+
+  class VisualDiGraphState extends DiGraphState {
+      constructor(digraph, args) {
+          super(digraph, args);
+          this.viz = "";
+      }
+
+
+      getPos(name, digraph) {
+          const xy = digraph.positions[name];
+          if (!xy) return "";
+          this.pos = true;
+          return ', pos = "' + xy + '!"';
+      }
+
+      /*!
+       * Converts digraph structure to GraphViz-syntax
+       * \fn makeViz()
+       * \return string digraph ad GraphViz
+       */
+      makeViz() {
+          let digraphState = this;
+          const digraph = digraphState.digraph;
+          this.errors = digraph.staticerrors;
+          let pos = this.getPos("startpoint", digraph);
+          let s = 'digraph gr {\n' +
+              'rankdir=LR;\n' +
+              'size="8,5";\n' +
+              'startpoint [shape = none, fontcolor=white, label=""' + pos +'];\n';
+
+          let minstep = digraphState.step % 3;
+          this.pos = false;
+
+          // make node descriptions
+          for (let n in digraph.nodes) {
+              let node = digraph.nodes[n];
+              let circ = "circle";
+              let color = "";
+              let error = "";
+              let activeColor = "yellow";
+              if (node.error && (digraphState.active || node.dublicate)) {
+                  color = ", fillcolor=red, style=filled"
+                  error = node.error;
+                  activeColor = "orange";
+              }
+
+              if (digraphState.active && digraphState.active.name === n)
+                  if (minstep === 2)
+                      color = ', fillcolor="#ffffB0", style=filled'
+                  else
+                      color = ", fillcolor=" + activeColor + ", style=filled";
+              else
+                  if (digraph.params.trace && node.cnt > 0)
+                     color = ', fillcolor="#00ff00", style=filled'
+
+              if (node.accept) circ = "doublecircle";
+              let pos = this.getPos(node.name, digraph);
+              let xlabel = "";
+              if (error) {
+                  // xlabel = ', xlabel="' + error + '"';
+                  this.errors += error;
+              }
+              s += node.name + " [shape = " + circ + color + pos + xlabel + "];\n";
+          }
+
+          for (let arc of digraph.arcs) {
+              arc.done = false;
+          }
+
+          // connect nodes by arcs
+          for (let ia = 0; ia < digraph.arcs.length; ia++) {
+              const arc = digraph.arcs[ia];
+              // if need to draw separate arcs for same arc, set this ia+1:
+              const n = digraph.arcs.length
+              if ( arc.done ) continue;
+              let label = "";
+              let color = "";
+              let arctext = ""; // combine all labels to this
+              let comma = "";
+              for (let ia2 = ia; ia2 < n; ia2++) { // combine same arcs
+                  const arc2 = digraph.arcs[ia2];
+                  if (arc2.done) continue;
+                  if (arc2.from === arc.from && arc2.to === arc.to) {
+                      let text = arc2.value !==-1 ? arc2.label : "";
+                      if (digraphState.activeArc === arc2) {
+                          if (minstep === 1) {
+                              color = ", fontcolor=red";
+                              if (text) text = '<b>' + text + '</b>'; // make bold
+                          } else color = ', color=red, penwidth=2'
+                      } else if (this.params.trace) {
+                          if (arc2.cnt > 0)
+                             color = ', color="#00b000", penwidth=2'
+                      }
+                      arctext += comma + text;
+                      comma = ",";
+                      arc2.done = true;
+                  }
+                  arc.done = true;
+              }
+              if (arctext) arctext = '<' + arctext + '>';
+              if (arc.value !== -1) label = ' [ label = ' + arctext + color + ']';
+              s += arc.from + " -> " + arc.to + label + ";\n";
+          }
+
+          s += "}"
+          this.viz = s;
+          return s;
+      }
+
+
+      /*!
+       * Draw whole digraph. Use also it's args to draw input
+       * \fn makeViz(digraph)
+       * \param json digraph structure of digraph
+       */
+      drawdfa() {
+          let digraph = this;
+          argsdiv.innerHTML = "";
+          let options = {};
+          if (this.pos) options = {engine: "neato"};
+
+          drawimage(this.viz, options, this.errors);
+          let args = digraph.args;
+          if (!args) {
+              buttondiv.classList.add("hidden");
+              return;
+          }
+          argsdiv.classList.remove("reject");
+          argsdiv.classList.remove("accept");
+          buttondiv.classList.remove("hidden");
+          accepttext.innerText = "";
+
+          // let index = digraph.args.length-1; let indexdir = -1;  // id RL
+          let index = 0;
+          let indexdir = 1;
+          const last = args.length * 3;
+          if (digraph.step >= 0)
+              index += indexdir * (digraph.step / 3 | 0);
+          for (let i = 0; i < args.length; i++) {
+              let c = args[i];
+              let el = document.createElement("span");
+              if (i === index && digraph.step !== last) el.classList.add('selarg');
+              el.innerText = c;
+              el.onclick = function () {
+                  jumpToIndex(i)
+              };
+              el.title = "click to run this";
+              // let el = '<span' + color + '>' + c + '</span>';
+              argsdiv.appendChild(el);
+          }
+          if (this.params.trace && digraph.digraph.cnt)
+              accepttext.innerText = digraph.digraph.cnt;
+          if (digraph.step >= last || digraph.error ) {
+              let text;
+              let cls;
+              if (!digraph.error && digraph.active && digraph.active.accept) {
+                  text = this.params.acceptText;
+                  cls = "accept";
+              }
+              else {
+                  text = this.params.rejectText;
+                  cls = "reject";
+              }
+              argsdiv.classList.add(cls);
+              accepttext.innerText = text;
+          }
+      }
+
+
+      update() {
+         this.makeViz();
+         this.drawdfa();
+      }
+
+  } // VisualDiGraphState
+
+
+  let digraphState = null;
+
+  function jumpToStart() {
+    digraphState.reset();
+    digraphState.update();
+  }
+
+  function stepFwd() {
+    digraphState.forward();
+    digraphState.update();
+  }
+
+  function stepBack() {
+    digraphState.backward();
+    digraphState.update();
+  }
+
+  let timer;
+
+  function animate(digraphState, n, minor, call, until) {
+    clearInterval(timer);
+    if ( n === undefined ) n = 10000;
+    let step = 0;
+    if (digraphState.step >= 0) step = digraphState.step = ((digraphState.step / 3) | 0) * 3;
+    step += minor*n; if ( step <= 0 ) step = -1;
+    timer = setInterval(function() {
+        if (until(step)) {
+          clearInterval(timer);
+          return;
+        }
+        if (!call()) clearInterval(timer);
+        digraphState.update();
+    },500)
+  }
+
+  function animateFwd(n) {
+    animate(digraphState, n, 3, () => digraphState.forward(), (step) => digraphState.step >= step)
+  }
+
+  function animateBack(n) {
+    animate(digraphState, n, -3, () => digraphState.backward(), (step) => digraphState.step <= step);
+  }
+
+  function jumpToIndex(i) {
+    let step = i*3;
+    digraphState.reset();
+    while (digraphState.step < step) digraphState.forward();
+    digraphState.update();
+  }
+
+  function jumpToEnd() {
+    while (digraphState.forward()) {}
+    digraphState.update();
+  }
+
+  function preCheck(data) {
+     if (!data) return false;
+     if (!data.params) return false;
+     let args = data.args || data.params.args;
+     if (!args) return;
+     args = (""+args).trim();
+     data.args = args;
+     let illegal = data.params.illegal;
+     if (!illegal) return false;
+     for (let s of illegal) {
+        let re = new RegExp("^"+s+"$");
+        if (args.match(re)) {
+            errspan.innerText = "Laiton jono: " + args;
+            return true;
+        }
+     }
+     return false;
+  }
+
+
+  function paramDefault(params, name, value) {
+      if (params[name] === undefined) params[name] = value;
+  }
+
+
+  function setData(data) {
+    if ( preCheck(data) ) return;
+    let params = data.params;
+    if (!params) params = { };
+    paramDefault(params, "acceptText", "accept");
+    paramDefault(params, "rejectText", "reject");
+    let digraph = new DiGraph(data.code, params);
+    digraphState = new VisualDiGraphState(digraph, data.args);
+    digraphState.makeViz();
+    digraphState.drawdfa();
+  }
+
+</script>
+  <script>
+    const code = `
+=|a b
+*1 a_ 2
+1 b 3
+2 * 4*
+4 a 1
+4 b 4
+3 a,b 3
+     `;
+    // setData({code: code, args: "abaa", params: {trace: true, acceptText: "joo", rejectText: "nyyh", syntaxes: "2", allowstar: false}});
+    // console.log(digraphState.digraph.accepts("abaa"));
+  </script>
+</body>
+
+</html>

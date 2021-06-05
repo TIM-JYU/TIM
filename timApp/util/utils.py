@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import struct
+from concurrent.futures import Future
 from dataclasses import fields, asdict
 from datetime import datetime, timezone
 from enum import Enum
@@ -13,6 +14,7 @@ from typing import List, Optional, Tuple, Union, Dict, Any, Sequence, Callable, 
 
 import dateutil.parser
 import pytz
+import requests
 from lxml.html import HtmlElement
 
 from timApp.markdown.htmlSanitize import sanitize_html
@@ -372,3 +374,28 @@ def append_to_bytearray(b: bytearray, v: Any) -> None:
         append_to_bytearray(b, v.value)
     else:
         raise Exception(f'Unhandled type: {type(v)}')
+
+
+def read_json_lines(file_to_read: Path) -> List[Dict]:
+    with file_to_read.open() as f:
+        content = f.read()
+    json_str = f'[{",".join(content.splitlines())}]'
+    loaded_json = json.loads(json_str)
+    return loaded_json
+
+
+def wait_response_and_collect_error(f: Future, h: str, errors: List[str]) -> None:
+    try:
+        resp: requests.Response = f.result()
+    except Exception as e:
+        errors.append(f'Connection to {h} failed: {e}')
+    else:
+        if resp.status_code != 200:
+            errors.append(f'{resp.request.url} returned status {resp.status_code} and text {resp.text}')
+
+
+def collect_errors_from_hosts(futures: List[Future], hosts: List[str]) -> List[str]:
+    errors: List[str] = []
+    for f, h in zip(futures, hosts):
+        wait_response_and_collect_error(f, h, errors)
+    return errors

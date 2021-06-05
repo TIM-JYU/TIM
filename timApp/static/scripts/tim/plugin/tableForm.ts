@@ -4,7 +4,12 @@
 import angular from "angular";
 import * as t from "io-ts";
 import {$http, $httpParamSerializer} from "tim/util/ngimport";
-import {clone, maxContentOrFitContent, to} from "tim/util/utils";
+import {
+    clone,
+    defaultErrorMessage,
+    maxContentOrFitContent,
+    to,
+} from "tim/util/utils";
 import {
     ApplicationRef,
     ChangeDetectorRef,
@@ -146,12 +151,20 @@ const Styles = t.record(
 
 interface IRowsType extends t.TypeOf<typeof Rows> {}
 
+interface ITableFormUser {
+    id: number;
+    real_name: string;
+    email: string;
+}
+
 const TableFormAll = t.intersection([
     t.partial({
         aliases: t.record(t.string, t.string),
         fields: t.array(t.string),
-        realnamemap: t.record(t.string, t.string),
-        emailmap: t.record(t.string, t.string),
+        users: t.record(
+            t.string,
+            t.type({id: t.number, email: t.string, real_name: t.string})
+        ),
         membershipmap: t.record(t.string, nullable(t.string)),
         rows: Rows,
         styles: Styles,
@@ -297,15 +310,13 @@ export class TableFormComponent
         userdata: {type: "Relative", cells: {}},
         nonUserSpecific: true,
         isPreview: false,
-        // saveCallBack: this.singleCellSave
     };
     // TODO: Change row format to properly typed format (maybe userobject:IRowstype) format
     private rows!: IRowsType;
     private styles?: t.TypeOf<typeof Styles>;
     private fields!: string[];
     private lockedFields!: string[];
-    private realnamemap!: Record<string, string>;
-    private emailmap!: Record<string, string>;
+    private users!: Record<string, ITableFormUser>;
     private membershipmap!: Record<string, string | null>;
     private aliases!: Record<string, string>;
     private realnames = false;
@@ -562,18 +573,16 @@ export class TableFormComponent
         this.styles = this.attrsall.styles;
         this.fields = this.attrsall.fields ?? [];
         this.lockedFields = this.markup.lockedFields ?? [];
-        this.realnamemap = this.attrsall.realnamemap ?? {};
-        this.emailmap = this.attrsall.emailmap ?? {};
+        this.users = this.attrsall.users ?? {};
         this.membershipmap = this.attrsall.membershipmap ?? {};
         this.aliases = this.attrsall.aliases ?? {};
 
         this.setDataMatrix();
 
-        this.data.saveCallBack = (cellsTosave, colValuesAreSame) =>
-            this.cellChanged(cellsTosave, colValuesAreSame);
+        this.data.saveCallBack = (cellsTosave) => this.cellChanged(cellsTosave);
         if (this.markup.saveStyles) {
-            this.data.saveStyleCallBack = (cellsTosave, colValuesAreSame) =>
-                this.cellChanged(cellsTosave, colValuesAreSame);
+            this.data.saveStyleCallBack = (cellsTosave) =>
+                this.cellChanged(cellsTosave);
         }
         this.data.cbCallBack = (cbs, n, index) => this.cbChanged(cbs, n, index);
 
@@ -611,17 +620,17 @@ export class TableFormComponent
     }
 
     /**
-     * Sorts row key values (usernames) by their real name attribute in this.realnamemap
+     * Sorts row key values (usernames) by their real name attribute in this.users
      * @param a username to compare with b
      * @param b username to compare with a
      */
     sortByRealName(a: string, b: string) {
-        if (!this.realnamemap) {
+        if (!this.users) {
             return 0;
         }
         try {
-            return this.realnamemap[a].localeCompare(
-                this.realnamemap[b],
+            return this.users[a].real_name.localeCompare(
+                this.users[b].real_name,
                 sortLang
             );
         } catch (e) {
@@ -630,11 +639,11 @@ export class TableFormComponent
     }
 
     sortByEmail(a: string, b: string) {
-        if (!this.emailmap) {
-            return 0;
-        }
         try {
-            return this.emailmap[a].localeCompare(this.emailmap[b], sortLang);
+            return this.users[a].email.localeCompare(
+                this.users[b].email,
+                sortLang
+            );
         } catch (e) {
             return 0;
         }
@@ -653,9 +662,8 @@ export class TableFormComponent
         interface TableFetchResponse {
             aliases: Record<string, string>;
             fields: string[];
-            realnamemap: Record<string, string>;
+            users: Record<string, ITableFormUser>;
             membershipmap: Record<string, string>;
-            emailmap: Record<string, string>;
             rows: IRowsType;
             styles: t.TypeOf<typeof Styles>;
         }
@@ -697,8 +705,7 @@ export class TableFormComponent
             this.rows = tableResponse.data.rows || {};
             this.rowKeys = Object.keys(tableResponse.data.rows);
             this.fields = tableResponse.data.fields || [];
-            this.realnamemap = tableResponse.data.realnamemap || {};
-            this.emailmap = tableResponse.data.emailmap || {};
+            this.users = tableResponse.data.users;
             this.styles = tableResponse.data.styles || {};
             this.userLocations = {};
             this.taskLocations = {};
@@ -832,9 +839,8 @@ export class TableFormComponent
                 this.rowKeys.sort((a, b) => this.sortByEmail(a, b));
             }
             this.data.lockedColumns.push(userNameColumn);
-            if (this.emailmap) {
-                this.data.lockedColumns.push(emailColumn);
-            }
+            this.data.lockedColumns.push(emailColumn);
+            // }
             if (this.attrsall.markup.sisugroups) {
                 // These require unique names, otherwise could just use empty strings in place of "invisibleX".
                 this.data.headers = [
@@ -867,9 +873,16 @@ export class TableFormComponent
                     backgroundColor: this.fixedColor,
                 };
                 this.userLocations[y] = r;
+                const userInfo = this.users[r];
+                this.data.userdata.cells[realNameColumn + y] = {
+                    cell: userInfo.real_name,
+                    backgroundColor: this.fixedColor,
+                };
+                this.data.userdata.cells[emailColumn + y] = {
+                    cell: userInfo.email,
+                    backgroundColor: this.fixedColor,
+                };
                 for (const [map, col] of [
-                    [this.realnamemap, realNameColumn],
-                    [this.emailmap, emailColumn],
                     [this.membershipmap, membershipColumn],
                 ] as const) {
                     if (map) {
@@ -950,7 +963,7 @@ export class TableFormComponent
             return;
         }
         await timTable.saveAndCloseSmallEditor();
-        this.doSaveText([]);
+        this.doSaveText();
     }
 
     /**
@@ -1162,17 +1175,11 @@ export class TableFormComponent
         const selUsers = timTable.getCheckedRows(0, true);
         const ulist = [];
         let usep = "";
-        if (!this.realnamemap) {
-            return;
-        }
-        if (!this.emailmap) {
-            return;
-        }
         for (const u of selUsers) {
             const un = u[userNameColIndex];
             let s = "";
             if (this.listName) {
-                s = this.realnamemap[un];
+                s = this.users[un].real_name;
                 usep = ", ";
             }
             if (this.listUsername) {
@@ -1180,7 +1187,7 @@ export class TableFormComponent
                 usep = ", ";
             }
             if (this.listEmail) {
-                s += usep + this.emailmap[un];
+                s += usep + this.users[un].email;
                 usep = ", ";
             }
             usep = "";
@@ -1236,26 +1243,16 @@ export class TableFormComponent
 
     /**
      * Callback function that gets called when timTable saves a cell
+     * Collects information about which cells have changed and which ones want to clear their style attributes
      * @param cellsToSave list of cells that needs to be saved
-     * @param colValuesAreSame if all values in on column has same value
      */
-    async cellChanged(
-        cellsToSave: CellToSave[] | CellAttrToSave[],
-        colValuesAreSame: boolean
-    ) {
-        // TODO make better implementation so singleCellSave is not called one by one
-        // TODO: maybe done so that push cells to chengedCells and call save
-        // TODO: but first check if saved to person or group and to that column by column
+    async cellChanged(cellsToSave: CellToSave[] | CellAttrToSave[]) {
         if (this.attrsall.markup.sisugroups) {
             return;
         }
-
-        const globalChangedFields = new Set<string>();
-
         for (const c of cellsToSave) {
             const coli = c.col;
             const rowi = c.row;
-            const content = c.c;
             const changedStyle = c.key;
             if (changedStyle) {
                 if (changedStyle == "CLEAR") {
@@ -1268,42 +1265,11 @@ export class TableFormComponent
                     );
                 }
             }
-            if (this.markup.autosave) {
-                await this.singleCellSave(
-                    rowi,
-                    coli,
-                    content,
-                    globalChangedFields
-                );
-            } else {
-                this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
-            }
+            this.changedCells.push(colnumToLetters(coli) + (rowi + 1));
         }
-        if (this.viewctrl && globalChangedFields.size > 0) {
-            if (this.markup.autoUpdateFields) {
-                this.viewctrl.updateFields(Array.from(globalChangedFields));
-            }
-            if (this.markup.autoUpdateTables) {
-                this.viewctrl.updateAllTables(Array.from(globalChangedFields));
-            }
+        if (this.markup.autosave) {
+            await this.doSaveText();
         }
-    }
-
-    /**
-     * Calls the actual save function with given cell
-     * @param rowi row number
-     * @param coli col number
-     * @param content unused
-     * @param globalChangedFields set where save fields than should be updated
-     */
-    async singleCellSave(
-        rowi: number,
-        coli: number,
-        content: string,
-        globalChangedFields: Set<string> | undefined = undefined
-    ) {
-        const cells = [colnumToLetters(coli) + (rowi + 1)];
-        await this.doSaveText(cells, globalChangedFields);
     }
 
     async openTable() {
@@ -1333,32 +1299,20 @@ export class TableFormComponent
 
     /**
      * Transforms the cell format back to row format and saves the table input
-     * @param cells to save
-     * @param globalChangedFields set where save fields than should be updated
      */
-    async doSaveText(
-        cells: string[],
-        globalChangedFields: Set<string> | undefined = undefined
-    ) {
+    async doSaveText() {
         // this.error = "... saving ...";
-        let keys: string[];
-        if (cells && cells.length > 0) {
-            keys = cells;
-        } else {
-            // TODO: Force save all?
-            // keys = Object.keys(this.data.userdata.cells);
-            keys = this.changedCells;
-        }
-        if (keys.length == 0) {
+        if (this.changedCells.length == 0) {
             return;
         }
         const replyRows: Record<
-            string,
+            number,
             Record<string, string | null | Record<string, unknown>>
         > = {};
         const changedFields = new Set<string>();
+        const changedFieldsForTables = new Set<string>();
         try {
-            for (const coord of keys) {
+            for (const coord of this.changedCells) {
                 const alphaRegExp = new RegExp("([A-Z]*)");
                 const alpha = alphaRegExp.exec(coord);
                 if (alpha == null) {
@@ -1397,32 +1351,32 @@ export class TableFormComponent
                 // else if (typeof cellContent === "boolean") {
                 //     throw new Error("cell was boolean?");
 
-                // TODO: If attr (auto)updatefields...
-                if (this.viewctrl) {
+                if (
+                    (this.markup.autoUpdateFields ||
+                        this.markup.autoUpdateTables) &&
+                    this.viewctrl
+                ) {
+                    const taskWithField = this.taskLocations[columnPlace].split(
+                        "."
+                    );
+                    const docTask = taskWithField[0] + "." + taskWithField[1];
                     if (
                         this.viewctrl.selectedUser.name ==
                         this.userLocations[numberPlace]
                     ) {
-                        const taskWithField = this.taskLocations[
-                            columnPlace
-                        ].split(".");
-                        const docTask =
-                            taskWithField[0] + "." + taskWithField[1];
-                        if (globalChangedFields) {
-                            // if call from cellChanged update global
-                            globalChangedFields.add(docTask);
-                        } else {
-                            changedFields.add(docTask);
-                        }
+                        // TODO: Should check for global / useCurrentUser fields here
+                        changedFields.add(docTask);
                     }
+                    changedFieldsForTables.add(docTask);
                 }
+                const userId = this.users[this.userLocations[numberPlace]].id;
                 try {
-                    replyRows[this.userLocations[numberPlace]][
+                    replyRows[userId][
                         this.taskLocations[columnPlace]
                     ] = cellContent;
                 } catch (e) {
-                    replyRows[this.userLocations[numberPlace]] = {};
-                    replyRows[this.userLocations[numberPlace]][
+                    replyRows[userId] = {};
+                    replyRows[userId][
                         this.taskLocations[columnPlace]
                     ] = cellContent;
                 }
@@ -1435,9 +1389,7 @@ export class TableFormComponent
                     );
                     const docTaskStyles =
                         taskWithField[0] + "." + taskWithField[1] + ".styles";
-                    replyRows[this.userLocations[numberPlace]][
-                        docTaskStyles
-                    ] = null;
+                    replyRows[userId][docTaskStyles] = null;
                 } else if (
                     cellStyle != null &&
                     Object.keys(cellStyle).length != 0
@@ -1447,9 +1399,7 @@ export class TableFormComponent
                     );
                     const docTaskStyles =
                         taskWithField[0] + "." + taskWithField[1] + ".styles";
-                    replyRows[this.userLocations[numberPlace]][
-                        docTaskStyles
-                    ] = cellStyle;
+                    replyRows[userId][docTaskStyles] = cellStyle;
                 }
             }
         } catch (e) {
@@ -1472,20 +1422,25 @@ export class TableFormComponent
             this.error = data.web.error;
             // this.result = "Saved";
         } else {
-            this.error = r.result.data.error; // "Infinite loop or some other error?";
+            this.error = r.result.data.error ?? defaultErrorMessage;
         }
         const timtab = this.getTimTable();
         if (!timtab) {
             return;
         }
         timtab.confirmSaved();
-        if (this.viewctrl && changedFields.size > 0) {
-            // if this.globalChangedFields then this is empty
-            if (this.markup.autoUpdateFields) {
+        if (this.viewctrl) {
+            if (this.markup.autoUpdateFields && changedFields.size > 0) {
                 this.viewctrl.updateFields(Array.from(changedFields));
             }
-            if (this.markup.autoUpdateTables) {
-                this.viewctrl.updateAllTables(Array.from(changedFields));
+            if (
+                this.markup.autoUpdateTables &&
+                changedFieldsForTables.size > 0
+            ) {
+                this.viewctrl.updateAllTables(
+                    Array.from(changedFieldsForTables),
+                    this.getTaskId()
+                );
             }
         }
         this.clearStylesCells.clear();

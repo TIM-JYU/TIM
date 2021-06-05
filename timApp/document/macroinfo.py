@@ -35,13 +35,17 @@ class MacroInfo:
      (instead of replacing them with empty values)."""
 
     def __post_init__(self) -> None:
+        from timApp.tim_app import app
         doc = self.doc
+        self.macro_map['host'] = app.config["TIM_HOST"]
         if doc is not None:
-            self.macro_map.update({'docid': doc.doc_id})
             docinfo = doc.get_docinfo()
-            self.macro_map.update({'docpath': docinfo.path})
-            self.macro_map.update({'doctitle': docinfo.title})
-            self.macro_map.update({'docname': docinfo.short_name})
+            self.macro_map.update({
+                'docid': doc.doc_id,
+                'docpath': docinfo.path,
+                'doctitle': docinfo.title,
+                'docname': docinfo.short_name
+            })
             urlmacros = doc.get_settings().urlmacros()
             if urlmacros:
                 self.macro_map.update(
@@ -115,7 +119,7 @@ def get_rnd_macros(rndmacros_setting: Dict[str, str], user: Optional['User']) ->
     return ret
 
 
-urlmacros_tester = re.compile(r"[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/]+")
+urlmacros_tester = re.compile(r"[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/@]+")
 
 
 def get_url_macros(

@@ -57,6 +57,10 @@ PLUGIN_CONNECT_TIMEOUT = 0.5
 # When enabled, the readingtypes on_screen and hover_par will not be saved in the database.
 DISABLE_AUTOMATIC_READINGS = False
 HELP_EMAIL = 'tim@jyu.fi'
+
+# Default sender address for email.
+MAIL_FROM = 'tim@jyu.fi'
+
 ERROR_EMAIL = 'timwuff.group@korppi.jyu.fi'
 WUFF_EMAIL = 'wuff@tim.jyu.fi'
 NOREPLY_EMAIL = 'no-reply@tim.jyu.fi'
@@ -129,6 +133,9 @@ ALLOW_CREATE_DOCUMENTS = True
 EMAIL_REGISTRATION_ENABLED = True
 HAKA_ENABLED = True
 
+# If False, resetting password is not allowed.
+PASSWORD_RESET_ENABLED = True
+
 # When enabled, the email login and signup processes are unified so that:
 #
 # * only email is asked first
@@ -175,11 +182,73 @@ INTERNAL_PLUGIN_DOMAIN = 'tim'
 # When sending an answer to another host, use this secret for authentication.
 BACKUP_ANSWER_SEND_SECRET = None
 
-# When receiving an answer from another host, make sure that the given token matches this one.
+# When receiving an answer from another host, make sure that the given secret matches this one.
 BACKUP_ANSWER_RECEIVE_SECRET = None
 
 # In the receiving host, the filename where the answers will be stored, one JSON string per line.
 BACKUP_ANSWER_FILE = 'answers.backup'
 
-# The host where to back up the answers. Should start with "https://".
-BACKUP_ANSWER_HOST = None
+# The hosts where to back up the answers. Every entry should start with "https://".
+BACKUP_ANSWER_HOSTS = None
+
+# DIST_RIGHTS_* variables are related to distributing rights.
+
+# A mapping of target identifiers to lists of hosts.
+# Example:
+# {
+#     'some_exam': {
+#         'hosts': ['https://machine1.example.com', 'https://machine2.example.com'],
+#         'item': 'path/to/some/exam/here',
+#     },
+# }
+DIST_RIGHTS_HOSTS = {
+
+}
+
+# When registering a right that is going to be distributed, make sure that the given secret matches this one.
+DIST_RIGHTS_REGISTER_SECRET = None
+
+# When sending a right to another host, send this secret.
+DIST_RIGHTS_SEND_SECRET = None
+
+# When receiving a right from the distributor host, make sure that the given secret matches this one.
+DIST_RIGHTS_RECEIVE_SECRET = None
+
+# A list of documents on this TIM instance that can register and distribute rights directly
+DIST_RIGHTS_MODERATION_DOCS = [
+
+]
+
+# Map of items that should trigger rights distribution when unlocking the item.
+DIST_RIGHTS_UNLOCK_TARGETS = {
+    # 'path/to/item': ['some_target'],
+}
+
+# List of hosts to send /register calls.
+DIST_RIGHTS_REGISTER_HOSTS = []
+
+# When calling /register, send this secret.
+DIST_RIGHTS_REGISTER_SEND_SECRET = None
+
+# The group that is allowed to call /changeStartTime.
+DIST_RIGHTS_START_TIME_GROUP = None
+
+# Whether this host is the rights distributor.
+DIST_RIGHTS_IS_DISTRIBUTOR = False
+
+# The set of allowed IP networks. The following actions are restricted:
+# * Login and email registration are denied for non-admins.
+# * Answer route is blocked.
+IP_BLOCK_ALLOWLIST = None
+
+# The informational message to display in TIM header if the IP is outside the allowlist.
+IP_BLOCK_MESSAGE = None
+
+# If true, IPs that are:
+# * outside allowed networks and
+# * not in blocklist
+# are not blocked but only logged.
+IP_BLOCK_LOG_ONLY = False
+
+# The set of documents for which the right is inherited from its containing folder.
+INHERIT_FOLDER_RIGHTS_DOCS = {}

@@ -1105,14 +1105,14 @@ tools.setGroup("tg1", []);
 
         def expect_tg1_members(members):
             ug = UserGroup.get_by_name('tg1')
-            self.assertEqual(members, ug.users)
+            self.assertEqual(members, set(ug.users))
 
-        expect_tg1_members([self.test_user_1, self.test_user_2])
+        expect_tg1_members({self.test_user_1, self.test_user_2})
         self.do_jsrun(
             d_empty,
             expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
         )
-        expect_tg1_members([])
+        expect_tg1_members(set())
         d1 = self.create_group_jsrun([self.test_user_1.id], method='addToGroup')
         d2 = self.create_group_jsrun([self.test_user_2.id], method='addToGroup')
         self.do_jsrun(
@@ -1123,7 +1123,7 @@ tools.setGroup("tg1", []);
             d2,
             expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
         )
-        expect_tg1_members([self.test_user_1, self.test_user_2])
+        expect_tg1_members({self.test_user_1, self.test_user_2})
 
         d1 = self.create_group_jsrun([self.test_user_1.id], method='removeFromGroup')
         d2 = self.create_group_jsrun([self.test_user_2.id], method='removeFromGroup')
@@ -1131,12 +1131,12 @@ tools.setGroup("tg1", []);
             d1,
             expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
         )
-        expect_tg1_members([self.test_user_2])
+        expect_tg1_members({self.test_user_2})
         self.do_jsrun(
             d2,
             expect_content={"web": {"output": "", "errors": [], "outdata": {}}},
         )
-        expect_tg1_members([])
+        expect_tg1_members(set())
 
         d = self.create_jsrun("""
 fields: []

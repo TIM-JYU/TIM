@@ -18,7 +18,8 @@ export interface IQueryHandler {
 
     searchUser(
         queryStrings: string[],
-        maxMatches: number
+        maxMatches: number,
+        t9Mode: boolean
     ): Promise<Result<SearchResult, {errorMessage: string}>>;
 }
 
@@ -62,6 +63,7 @@ export class PrefetchedQueryHandler implements IQueryHandler {
         searchStrings: string[][];
     }[] = [];
     allFields: string[] = [];
+    t9Mode: boolean = false;
 
     constructor(
         private http: HttpClient,
@@ -104,7 +106,8 @@ export class PrefetchedQueryHandler implements IQueryHandler {
         this.allFields = result.fieldNames;
     }
 
-    searchUser(queryStrings: string[], maxMatches: number) {
+    searchUser(queryStrings: string[], maxMatches: number, t9Mode: boolean) {
+        this.t9Mode = t9Mode;
         // Workaround for "no await in async method"
         return new Promise<Result<SearchResult, {errorMessage: string}>>(
             (accept) => accept(this.searchUserImpl(queryStrings, maxMatches))
@@ -123,7 +126,7 @@ export class PrefetchedQueryHandler implements IQueryHandler {
             .filter((u) =>
                 u.searchStrings.some((valueToCheck) =>
                     queryStringsSet.some((queryWords) =>
-                        matchKeywords(queryWords, valueToCheck)
+                        matchKeywords(queryWords, valueToCheck, this.t9Mode)
                     )
                 )
             )
@@ -145,14 +148,78 @@ export class PrefetchedQueryHandler implements IQueryHandler {
     }
 }
 
-function matchKeywords(queryWords: string[], keywords: string[]) {
+function matchKeywords(
+    queryWords: string[],
+    keywords: string[],
+    t9Mode: boolean
+) {
     const keywordsSet = new Set(keywords);
+    const normalMatch = matchNormalKeywords(queryWords, keywordsSet);
+    if (normalMatch) return true;
+    if (!t9Mode) return false;
+    return matchT9Keywords(queryWords, keywordsSet);
+}
+
+function matchNormalKeywords(queryWords: string[], keywordsSet: Set<string>) {
     for (const queryWord of queryWords) {
-        const found = setHas(keywordsSet, (v) => v.includes(queryWord));
+        // const found = setHas(keywordsSet, (v) => v.includes(queryWord));
+        const found = setHas(keywordsSet, (v) => v.startsWith(queryWord));
         if (found === undefined) {
             return false;
         }
         keywordsSet.delete(found);
+    }
+    return true;
+}
+
+function matchT9Keywords(queryWords: string[], keywordsSet: Set<string>) {
+    if (queryWords.length === 0) return false;
+    const qw = queryWords[0];
+    if (!qw.match(/^[0-9]+$/)) return false;
+    // If match to original qw with 0's, use that.
+    if (setHas(keywordsSet, (v) => isT9match(v, qw))) {
+        return true;
+    }
+    // if (qw.startsWith("0") || qw.endsWith("0")) {
+    // finds too much without this, but works not so good when 0 is
+    // last number, because if not used as space, says not found
+    // in most normal cases.  This would be needed to find mass30
+    // id 0 in any end, do not use 0 as space
+    //  return false;
+    // }
+    // split from 0's and trim
+    let qw1 = qw.replace(/0+/, " ");
+    qw1 = qw1.trim();
+    queryWords = qw1.split(" ");
+    for (const queryWord of queryWords) {
+        // const found = setHas(keywordsSet, (v) => v.includes(queryWord));
+        const found = setHas(keywordsSet, (v) => isT9match(v, queryWord));
+        if (found === undefined) {
+            return false;
+        }
+        keywordsSet.delete(found);
+    }
+    return true;
+}
+
+const T9CHARS: string[] = [
+    "0", // 0
+    "1", // 1
+    "2abcäå", // 2
+    "3def", // 3
+    "4ghi", // 4
+    "5jkl", // 5
+    "6mnoö", // 6
+    "7pqrs", // 7
+    "8tuvü", // 8
+    "9wxyz", // 9
+];
+
+function isT9match(word: string, nums: string): boolean {
+    if (word.length < nums.length) return false;
+    for (let i = 0; i < nums.length; i++) {
+        const ti: number = +nums[i];
+        if (!T9CHARS[ti].includes(word[i])) return false;
     }
     return true;
 }

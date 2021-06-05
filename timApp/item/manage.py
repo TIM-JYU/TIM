@@ -12,7 +12,7 @@ from isodate import Duration
 
 from timApp.auth.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
     verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort, verify_copy_access, AccessDenied, \
-    get_single_view_access
+    get_single_view_access, has_edit_access
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
 from timApp.auth.sessioninfo import get_current_user_group_object
@@ -55,7 +55,7 @@ def manage(path):
     verify_view_access(item)
 
     is_folder = isinstance(item, Folder)
-    if not is_folder:
+    if not is_folder and has_edit_access(item):
         item.serialize_content = True
         item.changelog_length = get_option(request, 'history', 100)
 
@@ -348,6 +348,30 @@ def remove_permission(m: PermissionRemoveModel):
     check_ownership_loss(had_ownership, i)
 
     log_right(f'removed {a.info_str} for {ug.name} in {i.path}')
+    db.session.commit()
+    return ok_response()
+
+
+@dataclass
+class PermissionClearModel:
+    paths: List[str]
+    type: AccessType = field(metadata={'by_value': True})
+
+
+@manage_page.route("/permissions/clear", methods=["PUT"])
+@use_model(PermissionClearModel)
+def clear_permissions(m: PermissionClearModel):
+    for p in m.paths:
+        i = DocEntry.find_by_path(p, try_translation=True)
+        if not i:
+            i = Folder.find_by_path(p)
+        if not i:
+            raise RouteException(f'Item not found: {p}')
+        verify_ownership(i)
+        i.block.accesses = {
+            (ugid, permtype): v for (ugid, permtype), v in i.block.accesses.items() if
+            permtype != m.type.value
+        }
     db.session.commit()
     return ok_response()
 

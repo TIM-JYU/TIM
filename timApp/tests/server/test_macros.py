@@ -7,6 +7,7 @@ from timApp.markdown.markdownconverter import md_to_html
 from timApp.plugin.plugin import Plugin
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID
 from timApp.tests.server.timroutetest import TimRouteTest, get_content
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
 from timApp.util.utils import decode_csplugin
@@ -53,19 +54,23 @@ header: %%username%% and %%realname%%
         db.session.commit()
 
         pars = self.get(d.url, as_tree=True).cssselect('.parContent')
-        self.assertEqual('Username is testuser1 and real name is Test user 1 and email is test1@example.com and logged name is testuser1',
-                         pars[0].text_content().strip())
+        self.assertEqual(
+            'Username is testuser1 and real name is Test user 1 and email is test1@example.com and logged name is testuser1',
+            pars[0].text_content().strip())
         self.assertEqual('Percents: %%',
                          pars[1].text_content().strip())
         self.assertEqual("Syntax error in template: unexpected ‘end of template’",
                          pars[2].text_content().strip())
-        p, _ = Plugin.from_task_id(f'{d.id}.test', UserContext.from_one_user(User.query.get(TEST_USER_1_ID)), default_view_ctx)
+        p, _ = Plugin.from_task_id(f'{d.id}.test', UserContext.from_one_user(User.query.get(TEST_USER_1_ID)),
+                                   default_view_ctx)
         self.assertEqual('testuser1 and Test user 1', p.values['header'])
         self.login_test2()
-        self.assertEqual('Username is testuser2 and real name is Test user 2 and email is test2@example.com and logged name is testuser2',
-                         self.get(f'/view/{d.id}', as_tree=True).cssselect('.parContent')[
-                             0].text_content().strip())
-        p, _ = Plugin.from_task_id(f'{d.id}.test', UserContext.from_one_user(User.query.get(TEST_USER_2_ID)), default_view_ctx)
+        self.assertEqual(
+            'Username is testuser2 and real name is Test user 2 and email is test2@example.com and logged name is testuser2',
+            self.get(f'/view/{d.id}', as_tree=True).cssselect('.parContent')[
+                0].text_content().strip())
+        p, _ = Plugin.from_task_id(f'{d.id}.test', UserContext.from_one_user(User.query.get(TEST_USER_2_ID)),
+                                   default_view_ctx)
         self.assertEqual('testuser2 and Test user 2', p.values['header'])
 
     def test_user_nocache(self):
@@ -108,6 +113,12 @@ I am %%username%%.
         d.document.add_paragraph('%%docid%% %%docpath%%')
         e = self.get(d.url, as_tree=True)
         self.assert_content(e, [f'{d.id} {d.path}'])
+
+    def test_host_macros(self):
+        self.login_test1()
+        d = self.create_doc(initial_par='%%host%%')
+        e = self.get(d.url, as_tree=True)
+        self.assert_content(e, [app.config["TIM_HOST"]])
 
     def test_globalmacros_with_reference(self):
         self.login_test1()

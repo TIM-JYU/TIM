@@ -723,3 +723,26 @@ class TestSignUp(TimRouteTest):
         # No new mails because registration disabled.
         self.assertEqual(pwcount + 2, len(test_pws))
         app.config['EMAIL_REGISTRATION_ENABLED'] = True
+
+    def test_no_password_reset(self):
+        self.login_test1()
+        with self.temp_config({
+            'PASSWORD_RESET_ENABLED': False,
+            'EMAIL_REGISTRATION_ENABLED': False,
+        }):
+            self.json_post(
+                '/emailSignup', {
+                    'email': 'test1@example.com',
+                    'reset_password': True,
+                },
+                expect_status=403,
+                expect_content='PasswordResetDisabled',
+            )
+            self.json_post(
+                '/emailSignup', {
+                    'email': 'test1@example.com',
+                    'reset_password': False,
+                },
+                expect_status=403,
+                expect_content='Email registration is disabled.',
+            )

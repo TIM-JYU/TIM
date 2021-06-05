@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from typing import List
 from unittest.mock import patch
@@ -13,6 +12,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.util.utils import read_json_lines
 
 
 class AnswerTest(TimRouteTest):
@@ -190,7 +190,7 @@ class AnswerTest(TimRouteTest):
         with self.temp_config({
             'BACKUP_ANSWER_SEND_SECRET': 'xxx',
             'BACKUP_ANSWER_RECEIVE_SECRET': 'xxx',
-            'BACKUP_ANSWER_HOST': f'http://{app.config["INTERNAL_PLUGIN_DOMAIN"]}:5001',
+            'BACKUP_ANSWER_HOSTS': [f'http://{app.config["INTERNAL_PLUGIN_DOMAIN"]}:5001'],
         }):
             with patch.object(tim_celery.send_answer_backup, 'delay', wraps=tim_celery.do_send_answer_backup) as m:  # type: Mock
                 with self.internal_container_ctx():
@@ -198,10 +198,9 @@ class AnswerTest(TimRouteTest):
                     self.post_answer('textfield', task_id, user_input={'c': '2'})
                 self.assertEqual(2, m.call_count)
         anss: List[Answer] = self.test_user_1.answers.filter_by(task_id=task_id).order_by(Answer.id.asc()).all()
-        with get_backup_answer_file().open() as f:
-            backup_content = f.read()
-        json_str = f'[{",".join(backup_content.splitlines())}]'
-        for a, backup in zip(anss, json.loads(json_str)):
+        file_to_read = get_backup_answer_file()
+        loaded_json = read_json_lines(file_to_read)
+        for a, backup in zip(anss, loaded_json):
             self.assertEqual({
                 'content': a.content,
                 'email': self.test_user_1.email,

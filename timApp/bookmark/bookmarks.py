@@ -8,10 +8,6 @@ class Bookmarks:
 
     def __init__(self, user: User):
         self.user = user
-        f = user.get_personal_folder()
-        self.bookmark_document = f.get_document('Bookmarks',
-                                                create_if_not_exist=True,
-                                                creator_group=user.get_personal_group()).document
         self.bookmark_data = self.get_bookmarks()
 
     def add_bookmark(self,
@@ -85,19 +81,26 @@ class Bookmarks:
         return self
 
     def get_bookmarks(self):
-        with self.bookmark_document.get_lock():
+        p = self.user.get_prefs()
+        if p.bookmarks:
+            return p.bookmarks
+        f = self.user.get_personal_folder()
+        docinfo = f.get_document('Bookmarks', create_if_not_exist=False)
+        if not docinfo:
+            return []
+        bookmark_document = docinfo.document
+        with bookmark_document.get_lock():
             # Note: get_own_settings is intentional, so not get_settings.
-            settings = self.bookmark_document.get_own_settings()
-            return DocSettings(self.bookmark_document, settings).get_bookmarks()
+            settings = bookmark_document.get_own_settings()
+            return DocSettings(bookmark_document, settings).get_bookmarks()
 
     def save_bookmarks(self):
         self._set_bookmarks(self.bookmark_data)
 
     def _set_bookmarks(self, bookmark_data):
-        with self.bookmark_document.get_lock():
-            new_settings = self.bookmark_document.get_settings()
-            new_settings.set_bookmarks(bookmark_data)
-            self.bookmark_document.set_settings(new_settings.get_dict())
+        p = self.user.get_prefs()
+        p.bookmarks = bookmark_data
+        self.user.set_prefs(p)
 
     def as_dict(self) -> List[Dict]:
         result = []

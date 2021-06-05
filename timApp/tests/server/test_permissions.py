@@ -681,3 +681,54 @@ class PermissionTest(TimRouteTest):
         self.get(d.url, expect_status=403, expect_contains="Sorry, you don't have permission to access this resource.")
         d.document.set_settings({'access_denied_message': 'You cannot see this.'})
         self.get(d.url, expect_status=403, expect_contains="You cannot see this.")
+
+    def test_inherit_rights_from_folder(self):
+        self.login_test1()
+        d = self.create_doc(
+            path=self.get_personal_item_path('x/test'),
+            initial_par='#- {plugin=textfield #t}'
+        )
+        tr = self.create_translation(d)
+        f = d.parent
+        self.test_user_2.grant_access(f, AccessType.view)
+        db.session.commit()
+        self.login_test2()
+        self.get(d.url, expect_status=403)
+        self.get(tr.url, expect_status=403)
+        with self.temp_config({'INHERIT_FOLDER_RIGHTS_DOCS': {d.path}}):
+            self.get(d.url)
+            self.get(tr.url)
+            self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
+            self.post_answer('textfield', f'{d.id}.t', user_input={'c': 'x'})
+
+    def test_no_fulltext_in_manage_with_view(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {plugin=csPlugin}
+-pointsRule: 
+  expectCode: "secret answer"
+""")
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.login_test2()
+        r = self.get(d.get_url_for_view('manage'))
+        self.assertNotIn('secret answer', r)
+
+    def test_permission_clear(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.test_user_2.grant_access(d, AccessType.view)
+        self.test_user_2.grant_access(d, AccessType.edit)
+        db.session.commit()
+        db.session.refresh(d)
+        self.assertTrue(self.test_user_2.has_edit_access(d))
+        self.assertTrue(self.test_user_2.has_view_access(d))
+        self.json_put('/permissions/clear', {'paths': [d.path], 'type': AccessType.edit.value})
+        d = DocEntry.find_by_id(d.id)
+        self.assertFalse(self.test_user_2.has_edit_access(d))
+        self.assertTrue(self.test_user_2.has_view_access(d))
+        self.json_put('/permissions/clear', {'paths': [d.path], 'type': AccessType.view.value})
+        d = DocEntry.find_by_id(d.id)
+        self.assertFalse(self.test_user_2.has_edit_access(d))
+        self.assertFalse(self.test_user_2.has_view_access(d))
+        self.assertTrue(self.test_user_1.has_ownership(d))

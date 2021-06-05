@@ -736,14 +736,15 @@ class TimRouteTest(TimDbTest):
         self.assertEqual(expect_content, var)
 
     def get_js_variable(self, element, variable_name):
-        variables = element.cssselect('script[class="global-vars"]')[0].text
-        # '\s*' are zero or more whitespaces, '(.*)' is variable content between '=' and ';'.
-        matches = re.findall(f"{variable_name}\s*=\s*(.*);", variables)
-        if matches:
-            var = json.loads(matches[0])
-            return var
-        else:
-            raise AssertionError(f"'{variable_name}' not found")
+        scripts = element.cssselect('script[class="global-vars"]')
+        for s in scripts:
+            variables = s.text
+            # '\s*' are zero or more whitespaces, '(.*)' is variable content between '=' and ';'.
+            matches = re.findall(f"{variable_name}\s*=\s*(.*);", variables)
+            if matches:
+                var = json.loads(matches[0])
+                return var
+        raise AssertionError(f"'{variable_name}' not found")
 
     def assert_elements_equal(self, e1, e2):
         try:
@@ -1027,9 +1028,11 @@ class TimRouteTest(TimDbTest):
         old_settings = {k: current_app.config[k] for k in settings.keys()}
         for k, v in settings.items():
             current_app.config[k] = v
-        yield
-        for k, v in old_settings.items():
-            current_app.config[k] = v
+        try:
+            yield
+        finally:
+            for k, v in old_settings.items():
+                current_app.config[k] = v
 
 
 class TimPluginFix(TimRouteTest):

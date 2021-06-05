@@ -4,9 +4,9 @@ from unittest.mock import patch, Mock
 from timApp.auth.accesstype import AccessType
 from timApp.document.caching import clear_doc_cache
 from timApp.document.docentry import DocEntry
+from timApp.item import routes
 from timApp.item.routes import render_doc_view
 from timApp.tests.server.timroutetest import TimRouteTest, get_note_id_from_json
-from timApp.item import routes
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
@@ -103,6 +103,16 @@ class CachingTest(TimRouteTest):
 2/2 testuser2: already cached
                 """.strip() + '\n')
         self.check_is_cached(d)
+        self.get(
+            f'/generateCache/{d.path}',
+            # TODO enable this test. We need two users with only view right.
+            #  testuser1 and 2 have different rights so there will be differences in the HTML.
+            # query_string={'print_diffs': True},
+            expect_content="""
+1/2 testuser1: already cached
+2/2 testuser2: already cached
+
+                        """.strip() + '\n')
 
         ug = UserGroup.create('testgroup1')
         self.test_user_3.add_to_group(ug, added_by=None)
@@ -120,3 +130,46 @@ class CachingTest(TimRouteTest):
         # sqlalchemy.orm.exc.FlushError in initialize_database. Refreshing the test client prevents it.
         # The line self.test_user_3.add_to_group seems to trigger the error.
         self.refresh_client()
+
+    def test_cache_generate_exam_mode(self):
+        self.login_test1()
+        d = self.create_doc(settings={'exam_mode': 'view', 'cache': True})
+
+        # The nocache is just for making sure there's no previous doc cache when rerunning this same test from IDE.
+        # The doc id is always the same because the DB starts fresh.
+        self.get(d.url, query_string={'nocache': True})
+
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.get(
+            f'/generateCache/{d.path}',
+        )
+        self.login_test2()
+        r = self.get(d.url, as_tree=True)
+        self.assert_js_variable(r, 'exam_mode', True)
+        rights = self.get_js_variable(r, 'curr_item')['rights']
+        self.assertEqual({
+            'browse_own_answers': True,
+            'can_comment': True,
+            'can_mark_as_read': True,
+            'copy': False,
+            'editable': False,
+            'manage': False,
+            'owner': False,
+            'see_answers': False,
+            'teacher': False},
+            rights,
+        )
+        rights = self.get_js_variable(r, 'translations')[0]['rights']
+        self.assertEqual({
+            'browse_own_answers': True,
+            'can_comment': True,
+            'can_mark_as_read': True,
+            'copy': False,
+            'editable': False,
+            'manage': False,
+            'owner': False,
+            'see_answers': False,
+            'teacher': False},
+            rights,
+        )

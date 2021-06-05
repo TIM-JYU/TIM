@@ -8,7 +8,7 @@ import pytz
 from flask import flash
 from jinja2.sandbox import SandboxedEnvironment
 
-from timApp.auth.sessioninfo import get_session_usergroup_ids
+from timApp.auth.sessioninfo import get_session_usergroup_ids, get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
@@ -26,6 +26,7 @@ from timApp.readmark.readings import get_common_readings, get_read_expiry_condit
 from timApp.readmark.readmarkcollection import ReadMarkCollection
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.user.user import User, check_rights
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
 
@@ -155,10 +156,11 @@ def post_process_pars(
     if curr_user.logged_in:
         # taketime("readings begin")
 
-        usergroup_ids = get_session_usergroup_ids()
+        # TODO: UserContext should support multiple users like in group login.
+        usergroup_ids = [user_ctx.logged_user.get_personal_group().id]
 
         # If we're in exam mode and we're visiting the page for the first time, mark everything read
-        if should_auto_read(doc, usergroup_ids, user_ctx.user):
+        if should_auto_read(doc, usergroup_ids, user_ctx.logged_user):
             should_mark_all_read = True
             readings = []
         else:
@@ -359,4 +361,8 @@ def process_areas(
 
 def should_auto_read(doc: Document, usergroup_ids: List[int], user: User) -> bool:
     return not has_anything_read(usergroup_ids, doc) and (
-                check_rights(doc.get_settings().exam_mode(), doc.docinfo.rights) or user.get_prefs().auto_mark_all_read)
+        check_rights(
+            doc.get_settings().exam_mode(),
+            get_user_rights_for_item(doc.docinfo, get_current_user_object()),
+        ) or user.get_prefs().auto_mark_all_read
+    )

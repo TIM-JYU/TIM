@@ -38,25 +38,6 @@ class SettingsTest(TimRouteTest):
                                                   'see_answers': True,
                                                   'teacher': True},
                                        'title': 'document 2',
-                                       'unpublished': True},
-                                      {'id': 4,
-                                       'isFolder': False,
-                                       'location': 'users/test-user-1',
-                                       'modified': 'just now',
-                                       'name': 'Bookmarks',
-                                       'owners': [{'id': t1id, 'name': 'testuser1'}],
-                                       'path': 'users/test-user-1/Bookmarks',
-                                       'public': True,
-                                       'rights': {'browse_own_answers': True,
-                                                  'can_comment': True,
-                                                  'can_mark_as_read': True,
-                                                  'copy': True,
-                                                  'editable': True,
-                                                  'manage': True,
-                                                  'owner': True,
-                                                  'see_answers': True,
-                                                  'teacher': True},
-                                       'title': 'Bookmarks',
                                        'unpublished': True}],
                                  'owned_folders':
                                      [{'id': 2,
@@ -91,7 +72,15 @@ class SettingsTest(TimRouteTest):
                                           'modified': self.test_user_1.modified.isoformat(),
                                           'name': 'testuser1',
                                           'origin': None,
-                                          'prefs': None,
+                                          'prefs': '{"css_files": {}, "custom_css": "", '
+                                                   '"use_document_word_list": false, "disable_menu_hover": '
+                                                   'false, "remember_last_sidebar_menu_tab": false, '
+                                                   '"remember_last_sidebar_menu_state": false, "word_list": '
+                                                   '"", "email_exclude": "", "language": null, '
+                                                   '"last_answer_fetch": {}, "auto_mark_all_read": false, '
+                                                   '"bookmarks": [{"Last edited": [{"document 2": '
+                                                   '"/view/users/test-user-1/doc1"}]}], "css_combined": '
+                                                   '"default"}',
                                           'real_name': 'Test user 1'},
                                  'velps': []})
         self.get('/settings/info/testuser2', expect_status=403)
@@ -138,7 +127,7 @@ type: python
         self.assertNotIn('points', json.loads(answs[0]['content']))
 
     def test_settings_save(self):
-        self.login_test1()
+        self.login_test3()
         self.json_post(f'/settings/save', {'invalid': 'yes'}, expect_status=400)
         self.get(f'/settings/get',
                  expect_content={'css_combined': 'default',
@@ -153,6 +142,7 @@ type: python
                                  'remember_last_sidebar_menu_tab': False,
                                  'remember_last_sidebar_menu_state': False,
                                  'auto_mark_all_read': False,
+                                 'bookmarks': None,
                                  })
         self.json_post(
             f'/settings/save',
@@ -185,6 +175,7 @@ type: python
                      'remember_last_sidebar_menu_state': True,
                      'remember_last_sidebar_menu_tab': True,
                      'auto_mark_all_read': True,
+                     'bookmarks': None,
                  })
         self.json_post(
             f'/settings/save',
@@ -216,6 +207,7 @@ type: python
                      'remember_last_sidebar_menu_state': False,
                      'remember_last_sidebar_menu_tab': True,
                      'auto_mark_all_read': False,
+                     'bookmarks': None,
                  })
 
     def test_settings_get_single(self):

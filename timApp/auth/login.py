@@ -13,11 +13,11 @@ from flask import url_for
 from flask.sessions import SecureCookieSession
 
 from timApp.admin.user_cli import do_merge_users, do_soft_delete
-from timApp.auth.accesshelper import verify_admin, AccessDenied
+from timApp.auth.accesshelper import verify_admin, AccessDenied, verify_ip_ok
 from timApp.auth.sessioninfo import get_current_user_id, logged_in
 from timApp.auth.sessioninfo import get_other_users, get_session_users_ids, get_other_users_as_list, \
     get_current_user_object
-from timApp.notification.notify import send_email
+from timApp.notification.send_email import send_email
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
@@ -203,6 +203,9 @@ def do_email_signup_or_password_reset(
         if only_password_reset and not User.get_by_email_case_insensitive(email):
             fail = True
 
+    if only_password_reset and not current_app.config['PASSWORD_RESET_ENABLED']:
+        raise AccessDenied('PasswordResetDisabled')
+
     password = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
 
     nu = NewUser.query.get(email)
@@ -245,7 +248,8 @@ def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
         if u:
             nu = NewUser.query.get(u.email)
     if not (nu and nu.check_password(oldpass)):
-        log_warning(f'Wrong temp password for "{email_or_username}": "{oldpass}"')
+        masked = oldpass[0] + '*****' if oldpass else ''
+        log_warning(f'Wrong temp password for "{email_or_username}": "{masked}"')
         raise RouteException('WrongTempPassword')
     return nu
 
@@ -282,6 +286,7 @@ def email_signup_finish(
     username = nu_email
     real_name = realname
     user = User.get_by_email(nu_email)
+    verify_ip_ok(user)
     if user is not None:
         # User with this email already exists
         user_id = user.id
@@ -370,6 +375,8 @@ def do_email_login(
                 ug = UserGroup(name=user.name)
                 user.groups.append(ug)
                 db.session.commit()
+            verify_ip_ok(user)
+
             set_user_to_session(user)
 
             # if password hash was updated, save it
