@@ -71,7 +71,7 @@ def test_name(name_candidate: str) -> None:
     """Check new message list's name candidate's name.
 
      The name has to meet naming rules, it has to be not already be in use and it cannot be a reserved name. If the
-     function retuns control to it's caller, then name is viable to use for a message list. If at some point the name
+     function retuns control to its caller, then name is viable to use for a message list. If at some point the name
      is not viable, then an exception is raised.
 
     :param name_candidate: The name candidate to check.
@@ -98,7 +98,7 @@ def domains() -> Response:
 
 @messagelist.route("/deletelist", methods=['DELETE'])
 def delete_list(listname: str, permanent: bool) -> Response:
-    """Delete message and it's associated message channels.
+    """Delete message and  associated message channels.
 
     :param listname: The list to be deleted.
     :param permanent: A boolean flag indicating if the deletion is meant to be permanent.
@@ -113,7 +113,7 @@ def delete_list(listname: str, permanent: bool) -> Response:
     # The amount of docentries a message list's block relationship refers to should be one. If not, something is
     # terribly wrong.
     if len(message_list.block.docentries) > 1:
-        log_error(f"Message list '{listname}' has multiple docentries to it's block relationship.")
+        log_error(f"Message list '{listname}' has multiple docentries to its block relationship.")
         raise RouteException("Can't perform deletion at this time. The problem has been logged for admins.")
 
     # Perform deletion.
@@ -182,7 +182,7 @@ def save_list_options(options: ListOptions) -> Response:
         raise RouteException("You need at least a manange access to the list in order to do this action.")
 
     if message_list.archive_policy != options.archive:
-        # TODO: If message list changes it's archive policy, the members on the list need to be notified. Insert
+        # TODO: If message list changes its archive policy, the members on the list need to be notified. Insert
         #  messaging here.
         message_list.archive = options.archive
 

@@ -110,7 +110,6 @@ def delete_email_list(list_to_delete: MailingList, permanent_deletion: bool = Fa
     :param list_to_delete: MailingList object of the email list to be deleted.
     """
     try:
-        # list_to_delete: MailingList = _client.get_list(fqdn_listname)
         if permanent_deletion:
             list_to_delete.delete()
         else:
@@ -228,12 +227,12 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         mlist_settings["send_welcome_message"] = False
         mlist_settings["send_goodbye_message"] = False
 
-        # This is to force Mailman generate archivers into it's db. It exists is to fix a race condition,
-        # where creating a new list without proper engineer interface procedures might make duplicate archiver rows
-        # in to db, while Mailman's code expects there to be only one archiver row (which results in the db code
-        # breaking and the list becoming unusable, at least without manual db fixing). This might be unnecessary at
-        # some point in time in the future if the condition is remedied in Mailman Core, but since this line is only
-        # needed once on list creation it might be good enough to just leave as is.
+        # This is to force Mailman generate archivers into its db. It fixes a race condition, where creating a new list
+        # without proper engineer interface procedures might make duplicate archiver rows in to db, while Mailman's code
+        # expects there to be only one archiver row (which results in the db code breaking and the list becoming
+        # unusable, at least without manual db fixing). This might be unnecessary at some point in time in the future if
+        # the condition is remedied in Mailman Core, but since this line is only needed once on list creation it might
+        # be good enough to just leave as is.
         _ = dict(email_list.archivers)
 
         set_email_list_archive_policy(email_list, list_options.archive)
@@ -249,7 +248,7 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
 def get_list_ui_link(listname: str, domain: Optional[str]) -> Optional[str]:
     """Get a link for a list to use for advanced email list options and moderation.
 
-    The function assumes that Mailman uses Postorius as it's web-UI. There exists no guarantee that other web-UIs would
+    The function assumes that Mailman uses Postorius as its web-UI. There exists no guarantee that other web-UIs would
     use the exact form for their links. If Postorius is changed to some other web-UI, this needs to be updated.
 
     :param listname: The list we are getting the UI link for.
@@ -263,7 +262,7 @@ def get_list_ui_link(listname: str, domain: Optional[str]) -> Optional[str]:
         if _client is None:
             return None
         mail_list = _client.get_list(f"{listname}@{domain}")
-        # Get the list's list id, which is basically it's address/name but '@' replaced with a dot.
+        # Get the list's list id, which is basically its address/name but '@' replaced with a dot.
         list_id: str = mail_list.rest_data["list_id"]
         # Build the hyperlink.
         link = f"{config.MAILMAN_UI_LINK_PREFIX}{list_id}"

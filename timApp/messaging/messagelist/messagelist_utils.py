@@ -128,7 +128,7 @@ class EmailAndDisplayName:
 @dataclass
 class BaseMessage:
     """A unified datastructure for messages TIM handles."""
-    # Meta information about where this message belongs to and where it's from. Mandatory values for all messages.
+    # Meta information about where this message belongs to and where its from. Mandatory values for all messages.
     message_list_name: str
     message_channel: Channel = field(metadata={'by_value': True})  # Where the message came from.
 
@@ -703,7 +703,7 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
 
     Adding a group to a message list means that all the users in the (user) group will be added individually in the
     message list and the group itself will be added to the list. The group being in the list means that the group
-    will be observed for changes in it's membership.
+    will be observed for changes in its membership.
 
     Performs checking for possible duplicates. Checks that the adder has at least manage rights to group's admin doc.
 
@@ -851,7 +851,7 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
     :param member: Member who's rights are being set.
     :param send: Member's new send right.
     :param delivery: Member's new delivery right.
-    :param email_list: If the message list has email list as one of it's message channels, set the send and delivery
+    :param email_list: If the message list has email list as one of its message channels, set the send and delivery
      rights there also.
     :return: None.
     """
@@ -863,7 +863,7 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
                 mlist_member = get_email_list_member(email_list, member.get_email())
                 set_email_list_member_send_status(mlist_member, send)
             elif member.is_group():
-                # For group, set the delivery status for it's members on the email list.
+                # For group, set the delivery status for its members on the email list.
                 ug = member.tim_member.user_group
                 ug_members = ug.users  # ug.current_memberships
                 for ug_member in ug_members:
@@ -880,7 +880,7 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
                 mlist_member = get_email_list_member(email_list, member.get_email())
                 set_email_list_member_delivery_status(mlist_member, delivery)
             elif member.is_group():
-                # For group, set the delivery status for it's members on the email list.
+                # For group, set the delivery status for its members on the email list.
                 ug = member.tim_member.user_group
                 ug_members = ug.users  # ug.current_memberships
                 for ug_member in ug_members:
@@ -890,7 +890,7 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
 
 
 def set_message_list_description(message_list: MessageListModel, description: Optional[str]) -> None:
-    """Set a (short) description to a message list and it's associated message channels.
+    """Set a (short) description to a message list and its associated message channels.
 
     :param message_list: The message list where the description is set.
     :param description: The new description. If None, keep the current value.
@@ -904,7 +904,7 @@ def set_message_list_description(message_list: MessageListModel, description: Op
 
 
 def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -> None:
-    """Set a long description (called 'info' on Mailman) to a message list and it's associated message channels.
+    """Set a long description (called 'info' on Mailman) to a message list and its associated message channels.
 
     :param message_list: The message list where the (long) description is set.
     :param info: The new long description. If None, keep the current value.
