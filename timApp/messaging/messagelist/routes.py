@@ -369,12 +369,3 @@ def get_group_members(list_name: str) -> Response:
         gm = GroupAndMembers(groupName=user_group.name, members=group_members)
         groups_and_members.append(gm)
     return json_response(groups_and_members)
-
-
-@messagelist.route("/test", methods=['GET'])
-def test_route() -> Response:
-    """A testing route. Only allow calls here during development, i.e. when operating from localhost."""
-    if not is_localhost():
-        raise RouteException()
-    # Add possible testing code here.
-    return ok_response()
