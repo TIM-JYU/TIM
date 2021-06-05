@@ -667,65 +667,33 @@ def set_message_list_default_reply_type(message_list: MessageListModel,
         set_email_list_default_reply_type(email_list, default_reply_type)
 
 
-def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
-                                  send_right: bool, delivery_right: bool,
-                                  em_list: Optional[MailingList]) -> None:
-    """Add a TIM user as a member on a message list.
-
-    Performs a duplicate check. A duplicate member will not be added again to the list. This process is different to
-    re-activating a removed member of a list. For re-activating an already existing member, use
-    set_message_list_member_removed_status function.
-
-    This is a direct add, meaning member's membership_verified attribute is set in this function. Use other means to
-    invite members.
-
-    :param msg_list: The message list where the new user will be added as a member.
-    :param user: TIM user to be added to the message list.
-    :param send_right: The send right to be set for the new member.
-    :param delivery_right: The delivery right to be set for the new member.
-    :param em_list: If not None, indicates that the user will also be added to the email list that belongs to the
-    message list.
-    """
-    # Check for member duplicates.
-    member = msg_list.find_member(username=user.name, email=user.email)
-    if member and not member.membership_ended:
-        return
-
-    new_tim_member = MessageListTimMember(message_list=msg_list, user_group=user.get_personal_group(),
-                                          delivery_right=delivery_right, send_right=send_right,
-                                          membership_verified=get_current_time())
-    db.session.add(new_tim_member)
-
-    if em_list is not None:
-        # TODO: Search for a set of emails and a primary email here when users' additional emails are implemented.
-        user_email = user.email
-        add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
-                  send_right=new_tim_member.send_right, delivery_right=new_tim_member.delivery_right)
-
-
 def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
                                send_right: bool, delivery_right: bool, em_list: Optional[MailingList]) -> None:
     """Add new (user) group to a message list.
 
-    Adding a group to a message list means that all the users in the (user) group will be added individually in the
-    message list and the group itself will be added to the list. The group being in the list means that the group
-    will be observed for changes in its membership.
+    For groups, checks that the adder has at least manage rights to group's admin doc.
 
-    Performs checking for possible duplicates. Checks that the adder has at least manage rights to group's admin doc.
+    Performs a duplicate check for memberships. A duplicate member will not be added again to the list. The process
+    of re-activating a removed member of a list is different. For re-activating an already existing member,
+    use set_message_list_member_removed_status function.
+
+    This is a direct add, meaning member's membership_verified attribute is set in this function. Use other means to
+    invite members.
 
     :param msg_list: The message list where the group will be added.
-    :param ug: The user group being added the a message list.
+    :param ug: The user group being added to a message list.
     :param send_right: Send right for user groups members, that will be added to the message list individually.
     :param delivery_right: Delivery right for user groups members, that will be added to the message list individually.
     :param em_list: An optional email list. If given, then all the members of the user group will also be subscribed to
     the email list.
     """
-    # Check right to the group. Right checking is not required for personal groups, only generated user groups.
+    # Check right to a group. Right checking is not required for personal groups, only user groups.
     if not ug.is_personal_group and not has_manage_access(ug.admin_doc):
         return
 
-    # Check for duplicates. Groups only have their name to check against.
-    if msg_list.find_member(username=ug.name, email=None):
+    # Check for membership duplicates.
+    member = msg_list.find_member(username=ug.name, email=None)
+    if member and not member.membership_ended:
         return
     # Add the user group as a member to the message list.
     new_group_member = MessageListTimMember(message_list_id=msg_list.id, group_id=ug.id,
@@ -736,6 +704,7 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     # Add group's individual members to message channels.
     if em_list is not None:
         for user in ug.users:
+            # TODO: Search for a set of emails and a primary email here when users' additional emails are implemented.
             user_email = user.email  # In the future, we can search for a set of emails and a primary email here.
             add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
                       send_right=send_right, delivery_right=delivery_right)

@@ -17,14 +17,13 @@ from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_na
     set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
     set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
     set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
-    add_new_message_list_tim_user, add_new_message_list_group, add_message_list_external_email_member, \
+    add_new_message_list_group, add_message_list_external_email_member, \
     set_message_list_member_removed_status, set_member_send_delivery, set_message_list_description, \
     set_message_list_info
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
-from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import RouteException, is_localhost
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_error
@@ -295,13 +294,7 @@ def add_member(member_candidates: List[str], msg_list: str, send_right: bool, de
         em_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
 
     for member_candidate in member_candidates:
-        # For individual users
-        u = User.get_by_name(member_candidate.strip())
-        if u is not None:
-            # The name given was an existing TIM user.
-            add_new_message_list_tim_user(message_list, u, send_right, delivery_right, em_list)
-
-        # For user groups.
+        # For user groups and individual users.
         ug = UserGroup.get_by_name(member_candidate.strip())
         if ug is not None:
             # The name belongs to a user group.
