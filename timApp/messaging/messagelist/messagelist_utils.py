@@ -54,9 +54,19 @@ def verify_name_availability(name_candidate: str) -> None:
         raise RouteException(f"Message list with name {name_candidate} already exists.")
 
 
+# Regular expression patters used for name rule verification. They are kept here, so they are not re-compiled at
+# every name rule verification. The explanation of the rules is at their usage in verify_name_rules function.
+START_WITH_LOWERCASE_PATTER = re.compile(r"^[a-z]")
+SEQUENTIAL_DOTS_PATTERN = re.compile(r"\.\.+")
+PROHIBITED_CHARACTERS_PATTERN = re.compile(r"[^a-z0-9.\-_]")
+REQUIRED_DIGIT_PATTERN = re.compile(r"\d")
+
+
 def verify_name_rules(name_candidate: str) -> None:
-    """Check if name candidate complies with naming rules. The method raises a RouteException if naming rule is
-    violated. If this function doesn't raise an exception, then the name candidate follows naming rules.
+    """Check if name candidate complies with naming rules.
+
+    The function raises a RouteException if naming rule is violated. If this function doesn't raise an exception,
+    then the name candidate follows naming rules.
 
     :param name_candidate: What name we are checking against the rules.
     """
@@ -72,13 +82,11 @@ def verify_name_rules(name_candidate: str) -> None:
                              f"most {upper_bound} characters long.")
 
     # Name has to start with a lowercase letter.
-    start_with_lowercase = re.compile(r"^[a-z]")
-    if start_with_lowercase.search(name_candidate) is None:
+    if not START_WITH_LOWERCASE_PATTER.search(name_candidate):
         raise RouteException("Name has to start with a lowercase letter.")
 
     # Name cannot have multiple dots in sequence.
-    no_sequential_dots = re.compile(r"\.\.+")
-    if no_sequential_dots.search(name_candidate) is not None:
+    if SEQUENTIAL_DOTS_PATTERN.search(name_candidate):
         raise RouteException("Name cannot have sequential dots.")
 
     # Name cannot end in a dot.
@@ -92,14 +100,12 @@ def verify_name_rules(name_candidate: str) -> None:
     #     dot '.'
     #     hyphen '-'
     #     underscore '_'
-    # Notice the compliment usage of ^.
-    allowed_characters = re.compile(r"[^a-z0-9.\-_]")
-    if allowed_characters.search(name_candidate) is not None:
+    # The pattern is a negation of the actual rules.
+    if PROHIBITED_CHARACTERS_PATTERN.search(name_candidate):
         raise RouteException("Name contains forbidden characters.")
 
     # Name has to include at least one digit.
-    required_digit = re.compile(r"\d")
-    if required_digit.search(name_candidate) is None:
+    if not REQUIRED_DIGIT_PATTERN.search(name_candidate):
         raise RouteException("Name has to include at least one digit.")
 
 
