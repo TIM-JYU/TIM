@@ -731,6 +731,9 @@ export class MessageListAdminComponent implements OnInit {
                 this.memberGroups.push(gm.groupName);
             }
         } else {
+            this.permanentErrorMessage =
+                "Loading members of groups failed. Please refresh the browser. If the problem " +
+                "persists, please contact TIM's support.";
         }
     }
 
