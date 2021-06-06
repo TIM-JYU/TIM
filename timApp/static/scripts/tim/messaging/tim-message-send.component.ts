@@ -89,8 +89,8 @@ export class TimMessageComponent {
      *  TODO: This component has a minor bug. If the textfield of recipients is emptied by hand, the component closes
      *  and it can't be reopened unless the recipientList variable changes. A hypothetical fix would be to use a
      *  separate flag in the *ngIf, instead of just the recipientList variable. Then this flag would only be operated to
-     *  close when  the component is closed from the x. It would propably requrie change detection for the recipientList
-     *  variable, as it's length grows beoynd 0 the the flag is set on?
+     *  close when the component is closed from the x. It would propably requrie change detection for the recipientList
+     *  variable, as its length grows beoynd 0 the the flag is set on?
      */
 
     @Input()
@@ -181,7 +181,7 @@ export class TimMessageComponent {
         }
     }
 
-    // resets form to it's initial values
+    // resets form to its initial values
     resetForm() {
         this.messageMsg = "Sent!";
         setTimeout((): void => {

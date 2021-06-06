@@ -149,9 +149,8 @@ import {Users} from "../user/userService";
                             members are only
                             added after you click the "Add new members" button.</p>
                         <p class="indented">Add individual TIM users by writing their username.</p>
-                        <p class="indented">Add a group by writing it's name. You need to be the owner of the group for
-                            the adding to
-                            succeed.</p>
+                        <p class="indented">Add a group by writing its name. You need to be the owner of the group for
+                            the adding to succeed.</p>
                         <p class="indented">Add an external member (someone who is not a TIM user) by writing their
                             email address
                             (mandatory) and name (optional) either in the form <code>john.doe@domain.fi John Doe</code>
@@ -532,7 +531,7 @@ export class MessageListAdminComponent implements OnInit {
 
     /**
      * Get values for message list's options.
-     * @param docID List is defined by it's management document, so we get list's options and members with it.
+     * @param docID List is defined by its management document, so we get list's options and members with it.
      */
     async loadValues(docID: number) {
         return to2(
@@ -732,6 +731,9 @@ export class MessageListAdminComponent implements OnInit {
                 this.memberGroups.push(gm.groupName);
             }
         } else {
+            this.permanentErrorMessage =
+                "Loading members of groups failed. Please refresh the browser. If the problem " +
+                "persists, please contact TIM's support.";
         }
     }
 

@@ -17,14 +17,13 @@ from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_na
     set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
     set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
     set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
-    add_new_message_list_tim_user, add_new_message_list_group, add_message_list_external_email_member, \
+    add_new_message_list_group, add_message_list_external_email_member, \
     set_message_list_member_removed_status, set_member_send_delivery, set_message_list_description, \
     set_message_list_info
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
-from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import RouteException, is_localhost
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_error
@@ -71,7 +70,7 @@ def test_name(name_candidate: str) -> None:
     """Check new message list's name candidate's name.
 
      The name has to meet naming rules, it has to be not already be in use and it cannot be a reserved name. If the
-     function retuns control to it's caller, then name is viable to use for a message list. If at some point the name
+     function retuns control to its caller, then name is viable to use for a message list. If at some point the name
      is not viable, then an exception is raised.
 
     :param name_candidate: The name candidate to check.
@@ -98,7 +97,7 @@ def domains() -> Response:
 
 @messagelist.route("/deletelist", methods=['DELETE'])
 def delete_list(listname: str, permanent: bool) -> Response:
-    """Delete message and it's associated message channels.
+    """Delete message and  associated message channels.
 
     :param listname: The list to be deleted.
     :param permanent: A boolean flag indicating if the deletion is meant to be permanent.
@@ -113,7 +112,7 @@ def delete_list(listname: str, permanent: bool) -> Response:
     # The amount of docentries a message list's block relationship refers to should be one. If not, something is
     # terribly wrong.
     if len(message_list.block.docentries) > 1:
-        log_error(f"Message list '{listname}' has multiple docentries to it's block relationship.")
+        log_error(f"Message list '{listname}' has multiple docentries to its block relationship.")
         raise RouteException("Can't perform deletion at this time. The problem has been logged for admins.")
 
     # Perform deletion.
@@ -182,7 +181,7 @@ def save_list_options(options: ListOptions) -> Response:
         raise RouteException("You need at least a manange access to the list in order to do this action.")
 
     if message_list.archive_policy != options.archive:
-        # TODO: If message list changes it's archive policy, the members on the list need to be notified. Insert
+        # TODO: If message list changes its archive policy, the members on the list need to be notified. Insert
         #  messaging here.
         message_list.archive = options.archive
 
@@ -295,13 +294,7 @@ def add_member(member_candidates: List[str], msg_list: str, send_right: bool, de
         em_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
 
     for member_candidate in member_candidates:
-        # For individual users
-        u = User.get_by_name(member_candidate.strip())
-        if u is not None:
-            # The name given was an existing TIM user.
-            add_new_message_list_tim_user(message_list, u, send_right, delivery_right, em_list)
-
-        # For user groups.
+        # For user groups and individual users.
         ug = UserGroup.get_by_name(member_candidate.strip())
         if ug is not None:
             # The name belongs to a user group.
@@ -369,12 +362,3 @@ def get_group_members(list_name: str) -> Response:
         gm = GroupAndMembers(groupName=user_group.name, members=group_members)
         groups_and_members.append(gm)
     return json_response(groups_and_members)
-
-
-@messagelist.route("/test", methods=['GET'])
-def test_route() -> Response:
-    """A testing route. Only allow calls here during development, i.e. when operating from localhost."""
-    if not is_localhost():
-        raise RouteException()
-    # Add possible testing code here.
-    return ok_response()

@@ -113,7 +113,7 @@ class MessageListModel(db.Model):
 
     @staticmethod
     def get_list_by_name_first(name_candidate: str) -> 'MessageListModel':
-        """Get a message list by it's name, if a list with said name exists.
+        """Get a message list by its name, if a list with said name exists.
 
         :param name_candidate: The name of the message list.
         :return: Return the message list after query by name. Returns at most one result or None if no there are hits.
@@ -174,9 +174,9 @@ class MessageListModel(db.Model):
             raise ValueError
 
         for member in self.members:
-            if username is not None and username == member.get_username():
+            if username and username == member.get_username():
                 return member
-            if email is not None and email == member.get_email():
+            if email and email == member.get_email():
                 return member
         return None
 

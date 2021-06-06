@@ -54,9 +54,19 @@ def verify_name_availability(name_candidate: str) -> None:
         raise RouteException(f"Message list with name {name_candidate} already exists.")
 
 
+# Regular expression patters used for name rule verification. They are kept here, so they are not re-compiled at
+# every name rule verification. The explanation of the rules is at their usage in verify_name_rules function.
+START_WITH_LOWERCASE_PATTER = re.compile(r"^[a-z]")
+SEQUENTIAL_DOTS_PATTERN = re.compile(r"\.\.+")
+PROHIBITED_CHARACTERS_PATTERN = re.compile(r"[^a-z0-9.\-_]")
+REQUIRED_DIGIT_PATTERN = re.compile(r"\d")
+
+
 def verify_name_rules(name_candidate: str) -> None:
-    """Check if name candidate complies with naming rules. The method raises a RouteException if naming rule is
-    violated. If this function doesn't raise an exception, then the name candidate follows naming rules.
+    """Check if name candidate complies with naming rules.
+
+    The function raises a RouteException if naming rule is violated. If this function doesn't raise an exception,
+    then the name candidate follows naming rules.
 
     :param name_candidate: What name we are checking against the rules.
     """
@@ -72,13 +82,11 @@ def verify_name_rules(name_candidate: str) -> None:
                              f"most {upper_bound} characters long.")
 
     # Name has to start with a lowercase letter.
-    start_with_lowercase = re.compile(r"^[a-z]")
-    if start_with_lowercase.search(name_candidate) is None:
+    if not START_WITH_LOWERCASE_PATTER.search(name_candidate):
         raise RouteException("Name has to start with a lowercase letter.")
 
     # Name cannot have multiple dots in sequence.
-    no_sequential_dots = re.compile(r"\.\.+")
-    if no_sequential_dots.search(name_candidate) is not None:
+    if SEQUENTIAL_DOTS_PATTERN.search(name_candidate):
         raise RouteException("Name cannot have sequential dots.")
 
     # Name cannot end in a dot.
@@ -92,14 +100,12 @@ def verify_name_rules(name_candidate: str) -> None:
     #     dot '.'
     #     hyphen '-'
     #     underscore '_'
-    # Notice the compliment usage of ^.
-    allowed_characters = re.compile(r"[^a-z0-9.\-_]")
-    if allowed_characters.search(name_candidate) is not None:
+    # The pattern is a negation of the actual rules.
+    if PROHIBITED_CHARACTERS_PATTERN.search(name_candidate):
         raise RouteException("Name contains forbidden characters.")
 
     # Name has to include at least one digit.
-    required_digit = re.compile(r"\d")
-    if required_digit.search(name_candidate) is None:
+    if not REQUIRED_DIGIT_PATTERN.search(name_candidate):
         raise RouteException("Name has to include at least one digit.")
 
 
@@ -128,7 +134,7 @@ class EmailAndDisplayName:
 @dataclass
 class BaseMessage:
     """A unified datastructure for messages TIM handles."""
-    # Meta information about where this message belongs to and where it's from. Mandatory values for all messages.
+    # Meta information about where this message belongs to and where its from. Mandatory values for all messages.
     message_list_name: str
     message_channel: Channel = field(metadata={'by_value': True})  # Where the message came from.
 
@@ -661,65 +667,33 @@ def set_message_list_default_reply_type(message_list: MessageListModel,
         set_email_list_default_reply_type(email_list, default_reply_type)
 
 
-def add_new_message_list_tim_user(msg_list: MessageListModel, user: User,
-                                  send_right: bool, delivery_right: bool,
-                                  em_list: Optional[MailingList]) -> None:
-    """Add a TIM user as a member on a message list.
-
-    Performs a duplicate check. A duplicate member will not be added again to the list. This process is different to
-    re-activating a removed member of a list. For re-activating an already existing member, use
-    set_message_list_member_removed_status function.
-
-    This is a direct add, meaning member's membership_verified attribute is set in this function. Use other means to
-    invite members.
-
-    :param msg_list: The message list where the new user will be added as a member.
-    :param user: TIM user to be added to the message list.
-    :param send_right: The send right to be set for the new member.
-    :param delivery_right: The delivery right to be set for the new member.
-    :param em_list: If not None, indicates that the user will also be added to the email list that belongs to the
-    message list.
-    """
-    # Check for member duplicates.
-    member = msg_list.find_member(username=user.name, email=user.email)
-    if member and not member.membership_ended:
-        return
-
-    new_tim_member = MessageListTimMember(message_list=msg_list, user_group=user.get_personal_group(),
-                                          delivery_right=delivery_right, send_right=send_right,
-                                          membership_verified=get_current_time())
-    db.session.add(new_tim_member)
-
-    if em_list is not None:
-        # TODO: Search for a set of emails and a primary email here when users' additional emails are implemented.
-        user_email = user.email
-        add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
-                  send_right=new_tim_member.send_right, delivery_right=new_tim_member.delivery_right)
-
-
 def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
                                send_right: bool, delivery_right: bool, em_list: Optional[MailingList]) -> None:
     """Add new (user) group to a message list.
 
-    Adding a group to a message list means that all the users in the (user) group will be added individually in the
-    message list and the group itself will be added to the list. The group being in the list means that the group
-    will be observed for changes in it's membership.
+    For groups, checks that the adder has at least manage rights to group's admin doc.
 
-    Performs checking for possible duplicates. Checks that the adder has at least manage rights to group's admin doc.
+    Performs a duplicate check for memberships. A duplicate member will not be added again to the list. The process
+    of re-activating a removed member of a list is different. For re-activating an already existing member,
+    use set_message_list_member_removed_status function.
+
+    This is a direct add, meaning member's membership_verified attribute is set in this function. Use other means to
+    invite members.
 
     :param msg_list: The message list where the group will be added.
-    :param ug: The user group being added the a message list.
+    :param ug: The user group being added to a message list.
     :param send_right: Send right for user groups members, that will be added to the message list individually.
     :param delivery_right: Delivery right for user groups members, that will be added to the message list individually.
     :param em_list: An optional email list. If given, then all the members of the user group will also be subscribed to
     the email list.
     """
-    # Check right to the group. Right checking is not required for personal groups, only generated user groups.
+    # Check right to a group. Right checking is not required for personal groups, only user groups.
     if not ug.is_personal_group and not has_manage_access(ug.admin_doc):
         return
 
-    # Check for duplicates. Groups only have their name to check against.
-    if msg_list.find_member(username=ug.name, email=None):
+    # Check for membership duplicates.
+    member = msg_list.find_member(username=ug.name, email=None)
+    if member and not member.membership_ended:
         return
     # Add the user group as a member to the message list.
     new_group_member = MessageListTimMember(message_list_id=msg_list.id, group_id=ug.id,
@@ -730,6 +704,7 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     # Add group's individual members to message channels.
     if em_list is not None:
         for user in ug.users:
+            # TODO: Search for a set of emails and a primary email here when users' additional emails are implemented.
             user_email = user.email  # In the future, we can search for a set of emails and a primary email here.
             add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
                       send_right=send_right, delivery_right=delivery_right)
@@ -851,7 +826,7 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
     :param member: Member who's rights are being set.
     :param send: Member's new send right.
     :param delivery: Member's new delivery right.
-    :param email_list: If the message list has email list as one of it's message channels, set the send and delivery
+    :param email_list: If the message list has email list as one of its message channels, set the send and delivery
      rights there also.
     :return: None.
     """
@@ -863,7 +838,7 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
                 mlist_member = get_email_list_member(email_list, member.get_email())
                 set_email_list_member_send_status(mlist_member, send)
             elif member.is_group():
-                # For group, set the delivery status for it's members on the email list.
+                # For group, set the delivery status for its members on the email list.
                 ug = member.tim_member.user_group
                 ug_members = ug.users  # ug.current_memberships
                 for ug_member in ug_members:
@@ -880,7 +855,7 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
                 mlist_member = get_email_list_member(email_list, member.get_email())
                 set_email_list_member_delivery_status(mlist_member, delivery)
             elif member.is_group():
-                # For group, set the delivery status for it's members on the email list.
+                # For group, set the delivery status for its members on the email list.
                 ug = member.tim_member.user_group
                 ug_members = ug.users  # ug.current_memberships
                 for ug_member in ug_members:
@@ -890,7 +865,7 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
 
 
 def set_message_list_description(message_list: MessageListModel, description: Optional[str]) -> None:
-    """Set a (short) description to a message list and it's associated message channels.
+    """Set a (short) description to a message list and its associated message channels.
 
     :param message_list: The message list where the description is set.
     :param description: The new description. If None, keep the current value.
@@ -904,7 +879,7 @@ def set_message_list_description(message_list: MessageListModel, description: Op
 
 
 def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -> None:
-    """Set a long description (called 'info' on Mailman) to a message list and it's associated message channels.
+    """Set a long description (called 'info' on Mailman) to a message list and its associated message channels.
 
     :param message_list: The message list where the (long) description is set.
     :param info: The new long description. If None, keep the current value.

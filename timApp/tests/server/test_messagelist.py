@@ -13,10 +13,10 @@ class MessageListTest(TimRouteTest):
         self.login_test1()
         testuser1 = self.current_user
         self.make_admin(testuser1)
-        # Create the list. This name corresponds with name requirements. It's long enough, contains only allowed
+        # Create the list. This name corresponds with name requirements. Its long enough, contains only allowed
         # characters and has at least one digit.
         list_name = "valid_list5"
-        # The archive type is a mandatory value in list creation, but it's exact value doesn't have an impact on this
+        # The archive type is a mandatory value in list creation, but its exact value doesn't have an impact on this
         # test.
         archive = ArchiveType.PUBLIC
         response_item = self.json_post("/messagelist/createlist",

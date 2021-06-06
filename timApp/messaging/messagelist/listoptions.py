@@ -26,7 +26,7 @@ class ArchiveType(Enum):
     NONE = 0
     # Secret archive. Only for owner(and moderators?). No direct correlation with Mailman's archive policies.
     SECRET = 1
-    # For group and it's members' eyes only. Equal for Mailman's archive policy of 'private'.
+    # For group and its members' eyes only. Equal for Mailman's archive policy of 'private'.
     GROUPONLY = 2
     # Logged in TIM users can see the list.
     UNLISTED = 3
@@ -64,7 +64,7 @@ class ListOptions:
     """If only pure text is allowed on a list."""
 
     list_description: Optional[str] = None
-    """A short description of the list and it's purpose."""
+    """A short description of the list and its purpose."""
 
     list_info: Optional[str] = None
     """Additional information about the list."""
@@ -97,7 +97,7 @@ class ListOptions:
     allow_attachments: Optional[bool] = None
     """A flag controlling if attachments are allowed on the list."""
 
-    distribution: Optional[Distribution] = None  # List[Channel] = field(default_factory=list)
+    distribution: Optional[Distribution] = None
     """All the message channels the list is using."""
 
     removed: Optional[datetime] = None
@@ -118,7 +118,7 @@ class MemberInfo:
 
 @dataclass
 class GroupAndMembers:
-    """Helper class for querying user group and it's members."""
+    """Helper class for querying user group and its members."""
     groupName: str
     members: List[MemberInfo]
 
