@@ -598,7 +598,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             access: AccessType,
             grace_period=timedelta(seconds=0),
     ) -> Optional[BlockAccess]:
-        return self.has_some_access(i, access_sets[access], grace_period=grace_period)
+        from timApp.auth.accesshelper import check_inherited_right
+        return check_inherited_right(self, i, access, grace_period) or self.has_some_access(i, access_sets[access],
+                                                                                            grace_period=grace_period)
 
     def has_view_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
         return self.has_some_access(i, view_access_set)
