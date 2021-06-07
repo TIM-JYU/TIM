@@ -99,6 +99,7 @@ function time02String(time: number) {
 }
 
 const youtubeDomains = new Set(["www.youtube.com", "youtube.com", "youtu.be"]);
+const moniviestinDomains = new Set(["m3.jyu.fi", "moniviestin.jyu.fi"]);
 
 function isYoutube(file: string) {
     try {
@@ -552,29 +553,37 @@ export class VideoComponent extends AngularPluginBase<
         this.addEventListeners();
 
         this.span = this.limits;
-        const moniviestin = this.markup.file.includes("m3.jyu.fi");
-        let params = "?";
-        if (this.start) {
-            if (moniviestin) {
-                params = "#position=" + this.start;
-            } else {
-                params = "?start=" + this.start + "&end=" + this.end;
+        const srcUrl = new URL(this.markup.file, location.origin);
+        if (moniviestinDomains.has(srcUrl.hostname)) {
+            if (this.start) {
+                srcUrl.hash = "#position=" + this.start;
+            }
+        } else {
+            if (this.start) {
+                srcUrl.searchParams.set("start", this.start.toString());
+            }
+            if (this.end) {
+                srcUrl.searchParams.set("end", this.end.toString());
             }
         }
         if (this.iframe) {
-            let file = this.markup.file;
-            if (isYoutube(file) && !file.includes("embed")) {
-                const yname = "youtu.be/"; // could be also https://youtu.be/1OygRiwlAok
-                const yembed = "//www.youtube.com/embed/";
-                const iy = file.indexOf(yname);
-                const parts = file.split("=");
-                if (parts.length > 1) {
-                    file = yembed + parts[1];
-                } else if (iy >= 0) {
-                    file = yembed + file.substring(iy + yname.length);
+            if (
+                youtubeDomains.has(srcUrl.hostname) &&
+                !srcUrl.pathname.includes("embed")
+            ) {
+                let id;
+                if (srcUrl.hostname.includes("youtu.be")) {
+                    // Shortened form: https://youtu.be/1OygRiwlAok
+                    id = srcUrl.pathname.substring(1);
+                } else {
+                    // Normal form: https://www.youtube.com/watch?v=1OygRiwlAok
+                    id = srcUrl.searchParams.get("v") ?? "";
+                    srcUrl.searchParams.delete("v");
                 }
+                srcUrl.hostname = "www.youtube.com";
+                srcUrl.pathname = `/embed/${id}`;
             }
-            const src = `${file}${params}`;
+            const src = srcUrl.toString();
             this.isPdf =
                 src.includes(".pdf") && // TODO: hack for Mac Safari see https://gitlab.com/tim-jyu/tim/-/issues/2114
                 isSafari();
@@ -592,7 +601,6 @@ export class VideoComponent extends AngularPluginBase<
                 allow: null,
             };
         } else {
-            params = "";
             let tbe = "";
             if (this.start) {
                 tbe += this.start; // loadedmetadata event doesn't work on iPad
@@ -601,10 +609,10 @@ export class VideoComponent extends AngularPluginBase<
                 }
             }
             if (tbe) {
-                params = "#t=" + tbe;
+                srcUrl.hash = "#t=" + tbe;
             }
             this.videosettings = {
-                src: `${this.markup.file}${params}`,
+                src: srcUrl.toString(),
             };
         }
         this.videoOn = true;
