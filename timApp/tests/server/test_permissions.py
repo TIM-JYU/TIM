@@ -688,6 +688,7 @@ class PermissionTest(TimRouteTest):
             path=self.get_personal_item_path('x/test'),
             initial_par='#- {plugin=textfield #t}'
         )
+        uf = self.upload_file(d, b'test', 'test.txt')
         tr = self.create_translation(d)
         f = d.parent
         self.test_user_2.grant_access(f, AccessType.view)
@@ -695,9 +696,11 @@ class PermissionTest(TimRouteTest):
         self.login_test2()
         self.get(d.url, expect_status=403)
         self.get(tr.url, expect_status=403)
+        self.get(f'/files/{uf["file"]}', expect_status=403)
         with self.temp_config({'INHERIT_FOLDER_RIGHTS_DOCS': {d.path}}):
             self.get(d.url)
             self.get(tr.url)
+            self.get(f'/files/{uf["file"]}')
             self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
             self.post_answer('textfield', f'{d.id}.t', user_input={'c': 'x'})
 
