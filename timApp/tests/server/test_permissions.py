@@ -696,6 +696,7 @@ class PermissionTest(TimRouteTest):
         self.login_test2()
         self.get(d.url, expect_status=403)
         self.get(tr.url, expect_status=403)
+        self.get(f'/files/{uf["file"]}', expect_status=403)
         with self.temp_config({'INHERIT_FOLDER_RIGHTS_DOCS': {d.path}}):
             self.get(d.url)
             self.get(tr.url)
