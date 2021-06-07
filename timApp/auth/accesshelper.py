@@ -112,7 +112,7 @@ def check_inherited_right(
 ) -> Optional[BlockAccess]:
     has_access = None
     is_docinfo = isinstance(b, DocInfo)
-    if is_docinfo or isinstance(b, Block) and b.type_id == BlockType.Document.value:
+    if is_docinfo or (isinstance(b, Block) and b.type_id == BlockType.Document.value):
         doc = b if is_docinfo else DocEntry.find_by_id(b.id)
         if not doc:
             return None
