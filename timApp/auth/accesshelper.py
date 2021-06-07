@@ -19,6 +19,7 @@ from timApp.document.document import Document, dereference_pars
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, OriginInfo
 from timApp.folder.folder import Folder
+from timApp.item.block import BlockType, Block
 from timApp.item.item import Item
 from timApp.notification.send_email import send_email
 from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
@@ -86,9 +87,7 @@ def verify_access(
         user: Optional[User] = None,
 ):
     u = user or get_current_user_object()
-    has_access = check_inherited_right(u, b, access_type, grace_period)
-    if not has_access:
-        has_access = u.has_access(b, access_type, grace_period)
+    has_access = u.has_access(b, access_type, grace_period)
     if not has_access and check_parents:
         # Only uploaded files and images have a parent so far.
         for x in (u.has_access(p, access_type, grace_period) for p in b.parents):
@@ -112,8 +111,12 @@ def check_inherited_right(
         grace_period: timedelta,
 ) -> Optional[BlockAccess]:
     has_access = None
-    if isinstance(b, DocInfo):
-        if b.path_without_lang in current_app.config['INHERIT_FOLDER_RIGHTS_DOCS']:
+    is_docinfo = isinstance(b, DocInfo)
+    if is_docinfo or isinstance(b, Block) and b.type_id == BlockType.Document.value:
+        doc = b if is_docinfo else DocEntry.find_by_id(b.id)
+        if not doc:
+            return None
+        if doc.path_without_lang in current_app.config['INHERIT_FOLDER_RIGHTS_DOCS']:
             has_access = u.has_access(b.parent, access_type, grace_period)
     return has_access
 
