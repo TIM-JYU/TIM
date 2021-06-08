@@ -313,7 +313,13 @@ def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Res
     messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList,
                                     options.readReceipt, False, get_current_user_object().name,
                                     get_current_user_object().email, options.repliesTo)
-    message = messageBody
+    recipient = User.get_by_name(messageBody.recipients.pop())
+    if recipient:
+        recipient_email = recipient.email
+    else:
+        raise NotExist('Recipient not found')
+
+    message = MessageBody(messageBody.messageBody, messageBody.messageSubject, [recipient_email])
 
     return send_message_or_reply(messageOptions, message)
 
@@ -353,7 +359,7 @@ def cancel_read_receipt(message_id: int) -> Response:
     verify_logged_in()
 
     receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=get_current_user_object().get_personal_group().id,
-                                                         message_id=message_id).first()
+                                                         message_id=message_id).one()
     receipt.user_id = None
     receipt.marked_as_read_on = None
     db.session.commit()
