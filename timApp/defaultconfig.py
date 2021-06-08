@@ -164,8 +164,9 @@ MAILMAN_EVENT_API_KEY = None
 # Link prefix to Postorius Web-UI. If used as is, directs to the mailing lists page.
 MAILMAN_UI_LINK_PREFIX = "https://timlist.it.jyu.fi/postorius/lists/"
 # Permitted file extensions allowed on message lists. If this grows large, maybe move to an external file and modify
-# getting attachments from the file instead.
-PERMITTED_ATTACHMENTS = ["jpg", "pdf", "png", "tex", "txt"]
+# getting attachment file extensions from the file instead.
+PERMITTED_ATTACHMENTS = ["doc", "docx", "htm", "html", "jpeg", "jpg", "pdf", "png", "ppt", "pptx", "tex", "txt", "xls",
+                         "xlsx"]
 # These names are reserved from the pool of names for message lists. If need arises, split into TIM and message
 # channel specific reserved names.
 RESERVED_NAMES = ["postmaster", "listmaster", "admin"]
