@@ -420,7 +420,7 @@ class VerificationType(Enum):
     EMAIL_OWNERSHIP = 2
 
 
-class Verifications(db.Model):
+class Verification(db.Model):
     """For various pending verifications, such as message list joining and email ownership verification."""
     __tablename__ = "verifications"
 
