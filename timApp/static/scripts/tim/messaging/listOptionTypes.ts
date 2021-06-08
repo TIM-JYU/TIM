@@ -62,20 +62,19 @@ export const archivePolicyNames: ArchivePolicyNames[] = [
     {archiveType: ArchiveType.NONE, policyName: "No archiving."},
     {
         archiveType: ArchiveType.SECRET,
-        policyName: "Secret archive. Only for owners of the list.",
+        policyName: "Owners only",
     },
     {
         archiveType: ArchiveType.GROUPONLY,
-        policyName:
-            "Members only archive. Only logged-in members of this list can access.",
+        policyName: "Members only.",
     },
     {
         archiveType: ArchiveType.UNLISTED,
-        policyName: "Unlisted archive. TIM-users with link can access.",
+        policyName: "TIM-users.",
     },
     {
         archiveType: ArchiveType.PUBLIC,
-        policyName: "Public archive. Everyone with link can access.",
+        policyName: "Public.",
     },
 ].reverse();
 

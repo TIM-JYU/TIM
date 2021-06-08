@@ -12,29 +12,13 @@ div.archive-options {
   font-weight: bold;
 }
 
-
 input[type='radio'] {
   margin-right: 2em;
-}
-
-
-input[type='checkbox'] {
-  // For checkboxes in options.
-  margin-right: 2em;
-  margin-bottom: 2em;
-}
-
-
-td > input[type='checkbox'] {
-  // For checkboxes in tables.
-  margin-right: 0;
-  margin-bottom: 0;
 }
 
 .list-name {
   font-weight: bold;
 }
-
 
 .owner-address {
   font-weight: bold;
@@ -51,7 +35,6 @@ td > input[type='checkbox'] {
 .long-description {
   font-weight: bold;
 }
-
 
 label {
   font-weight: normal;
