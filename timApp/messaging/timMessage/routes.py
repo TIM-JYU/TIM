@@ -313,7 +313,7 @@ def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Res
     messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList,
                                     options.readReceipt, False, get_current_user_object().name,
                                     get_current_user_object().email, options.repliesTo)
-    recipient = User.get_by_name(messageBody.recipients.pop()).email
+    recipient = User.get_by_name(messageBody.recipients.pop())
     if recipient:
         recipient_email = recipient.email
     else:
