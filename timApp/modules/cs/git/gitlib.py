@@ -129,7 +129,7 @@ class GitLib:
             try:
                 file.content = file.bcontent.decode(encoding="utf-8")
             except Exception as e:
-                file.content = None
+                continue
             files.append(file)
 
         return files
@@ -144,7 +144,7 @@ class GitLib:
         elif basepath.is_dir() and dpath.exists() and not dpath.is_dir():
             rm(dpath)
 
-        copy_files_glob(glob, str(basepath), destination)
+        return copy_files_glob(glob, str(basepath), destination)
 
     def sanitize_repo_path(self, repo: str):
         repo = re.sub(r'[^A-Za-z0-9\.-_]', "-", repo)
@@ -284,6 +284,11 @@ def checkout(path: str, sub_path = ".", do_fetch=True, remote="origin", branch="
         response = subprocess.run(["git", "-C", path, "fetch"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
         if response.returncode != 0:
             raise Exception(f"Git fetch: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
+
+    response = subprocess.run(["git", "-C", path, "rm", "-rf", sub_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+    if response.returncode != 0:
+        raise Exception(f"Git rm: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
+
     response = subprocess.run(["git", "-C", path, "checkout", *options, checkout_branch, "--", sub_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
     if response.returncode != 0:
         raise Exception(f"Git checkout: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")

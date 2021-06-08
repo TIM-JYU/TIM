@@ -7,9 +7,10 @@ from typing import List, Optional, Dict, Tuple, Iterable, Any, Generator, TypeVa
     TypedDict, MappingView, ItemsView
 
 from bs4 import UnicodeDammit
+from flask import current_app
 from sqlalchemy import func, Numeric, Float, true
 from sqlalchemy.dialects.postgresql import aggregate_order_by
-from sqlalchemy.orm import selectinload, defaultload, Query
+from sqlalchemy.orm import selectinload, defaultload, Query, joinedload
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
@@ -364,6 +365,8 @@ def get_users_for_tasks(
         cols.append(doc_id)
     if user_ids is not None:
         main = main.filter(User.id.in_(user_ids))
+    if current_app.config["LOAD_STUDENT_IDS_IN_TEACHER"]:
+        main = main.options(joinedload('uniquecodes'))
     main = main.group_by(User.id, *group_by_cols)
 
     # prevents error:
@@ -499,6 +502,7 @@ def get_points_by_rule(
                 task_points=None,
                 task_id=t.doc_task,
             ))
+    rule_groups = dict(rule.groups)
     for tu in tasks_users:
         u = tu['user']
         uid = u.id
@@ -507,7 +511,14 @@ def get_points_by_rule(
             c = task_counts.get(uid, 0)
             c += 1
             task_counts[uid] = c
-        for grp in rule.find_groups(tu['task_id']):
+
+        group_names = list(rule.find_groups(tu['task_id']))
+        if not group_names and rule.include_groupless:
+            gname = TaskId.parse(tu['task_id']).task_name
+            group_names = [gname]
+            rule_groups[gname] = Group(gname, gname)
+
+        for grp in group_names:
             result[uid]['groups'][grp]['tasks'].append(tu)
     for user_id, task_groups in result.items():
         groups = task_groups['groups']
@@ -515,10 +526,10 @@ def get_points_by_rule(
         for groupname, group in groups.items():
             task_sum = None
             velp_sum = None
-            gr = rule.groups[groupname]
+            gr = rule_groups[groupname]
             if PointType.task in gr.point_types:
                 task_sum = sum_and_round(t['task_points'] for t in group['tasks'] if t['task_points'] is not None)
-            if PointType.velp in rule.groups[groupname].point_types:
+            if PointType.velp in gr.point_types:
                 velp_sum = sum_and_round(t['velp_points'] for t in group['tasks'] if t['velp_points'] is not None)
             group['velped_task_count'] = sum(1 for t in group['tasks'] if t['velped_task_count'] > 0)
             if task_sum is not None and velp_sum is not None:
@@ -544,11 +555,12 @@ def get_points_by_rule(
             task_groups['task_sum'] = sum_and_round(s[0] for s in groupsums[0:rule.count_amount] if s[0] is not None)
             task_groups['velp_sum'] = sum_and_round(s[1] for s in groupsums[0:rule.count_amount] if s[1] is not None)
             task_groups['total_sum'] = sum_and_round(s[2] for s in groupsums[0:rule.count_amount] if s[2] is not None)
-    return flatten_points_result(rule, result, task_counts, user_map)
+    return flatten_points_result(rule, rule_groups, result, task_counts, user_map)
 
 
 def flatten_points_result(
         rule: PointSumRule,
+        rule_groups: Dict[str, Group],
         result: DefaultDict[int, UserPointInfo],
         task_counts: Dict[int, int],
         user_map: Dict[int, User],
@@ -567,9 +579,9 @@ def flatten_points_result(
         )
 
         if rule.sort:
-            rulegroups: Union[ItemsView[str, Group], List[Tuple[str, Group]]] = sorted(rule.groups.items())
+            rulegroups: Union[ItemsView[str, Group], List[Tuple[str, Group]]] = sorted(rule_groups.items())
         else:
-            rulegroups = rule.groups.items()
+            rulegroups = rule_groups.items()
         for groupname, rg in rulegroups:
             if hide_list and groupname in hide_list:
                 continue

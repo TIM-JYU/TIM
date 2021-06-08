@@ -82,18 +82,20 @@ def rm(path: Path):
 
 def copy_files_regex(f: str, source: str, dest: str):
     if f is None or source is None or dest is None:
-        return
+        return 0
 
     dest = Path(dest)
 
     regex = re.compile(f)
 
+    count = 0
     for root, _, files in os.walk(source):
         rootp = Path(root)
         relpath = rootp.relative_to(source)
         for file in files:
             relfilepath = relpath / file
             if regex.fullmatch(str(relfilepath)) is not None:
+                count += 1
                 if dest.is_file():
                     dest.unlink()
                 mkdirs(str(dest))
@@ -103,10 +105,12 @@ def copy_files_regex(f: str, source: str, dest: str):
                 for f in filepath.parents:
                     chown(f, user="agent", group="agent")
 
+    return count
+
 
 def copy_files_glob(glob: str, source: str, dest: str):
     if glob is None or source is None or dest is None:
-        return
+        return 0
 
     path = Path(source)
     if not path.exists():
@@ -145,11 +149,9 @@ def copy_files_glob(glob: str, source: str, dest: str):
                 chown(os.path.join(root, d), user="agent", group="agent")
             for f in files:
                 chown(os.path.join(root, f), user="agent", group="agent")
-        return
     elif len(matches) > 1 and not dest_dir:
         raise Exception("Cannot copy multiple files to a single filename")
-
-    if dest_dir:
+    elif dest_dir:
         for m in matches:
             destination = dest / m.relative_to(source)
             if m.is_dir():
@@ -165,9 +167,11 @@ def copy_files_glob(glob: str, source: str, dest: str):
             chown(destination, user="agent", group="agent")
             for f in m.relative_to(source).parents:
                 chown(dest / f, user="agent", group="agent")
-    else:
+    elif len(matches) > 0:
         copy2(str(matches[0]), dest)
         chown(dest, user="agent", group="agent")
+
+    return len(matches)
 
 
 def is_parent_of(parent: str, child: str):
