@@ -200,12 +200,6 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     try:
         domain: Domain = _client.get_domain(list_options.domain)
         email_list: MailingList = domain.create_list(list_options.name)
-        # All lists created through TIM need an owner, and owners need email addresses to control their lists on
-        # Mailman.
-        email_list.add_owner(owner.email)
-        # Add owner automatically as a member of a list.
-        email_list.subscribe(owner.email, display_name=owner.real_name, pre_approved=True, pre_verified=True,
-                             pre_confirmed=True)
 
         set_default_templates(email_list)
 
@@ -241,9 +235,16 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
 
         set_email_list_archive_policy(email_list, list_options.archive)
 
-        # This needs to be the last line, because no changes to settings take effect until save() method is
-        # called.
+        # This needs to be the last line aften changing settings, because no changes to settings take effect until
+        # save() method is called.
         mlist_settings.save()
+
+        # All lists created through TIM need an owner, and owners need email addresses to control their lists on
+        # Mailman.
+        email_list.add_owner(owner.email)
+        # Add owner automatically as a member of a list, so they receive the posts on the list.
+        email_list.subscribe(owner.email, display_name=owner.real_name, pre_approved=True, pre_verified=True,
+                             pre_confirmed=True)
     except HTTPError as e:
         log_mailman(e, "In create_new_email_list()")
         raise
