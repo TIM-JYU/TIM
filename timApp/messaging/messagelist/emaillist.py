@@ -200,12 +200,6 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
     try:
         domain: Domain = _client.get_domain(list_options.domain)
         email_list: MailingList = domain.create_list(list_options.name)
-        # All lists created through TIM need an owner, and owners need email addresses to control their lists on
-        # Mailman.
-        email_list.add_owner(owner.email)
-        # Add owner automatically as a member of a list.
-        email_list.subscribe(owner.email, display_name=owner.real_name, pre_approved=True, pre_verified=True,
-                             pre_confirmed=True)
 
         set_default_templates(email_list)
 
@@ -226,6 +220,10 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # Turn off automatic welcome and goodbye messages.
         mlist_settings["send_welcome_message"] = False
         mlist_settings["send_goodbye_message"] = False
+        # Set content filtering on, so lists can set pass_extensions on and off. Because allowing attachments is not
+        # on by default, add pass_extensions value to block attachments.
+        mlist_settings["filter_content"] = True
+        mlist_settings["pass_extensions"] = ['no_extension']
 
         # This is to force Mailman generate archivers into its db. It fixes a race condition, where creating a new list
         # without proper engineer interface procedures might make duplicate archiver rows in to db, while Mailman's code
@@ -237,9 +235,16 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
 
         set_email_list_archive_policy(email_list, list_options.archive)
 
-        # This needs to be the last line, because no changes to settings take effect until save() method is
-        # called.
+        # This needs to be the last line aften changing settings, because no changes to settings take effect until
+        # save() method is called.
         mlist_settings.save()
+
+        # All lists created through TIM need an owner, and owners need email addresses to control their lists on
+        # Mailman.
+        email_list.add_owner(owner.email)
+        # Add owner automatically as a member of a list, so they receive the posts on the list.
+        email_list.subscribe(owner.email, display_name=owner.real_name, pre_approved=True, pre_verified=True,
+                             pre_confirmed=True)
     except HTTPError as e:
         log_mailman(e, "In create_new_email_list()")
         raise
