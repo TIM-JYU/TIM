@@ -226,6 +226,10 @@ def create_new_email_list(list_options: ListOptions, owner: User) -> None:
         # Turn off automatic welcome and goodbye messages.
         mlist_settings["send_welcome_message"] = False
         mlist_settings["send_goodbye_message"] = False
+        # Set content filtering on, so lists can set pass_extensions on and off. Because allowing attachments is not
+        # on by default, add pass_extensions value to block attachments.
+        mlist_settings["filter_content"] = True
+        mlist_settings["pass_extensions"] = ['no_extension']
 
         # This is to force Mailman generate archivers into its db. It fixes a race condition, where creating a new list
         # without proper engineer interface procedures might make duplicate archiver rows in to db, while Mailman's code
