@@ -134,7 +134,7 @@ import {Users} from "../user/userService";
                 <div class="indented">
                     <label>
                         <input type="checkbox" name="list-answer-guidance" [(ngModel)]="listAnswerGuidance">
-                        Guide answers to message list.</label>
+                        Direct answers to message list.</label>
                 </div>
                 <div class="indented">
                     <button class="timButton" (click)="saveOptions()">Save options</button>

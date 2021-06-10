@@ -70,7 +70,7 @@ export const archivePolicyNames: ArchivePolicyNames[] = [
     },
     {
         archiveType: ArchiveType.UNLISTED,
-        policyName: "TIM-users.",
+        policyName: "TIM users.",
     },
     {
         archiveType: ArchiveType.PUBLIC,
