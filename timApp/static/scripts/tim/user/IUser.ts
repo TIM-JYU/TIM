@@ -9,6 +9,7 @@ export interface IUser {
     name: string;
     email: string | null;
     real_name: string | null;
+    student_id?: string | null;
 }
 
 export interface IUserListEntry {

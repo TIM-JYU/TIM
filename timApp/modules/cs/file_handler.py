@@ -117,6 +117,7 @@ class EditorSource(FileSource):
         if max_files is not None and len(paths) > max_files:
             raise PermissionError(f"Too many files submitted. Maximum is {max_files}")
 
+        paths = [file.path for file in files]
         for path in cls.must_paths:
             if path not in paths:
                 raise ValueError(f"Couldn't find file {path} in submitted files")
@@ -132,7 +133,7 @@ class UploadByCodeSource(FileSource):
 
     @classinstancemethod
     def load(cls, self, file: File) -> List[File]:
-        return [self.file]
+        return [file]
 
     @classinstancemethod
     def copy(cls, self, destination_path: str) -> None:
@@ -152,7 +153,7 @@ class UploadByCodeSource(FileSource):
 
     @classmethod
     def verify(cls, files):
-        paths = [file.path for file in files if file.source == "uploadByCode"]
+        paths = [file.path for file in files]
         for path in cls.must_paths:
             if path not in paths:
                 raise ValueError(f"Couldn't find file {path} in submitted files")
@@ -251,9 +252,12 @@ class MasterSource(FileSource):
             raise ValueError("Master source path not found")
 
         if self.is_regex:
-            copy_files_regex(self.source_path, source_path, destination_path)
+            count = copy_files_regex(self.source_path, source_path, destination_path)
         else:
-            copy_files_glob(self.source_path, source_path, destination_path)
+            count = copy_files_glob(self.source_path, source_path, destination_path)
+
+        if count == 0:
+            raise ValueError(f"Configuration error: No files were found for {self.specification.source}.")
 
     @classmethod
     def init(cls, query, files) -> None:
@@ -321,7 +325,9 @@ class GitSource(ExternalFileSource):
 
     @classinstancemethod
     def copy(cls, self, destination_path: str) -> None:
-        return self.lib.copy_files(self.sub_path, destination_path, self.glob)
+        count = self.lib.copy_files(self.sub_path, destination_path, self.glob)
+        if count == 0:
+            raise ValueError(f"Configuration error: No files were found for {self.specification.source}.")
 
     @classmethod
     def init(cls, query, files) -> None:

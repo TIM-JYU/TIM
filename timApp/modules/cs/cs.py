@@ -1023,6 +1023,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 timeout = int(timeout)
             except:
                 timeout = 20
+        timeout = timeout+2.5 # +2.5 because we want languages to realize the timeout first
         try:
             signal.signal(signal.SIGALRM, signal_handler)
             signal.alarm(timeout)  # Ten seconds
@@ -1322,6 +1323,12 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
             fhandler = FileHandler(query, save)
             submitted_files = fhandler.get_files(s)
 
+            # code ahead needs the unmodified usercode, so take it here
+            # TODO: refactor to not need this
+            usercode = get_json_param(query.jso, "input", "usercode", None)
+            if usercode is None:
+                usercode = submitted_files[0].content
+
             # TODO: get_param is potentially unsafe as the client can change its value
             # get_json_param from markup would be better, but all language and test
             # languages change the type on client side
@@ -1336,20 +1343,19 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 raise Exception(f"Give task not allowed for {ttype}")
 
 
-            nofilesave = get_param(query, 'nofilesave', language.nofilesave)
-            if not nofilesave:
-                mkdirs(language.prgpath)
             filesaveattribute = get_param(query, "filesaveattribute", None)
+            if filesaveattribute:
+                if len(language.sourcefiles) > 1:
+                    raise Exception("Cannot have multiple files with filesaveattribute") # TODO
+                attrnames = filesaveattribute.split(',')
+                usercode = ""
+                for aname in attrnames:
+                    usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
+                language.sourcefiles[0].content = usercode
+
             errorcondition = get_json_param(query.jso, "markup", "errorcondition", False)
             warncondition = get_json_param(query.jso, "markup", "warncondition", False)
             for file in language.sourcefiles:
-                if filesaveattribute:
-                    attrnames = filesaveattribute.split(',')
-                    usercode = ""  # TODO: Should this be a local variable?
-                    for aname in attrnames:
-                        usercode += get_json_param(query.jso, "input", aname.strip(), "") + "\n"
-                    file.content = usercode
-
                 if file.content is None:
                     continue
 
@@ -1374,11 +1380,10 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                     file.content = language.before_save(language.before_code + file.content)
                     slines = file.content
 
-            # usercode = language.sourcefiles[0].content # for single file compatibility # TODO: make unnecessary
-            # previous does not work, because it returns more than pure usercode
-
             # Write the program to the file =======================================================
+            nofilesave = get_param(query, 'nofilesave', False)
             if not nofilesave:
+                mkdirs(language.prgpath)
                 fhandler.save_files(language.sourcefiles, language)
 
             save_extra_files(query, extra_files, language.prgpath)
