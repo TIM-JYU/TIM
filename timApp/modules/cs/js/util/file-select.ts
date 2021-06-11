@@ -423,6 +423,10 @@ export class FileSelectManagerComponent {
         this.updateFileInfo();
     }
 
+    removeFile(path: string) {
+        this.loadedFiles.removeByKey(path);
+    }
+
     updateFileInfo() {
         const self = this;
         let nfileInfo: typeof self.fileInfo = [];
@@ -467,6 +471,20 @@ export class FileSelectManagerComponent {
         }
         for (const item of list) {
             this.fileSelects[item.id] = item;
+        }
+    }
+
+    loadFiles(
+        ...files: {path: string; content?: string | null; realName?: string}[]
+    ) {
+        for (const file of files) {
+            if (file.content != undefined) {
+                this.onFileLoad({
+                    path: file.path,
+                    content: file.content,
+                    realName: file.realName ?? file.path,
+                });
+            }
         }
     }
 

@@ -14,12 +14,12 @@
     }
 }
 
-.penalty-text {
+::ng-deep .penalty-text {
     background-color: #da0000;
     width: 95%;
     padding: 2px 0.5em;
 }
 
-.centermargin {
+::ng-deep .centermargin {
     margin: 0 auto !important;
 }

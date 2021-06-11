@@ -20,14 +20,17 @@ The command should print a json string to standard output with the following str
         title: {
             classes: <classes to add to title element>,
             content: <actual title>,
-            isHTML: <if the title is html>,
             isAngular: <if the title is angular html>
         },
-        content: {
+        angular: { // angular content (does not work)
+        },
+        html: { // html content
             classes: <classes to add to content element>,
             content: <actual content>,
-            isHTML: <if the content is html>,
-            isAngular: <if the content is angular html>
+        }
+        text: { // pure text content
+            classes: <classes to add to content element>,
+            content: <actual content>,
         }
     }
 }
@@ -74,9 +77,9 @@ class ExtCheck(Language):
 
     def run(self, result, sourcelines, points_rule):
         if isinstance(self.command, list):
-            self.command = [c.replace("points_rule", json.dumps(points_rule)) for c in self.command]
+            self.command = [c.replace("points_rule", json.dumps(points_rule)).replace("timeout", str(self.timeout)) for c in self.command]
         else:
-            self.command = self.command.replace("points_rule", json.dumps(points_rule))
+            self.command = self.command.replace("points_rule", json.dumps(points_rule)).replace("timeout", str(self.timeout))
 
         code, out, err, pwddir = self.runself(self.command)
         if code == -9:

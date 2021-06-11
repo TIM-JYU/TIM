@@ -43,9 +43,9 @@ class EditTest(TimRouteTest):
 
     def test_area_editing(self):
         self.login_test1()
-        d = self.create_doc(initial_par=['a1', 'a2', 'a3'])
+        d = self.create_doc(initial_par=['a1par', 'a2par', 'a3par'])
         pars = d.document.get_paragraphs()
-        new_text = d.document.export_markdown().replace('a1', 'b1').replace('a2', 'b2').replace('a3', 'b3')
+        new_text = d.document.export_markdown().replace('a1par', 'b1par').replace('a2par', 'b2par').replace('a3par', 'b3par')
         self.json_post('/postParagraph/', {
             "text": new_text,
             "docId": d.id,

@@ -2,6 +2,7 @@ import enum
 import re
 from dataclasses import dataclass, field
 from typing import Dict, Union, List, Generator, Optional
+from timApp.plugin.taskid import TaskId
 
 from marshmallow import ValidationError
 
@@ -66,7 +67,6 @@ class Group:
 @dataclass(frozen=True)
 class ScoreboardOptions:
     groups: List[str] = field(default_factory=list)
-    point_count_method: PointCountMethod = PointCountMethod.latest
 
 
 @dataclass(frozen=True)
@@ -80,6 +80,8 @@ class CountModel:
 class PointSumRuleModel:
     count: CountModel = CountModel(best=9999)
     scoreboard: ScoreboardOptions = ScoreboardOptions()
+    include_groupless: bool = False
+    point_count_method: PointCountMethod = PointCountMethod.latest
 
 
 PointSumRuleSchema = class_schema(PointSumRuleModel)
@@ -105,6 +107,8 @@ class PointSumRule:
             self.count_type, self.count_amount = 'worst', pr.count.worst
 
         self.scoreboard = pr.scoreboard
+        self.include_groupless = pr.include_groupless
+        self.point_count_method = pr.point_count_method
         self.total = data.get('total', None)
         self.hide = data.get('hide', None)
         self.sort = data.get('sort', True)
@@ -117,3 +121,13 @@ class PointSumRule:
         for g in self.groups.values():
             if g.check_match(task_id):
                 yield g.name
+
+    def get_groups(self, task_ids: Optional[List[TaskId]] = None) -> Dict[str, Group]:
+        if task_ids is None:
+            return self.groups
+        groups = dict(self.groups)
+        if self.include_groupless:
+            for id in task_ids:
+                if all(not g.check_match(id.doc_task) for g in groups.values()):
+                    groups[id.task_name] = Group(id.task_name, id.doc_task)
+        return groups

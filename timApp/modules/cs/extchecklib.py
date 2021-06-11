@@ -24,6 +24,7 @@ class OutputContainer(Loadable):
     title: Optional[DivContent] = None
     text: Optional[DivContent] = None
     angular: Optional[AngularModule] = None
+    html: Optional[DivContent] = None
     hide: bool = False # whether to hide by default
 
 @dataclass

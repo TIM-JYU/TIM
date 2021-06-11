@@ -445,7 +445,7 @@ def get_tally_field_values(
             answer_filter=ans_filter,
         )
 
-        known_tally_fields = list(itertools.chain(basic_tally_fields, psr.groups if psr else []))
+        known_tally_fields = list(itertools.chain(basic_tally_fields, psr.get_groups(tids) if psr else []))
         for field, _ in fs:
             if field.field not in known_tally_fields:
                 raise RouteException(f'Unknown tally field: {field.field}. '

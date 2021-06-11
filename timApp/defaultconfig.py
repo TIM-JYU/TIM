@@ -121,6 +121,8 @@ HAKA_METADATA_FINGERPRINT_NEW_PROD = 'a2c1eff331849cbfbfc920924861e03c8a56414ec0
 
 HOME_ORGANIZATION = 'jyu.fi'
 
+LOAD_STUDENT_IDS_IN_TEACHER = False
+
 HAS_HTTPS = TIM_HOST.startswith('https:')
 SESSION_COOKIE_SAMESITE = 'None' if HAS_HTTPS else None  # Required for Aalto iframe to work.
 SESSION_COOKIE_SECURE = HAS_HTTPS  # Required by Chrome due to SameSite=None setting.

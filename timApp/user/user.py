@@ -23,8 +23,8 @@ from timApp.lecture.lectureusers import LectureUsers
 from timApp.messaging.timMessage.internalmessage_models import InternalMessageReadReceipt
 from timApp.notification.notification import Notification
 from timApp.timdb.exceptions import TimDbException
-from timApp.timdb.sqa import db, TimeStampMixin
-from timApp.user.hakaorganization import HakaOrganization
+from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded
+from timApp.user.hakaorganization import HakaOrganization, get_home_organization_id
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.preferences import Preferences
 from timApp.user.scimentity import SCIMEntity
@@ -407,6 +407,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if ag not in self.groups:
             self.groups.append(ag)
 
+    def get_home_org_student_id(self):
+        home_org_id = get_home_organization_id()
+        puc = self.uniquecodes.get((home_org_id, 'studentID'), None)
+        return puc.code if puc is not None else None
+
     def get_personal_group(self) -> UserGroup:
         return self.personal_group_prop
 
@@ -608,7 +613,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             access: AccessType,
             grace_period=timedelta(seconds=0),
     ) -> Optional[BlockAccess]:
-        return self.has_some_access(i, access_sets[access], grace_period=grace_period)
+        from timApp.auth.accesshelper import check_inherited_right
+        return check_inherited_right(self, i, access, grace_period) or self.has_some_access(i, access_sets[access],
+                                                                                            grace_period=grace_period)
 
     def has_view_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
         return self.has_some_access(i, view_access_set)
@@ -690,19 +697,24 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     @property
     def basic_info_dict(self):
         if not self.is_name_hidden:
-            return {
+            info_dict = {
                 'id': self.id,
                 'name': self.name,
                 'real_name': self.real_name,
                 'email': self.email,
             }
         else:
-            return {
+            info_dict = {
                 'id': self.id,
                 'name': f'user{self.id}',
                 'real_name': f'User {self.id}',
                 'email': f'user{self.id}@example.com',
             }
+
+        if is_attribute_loaded("uniquecodes", self):
+            info_dict['student_id'] = self.get_home_org_student_id()
+
+        return info_dict
 
     def to_json(self, full: bool=False) -> Dict:
         return {**self.basic_info_dict,

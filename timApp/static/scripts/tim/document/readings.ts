@@ -269,10 +269,10 @@ export async function initReadings(item: IItem) {
 }
 
 export async function handleUnread(pos: EditPosition) {
-    if (pos.type !== EditType.Edit) {
+    if (pos.type !== EditType.Edit && pos.type !== EditType.CommentAction) {
         return;
     }
-    const first = pos.pars.start;
+    const first = pos.type === EditType.Edit ? pos.pars.start : pos.par;
     const [docid, parid] = [first.par.docId, first.par.id];
     const result = await to(
         $http.put<IOkResponse & {latest?: unknown}>(
