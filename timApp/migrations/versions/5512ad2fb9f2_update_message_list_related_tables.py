@@ -19,8 +19,8 @@ memberjoinmethod_enum = sa.Enum('DIRECT_ADD', 'INVITED', 'JOINED', name='memberj
 
 
 def upgrade():
-    replytolistchanges_enum.create(op.get_bind(), checkfirst=True)
-    memberjoinmethod_enum.create(op.get_bind(), checkfirst=True)
+    # replytolistchanges_enum.create(op.get_bind(), checkfirst=True)
+    # memberjoinmethod_enum.create(op.get_bind(), checkfirst=True)
     op.add_column('messagelist', sa.Column('allow_attachments', sa.Boolean(), nullable=True))
     op.add_column('messagelist', sa.Column('default_delivery_right', sa.Boolean(), nullable=True))
     op.add_column('messagelist', sa.Column('default_reply_type', replytolistchanges_enum, nullable=True))

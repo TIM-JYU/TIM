@@ -17,7 +17,7 @@ messagelist_distribution_enum = sa.Enum('TIM_MESSAGE', 'EMAIL_LIST', name='chann
 
 
 def upgrade():
-    messagelist_distribution_enum.create(op.get_bind(), checkfirst=True)
+    # messagelist_distribution_enum.create(op.get_bind(), checkfirst=True)
     op.add_column('messagelist', sa.Column('email_list_domain', sa.Text(), nullable=True))
     op.add_column('messagelist', sa.Column('removed', sa.DateTime(timezone=True), nullable=True))
     op.add_column('messagelist_distribution', sa.Column('channel', messagelist_distribution_enum, nullable=True))

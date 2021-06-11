@@ -17,7 +17,7 @@ display_type_enum = sa.Enum('TOP_OF_PAGE', 'STICKY', name='displaytype')
 
 
 def upgrade():
-    display_type_enum.create(op.get_bind(), checkfirst=True)
+    # display_type_enum.create(op.get_bind(), checkfirst=True)
     op.create_table('internalmessage',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('doc_id', sa.Integer(), nullable=False),

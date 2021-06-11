@@ -17,7 +17,7 @@ verification_type_enum = sa.Enum('LIST_JOIN', 'EMAIL_OWNERSHIP', name='verificat
 
 
 def upgrade():
-    verification_type_enum.create(op.get_bind(), checkfirst=True)
+    # verification_type_enum.create(op.get_bind(), checkfirst=True)
     op.create_table('verifications',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('verification_type', verification_type_enum, nullable=True),
