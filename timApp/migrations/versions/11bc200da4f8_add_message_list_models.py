@@ -18,8 +18,8 @@ channel_id_enum = sa.Enum('TIM_MESSAGE', 'EMAIL_LIST', name='channel')
 
 
 def upgrade():
-    archive_enum.create(op.get_bind(), checkfirst=True)
-    channel_id_enum.create(op.get_bind(), checkfirst=True)
+    # archive_enum.create(op.get_bind(), checkfirst=True)
+    # channel_id_enum.create(op.get_bind(), checkfirst=True)
     op.create_table('messagelist',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('manage_doc_id', sa.Integer(), nullable=True),
