@@ -1,0 +1,75 @@
+.timMessageDisplay {
+    border: 1px solid black;
+    border-radius: 6px;
+    padding: 6px 8px 8px 8px;
+    background-color: var(--basic-color-inverse);
+
+    @media (min-width: 1400px) {
+        margin: 0 10% 0 10%;
+    }
+
+    .fullMessageContent, .cutMessageContent {
+        text-align: justify;
+        text-justify: auto;
+        margin-bottom: 4px;
+    }
+
+    p {
+        margin-bottom: 4px;
+    }
+
+    .messageHeading {
+        font-weight: bold;
+    }
+
+    .replyArea {
+        padding-top: 5px;
+
+        textarea {
+            width: 500px;
+            display: block;
+        }
+
+        .timButton {
+            margin-right: 5px;
+        }
+
+        .sent {
+            margin-top: 5px;
+        }
+    }
+
+    .readReceiptArea {
+        margin-top: 5px;
+        display: grid;
+        grid-template-columns: 12% 40% 48%;
+        grid-template-areas: "checkbox link button";
+
+        input[type='checkbox'] {
+            grid-area: checkbox;
+            justify-self: start;
+            align-self: start;
+        }
+
+        label {
+            grid-area: checkbox;
+            font-weight: normal;
+            justify-self: start;
+            align-self: start;
+        }
+
+        .readReceiptLink {
+            grid-area: link;
+            margin-top: 5px;
+            font-size: 80%;
+            justify-self: start;
+            align-self: start;
+        }
+
+        .timButton {
+            grid-area: button;
+            justify-self: end;
+            align-self: start;
+        }
+    }
+}

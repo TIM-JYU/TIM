@@ -38,6 +38,8 @@ import {showMergePdfDialog} from "tim/document/minutes/showMergePdfDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
 import {openScheduleDialog} from "tim/document/scheduling/openScheduleDialog";
+import {showMessageListCreation} from "tim/messaging/showMessageListCreation.component";
+import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 
 const DEFAULT_PIECE_SIZE = 20;
 
@@ -209,6 +211,17 @@ const DEFAULT_PIECE_SIZE = 20;
                 </button>
                 <a href="/view/groups" i18n>Browse existing groups</a>
             </ng-container>
+            <ng-container *ngIf="users.isGroupAdmin() && !hideVars.messageListCreate">
+                <h5>Message lists</h5>
+                <button class="timButton btn-block"
+                        title="Create a new message list"
+                        (click)="createMessagelist()"
+                >Create a new message list
+                </button>
+                <a href="/view/messagelists">Browse existing message lists</a> 
+                <br/>
+                <a href="/view/archives">Browse archives</a>
+            </ng-container>
         </ng-container>
 
         <ng-container *ngIf="docSettings?.cache && item?.rights?.manage">
@@ -236,6 +249,7 @@ const DEFAULT_PIECE_SIZE = 20;
     `,
 })
 export class SettingsTabComponent implements OnInit {
+    hideVars: IVisibilityVars = getVisibilityVars();
     users: UserService = Users;
     showFolderSettings: boolean = false;
     showRelevance: boolean = true;
@@ -566,6 +580,10 @@ export class SettingsTabComponent implements OnInit {
             },
         });
         redirectToItem(doc);
+    }
+
+    async createMessagelist() {
+        await showMessageListCreation();
     }
 
     /**

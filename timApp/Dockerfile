@@ -143,6 +143,8 @@ humanize \
 isodate \
 libsass \
 lxml \
+`# Use mailmanclient from GIT since version PyPI is not updated with a critical fix yet` \
+git+https://gitlab.com/mailman/mailmanclient.git@1c895c84b5744b2a79146c613885fe8d0f692ec3 \
 marshmallow \
 marshmallow-enum \
 marshmallow_union \
