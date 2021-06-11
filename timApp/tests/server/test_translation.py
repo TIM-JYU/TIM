@@ -290,3 +290,10 @@ c
         self.json_post(f'/markTranslated/{t.id}')
         t.document.clear_mem_cache()
         self.assertEqual(6, len(t.document.get_changelog().entries))
+
+    def test_translation_alias_delete(self):
+        self.login_test1()
+        d = self.create_doc()
+        self.create_translation(d)
+        self.json_put(f'/alias/{d.id}/users%2Ftest-user-1%2Falias')
+        self.json_delete(f'/alias/users%2Ftest-user-1%2Falias')
