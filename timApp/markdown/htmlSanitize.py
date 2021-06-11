@@ -99,6 +99,9 @@ TIM_SAFE_TAGS = [
     'tim-goto-link',
     'tim-graph-viz',
     'tim-variables',
+    'tim-message-list-admin',
+    'tim-message-view',
+    'manage-read-receipt',
 ]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],

@@ -57,6 +57,7 @@ interface IConfig {
     emailRegistrationEnabled: boolean;
     simpleEmailLogin: boolean;
     hosts?: IHostConfig;
+    messageListsEnabled: boolean;
 }
 
 export type Locale = "fi" | "en-US";

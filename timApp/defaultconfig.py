@@ -66,10 +66,10 @@ WUFF_EMAIL = 'wuff@tim.jyu.fi'
 NOREPLY_EMAIL = 'no-reply@tim.jyu.fi'
 GLOBAL_NOTIFICATION_FILE = '/tmp/global_notification.html'
 
-
 GIT_LATEST_COMMIT_TIMESTAMP = subprocess.run(["git", "log", "-1", "--date=format:%d.%m.%Y %H:%M:%S", "--format=%cd"],
                                              stdout=subprocess.PIPE).stdout.decode().strip()
-GIT_BRANCH = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], stdout=subprocess.PIPE).stdout.decode().strip()
+GIT_BRANCH = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                            stdout=subprocess.PIPE).stdout.decode().strip()
 
 CELERY_BROKER_URL = 'redis://redis:6379'
 CELERY_RESULT_BACKEND = 'redis://redis:6379'
@@ -155,6 +155,25 @@ LOG_HOST = False
 MAX_ANSWER_CONTENT_SIZE = 200 * 1024  # bytes
 
 SCIM_ALLOWED_IP = '127.0.0.1'
+
+# Whether to allow creation of messages lists via GUI. At this moment requires Mailman to be configured.
+MESSAGE_LISTS_ENABLED = False
+# Settings for mailmanclient-library. Set properly in production.
+MAILMAN_URL = None
+MAILMAN_USER = None
+MAILMAN_PASS = None
+# Settings for mailman-rest-events library. Set properly in production.
+MAILMAN_EVENT_API_USER = None
+MAILMAN_EVENT_API_KEY = None
+# Link prefix to Postorius Web-UI. If used as is, directs to the mailing lists page.
+MAILMAN_UI_LINK_PREFIX = "https://timlist.it.jyu.fi/postorius/lists/"
+# Permitted file extensions allowed on message lists. If this grows large, maybe move to an external file and modify
+# getting attachment file extensions from the file instead.
+PERMITTED_ATTACHMENTS = ["doc", "docx", "htm", "html", "jpeg", "jpg", "pdf", "png", "ppt", "pptx", "tex", "txt", "xls",
+                         "xlsx"]
+# These names are reserved from the pool of names for message lists. If need arises, split into TIM and message
+# channel specific reserved names.
+RESERVED_NAMES = ["postmaster", "listmaster", "admin"]
 
 # If true, prints all SQL statements with tracebacks.
 DEBUG_SQL = False

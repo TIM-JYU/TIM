@@ -34,6 +34,7 @@ export interface IVisibilityVars {
     headerNav?: boolean;
     headerDocumentActions?: boolean;
     scoreBoard?: boolean;
+    messageListCreate?: boolean;
 }
 
 function hideLinkStuff(hide: IVisibilityVars) {
@@ -129,6 +130,10 @@ export function getVisibilityVars() {
 
     if (!g.config.emailRegistrationEnabled) {
         hide.signup = true;
+    }
+
+    if (!g.config.messageListsEnabled) {
+        hide.messageListCreate = true;
     }
 
     if (params.get("hide_top_buttons")) {

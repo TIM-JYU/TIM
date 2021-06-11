@@ -16,12 +16,12 @@ import {
     Component,
     DoBootstrap,
     ElementRef,
-    Input,
     NgModule,
     OnInit,
     ViewChild,
 } from "@angular/core";
 
+import {TimMessageComponent} from "tim/messaging/tim-message-send.component";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
@@ -30,11 +30,13 @@ import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
-import {TaskId} from "tim/plugin/taskid";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
+import {BsDropdownModule} from "ngx-bootstrap/dropdown";
+import {TimepickerModule} from "ngx-bootstrap/timepicker";
+import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
+import {documentglobals} from "tim/util/globals";
 import {ViewCtrl} from "../document/viewctrl";
-import {Users} from "../user/userService";
 import {widenFields} from "../util/common";
 import {
     GenericPluginMarkup,
@@ -182,98 +184,6 @@ const memberShipColIndex = 3;
 const sortLang = "fi";
 
 @Component({
-    selector: "tim-email-send",
-    template: `
-        <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="emaillist">
-            <tim-close-button (click)="emaillist=''"></tim-close-button>
-            <p><textarea [(ngModel)]="emaillist" rows="4" cols="40"></textarea>
-            </p>
-            <p>
-                <label title="Send so that names are not visible (works only non-TIM send)"><input type="checkbox"
-                                                                                                   [(ngModel)]="emailbcc">BCC</label>&nbsp;
-                <label title="Send also a copy for me"><input type="checkbox" [(ngModel)]="emailbccme">BCC also
-                    for me</label>&nbsp;
-                <label title="Send using TIM. Every mail is sent as a personal mail."><input type="checkbox"
-                                                                                              [(ngModel)]="emailtim">use
-                    TIM to send</label>&nbsp;
-            </p>
-            <p>Subject: <input [(ngModel)]="emailsubject" size="60"></p>
-            <p>eMail content:</p>
-            <p><textarea [(ngModel)]="emailbody" rows="10" cols="70"></textarea></p>
-            <p>
-                <button class="timButton"
-                        (click)="sendEmail()">
-                    Send
-                </button>
-                <span class="savedtext" *ngIf="emailMsg">Sent!</span>
-            </p>
-        </div>
-    `,
-})
-export class TimEmailComponent {
-    @Input()
-    emaillist: string = "";
-    emailsubject: string = "";
-    emailbody: string = "";
-    emailbcc: boolean = false;
-    emailbccme: boolean = true;
-    emailtim: boolean = true;
-    emailMsg: string = "";
-    @Input()
-    taskid?: TaskId;
-
-    async sendEmailTim() {
-        if (!this.taskid) {
-            this.emailMsg = "Cannot send email without taskid";
-            return;
-        }
-        this.emailMsg = ""; // JSON.stringify(response);
-        const url = `/multiSendEmail/${this.taskid.docTask().toString()}`;
-        const response = await to(
-            $http.post<string[]>(url, {
-                rcpt: this.emaillist.replace(/\n/g, ";"),
-                subject: this.emailsubject,
-                msg: this.emailbody,
-                bccme: this.emailbccme,
-            })
-        );
-        this.emailMsg = response.ok ? "Sent" : response.result.data.error;
-    }
-
-    public async sendEmail() {
-        if (this.emailtim) {
-            await this.sendEmailTim();
-            return;
-        }
-        // TODO: iPad do not like ;
-        let addrs = this.emaillist.replace(/\n/g, ",");
-        let bcc = "";
-        if (this.emailbcc) {
-            bcc = addrs;
-            addrs = "";
-        }
-        if (this.emailbccme) {
-            if (bcc) {
-                bcc += ",";
-            }
-            bcc += Users.getCurrent().email;
-        }
-        window.location.href =
-            "mailto:" +
-            addrs +
-            "?" +
-            "subject=" +
-            this.emailsubject +
-            "&" +
-            "body=" +
-            this.emailbody +
-            "&" +
-            "bcc=" +
-            bcc;
-    }
-}
-
-@Component({
     selector: "tableform-runner",
     // changeDetection: ChangeDetectionStrategy.OnPush,
     template: `
@@ -359,7 +269,7 @@ export class TimEmailComponent {
                     Copy
                 </button>
             </div>
-            <tim-email-send [emaillist]="emaillist" [taskid]="getTaskId()"></tim-email-send>
+            <tim-message-send [recipientList]="recipientList" [docId]="currentDocumentID()"></tim-message-send>
             <pre *ngIf="result">{{result}}</pre>
             <pre *ngIf="error" [innerHtml]="error"></pre>
             <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
@@ -369,7 +279,8 @@ export class TimEmailComponent {
                     [disabled]="loading"
                     (click)="openTable()">
                 {{openButtonText}}
-            </button><tim-loading *ngIf="loading"></tim-loading>
+            </button>
+            <tim-loading *ngIf="loading"></tim-loading>
         </div>
     `,
     styleUrls: ["./tableForm.scss"],
@@ -430,8 +341,12 @@ export class TableFormComponent
     cbCount: number = 0;
     @ViewChild(TimTableComponent)
     timTable?: TimTableComponent;
-    emaillist = "";
+    recipientList = "";
     loading = false;
+
+    currentDocumentID() {
+        return documentglobals().curr_item.id;
+    }
 
     getDefaultMarkup() {
         return {};
@@ -742,6 +657,7 @@ export class TableFormComponent
         if (this.attrsall.markup.sisugroups) {
             return;
         }
+
         // TODO: Save before reset?
         interface TableFetchResponse {
             aliases: Record<string, string>;
@@ -751,6 +667,7 @@ export class TableFormComponent
             rows: IRowsType;
             styles: t.TypeOf<typeof Styles>;
         }
+
         let prom;
         const tid = this.getTaskId();
         if (!tid) {
@@ -1306,7 +1223,7 @@ export class TableFormComponent
             return;
         }
         const selUsers = timTable.getCheckedRows(0, true);
-        this.emaillist = TableFormComponent.makeUserList(
+        this.recipientList = TableFormComponent.makeUserList(
             selUsers,
             emailColIndex,
             "",
@@ -1587,14 +1504,18 @@ export class TableFormComponent
 }
 
 @NgModule({
-    declarations: [TableFormComponent, TimEmailComponent],
+    declarations: [TableFormComponent, TimMessageComponent],
     imports: [
         BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
         TimTableModule,
+        BsDropdownModule.forRoot(),
+        TimepickerModule.forRoot(),
+        DatetimePickerModule,
     ],
+    exports: [TimMessageComponent],
 })
 export class TableFormModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

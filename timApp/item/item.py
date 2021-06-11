@@ -114,12 +114,10 @@ class Item(ItemBase):
     def parents_to_root(self, include_root=True, eager_load_groups=False):
         if not self.path_without_lang:
             return []
-        path_parts = self.path_without_lang.split('/')
-        paths = list(p[1:] for p in accumulate('/' + part for part in path_parts[:-1]))
+        path_tuples = self.parent_paths()
         from timApp.folder.folder import Folder
-        if not paths:
+        if not path_tuples:
             return [Folder.get_root()]
-        path_tuples = [split_location(p) for p in paths]
 
         # TODO: Add an option whether to load relevance eagerly or not;
         #  currently eager by default is better to speed up search cache processing
@@ -141,6 +139,11 @@ class Item(ItemBase):
         if include_root:
             crumbs.append(Folder.get_root())
         return crumbs
+
+    def parent_paths(self):
+        path_parts = self.path_without_lang.split('/')
+        paths = list(p[1:] for p in accumulate('/' + part for part in path_parts[:-1]))
+        return [split_location(p) for p in paths]
 
     @cached_property
     def parents_to_root_eager(self):

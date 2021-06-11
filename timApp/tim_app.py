@@ -40,6 +40,10 @@ from timApp.lecture.questionactivity import QuestionActivity
 from timApp.lecture.runningquestion import Runningquestion
 from timApp.lecture.showpoints import Showpoints
 from timApp.lecture.useractivity import Useractivity
+from timApp.messaging.messagelist.messagelist_models import MessageListModel, MessageListMember, \
+    MessageListExternalMember, MessageListTimMember, MessageListDistribution
+from timApp.messaging.timMessage.internalmessage_models import InternalMessage, InternalMessageDisplay, \
+    InternalMessageReadReceipt
 from timApp.note.usernote import UserNote
 from timApp.notification.notification import Notification
 from timApp.notification.pending_notification import PendingNotification, DocumentNotification, CommentNotification
@@ -88,11 +92,19 @@ all_models = (
     DocumentNotification,
     Folder,
     HakaOrganization,
+    InternalMessage,
+    InternalMessageReadReceipt,
+    InternalMessageDisplay,
     LabelInVelp,
     Lecture,
     LectureAnswer,
     LectureUsers,
     Message,
+    MessageListDistribution,
+    MessageListMember,
+    MessageListModel,
+    MessageListTimMember,
+    MessageListExternalMember,
     NewUser,
     Notification,
     PeerReview,

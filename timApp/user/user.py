@@ -20,6 +20,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
+from timApp.messaging.timMessage.internalmessage_models import InternalMessageReadReceipt
 from timApp.notification.notification import Notification
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded
@@ -95,6 +96,7 @@ access_sets = {
 }
 
 SCIM_USER_NAME = ':scimuser'
+
 
 class Consent(Enum):
     CookieOnly = 1
@@ -200,6 +202,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         back_populates='user',
         collection_class=attribute_mapped_collection('user_collection_key'),
     )
+
+    internalmessage_readreceipt: Optional[InternalMessageReadReceipt] = db.relationship('InternalMessageReadReceipt',
+                                                                                        back_populates='user')
 
     @property
     def scim_display_name(self):
@@ -493,15 +498,20 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             )
         return q
 
-    def add_to_group(self, ug: UserGroup, added_by: Optional['User']):
+    def add_to_group(self, ug: UserGroup, added_by: Optional['User']) -> bool:
+        # Avoid cyclical importing.
+        from timApp.messaging.messagelist.messagelist_utils import sync_message_list_on_add
         existing: UserGroupMember = self.id is not None and self.memberships_dyn.filter_by(group=ug).first()
         if existing:
             existing.membership_end = None
             existing.adder = added_by
-            return False
+            new_add = False
         else:
             self.memberships.append(UserGroupMember(group=ug, adder=added_by))
-            return True
+            new_add = True
+        # On changing of group, sync this person to the user goup's message lists.
+        sync_message_list_on_add(self, ug)
+        return new_add
 
     @staticmethod
     def get_scimuser() -> 'User':

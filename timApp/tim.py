@@ -52,6 +52,8 @@ from timApp.item.routes_tags import tags_blueprint
 from timApp.item.tag import Tag, GROUP_TAG_PREFIX
 from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.lecture.routes import lecture_routes
+from timApp.messaging.messagelist.mailman_events import mailman_events
+from timApp.messaging.messagelist.routes import messagelist
 from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
 from timApp.notification.notify import notify
@@ -68,6 +70,7 @@ from timApp.readmark.routes import readings
 from timApp.scheduling.scheduling_routes import scheduling
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
+from timApp.messaging.timMessage.routes import timMessage
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
@@ -119,6 +122,7 @@ blueprints = [
     velps,
     view_page,
     scheduling,
+    mailman_events,
 
     # plugins
     importData_plugin,
@@ -129,6 +133,8 @@ blueprints = [
     timMenu_plugin,
     timTable_plugin,
     user_select_plugin,
+    messagelist,
+    timMessage,
 ]
 
 if app.config['BOOKMARKS_ENABLED']:

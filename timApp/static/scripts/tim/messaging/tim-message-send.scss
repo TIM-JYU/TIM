@@ -1,0 +1,38 @@
+tim-datetime-picker {
+  display: inline-block;
+  width: 50%;
+  float: right;
+}
+
+input[type='checkbox'], input[type='radio'] {
+  margin-right: 10px;
+}
+
+ul {
+  list-style-type: none;
+}
+
+label {
+  font-weight: normal;
+}
+
+.bold {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.glyphicon {
+  margin: 0px 10px 20px 0px;
+}
+
+.cursor-pointer {
+  font-weight: bold;
+}
+
+.tim-message {
+  padding-left: 40px;
+}
+
+#optionsButton {
+  margin-bottom: 10px;
+}

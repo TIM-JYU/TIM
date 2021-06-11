@@ -1,0 +1,90 @@
+h1, h2 {
+  margin-bottom: 1em;
+}
+
+div.archive-options {
+  margin-top: 2em;
+  margin-bottom: 0.2em;
+}
+
+.list-archive-policy-header {
+  margin-bottom: 0.5em;
+  font-weight: bold;
+}
+
+input[type='radio'] {
+  margin-right: 2em;
+}
+
+.list-name {
+  font-weight: bold;
+}
+
+.owner-address {
+  font-weight: bold;
+}
+
+.subject-prefix {
+  font-weight: bold;
+}
+
+.short-description {
+  font-weight: bold;
+}
+
+.long-description {
+  font-weight: bold;
+}
+
+label {
+  font-weight: normal;
+  padding-left: 1em;
+}
+
+#add-multiple-members {
+  width: 25em;
+  height: 5em;
+}
+
+.section {
+  padding-bottom: 1.5em;
+}
+
+#archive-policy-list {
+  list-style-type: none
+}
+
+#add-member-feedback {
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+
+#email-send {
+  padding-bottom: 1em;
+}
+
+.indented {
+  // Indent by uniform amount.
+  margin-left: 2em;
+}
+
+.indented-more {
+  // Some elemenents are sub-elements, those are indented a bit more.
+  margin-left: 4em;
+}
+
+#domain-indicator {
+  padding: 0 0.25em;
+}
+
+.member-table-row {
+  font-size: 0.8em;
+}
+
+tbody {
+  // Tables, especially the one showing group's members, might be hundreds of rows long. We don't want that to make the
+  // table and by extension the page unnecessarily long, so add scrolling to table's body.
+  overflow: scroll;
+  max-height: 40em;
+  size: auto;
+}
