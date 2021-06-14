@@ -52,12 +52,8 @@
 
         var close = function () {
 
-            if (TIMJS.frm) {
-                document.body.removeChild(iframe);
-                window.port2.postMessage({msg: "frameClosed"});
-            } else {
-                drw.close();
-            }
+            document.body.removeChild(iframe);
+            window.port2.postMessage({msg: "frameClosed", fullscreen: !TIMJS.frm});
             // Do not clean up any eventListeners or tim-drawio communication variables here,
             // or else we may get stuck if browser cancels exit.
             // Instead check if they exist and clean them up on every startup by adding
@@ -84,10 +80,9 @@
                 return;
             }
             elt = document.getElementById('diagram');
-            if (TIMJS.frm) {
-                iframe = document.createElement('iframe');
-                iframe.setAttribute('frameborder', '0');
-            }
+            iframe = document.createElement('iframe');
+            iframe.setAttribute('frameborder', '0');
+            window.port2.postMessage({msg: "frameInited", fullscreen: !TIMJS.frm});
 
 
             var draft = null; // localStorage.getItem('.draft-' + name);
@@ -163,9 +158,7 @@
                                 autosave: 1, xml: svg
                             }), '*');
                         }
-                        if (TIMJS.frm) {
-                            window.port2.postMessage({msg: "frameInited"})
-                        }
+                        // window.port2.postMessage({msg: "frameInited"})
                     } else if (msg.event == 'export') {
                         // Extracts SVG DOM from data URI to enable links
                         var svg = b64DecodeUnicode(msg.data.substring(msg.data.indexOf(',') + 1));
@@ -208,13 +201,9 @@
             }
             receiveEvent = receive;
             window.addEventListener('message', receive);
-            if (TIMJS.frm) {
-                iframe.setAttribute('src', editor);
-                document.body.appendChild(iframe);
-                drw = iframe.contentWindow;
-            } else {
-                drw = window.open(editor);
-            }
+            iframe.setAttribute('src', editor);
+            document.body.appendChild(iframe);
+            drw = iframe.contentWindow;
         };
 
         function load() {
