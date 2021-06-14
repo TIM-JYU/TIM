@@ -34,11 +34,11 @@ export function fullscreenSupported(e: HTMLElement) {
 
 /**
  * Makes an element fullscreen
+ * @returns {boolean} true if element was toggled to fullscreen
  */
-export function goFullScreen(e: HTMLElement) {
-    const doc = document as INonStandardFullScreenProperties & Document;
+export function toggleFullScreen(e: HTMLElement): boolean {
+    let wentFullscreen = true;
     if (!getFullscreenElement()) {
-        let wentFullscreen = true;
         const ele = e as INonStandardFullScreenElement & Element;
         if (ele.requestFullscreen) {
             ele.requestFullscreen();
@@ -49,22 +49,20 @@ export function goFullScreen(e: HTMLElement) {
         } else {
             wentFullscreen = false;
         }
-
-        if (wentFullscreen) {
-            ele.setAttribute(
-                "style",
-                "width: 100%; height: 100%; position: absolute; top: 0px;" +
-                    "padding: 2em 5px 5px 5px; background: rgb(224, 224, 224); -webkit-box-sizing: border-box;" +
-                    "-moz-box-sizing: border-box; box-sizing: border-box;"
-            );
-        }
     } else {
-        if (doc.exitFullscreen) {
-            doc.exitFullscreen();
-        } else if (doc.msExitFullscreen) {
-            doc.msExitFullscreen();
-        } else if (doc.webkitExitFullscreen) {
-            doc.webkitExitFullscreen();
-        }
+        exitFullScreen();
+        wentFullscreen = false;
+    }
+    return wentFullscreen;
+}
+
+export function exitFullScreen() {
+    const doc = document as INonStandardFullScreenProperties & Document;
+    if (doc.exitFullscreen) {
+        doc.exitFullscreen();
+    } else if (doc.msExitFullscreen) {
+        doc.msExitFullscreen();
+    } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
     }
 }

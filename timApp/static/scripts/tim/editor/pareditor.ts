@@ -7,7 +7,11 @@ import {markAsUsed, TimStorage, to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
 import {showRestampDialog} from "tim/editor/showRestampDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
-import {fullscreenSupported, getFullscreenElement, goFullScreen} from "tim/util/fullscreen";
+import {
+    fullscreenSupported,
+    getFullscreenElement,
+    toggleFullScreen,
+} from "tim/util/fullscreen";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -868,6 +872,7 @@ ${backTicks}
             "webkitfullscreenchange fullscreenchange MSFullscreenChange",
             (event) => {
                 const editor = element[0];
+                console.log(editor);
                 if (!getFullscreenElement()) {
                     editor.removeAttribute("style");
                 }
@@ -1667,8 +1672,16 @@ ${backTicks}
         return fullscreenSupported(this.element[0]);
     }
 
-    goFullScreen(){
-        goFullScreen(this.element[0])
+    goFullScreen() {
+        const wentFullscreen = toggleFullScreen(this.element[0]);
+        if (wentFullscreen) {
+            this.element[0].setAttribute(
+                "style",
+                "width: 100%; height: 100%; position: absolute; top: 0px;" +
+                    "padding: 2em 5px 5px 5px; background: rgb(224, 224, 224); -webkit-box-sizing: border-box;" +
+                    "-moz-box-sizing: border-box; box-sizing: border-box;"
+            );
+        }
     }
 
     /**
