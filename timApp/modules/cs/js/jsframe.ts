@@ -301,7 +301,6 @@ export class JsframeComponent
     connectionErrorMessage?: string;
     private prevdata?: JSFrameData;
     private currentData?: JSFrameData;
-    private wentFullScreen = false;
 
     private initData: string = "";
     private userName?: string;
@@ -705,13 +704,14 @@ export class JsframeComponent
                 d.fullscreen &&
                 fullscreenSupported(this.frame!.nativeElement)
             ) {
-                this.wentFullScreen = toggleFullScreen(
-                    this.frame!.nativeElement
-                );
+                toggleFullScreen(this.frame!.nativeElement);
             }
-            if (d.msg === "frameClosed" && this.wentFullScreen) {
-                exitFullScreen();
-                this.wentFullScreen = false;
+            if (d.msg === "frameClosed" && d.fullscreen) {
+                try {
+                    exitFullScreen();
+                } catch (e) {
+                    // Ignore TypeError: Not in fullscreen mode
+                }
             }
         };
         const f = this.getFrame();
