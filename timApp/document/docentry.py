@@ -45,6 +45,11 @@ class DocEntry(db.Model, DocInfo):
         'Translation',
         primaryjoin=id == foreign(Translation.src_docid),
         back_populates='docentry',
+        # When a DocEntry object is deleted, we don't want to touch the translation objects at all.
+        # Otherwise SQLAlchemy would try to null the src_docid column of the corresponding Translation object.
+        # TODO: This feels slightly hacky. This relationship attribute might be better in Block class, although that
+        #  doesn't sound ideal either.
+        passive_deletes='all',
     )
 
     __table_args__ = (db.Index('docentry_id_idx', 'id'),)
