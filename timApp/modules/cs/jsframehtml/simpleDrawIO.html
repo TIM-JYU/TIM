@@ -82,7 +82,6 @@
             elt = document.getElementById('diagram');
             iframe = document.createElement('iframe');
             iframe.setAttribute('frameborder', '0');
-            window.port2.postMessage({msg: "frameInited", fullscreen: !TIMJS.frm});
 
 
             var draft = null; // localStorage.getItem('.draft-' + name);
@@ -158,7 +157,7 @@
                                 autosave: 1, xml: svg
                             }), '*');
                         }
-                        // window.port2.postMessage({msg: "frameInited"})
+                        window.port2.postMessage({msg: "frameInited", fullscreen: !TIMJS.frm});
                     } else if (msg.event == 'export') {
                         // Extracts SVG DOM from data URI to enable links
                         var svg = b64DecodeUnicode(msg.data.substring(msg.data.indexOf(',') + 1));
