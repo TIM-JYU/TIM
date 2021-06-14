@@ -872,7 +872,6 @@ ${backTicks}
             "webkitfullscreenchange fullscreenchange MSFullscreenChange",
             (event) => {
                 const editor = element[0];
-                console.log(editor);
                 if (!getFullscreenElement()) {
                     editor.removeAttribute("style");
                 }

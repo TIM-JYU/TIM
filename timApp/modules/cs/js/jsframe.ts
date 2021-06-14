@@ -43,7 +43,11 @@ import {
     IMenuFunctionEntry,
 } from "../../../static/scripts/tim/document/viewutils";
 import {communicationJS} from "./iframeutils";
-import {exitFullScreen, fullscreenSupported, toggleFullScreen} from "../../../static/scripts/tim/util/fullscreen";
+import {
+    exitFullScreen,
+    fullscreenSupported,
+    toggleFullScreen,
+} from "../../../static/scripts/tim/util/fullscreen";
 
 const JsframeMarkup = t.intersection([
     t.partial({
@@ -695,11 +699,14 @@ export class JsframeComponent
             if (d.msg === "datasave") {
                 this.getDataReady(d.data, true);
             }
-            if(d.msg === "frameInited" && d.fullscreen && fullscreenSupported(this.frame!.nativeElement)){
+            if (
+                d.msg === "frameInited" &&
+                d.fullscreen &&
+                fullscreenSupported(this.frame!.nativeElement)
+            ) {
                 toggleFullScreen(this.frame!.nativeElement);
             }
-            console.log(d);
-            if(d.msg === "frameClosed"){
+            if (d.msg === "frameClosed") {
                 exitFullScreen();
             }
         };
