@@ -42,12 +42,12 @@ import {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
 } from "../../../static/scripts/tim/document/viewutils";
-import {communicationJS} from "./iframeutils";
 import {
     exitFullScreen,
     fullscreenSupported,
     toggleFullScreen,
 } from "../../../static/scripts/tim/util/fullscreen";
+import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
     t.partial({
@@ -301,6 +301,7 @@ export class JsframeComponent
     connectionErrorMessage?: string;
     private prevdata?: JSFrameData;
     private currentData?: JSFrameData;
+    private wentFullScreen = false;
 
     private initData: string = "";
     private userName?: string;
@@ -704,10 +705,13 @@ export class JsframeComponent
                 d.fullscreen &&
                 fullscreenSupported(this.frame!.nativeElement)
             ) {
-                toggleFullScreen(this.frame!.nativeElement);
+                this.wentFullScreen = toggleFullScreen(
+                    this.frame!.nativeElement
+                );
             }
-            if (d.msg === "frameClosed") {
+            if (d.msg === "frameClosed" && this.wentFullScreen) {
                 exitFullScreen();
+                this.wentFullScreen = false;
             }
         };
         const f = this.getFrame();
