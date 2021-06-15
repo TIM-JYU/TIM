@@ -2,6 +2,7 @@ import {HttpClient} from "@angular/common/http";
 import {Component, DoCheck, Input} from "@angular/core";
 import {DocumentOrFolder} from "tim/item/IItem";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {showAddContactDialog} from "tim/user/showAddContactDialog";
 import {ConsentType} from "../ui/consent";
 import {settingsglobals} from "../util/globals";
 import {IOkResponse, timeout, to2} from "../util/utils";
@@ -218,6 +219,10 @@ export class SaveButtonComponent {
                 <p>Full name: {{user.real_name}}</p>
                 <p>Email: {{user.email}}</p>
             </bootstrap-panel>
+            <bootstrap-panel title="Additional contact information">
+                <p>Hei</p>
+                <button class="timButton" (click)="openContactInfoDialog()">Add new</button>
+            </bootstrap-panel>
             <bootstrap-panel title="Delete your account">
                 <button class="timButton btn-danger"
                         (click)="beginDeleteAccount()"
@@ -244,9 +249,11 @@ export class SaveButtonComponent {
 })
 export class SettingsComponent implements DoCheck {
     saving = false;
+    private readonly style: HTMLStyleElement;
     settings: ISettings;
     cssFiles: Array<ICssFile>;
     notifications: INotification[];
+    private readonly consent: ConsentType | undefined;
     storageClear = false;
     user: IFullUser;
     deletingAccount = false;
@@ -367,5 +374,12 @@ export class SettingsComponent implements DoCheck {
                 await showMessageDialog(r.result.error.error);
             }
         }
+    }
+
+    /**
+     * Open a dialog for user to add additional contact information.
+     */
+    async openContactInfoDialog() {
+        return await showAddContactDialog();
     }
 }
