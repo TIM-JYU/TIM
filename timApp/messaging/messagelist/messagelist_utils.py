@@ -14,6 +14,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
+from timApp.item.validation import ItemValidationRule
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
     set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
     set_email_list_allow_nonmember, set_email_list_allow_attachments, set_email_list_default_reply_type, \
@@ -457,7 +458,10 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     path_safe_list_name = remove_path_special_chars(list_options.name)
     path_to_doc = f'/{MESSAGE_LIST_DOC_PREFIX}/{path_safe_list_name}'
 
-    doc = create_document(path_to_doc, list_options.name)
+    doc = create_document(path_to_doc,
+                          list_options.name,
+                          validation_rule=ItemValidationRule(check_write_perm=False),
+                          parent_owner=UserGroup.get_admin_group())
 
     # We add the admin component to the document.
     admin_component = """#- {allowangular="true"}
