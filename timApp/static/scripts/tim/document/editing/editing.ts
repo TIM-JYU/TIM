@@ -687,6 +687,7 @@ This will delete the whole ${
         let areaWithSel:
             | {sel: UserSelection<UnbrokenSelection>; area: Area}
             | undefined;
+        let insideRefArea = false;
         if (ctx instanceof Area && ctx.isStartOrEnd(par.par)) {
             areaWithSel = {
                 sel: new UserSelection(
@@ -698,6 +699,11 @@ This will delete the whole ${
                 ),
                 area: ctx,
             };
+        } else if (
+            ctx instanceof ReferenceParagraph &&
+            ctx.target instanceof Area
+        ) {
+            insideRefArea = !ctx.target.startPar.par.equals(par.par);
         }
         if (this.viewctrl.editing) {
             fns.push(
@@ -773,9 +779,11 @@ This will delete the whole ${
                     },
                     desc: "Follow reference",
                     show: par.isReference(),
-                },
-                this.getAddParagraphItem(addAbovePos)
+                }
             );
+            if (!insideRefArea) {
+                fns.push(this.getAddParagraphItem(addAbovePos));
+            }
             if (showSingleParFns) {
                 fns.push({
                     func: (e) =>
@@ -874,8 +882,12 @@ This will delete the whole ${
                         this.viewctrl.areaHandler.removeAreaMarking(e, par),
                     desc: "Remove area marking",
                     show: documentglobals().editMode === "area",
-                },
-                this.getAddQuestionItem(addAbovePos),
+                }
+            );
+            if (!insideRefArea) {
+                fns.push(this.getAddQuestionItem(addAbovePos));
+            }
+            fns.push(
                 {
                     func: (e) => this.viewctrl.questionHandler.editQst(e, par),
                     desc: "Edit question",
