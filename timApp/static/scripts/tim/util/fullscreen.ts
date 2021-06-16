@@ -50,13 +50,13 @@ export function toggleFullScreen(e: HTMLElement): boolean {
             wentFullscreen = false;
         }
     } else {
-        exitFullScreen();
+        doExitFullScreen();
         wentFullscreen = false;
     }
     return wentFullscreen;
 }
 
-export function exitFullScreen() {
+export function doExitFullScreen() {
     const doc = document as INonStandardFullScreenProperties & Document;
     if (doc.exitFullscreen) {
         doc.exitFullscreen();
@@ -64,5 +64,11 @@ export function exitFullScreen() {
         doc.msExitFullscreen();
     } else if (doc.webkitExitFullscreen) {
         doc.webkitExitFullscreen();
+    }
+}
+
+export function exitFullScreen() {
+    if (getFullscreenElement()) {
+        doExitFullScreen();
     }
 }
