@@ -1,6 +1,8 @@
+import string
 from dataclasses import field
 from typing import List, Optional, Dict, Any
 
+import random
 from flask import Response
 from sqlalchemy.orm import load_only
 
@@ -22,28 +24,17 @@ from timApp.messaging.messagelist.listoptions import ListOptions, Distribution, 
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.listinfo import ListInfo, MemberInfo, GroupAndMembers
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
-from timApp.messaging.messagelist.messagelist_utils import (
-    verify_messagelist_name_requirements,
-    new_list,
-    set_message_list_notify_owner_on_change,
-    set_message_list_member_can_unsubscribe,
-    set_message_list_subject_prefix,
-    set_message_list_tim_users_can_join,
-    set_message_list_default_send_right,
-    set_message_list_default_delivery_right,
-    set_message_list_only_text,
-    set_message_list_non_member_message_pass,
-    set_message_list_allow_attachments,
-    set_message_list_default_reply_type,
-    add_new_message_list_group,
-    add_message_list_external_email_member,
-    set_message_list_member_removed_status,
-    set_member_send_delivery,
-    set_message_list_description,
-    set_message_list_info,
-    check_name_rules,
-    verify_can_create_lists,
-)
+from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_name_requirements, new_list, \
+    set_message_list_notify_owner_on_change, \
+    set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
+    set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
+    set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
+    add_new_message_list_group, add_message_list_external_email_member, \
+    set_message_list_member_removed_status, set_member_send_delivery, set_message_list_description, \
+    set_message_list_info
+from timApp.notification.send_email import send_email
+from timApp.tim_app import app
+    set_message_list_info, check_name_rules, verify_can_create_lists
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
@@ -52,7 +43,8 @@ from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_error
 from timApp.util.utils import is_valid_email, get_current_time
 
-messagelist = TypedBlueprint("messagelist", __name__, url_prefix="/messagelist")
+messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
+verification = TypedBlueprint('verification', __name__, url_prefix='/verification')
 
 
 @messagelist.route("/checkname", methods=["POST"])
@@ -477,5 +469,26 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
     verify_logged_in()
     # TODO: Check for duplicate contact information.
     # TODO: Generate verification information for db.
+    # Random string for verification URL.
+    verification_string = r''.join(random.choice(string.ascii_lowercase) for _ in range(30))
+    verification_url = f"{app.config['TIM_HOST']}/verification/contact/{verification_string}"
     # TODO: Send verification link to the contact information.
+    if contact_info_type is Channel.EMAIL:
+        if not is_valid_email(contact_info):
+            # If the email contact information is considered to not be a valid email address, then return an
+            # exception to the user.
+            raise RouteException("01")
+        send_email(contact_info, "New TIM contact information verification link", f"""Hey, 
+
+someone requested to add a new email ({contact_info}) for their TIM account. If this person was you, then you may 
+click the link at the end of this message and your contact information will be added in TIM. 
+
+If this was not you, then please disregard this message, someone most likely accidentally wrote the wrong contact 
+information for themselves. If, however, this is among a multitude of requests that are not from you, then please 
+forward this message to {app.config['HELP_EMAIL']} and TIM support will be deal with.
+
+
+{verification_url}
+
+""")
     return ok_response()

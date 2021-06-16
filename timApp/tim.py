@@ -66,6 +66,8 @@ from timApp.messaging.messagelist.mailman_events import (
 )
 from timApp.messaging.messagelist.routes import messagelist
 from timApp.messaging.timMessage.routes import timMessage
+from timApp.messaging.messagelist.mailman_events import mailman_events
+from timApp.messaging.messagelist.routes import messagelist, verification
 from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
 from timApp.notification.notify import notify
@@ -150,6 +152,7 @@ blueprints = [
     user_select_plugin,
     messagelist,
     timMessage,
+    verification,
 ]
 
 if app.config["BOOKMARKS_ENABLED"]:
