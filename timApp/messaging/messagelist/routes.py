@@ -1,3 +1,4 @@
+from typing import List, Optional
 import secrets
 from dataclasses import field
 from typing import List, Optional, Dict, Any
@@ -19,6 +20,7 @@ from timApp.folder.folder import Folder
 from timApp.item.manage import get_trash_folder
 from timApp.messaging.messagelist.emaillist import create_new_email_list, \
     delete_email_list, verify_emaillist_name_requirements, get_domain_names, verify_mailman_connection
+from timApp.messaging.messagelist.listoptions import ListOptions, Distribution, MemberInfo, GroupAndMembers
 from timApp.messaging.messagelist.listoptions import ListOptions, Distribution, MemberInfo, GroupAndMembers, Channel
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.listinfo import ListInfo, MemberInfo, GroupAndMembers
@@ -43,7 +45,7 @@ from timApp.util.logger import log_error
 from timApp.util.utils import is_valid_email, get_current_time
 
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
-verification = TypedBlueprint('verification', __name__, url_prefix='/verification')
+
 
 
 @messagelist.route("/checkname", methods=["POST"])
