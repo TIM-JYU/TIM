@@ -1,5 +1,6 @@
 import secrets
 from dataclasses import field
+from enum import Enum
 
 from flask import Response
 
@@ -7,6 +8,7 @@ from timApp.auth.accesshelper import verify_logged_in
 from timApp.messaging.messagelist.listoptions import Channel
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
+from timApp.timdb.sqa import db
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -50,3 +52,35 @@ Verification link (click only if you requested this action):
 
 """)
     return ok_response()
+
+
+class VerificationType(Enum):
+    """Type of verification, used to direct the proper verification action afterwards."""
+    LIST_JOIN = 1
+    """A user has been invited to a message list."""
+    CONTACT_OWNERSHIP = 2
+    """A user has added a new contact information for themselves, and it's verified they are in possession of said 
+    contact information. """
+
+
+class Verification(db.Model):
+    """For various pending verifications, such as message list joining and email ownership verification."""
+
+    __tablename__ = "verifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    contact_id = db.Column(db.Integer, db.ForeignKey("user_contacts.id"), primary_key=True)
+
+    verification_type = db.Column(db.Enum(VerificationType))
+    """The type of verification, see VerificationType class for details."""
+
+    verification_pending = db.Column(db.DateTime(timezone=True))
+    """When a verification has been added to db, pending sending to a user."""
+
+    verification_link = db.Column(db.Text)
+    """Generated verification link. This is given to the user and once they click on it, they are verified (in 
+    whatever it was that needed verification)."""
+
+    verified = db.Column(db.DateTime(timezone=True))
+    """When the user used the link to verify."""
