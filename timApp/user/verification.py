@@ -5,14 +5,16 @@ from enum import Enum
 from flask import Response
 
 from timApp.auth.accesshelper import verify_logged_in
+from timApp.auth.sessioninfo import get_current_user
 from timApp.messaging.messagelist.listoptions import Channel
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
+from timApp.user.usercontact import UserContact
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import is_valid_email
+from timApp.util.utils import is_valid_email, get_current_time
 
 verification = TypedBlueprint('verification', __name__, url_prefix='/verification')
 
@@ -27,18 +29,27 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
     :return: OK response.
     """
     verify_logged_in()
-    # TODO: Check for duplicate contact information.
-    # TODO: Generate verification information for db.
+    # TODO: Check for duplicate contact information?
+
     # Random string for verification URL.
     verification_string = secrets.token_urlsafe(32)
     verification_url = f"{app.config['TIM_HOST']}/verification/contact/{verification_string}"
-    # TODO: Send verification link to the contact information.
+    uc = None
+    # Add appropriate contact info.
     if contact_info_type is Channel.EMAIL:
         if not is_valid_email(contact_info):
             # If the email contact information is considered to not be a valid email address, then return an
             # exception to the user.
             raise RouteException("01")
-        send_email(contact_info, "New TIM contact information verification link", f"""Hey, 
+        # TODO: Generate verification information for db.
+        # TODO: Generate contact info in db, with verified = False.
+        u_id = get_current_user().id
+        uc = UserContact(user_id=u_id, contact=contact_info, channel=Channel.EMAIL, verified=False, primary=False)
+        db.session.add(uc)
+    ver = Verification(verification_type=VerificationType.CONTACT_OWNERSHIP, verification_pending=get_current_time(),
+                       verification_token=verification_string, contact=uc)
+    db.session.add(ver)
+    send_email(contact_info, "New TIM contact information verification link", f"""Hey, 
 
 someone requested to add a new email ({contact_info}) to their TIM account. If this person was you, then you may 
 click the link at the end of this message and your contact information will be added to your user profile in TIM. 
@@ -51,6 +62,7 @@ Verification link (click only if you requested this action):
 {verification_url}
 
 """)
+    db.session.commit()
     return ok_response()
 
 
@@ -64,7 +76,8 @@ class VerificationType(Enum):
 
 
 class Verification(db.Model):
-    """For various pending verifications, such as message list joining and email ownership verification."""
+    """For various pending verifications, such as message list joining and contact information ownership
+    verification."""
 
     __tablename__ = "verifications"
 
@@ -72,15 +85,19 @@ class Verification(db.Model):
 
     contact_id = db.Column(db.Integer, db.ForeignKey("user_contacts.id"), primary_key=True)
 
-    verification_type = db.Column(db.Enum(VerificationType))
+    verification_type = db.Column(db.Enum(VerificationType), nullable=False)
     """The type of verification, see VerificationType class for details."""
 
     verification_pending = db.Column(db.DateTime(timezone=True))
     """When a verification has been added to db, pending sending to a user."""
 
-    verification_link = db.Column(db.Text)
+    verification_token = db.Column(db.Text, nullable=False)
     """Generated verification link. This is given to the user and once they click on it, they are verified (in 
     whatever it was that needed verification)."""
 
-    verified = db.Column(db.DateTime(timezone=True))
+    verified_at = db.Column(db.DateTime(timezone=True))
     """When the user used the link to verify."""
+
+    contact = db.relationship("UserContact", back_populates="verification", lazy="select", uselist=False)
+    """Relationship to UserContact, to allow connecting without db flushing first."""
+
