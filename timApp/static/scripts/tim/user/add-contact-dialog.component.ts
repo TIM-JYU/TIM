@@ -64,7 +64,7 @@ export class AddContactDialogComponent extends AngularDialogComponent<
         }
         const result = await to2(
             this.http
-                .post("/messagelist/addnewcontact", {
+                .post("/verification/addnewcontact", {
                     contact_info_type: this.chosenChannel,
                     contact_info: this.contactInfo,
                 })
