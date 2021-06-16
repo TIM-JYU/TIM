@@ -1,8 +1,7 @@
-import string
+import secrets
 from dataclasses import field
 from typing import List, Optional, Dict, Any
 
-import random
 from flask import Response
 from sqlalchemy.orm import load_only
 
@@ -470,7 +469,7 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
     # TODO: Check for duplicate contact information.
     # TODO: Generate verification information for db.
     # Random string for verification URL.
-    verification_string = r''.join(random.choice(string.ascii_lowercase) for _ in range(30))
+    verification_string = secrets.token_urlsafe(32)
     verification_url = f"{app.config['TIM_HOST']}/verification/contact/{verification_string}"
     # TODO: Send verification link to the contact information.
     if contact_info_type is Channel.EMAIL:
