@@ -479,14 +479,14 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
             raise RouteException("01")
         send_email(contact_info, "New TIM contact information verification link", f"""Hey, 
 
-someone requested to add a new email ({contact_info}) for their TIM account. If this person was you, then you may 
-click the link at the end of this message and your contact information will be added in TIM. 
+someone requested to add a new email ({contact_info}) to their TIM account. If this person was you, then you may 
+click the link at the end of this message and your contact information will be added to your user profile in TIM. 
 
 If this was not you, then please disregard this message, someone most likely accidentally wrote the wrong contact 
 information for themselves. If, however, this is among a multitude of requests that are not from you, then please 
-forward this message to {app.config['HELP_EMAIL']} and TIM support will be deal with.
+forward this message to {app.config['HELP_EMAIL']} and TIM support will be deal with it.
 
-
+Verification link (click only if you requested this action):
 {verification_url}
 
 """)
