@@ -75,6 +75,7 @@ const JsframeMarkup = t.intersection([
         norun: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
         task: withDefault(t.boolean, true), // TODO: check if other jsframes are tasks or not
+        apifullscreen: withDefault(t.boolean, false),
     }),
 ]);
 const JsframeAll = t.intersection([
@@ -188,6 +189,7 @@ export interface Iframesettings {
                         [sandbox]="iframesettings.sandbox"
                         [attr.allow]="iframesettings.allow"
                         (load)="iframeloaded($event)"
+                        [ngClass]="{'fullScreen': fullScreen}"
                 >
                 </iframe>
             </div>
@@ -301,6 +303,7 @@ export class JsframeComponent
     connectionErrorMessage?: string;
     private prevdata?: JSFrameData;
     private currentData?: JSFrameData;
+    fullScreen: boolean = false;
 
     private initData: string = "";
     private userName?: string;
@@ -699,18 +702,28 @@ export class JsframeComponent
             if (d.msg === "datasave") {
                 this.getDataReady(d.data, true);
             }
-            if (
-                d.msg === "frameInited" &&
-                d.fullscreen &&
-                fullscreenSupported(this.frame!.nativeElement)
-            ) {
-                toggleFullScreen(this.frame!.nativeElement);
+            if (d.msg === "frameInited" && d.fullscreen) {
+                if (
+                    this.markup.apifullscreen &&
+                    fullscreenSupported(this.frame!.nativeElement)
+                ) {
+                    toggleFullScreen(this.frame!.nativeElement);
+                } else {
+                    this.fullScreen = true;
+                    document.body.classList.add("no-overflow"); // hide document scrollbar
+                    this.c();
+                }
             }
             if (d.msg === "frameClosed" && d.fullscreen) {
-                try {
+                if (
+                    this.markup.apifullscreen &&
+                    fullscreenSupported(this.frame!.nativeElement)
+                ) {
                     exitFullScreen();
-                } catch (e) {
-                    // Ignore TypeError: Not in fullscreen mode
+                } else {
+                    this.fullScreen = false;
+                    document.body.classList.remove("no-overflow");
+                    this.c();
                 }
             }
         };
