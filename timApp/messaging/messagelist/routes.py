@@ -1,4 +1,5 @@
-from typing import Optional, Any
+from dataclasses import field
+from typing import List, Optional, Dict, Any
 
 from flask import Response
 from sqlalchemy.orm import load_only
@@ -15,13 +16,9 @@ from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document, DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.manage import get_trash_folder
-from timApp.messaging.messagelist.emaillist import (
-    create_new_email_list,
-    delete_email_list,
-    verify_emaillist_name_requirements,
-    get_domain_names,
-    verify_mailman_connection,
-)
+from timApp.messaging.messagelist.emaillist import create_new_email_list, \
+    delete_email_list, verify_emaillist_name_requirements, get_domain_names, verify_mailman_connection
+from timApp.messaging.messagelist.listoptions import ListOptions, Distribution, MemberInfo, GroupAndMembers, Channel
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.listinfo import ListInfo, MemberInfo, GroupAndMembers
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
@@ -466,3 +463,19 @@ def get_sibling_archive_messages(message_doc_id: int) -> Response:
         )
 
     return json_response({"next": to_json(next_doc), "prev": to_json(prev_doc)})
+
+
+@messagelist.post("/addnewcontact")
+def add_contact_info(contact_info: str, contact_info_type: Channel = field(metadata={'by_value': True})) \
+        -> Response:
+    """Add a new contact information for a TIM user.
+
+    :param contact_info_type: The channel user wishes to add a new contact information.
+    :param contact_info: The contact information.
+    :return: OK response.
+    """
+    verify_logged_in()
+    # TODO: Check for duplicate contact information.
+    # TODO: Generate verification information for db.
+    # TODO: Send verification link to the contact information.
+    return ok_response()
