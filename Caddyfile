@@ -4,6 +4,17 @@
 	}
 }
 
+(mailman_dev) {
+	handle /mailman3/* {
+        reverse_proxy * http://mailman-web:8000
+    }
+    handle_path /mailman3/static/* {
+        file_server * {
+            root /var/www/mailman3/static
+        }
+    }
+}
+
 (common) {
 	encode gzip
 
@@ -48,6 +59,7 @@
 	handle {
 		reverse_proxy * http://tim:5000
 	}
+	{$EXTRA_TIM_CONFIG}
 	log {
 		output file /logs/access.log {
 			roll_keep 100

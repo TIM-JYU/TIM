@@ -11,6 +11,7 @@ x-caddy:
   - ./Caddyfile:/etc/caddy/Caddyfile:ro
   - ./timApp/static:/tim/timApp/static:ro
   - ${LOG_DIR:?}/caddy:/logs
+  - ${CADDY_MAILMAN_STATIC_DIR:?}:/var/www/mailman3/static
   - ./timApp/modules/cs/generated:/tim/timApp/modules/cs/generated:ro
   - ./timApp/modules/cs/static:/tim/timApp/modules/cs/static:ro
  depends_on:
@@ -18,7 +19,15 @@ x-caddy:
  environment:
   CADDY_DOMAINS: ${CADDY_DOMAINS:?}
   CADDY_EXTRA_CONFIG: ${CADDY_EXTRA_CONFIG:?}
+  EXTRA_TIM_CONFIG: ${EXTRA_TIM_CONFIG:?}
  restart: unless-stopped
+x-mailman-common-env:
+ &mailman-common-env
+  DATABASE_TYPE: sqlite
+  DATABASE_URL: sqlite:////opt/mailmandb/mailmanweb.db
+  DATABASE_CLASS: mailman.database.sqlite.SQLiteDatabase
+  HYPERKITTY_API_KEY: test
+
 
 services:
  tim:
@@ -341,6 +350,34 @@ services:
    - ./oiko:/service:ro
   tmpfs:
    - /tmp
+ mailman-core:
+  image: timimages/mailman-core:latest
+  restart: unless-stopped
+  profiles:
+   - dev_mailman
+  volumes:
+   - ./mailman/db:/opt/mailmandb
+   - ./mailman/core:/opt/mailman
+  environment:
+   <<: *mailman-common-env
+ mailman-web:
+  image: timimages/mailman-web:latest
+  restart: unless-stopped
+  profiles:
+   - dev_mailman
+  depends_on:
+   - mailman-core
+  volumes:
+   - ./mailman/db:/opt/mailmandb
+   - ./mailman/web:/opt/mailman-web-data
+   - ./mailman/messages:/tmp/mailman-messages
+  environment:
+   <<: *mailman-common-env
+   SECRET_KEY: test
+   MAILMAN_ADMIN_USER: admin
+   MAILMAN_ADMIN_EMAIL: admin@example.com
+   SERVE_FROM_DOMAIN: localhost
+   URL_BASE_DIR: mailman3
  caddy:
   <<: *caddy-common
   profiles:

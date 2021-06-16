@@ -64,3 +64,10 @@ redate-settings
 temp
 Thumbs.db
 yubi.key
+/mailman/web/diskcache/
+/mailman/web/fulltext_index/
+/mailman/web/logs/
+/mailman/web/static/
+/mailman/messages/
+/mailman/db/
+/mailman/core/var/

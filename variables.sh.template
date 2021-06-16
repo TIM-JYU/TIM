@@ -46,6 +46,7 @@ export FILES_ROOT=${DIR}/timApp/tim_files
 # * prod_multi: This is one of multiple TIM instances running on the same remote machine.
 # * dev: This is a local development TIM instance.
 # * test: This instance is used only for running tests. Used mostly in GitLab CI.
+# * dev_mailman: Also run local development mailman
 export COMPOSE_PROFILES=prod
 
 # Command to start csplugin when COMPOSE_PROFILES=dev; use empty command if you want to debug it with SSH.

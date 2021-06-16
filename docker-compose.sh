@@ -25,10 +25,15 @@ if ! [ -z $DEV ]; then
   fi
 fi
 
-if [ "$COMPOSE_PROFILES" = "test" ]; then
+if [[ "$COMPOSE_PROFILES" == *"dev_mailman"* ]]; then
+  export EXTRA_TIM_CONFIG="import mailman_dev"
+  export CADDY_MAILMAN_STATIC_DIR="./mailman/web/static"
+fi
+
+if [[ "$COMPOSE_PROFILES" == *"test"* ]]; then
   COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}test"
   docker-compose -f "${DIR}/docker-compose.yml" --profile test "$@"
-elif [ "$COMPOSE_PROFILES" = "dev" ]; then
+elif [[ "$COMPOSE_PROFILES" == *"dev"* ]]; then
   docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.dev.yml" "$@"
 else
   docker-compose -f "${DIR}/docker-compose.yml" "$@"
