@@ -243,12 +243,11 @@
             if (!data) {
                 return;
             }
-            if (!data.c) {
+            if (!data.c || Object.entries(data.c).length === 0) {
                 // "undo" call in plugin might call setData with undefined c so we need separate check
-                document.getElementById('diagram').innerHTML = initial;
+                document.getElementById('diagram').innerHTML = null;
                 return;
             }
-            if (Object.entries(data.c).length === 0) return;
             let c = data.c;
             let d = String.fromCharCode(195);  // UTF-Escape for ä
             if (c.indexOf(d) >= 0) {

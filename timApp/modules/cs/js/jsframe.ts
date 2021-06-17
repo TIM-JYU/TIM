@@ -441,7 +441,9 @@ export class JsframeComponent
 
     changeAnswer(a: IAnswer) {
         const parse = JSON.parse(a.content) as unknown;
-        this.setData(unwrapAllC(parse));
+        const unwrap = unwrapAllC(parse);
+        this.prevdata = unwrap;
+        this.setData(unwrap);
     }
 
     private getFrame() {
