@@ -189,7 +189,7 @@ export interface Iframesettings {
                         [sandbox]="iframesettings.sandbox"
                         [attr.allow]="iframesettings.allow"
                         (load)="iframeloaded($event)"
-                        [ngClass]="{'fullScreen': fullScreen}"
+                        [ngClass]="{fullScreen: fullScreen}"
                 >
                 </iframe>
             </div>
@@ -707,9 +707,9 @@ export class JsframeComponent
             if (d.msg === "frameInited" && d.fullscreen) {
                 if (
                     this.markup.apifullscreen &&
-                    fullscreenSupported(this.frame!.nativeElement)
+                    fullscreenSupported(this.getFrame())
                 ) {
-                    toggleFullScreen(this.frame!.nativeElement);
+                    toggleFullScreen(this.getFrame());
                 } else {
                     this.fullScreen = true;
                     document.body.classList.add("no-overflow"); // hide document scrollbar
@@ -719,7 +719,7 @@ export class JsframeComponent
             if (d.msg === "frameClosed" && d.fullscreen) {
                 if (
                     this.markup.apifullscreen &&
-                    fullscreenSupported(this.frame!.nativeElement)
+                    fullscreenSupported(this.getFrame())
                 ) {
                     exitFullScreen();
                 } else {

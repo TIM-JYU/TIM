@@ -19,7 +19,6 @@ export function getFullscreenElement(): Element | undefined {
     );
 }
 
-// noinspection JSUnusedGlobalSymbols, used in template
 /**
  * @returns {boolean} true if device supports fullscreen, otherwise false
  */
