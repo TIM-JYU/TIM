@@ -42,6 +42,11 @@ import {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
 } from "../../../static/scripts/tim/document/viewutils";
+import {
+    exitFullScreen,
+    fullscreenSupported,
+    toggleFullScreen,
+} from "../../../static/scripts/tim/util/fullscreen";
 import {communicationJS} from "./iframeutils";
 
 const JsframeMarkup = t.intersection([
@@ -70,6 +75,7 @@ const JsframeMarkup = t.intersection([
         norun: withDefault(t.boolean, true),
         lang: withDefault(t.string, "fi"),
         task: withDefault(t.boolean, true), // TODO: check if other jsframes are tasks or not
+        apifullscreen: withDefault(t.boolean, false),
     }),
 ]);
 const JsframeAll = t.intersection([
@@ -132,6 +138,7 @@ type MessageFromFrame =
       }
     | {
           msg: "frameInited" | "frameClosed";
+          fullscreen: boolean;
       };
 
 /**
@@ -182,6 +189,7 @@ export interface Iframesettings {
                         [sandbox]="iframesettings.sandbox"
                         [attr.allow]="iframesettings.allow"
                         (load)="iframeloaded($event)"
+                        [ngClass]="{fullScreen: fullScreen}"
                 >
                 </iframe>
             </div>
@@ -295,6 +303,7 @@ export class JsframeComponent
     connectionErrorMessage?: string;
     private prevdata?: JSFrameData;
     private currentData?: JSFrameData;
+    fullScreen: boolean = false;
 
     private initData: string = "";
     private userName?: string;
@@ -432,7 +441,9 @@ export class JsframeComponent
 
     changeAnswer(a: IAnswer) {
         const parse = JSON.parse(a.content) as unknown;
-        this.setData(unwrapAllC(parse));
+        const unwrap = unwrapAllC(parse);
+        this.prevdata = unwrap;
+        this.setData(unwrap);
     }
 
     private getFrame() {
@@ -692,6 +703,30 @@ export class JsframeComponent
             }
             if (d.msg === "datasave") {
                 this.getDataReady(d.data, true);
+            }
+            if (d.msg === "frameInited" && d.fullscreen) {
+                if (
+                    this.markup.apifullscreen &&
+                    fullscreenSupported(this.getFrame())
+                ) {
+                    toggleFullScreen(this.getFrame());
+                } else {
+                    this.fullScreen = true;
+                    document.body.classList.add("no-overflow"); // hide document scrollbar
+                    this.c();
+                }
+            }
+            if (d.msg === "frameClosed" && d.fullscreen) {
+                if (
+                    this.markup.apifullscreen &&
+                    fullscreenSupported(this.getFrame())
+                ) {
+                    exitFullScreen();
+                } else {
+                    this.fullScreen = false;
+                    document.body.classList.remove("no-overflow");
+                    this.c();
+                }
             }
         };
         const f = this.getFrame();

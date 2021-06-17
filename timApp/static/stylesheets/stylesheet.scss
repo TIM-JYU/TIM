@@ -11,6 +11,10 @@ body {
     background-color: $bg-color;
 }
 
+body.no-overflow {
+    overflow: hidden;
+}
+
 a:visited {
     color: $link-visited-color;
     &.label {
