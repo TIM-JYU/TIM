@@ -7,6 +7,11 @@ import {markAsUsed, TimStorage, to} from "tim/util/utils";
 import {DialogController} from "tim/ui/dialogController";
 import {showRestampDialog} from "tim/editor/showRestampDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {
+    fullscreenSupported,
+    getFullscreenElement,
+    toggleFullScreen,
+} from "tim/util/fullscreen";
 import {IExtraData, ITags} from "../document/editing/edittypes";
 import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
@@ -23,18 +28,6 @@ import {TextAreaParEditor} from "./TextAreaParEditor";
 markAsUsed(rangyinputs);
 
 const TIM_TABLE_CELL = "timTableCell";
-
-interface INonStandardFullScreenProperties {
-    webkitFullscreenElement?: Element;
-    msFullscreenElement?: Element;
-    msExitFullscreen?: () => void;
-    webkitExitFullscreen?: () => void;
-}
-
-interface INonStandardFullScreenElement {
-    webkitRequestFullScreen?: () => void;
-    msRequestFullscreen?: () => void;
-}
 
 export interface ITag {
     name: keyof ITags;
@@ -174,15 +167,6 @@ interface IEditorTab {
 }
 
 type MenuNameAndItems = Array<[string, MenuItemEntries]>;
-
-function getFullscreenElement(): Element | undefined {
-    const doc = document as INonStandardFullScreenProperties & Document;
-    return (
-        doc.fullscreenElement ??
-        doc.webkitFullscreenElement ??
-        doc.msFullscreenElement
-    );
-}
 
 export interface ISpellWordInfo {
     word: string;
@@ -1683,54 +1667,19 @@ ${backTicks}
         this.activeTab = name;
     }
 
-    // noinspection JSUnusedGlobalSymbols, used in template
-    /**
-     * @returns {boolean} true if device supports fullscreen, otherwise false
-     */
     fullscreenSupported() {
-        const div = this.element[0] as INonStandardFullScreenElement & Element;
-        return (
-            div.requestFullscreen != null ||
-            div.webkitRequestFullScreen != null ||
-            div.msRequestFullscreen != null
-        );
+        return fullscreenSupported(this.element[0]);
     }
 
-    /**
-     * Makes editor div fullscreen
-     */
     goFullScreen() {
-        const doc = document as INonStandardFullScreenProperties & Document;
-        if (!getFullscreenElement()) {
-            let wentFullscreen = true;
-            const div = this.element[0] as INonStandardFullScreenElement &
-                Element;
-            if (div.requestFullscreen) {
-                div.requestFullscreen();
-            } else if (div.webkitRequestFullScreen) {
-                div.webkitRequestFullScreen();
-            } else if (div.msRequestFullscreen) {
-                div.msRequestFullscreen();
-            } else {
-                wentFullscreen = false;
-            }
-
-            if (wentFullscreen) {
-                div.setAttribute(
-                    "style",
-                    "width: 100%; height: 100%; position: absolute; top: 0px;" +
-                        "padding: 2em 5px 5px 5px; background: rgb(224, 224, 224); -webkit-box-sizing: border-box;" +
-                        "-moz-box-sizing: border-box; box-sizing: border-box;"
-                );
-            }
-        } else {
-            if (doc.exitFullscreen) {
-                doc.exitFullscreen();
-            } else if (doc.msExitFullscreen) {
-                doc.msExitFullscreen();
-            } else if (doc.webkitExitFullscreen) {
-                doc.webkitExitFullscreen();
-            }
+        const wentFullscreen = toggleFullScreen(this.element[0]);
+        if (wentFullscreen) {
+            this.element[0].setAttribute(
+                "style",
+                "width: 100%; height: 100%; position: absolute; top: 0px;" +
+                    "padding: 2em 5px 5px 5px; background: rgb(224, 224, 224); -webkit-box-sizing: border-box;" +
+                    "-moz-box-sizing: border-box; box-sizing: border-box;"
+            );
         }
     }
 

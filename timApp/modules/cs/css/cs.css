@@ -27,6 +27,20 @@
     border-right-width: thick;
 }
 
+.jsframe iframe.fullScreen {
+    position: fixed;
+    background: #000;
+    border: none;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 10;
+}
+
+
 .csRunArea {
 	width: 50em;
 }
