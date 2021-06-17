@@ -3,6 +3,7 @@ from dataclasses import field
 from enum import Enum
 
 from flask import Response
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user
@@ -14,7 +15,7 @@ from timApp.user.usercontact import UserContact
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.logger import log_warning
+from timApp.util.logger import log_warning, log_error
 from timApp.util.utils import is_valid_email, get_current_time
 
 verification = TypedBlueprint('verification', __name__, url_prefix='/verification')
@@ -31,7 +32,7 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
     """
     verify_logged_in()
     u_id = get_current_user().id
-    # TODO: Check for duplicate contact information?
+    # Check for duplicate contact information.
     existing_contact_info = UserContact.query.filter_by(user_id=u_id, contact=contact_info,
                                                         channel=contact_info_type).first()
 
@@ -51,7 +52,7 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
             # Generate new contact info in db, with verified = False to wait for the user to verify this.
             uc = UserContact(user_id=u_id, contact=contact_info, channel=Channel.EMAIL, verified=False, primary=False)
             db.session.add(uc)
-    # TODO: Generate verification information for db.
+    # Generate verification information for db.
     ver = Verification(verification_type=VerificationType.CONTACT_OWNERSHIP, verification_pending=get_current_time(),
                        verification_token=verification_string, contact=uc)
     db.session.add(ver)
@@ -106,7 +107,7 @@ def send_verification_messsage(contact_info: str, verification_url: str, channel
     """
     if channel is Channel.EMAIL:
         send_email(contact_info, "TIM-yhteystiedon vahvistuslinkki / New TIM contact information verification link",
-                   f"""In english below.
+                   f"""In English below.
 
     Joku on pyytänyt liittämään tämän sähköpostiosoitteen TIM-tiliinsä. Jos tämä on tapahtunut sinun aloitteestasi, 
     niin voit painaa myöhemmin tässä viestissä olevaa linkkiä ja tämä yhteystieto lisätään profiiliisi TIMissä. 
@@ -120,7 +121,7 @@ def send_verification_messsage(contact_info: str, verification_url: str, channel
     {verification_url}
 
 
-
+    In English:
 
     Someone requested to add a new email ({contact_info}) to their TIM account. If this person was you, then you may 
     click the link at the end of this message and your contact information will be added to your user profile in TIM. 
@@ -138,4 +139,30 @@ def send_verification_messsage(contact_info: str, verification_url: str, channel
         # it).
         log_warning(f"Tried to send verification message to an unhandled message channel '{channel}' in "
                     f"verification.py.")
-        pass
+        # The user needs some kind of feedback to know that they are not getting their verification message as they
+        # might expect.
+        raise RouteException("03")
+
+
+@verification.route("/contact/<verification_token>", methods=['POST'])
+def contact_info_verification(verification_token: str) -> Response:
+    """Verify user's additional contact information.
+
+    :param verification_token: Generated string token
+    :return: OK response.
+    """
+    try:
+        v = Verification.query.filter_by(verification_token=verification_token).one()
+        # Verify the contact information the token corresponds with.
+        contact_info = v.contact
+        contact_info.verified = True
+        v.verified_at = get_current_time()
+    except NoResultFound:
+        # We are most likely here if someone copy-pasted their verification link badly to the browser.
+        raise RouteException("Verification could not be done. Make sure you used the correct link.")
+    except MultipleResultsFound:
+        # If we are here, we have found multiple same tokens in the db. Something is most likely wrong with token
+        # generation.
+        log_error(f"Multiple verification tokens found in db (token: {verification_token}).")
+    db.session.commit()
+    return ok_response()

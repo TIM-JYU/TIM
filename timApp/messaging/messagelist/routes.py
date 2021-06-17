@@ -48,7 +48,7 @@ messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
 
 
-@messagelist.route("/checkname", methods=["POST"])
+@messagelist.post("/checkname")
 def check_name(name: str) -> Response:
     verify_logged_in()
     verify_can_create_lists()
@@ -59,7 +59,7 @@ def check_name(name: str) -> Response:
 
 
 @messagelist.post("/createlist")
-def create_list(options: ListInfo) -> Response:
+def create_list(options: ListOptions) -> Response:
     """Handles creating a new message list.
 
     :param options All options necessary for establishing a new message list.
