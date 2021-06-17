@@ -14,6 +14,7 @@ from timApp.user.usercontact import UserContact
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.logger import log_warning
 from timApp.util.utils import is_valid_email, get_current_time
 
 verification = TypedBlueprint('verification', __name__, url_prefix='/verification')
@@ -54,33 +55,7 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
     ver = Verification(verification_type=VerificationType.CONTACT_OWNERSHIP, verification_pending=get_current_time(),
                        verification_token=verification_string, contact=uc)
     db.session.add(ver)
-    send_email(contact_info, "TIM-yhteystiedon vahvistuslinkki / New TIM contact information verification link",
-               f"""In english below.
-    
-Joku on pyytänyt liittämään tämän sähköpostiosoitteen TIM-tiliinsä. Jos tämä on tapahtunut sinun aloitteestasi, 
-niin voit painaa myöhemmin tässä viestissä olevaa linkkiä ja tämä yhteystieto lisätään profiiliisi TIMissä. 
-
-Jos tämä tapahtuma ei ole sinun aloitteestasi, voit jättää tämän viestin huomiotta. Todennäköisesti TIM-käyttäjä on 
-vahingossa yrittänyt lisätä itselleen väärän yhteystiedon. Jos kuitenkin tämä on osa usean samanlaisen viestin 
-sarjaa, niin ole hyvä ja edelleenlähetä tämä viesti osoitteeseen {app.config['HELP_EMAIL']} ja TIMin tuki hoitaa asian.
-
-Vahvistuslinkki (paina ainostaan jos pyysit tätä toimintoa):
-{verification_url}
-
-
-
-
-someone requested to add a new email ({contact_info}) to their TIM account. If this person was you, then you may 
-click the link at the end of this message and your contact information will be added to your user profile in TIM. 
-
-If this was not you, then please disregard this message, someone most likely accidentally wrote the wrong contact 
-information for themselves. If, however, this is among a multitude of requests that are not from you, then please 
-forward this message to {app.config['HELP_EMAIL']} and TIM support will be deal with it.
-
-Verification link (click only if you requested this action):
-{verification_url}
-
-""")
+    send_verification_messsage(contact_info, verification_url, contact_info_type)
     db.session.commit()
     return ok_response()
 
@@ -120,3 +95,47 @@ class Verification(db.Model):
     contact = db.relationship("UserContact", back_populates="verification", lazy="select", uselist=False)
     """Relationship to UserContact, to allow connecting without db flushing first."""
 
+
+def send_verification_messsage(contact_info: str, verification_url: str, channel: Channel) -> None:
+    """Send verification messages to appropriate message channels.
+
+    :param contact_info: The contact information to receive the verification message.
+    :param verification_url: The URL in TIM to give to the owner of the contact information, so they can verify their
+    ownership of said contact information.
+    :param channel: The medium where the message is sent.
+    """
+    if channel is Channel.EMAIL:
+        send_email(contact_info, "TIM-yhteystiedon vahvistuslinkki / New TIM contact information verification link",
+                   f"""In english below.
+
+    Joku on pyytänyt liittämään tämän sähköpostiosoitteen TIM-tiliinsä. Jos tämä on tapahtunut sinun aloitteestasi, 
+    niin voit painaa myöhemmin tässä viestissä olevaa linkkiä ja tämä yhteystieto lisätään profiiliisi TIMissä. 
+
+    Jos tämä tapahtuma ei ole sinun aloitteestasi, voit jättää tämän viestin huomiotta. Todennäköisesti TIM-käyttäjä on 
+    vahingossa yrittänyt lisätä itselleen väärän yhteystiedon. Jos kuitenkin tämä on osa usean samanlaisen viestin 
+    sarjaa, niin ole hyvä ja edelleenlähetä tämä viesti osoitteeseen {app.config['HELP_EMAIL']} ja TIMin tuki hoitaa 
+    asian.
+
+    Vahvistuslinkki (paina ainostaan jos pyysit tätä toimintoa):
+    {verification_url}
+
+
+
+
+    Someone requested to add a new email ({contact_info}) to their TIM account. If this person was you, then you may 
+    click the link at the end of this message and your contact information will be added to your user profile in TIM. 
+
+    If this was not you, then please disregard this message, someone most likely accidentally wrote the wrong contact 
+    information for themselves. If, however, this is among a multitude of requests that are not from you, then please 
+    forward this message to {app.config['HELP_EMAIL']} and TIM support will be deal with it.
+
+    Verification link (click only if you requested this action):
+    {verification_url}
+    """)
+    else:
+        # Technically we should not be here, as it would mean somehow the contact info is meant for a channel that
+        # TIM does not yet handle. Log this anomaly for later investigation (or remind us to implement a handler for
+        # it).
+        log_warning(f"Tried to send verification message to an unhandled message channel '{channel}' in "
+                    f"verification.py.")
+        pass
