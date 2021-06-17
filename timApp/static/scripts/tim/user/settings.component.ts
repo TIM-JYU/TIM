@@ -220,7 +220,6 @@ export class SaveButtonComponent {
                 <p>Email: {{user.email}}</p>
             </bootstrap-panel>
             <bootstrap-panel title="Additional contact information">
-                <p>Hei</p>
                 <button class="timButton" (click)="openContactInfoDialog()">Add new</button>
             </bootstrap-panel>
             <bootstrap-panel title="Delete your account">

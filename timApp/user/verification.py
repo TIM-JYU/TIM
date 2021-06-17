@@ -6,7 +6,7 @@ from flask import Response
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from timApp.auth.accesshelper import verify_logged_in
-from timApp.auth.sessioninfo import get_current_user
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.listoptions import Channel
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
@@ -31,7 +31,7 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
     :return: OK response.
     """
     verify_logged_in()
-    u_id = get_current_user().id
+    u_id = get_current_user_object().id
     # Check for duplicate contact information.
     existing_contact_info = UserContact.query.filter_by(user_id=u_id, contact=contact_info,
                                                         channel=contact_info_type).first()
@@ -93,7 +93,8 @@ class Verification(db.Model):
     verified_at = db.Column(db.DateTime(timezone=True))
     """When the user used the link to verify."""
 
-    contact = db.relationship("UserContact", back_populates="verification", lazy="select", uselist=False)
+    # contact = db.relationship("UserContact", back_populates="verification", lazy="select", uselist=False)
+    contact = db.relationship("UserContact", lazy="select", uselist=False)
     """Relationship to UserContact, to allow connecting without db flushing first."""
 
 
