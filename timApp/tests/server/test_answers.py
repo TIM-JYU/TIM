@@ -7,6 +7,7 @@ from timApp.admin.answer_cli import delete_old_answers
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_users_for_tasks, save_answer, get_existing_answers_info
 from timApp.answer.backup import get_backup_answer_file
+from timApp.auth.accesstype import AccessType
 from timApp.plugin.taskid import TaskId
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
@@ -211,3 +212,17 @@ class AnswerTest(TimRouteTest):
                 'doc': d.path,
                 'host': 'http://localhost',
             }, backup)
+
+    def test_answer_disabled(self):
+        self.login_test1()
+        d = self.create_doc(initial_par='#- {#t plugin=textfield}', settings={'disable_answer': 'view'})
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.login_test2()
+        self.post_answer(
+            'textfield',
+            f'{d.id}.t',
+            user_input={'c': 'x'},
+            expect_status=403,
+            expect_content='Answering is disabled for this document.',
+        )
