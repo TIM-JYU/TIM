@@ -57,6 +57,7 @@ class DocSettingTypes:
     peer_review: bool
     peer_review_count: int
     access_denied_message: str
+    disable_answer: str
 
 
 doc_setting_field_map: Dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
@@ -447,6 +448,9 @@ class DocSettings:
 
     def access_denied_message(self) -> Optional[str]:
         return self.get_setting_or_default('access_denied_message', None)
+
+    def disable_answer(self) -> Optional[str]:
+        return self.get_setting_or_default('disable_answer', None)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

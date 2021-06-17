@@ -13,6 +13,7 @@ from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
+from timApp.auth.get_user_rights_for_item import UserItemRights
 from timApp.document.docinfo import DocInfo
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.folder.createopts import FolderCreationOptions
@@ -746,19 +747,21 @@ def get_membership_end(u: User, group_ids: Set[int]):
     return membership_end
 
 
-def check_rights(hide_type: str, rights: dict):
+def has_no_higher_right(access_type: Optional[str], rights: UserItemRights) -> bool:
     """
-    Checks whether the user has the correct rights rights not to hide links or the buttons in the top of the
-    page from them.
+    Checks whether the given access type (view, edit, ...) has no higher match in the given UserItemRights.
+    For example, if rights has {'edit': True}, then has_no_higher_right('view', rights) is False.
+    For now, only works for view, edit, see_answers and teacher access types.
 
-    :param hide_type What elements to hide in the document.
-    :param rights Which user roles the elements should be hidden from.
-    :return Should the elements be hidden from the user.
+    :param access_type The access type to check.
+    :param rights The UserItemRights to consider.
+    :return True if access_type is one of view, edit, see_answers or teacher and there is no higher right in the
+     UserItemRights, False otherwise.
     """
     return {'view': not rights['editable'] and not rights['see_answers'],
             'edit': not rights['see_answers'],
             'see_answers': not rights['teacher'],
-            'teacher': not rights['manage']}.get(hide_type, False)
+            'teacher': not rights['manage']}.get(access_type, False)
 
 
 def get_owned_objects_query(u: User):

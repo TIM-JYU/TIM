@@ -61,7 +61,7 @@ from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
 from timApp.user.settings.theme import Theme, theme_exists
 from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
-from timApp.user.user import User, check_rights
+from timApp.user.user import User, has_no_higher_right
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
@@ -882,23 +882,23 @@ def get_linked_groups_route(item_id: int):
 
 
 def should_hide_links(settings: DocSettings, rights: dict):
-    return check_rights(settings.hide_links(), rights)
+    return has_no_higher_right(settings.hide_links(), rights)
 
 
 def should_hide_top_buttons(settings: DocSettings, rights: dict):
-    return check_rights(settings.hide_top_buttons(), rights)
+    return has_no_higher_right(settings.hide_top_buttons(), rights)
 
 
 def should_hide_paragraphs(settings: DocSettings, rights: dict):
-    return check_rights(settings.pars_only(), rights)
+    return has_no_higher_right(settings.pars_only(), rights)
 
 
 def should_hide_sidemenu(settings: DocSettings, rights: dict):
-    return check_rights(settings.hide_sidemenu(), rights)
+    return has_no_higher_right(settings.hide_sidemenu(), rights)
 
 
 def is_exam_mode(settings: DocSettings, rights: dict):
-    return check_rights(settings.exam_mode(), rights)
+    return has_no_higher_right(settings.exam_mode(), rights)
 
 
 @view_page.route('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')
