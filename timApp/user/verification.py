@@ -49,7 +49,21 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
     ver = Verification(verification_type=VerificationType.CONTACT_OWNERSHIP, verification_pending=get_current_time(),
                        verification_token=verification_string, contact=uc)
     db.session.add(ver)
-    send_email(contact_info, "New TIM contact information verification link", f"""Hey, 
+    send_email(contact_info, "TIM-yhteystiedon vahvistuslinkki / New TIM contact information verification link",
+               f"""In english below.
+    
+Joku on pyytänyt liittämään tämän sähköpostiosoitteen TIM-tiliinsä. Jos tämä on tapahtunut sinun aloitteestasi, 
+niin voit painaa myöhemmin tässä viestissä olevaa linkkiä ja tämä yhteystieto lisätään profiiliisi TIMissä. 
+
+Jos tämä tapahtuma ei ole sinun aloitteestasi, voit jättää tämän viestin huomiotta. Todennäköisesti TIM-käyttäjä on 
+vahingossa yrittänyt lisätä itselleen väärän yhteystiedon. Jos kuitenkin tämä on osa usean samanlaisen viestin 
+sarjaa, niin ole hyvä ja edelleenlähetä tämä viesti osoitteeseen {app.config['HELP_EMAIL']} ja TIMin tuki hoitaa asian.
+
+Vahvistuslinkki (paina ainostaan jos pyysit tätä toimintoa):
+{verification_url}
+
+
+
 
 someone requested to add a new email ({contact_info}) to their TIM account. If this person was you, then you may 
 click the link at the end of this message and your contact information will be added to your user profile in TIM. 
