@@ -25,8 +25,8 @@ class UserContact(db.Model):
     verified = db.Column(db.Boolean, nullable=False)
     """The user has to verify they are in the possession of the contact information.
     
-    For a value of False, this 
-    """
+    For a value of False, this means that a user has made a claim for a contact info, but has not yet verified it's 
+    ownership. """
 
     # TODO: Figure if this relationship is needed.
     # verification = db.relationship("Verification", back_populates="contact", lazy="select", uselist=False)

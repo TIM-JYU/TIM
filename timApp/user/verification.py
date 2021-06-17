@@ -29,7 +29,14 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
     :return: OK response.
     """
     verify_logged_in()
+    u_id = get_current_user().id
     # TODO: Check for duplicate contact information?
+    existing_contact_info = UserContact.query.filter_by(user_id=u_id, contact=contact_info,
+                                                        channel=contact_info_type).first()
+
+    if existing_contact_info and existing_contact_info.verified:
+        # If the contact info already exists and is verified by the user, then inform them about it.
+        raise RouteException("02")
 
     # Random string for verification URL.
     verification_string = secrets.token_urlsafe(32)
@@ -38,14 +45,12 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
     # Add appropriate contact info.
     if contact_info_type is Channel.EMAIL:
         if not is_valid_email(contact_info):
-            # If the email contact information is considered to not be a valid email address, then return an
-            # exception to the user.
             raise RouteException("01")
-        # TODO: Generate verification information for db.
-        # TODO: Generate contact info in db, with verified = False.
-        u_id = get_current_user().id
-        uc = UserContact(user_id=u_id, contact=contact_info, channel=Channel.EMAIL, verified=False, primary=False)
-        db.session.add(uc)
+        if not existing_contact_info:
+            # Generate new contact info in db, with verified = False to wait for the user to verify this.
+            uc = UserContact(user_id=u_id, contact=contact_info, channel=Channel.EMAIL, verified=False, primary=False)
+            db.session.add(uc)
+    # TODO: Generate verification information for db.
     ver = Verification(verification_type=VerificationType.CONTACT_OWNERSHIP, verification_pending=get_current_time(),
                        verification_token=verification_string, contact=uc)
     db.session.add(ver)
