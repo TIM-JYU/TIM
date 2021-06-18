@@ -78,7 +78,7 @@ class Verification(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    contact_id = db.Column(db.Integer, db.ForeignKey("user_contacts.id"), primary_key=True)
+    contact_id = db.Column(db.Integer, db.ForeignKey("user_contacts.id"))
 
     verification_type = db.Column(db.Enum(VerificationType), nullable=False)
     """The type of verification, see VerificationType class for details."""
@@ -93,7 +93,6 @@ class Verification(db.Model):
     verified_at = db.Column(db.DateTime(timezone=True))
     """When the user used the link to verify."""
 
-    # contact = db.relationship("UserContact", back_populates="verification", lazy="select", uselist=False)
     contact = db.relationship("UserContact", lazy="select", uselist=False)
     """Relationship to UserContact, to allow connecting without db flushing first."""
 

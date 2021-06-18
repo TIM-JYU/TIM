@@ -221,7 +221,7 @@ export class SaveButtonComponent {
             </bootstrap-panel>
             <bootstrap-panel title="Additional contact information">
                 <!-- TODO: Remove when feature is complete. -->
-                <a href="https://gitlab.com/tim-jyu/tim/-/merge_requests/253">Merge request #253</a>
+                <p><a href="https://gitlab.com/tim-jyu/tim/-/merge_requests/253">Merge request #253</a></p>
                 <button class="timButton" (click)="openContactInfoDialog()">Add new</button>
             </bootstrap-panel>
             <bootstrap-panel title="Delete your account">
