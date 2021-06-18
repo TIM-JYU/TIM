@@ -33,6 +33,8 @@ fi
 if [[ "$COMPOSE_PROFILES" == *"test"* ]]; then
   COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}test"
   docker-compose -f "${DIR}/docker-compose.yml" --profile test "$@"
+elif [[ "$COMPOSE_PROFILES" == *"dev_mailman"* ]]; then
+  docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.dev.yml" -f "${DIR}/mailman/docker-compose.dev.yml" "$@"
 elif [[ "$COMPOSE_PROFILES" == *"dev"* ]]; then
   docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.dev.yml" "$@"
 else
