@@ -5,7 +5,7 @@ from timApp.timdb.sqa import db
 class UserContact(db.Model):
     """TIM users' additional contact information."""
 
-    __tablename__ = "user_contacts"
+    __tablename__ = "user_contact"
 
     id = db.Column(db.Integer, primary_key=True)
 

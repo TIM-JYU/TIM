@@ -20,7 +20,7 @@ channel_enum = sa.Enum('TIM_MESSAGE', 'EMAIL_LIST', name='channel')
 
 
 def upgrade():
-    op.create_table('user_contacts',
+    op.create_table('user_contact',
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=False),
                     sa.Column('contact', sa.Text(), nullable=False),
@@ -32,14 +32,14 @@ def upgrade():
     op.drop_table('user_emails')
     # Add a column to user_contacts table here, because the enum used here already exists and it gives
     # psycopg2.errors.DuplicateObject error if used in create_table.
-    op.add_column('user_contacts', sa.Column('channel', channel_enum, nullable=False))
+    op.add_column('user_contact', sa.Column('channel', channel_enum, nullable=False))
     op.add_column('verifications', sa.Column('contact_id', sa.Integer(), nullable=True))
     op.add_column('verifications', sa.Column('verification_token', sa.Text(), nullable=False))
     op.add_column('verifications', sa.Column('verified_at', sa.DateTime(timezone=True), nullable=True))
     op.alter_column('verifications', 'verification_type',
                     existing_type=postgresql.ENUM('LIST_JOIN', 'EMAIL_OWNERSHIP', name='verificationtype'),
                     nullable=False)
-    op.create_foreign_key(None, 'verifications', 'user_contacts', ['contact_id'], ['id'])
+    op.create_foreign_key(None, 'verifications', 'user_contact', ['contact_id'], ['id'])
     op.drop_column('verifications', 'verification_link')
     op.drop_column('verifications', 'verified')
     with op.get_context().autocommit_block():
@@ -72,7 +72,7 @@ def downgrade():
                     sa.PrimaryKeyConstraint('id', name='user_emails_pkey'),
                     sa.UniqueConstraint('additional_email', name='user_emails_additional_email_key')
                     )
-    op.drop_table('user_contacts')
+    op.drop_table('user_contact')
     # Intentionally don't remove enums that are added in upgrade. There are no good corresponding db states for this
     # change in the opposite direction.
 

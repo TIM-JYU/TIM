@@ -78,7 +78,7 @@ class Verification(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    contact_id = db.Column(db.Integer, db.ForeignKey("user_contacts.id"))
+    contact_id = db.Column(db.Integer, db.ForeignKey("user_contact.id"))
 
     verification_type = db.Column(db.Enum(VerificationType), nullable=False)
     """The type of verification, see VerificationType class for details."""
