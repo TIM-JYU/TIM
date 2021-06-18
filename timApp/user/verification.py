@@ -3,11 +3,12 @@ from dataclasses import field
 from enum import Enum
 
 from flask import Response
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound # type: ignore
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound  # type: ignore
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.messaging.messagelist.listoptions import Channel
+from timApp.messaging.messagelist.messagelist_utils import sync_new_contact_info
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
@@ -144,7 +145,10 @@ def send_verification_messsage(contact_info: str, verification_url: str, channel
         raise RouteException("03")
 
 
-@verification.route("/contact/<verification_token>", methods=['POST'])
+# TODO: Is there a way to do this in other than GET method? it's not very RESTful to change state in a db with a GET
+#  request. Should we instead re-direct to a page with a simple button for "Yes I own this contact information" for a
+#  POST request? Then we could differentatiate between GET and POST methods, thus preserving the sanctity of REST.
+@verification.route("/contact/<verification_token>", methods=['GET'])
 def contact_info_verification(verification_token: str) -> Response:
     """Verify user's additional contact information.
 
@@ -157,6 +161,8 @@ def contact_info_verification(verification_token: str) -> Response:
         contact_info = v.contact
         contact_info.verified = True
         v.verified_at = get_current_time()
+        # Sync the now verified contact info to relevant message lists.
+        sync_new_contact_info(contact_info)
     except NoResultFound:
         # We are most likely here if someone copy-pasted their verification link badly to the browser.
         raise RouteException("Verification could not be done. Make sure you used the correct link.")
@@ -165,4 +171,5 @@ def contact_info_verification(verification_token: str) -> Response:
         # generation.
         log_error(f"Multiple verification tokens found in db (token: {verification_token}).")
     db.session.commit()
+    # TODO: Sync new contact info to message lists.
     return ok_response()

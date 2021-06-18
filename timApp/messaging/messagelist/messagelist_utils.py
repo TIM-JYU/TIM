@@ -54,6 +54,7 @@ from timApp.messaging.messagelist.messagelist_models import (
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
+from timApp.user.usercontact import UserContact
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.logger import log_warning
@@ -952,17 +953,10 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
         group_message_list: MessageListModel = group_tim_member.message_list
         # Propagate the adding on message list's message channels.
         if group_message_list.email_list_domain:
-            email_list = get_email_list_by_name(
-                group_message_list.name, group_message_list.email_list_domain
-            )
-            add_email(
-                email_list,
-                user.email,
-                True,
-                user.real_name,
-                group_tim_member.member.send_right,
-                group_tim_member.member.delivery_right,
-            )
+            # TODO: Find user's contact info for emails and add them accordingly.
+            email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
+            add_email(email_list, user.email, True, user.real_name,
+                      group_tim_member.member.send_right, group_tim_member.member.delivery_right)
 
 
 def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
@@ -982,9 +976,8 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
         group_message_list: MessageListModel = group_tim_member.message_list
         # Propagate the deletion on message list's message channels.
         if group_message_list.email_list_domain:
-            email_list = get_email_list_by_name(
-                group_message_list.name, group_message_list.email_list_domain
-            )
+            # TODO: Find user's contact info for emails and remove them accordingly.
+            email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
             email_list_member = get_email_list_member(email_list, user.email)
             remove_email_list_membership(email_list_member)
 
@@ -1122,6 +1115,22 @@ def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -
             message_list.name, message_list.email_list_domain
         )
         set_email_list_info(email_list, info)
+
+
+def sync_new_contact_info(contact_info: UserContact) -> None:
+    """Sync user's new contact information to message lists.
+
+    :param contact_info: Contact information to be synced to message lists.
+    """
+    # TODO: Get the user and find all the message lists they are part of.
+    user = User.get_by_id(contact_info.user_id)
+    # TODO: Find message lists where the user is directly a member. Add the new contact information there.
+    user.get_personal_group()
+
+    # TODO: For all the message lists's these groups are a member, add the new contact info in them if appropriate.
+    #  - There might be duplicate lists, if there are groups that are a member in the same list. Is it better to get
+    #    only unique lists, or let the adding function take care of not adding duplicates?
+    user.groups
 
 
 @dataclass
