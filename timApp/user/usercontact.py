@@ -9,7 +9,7 @@ class UserContact(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
     """Which user owns this contact information."""
 
     contact = db.Column(db.Text, nullable=False)
