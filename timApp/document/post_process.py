@@ -25,7 +25,7 @@ from timApp.plugin.pluginControl import pluginify
 from timApp.readmark.readings import get_common_readings, get_read_expiry_condition, has_anything_read
 from timApp.readmark.readmarkcollection import ReadMarkCollection
 from timApp.readmark.readparagraph import ReadParagraph
-from timApp.user.user import User, check_rights
+from timApp.user.user import User, has_no_higher_right
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
@@ -361,7 +361,7 @@ def process_areas(
 
 def should_auto_read(doc: Document, usergroup_ids: List[int], user: User) -> bool:
     return not has_anything_read(usergroup_ids, doc) and (
-        check_rights(
+            has_no_higher_right(
             doc.get_settings().exam_mode(),
             get_user_rights_for_item(doc.docinfo, get_current_user_object()),
         ) or user.get_prefs().auto_mark_all_read

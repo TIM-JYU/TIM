@@ -18,6 +18,7 @@ from webargs.flaskparser import use_args
 
 from timApp.answer.exportedanswer import ExportedAnswer
 from timApp.answer.backup import send_answer_backup_if_enabled
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from tim_common.markupmodels import GenericMarkupModel
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
@@ -59,7 +60,7 @@ from timApp.tim_app import get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.groups import do_create_group, verify_group_edit_access
-from timApp.user.user import User, UserInfo
+from timApp.user.user import User, UserInfo, has_no_higher_right
 from timApp.user.user import maxdate
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
@@ -548,6 +549,10 @@ def post_answer_impl(
     if curr_user.is_deleted:
         session.clear()
         raise AccessDenied('Please refresh the page and log in again.')
+
+    rights = get_user_rights_for_item(d, curr_user)
+    if has_no_higher_right(d.document.get_settings().disable_answer(), rights):
+        raise AccessDenied('Answering is disabled for this document.')
 
     force_answer = answer_options.get('forceSave', False)  # Only used in feedback plugin.
     is_teacher = answer_browser_data.get('teacher', False)
