@@ -102,6 +102,8 @@ services:
    - ./mailman/core:/opt/mailman
   environment:
    <<: *mailman-common-env
+   HYPERKITTY_URL: http://mailman-web:8000/mailman3/hyperkitty/
+   INIT_DEV: 1
  mailman-web:
   image: timimages/mailman-web:latest
   restart: unless-stopped
