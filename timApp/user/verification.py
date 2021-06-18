@@ -3,7 +3,7 @@ from dataclasses import field
 from enum import Enum
 
 from flask import Response
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound # type: ignore
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
