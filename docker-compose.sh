@@ -26,7 +26,7 @@ if ! [ -z $DEV ]; then
 fi
 
 if [[ "$COMPOSE_PROFILES" == *"dev_mailman"* ]]; then
-  export EXTRA_TIM_CONFIG="import mailman_dev"
+  export CADDY_EXTRA_TIM_CONFIG="import mailman_dev"
   export CADDY_MAILMAN_STATIC_DIR="./mailman/web/static"
 fi
 

@@ -10,6 +10,13 @@ x-common-root:
  tmpfs:
   - /run/sshd
   - /root/.pycharm_helpers
+x-mailman-common-env:
+ &mailman-common-env
+  DATABASE_TYPE: sqlite
+  DATABASE_URL: sqlite:////opt/mailmandb/mailmanweb.db
+  DATABASE_CLASS: mailman.database.sqlite.SQLiteDatabase
+  HYPERKITTY_API_KEY: test
+
 services:
  tim:
   << : *common-root
@@ -85,3 +92,34 @@ services:
   command: ${SVNPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49996:22"
+ mailman-core:
+  image: timimages/mailman-core:latest
+  restart: unless-stopped
+  profiles:
+   - dev_mailman
+  volumes:
+   - ./mailman/db:/opt/mailmandb
+   - ./mailman/core:/opt/mailman
+  environment:
+   <<: *mailman-common-env
+ mailman-web:
+  image: timimages/mailman-web:latest
+  restart: unless-stopped
+  profiles:
+   - dev_mailman
+  depends_on:
+   - mailman-core
+  volumes:
+   - ./mailman/db:/opt/mailmandb
+   - ./mailman/web:/opt/mailman-web-data
+   - ./mailman/messages:/tmp/mailman-messages
+  environment:
+   <<: *mailman-common-env
+   SECRET_KEY: test
+   MAILMAN_ADMIN_USER: admin
+   MAILMAN_ADMIN_EMAIL: admin@example.com
+   SERVE_FROM_DOMAIN: localhost
+   URL_BASE_DIR: mailman3
+ caddy:
+  volumes:
+     - ${CADDY_MAILMAN_STATIC_DIR:?}:/var/www/mailman3/static

@@ -59,13 +59,13 @@
 	handle {
 		reverse_proxy * http://tim:5000
 	}
-	{$EXTRA_TIM_CONFIG}
 	log {
 		output file /logs/access.log {
 			roll_keep 100
 			roll_keep_for 365d
 		}
 	}
+	{$CADDY_EXTRA_TIM_CONFIG}
 }
 
 {$CADDY_DOMAINS} {
