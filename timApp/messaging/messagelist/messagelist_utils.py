@@ -1117,20 +1117,26 @@ def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -
         set_email_list_info(email_list, info)
 
 
-def sync_new_contact_info(contact_info: UserContact) -> None:
+def sync_new_contact_info(user_contact: UserContact) -> None:
     """Sync user's new contact information to message lists.
 
-    :param contact_info: Contact information to be synced to message lists.
-    """
-    # TODO: Get the user and find all the message lists they are part of.
-    user = User.get_by_id(contact_info.user_id)
-    # TODO: Find message lists where the user is directly a member. Add the new contact information there.
-    user.get_personal_group()
+    Syncs new emails to email lists.
 
-    # TODO: For all the message lists's these groups are a member, add the new contact info in them if appropriate.
-    #  - There might be duplicate lists, if there are groups that are a member in the same list. Is it better to get
-    #    only unique lists, or let the adding function take care of not adding duplicates?
-    user.groups
+    :param user_contact: Contact information to be synced to message lists.
+    """
+    user = User.get_by_id(user_contact.user_id)
+    # This is mostly for typing, but what if we *didn't* find this user here?
+    if user:
+        for group in user.groups:
+            for membership in group.messagelist_membership:
+                message_list = membership.message_list
+                # Add new emails to email lists.
+                if user_contact.channel is Channel.EMAIL_LIST and message_list.email_list_domain:
+                    email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+                    # TODO: add_email calls Mailman for every invocation. This might become a performance bottleneck?
+                    # TODO: Is there a proper recovery if add_email raises an exception?
+                    add_email(email_list, user_contact.contact, True, user.real_name, membership.send_right,
+                              membership.delivery_right)
 
 
 @dataclass

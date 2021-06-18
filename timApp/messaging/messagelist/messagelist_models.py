@@ -236,11 +236,10 @@ class MessageListMember(db.Model):
     """What message list a member belongs to."""
 
     send_right = db.Column(db.Boolean)
-    """If a member can send messages to a message list. Send right for a user group is meaningless at this point"""
+    """If a member can send messages to a message list."""
 
     delivery_right = db.Column(db.Boolean)
-    """If a member can get messages from a message list. Delivery right for a user group is meaningless at this 
-    point. """
+    """If a member can get messages from a message list."""
 
     membership_ended = db.Column(db.DateTime(timezone=True))
     """When member's membership on a list ended. This is set when member is removed from a list. A value of None means 
