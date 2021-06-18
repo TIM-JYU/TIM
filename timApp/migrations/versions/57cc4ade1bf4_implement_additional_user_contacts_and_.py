@@ -14,8 +14,8 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-# This enum has a value 'EMAIL' added to it in it's class, but adding a new enum value in db requires jumping through
-# some hoops. See upgrade function for detail.
+# This enum has a value 'EMAIL' added to it in it's class in between migrations, but adding a new enum value in db
+# requires jumping through some hoops. See upgrade function for detail.
 channel_enum = sa.Enum('TIM_MESSAGE', 'EMAIL_LIST', name='channel')
 
 
@@ -44,11 +44,11 @@ def upgrade():
     op.drop_column('verifications', 'verified')
     with op.get_context().autocommit_block():
         # The enum 'channel' is already in use and has a new value since it was first used, so we need to manually
-        # update it's value. Also ALTER TYPE cannot be used in a transaction context in postgresql v. < 12,
-        # so we need to wrap this in an autocommit block.
+        # update it's value.ALTER TYPE cannot be used in a transaction context in postgresql v. < 12, so we need to wrap
+        # this in an autocommit block.
         op.execute("""ALTER TYPE channel ADD VALUE IF NOT EXISTS 'EMAIL'""")
         # verificationtype enum had it's value changed between migrations. It is safer to just add a new value,
-        # and leave the existing one, to ensure that downgrades can be done safely.
+        # and leave the existing one in, to ensure that downgrades can be done safely.
         op.execute("""ALTER TYPE verificationtype ADD VALUE IF NOT EXISTS 'CONTACT_OWNERSHIP'""")
 
 
@@ -56,7 +56,6 @@ def downgrade():
     op.add_column('verifications',
                   sa.Column('verified', postgresql.TIMESTAMP(timezone=True), autoincrement=False, nullable=True))
     op.add_column('verifications', sa.Column('verification_link', sa.TEXT(), autoincrement=False, nullable=True))
-    # op.drop_constraint(None, 'verifications', type_='foreignkey')
     op.alter_column('verifications', 'verification_type',
                     existing_type=postgresql.ENUM('LIST_JOIN', 'EMAIL_OWNERSHIP', name='verificationtype'),
                     nullable=True)
@@ -75,5 +74,5 @@ def downgrade():
                     )
     op.drop_table('user_contacts')
     # Intentionally don't remove enums that are added in upgrade. There are no good corresponding db states for this
-    # change.
+    # change in the opposite direction.
 
