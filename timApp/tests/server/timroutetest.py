@@ -34,6 +34,7 @@ from timApp.plugin import containerLink
 from timApp.plugin.containerLink import do_request
 from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.tests.db.timdbtest import TimDbTest
+from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -252,7 +253,8 @@ class TimRouteTest(TimDbTest):
             return resp_data
         if force_return_text:
             return resp_data
-        if expect_status >= 400 and json_key is None and (isinstance(expect_content, str) or isinstance(expect_contains, str)):
+        if expect_status >= 400 and json_key is None and (
+                isinstance(expect_content, str) or isinstance(expect_contains, str)):
             json_key = 'error'
         if as_response:
             return resp
@@ -373,7 +375,7 @@ class TimRouteTest(TimDbTest):
                   expect_cookie: Optional[Tuple[str, Optional[str]]] = None,
                   json_key: Optional[str] = None,
                   headers: Optional[List[Tuple[str, str]]] = None,
-                  auth: Optional[BasicAuthParams]=None,
+                  auth: Optional[BasicAuthParams] = None,
                   **kwargs):
         """Performs a JSON POST request.
 
@@ -536,7 +538,7 @@ class TimRouteTest(TimDbTest):
                               "ref_from": {'docId': ref_from[0], 'par': ref_from[1]} if ref_from else None,
                               }, **kwargs)
 
-    def get_task_answers(self, task_id, user: Optional[User]=None):
+    def get_task_answers(self, task_id, user: Optional[User] = None):
         answer_list = self.get(f'/getAnswers/{task_id}/{user.id if user else self.current_user_id()}')
         return answer_list
 
@@ -1038,8 +1040,10 @@ class TimRouteTest(TimDbTest):
 class TimPluginFix(TimRouteTest):
     """Unused class. This was a test whether local plugins could be made to work without BrowserTest class.
     """
+
     def setUp(self):
         super().setUp()
+
         # Some plugins live in TIM container, which means we cannot use the requests library to call those plugins
         # because there is no real server running (it is just the test client).
         # Here we replace the request method in containerLink so that all such requests are redirected
@@ -1065,6 +1069,30 @@ class TimPluginFix(TimRouteTest):
     def tearDown(self):
         super().tearDown()
         containerLink.plugin_request_fn = do_request
+
+
+class TimMessageListTest(TimRouteTest):
+
+    @classmethod
+    def setUpClass(cls):
+        import mailmanclient as mc
+        super().setUpClass()
+
+        # Sanity check to ensure we're not operating on real mailman instance
+        assert 'mailman-test' in app.config['MAILMAN_URL']
+
+        mailman_client = mc.Client(app.config['MAILMAN_URL'],
+                                   app.config['MAILMAN_USER'],
+                                   app.config['MAILMAN_PASS'])
+
+        lists: List[mc.MailingList] = list(mailman_client.lists)
+        users: List[mc.User] = list(mailman_client.users)
+
+        # Delete previous lists and users before testing
+        for ml in lists:
+            ml.delete()
+        for mu in users:
+            mu.delete()
 
 
 def get_note_id_from_json(json):

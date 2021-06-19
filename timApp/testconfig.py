@@ -58,3 +58,8 @@ SESSION_COOKIE_SECURE = False  # Test running does not have HTTPS, so secure coo
 MINIMUM_SCHEDULED_FUNCTION_INTERVAL = 1
 
 INTERNAL_PLUGIN_DOMAIN = 'localhost'
+
+MESSAGE_LISTS_ENABLED = True
+MAILMAN_URL = "http://mailman-test:8001/3.1"
+MAILMAN_USER = "restadmin"
+MAILMAN_PASS = "restpass"
