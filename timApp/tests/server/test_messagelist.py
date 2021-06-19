@@ -7,7 +7,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 class MessageListTest(TimRouteTest):
     """Server test for message lists."""
 
-    def creation_test_valid_name(self):
+    def test_creation_valid_name(self):
         """Test creating a message list with a valid user and valid list name."""
         # Make testuser1 admin.
         self.login_test1()
@@ -27,9 +27,9 @@ class MessageListTest(TimRouteTest):
         # the message list.
         admin_doc = get_doc_or_abort(response_item["id"])
         # Verify that the list exists in the db.
-        message_list = MessageListModel.query(name=list_name).one()
+        message_list: MessageListModel = MessageListModel.query.filter_by(name=list_name).one()
         # Verify returned admin doc is the same message list's admin doc in db.
-        self.assertEqual(message_list.admin_doc, admin_doc)
+        self.assertEqual(message_list.manage_doc_id, admin_doc.id)
         # Verify name and archive type are as intented in the db.
         self.assertEqual(message_list.name, list_name)
         self.assertEqual(message_list.archive, archive)

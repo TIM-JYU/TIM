@@ -357,6 +357,20 @@ services:
    - prod_multi
   ports:
   - "${CADDY_MULTI_PORT}:80"
+ mailman-test:
+  image: timimages/mailman-core:latest
+  profiles:
+   - test
+   - dev
+  volumes:
+   - ./mailman/core/mailman-extra.cfg:/opt/mailman/mailman-extra.cfg
+  environment:
+   DATABASE_TYPE: sqlite
+   DATABASE_URL: sqlite:////opt/mailmandb/mailmanweb.db
+   DATABASE_CLASS: mailman.database.sqlite.SQLiteDatabase
+   INIT_DEV: 1
+  tmpfs:
+   - /opt/mailmandb
  tests:
   profiles:
    - test
@@ -381,6 +395,7 @@ services:
    - oiko
    - caddy
    - postgresql-test
+   - mailman-test
   tmpfs:
    - /tmp
    - /tim_files
