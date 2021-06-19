@@ -11,7 +11,7 @@ services:
     image: timimages/mailman-core:latest
     restart: unless-stopped
     profiles:
-      - dev_mailman
+      - dev
     volumes:
       - ./mailman/db:/opt/mailmandb
       - ./mailman/core:/opt/mailman
@@ -23,7 +23,7 @@ services:
     image: timimages/mailman-web:latest
     restart: unless-stopped
     profiles:
-      - dev_mailman
+      - dev
     depends_on:
       - mailman-core
     volumes:

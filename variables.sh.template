@@ -46,7 +46,6 @@ export FILES_ROOT=${DIR}/timApp/tim_files
 # * prod_multi: This is one of multiple TIM instances running on the same remote machine.
 # * dev: This is a local development TIM instance.
 # * test: This instance is used only for running tests. Used mostly in GitLab CI.
-# * dev_mailman: Also run local development mailman
 export COMPOSE_PROFILES=prod
 
 # Command to start csplugin when COMPOSE_PROFILES=dev; use empty command if you want to debug it with SSH.
@@ -72,6 +71,9 @@ export DRAG_DEV_COMMAND=./startAll.sh
 
 # Same as above but for imagex plugin.
 export IMAGEX_DEV_COMMAND=./startAll.sh
+
+# Set to 1 to run local test mailman installation
+export RUN_MAILMAN_DEV=0
 
 # Location of config file to use in addition to defaultconfig (relative to timApp directory).
 # In production, you need to create the prodconfig.py file.
