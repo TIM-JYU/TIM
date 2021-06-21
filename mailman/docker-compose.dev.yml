@@ -14,7 +14,8 @@ services:
       - dev
     volumes:
       - ./mailman/db:/opt/mailmandb
-      - ./mailman/core:/opt/mailman
+      - ./mailman/core/mailman-extra.cfg:/opt/mailman/mailman-extra.cfg
+      - ./mailman/core/logs:/opt/mailman/var/logs
     environment:
       <<: *mailman-common-env
       HYPERKITTY_URL: http://mailman-web:8000/mailman3/hyperkitty/
