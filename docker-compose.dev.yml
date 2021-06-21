@@ -10,7 +10,6 @@ x-common-root:
  tmpfs:
   - /run/sshd
   - /root/.pycharm_helpers
-
 services:
  tim:
   << : *common-root
