@@ -70,4 +70,4 @@ yubi.key
 /mailman/web/static/
 /mailman/messages/
 /mailman/db/
-/mailman/core/var/
+/mailman/core/logs/
