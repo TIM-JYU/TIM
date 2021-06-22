@@ -4,6 +4,17 @@
 	}
 }
 
+(mailman_dev) {
+	handle /mailman3/* {
+        reverse_proxy * http://mailman-web:8000
+    }
+    handle_path /mailman3/static/* {
+        file_server * {
+            root /var/www/mailman3/static
+        }
+    }
+}
+
 (common) {
 	encode gzip
 
@@ -54,6 +65,7 @@
 			roll_keep_for 365d
 		}
 	}
+	{$CADDY_EXTRA_TIM_CONFIG}
 }
 
 {$CADDY_DOMAINS} {

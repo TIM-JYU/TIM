@@ -17,7 +17,7 @@ fi
 
 . ${DIR}/variables.sh
 
-if ! [ -z $DEV ]; then
+if [[ -n $DEV ]]; then
   if [ "$DEV" == 1 ]; then
     COMPOSE_PROFILES=dev
   else
@@ -25,11 +25,20 @@ if ! [ -z $DEV ]; then
   fi
 fi
 
-if [ "$COMPOSE_PROFILES" = "test" ]; then
+extra_args=( )
+if [[ -n $RUN_MAILMAN_DEV ]]; then
+  if [[ "$RUN_MAILMAN_DEV" == 1 ]]; then
+    export CADDY_EXTRA_TIM_CONFIG="import mailman_dev"
+    export CADDY_MAILMAN_STATIC_DIR="./mailman/web/static"
+    extra_args=( "-f" "${DIR}/mailman/docker-compose.dev.yml" )
+  fi
+fi
+
+if [[ "$COMPOSE_PROFILES" == "test" ]]; then
   COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}test"
   docker-compose -f "${DIR}/docker-compose.yml" --profile test "$@"
-elif [ "$COMPOSE_PROFILES" = "dev" ]; then
-  docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.dev.yml" "$@"
+elif [[ "$COMPOSE_PROFILES" == "dev" ]]; then
+  docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.dev.yml" "${extra_args[@]}" "$@"
 else
   docker-compose -f "${DIR}/docker-compose.yml" "$@"
 fi
