@@ -9,6 +9,7 @@ import {CollapseControls} from "tim/document/structure/collapseControls";
 import * as t from "io-ts";
 import {Paragraph} from "tim/document/structure/paragraph";
 import {documentglobals} from "tim/util/globals";
+import {DerefOption} from "tim/document/structure/derefOption";
 
 function getAttr(el: Element, attrName: string) {
     const attr = el.getAttribute(attrName);
@@ -86,11 +87,19 @@ export function createParContext(el: Element) {
 
 export function createParContextOrHelp(el: Element) {
     const ctx = getContext(el);
-    let s = ctx.getSinglePar(el);
+    // We might have a reference paragraph inside an area.
+    // In that case, we don't want to dereference it so that View source/Edit still works.
+    // TODO: The abstractions need to support nested contexts (e.g. area -> refpar -> par).
+    let s = ctx.getSinglePar(
+        el,
+        ctx instanceof ReferenceParagraph
+            ? DerefOption.Deref
+            : DerefOption.NoDeref
+    );
     if (!s) {
         const target = maybeDeref(ctx);
         if (target instanceof BrokenArea) {
-            s = target.inner[0];
+            s = maybeDeref(target.inner[0]);
         } else if (target instanceof Area && !target.collapse) {
             s = target.startPar.par;
         } else {
@@ -123,7 +132,7 @@ export function fromHtmlElement(el: HTMLElement) {
     if (carea.ok) {
         return carea.result;
     }
-    const {par, original} = parseParagraph(el, null);
+    const {par, original} = parseParagraph(el);
     if (original) {
         return new ReferenceParagraph(original, par);
     }
@@ -148,29 +157,30 @@ function tryParseCollapsibleArea(
     if (!content || !(content instanceof HTMLElement)) {
         return {ok: false, result: "area container content missing"};
     }
-    const {contentpars, original} = getAreaContent(content);
-    const p = parseParagraph(el, original);
+    const contentpars = getAreaContent(content);
+    const p = parseParagraph(el);
     const start = new AreaStartPar(p.par, areaname);
-    const end = new AreaEndPar(contentpars[contentpars.length - 1], areaname);
+    const end = new AreaEndPar(
+        maybeDeref(contentpars[contentpars.length - 1]),
+        areaname
+    );
     const inner = contentpars.slice(0, contentpars.length - 1);
     const area = new Area(start, end, inner, new CollapseControls(start));
-    const result = original ? new ReferenceParagraph(original, area) : area;
+    const result = p.original ? new ReferenceParagraph(p.original, area) : area;
     return {ok: true, result: result};
 }
 
-function parseParagraph(e: HTMLElement, orig: Paragraph | null) {
+function parseParagraph(e: HTMLElement) {
     let original = null;
     const refattrs = e.getAttribute("ref-attrs");
-    const parOrOrig =
-        orig ??
-        new Paragraph(
-            e.id,
-            getAttr(e, "t"),
-            documentglobals().curr_item.id,
-            parseAttrs(getAttr(e, "attrs")),
-            e,
-            e.getAttribute("data-from-preamble") ?? undefined
-        );
+    const parOrOrig = new Paragraph(
+        e.id,
+        getAttr(e, "t"),
+        documentglobals().curr_item.id,
+        parseAttrs(getAttr(e, "attrs")),
+        e,
+        e.getAttribute("data-from-preamble") ?? undefined
+    );
     let par;
     if (refattrs) {
         const refparsed = parseAttrs(refattrs);
@@ -192,16 +202,18 @@ function parseParagraph(e: HTMLElement, orig: Paragraph | null) {
 
 function getAreaContent(areacontent: HTMLElement) {
     const contentpars = [];
-    let original = null;
     for (const e of areacontent.children) {
         if (!(e instanceof HTMLElement)) {
             throw Error("not a HTML element");
         }
-        const ret = parseParagraph(e, original);
-        original = ret.original;
-        contentpars.push(ret.par);
+        const ret = parseParagraph(e);
+        contentpars.push(
+            ret.original
+                ? new ReferenceParagraph(ret.original, ret.par)
+                : ret.par
+        );
     }
-    return {contentpars, original};
+    return contentpars;
 }
 
 function tryParseUncollapsibleArea(
@@ -227,7 +239,7 @@ function tryParseUncollapsibleArea(
     if (!areacontent || !(areacontent instanceof HTMLElement)) {
         return {ok: false, result: "areacontent missing"};
     }
-    const {contentpars, original} = getAreaContent(areacontent);
+    const contentpars = getAreaContent(areacontent);
     // TODO: Nested areas are not currently supported. Server sends broken area pieces in that case.
     //  We still want to be able to handle the document, so we return a BrokenArea.
     if (contentpars.length < 2) {
@@ -241,7 +253,9 @@ function tryParseUncollapsibleArea(
             ),
         };
     }
-    if (contentpars[0].attrs.area !== areaname) {
+    const fcontent = contentpars[0];
+    const first = maybeDeref(fcontent);
+    if (first.attrs.area !== areaname) {
         return {
             ok: true,
             result: new BrokenArea(
@@ -252,7 +266,8 @@ function tryParseUncollapsibleArea(
             ),
         };
     }
-    if (contentpars[contentpars.length - 1].attrs.area_end !== areaname) {
+    const last = maybeDeref(contentpars[contentpars.length - 1]);
+    if (last.attrs.area_end !== areaname) {
         return {
             ok: true,
             result: new BrokenArea(
@@ -263,11 +278,14 @@ function tryParseUncollapsibleArea(
             ),
         };
     }
-    const start = new AreaStartPar(contentpars[0], areaname);
-    const end = new AreaEndPar(contentpars[contentpars.length - 1], areaname);
+    const start = new AreaStartPar(first, areaname);
+    const end = new AreaEndPar(last, areaname);
     const inner = contentpars.slice(1, contentpars.length - 1);
     const area = new Area(start, end, inner, undefined);
-    const result = original ? new ReferenceParagraph(original, area) : area;
+    const result =
+        fcontent instanceof ReferenceParagraph
+            ? new ReferenceParagraph(fcontent.original, area)
+            : area;
     return {ok: true, result: result};
 }
 

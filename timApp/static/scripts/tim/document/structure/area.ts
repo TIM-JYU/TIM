@@ -2,6 +2,9 @@ import {Paragraph} from "tim/document/structure/paragraph";
 import $ from "jquery";
 import {CollapseControls} from "tim/document/structure/collapseControls";
 import {DocumentPart, IDocumentPart} from "tim/document/structure/documentPart";
+import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
+import {DerefOption} from "tim/document/structure/derefOption";
+import {enumAreaPars} from "tim/document/structure/enumAreaPars";
 
 enum AreaBoundary {
     Start,
@@ -31,7 +34,8 @@ export class Area implements IDocumentPart {
     constructor(
         public readonly startPar: AreaStartPar,
         public readonly endPar: AreaEndPar,
-        public readonly inner: Paragraph[], // TODO: This should be DocumentPart[] as soon as nested areas are supported.
+        // TODO: This should be DocumentPart[] as soon as nested areas are supported.
+        public readonly inner: Array<Paragraph | ReferenceParagraph<Paragraph>>,
         public readonly collapse: CollapseControls | undefined
     ) {
         if (startPar.areaname !== endPar.areaname) {
@@ -59,8 +63,8 @@ export class Area implements IDocumentPart {
         }
     }
 
-    getSinglePar(el: Element) {
-        for (const p of this.enumPars()) {
+    getSinglePar(el: Element, d: DerefOption) {
+        for (const p of this.enumPars(d)) {
             if (p.htmlElement === el) {
                 return p;
             }
@@ -71,9 +75,13 @@ export class Area implements IDocumentPart {
         return this.startPar.par;
     }
 
-    *enumPars() {
+    *enumInnerPars(d: DerefOption) {
+        yield* enumAreaPars(this, d);
+    }
+
+    *enumPars(d: DerefOption) {
         yield this.startPar.par;
-        yield* this.inner;
+        yield* this.enumInnerPars(d);
         yield this.endPar.par;
     }
 

@@ -9,18 +9,19 @@ import {
     enumDocParts,
     PreambleIteration,
 } from "tim/document/structure/iteration";
+import {DerefOption} from "tim/document/structure/derefOption";
 import {documentglobals} from "../util/globals";
 
 function* getInnerPars(p: Paragraph | Area | BrokenArea) {
     if (p instanceof Paragraph) {
         yield p;
     } else if (p instanceof BrokenArea) {
-        yield* p.inner;
+        yield* p.enumPars(DerefOption.Deref);
     } else {
         if (p.collapse) {
             yield p.startPar.par;
         }
-        yield* p.inner;
+        yield* p.enumInnerPars(DerefOption.Deref);
     }
 }
 
