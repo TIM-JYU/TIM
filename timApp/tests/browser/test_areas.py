@@ -186,6 +186,11 @@ par 22
         self.check_menu(pars[16], ref_area_choices_ext_no_add)
         self.check_menu(pars[23], area_choices_ext('a4'))
 
+        # Make sure viewing source works for a reference paragraph that is inside an area.
+        menu = self.open_menu(pars[21])
+        self.find_element_by_text('View source', parent=menu).click()
+        self.wait_until_text_present('tim-diff-dialog', f'#- {{rd="{ref.id}" rp="6JG9R9LAg4AT"}}')
+
     def check_menu(self, p, expected):
         menu = self.open_menu(p)
         self.assertEqual(expected, menu.text.splitlines())

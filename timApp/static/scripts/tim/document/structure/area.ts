@@ -63,8 +63,8 @@ export class Area implements IDocumentPart {
         }
     }
 
-    getSinglePar(el: Element) {
-        for (const p of this.enumPars(DerefOption.Deref)) {
+    getSinglePar(el: Element, d: DerefOption) {
+        for (const p of this.enumPars(d)) {
             if (p.htmlElement === el) {
                 return p;
             }

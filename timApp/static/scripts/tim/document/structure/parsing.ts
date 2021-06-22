@@ -9,6 +9,7 @@ import {CollapseControls} from "tim/document/structure/collapseControls";
 import * as t from "io-ts";
 import {Paragraph} from "tim/document/structure/paragraph";
 import {documentglobals} from "tim/util/globals";
+import {DerefOption} from "tim/document/structure/derefOption";
 
 function getAttr(el: Element, attrName: string) {
     const attr = el.getAttribute(attrName);
@@ -86,7 +87,15 @@ export function createParContext(el: Element) {
 
 export function createParContextOrHelp(el: Element) {
     const ctx = getContext(el);
-    let s = ctx.getSinglePar(el);
+    // We might have a reference paragraph inside an area.
+    // In that case, we don't want to dereference it so that View source/Edit still works.
+    // TODO: The abstractions need to support nested contexts (e.g. area -> refpar -> par).
+    let s = ctx.getSinglePar(
+        el,
+        ctx instanceof ReferenceParagraph
+            ? DerefOption.Deref
+            : DerefOption.NoDeref
+    );
     if (!s) {
         const target = maybeDeref(ctx);
         if (target instanceof BrokenArea) {
