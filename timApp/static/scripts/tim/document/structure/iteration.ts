@@ -14,13 +14,13 @@ function isBottomContainer(e: Element) {
 }
 
 export function nextParContext(par: ParContext) {
-    let nh = par.context.nextInHtml();
+    let nh;
     const d = maybeDeref(par.context);
     if (d instanceof Paragraph) {
         nh = d.nextInHtml();
     } else {
         let found = false;
-        for (const p of d.enumPars()) {
+        for (const p of d.enumPars(DerefOption.Deref)) {
             if (found) {
                 return new ParContext(p, par.context);
             }

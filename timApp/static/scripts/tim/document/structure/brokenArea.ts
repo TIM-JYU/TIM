@@ -2,6 +2,9 @@ import {Paragraph} from "tim/document/structure/paragraph";
 import $ from "jquery";
 import {DocumentPart, IDocumentPart} from "tim/document/structure/documentPart";
 import {NotRemovableHTMLElement} from "tim/document/structure/notRemovableElement";
+import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
+import {DerefOption} from "tim/document/structure/derefOption";
+import {enumAreaPars} from "tim/document/structure/enumAreaPars";
 
 /**
  * Represents an {@link Area} that is in some way broken. For example, `area_end` attribute could be missing.
@@ -33,7 +36,7 @@ export class BrokenArea implements IDocumentPart {
     constructor(
         public readonly areaname: string,
         htmlElement: HTMLElement,
-        readonly inner: Paragraph[],
+        readonly inner: Array<Paragraph | ReferenceParagraph<Paragraph>>,
         public readonly reason: string
     ) {
         this.htmlElement = htmlElement as NotRemovableHTMLElement;
@@ -54,16 +57,19 @@ export class BrokenArea implements IDocumentPart {
         $(this.htmlElement).remove();
     }
 
-    *enumPars() {
-        yield* this.inner;
+    *enumPars(d: DerefOption) {
+        yield* enumAreaPars(this, d);
     }
 
     getFirstOrigPar(): Paragraph | undefined {
-        return this.inner[0];
+        const x = this.enumPars(DerefOption.NoDeref).next();
+        if (!x.done) {
+            return x.value;
+        }
     }
 
-    getSinglePar(el: Element) {
-        for (const p of this.enumPars()) {
+    getSinglePar(el: Element, d: DerefOption) {
+        for (const p of this.enumPars(d)) {
             if (p.htmlElement === el) {
                 return p;
             }

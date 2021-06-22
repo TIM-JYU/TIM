@@ -3,6 +3,7 @@ import $ from "jquery";
 import {Area} from "tim/document/structure/area";
 import {ParContext} from "tim/document/structure/parContext";
 import {maybeDeref} from "tim/document/structure/maybeDeref";
+import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 
 /**
  * Represents a "not broken" contiguous selection of paragraphs.
@@ -80,13 +81,32 @@ export class UnbrokenSelection extends ParSelection {
                 }
             }
         }
-        const start = missingStart
+        let start = missingStart
             ? new ParContext(missingStart.startPar.par, missingStart)
             : s.start;
         const missingEnd: Area | undefined = areaStack[0];
-        const end = missingEnd
+        let end = missingEnd
             ? new ParContext(missingEnd.endPar.par, missingEnd)
             : s.end;
+
+        // If we're inside an area reference, extend the selection to cover the full area.
+        // Currently it's not possible to edit individual area paragraphs through an area reference,
+        // so it's better not to deceive the user.
+        if (
+            start.context instanceof ReferenceParagraph &&
+            start.context.target instanceof Area
+        ) {
+            start = new ParContext(
+                start.context.target.startPar.par,
+                start.context
+            );
+        }
+        if (
+            end.context instanceof ReferenceParagraph &&
+            end.context.target instanceof Area
+        ) {
+            end = new ParContext(end.context.target.endPar.par, end.context);
+        }
         return new UnbrokenSelection(start, end);
     }
 }

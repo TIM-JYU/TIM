@@ -32,8 +32,9 @@ export interface IDocumentPart {
     /**
      * Returns a {@link Paragraph} inside this `IDocumentPart` that corresponds to the given {@link Element}.
      * @param el The {@link Element} to match against.
+     * @param d Specifies the behavior of how {@link ReferenceParagraph}s are iterated. See {@link DerefOption}.
      */
-    getSinglePar(el: Element): Paragraph | undefined;
+    getSinglePar(el: Element, d: DerefOption): Paragraph | undefined;
 
     /**
      * Gets the element in DOM tree that follows this `IDocumentPart`.

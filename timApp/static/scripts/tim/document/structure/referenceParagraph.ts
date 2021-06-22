@@ -24,8 +24,10 @@ export class ReferenceParagraph<T extends Paragraph | Area>
         return this.target.nextInHtml();
     }
 
-    getSinglePar(el: Element) {
-        return this.target.getSinglePar(el);
+    getSinglePar(el: Element, d: DerefOption) {
+        return d === DerefOption.Deref
+            ? this.target.getSinglePar(el, d)
+            : this.original;
     }
 
     getFirstOrigPar() {
