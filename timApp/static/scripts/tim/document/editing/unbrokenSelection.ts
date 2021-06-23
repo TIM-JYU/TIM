@@ -22,10 +22,6 @@ export class UnbrokenSelection extends ParSelection {
         super(start, end);
     }
 
-    getMinimalUnbrokenSelection() {
-        return this;
-    }
-
     remove() {
         $(this.removeAllButFirst()).remove();
     }
