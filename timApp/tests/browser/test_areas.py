@@ -6,7 +6,7 @@ from timApp.tests.browser.browsertest import BrowserTest
 class AreasTest(BrowserTest):
 
     def test_areas(self):
-        self.login_browser_test1()
+        self.login_browser_quick_test1()
         self.login_test1()
         ref = self.create_doc(initial_par="""
 #- {id=hP7jT8DiV9al}
@@ -203,3 +203,30 @@ par 22
         self.find_element('.editline', parent=p).click()
         menu = self.find_element('tim-popup-menu-dialog')
         return menu
+
+    def test_area_delete_par(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {area="a"}
+
+#-
+par 1
+
+#-
+par 2
+
+#- {area_end="a"}
+        """)
+        self.login_browser_quick_test1()
+        self.goto_document(d)
+        pars = self.drv.find_elements(By.CSS_SELECTOR, '.par:not(#HELP_PAR)')
+        menu = self.open_menu(pars[2])
+        self.find_element_by_text('Edit', parent=menu).click()
+        self.wait_until_present_and_vis('pareditor')
+        old_len = len(pars)
+        self.wait_for_editor_load()
+        self.find_element_by_text('Delete').click()
+        self.drv.switch_to.alert.accept()
+        self.wait_until_hidden('pareditor')
+        pars = self.drv.find_elements(By.CSS_SELECTOR, '.par:not(#HELP_PAR)')
+        self.assertEqual(old_len - 1, len(pars))
