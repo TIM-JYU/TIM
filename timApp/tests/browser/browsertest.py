@@ -390,6 +390,9 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def get_uninteractable_element(self):
         return self.find_element('.breadcrumb .current')
 
+    def wait_for_editor_load(self):
+        self.wait_until_hidden('.editor-loading')
+
 
 def find_button_by_text(root: WebElement, text: str):
     return find_element_by_text(root, text, 'button')
