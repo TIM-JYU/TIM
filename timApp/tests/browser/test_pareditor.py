@@ -67,9 +67,6 @@ class ParEditorTest(BrowserTest):
             'pareditor/ace_hello_world_3',
         ])
 
-    def wait_for_editor_load(self):
-        self.wait_until_hidden('.editor-loading')
-
     def get_editor_element(self) -> WebElement:
         pareditor = self.drv.find_element_by_css_selector('pareditor')
         return pareditor

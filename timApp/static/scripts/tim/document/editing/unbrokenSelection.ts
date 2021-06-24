@@ -22,10 +22,6 @@ export class UnbrokenSelection extends ParSelection {
         super(start, end);
     }
 
-    getMinimalUnbrokenSelection() {
-        return this;
-    }
-
     remove() {
         $(this.removeAllButFirst()).remove();
     }
@@ -45,6 +41,21 @@ export class UnbrokenSelection extends ParSelection {
         }
         const firstctx = maybeDeref(this.start.context);
         if (firstctx instanceof Area) {
+            // If the selection start paragraph is not equal to the area start paragraph, it means
+            // that the selection is inside one area. In that case, we don't
+            // want to touch the whole area container, but only the selected
+            // paragraphs.
+            if (!firstctx.startPar.par.equals(this.start.par)) {
+                const it = this.iter();
+
+                // Don't remove the first one; we return that one.
+                it.next();
+
+                for (const p of it) {
+                    p.par.remove();
+                }
+                return this.start.par.htmlElement;
+            }
             const ac = firstctx.getAreaContainer();
             if (firstctx.collapse) {
                 $(ac).remove();
