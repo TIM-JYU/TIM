@@ -14,8 +14,8 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
     selector: "message-list-creation",
     template: `
         <tim-dialog-frame class="form-horizontal">
-            <ng-container header>
-                Message list creation
+            <ng-container header i18n>
+                Create message list
             </ng-container>
             <ng-container body>
                 <div *ngIf="errorMessage.length > 0" class="alert alert-danger">
@@ -24,11 +24,11 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
                     </ul>
                 </div>
                 <div class="form-group">
-                    <label for="list-name" class="list-name text-left control-label col-sm-3">List name: </label>
+                    <label for="list-name" class="list-name text-left control-label col-sm-3" i18n>List name: </label>
                     <div class="col-sm-8">
                         <div class="input-group">
                             <input type="text" class="form-control" name="list-name" id="list-name"
-                                   [(ngModel)]="listname"
+                                   [(ngModel)]="listName"
                                    (keyup)="checkNameRequirementsLocally()"/>
                             <div class="input-group-addon">@</div>
                             <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
@@ -38,18 +38,18 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
                     </div>
                 </div>
                 <div class="archive-options">
-                    <p class="list-name">List archive policy: </p>
+                    <p class="list-name" i18n>Who can read the archives: </p>
                     <ul class="archive-list">
                         <li *ngFor="let option of archiveOptions">
                             <label class="radio" for="archive-{{option.archiveType}}">
-                            <input
-                                    name="items-radio"
-                                    type="radio"
-                                    id="archive-{{option.archiveType}}"
-                                    [value]="option.archiveType"
-                                    [(ngModel)]="archive"
-                            />
-                            {{option.policyName}}
+                                <input
+                                        name="items-radio"
+                                        type="radio"
+                                        id="archive-{{option.archiveType}}"
+                                        [value]="option.archiveType"
+                                        [(ngModel)]="archive"
+                                />
+                                {{option.policyName}}
                             </label>
                         </li>
                     </ul>
@@ -57,7 +57,7 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
             </ng-container>
             <ng-container footer>
                 <tim-loading *ngIf="disableCreate"></tim-loading>
-                <button [disabled]="disableCreate" class="timButton" type="button" (click)="newList() ">Create</button>
+                <button [disabled]="disableCreate" class="timButton" type="button" (click)="newList()" i18n>Create</button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -69,7 +69,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
 > {
     disableCreate: boolean = false;
     protected dialogName = "MessageList";
-    listname: string = "";
+    listName: string = "";
     errorMessage: string[] = [];
 
     urlPrefix: string = "/messagelist";
@@ -106,7 +106,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
             this.domain = this.domains[0];
         } else {
             this.errorMessage = [
-                `Failed to load domains, list creation can't continue. The following error provides details: ${result.result.error.error}`,
+                $localize`Failed to load domains, list creation can't continue. The following error provides details: ${result.result.error.error}`,
             ];
             // Creating a message list isn't possible at this time if domains are not given. Therefore disable creation
             // button.
@@ -125,7 +125,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
         this.errorMessage = [];
         this.disableCreate = true;
         const result = await this.createList({
-            name: this.listname,
+            name: this.listName,
             domain: this.domain,
             archive: this.archive,
         });
@@ -164,32 +164,32 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
         this.errorMessage = [];
 
         // Name length is within length boundaries.
-        if (this.listname.length <= 5 || 36 <= this.listname.length) {
+        if (this.listName.length <= 5 || 36 <= this.listName.length) {
             this.errorMessage.push("Name not in length boundaries");
         }
 
         // Name starts with a character that is a letter a - z.
         const regExpStartCharacter: RegExp = /^[a-z]/;
-        if (!regExpStartCharacter.test(this.listname)) {
+        if (!regExpStartCharacter.test(this.listName)) {
             this.errorMessage.push("Name should start with a lowercase letter");
         }
 
         // Name contains at least one digit.
         const regExpAtLeastOneDigit: RegExp = /\d/;
-        if (!regExpAtLeastOneDigit.test(this.listname)) {
+        if (!regExpAtLeastOneDigit.test(this.listName)) {
             this.errorMessage.push("Name should contain at least one digit");
         }
 
         // Name can't contain sequential dots.
         const regExpMultipleDots: RegExp = /\.\.+/;
-        if (regExpMultipleDots.test(this.listname)) {
+        if (regExpMultipleDots.test(this.listName)) {
             this.errorMessage.push("Name shouldn´t contain multiple dots");
         }
 
         // Name doesn't end in a dot.
         // ESLint prefers to not use regex for this. And by "prefer" we mean this won't transpile with a regular
         // expression.
-        if (this.listname.endsWith(".")) {
+        if (this.listName.endsWith(".")) {
             this.errorMessage.push("Name shouldn´t end in a dot");
         }
 
@@ -203,7 +203,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
         // found the name is of correct form. Notice that hyphen is in two different roles and one hyphen has
         // to be escaped. The dot does not have to be escaped here.
         const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
-        if (regExpNonAllowedCharacters.test(this.listname)) {
+        if (regExpNonAllowedCharacters.test(this.listName)) {
             this.errorMessage.push("Name has forbidden characters");
         }
         return this.errorMessage.length == 0;
