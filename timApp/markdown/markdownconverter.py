@@ -14,7 +14,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
-from timApp.markdown.htmlSanitize import sanitize_html
+from timApp.markdown.htmlSanitize import sanitize_html, presanitize_html_body
 from timApp.util.utils import get_error_html, title_to_id
 from timApp.util.utils import widen_fields
 
@@ -573,7 +573,7 @@ def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bo
     :return: The HTML with the formatted headings.
 
     """
-    tree = html.fragment_fromstring(html_str, create_parent=True)
+    tree = html.fragment_fromstring(presanitize_html_body(html_str), create_parent=True)
     counts = heading_info['h']
     used = heading_info['headings']
     for e in tree.iterchildren():

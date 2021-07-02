@@ -28,6 +28,7 @@ from timApp.document.validationresult import ValidationResult
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
+from timApp.markdown.htmlSanitize import presanitize_html_body
 from timApp.timdb.exceptions import TimDbException, PreambleException, InvalidReferenceException
 from timApp.timtypes import DocInfoType
 from timApp.util.utils import get_error_html, trim_markdown, cache_folder_path
@@ -1195,7 +1196,7 @@ def get_index_from_html_list(html_table) -> List[Tuple]:
     current_headers = None
     for htmlstr in html_table:
         try:
-            index_entry = html.fragment_fromstring(htmlstr, create_parent=True)
+            index_entry = html.fragment_fromstring(presanitize_html_body(htmlstr), create_parent=True)
         except etree.XMLSyntaxError:
             continue
         if index_entry.tag == 'div':
