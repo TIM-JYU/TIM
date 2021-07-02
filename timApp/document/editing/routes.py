@@ -340,9 +340,9 @@ def preview_paragraphs(doc_id):
     text, = verify_json_params('text')
     proofread, = verify_json_params('proofread', require=False, default=False)
     docinfo = get_doc_or_abort(doc_id)
-    verify_edit_access(docinfo)
     rjson = request.get_json()
     if not rjson.get('isComment'):
+        verify_edit_access(docinfo)
         doc = docinfo.document
         edit_request = EditRequest.from_request(doc, preview=True)
         try:
