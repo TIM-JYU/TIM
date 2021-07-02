@@ -200,3 +200,15 @@ def strip_div(s: str) -> str:
         return s[5:-6]
     else:
         return s
+
+
+def presanitize_html_body(html_string: str) -> str:
+    """
+    Apply basic <html> tag sanitization.
+    This may be needed in cases where user-given yet un-sanitized HTML is parsed by lxml before proper sanitization.
+
+
+    :param html_string: HTML to sanitize
+    :return: HTML string with <html> tag sanitized in a basic way for LXML to parse it
+    """
+    return html_string.replace("<html", "&lt;html")
