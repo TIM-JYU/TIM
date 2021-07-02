@@ -1,11 +1,12 @@
 import re
+from collections import Generator
 from copy import deepcopy
 from enum import Enum
 from textwrap import shorten
 from typing import Dict, Optional, Tuple
 
 import yaml
-from yaml import YAMLError, CSafeLoader
+from yaml import YAMLError, CSafeLoader, Event, AliasEvent, NodeEvent
 
 from timApp.util.utils import count_chars_from_beginning
 
@@ -339,6 +340,35 @@ def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
     return s, merge_hints
 
 
+def verify_anchor_depth(text: str, max_depth=3) -> None:
+    """
+    Verifies that the given YAML file does not include too deep anchor references.
+
+    Anchor references can be used for quadratic growth DoS attacks when YAML is being iterated through.
+    The method verifies that the maximum reference depth is within the provided value. Default max depth is 3.
+
+    If YAML includes deep references, YAMLError is thrown.
+
+    :param text: YAML to check
+    :param max_depth: Maximum anchor reference depth
+    """
+    parser: Generator[Event] = yaml.parse(text, yaml_loader)
+    context_depths = {}
+    current_context = None
+    for p in parser:
+        if isinstance(p, AliasEvent) and p.anchor not in current_context:
+            depths = context_depths[current_context]
+            if p.anchor not in depths:
+                depth = max([*context_depths[p.anchor].values(), 0]) + 1
+                if depth > max_depth:
+                    raise YAMLError('Markup includes too deep anchor references')
+                depths[p.anchor] = depth
+            continue
+        if isinstance(p, NodeEvent) and p.anchor is not None:
+            context_depths[p.anchor] = {}
+            current_context = p.anchor
+
+
 def parse_yaml(text: str) -> Tuple[dict, YamlMergeInfo]:
     """Parses the specified text as (customized) YAML.
 
@@ -347,6 +377,8 @@ def parse_yaml(text: str) -> Tuple[dict, YamlMergeInfo]:
     """
 
     text, hints = correct_yaml(text)
+    verify_anchor_depth(text)
+
     values = yaml.load(text, yaml_loader)
     if isinstance(values, str):
         raise YAMLError('Markup must not be a mere string.')
