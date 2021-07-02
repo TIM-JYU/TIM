@@ -356,7 +356,7 @@ def verify_anchor_depth(text: str, max_depth=3) -> None:
     context_depths = {}
     current_context = None
     for p in parser:
-        if isinstance(p, AliasEvent) and p.anchor not in current_context:
+        if isinstance(p, AliasEvent) and current_context:
             depths = context_depths[current_context]
             if p.anchor not in depths:
                 depth = max([*context_depths[p.anchor].values(), 0]) + 1
