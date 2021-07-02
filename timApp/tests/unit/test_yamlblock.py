@@ -259,6 +259,21 @@ a: |9
 """)
         self.assertEqual({'a': ''}, yb)
 
+    def test_anchor_depth(self):
+        def parse():
+            YamlBlock.from_markdown("""
+a: &a ["lol","lol","lol","lol","lol","lol","lol","lol","lol"]
+b: &b [*a,*a,*a,*a,*a,*a,*a,*a,*a]
+c: &c [*b,*b,*b,*b,*b,*b,*b,*b,*b]
+d: &d [*c,*c,*c,*c,*c,*c,*c,*c,*c]
+e: &e [*d,*d,*d,*d,*d,*d,*d,*d,*d]
+f: &f [*e,*e,*e,*e,*e,*e,*e,*e,*e]
+g: &g [*f,*f,*f,*f,*f,*f,*f,*f,*f]
+h: &h [*g,*g,*g,*g,*g,*g,*g,*g,*g]
+i: &i [*h,*h,*h,*h,*h,*h,*h,*h,*h]
+""")
+        self.assertRaises(YAMLError, parse)
+
     def test_css_default_append(self):
         yb = YamlBlock.from_markdown("css: 'html {display: none;}'")
         yb2 = YamlBlock.from_markdown("css: 'body {display: none;}'")
