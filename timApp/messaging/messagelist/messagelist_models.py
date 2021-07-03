@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Any
 
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound  # type: ignore
 
-from timApp.messaging.messagelist.listoptions import ArchiveType, Channel, ReplyToListChanges
+from timApp.messaging.messagelist.listinfo import ArchiveType, Channel, ReplyToListChanges, ListInfo, Distribution
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time
 
@@ -91,35 +91,30 @@ class MessageListModel(db.Model):
     """The message channels the list uses."""
 
     @staticmethod
-    def get_list_by_manage_doc_id(doc_id: int) -> 'MessageListModel':
-        m = MessageListModel.query.filter_by(manage_doc_id=doc_id).one()
-        return m
+    def from_manage_doc_id(doc_id: int) -> 'MessageListModel':
+        return MessageListModel.query.filter_by(manage_doc_id=doc_id).one()
 
     @staticmethod
-    def get_list_by_name_exactly_one(name: str) -> 'MessageListModel':
-        """Get a message list. Use this when the list is expected to exist.
-
-        Raise NotExist exception, if the message list is not found (or technically if multiple ones are found).
+    def from_name(name: str) -> 'MessageListModel':
+        """Gets a message list from name or throws a NotExist error if no unique list exists.
 
         :param name: The name of the list.
         :return: MessageListModel object, if a MessageListModel with attribute name is found.
         """
-        try:
-            m = MessageListModel.query.filter_by(name=name).one()
-            return m
-        except (MultipleResultsFound, NoResultFound):
-            from timApp.util.flask.requesthelper import NotExist
+        from timApp.util.flask.requesthelper import NotExist
+        m = MessageListModel.get_by_name(name)
+        if not m:
             raise NotExist(f"No message list named {name}")
+        return m
 
     @staticmethod
-    def get_list_by_name_first(name_candidate: str) -> 'MessageListModel':
+    def get_by_name(name_candidate: str) -> Optional['MessageListModel']:
         """Get a message list by its name, if a list with said name exists.
 
         :param name_candidate: The name of the message list.
         :return: Return the message list after query by name. Returns at most one result or None if no there are hits.
         """
-        m = MessageListModel.query.filter_by(name=name_candidate).first()
-        return m
+        return MessageListModel.query.filter_by(name=name_candidate).first()
 
     @staticmethod
     def name_exists(name_candidate: str) -> bool:
@@ -127,11 +122,7 @@ class MessageListModel(db.Model):
 
         :param name_candidate: The name we are checking if it already is already in use by another list.
         """
-        maybe_list = MessageListModel.get_list_by_name_first(name_candidate=name_candidate)
-        if maybe_list is None:
-            return False
-        else:
-            return True
+        return db.session.query(MessageListModel.name).filter_by(name=name_candidate).first() is not None
 
     @property
     def archive_policy(self) -> ArchiveType:
@@ -179,6 +170,30 @@ class MessageListModel(db.Model):
             if email and email == member.get_email():
                 return member
         return None
+
+    def to_info(self) -> ListInfo:
+        from timApp.messaging.messagelist.emaillist import get_list_ui_link
+        return ListInfo(
+            name=self.name,
+            notify_owners_on_list_change=self.notify_owner_on_change,
+            domain=self.email_list_domain,
+            archive=self.archive,
+            default_reply_type=self.default_reply_type,
+            tim_users_can_join=self.tim_user_can_join,
+            list_subject_prefix=self.subject_prefix,
+            members_can_unsubscribe=self.can_unsubscribe,
+            default_send_right=self.default_send_right,
+            default_delivery_right=self.default_delivery_right,
+            only_text=self.only_text,
+            non_member_message_pass=self.non_member_message_pass,
+            email_admin_url=get_list_ui_link(self.name, self.email_list_domain),
+            list_info=self.info,
+            list_description=self.description,
+            allow_attachments=self.allow_attachments,
+            distribution=Distribution(email_list=True, tim_message=True),
+            removed=self.removed
+        )
+
 
 
 class MessageListMember(db.Model):

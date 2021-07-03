@@ -1,3 +1,23 @@
+tim-dialog-frame ::ng-deep div.modal-dialog {
+  width: 700px;
+}
+
+section {
+  display: grid;
+  grid-template:
+              "name-label name" auto
+              "name-reqs name-reqs" auto
+              "archive-label ." auto
+              "archive archive" auto
+              / max-content 1fr;
+  grid-gap: 1em;
+  align-items: center;
+}
+
+label {
+  font-weight: normal;
+}
+
 div.archive-options {
   margin-top: 10px;
 }
@@ -6,19 +26,51 @@ input[type='radio'] {
   margin-right: 10px;
 }
 
-.list-name {
-  font-weight: bold;
-  text-align: left !important;
+.name-requirements {
+  grid-area: name-reqs;
+
+  & .glyphicon {
+    color: #00AA00;
+  }
+
+  & ul {
+    list-style: none;
+  }
 }
 
-label {
-  font-weight: normal;
+.list-name-label {
+  grid-area: name-label;
+}
+
+.list-name-group {
+  grid-area: name;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  & div.input-group {
+    flex-grow: 1;
+  }
+
+  & tim-loading {
+    margin-left: 0.5em;
+  }
+}
+
+#archives-label {
+  grid-area: archive-label;
+  pointer-events: none;
+}
+
+.list-name-label, #archives-label {
+  font-weight: bold;
+}
+
+.archive-list {
+  grid-area: archive;
+  list-style-type: none;
 }
 
 tim-loading {
   margin-right: 1em;
-}
-
-.archive-list {
-  list-style-type: none;
 }

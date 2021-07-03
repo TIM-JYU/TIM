@@ -8,9 +8,9 @@ from timApp.document.docinfo import move_document
 from timApp.folder.folder import Folder
 from timApp.item.manage import get_trash_folder
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
-from timApp.messaging.messagelist.emaillist import get_list_ui_link, create_new_email_list, \
+from timApp.messaging.messagelist.emaillist import create_new_email_list, \
     delete_email_list, verify_emaillist_name_requirements, get_domain_names, verify_mailman_connection
-from timApp.messaging.messagelist.listoptions import ListOptions, Distribution, MemberInfo, GroupAndMembers
+from timApp.messaging.messagelist.listinfo import ListInfo, MemberInfo, GroupAndMembers
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_name_requirements, new_list, \
     set_message_list_notify_owner_on_change, \
@@ -19,7 +19,7 @@ from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_na
     set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
     add_new_message_list_group, add_message_list_external_email_member, \
     set_message_list_member_removed_status, set_member_send_delivery, set_message_list_description, \
-    set_message_list_info
+    set_message_list_info, check_name_rules
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.usergroup import UserGroup
@@ -32,8 +32,21 @@ from timApp.util.utils import is_valid_email, get_current_time
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
 
+@messagelist.route('/checkname', methods=['POST'])
+def check_name(name: str):
+    verify_logged_in()
+    verify_groupadmin()
+
+    rule_fails = check_name_rules(name)
+    exists = MessageListModel.name_exists(name)
+    return json_response({
+        'rule_fails': list(rule_fails),
+        'exists': exists
+    })
+
+
 @messagelist.post('/createlist')
-def create_list(options: ListOptions) -> Response:
+def create_list(options: ListInfo) -> Response:
     """Handles creating a new message list.
 
     :param options All options necessary for establishing a new message list.
@@ -105,7 +118,7 @@ def delete_list(listname: str, permanent: bool) -> Response:
     """
     # Check access rights.
     verify_logged_in()
-    message_list = MessageListModel.get_list_by_name_exactly_one(listname)
+    message_list = MessageListModel.from_name(listname)
     if not has_manage_access(message_list.block):
         raise RouteException("You need at least a manage access to the list in order to do this action.")
 
@@ -142,33 +155,11 @@ def get_list(document_id: int) -> Response:
     :return: ListOptions with the list's information.
     """
     verify_logged_in()
-
-    message_list = MessageListModel.get_list_by_manage_doc_id(document_id)
-    list_options = ListOptions(
-        name=message_list.name,
-        notify_owners_on_list_change=message_list.notify_owner_on_change,
-        domain=message_list.email_list_domain,
-        archive=message_list.archive,
-        default_reply_type=message_list.default_reply_type,
-        tim_users_can_join=message_list.tim_user_can_join,
-        list_subject_prefix=message_list.subject_prefix,
-        members_can_unsubscribe=message_list.can_unsubscribe,
-        default_send_right=message_list.default_send_right,
-        default_delivery_right=message_list.default_delivery_right,
-        only_text=message_list.only_text,
-        non_member_message_pass=message_list.non_member_message_pass,
-        email_admin_url=get_list_ui_link(message_list.name, message_list.email_list_domain),
-        list_info=message_list.info,
-        list_description=message_list.description,
-        allow_attachments=message_list.allow_attachments,
-        distribution=Distribution(email_list=True, tim_message=True),
-        removed=message_list.removed
-    )
-    return json_response(list_options)
+    return json_response(MessageListModel.from_manage_doc_id(document_id).to_info())
 
 
 @messagelist.post("/save")
-def save_list_options(options: ListOptions) -> Response:
+def save_list_options(options: ListInfo) -> Response:
     """Save message list's options.
 
     :param options: The options to be saved.
@@ -176,7 +167,7 @@ def save_list_options(options: ListOptions) -> Response:
     """
     # Check access rights.
     verify_logged_in()
-    message_list = MessageListModel.get_list_by_name_exactly_one(options.name)
+    message_list = MessageListModel.from_name(options.name)
     if not has_manage_access(message_list.block):
         raise RouteException("You need at least a manange access to the list in order to do this action.")
 
@@ -212,7 +203,7 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
     """
     # Check access rights.
     verify_logged_in()
-    message_list = MessageListModel.get_list_by_name_exactly_one(listname)
+    message_list = MessageListModel.from_name(listname)
     if not has_manage_access(message_list.block):
         raise RouteException("You need at least a manage access to the list to do this action.")
 
@@ -281,7 +272,7 @@ def add_member(member_candidates: List[str], msg_list: str, send_right: bool, de
     """
     # Check access right.
     verify_logged_in()
-    message_list = MessageListModel.get_list_by_name_exactly_one(msg_list)
+    message_list = MessageListModel.from_name(msg_list)
     if not has_manage_access(message_list.block):
         raise RouteException("You need at least a manage access to the list to do this action.")
 
@@ -326,7 +317,7 @@ def get_members(list_name: str) -> Response:
     :return: All the members of a list.
     """
     verify_logged_in()
-    msg_list = MessageListModel.get_list_by_name_exactly_one(list_name)
+    msg_list = MessageListModel.from_name(list_name)
     if not has_manage_access(msg_list.block):
         raise RouteException("You are not authorized to see the members of this list.")
     list_members = msg_list.members
@@ -342,7 +333,7 @@ def get_group_members(list_name: str) -> Response:
     """
     # Check rights.
     verify_logged_in()
-    message_list = MessageListModel.get_list_by_name_exactly_one(list_name)
+    message_list = MessageListModel.from_name(list_name)
     if not has_manage_access(message_list.block):
         raise RouteException("Only an owner of this list can see the members of this group.")
 

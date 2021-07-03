@@ -2,6 +2,15 @@ import {BrowserModule} from "@angular/platform-browser";
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
+import {of, Subject, Subscription} from "rxjs";
+import {
+    catchError,
+    debounceTime,
+    distinctUntilChanged,
+    map,
+    switchMap,
+    tap,
+} from "rxjs/operators";
 import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
@@ -23,23 +32,32 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
                         <li *ngFor="let error of errorMessage">{{error}}</li>
                     </ul>
                 </div>
-                <div class="form-group">
-                    <label for="list-name" class="list-name text-left control-label col-sm-3" i18n>List name: </label>
-                    <div class="col-sm-8">
+                <section>
+                    <label for="list-name" class="list-name-label" i18n>List name:</label>
+                    <div class="list-name-group has-error">
                         <div class="input-group">
                             <input type="text" class="form-control" name="list-name" id="list-name"
                                    [(ngModel)]="listName"
+                                   (ngModelChange)="nameTyped.next($event)"
                                    (keyup)="checkNameRequirementsLocally()"/>
                             <div class="input-group-addon">@</div>
-                            <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
-                                <option [disabled]="domains.length" *ngFor="let domain of domains">{{domain}}</option>
+                            <select id="domain-select" class="form-control" name="domain-select"
+                                    [(ngModel)]="domain">
+                                <option [disabled]="domains.length"
+                                        *ngFor="let domain of domains">{{domain}}</option>
                             </select>
                         </div>
+                        <tim-loading [style.visibility]="pollingAvailability ? 'visible' : 'hidden'"></tim-loading>
                     </div>
-                </div>
-                <div class="archive-options">
-                    <p class="list-name" i18n>Who can read the archives: </p>
-                    <ul class="archive-list">
+                    <div class="name-requirements">
+                        <p>Name requirements:</p>
+                        <ul>
+                            <li><i class="glyphicon glyphicon-ok"></i> A name must be unique</li>
+                            <li>Name length: 8-36 characters</li>
+                        </ul>
+                    </div>
+                    <span id="archives-label">Who can read the archives:</span>
+                    <ul class="archive-list" role="radiogroup" aria-labelledby="archives-label">
                         <li *ngFor="let option of archiveOptions">
                             <label class="radio" for="archive-{{option.archiveType}}">
                                 <input
@@ -53,11 +71,12 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
                             </label>
                         </li>
                     </ul>
-                </div>
+                </section>
             </ng-container>
             <ng-container footer>
                 <tim-loading *ngIf="disableCreate"></tim-loading>
-                <button [disabled]="disableCreate" class="timButton" type="button" (click)="newList()" i18n>Create</button>
+                <button [disabled]="disableCreate" class="timButton" type="button" (click)="newList()" i18n>Create
+                </button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -81,6 +100,10 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
     archive: ArchiveType = ArchiveType.PUBLIC;
     archiveOptions = archivePolicyNames;
 
+    pollingAvailability: boolean = false;
+    nameTyped: Subject<string> = new Subject<string>();
+    nameTypedSubscription!: Subscription;
+
     constructor(private http: HttpClient) {
         super();
     }
@@ -89,6 +112,29 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
         if (Users.isLoggedIn()) {
             void this.getDomains();
         }
+
+        this.nameTypedSubscription = this.nameTyped
+            .pipe(
+                debounceTime(1000),
+                distinctUntilChanged(),
+                tap(() => (this.pollingAvailability = true)),
+                switchMap((name) =>
+                    this.http.post<{rule_fails: string[]; exists: boolean}>(
+                        `${this.urlPrefix}/checkname`,
+                        {name}
+                    )
+                ),
+                tap(() => (this.pollingAvailability = false)),
+                catchError((e) => of({exists: false, rule_fails: []}))
+            )
+            .subscribe((res) => {
+                console.log(res);
+            });
+    }
+
+    ngOnDestroy() {
+        super.ngOnDestroy();
+        this.nameTypedSubscription.unsubscribe();
     }
 
     /**
@@ -169,19 +215,19 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
         }
 
         // Name starts with a character that is a letter a - z.
-        const regExpStartCharacter: RegExp = /^[a-z]/;
+        const regExpStartCharacter = /^[a-z]/;
         if (!regExpStartCharacter.test(this.listName)) {
             this.errorMessage.push("Name should start with a lowercase letter");
         }
 
         // Name contains at least one digit.
-        const regExpAtLeastOneDigit: RegExp = /\d/;
+        const regExpAtLeastOneDigit = /\d/;
         if (!regExpAtLeastOneDigit.test(this.listName)) {
             this.errorMessage.push("Name should contain at least one digit");
         }
 
         // Name can't contain sequential dots.
-        const regExpMultipleDots: RegExp = /\.\.+/;
+        const regExpMultipleDots = /\.\.+/;
         if (regExpMultipleDots.test(this.listName)) {
             this.errorMessage.push("Name shouldn´t contain multiple dots");
         }
@@ -202,7 +248,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
         // The following regular expression searches for characters that are *not* one of the above. If those are not
         // found the name is of correct form. Notice that hyphen is in two different roles and one hyphen has
         // to be escaped. The dot does not have to be escaped here.
-        const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
+        const regExpNonAllowedCharacters = /[^a-z0-9.\-_]/;
         if (regExpNonAllowedCharacters.test(this.listName)) {
             this.errorMessage.push("Name has forbidden characters");
         }
