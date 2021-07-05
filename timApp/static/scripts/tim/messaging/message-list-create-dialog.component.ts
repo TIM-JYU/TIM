@@ -7,7 +7,7 @@ import {
     catchError,
     debounceTime,
     distinctUntilChanged,
-    map,
+    filter,
     switchMap,
     tap,
 } from "rxjs/operators";
@@ -18,6 +18,25 @@ import {Users} from "../user/userService";
 import {IDocument, redirectToItem} from "../item/IItem";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
+
+enum NameRequirements {
+    ERROR = -1,
+    NAME_LENGTH_BOUNDED = 0,
+    START_WITH_LOWERCASE = 1,
+    NO_SEQUENTIAL_DOTS = 2,
+    NO_TRAILING_DOTS = 3,
+    NO_FORBIDDEN_CHARS = 4,
+    MIN_ONE_DIGIT = 5,
+}
+
+const NAME_RULES: Record<number, string> = {
+    [NameRequirements.NAME_LENGTH_BOUNDED]: $localize`Length: 5-36 characters`,
+    [NameRequirements.NO_FORBIDDEN_CHARS]: $localize`Allowed characters: letters A-z, numbers 0-9, dots, dash, underscore`,
+    [NameRequirements.MIN_ONE_DIGIT]: $localize`Has at least one digit`,
+    [NameRequirements.START_WITH_LOWERCASE]: $localize`Begins with small letter`,
+    [NameRequirements.NO_SEQUENTIAL_DOTS]: $localize`Must not have subsequent dots`,
+    [NameRequirements.NO_TRAILING_DOTS]: $localize`Must not end with a dot`,
+};
 
 @Component({
     selector: "message-list-creation",
@@ -32,50 +51,58 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
                         <li *ngFor="let error of errorMessage">{{error}}</li>
                     </ul>
                 </div>
-                <section>
-                    <label for="list-name" class="list-name-label" i18n>List name:</label>
-                    <div class="list-name-group has-error">
-                        <div class="input-group">
-                            <input type="text" class="form-control" name="list-name" id="list-name"
-                                   [(ngModel)]="listName"
-                                   (ngModelChange)="nameTyped.next($event)"
-                                   (keyup)="checkNameRequirementsLocally()"/>
-                            <div class="input-group-addon">@</div>
-                            <select id="domain-select" class="form-control" name="domain-select"
-                                    [(ngModel)]="domain">
-                                <option [disabled]="domains.length"
-                                        *ngFor="let domain of domains">{{domain}}</option>
-                            </select>
-                        </div>
-                        <tim-loading [style.visibility]="pollingAvailability ? 'visible' : 'hidden'"></tim-loading>
-                    </div>
-                    <div class="name-requirements">
-                        <p>Name requirements:</p>
-                        <ul>
-                            <li><i class="glyphicon glyphicon-ok"></i> A name must be unique</li>
-                            <li>Name length: 8-36 characters</li>
-                        </ul>
-                    </div>
-                    <span id="archives-label">Who can read the archives:</span>
-                    <ul class="archive-list" role="radiogroup" aria-labelledby="archives-label">
-                        <li *ngFor="let option of archiveOptions">
-                            <label class="radio" for="archive-{{option.archiveType}}">
-                                <input
-                                        name="items-radio"
-                                        type="radio"
-                                        id="archive-{{option.archiveType}}"
-                                        [value]="option.archiveType"
-                                        [(ngModel)]="archive"
-                                />
-                                {{option.policyName}}
-                            </label>
-                        </li>
-                    </ul>
-                </section>
+                <form>
+                    <fieldset [disabled]="creatingList">
+                        <section>
+                            <label for="list-name" class="list-name-label" i18n>List name:</label>
+                            <div class="list-name-group" [class.has-error]="!nameValid">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="list-name" id="list-name"
+                                           [(ngModel)]="listName"
+                                           (ngModelChange)="nameTyped.next($event)"/>
+                                    <div class="input-group-addon">@</div>
+                                    <select id="domain-select" class="form-control" name="domain-select"
+                                            [(ngModel)]="domain">
+                                        <option [disabled]="domains.length"
+                                                *ngFor="let domain of domains">{{domain}}</option>
+                                    </select>
+                                </div>
+                                <tim-loading
+                                        [style.visibility]="pollingAvailability ? 'visible' : 'hidden'"></tim-loading>
+                            </div>
+                            <div class="name-requirements">
+                                <p>Name requirements:</p>
+                                <ul>
+                                    <li><i class="glyphicon glyphicon-ok" [class.invisible]="nameExists"></i><span i18n>Must be unique</span>
+                                    </li>
+                                    <li *ngFor="let rule of rules"><i class="glyphicon glyphicon-ok"
+                                                                      [class.invisible]="failedRequirements.has(rule)"></i><span>{{rules_names[rule]}}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <span id="archives-label">Who can read the archives:</span>
+                            <ul class="archive-list" role="radiogroup" aria-labelledby="archives-label">
+                                <li *ngFor="let option of archiveOptions">
+                                    <label class="radio" for="archive-{{option.archiveType}}">
+                                        <input
+                                                name="items-radio"
+                                                type="radio"
+                                                id="archive-{{option.archiveType}}"
+                                                [value]="option.archiveType"
+                                                [(ngModel)]="archive"
+                                        />
+                                        {{option.policyName}}
+                                    </label>
+                                </li>
+                            </ul>
+                        </section>
+                    </fieldset>
+                </form>
             </ng-container>
             <ng-container footer>
-                <tim-loading *ngIf="disableCreate"></tim-loading>
-                <button [disabled]="disableCreate" class="timButton" type="button" (click)="newList()" i18n>Create
+                <tim-loading *ngIf="creatingList"></tim-loading>
+                <button [disabled]="!canCreate || creatingList" class="timButton" type="button" (click)="newList()" i18n>
+                    Create
                 </button>
             </ng-container>
         </tim-dialog-frame>
@@ -86,7 +113,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
     unknown,
     unknown
 > {
-    disableCreate: boolean = false;
+    creatingList: boolean = false;
     protected dialogName = "MessageList";
     listName: string = "";
     errorMessage: string[] = [];
@@ -95,6 +122,8 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
 
     domains: string[] = [];
     domain: string = "";
+    rules_names = NAME_RULES;
+    rules = Object.keys(NAME_RULES).map((k) => Number.parseInt(k, 10));
 
     // List has a public archive by default.
     archive: ArchiveType = ArchiveType.PUBLIC;
@@ -103,6 +132,10 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
     pollingAvailability: boolean = false;
     nameTyped: Subject<string> = new Subject<string>();
     nameTypedSubscription!: Subscription;
+    nameValid: boolean = true;
+    nameExists: boolean = true;
+    canCreate: boolean = false;
+    failedRequirements = new Set<NameRequirements>(this.rules);
 
     constructor(private http: HttpClient) {
         super();
@@ -115,20 +148,32 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
 
         this.nameTypedSubscription = this.nameTyped
             .pipe(
-                debounceTime(1000),
+                tap(() => {
+                    this.canCreate = false;
+                    this.nameValid = true;
+                }),
+                debounceTime(500),
                 distinctUntilChanged(),
+                filter((s) => s.length != 0),
                 tap(() => (this.pollingAvailability = true)),
                 switchMap((name) =>
-                    this.http.post<{rule_fails: string[]; exists: boolean}>(
-                        `${this.urlPrefix}/checkname`,
-                        {name}
-                    )
+                    this.http.post<{
+                        rule_fails: NameRequirements[];
+                        exists: boolean;
+                    }>(`${this.urlPrefix}/checkname`, {name})
                 ),
                 tap(() => (this.pollingAvailability = false)),
-                catchError((e) => of({exists: false, rule_fails: []}))
+                catchError((e) =>
+                    of({exists: false, rule_fails: [NameRequirements.ERROR]})
+                )
             )
             .subscribe((res) => {
-                console.log(res);
+                this.nameValid = !res.exists && res.rule_fails.length == 0;
+                this.canCreate = this.nameValid;
+                this.nameExists = res.exists;
+                this.failedRequirements = new Set<NameRequirements>(
+                    res.rule_fails
+                );
             });
     }
 
@@ -156,7 +201,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
             ];
             // Creating a message list isn't possible at this time if domains are not given. Therefore disable creation
             // button.
-            this.disableCreate = true;
+            this.creatingList = true;
         }
     }
 
@@ -164,12 +209,8 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
      * Launching the creation of a new list. Verifies the basic name rules in the client before involving the server.
      */
     async newList() {
-        if (!this.checkNameRequirementsLocally()) {
-            return;
-        }
-
         this.errorMessage = [];
-        this.disableCreate = true;
+        this.creatingList = true;
         const result = await this.createList({
             name: this.listName,
             domain: this.domain,
@@ -177,7 +218,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
         });
         if (!result.ok) {
             this.errorMessage = [result.result.error.error];
-            this.disableCreate = false;
+            this.creatingList = false;
         } else {
             redirectToItem(result.result);
         }
@@ -195,64 +236,6 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
                 .post<IDocument>(`${this.urlPrefix}/createlist`, {options})
                 .toPromise()
         );
-    }
-
-    /**
-     * Check list name requirements locally.
-     *
-     * If you make changes here, make sure to check that the server checks the same things. Otherwise there will
-     * inconsistant name checking and a confused user.
-     *
-     * @returns {boolean} Returns true if name requirements are met. Otherwise returns false.
-     */
-    checkNameRequirementsLocally(): boolean {
-        // Clear old error messages.
-        this.errorMessage = [];
-
-        // Name length is within length boundaries.
-        if (this.listName.length <= 5 || 36 <= this.listName.length) {
-            this.errorMessage.push("Name not in length boundaries");
-        }
-
-        // Name starts with a character that is a letter a - z.
-        const regExpStartCharacter = /^[a-z]/;
-        if (!regExpStartCharacter.test(this.listName)) {
-            this.errorMessage.push("Name should start with a lowercase letter");
-        }
-
-        // Name contains at least one digit.
-        const regExpAtLeastOneDigit = /\d/;
-        if (!regExpAtLeastOneDigit.test(this.listName)) {
-            this.errorMessage.push("Name should contain at least one digit");
-        }
-
-        // Name can't contain sequential dots.
-        const regExpMultipleDots = /\.\.+/;
-        if (regExpMultipleDots.test(this.listName)) {
-            this.errorMessage.push("Name shouldn´t contain multiple dots");
-        }
-
-        // Name doesn't end in a dot.
-        // ESLint prefers to not use regex for this. And by "prefer" we mean this won't transpile with a regular
-        // expression.
-        if (this.listName.endsWith(".")) {
-            this.errorMessage.push("Name shouldn´t end in a dot");
-        }
-
-        // Name contains only acceptable characters, which are:
-        //     letters                  a - z
-        //     numbers                  0 - 9
-        //     dot                      '.'
-        //     underscore               '_'
-        //     hyphen (or "minus sign") '-'
-        // The following regular expression searches for characters that are *not* one of the above. If those are not
-        // found the name is of correct form. Notice that hyphen is in two different roles and one hyphen has
-        // to be escaped. The dot does not have to be escaped here.
-        const regExpNonAllowedCharacters = /[^a-z0-9.\-_]/;
-        if (regExpNonAllowedCharacters.test(this.listName)) {
-            this.errorMessage.push("Name has forbidden characters");
-        }
-        return this.errorMessage.length == 0;
     }
 }
 
