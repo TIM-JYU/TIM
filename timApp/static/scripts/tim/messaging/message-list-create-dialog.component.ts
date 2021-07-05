@@ -71,7 +71,7 @@ const NAME_RULES: Record<number, string> = {
                                         [style.visibility]="pollingAvailability ? 'visible' : 'hidden'"></tim-loading>
                             </div>
                             <div class="name-requirements">
-                                <p>Name requirements:</p>
+                                <p i18n>Name requirements:</p>
                                 <ul>
                                     <li><i class="glyphicon glyphicon-ok" [class.invisible]="nameExists"></i><span i18n>Must be unique</span>
                                     </li>
@@ -80,7 +80,7 @@ const NAME_RULES: Record<number, string> = {
                                     </li>
                                 </ul>
                             </div>
-                            <span id="archives-label">Who can read the archives:</span>
+                            <span id="archives-label" i18n>Who can read the archives:</span>
                             <ul class="archive-list" role="radiogroup" aria-labelledby="archives-label">
                                 <li *ngFor="let option of archiveOptions">
                                     <label class="radio" for="archive-{{option.archiveType}}">
