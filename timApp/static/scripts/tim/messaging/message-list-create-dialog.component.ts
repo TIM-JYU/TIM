@@ -163,7 +163,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
                     }>(`${this.urlPrefix}/checkname`, {name})
                 ),
                 tap(() => (this.pollingAvailability = false)),
-                catchError((e) =>
+                catchError(() =>
                     of({exists: false, rule_fails: [NameRequirements.ERROR]})
                 )
             )
