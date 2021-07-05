@@ -19,21 +19,20 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
                 {{dialogName}}
             </ng-container>
             <ng-container body>
-                <div>
-                    <label>
-                        Channel
-                        <select name="channel-select" [(ngModel)]="chosenChannel">
-                            <option value="email">Email</option>
-                        </select>
-                    </label>
+                <div class="form-group">
+                    <label class="control-label" for="name-select">
+                        Channel</label>
+                    <select class="form-control" name="channel-select" [(ngModel)]="chosenChannel">
+                        <option value="email">Email</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="control-label" for="contact-info-text">
+                        Contact info</label>
+                    <input class="form-control" type="text" name="contact-info-text"
+                           [(ngModel)]="contactInfo">
                 </div>
                 <div>
-                    <label>
-                        Contact info
-                        <input type="text" name="contact-info-text" [(ngModel)]="contactInfo">
-                    </label>
-                </div>
-                <div id="errors">
                     <tim-alert *ngIf="verificationSend" severity="success">A message with a verification link will be
                         sent to the contact info you provided. You may close this dialog.
                     </tim-alert>
@@ -46,7 +45,8 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
                     <tim-alert *ngIf="unhandledChannelError" severity="danger">An error has occured in TIM that has
                         prevented the sending of a verification message.
                     </tim-alert>
-                    <tim-alert *ngIf="noChannelChosenError" severity="danger">Choose a channel for the user information.
+                    <tim-alert *ngIf="noChannelChosenError" severity="danger">Choose a channel for the user contact
+                        information.
                     </tim-alert>
                     <tim-alert *ngIf="noInfoError" severity="danger">The contact information field is empty.
                     </tim-alert>
@@ -97,16 +97,7 @@ export class AddContactDialogComponent extends AngularDialogComponent<
 
     // Send a new contact information for a user to server.
     async addNewContact() {
-        // Sending contact info is meaningless if contact info and it's channel isn't given.
-        if (!this.chosenChannel) {
-            this.noChannelChosenError = true;
-            return;
-        }
-        if (!this.contactInfo) {
-            this.noInfoError = true;
-        }
-
-        // Clear possible error messages.
+        // Reset error messages.
         this.notValidEmailError = false;
         this.alreadyVerifiedError = false;
         this.unspecifiedError = false;
@@ -114,6 +105,16 @@ export class AddContactDialogComponent extends AngularDialogComponent<
         this.verificationSend = false;
         this.noInfoError = false;
         this.noChannelChosenError = false;
+
+        // Sending contact info is meaningless if contact info and it's channel isn't given.
+        if (!this.chosenChannel) {
+            this.noChannelChosenError = true;
+            return;
+        }
+        if (!this.contactInfo) {
+            this.noInfoError = true;
+            return;
+        }
 
         // Call the server.
         const result = await to2(
