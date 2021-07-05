@@ -157,8 +157,9 @@ def contact_info_verification(verification_token: str) -> Response:
     """
     try:
         v = Verification.query.filter_by(verification_token=verification_token).one()
-        # Verify the contact information the token corresponds with.
+        # Verify the contact information that corresponds with the token.
         contact_info = v.contact
+
         contact_info.verified = True
         v.verified_at = get_current_time()
         # Sync the now verified contact info to relevant message lists.
@@ -169,7 +170,6 @@ def contact_info_verification(verification_token: str) -> Response:
     except MultipleResultsFound:
         # If we are here, we have found multiple same tokens in the db. Something is most likely wrong with token
         # generation.
-        log_error(f"Multiple verification tokens found in db (token: {verification_token}).")
+        log_error(f"Multiple verification tokens found in db (with token: '{verification_token}').")
     db.session.commit()
-    # TODO: Sync new contact info to message lists.
     return ok_response()

@@ -1120,7 +1120,8 @@ def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -
 def sync_new_contact_info(user_contact: UserContact) -> None:
     """Sync user's new contact information to message lists.
 
-    Syncs new emails to email lists.
+    Syncs
+    - new emails to email lists.
 
     :param user_contact: Contact information to be synced to message lists.
     """
@@ -1129,12 +1130,12 @@ def sync_new_contact_info(user_contact: UserContact) -> None:
     if user:
         for group in user.groups:
             for membership in group.messagelist_membership:
+                # Go through all message user's groups and the message lists those groups are a member.
                 message_list = membership.message_list
                 # Add new emails to email lists.
                 if user_contact.channel is Channel.EMAIL_LIST and message_list.email_list_domain:
                     email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
                     # TODO: add_email calls Mailman for every invocation. This might become a performance bottleneck?
-                    # TODO: Is there a proper recovery if add_email raises an exception?
                     add_email(email_list, user_contact.contact, True, user.real_name, membership.send_right,
                               membership.delivery_right)
 
