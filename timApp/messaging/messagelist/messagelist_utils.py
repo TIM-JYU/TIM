@@ -9,7 +9,7 @@ from mailmanclient import MailingList
 
 from timApp.auth.accesshelper import has_manage_access
 from timApp.auth.accesstype import AccessType
-from timApp.document.create_item import create_document
+from timApp.document.create_item import create_document, apply_template
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
@@ -473,20 +473,15 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListIn
     :return: Newly created management document.
     """
 
-    # We'll err on the side of caution and make sure the path is safe for the management doc.
-    path_safe_list_name = remove_path_special_chars(list_options.name)
-    path_to_doc = f'/{MESSAGE_LIST_DOC_PREFIX}/{path_safe_list_name}'
-
-    doc = create_document(path_to_doc,
+    doc = create_document(f'/{MESSAGE_LIST_DOC_PREFIX}/{remove_path_special_chars(list_options.name)}',
                           list_options.name,
                           validation_rule=ItemValidationRule(check_write_perm=False),
                           parent_owner=UserGroup.get_admin_group())
 
-    # We add the admin component to the document.
-    admin_component = """#- {allowangular="true"}
-<tim-message-list-admin></tim-message-list-admin>
-    """
-    doc.document.add_text(admin_component)
+    apply_template(doc)
+    s = doc.document.get_settings().get_dict().get('macros', {})
+    s['messagelist'] = list_options.name
+    doc.document.add_setting('macros', s)
 
     # Set the management doc for the message list.
     msg_list_model.manage_doc_id = doc.id
