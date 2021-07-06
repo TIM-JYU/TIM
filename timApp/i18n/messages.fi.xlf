@@ -950,6 +950,218 @@
           <context context-type="linenumber">200</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="b7a79f2346c643bcbe2c39901f5f5d439d33bf22" datatype="html">
+        <source>Recipients:</source>
+        <target state="translated">Vastaanottajat:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4e232c3f05990630360bcf22f0b3b2301e8106e9" datatype="html">
+        <source>Subject:</source>
+        <target state="translated">Aihe:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">37</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="383548eb609b4719226aa0b5d483417f3db23bd7" datatype="html">
+        <source>Message content:</source>
+        <target state="translated">Viestin sisältö:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="ae4ee565214f3b3b4338e3214bfa94f43aa1ffa5" datatype="html">
+        <source>Show message options</source>
+        <target state="translated">Näytä lähetysasetukset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">47</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9c97a8111aa5d426e91c757b3ac4033bbe252af4" datatype="html">
+        <source>Archive message</source>
+        <target state="translated">Arkistoi viesti</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">54</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">59</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9008389c78c84861ea902cf52fb630c6b88ba982" datatype="html">
+        <source>Currently only applies to TIM messages</source>
+        <target state="translated">Tällä hetkellä voimassa vain TIM-viesteille</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">60</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8145afe7cc78d1e2a5a6551108f8df9585e922c2" datatype="html">
+        <source>Send as</source>
+        <target state="translated">Lähetä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">66</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="b5e5e1452c184c8000c60ef57e11d3932c69f0ce" datatype="html">
+        <source>Select at least one channel</source>
+        <target state="translated">Valitse vähintään yksi viestikanava</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">67</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="0b15bf6fa1e5bdabc9fde97a14bee63a5d5e62f6" datatype="html">
+        <source>email</source>
+        <target state="translated">sähköpostiviestinä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">75</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="70a4da2ae0b624d5e4a833958e3ce87e6fdfa49c" datatype="html">
+        <source>Hide message options</source>
+        <target state="translated">Piilota lähetysasetukset</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">46</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3b86f3857b9147a4bd9c89240dfd681f29d2d931" datatype="html">
+        <source>Use TIM to send</source>
+        <target state="translated">Lähetä TIMin kautta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="972a08da4cb6a2b8b05941f039f0a06ca86385f2" datatype="html">
+        <source>Use your default email client</source>
+        <target state="translated">Lähetä laitteen oman sähköpostiohjelman kautta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">86</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7a422f0163db2938c19c13610e3e93853242049b" datatype="html">
+        <source>Recipients will see each others' addresses</source>
+        <target state="translated">Vastaanottajat näkevät toistensa osoitteet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">87</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="eafdc83c332eb77ecedb775b8337a955814feefa" datatype="html">
+        <source>Recipient only replies to sender</source>
+        <target state="translated">Vastaanottaja voi vastata vain lähettäjälle</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">94</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9324090f134a30e6c10b7c065bab25a9256e6b32" datatype="html">
+        <source>Recipients can only reply to you</source>
+        <target state="translated">Vastaanottajat voivat vastata vain sinulle</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">95</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="e1a7f330f7b2d42a8569f3a073ab30e33b1d233e" datatype="html">
+        <source>Recipient replies all by default</source>
+        <target state="translated">Vastaanottaja vastaa oletuksena kaikille</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">101</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="aa7926c9f66774a62ff053d48f12c531afbd7c87" datatype="html">
+        <source>Recipients can reply to all other recipients</source>
+        <target state="translated">Vastaanottajat voivat vastata kaikille muille vastaanottajille</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">102</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2e8b2fe7361607501aabbffb978e51a5219100d1" datatype="html">
+        <source>TIM message</source>
+        <target state="translated">TIM-viestinä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">110</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="935af75da6dc3f9b8b8caf7df97d8811cbf36580" datatype="html">
+        <source>Pages to send TIM message to</source>
+        <target state="translated">Sivut, joissa viesti näytetään</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">115</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5030aca5fbf9cd1f4937e75da9df3a2b7476b989" datatype="html">
+        <source>Enter URL addresses of the pages one per line. URLs will be automatically shortened.</source>
+        <target state="translated">Syötä sivujen osoitteet jokainen omalle riville. Osoitteet lyhennetään automaattisesti.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="f045b7939aec602601bc2a7b7b2ed468cc815419" datatype="html">
+        <source>Recipient sees TIM message as private</source>
+        <target state="translated">Viesti näytetään yksityisviestinä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">129</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="02f137581b04727de748b28174032001bfa6f5dd" datatype="html">
+        <source>TIM message can be replied to</source>
+        <target state="translated">Viestiin voi vastata</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">134</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="e7003996487859f291198e8e25c04a0451e2a31f" datatype="html">
+        <source>TIM message can be marked as read</source>
+        <target state="translated">Viesti voi kuitata luetuksi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">139</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="392490af84c32caf208b7294bfe64e1e364fe715" datatype="html">
+        <source>TIM message will be removed on:</source>
+        <target state="translated">Viesti poistetaan:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">142</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="0022b3084b4cf146a5dc948b2dad4a09945f71c0" datatype="html">
+        <source>No automatic date</source>
+        <target state="translated">Ei automaattista päivämäärää</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">145</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="ff64cb4dd5b6678d79cb21996989d675d33a9834" datatype="html">
+        <source> Send </source>
+        <target state="translated"> Lähetä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
+          <context context-type="linenumber">154,155</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="fb01abd6fd0fa55e2cc554c12550d3f1900e6a36" datatype="html">
         <source> I allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>                         "/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>                     "/> to be used for scientific research purposes after anonymization. </source>
         <target state="translated">
