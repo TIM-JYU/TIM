@@ -84,7 +84,7 @@ interface TimMessageOptions {
     `,
     styleUrls: ["./tim-message-send.scss"],
 })
-export class TimMessageComponent {
+export class TimMessageSendComponent {
     /**
      *  TODO: This component has a minor bug. If the textfield of recipients is emptied by hand, the component closes
      *  and it can't be reopened unless the recipientList variable changes. A hypothetical fix would be to use a

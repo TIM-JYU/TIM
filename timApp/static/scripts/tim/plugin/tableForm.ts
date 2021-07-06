@@ -21,7 +21,7 @@ import {
     ViewChild,
 } from "@angular/core";
 
-import {TimMessageComponent} from "tim/messaging/tim-message-send.component";
+import {TimMessageSendComponent} from "tim/messaging/tim-message-send.component";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
@@ -1504,7 +1504,7 @@ export class TableFormComponent
 }
 
 @NgModule({
-    declarations: [TableFormComponent, TimMessageComponent],
+    declarations: [TableFormComponent, TimMessageSendComponent],
     imports: [
         BrowserModule,
         HttpClientModule,
@@ -1515,7 +1515,7 @@ export class TableFormComponent
         TimepickerModule.forRoot(),
         DatetimePickerModule,
     ],
-    exports: [TimMessageComponent],
+    exports: [TimMessageSendComponent],
 })
 export class TableFormModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
