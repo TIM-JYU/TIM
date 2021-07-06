@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from enum import Enum
-from typing import Optional, List, Dict, Tuple, Iterable
+from typing import Optional, List, Dict, Tuple, Iterator
 
 from mailmanclient import MailingList
 
@@ -80,7 +80,7 @@ class NameRequirements(Enum):
     MIN_ONE_DIGIT = 5
 
 
-def check_name_rules(name_candidate: str) -> Iterable[NameRequirements]:
+def check_name_rules(name_candidate: str) -> Iterator[NameRequirements]:
     """Check if name candidate complies with naming rules.
 
     :param name_candidate: What name we are checking against the rules.
