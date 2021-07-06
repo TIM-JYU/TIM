@@ -1,8 +1,7 @@
 import {HttpClient} from "@angular/common/http";
-import {Component, NgModule, OnInit} from "@angular/core";
-import {CommonModule} from "@angular/common";
-import {to, to2} from "tim/util/utils";
-import {FormsModule} from "@angular/forms";
+import {Component, OnInit} from "@angular/core";
+import moment, {Moment} from "moment";
+import {to, to2} from "../../util/utils";
 import {
     archivePolicyNames,
     ArchiveType,
@@ -11,15 +10,12 @@ import {
     ListOptions,
     MemberInfo,
     ReplyToListChanges,
-} from "tim/messaging/listOptionTypes";
-import {documentglobals} from "tim/util/globals";
-import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {TableFormModule} from "tim/plugin/tableForm";
-import moment, {Moment} from "moment";
-import {showInputDialog} from "tim/ui/showInputDialog";
-import {InputDialogKind} from "tim/ui/input-dialog.kind";
-import {$http} from "tim/util/ngimport";
-import {Users} from "../user/userService";
+} from "../listOptionTypes";
+import {documentglobals} from "../../util/globals";
+import {showInputDialog} from "../../ui/showInputDialog";
+import {InputDialogKind} from "../../ui/input-dialog.kind";
+import {$http} from "../../util/ngimport";
+import {Users} from "../../user/userService";
 
 @Component({
     selector: "tim-message-list-admin",
@@ -750,10 +746,3 @@ export class MessageListAdminComponent implements OnInit {
         }
     }
 }
-
-@NgModule({
-    declarations: [MessageListAdminComponent],
-    exports: [MessageListAdminComponent],
-    imports: [CommonModule, FormsModule, TimUtilityModule, TableFormModule],
-})
-export class NewMsgListModule {}

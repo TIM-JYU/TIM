@@ -50,6 +50,7 @@ from timApp.item.scoreboard import get_score_infos_if_enabled
 from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
 from timApp.markdown.htmlSanitize import sanitize_html
+from timApp.messaging.messagelist.messagelist_utils import MESSAGE_LIST_DOC_PREFIX
 from timApp.peerreview.peerreview_utils import generate_review_groups, get_reviews_for_user, check_review_grouping, \
     PeerReviewException, is_peerreview_enabled
 from timApp.plugin.plugin import find_task_ids
@@ -726,6 +727,10 @@ def render_doc_view(
     if teacher_or_see_answers or view_ctx.route.is_review:
         post_process_result.js_paths.append('angular-ui-grid')
         angular_module_names += get_grid_modules()
+    # TODO: Instead add a docsetting that allows to manually import modules/lightweight components
+    if doc_info.path.startswith(MESSAGE_LIST_DOC_PREFIX):
+        post_process_result.js_paths.append('timMessageListManagement')
+
     taketime("before render")
     nav_ranges = []
     if view_range.is_restricted:
