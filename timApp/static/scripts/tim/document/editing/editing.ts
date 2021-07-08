@@ -403,7 +403,7 @@ This will delete the whole ${
     hasNonSettingsPars() {
         let has = false;
         for (const p of enumPars(DerefOption.Deref)) {
-            if (!p.isSetting() && !p.preamblePath) {
+            if (!p.isSetting()) {
                 has = true;
                 break;
             }
