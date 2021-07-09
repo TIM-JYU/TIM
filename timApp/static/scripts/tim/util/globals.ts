@@ -162,6 +162,20 @@ export interface ISettingsGlobals extends IGenericGlobals {
     notificationLimit: number;
 }
 
+// See VerificationType on verification.py for details.
+export enum VerificationType {
+    LIST_JOIN = 1,
+    CONTACT_OWNERSHIP = 2,
+}
+
+export interface IVerificationGlobals extends IGenericGlobals {
+    verification_token: string;
+    type?: VerificationType;
+    title: string;
+    error: boolean;
+    error_code?: string;
+}
+
 export type SomeGlobals =
     | IGenericGlobals
     | IFolderGlobals
@@ -208,6 +222,10 @@ export function settingsglobals(): ISettingsGlobals {
 }
 
 export function lectureinfoglobals(): ILectureInfoGlobals {
+    return someGlobals();
+}
+
+export function verificationglobals(): IVerificationGlobals {
     return someGlobals();
 }
 
