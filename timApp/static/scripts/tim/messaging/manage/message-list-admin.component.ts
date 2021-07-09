@@ -173,100 +173,112 @@ import {Users} from "../../user/userService";
                     </div>
                 </div>
             </fieldset>
-        </form>
-        <div id="members-tab" class="panel panel-default">
-            <div class="panel-heading" i18n>Add members <a class="add-members-help"
-                                                           title="Adding members help (in Finnish)" i18n-title
-                                                           href="/view/tim/ohjeita/kayttoohjeet-viestilistoille#jäsenten-hallinta"><i
-                    class="glyphicon glyphicon-question-sign"></i></a></div>
-            <div class="panel-body">
+            <fieldset [disabled]="addingNewMember">
+                <div id="members-tab" class="panel panel-default">
+                    <div class="panel-heading" i18n>Add members <a class="add-members-help"
+                                                                   title="Adding members help (in Finnish)" i18n-title
+                                                                   href="/view/tim/ohjeita/kayttoohjeet-viestilistoille#jäsenten-hallinta"><i
+                            class="glyphicon glyphicon-question-sign"></i></a></div>
+                    <div class="panel-body">
                 <textarea id="add-multiple-members" name="add-multiple-members" class="form-control"
                           [(ngModel)]="membersTextField"></textarea>
-                <label class="font-weight-normal"><input type="checkbox" name="new-member-send-right"
-                                                         [(ngModel)]="newMemberSendRight">
-                    <ng-container i18n>Members can send messages to the list</ng-container>
-                </label>
-                <label class="font-weight-normal"><input type="checkbox" name="new-member-delivery-right"
-                                                         [(ngModel)]="newMemberDeliveryRight">
-                    <ng-container i18n>Members can receive messages from the list</ng-container>
-                </label>
-                <div>
-                    <button class="timButton" (click)="addNewListMember()">Add new members</button>
+                        <label class="font-weight-normal"><input type="checkbox" name="new-member-send-right"
+                                                                 [(ngModel)]="newMemberSendRight">
+                            <ng-container i18n>Members can send messages to the list</ng-container>
+                        </label>
+                        <label class="font-weight-normal"><input type="checkbox" name="new-member-delivery-right"
+                                                                 [(ngModel)]="newMemberDeliveryRight">
+                            <ng-container i18n>Members can receive messages from the list</ng-container>
+                        </label>
+                        <div class="save-button">
+                            <div>
+                                <button class="timButton" (click)="addNewListMember()">Add new members</button>
+                                <tim-loading *ngIf="addingNewMember"></tim-loading>
+                            </div>
+                        <tim-alert *ngIf="memberAddSucceededResponse"
+                                   severity="success">{{memberAddSucceededResponse}}</tim-alert>
+                        <tim-alert *ngIf="memberAddFailedResponse"
+                                   severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                        </div>
+                    </div>
                 </div>
-                <tim-alert *ngIf="memberAddSucceededResponse"
-                           severity="success">{{memberAddSucceededResponse}}</tim-alert>
-                <tim-alert *ngIf="memberAddFailedResponse"
-                           severity="danger">{{memberAddFailedResponse}}</tim-alert>
-            </div>
-        </div>
-        <div id="current-members-tab" class="panel panel-default">
-            <div class="panel-heading" i18n>Current members</div>
-            <div class="panel-body">
-                <table>
-                    <thead>
-                    <tr class="member-table-row">
-                        <th>Name</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Send right</th>
-                        <th>Delivery right</th>
-                        <th>Membership ended</th>
-                        <th>Removed</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr class="member-table-row" *ngFor="let member of membersList">
-                        <td>{{member.name}}</td>
-                        <td>{{member.username}}</td>
-                        <td>{{member.email}}</td>
-                        <td>
-                            <input type="checkbox" [(ngModel)]="member.sendRight"
-                                   name="member-send-right-{{member.email}}">
-                        </td>
-                        <td>
-                            <input type="checkbox" [(ngModel)]="member.deliveryRight"
-                                   name="member-delivery-right-{{member.email}}">
-                        </td>
-                        <td>{{member.removedDisplay}}</td>
-                        <td><input type="checkbox" (click)="membershipChange(member)" [ngModel]="!!member.removed"
-                                   name="removed-{{member.email}}"/></td>
-                    </tr>
-                    </tbody>
-                </table>
+            </fieldset>
+            <fieldset [disabled]="editingMembers">
+                <div id="current-members-tab" class="panel panel-default">
+                    <div class="panel-heading" i18n>Current members</div>
+                    <div class="panel-body">
+                        <table>
+                            <thead>
+                            <tr class="member-table-row">
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Send right</th>
+                                <th>Delivery right</th>
+                                <th>Membership ended</th>
+                                <th>Removed</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr class="member-table-row" *ngFor="let member of membersList">
+                                <td>{{member.name}}</td>
+                                <td>{{member.username}}</td>
+                                <td>{{member.email}}</td>
+                                <td>
+                                    <input type="checkbox" [(ngModel)]="member.sendRight"
+                                           name="member-send-right-{{member.email}}">
+                                </td>
+                                <td>
+                                    <input type="checkbox" [(ngModel)]="member.deliveryRight"
+                                           name="member-delivery-right-{{member.email}}">
+                                </td>
+                                <td>{{member.removedDisplay}}</td>
+                                <td><input type="checkbox" (click)="membershipChange(member)"
+                                           [ngModel]="!!member.removed"
+                                           name="removed-{{member.email}}"/></td>
+                            </tr>
+                            </tbody>
+                        </table>
 
-                <ng-container *ngIf="hasGroups">
-                    <label for="user-group-view-select">View members of a group</label>
-                    <select id="user-group-view-select" class="form-control" [(ngModel)]="currentGroup" name="user-group-view-select"
-                            (change)="setGroupMembers()">
-                        <option *ngFor="let memberGroup of memberGroups">{{memberGroup}}</option>
-                    </select>
-                    <table *ngIf="currentGroup">
-                        <thead>
-                        <tr class="member-table-row">
-                            <th>Name</th>
-                            <th>Username</th>
-                            <th>Email</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr class="member-table-row" *ngFor="let gMember of groupMembers">
-                            <td>{{gMember.name}}</td>
-                            <td>{{gMember.username}}</td>
-                            <td>{{gMember.email}}</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </ng-container>
+                        <ng-container *ngIf="hasGroups">
+                            <label for="user-group-view-select">View members of a group</label>
+                            <select id="user-group-view-select" class="form-control" [(ngModel)]="currentGroup"
+                                    name="user-group-view-select"
+                                    (change)="setGroupMembers()">
+                                <option *ngFor="let memberGroup of memberGroups">{{memberGroup}}</option>
+                            </select>
+                            <table *ngIf="currentGroup">
+                                <thead>
+                                <tr class="member-table-row">
+                                    <th>Name</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr class="member-table-row" *ngFor="let gMember of groupMembers">
+                                    <td>{{gMember.name}}</td>
+                                    <td>{{gMember.username}}</td>
+                                    <td>{{gMember.email}}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </ng-container>
 
-                <div>
-                    <button class="timButton" (click)="saveMembers()">Save members</button>
+                        <div class="save-button">
+                        <div>
+                            <button class="timButton" (click)="saveMembers()">Save members</button>
+                            <tim-loading *ngIf="editingMembers"></tim-loading>
+                        </div>
+                        <tim-alert *ngIf="memberSaveSuccessResponse"
+                                   severity="success">{{memberSaveSuccessResponse}}</tim-alert>
+                        <tim-alert *ngIf="memberSaveFailResponse"
+                                   severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                        </div>
+                    </div>
                 </div>
-                <tim-alert *ngIf="memberSaveSuccessResponse"
-                           severity="success">{{memberSaveSuccessResponse}}</tim-alert>
-                <tim-alert *ngIf="memberSaveFailResponse"
-                           severity="danger">{{memberAddFailedResponse}}</tim-alert>
-            </div>
-        </div>
+            </fieldset>
+        </form>
         <div class="panel panel-danger">
             <div class="panel-heading" i18n>Dangerous actions</div>
             <div class="panel-body">
@@ -347,6 +359,9 @@ export class MessageListAdminComponent implements OnInit {
     groupsAndMembers?: GroupAndMembers[];
     // Current group to view on the UI. If undefined, shows no group on the UI.
     currentGroup?: string;
+
+    addingNewMember = false;
+    editingMembers = false;
 
     /**
      * Modifies the member's removed attribute if the member's state is changed.
@@ -469,6 +484,7 @@ export class MessageListAdminComponent implements OnInit {
         if (memberCandidates.length == 0) {
             return;
         }
+        this.addingNewMember = true;
         const result = await to2(
             this.http
                 .post(`${this.urlPrefix}/addmember`, {
@@ -479,6 +495,7 @@ export class MessageListAdminComponent implements OnInit {
                 })
                 .toPromise()
         );
+        this.addingNewMember = false;
         if (result.ok) {
             // Empty the text field.
             this.membersTextField = undefined;
@@ -649,6 +666,7 @@ export class MessageListAdminComponent implements OnInit {
      * Save the lists members' state.
      */
     async saveMembers() {
+        this.editingMembers = true;
         const tempMembersList = this.membersList;
         // Get rid of removedDisplay property for the members being send to server, as the server does not need it for
         // anything.
@@ -656,6 +674,7 @@ export class MessageListAdminComponent implements OnInit {
             delete tempMember.removedDisplay;
         }
         const resultSaveMembers = await this.saveMembersCall(tempMembersList);
+        this.editingMembers = false;
         // Give timed feedback to user.
         if (resultSaveMembers.ok) {
             this.memberSaveSuccessResponse = "Saving members succeeded!";
