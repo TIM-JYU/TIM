@@ -2,7 +2,7 @@ import secrets
 from dataclasses import field
 from enum import Enum
 
-from flask import Response
+from flask import Response, request, render_template
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound  # type: ignore
 
 from timApp.auth.accesshelper import verify_logged_in
@@ -148,28 +148,44 @@ def send_verification_messsage(contact_info: str, verification_url: str, channel
 # TODO: Is there a way to do this in other than GET method? it's not very RESTful to change state in a db with a GET
 #  request. Should we instead re-direct to a page with a simple button for "Yes I own this contact information" for a
 #  POST request? Then we could differentatiate between GET and POST methods, thus preserving the sanctity of REST.
-@verification.route("/contact/<verification_token>", methods=['GET'])
+@verification.route("/contact/<verification_token>", methods=['GET', 'POST'])
 def contact_info_verification(verification_token: str) -> Response:
     """Verify user's additional contact information.
 
-    :param verification_token: Generated string token
-    :return: OK response.
+    :param verification_token: Generated string token to identify user's not-yet-verified contact information.
+    :return: If the HTTP method is POST and contact verification token was found in the db, return OK response. If
+    the HTTP method is GET, return template 'contact-info-verification.jinja2' with necessary substituted variables.
     """
+    template = 'contact-info-verification.jinja2'
     try:
         v = Verification.query.filter_by(verification_token=verification_token).one()
-        # Verify the contact information that corresponds with the token.
-        contact_info = v.contact
+        # TODO: Verify the contact information that corresponds with the token.
+        if v.verification_type == VerificationType.CONTACT_OWNERSHIP:
+            contact_info = v.contact
 
-        contact_info.verified = True
-        v.verified_at = get_current_time()
-        # Sync the now verified contact info to relevant message lists.
-        sync_new_contact_info(contact_info)
+            if request.method == 'GET':
+                # TODO: Check if contact info is already verified.
+                return render_template(template, verification_token=verification_token, error=False, error_code=None,
+                                       title="Contact information verification", type=v.verification_type)
+            else:
+                # TODO: Check if contact info is already verified.
+                # If the method is POST, the user has verified their contact info.
+                contact_info.verified = True
+                contact_info.verified_at = get_current_time()
+                # Sync the now verified contact info to relevant message lists.
+                sync_new_contact_info(contact_info)
+
+                db.session.commit()
+                return ok_response()
     except NoResultFound:
         # We are most likely here if someone copy-pasted their verification link badly to the browser.
-        raise RouteException("Verification could not be done. Make sure you used the correct link.")
+        # Assume this comes from a GET request.
+        return render_template(template, verification_token=verification_token, error=True,
+                               error_code="01", title="Verification error", type=None)
+        # raise RouteException("Verification could not be done. Make sure you used the correct link.")
     except MultipleResultsFound:
         # If we are here, we have found multiple same tokens in the db. Something is most likely wrong with token
         # generation.
         log_error(f"Multiple verification tokens found in db (with token: '{verification_token}').")
-    db.session.commit()
-    return ok_response()
+        return render_template(template, verification_token=verification_token, error=True,
+                               error_code="Invalid verification link.", title="Verification error", type=None)

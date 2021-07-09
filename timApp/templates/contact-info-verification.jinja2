@@ -1,0 +1,15 @@
+{% extends "base.jinja2" %}
+{% block title %}Contact information verification{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script>
+        var verification_token = {{ verification_token|tojson }};
+        var error = {{ error|tojson }};
+        var error_code = {{ error_code|tojson }};
+        var title = {{ title|tojson }};
+        var type = {{ type|tojson }};
+    </script>
+{% endblock %}
+{% block content %}
+    <contact-info-verification></contact-info-verification>
+{% endblock %}
