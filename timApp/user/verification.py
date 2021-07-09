@@ -172,7 +172,7 @@ def contact_info_verification(verification_token: str) -> Response:
                 # TODO: Check if contact info is already verified.
                 # If the method is POST, the user has verified their contact info.
                 user_contact.verified = True
-                user_contact.verified_at = get_current_time()
+                v.verified_at = get_current_time()
                 # Sync the now verified contact info to relevant message lists.
                 sync_new_contact_info(user_contact)
 
