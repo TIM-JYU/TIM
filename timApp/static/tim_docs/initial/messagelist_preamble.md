@@ -1,6 +1,9 @@
 ``` {settings=""}
 form_mode: true
 css: |!!
+.paragraphs {
+  max-width: initial;
+}
 !!
 ```
 

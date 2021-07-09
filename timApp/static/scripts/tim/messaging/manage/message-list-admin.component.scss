@@ -1,10 +1,17 @@
-h1, h2 {
-  margin-bottom: 1em;
-}
+tabset.merged ::ng-deep .tab-content {
+  display: grid;
+  grid-template-areas: "tab";
+  grid-template-rows: max-content;
 
-div.archive-options {
-  margin-top: 2em;
-  margin-bottom: 0.2em;
+  & > tab {
+    display: block;
+    visibility: hidden;
+    grid-area: tab;
+
+    &.active {
+      visibility: visible;
+    }
+  }
 }
 
 .list-archive-policy-header {
@@ -12,55 +19,100 @@ div.archive-options {
   font-weight: bold;
 }
 
-input[type='radio'] {
-  margin-right: 2em;
+tab {
+  margin-top: 1em;
+  margin-bottom: 1em;
+
+  h4 {
+    font-size: 1em;
+  }
 }
 
-.list-name {
-  font-weight: bold;
+.grid-tab {
+  display: grid !important;
+  grid-template-columns: max-content auto;
+  grid-auto-rows: max-content;
+  align-items: baseline;
+  gap: 1em 0.5em;
 }
 
-.owner-address {
-  font-weight: bold;
+textarea {
+  min-height: 10em;
+  resize: vertical;
 }
 
-.subject-prefix {
-  font-weight: bold;
+.save-button {
+
+  & > * {
+    margin-top: 0.5em;
+  }
+
+  div {
+    display: flex;
+    align-items: center;
+  }
+
+  tim-loading {
+    margin-left: 1em;
+    vertical-align: baseline;
+  }
 }
 
-.short-description {
-  font-weight: bold;
+tim-alert {
+  display: block;
 }
 
-.long-description {
-  font-weight: bold;
+#actions-panel .panel-body .actions {
+  display: flex;
+
+  & > *:not(:first-child) {
+    margin-left: 0.5em;
+  }
 }
 
-label {
-  font-weight: normal;
-  padding-left: 1em;
+#members-tab .panel-body{
+  display: flex;
+  flex-direction: column;
+
+  & > *:not(:first-child) {
+    margin-top: 0.5em;
+  }
+
+  & label {
+    margin-bottom: 0;
+  }
+
+  & .add-members-help {
+    margin-left: 0.5em;
+  }
 }
 
-#add-multiple-members {
-  width: 25em;
-  height: 5em;
+#current-members-tab .panel-body {
+  display: flex;
+  flex-direction: column;
+
+  & > *:not(:first-child) {
+    margin-top: 0.5em;
+  }
+}
+
+input[type="checkbox"], input[type="radio"] {
+  margin-right: 0.5em;
 }
 
 .section {
   padding-bottom: 1.5em;
 }
 
-#archive-policy-list {
-  list-style-type: none
-}
+#tab-archive {
+  ul {
+    list-style: none;
+    padding-left: 1.5em;
+  }
 
-#add-member-feedback {
-  padding-top: 1em;
-  padding-bottom: 1em;
-}
-
-#email-send {
-  padding-bottom: 1em;
+  label {
+    font-weight: normal;
+  }
 }
 
 .indented {
