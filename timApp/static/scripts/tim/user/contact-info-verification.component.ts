@@ -24,6 +24,11 @@ import {Channel} from "tim/messaging/listOptionTypes";
                 <tim-alert severity="danger" *ngIf="errorCode == '01'">Invalid verification link. Check that the link in
                     the browser's address bar is the same as in the message you used to arrive to this site.
                 </tim-alert>
+                <tim-alert severity="danger" *ngIf="errorCode == '02'">This contact info is already verified.
+                </tim-alert>
+                <tim-alert severity="danger" *ngIf="errorCode == '03'">This contact info is already verified.
+                </tim-alert>
+            
             </div>
             <div *ngIf="verificationSucceeded !== undefined">
                 <tim-alert severity="success" *ngIf="verificationSucceeded">Verification succeeded! Your new contact
@@ -82,8 +87,12 @@ export class ContactInfoVerificationComponent implements OnInit {
      */
     async callVerify() {
         // If verification would for some reason be undefined, then there is no reason to call the server with a POST
-        // method.
+        // method. Also helps in typing.
         if (!this.verificationToken) {
+            return;
+        }
+        // If any kind of error flag is up, then calling for verification doesn't make sense.
+        if (this.error) {
             return;
         }
 
@@ -96,7 +105,8 @@ export class ContactInfoVerificationComponent implements OnInit {
         if (r.ok) {
             this.verificationSucceeded = true;
         } else {
-            // TODO: Verification was unsuccessfull. Use the error code to provide an error message.
+            this.error = true;
+            this.errorCode = r.result.error.error;
         }
     }
 }

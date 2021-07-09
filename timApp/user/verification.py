@@ -153,8 +153,14 @@ def contact_info_verification(verification_token: str) -> Response:
     """Verify user's additional contact information.
 
     :param verification_token: Generated string token to identify user's not-yet-verified contact information.
-    :return: If the HTTP method is POST and contact verification token was found in the db, return OK response. If
-    the HTTP method is GET, return template 'contact-info-verification.jinja2' with necessary substituted variables.
+    :return: For successes:
+      - If the HTTP method is POST and contact verification token was found in the db, return OK response.
+      - If the HTTP method is GET, return template 'contact-info-verification.jinja2' with necessary substituted
+      variables.
+    For failures:
+      - Return error code '01' if the verification token is not found in the db.
+      - Return error code '02' if during a GET call the user's contact information has already been verified.
+      - Return error code '03' if the user tries to verify the same contact info in multiple POST calls.
     """
     template = 'contact-info-verification.jinja2'
     try:
@@ -164,20 +170,32 @@ def contact_info_verification(verification_token: str) -> Response:
             user_contact = v.contact
 
             if request.method == 'GET':
-                # TODO: Check if contact info is already verified.
-                return render_template(template, verification_token=verification_token, error=False, error_code=None,
-                                       title="Contact information verification", type=v.verification_type,
-                                       channel=user_contact.channel, contact_info=user_contact.contact)
+                if v.verified_at:
+                    # The contact info is already verified.
+                    return render_template(template, verification_token=verification_token, error=True, error_code="02",
+                                           title="Contact information verification", type=v.verification_type,
+                                           channel=user_contact.channel, contact_info=user_contact.contact)
+                else:
+                    # The contact info is not yet verified.
+                    return render_template(template, verification_token=verification_token, error=False,
+                                           error_code=None, title="Contact information verification",
+                                           type=v.verification_type, channel=user_contact.channel,
+                                           contact_info=user_contact.contact)
             else:
-                # TODO: Check if contact info is already verified.
-                # If the method is POST, the user has verified their contact info.
-                user_contact.verified = True
-                v.verified_at = get_current_time()
-                # Sync the now verified contact info to relevant message lists.
-                sync_new_contact_info(user_contact)
+                if v.verified_at:
+                    # The contact info is already verified. We should only be here if the user has gone outside of
+                    # the beaten path to make a POST call.
+                    raise RouteException("03")
+                else:
+                    # THe contact info is not yet verified.
+                    # If the method is POST, the user has verified their contact info.
+                    user_contact.verified = True
+                    v.verified_at = get_current_time()
+                    # Sync the now verified contact info to relevant message lists.
+                    sync_new_contact_info(user_contact)
 
-                db.session.commit()
-                return ok_response()
+                    db.session.commit()
+                    return ok_response()
     except NoResultFound:
         # We are most likely here if someone copy-pasted their verification link badly to the browser.
         # Assume this comes from a GET request.
