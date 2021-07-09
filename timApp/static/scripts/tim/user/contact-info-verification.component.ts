@@ -4,6 +4,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {verificationglobals, VerificationType} from "tim/util/globals";
 import {to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
+import {Channel} from "tim/messaging/listOptionTypes";
 
 // Component for verifying user's additional contact information. See verification.py and path
 // /contact/<verification_token> for additional details.
@@ -14,8 +15,8 @@ import {HttpClient} from "@angular/common/http";
         <bootstrap-panel title="{{panelTitle}}">
             <div *ngIf="!error && verificationToken">
                 <p>Are you sure you wish to verify this contact information?</p>
-                <p>Type:</p>
-                <p>Information: </p>
+                <p>Type: {{channel}}</p>
+                <p>Information: {{contactInfo}} </p>
                 <button class="timButton" (click)="callVerify()" [disabled]="verificationSucceeded">Verify</button>
             </div>
             <div *ngIf="error">
@@ -49,6 +50,10 @@ export class ContactInfoVerificationComponent implements OnInit {
     verificationType?: VerificationType;
     // Title for panel. Should be overridden from server side.
     panelTitle: string = "Verification";
+    // The type of contact information.
+    channel?: Channel;
+    // The contact information.
+    contactInfo?: string;
 
     // Other variables.
 
@@ -68,6 +73,8 @@ export class ContactInfoVerificationComponent implements OnInit {
         this.panelTitle = verificationglobals().title
             ? verificationglobals().title
             : this.panelTitle;
+        this.channel = verificationglobals().channel;
+        this.contactInfo = verificationglobals().contact_info;
     }
 
     /**

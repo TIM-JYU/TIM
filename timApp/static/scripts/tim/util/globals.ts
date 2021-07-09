@@ -1,6 +1,7 @@
 import {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {HeaderIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
 import {IDocScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
+import {Channel} from "tim/messaging/listOptionTypes";
 import {IDocSettings, ISlideDocSettings} from "../document/IDocSettings";
 import {EditMode} from "../document/popup-menu-dialog.component";
 import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
@@ -174,6 +175,8 @@ export interface IVerificationGlobals extends IGenericGlobals {
     title: string;
     error: boolean;
     error_code?: string;
+    channel?: Channel;
+    contact_info: string;
 }
 
 export type SomeGlobals =

@@ -161,19 +161,20 @@ def contact_info_verification(verification_token: str) -> Response:
         v = Verification.query.filter_by(verification_token=verification_token).one()
         # TODO: Verify the contact information that corresponds with the token.
         if v.verification_type == VerificationType.CONTACT_OWNERSHIP:
-            contact_info = v.contact
+            user_contact = v.contact
 
             if request.method == 'GET':
                 # TODO: Check if contact info is already verified.
                 return render_template(template, verification_token=verification_token, error=False, error_code=None,
-                                       title="Contact information verification", type=v.verification_type)
+                                       title="Contact information verification", type=v.verification_type,
+                                       channel=user_contact.channel, contact_info=user_contact.contact)
             else:
                 # TODO: Check if contact info is already verified.
                 # If the method is POST, the user has verified their contact info.
-                contact_info.verified = True
-                contact_info.verified_at = get_current_time()
+                user_contact.verified = True
+                user_contact.verified_at = get_current_time()
                 # Sync the now verified contact info to relevant message lists.
-                sync_new_contact_info(contact_info)
+                sync_new_contact_info(user_contact)
 
                 db.session.commit()
                 return ok_response()
