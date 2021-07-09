@@ -25,9 +25,10 @@ import {Users} from "../../user/userService";
             <div class="panel-heading" i18n>Common actions</div>
             <div class="panel-body">
                 <div class="actions">
-                    <button class="timButton" (click)="openEmail()" [disabled]="recipients">Send message to list
+                    <button class="timButton" (click)="openEmail()" [disabled]="recipients" i18n>
+                        Send a message to the list
                     </button>
-                    <a class="timButton" *ngIf="archiveURL" [href]="archiveURL">View archives</a>
+                    <a class="timButton" *ngIf="archiveURL" [href]="archiveURL" i18n>View archives</a>
                 </div>
                 <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
             </div>
@@ -60,14 +61,14 @@ import {Users} from "../../user/userService";
                                 <input type="text" id="list-subject-prefix" name="list-subject-prefix"
                                        class="form-control"
                                        [(ngModel)]="listSubjectPrefix">
-                                <h4>Advanced</h4>
+                                <h4 i18n>Advanced</h4>
                                 <div *ngIf="emailAdminURL">
-                                    <a [href]="emailAdminURL">Advanced email list settings (takes to Mailman)</a>
+                                    <a [href]="emailAdminURL" i18n>Advanced email list settings (takes to Mailman)</a>
                                 </div>
                             </tab>
                             <tab heading="Archiving" id="tab-archive">
                                 <div *ngIf="archiveOptions && archive">
-                                    <h4 id="archive-policy-label">Archive policy</h4>
+                                    <h4 id="archive-policy-label" i18n>Archive policy</h4>
                                     <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
                                     <ul role="radiogroup"
                                         aria-labelledby="archive-policy-label">
@@ -84,7 +85,7 @@ import {Users} from "../../user/userService";
                                     </ul>
                                 </div>
                                 <div>
-                                    <h4 id="archive-options-label">Archive options</h4>
+                                    <h4 id="archive-options-label" i18n>Archive options</h4>
                                     <ul role="radiogroup" aria-labelledby="archive-options-label">
                                         <li>
                                             <label>
@@ -164,7 +165,7 @@ import {Users} from "../../user/userService";
                         </tabset>
                         <div class="save-button">
                             <div>
-                                <button class="timButton" (click)="saveOptions()">Save options</button>
+                                <button class="timButton" (click)="saveOptions()" i18n>Save options</button>
                                 <tim-loading *ngIf="savingSettings"></tim-loading>
                             </div>
                             <tim-alert severity="success" *ngIf="saveSuccessMessage">{{saveSuccessMessage}}</tim-alert>
@@ -175,13 +176,16 @@ import {Users} from "../../user/userService";
             </fieldset>
             <fieldset [disabled]="addingNewMember">
                 <div id="members-tab" class="panel panel-default">
-                    <div class="panel-heading" i18n>Add members <a class="add-members-help"
-                                                                   title="Adding members help (in Finnish)" i18n-title
-                                                                   href="/view/tim/ohjeita/kayttoohjeet-viestilistoille#jäsenten-hallinta"><i
-                            class="glyphicon glyphicon-question-sign"></i></a></div>
+                    <div class="panel-heading">
+                        <ng-container i18n>Add members</ng-container>
+                        <a class="add-members-help"
+                           title="Adding members help (in Finnish)" i18n-title
+                           href="/view/tim/ohjeita/kayttoohjeet-viestilistoille#jäsenten-hallinta"><i
+                                class="glyphicon glyphicon-question-sign"></i></a>
+                    </div>
                     <div class="panel-body">
-                <textarea id="add-multiple-members" name="add-multiple-members" class="form-control"
-                          [(ngModel)]="membersTextField"></textarea>
+                        <textarea id="add-multiple-members" name="add-multiple-members" class="form-control"
+                                  [(ngModel)]="membersTextField"></textarea>
                         <label class="font-weight-normal"><input type="checkbox" name="new-member-send-right"
                                                                  [(ngModel)]="newMemberSendRight">
                             <ng-container i18n>Members can send messages to the list</ng-container>
@@ -192,13 +196,13 @@ import {Users} from "../../user/userService";
                         </label>
                         <div class="save-button">
                             <div>
-                                <button class="timButton" (click)="addNewListMember()">Add new members</button>
+                                <button class="timButton" (click)="addNewListMember()" i18n>Add new members</button>
                                 <tim-loading *ngIf="addingNewMember"></tim-loading>
                             </div>
-                        <tim-alert *ngIf="memberAddSucceededResponse"
-                                   severity="success">{{memberAddSucceededResponse}}</tim-alert>
-                        <tim-alert *ngIf="memberAddFailedResponse"
-                                   severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                            <tim-alert *ngIf="memberAddSucceededResponse"
+                                       severity="success">{{memberAddSucceededResponse}}</tim-alert>
+                            <tim-alert *ngIf="memberAddFailedResponse"
+                                       severity="danger">{{memberAddFailedResponse}}</tim-alert>
                         </div>
                     </div>
                 </div>
@@ -207,16 +211,17 @@ import {Users} from "../../user/userService";
                 <div id="current-members-tab" class="panel panel-default">
                     <div class="panel-heading" i18n>Current members</div>
                     <div class="panel-body">
+                        <!-- TODO: Implement as TimTable -->
                         <table>
                             <thead>
                             <tr class="member-table-row">
-                                <th>Name</th>
-                                <th>Username</th>
-                                <th>Email</th>
-                                <th>Send right</th>
-                                <th>Delivery right</th>
-                                <th>Membership ended</th>
-                                <th>Removed</th>
+                                <th i18n>Name</th>
+                                <th i18n>Username</th>
+                                <th i18n>Email</th>
+                                <th i18n>Send right</th>
+                                <th i18n>Delivery right</th>
+                                <th i18n>Membership ended</th>
+                                <th i18n>Removed</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -241,7 +246,7 @@ import {Users} from "../../user/userService";
                         </table>
 
                         <ng-container *ngIf="hasGroups">
-                            <label for="user-group-view-select">View members of a group</label>
+                            <label for="user-group-view-select" i18n>View members of a group</label>
                             <select id="user-group-view-select" class="form-control" [(ngModel)]="currentGroup"
                                     name="user-group-view-select"
                                     (change)="setGroupMembers()">
@@ -250,9 +255,9 @@ import {Users} from "../../user/userService";
                             <table *ngIf="currentGroup">
                                 <thead>
                                 <tr class="member-table-row">
-                                    <th>Name</th>
-                                    <th>Username</th>
-                                    <th>Email</th>
+                                    <th i18n>Name</th>
+                                    <th i18n>Username</th>
+                                    <th i18n>Email</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -266,14 +271,14 @@ import {Users} from "../../user/userService";
                         </ng-container>
 
                         <div class="save-button">
-                        <div>
-                            <button class="timButton" (click)="saveMembers()">Save members</button>
-                            <tim-loading *ngIf="editingMembers"></tim-loading>
-                        </div>
-                        <tim-alert *ngIf="memberSaveSuccessResponse"
-                                   severity="success">{{memberSaveSuccessResponse}}</tim-alert>
-                        <tim-alert *ngIf="memberSaveFailResponse"
-                                   severity="danger">{{memberAddFailedResponse}}</tim-alert>
+                            <div>
+                                <button class="timButton" (click)="saveMembers()" i18n>Save members</button>
+                                <tim-loading *ngIf="editingMembers"></tim-loading>
+                            </div>
+                            <tim-alert *ngIf="memberSaveSuccessResponse"
+                                       severity="success">{{memberSaveSuccessResponse}}</tim-alert>
+                            <tim-alert *ngIf="memberSaveFailResponse"
+                                       severity="danger">{{memberAddFailedResponse}}</tim-alert>
                         </div>
                     </div>
                 </div>
@@ -408,7 +413,7 @@ export class MessageListAdminComponent implements OnInit {
             if (result1.ok) {
                 this.setValues(result1.result);
             } else {
-                this.permanentErrorMessage = `Loading list options failed: ${result1.result.error.error}`;
+                this.permanentErrorMessage = $localize`Loading list options failed: ${result1.result.error.error}`;
                 // Loading options failed. Short circuit here, no reason to continue.
                 return;
             }
@@ -428,7 +433,7 @@ export class MessageListAdminComponent implements OnInit {
                     }
                 }
             } else {
-                this.permanentErrorMessage = `Loading list's members failed: ${result2.result.error.error}`;
+                this.permanentErrorMessage = $localize`Loading list's members failed: ${result2.result.error.error}`;
             }
 
             await this.getGroupMembers();
@@ -499,9 +504,9 @@ export class MessageListAdminComponent implements OnInit {
         if (result.ok) {
             // Empty the text field.
             this.membersTextField = undefined;
-            this.memberAddSucceededResponse = "New members added.";
+            this.memberAddSucceededResponse = $localize`New members added.`;
         } else {
-            this.memberAddFailedResponse = `Adding new members failed: ${result.result.error.error}`;
+            this.memberAddFailedResponse = $localize`Adding new members failed: ${result.result.error.error}`;
         }
     }
 
@@ -524,9 +529,9 @@ export class MessageListAdminComponent implements OnInit {
     async deleteList() {
         // Ask confirmation from the user.
         await showInputDialog({
-            title: "Confirm list deletion",
-            text: "Confirm you really want to delete this list.",
-            okText: "Delete",
+            title: $localize`Delete list ${this.listname}`,
+            text: $localize`Do you really want to delete list ${this.listname}? Members will not be able to receive or send messages through the list anymore.`,
+            okText: $localize`Delete`,
             isInput: InputDialogKind.ValidatorOnly,
             validator: async () => {
                 const result = await to(
@@ -542,7 +547,7 @@ export class MessageListAdminComponent implements OnInit {
                     location.assign("/view/messagelists");
                     return {ok: true, result: result.result} as const;
                 } else {
-                    this.permanentErrorMessage = "Deleting the list failed.";
+                    this.permanentErrorMessage = $localize`Deleting the list failed.`;
                     return {
                         ok: false,
                         result: result.result.data.error,
@@ -573,9 +578,7 @@ export class MessageListAdminComponent implements OnInit {
         this.archive = listOptions.archive;
         // Without archive value, there is no reason to continue. Show error and short circuit here.
         if (this.archive == null) {
-            this.permanentErrorMessage =
-                "Loading the archive value failed. Please reload the page. If reloading the page does not fix the " +
-                "problem, then please contact TIM's support and tell about this error.";
+            this.permanentErrorMessage = $localize`Loading archive information failed. Please reload the page. If reloading the page does not fix the problem, please contact TIM support.`;
             return;
         }
 
@@ -612,8 +615,7 @@ export class MessageListAdminComponent implements OnInit {
         }
         this.removed = listOptions.removed;
         if (this.removed) {
-            this.permanentErrorMessage =
-                "This message list is not currently in use.";
+            this.permanentErrorMessage = $localize`This message list has been deleted and thus is not in use.`;
         }
     }
 
@@ -650,7 +652,7 @@ export class MessageListAdminComponent implements OnInit {
         if (result.ok) {
             this.showTempSaveSuccess();
         } else {
-            this.saveFailMessage = `Save failed with an error: ${result.result.error.error}`;
+            this.saveFailMessage = $localize`Saving failed with an error: ${result.result.error.error}`;
         }
     }
 
@@ -677,13 +679,13 @@ export class MessageListAdminComponent implements OnInit {
         this.editingMembers = false;
         // Give timed feedback to user.
         if (resultSaveMembers.ok) {
-            this.memberSaveSuccessResponse = "Saving members succeeded!";
+            this.memberSaveSuccessResponse = $localize`Member information updated!`;
             window.setTimeout(
                 () => (this.memberSaveSuccessResponse = ""),
                 5 * 1000
             );
         } else {
-            this.memberSaveFailResponse = "Saving members failed.";
+            this.memberSaveFailResponse = $localize`Failed to save member information.`;
             window.setTimeout(
                 () => (this.memberSaveFailResponse = ""),
                 5 * 1000
@@ -721,7 +723,7 @@ export class MessageListAdminComponent implements OnInit {
      * Shows a timed save success message.
      */
     showTempSaveSuccess() {
-        this.saveSuccessMessage = "Save success!";
+        this.saveSuccessMessage = $localize`Saved!`;
         window.setTimeout(() => (this.saveSuccessMessage = ""), 5 * 1000);
     }
 
@@ -758,9 +760,7 @@ export class MessageListAdminComponent implements OnInit {
                 this.memberGroups.push(gm.groupName);
             }
         } else {
-            this.permanentErrorMessage =
-                "Loading members of groups failed. Please refresh the browser. If the problem " +
-                "persists, please contact TIM's support.";
+            this.permanentErrorMessage = $localize`Loading group information failed. Please refresh the browser. If the problem persists, please contact TIM support.`;
         }
     }
 
