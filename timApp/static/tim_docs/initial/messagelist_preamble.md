@@ -3,6 +3,10 @@ form_mode: true
 css: |!!
 .paragraphs {
   max-width: initial;
+  
+  .parContent {
+    font-size: 1em;
+  }
 }
 !!
 ```
