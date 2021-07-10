@@ -26,7 +26,7 @@ interface ReplyOptions {
             <div class="timMessageDisplay">
                 <tim-close-button class="closeButton" (click)="closeMessage()"></tim-close-button>
                 <p class="messageInformation">
-                    <span class="from">From: </span>
+                    <span class="from" i18n>From: </span>
                     <span class="sender">{{sender}}</span>
                     <!-- TODO Display what group the message is related to
                     <span class="group" *ngIf="messageToGroup">, {{group}}</span> 
@@ -36,23 +36,23 @@ interface ReplyOptions {
                 <div class="fullMessageContent" *ngIf="showFullContent">
                     <div class="fullContentText" [innerHTML]="fullContent"></div>
                     <p class="toggleReadMore" *ngIf="messageOverMaxLength">
-                        <a (click)="toggleDisplayedContentLength()">Read less</a>
+                        <a (click)="toggleDisplayedContentLength()" i18n>Read less</a>
                     </p>
                 </div>
                 <div class="cutMessageContent" *ngIf="!showFullContent">
                     <div class="shownContentText" [innerHTML]="shownContent"></div>
-                    <p class="toggleReadMore"><a (click)="toggleDisplayedContentLength()">Read more</a></p>
+                    <p class="toggleReadMore"><a (click)="toggleDisplayedContentLength()" i18n>Read more</a></p>
                 </div>
                 <div class="buttonArea">
-                    <button class="timButton" *ngIf="canReply" (click)="reply()">Reply</button>
+                    <button class="timButton" *ngIf="canReply" (click)="reply()" i18n>Reply</button>
                 </div>
                 <div class="replyArea" *ngIf="showReply">
                     <p class="replyTo">To: {{sender}}</p>
                     <textarea class="replyTextarea" id="reply-message" name="reply-message"
                               [(ngModel)]="replyMessage"></textarea>
                     <div class="sent">
-                        <button class="timButton" [disabled]="!canSendReply" (click)="sendReply()">Send</button>
-                        <span class="replySent" *ngIf="replySent">Sent!</span>
+                        <button class="timButton" [disabled]="!canSendReply" (click)="sendReply()" i18n>Send</button>
+                        <span class="replySent" *ngIf="replySent" i18n>Sent!</span>
                     </div>
                 </div>
                 <form class="readReceiptArea">
@@ -61,11 +61,11 @@ interface ReplyOptions {
                                                           name="mark-as-read"
                                                           id="mark-as-read"
                                                           [disabled]="!canMarkAsRead || markedAsRead"
-                                                          (click)="markAsRead()"/> Mark as Read</label>
-                    <span class="readReceiptLink" *ngIf="markedAsRead">
+                                                          (click)="markAsRead()" i18n/> Mark as Read</label>
+                    <span class="readReceiptLink" *ngIf="markedAsRead" i18n>
                         Read receipt can be cancelled in <a href="/view/messages/tim-messages">your messages</a>
                     </span>
-                    <button class="timButton" title="Close Message" (click)="closeMessage()">
+                    <button class="timButton" title="Close Message" (click)="closeMessage()" i18n>
                         Close
                     </button>
                 </form>

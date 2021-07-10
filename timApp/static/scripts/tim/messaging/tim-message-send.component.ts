@@ -345,7 +345,7 @@ export class TimMessageSendComponent {
 
     async sendEmailTim() {
         if (!this.docId) {
-            this.messageMsg = "Cannot send email without docId";
+            this.messageMsg = $localize`Cannot send email without docId`;
             return;
         }
         this.messageMsg = ""; // JSON.stringify(response);

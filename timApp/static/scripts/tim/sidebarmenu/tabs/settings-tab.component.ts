@@ -38,7 +38,7 @@ import {showMergePdfDialog} from "tim/document/minutes/showMergePdfDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
 import {openScheduleDialog} from "tim/document/scheduling/openScheduleDialog";
-import {showMessageListCreation} from "tim/messaging/showMessageListCreation.component";
+import {showMessageListCreation} from "tim/messaging/showMessageListCreation";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 
 const DEFAULT_PIECE_SIZE = 20;
