@@ -903,15 +903,15 @@
         <target state="translated">Yleiset toiminnot</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">25</context>
+          <context context-type="linenumber">26</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="f42a5e6915517b4ee50bc97a55d720af4303745d" datatype="html">
+      <trans-unit id="ee7b5b2a77a73feaca8c90abdbab258659eb4a98" datatype="html">
         <source> Send a message to the list </source>
         <target state="translated"> Lähetä viesti listalle </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">29,30</context>
+          <context context-type="linenumber">30,31</context>
         </context-group>
       </trans-unit>
       <trans-unit id="0ac7e3254c8f1f1c65c5032265dd6c813a720ff4" datatype="html">
@@ -919,7 +919,7 @@
         <target state="translated">Selaa arkistoja</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">31</context>
+          <context context-type="linenumber">32</context>
         </context-group>
       </trans-unit>
       <trans-unit id="a1bf283afa520a4143bf9ac626c575b2c4feccbb" datatype="html">
@@ -927,7 +927,7 @@
         <target state="translated">Listan asetukset</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">39</context>
+          <context context-type="linenumber">40</context>
         </context-group>
       </trans-unit>
       <trans-unit id="81e25d6b94153f566603cf0edc10f4e7b082aa49" datatype="html">
@@ -935,7 +935,7 @@
         <target state="translated">Listan nimi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">43</context>
+          <context context-type="linenumber">44</context>
         </context-group>
       </trans-unit>
       <trans-unit id="69b6ac577a19acc39fc0c22342092f327fff2529" datatype="html">
@@ -943,7 +943,7 @@
         <target state="translated">Sähköpostiosoite</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">48</context>
+          <context context-type="linenumber">49</context>
         </context-group>
       </trans-unit>
       <trans-unit id="512b045163a7187b2fc5d554e5f59fb3e49e174b" datatype="html">
@@ -951,7 +951,7 @@
         <target state="translated">Lyhyt kuvaus</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">52</context>
+          <context context-type="linenumber">53</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4ad112ce9bcd55dfd137792a86afe1b5a5b13cf8" datatype="html">
@@ -959,7 +959,7 @@
         <target state="translated">Pitkä kuvaus</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">55</context>
+          <context context-type="linenumber">57</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5a1122547e07be51a50071a7131e4a7cac7908c1" datatype="html">
@@ -967,7 +967,7 @@
         <target state="translated">Viestiotsikkojen etuliite</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">60</context>
+          <context context-type="linenumber">62</context>
         </context-group>
       </trans-unit>
       <trans-unit id="bc2e854e111ecf2bd7db170da5e3c2ed08181d88" datatype="html">
@@ -975,15 +975,15 @@
         <target state="translated">Edistynyt</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">64</context>
+          <context context-type="linenumber">66</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="3c433185517b87d91f5511300e424ecb4186bb5f" datatype="html">
+      <trans-unit id="6548f002e6e15883383799eaea352f2575b320a9" datatype="html">
         <source>Advanced email list settings (takes to Mailman)</source>
         <target state="translated">Edistyneet sähköpostilistan asetukset (ulkoinen Mailman-ohjelma)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">66</context>
+          <context context-type="linenumber">68,69</context>
         </context-group>
       </trans-unit>
       <trans-unit id="17c2d786a4c643b07b48a825ac309d6abc8d7324" datatype="html">
@@ -991,7 +991,7 @@
         <target state="translated">Pääsylupa arkistoihin</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">71</context>
+          <context context-type="linenumber">74</context>
         </context-group>
       </trans-unit>
       <trans-unit id="13fca0b3da2b6785b0818a97c6a8e6431fa01d75" datatype="html">
@@ -999,63 +999,63 @@
         <target state="translated">Arkistointiasetukset</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">88</context>
+          <context context-type="linenumber">91</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="6c5b0df33858b41e60bffb1106fcf59b25d4dfea" datatype="html">
+      <trans-unit id="a1f48198dab2624179a79f639e0ab32f8ac25bb6" datatype="html">
         <source>Notify owners on list changes (e.g. user subscribes) </source>
         <target state="translated">Ilmoita listan omistajille listan muutoksista (esim. uudet jäsenet) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">94,96</context>
+          <context context-type="linenumber">97,99</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="9136048e38a9da4112e9533c5260348a0fc0f829" datatype="html">
-        <source>TIM users can freely join this list</source>
+      <trans-unit id="996c2894a228590e704954c5a8981b67d2d6923b" datatype="html">
+        <source>TIM users can freely join this list </source>
         <target state="translated">TIM-käyttäjät voivat vapaasti liittyä listalle</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">104</context>
+          <context context-type="linenumber">107,108</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="0d477f88a4dcaadc9b377404ca77500705d739ea" datatype="html">
+      <trans-unit id="d0ef0645ee49cf0ffa04b9f30d2eb69846e68b14" datatype="html">
         <source>Default send right for new members </source>
         <target state="translated">Uudet jäsenet saavat lähettää viestejä listalle </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">112,113</context>
+          <context context-type="linenumber">116,117</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="da3824fd761120e9a19f7c9b8ff2189aba2cbf86" datatype="html">
+      <trans-unit id="ff69890d4e343d852fcf4f205837c456fc45bdeb" datatype="html">
         <source>Default delivery right for new members </source>
         <target state="translated">Uudet jäsenet saavat vastaanottaa viestejä listalta </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">121,122</context>
+          <context context-type="linenumber">125,126</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="10281ddff3532cf1932af20426f68b666ced6710" datatype="html">
+      <trans-unit id="0595b36ef37bff6047a7fdf1053e16700f2e4dfb" datatype="html">
         <source>Members can unsubscribe from the list on their own </source>
         <target state="translated">Jäsenet saavat vapaasti poistua listalta </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">131,132</context>
+          <context context-type="linenumber">135,137</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="16712b056653cf4577d3f603c9a656b60311ee14" datatype="html">
-        <source>Non members can send messages to list</source>
+      <trans-unit id="976d3aec79c455fafafc6af6981b7885fd6163a1" datatype="html">
+        <source>Non members can send messages to list </source>
         <target state="translated">Listaan kuulumattomat saavat lähettää viestejä listalle</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">139</context>
+          <context context-type="linenumber">144,145</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="d0915cad79467d3ff5b87313efacba18e3d5fac2" datatype="html">
-        <source>No HTML messages allowed on the list</source>
+      <trans-unit id="4fb16cb28587865b612e1d0465fae29e6b42c7f8" datatype="html">
+        <source>No HTML messages allowed on the list </source>
         <target state="translated">HTML-viestit ovat kielletty</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">145</context>
+          <context context-type="linenumber">151,152</context>
         </context-group>
       </trans-unit>
       <trans-unit id="a84c4d938b516527d515744a9f576ed1ab6e8186" datatype="html">
@@ -1063,7 +1063,7 @@
         <target state="translated">Listalle saa lähettää liitteitä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">152</context>
+          <context context-type="linenumber">159</context>
         </context-group>
       </trans-unit>
       <trans-unit id="aca73128bf13efe1ab844b7f12ef251332b9e47c" datatype="html">
@@ -1071,7 +1071,7 @@
         <target state="translated">Vastausviestien vastaanottaja on viestilista</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">159</context>
+          <context context-type="linenumber">166</context>
         </context-group>
       </trans-unit>
       <trans-unit id="f94c600779da3cff2f7356bb17ec125a6d55a860" datatype="html">
@@ -1079,7 +1079,7 @@
         <target state="translated">Tallenna asettukset</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">168</context>
+          <context context-type="linenumber">175</context>
         </context-group>
       </trans-unit>
       <trans-unit id="37689ff2817dc14d7992606f51621680f4929194" datatype="html">
@@ -1087,7 +1087,7 @@
         <target state="translated">Lisää jäsenet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">180</context>
+          <context context-type="linenumber">188</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8612d011ba1d980d8783c99084fbdc20159acc40" datatype="html">
@@ -1095,7 +1095,7 @@
         <target state="translated">Ohje jäsenten lisäämisestä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">182</context>
+          <context context-type="linenumber">190</context>
         </context-group>
       </trans-unit>
       <trans-unit id="763f122078c9b6156f988709b6b7ce8581917115" datatype="html">
@@ -1103,7 +1103,7 @@
         <target state="translated">Jäsenet saavat lähettää viestejä listalle</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">191</context>
+          <context context-type="linenumber">199</context>
         </context-group>
       </trans-unit>
       <trans-unit id="58b28390289c157255cc93d982e95a9de3feb3c6" datatype="html">
@@ -1111,7 +1111,7 @@
         <target state="translated">Jäsenet vastaanottavat viestejä listalta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">195</context>
+          <context context-type="linenumber">203</context>
         </context-group>
       </trans-unit>
       <trans-unit id="e2c0c421c506bada7481377b600745bed1da6ded" datatype="html">
@@ -1119,7 +1119,7 @@
         <target state="translated">Lisää uudet jäsenet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">199</context>
+          <context context-type="linenumber">207</context>
         </context-group>
       </trans-unit>
       <trans-unit id="fc8758896b95c4be2ae33dd305f6fdd9508460b5" datatype="html">
@@ -1127,7 +1127,7 @@
         <target state="translated">Nykyiset jäsenet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">212</context>
+          <context context-type="linenumber">220</context>
         </context-group>
       </trans-unit>
       <trans-unit id="cff1428d10d59d14e45edec3c735a27b5482db59" datatype="html">
@@ -1135,11 +1135,11 @@
         <target state="translated">Nimi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">218</context>
+          <context context-type="linenumber">226</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">258</context>
+          <context context-type="linenumber">266</context>
         </context-group>
       </trans-unit>
       <trans-unit id="08c74dc9762957593b91f6eb5d65efdfc975bf48" datatype="html">
@@ -1147,11 +1147,11 @@
         <target state="translated">Käyttäjätunnus</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">219</context>
+          <context context-type="linenumber">227</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">259</context>
+          <context context-type="linenumber">267</context>
         </context-group>
       </trans-unit>
       <trans-unit id="244aae9346da82b0922506c2d2581373a15641cc" datatype="html">
@@ -1159,11 +1159,11 @@
         <target state="translated">Sähköpostiosoite</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">220</context>
+          <context context-type="linenumber">228</context>
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">260</context>
+          <context context-type="linenumber">268</context>
         </context-group>
       </trans-unit>
       <trans-unit id="06f37893457dc4b5fe5e2beea0ed3f605367ec17" datatype="html">
@@ -1171,7 +1171,7 @@
         <target state="translated">Lähetysoikeus</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">221</context>
+          <context context-type="linenumber">229</context>
         </context-group>
       </trans-unit>
       <trans-unit id="78ae85ce8c7ebcf1c2b237690c2d8a5b5a58daba" datatype="html">
@@ -1179,7 +1179,7 @@
         <target state="translated">Vastaanotto-oikeus</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">222</context>
+          <context context-type="linenumber">230</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7889af7b76235eda2004b416fcacfb669da81f69" datatype="html">
@@ -1187,7 +1187,7 @@
         <target state="translated">Jäsenyys päättyi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">223</context>
+          <context context-type="linenumber">231</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1aa4883bc4f1352f7a0bdd94810a9bf6dc22bd02" datatype="html">
@@ -1195,7 +1195,7 @@
         <target state="translated">Poistettu listalta</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">224</context>
+          <context context-type="linenumber">232</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5419f85e83f529346eed346f37e9cee67951bb35" datatype="html">
@@ -1203,7 +1203,7 @@
         <target state="translated">Selaa ryhmän jäsenet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">249</context>
+          <context context-type="linenumber">257</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5e87237f08801d65b666bc81af70c60a169920cb" datatype="html">
@@ -1211,7 +1211,7 @@
         <target state="translated">Tallenna jäsenet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">275</context>
+          <context context-type="linenumber">283</context>
         </context-group>
       </trans-unit>
       <trans-unit id="be8e6d6ea0f40437956f0ffaca4b6b8c17b5a08a" datatype="html">
@@ -1219,7 +1219,7 @@
         <target state="translated">Vaaralliset toiminnot</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">288</context>
+          <context context-type="linenumber">296</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4e5aa15a0779f6f0a21e4c7af1e16f77b997e8fb" datatype="html">
@@ -1227,7 +1227,15 @@
         <target state="translated">Poista lista</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">290</context>
+          <context context-type="linenumber">298</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8639579854977752283" datatype="html">
+        <source>No list specified</source>
+        <target state="translated">Ei listaa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
+          <context context-type="linenumber">417</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1751262057884657070" datatype="html">
@@ -1235,7 +1243,7 @@
         <target state="translated">Listan asetusten lataaminen epäonnistui: <x id="PH" equiv-text="result1.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">416</context>
+          <context context-type="linenumber">431</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2142462720777190527" datatype="html">
@@ -1243,7 +1251,7 @@
         <target state="translated">Listan jäsenten lataaminen epäonnistui: <x id="PH" equiv-text="result2.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">436</context>
+          <context context-type="linenumber">451</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3019099927046303872" datatype="html">
@@ -1251,7 +1259,7 @@
         <target state="translated">Uudet jäsenet lisätty</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">507</context>
+          <context context-type="linenumber">522</context>
         </context-group>
       </trans-unit>
       <trans-unit id="655264950585895085" datatype="html">
@@ -1259,7 +1267,7 @@
         <target state="translated">Uusien jäsenten lisääminen epäonnistui: <x id="PH" equiv-text="result.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">509</context>
+          <context context-type="linenumber">524</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4171354538993599001" datatype="html">
@@ -1267,7 +1275,7 @@
         <target state="translated">Poista lista <x id="PH" equiv-text="this.listname"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">532</context>
+          <context context-type="linenumber">547</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1876963562900096705" datatype="html">
@@ -1275,7 +1283,7 @@
         <target state="translated">Oletko varma, että haluat poistaa listan <x id="PH" equiv-text="this.listname"/>? Jäsenet eivät tämän jälkeen saa lähettää viestejä listalle tai vastaanottaa viestejä sieltä.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">533</context>
+          <context context-type="linenumber">548</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7022070615528435141" datatype="html">
@@ -1283,7 +1291,7 @@
         <target state="translated">Poista</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">534</context>
+          <context context-type="linenumber">549</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2388460167283222051" datatype="html">
@@ -1291,7 +1299,7 @@
         <target state="translated">Listan poistaminen epäonnistui.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">550</context>
+          <context context-type="linenumber">565</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6176606851464694289" datatype="html">
@@ -1299,7 +1307,7 @@
         <target state="translated">Listan arkistointitietojen lataaminen epäonnistui. Virkistä sivu ja kokeile uudelleen. Jos virkistäminen ei auta, ota yhteyttä TIM-tukeen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">581</context>
+          <context context-type="linenumber">597</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2302430376957753027" datatype="html">
@@ -1307,7 +1315,7 @@
         <target state="translated">Viestilista on poistettu, eikä ole käytössä.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">618</context>
+          <context context-type="linenumber">634</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7087504753002598819" datatype="html">
@@ -1315,7 +1323,7 @@
         <target state="translated">Tallennus epäonnistui seuraavalla virheellä: <x id="PH" equiv-text="result.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">655</context>
+          <context context-type="linenumber">671</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4939478568678506098" datatype="html">
@@ -1323,7 +1331,7 @@
         <target state="translated">Jäsenten tiedot ovat päivitetty!</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">682</context>
+          <context context-type="linenumber">698</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5654062965784608225" datatype="html">
@@ -1331,7 +1339,7 @@
         <target state="translated">Jäsentietojen tallennus epäonnistui.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">688</context>
+          <context context-type="linenumber">704</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4848068705010228483" datatype="html">
@@ -1339,7 +1347,7 @@
         <target state="translated">Tallennettu!</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">726</context>
+          <context context-type="linenumber">742</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4800928027175512213" datatype="html">
@@ -1347,7 +1355,7 @@
         <target state="translated">Ryhmätietojen lataaminen epäonnistui. Virkistä sivu ja kokeile uudelleen. Jos virhe toistuu, ota yhteyttä TIM-tukeen.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">763</context>
+          <context context-type="linenumber">779</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7263384815363976827" datatype="html">
