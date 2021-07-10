@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from flask import Response
 
-from timApp.auth.accesshelper import verify_logged_in, has_manage_access, get_doc_or_abort
+from timApp.auth.accesshelper import verify_logged_in, has_manage_access, get_doc_or_abort, verify_manage_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import move_document
 from timApp.folder.folder import Folder
@@ -23,7 +23,7 @@ from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_na
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import RouteException
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_error
@@ -147,15 +147,20 @@ def delete_list(listname: str, permanent: bool) -> Response:
     return ok_response()
 
 
-@messagelist.get("/getlist/<int:document_id>")
-def get_list(document_id: int) -> Response:
+@messagelist.get("/getlist/<listname>")
+def get_list(listname: str) -> Response:
     """Get the information for a message list.
 
-    :param document_id: ID for message list's admin document.
+    :param listname: Name of the list
     :return: ListOptions with the list's information.
     """
+    if not listname:
+        raise NotExist("No message list specified")
+
     verify_logged_in()
-    return json_response(MessageListModel.from_manage_doc_id(document_id).to_info())
+    msg_list = MessageListModel.from_name(listname)
+    verify_manage_access(msg_list.block)
+    return json_response(msg_list.to_info())
 
 
 @messagelist.post("/save")
