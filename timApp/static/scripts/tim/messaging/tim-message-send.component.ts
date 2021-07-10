@@ -26,6 +26,7 @@ interface TimMessageOptions {
 @Component({
     selector: "tim-message-send",
     template: `
+        <tim-alert *ngIf="errorMessage">{{errorMessage}}</tim-alert>
         <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="recipientList">
             <tim-close-button (click)="closeComponent()"></tim-close-button>
             <form>
@@ -183,6 +184,7 @@ export class TimMessageSendComponent {
     messageMsg: string = "";
     timMessage: boolean = false;
     urlError: string = "";
+    errorMessage?: string;
     formChanged: boolean = true;
     timMessageOptions: TimMessageOptions = {
         messageChannel: false,
@@ -251,7 +253,6 @@ export class TimMessageSendComponent {
         );
         if (!result.ok) {
             this.urlError = result.result.error.error;
-            console.error(result.result.error.error);
         } else {
             this.timMessageOptions.pageList = result.result.shortened_urls;
         }
@@ -286,11 +287,13 @@ export class TimMessageSendComponent {
     }
 
     public async sendMessage() {
+        this.errorMessage = undefined;
         // send as TIM message
         if (this.timMessage) {
             const result = await this.postTimMessage(this.timMessageOptions);
             if (!result.ok) {
-                console.error(result.result.error.error);
+                this.errorMessage = $localize`Failed to send as TIM message: ${result.result.error.error}`;
+                return;
             }
         }
         // send as email in TIM

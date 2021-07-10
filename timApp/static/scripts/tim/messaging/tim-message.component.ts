@@ -20,6 +20,9 @@ interface ReplyOptions {
     selector: "tim-message",
     template: `
         <ng-container *ngIf="showMessage">
+            <tim-alert *ngIf="errorMessage">
+                {{errorMessage}}
+            </tim-alert>
             <div class="timMessageDisplay">
                 <tim-close-button class="closeButton" (click)="closeMessage()"></tim-close-button>
                 <p class="messageInformation">
@@ -74,6 +77,7 @@ interface ReplyOptions {
 export class TimMessageComponent implements OnInit {
     @Input()
     message!: TimMessageData;
+    errorMessage?: string;
 
     messageMaxLength: number = 210;
     messageOverMaxLength: boolean = false;
@@ -117,6 +121,8 @@ export class TimMessageComponent implements OnInit {
         const result = await markAsRead(this.http, this.message.id);
         if (result.ok) {
             this.markedAsRead = true;
+        } else {
+            this.errorMessage = $localize`Could not mark as read: ${result.result.error.error}`;
         }
     }
 
@@ -140,12 +146,11 @@ export class TimMessageComponent implements OnInit {
     async sendReply() {
         this.replySent = true;
         this.canSendReply = false;
-        if (this.sender) {
-            this.replyOptions.recipient = this.sender;
-            this.replyOptions.repliesTo = this.message.id;
-        } else {
-            console.log("no recipient, can't send");
+        if (!this.sender) {
+            return;
         }
+        this.replyOptions.recipient = this.sender;
+        this.replyOptions.repliesTo = this.message.id;
         const result = await to2(
             this.http
                 .post("/timMessage/reply", {
@@ -159,7 +164,7 @@ export class TimMessageComponent implements OnInit {
                 .toPromise()
         );
         if (!result.ok) {
-            console.error(result.result.error.error);
+            this.errorMessage = $localize`Could not reply to message: ${result.result.error.error}`;
         }
     }
 
