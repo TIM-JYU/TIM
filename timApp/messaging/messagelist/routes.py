@@ -33,7 +33,7 @@ messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
 
 @messagelist.route('/checkname', methods=['POST'])
-def check_name(name: str):
+def check_name(name: str) -> Response:
     verify_logged_in()
     verify_groupadmin()
 
