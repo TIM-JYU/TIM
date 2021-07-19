@@ -1,6 +1,7 @@
 import secrets
 from dataclasses import field
 from enum import Enum
+from typing import Union
 
 from flask import Response, request, render_template
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound  # type: ignore
@@ -146,7 +147,7 @@ def send_verification_messsage(contact_info: str, verification_url: str, channel
 
 
 @verification.route("/contact/<verification_token>", methods=['GET', 'POST'])
-def contact_info_verification(verification_token: str) -> Response:
+def contact_info_verification(verification_token: str) -> Union[Response, str]:
     """Verify user's additional contact information.
 
     :param verification_token: Generated string token to identify user's not-yet-verified contact information.
