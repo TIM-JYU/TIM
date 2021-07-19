@@ -88,6 +88,7 @@ TIM_SAFE_TAGS = [
     'goaltable-runner',
     'jsframe-runner',
     'tim-video',
+    'tim-images',
     'importdata-runner',
     'tim-table',
 

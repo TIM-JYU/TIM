@@ -69,6 +69,7 @@ def get_plugins() -> Dict[str, PluginReg]:
         PluginReg(name="graphviz", domain=CSPLUGIN_DOMAIN, path="/cs/graphviz/"),
         PluginReg(name="showCode", domain=SVNPLUGIN_DOMAIN, path="/svn/"),
         PluginReg(name="showImage", domain=SVNPLUGIN_DOMAIN, path="/svn/image/"),
+        PluginReg(name="showImages", domain=SVNPLUGIN_DOMAIN, path="/svn/multiimages/"),
         PluginReg(name="showVideo", domain=SVNPLUGIN_DOMAIN, path="/svn/video/"),
         PluginReg(name="showPdf", domain=SVNPLUGIN_DOMAIN, path="/svn/pdf/"),
         PluginReg(name="mcq", domain=HASKELLPLUGIN_DOMAIN, port=5001),

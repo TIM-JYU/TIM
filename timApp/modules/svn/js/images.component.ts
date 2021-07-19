@@ -14,14 +14,8 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {copyToClipboard} from "tim/util/utils";
 
-import {
-    parseIframeopts,
-    seconds2Time,
-    valueDefu,
-    isSafari,
-} from "tim/util/utils";
+import {valueDefu} from "tim/util/utils";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
@@ -30,113 +24,37 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
-import {Iframesettings} from "../../cs/js/jsframe";
 import {
     getKeyCode,
     KEY_LEFT,
     KEY_RIGHT,
 } from "../../../static/scripts/tim/util/keycodes";
-import {VideoLinkComponent} from "./video-link.component";
-
-function toSeconds(value: string | number | undefined): number | undefined {
-    if (value === null || value === undefined) {
-        return undefined;
-    }
-    if (typeof value == "number") {
-        return value;
-    }
-
-    let s = "0 0 0 " + value.replace(/s/g, "").replace(/[,\/;:.hm]/g, " "); // forget the final 's' from 1h3m2s
-    s = s.trim();
-    const sc = s.split(" ");
-    const n = sc.length;
-    const h = parseFloat(sc[n - 3]);
-    const m = parseFloat(sc[n - 2]);
-    const ss = parseFloat(sc[n - 1]);
-    const result = h * 3600.0 + m * 60.0 + ss;
-    if (isNaN(result)) {
-        return undefined;
-    }
-    return result;
-}
-
-function time2String(time: number) {
-    const {hours, minutes, seconds} = seconds2Time(time);
-    let hs;
-    let ms;
-    if (!hours) {
-        hs = "";
-    } else {
-        hs = hours + "h";
-    }
-    if (!hours && !minutes) {
-        ms = "";
-    } else {
-        ms = minutes + "m";
-    }
-    const ss = seconds + "s";
-    return hs + ms + ss;
-}
-
-function time02String(time: number) {
-    const {hours, minutes, seconds} = seconds2Time(time);
-    let hs = "";
-    let ms = "";
-    if (hours) {
-        hs = hours + ":";
-    }
-    if (hours || minutes) {
-        ms = minutes + ":";
-        if (minutes < 10) {
-            ms = "0" + ms;
-        }
-    }
-    let ss = "" + seconds;
-    if (seconds < 10) {
-        ss = "0" + ss;
-    }
-    return hs + ms + ss;
-}
-
-const youtubeDomains = new Set(["www.youtube.com", "youtube.com", "youtu.be"]);
-const moniviestinDomains = new Set(["m3.jyu.fi", "moniviestin.jyu.fi"]);
-
-function isYoutube(file: string) {
-    try {
-        const u = new URL(file, location.origin);
-        return youtubeDomains.has(u.hostname);
-    } catch {
-        return false;
-    }
-}
 
 const ShowFileMarkup = t.intersection([
     t.partial({
-        doclink: nullable(t.string),
-        doctext: nullable(t.string),
-        end: t.union([t.number, t.string]),
         followid: t.string,
+        width: t.number,
         height: t.number,
         hidetext: nullable(t.string),
-        iframe: t.boolean,
-        iframeopts: nullable(t.string),
-        start: t.union([t.number, t.string]),
-        videoname: nullable(t.string),
-        width: t.number,
     }),
     GenericPluginMarkup,
     t.type({
-        autoplay: withDefault(t.boolean, true),
-        file: withDefault(t.string, ""),
-        target: withDefault(t.string, "timdoc"),
-        open: withDefault(t.boolean, false),
-        videoicon: withDefault(t.boolean, true),
-        type: withDefault(
-            t.keyof({normal: null, small: null, list: null}),
-            "normal"
+        autoplay: withDefault(t.number, 0),
+        repeat: withDefault(t.boolean, true),
+        open: withDefault(t.boolean, true),
+        files: withDefault(
+            t.array(
+                t.type({
+                    name: t.string,
+                    caption: withDefault(t.string, ""),
+                    alt: withDefault(t.string, ""),
+                })
+            ),
+            []
         ),
     }),
 ]);
+
 const ShowFileAll = t.type({
     info: Info,
     markup: ShowFileMarkup,
@@ -145,106 +63,42 @@ const ShowFileAll = t.type({
 
 // noinspection TypeScriptUnresolvedVariable
 @Component({
-    selector: "tim-video",
+    selector: "tim-images",
     template: `
-        <div [class]="videoClass" 
+        <div [class]="imagesClass" 
              tabindex="0"
              (keydown.-)="speed(1.0/1.2, $event)"
              (keydown.1)="speed(0, $event)"
              (keydown.+)="speed(1.2/1.0, $event)"
-             (keydown.x)="zoom(1.0/1.4, $event)"
-             (keydown.r)="zoom(0, $event)"
-             (keydown.z)="zoom(1.4/1.0, $event)"
-             (keydown.s)="markStart($event)"
-             (keydown.e)="markEnd($event)"
-             (keydown.c)="copyStartEnd($event)"
              (keydown.arrowLeft)="jump(-1, $event)"
              (keydown.arrowRight)="jump(1, $event)"
-             (keydown.control.arrowLeft)="jump(-10, $event)"
-             (keydown.control.arrowRight)="jump(10, $event)"
-             (keydown.shift.control.arrowLeft)="jump(-60, $event)"
-             (keydown.shift.control.arrowRight)="jump(60, $event)"
-             (keydown.f)="jump(-10, $event)"
-             (keydown.g)="jump(-1, $event)"
-             (keydown.h)="jump(1, $event)"
-             (keydown.j)="jump(10, $event)"
+             (keydown.control.arrowLeft)="jumpTo(1, $event)"
+             (keydown.control.arrowRight)="jumpTo(1000, $event)"
         >
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <p *ngIf="header" [innerHtml]="header"></p>
-            <p *ngIf="stem && isNormalSize" class="stem" [innerHtml]="stem"></p>
+            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
 
-            <div *ngIf="!isNormalSize" class="videoInfo">
-                <span [innerHtml]="stem"></span>&ngsp;
-                <a *ngIf="videoname" class="videoname"
-                   (click)="toggleVideo()">
-                    <i *ngIf="markup.videoicon" class="glyphicon glyphicon-facetime-video"></i>
-                    {{videoname}}
-                    <ng-container *ngIf="markup.type === 'list'">
-                        &ndash;
-                        {{startt}}
-                    </ng-container>
-                    {{duration}} {{span}}</a>
-                &ngsp;
-                <tim-video-link
-                        *ngIf="markup.doclink"
-                        [doclink]="markup.doclink"
-                        [doctext]="doctext"
-                        [target]="markup.target"
-                ></tim-video-link>
-            </div>
 
-            <ng-container *ngIf="videoOn">
-                <iframe *ngIf="iframesettings && isPdf"
-                        class="showVideo"
-                        frameborder="0"
-                        allowfullscreen
-                        [src]="iframesettings.src"
-                        [style.width.px]="width"
-                        [style.height.px]="height"
-                        [attr.allow]="iframesettings.allow"
-                >
-                </iframe>
-                <iframe *ngIf="iframesettings && !isPdf"
-                        class="showVideo"
-                        frameborder="0"
-                        allowfullscreen
-                        [src]="iframesettings.src"
-                        [style.width.px]="width"
-                        [style.height.px]="height"
-                        [sandbox]="iframesettings.sandbox"
-                        [attr.allow]="iframesettings.allow"
-                >
-                </iframe>
-                <video *ngIf="videosettings"
-                       #video
-                       class="showVideo"
-                       controls
-                       (loadedmetadata)="metadataloaded()"
-                       (timeupdate)="timeupdate()"
-                       [style.width.px]="width"
-                       [style.height.px]="height"
-                       [src]="videosettings.src"
-                       [autoplay]="markup.autoplay"
-                >
-                </video>
-            </ng-container>
-            <ng-container *ngIf="isNormalSize">
-                <div *ngIf="!videoOn" class="no-popup-menu play">
-                    <a (click)="toggleVideo()">
-                        <i class="glyphicon glyphicon-play-circle"
-                           title="Click here to show the video"></i>
-                    </a>
+            <div class="images-container">
+                <div *ngFor="let file of files; let i = index">
+                    <div class="fade" *ngIf="slideIndex===(i+1)">
+                        <div class="numbertext">{{(i+1)}} / 3</div>
+                        <img src="{{file.name}}" alt="{{file.alt}}" style="width:100%">
+                        <div class="text">{{file.caption}}</div>
+                    </div>    
                 </div>
-                <tim-video-link
-                        *ngIf="markup.doclink"
-                        [doclink]="markup.doclink"
-                        [doctext]="doctext"
-                        [target]="markup.target"
-                ></tim-video-link>
-            </ng-container>
-            <div class="flex" *ngIf="videoOn" style="justify-content: flex-end">
-                <div *ngIf="videosettings" class="margin-5-right">
-                    <label class="normalLabel" title="Advanced video controls">Adv <input type="checkbox" [(ngModel)]="advVideo" /></label>
+                <a class="prev" (click)="plusSlides(-1)">&#10094;</a>
+                <a class="next" (click)="plusSlides(1)">&#10095;</a>
+            </div>
+            <br>
+            
+            <div style="text-align:center" class="images-control">
+              <span *ngFor="let file of files; let i = index" class="dot" (click)="currentSlide(i+1)"></span>
+            </div>                
+
+            <div class="flex"  style="justify-content: flex-end">
+                <div class="margin-5-right">
                     Speed:
                     <span class="text-smaller">
                         {{playbackRateString}}
@@ -253,131 +107,41 @@ const ShowFileAll = t.type({
                     <a (click)="speed(0)" title="Normal speed (1)">1x</a>&ngsp;
                     <a (click)="speed(1.2)" title="Faster speed (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
                 </div>
-                <div class="margin-5-right">
-                    Zoom:
-                    <a (click)="zoom(1.0/1.4)" title="Zoom out (x)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
-                    <a (click)="zoom(0)" title="Normal zoom (r)">R</a>&ngsp;
-                    <a (click)="zoom(1.4)" title="Zoom in (z)"><i class="glyphicon glyphicon-plus"></i></a>
-                </div>
-                <a (click)="hideVideo()">{{hidetext}}</a>
-            </div>
-            <div *ngIf="advVideo && videoOn">
-                <span>Jump sec: </span>
-                <a (click)="jump(-10)" title="Jump -10s (ctrl <- or f)">-10</a>
-                <a (click)="jump(-2)" title="Jump -2s">-2</a>
-                <a (click)="jump(-1)" title="Jump -1s (<- or g)">-1</a>
-                <a (click)="jump(1)" title="Jump  +1s (-> or h)">+1</a>
-                <a (click)="jump(2)" title="Jump  +2s">+2</a>
-                <a (click)="jump(10)" title="Jump +10s (ctrl -> or j)">+10</a>
-                <span>&nbsp;&nbsp;</span>
-                <a (click)="markStart()" title="Mark start (s)">Start: </a>
-                <a (click)="jumpTo(0)" [innerHtml]="startTime" title="Jump to start time"> </a>
-                <span>&nbsp;&nbsp;</span>
-                <a (click)="markEnd()" title="Mark end (e)">End: </a>
-                <a (click)="jumpTo(1)" [innerHtml]="endTime" title="Jump to end time"> </a>
-                <span>&nbsp;&nbsp;</span>
-                <a (click)="copyStartEnd()" title="Copy start/end to clipboard (c)">Copy</a>
             </div>
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
         </div>
     `,
-    styleUrls: ["./video.component.scss"],
+    styleUrls: ["./images.component.scss"],
 })
-export class VideoComponent extends AngularPluginBase<
+export class ImagesComponent extends AngularPluginBase<
     t.TypeOf<typeof ShowFileMarkup>,
     t.TypeOf<typeof ShowFileAll>,
     typeof ShowFileAll
 > {
-    get videoClass() {
-        switch (this.markup.type) {
-            case "normal": {
-                return "videoRunDiv";
-            }
-            case "small": {
-                return "smallVideoRunDiv";
-            }
-            case "list": {
-                return "listVideoRunDiv";
-            }
-        }
-    }
-
-    get isNormalSize() {
-        return this.markup.type === "normal";
-    }
-
-    get iframe() {
-        return this.markup.iframe ?? isYoutube(this.markup.file);
-    }
-
-    get videoname() {
-        return this.markup.videoname;
+    get imagesClass() {
+        return "imagesRunDiv";
     }
 
     get hidetext() {
         return valueDefu(this.markup.hidetext, "Hide file");
     }
 
-    get doctext() {
-        return this.markup.doctext;
-    }
-
-    private watchEnd?: number;
-    private start?: number;
-    private end?: number;
-    videoOn: boolean = false;
     span?: string | null;
-    private origSize!: string;
-    private origWidth?: number;
-    private origHeight?: number;
-    @ViewChild("video") video?: ElementRef<HTMLVideoElement>;
-    private limits!: string | null;
-    duration!: string | null;
-    startt!: string | null;
+    @ViewChild("images") images?: ElementRef<HTMLImageElement>;
     width?: number;
     height?: number;
     private vctrl?: ViewCtrl;
-    iframesettings?: Iframesettings;
-    isPdf = false;
-    videosettings?: {src: string};
-    playbackRateString = "";
-    advVideo: boolean = false;
+    imagesOn: boolean = true;
+    slideIndex = 1;
+    files: {name: string; caption: string; alt: string}[] = [];
+    duration: number = 0;
 
     ngOnInit() {
         super.ngOnInit();
         this.vctrl = vctrlInstance;
-        this.start = toSeconds(this.markup.start);
-        this.end = toSeconds(this.markup.end);
-        this.bookmarks[0] = this.start ?? 0;
-        this.bookmarks[1] = this.end ?? 10000;
-        this.startTime = time02String(this.bookmarks[0]);
-        this.endTime = time02String(this.bookmarks[1]);
-        if (!this.end) {
-            this.endTime = "to end";
-        }
         this.width = this.markup.width;
         this.height = this.markup.height;
-        if (this.start != null && this.end != null) {
-            this.duration = `(${time2String(this.end - this.start)})`;
-            this.limits = `(${time2String(this.start)}-${time2String(
-                this.end
-            )})`;
-            this.startt = time2String(this.start);
-        } else {
-            this.duration = null;
-            this.limits = null;
-            this.startt = null;
-        }
-        this.getPrevZoom();
-        if (this.markup.open) {
-            this.toggleVideo();
-        }
-    }
-
-    hideVideo() {
-        this.removeEventListeners();
-        this.videoOn = false;
-        this.span = "";
+        this.files = this.markup.files;
     }
 
     eventListenersActive: boolean = false;
@@ -387,7 +151,7 @@ export class VideoComponent extends AngularPluginBase<
             return;
         }
         this.eventListenersActive = false;
-        document.removeEventListener("keydown", this.keyDownVideo);
+        document.removeEventListener("keydown", this.keyDownImages);
         // document.removeEventListener("click", this.onClick);
     }
 
@@ -397,11 +161,11 @@ export class VideoComponent extends AngularPluginBase<
             return;
         }
         this.eventListenersActive = true;
-        document.addEventListener("keydown", this.keyDownVideo);
+        document.addEventListener("keydown", this.keyDownImages);
         // document.addEventListener("click", this.onClick);
     }
 
-    private keyDownVideo = (ev: KeyboardEvent) => {
+    private keyDownImages = (ev: KeyboardEvent) => {
         const keyCode = getKeyCode(ev);
         if (keyCode === KEY_LEFT) {
             ev.preventDefault();
@@ -412,236 +176,57 @@ export class VideoComponent extends AngularPluginBase<
         }
     };
 
-    getCurrentZoom() {
-        const origw = localStorage[this.origSize + ".width"];
-        if (t.number.is(origw)) {
-            this.width = origw;
-        }
-        const origh = localStorage[this.origSize + ".height"];
-        if (t.number.is(origh)) {
-            this.height = origh;
-        }
+    currentSlide(n: number) {
+        this.showSlides((this.slideIndex = n));
     }
 
-    getPrevZoom() {
-        let name = "z";
+    plusSlides(n: number) {
+        this.showSlides((this.slideIndex += n));
+    }
 
-        if (this.width) {
-            name += this.width;
+    private showSlides(n: number) {
+        let i;
+        const dots = document.getElementsByClassName("dot");
+        if (n > this.files.length) {
+            this.slideIndex = 1;
         }
-        this.origWidth = this.width;
-
-        name += "x";
-
-        if (this.height) {
-            name += this.height;
+        if (n < 1) {
+            this.slideIndex = this.files.length;
         }
-        this.origHeight = this.height;
-
-        this.origSize = name;
+        for (i = 0; i < dots.length; i++) {
+            dots[i].className = dots[i].className.replace(" active", "");
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        // slides[this.slideIndex - 1].style.display = "block";
+        dots[this.slideIndex - 1].className += " active";
     }
 
     speed(mult: number, $event: Event | undefined = undefined) {
-        if (!this.video) {
-            return;
-        }
         if ($event) {
             $event.preventDefault();
         }
-        const v = this.video.nativeElement;
+        this.duration *= mult;
         if (mult === 0) {
-            v.playbackRate = 1.0;
-        } else {
-            v.playbackRate *= mult;
+            this.duration = this.markup.autoplay;
         }
-        this.playbackRateString = v.playbackRate.toFixed(1);
-    }
-
-    bookmarks: number[] = [0, 0];
-    startTime: string = "";
-    endTime: string = "";
-
-    markTime(
-        nr: number,
-        $event: Event | undefined = undefined
-    ): string | undefined {
-        if (!this.video) {
-            return undefined;
-        }
-        if ($event) {
-            $event.preventDefault();
-        }
-        const v = this.video.nativeElement;
-        this.bookmarks[nr] = v.currentTime;
-        return time02String(v.currentTime);
-    }
-
-    markStart($event: Event | undefined = undefined) {
-        const mt = this.markTime(0, $event);
-        if (mt == undefined) {
-            return;
-        }
-        this.startTime = mt;
-    }
-
-    markEnd($event: Event | undefined = undefined) {
-        const mt = this.markTime(1, $event);
-        if (mt == undefined) {
-            return;
-        }
-        this.endTime = mt;
-    }
-
-    copyStartEnd($event: Event | undefined = undefined) {
-        if ($event) {
-            $event.preventDefault();
-        }
-        const s =
-            "start: " + this.startTime + "\n" + "end: " + this.endTime + "\n";
-        copyToClipboard(s);
     }
 
     jumpTo(value: number, $event: Event | undefined = undefined) {
-        if (!this.video) {
-            return;
-        }
         if ($event) {
             $event.preventDefault();
         }
-        const v = this.video.nativeElement;
-        v.currentTime = this.bookmarks[value];
+        this.currentSlide(value);
     }
 
     jump(value: number, $event: Event | undefined = undefined) {
-        if (!this.video) {
-            return;
-        }
         if ($event) {
             $event.preventDefault();
         }
-        const v = this.video.nativeElement;
-        v.currentTime += value;
-    }
-
-    zoom(mult: number, $event: Event | undefined = undefined) {
-        if ($event) {
-            $event.preventDefault();
-        }
-        if (mult === 0) {
-            this.width = this.origWidth;
-            this.height = this.origHeight;
-            localStorage.removeItem(this.origSize + ".width");
-            localStorage.removeItem(this.origSize + ".height");
-        } else {
-            if (this.width) {
-                this.width *= mult;
-                localStorage[this.origSize + ".width"] = "" + this.width;
-            }
-            if (this.height) {
-                this.height *= mult;
-                localStorage[this.origSize + ".height"] = "" + this.height;
-            }
-        }
-    }
-
-    toggleVideo() {
-        if (this.videoOn) {
-            this.hideVideo();
-            return;
-        }
-        this.getCurrentZoom();
-        this.addEventListeners();
-
-        this.span = this.limits;
-        const srcUrl = new URL(this.markup.file, location.origin);
-        if (moniviestinDomains.has(srcUrl.hostname)) {
-            if (this.start) {
-                srcUrl.hash = "#position=" + this.start;
-            }
-        } else {
-            if (this.start) {
-                srcUrl.searchParams.set("start", this.start.toString());
-            }
-            if (this.end) {
-                srcUrl.searchParams.set("end", this.end.toString());
-            }
-        }
-        if (this.iframe) {
-            if (
-                youtubeDomains.has(srcUrl.hostname) &&
-                !srcUrl.pathname.includes("embed")
-            ) {
-                let id;
-                if (srcUrl.hostname.includes("youtu.be")) {
-                    // Shortened form: https://youtu.be/1OygRiwlAok
-                    id = srcUrl.pathname.substring(1);
-                } else {
-                    // Normal form: https://www.youtube.com/watch?v=1OygRiwlAok
-                    id = srcUrl.searchParams.get("v") ?? "";
-                    srcUrl.searchParams.delete("v");
-                }
-                srcUrl.hostname = "www.youtube.com";
-                srcUrl.pathname = `/embed/${id}`;
-            }
-            const src = srcUrl.toString();
-            this.isPdf =
-                src.includes(".pdf") && // TODO: hack for Mac Safari see https://gitlab.com/tim-jyu/tim/-/issues/2114
-                isSafari();
-            this.iframesettings = {
-                src: this.domSanitizer.bypassSecurityTrustResourceUrl(src),
-                width: this.width ?? null,
-                height: this.height ?? null,
-                sandbox: parseIframeopts(
-                    this.markup.iframeopts ??
-                        // Some GeoGebra instances use showVideo plugin.
-                        // The allow-same-origin is needed for GeoGebra on iPad.
-                        'sandbox="allow-scripts allow-same-origin"',
-                    src
-                ).sandbox,
-                allow: null,
-            };
-        } else {
-            let tbe = "";
-            if (this.start) {
-                tbe += this.start; // loadedmetadata event doesn't work on iPad
-                if (this.end) {
-                    tbe += "," + this.end;
-                }
-            }
-            if (tbe) {
-                srcUrl.hash = "#t=" + tbe;
-            }
-            this.videosettings = {
-                src: srcUrl.toString(),
-            };
-        }
-        this.videoOn = true;
-        this.watchEnd = this.end;
-    }
-
-    metadataloaded() {
-        this.video!.nativeElement.currentTime = this.start ?? 0;
-        if (this.markup.followid && this.vctrl) {
-            this.vctrl.registerVideo(
-                this.markup.followid,
-                this.video!.nativeElement
-            );
-        }
-    }
-
-    timeupdate() {
-        const v = this.video!.nativeElement;
-        if (this.watchEnd && v.currentTime > this.watchEnd) {
-            v.pause();
-            this.watchEnd = 1000000;
-        }
+        this.currentSlide(this.slideIndex + value);
     }
 
     getDefaultMarkup() {
-        return {
-            file: "https://example.com",
-            iframe: true,
-        };
+        return {};
     }
 
     getAttributeType() {
@@ -650,19 +235,19 @@ export class VideoComponent extends AngularPluginBase<
 }
 
 @NgModule({
-    declarations: [VideoComponent, VideoLinkComponent],
+    declarations: [ImagesComponent],
     imports: [BrowserModule, TimUtilityModule, HttpClientModule, FormsModule],
 })
-export class VideoModule implements DoBootstrap {
+export class ImagesModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
 }
 
 export const moduleDefs = [
     doDowngrade(
         createDowngradedModule((extraProviders) =>
-            platformBrowserDynamic(extraProviders).bootstrapModule(VideoModule)
+            platformBrowserDynamic(extraProviders).bootstrapModule(ImagesModule)
         ),
-        "timVideo",
-        VideoComponent
+        "timImages",
+        ImagesComponent
     ),
 ];

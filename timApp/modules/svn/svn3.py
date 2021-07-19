@@ -215,6 +215,19 @@ def small_and_list_md(query, duration_template):
     return s
 
 
+def images_html(query):
+    s = '<div class="videoRunDiv">'
+    s += get_header(query)
+    s += replace_template_param(query, '<p class="stem">{{stem}}</p>', "stem")
+    s += '<div class="no-popup-menu play">' \
+        '<a><i class="glyphicon glyphicon-play-circle" title="Click here to show the images"></i></a>' \
+        '</div>'
+    s += get_link(query)
+    s += get_footer(query)
+    s += '</div>'
+    return s
+
+
 def small_video_html(query):
     # Kokeiltu myös listoilla, ei mitattavasti parempi
     s = '<div class="smallVideoRunDiv">'
@@ -260,6 +273,23 @@ def get_header(query):
 
 def get_footer(query):
     return replace_template_params(query, '<p class="plgfooter">{{footer}}</p>', "footer")
+
+
+def get_images_html(query: QueryClass):
+    """Muodostaa kuvien näyttämiseksi tarvittavan HTML-koodin.
+
+    :param query: pyynnön paramterit
+    :return: kuvien html-jono
+
+    """
+    js = query_params_to_map_check_parts(query)
+    jso = json.dumps(js)
+
+    encoded = encode_json_data(jso)
+    s = f'<tim-images json="{encoded}"></tim-images>'
+    htmlfunc = images_html
+    s = make_lazy(s, query, htmlfunc)
+    return s
 
 
 def get_video_html(query: QueryClass):
@@ -417,6 +447,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         is_js = self.path.find('/js') >= 0  or self.path.find('.ts') >= 0
         is_reqs = self.path.find('/reqs') >= 0
         is_image = self.path.find('/image') >= 0
+        is_images = self.path.find('/multiimages') >= 0
         is_video = self.path.find('/video') >= 0
         is_pdf = self.path.find('/pdf') >= 0
 
@@ -440,6 +471,8 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         tempdir = "svn"
         if is_image:
             tempdir = "image"
+        if is_images:
+            tempdir = "images"
         if is_video:
             tempdir = "video"
         if is_pdf:
@@ -454,6 +487,8 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
 
         if is_reqs:
             result_json = join_dict({"multihtml": True, "multimd": True}, get_all_templates(tempdir))
+            if is_images:
+                result_json.update({"js": ["/svn/js/images.js"]})
             if is_video or is_pdf:
                 result_json.update({"js": ["/svn/js/video.js"]})
             result_str = json.dumps(result_json)
@@ -481,6 +516,7 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
 
 def get_md(self, query):
     is_image = self.path.find('/image/') >= 0
+    is_images = self.path.find('/multiimages/') >= 0
     is_video = self.path.find('/video/') >= 0
     is_pdf = self.path.find('/pdf/') >= 0
     is_template = self.path.find('/template') >= 0
@@ -489,6 +525,12 @@ def get_md(self, query):
     if is_image:
         if is_template:
             return file_to_string('templates/image/' + tempfile)
+        s = get_image_md(query)
+        return s
+
+    if is_images:
+        if is_template:
+            return file_to_string('templates/images/' + tempfile)
         s = get_image_md(query)
         return s
 
@@ -524,6 +566,7 @@ def get_md(self, query):
 
 def get_html(self: http.server.BaseHTTPRequestHandler, query: QueryClass, show_html: bool):
     is_image = self.path.find('/image/') >= 0
+    is_images = self.path.find('/multiimages/') >= 0
     is_video = self.path.find('/video/') >= 0
     is_pdf = self.path.find('/pdf/') >= 0
     is_template = self.path.find('/template') >= 0
@@ -533,6 +576,12 @@ def get_html(self: http.server.BaseHTTPRequestHandler, query: QueryClass, show_h
         if is_template:
             return file_to_string('templates/image/' + tempfile)
         s = get_image_html(query)
+        return s
+
+    if is_images:
+        if is_template:
+            return file_to_string('templates/images/' + tempfile)
+        s = get_images_html(query)
         return s
 
     if is_video:
