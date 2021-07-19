@@ -42,11 +42,14 @@ const ShowFileMarkup = t.intersection([
         autostart: withDefault(t.boolean, true),
         files: withDefault(
             t.array(
-                t.type({
-                    name: t.string,
-                    caption: withDefault(t.string, ""),
-                    alt: withDefault(t.string, ""),
-                })
+                t.union([
+                    t.type({
+                        name: t.string,
+                        caption: withDefault(t.string, ""),
+                        alt: withDefault(t.string, ""),
+                    }),
+                    t.string,
+                ])
             ),
             []
         ),
@@ -150,7 +153,14 @@ export class ImagesComponent extends AngularPluginBase<
         this.vctrl = vctrlInstance;
         this.width = this.markup.width;
         this.height = this.markup.height;
-        this.files = this.markup.files;
+        for (const file of this.markup.files) {
+            if (typeof file === "string") {
+                this.files.push({name: file, caption: "", alt: ""});
+            } else {
+                this.files.push(file);
+            }
+        }
+        // this.files = this.markup.files;
         if (this.markup.random) {
             this.fileIndex = Math.floor(Math.random() * this.files.length) + 1;
         }
