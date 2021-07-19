@@ -1,3 +1,5 @@
+from typing import List
+
 from timApp.messaging.messagelist.listoptions import Channel
 from timApp.timdb.sqa import db
 from timApp.user.user import User
@@ -40,9 +42,9 @@ class ContactInfo:
     contact: str
 
 
-def user_contact_infos(user: User) -> [ContactInfo]:
+def user_contact_infos(user: User) -> List[ContactInfo]:
     """Get all additional verified user contact informations for a user."""
     user_verified_contacts = UserContact.query.filter_by(user_id=user.id, verified=True).all()
-    contacts = [ContactInfo(channel=contact.channel, primary=contact.primary, contact=contact.contact) for contact
+    contacts = [ContactInfo(contact.channel, contact.primary, contact.contact) for contact
                 in user_verified_contacts]
     return contacts
