@@ -1,5 +1,8 @@
 from timApp.messaging.messagelist.listoptions import Channel
 from timApp.timdb.sqa import db
+from timApp.user.user import User
+
+from tim_common.marshmallow_dataclass import dataclass
 
 
 class UserContact(db.Model):
@@ -28,5 +31,18 @@ class UserContact(db.Model):
     For a value of False, this means that a user has made a claim for a contact info, but has not yet verified it's 
     ownership. """
 
-    # TODO: Figure if this relationship is needed.
-    # verification = db.relationship("Verification", back_populates="contact", lazy="select", uselist=False)
+
+@dataclass
+class ContactInfo:
+    """User contact information. Simplified version of a UserContact row."""
+    channel: Channel
+    primary: bool
+    contact: str
+
+
+def user_contact_infos(user: User) -> [ContactInfo]:
+    """Get all additional verified user contact informations for a user."""
+    user_verified_contacts = UserContact.query.filter_by(user_id=user.id, verified=True).all()
+    contacts = [ContactInfo(channel=contact.channel, primary=contact.primary, contact=contact.contact) for contact
+                in user_verified_contacts]
+    return contacts

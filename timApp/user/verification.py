@@ -129,7 +129,7 @@ def send_verification_messsage(contact_info: str, verification_url: str, channel
 
     If this was not you, then please disregard this message, someone most likely accidentally wrote the wrong contact 
     information for themselves. If, however, this is among a multitude of requests that are not from you, then please 
-    forward this message to {app.config['HELP_EMAIL']} and TIM support will be deal with it.
+    forward this message to {app.config['HELP_EMAIL']} and TIM support will deal with it.
 
     Verification link (click only if you requested this action):
     {verification_url}
@@ -145,18 +145,15 @@ def send_verification_messsage(contact_info: str, verification_url: str, channel
         raise RouteException("03")
 
 
-# TODO: Is there a way to do this in other than GET method? it's not very RESTful to change state in a db with a GET
-#  request. Should we instead re-direct to a page with a simple button for "Yes I own this contact information" for a
-#  POST request? Then we could differentatiate between GET and POST methods, thus preserving the sanctity of REST.
 @verification.route("/contact/<verification_token>", methods=['GET', 'POST'])
 def contact_info_verification(verification_token: str) -> Response:
     """Verify user's additional contact information.
 
     :param verification_token: Generated string token to identify user's not-yet-verified contact information.
     :return: For successes:
-      - If the HTTP method is POST and contact verification token was found in the db, return OK response.
       - If the HTTP method is GET, return template 'contact-info-verification.jinja2' with necessary substituted
-      variables.
+       variables.
+      - If the HTTP method is POST and contact verification token was found in the db, return OK response.
     For failures:
       - Return error code '01' if the verification token is not found in the db.
       - Return error code '02' if during a GET call the user's contact information has already been verified.
@@ -165,10 +162,8 @@ def contact_info_verification(verification_token: str) -> Response:
     template = 'contact-info-verification.jinja2'
     try:
         v = Verification.query.filter_by(verification_token=verification_token).one()
-        # TODO: Verify the contact information that corresponds with the token.
         if v.verification_type == VerificationType.CONTACT_OWNERSHIP:
             user_contact = v.contact
-
             if request.method == 'GET':
                 if v.verified_at:
                     # The contact info is already verified.
@@ -201,7 +196,6 @@ def contact_info_verification(verification_token: str) -> Response:
         # Assume this comes from a GET request.
         return render_template(template, verification_token=verification_token, error=True,
                                error_code="01", title="Verification error", type=None)
-        # raise RouteException("Verification could not be done. Make sure you used the correct link.")
     except MultipleResultsFound:
         # If we are here, we have found multiple same tokens in the db. Something is most likely wrong with token
         # generation.

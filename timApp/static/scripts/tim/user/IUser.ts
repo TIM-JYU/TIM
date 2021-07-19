@@ -1,3 +1,4 @@
+import {Channel} from "tim/messaging/listOptionTypes";
 import {IDocument, IFolder} from "../item/IItem";
 import {ConsentType} from "../ui/consent";
 
@@ -20,11 +21,19 @@ export interface IUserListEntry {
     user: IUser;
 }
 
+// See ContactInfo Python class
+export interface IContactInfo {
+    channel: Channel;
+    contact: string;
+    primary: boolean;
+}
+
 export interface IFullUser extends IUser {
     groups: IGroup[];
     consent: ConsentType | undefined;
     folder: IFolder | null; // Folder is null only when not logged in.
     last_name: string | null;
+    contact_infos: IContactInfo[];
 }
 
 export interface IGroup {

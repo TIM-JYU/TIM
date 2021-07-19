@@ -3,10 +3,11 @@ import {Component, DoCheck, Input} from "@angular/core";
 import {DocumentOrFolder} from "tim/item/IItem";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
+import {Channel} from "tim/messaging/listOptionTypes";
 import {ConsentType} from "../ui/consent";
 import {settingsglobals} from "../util/globals";
 import {IOkResponse, timeout, to2} from "../util/utils";
-import {IFullUser} from "./IUser";
+import {IContactInfo, IFullUser} from "./IUser";
 
 export interface ISettings {
     css_combined: string;
@@ -218,6 +219,7 @@ export class SaveButtonComponent {
                 <p>Username: {{user.name}}</p>
                 <p>Full name: {{user.real_name}}</p>
                 <p>Email: {{user.email}}</p>
+                <p *ngFor="let contactInfo of user.contact_infos">{{userContactPrint(contactInfo)}}</p>
             </bootstrap-panel>
             <bootstrap-panel title="Additional contact information">
                 <!-- TODO: Remove when feature is complete. -->
@@ -382,5 +384,17 @@ export class SettingsComponent implements DoCheck {
      */
     async openContactInfoDialog() {
         return await showAddContactDialog();
+    }
+
+    /**
+     * Pretty print user contact infos.
+     */
+    userContactPrint(c: IContactInfo) {
+        switch (c.channel) {
+            case Channel.EMAIL:
+                return `Email: ${c.contact}`;
+            default:
+                return "meh";
+        }
     }
 }
