@@ -34,7 +34,9 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
                 </div>
                 <div>
                     <tim-alert *ngIf="verificationSend" severity="success">A message with a verification link will be
-                        sent to the contact info you provided. You may close this dialog.
+                        sent to the contact info you provided. Remember to check your spam folder if you don't see the
+                        email. You may close this
+                        dialog.
                     </tim-alert>
                     <tim-alert *ngIf="notValidEmailError" severity="danger">The email you attempted to provide is of
                         invalid form. Please check it.

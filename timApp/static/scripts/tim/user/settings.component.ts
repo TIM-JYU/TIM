@@ -394,7 +394,7 @@ export class SettingsComponent implements DoCheck {
             case Channel.EMAIL:
                 return `Email: ${c.contact}`;
             default:
-                return "meh";
+                return "Error";
         }
     }
 }
