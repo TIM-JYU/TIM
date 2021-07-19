@@ -24,11 +24,6 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
-import {
-    getKeyCode,
-    KEY_LEFT,
-    KEY_RIGHT,
-} from "../../../static/scripts/tim/util/keycodes";
 
 const ShowFileMarkup = t.intersection([
     t.partial({
@@ -41,7 +36,10 @@ const ShowFileMarkup = t.intersection([
     t.type({
         autoplay: withDefault(t.number, 0),
         repeat: withDefault(t.boolean, true),
+        fade: withDefault(t.boolean, true),
         open: withDefault(t.boolean, true),
+        random: withDefault(t.boolean, false),
+        autostart: withDefault(t.boolean, true),
         files: withDefault(
             t.array(
                 t.type({
@@ -69,7 +67,7 @@ const ShowFileAll = t.type({
              tabindex="0"
              (keydown.-)="speed(1.0/1.2, $event)"
              (keydown.1)="speed(0, $event)"
-             (keydown.+)="speed(1.2/1.0, $event)"
+             (keydown.+)="speed(1.2, $event)"
              (keydown.arrowLeft)="jump(-1, $event)"
              (keydown.arrowRight)="jump(1, $event)"
              (keydown.space)="jump(1, $event)"
@@ -86,29 +84,36 @@ const ShowFileAll = t.type({
                         [style.height.px]="height"
             >
                 <div *ngFor="let file of files; let i = index">
-                    <div class="fade" *ngIf="slideIndex===(i+1)">
+                    <div [class]="{fade: markup.fade}" *ngIf="fileIndex===(i+1)"  (click)="jump(1)">
                         <div class="numbertext">{{(i+1)}} / {{files.length}}</div>
                         <img src="{{file.name}}" alt="{{file.alt}}" style="width:100%">
                         <div class="text">{{file.caption}}</div>
                     </div>    
                 </div>
-                <a class="prev" (click)="plusSlides(-1)">&#10094;</a>
-                <a class="next" (click)="plusSlides(1)">&#10095;</a>
+                <a class="prev" (click)="plusFile(-1)">&#10094;</a>
+                <a class="next" (click)="plusFile(1)">&#10095;</a>
             </div>
             <br>
             
             <div style="text-align:center" class="images-control">
-              <span *ngFor="let file of files; let i = index" [ngClass]="{'active': (i+1) === slideIndex}" class="dot" (click)="currentSlide(i+1)"></span>
+              <span *ngFor="let file of files; let i = index" [ngClass]="{'active': (i+1) === fileIndex}" class="dot" (click)="currentFile(i+1)"></span>
             </div>                
 
-            <div class="flex"  style="justify-content: flex-end">
+            <div *ngIf="markup.autoplay" class="flex"  style="justify-content: flex-end">
                 <div class="margin-5-right">
-                    Speed:
-                    <span class="text-smaller">
+                    <span *ngIf="intervalId">
+                        <span class="text-smaller">
+                            Interval:
+                            {{this.duration/1000 | number: '1.1-1'}}
+                            s
+                        </span>
+                        <a (click)="speed(1.0/1.2)" title="Shorter interval (-)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
+                        <a (click)="speed(0)" title="Normal interval (1)">1x</a>&ngsp;
+                        <a (click)="speed(1.2)" title="Longer interval (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
                     </span>
-                    <a (click)="speed(1.0/1.2)" title="Slower speed (-)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
-                    <a (click)="speed(0)" title="Normal speed (1)">1x</a>&ngsp;
-                    <a (click)="speed(1.2)" title="Faster speed (+)"><i class="glyphicon glyphicon-plus"></i></a>&ngsp;
+                    <span *ngIf="intervalId===0">
+                        <a (click)="speed(1)" title="Run">Run</a>&ngsp;
+                    </span>
                 </div>
             </div>
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
@@ -135,9 +140,10 @@ export class ImagesComponent extends AngularPluginBase<
     height?: number;
     private vctrl?: ViewCtrl;
     imagesOn: boolean = true;
-    slideIndex = 1;
+    fileIndex = 1;
     files: {name: string; caption: string; alt: string}[] = [];
     duration: number = 0;
+    intervalId: number = 0;
 
     ngOnInit() {
         super.ngOnInit();
@@ -145,63 +151,61 @@ export class ImagesComponent extends AngularPluginBase<
         this.width = this.markup.width;
         this.height = this.markup.height;
         this.files = this.markup.files;
-    }
-
-    eventListenersActive: boolean = false;
-
-    private removeEventListeners() {
-        if (!this.eventListenersActive) {
-            return;
+        if (this.markup.random) {
+            this.fileIndex = Math.floor(Math.random() * this.files.length) + 1;
         }
-        this.eventListenersActive = false;
-        document.removeEventListener("keydown", this.keyDownImages);
-        // document.removeEventListener("click", this.onClick);
-    }
-
-    private addEventListeners() {
-        return;
-        if (this.eventListenersActive) {
-            return;
+        this.duration = this.markup.autoplay;
+        if (this.markup.autostart) {
+            this.speed(0);
         }
-        this.eventListenersActive = true;
-        document.addEventListener("keydown", this.keyDownImages);
-        // document.addEventListener("click", this.onClick);
     }
 
-    private keyDownImages = (ev: KeyboardEvent) => {
-        const keyCode = getKeyCode(ev);
-        if (keyCode === KEY_LEFT) {
-            ev.preventDefault();
-            this.jump(-10);
-        } else if (keyCode === KEY_RIGHT) {
-            ev.preventDefault();
-            this.jump(10);
-        }
-    };
-
-    currentSlide(n: number) {
-        this.showSlides(n);
+    currentFile(n: number) {
+        this.stop();
+        this.showFile(n);
     }
 
-    plusSlides(n: number) {
-        this.showSlides(this.slideIndex + n);
+    plusFile(n: number = 1) {
+        this.showFile(this.fileIndex + n);
     }
 
-    private showSlides(n: number) {
+    private showFile(n: number) {
         if (n > this.files.length) {
-            this.slideIndex = 1;
+            this.fileIndex = 1;
         } else if (n < 1) {
-            this.slideIndex = this.files.length;
-        } else this.slideIndex = n;
+            this.fileIndex = this.files.length;
+        } else this.fileIndex = n;
+    }
+
+    stop() {
+        if (this.intervalId === 0) {
+            return;
+        }
+        window.clearInterval(this.intervalId);
+        this.intervalId = 0;
     }
 
     speed(mult: number, $event: Event | undefined = undefined) {
         if ($event) {
             $event.preventDefault();
         }
+        this.stop();
         this.duration *= mult;
         if (mult === 0) {
             this.duration = this.markup.autoplay;
+        }
+        const images = this;
+        if (this.duration) {
+            this.intervalId = window.setInterval(function () {
+                if (
+                    !images.markup.repeat &&
+                    images.fileIndex >= images.files.length
+                ) {
+                    images.stop();
+                } else {
+                    images.plusFile(1);
+                }
+            }, this.duration);
         }
     }
 
@@ -209,14 +213,15 @@ export class ImagesComponent extends AngularPluginBase<
         if ($event) {
             $event.preventDefault();
         }
-        this.currentSlide(value);
+        this.currentFile(value);
     }
 
-    jump(value: number, $event: Event | undefined = undefined) {
+    jump(value: number = 1, $event: Event | undefined = undefined) {
         if ($event) {
             $event.preventDefault();
         }
-        this.plusSlides(value);
+        this.stop();
+        this.plusFile(value);
     }
 
     getDefaultMarkup() {

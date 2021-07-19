@@ -50,7 +50,8 @@ $pre-background: white;
 $container-xs-padding: 0.2em;
 $focus-bar-color: exportable(lightblue, focus-bar-color);
 $lightselect-color: exportable(#fcfcfc, lightselect-color);
-$parselect-color: exportable(lightgray, parselect-color);
+// $parselect-color: exportable(lightgray, parselect-color);
+$parselect-color: exportable(#fcfcfc, parselect-color);
 
 // TODO decide if these two are necessary
 $left-side-columns: 2;
