@@ -101,7 +101,6 @@ const ShowFileAll = t.type({
                 <div class="margin-5-right">
                     Speed:
                     <span class="text-smaller">
-                        {{playbackRateString}}
                     </span>
                     <a (click)="speed(1.0/1.2)" title="Slower speed (-)"><i class="glyphicon glyphicon-minus"></i></a>&ngsp;
                     <a (click)="speed(0)" title="Normal speed (1)">1x</a>&ngsp;
