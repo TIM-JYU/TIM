@@ -72,18 +72,22 @@ const ShowFileAll = t.type({
              (keydown.+)="speed(1.2/1.0, $event)"
              (keydown.arrowLeft)="jump(-1, $event)"
              (keydown.arrowRight)="jump(1, $event)"
+             (keydown.space)="jump(1, $event)"
              (keydown.control.arrowLeft)="jumpTo(1, $event)"
-             (keydown.control.arrowRight)="jumpTo(1000, $event)"
+             (keydown.control.arrowRight)="jumpTo(-1, $event)"
         >
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
             <p *ngIf="header" [innerHtml]="header"></p>
             <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
 
 
-            <div class="images-container">
+            <div class="images-container"
+                        [style.width.px]="width"
+                        [style.height.px]="height"
+            >
                 <div *ngFor="let file of files; let i = index">
                     <div class="fade" *ngIf="slideIndex===(i+1)">
-                        <div class="numbertext">{{(i+1)}} / 3</div>
+                        <div class="numbertext">{{(i+1)}} / {{files.length}}</div>
                         <img src="{{file.name}}" alt="{{file.alt}}" style="width:100%">
                         <div class="text">{{file.caption}}</div>
                     </div>    
@@ -94,7 +98,7 @@ const ShowFileAll = t.type({
             <br>
             
             <div style="text-align:center" class="images-control">
-              <span *ngFor="let file of files; let i = index" class="dot" (click)="currentSlide(i+1)"></span>
+              <span *ngFor="let file of files; let i = index" [ngClass]="{'active': (i+1) === slideIndex}" class="dot" (click)="currentSlide(i+1)"></span>
             </div>                
 
             <div class="flex"  style="justify-content: flex-end">
@@ -176,28 +180,19 @@ export class ImagesComponent extends AngularPluginBase<
     };
 
     currentSlide(n: number) {
-        this.showSlides((this.slideIndex = n));
+        this.showSlides(n);
     }
 
     plusSlides(n: number) {
-        this.showSlides((this.slideIndex += n));
+        this.showSlides(this.slideIndex + n);
     }
 
     private showSlides(n: number) {
-        let i;
-        const dots = document.getElementsByClassName("dot");
         if (n > this.files.length) {
             this.slideIndex = 1;
-        }
-        if (n < 1) {
+        } else if (n < 1) {
             this.slideIndex = this.files.length;
-        }
-        for (i = 0; i < dots.length; i++) {
-            dots[i].className = dots[i].className.replace(" active", "");
-        }
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        // slides[this.slideIndex - 1].style.display = "block";
-        dots[this.slideIndex - 1].className += " active";
+        } else this.slideIndex = n;
     }
 
     speed(mult: number, $event: Event | undefined = undefined) {
@@ -221,7 +216,7 @@ export class ImagesComponent extends AngularPluginBase<
         if ($event) {
             $event.preventDefault();
         }
-        this.currentSlide(this.slideIndex + value);
+        this.plusSlides(value);
     }
 
     getDefaultMarkup() {
