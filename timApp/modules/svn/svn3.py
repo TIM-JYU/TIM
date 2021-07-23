@@ -514,6 +514,10 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         return
 
 
+def escape_latex(s: str):
+    return s.replace("_", "\\_")
+
+
 def get_md(self, query):
     is_image = self.path.find('/image/') >= 0
     is_images = self.path.find('/multiimages/') >= 0
@@ -560,7 +564,8 @@ def get_md(self, query):
     s += get_file_to_output(query, False)
     filename = query.jso.get('markup',{}).get('file','')
     name = filename[filename.rfind('/')+1:]
-    s = get_surrounding_md_headers(query, s, '\\smallhref{' + filename + '}{' + name +'}')
+
+    s = get_surrounding_md_headers(query, s, '\\smallhref{' + escape_latex(filename) + '}{' + escape_latex(name) +'}')
     return s
 
 
