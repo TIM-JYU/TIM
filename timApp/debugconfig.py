@@ -11,3 +11,6 @@ if os.environ.get("RUN_MAILMAN_DEV", "0") == "1":
     MAILMAN_URL = "http://mailman-core:8001/3.1"
     MAILMAN_USER = "restadmin"
     MAILMAN_PASS = "restpass"
+    MAILMAN_EVENT_API_USER = "apiuser"
+    MAILMAN_EVENT_API_KEY = "apikey"
+    MAILMAN_UI_LINK_PREFIX = f"{os.environ.get('TIM_HOST', 'http://localhost')}/mailman3/postorius/lists/"
