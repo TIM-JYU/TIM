@@ -3,10 +3,36 @@ from typing import List
 
 from lxml.html import HtmlElement
 
+from timApp.auth.accesstype import AccessType
 from timApp.tests.server.timroutetest import TimRouteTest, get_content
+from timApp.timdb.sqa import db
 
 
 class PreviewTest(TimRouteTest):
+    def test_preview_permission(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="Secret")
+        p = d.document.get_last_par()
+        self.assertEqual(p.get_markdown(), "Secret")
+        res = self.post_preview(d, "", par=p.get_id())
+        self.assertEqual(res["original_par"]["md"], "Secret")
+
+        self.logout()
+        res = self.post_preview(d, "", par=p.get_id())
+        self.assertIsNone(res["original_par"])
+
+        self.login_test2()
+        res = self.post_preview(d, "", par=p.get_id())
+        self.assertIsNone(res["original_par"])
+
+        self.login_test1()
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+
+        self.login_test2()
+        res = self.post_preview(d, "", par=p.get_id())
+        self.assertEqual(res["original_par"]["md"], "Secret")
+
     def test_translation_invalid_ref(self):
         self.login_test1()
         d = self.create_doc(initial_par="""#- {rd=9999 rp=xxxx}""")
