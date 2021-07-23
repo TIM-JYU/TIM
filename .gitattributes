@@ -2,6 +2,8 @@
 *.ts text eol=lf
 *.py text eol=lf
 *.sh text eol=lf
+# Mono's dll mapping configs. Generally only read by mono
+*.dll.config eol=lf
 dc text eol=lf
 npmi text eol=lf
 npmiw text eol=lf
