@@ -3153,7 +3153,11 @@ ${fhtml}
             const data = r.result;
             const element: JQuery = $($.parseHTML(data.texts) as HTMLElement[]);
             await ParCompiler.processAllMath(element);
-            this.mdHtml = element.html();
+            // Remove par class as it's used to identify real paragraphs
+            element.removeClass("par");
+            // Remove editline as well as it's not valid for preview
+            element.children(".editline").remove();
+            this.mdHtml = element.wrapAll("<div>").parent().html();
         } else {
             const data = r.result;
             alert("Failed to show preview: " + data.error.error);
