@@ -34,7 +34,10 @@ export abstract class BaseParEditor {
     protected editor: IAceEditor | JQuery;
     public abstract type: EditorType;
 
-    constructor(editor: IAceEditor | JQuery, callbacks: IEditorCallbacks) {
+    protected constructor(
+        editor: IAceEditor | JQuery,
+        callbacks: IEditorCallbacks
+    ) {
         this.editor = editor;
         this.callbacks = callbacks;
     }
@@ -65,6 +68,8 @@ export abstract class BaseParEditor {
 
     public abstract getPosition(): SelectionRange;
 
+    public abstract getEditorText(): string;
+
     public abstract setPosition(pos: SelectionRange): void;
 
     public surroundedByItalic() {
@@ -72,6 +77,21 @@ export abstract class BaseParEditor {
             (this.surroundedBy("*", "*") && !this.surroundedBy("**", "**")) ||
             this.surroundedBy("***", "***")
         );
+    }
+
+    public getCurrentLinePosAndLine(): [number, string] {
+        const s = this.getEditorText();
+        const pos = this.getPosition();
+        const start = pos[0];
+        let i1 = start - 1;
+        let i2 = start;
+        while (i1 >= 0 && s[i1] != "\n") {
+            i1--;
+        }
+        while (i2 < s.length && s[i2] != "\n") {
+            i2++;
+        }
+        return [i1 + 1, s.substring(i1 + 1, i2)];
     }
 
     checkWrap() {

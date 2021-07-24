@@ -1596,6 +1596,7 @@ ${backTicks}
                     // TODO: Could this be editor.contains(...)?
                     const isplugin = ed.editorStartsWith("``` {");
                     let start = "[File](";
+                    let end = ")";
                     let savedir = "/files/";
                     if (
                         response.data.image ||
@@ -1620,10 +1621,23 @@ ${backTicks}
                         );
                     }
                     if (isplugin || macroRange || macroRange2) {
-                        ed.insertTemplate(this.uploadedFile);
-                    } else {
-                        ed.insertTemplate(`${start}${this.uploadedFile})`);
+                        start = "";
+                        end = "";
+                        if (
+                            // is showImages?  How to make this general and ask from plugin?
+                            editorText.match(
+                                /^```[^\n]*plugin="showImages"[^\n]*\n/
+                            )
+                        ) {
+                            const [i1, s] = ed.getCurrentLinePosAndLine();
+                            if (s.trim() === "") {
+                                start = "  - name: ";
+                                end = "\n";
+                                ed.setPosition([i1, i1]);
+                            }
+                        }
                     }
+                    ed.insertTemplate(`${start}${this.uploadedFile}${end}`);
                     // Separate from isPlugin so this is ran only when there are attachments with stamps.
                     if (macroRange && kokousDate) {
                         stamped.uploadUrl = this.uploadedFile;
