@@ -4,6 +4,8 @@ from __future__ import annotations
 import datetime
 from dataclasses import dataclass
 from datetime import date
+from datetime import datetime
+from datetime import timedelta
 from typing import Optional, Dict, TYPE_CHECKING, List, Iterable
 
 from jinja2 import TemplateSyntaxError
@@ -205,6 +207,12 @@ def month_to_week(month, daynr=1, year=None):
     return d.isocalendar()[1]
 
 
+def now(fmt=0):
+    if (isinstance(fmt, int)):
+        return datetime.now() + timedelta(days=fmt)
+    return fmt_date(datetime.now(), fmt)
+
+
 def fmt_date(d, fmt=""):
     """
     Format date using extended %d1 and %m1 for one number values
@@ -335,6 +343,7 @@ tim_filters = {
     'gfields': genfields,
     'gfrange': gfrange,
     'srange': srange,
+    'now' : now,
     'w2date': week_to_date,
     'm2w': month_to_week,
     'w2text': week_to_text,

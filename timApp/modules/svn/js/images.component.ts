@@ -34,12 +34,16 @@ const ShowFileMarkup = t.intersection([
     }),
     GenericPluginMarkup,
     t.type({
+        first: withDefault(t.number, 1),
         autoplay: withDefault(t.number, 0),
         repeat: withDefault(t.boolean, true),
         fade: withDefault(t.boolean, true),
         open: withDefault(t.boolean, true),
         random: withDefault(t.boolean, false),
         autostart: withDefault(t.boolean, true),
+        dots: withDefault(t.boolean, true),
+        counter: withDefault(t.boolean, true),
+        change: withDefault(t.boolean, true),
         files: withDefault(
             t.array(
                 t.union([
@@ -88,17 +92,17 @@ const ShowFileAll = t.type({
             >
                 <div *ngFor="let file of files; let i = index">
                     <div [class]="{fade: markup.fade}" *ngIf="fileIndex===(i+1)"  (click)="jump(1)">
-                        <div class="numbertext">{{(i+1)}} / {{files.length}}</div>
+                        <div *ngIf="markup.counter" class="numbertext">{{(i+1)}} / {{files.length}}</div>
                         <img src="{{file.name}}" alt="{{file.alt}}" style="width:100%">
                         <div class="text">{{file.caption}}</div>
                     </div>    
                 </div>
-                <a class="prev" (click)="plusFile(-1)">&#10094;</a>
-                <a class="next" (click)="plusFile(1)">&#10095;</a>
+                <a *ngIf="markup.change" class="prev" (click)="jump(-1)">&#10094;</a>
+                <a *ngIf="markup.change" class="next" (click)="jump(1)">&#10095;</a>
             </div>
             <br>
             
-            <div style="text-align:center" class="images-control">
+            <div *ngIf="markup.dots" style="text-align:center" class="images-control" >
               <span *ngFor="let file of files; let i = index" [ngClass]="{'active': (i+1) === fileIndex}" class="dot" (click)="currentFile(i+1)"></span>
             </div>                
 
@@ -161,8 +165,11 @@ export class ImagesComponent extends AngularPluginBase<
             }
         }
         // this.files = this.markup.files;
+        const n = this.files.length;
+        // take positive modulo so always in [1,n]
+        this.fileIndex = ((((this.markup.first - 1) % n) + n) % n) + 1;
         if (this.markup.random) {
-            this.fileIndex = Math.floor(Math.random() * this.files.length) + 1;
+            this.fileIndex = Math.floor(Math.random() * n) + 1;
         }
         this.duration = this.markup.autoplay;
         if (this.markup.autostart) {
@@ -171,6 +178,9 @@ export class ImagesComponent extends AngularPluginBase<
     }
 
     currentFile(n: number) {
+        if (!this.markup.change) {
+            return;
+        }
         this.stop();
         this.showFile(n);
     }
@@ -223,12 +233,19 @@ export class ImagesComponent extends AngularPluginBase<
         if ($event) {
             $event.preventDefault();
         }
+        if (!this.markup.change) {
+            return;
+        }
+        this.stop();
         this.currentFile(value);
     }
 
     jump(value: number = 1, $event: Event | undefined = undefined) {
         if ($event) {
             $event.preventDefault();
+        }
+        if (!this.markup.change) {
+            return;
         }
         this.stop();
         this.plusFile(value);
