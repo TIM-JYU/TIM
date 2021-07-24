@@ -10,7 +10,7 @@
                    placeholder='paste image' size="9" style="font-size: 0.7em;" ng-show="$ctrl.isAce()" />
                    <!--ngf-drop="$ctrl.onDrop($event)"  ng-dragover="$ctrl.allowDrop($event)" -->
                    <!-- ondragover="$ctrl.allowDrop($event)" ondrop="$ctrl.onDrop($event)" -->
-            <input type="file" ngf-select="$ctrl.onFileSelect($file)">
+            <input type="file" ngf-select="$ctrl.onFilesSelect($files, $invalidFiles)" ngf-multiple="true">
             <span ng-show="$ctrl.file.progress >= 0 && !$ctrl.file.error"
                   ng-bind="$ctrl.file.progress < 100 ? 'Uploading... ' + $ctrl.file.progress + '%' : 'Done!'"></span>
             <a ng-href="{{$ctrl.uploadedFile}}" >{{$ctrl.uploadedFile}}</a>

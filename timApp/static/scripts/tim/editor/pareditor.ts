@@ -1502,6 +1502,12 @@ ${backTicks}
         return [indexA, selectIndexB + indexB + endStr.length];
     }
 
+    async onFilesSelect(files: File[], invalidFiles: File[]) {
+        for (const file of files) {
+            await this.onFileSelect(file);
+        }
+    }
+
     async onFileSelect(file: File) {
         const editor = this.editor!;
         this.focusEditor();
