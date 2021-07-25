@@ -1,0 +1,27 @@
+Images
+Multiple images for carousel or animation
+``` {plugin="showImages"}
+#header: Kuviem otsikko
+#stem: Kuvien selitys
+#footer: alaotsikko
+#width: 300
+#height: 300
+#autoplay: 1000
+#autostart: false
+#dots: false
+#fade: false
+#repeat: false
+#random: true
+#change: false
+#counter: false
+#nearFiles: 2
+#noFlicker: true
+#first: %% "%w" | now %%
+file: https://www.w3schools.com/howto/img_nature_wide.jpg
+files:
+  - name: https://www.w3schools.com/howto/img_nature_wide.jpg
+    caption: Eka
+  - https://www.w3schools.com/howto/img_snow_wide.jpg
+  - name: https://www.w3schools.com/howto/img_mountains_wide.jpg
+    caption: Kolmas
+```
