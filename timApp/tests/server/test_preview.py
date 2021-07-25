@@ -26,7 +26,7 @@ class PreviewTest(TimRouteTest):
         self.assertIsNone(res["original_par"])
 
         self.login_test1()
-        self.test_user_2.grant_access(d, AccessType.view)
+        self.test_user_2.grant_access(d, AccessType.edit)
         db.session.commit()
 
         self.login_test2()

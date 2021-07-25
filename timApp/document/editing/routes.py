@@ -10,7 +10,8 @@ from flask import request
 from timApp.admin.associate_old_uploads import upload_regexes
 from timApp.answer.answer import Answer
 from timApp.auth.accesshelper import verify_edit_access, verify_view_access, get_doc_or_abort, \
-    verify_teacher_access, verify_manage_access, verify_ownership, verify_seeanswers_access, has_view_access
+    verify_teacher_access, verify_manage_access, verify_ownership, verify_seeanswers_access, \
+    has_edit_access
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_current_user_group, \
     user_context_with_logged_in
@@ -461,7 +462,7 @@ def par_response(
     changed_post_process_result = post_process_pars(doc, changed_pars, user_ctx, view_ctx)
     original_par = edit_request.original_par if edit_request else None
 
-    if original_par and not has_view_access(docu):
+    if original_par and not has_edit_access(docu):
         original_par = None
 
     if spellcheck:
