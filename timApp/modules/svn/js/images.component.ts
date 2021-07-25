@@ -44,6 +44,8 @@ const ShowFileMarkup = t.intersection([
         dots: withDefault(t.boolean, true),
         counter: withDefault(t.boolean, true),
         change: withDefault(t.boolean, true),
+        noFlicker: withDefault(t.boolean, false),
+        nearFiles: withDefault(t.number, 1),
         files: withDefault(
             t.array(
                 t.union([
@@ -91,7 +93,7 @@ const ShowFileAll = t.type({
                         [style.height.px]="height"
             >
                 <div *ngFor="let file of files; let i = index">
-                    <div [class]="{fade: markup.fade}" *ngIf="fileIndex===(i+1)"  (click)="jump(1)">
+                    <div [class]="{fade: markup.fade}" *ngIf="noFlicker || isNear(i+1)" [hidden]="fileIndex!==(i+1)"  (click)="jump(1)">
                         <div *ngIf="markup.counter" class="numbertext">{{(i+1)}} / {{files.length}}</div>
                         <img src="{{file.name}}" alt="{{file.alt}}" style="width:100%">
                         <div class="text">{{file.caption}}</div>
@@ -151,12 +153,15 @@ export class ImagesComponent extends AngularPluginBase<
     files: {name: string; caption: string; alt: string}[] = [];
     duration: number = 0;
     intervalId: number = 0;
+    noFlicker: boolean = false;
+    nearFiles: number = 1;
 
     ngOnInit() {
         super.ngOnInit();
         this.vctrl = vctrlInstance;
         this.width = this.markup.width;
         this.height = this.markup.height;
+        this.noFlicker = this.markup.noFlicker || this.markup.autoplay != 0;
         for (const file of this.markup.files) {
             if (typeof file === "string") {
                 this.files.push({name: file, caption: "", alt: ""});
@@ -166,6 +171,11 @@ export class ImagesComponent extends AngularPluginBase<
         }
         // this.files = this.markup.files;
         const n = this.files.length;
+        if (!this.markup.change) {
+            this.nearFiles = 0;
+        } else {
+            this.nearFiles = this.markup.nearFiles;
+        }
         // take positive modulo so always in [1,n]
         this.fileIndex = ((((this.markup.first - 1) % n) + n) % n) + 1;
         if (this.markup.random) {
@@ -175,6 +185,12 @@ export class ImagesComponent extends AngularPluginBase<
         if (this.markup.autostart) {
             this.speed(0);
         }
+    }
+
+    isNear(n: number) {
+        const diff = Math.abs(this.fileIndex - n);
+        if (diff <= this.nearFiles) return true;
+        return diff >= this.files.length - this.nearFiles;
     }
 
     currentFile(n: number) {

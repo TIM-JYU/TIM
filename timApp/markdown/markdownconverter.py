@@ -205,6 +205,12 @@ def month_to_week(month, daynr=1, year=None):
 
 
 def now(fmt=0):
+    """
+    Used in Jinja macros like tomorrow: %%1 | now%%
+    Or this week %% "%w" | now %%
+    :param fmt: fromat for curent date or delta for current date
+    :return: current date + (fmt as int) if fmt is int, otherwise current timestamp formated
+    """
     if isinstance(fmt, int):
         return datetime.now() + timedelta(days=fmt)
     return fmt_date(datetime.now(), fmt)
