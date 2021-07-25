@@ -17,7 +17,7 @@ Multiple images for carousel or animation
 #nearFiles: 2
 #noFlicker: true
 #first: %% "%w" | now %%
-file: https://www.w3schools.com/howto/img_nature_wide.jpg
+#texfile: https://www.w3schools.com/howto/img_nature_wide.jpg
 files:
   - name: https://www.w3schools.com/howto/img_nature_wide.jpg
     caption: Eka

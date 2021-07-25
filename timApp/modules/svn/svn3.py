@@ -128,6 +128,43 @@ def sec_2_timestr(t: float):
     s = str(s) + "s"
     return h + m + s
 
+def get_images_md(query):
+    """Muodostaa kuvien näyttämiseksi tarvittavan MD-koodin.
+
+    :param query: pyynnön paramterit
+    :return: kuvan md-jono
+
+    """
+    markup = query.jso.get('markup', {})
+    url = markup.get("texfile", None)
+    files = markup.get('files', None)
+    i = -1
+    if url is None:
+        i = 0
+    elif isinstance(url, int):
+        i = url
+        n = len(files)
+        if n > 0:
+            i = ((i - 1) % n + n) % n
+        else:
+            url = ''
+            i = -1
+    if i >= 0: # want by index
+        if files and len(files) > 0:
+            url = files[i]
+            if not isinstance(url, str):
+                url = url.get("name", "")
+        else:
+            url = ''
+    w = get_clean_param(query, "width", "")
+    h = get_clean_param(query, "height", "")
+    if w:
+        w = 'width=' + w + ' '
+    if h:
+        h = 'height=' + h + ' '
+    header, footer = get_surrounding_md_headers2(query, "pluginHeader", None)
+    result = header + "\n\n" + "![{0}]({1}){{{2}{3}}}".format(footer, url, w, h)
+    return result
 
 def get_image_md(query):
     """Muodostaa kuvan näyttämiseksi tarvittavan MD-koodin.
@@ -535,7 +572,7 @@ def get_md(self, query):
     if is_images:
         if is_template:
             return file_to_string('templates/images/' + tempfile)
-        s = get_image_md(query)
+        s = get_images_md(query)
         return s
 
     if is_video:
