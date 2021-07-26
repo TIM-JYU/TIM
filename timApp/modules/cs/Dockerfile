@@ -23,7 +23,7 @@ RUN python3.9 -m pip install Flask bleach && bash -c "${APT_CLEANUP}"
 # Keep above same as SVN Dockerfile for better caching
 
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && bash -c "${APT_CLEANUP}"
-RUN echo "deb http://download.mono-project.com/repo/ubuntu bionic main" > /etc/apt/sources.list.d/mono-official.list
+RUN echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" > /etc/apt/sources.list.d/mono-official-stable.list
 RUN bash -c "${APT_INSTALL} \
 doxygen \
 firejail \
@@ -48,14 +48,14 @@ xvfb \
 && ${APT_CLEANUP}"
 
 # Scala
-RUN bash -c "${APT_INSTALL} openjdk-11-jre-headless && ${APT_CLEANUP}"
-ENV SCALA_VERSION 2.13.1
+RUN bash -c "${APT_INSTALL} openjdk-16-jre-headless && ${APT_CLEANUP}"
+ENV SCALA_VERSION 2.13.6
 RUN wget -q https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA_VERSION}.deb && \
  dpkg -i scala-${SCALA_VERSION}.deb && \
  rm scala-${SCALA_VERSION}.deb
 
 # Docker client binary
-ENV DOCKER_VERSION 19.03.8
+ENV DOCKER_VERSION 20.10.3
 RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz && \
     tar -xzvf docker-${DOCKER_VERSION}.tgz --strip=1 -C /usr/bin docker/docker && \
     rm docker-${DOCKER_VERSION}.tgz && docker --version
@@ -78,11 +78,11 @@ RUN printf "pkg install -forge io" | octave && \
 # Swift requirements
 RUN bash -c "${APT_INSTALL} libatomic1 libcurl4 curl libxml2 tzdata libpython2.7 && ${APT_CLEANUP}"
 
-# from https://github.com/apple/swift-docker/blob/master/5.2/ubuntu/18.04/slim/Dockerfile
+# modified from https://github.com/apple/swift-docker/blob/main/5.4/ubuntu/20.04/slim/Dockerfile
 ARG SWIFT_SIGNING_KEY=A62AE125BBBFBB96A6E042EC925CC1CCED3D1561
-ARG SWIFT_PLATFORM=ubuntu18.04
-ARG SWIFT_BRANCH=swift-5.2-release
-ARG SWIFT_VERSION=swift-5.2-RELEASE
+ARG SWIFT_PLATFORM=ubuntu20.04
+ARG SWIFT_BRANCH=swift-5.4.2-release
+ARG SWIFT_VERSION=swift-5.4.2-RELEASE
 ARG SWIFT_WEBROOT=https://swift.org/builds/
 
 ENV SWIFT_SIGNING_KEY=$SWIFT_SIGNING_KEY \
@@ -101,7 +101,7 @@ RUN set -e; \
     # - Download the GPG keys, Swift toolchain, and toolchain signature, and verify.
     && export GNUPGHOME="$(mktemp -d)" \
     && curl -fsSL "$SWIFT_BIN_URL" -o swift.tar.gz "$SWIFT_SIG_URL" -o swift.tar.gz.sig \
-    && gpg --batch --quiet --keyserver ha.pool.sks-keyservers.net --recv-keys "$SWIFT_SIGNING_KEY" \
+    && curl -fSsL https://swift.org/keys/release-key-swift-5.x.asc | gpg --import - \
     && gpg --batch --verify swift.tar.gz.sig swift.tar.gz \
     # - Unpack the toolchain, set libs permissions, and clean up.
     && tar -xzf swift.tar.gz --directory / --strip-components=1 \
@@ -131,7 +131,7 @@ RUN bash -c "${APT_INSTALL} bsdmainutils iputils-ping && ${APT_CLEANUP}"
 RUN python3.9 -m pip install sympy pyaml html5lib opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
 
 # Kotlin
-ENV         KOTLIN_VERSION=1.3.70 \
+ENV         KOTLIN_VERSION=1.5.21 \
             KOTLIN_HOME=/usr/local/kotlin
 
 RUN         cd  /tmp && \
@@ -145,9 +145,10 @@ RUN         cd  /tmp && \
             ${APT_CLEANUP}
 
 # JavaFX for OpenJDK
-RUN wget https://download2.gluonhq.com/openjfx/15.0.1/openjfx-15.0.1_linux-x64_bin-sdk.zip && \
-    unzip openjfx-15.0.1_linux-x64_bin-sdk.zip && \
-    rm openjfx-15.0.1_linux-x64_bin-sdk.zip
+ENV OPENJFX_VERSION=16
+RUN wget https://download2.gluonhq.com/openjfx/${OPENJFX_VERSION}/openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
+    unzip openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
+    rm openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip
 
 # Rust (nightly)
 ENV CARGO_HOME=/cargo
@@ -160,7 +161,8 @@ RUN ln -s "/cargo/bin/"* "/usr/bin/"
 RUN bash -c "${APT_INSTALL} fpc && ${APT_CLEANUP}"
 
 # Go
-RUN wget -q https://dl.google.com/go/go1.14.1.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.14.1.linux-amd64.tar.gz && rm go1.14.1.linux-amd64.tar.gz
+ENV GOLANG_VERSION=1.16.6
+RUN wget -q https://dl.google.com/go/go${GOLANG_VERSION}.linux-amd64.tar.gz && tar -C /usr/local -xzf go${GOLANG_VERSION}.linux-amd64.tar.gz && rm go${GOLANG_VERSION}.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
 RUN python3.9 -m pip install \
@@ -181,10 +183,11 @@ RUN python3.9 -m pip install requests --upgrade && bash -c "${APT_CLEANUP}"
 # git
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
 
-RUN wget -q https://github.com/AdoptOpenJDK/openjdk15-binaries/releases/download/jdk-15.0.2%2B7/OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz && \
- tar -xf OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz && \
- rm OpenJDK15U-jdk_x64_linux_hotspot_15.0.2_7.tar.gz
-ENV PATH=$PWD/jdk-15.0.2+7/bin:$PATH
+# JDK
+RUN wget -q https://github.com/AdoptOpenJDK/openjdk16-binaries/releases/download/jdk-16.0.1%2B9/OpenJDK16U-jdk_x64_linux_hotspot_16.0.1_9.tar.gz && \
+ tar -xf OpenJDK16U-jdk_x64_linux_hotspot_16.0.1_9.tar.gz && \
+ rm OpenJDK16U-jdk_x64_linux_hotspot_16.0.1_9.tar.gz
+ENV PATH=$PWD/jdk-16.0.1+9/bin:$PATH
 RUN java -version
 # RUN bash -c "${APT_INSTALL} uuid-runtime && ${APT_CLEANUP}"
 # RUN uuidgen > /etc/machine-id
