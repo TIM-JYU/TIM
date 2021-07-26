@@ -1,4 +1,4 @@
-FROM timimages/cs3:rust
+FROM timimages/cs3:focal
 USER root
 RUN bash -c "${APT_INSTALL} openssh-server && ${APT_CLEANUP}"
 RUN mkdir /var/run/sshd

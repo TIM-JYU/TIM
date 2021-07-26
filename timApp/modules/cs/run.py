@@ -8,7 +8,7 @@ from typing import List
 
 from tim_common.fileParams import *
 
-CS3_TAG = 'rust'
+CS3_TAG = 'focal'
 
 
 def wait_file(f1):

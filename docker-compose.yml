@@ -111,7 +111,7 @@ services:
   environment:
    POSTGRES_PASSWORD: postgresql
  csplugin:
-  image: timimages/cs3:rust
+  image: timimages/cs3:focal
   build: ./timApp/modules/cs
   volumes:
    - ${FILES_ROOT:?}/blocks/uploads:/uploads:ro
@@ -158,7 +158,7 @@ services:
   tmpfs:
     - /tmp
  imagex:
-  image: timimages/cs3:rust
+  image: timimages/cs3:focal
   volumes:
    - ./timApp/modules/imagex:/app/imagex:ro
    - ./tim_common:/app/tim_common:ro
