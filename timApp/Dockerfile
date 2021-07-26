@@ -90,6 +90,8 @@ RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/2
 
 RUN bash -c "${APT_INSTALL} openssh-server python3.9 && ${APT_CLEANUP}"
 
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 20
+
 # lxml dependencies
 # C-parser for PyYAML
 # python-magic dependency
