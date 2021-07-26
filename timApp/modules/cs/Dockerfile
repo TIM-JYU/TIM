@@ -16,9 +16,9 @@ RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
 
-RUN bash -c "${APT_INSTALL} python3.8 wget dirmngr gpg-agent curl python3-distutils && ${APT_CLEANUP}"
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.8 get-pip.py && rm get-pip.py
-RUN python3.8 -m pip install Flask bleach && bash -c "${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} python3.9 wget dirmngr gpg-agent curl python3-distutils && ${APT_CLEANUP}"
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.9 get-pip.py && rm get-pip.py
+RUN python3.9 -m pip install Flask bleach && bash -c "${APT_CLEANUP}"
 
 # Keep above same as SVN Dockerfile for better caching
 
@@ -65,7 +65,7 @@ RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCK
 # http://www.scipy.org/install.html
 RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
 
-RUN python3.8 -m pip install numpy scipy matplotlib pandas statsmodels control && bash -c "${APT_CLEANUP}"
+RUN python3.9 -m pip install numpy scipy matplotlib pandas statsmodels control && bash -c "${APT_CLEANUP}"
 
 # Octave
 RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic gnuplot pstoedit liboctave-dev && ${APT_CLEANUP}"
@@ -128,7 +128,7 @@ RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArm
 
 RUN bash -c "${APT_INSTALL} bsdmainutils iputils-ping && ${APT_CLEANUP}"
 
-RUN python3.8 -m pip install sympy pyaml html5lib opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
+RUN python3.9 -m pip install sympy pyaml html5lib opencv-contrib-python-headless && bash -c "${APT_CLEANUP}"
 
 # Kotlin
 ENV         KOTLIN_VERSION=1.3.70 \
@@ -163,7 +163,7 @@ RUN bash -c "${APT_INSTALL} fpc && ${APT_CLEANUP}"
 RUN wget -q https://dl.google.com/go/go1.14.1.linux-amd64.tar.gz && tar -C /usr/local -xzf go1.14.1.linux-amd64.tar.gz && rm go1.14.1.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
-RUN python3.8 -m pip install \
+RUN python3.9 -m pip install \
 beautifulsoup4 \
 filelock \
 gunicorn \
@@ -176,7 +176,7 @@ python-dateutil \
 typing-inspect \
 webargs \
  && bash -c "${APT_CLEANUP}"
-RUN python3.8 -m pip install requests --upgrade && bash -c "${APT_CLEANUP}"
+RUN python3.9 -m pip install requests --upgrade && bash -c "${APT_CLEANUP}"
 
 # git
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
@@ -196,7 +196,7 @@ RUN (curl -sL https://deb.nodesource.com/setup_14.x | bash -) && bash -c "${APT_
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 20
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 20
 
 RUN useradd -m agent
 ENV HOME /home/agent
