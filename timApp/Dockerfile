@@ -175,6 +175,17 @@ wand \
 webargs==5.5 \
 && ${PIP_INSTALL} requests --upgrade && ${APT_CLEANUP}"
 
+# Install typings for MyPy
+RUN bash -c "${PIP_INSTALL} \
+types-bleach \
+types-python-dateutil \
+types-pytz \
+types-redis \
+types-filelock \
+types-requests \
+types-PyYAML \
+&& ${APT_CLEANUP}"
+
 # Install Pandoc
 RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.10.1/pandoc-2.10.1-1-amd64.deb" -qO $FILE && \
  dpkg -i $FILE && rm $FILE && bash -c "${APT_CLEANUP}"
