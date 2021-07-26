@@ -98,7 +98,8 @@ class SCIMException(Exception):
 
 
 @scim.errorhandler(SCIMException)
-def item_locked(error: SCIMException) -> Response:
+def item_locked(error: Exception) -> Response:
+    assert isinstance(error, SCIMException)
     log_warning(error.msg)
     return handle_error_msg_code(error.code, error.msg, error.headers)
 

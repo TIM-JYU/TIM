@@ -459,6 +459,9 @@ AssessmentSchema = class_schema(Assessment)
 def mock_assessments(sisuid: str) -> Response:
     ok_names = {'us-1'}
     j = request.get_json()
+    # Part of spec
+    assert j is not None and isinstance(j, dict)
+
     assessments = j['assessments']
     partial = j['partial']
     return json_response({'body': {

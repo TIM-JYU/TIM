@@ -59,8 +59,11 @@ def save_settings() -> Response:
     # Don't overwrite bookmarks. If the user has multiple tabs open, the latest bookmarks might get overwritten.
     attrs_to_preserve = {'bookmarks'}
 
+    j = request.get_json()
+    if not j or not isinstance(j, dict):
+        return json_response(user.get_prefs())
+
     try:
-        j = request.get_json()
         curr_prefs = user.get_prefs()
         for attr in attrs_to_preserve:
             val = getattr(curr_prefs, attr)

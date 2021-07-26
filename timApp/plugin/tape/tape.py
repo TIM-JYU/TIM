@@ -6,6 +6,7 @@ from flask import Blueprint, Response
 from flask import request
 
 from timApp.tim_app import csrf
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response
 
 tape_plugin = Blueprint('tape_plugin',
@@ -33,6 +34,9 @@ def tape_multihtml() -> Response:
     :return:
     """
     jsondata = request.get_json()
+    if not jsondata or not isinstance(jsondata, dict):
+        raise RouteException("Invalid JSON data")
+
     multi = []
     for jso in jsondata:
         multi.append(tape_get_html(jso))

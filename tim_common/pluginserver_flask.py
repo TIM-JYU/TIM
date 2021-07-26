@@ -395,12 +395,18 @@ def register_html_routes(
 
     @app.route('/multihtml', methods=['post'])
     def multihtml() -> Response:
-        ret = render_multihtml(request.get_json(), html_schema())
+        args = request.get_json()
+        if not isinstance(args, list):
+            args = [args]
+        ret = render_multihtml(args, html_schema())
         return ret
 
     @app.route('/multimd', methods=['post'])
     def multimd() -> Response:
-        ret = render_multimd(request.get_json(), html_schema())
+        args = request.get_json()
+        if not isinstance(args, list):
+            args = [args]
+        ret = render_multimd(args, html_schema())
         return ret
 
     @app.route('/reqs')
