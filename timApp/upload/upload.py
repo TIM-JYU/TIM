@@ -69,7 +69,7 @@ default_attachment_folder = get_files_path() / "blocks/files"
 @upload.route('/uploads/<path:relfilename>')
 def get_upload(relfilename: str):
     mt, up = get_pluginupload(relfilename)
-    return send_file(up.filesystem_path.as_posix(), mimetype=mt, add_etags=False)
+    return send_file(up.filesystem_path.as_posix(), mimetype=mt, etag=False)
 
 
 def get_pluginupload(relfilename: str) -> Tuple[str, PluginUpload]:
