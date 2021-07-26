@@ -23,7 +23,7 @@ app.register_blueprint(dropdown_route)
 app.register_blueprint(goaltable_route)
 
 
-@app.route('/reqs')
+@app.get('/reqs')
 def reqs() -> Response:
     return jsonify({
         "js": [],

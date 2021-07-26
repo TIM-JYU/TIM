@@ -48,7 +48,7 @@ class QuestionInDocument:
     isPreamble: bool
 
 
-@qst_plugin.route("/qst/mcq/reqs")
+@qst_plugin.get("/qst/mcq/reqs")
 def qst_mcq_reqs():
     reqs = {
         "type": "embedded",
@@ -60,7 +60,7 @@ def qst_mcq_reqs():
     return json_response(reqs)
 
 
-@qst_plugin.route("/qst/mmcq/reqs")
+@qst_plugin.get("/qst/mmcq/reqs")
 def qst_mmcq_reqs():
     reqs = {
         "type": "embedded",
@@ -72,7 +72,7 @@ def qst_mmcq_reqs():
     return json_response(reqs)
 
 
-@qst_plugin.route("/qst/reqs")
+@qst_plugin.get("/qst/reqs")
 def qst_reqs():
     reqs = {
         "type": "embedded",
@@ -84,7 +84,7 @@ def qst_reqs():
     return json_response(reqs)
 
 
-@qst_plugin.route("/qst/mcq/answer", methods=["PUT"])
+@qst_plugin.put("/qst/mcq/answer")
 @csrf.exempt
 def qst_mcq_answer():
     jsondata = request.get_json()
@@ -92,7 +92,7 @@ def qst_mcq_answer():
     return qst_answer_jso(AnswerSchema().load(jsondata))
 
 
-@qst_plugin.route("/qst/mmcq/answer", methods=["PUT"])
+@qst_plugin.put("/qst/mmcq/answer")
 @csrf.exempt
 def qst_mmcq_answer():
     jsondata = request.get_json()
@@ -155,7 +155,7 @@ class QstAnswerModel(GenericAnswerModel[QstInputModel, QstMarkupModel, QstStateM
 AnswerSchema = class_schema(QstAnswerModel)
 
 
-@qst_plugin.route("/qst/answer", methods=["PUT"])
+@qst_plugin.put("/qst/answer")
 @csrf.exempt
 @use_model(QstAnswerModel)
 def qst_answer(m):
@@ -244,7 +244,8 @@ class QstHtmlModel(GenericHtmlModel[QstInputModel, QstMarkupModel, QstStateModel
 
 QstHtmlSchema = class_schema(QstHtmlModel)
 
-@qst_plugin.route("/qst/multihtml", methods=["POST"])
+
+@qst_plugin.post("/qst/multihtml")
 @csrf.exempt
 def qst_multihtml():
     jsondata = request.get_json()
@@ -337,7 +338,7 @@ def convert_mcq_to_qst(jso, is_mmcq=False):
     qjso["points"] = points
 
 
-@qst_plugin.route("/qst/mcq/multihtml", methods=["POST"])
+@qst_plugin.post("/qst/mcq/multihtml")
 @csrf.exempt
 def qst__mcq_multihtml():
     jsondata = request.get_json()
@@ -348,7 +349,7 @@ def qst__mcq_multihtml():
     return json_response(multi)
 
 
-@qst_plugin.route("/qst/mmcq/multihtml", methods=["POST"])
+@qst_plugin.post("/qst/mmcq/multihtml")
 @csrf.exempt
 def qst__mmcq_multihtml():
     jsondata = request.get_json()
@@ -359,7 +360,7 @@ def qst__mmcq_multihtml():
     return json_response(multi)
 
 
-@qst_plugin.route("/qst/multimd", methods=["POST"])
+@qst_plugin.post("/qst/multimd")
 @csrf.exempt
 def qst_multimd():
     jsondata = request.get_json()
@@ -369,7 +370,7 @@ def qst_multimd():
     return json_response(multi)
 
 
-@qst_plugin.route("/qst/mcq/multimd", methods=["POST"])
+@qst_plugin.post("/qst/mcq/multimd")
 @csrf.exempt
 def qst_mcq_multimd():
     jsondata = request.get_json()
@@ -380,7 +381,7 @@ def qst_mcq_multimd():
     return json_response(multi)
 
 
-@qst_plugin.route("/qst/mmcq/multimd", methods=["POST"])
+@qst_plugin.post("/qst/mmcq/multimd")
 @csrf.exempt
 def qst_mmcq_multimd():
     jsondata = request.get_json()
@@ -391,7 +392,7 @@ def qst_mmcq_multimd():
     return json_response(multi)
 
 
-@qst_plugin.route("/qst/getQuestionMD/", methods=['POST'])
+@qst_plugin.post("/qst/getQuestionMD/")
 def get_question_md():
     md, = verify_json_params('text')
     markup = json.loads(md)
@@ -400,7 +401,7 @@ def get_question_md():
     return json_response({'md': plugin_data['markup']})
 
 
-@qst_plugin.route("/qst/html/", methods=["POST"])
+@qst_plugin.post("/qst/html/")
 @csrf.exempt
 def qst_html():
     jsondata = request.get_json()
@@ -409,7 +410,7 @@ def qst_html():
     return Response(html, mimetype="text/html")
 
 
-@qst_plugin.route("/qst/<path:path>")
+@qst_plugin.get("/qst/<path:path>")
 def not_found(path):
     """This 404 route is required because qst plugin is in the same process - otherwise calling a non-existent qst route
     results in a weird request loop, at least when running locally.
@@ -583,7 +584,7 @@ def mmcq_get_md(jso):
             if ua:
                 leftbox += '*'
             # noinspection PySimplifyBooleanCheck
-            if ua == False:   # do not replace with not ua because it can be None
+            if ua == False:  # do not replace with not ua because it can be None
                 rightbox += '*'
             reason = ' & & '
             if ua is not None:
@@ -611,17 +612,11 @@ qst_own_attributes = {
 
 generic_attribute_names = get_dataclass_field_names(GenericMarkupModel)
 
-
 common = generic_attribute_names & qst_own_attributes
 if common:
     raise Exception(f'qst_own_attributes does not need to list generic attributes: {common}')
 
 qst_attrs = qst_own_attributes.union(generic_attribute_names)
-
-
-
-
-
 
 
 def qst_get_html(jso, review):

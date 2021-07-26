@@ -90,7 +90,7 @@ class TimMessageReadReceipt:
     can_mark_as_read: bool
 
 
-@timMessage.route("/get/<int:item_id>", methods=['GET'])
+@timMessage.get("/get/<int:item_id>")
 def get_tim_messages(item_id: int) -> Response:
     """
     Retrieve messages displayed for current based on item id and return them in json format.
@@ -170,7 +170,7 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     return fullmessages
 
 
-@timMessage.route("/get_read_receipt/<int:doc_id>", methods=['GET'])
+@timMessage.get("/get_read_receipt/<int:doc_id>")
 def get_read_receipt(doc_id: int) -> Response:
     """
     Retrieve read receipt object for the current user and message related to the given document id
@@ -190,10 +190,12 @@ def get_read_receipt(doc_id: int) -> Response:
 
     return json_response(receipt_data)
 
+
 # Regex pattern for url verification.
 URL_PATTERN = re.compile(r"https?://[a-z0-9.-]*/(show_slide|view|teacher|velp|answers|lecture|review|slide)/")
 
-@timMessage.route("/url_check", methods=['POST'])
+
+@timMessage.post("/url_check")
 def check_urls(urls: str) -> Response:
     """
     Checks if given URLS's exist in TIM and that user has right to post TIM message to them
@@ -239,7 +241,7 @@ def check_urls(urls: str) -> Response:
         return json_response({"shortened_urls": valid_urls_string}, 200)
 
 
-@timMessage.route("/send", methods=['POST'])
+@timMessage.post("/send")
 def send_tim_message(options: MessageOptions, message: MessageBody) -> Response:
     return send_message_or_reply(options, message)
 
@@ -308,7 +310,7 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
     return message_doc
 
 
-@timMessage.route("/reply", methods=['POST'])
+@timMessage.post("/reply")
 def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Response:
     messageOptions = MessageOptions(options.messageChannel, False, True, options.archive, options.pageList,
                                     options.readReceipt, False, get_current_user_object().name,
@@ -324,7 +326,7 @@ def reply_to_tim_message(options: ReplyOptions, messageBody: MessageBody) -> Res
     return send_message_or_reply(messageOptions, message)
 
 
-@timMessage.route("/mark_as_read", methods=['POST'])
+@timMessage.post("/mark_as_read")
 def mark_as_read(message_id: int) -> Response:
     """
         Marks given message as read in database.
@@ -348,7 +350,7 @@ def mark_as_read(message_id: int) -> Response:
     return ok_response()
 
 
-@timMessage.route("/cancel_read_receipt", methods=['POST'])
+@timMessage.post("/cancel_read_receipt")
 def cancel_read_receipt(message_id: int) -> Response:
     """
     Removes read receipt date and the user who marked it from the database entry.

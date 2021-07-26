@@ -20,7 +20,7 @@ doc_bp = Blueprint('document',
                    url_prefix='')
 
 
-@doc_bp.route('/download/<int:doc_id>')
+@doc_bp.get('/download/<int:doc_id>')
 def download_document(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_copy_access(d)
@@ -35,7 +35,7 @@ def return_doc_content(d: Document):
         return Response(d.export_markdown(), mimetype="text/plain")
 
 
-@doc_bp.route('/download/<int:doc_id>/<int:major>/<int:minor>')
+@doc_bp.get('/download/<int:doc_id>/<int:major>/<int:minor>')
 def download_document_version(doc_id, major, minor):
     d = get_doc_or_abort(doc_id)
     verify_edit_access(d)
@@ -45,7 +45,7 @@ def download_document_version(doc_id, major, minor):
     return return_doc_content(doc)
 
 
-@doc_bp.route('/diff/<int:doc_id>/<int:major1>/<int:minor1>/<int:major2>/<int:minor2>')
+@doc_bp.get('/diff/<int:doc_id>/<int:major1>/<int:minor1>/<int:major2>/<int:minor2>')
 def diff_document(doc_id, major1, minor1, major2, minor2):
     d = get_doc_or_abort(doc_id)
     verify_edit_access(d)
@@ -71,7 +71,7 @@ class GetBlockModel:
 GetBlockModelSchema = class_schema(GetBlockModel)
 
 
-@doc_bp.route("/getBlock/<int:doc_id>/<par_id>")
+@doc_bp.get("/getBlock/<int:doc_id>/<par_id>")
 def get_block(doc_id, par_id):
     return get_block_2(GetBlockModel(
         area_end=request.args.get('area_end'),
@@ -81,7 +81,7 @@ def get_block(doc_id, par_id):
     ))
 
 
-@doc_bp.route("/getBlock")
+@doc_bp.get("/getBlock")
 @use_args(GetBlockModelSchema())
 def get_block_schema(args: GetBlockModel):
     return get_block_2(args)

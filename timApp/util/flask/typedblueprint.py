@@ -12,10 +12,29 @@ from timApp.util.flask.requesthelper import use_model
 class TypedBlueprint(Blueprint):
     """Adds support for declaring route parameters directly in the route function signature."""
 
-    def route(self, rule: str, **options: Any) -> Callable:
+    def get(self, rule: str, **kwargs: Any) -> Callable:
+        return self._route_impl('get', rule, **kwargs)
+
+    def post(self, rule: str, **kwargs: Any) -> Callable:
+        return self._route_impl('post', rule, **kwargs)
+
+    def put(self, rule: str, **kwargs: Any) -> Callable:
+        return self._route_impl('put', rule, **kwargs)
+
+    def patch(self, rule: str, **kwargs: Any) -> Callable:
+        return self._route_impl('patch', rule, **kwargs)
+
+    def delete(self, rule: str, **kwargs: Any) -> Callable:
+        return self._route_impl('delete', rule, **kwargs)
+
+    def route(self, rule: str, **kwargs: Any) -> Callable:
+        return self._route_impl('route', rule, **kwargs)
+
+    def _route_impl(self, meth: str, rule: str, **options: Any) -> Callable:
         def decorator(f: Callable) -> Callable:
             wrapped = use_typed_params(sum(1 for c in rule if c == '<'))(f)
-            return super(TypedBlueprint, self).route(rule, **options)(wrapped)
+            route_call = getattr(super(TypedBlueprint, self), meth)
+            return route_call(rule, **options)(wrapped)
 
         return decorator
 

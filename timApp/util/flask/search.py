@@ -50,7 +50,7 @@ class GetFoldersModel:
     folder: str
 
 
-@search_routes.route('getFolders')
+@search_routes.get('getFolders')
 @use_model(GetFoldersModel)
 def get_subfolders(m: GetFoldersModel):
     """
@@ -532,7 +532,7 @@ def create_search_files(remove_deleted_pars=True):
         return 400, f"Creating files to {PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH} failed!"
 
 
-@search_routes.route("createContentFile")
+@search_routes.get("createContentFile")
 def create_search_files_route():
     """
     Route for grouping all TIM-paragraphs under documents and combining them into a single file.
@@ -547,7 +547,7 @@ def create_search_files_route():
     return json_response(status_code=status, jsondata=msg)
 
 
-@search_routes.route("/titles")
+@search_routes.get("/titles")
 def title_search():
     """
     Performs search on document titles.
@@ -606,7 +606,7 @@ def title_search():
     return json_response(result_response(results, title_result_count))
 
 
-@search_routes.route('/tags')
+@search_routes.get('/tags')
 def tag_search():
     """
     A route for document tag search.
@@ -716,7 +716,7 @@ def compile_regex(query: str, regex: bool, case_sensitive: bool, search_whole_wo
         return term_regex
 
 
-@search_routes.route("paths")
+@search_routes.get("paths")
 def path_search():
     """
     Document path search. Path results are treated as title results and use
@@ -808,7 +808,7 @@ def is_timeouted(start_time: float, timeout: float) -> bool:
     return elapsed_time > timeout
 
 
-@search_routes.route("")
+@search_routes.get("")
 def search():
     """
     Perform document word search on a combined and grouped par file using grep.

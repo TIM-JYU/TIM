@@ -164,7 +164,7 @@ def scim_group_to_tim(sisu_group: str) -> str:
     return f'{SISU_GROUP_PREFIX}{sisu_group}'
 
 
-@scim.route('/Groups')
+@scim.get('/Groups')
 @use_args(GetGroupsModelSchema())
 def get_groups(args: GetGroupsModel) -> Response:
     m = filter_re.fullmatch(args.filter)
@@ -197,7 +197,7 @@ def derive_scim_group_name(s: SCIMGroupModel) -> str:
 
 
 @csrf.exempt
-@scim.route('/Groups', methods=['post'])
+@scim.post('/Groups')
 @use_args(SCIMGroupModelSchema(), locations=("json",))
 def post_group(args: SCIMGroupModel) -> Response:
     log_info(f'/Groups externalId: {args.externalId}')
@@ -234,14 +234,14 @@ def disambiguate_name(derived_name: str) -> str:
     return derived_name
 
 
-@scim.route('/Groups/<group_id>')
+@scim.get('/Groups/<group_id>')
 def get_group(group_id: str) -> Response:
     ug = get_group_by_scim(group_id)
     return json_response(group_scim(ug))
 
 
 @csrf.exempt
-@scim.route('/Groups/<group_id>', methods=['put'])
+@scim.put('/Groups/<group_id>')
 def put_group(group_id: str) -> Response:
     # log_info(get_request_message(include_body=True))
     try:
@@ -259,7 +259,7 @@ def put_group(group_id: str) -> Response:
 
 
 @csrf.exempt
-@scim.route('/Groups/<group_id>', methods=['delete'])
+@scim.delete('/Groups/<group_id>')
 def delete_group(group_id: str) -> Response:
     ug = get_group_by_scim(group_id)
     ug.name = f'{DELETED_GROUP_PREFIX}{ug.external_id.external_id}'
@@ -268,7 +268,7 @@ def delete_group(group_id: str) -> Response:
     return Response(status=204)
 
 
-@scim.route('/Users/<user_id>')
+@scim.get('/Users/<user_id>')
 def get_user(user_id: str) -> Response:
     u = User.get_by_name(user_id)
     if not u:
@@ -277,7 +277,7 @@ def get_user(user_id: str) -> Response:
 
 
 @csrf.exempt
-@scim.route('/Users/<user_id>', methods=['put'])
+@scim.put('/Users/<user_id>')
 def put_user(user_id: str) -> Response:
     u = User.get_by_name(user_id)
     if not u:

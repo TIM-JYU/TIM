@@ -60,11 +60,9 @@ class TimTable:
     def __init__(self) -> None:
         pass
 
-
     @staticmethod
     def prepare_for_dumbo(values):
         return prepare_for_dumbo(values[MARKUP])
-
 
     @staticmethod
     def multihtml_direct_call(jsondata):
@@ -77,7 +75,8 @@ class RelativeDataBlockValue:
         self.column = column
         self.data = data
 
-@timTable_plugin.route("reqs")
+
+@timTable_plugin.get("reqs")
 def tim_table_reqs():
     reqs = {
         "type": "embedded",
@@ -101,7 +100,7 @@ def tim_table_multihtml_direct(jsondata):
     return json.dumps(multi)
 
 
-@timTable_plugin.route("convertExportData", methods=["POST"])
+@timTable_plugin.post("convertExportData")
 @csrf.exempt
 def convert_export_data():
     """
@@ -121,7 +120,7 @@ def convert_export_data():
     return {"answers": result}
 
 
-@timTable_plugin.route("multihtml", methods=["POST"])
+@timTable_plugin.post("multihtml")
 @csrf.exempt
 def tim_table_multihtml():
     """
@@ -144,7 +143,9 @@ def prepare_multi_for_dumbo(timtable_list):
     for table in timtable_list:
         prepare_for_dumbo(table[MARKUP])
 
+
 CELL_FINDER = re.compile("([A-Z]+)([0-9]+)[!0-9]*")
+
 
 def row_key(s):
     """
@@ -173,7 +174,7 @@ def matrix_to_cells(matrix):
             cells[cell_coordinate(row, col)] = mcol
             col += 1
         row += 1
-    return { "cells": cells,  "type": "Relative" }
+    return {"cells": cells, "type": "Relative"}
 
 
 def tim_table_get_html(jso, review):
@@ -184,12 +185,12 @@ def tim_table_get_html(jso, review):
     :return:
     """
     values = jso[MARKUP]
-    state = jso.get("state",{})
+    state = jso.get("state", {})
     userdata = None
     if state != None:
         userdata = state.get(USERDATA, None)
         headers = state.get("headers", None)
-        if not userdata: # if no userdata use matrix to init data
+        if not userdata:  # if no userdata use matrix to init data
             userdata = matrix_to_cells(state.get('matrix', None))
         values[USERDATA] = userdata
         if headers and values.get("saveUserDataHeader", False):
@@ -209,9 +210,9 @@ def tim_table_get_html(jso, review):
             cells = []
             for key in ucells:
                 cells.append((row_key(key), key + ": " + json.dumps(ucells[key])))
-            cells.sort(key=lambda c: c[0])
+            cells.sort(key=lambda cell: cell[0])
             for c in cells:
-                udata += c[1] +"\n"
+                udata += c[1] + "\n"
         else:
             for key in ucells:
                 udata += key + ": " + json.dumps(ucells[key]) + "\n"
@@ -225,7 +226,7 @@ def tim_table_get_html(jso, review):
     return s
 
 
-@timTable_plugin.route("multimd", methods=["POST"])
+@timTable_plugin.post("multimd")
 @csrf.exempt
 def tim_table_multimd():
     """
@@ -241,7 +242,7 @@ def tim_table_multimd():
     return json_response(multi)
 
 
-@timTable_plugin.route("getCellData", methods=["GET"])
+@timTable_plugin.get("getCellData")
 def tim_table_get_cell_data():
     """
     Route for getting the content of a cell.
@@ -264,20 +265,20 @@ def tim_table_get_cell_data():
         cell_cnt = find_cell_from_datablock(yaml[TABLE][DATABLOCK][CELLS], int(args[ROW]), int(args[COL]))
     if cell_cnt is not None:
         if isinstance(cell_cnt, dict):
-            multi.append(cell_cnt.get(CELL,''))
+            multi.append(cell_cnt.get(CELL, ''))
         else:
             multi.append(cell_cnt)
     else:
         try:
             rows = yaml[TABLE][ROWS]
-            cell_content = find_cell(rows,int(args['row']),int(args['col']))
+            cell_content = find_cell(rows, int(args['row']), int(args['col']))
         except:
             cell_content = ''
         multi.append(cell_content)
     return json_response(multi)
 
 
-@timTable_plugin.route("addRow", methods=["POST"])
+@timTable_plugin.post("addRow")
 def tim_table_add_row():
     """
     Adds a row into the table.
@@ -289,7 +290,7 @@ def tim_table_add_row():
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
-@timTable_plugin.route("addUserSpecificRow", methods=["POST"])
+@timTable_plugin.post("addUserSpecificRow")
 def tim_table_add_user_specific_row():
     """
     Adds an user-specific row into the table.
@@ -308,18 +309,19 @@ def tim_table_add_user_specific_row():
     db.session.commit()
     return json_response(prepare_for_and_call_dumbo(plug))
 
-@timTable_plugin.route("answer", methods=["PUT"])
+
+@timTable_plugin.put("answer")
 @csrf.exempt
-def timTable_answer():
-    return timTable_answer_jso(request.get_json())
+def tim_table_answer():
+    return tim_table_answer_jso(request.get_json())
 
 
-def timTable_answer_jso(jsondata):
+def tim_table_answer_jso(jsondata):
     tim_info = {}
     answers = jsondata['input']['answers']
     spoints = jsondata['markup'].get('points')
     markup = jsondata['markup']
-    savedText = "Saved" #  markup.get('savedText', "Saved")  # Todo make this work
+    savedText = "Saved"  # markup.get('savedText', "Saved")  # Todo make this work
     result = ""
 
     save = answers
@@ -349,7 +351,7 @@ def add_row(plug: Plugin, row_id: int):
         raise RouteException()
     if row_id < 0:
         row_id = len(rows)
-    elif len(rows) < row_id: # fill rows to match needed len
+    elif len(rows) < row_id:  # fill rows to match needed len
         # raise RouteException()
         if len(rows) == 0:
             copy_row = make_empty_row()
@@ -359,7 +361,7 @@ def add_row(plug: Plugin, row_id: int):
             rows.insert(row_id, copy_row)
 
     # clone the previous row's data into the new row but remove the cell content
-    idx = row_id -1
+    idx = row_id - 1
     if idx < 0:
         idx = 0
     if len(rows) == 0:
@@ -407,7 +409,7 @@ def pop_unique_row_id(plug: Plugin) -> int:
     return unique_row_count
 
 
-@timTable_plugin.route("addDatablockRow", methods=["POST"])
+@timTable_plugin.post("addDatablockRow")
 def tim_table_add_datablock_row():
     """
     Adds a row into the table's datablock.
@@ -426,7 +428,7 @@ def tim_table_add_datablock_row():
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
-        rows = [{'row' : []}]
+        rows = [{'row': []}]
         # plug.values[TABLE][ROWS] = rows
     if not rows:
         raise RouteException()
@@ -463,11 +465,12 @@ def fill_row(r, r_len):
     if len(r) > 0:
         model_cell = r[-1]
     else:
-        model_cell = {'cell' : ''}
+        model_cell = {'cell': ''}
     while len(r) < r_len:
         r.append(model_cell)
 
-@timTable_plugin.route("addColumn", methods=["POST"])
+
+@timTable_plugin.post("addColumn")
 def tim_table_add_column():
     """
     Adds a new cell into each row on the table.
@@ -536,7 +539,7 @@ def tim_table_add_column():
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
-@timTable_plugin.route("addDatablockColumn", methods=["POST"])
+@timTable_plugin.post("addDatablockColumn")
 def tim_table_add_datablock_column():
     """
     Adds a column into the table's datablock.
@@ -586,7 +589,7 @@ def get_column_counts(plug: Plugin, row_len: int) -> Tuple[Dict[int, int], List[
     except KeyError:
         # raise RouteException()
         rows = []
-    max_row = len(rows)-1
+    max_row = len(rows) - 1
     for i in range(0, len(rows)):
         try:
             current_row = rows[i][ROW]
@@ -608,7 +611,7 @@ def get_column_counts(plug: Plugin, row_len: int) -> Tuple[Dict[int, int], List[
     return column_counts, datablock_entries, max_row
 
 
-@timTable_plugin.route("removeRow", methods=["POST"])
+@timTable_plugin.post("removeRow")
 def tim_table_remove_row():
     """
     Removes a row from the table.
@@ -643,7 +646,7 @@ def tim_table_remove_row():
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
-@timTable_plugin.route("removeColumn", methods=["POST"])
+@timTable_plugin.post("removeColumn")
 def tim_table_remove_column():
     """
     Removes a column from the table.
@@ -663,8 +666,8 @@ def tim_table_remove_column():
             except KeyError:
                 raise RouteException()
             if len(current_row) <= col_id:
-                continue # continue instead of erroring out, some rows might have colspan in
-                         # their cells while we can still remove the column from other rows
+                continue  # continue instead of erroring out, some rows might have colspan in
+                # their cells while we can still remove the column from other rows
 
             current_row.pop(col_id)
 
@@ -683,10 +686,11 @@ def tim_table_remove_column():
     save_plugin(plug)
     return json_response(prepare_for_and_call_dumbo(plug))
 
+
 #############################
 # Table editor toolbar routes
 #############################
-@timTable_plugin.route("setCell", methods=["POST"])
+@timTable_plugin.post("setCell")
 def tim_table_set_cell():
     """
     Sets a cell's attributes or content.
@@ -738,7 +742,7 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
                         cell_content = find_cell(plug.values[TABLE][ROWS], row_id, col_id)
                     except KeyError:
                         cell_content = ''
-                    new_entry = RelativeDataBlockValue(row_id, col_id, {attribute: value, CELL: cell_content} )
+                    new_entry = RelativeDataBlockValue(row_id, col_id, {attribute: value, CELL: cell_content})
                     datablock_entries.append(new_entry)
                 else:
                     pass
@@ -766,8 +770,8 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
                 if attribute == "CLEAR":
                     continue
                 # raise RouteException()
-                for ir in range(len(rows), row_id+1):
-                    rows.append({ ROW: []})
+                for ir in range(len(rows), row_id + 1):
+                    rows.append({ROW: []})
             row = rows[row_id]
             try:
                 row_data = row[ROW]
@@ -775,19 +779,19 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
                 raise RouteException()
             if row_data == None:
                 row_data = []
-                rows[row_id] = { ROW: row_data}
+                rows[row_id] = {ROW: row_data}
 
             if isinstance(row_data, str):
                 if attribute == "CLEAR":
                     continue
                 row_data = [row_data]
-                rows[row_id] = { ROW: row_data}
+                rows[row_id] = {ROW: row_data}
 
             if len(row_data) <= col_id:
                 if attribute == "CLEAR":
                     continue
                 # raise RouteException()
-                for ic in range(len(row_data), col_id+1):
+                for ic in range(len(row_data), col_id + 1):
                     row_data.append('')
 
             cell = row_data[col_id]
@@ -839,7 +843,7 @@ def set_value_to_table(plug, row_id, col_id, value):
         row_data = row[ROW]
     except KeyError:
         raise RouteException()
-    if row_data == None:
+    if row_data is None:
         row_data = []
         rows[row_id] = {ROW: row_data}
     if isinstance(row_data, str):
@@ -901,7 +905,7 @@ def create_datablock(table: Dict[str, Any]):
     table[DATABLOCK][CELLS] = {}
 
 
-@timTable_plugin.route("saveMultiCell", methods=["POST"])
+@timTable_plugin.post("saveMultiCell")
 def tim_table_save_multi_cell_list():
     """
     Saves cell content
@@ -911,7 +915,7 @@ def tim_table_save_multi_cell_list():
     return tim_table_save_multi_cell_value(cells_to_save, docid, parid)
 
 
-@timTable_plugin.route("saveCell", methods=["POST"])
+@timTable_plugin.post("saveCell")
 def tim_table_save_cell_list():
     """
     Saves cell content
@@ -951,7 +955,8 @@ def tim_table_add_multi_cell_value(cells_to_save, d, plug, multi, must_call_dumb
             cc = MD + cc
         settings = d.document.get_settings()
         if must_call_dumbo:
-            html = call_dumbo([cc], DUMBO_PARAMS, options=plug.par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
+            html = call_dumbo([cc], DUMBO_PARAMS,
+                              options=plug.par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
             multi.append({'cellHtml': html[0], 'row': row, 'col': col})
 
 
@@ -1026,17 +1031,17 @@ def find_cell(rows: list, row: int, col: int) -> str:
     """
     if row >= len(rows):
         return ''
-    right_row = rows[row].get(ROW,[])
+    right_row = rows[row].get(ROW, [])
     if col >= len(right_row):
         return ''
     right_cell = right_row[col]
     if isinstance(right_cell, str) or isinstance(right_cell, int) or isinstance(right_cell, float):
-       return right_cell
-    return right_cell.get(CELL,'')
+        return right_cell
+    return right_cell.get(CELL, '')
 
 
 def cell_coordinate(row: int, col: int) -> str:
-    return colnum_to_letters(col) + str(row+1)
+    return colnum_to_letters(col) + str(row + 1)
 
 
 def find_cell_from_datablock(cells: dict, row: int, col: int) -> Optional[str]:
@@ -1097,7 +1102,7 @@ def datablock_key_to_indexes(datablock_key: str) -> Tuple[int, int]:
     column_index = 0
     for c in columnstring.encode('ascii'):
         # ascii encoding returns a list of bytes, so we can use c directly
-        addition = ((ASCII_CHAR_COUNT**chr_index) * (c - ASCII_OF_A)) + 1
+        addition = ((ASCII_CHAR_COUNT ** chr_index) * (c - ASCII_OF_A)) + 1
         column_index += addition
     return column_index - 1, row_index - 1
 
@@ -1145,7 +1150,7 @@ def prepare_for_and_call_dumbo(plug: Plugin):
         dumbo_opts = par.get_dumbo_options(base_opts=doc.get_settings().get_dumbo_options())
     else:
         dumbo_opts = DumboOptions.default()
-    if plug.is_automd_enabled(default = True):
+    if plug.is_automd_enabled(default=True):
         return call_dumbo(prepare_for_dumbo(plug.values), DUMBO_PARAMS, options=dumbo_opts)
 
     return call_dumbo(plug.values, DUMBO_PARAMS, options=dumbo_opts)
@@ -1176,7 +1181,7 @@ def prepare_for_dumbo(values):
         for i in range(len(rowdata)):
             cell = rowdata[i]
             if is_of_unconvertible_type(cell):
-                    continue
+                continue
 
             if isinstance(cell, str):
                 if cell.startswith(MD):
@@ -1185,7 +1190,7 @@ def prepare_for_dumbo(values):
                     continue
                 rowdata[i] = MD + cell
             else:
-                s = str(cell.get(CELL,''))
+                s = str(cell.get(CELL, ''))
                 if s == '':
                     continue
                 cell[CELL] = MD + s

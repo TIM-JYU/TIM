@@ -50,7 +50,7 @@ class AskedIdModel:
     asked_id: int
 
 
-@lecture_routes.route('/getLectureInfo')
+@lecture_routes.get('/getLectureInfo')
 def get_lecture_info():
     """Route to get info from lectures.
 
@@ -87,7 +87,7 @@ def get_lecture_info():
     )
 
 
-@lecture_routes.route('/getLectureAnswerTotals/<int:lecture_id>')
+@lecture_routes.get('/getLectureAnswerTotals/<int:lecture_id>')
 def get_lecture_answer_totals(lecture_id):
     lec = Lecture.find_by_id(lecture_id)
     is_lecturer = is_lecturer_of(lec)
@@ -105,7 +105,7 @@ def get_lecture_answer_totals(lecture_id):
     return Response(generate_text(), mimetype='text/plain')
 
 
-@lecture_routes.route('/getAllMessages')
+@lecture_routes.get('/getAllMessages')
 def get_all_messages():
     """Route to get all the messages from some lecture.
     """
@@ -124,7 +124,7 @@ class GetUpdatesModel:
     use_wall: bool = field(metadata={'data_key': 'm'}, default=False)
 
 
-@lecture_routes.route('/getUpdates')
+@lecture_routes.get('/getUpdates')
 @use_model(GetUpdatesModel)
 def get_updates(m: GetUpdatesModel):
     # taketime("before update")
@@ -290,7 +290,7 @@ def do_get_updates(m: GetUpdatesModel):
     return basic_info
 
 
-@lecture_routes.route('/getQuestionManually')
+@lecture_routes.get('/getQuestionManually')
 def get_question_manually():
     """Route to use to get question manually (instead of getting question in /getUpdates)."""
     lecture = get_current_lecture_or_abort()
@@ -406,7 +406,7 @@ class SendMessageModel:
     message: str
 
 
-@lecture_routes.route('/sendMessage', methods=['POST'])
+@lecture_routes.post('/sendMessage')
 @use_model(SendMessageModel)
 def send_message(m: SendMessageModel):
     """Route to add message to database."""
@@ -439,7 +439,7 @@ def lecture_dict(lecture: Lecture):
     }
 
 
-@lecture_routes.route('/checkLecture', methods=['GET'])
+@lecture_routes.get('/checkLecture')
 def check_lecture():
     """Route to check if the current user is in some lecture in specific document."""
     lectures = get_current_user_object().lectures
@@ -464,7 +464,7 @@ def switch_to_lecture(l: Lecture):
     u.lectures = [l]
 
 
-@lecture_routes.route("/startFutureLecture", methods=['POST'])
+@lecture_routes.post("/startFutureLecture")
 def start_future_lecture():
     lecture = get_lecture_from_request(check_access=True)
     time_now = get_current_time()
@@ -474,7 +474,7 @@ def start_future_lecture():
     return json_response(lecture_dict(lecture), date_conversion=True)
 
 
-@lecture_routes.route('/getAllLecturesFromDocument', methods=['GET'])
+@lecture_routes.get('/getAllLecturesFromDocument')
 def get_all_lectures():
     if not request.args.get('doc_id'):
         raise RouteException('missing argument(s)')
@@ -504,7 +504,7 @@ def get_all_lectures():
     )
 
 
-@lecture_routes.route('/showLectureInfo/<int:lecture_id>', methods=['GET'])
+@lecture_routes.get('/showLectureInfo/<int:lecture_id>')
 def show_lecture_info(lecture_id):
     lecture = Lecture.find_by_id(lecture_id)
     if not lecture:
@@ -517,7 +517,7 @@ def show_lecture_info(lecture_id):
                            translations=doc.translations)
 
 
-@lecture_routes.route('/showLectureInfoGivenName')
+@lecture_routes.get('/showLectureInfoGivenName')
 def show_lecture_info_given_name():
     lecture = get_lecture_from_request(check_access=False)
     return json_response(
@@ -526,7 +526,7 @@ def show_lecture_info_given_name():
     )
 
 
-@lecture_routes.route('/getLectureByCode')
+@lecture_routes.get('/getLectureByCode')
 def lecture_needs_password():
     lecture = get_lecture_from_request(check_access=False)
     return json_response(lecture, date_conversion=True)
@@ -581,7 +581,7 @@ def get_running_lectures(doc_id=None):
     }
 
 
-@lecture_routes.route('/createLecture', methods=['POST'])
+@lecture_routes.post('/createLecture')
 def create_lecture():
     doc_id, start_time, end_time, lecture_code = verify_json_params('doc_id', 'start_time', 'end_time', 'lecture_code')
     start_time = dateutil.parser.parse(start_time)
@@ -627,7 +627,7 @@ def empty_lecture(lec: Lecture):
     clean_dictionaries_by_lecture(lec)
 
 
-@lecture_routes.route('/endLecture', methods=['POST'])
+@lecture_routes.post('/endLecture')
 def end_lecture():
     lecture = get_lecture_from_request()
     now = get_current_time()
@@ -665,7 +665,7 @@ def delete_question_temp_data(question: AskedQuestion, lecture: Lecture):
     stop_showing_points(lecture)
 
 
-@lecture_routes.route('/extendLecture', methods=['POST'])
+@lecture_routes.post('/extendLecture')
 def extend_lecture():
     new_end_time = request.args.get("new_end_time")
     if not new_end_time:
@@ -681,7 +681,7 @@ class DeleteLectureModel:
     lecture_id: int
 
 
-@lecture_routes.route('/deleteLecture', methods=['POST'])
+@lecture_routes.post('/deleteLecture')
 @use_model(DeleteLectureModel)
 def delete_lecture(m: DeleteLectureModel):
     lecture = get_lecture_from_request(lecture_id=m.lecture_id)
@@ -711,7 +711,7 @@ def get_lecture_from_request(check_access=True, lecture_id: Optional[int] = None
     return lecture
 
 
-@lecture_routes.route('/joinLecture', methods=['POST'])
+@lecture_routes.post('/joinLecture')
 def join_lecture():
     """Route to join lecture.
 
@@ -753,7 +753,7 @@ def update_activity(lecture: Lecture, u: User):
     db.session.merge(ua)
 
 
-@lecture_routes.route('/leaveLecture', methods=['POST'])
+@lecture_routes.post('/leaveLecture')
 def leave_lecture_route():
     lecture = get_lecture_from_request(check_access=False)
     leave_lecture(lecture)
@@ -767,7 +767,7 @@ def leave_lecture(lecture: Lecture):
         lecture.users.remove(u)
 
 
-@lecture_routes.route("/extendQuestion", methods=['POST'])
+@lecture_routes.post("/extendQuestion")
 def extend_question():
     asked_id = int(request.args.get('asked_id'))
     extend = int(request.args.get('extend'))
@@ -799,7 +799,7 @@ def get_current_lecture_or_abort() -> Lecture:
     return lec
 
 
-@lecture_routes.route("/askQuestion", methods=['POST'])
+@lecture_routes.post("/askQuestion")
 def ask_question():
     if not (request.args.get('question_id') or request.args.get('asked_id') or request.args.get('par_id')):
         raise RouteException("Bad request")
@@ -860,7 +860,7 @@ class ShowAnswerPointsModel(AskedIdModel):
     current_points_id: Optional[int] = None
 
 
-@lecture_routes.route('/showAnswerPoints', methods=['POST'])
+@lecture_routes.post('/showAnswerPoints')
 @use_model(ShowAnswerPointsModel)
 def show_points(m: ShowAnswerPointsModel):
     lecture = get_current_lecture_or_abort()
@@ -888,7 +888,7 @@ def stop_showing_points(lecture: Lecture):
         AskedQuestion.query.filter_by(lecture_id=lecture.lecture_id).with_entities(AskedQuestion.asked_id))).delete(synchronize_session='fetch')
 
 
-@lecture_routes.route('/updatePoints/', methods=['POST'])
+@lecture_routes.post('/updatePoints/')
 def update_question_points():
     """Route to get add question to database."""
     if 'asked_id' not in request.args or 'points' not in request.args:
@@ -914,7 +914,7 @@ def delete_activity(question: AskedQuestion, kinds):
                                   QuestionActivity.kind.in_(kinds)).delete(synchronize_session='fetch')
 
 
-@lecture_routes.route("/getQuestionByParId", methods=['GET'])
+@lecture_routes.get("/getQuestionByParId")
 def get_question_by_par_id():
     if not request.args.get("par_id") or not request.args.get("doc_id"):
         raise RouteException('missing argument(s)')
@@ -927,7 +927,7 @@ def get_question_by_par_id():
     return json_response(question)
 
 
-@lecture_routes.route("/getAskedQuestionById", methods=['GET'])
+@lecture_routes.get("/getAskedQuestionById")
 def get_asked_question_by_id():
     if not request.args.get("asked_id"):
         raise RouteException('missing argument(s)')
@@ -937,7 +937,7 @@ def get_asked_question_by_id():
     return json_response(question, date_conversion=True)
 
 
-@lecture_routes.route("/getQuestionAnswer", methods=['GET'])
+@lecture_routes.get("/getQuestionAnswer")
 def get_question_answer_by_id():
     answer_id = get_option(request, 'id', default=None, cast=int)
     if answer_id:
@@ -949,7 +949,7 @@ def get_question_answer_by_id():
     return json_response(ans, date_conversion=True)
 
 
-@lecture_routes.route("/stopQuestion", methods=['POST'])
+@lecture_routes.post("/stopQuestion")
 @use_model(AskedIdModel)
 def stop_question(m: AskedIdModel):
     """Route to stop question from running."""
@@ -967,7 +967,7 @@ def stop_question(m: AskedIdModel):
     return ok_response()
 
 
-@lecture_routes.route("/getLectureAnswers", methods=['GET'])
+@lecture_routes.get("/getLectureAnswers")
 def get_lecture_answers():
     """Changing this to long poll requires removing threads."""
     asked_id = get_option(request, 'asked_id', None, cast=int)
@@ -993,7 +993,7 @@ class AnswerToQuestionModel(AskedIdModel):
     input: List[List[str]]
 
 
-@lecture_routes.route("/answerToQuestion", methods=['PUT'])
+@lecture_routes.put("/answerToQuestion")
 @use_model(AnswerToQuestionModel)
 def answer_to_question(m: AnswerToQuestionModel):
     asked_id = m.asked_id
@@ -1038,7 +1038,7 @@ def answer_to_question(m: AnswerToQuestionModel):
     return ok_response()
 
 
-@lecture_routes.route("/closePoints", methods=['PUT'])
+@lecture_routes.put("/closePoints")
 def close_points():
     asked_id = get_option(request, 'asked_id', None, cast=int)
     if not asked_id:

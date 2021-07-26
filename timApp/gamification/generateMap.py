@@ -12,7 +12,7 @@ from timApp.util.flask.responsehelper import json_response
 generateMap = Blueprint('generateMap', __name__, url_prefix='')
 
 
-@generateMap.route('/generateMap', methods=["POST"])
+@generateMap.post('/generateMap')
 def generate_map():
     # Configuring the data is here to make the map load lazier.
     try:

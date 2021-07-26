@@ -47,7 +47,7 @@ sisu = Blueprint('sisu',
                  url_prefix='/sisu')
 
 
-@sisu.route('/getPotentialGroups')
+@sisu.get('/getPotentialGroups')
 def get_potential_groups_route() -> Response:
     u = get_current_user_object()
     result = get_potential_groups(u)
@@ -113,7 +113,7 @@ def get_sisu_group_rights(g: UserGroup) -> List[UserGroup]:
     return get_sisu_groups_by_filter(ScimUserGroup.external_id.in_(group_names))
 
 
-@sisu.route('/createGroupDocs', methods=['post'])
+@sisu.post('/createGroupDocs')
 @use_args(GroupCreateSchema(many=True), locations=("json",))
 def create_groups_route(args: List[GroupCreateModel]) -> Response:
     u = get_current_user_object()
@@ -336,7 +336,7 @@ class PostGradesModel:
     groups: Optional[List[str]] = None
 
 
-@sisu.route('/sendGrades', methods=['post'])
+@sisu.post('/sendGrades')
 @use_model(PostGradesModel)
 def post_grades_route(m: PostGradesModel) -> Response:
     result = json_response(send_grades_to_sisu(
@@ -455,7 +455,7 @@ AssessmentSchema = class_schema(Assessment)
 
 
 @csrf.exempt
-@sisu.route('/assessments/<sisuid>', methods=['post'])
+@sisu.post('/assessments/<sisuid>')
 def mock_assessments(sisuid: str) -> Response:
     ok_names = {'us-1'}
     j = request.get_json()

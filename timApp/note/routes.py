@@ -55,7 +55,7 @@ def get_comment_and_check_exists(note_id: int) -> UserNote:
     return note
 
 
-@notes.route("/note/<int:note_id>")
+@notes.get("/note/<int:note_id>")
 def get_note(note_id: int) -> Response:
     note = get_comment_and_check_exists(note_id)
     if not has_note_edit_access(note):
@@ -90,7 +90,7 @@ class DeletedNote:
         }
 
 
-@notes.route("/notes/<path:item_path>")
+@notes.get("/notes/<path:item_path>")
 def get_notes(
         item_path: str,
         private: bool = False,
@@ -190,7 +190,7 @@ class ParContext:
         return self.curr != self.orig
 
 
-@notes.route("/postNote", methods=['POST'])
+@notes.post("/postNote")
 def post_note(
         text: str,
         access: str,
@@ -244,7 +244,7 @@ def check_permissions_and_get_orig(ctx: ParContext, is_public: bool) -> Tuple[Do
     return orig_docinfo, p
 
 
-@notes.route("/editNote", methods=['POST'])
+@notes.post("/editNote")
 def edit_note(
         id: int,
         ctx: ParContext,
@@ -280,7 +280,7 @@ def edit_note(
     return comment_response(ctx, orig_docinfo, p)
 
 
-@notes.route("/deleteNote", methods=['POST'])
+@notes.post("/deleteNote")
 def delete_note(
         id: int,
         ctx: ParContext,

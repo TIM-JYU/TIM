@@ -63,11 +63,11 @@ class DataViewSettingsModel:
 
 @dataclass
 class RunScriptModel:
-     script: Optional[str] = None
-     button: Optional[str] = None
-     all: Optional[bool] = None
-     update: Optional[bool] = None
-     interval: Optional[int] = None
+    script: Optional[str] = None
+    button: Optional[str] = None
+    all: Optional[bool] = None
+    update: Optional[bool] = None
+    interval: Optional[int] = None
 
 
 @dataclass
@@ -361,7 +361,7 @@ def check_field_filtering(r_filter: Optional[RegexOrComparator], target: Union[s
     return r_filter.is_match(target)
 
 
-@tableForm_plugin.route('/generateCSV')
+@tableForm_plugin.get('/generateCSV')
 @use_args(GenerateCSVSchema())
 def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
     """
@@ -371,9 +371,9 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
     """
     curr_user = get_current_user_object()
     docid, groups, separator, show_real_names, show_user_names, show_emails, remove_doc_ids, fields, user_filter, \
-        filter_fields, filter_values = args.docId, args.groups, args.separator, args.realnames, \
-        args.usernames, args.emails, args.removeDocIds, args.fields, args.userFilter, \
-        args.filterFields, args.filterValues
+    filter_fields, filter_values = args.docId, args.groups, args.separator, args.realnames, \
+                                   args.usernames, args.emails, args.removeDocIds, args.fields, args.userFilter, \
+                                   args.filterFields, args.filterValues
     if len(separator) > 1:
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now"
@@ -455,7 +455,7 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
             csv, output = jsrunner_run(params)
         except JsRunnerError as e:
             raise RouteException('Error in JavaScript: ' + str(e)) from e
-    return text_response(output+csv)
+    return text_response(output + csv)
 
 
 """
@@ -472,7 +472,7 @@ class FetchTableDataModel:
     taskid: str
 
 
-@tableForm_plugin.route('/fetchTableData')
+@tableForm_plugin.get('/fetchTableData')
 @use_model(FetchTableDataModel)
 def fetch_rows(m: FetchTableDataModel) -> Response:
     curr_user = get_current_user_object()
@@ -518,7 +518,7 @@ class FetchTableDataModelPreview(FetchTableDataModel):
     removeDocIds: bool = True
 
 
-@tableForm_plugin.route('/fetchTableDataPreview')
+@tableForm_plugin.get('/fetchTableDataPreview')
 @use_model(FetchTableDataModelPreview)
 def fetch_rows_preview(m: FetchTableDataModelPreview) -> Response:
     curr_user = get_current_user_object()
@@ -550,7 +550,7 @@ class UpdateFieldsModel:
     fields: List[str]
 
 
-@tableForm_plugin.route('/updateFields')
+@tableForm_plugin.get('/updateFields')
 @use_model(UpdateFieldsModel)
 def update_fields(m: UpdateFieldsModel) -> Response:
     r: Dict[str, Any] = {}

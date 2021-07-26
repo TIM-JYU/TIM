@@ -25,7 +25,7 @@ tr_bp = Blueprint('translation',
                   url_prefix='')
 
 
-@tr_bp.route("/translate/<int:tr_doc_id>/<language>", methods=["POST"])
+@tr_bp.post("/translate/<int:tr_doc_id>/<language>")
 def create_translation_route(tr_doc_id, language):
     title = request.get_json().get('doc_title', None)
 
@@ -57,7 +57,7 @@ def create_translation_route(tr_doc_id, language):
     return json_response(tr)
 
 
-@tr_bp.route("/translation/<int:doc_id>", methods=["POST"])
+@tr_bp.post("/translation/<int:doc_id>")
 def update_translation(doc_id):
     (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=True)
     if not valid_language_id(lang_id):
@@ -74,7 +74,7 @@ def update_translation(doc_id):
     return ok_response()
 
 
-@tr_bp.route("/translations/<int:doc_id>", methods=["GET"])
+@tr_bp.get("/translations/<int:doc_id>")
 def get_translations(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_manage_access(d)

@@ -231,7 +231,7 @@ def inject_user() -> dict:
     return r
 
 
-@app.route('/js/<path:path>')
+@app.get('/js/<path:path>')
 def get_js_file(path: str):
     locale = get_locale()
     for f in [
@@ -245,12 +245,12 @@ def get_js_file(path: str):
     raise NotExist('File not found')
 
 
-@app.route('/empty')
+@app.get('/empty')
 def empty_response_route():
     return Response('', mimetype='text/plain')
 
 
-@app.route("/ping")
+@app.get("/ping")
 def ping():
     return ok_response()
 
@@ -263,7 +263,7 @@ class GetProxyModel:
     mimetype: Optional[str] = None
 
 
-@app.route("/getproxy")
+@app.get("/getproxy")
 @use_model(GetProxyModel)
 def getproxy(m: GetProxyModel):
     parsed = urlparse(m.url)
@@ -297,12 +297,12 @@ def getproxy(m: GetProxyModel):
     return json_response({'data': r.text, 'status_code': r.status_code})
 
 
-@app.route("/time")
+@app.get("/time")
 def get_time():
     return json_response({'time': get_current_time()}, date_conversion=True)
 
 
-@app.route("/getTemplates")
+@app.get("/getTemplates")
 def get_templates():
     current_path = request.args.get('item_path', '')
     d = DocEntry.find_by_path(current_path)
@@ -331,9 +331,9 @@ def update_user_course_bookmarks():
             add_to_course_bookmark(b, d)
 
 
-@app.route("/en")
-@app.route("/fi")
-@app.route("/")
+@app.get("/en")
+@app.get("/fi")
+@app.get("/")
 def start_page():
     update_user_course_bookmarks()
     db.session.commit()

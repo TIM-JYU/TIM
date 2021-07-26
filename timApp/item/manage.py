@@ -42,7 +42,7 @@ manage_page = Blueprint('manage_page',
                         url_prefix='')  # TODO: Better URL prefix.
 
 
-@manage_page.route("/manage/<path:path>")
+@manage_page.get("/manage/<path:path>")
 def manage(path):
     if has_special_chars(path):
         return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
@@ -71,7 +71,7 @@ def manage(path):
     )
 
 
-@manage_page.route("/changelog/<int:doc_id>/<int:length>")
+@manage_page.get("/changelog/<int:doc_id>/<int:length>")
 def get_changelog(doc_id, length):
     doc = get_doc_or_abort(doc_id)
     verify_manage_access(doc)
@@ -188,7 +188,7 @@ class PermissionMassEditModel(PermissionEditModel):
     action: EditOption = field(metadata={'by_value': True})
 
 
-@manage_page.route("/permissions/add", methods=["PUT"])
+@manage_page.put("/permissions/add")
 @use_model(PermissionSingleEditModel)
 def add_permission(m: PermissionSingleEditModel):
     i = get_item_or_abort(m.id)
@@ -220,7 +220,7 @@ def get_group_and_doc(doc_id: int, username: str) -> Tuple[UserGroup, DocInfo]:
     return g, i
 
 
-@manage_page.route("/permissions/expire/<int:doc_id>/<username>")
+@manage_page.get("/permissions/expire/<int:doc_id>/<username>")
 def expire_permission_url(doc_id: int, username: str):
     g, i = get_group_and_doc(doc_id, username)
     ba: Optional[BlockAccess] = BlockAccess.query.filter_by(
@@ -241,14 +241,14 @@ def expire_permission_url(doc_id: int, username: str):
     return ok_response()
 
 
-@manage_page.route("/permissions/confirm/<int:doc_id>/<username>")
+@manage_page.get("/permissions/confirm/<int:doc_id>/<username>")
 def confirm_permission_url(doc_id: int, username: str):
     g, i = get_group_and_doc(doc_id, username)
     m = PermissionRemoveModel(id=doc_id, type=AccessType.view, group=g.id)
     return do_confirm_permission(m, i)
 
 
-@manage_page.route("/permissions/confirm", methods=["PUT"])
+@manage_page.put("/permissions/confirm")
 @use_model(PermissionRemoveModel)
 def confirm_permission(m: PermissionRemoveModel):
     i = get_item_or_abort(m.id)
@@ -273,7 +273,7 @@ def do_confirm_permission(m: PermissionRemoveModel, i: DocInfo):
     return ok_response()
 
 
-@manage_page.route("/permissions/edit", methods=["put"])
+@manage_page.put("/permissions/edit")
 @use_model(PermissionMassEditModel)
 def edit_permissions(m: PermissionMassEditModel):
     groups = m.group_objects
@@ -336,7 +336,7 @@ def add_perm(
     return accs
 
 
-@manage_page.route("/permissions/remove", methods=["PUT"])
+@manage_page.put("/permissions/remove")
 @use_model(PermissionRemoveModel)
 def remove_permission(m: PermissionRemoveModel):
     i = get_item_or_abort(m.id)
@@ -358,7 +358,7 @@ class PermissionClearModel:
     type: AccessType = field(metadata={'by_value': True})
 
 
-@manage_page.route("/permissions/clear", methods=["PUT"])
+@manage_page.put("/permissions/clear")
 @use_model(PermissionClearModel)
 def clear_permissions(m: PermissionClearModel):
     for p in m.paths:
@@ -381,7 +381,7 @@ class SelfExpireModel:
     id: int
 
 
-@manage_page.route("/permissions/selfExpire", methods=["post"])
+@manage_page.post("/permissions/selfExpire")
 @use_model(SelfExpireModel)
 def self_expire_permission(m: SelfExpireModel):
     i = get_item_or_abort(m.id)
@@ -406,14 +406,14 @@ def check_ownership_loss(had_ownership, item):
         raise AccessDenied('You cannot remove ownership from yourself.')
 
 
-@manage_page.route("/alias/<int:doc_id>", methods=["GET"])
+@manage_page.get("/alias/<int:doc_id>")
 def get_doc_names(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_manage_access(d)
     return json_response(d.aliases)
 
 
-@manage_page.route("/alias/<int:doc_id>/<path:new_alias>", methods=["PUT"])
+@manage_page.put("/alias/<int:doc_id>/<path:new_alias>")
 def add_alias(doc_id, new_alias):
     d = get_doc_or_abort(doc_id)
     verify_manage_access(d)
@@ -427,7 +427,7 @@ def add_alias(doc_id, new_alias):
     return ok_response()
 
 
-@manage_page.route("/alias/<path:alias>", methods=["POST"])
+@manage_page.post("/alias/<path:alias>")
 def change_alias(alias):
     alias = alias.strip('/')
     new_alias, = verify_json_params('new_name')
@@ -454,7 +454,7 @@ def change_alias(alias):
     return ok_response()
 
 
-@manage_page.route("/alias/<path:alias>", methods=["DELETE"])
+@manage_page.delete("/alias/<path:alias>")
 def remove_alias(alias):
     alias = alias.strip('/')
 
@@ -476,7 +476,7 @@ def remove_alias(alias):
     return ok_response()
 
 
-@manage_page.route("/rename/<int:item_id>", methods=["PUT"])
+@manage_page.put("/rename/<int:item_id>")
 def rename_folder(item_id):
     new_name = request.get_json()['new_name'].strip('/')
 
@@ -504,7 +504,7 @@ def rename_folder(item_id):
     return json_response({'new_name': new_name})
 
 
-@manage_page.route("/permissions/get/<int:item_id>")
+@manage_page.get("/permissions/get/<int:item_id>")
 def get_permissions(item_id):
     i = get_item_or_abort(item_id)
     verify_manage_access(i)
@@ -516,7 +516,7 @@ def get_permissions(item_id):
     }, date_conversion=True)
 
 
-@manage_page.route("/defaultPermissions/<object_type>/get/<int:folder_id>")
+@manage_page.get("/defaultPermissions/<object_type>/get/<int:folder_id>")
 def get_default_document_permissions(folder_id, object_type):
     f = get_folder_or_abort(folder_id)
     verify_manage_access(f)
@@ -524,7 +524,7 @@ def get_default_document_permissions(folder_id, object_type):
     return json_response({'grouprights': grouprights}, date_conversion=True)
 
 
-@manage_page.route("/defaultPermissions/add", methods=["PUT"])
+@manage_page.put("/defaultPermissions/add")
 @use_model(DefaultPermissionModel)
 def add_default_doc_permission(m: DefaultPermissionModel):
     i = get_folder_or_abort(m.id)
@@ -545,7 +545,7 @@ def add_default_doc_permission(m: DefaultPermissionModel):
     return permission_response(m)
 
 
-@manage_page.route("/defaultPermissions/remove", methods=["PUT"])
+@manage_page.put("/defaultPermissions/remove")
 @use_model(DefaultPermissionRemoveModel)
 def remove_default_doc_permission(m: DefaultPermissionRemoveModel):
     f = get_folder_or_abort(m.id)
@@ -574,7 +574,7 @@ def verify_permission_edit_access(i: ItemOrBlock, perm_type: AccessType) -> bool
         return False
 
 
-@manage_page.route("/documents/<int:doc_id>", methods=["DELETE"])
+@manage_page.delete("/documents/<int:doc_id>")
 def del_document(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_ownership(d)
@@ -592,7 +592,7 @@ def get_trash_folder() -> Folder:
     return f
 
 
-@manage_page.route("/folders/<folder_id>", methods=["DELETE"])
+@manage_page.delete("/folders/<folder_id>")
 def delete_folder(folder_id):
     f = get_folder_or_abort(folder_id)
     verify_ownership(f)
@@ -607,7 +607,7 @@ def delete_folder(folder_id):
     return ok_response()
 
 
-@manage_page.route("/changeTitle/<int:item_id>", methods=["PUT"])
+@manage_page.put("/changeTitle/<int:item_id>")
 def change_title(item_id):
     item = get_item_or_abort(item_id)
     verify_edit_access(item)
@@ -627,7 +627,7 @@ def get_copy_folder_params(folder_id):
     return f, dest, compiled
 
 
-@manage_page.route("/copy/<int:folder_id>", methods=["POST"])
+@manage_page.post("/copy/<int:folder_id>")
 def copy_folder_endpoint(folder_id):
     f, dest, compiled = get_copy_folder_params(folder_id)
     o = get_current_user_group_object()
@@ -650,7 +650,7 @@ def get_pattern(exclude: str):
         raise RouteException(f'Wrong pattern format: {exclude}')
 
 
-@manage_page.route("/copy/<int:folder_id>/preview", methods=["POST"])
+@manage_page.post("/copy/<int:folder_id>/preview")
 def copy_folder_preview(folder_id):
     f, dest, compiled = get_copy_folder_params(folder_id)
     preview_list = []

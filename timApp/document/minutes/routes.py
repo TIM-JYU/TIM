@@ -28,7 +28,7 @@ minutes_blueprint = Blueprint('minutes',
                               url_prefix='/minutes')
 
 
-@minutes_blueprint.route('/createMinuteExtracts/<path:doc>')
+@minutes_blueprint.get('/createMinuteExtracts/<path:doc>')
 def create_minute_extracts(doc: str) -> Response:
     """
     A route for creating extracts of faculty council minutes.
@@ -84,7 +84,8 @@ def create_minute_extracts(doc: str) -> Response:
                 # raise RouteException(f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
 
             try:
-                new_extract_index: Union[int, str] = ast.literal_eval(markdown[macro_position + len(markdown_to_find):comma_position])
+                new_extract_index: Union[int, str] = ast.literal_eval(
+                    markdown[macro_position + len(markdown_to_find):comma_position])
             except ValueError:
                 raise RouteException(f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
 
@@ -93,7 +94,7 @@ def create_minute_extracts(doc: str) -> Response:
                 # don't allow duplicate extract numbers
                 if current_extract_index in extract_dict:
                     raise RouteException(f"Error creating extracts: the same extract entry ({current_extract_index}) " +
-                                 "cannot exist multiple times in the document.")
+                                         "cannot exist multiple times in the document.")
                 extract_dict[current_extract_index] = (current_extract_title, current_paragraphs)
                 current_extract_title = ""
                 current_paragraphs = []
@@ -121,7 +122,7 @@ def create_minute_extracts(doc: str) -> Response:
     if current_extract_index is not None:
         if current_extract_index in extract_dict:
             raise RouteException(f"Error creating extracts: the same extract entry ({current_extract_index}) cannot " +
-                         "exist multiple times in the document.")
+                                 "exist multiple times in the document.")
         extract_dict[current_extract_index] = (current_extract_title, current_paragraphs)
 
     if not extract_dict:
@@ -166,7 +167,7 @@ PÖYTÄKIRJANOTE - Lista {extract_number} -  {extract_title}
     return safe_redirect(f"/view/{composite_docentry.path_without_lang}")
 
 
-@minutes_blueprint.route("/createMinutes", methods=["POST"])
+@minutes_blueprint.post("/createMinutes")
 def create_minutes_route() -> Response:
     """
     Creates a base document for minutes from an IT faculty council meeting invitation.
@@ -214,7 +215,7 @@ def create_or_get_and_wipe_document(path: str, title: str) -> DocInfo:
     return d
 
 
-@minutes_blueprint.route('/checkAttachments/<path:doc>', methods=['GET'])
+@minutes_blueprint.get('/checkAttachments/<path:doc>')
 def get_attachment_list(doc: str) -> Response:
     """
     Gets the list of all attachments in the document, their macro-types, possible errors,
@@ -243,7 +244,7 @@ class MergeAttachmentsModel:
     doc_id: int
 
 
-@minutes_blueprint.route('/mergeAttachments', methods=['POST'])
+@minutes_blueprint.post('/mergeAttachments')
 @use_model(MergeAttachmentsModel)
 def merge_selected_attachments(args: MergeAttachmentsModel) -> Response:
     """
@@ -281,7 +282,7 @@ def merge_selected_attachments(args: MergeAttachmentsModel) -> Response:
         return json_response({'success': True, 'url': f"/minutes/openMergedAttachment?{params}"}, status_code=201)
 
 
-@minutes_blueprint.route('/openMergedAttachment')
+@minutes_blueprint.get('/openMergedAttachment')
 @use_model(MergeAttachmentsModel)
 def open_merged_file(args: MergeAttachmentsModel) -> Response:
     """

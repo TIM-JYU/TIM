@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from threading import Thread
 
 from flask import Flask
+from typing import Optional
 
 from timApp.tim_app import app
 from timApp.util.flask.requesthelper import is_testing, is_localhost
@@ -17,17 +18,19 @@ def send_email(
         msg: str,
         mail_from: str = app.config['MAIL_FROM'],
         reply_to: str = app.config['NOREPLY_EMAIL'],
-) -> None:
+) -> Optional[Thread]:
     if is_testing():
         sent_mails_in_testing.append(locals())
-        return
+        return None
 
     if is_localhost():
         # don't use log_* function because this is typically run in Celery
         print(f'Skipping mail send on localhost, rcpt: {rcpt}, message: {msg}')
-        return
+        return None
 
-    Thread(target=send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to)).start()
+    t = Thread(target=send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to))
+    t.start()
+    return t
 
 
 def send_email_impl(

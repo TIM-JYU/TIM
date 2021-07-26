@@ -29,7 +29,7 @@ tags_blueprint = Blueprint('tags',
                            url_prefix='/tags')
 
 
-@tags_blueprint.route('/add/<path:doc>', methods=["POST"])
+@tags_blueprint.post('/add/<path:doc>')
 def add_tag(doc):
     """
     Adds a tag-document entry into the database.
@@ -87,7 +87,7 @@ def check_tag_access(tag: Tag, check_group=True):
         verify_group_view_access(ug)
 
 
-@tags_blueprint.route('/setCourseTags/<path:doc>', methods=["POST"])
+@tags_blueprint.post('/setCourseTags/<path:doc>')
 def set_group_tags(doc):
     d = DocEntry.find_by_path(doc)
     if not d:
@@ -110,7 +110,7 @@ def set_group_tags(doc):
     return commit_and_ok()
 
 
-@tags_blueprint.route('/edit/<path:doc>', methods=["POST"])
+@tags_blueprint.post('/edit/<path:doc>')
 def edit_tag(doc):
     """
     Replaces a tag-document entry in the database with new one.
@@ -151,7 +151,7 @@ def edit_tag(doc):
     return ok_response()
 
 
-@tags_blueprint.route('/remove/<path:doc>', methods=["POST"])
+@tags_blueprint.post('/remove/<path:doc>')
 def remove_tag(doc):
     """
     Removes a tag-document entry from the database.
@@ -180,7 +180,7 @@ def remove_tag(doc):
     return ok_response()
 
 
-@tags_blueprint.route('/getTags/<path:doc>', methods=["GET"])
+@tags_blueprint.get('/getTags/<path:doc>')
 def get_tags(doc):
     """
     Gets the list of a document's tags.
@@ -195,7 +195,7 @@ def get_tags(doc):
     return json_response(tags, date_conversion=True)
 
 
-@tags_blueprint.route('/getAllTags', methods=["GET"])
+@tags_blueprint.get('/getAllTags')
 def get_all_tags():
     """
     Gets the list of all unique tags used in any document, regardless
@@ -210,7 +210,7 @@ def get_all_tags():
     return json_response(sorted(list(tags_unique)), date_conversion=True)
 
 
-@tags_blueprint.route('/getDocs')
+@tags_blueprint.get('/getDocs')
 def get_tagged_documents():
     """
     Gets a list of documents that have a certain tag.
@@ -253,7 +253,7 @@ def get_tagged_documents():
     return json_response(docs, date_conversion=True)
 
 
-@tags_blueprint.route("/getDoc/<int:doc_id>")
+@tags_blueprint.get("/getDoc/<int:doc_id>")
 def get_tagged_document_by_id(doc_id):
     """
     Gets a document and its tags by id.

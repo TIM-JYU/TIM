@@ -75,7 +75,7 @@ EVENTS = {
 }
 
 
-@mailman_events.route("", methods=["POST"])
+@mailman_events.post("")
 @csrf.exempt
 def handle_event() -> Response:
     """Handle events sent by Mailman."""

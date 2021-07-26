@@ -35,14 +35,14 @@ def inject_global_notifications() -> dict:
     return dict(global_notifications=notifications)
 
 
-@global_notification.route('/set/<path:message>')
+@global_notification.get('/set/<path:message>')
 def set_global_notification(message: str) -> Response:
     with open(current_app.config['GLOBAL_NOTIFICATION_FILE'], 'wt', encoding='utf8') as f:
         f.write(md_to_html(message))
     return safe_redirect(url_for('start_page'))
 
 
-@global_notification.route('/remove')
+@global_notification.get('/remove')
 def remove_global_notification() -> Response:
     try:
         os.remove(current_app.config['GLOBAL_NOTIFICATION_FILE'])

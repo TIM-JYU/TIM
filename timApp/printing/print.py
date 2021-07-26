@@ -97,7 +97,7 @@ def get_template_doc(doc: DocInfo, template_doc_id):
     return template_doc, template_doc_id, None, isdef
 
 
-@print_blueprint.route("/<path:doc_path>", methods=['POST'])
+@print_blueprint.post("/<path:doc_path>")
 def print_document(doc_path):
     file_type, template_doc_id, plugins_user_print = verify_json_params('fileType', 'templateDocId',
                                                                         'printPluginsUserCode',
@@ -126,13 +126,13 @@ def print_document(doc_path):
                                      plugins_user_print=plugins_user_print)
 
     #  print_access_url = f'{request.url}?file_type={str(print_type.value).lower()}&template_doc_id={template_doc_id}&plugins_user_code={plugins_user_print}'
-    print_access_url = f'{request.url}' # create url for printed page
+    print_access_url = f'{request.url}'  # create url for printed page
     sep = '?'
     if str(print_type.value).lower() != 'pdf':
         print_access_url += f'{sep}file_type={str(print_type.value).lower()}'
         sep = '&'
-    if  not template_doc_def:
-        print_access_url +=  f'{sep}template_doc_id={template_doc_id}'
+    if not template_doc_def:
+        print_access_url += f'{sep}template_doc_id={template_doc_id}'
         sep = '&'
     if plugins_user_print:
         print_access_url += f'{sep}plugins_user_code={plugins_user_print}'
@@ -186,7 +186,7 @@ def print_document(doc_path):
     return json_response({'success': True, 'url': print_access_url}, status_code=201)
 
 
-@print_blueprint.route("/<path:doc_path>", methods=['GET'])
+@print_blueprint.get("/<path:doc_path>")
 def get_printed_document(doc_path):
     doc = g.doc_entry
 
@@ -209,7 +209,7 @@ def get_printed_document(doc_path):
     template_doc = None
     template_doc_id = get_option(request, 'template_doc_id', -1)
     orginal_print_type = print_type
-    if (print_type == PrintFormat.ICS):
+    if print_type == PrintFormat.ICS:
         print_type = PrintFormat.PLAIN
     if print_type != PrintFormat.PLAIN and \
             print_type != PrintFormat.RST and \
@@ -319,18 +319,18 @@ def get_printed_document(doc_path):
     return response
 
 
-@print_blueprint.route("/templates/<path:doc_path>", methods=['GET'])
+@print_blueprint.get("/templates/<path:doc_path>")
 def get_templates(doc_path):
     doc = g.doc_entry
 
     template_name = get_doc_template_name(doc)
     if template_name:  # do not give choices if template fixed in doc
-        return json_response({'templates': [], 'doctemplate' : template_name})
+        return json_response({'templates': [], 'doctemplate': template_name})
 
     user = g.user
 
     templates = DocumentPrinter.get_templates_as_dict(doc, user)
-    return json_response({'templates': templates, 'doctemplate' : ''})
+    return json_response({'templates': templates, 'doctemplate': ''})
 
 
 def get_mimetype_for_format(file_type: PrintFormat) -> str:

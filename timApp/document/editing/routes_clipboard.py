@@ -52,7 +52,7 @@ def pull_doc_id(endpoint, values):
             raise NotExist()
 
 
-@clipboard.route('/clipboard/cut/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
+@clipboard.post('/clipboard/cut/<int:doc_id>/<from_par>/<to_par>')
 def cut_to_clipboard(doc_id, from_par, to_par, area_name: Optional[str] = None):
     verify_logged_in()
     verify_edit_access(wd.docentry)
@@ -74,7 +74,7 @@ def cut_to_clipboard(doc_id, from_par, to_par, area_name: Optional[str] = None):
     return json_response({'doc_ver': doc.get_version(), 'pars': [{'id': p.get_id()} for p in pars]})
 
 
-@clipboard.route('/clipboard/copy/<int:doc_id>/<from_par>/<to_par>', methods=['POST'])
+@clipboard.post('/clipboard/copy/<int:doc_id>/<from_par>/<to_par>')
 def copy_to_clipboard(
         doc_id,
         from_par,
@@ -94,7 +94,7 @@ def copy_to_clipboard(
     return ok_response()
 
 
-@clipboard.route('/clipboard/paste/<int:doc_id>', methods=['POST'])
+@clipboard.post('/clipboard/paste/<int:doc_id>')
 def paste_from_clipboard(
         doc_id,
         par_before: Optional[str] = None,
@@ -161,7 +161,7 @@ def paste_from_clipboard(
 
 
 # TODO unused route?
-@clipboard.route('/clipboard/deletesrc/<int:doc_id>', methods=['POST'])
+@clipboard.post('/clipboard/deletesrc/<int:doc_id>')
 def delete_from_source(doc_id):
     verify_logged_in()
     verify_edit_access(wd.docentry)
@@ -179,7 +179,7 @@ def delete_from_source(doc_id):
     return json_response({'doc_ver': doc.get_version(), 'pars': my_pars})
 
 
-@clipboard.route('/clipboard', methods=['GET'])
+@clipboard.get('/clipboard')
 def show_clipboard(doc_id: int):
     verify_logged_in()
 
@@ -192,7 +192,7 @@ def show_clipboard(doc_id: int):
     return par_response(pars, d)
 
 
-@clipboard.route('/clipboardstatus', methods=['GET'])
+@clipboard.get('/clipboardstatus')
 def get_clipboard_status():
     verify_logged_in()
     clip = Clipboard().get(get_current_user_object())

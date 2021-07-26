@@ -13,7 +13,7 @@ tape_plugin = Blueprint('tape_plugin',
                             url_prefix='/tape/')
 
 
-@tape_plugin.route("reqs")
+@tape_plugin.get("reqs")
 def tape_reqs() -> Response:
     reqs = {
         "type": "embedded",
@@ -25,7 +25,7 @@ def tape_reqs() -> Response:
     return json_response(reqs)
 
 
-@tape_plugin.route("multihtml", methods=["POST"])
+@tape_plugin.post("multihtml")
 @csrf.exempt
 def tape_multihtml() -> Response:
     """

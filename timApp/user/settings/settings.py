@@ -33,7 +33,7 @@ def verify_login() -> None:
     verify_logged_in()
 
 
-@settings_page.route('')
+@settings_page.get('')
 def show() -> str:
     available_css_files = [{'name': theme.filename, 'desc': theme.description} for theme in get_available_themes()]
 
@@ -47,12 +47,12 @@ def show() -> str:
         raise NotExist()
 
 
-@settings_page.route('/get')
+@settings_page.get('/get')
 def get_settings() -> Response:
     return json_response(get_current_user_object().get_prefs())
 
 
-@settings_page.route('/save', methods=['POST'])
+@settings_page.post('/save')
 def save_settings() -> Response:
     user = get_current_user_object()
 
@@ -78,7 +78,7 @@ class LangModel:
     lang: str
 
 
-@settings_page.route('/save/lang', methods=['put'])
+@settings_page.put('/save/lang')
 @use_model(LangModel)
 def save_language_route(m: LangModel) -> Response:
     u = get_current_user_object()
@@ -91,7 +91,7 @@ def save_language_route(m: LangModel) -> Response:
     return r
 
 
-@settings_page.route('/get/<name>')
+@settings_page.get('/get/<name>')
 def get_setting(name: str) -> Response:
     prefs = get_current_user_object().get_prefs()
     return json_response({name: getattr(prefs, name, None)})
@@ -137,8 +137,8 @@ def get_user_info(u: User, include_doc_content: bool=False) -> Dict[str, Any]:
     }
 
 
-@settings_page.route('/info')
-@settings_page.route('/info/<username>')
+@settings_page.get('/info')
+@settings_page.get('/info/<username>')
 def get_info_route(username: Optional[str]=None) -> Response:
     if username:
         verify_admin()
@@ -151,7 +151,7 @@ def get_info_route(username: Optional[str]=None) -> Response:
     return json_response(get_user_info(u, include_doc_content))
 
 
-@settings_page.route('/updateConsent', methods=['POST'])
+@settings_page.post('/updateConsent')
 def update_consent() -> Response:
     u = get_current_user_object()
     v, = verify_json_params('consent')
@@ -166,7 +166,7 @@ def update_consent() -> Response:
     return ok_response()
 
 
-@settings_page.route('/account/delete', methods=['post'])
+@settings_page.post('/account/delete')
 def delete_account() -> Response:
     verify_logged_in()
     u = get_current_user_object()
