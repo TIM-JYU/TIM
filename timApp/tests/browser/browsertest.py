@@ -45,7 +45,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def setUp(self):
         TimLiveServer.setUp(self)
-        self.drv = webdriver.Chrome(desired_capabilities=options.to_capabilities())
+        self.drv = webdriver.Chrome(options=options)
         self.drv.implicitly_wait(10)
         self.drv.set_page_load_timeout(20)
         self.drv.set_script_timeout(20)

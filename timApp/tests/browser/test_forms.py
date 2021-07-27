@@ -1,3 +1,5 @@
+from selenium.webdriver.common.by import By
+
 from timApp.auth.accesstype import AccessType
 from timApp.tests.browser.browsertest import BrowserTest
 from timApp.timdb.sqa import db
@@ -22,7 +24,7 @@ class FormTest(BrowserTest):
             field = self.find_element_and_move_to('#c .textfieldNoSaveDiv input')
             field.send_keys(ans)
             multisave = self.find_element_avoid_staleness('#save tim-multisave')
-            runbutton = multisave.find_element_by_css_selector('button')
+            runbutton = multisave.find_element(by=By.CSS_SELECTOR, value='button')
             runbutton.click()
             self.wait_until_present_and_vis('p.savedtext')
 
