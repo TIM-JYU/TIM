@@ -275,7 +275,7 @@ def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMark
     )
 
 
-def make_base64(d: dict, json_encoder: Optional[Type[JSONEncoder]]=None) -> str:
+def make_base64(d: dict, json_encoder: Optional[Type[JSONEncoder]] = None) -> str:
     """Converts the given dict to a base64-encoded JSON string."""
     return base64.b64encode(json.dumps(d, sort_keys=True, cls=json_encoder).encode()).decode()
 
@@ -393,7 +393,7 @@ def register_html_routes(
     def handle_invalid_request(error: Any) -> Response:
         return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
 
-    @app.route('/multihtml', methods=['post'])
+    @app.post('/multihtml')
     def multihtml() -> Response:
         args = request.get_json()
         if not isinstance(args, list):
@@ -401,7 +401,7 @@ def register_html_routes(
         ret = render_multihtml(args, html_schema())
         return ret
 
-    @app.route('/multimd', methods=['post'])
+    @app.post('/multimd')
     def multimd() -> Response:
         args = request.get_json()
         if not isinstance(args, list):
@@ -409,7 +409,7 @@ def register_html_routes(
         ret = render_multimd(args, html_schema())
         return ret
 
-    @app.route('/reqs')
+    @app.get('/reqs')
     def reqs() -> Response:
         return jsonify(reqs_handler())
 
@@ -427,8 +427,8 @@ def register_html_routes(
 HtmlModel = TypeVar('HtmlModel', bound=GenericHtmlModel)
 AnswerModel = TypeVar('AnswerModel', bound=GenericAnswerModel)
 
-
 T = TypeVar('T')
+
 
 def value_or_default(val: Union[T, None, Missing], default: T) -> T:
     if val is None or isinstance(val, Missing):
@@ -471,7 +471,7 @@ def register_answer_route(
         answer_handler: Callable[[AnswerModel], PluginAnswerResp],
         csrf: Optional[CSRFProtect] = None,
 ) -> None:
-    @app.route('/answer', methods=['put'])
+    @app.put('/answer')
     @use_args(class_schema(answer_model)(), locations=("json",))
     def ans(m: AnswerModel) -> Response:
         return jsonify(answer_handler(m))
