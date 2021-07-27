@@ -141,6 +141,7 @@ gevent \
 git+git://github.com/miracle2k/webassets.git \
 gunicorn \
 html5lib \
+httpagentparser \
 humanize \
 isodate \
 libsass \
