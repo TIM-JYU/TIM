@@ -239,7 +239,7 @@ def get_js_file(path: str):
         f'static/scripts/build/{path}',
     ]:
         try:
-            return send_file(f, conditional=True)
+            return send_file(f)
         except FileNotFoundError:
             pass
     raise NotExist('File not found')

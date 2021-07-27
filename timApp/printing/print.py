@@ -286,7 +286,7 @@ def get_printed_document(doc_path):
     mime = get_mimetype_for_format(orginal_print_type)
 
     if not line:
-        response = make_response(send_file(filename_or_fp=cached, mimetype=mime))
+        response = make_response(send_file(path_or_file=cached, mimetype=mime))
         add_csp_if_not_pdf(response, mime, 'sandbox allow-scripts')
     else:  # show LaTeX with line numbers
         styles = "p.red { color: red; }\n"
