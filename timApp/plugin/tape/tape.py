@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional, Union
 from xml.sax.saxutils import quoteattr
 
 from flask import Blueprint, Response
@@ -33,17 +33,17 @@ def tape_multihtml() -> Response:
     Route for getting the HTML of all tape plugins in a document.
     :return:
     """
-    jsondata = request.get_json()
-    if not jsondata or not isinstance(jsondata, dict):
-        raise RouteException("Invalid JSON data")
-
+    jsondata: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = request.get_json()
+    if not jsondata:
+        return json_response([])
+    args: List[Dict[str, Any]] = jsondata if isinstance(jsondata, list) else [jsondata]
     multi = []
-    for jso in jsondata:
+    for jso in args:
         multi.append(tape_get_html(jso))
     return json_response(multi)
 
 
-def tape_get_html(jso: Dict[str, Any]) -> str:
+def tape_get_html(jso: Dict[Any, Any]) -> str:
     """
     Returns the HTML of a single tape paragraph.
     :param jso:
