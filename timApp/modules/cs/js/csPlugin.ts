@@ -155,110 +155,80 @@ async function loadSimcir() {
 // =================================================================================================================
 // Things for known languages
 
+interface LanguageType {
+    ace: string; // ACE-editor type
+    comment: string; // one line comment for language, if needs
+    // beg and end symbols, separate by space
+    // for exaple "/* */"
+}
+
 class LanguageTypes {
+    languages: Record<string, LanguageType> = {
+        pascal: {ace: "pascal", comment: "//"},
+        fortran: {ace: "fortran", comment: "c"},
+        css: {ace: "css", comment: "/* */"},
+        jypeli: {ace: "csharp", comment: "//"},
+        scala: {ace: "scala", comment: "//"},
+        java: {ace: "java", comment: "//"},
+        graphics: {ace: "java", comment: "//"},
+        cc: {ace: "c_cpp", comment: "//"},
+        "c++": {ace: "c_cpp", comment: "//"},
+        shell: {ace: "sh", comment: "#"},
+        vpython: {ace: "python", comment: "#"},
+        py2: {ace: "python", comment: "#"},
+        py: {ace: "python", comment: "#"},
+        fs: {ace: "fsharp", comment: "//"},
+        clisp: {ace: "lisp", comment: ";;"},
+        jjs: {ace: "javascript", comment: "//"},
+        psql: {ace: "sql", comment: "--"},
+        sql: {ace: "sql", comment: "--"},
+        alloy: {ace: "alloy", comment: ""},
+        text: {ace: "text", comment: ""},
+        cs: {ace: "csharp", comment: "//"},
+        run: {ace: "run", comment: "//"},
+        md: {ace: "text", comment: "<!-- -->"},
+        js: {ace: "javascript", comment: "//"},
+        glowscript: {ace: "javascript", comment: "//"},
+        sage: {ace: "python", comment: "#"},
+        simcir: {ace: "json", comment: ""},
+        xml: {ace: "xml", comment: "<!-- -->"},
+        octave: {ace: "matlab", comment: "#"},
+        lua: {ace: "lua", comment: "--"},
+        quorum: {ace: "quorum", comment: "//"},
+        swift: {ace: "swift", comment: "//"},
+        mathcheck: {ace: "text", comment: ""},
+        html: {ace: "html", comment: "<!-- -->"},
+        processing: {ace: "javascript", comment: "//"},
+        rust: {ace: "text", comment: "//"},
+        wescheme: {ace: "scheme", comment: "--"},
+        ping: {ace: "text", comment: ""},
+        kotlin: {ace: "kotlin", comment: "//"},
+        smalltalk: {ace: "text", comment: '" "'},
+        upload: {ace: "text", comment: "//"},
+        extcheck: {ace: "c_cpp", comment: ""},
+        gitreg: {ace: "text", comment: ""},
+        viz: {ace: "text", comment: "//"},
+        vars: {ace: "text", comment: "//"},
+        r: {ace: "r", comment: "#"},
+        ts: {ace: "typescript", comment: "//"},
+        maxima: {ace: "matlab", comment: "/* */"},
+    };
+
     // What are known language types (be careful not to include partial word):
-    runTypes = [
-        "pascal",
-        "fortran",
-        "css",
-        "jypeli",
-        "scala",
-        "java",
-        "graphics",
-        "cc",
-        "c++",
-        "shell",
-        "vpython",
-        "py2",
-        "py",
-        "fs",
-        "clisp",
-        "jjs",
-        "psql",
-        "sql",
-        "alloy",
-        "text",
-        "cs",
-        "run",
-        "md",
-        "js",
-        "glowscript",
-        "sage",
-        "simcir",
-        "xml",
-        "octave",
-        "lua",
-        "quorum",
-        "swift",
-        "mathcheck",
-        "html",
-        "processing",
-        "rust",
-        "wescheme",
-        "ping",
-        "kotlin",
-        "smalltalk",
-        "upload",
-        "extcheck",
-        "gitreg",
-        "viz",
-        "vars",
-        "r",
-        "ts",
-        "maxima",
-    ];
+    runTypes: string[] = [];
 
     // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
-    aceModes = [
-        "pascal",
-        "fortran",
-        "css",
-        "csharp",
-        "scala",
-        "java",
-        "java",
-        "c_cpp",
-        "c_cpp",
-        "sh",
-        "python",
-        "python",
-        "python",
-        "fsharp",
-        "lisp",
-        "javascript",
-        "sql",
-        "sql",
-        "alloy",
-        "text",
-        "csharp",
-        "run",
-        "text",
-        "javascript",
-        "javascript",
-        "python",
-        "json",
-        "xml",
-        "matlab",
-        "lua",
-        "quorum",
-        "swift",
-        "text",
-        "html",
-        "javascript",
-        "text",
-        "scheme",
-        "text",
-        "kotlin",
-        "text",
-        "text",
-        "c_cpp",
-        "text",
-        "text",
-        "text",
-        "r",
-        "typescript",
-        "matlab",
-    ];
+    aceModes: string[] = [];
+
+    constructor() {
+        for (const lt in this.languages) {
+            if (!Object.prototype.hasOwnProperty.call(this.languages, lt))
+                continue;
+            this.runTypes.push(lt);
+            const language = this.languages[lt];
+            this.aceModes.push(language.ace);
+        }
+    }
 
     // What are known test types (be careful not to include partial word):
     testTypes = ["ccomtest", "jcomtest", "comtest", "scomtest"];
@@ -283,6 +253,20 @@ class LanguageTypes {
         scala: "junit",
         "c++": "cunit",
     };
+
+    getCommentMarkers(type: string) {
+        type = type.toLowerCase();
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const c = this.languages[type].comment;
+        const c2 = c.split(" ");
+        let b = c2[0];
+        if (b !== "") b = b + " ";
+        let e = "";
+        if (c2.length >= 2) e = c2[1];
+        if (e !== "") e = " " + e;
+        return [b, e];
+    }
 
     whatIsIn(types: string[], type: string, def: string) {
         if (!type) {
@@ -2943,10 +2927,11 @@ ${fhtml}
         let ind = "";
         if (extra) {
             ind = this.getSameIndent(this.usercode, 0);
-            pre += ind + "// BYCODEBEGIN\n"; // TODO: ask comment string from language
+            const c = languageTypes.getCommentMarkers(this.rtype);
+            pre += ind + c[0] + "BYCODEBEGIN" + c[1] + "\n"; // TODO: ask comment string from language
             const i = this.findLastNonEmpty(usercode);
-            ind = this.getSameIndent(this.usercode, i);
-            post = "\n" + ind + "// BYCODEEND\n" + post; // TODO: ask comment string from language
+            if (i > 0) ind = this.getSameIndent(this.usercode, i);
+            post = "\n" + ind + c[0] + "BYCODEEND" + c[1] + "\n" + post; // TODO: ask comment string from language
         }
         const s = pre + this.usercode + post;
         copyToClipboard(s);
