@@ -1066,7 +1066,7 @@ class NodeJS(Language):
         self.exename = self.sourcefilename
         self.pure_exename = u"./{0:s}.js".format(self.filename)
         self.fileext = "js"
-        self.is_jjs = "jjs" in get_param(query, "type", "")
+        self.is_jjs = "jjs" in self.markup.get("type", "")
         if self.is_jjs:
             shim_print = "var print = console.log;var println = print;"
             self.before_code = shim_print if not self.before_code else shim_print + self.before_code
