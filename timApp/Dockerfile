@@ -179,12 +179,12 @@ webargs==5.5 \
 # Install typings for MyPy
 RUN bash -c "${PIP_INSTALL} \
 types-bleach \
+types-filelock \
 types-python-dateutil \
 types-pytz \
-types-redis \
-types-filelock \
-types-requests \
 types-PyYAML \
+types-redis \
+types-requests \
 && ${APT_CLEANUP}"
 
 # Install Pandoc
