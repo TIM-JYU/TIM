@@ -98,7 +98,7 @@ class Language:
         self.userargs = get_json_param(query.jso, "input", "userargs", None)
         if not self.userargs:
             self.userargs = get_json_param(query.jso, "markup", "userargs", None)
-        self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", f"timimages/cs3:{CS3_TAG}")
+        self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", f"timimages/cs3{CS3_TARGET}:{CS3_TAG}")
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
         self.opt = get_param(query, "opt", "")
@@ -1685,7 +1685,7 @@ class Octave(Language):
     def run(self, result, sourcelines, points_rule):
         # print("octave: ", self.exename)
         extra = get_param(self.query, "extra", "").format(self.pure_exename, self.userargs)
-        self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", f"timimages/cs3:{CS3_TAG}")
+        self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", f"timimages/cs3{CS3_TARGET}:{CS3_TAG}")
         code, out, err, pwddir = self.runself(["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],
                                               timeout=20,
                                               ulimit=df(self.ulimit, "ulimit -t 30 -f 80000"), no_x11=True,

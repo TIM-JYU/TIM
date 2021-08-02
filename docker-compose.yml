@@ -111,8 +111,10 @@ services:
   environment:
    POSTGRES_PASSWORD: postgresql
  csplugin:
-  image: timimages/cs3:focal
-  build: ./timApp/modules/cs
+  image: timimages/cs3${CSPLUGIN_TARGET:-}:focal
+  build:
+   context: ./timApp/modules/cs
+   target: ${CSPLUGIN_TARGET:-complete}
   volumes:
    - ${FILES_ROOT:?}/blocks/uploads:/uploads:ro
    - ./timApp/modules/cs:/cs
@@ -129,6 +131,7 @@ services:
    TIM_ROOT: ${TIM_ROOT:?}
    TIM_HOST: ${TIM_HOST:?}
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}
+   CSPLUGIN_TARGET: ${CSPLUGIN_TARGET:-}
   user: root  # We need access to Docker socket.
   restart: unless-stopped
   read_only: true
@@ -158,7 +161,7 @@ services:
   tmpfs:
     - /tmp
  imagex:
-  image: timimages/cs3:focal
+  image: timimages/cs3${CSPLUGIN_TARGET:-}:focal
   volumes:
    - ./timApp/modules/imagex:/app/imagex:ro
    - ./tim_common:/app/tim_common:ro
