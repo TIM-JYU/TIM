@@ -1058,7 +1058,7 @@ class Css(Text):
 
 
 class NodeJS(Language):
-    ttype = "nodejs"
+    ttype = ["nodejs", "jjs"]
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
@@ -1066,25 +1066,17 @@ class NodeJS(Language):
         self.exename = self.sourcefilename
         self.pure_exename = u"./{0:s}.js".format(self.filename)
         self.fileext = "js"
+        self.is_jjs = "jjs" in get_param(query, "type", "")
+        if self.is_jjs:
+            shim_print = "var print = console.log;var println = print;"
+            self.before_code = shim_print if not self.before_code else shim_print + self.before_code
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["node", self.pure_exename])
+        if self.is_jjs:
+            err = f"JJS engine has been deprecated. Change language type from `jjs` to `nodejs`.\n{err}"
         return code, out, err, pwddir
 
-
-class JJS(NodeJS):
-    ttype = "jjs"
-
-    def __init__(self, query, sourcecode):
-        super().__init__(query, sourcecode)
-        # Add a basic shim for print and println as they are most generally used by the plugins
-        shim_print = "var print = console.log;var println = print;"
-        self.before_code = shim_print if not self.before_code else shim_print + self.before_code
-
-    def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = super().run(result, sourcelines, points_rule)
-        err = f"JJS engine has been deprecated. Change language type from `jjs` to `nodejs`.\n{err}"
-        return code, out, err, pwddir
 
 class TS(Language):
     ttype = "ts"
