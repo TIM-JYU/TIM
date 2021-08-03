@@ -18,6 +18,7 @@ import os
 import re
 import tempfile
 import urllib.request
+from subprocess import check_output, STDOUT
 
 from pandocfilters import toJSONFilter, RawInline, Image, Link, Str
 
@@ -39,7 +40,8 @@ urlmaps = [
     {'url': '/csstatic/', 'dir': '/service/timApp/modules/cs/static/'},
     {'url': '/csgenerated/', 'dir': '/service/timApp/modules/cs/generated/'},
     {'url': '/static/', 'dir': '/service/timApp/static/'},
-    {'url': '/images/', 'dir': '/tim_files/blocks/images/'}
+    {'url': '/images/', 'dir': '/tim_files/blocks/images/'},
+    {'url': '/files/', 'dir': '/tim_files/blocks/files/'}
 ]
 
 
@@ -79,6 +81,53 @@ DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, 'tim-img-dls')
 texdocid = None
 
 
+def convert_svg_to_pdf(image_path):
+    path = os.path.dirname(image_path)
+    # TODO: muista tarkistaa että jos pdf jo on, niin ei tehdä uudelleen!!!
+    temp = image_path.replace('.svg', '.tmp.html')
+    pdf = image_path.replace('.svg', '.pdf')
+    if os.path.isfile(pdf):
+        pdftime = os.path.getmtime(pdf)
+        svgtime = os.path.getmtime(image_path)
+        if pdftime > svgtime:
+            return pdf
+
+    # Make html to avoid headers and footers from PDF-image
+    html = """<html>
+  <head>
+    <style>
+body {
+  margin: 0;
+}
+    </style>
+    <script>
+function init() {
+  const element = document.getElementById('targetsvg');
+  const positionInfo = element.getBoundingClientRect();
+  const height = positionInfo.height;
+  const width = positionInfo.width;
+  const style = document.createElement('style');
+  style.innerHTML = `@page {margin: 0; size: ${width}px ${height+1}px}`;
+  document.head.appendChild(style);
+}
+window.onload = init;
+    </script>
+  </head>
+  <body>
+    <img id="targetsvg" src="SVGIMAGE">
+  </body>
+</html>
+"""
+    # string.format does not work because {} is needed for js
+    html = html.replace("SVGIMAGE", image_path)
+    open(temp, "w").writelines(html)
+    cmd = "/opt/google/chrome/chrome --no-sandbox --headless --disable-gpu --print-to-pdf={} {}".format(pdf, temp)
+    # cmd = "./svg2pdf.sh {} {}".format(image_path, pdf)
+    output = check_output(cmd, stderr=STDOUT, shell=True, cwd=path)
+    os.remove(temp)
+    return pdf
+
+
 def handle_images(key, value, fmt, meta):
     # open("Output.txt", "a").write("Meta:" + str(meta) + "\n")
 
@@ -114,6 +163,8 @@ def handle_images(key, value, fmt, meta):
 
         if image_path != '' and os.path.exists(image_path):
             image_path = image_path.replace('\\', '/')
+            if (image_path.endswith(".svg")):
+                image_path = convert_svg_to_pdf(image_path)
             return Image(attrs, alt_text_inlines, [image_path, title])
 
         '''
@@ -175,6 +226,8 @@ def handle_images(key, value, fmt, meta):
                     # urllib.URLopener().retrieve(url, img_dl_path)
 
                 img_dl_path = img_dl_path.replace('\\', '/') # Ensure UNIX form for pandoc
+                if (img_dl_path.endswith(".svg")):
+                    img_dl_path = convert_svg_to_pdf(img_dl_path)
                 return Image(attrs, alt_text_inlines, [img_dl_path, title])
 
             except IOError:
