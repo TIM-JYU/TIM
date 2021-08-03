@@ -121,9 +121,15 @@ window.onload = init;
     # string.format does not work because {} is needed for js
     html = html.replace("SVGIMAGE", image_path)
     open(temp, "w").writelines(html)
-    cmd = "/opt/google/chrome/chrome --no-sandbox --headless --disable-gpu --print-to-pdf={} {}".format(pdf, temp)
+    cmd = ["/opt/google/chrome/chrome",
+           "--no-sandbox",
+           "--headless",
+           "--disable-gpu",
+           "--print-to-pdf={}".format(pdf),
+           temp
+           ]
     # cmd = "./svg2pdf.sh {} {}".format(image_path, pdf)
-    output = check_output(cmd, stderr=STDOUT, shell=True, cwd=path)
+    output = check_output(cmd, stderr=STDOUT, cwd=path)
     os.remove(temp)
     return pdf
 
