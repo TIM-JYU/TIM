@@ -180,6 +180,7 @@ class LanguageTypes {
         fs: {ace: "fsharp", comment: "//"},
         clisp: {ace: "lisp", comment: ";;"},
         jjs: {ace: "javascript", comment: "//"},
+        nodejs: {ace: "javascript", comment: "//"},
         psql: {ace: "sql", comment: "--"},
         sql: {ace: "sql", comment: "--"},
         alloy: {ace: "alloy", comment: ""},

@@ -32,18 +32,18 @@ readings = Blueprint('readings',
                      url_prefix='')
 
 
-@readings.route("/read/<int:doc_id>", methods=['GET'])
+@readings.get("/read/<int:doc_id>")
 def get_read_paragraphs(doc_id):
     return get_readings_response(true(), doc_id)
 
 
-@readings.route("/read/<int:doc_id>/<block_id>", methods=['GET'])
+@readings.get("/read/<int:doc_id>/<block_id>")
 def get_read_paragraph(doc_id, block_id):
     cond = ReadParagraph.par_id.in_([block_id]) & (ReadParagraph.type == ReadParagraphType.click_red)
     return get_readings_response(cond, doc_id)
 
 
-@readings.route("/read/<int:doc_id>/groupCount", methods=['GET'])
+@readings.get("/read/<int:doc_id>/groupCount")
 def get_read_groups_count(doc_id: int):
     d = get_doc_or_abort(doc_id)
     verify_manage_access(d)
@@ -63,7 +63,7 @@ def get_readings_response(cond, doc_id):
     return json_response(list(result))
 
 
-@readings.route("/unread/<int:doc_id>/<par_id>", methods=['PUT'])
+@readings.put("/unread/<int:doc_id>/<par_id>")
 def unread_paragraph(doc_id, par_id):
     return set_read_paragraph(doc_id, par_id, unread=True)
 
@@ -76,7 +76,7 @@ class ReadModel:
 ReadModelSchema = class_schema(ReadModel)
 
 
-@readings.route("/read/<int:doc_id>/<par_id>/<int:read_type>", methods=['PUT'])
+@readings.put("/read/<int:doc_id>/<par_id>/<int:read_type>")
 def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
     paragraph_type = ReadParagraphType(read_type) if read_type is not None else ReadParagraphType.click_red
     if current_app.config['DISABLE_AUTOMATIC_READINGS'] and paragraph_type in (ReadParagraphType.on_screen,
@@ -143,7 +143,7 @@ def set_read_paragraph(doc_id, par_id, read_type=None, unread=False):
     return ok_response()
 
 
-@readings.route("/read/<int:doc_id>", methods=['PUT'])
+@readings.put("/read/<int:doc_id>")
 def mark_document_read(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_read_marking_right(d)
@@ -154,7 +154,7 @@ def mark_document_read(doc_id):
     return ok_response()
 
 
-@readings.route("/markAllUnread/<int:doc_id>", methods=['POST'])
+@readings.post("/markAllUnread/<int:doc_id>")
 def mark_all_unread(doc_id: int):
     d = get_doc_or_abort(doc_id)
     verify_manage_access(d, message="You need to have manage permission to mark document unread for everyone")
@@ -167,7 +167,7 @@ def mark_all_unread(doc_id: int):
     return ok_response()
 
 
-@readings.route("/read/stats/<path:doc_path>")
+@readings.get("/read/stats/<path:doc_path>")
 def get_statistics(doc_path):
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
     if not d:
@@ -217,14 +217,14 @@ def get_statistics(doc_path):
     def maybe_hide_name_from_row(row):
         if hide_names_in_teacher(d):
             _, rest = row[0], row[1:]
-            return ('user', *rest)
+            return 'user', *rest
         return row
 
     def row_to_dict(row):
         return dict(zip(column_names, maybe_hide_name_from_row(row)))
 
     if result_format == 'count':
-        reads =  list(
+        reads = list(
             map(
                 row_to_dict,
                 q.all()
@@ -234,7 +234,7 @@ def get_statistics(doc_path):
         return Response(str(len(reads)), mimetype='text/plain')
 
     if result_format == 'userid':
-        reads =  list(
+        reads = list(
             map(
                 row_to_dict,
                 q.all()

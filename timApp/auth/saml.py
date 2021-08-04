@@ -243,7 +243,7 @@ class TimRequestedAttributes:
         }
 
 
-@saml.route('/sso')
+@saml.get('/sso')
 @use_model(SSOData)
 def sso(m: SSOData):
     try:
@@ -264,7 +264,7 @@ def sso(m: SSOData):
 
 
 @csrf.exempt
-@saml.route('/acs', methods=['post'])
+@saml.post('/acs')
 def acs():
     entity_id = session.get('entityID')
     if not entity_id:
@@ -354,7 +354,7 @@ def try_process_saml_response(entity_id: str, try_new_cert: bool):
     return auth
 
 
-@saml.route('')
+@saml.get('')
 def get_metadata():
     saml_path = app.config['SAML_PATH']
     settings = OneLogin_Saml2_Settings(custom_base_path=saml_path, sp_validation_only=True)
@@ -369,7 +369,7 @@ def get_metadata():
     return resp
 
 
-@saml.route('/feed')
+@saml.get('/feed')
 def get_idps():
     idp_metadata_xml = get_haka_metadata()
     root = etree.fromstring(idp_metadata_xml)

@@ -1,3 +1,5 @@
+from selenium.webdriver.common.by import By
+
 from timApp.tests.browser.browsertest import BrowserTest
 
 
@@ -33,7 +35,7 @@ autosave: false
         multisave = self.find_element_avoid_staleness('#t3 tim-multisave')
         self.wait_until_present_and_vis('#t3 div') # wait for ng-if to finish
         self.assert_same_screenshot(par, ['textfield/fields_before_answer'])
-        runbutton = multisave.find_element_by_css_selector('button')
+        runbutton = multisave.find_element(by=By.CSS_SELECTOR, value='button')
         runbutton.click()
         self.wait_until_present_and_vis('p.savedtext')
         self.refresh()
@@ -61,7 +63,7 @@ autosave: false
         input2.send_keys(' ')
         self.get_uninteractable_element.click()
         multisave = self.find_element_avoid_staleness('#t3 tim-multisave')
-        runbutton = multisave.find_element_by_css_selector('button')
+        runbutton = multisave.find_element(by=By.CSS_SELECTOR, value='button')
         runbutton.click()
         self.goto_document(d)
         self.wait_until_present_and_vis('#t1 input')

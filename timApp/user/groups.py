@@ -28,10 +28,10 @@ USER_NOT_FOUND = 'User not found'
 
 
 def verify_groupadmin(
-        require: bool=True,
-        user: Optional[User]=None,
-        action: Optional[str]=None,
-        msg: Optional[str]=None,
+        require: bool = True,
+        user: Optional[User] = None,
+        action: Optional[str] = None,
+        msg: Optional[str] = None,
 ):
     curr_user = user
     if curr_user is None:
@@ -55,19 +55,19 @@ def get_uid_gid(groupname, usernames) -> Tuple[UserGroup, List[User]]:
     return group, users
 
 
-@groups.route('/getOrgs')
+@groups.get('/getOrgs')
 def get_organizations():
     return json_response(UserGroup.get_organizations())
 
 
-@groups.route('/show/<groupname>')
+@groups.get('/show/<groupname>')
 def show_members(groupname):
     ug = get_group_or_abort(groupname)
     verify_group_view_access(ug)
     return json_response(sorted(list(ug.users), key=attrgetter('id')))
 
 
-@groups.route('/usergroups/<username>')
+@groups.get('/usergroups/<username>')
 def show_usergroups(username):
     verify_admin()
     u = User.get_by_name(username)
@@ -76,7 +76,7 @@ def show_usergroups(username):
     return json_response(u.get_groups(include_special=False).order_by(UserGroup.name).all())
 
 
-@groups.route('/belongs/<username>/<groupname>')
+@groups.get('/belongs/<username>/<groupname>')
 def belongs(username, groupname):
     ug = get_group_or_abort(groupname)
     verify_group_view_access(ug)
@@ -97,7 +97,7 @@ def raise_group_not_found_if_none(groupname: str, ug: Optional[UserGroup]):
         raise RouteException(f'User group "{groupname}" not found')
 
 
-@groups.route('/create/<groupname>')
+@groups.get('/create/<groupname>')
 def create_group(groupname: str):
     """Route for creating a usergroup.
 
@@ -156,7 +156,7 @@ def add_group_infofield_template(doc: DocInfo) -> None:
     doc.document.add_text(text)
 
 
-def update_group_doc_settings(doc: DocInfo, groupname: str, extra_macros: Dict[str, Any]=None):
+def update_group_doc_settings(doc: DocInfo, groupname: str, extra_macros: Dict[str, Any] = None):
     s = doc.document.get_settings().get_dict().get('macros', {})
     s['group'] = groupname
     s['fields'] = ['info']
@@ -175,8 +175,9 @@ def validate_groupname(groupname: str):
         has_letters = has_letters or c.isalpha()
         has_non_alnum = has_non_alnum or not (c.isalnum() or c.isspace() or c in '-_')
     if not has_digits or not has_letters or has_non_alnum:
-        raise RouteException('Usergroup must contain at least one digit and one letter and must not have special chars: "' +
-              groupname + '"')
+        raise RouteException(
+            'Usergroup must contain at least one digit and one letter and must not have special chars: "' +
+            groupname + '"')
 
 
 def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
@@ -196,13 +197,13 @@ def verify_group_access(ug: UserGroup, access_set, u=None, require=True):
         return True
 
 
-def verify_group_edit_access(ug: UserGroup, user: Optional[User]=None, require=True):
+def verify_group_edit_access(ug: UserGroup, user: Optional[User] = None, require=True):
     if ug.name in SPECIAL_GROUPS:
         raise RouteException(f'Cannot edit special group: {ug.name}')
     if User.get_by_name(ug.name):
         raise RouteException(f'Cannot edit personal group: {ug.name}')
     if ug.name.startswith('cumulative:') or ug.name.startswith('deleted:'):
-         raise RouteException(f'Cannot edit special Sisu group: {ug.name}')
+        raise RouteException(f'Cannot edit special Sisu group: {ug.name}')
     return verify_group_access(ug, edit_access_set, user, require=require)
 
 
@@ -228,7 +229,7 @@ class NamesModel:
 NamesModelSchema = class_schema(NamesModel)
 
 
-@groups.route('/addmember/<groupname>', methods=['post'])
+@groups.post('/addmember/<groupname>')
 def add_member(groupname):
     nm: NamesModel = load_data_from_req(NamesModelSchema)
     existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, nm.names)
@@ -249,7 +250,7 @@ def add_member(groupname):
     })
 
 
-@groups.route('/removemember/<groupname>', methods=['post'])
+@groups.post('/removemember/<groupname>')
 def remove_member(groupname):
     nm: NamesModel = load_data_from_req(NamesModelSchema)
     existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, nm.names)

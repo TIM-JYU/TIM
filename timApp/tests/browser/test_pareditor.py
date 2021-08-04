@@ -11,7 +11,7 @@ from timApp.timdb.sqa import db
 
 
 def get_change_editor_button(pareditor) -> WebElement:
-    change_editor_button = pareditor.find_elements_by_css_selector('.editorOptions label')[1]
+    change_editor_button = pareditor.find_elements(by=By.CSS_SELECTOR, value='.editorOptions label')[1]
     return change_editor_button
 
 
@@ -68,7 +68,7 @@ class ParEditorTest(BrowserTest):
         ])
 
     def get_editor_element(self) -> WebElement:
-        pareditor = self.drv.find_element_by_css_selector('pareditor')
+        pareditor = self.drv.find_element(by=By.CSS_SELECTOR, value='pareditor')
         return pareditor
 
     def open_editor_from_bottom(self):

@@ -82,7 +82,7 @@ answers = Blueprint('answers',
                     url_prefix='')
 
 
-@answers.route("/savePoints/<int:user_id>/<int:answer_id>", methods=['PUT'])
+@answers.put("/savePoints/<int:user_id>/<int:answer_id>")
 def save_points(answer_id, user_id):
     answer, _ = verify_answer_access(
         answer_id,
@@ -130,7 +130,7 @@ class DeleteCollabModel(AnswerIdModel):
     user_id: int
 
 
-@answers.route("/answer/saveValidity", methods=['PUT'])
+@answers.put("/answer/saveValidity")
 @use_model(ValidityModel)
 def save_validity(m: ValidityModel):
     a, doc_id = verify_answer_access(
@@ -145,7 +145,7 @@ def save_validity(m: ValidityModel):
     return ok_response()
 
 
-@answers.route("/answer/delete", methods=['POST'])
+@answers.post("/answer/delete")
 @use_model(AnswerIdModel)
 def delete_answer(m: AnswerIdModel):
     """Deletes an answer.
@@ -169,7 +169,7 @@ def delete_answer(m: AnswerIdModel):
     return ok_response()
 
 
-@answers.route("/answer/deleteCollaborator", methods=['POST'])
+@answers.post("/answer/deleteCollaborator")
 @use_model(DeleteCollabModel)
 def delete_answer_collab(m: DeleteCollabModel):
     """Deletes an answer collaborator.
@@ -202,8 +202,8 @@ def points_to_float(points: Union[str, float]):
     return float(points)
 
 
-@answers.route("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>")
-@answers.route("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<int:answer_id>")
+@answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>")
+@answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<int:answer_id>")
 def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, answer_id: Optional[int] = None):
     """
     Gets the HTML to be used in iframe.
@@ -316,15 +316,15 @@ def get_globals_for_tasks(task_ids: List[TaskId], answer_map):
            .with_entities(col, cnt)
            .group_by(Answer.task_id).subquery()
            )
-    answers: List[Tuple[Answer, int]] = (
+    answers_all: List[Tuple[Answer, int]] = (
         Answer.query.join(sub, Answer.id == sub.c.col)
             .with_entities(Answer, sub.c.cnt)
             .all()
     )
-    for answer in answers:
+    for answer in answers_all:
         asd = answer.Answer.to_json()
         answer_map[answer.Answer.task_id] = asd
-    return cnt, answers
+    return cnt, answers_all
 
 
 @dataclass
@@ -336,7 +336,7 @@ class UserAnswersForTasksModel:
 UserAnswersForTasksSchema = class_schema(UserAnswersForTasksModel)
 
 
-@answers.route("/userAnswersForTasks", methods=['POST'])
+@answers.post("/userAnswersForTasks")
 @use_args(UserAnswersForTasksSchema())
 def get_answers_for_tasks(args: UserAnswersForTasksModel):
     """
@@ -450,7 +450,7 @@ class SendEmailModel:
 SendEmailSchema = class_schema(SendEmailModel)
 
 
-@answers.route('/sendemail/', methods=['post'])
+@answers.post('/sendemail/')
 @use_args(SendEmailSchema())
 def send_email(args: SendEmailModel):
     """
@@ -476,7 +476,7 @@ def send_email(args: SendEmailModel):
     return ok_response()
 
 
-@answers.route("/multiSendEmail/<doc_id>", methods=['POST'])
+@answers.post("/multiSendEmail/<doc_id>")
 def multisendemail(doc_id: int):
     d = get_doc_or_abort(doc_id)
     verify_teacher_access(d)
@@ -496,8 +496,8 @@ def multisendemail(doc_id: int):
     return ok_response()
 
 
-@answers.route("/<plugintype>/<task_id_ext>/answer/", methods=['put'])
-@answers.route("/<plugintype>/<task_id_ext>/answer", methods=['put'])
+@answers.put("/<plugintype>/<task_id_ext>/answer/")
+@answers.put("/<plugintype>/<task_id_ext>/answer")
 def post_answer(plugintype: str, task_id_ext: str):
     """Saves the answer submitted by user for a plugin in the database.
 
@@ -664,7 +664,8 @@ def post_answer_impl(
     info = plugin.get_info(users, answerinfo.count, look_answer=is_teacher and not save_teacher, valid=valid)
 
     # Get the newest answer (state). Only for logged in users.
-    state = try_load_json(answerinfo.latest_answer.content) if curr_user.logged_in and answerinfo.latest_answer else None
+    state = try_load_json(
+        answerinfo.latest_answer.content) if curr_user.logged_in and answerinfo.latest_answer else None
 
     preprocessor = answer_call_preprocessors.get(plugin.type)
     if preprocessor:
@@ -708,7 +709,7 @@ def post_answer_impl(
             text_to_add = dumbo_result[0]
         obj[key] = text_to_add
 
-    noupdate = False  #  if true do not send new id
+    noupdate = False  # if true do not send new id
 
     resultmd = result['web'].get('md', None)
     if resultmd:
@@ -845,15 +846,15 @@ def post_answer_impl(
 
             if postprogram:
                 data = {
-                        'answer_call_data': answer_call_data,
-                        'points': points,
-                        'save_object': save_object,
-                        'tags': tags,
-                        'is_valid': is_valid,
-                        'force_answer': force_answer,
-                        'error': '',
-                        'web': web,
-                        }
+                    'answer_call_data': answer_call_data,
+                    'points': points,
+                    'save_object': save_object,
+                    'tags': tags,
+                    'is_valid': is_valid,
+                    'force_answer': force_answer,
+                    'error': '',
+                    'web': web,
+                }
                 try:
                     params = JsRunnerParams(code=postprogram, data=data)
                     data, output = jsrunner_run(params)
@@ -1398,7 +1399,7 @@ def maybe_hide_name(d: DocInfo, u: User):
         u.hide_name = True
 
 
-@answers.route("/taskinfo/<task_id>")
+@answers.get("/taskinfo/<task_id>")
 def get_task_info(task_id):
     try:
         user_ctx = user_context_with_logged_in(None)
@@ -1448,7 +1449,7 @@ def hide_points(a: Answer):
     return j
 
 
-@answers.route('/exportAnswers/<path:doc_path>')
+@answers.get('/exportAnswers/<path:doc_path>')
 def export_answers(doc_path: str):
     d = DocEntry.find_by_path(doc_path, try_translation=False)
     if not d:
@@ -1479,7 +1480,7 @@ class ImportAnswersModel:
     doc_map: Dict[str, str] = field(default_factory=dict)
 
 
-@answers.route('/importAnswers', methods=['post'])
+@answers.post('/importAnswers')
 @use_model(ImportAnswersModel)
 def import_answers(m: ImportAnswersModel):
     verify_admin()
@@ -1548,7 +1549,7 @@ def import_answers(m: ImportAnswersModel):
     })
 
 
-@answers.route("/getAnswers/<task_id>/<int:user_id>")
+@answers.get("/getAnswers/<task_id>/<int:user_id>")
 def get_answers(task_id: str, user_id: int):
     verify_logged_in()
     try:
@@ -1586,7 +1587,7 @@ def get_answers(task_id: str, user_id: int):
     return json_response(user_answers)
 
 
-@answers.route("/allDocumentAnswersPlain/<path:doc_path>")
+@answers.get("/allDocumentAnswersPlain/<path:doc_path>")
 def get_document_answers(doc_path):
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
     pars = d.document.get_dereferenced_paragraphs(default_view_ctx)
@@ -1594,7 +1595,7 @@ def get_document_answers(doc_path):
     return get_all_answers_list_plain(task_ids)
 
 
-@answers.route("/allAnswersPlain/<task_id>")
+@answers.get("/allAnswersPlain/<task_id>")
 def get_all_answers_plain(task_id):
     return get_all_answers_list_plain([TaskId.parse(task_id)])
 
@@ -1700,7 +1701,7 @@ def get_plug_vals(doc: DocInfo, tid: TaskId, user_ctx: UserContext, view_ctx: Vi
     )
 
 
-@answers.route("/jsframe/userChange/<task_id>/<user_id>")
+@answers.get("/jsframe/userChange/<task_id>/<user_id>")
 def get_jsframe_data(task_id, user_id):
     """
         TODO: check proper rights
@@ -1731,7 +1732,7 @@ class GetStateModel:
 GetStateSchema = class_schema(GetStateModel)
 
 
-@answers.route("/getState")
+@answers.get("/getState")
 @use_args(GetStateSchema())
 def get_state(args: GetStateModel):
     par_id = args.par_id
@@ -1845,7 +1846,7 @@ def verify_answer_access(
     return answer, tid.doc_id
 
 
-@answers.route("/getTaskUsers/<task_id>")
+@answers.get("/getTaskUsers/<task_id>")
 def get_task_users(task_id):
     tid = TaskId.parse(task_id)
     d = get_doc_or_abort(tid.doc_id)
@@ -1876,7 +1877,7 @@ def get_task_users(task_id):
     return json_response(users)
 
 
-@answers.route('/renameAnswers/<old_name>/<new_name>/<path:doc_path>')
+@answers.get('/renameAnswers/<old_name>/<new_name>/<path:doc_path>')
 def rename_answers(old_name: str, new_name: str, doc_path: str):
     d = DocEntry.find_by_path(doc_path, fallback_to_id=True)
     if not d:

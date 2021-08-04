@@ -40,7 +40,7 @@ Adding new language to csPlugin:
 cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 filename_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 
-JAVAFX_VERSION = '15.0.1'
+JAVAFX_VERSION = '16'
 
 
 def sanitize_filename(s):
@@ -98,7 +98,7 @@ class Language:
         self.userargs = get_json_param(query.jso, "input", "userargs", None)
         if not self.userargs:
             self.userargs = get_json_param(query.jso, "markup", "userargs", None)
-        self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", f"timimages/cs3:{CS3_TAG}")
+        self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", f"timimages/cs3{CS3_TARGET}:{CS3_TAG}")
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
         self.opt = get_param(query, "opt", "")
@@ -1057,8 +1057,8 @@ class Css(Text):
     pass
 
 
-class JJS(Language):
-    ttype = "jjs"
+class NodeJS(Language):
+    ttype = ["nodejs", "jjs"]
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
@@ -1066,16 +1066,15 @@ class JJS(Language):
         self.exename = self.sourcefilename
         self.pure_exename = u"./{0:s}.js".format(self.filename)
         self.fileext = "js"
-        if self.before_code == "":  # Jos ei ole valmista koodia, niin tehdään konsoli johon voi tulostaa
-            self.before_code = ('var console={};'
-                                'console.log = function(s) {'
-                                '    var res = "", sep = "";'
-                                '    for (var i=0; i<arguments.length; i++) { res += sep + arguments[i]; sep = " "; } '
-                                '    print(res);'
-                                '};')
+        self.is_jjs = "jjs" in self.markup.get("type", "")
+        if self.is_jjs:
+            shim_print = "var print = console.log;var println = print;"
+            self.before_code = shim_print if not self.before_code else shim_print + self.before_code
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["jjs", self.pure_exename])
+        code, out, err, pwddir = self.runself(["node", self.pure_exename])
+        if self.is_jjs:
+            err = f"JJS engine has been deprecated. Change language type from `jjs` to `nodejs`.\n{err}"
         return code, out, err, pwddir
 
 
@@ -1686,7 +1685,7 @@ class Octave(Language):
     def run(self, result, sourcelines, points_rule):
         # print("octave: ", self.exename)
         extra = get_param(self.query, "extra", "").format(self.pure_exename, self.userargs)
-        self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", f"timimages/cs3:{CS3_TAG}")
+        self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", f"timimages/cs3{CS3_TARGET}:{CS3_TAG}")
         code, out, err, pwddir = self.runself(["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],
                                               timeout=20,
                                               ulimit=df(self.ulimit, "ulimit -t 30 -f 80000"), no_x11=True,

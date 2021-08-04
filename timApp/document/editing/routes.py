@@ -51,7 +51,7 @@ edit_page = Blueprint('edit_page',
                       url_prefix='')  # TODO: Better URL prefix.
 
 
-@edit_page.route('/update/<int:doc_id>', methods=['POST'])
+@edit_page.post('/update/<int:doc_id>')
 def update_document(doc_id):
     """Route for updating a document as a whole.
 
@@ -134,7 +134,7 @@ def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_befo
     return json_response({'versions': chg, 'fulltext': doc.export_markdown(), 'duplicates': duplicates})
 
 
-@edit_page.route("/postNewTaskNames/", methods=['POST'])
+@edit_page.post("/postNewTaskNames/")
 def rename_task_ids():
     timdb = get_timdb()
     doc_id, duplicates = verify_json_params('docId', 'duplicates')
@@ -194,7 +194,7 @@ def rename_task_ids():
         return manage_response(docinfo, pars, timdb, ver_before)
 
 
-@edit_page.route("/postParagraphQ/", methods=['POST'])
+@edit_page.post("/postParagraphQ/")
 def modify_paragraph_q():
     """Route for modifying a question editor paragraph in a document.
 
@@ -208,7 +208,7 @@ def modify_paragraph_q():
     return ret
 
 
-@edit_page.route("/postParagraph/", methods=['POST'])
+@edit_page.post("/postParagraph/")
 def modify_paragraph():
     """Route for modifying a paragraph in a document.
 
@@ -330,7 +330,7 @@ def abort_if_duplicate_ids(doc: Document, pars_to_add: List[DocParagraph]):
         raise RouteException(get_duplicate_id_msg(conflicting_ids))
 
 
-@edit_page.route("/preview/<int:doc_id>", methods=['POST'])
+@edit_page.post("/preview/<int:doc_id>")
 def preview_paragraphs(doc_id):
     """Route for previewing paragraphs.
 
@@ -412,8 +412,8 @@ def par_response(
         if edit_request:
             ctx = edit_request.context_par
 
-            # If the document was changed, there is no HTML cache for the new version, so we "cheat" by lying the document
-            # version so that the preload_htmls call is still fast.
+            # If the document was changed, there is no HTML cache for the new version, so we "cheat" by lying the
+            # document version so that the preload_htmls call is still fast.
             if edit_result:
                 for p in pars:
                     assert p.doc is doc
@@ -649,7 +649,7 @@ def mark_pars_as_read_if_chosen(pars, doc):
             mark_read(get_current_user_group(), doc, p)
 
 
-@edit_page.route("/cancelChanges/", methods=["POST"])
+@edit_page.post("/cancelChanges/")
 def cancel_save_paragraphs():
     doc_id, original_par, new_pars, par_id = verify_json_params('docId', 'originalPar', 'newPars', 'parId')
     docentry = get_doc_or_abort(doc_id)
@@ -673,7 +673,7 @@ def cancel_save_paragraphs():
     return json_response({"status": "cancel"})
 
 
-@edit_page.route("/newParagraphQ/", methods=["POST"])
+@edit_page.post("/newParagraphQ/")
 def add_paragraph_q():
     question_data, doc_id, par_next_id, is_task = verify_json_params('question', 'docId', 'par_next', 'isTask')
     task_id, = verify_json_params('taskId', require=False)
@@ -681,7 +681,7 @@ def add_paragraph_q():
     return add_paragraph_common(md, doc_id, par_next_id)
 
 
-@edit_page.route("/newParagraph/", methods=["POST"])
+@edit_page.post("/newParagraph/")
 def add_paragraph():
     """Route for adding a new paragraph to a document.
 
@@ -731,7 +731,7 @@ def add_paragraph_common(md: str, doc_id: int, par_next_id: Optional[str]):
                         edit_request=edit_request)
 
 
-@edit_page.route("/deleteParagraph/<int:doc_id>", methods=["POST"])
+@edit_page.post("/deleteParagraph/<int:doc_id>")
 def delete_paragraph(doc_id):
     """Route for deleting a paragraph from a document.
 
@@ -774,7 +774,7 @@ def delete_paragraph(doc_id):
                         edit_result=edit_result)
 
 
-@edit_page.route("/getUpdatedPars/<int:doc_id>")
+@edit_page.get("/getUpdatedPars/<int:doc_id>")
 def get_updated_pars(doc_id):
     """Gets updated paragraphs that were changed e.g. as the result of adding headings or modifying macros.
 
@@ -787,7 +787,7 @@ def get_updated_pars(doc_id):
     return par_response([], d, spellcheck=False, update_cache=True)
 
 
-@edit_page.route("/name_area/<int:doc_id>/<area_name>", methods=["POST"])
+@edit_page.post("/name_area/<int:doc_id>/<area_name>")
 def name_area(doc_id, area_name):
     area_start, area_end = verify_json_params('area_start', 'area_end', require=True)
     (options,) = verify_json_params('options', require=True)
@@ -828,7 +828,7 @@ def name_area(doc_id, area_name):
     )
 
 
-@edit_page.route("/unwrap_area/<int:doc_id>/<area_name>", methods=["POST"])
+@edit_page.post("/unwrap_area/<int:doc_id>/<area_name>")
 def unwrap_area(doc_id, area_name):
     docentry = get_doc_or_abort(doc_id)
     verify_edit_access(docentry)
@@ -853,7 +853,7 @@ def unwrap_area(doc_id, area_name):
     return ok_response()
 
 
-@edit_page.route("/markTranslated/<int:doc_id>", methods=["POST"])
+@edit_page.post("/markTranslated/<int:doc_id>")
 def mark_translated_route(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_edit_access(d)
@@ -873,7 +873,7 @@ class DrawIODataModel:
     doc_id: int
 
 
-@edit_page.route("/jsframe/drawIOData", methods=['PUT'])
+@edit_page.put("/jsframe/drawIOData")
 @use_model(DrawIODataModel)
 def set_drawio_base(args: DrawIODataModel):
     data, par_id, doc_id = args.data, args.par_id, args.doc_id

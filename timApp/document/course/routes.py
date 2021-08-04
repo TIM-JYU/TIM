@@ -16,7 +16,7 @@ course_blueprint = Blueprint('course',
                              url_prefix='/courses')
 
 
-@course_blueprint.route("/settings")
+@course_blueprint.get("/settings")
 def get_course_settings() -> Response:
     """
     Get course settings from the designated settings document.
@@ -28,7 +28,7 @@ def get_course_settings() -> Response:
     return json_response(d.document.get_settings().get_dict().values)
 
 
-@course_blueprint.route("/documents/<string:foldername>")
+@course_blueprint.get("/documents/<string:foldername>")
 def get_documents_from_bookmark_folder(foldername: str) -> Response:
     """
     Gets documents and their tags based on a bookmark folder name.

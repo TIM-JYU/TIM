@@ -359,7 +359,7 @@ def register_right_impl(
     return errors
 
 
-@dist_bp.route('/register', methods=['post'])
+@dist_bp.post('/register')
 @csrf.exempt
 def register_right(
         op: RightOp,
@@ -379,7 +379,7 @@ class RightEntry:
     right: Right
 
 
-@dist_bp.route('/receive', methods=['put'])
+@dist_bp.put('/receive')
 @csrf.exempt
 def receive_right(
         rights: List[RightEntry],
@@ -422,7 +422,7 @@ def receive_right(
     return ok_response()
 
 
-@dist_bp.route('/changeStartTime')
+@dist_bp.get('/changeStartTime')
 def change_starttime_route(
         group: str,
         target: str,  # comma-separated; TODO: List[str] doesn't work for GET requests
@@ -475,7 +475,7 @@ def register_op_to_hosts(op: RightOp, target: Union[str, List[str]], is_receivin
     return collect_errors_from_hosts(futures, register_hosts)
 
 
-@dist_bp.route('/current')
+@dist_bp.get('/current')
 def get_current_rights_route(
         groups: str,  # comma-separated; TODO: List[str] doesn't work for GET requests
         target: str,

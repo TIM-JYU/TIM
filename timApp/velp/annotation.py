@@ -49,7 +49,7 @@ class AddAnnotationModel:
     draw_data: Optional[List[dict]] = None
 
 
-@annotations.route("/add_annotation", methods=['post'])
+@annotations.post("/add_annotation")
 @use_model(AddAnnotationModel)
 def add_annotation(m: AddAnnotationModel) -> Response:
     """Adds a new annotation.
@@ -143,7 +143,7 @@ def check_annotation_edit_access_and_maybe_get_doc(user: User, ann: Annotation) 
     return True, d
 
 
-@annotations.route("/update_annotation", methods=['post'])
+@annotations.post("/update_annotation")
 @use_model(UpdateAnnotationModel)
 def update_annotation(m: UpdateAnnotationModel) -> Response:
     """Updates the information of an annotation.
@@ -191,7 +191,7 @@ def is_color_hex_string(s: str) -> bool:
     return False
 
 
-@annotations.route("/invalidate_annotation", methods=['post'])
+@annotations.post("/invalidate_annotation")
 @use_model(AnnotationIdModel)
 def invalidate_annotation(m: AnnotationIdModel) -> Response:
     """Invalidates an annotation by setting its valid_until to current moment.
@@ -220,7 +220,7 @@ def get_annotation_or_abort(ann_id: int) -> Annotation:
     return ann
 
 
-@annotations.route("/add_annotation_comment", methods=['post'])
+@annotations.post("/add_annotation_comment")
 @use_model(AddAnnotationCommentModel)
 def add_comment_route(m: AddAnnotationCommentModel) -> Response:
     """Adds a new comment to the annotation.
@@ -239,7 +239,7 @@ def add_comment_route(m: AddAnnotationCommentModel) -> Response:
     return json_response(a, date_conversion=True)
 
 
-@annotations.route("/<int:doc_id>/get_annotations", methods=['GET'])
+@annotations.get("/<int:doc_id>/get_annotations")
 def get_annotations(doc_id: int) -> Response:
     """Returns all annotations with comments user can see, e.g. has access to them in a document.
 

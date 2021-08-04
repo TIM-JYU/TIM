@@ -4,7 +4,7 @@ from voikko.libvoikko import Voikko, Token
 app = Flask(__name__)
 
 
-@app.route('/api/v1/proofread', methods=['post'])
+@app.post('/api/v1/proofread')
 def proofread():
     phrases = request.get_json()
     # The Voikko object is NOT thread-safe; we cannot initialize it in module level.

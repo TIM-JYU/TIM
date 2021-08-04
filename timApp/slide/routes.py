@@ -13,14 +13,14 @@ slide_bp = TypedBlueprint(
 )
 
 
-@slide_bp.route("/getslidestatus")
+@slide_bp.get("/getslidestatus")
 def getslidestatus(doc_id: int):
     status: SlideStatus = SlideStatus.query.filter_by(doc_id=doc_id).first()
     st = status.status if status else None
     return json_response(json.loads(st))
 
 
-@slide_bp.route("/setslidestatus", methods=['post'])
+@slide_bp.post("/setslidestatus")
 def setslidestatus(
         doc_id: int,
         indexf: int,

@@ -9,7 +9,7 @@ import os
 import sys
 from typing import Optional
 
-from flask import Flask
+from flask import Flask, Request
 from flask_migrate import Migrate
 from flask_wtf import CSRFProtect
 from sqlalchemy import func
@@ -63,6 +63,7 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.filters import map_format, timdate, humanize_timedelta, humanize_datetime
+from timApp.util.flask.user_agent import SimpleUserAgent
 from timApp.util.logger import setup_logging
 from timApp.util.utils import datestr_to_relative, date_to_relative
 from timApp.velp.annotation_model import Annotation
@@ -159,6 +160,7 @@ app.jinja_env.lstrip_blocks = True
 app.config.from_pyfile('defaultconfig.py', silent=False)
 app.config.from_envvar('TIM_SETTINGS', silent=True)
 app.config.from_json('hosts.json', silent=True)
+Request.user_agent_class = SimpleUserAgent
 setup_logging(app)
 
 # Compress(app)

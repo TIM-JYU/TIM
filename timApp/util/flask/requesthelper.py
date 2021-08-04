@@ -14,14 +14,12 @@ from flask import request
 from marshmallow import ValidationError, Schema
 from webargs.flaskparser import use_args
 from werkzeug.exceptions import HTTPException
-from werkzeug.wrappers import BaseRequest
+from werkzeug.user_agent import UserAgent
 
 from timApp.auth.sessioninfo import get_current_user_name
-from timApp.document.docparagraph import DocParagraph
 from timApp.document.viewcontext import ViewRoute, ViewContext
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.utils import DurationSchema
-from timApp.timdb.exceptions import InvalidReferenceException
 from timApp.user.user import Consent
 
 
@@ -36,13 +34,15 @@ class EmptyWarning:
 warnings = EmptyWarning()  # type: ignore[assignment]
 
 
-def verify_json_params(*args: str, require: bool=True, default: Any=None, error_msgs: Optional[List[str]]=None) -> List[Any]:
+def verify_json_params(*args: str, require: bool = True, default: Any = None, error_msgs: Optional[List[str]] = None) -> \
+List[Any]:
     """Gets the specified JSON parameters from the request.
 
     :param default: The default value for the parameter if it is not found from the request.
     :param require: If True and the parameter is not found, the request is aborted.
     """
-    warnings.warn('Do not use this function in new code. Define a dataclass and use "use_model" decorator in route.', DeprecationWarning)
+    warnings.warn('Do not use this function in new code. Define a dataclass and use "use_model" decorator in route.',
+                  DeprecationWarning)
     result = []
     json_params = request.get_json() or {}
     if error_msgs is not None:
@@ -60,7 +60,7 @@ def verify_json_params(*args: str, require: bool=True, default: Any=None, error_
     return result
 
 
-def get_option(req: Union[Request, ViewContext], name: str, default: Any, cast: Optional[Type]=None) -> Any:
+def get_option(req: Union[Request, ViewContext], name: str, default: Any, cast: Optional[Type] = None) -> Any:
     if name not in req.args:
         return default
     result = req.args[name]
@@ -114,20 +114,13 @@ def get_request_time() -> Optional[str]:
         return None
 
 
-@dataclass
-class UA:
-    platform: str
-    browser: str
-    version: str
-
-
-def get_request_message(status_code: Optional[int]=None, include_body: bool=False) -> str:
+def get_request_message(status_code: Optional[int] = None, include_body: bool = False) -> str:
     name = get_current_user_name()
     if current_app.config['LOG_HOST']:
         url_or_path = request.url
     else:
         url_or_path = request.full_path if request.query_string else request.path
-    ua: UA = request.user_agent  # type: ignore
+    ua: UserAgent = request.user_agent
     msg = f"""
 {name}
 [{request.remote_addr}]:
@@ -168,7 +161,9 @@ def load_data_from_req(schema: Type[Schema]) -> Any:
         raise JSONException(description=json.dumps(e.messages, sort_keys=True))
     return p
 
+
 ModelType = TypeVar('ModelType')
+
 
 def use_model(m: Type[ModelType]) -> Callable[[Callable[[ModelType], Response]], Callable[[ModelType], Response]]:
     if not is_dataclass(m):

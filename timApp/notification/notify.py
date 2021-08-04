@@ -32,7 +32,7 @@ notify = TypedBlueprint(
 )
 
 
-@notify.route('/<int:doc_id>', methods=['GET'])
+@notify.get('/<int:doc_id>')
 def get_notify_settings(doc_id):
     verify_logged_in()
     i = get_item_or_abort(doc_id)
@@ -41,7 +41,7 @@ def get_notify_settings(doc_id):
         get_current_user_object().get_notify_settings(i))
 
 
-@notify.route('/<int:doc_id>', methods=['POST'])
+@notify.post('/<int:doc_id>')
 def set_notify_settings(
         doc_id: int,
         email_comment_modify: bool,
@@ -59,7 +59,7 @@ def set_notify_settings(
     return ok_response()
 
 
-@notify.route('/all')
+@notify.get('/all')
 def get_user_notify_settings():
     verify_logged_in()
     nots = get_current_user_notifications()

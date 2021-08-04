@@ -1,11 +1,12 @@
 import json
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional, Union
 from xml.sax.saxutils import quoteattr
 
 from flask import Blueprint, Response
 from flask import request
 
 from timApp.tim_app import csrf
+from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response
 
 tape_plugin = Blueprint('tape_plugin',
@@ -13,7 +14,7 @@ tape_plugin = Blueprint('tape_plugin',
                             url_prefix='/tape/')
 
 
-@tape_plugin.route("reqs")
+@tape_plugin.get("reqs")
 def tape_reqs() -> Response:
     reqs = {
         "type": "embedded",
@@ -25,21 +26,24 @@ def tape_reqs() -> Response:
     return json_response(reqs)
 
 
-@tape_plugin.route("multihtml", methods=["POST"])
+@tape_plugin.post("multihtml")
 @csrf.exempt
 def tape_multihtml() -> Response:
     """
     Route for getting the HTML of all tape plugins in a document.
     :return:
     """
-    jsondata = request.get_json()
+    jsondata: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = request.get_json()
+    if not jsondata:
+        return json_response([])
+    args: List[Dict[str, Any]] = jsondata if isinstance(jsondata, list) else [jsondata]
     multi = []
-    for jso in jsondata:
+    for jso in args:
         multi.append(tape_get_html(jso))
     return json_response(multi)
 
 
-def tape_get_html(jso: Dict[str, Any]) -> str:
+def tape_get_html(jso: Dict[Any, Any]) -> str:
     """
     Returns the HTML of a single tape paragraph.
     :param jso:
