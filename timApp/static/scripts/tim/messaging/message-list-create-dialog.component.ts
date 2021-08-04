@@ -29,7 +29,12 @@ enum NameRequirements {
     MIN_ONE_DIGIT = 5,
 }
 
-const NAME_RULES: Record<number, string> = {
+type AnnotatedNameRequirements = Exclude<
+    NameRequirements,
+    NameRequirements.ERROR
+>;
+
+const NAME_RULES: Record<AnnotatedNameRequirements, string> = {
     [NameRequirements.NAME_LENGTH_BOUNDED]: $localize`Length: 5-36 characters`,
     [NameRequirements.NO_FORBIDDEN_CHARS]: $localize`Allowed characters: letters A-z, numbers 0-9, dots, dash, underscore`,
     [NameRequirements.MIN_ONE_DIGIT]: $localize`Has at least one digit`,
@@ -130,7 +135,9 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
     domains: string[] = [];
     domain: string = "";
     rules_names = NAME_RULES;
-    rules = Object.keys(NAME_RULES).map((k) => Number.parseInt(k, 10));
+    rules = Object.keys(NAME_RULES).map(
+        (k) => Number.parseInt(k, 10) as AnnotatedNameRequirements
+    );
     // List has a public archive by default.
     archive: ArchiveType = ArchiveType.PUBLIC;
     archiveOptions = archivePolicyNames;
@@ -140,7 +147,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
     nameValid: boolean = true;
     nameExists: boolean = true;
     canCreate: boolean = false;
-    failedRequirements = new Set<NameRequirements>(this.rules);
+    failedRequirements = new Set<AnnotatedNameRequirements>(this.rules);
     protected dialogName = "MessageList";
 
     constructor(private http: HttpClient) {
@@ -152,9 +159,20 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
             void this.getDomains();
         }
 
+        const allAnnotated = (
+            reqs: NameRequirements[]
+        ): reqs is AnnotatedNameRequirements[] =>
+            reqs.every((r) => r != NameRequirements.ERROR);
+
         this.nameTypedSubscription = this.nameTyped
             .pipe(
-                tap(() => {
+                tap((n) => {
+                    if (!n) {
+                        this.nameExists = true;
+                        this.failedRequirements = new Set<
+                            AnnotatedNameRequirements
+                        >(this.rules);
+                    }
                     this.canCreate = false;
                     this.nameValid = true;
                 }),
@@ -170,14 +188,24 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
                 ),
                 tap(() => (this.pollingAvailability = false)),
                 catchError(() =>
-                    of({exists: false, rule_fails: [NameRequirements.ERROR]})
+                    of({
+                        rule_fails: [NameRequirements.ERROR],
+                        exists: false,
+                    })
                 )
             )
             .subscribe((res) => {
                 this.nameValid = !res.exists && res.rule_fails.length == 0;
                 this.canCreate = this.nameValid;
                 this.nameExists = res.exists;
-                this.failedRequirements = new Set<NameRequirements>(
+                if (!allAnnotated(res.rule_fails)) {
+                    this.errorMessage = [
+                        $localize`Failed to check name requirements, please try again`,
+                    ];
+                    return;
+                }
+                this.errorMessage = [];
+                this.failedRequirements = new Set<AnnotatedNameRequirements>(
                     res.rule_fails
                 );
             });
