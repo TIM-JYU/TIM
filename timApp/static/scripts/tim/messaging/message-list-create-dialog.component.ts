@@ -81,10 +81,6 @@ const NAME_RULES: Record<number, string> = {
                                         <span i18n>Must be unique</span>
                                     </li>
                                     <li *ngFor="let rule of rules">
-<!--                                        <i class="glyphicon glyphicon-ok"-->
-<!--                                           [class.glyphicon-unchecked]="failedRequirements.has(rule)"-->
-<!--                                           [class.glyphicon-ok]="!failedRequirements.has(rule)">-->
-<!--                                        </i>-->
                                         <span class="req-check" [class.ok]="!failedRequirements.has(rule)">
                                             <i class="glyphicon glyphicon-unchecked"></i>
                                             <i class="glyphicon glyphicon-ok"></i>
