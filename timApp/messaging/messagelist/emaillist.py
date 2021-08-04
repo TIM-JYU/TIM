@@ -4,7 +4,7 @@ from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain, Member
 
-from timApp.messaging.messagelist.listoptions import ListOptions, mailman_archive_policy_correlate, ArchiveType, \
+from timApp.messaging.messagelist.listinfo import ListInfo, mailman_archive_policy_correlate, ArchiveType, \
     ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.tim_app import app
@@ -184,7 +184,7 @@ def set_email_list_archive_policy(email_list: MailingList, archive: ArchiveType)
         raise
 
 
-def create_new_email_list(list_options: ListOptions, owner: User) -> None:
+def create_new_email_list(list_options: ListInfo, owner: User) -> None:
     """Create a new email list with proper initial options set.
 
     :param owner: Who owns this list.

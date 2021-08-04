@@ -21,7 +21,7 @@ import {
     ViewChild,
 } from "@angular/core";
 
-import {TimMessageComponent} from "tim/messaging/tim-message-send.component";
+import {TimMessageSendModule} from "tim/messaging/tim-message-send.component";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {BrowserModule, DomSanitizer} from "@angular/platform-browser";
@@ -32,9 +32,6 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {showInputDialog} from "tim/ui/showInputDialog";
 import {InputDialogKind} from "tim/ui/input-dialog.kind";
-import {BsDropdownModule} from "ngx-bootstrap/dropdown";
-import {TimepickerModule} from "ngx-bootstrap/timepicker";
-import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import {documentglobals} from "tim/util/globals";
 import {ViewCtrl} from "../document/viewctrl";
 import {widenFields} from "../util/common";
@@ -1504,18 +1501,15 @@ export class TableFormComponent
 }
 
 @NgModule({
-    declarations: [TableFormComponent, TimMessageComponent],
+    declarations: [TableFormComponent],
     imports: [
         BrowserModule,
         HttpClientModule,
         FormsModule,
         TimUtilityModule,
         TimTableModule,
-        BsDropdownModule.forRoot(),
-        TimepickerModule.forRoot(),
-        DatetimePickerModule,
+        TimMessageSendModule,
     ],
-    exports: [TimMessageComponent],
 })
 export class TableFormModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

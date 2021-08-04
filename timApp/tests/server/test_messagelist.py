@@ -1,5 +1,5 @@
 from timApp.auth.accesshelper import get_doc_or_abort
-from timApp.messaging.messagelist.listoptions import ArchiveType
+from timApp.messaging.messagelist.listinfo import ArchiveType
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.tests.server.timroutetest import TimMessageListTest
 

@@ -26,6 +26,7 @@ const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
                    (blur)="onBlur($event)"
                    (mouseup)="onFocus($event)"
                    [(ngModel)]="timeStr"
+                   [attr.id]="inputId ? inputId : null"
             />
             <datetime-popup [value]="time || currDate"
                             (valueChange)="popupChanged($event)"
@@ -40,6 +41,7 @@ const datetimeFormat = "DD.MM.YYYY HH:mm:ss";
 export class DatetimePickerComponent implements OnInit, OnChanges {
     showPicker = false;
     timeStr!: string;
+    @Input() inputId?: string = undefined;
     @Input() time: Date | undefined;
     @Input() placeholder?: string = "";
     @Output() timeChange = new EventEmitter<Date | undefined>();

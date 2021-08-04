@@ -2,13 +2,14 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from email.utils import parsedate_to_datetime
-from typing import Optional, List, Dict, Tuple
+from enum import Enum
+from typing import Optional, List, Dict, Tuple, Iterator
 
 from mailmanclient import MailingList
 
 from timApp.auth.accesshelper import has_manage_access
 from timApp.auth.accesstype import AccessType
-from timApp.document.create_item import create_document
+from timApp.document.create_item import create_document, apply_template
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
@@ -20,7 +21,7 @@ from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_n
     set_email_list_allow_nonmember, set_email_list_allow_attachments, set_email_list_default_reply_type, \
     add_email, get_email_list_member, remove_email_list_membership, set_email_list_member_send_status, \
     set_email_list_member_delivery_status, set_email_list_description, set_email_list_info
-from timApp.messaging.messagelist.listoptions import ArchiveType, ListOptions, ReplyToListChanges
+from timApp.messaging.messagelist.listinfo import ArchiveType, ListInfo, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember, \
     MessageListExternalMember, MessageListMember
 from timApp.timdb.sqa import db
@@ -50,8 +51,7 @@ def verify_name_availability(name_candidate: str) -> None:
 
     :param name_candidate: The name to be checked if it already exists.
     """
-    msg_list_exists = MessageListModel.name_exists(name_candidate)
-    if msg_list_exists:
+    if MessageListModel.name_exists(name_candidate):
         raise RouteException(f"Message list with name {name_candidate} already exists.")
 
 
@@ -59,8 +59,61 @@ def verify_name_availability(name_candidate: str) -> None:
 # every name rule verification. The explanation of the rules is at their usage in verify_name_rules function.
 START_WITH_LOWERCASE_PATTER = re.compile(r"^[a-z]")
 SEQUENTIAL_DOTS_PATTERN = re.compile(r"\.\.+")
+# A Name cannot have allowed characters. This set of characters is an import from Korppi's character
+# limitations for email list names, and can probably be expanded in the future if desired.
+#     lowercase letters a - z
+#     digits 0 - 9
+#     dot '.'
+#     hyphen '-'
+#     underscore '_'
+# The pattern is a negation of the actual rules.
 PROHIBITED_CHARACTERS_PATTERN = re.compile(r"[^a-z0-9.\-_]")
 REQUIRED_DIGIT_PATTERN = re.compile(r"\d")
+
+
+class NameRequirements(Enum):
+    NAME_LENGTH_BOUNDED = 0
+    START_WITH_LOWERCASE = 1
+    NO_SEQUENTIAL_DOTS = 2
+    NO_TRAILING_DOTS = 3
+    NO_FORBIDDEN_CHARS = 4
+    MIN_ONE_DIGIT = 5
+
+
+def check_name_rules(name_candidate: str) -> Iterator[NameRequirements]:
+    """Check if name candidate complies with naming rules.
+
+    :param name_candidate: What name we are checking against the rules.
+    :return: A generator that returns violated name rules.
+    """
+    # Be careful when checking regex rules. Some rules allow a pattern to exist, while prohibiting others. Some
+    # rules prohibit something, but allow other things to exist. If the explanation for a rule is different than
+    # the regex, the explanation is more likely to be correct.
+
+    # Name is within length boundaries.
+    lower_bound = 5
+    upper_bound = 36
+    if not (lower_bound <= len(name_candidate) <= upper_bound):
+        yield NameRequirements.NAME_LENGTH_BOUNDED
+
+    # Name has to start with a lowercase letter.
+    if not START_WITH_LOWERCASE_PATTER.search(name_candidate):
+        yield NameRequirements.START_WITH_LOWERCASE
+
+    # Name cannot have multiple dots in sequence.
+    if SEQUENTIAL_DOTS_PATTERN.search(name_candidate):
+        yield NameRequirements.NO_SEQUENTIAL_DOTS
+
+    # Name cannot end in a dot.
+    if name_candidate.endswith("."):
+        yield NameRequirements.NO_TRAILING_DOTS
+
+    if PROHIBITED_CHARACTERS_PATTERN.search(name_candidate):
+        yield NameRequirements.NO_FORBIDDEN_CHARS
+
+    # Name has to include at least one digit.
+    if not REQUIRED_DIGIT_PATTERN.search(name_candidate):
+        yield NameRequirements.MIN_ONE_DIGIT
 
 
 def verify_name_rules(name_candidate: str) -> None:
@@ -71,43 +124,9 @@ def verify_name_rules(name_candidate: str) -> None:
 
     :param name_candidate: What name we are checking against the rules.
     """
-    # Be careful when checking regex rules. Some rules allow a pattern to exist, while prohibiting others. Some
-    # rules prohibit something, but allow other things to exist. If the explanation for a rule is different than
-    # the regex, the explanation is more likely to be correct.
-
-    # Name is within length boundaries.
-    lower_bound = 5
-    upper_bound = 36
-    if not (lower_bound <= len(name_candidate) <= upper_bound):
-        raise RouteException(f"Name is not within length boundaries. Name has to be at least {lower_bound} and at "
-                             f"most {upper_bound} characters long.")
-
-    # Name has to start with a lowercase letter.
-    if not START_WITH_LOWERCASE_PATTER.search(name_candidate):
-        raise RouteException("Name has to start with a lowercase letter.")
-
-    # Name cannot have multiple dots in sequence.
-    if SEQUENTIAL_DOTS_PATTERN.search(name_candidate):
-        raise RouteException("Name cannot have sequential dots.")
-
-    # Name cannot end in a dot.
-    if name_candidate.endswith("."):
-        raise RouteException("Name cannot end in a dot.")
-
-    # Name can have only these allowed characters. This set of characters is an import from Korppi's character
-    # limitations for email list names, and can probably be expanded in the future if desired.
-    #     lowercase letters a - z
-    #     digits 0 - 9
-    #     dot '.'
-    #     hyphen '-'
-    #     underscore '_'
-    # The pattern is a negation of the actual rules.
-    if PROHIBITED_CHARACTERS_PATTERN.search(name_candidate):
-        raise RouteException("Name contains forbidden characters.")
-
-    # Name has to include at least one digit.
-    if not REQUIRED_DIGIT_PATTERN.search(name_candidate):
-        raise RouteException("Name has to include at least one digit.")
+    res = next(check_name_rules(name_candidate), None)
+    if res:
+        raise RouteException(res.name)
 
 
 @dataclass
@@ -446,7 +465,7 @@ def get_message_list_owners(mlist: MessageListModel) -> List[UserGroup]:
     return manage_doc_block.owners
 
 
-def create_management_doc(msg_list_model: MessageListModel, list_options: ListOptions) -> DocInfo:
+def create_management_doc(msg_list_model: MessageListModel, list_options: ListInfo) -> DocInfo:
     """Create management doc for a new message list.
 
     :param msg_list_model: The message list the management document is created for.
@@ -454,20 +473,15 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     :return: Newly created management document.
     """
 
-    # We'll err on the side of caution and make sure the path is safe for the management doc.
-    path_safe_list_name = remove_path_special_chars(list_options.name)
-    path_to_doc = f'/{MESSAGE_LIST_DOC_PREFIX}/{path_safe_list_name}'
-
-    doc = create_document(path_to_doc,
+    doc = create_document(f'/{MESSAGE_LIST_DOC_PREFIX}/{remove_path_special_chars(list_options.name)}',
                           list_options.name,
                           validation_rule=ItemValidationRule(check_write_perm=False),
                           parent_owner=UserGroup.get_admin_group())
 
-    # We add the admin component to the document.
-    admin_component = """#- {allowangular="true"}
-<tim-message-list-admin></tim-message-list-admin>
-    """
-    doc.document.add_text(admin_component)
+    apply_template(doc)
+    s = doc.document.get_settings().get_dict().get('macros', {})
+    s['messagelist'] = list_options.name
+    doc.document.add_setting('macros', s)
 
     # Set the management doc for the message list.
     msg_list_model.manage_doc_id = doc.id
@@ -475,7 +489,7 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListOp
     return doc
 
 
-def new_list(list_options: ListOptions) -> Tuple[DocInfo, MessageListModel]:
+def new_list(list_options: ListInfo) -> Tuple[DocInfo, MessageListModel]:
     """Adds a new message list into the database and creates the list's management doc.
 
     :param list_options: The list information for creating a new message list. Used to carry list's name and archive

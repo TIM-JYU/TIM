@@ -1,3 +1,23 @@
+tim-dialog-frame ::ng-deep div.modal-dialog {
+  width: 800px;
+}
+
+section {
+  display: grid;
+  grid-template:
+              "name-label name" auto
+              "name-reqs name-reqs" auto
+              "archive-label ." auto
+              "archive archive" auto
+              / max-content 1fr;
+  grid-gap: 1em;
+  align-items: center;
+}
+
+label {
+  font-weight: normal;
+}
+
 div.archive-options {
   margin-top: 10px;
 }
@@ -6,19 +26,93 @@ input[type='radio'] {
   margin-right: 10px;
 }
 
-.list-name {
-  font-weight: bold;
-  text-align: left !important;
+.name-requirements {
+  grid-area: name-reqs;
+
+  .req-check {
+    display: inline-grid;
+    align-items: center;
+    justify-items: center;
+
+    .glyphicon {
+      grid-row: 1;
+      grid-column: 1;
+
+      &.glyphicon-unchecked {
+        font-size: 1.1em;
+        color: #adadad;
+      }
+
+      &.glyphicon-ok {
+        color: #016201;
+        transform: translateX(-1px);
+        font-size: 0.625em;
+        visibility: hidden;
+      }
+    }
+
+    &.ok {
+      .glyphicon.glyphicon-unchecked {
+        color: #004000;
+      }
+
+      .glyphicon-ok {
+        visibility: visible;
+      }
+    }
+  }
+
+  & > p {
+    font-weight: bold;
+  }
+
+  ul {
+    list-style: none;
+    padding-left: 1.3em;
+  }
+
+  li {
+    display: flex;
+  }
+
+  ul li span {
+    margin-left: 0.5em;
+  }
 }
 
-label {
-  font-weight: normal;
+.list-name-label {
+  grid-area: name-label;
+}
+
+.list-name-group {
+  grid-area: name;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  & div.input-group {
+    flex-grow: 1;
+  }
+
+  & tim-loading {
+    margin-left: 0.5em;
+  }
+}
+
+#archives-label {
+  grid-area: archive-label;
+  pointer-events: none;
+}
+
+.list-name-label, #archives-label {
+  font-weight: bold;
+}
+
+.archive-list {
+  grid-area: archive;
+  list-style-type: none;
 }
 
 tim-loading {
   margin-right: 1em;
-}
-
-.archive-list {
-  list-style-type: none;
 }

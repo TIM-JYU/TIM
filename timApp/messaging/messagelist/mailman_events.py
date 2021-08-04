@@ -116,7 +116,7 @@ def handle_new_message(event: NewMessageEvent) -> None:
     :param event: Contains information about a new message sent to Mailman's list.
     """
     m_list_name, _, _ = event.mlist.name.partition("@")
-    message_list = MessageListModel.get_list_by_name_first(m_list_name)
+    message_list = MessageListModel.get_by_name(m_list_name)
 
     if message_list is None:
         raise RouteException("Message list does not exist.")

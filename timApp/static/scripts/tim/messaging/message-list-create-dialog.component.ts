@@ -2,6 +2,15 @@ import {BrowserModule} from "@angular/platform-browser";
 import {Component, NgModule} from "@angular/core";
 import {FormsModule} from "@angular/forms";
 import {HttpClient} from "@angular/common/http";
+import {of, Subject, Subscription} from "rxjs";
+import {
+    catchError,
+    debounceTime,
+    distinctUntilChanged,
+    filter,
+    switchMap,
+    tap,
+} from "rxjs/operators";
 import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
 import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
@@ -10,12 +19,36 @@ import {IDocument, redirectToItem} from "../item/IItem";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
 
+enum NameRequirements {
+    ERROR = -1,
+    NAME_LENGTH_BOUNDED = 0,
+    START_WITH_LOWERCASE = 1,
+    NO_SEQUENTIAL_DOTS = 2,
+    NO_TRAILING_DOTS = 3,
+    NO_FORBIDDEN_CHARS = 4,
+    MIN_ONE_DIGIT = 5,
+}
+
+type AnnotatedNameRequirements = Exclude<
+    NameRequirements,
+    NameRequirements.ERROR
+>;
+
+const NAME_RULES: Record<AnnotatedNameRequirements, string> = {
+    [NameRequirements.NAME_LENGTH_BOUNDED]: $localize`Length: 5-36 characters`,
+    [NameRequirements.NO_FORBIDDEN_CHARS]: $localize`Allowed characters: letters A-z, numbers 0-9, dots, dash, underscore`,
+    [NameRequirements.MIN_ONE_DIGIT]: $localize`Has at least one digit`,
+    [NameRequirements.START_WITH_LOWERCASE]: $localize`Begins with small letter`,
+    [NameRequirements.NO_SEQUENTIAL_DOTS]: $localize`Must not have subsequent dots`,
+    [NameRequirements.NO_TRAILING_DOTS]: $localize`Must not end with a dot`,
+};
+
 @Component({
     selector: "message-list-creation",
     template: `
         <tim-dialog-frame class="form-horizontal">
-            <ng-container header>
-                Message list creation
+            <ng-container header i18n>
+                Create message list
             </ng-container>
             <ng-container body>
                 <div *ngIf="errorMessage.length > 0" class="alert alert-danger">
@@ -23,41 +56,69 @@ import {archivePolicyNames, ArchiveType, ListOptions} from "./listOptionTypes";
                         <li *ngFor="let error of errorMessage">{{error}}</li>
                     </ul>
                 </div>
-                <div class="form-group">
-                    <label for="list-name" class="list-name text-left control-label col-sm-3">List name: </label>
-                    <div class="col-sm-8">
-                        <div class="input-group">
-                            <input type="text" class="form-control" name="list-name" id="list-name"
-                                   [(ngModel)]="listname"
-                                   (keyup)="checkNameRequirementsLocally()"/>
-                            <div class="input-group-addon">@</div>
-                            <select id="domain-select" class="form-control" name="domain-select" [(ngModel)]="domain">
-                                <option [disabled]="domains.length" *ngFor="let domain of domains">{{domain}}</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="archive-options">
-                    <p class="list-name">List archive policy: </p>
-                    <ul class="archive-list">
-                        <li *ngFor="let option of archiveOptions">
-                            <label class="radio" for="archive-{{option.archiveType}}">
-                            <input
-                                    name="items-radio"
-                                    type="radio"
-                                    id="archive-{{option.archiveType}}"
-                                    [value]="option.archiveType"
-                                    [(ngModel)]="archive"
-                            />
-                            {{option.policyName}}
-                            </label>
-                        </li>
-                    </ul>
-                </div>
+                <form>
+                    <fieldset [disabled]="creatingList">
+                        <section>
+                            <label for="list-name" class="list-name-label" i18n>List name:</label>
+                            <div class="list-name-group" [class.has-error]="!nameValid">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="list-name" id="list-name"
+                                           [(ngModel)]="listName"
+                                           (ngModelChange)="nameTyped.next($event)"/>
+                                    <div class="input-group-addon">@</div>
+                                    <select id="domain-select" class="form-control" name="domain-select"
+                                            [(ngModel)]="domain">
+                                        <option [disabled]="domains.length"
+                                                *ngFor="let domain of domains">{{domain}}</option>
+                                    </select>
+                                </div>
+                                <tim-loading
+                                        [style.visibility]="pollingAvailability ? 'visible' : 'hidden'"></tim-loading>
+                            </div>
+                            <div class="name-requirements">
+                                <p i18n>Name requirements:</p>
+                                <ul>
+                                    <li>
+                                        <span class="req-check" [class.ok]="!nameExists">
+                                            <i class="glyphicon glyphicon-unchecked"></i>
+                                            <i class="glyphicon glyphicon-ok"></i>
+                                        </span>
+                                        <span i18n>Must be unique</span>
+                                    </li>
+                                    <li *ngFor="let rule of rules">
+                                        <span class="req-check" [class.ok]="!failedRequirements.has(rule)">
+                                            <i class="glyphicon glyphicon-unchecked"></i>
+                                            <i class="glyphicon glyphicon-ok"></i>
+                                        </span>
+                                        <span>{{rules_names[rule]}}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <span id="archives-label" i18n>Who can read the archives:</span>
+                            <ul class="archive-list" role="radiogroup" aria-labelledby="archives-label">
+                                <li *ngFor="let option of archiveOptions">
+                                    <label class="radio" for="archive-{{option.archiveType}}">
+                                        <input
+                                                name="items-radio"
+                                                type="radio"
+                                                id="archive-{{option.archiveType}}"
+                                                [value]="option.archiveType"
+                                                [(ngModel)]="archive"
+                                        />
+                                        {{option.policyName}}
+                                    </label>
+                                </li>
+                            </ul>
+                        </section>
+                    </fieldset>
+                </form>
             </ng-container>
             <ng-container footer>
-                <tim-loading *ngIf="disableCreate"></tim-loading>
-                <button [disabled]="disableCreate" class="timButton" type="button" (click)="newList() ">Create</button>
+                <tim-loading *ngIf="creatingList"></tim-loading>
+                <button [disabled]="!canCreate || creatingList" class="timButton" type="button" (click)="newList()"
+                        i18n>
+                    Create
+                </button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -67,19 +128,27 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
     unknown,
     unknown
 > {
-    disableCreate: boolean = false;
-    protected dialogName = "MessageList";
-    listname: string = "";
+    creatingList: boolean = false;
+    listName: string = "";
     errorMessage: string[] = [];
-
     urlPrefix: string = "/messagelist";
-
     domains: string[] = [];
     domain: string = "";
-
+    rules_names = NAME_RULES;
+    rules = Object.keys(NAME_RULES).map(
+        (k) => Number.parseInt(k, 10) as AnnotatedNameRequirements
+    );
     // List has a public archive by default.
     archive: ArchiveType = ArchiveType.PUBLIC;
     archiveOptions = archivePolicyNames;
+    pollingAvailability: boolean = false;
+    nameTyped: Subject<string> = new Subject<string>();
+    nameTypedSubscription!: Subscription;
+    nameValid: boolean = true;
+    nameExists: boolean = true;
+    canCreate: boolean = false;
+    failedRequirements = new Set<AnnotatedNameRequirements>(this.rules);
+    protected dialogName = "MessageList";
 
     constructor(private http: HttpClient) {
         super();
@@ -88,6 +157,81 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
     ngOnInit(): void {
         if (Users.isLoggedIn()) {
             void this.getDomains();
+        }
+
+        const allAnnotated = (
+            reqs: NameRequirements[]
+        ): reqs is AnnotatedNameRequirements[] =>
+            reqs.every((r) => r != NameRequirements.ERROR);
+
+        this.nameTypedSubscription = this.nameTyped
+            .pipe(
+                tap((n) => {
+                    if (!n) {
+                        this.nameExists = true;
+                        this.failedRequirements = new Set<
+                            AnnotatedNameRequirements
+                        >(this.rules);
+                    }
+                    this.canCreate = false;
+                    this.nameValid = true;
+                }),
+                debounceTime(500),
+                distinctUntilChanged(),
+                filter((s) => s.length != 0),
+                tap(() => (this.pollingAvailability = true)),
+                switchMap((name) =>
+                    this.http.post<{
+                        rule_fails: NameRequirements[];
+                        exists: boolean;
+                    }>(`${this.urlPrefix}/checkname`, {name})
+                ),
+                tap(() => (this.pollingAvailability = false)),
+                catchError(() =>
+                    of({
+                        rule_fails: [NameRequirements.ERROR],
+                        exists: false,
+                    })
+                )
+            )
+            .subscribe((res) => {
+                this.nameValid = !res.exists && res.rule_fails.length == 0;
+                this.canCreate = this.nameValid;
+                this.nameExists = res.exists;
+                if (!allAnnotated(res.rule_fails)) {
+                    this.errorMessage = [
+                        $localize`Failed to check name requirements, please try again`,
+                    ];
+                    return;
+                }
+                this.errorMessage = [];
+                this.failedRequirements = new Set<AnnotatedNameRequirements>(
+                    res.rule_fails
+                );
+            });
+    }
+
+    ngOnDestroy() {
+        super.ngOnDestroy();
+        this.nameTypedSubscription.unsubscribe();
+    }
+
+    /**
+     * Launching the creation of a new list. Verifies the basic name rules in the client before involving the server.
+     */
+    async newList() {
+        this.errorMessage = [];
+        this.creatingList = true;
+        const result = await this.createList({
+            name: this.listName,
+            domain: this.domain,
+            archive: this.archive,
+        });
+        if (!result.ok) {
+            this.errorMessage = [result.result.error.error];
+            this.creatingList = false;
+        } else {
+            redirectToItem(result.result);
         }
     }
 
@@ -106,34 +250,11 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
             this.domain = this.domains[0];
         } else {
             this.errorMessage = [
-                `Failed to load domains, list creation can't continue. The following error provides details: ${result.result.error.error}`,
+                $localize`Failed to load email domains. The following error provides details: ${result.result.error.error}`,
             ];
             // Creating a message list isn't possible at this time if domains are not given. Therefore disable creation
             // button.
-            this.disableCreate = true;
-        }
-    }
-
-    /**
-     * Launching the creation of a new list. Verifies the basic name rules in the client before involving the server.
-     */
-    async newList() {
-        if (!this.checkNameRequirementsLocally()) {
-            return;
-        }
-
-        this.errorMessage = [];
-        this.disableCreate = true;
-        const result = await this.createList({
-            name: this.listname,
-            domain: this.domain,
-            archive: this.archive,
-        });
-        if (!result.ok) {
-            this.errorMessage = [result.result.error.error];
-            this.disableCreate = false;
-        } else {
-            redirectToItem(result.result);
+            this.creatingList = true;
         }
     }
 
@@ -149,64 +270,6 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
                 .post<IDocument>(`${this.urlPrefix}/createlist`, {options})
                 .toPromise()
         );
-    }
-
-    /**
-     * Check list name requirements locally.
-     *
-     * If you make changes here, make sure to check that the server checks the same things. Otherwise there will
-     * inconsistant name checking and a confused user.
-     *
-     * @returns {boolean} Returns true if name requirements are met. Otherwise returns false.
-     */
-    checkNameRequirementsLocally(): boolean {
-        // Clear old error messages.
-        this.errorMessage = [];
-
-        // Name length is within length boundaries.
-        if (this.listname.length <= 5 || 36 <= this.listname.length) {
-            this.errorMessage.push("Name not in length boundaries");
-        }
-
-        // Name starts with a character that is a letter a - z.
-        const regExpStartCharacter: RegExp = /^[a-z]/;
-        if (!regExpStartCharacter.test(this.listname)) {
-            this.errorMessage.push("Name should start with a lowercase letter");
-        }
-
-        // Name contains at least one digit.
-        const regExpAtLeastOneDigit: RegExp = /\d/;
-        if (!regExpAtLeastOneDigit.test(this.listname)) {
-            this.errorMessage.push("Name should contain at least one digit");
-        }
-
-        // Name can't contain sequential dots.
-        const regExpMultipleDots: RegExp = /\.\.+/;
-        if (regExpMultipleDots.test(this.listname)) {
-            this.errorMessage.push("Name shouldn´t contain multiple dots");
-        }
-
-        // Name doesn't end in a dot.
-        // ESLint prefers to not use regex for this. And by "prefer" we mean this won't transpile with a regular
-        // expression.
-        if (this.listname.endsWith(".")) {
-            this.errorMessage.push("Name shouldn´t end in a dot");
-        }
-
-        // Name contains only acceptable characters, which are:
-        //     letters                  a - z
-        //     numbers                  0 - 9
-        //     dot                      '.'
-        //     underscore               '_'
-        //     hyphen (or "minus sign") '-'
-        // The following regular expression searches for characters that are *not* one of the above. If those are not
-        // found the name is of correct form. Notice that hyphen is in two different roles and one hyphen has
-        // to be escaped. The dot does not have to be escaped here.
-        const regExpNonAllowedCharacters: RegExp = /[^a-z0-9.\-_]/;
-        if (regExpNonAllowedCharacters.test(this.listname)) {
-            this.errorMessage.push("Name has forbidden characters");
-        }
-        return this.errorMessage.length == 0;
     }
 }
 

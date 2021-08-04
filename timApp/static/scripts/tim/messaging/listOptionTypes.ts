@@ -59,22 +59,25 @@ export interface ArchivePolicyNames {
 
 // Mapping of archive policy enum to explanations given in UI.
 export const archivePolicyNames: ArchivePolicyNames[] = [
-    {archiveType: ArchiveType.NONE, policyName: "No archiving."},
+    {
+        archiveType: ArchiveType.NONE,
+        policyName: $localize`No archiving`,
+    },
     {
         archiveType: ArchiveType.SECRET,
-        policyName: "Owners only",
+        policyName: $localize`Owners only`,
     },
     {
         archiveType: ArchiveType.GROUPONLY,
-        policyName: "Members only.",
+        policyName: $localize`Members only`,
     },
     {
         archiveType: ArchiveType.UNLISTED,
-        policyName: "TIM users.",
+        policyName: $localize`Logged-in users`,
     },
     {
         archiveType: ArchiveType.PUBLIC,
-        policyName: "Public.",
+        policyName: $localize`Everyone`,
     },
 ].reverse();
 
