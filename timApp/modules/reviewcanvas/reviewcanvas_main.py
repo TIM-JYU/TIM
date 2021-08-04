@@ -16,6 +16,7 @@ from tim_common.pluginserver_flask import GenericHtmlModel, \
     GenericAnswerModel, register_plugin_app, launch_if_main, PluginAnswerResp, PluginAnswerWeb, PluginReqs, EditorTab
 from tim_common.utils import Missing
 
+
 @dataclass
 class ReviewCanvasStateModel:
     """Model for the information that is stored in TIM database for each answer."""
@@ -26,11 +27,13 @@ class ReviewCanvasStateModel:
 class ReviewCanvasMarkupModel(GenericMarkupModel):
     pass
 
+
 @dataclass
 class ReviewCanvasInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component).
     TODO how do we actually receive files?"""
     fileData: bytearray
+
 
 @dataclass
 class ReviewCanvasHtmlModel(GenericHtmlModel[ReviewCanvasInputModel, ReviewCanvasMarkupModel, ReviewCanvasStateModel]):
