@@ -2,7 +2,7 @@
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Any
 from urllib.parse import urlparse
 
 import bs4
@@ -16,6 +16,7 @@ from flask import request
 from flask import session
 from flask_assets import Environment
 from flask_wtf.csrf import generate_csrf
+from jinja2 import Undefined
 from requests.exceptions import MissingSchema, InvalidURL
 from sqlalchemy import event
 from werkzeug.middleware.profiler import ProfilerMiddleware
@@ -23,13 +24,13 @@ from werkzeug.middleware.profiler import ProfilerMiddleware
 from timApp.admin.cli import register_clis
 from timApp.admin.global_notification import global_notification
 from timApp.admin.routes import admin_bp
-from timApp.backup.backup_routes import backup
 from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
 from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
 from timApp.auth.login import login_page
 from timApp.auth.saml import saml
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, logged_in
+from timApp.backup.backup_routes import backup
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.bookmark.routes import bookmarks, add_to_course_bookmark
 from timApp.defaultconfig import SECRET_KEY
@@ -54,6 +55,7 @@ from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.lecture.routes import lecture_routes
 from timApp.messaging.messagelist.mailman_events import mailman_events
 from timApp.messaging.messagelist.routes import messagelist
+from timApp.messaging.timMessage.routes import timMessage
 from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
 from timApp.notification.notify import notify
@@ -70,7 +72,6 @@ from timApp.readmark.routes import readings
 from timApp.scheduling.scheduling_routes import scheduling
 from timApp.sisu.scim import scim
 from timApp.sisu.sisu import sisu
-from timApp.messaging.timMessage.routes import timMessage
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
@@ -143,11 +144,24 @@ if app.config['BOOKMARKS_ENABLED']:
 for bp in blueprints:
     app.register_blueprint(bp)
 
-
 assets = Environment(app)
 
 register_errorhandlers(app)
 register_clis(app)
+
+
+def shim_jinja_undefined_contains(cls: Any, k: Any) -> bool:
+    return False
+
+
+# This is a temporary fix because of this change in Jinja 3.0.0:
+# https://github.com/pallets/jinja/pull/1204
+#
+# The change caused `a in b` checks fail for undefined fields in jinja templates
+# This shim emulates an official fix that will be merged into Jinja 3.0.2:
+# https://github.com/pallets/jinja/pull/1455
+# TODO: Remove once Jinja is updated to 3.0.2
+Undefined.__contains__ = classmethod(shim_jinja_undefined_contains)
 
 
 @app.context_processor
@@ -179,7 +193,7 @@ def inject_angular_scripts() -> dict:
             )
 
 
-def get_angularscripts(index_file: str, locale: Optional[str]=None):
+def get_angularscripts(index_file: str, locale: Optional[str] = None):
     with open(index_file) as f:
         html_data = f.read()
         bs = BeautifulSoup(html_data, 'lxml')
@@ -317,7 +331,8 @@ def update_user_course_bookmarks():
     u = get_current_user_object()
     for gr in u.groups:  # type: UserGroup
         if gr.is_sisu_student_group:
-            docs = DocEntry.query.join(Block).join(Tag).filter(Tag.name == GROUP_TAG_PREFIX + gr.name).with_entities(DocEntry).all()
+            docs = DocEntry.query.join(Block).join(Tag).filter(Tag.name == GROUP_TAG_PREFIX + gr.name).with_entities(
+                DocEntry).all()
             if not docs:
                 continue
             if len(docs) > 1:
