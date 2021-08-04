@@ -50,11 +50,6 @@ interface TimMessageOptions {
                 <div *ngIf="showOptions">
                     <div class="cb-collection" *ngIf="!defaultEmail">
                         <div>
-                            <input type="checkbox" [(ngModel)]="timMessageOptions.archive" name="archive-message"
-                                   id="archive-message" disabled>
-                            <label for="archive-message" i18n>Archive message</label>
-                        </div>
-                        <div>
                             <input type="checkbox" [(ngModel)]="timMessageOptions.important" name="important-message"
                                    id="important-message" disabled>
                             <label for="important-message" *ngIf="!defaultEmail" i18n>Archive message</label>
