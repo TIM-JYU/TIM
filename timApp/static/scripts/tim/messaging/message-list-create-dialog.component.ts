@@ -73,12 +73,22 @@ const NAME_RULES: Record<number, string> = {
                             <div class="name-requirements">
                                 <p i18n>Name requirements:</p>
                                 <ul>
-                                    <li><i class="glyphicon glyphicon-ok" [class.invisible]="nameExists"></i><span i18n>Must be unique</span>
+                                    <li>
+                                        <span class="req-check" [class.ok]="!nameExists">
+                                            <i class="glyphicon glyphicon-unchecked"></i>
+                                            <i class="glyphicon glyphicon-ok"></i>
+                                        </span>
+                                        <span i18n>Must be unique</span>
                                     </li>
                                     <li *ngFor="let rule of rules">
-                                        <i class="glyphicon glyphicon-ok"
-                                           [class.invisible]="failedRequirements.has(rule)">
-                                        </i>
+<!--                                        <i class="glyphicon glyphicon-ok"-->
+<!--                                           [class.glyphicon-unchecked]="failedRequirements.has(rule)"-->
+<!--                                           [class.glyphicon-ok]="!failedRequirements.has(rule)">-->
+<!--                                        </i>-->
+                                        <span class="req-check" [class.ok]="!failedRequirements.has(rule)">
+                                            <i class="glyphicon glyphicon-unchecked"></i>
+                                            <i class="glyphicon glyphicon-ok"></i>
+                                        </span>
                                         <span>{{rules_names[rule]}}</span>
                                     </li>
                                 </ul>

@@ -29,20 +29,49 @@ input[type='radio'] {
 .name-requirements {
   grid-area: name-reqs;
 
-  & .glyphicon {
-    color: #016201;
+  .req-check {
+    display: inline-grid;
+    align-items: center;
+    justify-items: center;
+
+    .glyphicon {
+      grid-row: 1;
+      grid-column: 1;
+
+      &.glyphicon-unchecked {
+        font-size: 1.1em;
+        color: #adadad;
+      }
+
+      &.glyphicon-ok {
+        color: #016201;
+        transform: translateX(-1px);
+        font-size: 0.625em;
+        visibility: hidden;
+      }
+    }
+
+    &.ok {
+      .glyphicon.glyphicon-unchecked { color: #004000; }
+      .glyphicon-ok { visibility: visible; }
+    }
   }
+
 
   & > p {
     font-weight: bold;
   }
 
-  & ul {
+  ul {
     list-style: none;
     padding-left: 1.3em;
   }
 
-  & ul li span {
+  li {
+    display: flex;
+  }
+
+  ul li span {
     margin-left: 0.5em;
   }
 }
