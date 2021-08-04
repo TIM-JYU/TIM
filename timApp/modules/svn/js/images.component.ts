@@ -92,13 +92,13 @@ const ShowFileAll = t.type({
                         [style.width.px]="width"
                         [style.height.px]="height"
             >
-                <div *ngFor="let file of files; let i = index">
+                <ng-container *ngFor="let file of files; let i = index">
                     <div [class]="{fade: markup.fade}" *ngIf="noFlicker || isNear(i+1)" [hidden]="fileIndex!==(i+1)"  (click)="jump(1)">
                         <div *ngIf="markup.counter" class="numbertext">{{(i+1)}} / {{files.length}}</div>
                         <img src="{{file.name}}" alt="{{file.alt}}" style="width:100%">
                         <div class="text">{{file.caption}}</div>
-                    </div>    
-                </div>
+                    </div>
+                </ng-container>
                 <a *ngIf="markup.change" class="prev" (click)="jump(-1)">&#10094;</a>
                 <a *ngIf="markup.change" class="next" (click)="jump(1)">&#10095;</a>
             </div>
