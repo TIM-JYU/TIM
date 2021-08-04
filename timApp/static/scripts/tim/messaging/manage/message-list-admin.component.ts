@@ -22,178 +22,172 @@ import {Users} from "../../user/userService";
     template: `
         <tim-alert *ngIf="permanentErrorMessage" severity="danger">{{permanentErrorMessage}}</tim-alert>
         <ng-container *ngIf="list">
-            <div id="actions-panel" class="panel panel-default">
-                <div class="panel-heading" i18n>Common actions</div>
-                <div class="panel-body">
-                    <div class="actions">
-                        <button class="timButton" (click)="openEmail()" [disabled]="recipients" i18n>
-                            Send a message to the list
-                        </button>
-                        <a class="timButton" *ngIf="archiveURL" [href]="archiveURL" i18n>View archives</a>
-                    </div>
-                    <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
+            <bootstrap-panel id="actions-panel" title="Common actions" i18n-title>
+                <div class="actions">
+                    <button class="timButton" (click)="openEmail()" [disabled]="recipients" i18n>
+                        Send a message to the list
+                    </button>
+                    <a class="timButton" *ngIf="archiveURL" [href]="archiveURL" i18n>View archives</a>
                 </div>
-            </div>
+                <tim-message-send [(recipientList)]="recipients" [docId]="getDocId()"></tim-message-send>
+            </bootstrap-panel>
             <form>
                 <fieldset [disabled]="savingSettings">
-                    <div class="panel panel-default">
-                        <div class="panel-heading" i18n>List options</div>
-                        <div class="panel-body">
-                            <tabset class="merged">
-                                <tab heading="General" class="grid-tab">
-                                    <label for="list-name" i18n>List name</label>
-                                    <input type="text" name="list-name" id="list-name" class="form-control"
-                                           [value]="listname"
-                                           disabled>
-                                    <ng-container *ngIf="domain">
-                                        <label for="list-email-address" i18n>Email address</label>
-                                        <input type="text" class="form-control" name="list-email-address"
-                                               id="list-email-address" [ngModel]="listAddress()" disabled/>
-                                    </ng-container>
-                                    <label for="list-description" i18n>Short description</label>
-                                    <input type="text" class="form-control" name="list-description"
-                                           id="list-description"
-                                           [(ngModel)]="listDescription"/>
-                                    <label for="list-info" i18n>Long description</label>
-                                    <textarea name="list-info" class="form-control" id="list-info"
-                                              [(ngModel)]="listInfo"></textarea>
-                                </tab>
-                                <tab heading="Email" class="grid-tab">
-                                    <label for="list-subject-prefix" i18n>Subject prefix</label>
-                                    <input type="text" id="list-subject-prefix" name="list-subject-prefix"
-                                           class="form-control"
-                                           [(ngModel)]="listSubjectPrefix">
-                                    <h4 i18n>Advanced</h4>
-                                    <div *ngIf="emailAdminURL">
-                                        <a [href]="emailAdminURL" i18n>Advanced email list settings (takes to
-                                            Mailman)</a>
-                                    </div>
-                                </tab>
-                                <tab heading="Archiving" id="tab-archive">
-                                    <div *ngIf="archiveOptions && archive">
-                                        <h4 id="archive-policy-label" i18n>Archive policy</h4>
-                                        <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
-                                        <ul role="radiogroup"
-                                            aria-labelledby="archive-policy-label">
-                                            <li *ngFor="let option of archiveOptions">
-                                                <label>
-                                                    <input
-                                                            name="items-radio"
-                                                            type="radio"
-                                                            [value]="option.archiveType"
-                                                            [(ngModel)]="archive"
-                                                            disabled
-                                                    />{{option.policyName}}</label>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <h4 id="archive-options-label" i18n>Archive options</h4>
-                                        <ul role="radiogroup" aria-labelledby="archive-options-label">
-                                            <li>
-                                                <label>
-                                                    <input type="checkbox" name="notify-owner-on-list-change"
-                                                           [(ngModel)]="notifyOwnerOnListChange"/>
-                                                    <ng-container i18n>Notify owners on list changes (e.g. user
-                                                        subscribes)
-                                                    </ng-container>
-                                                </label>
-                                            </li>
-                                            <li>
-                                                <label>
-                                                    <input type="checkbox" name="tim-users-can-join"
-                                                           [(ngModel)]="timUsersCanJoin"
-                                                           disabled>
-                                                    <ng-container i18n>TIM users can freely join this list
-                                                    </ng-container>
-                                                </label>
-                                                <ul>
-                                                    <li>
-                                                        <label>
-                                                            <input type="checkbox" name="default-send-right"
-                                                                   [(ngModel)]="defaultSendRight"
-                                                                   [disabled]="!timUsersCanJoin">
-                                                            <ng-container i18n>Default send right for new members
-                                                            </ng-container>
-                                                        </label>
-                                                    </li>
-                                                    <li>
-                                                        <label>
-                                                            <input type="checkbox" name="default-delivery-right"
-                                                                   [(ngModel)]="defaultDeliveryRight"
-                                                                   [disabled]="!timUsersCanJoin">
-                                                            <ng-container i18n>Default delivery right for new members
-                                                            </ng-container>
-                                                        </label>
-                                                    </li>
-                                                </ul>
-                                            </li>
-                                            <li>
-                                                <label>
-                                                    <input type="checkbox" name="can-user-unsubscribe"
-                                                           [(ngModel)]="canUnsubscribe">
-                                                    <ng-container i18n>Members can unsubscribe from the list on their
-                                                        own
-                                                    </ng-container>
-                                                </label>
-                                            </li>
-                                            <li>
-                                                <label>
-                                                    <input type="checkbox" name="non-members-can-send"
-                                                           [(ngModel)]="nonMemberMessagePass">
-                                                    <ng-container i18n>Non members can send messages to list
-                                                    </ng-container>
-                                                </label>
-                                            </li>
-                                            <li>
-                                                <label>
-                                                    <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
-                                                    <ng-container i18n>No HTML messages allowed on the list
-                                                    </ng-container>
-                                                </label>
-                                            </li>
-                                            <li>
-                                                <label>
-                                                    <input type="checkbox" name="allow-attachments"
-                                                           [(ngModel)]="allowAttachments">
-                                                    <ng-container i18n>Allow attachments on the list</ng-container>
-                                                </label>
-                                            </li>
-                                            <li>
-                                                <label>
-                                                    <input type="checkbox" name="list-answer-guidance"
-                                                           [(ngModel)]="listAnswerGuidance">
-                                                    <ng-container i18n>Direct answers to message list</ng-container>
-                                                </label>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </tab>
-                            </tabset>
-                            <div class="save-button">
-                                <div>
-                                    <button class="timButton" (click)="saveOptions()" i18n>Save options</button>
-                                    <tim-loading *ngIf="savingSettings"></tim-loading>
+                    <bootstrap-panel title="List options" i18n-title>
+                        <tabset class="merged">
+                            <tab heading="General" class="grid-tab">
+                                <label for="list-name" i18n>List name</label>
+                                <input type="text" name="list-name" id="list-name" class="form-control"
+                                       [value]="listname"
+                                       disabled>
+                                <ng-container *ngIf="domain">
+                                    <label for="list-email-address" i18n>Email address</label>
+                                    <input type="text" class="form-control" name="list-email-address"
+                                           id="list-email-address" [ngModel]="listAddress()" disabled/>
+                                </ng-container>
+                                <label for="list-description" i18n>Short description</label>
+                                <input type="text" class="form-control" name="list-description"
+                                       id="list-description"
+                                       [(ngModel)]="listDescription"/>
+                                <label for="list-info" i18n>Long description</label>
+                                <textarea name="list-info" class="form-control" id="list-info"
+                                          [(ngModel)]="listInfo"></textarea>
+                            </tab>
+                            <tab heading="Email" class="grid-tab">
+                                <label for="list-subject-prefix" i18n>Subject prefix</label>
+                                <input type="text" id="list-subject-prefix" name="list-subject-prefix"
+                                       class="form-control"
+                                       [(ngModel)]="listSubjectPrefix">
+                                <h4 i18n>Advanced</h4>
+                                <div *ngIf="emailAdminURL">
+                                    <a [href]="emailAdminURL" i18n>Advanced email list settings (takes to
+                                        Mailman)</a>
                                 </div>
-                                <tim-alert severity="success"
-                                           *ngIf="saveSuccessMessage">{{saveSuccessMessage}}</tim-alert>
-                                <tim-alert severity="danger" *ngIf="saveFailMessage">{{saveFailMessage}}</tim-alert>
+                            </tab>
+                            <tab heading="Archiving" id="tab-archive">
+                                <div *ngIf="archiveOptions && archive">
+                                    <h4 id="archive-policy-label" i18n>Archive policy</h4>
+                                    <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
+                                    <ul role="radiogroup"
+                                        aria-labelledby="archive-policy-label">
+                                        <li *ngFor="let option of archiveOptions">
+                                            <label>
+                                                <input
+                                                        name="items-radio"
+                                                        type="radio"
+                                                        [value]="option.archiveType"
+                                                        [(ngModel)]="archive"
+                                                        disabled
+                                                />{{option.policyName}}</label>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 id="archive-options-label" i18n>Archive options</h4>
+                                    <ul role="radiogroup" aria-labelledby="archive-options-label">
+                                        <li>
+                                            <label>
+                                                <input type="checkbox" name="notify-owner-on-list-change"
+                                                       [(ngModel)]="notifyOwnerOnListChange"/>
+                                                <ng-container i18n>Notify owners on list changes (e.g. user
+                                                    subscribes)
+                                                </ng-container>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label>
+                                                <input type="checkbox" name="tim-users-can-join"
+                                                       [(ngModel)]="timUsersCanJoin"
+                                                       disabled>
+                                                <ng-container i18n>TIM users can freely join this list
+                                                </ng-container>
+                                            </label>
+                                            <ul>
+                                                <li>
+                                                    <label>
+                                                        <input type="checkbox" name="default-send-right"
+                                                               [(ngModel)]="defaultSendRight"
+                                                               [disabled]="!timUsersCanJoin">
+                                                        <ng-container i18n>Default send right for new members
+                                                        </ng-container>
+                                                    </label>
+                                                </li>
+                                                <li>
+                                                    <label>
+                                                        <input type="checkbox" name="default-delivery-right"
+                                                               [(ngModel)]="defaultDeliveryRight"
+                                                               [disabled]="!timUsersCanJoin">
+                                                        <ng-container i18n>Default delivery right for new members
+                                                        </ng-container>
+                                                    </label>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <label>
+                                                <input type="checkbox" name="can-user-unsubscribe"
+                                                       [(ngModel)]="canUnsubscribe">
+                                                <ng-container i18n>Members can unsubscribe from the list on their
+                                                    own
+                                                </ng-container>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label>
+                                                <input type="checkbox" name="non-members-can-send"
+                                                       [(ngModel)]="nonMemberMessagePass">
+                                                <ng-container i18n>Non members can send messages to list
+                                                </ng-container>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label>
+                                                <input type="checkbox" name="only-text" [(ngModel)]="onlyText">
+                                                <ng-container i18n>No HTML messages allowed on the list
+                                                </ng-container>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label>
+                                                <input type="checkbox" name="allow-attachments"
+                                                       [(ngModel)]="allowAttachments">
+                                                <ng-container i18n>Allow attachments on the list</ng-container>
+                                            </label>
+                                        </li>
+                                        <li>
+                                            <label>
+                                                <input type="checkbox" name="list-answer-guidance"
+                                                       [(ngModel)]="listAnswerGuidance">
+                                                <ng-container i18n>Direct answers to message list</ng-container>
+                                            </label>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </tab>
+                        </tabset>
+                        <div class="save-button">
+                            <div>
+                                <button class="timButton" (click)="saveOptions()" i18n>Save options</button>
+                                <tim-loading *ngIf="savingSettings"></tim-loading>
                             </div>
+                            <tim-alert severity="success"
+                                       *ngIf="saveSuccessMessage">{{saveSuccessMessage}}</tim-alert>
+                            <tim-alert severity="danger" *ngIf="saveFailMessage">{{saveFailMessage}}</tim-alert>
                         </div>
-                    </div>
+                    </bootstrap-panel>
                 </fieldset>
                 <fieldset [disabled]="addingNewMember">
-                    <div id="members-tab" class="panel panel-default">
-                        <div class="panel-heading">
+                    <bootstrap-panel id="members-tab" [titleTemplate]="addNewMemberHeader">
+                        <ng-template #addNewMemberHeader>
                             <ng-container i18n>Add members</ng-container>
                             <a class="add-members-help"
                                title="Adding members help (in Finnish)" i18n-title
                                href="/view/tim/ohjeita/kayttoohjeet-viestilistoille#jäsenten-hallinta"><i
                                     class="glyphicon glyphicon-question-sign"></i></a>
-                        </div>
-                        <div class="panel-body">
-                        <textarea id="add-multiple-members" name="add-multiple-members" class="form-control"
-                                  [(ngModel)]="membersTextField"></textarea>
+                        </ng-template>
+                        <div class="contents">
+                            <textarea id="add-multiple-members" name="add-multiple-members" class="form-control"
+                                      [(ngModel)]="membersTextField"></textarea>
                             <label class="font-weight-normal"><input type="checkbox" name="new-member-send-right"
                                                                      [(ngModel)]="newMemberSendRight">
                                 <ng-container i18n>Members can send messages to the list</ng-container>
@@ -213,12 +207,11 @@ import {Users} from "../../user/userService";
                                            severity="danger">{{memberAddFailedResponse}}</tim-alert>
                             </div>
                         </div>
-                    </div>
+                    </bootstrap-panel>
                 </fieldset>
                 <fieldset [disabled]="editingMembers">
-                    <div id="current-members-tab" class="panel panel-default">
-                        <div class="panel-heading" i18n>Current members</div>
-                        <div class="panel-body">
+                    <bootstrap-panel id="current-members-tab" title="Current members" i18n-title>
+                        <div class="contents">
                             <!-- TODO: Implement as TimTable -->
                             <table>
                                 <thead>
@@ -289,15 +282,12 @@ import {Users} from "../../user/userService";
                                            severity="danger">{{memberAddFailedResponse}}</tim-alert>
                             </div>
                         </div>
-                    </div>
+                    </bootstrap-panel>
                 </fieldset>
             </form>
-            <div class="panel panel-danger">
-                <div class="panel-heading" i18n>Dangerous actions</div>
-                <div class="panel-body">
-                    <button class="btn btn-danger" (click)="deleteList()" i18n>Delete List</button>
-                </div>
-            </div>
+            <bootstrap-panel title="Dangerous actions" i18n-title severity="danger">
+                <button class="btn btn-danger" (click)="deleteList()" i18n>Delete List</button>
+            </bootstrap-panel>
         </ng-container>
     `,
     styleUrls: ["message-list-admin.component.scss"],
@@ -378,6 +368,8 @@ export class MessageListAdminComponent implements OnInit {
 
     addingNewMember = false;
     editingMembers = false;
+
+    constructor(private http: HttpClient) {}
 
     /**
      * Modifies the member's removed attribute if the member's state is changed.
@@ -460,40 +452,6 @@ export class MessageListAdminComponent implements OnInit {
      */
     openEmail() {
         this.recipients = this.listAddress();
-    }
-
-    /**
-     * Get domains ccondigured for email list use.
-     */
-    private async getDomains() {
-        const result = await to2(
-            this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
-        );
-        if (result.ok) {
-            this.domains = result.result;
-            if (!this.domains.length) {
-                this.domain = this.domains[0];
-            }
-        } else {
-            /* Getting an error here is not a problem, since these domains are not (yet) in use other than displaying
-             * them in the UI. The UI will probably look a bit funky, but it does not affect functionality right now.
-             * In the future, this is a problem if email list could be taken into use after the message list already
-             * exists.
-             */
-        }
-    }
-
-    constructor(private http: HttpClient) {}
-
-    /**
-     * Compile email addresses separated by line breaks into a list
-     * @private
-     */
-    private parseMembers(): string[] {
-        if (!this.membersTextField) {
-            return [];
-        }
-        return this.membersTextField.split("\n").filter((e) => e);
     }
 
     /**
@@ -673,14 +631,6 @@ export class MessageListAdminComponent implements OnInit {
     }
 
     /**
-     * Helper for list saving to keep types in check.
-     * @param options All the list options the user saves.
-     */
-    private saveOptionsCall(options: ListOptions) {
-        return to2(this.http.post(`/messagelist/save`, {options}).toPromise());
-    }
-
-    /**
      * Save the lists members' state.
      */
     async saveMembers() {
@@ -791,5 +741,45 @@ export class MessageListAdminComponent implements OnInit {
             );
             if (groupAndMembers) this.groupMembers = groupAndMembers.members;
         }
+    }
+
+    /**
+     * Get domains ccondigured for email list use.
+     */
+    private async getDomains() {
+        const result = await to2(
+            this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
+        );
+        if (result.ok) {
+            this.domains = result.result;
+            if (!this.domains.length) {
+                this.domain = this.domains[0];
+            }
+        } else {
+            /* Getting an error here is not a problem, since these domains are not (yet) in use other than displaying
+             * them in the UI. The UI will probably look a bit funky, but it does not affect functionality right now.
+             * In the future, this is a problem if email list could be taken into use after the message list already
+             * exists.
+             */
+        }
+    }
+
+    /**
+     * Compile email addresses separated by line breaks into a list
+     * @private
+     */
+    private parseMembers(): string[] {
+        if (!this.membersTextField) {
+            return [];
+        }
+        return this.membersTextField.split("\n").filter((e) => e);
+    }
+
+    /**
+     * Helper for list saving to keep types in check.
+     * @param options All the list options the user saves.
+     */
+    private saveOptionsCall(options: ListOptions) {
+        return to2(this.http.post(`/messagelist/save`, {options}).toPromise());
     }
 }

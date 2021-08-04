@@ -110,7 +110,8 @@ const NAME_RULES: Record<number, string> = {
             </ng-container>
             <ng-container footer>
                 <tim-loading *ngIf="creatingList"></tim-loading>
-                <button [disabled]="!canCreate || creatingList" class="timButton" type="button" (click)="newList()" i18n>
+                <button [disabled]="!canCreate || creatingList" class="timButton" type="button" (click)="newList()"
+                        i18n>
                     Create
                 </button>
             </ng-container>
@@ -123,21 +124,16 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
     unknown
 > {
     creatingList: boolean = false;
-    protected dialogName = "MessageList";
     listName: string = "";
     errorMessage: string[] = [];
-
     urlPrefix: string = "/messagelist";
-
     domains: string[] = [];
     domain: string = "";
     rules_names = NAME_RULES;
     rules = Object.keys(NAME_RULES).map((k) => Number.parseInt(k, 10));
-
     // List has a public archive by default.
     archive: ArchiveType = ArchiveType.PUBLIC;
     archiveOptions = archivePolicyNames;
-
     pollingAvailability: boolean = false;
     nameTyped: Subject<string> = new Subject<string>();
     nameTypedSubscription!: Subscription;
@@ -145,6 +141,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
     nameExists: boolean = true;
     canCreate: boolean = false;
     failedRequirements = new Set<NameRequirements>(this.rules);
+    protected dialogName = "MessageList";
 
     constructor(private http: HttpClient) {
         super();
@@ -192,6 +189,25 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
     }
 
     /**
+     * Launching the creation of a new list. Verifies the basic name rules in the client before involving the server.
+     */
+    async newList() {
+        this.errorMessage = [];
+        this.creatingList = true;
+        const result = await this.createList({
+            name: this.listName,
+            domain: this.domain,
+            archive: this.archive,
+        });
+        if (!result.ok) {
+            this.errorMessage = [result.result.error.error];
+            this.creatingList = false;
+        } else {
+            redirectToItem(result.result);
+        }
+    }
+
+    /**
      * Fetch possible domains to be used for email lists.
      * @private
      */
@@ -211,25 +227,6 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
             // Creating a message list isn't possible at this time if domains are not given. Therefore disable creation
             // button.
             this.creatingList = true;
-        }
-    }
-
-    /**
-     * Launching the creation of a new list. Verifies the basic name rules in the client before involving the server.
-     */
-    async newList() {
-        this.errorMessage = [];
-        this.creatingList = true;
-        const result = await this.createList({
-            name: this.listName,
-            domain: this.domain,
-            archive: this.archive,
-        });
-        if (!result.ok) {
-            this.errorMessage = [result.result.error.error];
-            this.creatingList = false;
-        } else {
-            redirectToItem(result.result);
         }
     }
 

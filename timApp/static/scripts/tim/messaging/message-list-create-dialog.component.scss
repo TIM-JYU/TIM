@@ -52,8 +52,13 @@ input[type='radio'] {
     }
 
     &.ok {
-      .glyphicon.glyphicon-unchecked { color: #004000; }
-      .glyphicon-ok { visibility: visible; }
+      .glyphicon.glyphicon-unchecked {
+        color: #004000;
+      }
+
+      .glyphicon-ok {
+        visibility: visible;
+      }
     }
   }
 

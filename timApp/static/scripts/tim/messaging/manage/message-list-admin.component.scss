@@ -62,7 +62,7 @@ tim-alert {
   display: block;
 }
 
-#actions-panel .panel-body .actions {
+#actions-panel .actions {
   display: flex;
 
   & > *:not(:first-child) {
@@ -70,7 +70,7 @@ tim-alert {
   }
 }
 
-#members-tab .panel-body{
+#members-tab .contents {
   display: flex;
   flex-direction: column;
 
@@ -87,7 +87,7 @@ tim-alert {
     margin-left: 0.5em;
 }
 
-#current-members-tab .panel-body {
+#current-members-tab .contents {
   display: flex;
   flex-direction: column;
 
