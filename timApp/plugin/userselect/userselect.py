@@ -177,7 +177,7 @@ def get_plugin_markup(task_id: Optional[str], par: Optional[GlobalParId]) \
     return model, doc, user, view_ctx
 
 
-@user_select_plugin.route('/fetchUsers')
+@user_select_plugin.get('/fetchUsers')
 def fetch_users(task_id: Optional[str] = None, doc_id: Optional[int] = None, par_id: Optional[str] = None) -> Response:
     model, doc, user, view_ctx = get_plugin_markup(task_id, GlobalParId(doc_id, par_id) if doc_id and par_id else None)
     field_data, _, field_names, _ = get_fields_and_users(
@@ -209,7 +209,7 @@ def match_query(query_words: List[str], keywords: List[str]) -> bool:
     return True
 
 
-@user_select_plugin.route('/search', methods=['POST'])
+@user_select_plugin.post('/search')
 def search_users(search_strings: List[str], task_id: Optional[str] = None,
                  par: Optional[GlobalParId] = None) -> Response:
     model, doc, user, view_ctx = get_plugin_markup(task_id, par)
@@ -285,7 +285,7 @@ def get_plugin_info(username: str, task_id: Optional[str] = None, par: Optional[
     return model, cur_user, user_group, user_acc
 
 
-@user_select_plugin.route("/undo", methods=["POST"])
+@user_select_plugin.post("/undo")
 def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
     # No permissions to undo
@@ -336,7 +336,7 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
     })
 
 
-@user_select_plugin.route("/apply", methods=["POST"])
+@user_select_plugin.post("/apply")
 def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
     # No permissions to apply, simply return

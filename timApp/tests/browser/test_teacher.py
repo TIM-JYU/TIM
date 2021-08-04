@@ -1,3 +1,5 @@
+from selenium.webdriver.common.by import By
+
 from timApp.tests.browser.browsertest import BrowserTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
@@ -11,8 +13,8 @@ class TeacherTest(BrowserTest):
 
         def check_col():
             header_row = self.find_element('.ui-grid-header-cell-row')
-            username_div = header_row.find_element_by_xpath(f"//{'span'}[contains(text(),'{'Username'}')]")
-            col_class = username_div.find_element_by_xpath("./../../..").get_attribute('class').split()[-1]
+            username_div = header_row.find_element(by=By.XPATH, value=f"//{'span'}[contains(text(),'{'Username'}')]")
+            col_class = username_div.find_element(by=By.XPATH, value="./../../..").get_attribute('class').split()[-1]
             return col_class
 
         self.login_browser_quick_test1()

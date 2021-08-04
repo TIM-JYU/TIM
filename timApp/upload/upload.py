@@ -66,10 +66,10 @@ ALLOWED_EXTENSIONS = set(PIC_EXTENSIONS + DOC_EXTENSIONS)
 default_attachment_folder = get_files_path() / "blocks/files"
 
 
-@upload.route('/uploads/<path:relfilename>')
+@upload.get('/uploads/<path:relfilename>')
 def get_upload(relfilename: str):
     mt, up = get_pluginupload(relfilename)
-    return send_file(up.filesystem_path.as_posix(), mimetype=mt, add_etags=False)
+    return send_file(up.filesystem_path.as_posix(), mimetype=mt, etag=False)
 
 
 def get_pluginupload(relfilename: str) -> Tuple[str, PluginUpload]:
@@ -106,12 +106,12 @@ def get_pluginupload(relfilename: str) -> Tuple[str, PluginUpload]:
 
 
 # noinspection PyUnusedLocal
-@upload.route('/pluginUpload/<int:doc_id>/<task_id>/<user_id>/', methods=['POST'])
+@upload.post('/pluginUpload/<int:doc_id>/<task_id>/<user_id>/')
 def pluginupload_file2(doc_id: int, task_id: str, user_id):
     return pluginupload_file(doc_id, task_id)
 
 
-@upload.route('/pluginUpload/<int:doc_id>/<task_id>/', methods=['POST'])
+@upload.post('/pluginUpload/<int:doc_id>/<task_id>/')
 def pluginupload_file(doc_id: int, task_id: str):
     d = get_doc_or_abort(doc_id)
     try:
@@ -159,7 +159,7 @@ def pluginupload_file(doc_id: int, task_id: str):
         })
 
 
-@upload.route('/upload/', methods=['POST'])
+@upload.post('/upload/')
 def upload_file():
     if not logged_in():
         raise AccessDenied('You have to be logged in to upload a file.')
@@ -217,7 +217,7 @@ class RestampModel:
     customStampModel: Optional[str] = None
 
 
-@upload.route('/upload/restamp', methods=['POST'])
+@upload.post('/upload/restamp')
 @use_model(RestampModel)
 def restamp_attachments(args: RestampModel):
     """
@@ -320,17 +320,17 @@ def save_file_and_grant_access(d: DocInfo, content, file, block_type: BlockType)
     return f
 
 
-@upload.route('/files/<int:file_id>/<file_filename>')
+@upload.get('/files/<int:file_id>/<file_filename>')
 def get_file(file_id, file_filename):
     f = UploadedFile.get_by_id_and_filename(file_id, file_filename)
     if not f:
         raise NotExist('File not found')
     verify_view_access(f, check_parents=True)
     file_path = f.filesystem_path.as_posix()
-    return send_file(file_path, mimetype=get_mimetype(file_path), conditional=True)
+    return send_file(file_path, mimetype=get_mimetype(file_path))
 
 
-@upload.route('/images/<int:image_id>/<image_filename>')
+@upload.get('/images/<int:image_id>/<image_filename>')
 def get_image(image_id, image_filename):
     f = UploadedFile.find_by_id(image_id)
     if not f:

@@ -48,7 +48,7 @@ def get_real_name(email: str) -> str:
     return ' '.join(parts2)
 
 
-@login_page.route("/logout", methods=['POST'])
+@login_page.post("/logout")
 def logout(user_id: Optional[int] = None) -> Response:
     if user_id is not None and user_id != get_current_user_id():
         group = get_other_users()
@@ -70,7 +70,7 @@ def login_user_data() -> Dict:
     )
 
 
-@login_page.route("/login")
+@login_page.get("/login")
 def login(anchor: Optional[str] = None) -> Union[Response, str]:
     save_came_from()
     if logged_in():
@@ -146,7 +146,7 @@ def set_single_user_to_session(user: User) -> None:
 test_pws = []
 
 
-@login_page.route("/checkTempPass", methods=['POST'])
+@login_page.post("/checkTempPass")
 def check_temp_password(email: str, token: str) -> Response:
     """Checks that the temporary password provided by user is correct.
     Sends the real name of the user if the email already exists so that the name field can be prefilled.
@@ -160,7 +160,7 @@ def check_temp_password(email: str, token: str) -> Response:
         return ok_response()
 
 
-@login_page.route("/emailSignup", methods=['POST'])
+@login_page.post("/emailSignup")
 def email_signup(email: str, url: Optional[str] = None, reset_password: bool = False) -> Response:
     """Begins email signup process or resets a password for a user.
 
@@ -254,7 +254,7 @@ def check_temp_pw(email_or_username: str, oldpass: str) -> NewUser:
     return nu
 
 
-@login_page.route("/emailSignupFinish", methods=['POST'])
+@login_page.post("/emailSignupFinish")
 def email_signup_finish(
         email: str,
         passconfirm: str,
@@ -339,7 +339,7 @@ def check_password_and_stripped(user: User, password: str) -> bool:
     return user.check_password(password.strip(), allow_old=True, update_if_old=True)
 
 
-@login_page.route("/emailLogin", methods=['POST'])
+@login_page.post("/emailLogin")
 def email_login(
         email: str,
         password: str,
@@ -400,7 +400,7 @@ def do_email_login(
     raise AccessDenied(error_msg)
 
 
-@login_page.route("/simpleLogin/email", methods=['POST'])
+@login_page.post("/simpleLogin/email")
 def simple_login(email: str) -> Response:
     """Begins simple email login process if simple email login is enabled.
 
@@ -421,7 +421,7 @@ def simple_login(email: str) -> Response:
         return ok_response()
 
 
-@login_page.route("/simpleLogin/password", methods=['post'])
+@login_page.post("/simpleLogin/password")
 def simple_login_password(email: str, password: str) -> Response:
     """Continues simple email login process if simple email login is enabled.
 
@@ -468,7 +468,7 @@ def save_came_from() -> None:
     session['anchor'] = request.args.get('anchor') or request.form.get('anchor') or ''
 
 
-@login_page.route("/quickLogin/<username>")
+@login_page.get("/quickLogin/<username>")
 def quick_login(username: str) -> Response:
     """A debug helping method for logging in as another user.
 

@@ -35,7 +35,7 @@ def throw_ex(m: ExceptionRouteModel) -> Response:
 gunicorn_pid_path = '/var/run/gunicorn/gunicorn.pid'
 
 
-@admin_bp.route('/restart')
+@admin_bp.get('/restart')
 def restart_server() -> Response:
     """Restarts the server by sending HUP signal to Gunicorn."""
     verify_admin()
@@ -47,7 +47,7 @@ def restart_server() -> Response:
     return safe_redirect(url_for('start_page'))
 
 
-@admin_bp.route('/users/search/<term>')
+@admin_bp.get('/users/search/<term>')
 def search_users(term: str) -> Response:
     verify_admin()
     result = User.query.filter(

@@ -49,7 +49,7 @@ velps = Blueprint('velps',
 # TODO: Add route for deleting velp (at least a velp without any annotations). Remove by setting valid_until attribute.
 
 
-@velps.route("/<int:doc_id>/get_default_velp_group", methods=['GET'])
+@velps.get("/<int:doc_id>/get_default_velp_group")
 def get_default_velp_group(doc_id: int):
     """Get default velp group ID and if  velp group doesn't exist yet, create one.
 
@@ -120,7 +120,7 @@ def get_default_velp_group(doc_id: int):
     })
 
 
-@velps.route("/get_default_personal_velp_group", methods=['GET'])
+@velps.get("/get_default_personal_velp_group")
 def get_default_personal_velp_group():
     """Get default personal velp group ID and if velp group doesn't exist yet, create one.
 
@@ -166,7 +166,7 @@ def get_default_personal_velp_group():
     return no_cache_json_response(created_velp_group)
 
 
-@velps.route("/<int:doc_id>/get_velps", methods=['GET'])
+@velps.get("/<int:doc_id>/get_velps")
 def get_velps(doc_id: int):
     """Get all velps for document user has access to.
 
@@ -180,7 +180,7 @@ def get_velps(doc_id: int):
     return no_cache_json_response(velp_content)
 
 
-@velps.route("/<int:doc_id>/get_velp_groups", methods=['GET'])
+@velps.get("/<int:doc_id>/get_velp_groups")
 def get_velp_groups(doc_id: int):
     """Gets all velp groups for document user has access to by using VelpGroupSelection table.
 
@@ -201,7 +201,7 @@ def get_velp_groups(doc_id: int):
     } for vg in all_velp_groups])
 
 
-@velps.route("/<int:doc_id>/get_velp_group_personal_selections", methods=['GET'])
+@velps.get("/<int:doc_id>/get_velp_group_personal_selections")
 def get_velp_group_personal_selections(doc_id: int) -> Dict:
     """Gets default velp group selections for velp groups user has access to in document.
 
@@ -215,7 +215,7 @@ def get_velp_group_personal_selections(doc_id: int) -> Dict:
     return no_cache_json_response(velp_group_selections)
 
 
-@velps.route("/<int:doc_id>/get_velp_group_default_selections", methods=['GET'])
+@velps.get("/<int:doc_id>/get_velp_group_default_selections")
 def get_velp_group_default_selections(doc_id: int) -> Dict:
     """Gets default velp group selections for velp groups user has access to in document.
 
@@ -228,7 +228,7 @@ def get_velp_group_default_selections(doc_id: int) -> Dict:
     return no_cache_json_response(velp_group_defaults)
 
 
-@velps.route("/<int:doc_id>/get_velp_labels", methods=['GET'])
+@velps.get("/<int:doc_id>/get_velp_labels")
 def get_velp_labels(doc_id: int) -> 'str':
     """Gets all velp labels for document user has access to by using VelpGroupSelection table.
 
@@ -242,7 +242,7 @@ def get_velp_labels(doc_id: int) -> 'str':
     return no_cache_json_response(label_data)
 
 
-@velps.route("/add_velp", methods=['POST'])
+@velps.post("/add_velp")
 def add_velp() -> int:
     """Creates a new velp and adds it to velp groups user chose.
 
@@ -312,7 +312,7 @@ def add_velp() -> int:
     return json_response(new_velp.id)
 
 
-@velps.route("/<int:doc_id>/update_velp", methods=['POST'])
+@velps.post("/<int:doc_id>/update_velp")
 def update_velp_route(doc_id: int):
     """Updates the velp's data.
 
@@ -396,7 +396,7 @@ def update_velp_route(doc_id: int):
     return ok_response()
 
 
-@velps.route("/add_velp_label", methods=["POST"])
+@velps.post("/add_velp_label")
 def add_label() -> int:
     """Creates new velp label.
 
@@ -424,7 +424,7 @@ def add_label() -> int:
     return json_response({'id': label.id})
 
 
-@velps.route("/update_velp_label", methods=["POST"])
+@velps.post("/update_velp_label")
 def update_velp_label_route():
     """Updates velp label content.
 
@@ -456,7 +456,7 @@ def update_velp_label_route():
     return ok_response()
 
 
-@velps.route("/<int:doc_id>/change_selection", methods=["POST"])
+@velps.post("/<int:doc_id>/change_selection")
 def change_selection_route(doc_id: int):
     """Change selection for velp group in users VelpGroupSelection in current document.
 
@@ -497,7 +497,7 @@ def change_selection_route(doc_id: int):
     return ok_response()
 
 
-@velps.route("/<int:doc_id>/change_all_selections", methods=["POST"])
+@velps.post("/<int:doc_id>/change_all_selections")
 def change_all_selections(doc_id: int):
     """Change selection for velp group in users VelpGroupSelection in current document.
 
@@ -530,7 +530,7 @@ def change_all_selections(doc_id: int):
     return ok_response()
 
 
-@velps.route("/<int:doc_id>/reset_target_area_selections_to_defaults", methods=['POST'])
+@velps.post("/<int:doc_id>/reset_target_area_selections_to_defaults")
 def reset_target_area_selections_to_defaults(doc_id: int):
     """Changes user's personal velp group selections in target area to defaults.
 
@@ -553,7 +553,7 @@ def reset_target_area_selections_to_defaults(doc_id: int):
     return ok_response()
 
 
-@velps.route("/<int:doc_id>/reset_all_selections_to_defaults", methods=['POST'])
+@velps.post("/<int:doc_id>/reset_all_selections_to_defaults")
 def reset_all_selections_to_defaults(doc_id: int):
     """Changes user's all personal velp group selections in document to defaults.
 
@@ -567,7 +567,7 @@ def reset_all_selections_to_defaults(doc_id: int):
     return ok_response()
 
 
-@velps.route("/<int:doc_id>/create_velp_group", methods=['POST'])
+@velps.post("/<int:doc_id>/create_velp_group")
 def create_velp_group_route(doc_id: int) -> Dict:
     """Creates a new velp group.
 
@@ -656,7 +656,7 @@ def create_velp_group_route(doc_id: int) -> Dict:
     return json_response(created_velp_group)
 
 
-@velps.route("/<int:doc_id>/create_default_velp_group", methods=['POST'])
+@velps.post("/<int:doc_id>/create_default_velp_group")
 def create_default_velp_group_route(doc_id: int):
     """Creates a default velp group document or changes existing document to default velp group.
 

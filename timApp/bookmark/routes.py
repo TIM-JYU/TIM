@@ -45,7 +45,7 @@ class BookmarkModel(BookmarkNoLink):
     link: str
 
 
-@bookmarks.route('/add', methods=['POST'])
+@bookmarks.post('/add')
 @use_model(BookmarkModel)
 def add_bookmark(m: BookmarkModel):
     wb.bookmarks.add_bookmark(m.group, m.name, m.link).save_bookmarks()
@@ -59,7 +59,7 @@ class AddCourseModel:
     require_group: bool = False
 
 
-@bookmarks.route('/addCourse', methods=['POST'])
+@bookmarks.post('/addCourse')
 @use_model(AddCourseModel)
 def add_course_bookmark(m: AddCourseModel):
     d = DocEntry.find_by_path(m.path)
@@ -94,7 +94,7 @@ class EditBookmarkModel:
     new: BookmarkModel
 
 
-@bookmarks.route('/edit', methods=['POST'])
+@bookmarks.post('/edit')
 @use_model(EditBookmarkModel)
 def edit_bookmark(args: EditBookmarkModel):
     old_group = args.old.group
@@ -107,7 +107,7 @@ def edit_bookmark(args: EditBookmarkModel):
     return get_bookmarks()
 
 
-@bookmarks.route('/createGroup/<groupname>', methods=['POST'])
+@bookmarks.post('/createGroup/<groupname>')
 def create_bookmark_group(groupname):
     wb.bookmarks.add_group(groupname).save_bookmarks()
     db.session.commit()
@@ -119,7 +119,7 @@ class DeleteBookmarkGroupModel:
     group: str
 
 
-@bookmarks.route('/deleteGroup', methods=['POST'])
+@bookmarks.post('/deleteGroup')
 @use_model(DeleteBookmarkGroupModel)
 def delete_bookmark_group(args: DeleteBookmarkGroupModel):
     wb.bookmarks.delete_group(args.group).save_bookmarks()
@@ -127,7 +127,7 @@ def delete_bookmark_group(args: DeleteBookmarkGroupModel):
     return get_bookmarks()
 
 
-@bookmarks.route('/delete', methods=['POST'])
+@bookmarks.post('/delete')
 @use_model(BookmarkNoLink)
 def delete_bookmark(args: BookmarkNoLink):
     if args.group == 'My courses':
@@ -164,7 +164,8 @@ class MarkLastReadModel:
 
 MLRSchema = class_schema(MarkLastReadModel)
 
-@bookmarks.route('/markLastRead/<int:doc_id>', methods=['POST'])
+
+@bookmarks.post('/markLastRead/<int:doc_id>')
 def mark_last_read(doc_id):
     d = get_doc_or_abort(doc_id)
     verify_view_access(d)
@@ -179,8 +180,8 @@ def mark_last_read(doc_id):
 
 
 # noinspection PyUnusedLocal
-@bookmarks.route('/get')
-@bookmarks.route('/get/<int:user_id>')
+@bookmarks.get('/get')
+@bookmarks.get('/get/<int:user_id>')
 def get_bookmarks(user_id=None):
     """Gets user bookmark data for the currently logged in user.
 

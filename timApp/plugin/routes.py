@@ -26,7 +26,7 @@ def return_resource_response(resp):
     return resp.raw.read(), resp.status_code, headers
 
 
-@plugin_bp.route("/<plugin>/<path:filename>")
+@plugin_bp.get("/<plugin>/<path:filename>")
 def plugin_call(plugin, filename):
     try:
         resp = call_plugin_resource(plugin, filename, request.args)
@@ -35,7 +35,7 @@ def plugin_call(plugin, filename):
         raise NotExist(str(e))
 
 
-@plugin_bp.route("/echoRequest/<path:filename>")
+@plugin_bp.get("/echoRequest/<path:filename>")
 def echo_request(filename):
     def generate():
         yield 'Request URL: ' + request.url + "\n\n"
@@ -45,7 +45,7 @@ def echo_request(filename):
     return Response(stream_with_context(generate()), mimetype='text/plain')
 
 
-@plugin_bp.route("/<plugin>/template/<template>/<index>")
+@plugin_bp.get("/<plugin>/template/<template>/<index>")
 def view_template(plugin, template, index):
     try:
         resp = call_plugin_resource(plugin, "template?file=" + template + "&idx=" + index)
@@ -86,15 +86,15 @@ def plugin_tid_call(plugintype: str, task_id_ext: str):
     info = plugin.get_info([curr_user], 0)
 
     call_data = {'markup': plugin.values,
-                'taskID': tid.doc_task,
-                'info': info,}
+                 'taskID': tid.doc_task,
+                 'info': info, }
 
     plugin_response = call_plugin_generic(plugintype,
-                    request.method,
-                    "fetchExternal",
-                    json.dumps(call_data, cls=TimJsonEncoder),
-                    headers={'Content-type': 'application/json'},
-                    read_timeout=30).text
+                                          request.method,
+                                          "fetchExternal",
+                                          json.dumps(call_data, cls=TimJsonEncoder),
+                                          headers={'Content-type': 'application/json'},
+                                          read_timeout=30).text
     try:
         jsonresp = json.loads(plugin_response)
     except ValueError as e:

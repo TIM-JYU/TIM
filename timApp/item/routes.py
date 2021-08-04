@@ -134,12 +134,12 @@ def get_document(doc_info: DocInfo, view_range: ViewRange) -> DocumentSlice:
     return get_partial_document(doc, view_range)
 
 
-@view_page.route("/show_slide/<path:doc_path>")
+@view_page.get("/show_slide/<path:doc_path>")
 def show_slide(doc_path):
     return view(doc_path, ViewRoute.ShowSlide)
 
 
-@view_page.route("/view/<path:doc_path>")
+@view_page.get("/view/<path:doc_path>")
 def view_document(doc_path):
     taketime("route view begin")
     ret = view(doc_path, ViewRoute.View)
@@ -147,37 +147,37 @@ def view_document(doc_path):
     return ret
 
 
-@view_page.route("/teacher/<path:doc_path>")
+@view_page.get("/teacher/<path:doc_path>")
 def teacher_view(doc_path):
     return view(doc_path, ViewRoute.Teacher)
 
 
-@view_page.route("/velp/<path:doc_path>")
+@view_page.get("/velp/<path:doc_path>")
 def velp_view(doc_path):
     return view(doc_path, ViewRoute.Velp)
 
 
-@view_page.route("/answers/<path:doc_path>")
+@view_page.get("/answers/<path:doc_path>")
 def see_answers_view(doc_path):
     return view(doc_path, ViewRoute.Answers)
 
 
-@view_page.route("/lecture/<path:doc_path>")
+@view_page.get("/lecture/<path:doc_path>")
 def lecture_view(doc_path):
     return view(doc_path, ViewRoute.Lecture)
 
 
-@view_page.route("/review/<path:doc_name>")
+@view_page.get("/review/<path:doc_name>")
 def review_view(doc_name):
     return view(doc_name, ViewRoute.Review)
 
 
-@view_page.route("/slide/<path:doc_path>")
+@view_page.get("/slide/<path:doc_path>")
 def slide_view(doc_path):
     return view(doc_path, ViewRoute.Slide)
 
 
-@view_page.route("/par_info/<int:doc_id>/<par_id>")
+@view_page.get("/par_info/<int:doc_id>/<par_id>")
 def par_info(doc_id, par_id):
     doc = get_doc_or_abort(doc_id)
     verify_view_access(doc)
@@ -190,7 +190,7 @@ def par_info(doc_id, par_id):
     })
 
 
-@view_page.route("/docViewInfo/<path:doc_name>")
+@view_page.get("/docViewInfo/<path:doc_name>")
 def doc_access_info(doc_name):
     doc_info = DocEntry.find_by_path(doc_name, fallback_to_id=True)
     if not doc_info:
@@ -221,7 +221,7 @@ class ItemWithRights:
         }
 
 
-@view_page.route("/getItems")
+@view_page.get("/getItems")
 def items_route(
         folder: Optional[str] = None,
         folder_id: Optional[int] = None,
@@ -247,7 +247,7 @@ def items_route(
     return json_response(items)
 
 
-@view_page.route("/view")
+@view_page.get("/view")
 def index_page():
     save_last_page()
     return render_template('index.jinja2',
@@ -255,7 +255,7 @@ def index_page():
                            item=Folder.get_root())
 
 
-@view_page.route("/generateCache/<path:doc_path>")
+@view_page.get("/generateCache/<path:doc_path>")
 def gen_cache(
         doc_path: str,
         same_for_all: bool = False,
@@ -383,12 +383,12 @@ def get_module_ids(js_paths: List[str]):
         yield jsfile.lstrip('/').rstrip('.js')
 
 
-def goto_view(item_path, model: ViewParams):
-    return render_template('goto_view.jinja2',
-                           item_path=item_path,
-                           display_text=model.goto,
-                           wait_max=model.wait_max,
-                           direct_link_timer=model.direct_link_timer)
+def goto_view(item_path, model: ViewParams) -> FlaskViewResult:
+    return make_response(render_template('goto_view.jinja2',
+                                         item_path=item_path,
+                                         display_text=model.goto,
+                                         wait_max=model.wait_max,
+                                         direct_link_timer=model.direct_link_timer))
 
 
 def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
@@ -785,7 +785,8 @@ def render_doc_view(
             document_themes = list(set().union(document_themes, user_themes))
         override_theme = generate_theme(document_themes, get_default_scss_gen_dir())
 
-    templates_to_render = ['slide_head.jinja2', 'slide_content.jinja2'] if is_slide else ['doc_head.jinja2', 'doc_content.jinja2']
+    templates_to_render = ['slide_head.jinja2', 'slide_content.jinja2'] if is_slide else ['doc_head.jinja2',
+                                                                                          'doc_content.jinja2']
     tmpl_params = dict(
         hide_links=should_hide_links(doc_settings, rights),
         hide_top_buttons=should_hide_top_buttons(doc_settings, rights),
@@ -874,7 +875,7 @@ def get_linked_groups(i: Item) -> Tuple[List[UserGroupWithSisuInfo], List[str]]:
     return [], group_tags
 
 
-@view_page.route('/items/linkedGroups/<int:item_id>')
+@view_page.get('/items/linkedGroups/<int:item_id>')
 def get_linked_groups_route(item_id: int):
     d = get_doc_or_abort(item_id)
     verify_teacher_access(d)
@@ -901,7 +902,7 @@ def is_exam_mode(settings: DocSettings, rights: dict):
     return has_no_higher_right(settings.exam_mode(), rights)
 
 
-@view_page.route('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')
+@view_page.get('/getParDiff/<int:doc_id>/<int:major>/<int:minor>')
 def check_updated_pars(doc_id, major, minor):
     # return json_response({'diff': None,
     #                       'version': None})
@@ -947,17 +948,17 @@ def check_updated_pars(doc_id, major, minor):
                           'live': live_updates})
 
 
-@view_page.route("/manage")
-@view_page.route("/slide")
-@view_page.route("/teacher")
-@view_page.route("/answers")
-@view_page.route("/review")
-@view_page.route("/lecture")
+@view_page.get("/manage")
+@view_page.get("/slide")
+@view_page.get("/teacher")
+@view_page.get("/answers")
+@view_page.get("/review")
+@view_page.get("/lecture")
 def index_redirect():
     return redirect('/view')
 
 
-@view_page.route("/createItem", methods=["POST"])
+@view_page.post("/createItem")
 def create_item_route(
         item_path: str,
         item_type: str,
@@ -1003,7 +1004,7 @@ def create_item_direct(
     return item
 
 
-@view_page.route("/items/<int:item_id>")
+@view_page.get("/items/<int:item_id>")
 def get_item(item_id: int):
     i = Item.find_by_id(item_id)
     if not i:
@@ -1012,7 +1013,7 @@ def get_item(item_id: int):
     return json_response(i)
 
 
-@view_page.route('/items/relevance/set/<int:item_id>', methods=["POST"])
+@view_page.post('/items/relevance/set/<int:item_id>')
 def set_blockrelevance(item_id: int, value: int):
     """
     Add block relevance or edit if it already exists for the block.
@@ -1046,7 +1047,7 @@ def set_blockrelevance(item_id: int, value: int):
     return ok_response()
 
 
-@view_page.route('/items/relevance/reset/<int:item_id>')
+@view_page.get('/items/relevance/reset/<int:item_id>')
 def reset_blockrelevance(item_id: int):
     """
     Reset (delete) block relevance.
@@ -1069,7 +1070,7 @@ def reset_blockrelevance(item_id: int):
     return ok_response()
 
 
-@view_page.route('/items/relevance/get/<int:item_id>')
+@view_page.get('/items/relevance/get/<int:item_id>')
 def get_relevance_route(item_id: int):
     """
     Returns item relevance or first non-null parent relevance. If no relevance was found until root,
@@ -1137,7 +1138,7 @@ def get_document_relevance(i: DocInfo) -> int:
     return DEFAULT_RELEVANCE
 
 
-@view_page.route('/viewrange/unset/piecesize')
+@view_page.get('/viewrange/unset/piecesize')
 def unset_piece_size():
     resp = make_response()
     resp.set_cookie(
@@ -1150,7 +1151,7 @@ def unset_piece_size():
     return resp
 
 
-@view_page.route('/viewrange/set/piecesize', methods=["POST"])
+@view_page.post('/viewrange/set/piecesize')
 def set_piece_size(pieceSize: int):
     """
     Add cookie for user defined view range (if isn't set, doc won't be partitioned).
@@ -1168,7 +1169,7 @@ def set_piece_size(pieceSize: int):
     return resp
 
 
-@view_page.route('/viewrange/get/<int:doc_id>/<int:index>/<int:forwards>')
+@view_page.get('/viewrange/get/<int:doc_id>/<int:index>/<int:forwards>')
 def get_viewrange(doc_id: int, index: int, forwards: int):
     taketime("route view begin")
     current_set_size = get_piece_size_from_cookie(request)
@@ -1180,7 +1181,7 @@ def get_viewrange(doc_id: int, index: int, forwards: int):
     return json_response(view_range)
 
 
-@view_page.route('/viewrange/getWithHeaderId/<int:doc_id>/<string:header_id>')
+@view_page.get('/viewrange/getWithHeaderId/<int:doc_id>/<string:header_id>')
 def get_viewrange_with_header_id(doc_id: int, header_id: str):
     """
     Route for getting suitable view range for index links.

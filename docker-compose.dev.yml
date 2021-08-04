@@ -32,7 +32,7 @@ services:
    POSTGRES_PASSWORD: postgresql
  imagex:
   << : *common-root
-  image: timimages/cs3sudo:rust
+  image: timimages/cs3sudo:focal
   command: ${IMAGEX_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49995:22"
@@ -63,10 +63,6 @@ services:
    - "49978:22"
  csplugin:
   << : *common-agent
-  image: timimages/cs3sudo:rust
-  build:
-   context: ./timApp/modules/cs
-   dockerfile: DockerfileS
   command: ${CSPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49998:22"
@@ -78,10 +74,10 @@ services:
    - "49992:22"
  showfile:
   << : *common-agent
-  image: timimages/cs3sudo:rust
+  image: timimages/cs3sudo:focal
   build:
    context: ./timApp/modules/cs
-   dockerfile: DockerfileS
+   target: sudo
   command: ${SVNPLUGIN_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49996:22"

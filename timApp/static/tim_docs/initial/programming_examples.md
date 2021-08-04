@@ -554,13 +554,13 @@ byCode: |!!
 
 ``` {#loopJS plugin="csPlugin"}
 header: JavaScript palvelimella
-type: jjs
+type: nodejs
 byCode: |
     function sum(a,b) {
        return a + b;
     }
     
-    print("Summa = " + sum(2,3));
+    console.log("Summa = " + sum(2,3));
 ```
 
 ``` {plugin="showVideo"}

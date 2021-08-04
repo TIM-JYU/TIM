@@ -49,7 +49,7 @@ class ScheduledFunctionItem:
     doc_path: str
 
 
-@scheduling.route('functions')
+@scheduling.get('functions')
 def get_scheduled_functions(all_users: bool = False) -> Response:
     verify_logged_in()
     u = get_current_user_object()
@@ -95,7 +95,7 @@ def get_scheduled_functions(all_users: bool = False) -> Response:
     return json_response(list(gen()), date_conversion=True)
 
 
-@scheduling.route('functions', methods=['post'])
+@scheduling.post('functions')
 def add_scheduled_function(
         doc_id: int,
         plugin_name: str,
@@ -144,7 +144,7 @@ def add_scheduled_function(
     return json_response(periodic_task)
 
 
-@scheduling.route('functions/<int:function_id>', methods=['delete'])
+@scheduling.delete('functions/<int:function_id>')
 def delete_scheduled_plugin_run(
         function_id: int,
 ) -> Response:
@@ -165,7 +165,7 @@ def delete_scheduled_plugin_run(
     return ok_response()
 
 
-@scheduling.route('parseYaml')
+@scheduling.get('parseYaml')
 def parse_yaml_r(yaml: str) -> Response:
     try:
         parsed, _ = parse_yaml(yaml)

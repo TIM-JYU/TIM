@@ -8,8 +8,8 @@ from typing import List
 
 from tim_common.fileParams import *
 
-CS3_TAG = 'rust'
-
+CS3_TAG = 'focal'
+CS3_TARGET = os.environ.get('CSPLUGIN_TARGET', '')
 
 def wait_file(f1):
     """Wait until the file is ready or 10 tries has been done.
@@ -118,7 +118,7 @@ class RunCleaner:
 # noinspection PyBroadException
 def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
          extra="", ulimit=None, no_x11=False, savestate="",
-         dockercontainer=f"timimages/cs3:{CS3_TAG}", compile_commandline = "",
+         dockercontainer=f"timimages/cs3{CS3_TARGET}:{CS3_TAG}", compile_commandline = "",
          mounts = []):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
     run inside docker.

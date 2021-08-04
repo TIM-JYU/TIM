@@ -1,3 +1,5 @@
+from selenium.webdriver.common.by import By
+
 from timApp.tests.browser.browsertest import BrowserTest, PREV_ANSWER
 
 
@@ -31,7 +33,7 @@ pointsRule:
         textarea = self.find_element_and_move_to('#py textarea')
         textarea.send_keys('print("Hei maailma!")')
         par = self.find_element_avoid_staleness('#py > tim-plugin-loader > div')
-        runbutton = par.find_element_by_css_selector('button')
+        runbutton = par.find_element(by=By.CSS_SELECTOR, value='button')
         runbutton.click()
         self.wait_until_present_and_vis('.console')
         self.wait_until_present_and_vis('answerbrowser')
@@ -47,7 +49,7 @@ pointsRule:
         self.get_uninteractable_element().click()
         par = self.find_element_avoid_staleness('#py > tim-plugin-loader > div')
         self.assert_same_screenshot(par, ['csplugin/python_before_answer'])
-        runbutton = par.find_element_by_css_selector('button')
+        runbutton = par.find_element(by=By.CSS_SELECTOR, value='button')
         runbutton.click()
         self.wait_until_present_and_vis('.console')
         self.wait_until_present_and_vis('answerbrowser')
@@ -64,7 +66,7 @@ pointsRule:
         self.wait_and_click(PREV_ANSWER)
         self.wait_until_hidden('.console')
         # Wait until answer is replaced in HTML
-        # self.wait.until(ec.staleness_of(par.find_element_by_css_selector('*')))
+        # self.wait.until(ec.staleness_of(par.find_element(by=By.CSS_SELECTOR, value='*')))
         par = self.find_element('#py > tim-plugin-loader > div')
 
         # Wait until the height workaround completes (see answerbrowser3.ts)
@@ -88,7 +90,7 @@ pointsRule:
         textarea.send_keys('print("Hello world!")')
         self.get_uninteractable_element().click()
         par = self.find_element_avoid_staleness('#text > tim-plugin-loader > div')
-        runbutton = par.find_element_by_css_selector('button')
+        runbutton = par.find_element(by=By.CSS_SELECTOR, value='button')
         runbutton.click()
         self.wait_until_present_and_vis('answerbrowser')
         self.wait_until_hidden('tim-loading')

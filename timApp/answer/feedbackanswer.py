@@ -60,7 +60,8 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     return compile_csv(qq, printname, hide_names, exp_answers, users, dec)
 
 
-def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: bool, exp_answers: str, s_user: [str], dec: str):
+def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: bool, exp_answers: str, s_user: [str],
+                dec: str):
     """
     Compile data into more csv friendly form.
     :param qq: List of Tuples containing Answers and Users.
@@ -72,9 +73,9 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
     :return: Returns test results as list.
     """
 
-    pt_dt = None    # Previous Datetime of previous answer.
-    prev_ans = None     # Previous Answer.
-    prev_user = None     # Previous User.
+    pt_dt = None  # Previous Datetime of previous answer.
+    prev_ans = None  # Previous Answer.
+    prev_user = None  # Previous User.
 
     results = []
 
@@ -85,7 +86,7 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
     user_ctx = user_context_with_logged_in(None)
     for answer, user in qq:
 
-        if prev_user != user:   # Resets if previous is different user.
+        if prev_user != user:  # Resets if previous is different user.
             prev_user = None
             prev_ans = None
             pt_dt = None
@@ -127,14 +128,12 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
             else:
                 answer_result = 'wrong'
 
-
-
             sel_opt_content = json_content.get('user_answer', "<JSON error: key 'user_answer' not found>")
             item_content = json_content.get('correct_answer', "<JSON error: key 'correct_answer' not found>")
             feedback_content = json_content.get('feedback', "<JSON error: key 'feedback' not found>")
 
             if pt_dt != None:
-                tasksecs = (prev_ans.answered_on - pt_dt).total_seconds()   # Get time subtracted by previous.
+                tasksecs = (prev_ans.answered_on - pt_dt).total_seconds()  # Get time subtracted by previous.
             else:
                 tasksecs = 0.0
 
@@ -165,12 +164,12 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
                                     fbsecs_str])
                 else:
                     results.append([shown_user,
-                                answer_result,
-                                item_content,
-                                sel_opt_content,
-                                feedback_content,
-                                tasksecs_str,
-                                fbsecs_str])
+                                    answer_result,
+                                    item_content,
+                                    sel_opt_content,
+                                    feedback_content,
+                                    tasksecs_str,
+                                    fbsecs_str])
 
         pt_dt = prev_ans.answered_on
         prev_ans = answer
@@ -179,7 +178,7 @@ def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: 
     return results
 
 
-@feedback.route("/report/<path:doc_path>")
+@feedback.get("/report/<path:doc_path>")
 def print_feedback_report(doc_path):
     """
     Route to Feedback report.
@@ -275,18 +274,17 @@ def print_feedback_report(doc_path):
         all_tasks = []
         for did in all_id:
             did_pars = did.document.get_dereferenced_paragraphs(default_view_ctx)
-            task_dids, _ , access_missing2 = find_task_ids(did_pars, default_view_ctx, user_ctx)
+            task_dids, _, access_missing2 = find_task_ids(did_pars, default_view_ctx, user_ctx)
             if len(access_missing2) > 0:
                 raise AccessDenied('Access missing for task_ids: ' + access_missing2)
             all_tasks += task_dids
         answers += get_all_feedback_answers(all_tasks,
-                                                hidename,
-                                                fullname,
-                                                validity,
-                                                exp_answers,
-                                                list_of_users,
-                                                period_from,
-                                                period_to,
-                                                decimal)
+                                            hidename,
+                                            fullname,
+                                            validity,
+                                            exp_answers,
+                                            list_of_users,
+                                            period_from,
+                                            period_to,
+                                            decimal)
     return csv_response(answers, dialect)
-

@@ -32,7 +32,7 @@ from timApp.util.utils import is_valid_email, get_current_time
 messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 
 
-@messagelist.route('/createlist', methods=['POST'])
+@messagelist.post('/createlist')
 def create_list(options: ListOptions) -> Response:
     """Handles creating a new message list.
 
@@ -84,7 +84,7 @@ def test_name(name_candidate: str) -> None:
         verify_emaillist_name_requirements(name, domain)
 
 
-@messagelist.route("/domains", methods=['GET'])
+@messagelist.get("/domains")
 def domains() -> Response:
     """Send possible domains for a client, if such exists.
 
@@ -95,7 +95,7 @@ def domains() -> Response:
     return json_response(possible_domains)
 
 
-@messagelist.route("/deletelist", methods=['DELETE'])
+@messagelist.delete("/deletelist")
 def delete_list(listname: str, permanent: bool) -> Response:
     """Delete message and  associated message channels.
 
@@ -134,7 +134,7 @@ def delete_list(listname: str, permanent: bool) -> Response:
     return ok_response()
 
 
-@messagelist.route("/getlist/<int:document_id>", methods=['GET'])
+@messagelist.get("/getlist/<int:document_id>")
 def get_list(document_id: int) -> Response:
     """Get the information for a message list.
 
@@ -167,7 +167,7 @@ def get_list(document_id: int) -> Response:
     return json_response(list_options)
 
 
-@messagelist.route("/save", methods=['POST'])
+@messagelist.post("/save")
 def save_list_options(options: ListOptions) -> Response:
     """Save message list's options.
 
@@ -202,7 +202,7 @@ def save_list_options(options: ListOptions) -> Response:
     return ok_response()
 
 
-@messagelist.route("/savemembers", methods=['POST'])
+@messagelist.post("/savemembers")
 def save_members(listname: str, members: List[MemberInfo]) -> Response:
     """Save the state of existing list members, e.g. send and delivery rights.
 
@@ -269,7 +269,7 @@ def parse_external_member(external_member_candidate: str) -> Optional[List[str]]
     return None
 
 
-@messagelist.route("/addmember", methods=['POST'])
+@messagelist.post("/addmember")
 def add_member(member_candidates: List[str], msg_list: str, send_right: bool, delivery_right: bool) -> Response:
     """Add new members to a message list.
 
@@ -318,7 +318,7 @@ def add_member(member_candidates: List[str], msg_list: str, send_right: bool, de
     return ok_response()
 
 
-@messagelist.route("/getmembers/<list_name>", methods=['GET'])
+@messagelist.get("/getmembers/<list_name>")
 def get_members(list_name: str) -> Response:
     """Get members belonging to a certain list.
 
@@ -333,7 +333,7 @@ def get_members(list_name: str) -> Response:
     return json_response(list_members)
 
 
-@messagelist.route("/getgroupmembers/<list_name>", methods=['GET'])
+@messagelist.get("/getgroupmembers/<list_name>")
 def get_group_members(list_name: str) -> Response:
     """View function for getting members of groups that are on a message list.
 

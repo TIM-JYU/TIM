@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 import humanize
-from jinja2.utils import soft_unicode
+from markupsafe import soft_str
 
 
 def map_format(value, pattern):
@@ -16,7 +16,7 @@ def map_format(value, pattern):
         Hello? - Foo!
 
     """
-    return soft_unicode(pattern) % value
+    return soft_str(pattern) % value
 
 
 def timdate(value: datetime):

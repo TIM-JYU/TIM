@@ -12,7 +12,7 @@ backup = TypedBlueprint(
 )
 
 
-@backup.route('answer', methods=['post'])
+@backup.post('answer')
 @csrf.exempt
 def receive_answer_backup(answer: ExportedAnswer, token: str) -> Response:
     return save_answer_backup(answer, token)

@@ -35,9 +35,11 @@ if [[ -n $RUN_MAILMAN_DEV ]]; then
 fi
 
 if [[ "$COMPOSE_PROFILES" == "test" ]]; then
+  export CSPLUGIN_TARGET="base"
   COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}test"
   docker-compose -f "${DIR}/docker-compose.yml" --profile test "$@"
 elif [[ "$COMPOSE_PROFILES" == "dev" ]]; then
+  export CSPLUGIN_TARGET="sudo"
   docker-compose -f "${DIR}/docker-compose.yml" -f "${DIR}/docker-compose.dev.yml" "${extra_args[@]}" "$@"
 else
   docker-compose -f "${DIR}/docker-compose.yml" "$@"

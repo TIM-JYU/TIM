@@ -75,7 +75,7 @@ EVENTS = {
 }
 
 
-@mailman_events.route("", methods=["POST"])
+@mailman_events.post("")
 @csrf.exempt
 def handle_event() -> Response:
     """Handle events sent by Mailman."""
@@ -86,6 +86,9 @@ def handle_event() -> Response:
         raise RouteException("Body must be JSON")
 
     data = request.json
+    if not data or not isinstance(data, dict):
+        raise RouteException("Body must be JSON object")
+
     if "event" not in data or data["event"] not in EVENTS:
         raise RouteException("Event not handled")
 
