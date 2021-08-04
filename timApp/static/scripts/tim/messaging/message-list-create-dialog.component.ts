@@ -250,7 +250,7 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
             this.domain = this.domains[0];
         } else {
             this.errorMessage = [
-                $localize`Failed to load domains, list creation can't continue. The following error provides details: ${result.result.error.error}`,
+                $localize`Failed to load email domains. The following error provides details: ${result.result.error.error}`,
             ];
             // Creating a message list isn't possible at this time if domains are not given. Therefore disable creation
             // button.

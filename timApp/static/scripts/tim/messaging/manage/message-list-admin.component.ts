@@ -66,8 +66,8 @@ import {Users} from "../../user/userService";
                             </tab>
                             <tab heading="Archiving" id="tab-archive">
                                 <div *ngIf="archiveOptions && archive">
-                                    <h4 id="archive-policy-label" i18n>Archive policy</h4>
-                                    <!-- Hide radio buttons here, until the changing of archive policy levels is implemented -->
+                                    <h4 id="archive-policy-label" i18n>Archive access policy</h4>
+                                    <!-- Disable radio buttons here, until the changing of archive policy levels is implemented -->
                                     <ul role="radiogroup"
                                         aria-labelledby="archive-policy-label">
                                         <li *ngFor="let option of archiveOptions">
@@ -136,7 +136,7 @@ import {Users} from "../../user/userService";
                                             <label>
                                                 <input type="checkbox" name="non-members-can-send"
                                                        [(ngModel)]="nonMemberMessagePass">
-                                                <ng-container i18n>Non members can send messages to list
+                                                <ng-container i18n>Non-members can send messages to list
                                                 </ng-container>
                                             </label>
                                         </li>
