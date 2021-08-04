@@ -26,6 +26,7 @@ HASKELLPLUGIN_DOMAIN = "haskellplugins"
 IMAGEXPLUGIN_DOMAIN = "imagex"
 JSRUNNERPLUGIN_DOMAIN = "jsrunner"
 PALIPLUGIN_DOMAIN = "pali"
+REVIEWCANVAS_DOMAIN = 'reviewcanvas'
 SVNPLUGIN_DOMAIN = "showfile"
 
 MARKUP = "markup"
@@ -40,6 +41,7 @@ QSTMDATTRS = [
     "[0-9]",
     ".*[Tt]ext",
 ]
+
 FBMDATTRS = ["nextTask", "questionItems", "choices", "levels"]
 DRAGATTRS = ["words"]
 TEXTFIELDATTRS = ["header", "stem", "inputstem"]
@@ -100,6 +102,7 @@ def get_plugins() -> dict[str, PluginReg]:
             automd=True,
         ),
         PluginReg(name="pali", domain=PALIPLUGIN_DOMAIN),
+        PluginReg(name="reviewcanvas", domain=REVIEWCANVAS_DOMAIN),
         # TODO: field is just a dummy class to get route for /field - better solution is needed
         PluginReg(
             name="field",
