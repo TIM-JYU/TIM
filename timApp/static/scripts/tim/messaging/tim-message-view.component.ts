@@ -29,7 +29,8 @@ export class TimMessageViewComponent implements OnInit {
 
     ngOnInit(): void {
         const current_item = itemglobals().curr_item;
-        if (current_item) {
+        // TODO: Fetch messages for root when there are global messages available
+        if (current_item?.path) {
             const itemId = current_item.id;
             void this.loadMessages(itemId);
         }
