@@ -35,7 +35,7 @@ import {Users} from "../../user/userService";
                 <fieldset [disabled]="savingSettings">
                     <bootstrap-panel title="List options" i18n-title>
                         <tabset class="merged">
-                            <tab heading="General" class="grid-tab">
+                            <tab heading="General" i18n-heading class="grid-tab">
                                 <label for="list-name" i18n>List name</label>
                                 <input type="text" name="list-name" id="list-name" class="form-control"
                                        [value]="listname"
@@ -53,7 +53,7 @@ import {Users} from "../../user/userService";
                                 <textarea name="list-info" class="form-control" id="list-info"
                                           [(ngModel)]="listInfo"></textarea>
                             </tab>
-                            <tab heading="Email" class="grid-tab">
+                            <tab heading="Email" i18n-heading class="grid-tab">
                                 <label for="list-subject-prefix" i18n>Subject prefix</label>
                                 <input type="text" id="list-subject-prefix" name="list-subject-prefix"
                                        class="form-control"
@@ -64,7 +64,7 @@ import {Users} from "../../user/userService";
                                         Mailman)</a>
                                 </div>
                             </tab>
-                            <tab heading="Archiving" id="tab-archive">
+                            <tab heading="Archiving" i18n-heading id="tab-archive">
                                 <div *ngIf="archiveOptions && archive">
                                     <h4 id="archive-policy-label" i18n>Archive access policy</h4>
                                     <!-- Disable radio buttons here, until the changing of archive policy levels is implemented -->
