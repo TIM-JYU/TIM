@@ -43,6 +43,11 @@ services:
   command: ${PALI_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49997:22"
+ reviewcanvas:
+  << : *common-root
+  command: ${REVIEWCANVAS_DEV_COMMAND:-/usr/sbin/sshd -D}
+  ports:
+   - "49994:22"
  fields:
   << : *common-root
   command: ${TEXTFIELD_DEV_COMMAND:-/usr/sbin/sshd -D}
