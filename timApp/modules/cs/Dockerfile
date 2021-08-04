@@ -78,7 +78,7 @@ python-dateutil \
 typing-inspect \
 webargs \
  && bash -c "${APT_CLEANUP}"
-RUN python3.9 -m pip install requests --upgrade && bash -c "${APT_CLEANUP}"
+RUN python3.9 -m pip install requests urllib3 --upgrade && bash -c "${APT_CLEANUP}"
 
 # git
 RUN bash -c "${APT_INSTALL} openssh-client git libnunit-framework2.6.3-cil && ${APT_CLEANUP}"
