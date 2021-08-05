@@ -1,33 +1,50 @@
-import {Component, NgModule, OnInit} from "@angular/core";
+import {
+    Component,
+    ComponentFactoryResolver,
+    NgModule,
+    OnInit,
+    ViewChild,
+    ViewContainerRef,
+} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {itemglobals} from "tim/util/globals";
 import {to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
-import {TimMessageModule} from "./tim-message.component";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "tim-message-view",
     template: `
-        <ng-container *ngFor="let timMessage of timMessages">
-            <tim-message [message]=timMessage></tim-message>
-        </ng-container>
+        <tim-alert *ngIf="messageError" i18n>
+           Could not load messages for the page: {{messageError}}
+        </tim-alert>
+        <ng-container #messageContainer></ng-container>
     `,
     styleUrls: ["tim-message-view.component.scss"],
 })
 export class TimMessageViewComponent implements OnInit {
+    @ViewChild("messageContainer", {read: ViewContainerRef, static: true})
+    container!: ViewContainerRef;
+    messageError?: string;
+
     ngOnInit(): void {
         const current_item = itemglobals().curr_item;
-        if (current_item) {
+        // TODO: Fetch messages for root when there are global messages available
+        if (current_item?.path) {
             const itemId = current_item.id;
-            void this.loadValues(itemId);
+            void this.loadMessages(itemId);
         }
     }
 
-    constructor(private http: HttpClient) {}
+    constructor(
+        private http: HttpClient,
+        private cfr: ComponentFactoryResolver
+    ) {}
 
     timMessages?: TimMessageData[];
 
-    async loadValues(itemId: number) {
+    async loadMessages(itemId: number) {
+        this.container.clear();
         const messages = await to2(
             // get messages shown on current page
             this.http
@@ -36,9 +53,16 @@ export class TimMessageViewComponent implements OnInit {
         );
 
         if (messages.ok) {
-            this.timMessages = messages.result;
+            const component = (await import("./tim-message.component"))
+                .TimMessageComponent;
+            const factory = this.cfr.resolveComponentFactory(component);
+
+            for (const message of messages.result) {
+                const res = this.container.createComponent(factory);
+                res.instance.message = message;
+            }
         } else {
-            console.error(messages.result.error.error);
+            this.messageError = messages.result.error.error;
         }
     }
 }
@@ -60,6 +84,6 @@ export interface TimMessageData {
 @NgModule({
     declarations: [TimMessageViewComponent],
     exports: [TimMessageViewComponent],
-    imports: [CommonModule, TimMessageModule],
+    imports: [CommonModule, TimUtilityModule],
 })
 export class TimMessageViewModule {}

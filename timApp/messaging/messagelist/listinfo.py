@@ -45,7 +45,7 @@ class ReplyToListChanges(Enum):
 
 
 @dataclass
-class ListOptions:
+class ListInfo:
     """All options regarding message lists."""
     name: str
     """The name of the message list. A mandatory value when list options are considered."""

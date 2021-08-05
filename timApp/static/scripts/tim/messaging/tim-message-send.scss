@@ -4,6 +4,38 @@ tim-datetime-picker {
   float: right;
 }
 
+.tableEmail {
+  display: flex;
+  flex-direction: column;
+}
+
+tim-close-button {
+  align-self: flex-end;
+}
+
+.message-info {
+  display: grid;
+  grid-template-columns: max-content auto;
+  grid-gap: 1em 0.5em;
+  align-items: baseline;
+}
+
+textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+form {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+
+  & > * {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+  }
+}
+
 input[type='checkbox'], input[type='radio'] {
   margin-right: 10px;
 }
@@ -16,17 +48,23 @@ label {
   font-weight: normal;
 }
 
-.bold {
+.send-as-label {
   font-weight: bold;
-  margin-top: 10px;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+
+  & span {
+    margin-right: 0.5em;
+  }
 }
 
-.glyphicon {
-  margin: 0px 10px 20px 0px;
-}
-
-.cursor-pointer {
+.extra-options {
+  cursor: pointer;
   font-weight: bold;
+
+  & .glyphicon {
+    margin-right: 0.5em;
+  }
 }
 
 .tim-message {
@@ -35,4 +73,41 @@ label {
 
 #optionsButton {
   margin-bottom: 10px;
+}
+
+.cb-collection {
+  display: flex;
+  flex-direction: column;
+  margin-left: 1em;
+
+  & > div {
+    display: flex;
+
+    & > label {
+      margin-left: 0.25em;
+      margin-right: 0.25em;
+    }
+  }
+}
+
+.top-space {
+  margin-top: 1em;
+}
+
+.page-list {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1em;
+
+  & .pages-label label {
+    margin-right: 0.5em;
+  }
+}
+
+.message-expiration {
+  align-items: center;
+
+  & label {
+    margin-left: 0 !important;
+  }
 }

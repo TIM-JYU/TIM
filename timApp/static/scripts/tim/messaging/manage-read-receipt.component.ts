@@ -4,20 +4,24 @@ import {itemglobals} from "tim/util/globals";
 import {to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
 @Component({
     selector: "manage-read-receipt",
     template: `
         <ng-container *ngIf="canMarkAsRead">
+            <tim-alert *ngIf="errorMessage">
+                {{errorMessage}}
+            </tim-alert>
             <div class="manageReadReceipt">
-                <button class="timButton" title="Mark as Read" *ngIf="!markedAsRead" (click)="markAsRead()">
+                <button class="timButton" title="Mark as Read" *ngIf="!markedAsRead" (click)="markAsRead()" i18n>
                     Mark as Read
                 </button>
                 <div class="cancelReadReceipt" *ngIf="markedAsRead">
-                    <button class="timButton" title="Cancel Read Receipt" (click)="cancelReadReceipt()">
+                    <button class="timButton" title="Cancel Read Receipt" (click)="cancelReadReceipt()" i18n>
                         Cancel Read Receipt
                     </button>
-                    <p>Cancelling the read receipt re-displays the message on designated TIM pages</p>
+                    <p i18n>Cancelling the read receipt re-displays the message on designated TIM pages</p>
                 </div>
             </div>
         </ng-container>
@@ -28,6 +32,7 @@ export class ManageReadReceiptComponent implements OnInit {
     markedAsRead: boolean = false;
     receipt: TimMessageReadReceipt | undefined;
     canMarkAsRead: boolean = false;
+    errorMessage?: string;
 
     constructor(private http: HttpClient) {}
 
@@ -45,6 +50,7 @@ export class ManageReadReceiptComponent implements OnInit {
      * @param docId Identifier for the message's document
      */
     async getReadReceipt(docId: number) {
+        this.errorMessage = undefined;
         const message = await to2(
             this.http
                 .get<TimMessageReadReceipt>(
@@ -60,7 +66,7 @@ export class ManageReadReceiptComponent implements OnInit {
                 this.markedAsRead = true;
             }
         } else {
-            console.error(message.result.error.error);
+            this.errorMessage = $localize`Could not load read information: ${message.result.error.error}`;
         }
     }
 
@@ -71,10 +77,14 @@ export class ManageReadReceiptComponent implements OnInit {
         if (!this.receipt) {
             return;
         }
+        this.errorMessage = undefined;
 
         const result = await markAsRead(this.http, this.receipt.message_id);
         if (result.ok) {
             this.markedAsRead = true;
+        } else {
+            this.errorMessage = $localize`Could not mark as read: ${result.result.error.error}`;
+            return;
         }
 
         window.location.reload();
@@ -84,6 +94,7 @@ export class ManageReadReceiptComponent implements OnInit {
      * Cancels the read receipt and displays the option to mark the message as read.
      */
     async cancelReadReceipt() {
+        this.errorMessage = undefined;
         const result = await to2(
             this.http
                 .post("/timMessage/cancel_read_receipt", {
@@ -92,7 +103,8 @@ export class ManageReadReceiptComponent implements OnInit {
                 .toPromise()
         );
         if (!result.ok) {
-            console.error(result.result.error.error);
+            this.errorMessage = $localize`Could not cancel read receipt: ${result.result.error.error}`;
+            return;
         }
 
         this.markedAsRead = false;
@@ -112,6 +124,6 @@ interface TimMessageReadReceipt {
 @NgModule({
     declarations: [ManageReadReceiptComponent],
     exports: [ManageReadReceiptComponent],
-    imports: [CommonModule],
+    imports: [CommonModule, TimUtilityModule],
 })
 export class ManageReadReceiptModule {}

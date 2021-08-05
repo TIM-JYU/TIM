@@ -17,6 +17,7 @@ from timApp.document.documents import import_document_from_file
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME, PREAMBLE_FOLDER_NAME, \
     DEFAULT_PREAMBLE_DOC
 from timApp.folder.folder import Folder
+from timApp.messaging.messagelist.messagelist_utils import MESSAGE_LIST_DOC_PREFIX
 from timApp.tim_app import app
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db, get_tim_main_engine
@@ -115,6 +116,14 @@ def initialize_database(create_docs: bool = True) -> None:
                 title='preamble',
             )
             group_preamble.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+
+            messagelist_preamble = import_document_from_file(
+                static_tim_doc('initial/messagelist_preamble.md'),
+                f'{MESSAGE_LIST_DOC_PREFIX}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{DEFAULT_PREAMBLE_DOC}',
+                admin_group,
+                title='preamble'
+            )
+            messagelist_preamble.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
 
         sess.commit()
         log_info('Database initialization done.')

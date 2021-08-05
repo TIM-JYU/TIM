@@ -161,6 +161,9 @@ TIM_SAFE_ATTRS = frozenset([
     'height',
     'jsparams',
 
+    # tim-message-list-admin
+    'list',
+
 ])
 
 c_no_style = Cleaner(
