@@ -361,7 +361,7 @@ services:
   ports:
   - "${CADDY_MULTI_PORT}:80"
  mailman-test:
-  image: timimages/mailman-core:latest
+  image: timimages/mailman-core:dev
   profiles:
    - test
    - dev

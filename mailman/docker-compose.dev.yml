@@ -8,29 +8,27 @@ x-mailman-common-env:
 
 services:
   mailman-core:
-    image: timimages/mailman-core:latest
+    image: timimages/mailman-core:dev
     restart: unless-stopped
-    profiles:
-      - dev
     volumes:
       - ./mailman/db:/opt/mailmandb
       - ./mailman/core/mailman-extra.cfg:/opt/mailman/mailman-extra.cfg
       - ./mailman/core/logs:/opt/mailman/var/logs
+      - ./mailman/plugins:/plugins
     environment:
       <<: *mailman-common-env
       HYPERKITTY_URL: http://mailman-web:8000/mailman3/hyperkitty/
       INIT_DEV: 1
   mailman-web:
-    image: timimages/mailman-web:latest
+    image: timimages/mailman-web:dev
     restart: unless-stopped
-    profiles:
-      - dev
     depends_on:
       - mailman-core
     volumes:
       - ./mailman/db:/opt/mailmandb
       - ./mailman/web:/opt/mailman-web-data
       - ./mailman/messages:/tmp/mailman-messages
+      - ./mailman/plugins:/plugins
     environment:
       <<: *mailman-common-env
       SECRET_KEY: test
