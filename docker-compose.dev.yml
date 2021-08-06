@@ -12,7 +12,7 @@ x-common-root:
   - /root/.pycharm_helpers
 services:
  tim:
-  << : *common-root
+  <<: *common-root
   command: /usr/sbin/sshd -D
   ports:
    - "49999:22"
@@ -21,6 +21,8 @@ services:
  postgresql:
   ports:
    - "5432:5432"
+ mailman-test:
+  restart: unless-stopped
  postgresql-test:
   image: postgres:11
   ports:
