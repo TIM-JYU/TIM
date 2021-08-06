@@ -32,14 +32,13 @@ class ReviewCanvasMarkupModel(GenericMarkupModel):
 class ReviewCanvasInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component).
     TODO how do we actually receive files?"""
-    fileData: bytearray
+    pass
 
 
 @dataclass
 class ReviewCanvasHtmlModel(GenericHtmlModel[ReviewCanvasInputModel, ReviewCanvasMarkupModel, ReviewCanvasStateModel]):
     def get_component_html_name(self) -> str:
-        # return 'pali-runner'
-        return ''
+        return 'reviewcanvas-runner'
 
     def get_static_html(self) -> str:
         return render_static_reviewcanvas(self)
