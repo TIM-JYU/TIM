@@ -9,7 +9,7 @@ import {
     nullable,
     withDefault,
 } from "tim/plugin/attributes";
-import {valueDefu} from "tim/util/utils";
+import {defaultErrorMessage, defaultTimeout, valueDefu} from "tim/util/utils";
 import {
     ApplicationRef,
     Component,
@@ -19,7 +19,7 @@ import {
     OnInit,
 } from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
-import {HttpClientModule} from "@angular/common/http";
+import {HttpClientModule, HttpHeaders} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {Subject, Subscription} from "rxjs";
@@ -27,6 +27,37 @@ import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {CsUtilityModule} from "../../cs/js/util/module";
+import {IFile} from "../../cs/js/util/file-select";
+import {Set} from "../../cs/js/util/set";
+
+const FileSubmission = t.intersection([
+    t.type({
+        source: t.string,
+        path: t.string,
+    }),
+    t.partial({
+        content: nullable(t.string),
+        type: t.string,
+    }),
+]);
+export type IFileSubmission = t.TypeOf<typeof FileSubmission>;
+
+const UploadedFile = t.type({
+    path: t.string,
+    type: t.string,
+});
+interface IUploadedFile extends t.TypeOf<typeof UploadedFile> {}
+
+interface IUploadResponse {
+    file: string;
+    type: string;
+    block: number;
+}
+
+interface IUploadRequestInput {
+    input: {uploadedFiles?: {path: string; type: string}[]};
+}
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -56,28 +87,20 @@ const PluginFields = t.intersection([
             </tim-plugin-header>
             <p stem *ngIf="stem" [innerHTML]="stem"></p>
             <ng-container body>
-                <div class="form-inline">
-                    <label>{{inputstem}}
-                        <input type="submit"
-                               class="form-control"
-                               [ngModel]="file"
-                               (ngModelChange)="modelChanged.next($event)"
-                               [readonly]="readonly"
-                               [placeholder]="inputplaceholder"
-                               [size]="cols">
-                    </label>
-                    <ng-container>
-                        <i title="There is nothing in here"></i>
-                    </ng-container>
+                 <file-select-manager class="small"
+                        [dragAndDrop]="dragAndDrop"
+                        [uploadUrl]="uploadUrl"
+                        [stem]="uploadstem"
+                        (file)="onFileLoad($event)"
+                        (upload)="onUploadResponse($event)"
+                        (uploadDone)="onUploadDone($event)">
+                </file-select-manager>
+                <div class="form-inline small">
+                    <span *ngFor="let item of uploadedFiles">
+                        <cs-upload-result [src]="item.path" [type]="item.type"></cs-upload-result>
+                    </span>
                 </div>
-                <div class="buttons">
-                    <button class="timButton"
-                            *ngIf="buttonText()"
-                            [disabled]="isRunning || !userword || readonly"
-                            (click)="uploadFile()">
-                        {{buttonText()}}
-                    </button>
-                </div>
+                <span *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHTML]="connectionErrorMessage"></span>
                 <tim-loading *ngIf="isRunning"></tim-loading>
                 <div *ngIf="error" [innerHTML]="error"></div>
                 <pre *ngIf="result">{{result}}</pre>
@@ -97,9 +120,22 @@ export class ReviewCanvasComponent
     result?: string;
     error?: string;
     isRunning = false;
-    file = undefined;
+    timeout: number = 0;
+    connectionErrorMessage?: string;
+    file?: object;
     modelChanged: Subject<object> = new Subject<object>();
     private modelChangeSub!: Subscription;
+
+    uploadUrl?: string;
+    dragAndDrop: boolean = true;
+    uploadstem?: string;
+    uploadedFiles = new Set((o: IUploadedFile) =>
+        this.uploadedFileName(o.path)
+    );
+
+    uploadedFileName(url: string) {
+        return url.split("/").slice(6).join("/");
+    }
 
     getDefaultMarkup() {
         return {};
@@ -144,30 +180,59 @@ export class ReviewCanvasComponent
         this.result = undefined;
     }
 
-    async uploadFile() {
-        return this.doUploadFile();
+    onFileLoad(file: IFile) {
+        return;
     }
 
-    async doUploadFile() {
+    onUploadResponse(resp: unknown) {
+        if (!resp) {
+            return;
+        }
+
+        const response = resp as IUploadResponse;
+        this.uploadedFiles.clear();
+        this.uploadedFiles.push({path: response.file, type: response.type});
+    }
+
+    onUploadDone(success: boolean) {
+        if (!success) {
+            return;
+        }
+
+        this.postUploadAnswer();
+    }
+
+    async postUploadAnswer() {
         this.isRunning = true;
-        this.result = undefined;
-        const params = {
+
+        const params: IUploadRequestInput = {
             input: {
-                filedata: this.file,
+                uploadedFiles: this.uploadedFiles.toArray(),
             },
         };
 
-        const r = await this.postAnswer<{
-            web: {result: string; error?: string};
-        }>(params);
-        this.isRunning = false;
+        const r = await this.postAnswer<IUploadRequestInput>(
+            params,
+            new HttpHeaders({timeout: `${this.timeout + defaultTimeout}`})
+        );
+
         if (r.ok) {
+            this.isRunning = false;
             const data = r.result;
-            this.error = data.web.error;
-            this.result = data.web.result;
+            this.error = data.error;
         } else {
-            this.error = r.result.error.error;
+            this.isRunning = false;
+            const data = r.result.error;
+            if (data?.error) {
+                this.error = data.error;
+            }
+            this.connectionErrorMessage =
+                this.error ??
+                this.markup.connectionErrorMessage ??
+                defaultErrorMessage;
         }
+
+        this.isRunning = false;
     }
 
     getAttributeType() {
@@ -177,7 +242,13 @@ export class ReviewCanvasComponent
 
 @NgModule({
     declarations: [ReviewCanvasComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        CsUtilityModule,
+    ],
 })
 export class ReviewCanvasModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}
@@ -190,7 +261,7 @@ export const moduleDefs = [
                 ReviewCanvasModule
             )
         ),
-        "reviewCanvasRunner",
+        "reviewcanvasRunner",
         ReviewCanvasComponent
     ),
 ];
