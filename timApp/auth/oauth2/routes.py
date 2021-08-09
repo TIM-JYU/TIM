@@ -2,7 +2,7 @@ from flask import render_template_string
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.oauth2.oauth2 import auth_server
-from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.sessioninfo import get_current_user_object, logged_in
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 oauth = TypedBlueprint('oauth', __name__, url_prefix='/oauth')
@@ -10,9 +10,10 @@ oauth = TypedBlueprint('oauth', __name__, url_prefix='/oauth')
 
 @oauth.get('authorize')
 def request_authorization():
-    return render_template_string("""
-<p>Test!</p>
-""")
+    if not logged_in():
+        return render_template_string("""<p>Not logged in!</p>""")
+    grant = auth_server.get_consent_grant(end_user=get_current_user_object())
+    return render_template_string("""<p>Got grant: {{grant.__dict__}}</p>""", grant=grant)
 
 
 @oauth.post('authorize')
