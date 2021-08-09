@@ -390,6 +390,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def is_special(self):
         return self.name in SPECIAL_USERNAMES
 
+    # Used by authlib mixins (e.g. authlib.integrations.sqla_oauth2.create_save_token_func)
+    def get_user_id(self):
+        return self.id
+
     def check_password(self, password: str, allow_old=False, update_if_old=True) -> bool:
         if not self.pass_:
             return False

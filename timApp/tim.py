@@ -28,6 +28,7 @@ from timApp.answer.feedbackanswer import feedback
 from timApp.answer.routes import answers
 from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
 from timApp.auth.login import login_page
+from timApp.auth.oauth2.oauth2 import init_oauth
 from timApp.auth.saml import saml
 from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, logged_in
 from timApp.backup.backup_routes import backup
@@ -143,6 +144,8 @@ if app.config['BOOKMARKS_ENABLED']:
 
 for bp in blueprints:
     app.register_blueprint(bp)
+
+init_oauth(app)
 
 assets = Environment(app)
 
