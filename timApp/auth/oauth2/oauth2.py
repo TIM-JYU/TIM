@@ -1,8 +1,9 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from authlib.integrations.flask_oauth2 import AuthorizationServer, ResourceProtector
 from authlib.integrations.sqla_oauth2 import create_save_token_func, \
     create_bearer_token_validator
+from authlib.oauth2 import OAuth2Request
 from authlib.oauth2.rfc6749 import grants
 from flask import Flask
 
@@ -21,7 +22,7 @@ class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
         # TODO: Do we need 'none'?
     ]
 
-    def save_authorization_code(self, code, request):
+    def save_authorization_code(self, code: str, request: OAuth2Request) -> OAuth2AuthorizationCode:
         auth_code = OAuth2AuthorizationCode(
             code=code,
             client_id=request.client.client_id,
@@ -33,20 +34,21 @@ class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
         db.session.commit()
         return auth_code
 
-    def query_authorization_code(self, code, client):
+    def query_authorization_code(self, code: str, client: OAuth2Client) -> Optional[OAuth2AuthorizationCode]:
         auth_code = OAuth2AuthorizationCode.query.filter_by(code=code, client_id=client.client_id).first()
         if auth_code and not auth_code.is_expired():
             return auth_code
+        return None
 
-    def delete_authorization_code(self, authorization_code):
+    def delete_authorization_code(self, authorization_code: OAuth2AuthorizationCode) -> None:
         db.session.delete(authorization_code)
         db.session.commit()
 
-    def authenticate_user(self, authorization_code):
+    def authenticate_user(self, authorization_code: OAuth2AuthorizationCode) -> User:
         return User.query.get(authorization_code.user_id)
 
 
-def query_client(client_id: str):
+def query_client(client_id: str) -> OAuth2Client:
     if client_id not in ALLOWED_CLIENTS:
         raise Exception(f"OAuth2 client {client_id} is not in allowed list")
     return ALLOWED_CLIENTS[client_id]
@@ -59,7 +61,7 @@ require_oauth = ResourceProtector()
 """Special decorator to request for permission scopes"""
 
 
-def init_oauth(app: Flask):
+def init_oauth(app: Flask) -> None:
     global ALLOWED_CLIENTS
     clients = app.config.get('OAUTH2_CLIENTS', [])
     schema = class_schema(OAuth2Client)()

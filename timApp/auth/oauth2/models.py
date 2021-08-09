@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 from authlib.integrations.sqla_oauth2 import OAuth2TokenMixin, OAuth2AuthorizationCodeMixin
 from authlib.oauth2.rfc6749 import ClientMixin, scope_to_list, list_to_scope
@@ -52,36 +52,36 @@ class OAuth2Client(ClientMixin):
     More custom grant types are allowed.
     """
 
-    def get_client_id(self):
+    def get_client_id(self) -> str:
         return self.client_id
 
-    def get_default_redirect_uri(self):
+    def get_default_redirect_uri(self) -> Optional[str]:
         if self.redirect_urls:
             return self.redirect_urls[0]
         return None
 
-    def get_allowed_scope(self, scope):
+    def get_allowed_scope(self, scope: str) -> Optional[str]:
         if not scope:
             return ''
         allowed = set(self.allowed_scopes)
         scopes = scope_to_list(scope)
         return list_to_scope([s for s in scopes if s in allowed])
 
-    def check_redirect_uri(self, redirect_uri):
+    def check_redirect_uri(self, redirect_uri: str) -> bool:
         return redirect_uri in self.redirect_urls
 
-    def check_client_secret(self, client_secret):
+    def check_client_secret(self, client_secret: str) -> bool:
         return self.client_secret == client_secret
 
-    def check_endpoint_auth_method(self, method, endpoint):
+    def check_endpoint_auth_method(self, method: str, endpoint: str) -> bool:
         if endpoint == 'token':
             return self.token_endpoint_auth_method == method
         return True
 
-    def check_response_type(self, response_type):
+    def check_response_type(self, response_type: str) -> bool:
         return response_type in self.response_types
 
-    def check_grant_type(self, grant_type):
+    def check_grant_type(self, grant_type: str) -> bool:
         return grant_type in self.grant_types
 
 
