@@ -17,7 +17,12 @@ export CADDY_DOMAINS='http://'
 # If COMPOSE_PROFILES=prod_multi, specifies the host port for Caddy. Otherwise unused.
 export CADDY_MULTI_PORT=50000
 
-# Extra configuration to add to Caddyfile.
+# Extra configuration to add to main TIM route in Caddyfile.
+export CADDY_EXTRA_TIM_CONFIG='
+
+'
+
+# Extra configuration to append to Caddyfile.
 export CADDY_EXTRA_CONFIG='
 
 '

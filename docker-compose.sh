@@ -28,7 +28,7 @@ fi
 extra_args=( )
 if [[ -n $RUN_MAILMAN_DEV ]]; then
   if [[ "$RUN_MAILMAN_DEV" == 1 ]]; then
-    export CADDY_EXTRA_TIM_CONFIG="import mailman_dev"
+    export CADDY_EXTRA_TIM_CONFIG=$(echo -e "import mailman_dev\n${CADDY_EXTRA_TIM_CONFIG}")
     export CADDY_MAILMAN_STATIC_DIR="./mailman/web/static"
     extra_args=( "-f" "${DIR}/mailman/docker-compose.dev.yml" )
   fi
