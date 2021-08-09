@@ -117,6 +117,7 @@ ENV PIP_INSTALL="python3.9 -m pip install"
 RUN bash -c "${PIP_INSTALL} wheel setuptools && ${APT_CLEANUP}"
 RUN bash -c "${PIP_INSTALL} \
 attrs \
+authlib==1.0.0a2 \
 autopep8 \
 beautifulsoup4 \
 bcrypt \
