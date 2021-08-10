@@ -19,6 +19,7 @@ OAUTH2_CLIENTS = [
     {
         "client_id": "mailman_tim",
         "client_secret": "test123",
+        "client_name": "Mailman Test",
         "redirect_urls": [
             "http://localhost/mailman3/accounts/tim/login/callback/"
         ],
