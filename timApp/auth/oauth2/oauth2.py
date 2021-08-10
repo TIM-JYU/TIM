@@ -32,7 +32,7 @@ class RefreshTokenGrant(grants.RefreshTokenGrant):
     def authenticate_user(self, credential: OAuth2Token) -> User:
         return User.query.get(credential.user_id)
 
-    def revoke_old_credential(self, credential: OAuth2Token):
+    def revoke_old_credential(self, credential: OAuth2Token) -> None:
         credential.refresh_token_revoked_at = int(time.time())
         db.session.add(credential)
         db.session.commit()
@@ -84,7 +84,7 @@ require_oauth = ResourceProtector()
 """Special decorator to request for permission scopes"""
 
 
-def delete_expired_oauth2_tokens():
+def delete_expired_oauth2_tokens() -> None:
     now_time = int(time.time())
     OAuth2Token.query.filter(
         (OAuth2Token.expires_in + OAuth2Token.issued_at < now_time) |

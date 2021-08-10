@@ -67,7 +67,7 @@ class OAuth2Client(ClientMixin):
     """
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.client_name or self.client_id
 
     def get_client_id(self) -> str:
