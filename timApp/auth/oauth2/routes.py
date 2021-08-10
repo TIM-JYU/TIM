@@ -1,11 +1,11 @@
 from authlib.oauth2.rfc6749 import BaseGrant
-from authlib.oauth2.rfc6749 import BaseGrant
 from flask import Response, render_template
 
 from timApp.auth.accesshelper import verify_logged_in
-from timApp.auth.oauth2.models import OAuth2Client, describe_scope
-from timApp.auth.oauth2.oauth2 import auth_server
+from timApp.auth.oauth2.models import OAuth2Client, describe_scope, Scope
+from timApp.auth.oauth2.oauth2 import auth_server, require_oauth
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
+from timApp.tim_app import csrf
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 oauth = TypedBlueprint('oauth', __name__, url_prefix='/oauth')
@@ -28,5 +28,13 @@ def authorize(confirm: bool) -> Response:
 
 
 @oauth.post('token')
+@csrf.exempt
 def issue_token() -> Response:
     return auth_server.create_token_response()
+
+
+@oauth.get('profile')
+@require_oauth(Scope.profile.name)
+def get_user_profile() -> Response:
+    print("hit!")
+    raise Exception("Hit!")
