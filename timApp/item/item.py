@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from itertools import accumulate
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List, Tuple
 
 from flask import current_app
 from sqlalchemy import tuple_, func
@@ -13,8 +13,6 @@ from timApp.item.block import Block, BlockType
 from timApp.item.blockrelevance import BlockRelevance
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import include_if_loaded
-
-
 from timApp.util.utils import split_location, date_to_relative, cached_property
 
 if TYPE_CHECKING:
@@ -140,7 +138,7 @@ class Item(ItemBase):
             crumbs.append(Folder.get_root())
         return crumbs
 
-    def parent_paths(self):
+    def parent_paths(self) -> List[Tuple[str, str]]:
         path_parts = self.path_without_lang.split('/')
         paths = list(p[1:] for p in accumulate('/' + part for part in path_parts[:-1]))
         return [split_location(p) for p in paths]
