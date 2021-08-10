@@ -1,31 +1,32 @@
 import re
 from dataclasses import dataclass
-from typing import Optional, List
 from datetime import datetime
+from typing import Optional, List
 
 from flask import Response
 from sqlalchemy import tuple_
 
-from timApp.document.document import Document
-from timApp.document.documents import import_document_from_file
-from timApp.document.viewcontext import default_view_ctx
-from timApp.item.manage import get_trash_folder
-from timApp.util.flask.requesthelper import RouteException, NotExist
+from timApp.auth.accesshelper import verify_edit_access
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.auth.accesshelper import verify_edit_access
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
+from timApp.document.document import Document
+from timApp.document.documents import import_document_from_file
+from timApp.document.translation.translation import Translation
+from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
+from timApp.item.manage import get_trash_folder
 from timApp.messaging.timMessage.internalmessage_models import InternalMessage, DisplayType, InternalMessageDisplay, \
     InternalMessageReadReceipt
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import ok_response, json_response, error_generic
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars, static_tim_doc
@@ -113,11 +114,14 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     :param item_id: Identifier for document or folder where message is displayed
     :return:
     """
-    current_page_obj = DocEntry.query.filter_by(id=item_id).first()
+    current_page_obj = DocEntry.find_by_id(item_id)
+    if isinstance(current_page_obj, Translation):
+        # Resolve to original file instead of translation file
+        current_page_obj = current_page_obj.docentry
     if not current_page_obj:
-        current_page_obj = Folder.query.filter_by(id=item_id).first()
-        if not current_page_obj:
-            raise NotExist('No document or folder found')
+        current_page_obj = Folder.get_by_id(item_id)
+    if not current_page_obj:
+        raise NotExist('No document or folder found')
 
     parent_paths = current_page_obj.parent_paths()  # parent folders
 
@@ -125,7 +129,7 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
     displays = InternalMessageDisplay.query \
         .outerjoin(Folder, Folder.id == InternalMessageDisplay.display_doc_id) \
         .filter((InternalMessageDisplay.usergroup == get_current_user_object().get_personal_group())
-                & ((InternalMessageDisplay.display_block == current_page_obj)
+                & ((InternalMessageDisplay.display_doc_id == current_page_obj.id)
                    | (tuple_(Folder.location, Folder.name).in_(parent_paths))))
 
     replies = InternalMessage.query.filter(InternalMessage.replies_to.isnot(None)).with_entities(
