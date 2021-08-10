@@ -38,7 +38,7 @@ class OAuth2Client(ClientMixin):
     allowed_scopes: List[Scope] = field(default_factory=list)
     """Resource scopes that the client can ask for. Scopes are used to limit what REST API can be used."""
 
-    token_endpoint_auth_method = 'client_secret_basic'
+    token_endpoint_auth_method = 'client_secret_post'
     """How the client authenticates itself with TIM. Allowed values:
         *  "none": The client is a public client as defined in OAuth 2.0,
             and does not have a client secret.
