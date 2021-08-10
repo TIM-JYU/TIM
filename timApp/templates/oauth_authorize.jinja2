@@ -1,29 +1,50 @@
 {% extends "base.jinja2" %}
+{% block head %}
+    {{ super() }}
+    <script>
+        var docSettings = {
+            login: {
+                hide: {
+                    search: true,
+                    sidebar: true,
+                }
+            }
+        };
+    </script>
+{% endblock %}
 {% block title %}Authenticate to {{ client.name }}{% endblock %}
 {% block content %}
-    <h1>Log in {{ client.name }} with TIM</h1>
-    <p>
-        You are attempting to log into <strong>{{ client.name }}</strong> with TIM.
-    </p>
-    <p><strong>{{ client.name }}</strong> will be able to</p>
-    <ul>
-        {% for scope in scopes %}
-            <li>{{ scope }}</li>
-        {% endfor %}
-    </ul>
-    <p>
-        Do you want to proceed?
-    </p>
-    <div>
-        <form action="" method="post">
-            <input type="hidden" name="confirm" value="false">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="submit" value="Cancel">
-        </form>
-        <form action="" method="post">
-            <input type="hidden" name="confirm" value="true">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="submit" value="Authorize">
-        </form>
+    <div class="flex justify-center">
+        <div>
+            <h1>Log in {{ client.name }} with TIM</h1>
+            <p>
+                You are attempting to log into <strong>{{ client.name }}</strong> with TIM.
+            </p>
+            <p><strong>{{ client.name }}</strong> will be able to</p>
+            <ul>
+                {% for scope in scopes %}
+                    <li>{{ scope }}</li>
+                {% endfor %}
+            </ul>
+            {% if user %}
+                <p>
+                    Do you want to proceed?
+                </p>
+                <div class="flex space-between pt-1">
+                    <form action="" method="post">
+                        <input type="hidden" name="confirm" value="false">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input class="btn btn-danger" type="submit" value="Cancel">
+                    </form>
+                    <form action="" method="post">
+                        <input type="hidden" name="confirm" value="true">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input class="btn btn-default" type="submit" value="Authorize {{ client.name }}">
+                    </form>
+                </div>
+            {% else %}
+                <p><strong>Log in with the button above in order to authorize</strong></p>
+            {% endif %}
+        </div>
     </div>
 {% endblock %}
