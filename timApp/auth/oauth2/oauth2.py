@@ -84,6 +84,16 @@ require_oauth = ResourceProtector()
 """Special decorator to request for permission scopes"""
 
 
+def delete_expired_oauth2_tokens():
+    now_time = int(time.time())
+    OAuth2Token.query.filter(
+        (OAuth2Token.expires_in + OAuth2Token.issued_at < now_time) |
+        (OAuth2Token.access_token_revoked_at < now_time) |
+        (OAuth2Token.refresh_token_revoked_at < now_time)) \
+        .delete()
+    db.session.commit()
+
+
 def init_oauth(app: Flask) -> None:
     global ALLOWED_CLIENTS
     clients = app.config.get('OAUTH2_CLIENTS', [])

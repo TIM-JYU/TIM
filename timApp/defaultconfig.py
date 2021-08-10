@@ -82,6 +82,10 @@ CELERYBEAT_SCHEDULE = {
     'process-notifications': {
         'task': 'timApp.tim_celery.process_notifications',
         'schedule': crontab(minute='*/5'),
+    },
+    'cleanup-expired-oauth2-tokens': {
+        'task': 'timApp.tim_celery.cleanup_oauth2_tokens',
+        'schedule': crontab(hour='*/24', minute='0'),
     }
 }
 # This makes the log format a little less verbose by omitting the Celery task id (which is an UUID).
