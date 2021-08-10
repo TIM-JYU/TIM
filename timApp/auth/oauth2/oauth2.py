@@ -1,3 +1,4 @@
+import time
 from typing import List, Dict, Optional
 
 from authlib.integrations.flask_oauth2 import AuthorizationServer, ResourceProtector
@@ -13,6 +14,28 @@ from timApp.user.user import User
 from tim_common.marshmallow_dataclass import class_schema
 
 ALLOWED_CLIENTS: Dict[str, OAuth2Client] = {}
+
+
+class RefreshTokenGrant(grants.RefreshTokenGrant):
+    TOKEN_ENDPOINT_AUTH_METHODS = [
+        'client_secret_basic',
+        'client_secret_post',
+    ]
+    INCLUDE_NEW_REFRESH_TOKEN = True
+
+    def authenticate_refresh_token(self, refresh_token: str) -> Optional[OAuth2Token]:
+        token: OAuth2Token = OAuth2Token.query.filter_by(refresh_token=refresh_token)
+        if token and not token.is_revoked() and not token.is_expired():
+            return token
+        return None
+
+    def authenticate_user(self, credential: OAuth2Token) -> User:
+        return User.query.get(credential.user_id)
+
+    def revoke_old_credential(self, credential: OAuth2Token):
+        credential.refresh_token_revoked_at = int(time.time())
+        db.session.add(credential)
+        db.session.commit()
 
 
 class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
@@ -70,6 +93,7 @@ def init_oauth(app: Flask) -> None:
 
     auth_server.init_app(app)
     auth_server.register_grant(AuthorizationCodeGrant)
+    auth_server.register_grant(RefreshTokenGrant)
 
     # TODO: Do we need to support revocation?
 
