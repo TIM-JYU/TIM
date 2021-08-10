@@ -17,6 +17,7 @@ import {
     NgModule,
     OnDestroy,
     OnInit,
+    ViewChild,
 } from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule, HttpHeaders} from "@angular/common/http";
@@ -28,7 +29,11 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {CsUtilityModule} from "../../cs/js/util/module";
-import {IFile} from "../../cs/js/util/file-select";
+import {
+    FileSelectManagerComponent,
+    IFile,
+    IFileSpecification,
+} from "../../cs/js/util/file-select";
 import {Set} from "../../cs/js/util/set";
 
 const FileSubmission = t.intersection([
@@ -63,11 +68,13 @@ const PluginMarkupFields = t.intersection([
     t.partial({
         inputplaceholder: nullable(t.string),
         inputstem: t.string,
+        filename: t.string,
     }),
     GenericPluginMarkup,
     t.type({
         // all withDefaults should come here; NOT in t.partial
         autoupdate: withDefault(t.number, 500),
+        maxSize: withDefault(t.number, 50),
     }),
 ]);
 
@@ -81,7 +88,6 @@ const PluginFields = t.intersection([
 @Component({
     selector: "reviewcanvas-runner",
     template: `
-        <tim-plugin-frame [markupError]="markupError">
             <tim-plugin-header *ngIf="header" header>
                 <span [innerHTML]="header"></span>
             </tim-plugin-header>
@@ -106,7 +112,6 @@ const PluginFields = t.intersection([
                 <pre *ngIf="result">{{result}}</pre>
             </ng-container>
             <p footer *ngIf="footer" [textContent]="footer"></p>
-        </tim-plugin-frame>
     `,
     styleUrls: ["./reviewcanvas.scss"],
 })
@@ -126,6 +131,7 @@ export class ReviewCanvasComponent
     modelChanged: Subject<object> = new Subject<object>();
     private modelChangeSub!: Subscription;
 
+    fileSelect?: FileSelectManagerComponent;
     uploadUrl?: string;
     dragAndDrop: boolean = true;
     uploadstem?: string;
@@ -148,6 +154,11 @@ export class ReviewCanvasComponent
     ngOnInit() {
         super.ngOnInit();
 
+        const taskId = this.pluginMeta.getTaskId();
+        if (taskId?.docId) {
+            this.uploadUrl = `/pluginUpload/${taskId.docId}/${taskId.name}/`;
+        }
+
         this.modelChangeSub = this.modelChanged
             .pipe(debounceTime(this.autoupdate), distinctUntilChanged())
             .subscribe((newValue) => {
@@ -157,6 +168,26 @@ export class ReviewCanvasComponent
 
     ngOnDestroy() {
         this.modelChangeSub.unsubscribe();
+    }
+
+    @ViewChild(FileSelectManagerComponent)
+    set fileSelectSetter(component: FileSelectManagerComponent | undefined) {
+        this.fileSelect = component;
+        if (!component) {
+            return;
+        }
+
+        const path = this.markup.filename ?? "";
+        const files: IFileSpecification[] = [];
+        files.push({
+            paths: [path],
+            maxSize: this.markup.maxSize,
+            upload: true,
+        });
+
+        component.allowMultiple = false; // this.markup.allowMultipleFiles;
+        component.multipleElements = false; // this.markup.multipleUploadElements;
+        component.files = files;
     }
 
     get correct() {
