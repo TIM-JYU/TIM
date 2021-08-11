@@ -77,6 +77,8 @@ class Answer(db.Model):
             'answered_on': self.answered_on,
             'valid': self.valid,
             'last_points_modifier': self.last_points_modifier,
+            'origin_doc_id': self.origin_doc_id,
+            'plugin_type': self.plugin_type,
             **include_if_loaded('users_all', self, 'users'),
         }
 

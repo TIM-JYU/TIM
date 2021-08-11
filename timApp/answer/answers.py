@@ -4,7 +4,7 @@ from collections import defaultdict, OrderedDict
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Dict, Tuple, Iterable, Any, Generator, TypeVar, SupportsRound, DefaultDict, Union, \
-    TypedDict, MappingView, ItemsView
+    TypedDict, ItemsView
 
 from bs4 import UnicodeDammit
 from flask import current_app
@@ -53,17 +53,18 @@ def get_latest_answers_query(task_id: TaskId, users: List[User]) -> Query:
 
 def get_latest_valid_answers_query(task_id: TaskId, users: List[User]) -> Query:
     sq = (Answer.query
-        .filter_by(task_id=task_id.doc_task, valid=True)
-        .join(User, Answer.users)
-        .filter(User.id.in_([u.id for u in users]))
-        .group_by(User.id)
-        .with_entities(func.max(Answer.id).label('aid'), User.id.label('uid'))
-        .subquery())
+          .filter_by(task_id=task_id.doc_task, valid=True)
+          .join(User, Answer.users)
+          .filter(User.id.in_([u.id for u in users]))
+          .group_by(User.id)
+          .with_entities(func.max(Answer.id).label('aid'), User.id.label('uid'))
+          .subquery())
     datas = Answer.query.join(sq, Answer.id == sq.c.aid).with_entities(Answer)
     return datas
 
 
-def is_redundant_answer(content: str, existing_answers: ExistingAnswersInfo, ptype: Optional[PluginType], valid: bool) -> bool:
+def is_redundant_answer(content: str, existing_answers: ExistingAnswersInfo, ptype: Optional[PluginType],
+                        valid: bool) -> bool:
     la = existing_answers.latest_answer
     is_redundant = la and (la.content == content and la.valid == valid)
     if is_redundant:
@@ -84,11 +85,12 @@ def save_answer(
         points: Optional[float],
         tags: Optional[List[str]] = None,
         valid: bool = True,
-        points_given_by: Optional[int]=None,
+        points_given_by: Optional[int] = None,
         force_save: bool = False,
         saver: Optional[User] = None,
         plugintype: Optional[PluginType] = None,
         max_content_len: Optional[int] = None,
+        origin_doc_id: Optional[int] = None,
 ) -> Optional[Answer]:
     """Saves an answer to the database.
 
@@ -103,6 +105,7 @@ def save_answer(
     :param content: The content of the answer.
     :param points: Points for the task.
     :param force_save: Whether to force to save the answer even if the latest existing answer has the same content.
+    :param origin_doc_id: If known, the document ID from which the answer was sent.
 
     """
     content_str = json.dumps(content)
@@ -120,8 +123,13 @@ def save_answer(
             a.last_points_modifier = points_given_by
         return None
 
-    a = Answer(task_id=task_id.doc_task, content=content_str, points=points, valid=valid,
-               last_points_modifier=points_given_by)
+    a = Answer(task_id=task_id.doc_task,
+               content=content_str,
+               points=points,
+               valid=valid,
+               last_points_modifier=points_given_by,
+               origin_doc_id=origin_doc_id,
+               plugin_type=plugintype.type)
     db.session.add(a)
 
     for u in users:
@@ -211,7 +219,7 @@ def get_all_answers(task_ids: List[TaskId],
         ns = str(int(n))  # n may be a boolean, so convert to int (0/1) first
         if hide_names:
             name = "user" + str(cnt)
-        header = name + "; " + a.task_id + "; " + str(a.answered_on) + "; " + ns + "; " + points
+        header = "; ".join([name, str(a.origin_doc_id), a.task_id, a.plugin_type, str(a.answered_on), ns, points])
         line = json.loads(a.content)
         answ = json.dumps(line, ensure_ascii=False)
         if isinstance(line, dict):  # maybe csPlugin?
@@ -572,7 +580,8 @@ def flatten_points_result(
             total_points=task_groups['total_sum'],
             task_points=task_groups['task_sum'],
             velp_points=task_groups['velp_sum'],
-            task_count=task_counts.get(user_id, 0) if rule.count_all else sum(1 for t in task_groups['groups'].values() if sum(x['task_count'] for x in t['tasks']) > 0),
+            task_count=task_counts.get(user_id, 0) if rule.count_all else sum(
+                1 for t in task_groups['groups'].values() if sum(x['task_count'] for x in t['tasks']) > 0),
             velped_task_count=sum(1 for t in task_groups['groups'].values() if t['velped_task_count'] > 0),
             groups=OrderedDict(),
             user=user_map[user_id],

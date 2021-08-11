@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict
 
-import requests
 from flask import Blueprint, session, current_app
 from flask import Response
 from flask import request
@@ -16,20 +15,19 @@ from sqlalchemy import func
 from sqlalchemy.orm import lazyload
 from webargs.flaskparser import use_args
 
-from timApp.answer.exportedanswer import ExportedAnswer
-from timApp.answer.backup import send_answer_backup_if_enabled
-from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
-from tim_common.markupmodels import GenericMarkupModel
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_existing_answers_info, save_answer, get_all_answers, \
     valid_answers_query, valid_taskid_filter
+from timApp.answer.backup import send_answer_backup_if_enabled
+from timApp.answer.exportedanswer import ExportedAnswer
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access, AccessDenied, \
-    verify_admin, get_origin_from_request, is_allowed_ip, verify_ip_ok
+    verify_admin, get_origin_from_request, verify_ip_ok
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
     verify_view_access, get_plugin_from_request
 from timApp.auth.accesstype import AccessType
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.login import create_or_update_user
 from timApp.auth.sessioninfo import get_current_user_id, logged_in, user_context_with_logged_in, \
     get_other_session_users_objs
@@ -43,7 +41,6 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx, OriginInfo
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
-from tim_common.marshmallow_dataclass import class_schema
 from timApp.notification.send_email import multi_send_email
 from timApp.peerreview.peerreview_utils import has_review_access, get_reviews_for_user, is_peerreview_enabled
 from timApp.plugin.containerLink import call_plugin_answer
@@ -74,6 +71,8 @@ from timApp.util.logger import log_info
 from timApp.util.utils import get_current_time, approximate_real_name
 from timApp.util.utils import local_timezone
 from timApp.util.utils import try_load_json, seq_to_str, is_valid_email
+from tim_common.markupmodels import GenericMarkupModel
+from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import value_or_default
 from tim_common.utils import Missing
 
@@ -519,7 +518,7 @@ def post_answer(plugintype: str, task_id_ext: str):
             curr_user,
             get_urlmacros_from_request(),
             get_other_session_users_objs(),
-            get_origin_from_request()
+            get_origin_from_request(),
         ).result)
 
 
@@ -537,7 +536,7 @@ def post_answer_impl(
         curr_user: User,
         urlmacros,
         other_session_users: List[User],
-        origin: Optional[OriginInfo]
+        origin: Optional[OriginInfo],
 ) -> AnswerRouteResult:
     receive_time = get_current_time()
     tid = TaskId.parse(task_id_ext)
@@ -881,6 +880,7 @@ def post_answer_impl(
                     force_answer,
                     plugintype=plugin.ptype,
                     max_content_len=current_app.config['MAX_ANSWER_CONTENT_SIZE'],
+                    origin_doc_id=origin.doc_id,
                 )
                 result['savedNew'] = a.id if a else None
                 if a:
@@ -906,6 +906,7 @@ def post_answer_impl(
                 saver=curr_user,
                 plugintype=plugin.ptype,
                 max_content_len=current_app.config['MAX_ANSWER_CONTENT_SIZE'],
+                origin_doc_id=origin.doc_id,
             )
             # TODO: Could call backup here too, but first we'd need to add support for saver in export/import.
             result['savedNew'] = a.id if a else None
