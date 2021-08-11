@@ -1,4 +1,5 @@
 import json
+
 from sqlalchemy import func
 
 from timApp.answer.answer_models import UserAnswer
@@ -23,6 +24,12 @@ class Answer(db.Model):
 
     task_id = db.Column(db.Text, nullable=False, index=True)
     """Task id to which this answer was posted. In the form "doc_id.name", for example "2.task1"."""
+
+    origin_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=True)
+    """The document in which the answer was saved"""
+
+    plugin_type = db.Column(db.Text, nullable=True)
+    """Plugin type the answer was saved on"""
 
     content = db.Column(db.Text, nullable=False)
     """Answer content."""
