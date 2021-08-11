@@ -130,7 +130,7 @@ def save_answer(
                valid=valid,
                last_points_modifier=points_given_by,
                origin_doc_id=origin.doc_id if origin else None,
-               plugin_type=plugintype.type if plugintype else None,
+               plugin_type=plugintype
                )
     db.session.add(a)
 

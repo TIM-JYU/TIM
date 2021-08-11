@@ -1236,7 +1236,7 @@ def save_fields(
                     ignore_fields[t_id.doc_task] = True
                     continue
                 raise RouteException(str(e))
-            plugin = PluginType('textfield')  # assuming textfield type for fields that are not in the document
+            plugin = PluginType.resolve('textfield')  # assuming textfield type for fields that are not in the document
         except (PluginException, TimDbException) as e:
             raise RouteException(str(e))
 

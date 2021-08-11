@@ -28,7 +28,7 @@ class Answer(db.Model):
     origin_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=True)
     """The document in which the answer was saved"""
 
-    plugin_type = db.Column(db.Text, nullable=True)
+    plugin_type_id = db.Column(db.Integer, db.ForeignKey('plugintype.id'), nullable=True)
     """Plugin type the answer was saved on"""
 
     content = db.Column(db.Text, nullable=False)
@@ -46,6 +46,7 @@ class Answer(db.Model):
     last_points_modifier = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
     """The UserGroup who modified the points last. Null if the points have been given by the task automatically."""
 
+    plugin_type = db.relationship('PluginType', lazy='select')
     uploads = db.relationship('AnswerUpload', back_populates='answer', lazy='dynamic')
     users = db.relationship('User', secondary=UserAnswer.__table__,
                             back_populates='answers', lazy='dynamic')
@@ -78,7 +79,7 @@ class Answer(db.Model):
             'valid': self.valid,
             'last_points_modifier': self.last_points_modifier,
             'origin_doc_id': self.origin_doc_id,
-            'plugin_type': self.plugin_type,
+            'plugin_type': self.plugin_type.type,
             **include_if_loaded('users_all', self, 'users'),
         }
 
