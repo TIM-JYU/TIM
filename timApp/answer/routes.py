@@ -880,7 +880,7 @@ def post_answer_impl(
                     force_answer,
                     plugintype=plugin.ptype,
                     max_content_len=current_app.config['MAX_ANSWER_CONTENT_SIZE'],
-                    origin_doc_id=origin.doc_id,
+                    origin=origin,
                 )
                 result['savedNew'] = a.id if a else None
                 if a:
@@ -906,7 +906,7 @@ def post_answer_impl(
                 saver=curr_user,
                 plugintype=plugin.ptype,
                 max_content_len=current_app.config['MAX_ANSWER_CONTENT_SIZE'],
-                origin_doc_id=origin.doc_id,
+                origin=origin,
             )
             # TODO: Could call backup here too, but first we'd need to add support for saver in export/import.
             result['savedNew'] = a.id if a else None

@@ -15,6 +15,7 @@ from sqlalchemy.orm import selectinload, defaultload, Query, joinedload
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.pointsumrule import PointSumRule, PointType, Group
+from timApp.document.viewcontext import OriginInfo
 from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
@@ -90,7 +91,7 @@ def save_answer(
         saver: Optional[User] = None,
         plugintype: Optional[PluginType] = None,
         max_content_len: Optional[int] = None,
-        origin_doc_id: Optional[int] = None,
+        origin: Optional[OriginInfo] = None,
 ) -> Optional[Answer]:
     """Saves an answer to the database.
 
@@ -105,7 +106,7 @@ def save_answer(
     :param content: The content of the answer.
     :param points: Points for the task.
     :param force_save: Whether to force to save the answer even if the latest existing answer has the same content.
-    :param origin_doc_id: If known, the document ID from which the answer was sent.
+    :param origin: If known, the document from which the answer was sent.
 
     """
     content_str = json.dumps(content)
@@ -123,14 +124,14 @@ def save_answer(
             a.last_points_modifier = points_given_by
         return None
 
-    plugin_type = plugintype.type if plugintype else None
     a = Answer(task_id=task_id.doc_task,
                content=content_str,
                points=points,
                valid=valid,
                last_points_modifier=points_given_by,
-               origin_doc_id=origin_doc_id,
-               plugin_type=plugin_type)
+               origin_doc_id=origin.doc_id if origin else None,
+               plugin_type=plugintype.type if plugintype else None,
+               )
     db.session.add(a)
 
     for u in users:
