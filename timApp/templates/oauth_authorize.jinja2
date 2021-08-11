@@ -27,7 +27,7 @@
                 {% endfor %}
             </ul>
             {% if user %}
-                <p>
+                <p class="proceed-prompt">
                     Do you want to proceed?
                 </p>
                 <div class="flex space-between pt-1">
@@ -43,7 +43,7 @@
                     </form>
                 </div>
             {% else %}
-                <p><strong>Log in with the button above in order to authorize</strong></p>
+                <p class="login-prompt"><strong>Log in with the button above in order to authorize</strong></p>
             {% endif %}
         </div>
     </div>

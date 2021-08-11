@@ -63,3 +63,18 @@ MESSAGE_LISTS_ENABLED = True
 MAILMAN_URL = "http://mailman-test:8001/3.1"
 MAILMAN_USER = "restadmin"
 MAILMAN_PASS = "restpass"
+
+os.environ["AUTHLIB_INSECURE_TRANSPORT"] = "true"
+OAUTH2_CLIENTS = [
+    {
+        "client_id": "tim_test",
+        "client_secret": "test",
+        "client_name": "TIM Test",
+        "redirect_urls": [
+            "http://tim/ping"
+        ],
+        "allowed_scopes": ["profile"],
+        "response_types": ["code", "token"],
+        "grant_types": ["authorization_code"]
+    }
+]
