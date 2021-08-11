@@ -79,7 +79,7 @@ class Answer(db.Model):
             'valid': self.valid,
             'last_points_modifier': self.last_points_modifier,
             'origin_doc_id': self.origin_doc_id,
-            'plugin_type': self.plugin_type.type,
+            'plugin_type': self.plugin_type.type if self.plugin_type else None,
             **include_if_loaded('users_all', self, 'users'),
         }
 
