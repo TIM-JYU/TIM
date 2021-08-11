@@ -1,14 +1,14 @@
 """Add OAuth2 models
 
 Revision ID: 8770c4966dc5
-Revises: 132d3c908b54
+Revises: a057ebaa15a2
 Create Date: 2021-08-10 07:47:25.216943
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '8770c4966dc5'
-down_revision = '132d3c908b54'
+down_revision = 'a057ebaa15a2'
 
 import sqlalchemy as sa
 from alembic import op
