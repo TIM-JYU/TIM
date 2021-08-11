@@ -99,9 +99,7 @@ export class NotesHandler {
             data = {
                 access:
                     new TimStorage("noteAccess", t.string).get() ?? "everyone",
-                tags: {
-                    markread: false,
-                },
+                tags: {},
             };
         } else {
             url = "/editNote";
@@ -117,9 +115,7 @@ export class NotesHandler {
                 data = {
                     id: options.noteData.id,
                     access: notedata.extraData.access,
-                    tags: {
-                        markread: false,
-                    },
+                    tags: {},
                 };
             } else {
                 await showMessageDialog(
