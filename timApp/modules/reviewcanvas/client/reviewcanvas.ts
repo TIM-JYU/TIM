@@ -61,7 +61,7 @@ interface IUploadResponse {
 }
 
 interface IUploadRequestInput {
-    input: {uploadedFiles?: {path: string; type: string}[]};
+    input: {uploadedfile?: {path: string; type: string}};
 }
 
 const PluginMarkupFields = t.intersection([
@@ -238,7 +238,7 @@ export class ReviewCanvasComponent
 
         const params: IUploadRequestInput = {
             input: {
-                uploadedFiles: this.uploadedFiles.toArray(),
+                uploadedfile: this.uploadedFiles.toArray()[0],
             },
         };
 

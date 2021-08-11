@@ -17,10 +17,16 @@ from tim_common.pluginserver_flask import GenericHtmlModel, \
 from tim_common.utils import Missing
 
 
+class UploadedFile:
+    path: str
+    type: str
+
+
 @dataclass
 class ReviewCanvasStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    filePath: str
+    # userword: str
+    uploadedfile: UploadedFile
 
 
 @dataclass
@@ -30,9 +36,10 @@ class ReviewCanvasMarkupModel(GenericMarkupModel):
 
 @dataclass
 class ReviewCanvasInputModel:
-    """Model for the information that is sent from browser (plugin AngularJS component).
-    TODO how do we actually receive files?"""
-    pass
+    """Model for the information that is sent from browser (plugin AngularJS component)."""
+    # would it be possible to receive multiple files somehow?
+    # Marshmallow appears to hate it if we make this into a list
+    uploadedfile: UploadedFile
 
 
 @dataclass
@@ -71,6 +78,9 @@ def render_static_reviewcanvas(m: ReviewCanvasHtmlModel) -> str:
 def answer(args: ReviewCanvasAnswerModel) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
     result: PluginAnswerResp = {'web': web}
+    uploadedfile = args.input.uploadedfile
+    save = {"uploadedfile": uploadedfile}
+    result["save"] = save
     web['result'] = "saved"
     return result
 
