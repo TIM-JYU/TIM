@@ -405,28 +405,28 @@ type: upload
         text = self.get(f'/allDocumentAnswersPlain/{doc.id}')
         date_re = r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}'
         self.assertRegex(text, fr"""
-{TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
+{TEST_USER_1_NAME}; {'testuser1'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
 \[true, false, false\]
 
 ----------------------------------------------------------------------------------
-{'Test user 2'}; {'testuser2'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
+{'Test user 2'}; {'testuser2'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
 \[true, true, true\]
 
 ----------------------------------------------------------------------------------
-{TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id2)}; {date_re}; 1; 1\.0
+{TEST_USER_1_NAME}; {'testuser1'}; None; {re.escape(task_id2)}; mmcq; {date_re}; 1; 1\.0
 \[true, false\]
 
 ----------------------------------------------------------------------------------
-{'Test user 2'}; {'testuser2'}; {re.escape(task_id2)}; {date_re}; 1; 2\.0
+{'Test user 2'}; {'testuser2'}; None; {re.escape(task_id2)}; mmcq; {date_re}; 1; 2\.0
 \[false, false\]
 """.strip())
         text2 = self.get(f'/allAnswersPlain/{task_id}')
         self.assertRegex(text2, fr"""
-{TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
+{TEST_USER_1_NAME}; {'testuser1'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
 \[true, false, false\]
 
 ----------------------------------------------------------------------------------
-{'Test user 2'}; {'testuser2'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
+{'Test user 2'}; {'testuser2'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
 \[true, true, true\]
         """.strip())
         self.assertEqual('', self.get(f'/allAnswersPlain/{task_id}', query_string={'consent': 'true'}))
