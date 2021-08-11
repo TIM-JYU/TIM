@@ -29,7 +29,7 @@ export interface IParInfo {
 }
 
 export type ITags = {
-    markread: boolean;
+    markread?: boolean;
     marktranslated?: boolean;
 };
 
