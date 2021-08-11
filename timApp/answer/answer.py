@@ -1,7 +1,10 @@
 import json
+from typing import Optional
+
 from sqlalchemy import func
 
 from timApp.answer.answer_models import UserAnswer
+from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db, include_if_loaded
 
@@ -24,6 +27,12 @@ class Answer(db.Model):
     task_id = db.Column(db.Text, nullable=False, index=True)
     """Task id to which this answer was posted. In the form "doc_id.name", for example "2.task1"."""
 
+    origin_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=True)
+    """The document in which the answer was saved"""
+
+    plugin_type_id = db.Column(db.Integer, db.ForeignKey('plugintype.id'), nullable=True)
+    """Plugin type the answer was saved on"""
+
     content = db.Column(db.Text, nullable=False)
     """Answer content."""
 
@@ -39,6 +48,7 @@ class Answer(db.Model):
     last_points_modifier = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
     """The UserGroup who modified the points last. Null if the points have been given by the task automatically."""
 
+    plugin_type: Optional[PluginType] = db.relationship('PluginType', lazy='select')
     uploads = db.relationship('AnswerUpload', back_populates='answer', lazy='dynamic')
     users = db.relationship('User', secondary=UserAnswer.__table__,
                             back_populates='answers', lazy='dynamic')
@@ -70,6 +80,8 @@ class Answer(db.Model):
             'answered_on': self.answered_on,
             'valid': self.valid,
             'last_points_modifier': self.last_points_modifier,
+            'origin_doc_id': self.origin_doc_id,
+            **include_if_loaded('plugin_type', self, 'plugin'),
             **include_if_loaded('users_all', self, 'users'),
         }
 
