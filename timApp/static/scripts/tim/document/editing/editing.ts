@@ -34,7 +34,6 @@ import * as t from "io-ts";
 import {UserSelection} from "tim/document/editing/userSelection";
 import {Paragraph} from "tim/document/structure/paragraph";
 import {Area} from "tim/document/structure/area";
-import {BrokenArea} from "tim/document/structure/brokenArea";
 import {HelpPar} from "tim/document/structure/helpPar";
 import {ParSelection} from "tim/document/editing/parSelection";
 import {
@@ -43,17 +42,17 @@ import {
 } from "tim/document/editing/unbrokenSelection";
 import {ParContext} from "tim/document/structure/parContext";
 import {DerefOption} from "tim/document/structure/derefOption";
-import {
-    enumDocParts,
-    enumPars,
-    nextParContext,
-    PreambleIteration,
-} from "tim/document/structure/iteration";
+import {enumPars, nextParContext} from "tim/document/structure/iteration";
+import {enumDocParts, PreambleIteration} from "tim/document/structure/parsing";
+import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 import {
     createParContext,
     getParContainerElem,
-} from "tim/document/structure/parsing";
-import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
+} from "tim/document/structure/create";
+import {
+    getContextualAreaInfo,
+    ParAreaInclusionKind,
+} from "tim/document/structure/areaContext";
 import {IMenuFunctionEntry, MenuFunctionList} from "../viewutils";
 import {ViewCtrl} from "../viewctrl";
 import {handleUnread} from "../readings";
@@ -336,12 +335,12 @@ This will delete the whole ${
                             })
                         );
                         if (res.ok && !isManageResponse(res.result)) {
-                            this.addSavedParToDom(res.result, params);
+                            await this.addSavedParToDom(res.result, params);
                         } else {
-                            this.addSavedParToDom(saveData, params);
+                            await this.addSavedParToDom(saveData, params);
                         }
                     } else {
-                        this.addSavedParToDom(saveData, params);
+                        await this.addSavedParToDom(saveData, params);
                     }
                 }
                 return {};
@@ -375,7 +374,10 @@ This will delete the whole ${
     }
 
     findSettingsPars() {
-        const pars = enumDocParts(PreambleIteration.Exclude);
+        const pars = enumDocParts(
+            PreambleIteration.Exclude,
+            getParContainerElem()
+        );
         const found = [];
         for (const p of pars) {
             if (p instanceof Paragraph && p.isSetting()) {
@@ -394,8 +396,8 @@ This will delete the whole ${
             const first = found[0];
             const last = found[found.length - 1];
             return getMinimalUnbrokenSelection(
-                new ParContext(first, first),
-                new ParContext(last, last)
+                new ParContext(first),
+                new ParContext(last)
             );
         }
     }
@@ -437,21 +439,14 @@ This will delete the whole ${
                     "Faulty recursion stopped, there should be a settings paragraph already"
                 );
             }
-            const iter = enumDocParts(PreambleIteration.Exclude).next();
+            const iter = enumDocParts(
+                PreambleIteration.Exclude,
+                getParContainerElem()
+            ).next();
             let ctx;
             const docPart = (!iter.done && iter.value) || undefined;
-            if (docPart instanceof BrokenArea) {
-                const first = docPart.getFirstOrigPar();
-                if (!first) {
-                    // TODO: Not sure if this is ever practically reachable. Leave this unimplemented for now.
-                    await showMessageDialog(
-                        "Document start has a broken/nested area; cannot open settings"
-                    );
-                    return;
-                }
-                ctx = new ParContext(first, docPart);
-            } else if (docPart) {
-                ctx = new ParContext(docPart.getFirstOrigPar(), docPart);
+            if (docPart) {
+                ctx = new ParContext(docPart.getFirstOrigPar());
             }
 
             const r = await to(
@@ -683,28 +678,31 @@ This will delete the whole ${
         const fns: MenuFunctionList = [];
         fns.push(this.getViewSourceEditorMenuEntry(par));
         const showSingleParFns = par.isDeletableOnItsOwn();
-        const ctx = par.context;
+        const {
+            areasBeforeRef,
+            areasAfterRef,
+            refAreaContainment,
+        } = getContextualAreaInfo(par);
         let areaWithSel:
             | {sel: UserSelection<UnbrokenSelection>; area: Area}
             | undefined;
-        let insideRefArea = false;
-        if (ctx instanceof Area && ctx.isStartOrEnd(par.par)) {
-            areaWithSel = {
-                sel: new UserSelection(
-                    getMinimalUnbrokenSelection(
-                        new ParContext(ctx.startPar.par, ctx),
-                        new ParContext(ctx.endPar.par, ctx)
-                    ),
-                    par
-                ),
-                area: ctx,
-            };
-        } else if (
-            ctx instanceof ReferenceParagraph &&
-            ctx.target instanceof Area
-        ) {
-            insideRefArea = !ctx.target.startPar.par.equals(par.par);
+        if (areasAfterRef.length === 0) {
+            for (const ctx of areasBeforeRef) {
+                if (ctx instanceof Area && ctx.isStartOrEnd(par.par)) {
+                    areaWithSel = {
+                        sel: new UserSelection(
+                            getMinimalUnbrokenSelection(
+                                new ParContext(ctx.startPar.par),
+                                new ParContext(ctx.endPar.par)
+                            ),
+                            par
+                        ),
+                        area: ctx,
+                    };
+                }
+            }
         }
+
         if (this.viewctrl.editing) {
             fns.push(
                 {
@@ -778,10 +776,13 @@ This will delete the whole ${
                         }
                     },
                     desc: "Follow reference",
-                    show: par.isReference(),
+                    show: par.isReference() || areasAfterRef.length > 0,
                 }
             );
-            if (!insideRefArea) {
+            if (
+                refAreaContainment === ParAreaInclusionKind.Outside ||
+                refAreaContainment === ParAreaInclusionKind.AtStart
+            ) {
                 fns.push(this.getAddParagraphItem(addAbovePos));
             }
             if (showSingleParFns) {
@@ -863,28 +864,36 @@ This will delete the whole ${
                     }
                 );
             }
-            fns.push(
-                {
-                    func: (e) =>
-                        this.viewctrl.clipboardHandler.showPasteMenu(e, par),
-                    desc: "Paste...",
-                    show: documentglobals().editMode != null,
-                    closeAfter: false,
-                },
-                {
-                    func: (e) =>
-                        this.viewctrl.clipboardHandler.showMoveMenu(e, par),
-                    desc: "Move here...",
-                    show: documentglobals().allowMove,
-                },
-                {
-                    func: (e) =>
-                        this.viewctrl.areaHandler.removeAreaMarking(e, par),
-                    desc: "Remove area marking",
-                    show: documentglobals().editMode === "area",
-                }
-            );
-            if (!insideRefArea) {
+            if (refAreaContainment !== ParAreaInclusionKind.Inside) {
+                fns.push(
+                    {
+                        func: (e) =>
+                            this.viewctrl.clipboardHandler.showPasteMenu(
+                                e,
+                                par
+                            ),
+                        desc: "Paste...",
+                        show: documentglobals().editMode != null,
+                        closeAfter: false,
+                    },
+                    {
+                        func: (e) =>
+                            this.viewctrl.clipboardHandler.showMoveMenu(e, par),
+                        desc: "Move here...",
+                        show: documentglobals().allowMove,
+                    },
+                    {
+                        func: (e) =>
+                            this.viewctrl.areaHandler.removeAreaMarking(e, par),
+                        desc: "Remove area marking",
+                        show: documentglobals().editMode === "area",
+                    }
+                );
+            }
+            if (
+                refAreaContainment === ParAreaInclusionKind.Outside ||
+                refAreaContainment === ParAreaInclusionKind.AtStart
+            ) {
                 fns.push(this.getAddQuestionItem(addAbovePos));
             }
             fns.push(

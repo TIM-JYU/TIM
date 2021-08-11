@@ -3,18 +3,11 @@
     {%- set editline = '<div class="editline" tabindex="0" title="Click to edit this paragraph"></div>' -%}
 {%- endif -%}
 
-{%- macro start_area(t, areas, attrs) -%}
-    {% set area_name = areas|join('_') %}
-    <div class="area {{ t.collapsed }}area_{{areas|join(' area_')}}"
+{%- macro start_area(t, area, attrs) -%}
+    {% set area_name = area %}
+    <div class="area {{ t.collapsed }} area_{{area_name}}"
          data-doc-id="{{ t.doc_id }}">
-        <div class="areaContent {{ t.cls }}" data-area="{{areas|join(' area_')}}">
-            {{ caller() }}
-{%- endmacro -%}
-
-{%- macro end_area(open_areas) -%}
-    </div>
-    </div>
-    {{ caller() }}
+        <div class="areaContent {{ t.cls }}" data-area="{{area_name}}">
 {%- endmacro -%}
 
 {%- macro notes(t) -%}
@@ -45,20 +38,16 @@
 
 {%- for t in text -%}
     {%- if t.end_areas -%}
-        {% call end_area(t.end_areas) %}
-        {% endcall %}
-
+        </div></div>
     {%- elif t.start_areas -%}
         {% if t.ref_attrs and t.ref_attrs.area %}
-            {% call start_area(t, t.start_areas, t.ref_attrs) %}
-            {% endcall %}
+            {{ start_area(t, t.start_areas, t.ref_attrs) }}
         {% else %}
-            {% call start_area(t, t.start_areas, t.attrs) %}
-            {% endcall %}
+            {{ start_area(t, t.start_areas, t.attrs) }}
         {% endif %}
 
     {%- elif t.collapse_area -%}
-        <div class="{{ t.collapse_class }}" title="Click to expand / collapse"
+        <div class="par {{ t.collapse_class }}" title="Click to expand / collapse"
              id="{{ t.id }}"
              t="{{ t.t }}"
              attrs="{{ t.attrs_str }}"

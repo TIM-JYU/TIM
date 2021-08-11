@@ -2,8 +2,8 @@ import {ParSelection} from "tim/document/editing/parSelection";
 import $ from "jquery";
 import {Area} from "tim/document/structure/area";
 import {ParContext} from "tim/document/structure/parContext";
-import {maybeDeref} from "tim/document/structure/maybeDeref";
-import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
+import {getActiveDocument} from "tim/document/activedocument";
+import {getContextualAreaInfo} from "tim/document/structure/areaContext";
 
 /**
  * Represents a "not broken" contiguous selection of paragraphs.
@@ -15,11 +15,18 @@ import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
  * in the selection.
  */
 export class UnbrokenSelection extends ParSelection {
-    private constructor(
-        public readonly start: ParContext,
-        public readonly end: ParContext
-    ) {
-        super(start, end);
+    private readonly areaStart: Area | undefined;
+    private readonly areaEnd: Area | undefined;
+
+    private constructor(start: ParContext | Area, end: ParContext | Area) {
+        super(
+            start instanceof ParContext
+                ? start
+                : new ParContext(start.startPar.par),
+            end instanceof ParContext ? end : new ParContext(end.endPar.par)
+        );
+        this.areaStart = start instanceof Area ? start : undefined;
+        this.areaEnd = end instanceof Area ? end : undefined;
     }
 
     remove() {
@@ -27,35 +34,22 @@ export class UnbrokenSelection extends ParSelection {
     }
 
     removeAllButFirst() {
-        let curr = this.start;
+        let curr = this.areaStart ?? this.start.par;
         const todelete = [];
-        let last = this.start.context;
-        for (curr of this.iter()) {
-            if (!curr.context.equals(last)) {
-                todelete.push(curr.context);
-                last = curr.context;
-            }
+        const last = this.areaEnd ?? this.end.par;
+        const doc = getActiveDocument();
+        while (!curr.equals(last)) {
+            // We know there should be at least one more element because curr != last.
+            const next = curr.nextInHtml()!;
+
+            curr = doc.getParMap().get(next)![1];
+            todelete.push(curr.parent ?? curr);
         }
         for (const d of todelete) {
             d.remove();
         }
-        const firstctx = maybeDeref(this.start.context);
+        const firstctx = this.areaStart ?? this.start.par;
         if (firstctx instanceof Area) {
-            // If the selection start paragraph is not equal to the area start paragraph, it means
-            // that the selection is inside one area. In that case, we don't
-            // want to touch the whole area container, but only the selected
-            // paragraphs.
-            if (!firstctx.startPar.par.equals(this.start.par)) {
-                const it = this.iter();
-
-                // Don't remove the first one; we return that one.
-                it.next();
-
-                for (const p of it) {
-                    p.par.remove();
-                }
-                return this.start.par.htmlElement;
-            }
             const ac = firstctx.getAreaContainer();
             if (firstctx.collapse) {
                 $(ac).remove();
@@ -77,48 +71,63 @@ export class UnbrokenSelection extends ParSelection {
      * We will assume that the current document as a whole is not broken, i.e. all areas are ended appropriately etc.
      */
     static minimal(s: ParSelection): UnbrokenSelection {
-        const areaStack = [];
-        let missingStart;
-        for (const curr of s.iter()) {
-            const d = maybeDeref(curr.context);
-            if (d instanceof Area) {
-                if (d.startPar.par.equals(curr.par)) {
-                    areaStack.push(d);
-                } else if (d.endPar.par.equals(curr.par)) {
-                    const a = areaStack.pop();
-                    if (!a) {
-                        missingStart = d;
-                    }
-                }
+        const startInfo = getContextualAreaInfo(s.start);
+        const endInfo = getContextualAreaInfo(s.end);
+
+        // Find the first area (starting from innermost) that contains both start and end.
+        let innermostCommonArea;
+        const endInfoAll = [
+            ...endInfo.areasBeforeRef,
+            ...endInfo.areasAfterRef,
+        ];
+        let eInd = -1;
+        const startInfoAll = [
+            ...startInfo.areasBeforeRef,
+            ...startInfo.areasAfterRef,
+        ];
+        let sInd = startInfoAll.length;
+        for (let i = startInfoAll.length - 1; i >= 0; i--) {
+            const x = startInfoAll[i];
+            sInd = i;
+            eInd = endInfoAll.findIndex((a) => a.equals(x));
+            if (eInd >= 0) {
+                innermostCommonArea = endInfoAll[eInd];
+                break;
             }
         }
-        let start = missingStart
-            ? new ParContext(missingStart.startPar.par, missingStart)
-            : s.start;
-        const missingEnd: Area | undefined = areaStack[0];
-        let end = missingEnd
-            ? new ParContext(missingEnd.endPar.par, missingEnd)
-            : s.end;
+        if (!innermostCommonArea) {
+            sInd = -1;
+        }
 
         // If we're inside an area reference, extend the selection to cover the full area.
         // Currently it's not possible to edit individual area paragraphs through an area reference,
         // so it's better not to deceive the user.
-        if (
-            start.context instanceof ReferenceParagraph &&
-            start.context.target instanceof Area
-        ) {
-            start = new ParContext(
-                start.context.target.startPar.par,
-                start.context
+        if (innermostCommonArea && eInd >= endInfo.areasBeforeRef.length) {
+            return new UnbrokenSelection(
+                endInfo.areasAfterRef[0],
+                endInfo.areasAfterRef[0]
             );
         }
         if (
-            end.context instanceof ReferenceParagraph &&
-            end.context.target instanceof Area
+            innermostCommonArea &&
+            (innermostCommonArea.isStartOrEnd(s.start.par) ||
+                innermostCommonArea.isStartOrEnd(s.end.par))
         ) {
-            end = new ParContext(end.context.target.endPar.par, end.context);
+            // Here we have a selection inside a single area, and we have selected the start and/or end paragraph
+            // of the area. In that case, we must extend the selection to cover the whole area.
+            return new UnbrokenSelection(
+                innermostCommonArea,
+                innermostCommonArea
+            );
         }
-        return new UnbrokenSelection(start, end);
+
+        // Widen types to include undefined to match reality.
+        const start = startInfoAll[sInd + 1] as Area | undefined;
+        const end = endInfoAll[eInd + 1] as Area | undefined;
+        return new UnbrokenSelection(
+            start ? start : s.start,
+            end ? end : s.end
+        );
     }
 }
 

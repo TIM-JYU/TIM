@@ -1,15 +1,12 @@
 import {maybeDeref} from "tim/document/structure/maybeDeref";
-import {BrokenArea} from "tim/document/structure/brokenArea";
 import {Area, AreaEndPar, AreaStartPar} from "tim/document/structure/area";
-import {HelpPar} from "tim/document/structure/helpPar";
-import {ParContext} from "tim/document/structure/parContext";
 import {Result} from "tim/util/utils";
 import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 import {CollapseControls} from "tim/document/structure/collapseControls";
 import * as t from "io-ts";
 import {Paragraph} from "tim/document/structure/paragraph";
 import {documentglobals} from "tim/util/globals";
-import {DerefOption} from "tim/document/structure/derefOption";
+import {DocumentPart} from "tim/document/structure/documentPart";
 
 function getAttr(el: Element, attrName: string) {
     const attr = el.getAttribute(attrName);
@@ -42,83 +39,6 @@ function parseAttrs(attrs: string) {
     return parsed;
 }
 
-function getContext(el: Element) {
-    let rootChild = el;
-    while (true) {
-        const p = rootChild.parentElement;
-        if (!p) {
-            throw Error("root paragraph container not found");
-        }
-        // The main content area of the document has "pars" id, but in editor preview,
-        // the div has "paragraphs" class.
-        if (p.id === "pars" || p.classList.contains("paragraphs")) {
-            break;
-        }
-        rootChild = p;
-    }
-    const prevsib = rootChild.previousElementSibling;
-    if (
-        prevsib &&
-        (prevsib.classList.contains("areaexpand") ||
-            prevsib.classList.contains("areacollapse"))
-    ) {
-        rootChild = prevsib;
-    }
-    if (!(rootChild instanceof HTMLElement)) {
-        throw Error("root was not HTMLElement");
-    }
-    return fromHtmlElement(rootChild);
-}
-
-export function fromParents(p: JQuery) {
-    if (!p.hasClass("par")) {
-        p = p.parents(".par");
-    }
-    return createParContextOrHelp(p[0]);
-}
-
-export function createParContext(el: Element) {
-    const c = createParContextOrHelp(el);
-    if (c instanceof ParContext) {
-        return c;
-    }
-    throw Error("unexpected help par");
-}
-
-export function createParContextOrHelp(el: Element) {
-    const ctx = getContext(el);
-    // We might have a reference paragraph inside an area.
-    // In that case, we don't want to dereference it so that View source/Edit still works.
-    // TODO: The abstractions need to support nested contexts (e.g. area -> refpar -> par).
-    let s = ctx.getSinglePar(
-        el,
-        ctx instanceof ReferenceParagraph
-            ? DerefOption.Deref
-            : DerefOption.NoDeref
-    );
-    if (!s) {
-        const target = maybeDeref(ctx);
-        if (target instanceof BrokenArea) {
-            s = maybeDeref(target.inner[0]);
-        } else if (target instanceof Area && !target.collapse) {
-            s = target.startPar.par;
-        } else {
-            throw Error("didn't find corresponding single par");
-        }
-    }
-    if (s.id === "HELP_PAR") {
-        return new HelpPar(s);
-    }
-    return new ParContext(s, ctx);
-}
-
-export function createParContextNoPreview(el: Element) {
-    const ctx = createParContextOrHelp(el);
-    if (!ctx.isHelp && !ctx.isInPreview()) {
-        return ctx;
-    }
-}
-
 /**
  * Constructs a {@link DocumentPart} from the given HTML element.
  * @param el An element that is a direct child of the #pars container.
@@ -132,9 +52,12 @@ export function fromHtmlElement(el: HTMLElement) {
     if (carea.ok) {
         return carea.result;
     }
+
     const {par, original} = parseParagraph(el);
     if (original) {
-        return new ReferenceParagraph(original, par);
+        const refpar = new ReferenceParagraph(original, par);
+        par.parent = refpar;
+        return refpar;
     }
     return par;
 }
@@ -157,16 +80,29 @@ function tryParseCollapsibleArea(
     if (!content || !(content instanceof HTMLElement)) {
         return {ok: false, result: "area container content missing"};
     }
-    const contentpars = getAreaContent(content);
+    let contentpars = getAreaContent(content);
+    const ret = maybeFixAreaContent(contentpars);
+    contentpars = ret.contentpars;
+    const last = maybeDeref(contentpars[contentpars.length - 1]);
+    if (!(last instanceof Paragraph)) {
+        return {ok: false, result: ""};
+    }
     const p = parseParagraph(el);
     const start = new AreaStartPar(p.par, areaname);
-    const end = new AreaEndPar(
-        maybeDeref(contentpars[contentpars.length - 1]),
-        areaname
-    );
+    const end = new AreaEndPar(last, areaname);
     const inner = contentpars.slice(0, contentpars.length - 1);
     const area = new Area(start, end, inner, new CollapseControls(start));
-    const result = p.original ? new ReferenceParagraph(p.original, area) : area;
+    p.par.parent = area;
+    for (const c of contentpars) {
+        c.parent = area;
+    }
+    let result: ReferenceParagraph<Area> | Area;
+    if (p.original) {
+        result = new ReferenceParagraph(p.original, area);
+        area.parent = result;
+    } else {
+        result = area;
+    }
     return {ok: true, result: result};
 }
 
@@ -200,25 +136,93 @@ function parseParagraph(e: HTMLElement) {
     return {par, original};
 }
 
-function getAreaContent(areacontent: HTMLElement) {
-    const contentpars = [];
-    for (const e of areacontent.children) {
-        if (!(e instanceof HTMLElement)) {
-            throw Error("not a HTML element");
+export function isBottomContainer(e: Element) {
+    return e.classList.contains("addBottomContainer");
+}
+
+export enum PreambleIteration {
+    Exclude,
+    Include,
+}
+
+export function* enumDocParts(
+    pi: PreambleIteration,
+    parContainer: HTMLElement
+): Generator<DocumentPart> {
+    let currelem = parContainer.firstElementChild;
+    while (currelem && !isBottomContainer(currelem)) {
+        if (!(currelem instanceof HTMLElement)) {
+            throw Error("currelem not HTMLElement");
         }
-        const ret = parseParagraph(e);
-        contentpars.push(
-            ret.original
-                ? new ReferenceParagraph(ret.original, ret.par)
-                : ret.par
-        );
+        if (currelem.id === "HELP_PAR") {
+            currelem = currelem.nextElementSibling;
+            continue;
+        }
+        const par = fromHtmlElement(currelem);
+        if (
+            !par.getFirstOrigPar()?.preamblePath ||
+            pi === PreambleIteration.Include
+        ) {
+            yield par;
+        }
+        currelem = par.nextInHtml() ?? null;
     }
-    return contentpars;
+}
+
+function getAreaContent(areacontent: HTMLElement) {
+    return Array.from(enumDocParts(PreambleIteration.Include, areacontent));
+}
+
+/**
+ * Right now, the HTML structure sent by the server doesn't properly differentiate between these cases:
+ *
+ * * a reference to an area
+ * * an area with full of reference pars
+ *
+ * Both of these cases look similar in HTML. So, for now, we have to figure out which one of these is the case for the
+ * given contentpars. We do that by checking whether all the contentpars are ReferenceParagraphs and whether they all
+ * share the same doc and paragraph ids in the original paragraph.
+ *
+ * This function fixes most of the common cases but not more complicated ones - it is necessary to fix the server
+ * to send proper information.
+ *
+ * For example, the following case does not work properly currently:
+ *
+ * ```
+ * doc 1      doc2         doc3
+ * ----------------------------
+ * refpar --> area
+ *              refpar --> area
+ *                           par
+ * ```
+ *
+ * When doc 1 is viewed, the HTML looks as if there were only the first reference (doc 1 --> doc 2).
+ *
+ * @param contentpars The area content to inspect.
+ */
+function maybeFixAreaContent(contentpars: DocumentPart[]) {
+    const originalIdSet = new Set(
+        contentpars.map(
+            (c) =>
+                c instanceof ReferenceParagraph &&
+                `${c.original.id}-${c.original.docId}`
+        )
+    );
+    let orig;
+    if (
+        originalIdSet.size === 1 &&
+        originalIdSet.values().next().value !== false
+    ) {
+        orig = (contentpars[0] as ReferenceParagraph<Area | Paragraph>)
+            .original;
+        contentpars = contentpars.map((c) => maybeDeref(c));
+    }
+    return {contentpars, orig};
 }
 
 function tryParseUncollapsibleArea(
     el: HTMLElement
-): Result<Area | ReferenceParagraph<Area> | BrokenArea, string> {
+): Result<Area | ReferenceParagraph<Area>, string> {
     if (el.classList.contains("par")) {
         return {ok: false, result: "unexpected par class"};
     }
@@ -239,56 +243,42 @@ function tryParseUncollapsibleArea(
     if (!areacontent || !(areacontent instanceof HTMLElement)) {
         return {ok: false, result: "areacontent missing"};
     }
-    const contentpars = getAreaContent(areacontent);
-    // TODO: Nested areas are not currently supported. Server sends broken area pieces in that case.
-    //  We still want to be able to handle the document, so we return a BrokenArea.
+    let contentpars = getAreaContent(areacontent);
     if (contentpars.length < 2) {
-        return {
-            ok: true,
-            result: new BrokenArea(
-                areaname,
-                el,
-                contentpars,
-                "too few contentpars"
-            ),
-        };
+        throw Error("uncollapsible area cannot have less than 2 content pars");
     }
-    const fcontent = contentpars[0];
-    const first = maybeDeref(fcontent);
-    if (first.attrs.area !== areaname) {
-        return {
-            ok: true,
-            result: new BrokenArea(
-                areaname,
-                el,
-                contentpars,
-                "area name not found or mismatch"
-            ),
-        };
-    }
+    const ret = maybeFixAreaContent(contentpars);
+    contentpars = ret.contentpars;
+    const orig = ret.orig;
+    const first = maybeDeref(contentpars[0]);
     const last = maybeDeref(contentpars[contentpars.length - 1]);
+    if (!(first instanceof Paragraph)) {
+        return {ok: false, result: ""};
+    }
+    if (!(last instanceof Paragraph)) {
+        return {ok: false, result: ""};
+    }
+    if (first.attrs.area !== areaname) {
+        throw Error(
+            `area name mismatch 1: ${first.attrs.area} !== ${areaname}`
+        );
+    }
     if (last.attrs.area_end !== areaname) {
-        return {
-            ok: true,
-            result: new BrokenArea(
-                areaname,
-                el,
-                contentpars,
-                "area_end name not found or mismatch"
-            ),
-        };
+        throw Error("area name mismatch 2");
     }
     const start = new AreaStartPar(first, areaname);
     const end = new AreaEndPar(last, areaname);
     const inner = contentpars.slice(1, contentpars.length - 1);
     const area = new Area(start, end, inner, undefined);
-    const result =
-        fcontent instanceof ReferenceParagraph
-            ? new ReferenceParagraph(fcontent.original, area)
-            : area;
+    for (const p of contentpars) {
+        p.parent = area;
+    }
+    let result: ReferenceParagraph<Area> | Area;
+    if (orig) {
+        result = new ReferenceParagraph(orig, area);
+        area.parent = result;
+    } else {
+        result = area;
+    }
     return {ok: true, result: result};
-}
-
-export function getParContainerElem() {
-    return document.getElementById("pars");
 }

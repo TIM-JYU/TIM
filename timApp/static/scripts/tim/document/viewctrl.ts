@@ -3,7 +3,7 @@ import $ from "jquery";
 import {timApp} from "tim/app";
 import {setActiveDocument} from "tim/document/activedocument";
 import {AreaHandler} from "tim/document/areas";
-import {Document} from "tim/document/document";
+import {TimDocument} from "tim/document/timDocument";
 import {ClipboardHandler, IClipboardMeta} from "tim/document/editing/clipboard";
 import * as interceptor from "tim/document/interceptor";
 import {NotesHandler} from "tim/document/notes";
@@ -30,8 +30,8 @@ import {InputDialogKind} from "tim/ui/input-dialog.kind";
 import * as t from "io-ts";
 import {ParContext} from "tim/document/structure/parContext";
 import {DerefOption} from "tim/document/structure/derefOption";
-import {getParContainerElem} from "tim/document/structure/parsing";
 import {enumPars} from "tim/document/structure/iteration";
+import {getParContainerElem} from "tim/document/structure/create";
 import {
     AnswerBrowserController,
     PluginLoaderCtrl,
@@ -198,7 +198,7 @@ export class ViewCtrl implements IController {
     private inputChangeListeners = new Set<IChangeListener>();
 
     private pendingUpdates: PendingCollection = new Map<string, string>();
-    private document: Document;
+    private document?: TimDocument;
     public selectedUser: IUser;
     public editing: boolean = false;
     public defaultActionStorage = new TimStorage(
@@ -246,9 +246,6 @@ export class ViewCtrl implements IController {
         this.teacherMode = dg.teacherMode;
         this.velpMode = dg.velpMode;
         this.scope = sc;
-
-        this.document = new Document(this.docId);
-        setActiveDocument(this.document);
 
         const currSel = documentglobals().current_list_user;
         if (this.users.length > 0) {
@@ -377,6 +374,8 @@ export class ViewCtrl implements IController {
 
     $postLink() {
         initCssPrint();
+        this.document = new TimDocument(getParContainerElem()!);
+        setActiveDocument(this.document);
         const parselem = getParContainerElem();
         if (this.item.lang_id && parselem) {
             // TODO document language ids should be validated
@@ -388,6 +387,7 @@ export class ViewCtrl implements IController {
         this.noBeginPageBreak();
         if (!this.isSlideOrShowSlideView()) {
             this.document.rebuildSections();
+            this.document.print();
         }
         // from https://stackoverflow.com/a/7317311
         window.addEventListener("beforeunload", (e) => {
@@ -530,7 +530,7 @@ export class ViewCtrl implements IController {
                 }
             }
             $timeout(() => {
-                this.document.rebuildSections();
+                this.document!.rebuildSections();
             }, 1000);
             if (this.liveUpdates != origLiveUpdates) {
                 // if value hase changes, stop and start new poll
@@ -1140,7 +1140,7 @@ export class ViewCtrl implements IController {
             const compiled = $($compile(n)(this.scope));
             ParCompiler.processAllMathDelayed(compiled);
         }
-        this.document.rebuildSections();
+        this.document!.rebuildSections();
         this.pendingUpdates.clear();
         this.questionHandler.processQuestions();
     }

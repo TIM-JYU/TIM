@@ -1,24 +1,29 @@
 import {Paragraph} from "tim/document/structure/paragraph";
-import {DocumentPart} from "tim/document/structure/documentPart";
 import $ from "jquery";
 import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 import {Area} from "tim/document/structure/area";
 import {EditType} from "tim/document/editing/edittypes";
-import {maybeDeref} from "tim/document/structure/maybeDeref";
+import {getContextualAreaInfo} from "tim/document/structure/areaContext";
+
+function getOutermostRef(par: Paragraph) {
+    let ref;
+    let curr = par.parent;
+    while (curr) {
+        if (curr instanceof ReferenceParagraph) {
+            ref = curr;
+        }
+        curr = curr.parent;
+    }
+    return ref;
+}
 
 /**
- * A {@link Paragraph} that is associated with a context.
- *
- * The context can be any {@link DocumentPart}.
- *
- * If the Paragraph does not have any particular context (i.e. it is not inside any {@link Area} and does not
- * come from a {@link ReferenceParagraph}), then the context is just the same as the wrapped
- * {@link Paragraph} itself.
+ * TODO remove this class. This is just a wrapper for {@link Paragraph}.
  */
 export class ParContext {
     isHelp = false as const;
 
-    constructor(public par: Paragraph, public context: DocumentPart) {}
+    constructor(public par: Paragraph) {}
 
     private toJQuery() {
         return $(this.par.htmlElement);
@@ -28,13 +33,11 @@ export class ParContext {
      * Returns the corresponding {@link Paragraph} object without dereferencing {@link ReferenceParagraph}.
      */
     get originalPar() {
-        const c = this.context;
-        if (c instanceof Paragraph) {
-            return c; // same as this.par
-        } else if (c instanceof ReferenceParagraph) {
-            return c.original;
+        const ref = getOutermostRef(this.par);
+
+        if (ref) {
+            return ref.original;
         } else {
-            // inside non-reference area
             return this.par;
         }
     }
@@ -83,7 +86,7 @@ export class ParContext {
     }
 
     isReference() {
-        return this.context instanceof ReferenceParagraph;
+        return getOutermostRef(this.par) instanceof ReferenceParagraph;
     }
 
     get preamble() {
@@ -106,11 +109,12 @@ export class ParContext {
      * Returns whether this paragraph is safe to delete without breaking the document structure.
      */
     isDeletableOnItsOwn() {
-        const d = maybeDeref(this.context);
+        const {areasAfterRef} = getContextualAreaInfo(this);
+        if (areasAfterRef.length > 0) {
+            return false;
+        }
+        const d = this.par.parent;
         if (d instanceof Area) {
-            if (this.context instanceof ReferenceParagraph) {
-                return false;
-            }
             if (d.isStartOrEnd(this.par)) {
                 return false;
             }
@@ -125,7 +129,7 @@ export class ParContext {
      * @param editType Whether the edit action is adding above or below this `ParContext`.
      */
     getElementForInsert(editType: EditType.AddAbove | EditType.AddBelow) {
-        const d = maybeDeref(this.context);
+        const d = this.par.parent;
         if (d instanceof Area) {
             if (d.isStartOrEnd(this.par)) {
                 if (
