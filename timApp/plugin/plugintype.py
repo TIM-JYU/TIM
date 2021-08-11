@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Dict, Any
 
 import timApp
 from timApp.timdb.sqa import db
@@ -29,7 +30,7 @@ class PluginType(db.Model):
     def resolve(p_type: str) -> 'PluginType':
         return PluginType.query.filter_by(type=p_type).first() or PluginType(type=p_type)
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, Any]:
         return {
             'type': self.type
         }
