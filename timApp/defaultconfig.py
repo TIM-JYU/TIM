@@ -263,5 +263,17 @@ IP_BLOCK_LOG_ONLY = False
 INHERIT_FOLDER_RIGHTS_DOCS = {}
 
 # A list of OAuth2 applications that can authenticate with TIM
-# TODO: Document format
+# Refer to OAuth2Client class in timApp/auth/oauth2/models.py for documentation of each field
+# Example:
+# [
+#     {
+#        'client_id': 'example',
+#        'client_secret': 'secret',
+#        'client_name': 'Example application',
+#        'redirect_urls': ['https://example.com/login/callback'],
+#        'allowed_scopes': ['profile'],
+#        'response_types': ['code', 'token'],
+#        'grant_types': ['authorization_code'],
+#     }
+# ]
 OAUTH2_CLIENTS = []
