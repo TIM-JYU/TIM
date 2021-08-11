@@ -123,13 +123,14 @@ def save_answer(
             a.last_points_modifier = points_given_by
         return None
 
+    plugin_type = plugintype.type if plugintype else None
     a = Answer(task_id=task_id.doc_task,
                content=content_str,
                points=points,
                valid=valid,
                last_points_modifier=points_given_by,
                origin_doc_id=origin_doc_id,
-               plugin_type=plugintype.type)
+               plugin_type=plugin_type)
     db.session.add(a)
 
     for u in users:
