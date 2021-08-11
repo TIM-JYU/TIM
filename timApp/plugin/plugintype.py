@@ -28,3 +28,8 @@ class PluginType(db.Model):
     @staticmethod
     def resolve(p_type: str) -> 'PluginType':
         return PluginType.query.filter_by(type=p_type).first() or PluginType(type=p_type)
+
+    def to_json(self):
+        return {
+            'type': self.type
+        }

@@ -1,8 +1,10 @@
 import json
+from typing import Optional
 
 from sqlalchemy import func
 
 from timApp.answer.answer_models import UserAnswer
+from timApp.plugin.plugintype import PluginType
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db, include_if_loaded
 
@@ -46,7 +48,7 @@ class Answer(db.Model):
     last_points_modifier = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
     """The UserGroup who modified the points last. Null if the points have been given by the task automatically."""
 
-    plugin_type = db.relationship('PluginType', lazy='select')
+    plugin_type: Optional[PluginType] = db.relationship('PluginType', lazy='select')
     uploads = db.relationship('AnswerUpload', back_populates='answer', lazy='dynamic')
     users = db.relationship('User', secondary=UserAnswer.__table__,
                             back_populates='answers', lazy='dynamic')
@@ -79,7 +81,7 @@ class Answer(db.Model):
             'valid': self.valid,
             'last_points_modifier': self.last_points_modifier,
             'origin_doc_id': self.origin_doc_id,
-            'plugin_type': self.plugin_type.type if self.plugin_type else None,
+            **include_if_loaded('plugin_type', self, 'plugin'),
             **include_if_loaded('users_all', self, 'users'),
         }
 

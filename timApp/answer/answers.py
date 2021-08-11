@@ -10,7 +10,7 @@ from bs4 import UnicodeDammit
 from flask import current_app
 from sqlalchemy import func, Numeric, Float, true
 from sqlalchemy.dialects.postgresql import aggregate_order_by
-from sqlalchemy.orm import selectinload, defaultload, Query, joinedload
+from sqlalchemy.orm import selectinload, defaultload, Query, joinedload, contains_eager
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
@@ -179,6 +179,7 @@ def get_all_answers(task_ids: List[TaskId],
     q = get_all_answer_initial_query(period_from, period_to, task_ids, valid)
 
     q = q.options(defaultload(Answer.users).lazyload(User.groups))
+
     if consent is not None:
         q = q.filter_by(consent=consent)
 
@@ -198,6 +199,7 @@ def get_all_answers(task_ids: List[TaskId],
     q = q.with_entities(minmax, counts)
     sub = q.subquery()
     q = Answer.query.join(sub, Answer.id == sub.c.minmax).join(User, Answer.users)
+    q = q.join(PluginType).options(contains_eager(Answer.plugin_type))
     if sort == 'username':
         q = q.order_by(User.name, Answer.task_id, Answer.answered_on)
     else:
@@ -221,8 +223,14 @@ def get_all_answers(task_ids: List[TaskId],
         ns = str(int(n))  # n may be a boolean, so convert to int (0/1) first
         if hide_names:
             name = "user" + str(cnt)
-        header = "; ".join([name, str(a.origin_doc_id), a.task_id, a.plugin_type, str(a.answered_on), ns, points])
         line = json.loads(a.content)
+        header = "; ".join([
+            name,
+            str(a.origin_doc_id),
+            a.task_id,
+            a.plugin_type.type if a.plugin_type else "", str(a.answered_on),
+            ns,
+            points])
         answ = json.dumps(line, ensure_ascii=False)
         if isinstance(line, dict):  # maybe csPlugin?
             files = line.get('uploadedFiles')
