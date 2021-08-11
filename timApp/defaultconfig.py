@@ -257,3 +257,5 @@ IP_BLOCK_LOG_ONLY = False
 
 # The set of documents for which the right is inherited from its containing folder.
 INHERIT_FOLDER_RIGHTS_DOCS = {}
+
+SQLALCHEMY_ECHO = True
