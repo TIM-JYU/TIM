@@ -228,7 +228,8 @@ def get_all_answers(task_ids: List[TaskId],
             name,
             str(a.origin_doc_id),
             a.task_id,
-            a.plugin_type.type if a.plugin_type else "", str(a.answered_on),
+            a.plugin_type.type if a.plugin_type else "",
+            str(a.answered_on),
             ns,
             points])
         answ = json.dumps(line, ensure_ascii=False)
