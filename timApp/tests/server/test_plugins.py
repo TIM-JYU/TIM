@@ -98,28 +98,34 @@ class PluginTest(TimRouteTest):
         answer_list = self.get_task_answers(task_id)
 
         self.assertEqual(
-            [{'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
+            [{'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID,
+                         'name': TEST_USER_1_USERNAME}],
               'content': '[true, false, true]',
-              'points': 9.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
+              'points': 9.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None, 'origin_doc_id': None},
+             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID,
+                         'name': TEST_USER_1_USERNAME}],
               'content': '[false, false, true]',
-              'points': None, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
+              'points': None, 'task_id': task_id, 'valid': True, 'last_points_modifier': None, 'origin_doc_id': None},
+             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID,
+                         'name': TEST_USER_1_USERNAME}],
               'content': '[true, true, true]',
-              'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
-             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
-              'content': '[true, false, false]',
-              'points': 2.0, 'task_id': task_id, 'valid': False, 'last_points_modifier': None},
-             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
-              'content': '[true, true, false]',
-              'points': 1.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None},
+              'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None, 'origin_doc_id': None},
              {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID,
                          'name': TEST_USER_1_USERNAME}],
               'content': '[true, false, false]',
-              'points': 2.0, 'task_id': task_id, 'valid': False, 'last_points_modifier': None},
-             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID, 'name': TEST_USER_1_USERNAME}],
+              'points': 2.0, 'task_id': task_id, 'valid': False, 'last_points_modifier': None, 'origin_doc_id': None},
+             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID,
+                         'name': TEST_USER_1_USERNAME}],
+              'content': '[true, true, false]',
+              'points': 1.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None, 'origin_doc_id': None},
+             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID,
+                         'name': TEST_USER_1_USERNAME}],
               'content': '[true, false, false]',
-              'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None}],
+              'points': 2.0, 'task_id': task_id, 'valid': False, 'last_points_modifier': None, 'origin_doc_id': None},
+             {'users': [{'real_name': TEST_USER_1_NAME, 'email': 'test1@example.com', 'id': TEST_USER_1_ID,
+                         'name': TEST_USER_1_USERNAME}],
+              'content': '[true, false, false]',
+              'points': 2.0, 'task_id': task_id, 'valid': True, 'last_points_modifier': None, 'origin_doc_id': None}],
             self.exclude_answered_on_id(answer_list))
         for ans in answer_list:
             d = dateutil.parser.parse(ans['answered_on'])
@@ -199,7 +205,8 @@ class PluginTest(TimRouteTest):
               'points': 6.0,
               'task_id': task_id,
               'valid': True,
-              'last_points_modifier': None}],
+              'last_points_modifier': None,
+              'origin_doc_id': None}],
             self.exclude_answered_on_id(anon_answers))
 
         self.get('/getState', query_string={'user_id': anon_id,
@@ -398,28 +405,28 @@ type: upload
         text = self.get(f'/allDocumentAnswersPlain/{doc.id}')
         date_re = r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\+\d{2}:\d{2}'
         self.assertRegex(text, fr"""
-{TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
+{TEST_USER_1_NAME}; {'testuser1'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
 \[true, false, false\]
 
 ----------------------------------------------------------------------------------
-{'Test user 2'}; {'testuser2'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
+{'Test user 2'}; {'testuser2'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
 \[true, true, true\]
 
 ----------------------------------------------------------------------------------
-{TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id2)}; {date_re}; 1; 1\.0
+{TEST_USER_1_NAME}; {'testuser1'}; None; {re.escape(task_id2)}; mmcq; {date_re}; 1; 1\.0
 \[true, false\]
 
 ----------------------------------------------------------------------------------
-{'Test user 2'}; {'testuser2'}; {re.escape(task_id2)}; {date_re}; 1; 2\.0
+{'Test user 2'}; {'testuser2'}; None; {re.escape(task_id2)}; mmcq; {date_re}; 1; 2\.0
 \[false, false\]
 """.strip())
         text2 = self.get(f'/allAnswersPlain/{task_id}')
         self.assertRegex(text2, fr"""
-{TEST_USER_1_NAME}; {'testuser1'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
+{TEST_USER_1_NAME}; {'testuser1'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
 \[true, false, false\]
 
 ----------------------------------------------------------------------------------
-{'Test user 2'}; {'testuser2'}; {re.escape(task_id)}; {date_re}; 1; 2\.0
+{'Test user 2'}; {'testuser2'}; None; {re.escape(task_id)}; mmcq; {date_re}; 1; 2\.0
 \[true, true, true\]
         """.strip())
         self.assertEqual('', self.get(f'/allAnswersPlain/{task_id}', query_string={'consent': 'true'}))
@@ -1033,7 +1040,8 @@ needed_len: 6
                                       'id': 2,
                                       'name': 'user2',
                                       'real_name': 'User 2'}],
-                           'valid': True}], self.exclude_answered_on_id(answer_list))
+                           'valid': True,
+                           'origin_doc_id': None}], self.exclude_answered_on_id(answer_list))
         self.get(f'/getTaskUsers/{task_id}',
                  expect_content=[{'email': 'user2@example.com',
                                   'id': 2,

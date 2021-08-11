@@ -19,7 +19,7 @@ from timApp.document.document import Document
 from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import ViewContext, ViewRoute
+from timApp.document.viewcontext import ViewContext
 from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
@@ -208,7 +208,7 @@ class Plugin:
         except ValidationError as e:
             raise PluginException(f'Invalid markup: {e}') from e
         self.type = plugin_type
-        self.ptype = PluginType(plugin_type)
+        self.ptype = PluginType.resolve(plugin_type)
         self.par = par
         self.output = None
         self.plugin_lazy = None

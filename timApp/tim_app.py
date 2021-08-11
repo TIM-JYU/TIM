@@ -47,10 +47,11 @@ from timApp.messaging.timMessage.internalmessage_models import InternalMessage, 
 from timApp.note.usernote import UserNote
 from timApp.notification.notification import Notification
 from timApp.notification.pending_notification import PendingNotification, DocumentNotification, CommentNotification
+from timApp.peerreview.peerreview import PeerReview
+from timApp.plugin.plugintype import PluginType
 from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.printing.printeddoc import PrintedDoc
 from timApp.readmark.readparagraph import ReadParagraph
-from timApp.peerreview.peerreview import PeerReview
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.slide.slidestatus import SlideStatus
 from timApp.timdb.sqa import db
@@ -70,7 +71,6 @@ from timApp.velp.annotation_model import Annotation
 from timApp.velp.velp_models import Velp, VelpContent, VelpGroup, VelpGroupDefaults, VelpGroupLabel, \
     VelpGroupSelection, VelpGroupsInDocument, VelpInGroup, VelpLabel, VelpLabelContent, VelpVersion, \
     LabelInVelp, AnnotationComment
-
 
 # All SQLAlchemy models must be imported in this module.
 all_models = (
@@ -111,6 +111,7 @@ all_models = (
     PeerReview,
     PendingNotification,
     PersonalUniqueCode,
+    PluginType,
     PrintedDoc,
     Question,
     QuestionActivity,
