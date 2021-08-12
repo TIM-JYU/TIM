@@ -14,15 +14,14 @@ class OAuth2Test(TimRouteTest):
 
         uri, state = client.create_authorization_url("/oauth/authorize")
 
-        # The user must be logged in to authorize
-        r = self.get(uri, as_tree=True)
-        self.assertEqual(len(r.cssselect('div.flex.justify-center div p.login-prompt strong')), 1)
+        # The authorize URI must be valid and return 200
+        self.get(uri, as_tree=True)
 
-        # Once user is logged in, he must get authorization prompt
+        # Authorization cannot be done for anonymous users
+        self.post(uri, expect_status=403, data={"confirm": "true"})
+
+        # User can only authorize if they are logged in
         self.login_test1()
-        r = self.get(uri, as_tree=True)
-        self.assertEqual(len(r.cssselect('div.flex.justify-center div p.proceed-prompt')), 1)
-
         res: str = self.post(uri, expect_status=302, data={"confirm": "true"})
         self.assertTrue(res.startswith(callback_uri),
                         f"Returned callback URL does not match: {res} does not start with {callback_uri}")
