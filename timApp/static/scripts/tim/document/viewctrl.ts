@@ -387,7 +387,6 @@ export class ViewCtrl implements IController {
         this.noBeginPageBreak();
         if (!this.isSlideOrShowSlideView()) {
             this.document.rebuildSections();
-            this.document.print();
         }
         // from https://stackoverflow.com/a/7317311
         window.addEventListener("beforeunload", (e) => {
