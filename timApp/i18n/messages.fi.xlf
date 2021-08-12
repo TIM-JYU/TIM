@@ -3394,7 +3394,71 @@
         </context-group>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
-          <context context-type="linenumber">30</context>
+          <context context-type="linenumber">29</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5970481071378421464" datatype="html">
+        <source>Read basic profile information (username, full name, email address)</source>
+        <target state="translated">Lukea peruskäyttäjätiedot (käyttäjätunnus, koko nimi, sähköpostiosoite)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
+          <context context-type="linenumber">16</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="daad7e26985a0e315ce7c1c246ec35d4a67c41ad" datatype="html">
+        <source>Authenticate to <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/> with TIM</source>
+        <target state="translated">Tunnistaudu palveluun <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/> TIMin avulla</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9db5d56538e77431a0864e4cd210ee9ee4aafd4b" datatype="html">
+        <source>You are attempting to authenticate to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong> "/> with TIM.</source>
+        <target state="translated">Olet yrittämässä tunnistautua palveluun <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong> "/> TIMin avulla.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
+          <context context-type="linenumber">42</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7c64c7651a890b4edfc0465c0c25348d60e3c1e1" datatype="html">
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong> "/> will be able to</source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong> "/> voi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
+          <context context-type="linenumber">43</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="f0a27298f74c4b7e0940fa160f30289d16bfe914" datatype="html">
+        <source>Do you want to proceed?</source>
+        <target state="translated">Haluatko jatkaa?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
+          <context context-type="linenumber">48</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="d7b35c384aecd25a516200d6921836374613dfe7" datatype="html">
+        <source>Cancel</source>
+        <target state="translated">Peruuta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
+          <context context-type="linenumber">50</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="917cdfd09c90314f30d6e9e21e17f9ff4762b561" datatype="html">
+        <source>Authenticate to <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/></source>
+        <target state="translated">Tunnistaudu palveluun <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
+          <context context-type="linenumber">51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a77ebc4d50024981549e97332f7de301b2fa0975" datatype="html">
+        <source>Log in with the button above in order to authenticate</source>
+        <target state="translated">Kirjaudu sisään yllä olevasta painikkeesta tunnistautuakseen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
+          <context context-type="linenumber">56</context>
         </context-group>
       </trans-unit>
       <trans-unit id="69e9773e3c4a051d4cc972ecbd0752c8639da771" datatype="html">
@@ -3402,7 +3466,7 @@
         <target state="translated">Kirjaa kaikki ulos</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
-          <context context-type="linenumber">36</context>
+          <context context-type="linenumber">35</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3fdc751b264ca9998e1542fcf5794e274cd56344" datatype="html">
@@ -3410,7 +3474,7 @@
         <target state="translated">Kirjaudu ulos</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
-          <context context-type="linenumber">37</context>
+          <context context-type="linenumber">36</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5f06c91b5aaa2c38580d465fdd05767a2c5e3a3f" datatype="html">
@@ -3418,7 +3482,7 @@
         <target state="translated">Kirjaa <x id="INTERPOLATION" equiv-text="{{ u.real_name }}"/> ulos</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
-          <context context-type="linenumber">42</context>
+          <context context-type="linenumber">40</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4b019cab111423fa70754a04ddf18799bede6bae" datatype="html">
