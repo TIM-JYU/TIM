@@ -71,7 +71,7 @@ export interface IParEditorOptions {
     forcedClasses?: string[];
     showDelete?: boolean;
     localSaveTag?: string;
-    texts?: {beforeText: string; initialText: string; afterText: string};
+    initialText?: string;
 }
 
 export enum SelectionUpdateType {
@@ -238,8 +238,8 @@ export class EditingHandler {
         };
         let initialText = "";
         let cursorPos;
-        if (options.texts) {
-            initialText = options.texts.initialText;
+        if (options.initialText) {
+            initialText = options.initialText;
             cursorPos = initialText.indexOf(CURSOR);
             initialText = initialText.replace(CURSOR, "");
         } else if (options.showDelete && ctx) {
@@ -431,14 +431,9 @@ This will delete the whole ${
         await compileWithViewctrl(helpPar, this.viewctrl.scope, this.viewctrl);
     }
 
-    async editSettingsPars(recursiveCall: boolean = false) {
+    async editSettingsPars() {
         const pars = this.findSettingsPars();
         if (!pars) {
-            if (recursiveCall) {
-                throw new Error(
-                    "Faulty recursion stopped, there should be a settings paragraph already"
-                );
-            }
             const iter = enumDocParts(
                 PreambleIteration.Exclude,
                 getParContainerElem()
@@ -449,31 +444,18 @@ This will delete the whole ${
                 ctx = new ParContext(docPart.getFirstOrigPar());
             }
 
-            const r = await to(
-                $http.post<IParResponse>("/newParagraph/", {
-                    text: '``` {settings=""}\nauto_number_headings: 0\n```',
-                    docId: this.viewctrl.docId,
-                    par_next: ctx?.par.id,
-                })
-            );
-            if (!r.ok) {
-                await showMessageDialog(r.result.data.error);
-                return;
-            }
-            await this.addSavedParToDom(
-                r.result.data,
+            await this.toggleParEditor(
                 ctx
-                    ? {
-                          type: EditType.AddAbove,
-                          par: ctx,
-                      }
-                    : {
-                          type: EditType.AddBottom,
-                      }
+                    ? {type: EditType.AddAbove, par: ctx}
+                    : {type: EditType.AddBottom},
+                {
+                    initialText: `\`\`\` {settings=""}
+auto_number_headings: 0${CURSOR}
+\`\`\``,
+                }
             );
-            this.editSettingsPars(true);
         } else {
-            this.toggleParEditor({type: EditType.Edit, pars: pars}, {});
+            await this.toggleParEditor({type: EditType.Edit, pars: pars}, {});
         }
     }
 
