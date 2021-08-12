@@ -1,7 +1,10 @@
 {% extends "base.jinja2" %}
+{% block title %}Authenticate to {{ client.name }}{% endblock %}
 {% block head %}
     {{ super() }}
     <script>
+        ANGULARMODULES = [];
+        JSMODULES = ["oauthAuthorize"];
         var docSettings = {
             login: {
                 hide: {
@@ -10,41 +13,10 @@
                 }
             }
         };
+        var oauthClientName = {{client.name|tojson}};
+        var oauthScopes = {{scopes|tojson}};
     </script>
 {% endblock %}
-{% block title %}Authenticate to {{ client.name }}{% endblock %}
 {% block content %}
-    <div class="flex justify-center">
-        <div>
-            <h1>Log in {{ client.name }} with TIM</h1>
-            <p>
-                You are attempting to log into <strong>{{ client.name }}</strong> with TIM.
-            </p>
-            <p><strong>{{ client.name }}</strong> will be able to</p>
-            <ul>
-                {% for scope in scopes %}
-                    <li>{{ scope }}</li>
-                {% endfor %}
-            </ul>
-            {% if user %}
-                <p class="proceed-prompt">
-                    Do you want to proceed?
-                </p>
-                <div class="flex space-between pt-1">
-                    <form action="" method="post">
-                        <input type="hidden" name="confirm" value="false">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input class="btn btn-danger" type="submit" value="Cancel">
-                    </form>
-                    <form action="" method="post">
-                        <input type="hidden" name="confirm" value="true">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input class="btn btn-default" type="submit" value="Authorize {{ client.name }}">
-                    </form>
-                </div>
-            {% else %}
-                <p class="login-prompt"><strong>Log in with the button above in order to authorize</strong></p>
-            {% endif %}
-        </div>
-    </div>
+    <tim-oauth-authorize></tim-oauth-authorize>
 {% endblock %}

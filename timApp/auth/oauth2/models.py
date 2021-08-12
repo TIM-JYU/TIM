@@ -9,13 +9,7 @@ from timApp.timdb.sqa import db
 
 
 class Scope(Enum):
-    profile = 'Read profile information (username, full name and primary email)'
-
-
-def describe_scope(scope: Optional[str]) -> List[str]:
-    if not scope:
-        return []
-    return [Scope[s].value for s in scope_to_list(scope)]
+    profile = 'profile'
 
 
 @dataclass
