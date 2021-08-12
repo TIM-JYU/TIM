@@ -100,12 +100,12 @@ class OAuth2Client(ClientMixin):
 class OAuth2Token(db.Model, OAuth2TokenMixin):
     __tablename__ = 'oauth2_token'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'))
     user = db.relationship('User')
 
 
 class OAuth2AuthorizationCode(db.Model, OAuth2AuthorizationCodeMixin):
     __tablename__ = 'oauth2_auth_code'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'))
     user = db.relationship('User')

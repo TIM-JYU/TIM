@@ -28,7 +28,7 @@ def upgrade():
                     sa.Column('code_challenge_method', sa.String(length=48), nullable=True),
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=True),
-                    sa.ForeignKeyConstraint(['user_id'], ['useraccount.id'], ondelete='CASCADE'),
+                    sa.ForeignKeyConstraint(['user_id'], ['useraccount.id']),
                     sa.PrimaryKeyConstraint('id'),
                     sa.UniqueConstraint('code')
                     )
@@ -44,7 +44,7 @@ def upgrade():
                     sa.Column('expires_in', sa.Integer(), nullable=False),
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=True),
-                    sa.ForeignKeyConstraint(['user_id'], ['useraccount.id'], ondelete='CASCADE'),
+                    sa.ForeignKeyConstraint(['user_id'], ['useraccount.id']),
                     sa.PrimaryKeyConstraint('id'),
                     sa.UniqueConstraint('access_token')
                     )
