@@ -681,7 +681,7 @@ This will delete the whole ${
         const {
             areasBeforeRef,
             areasAfterRef,
-            refAreaContainment,
+            refAreaInclusion,
         } = getContextualAreaInfo(par);
         let areaWithSel:
             | {sel: UserSelection<UnbrokenSelection>; area: Area}
@@ -780,8 +780,8 @@ This will delete the whole ${
                 }
             );
             if (
-                refAreaContainment === ParAreaInclusionKind.Outside ||
-                refAreaContainment === ParAreaInclusionKind.AtStart
+                refAreaInclusion === ParAreaInclusionKind.Outside ||
+                refAreaInclusion === ParAreaInclusionKind.IsStart
             ) {
                 fns.push(this.getAddParagraphItem(addAbovePos));
             }
@@ -864,7 +864,7 @@ This will delete the whole ${
                     }
                 );
             }
-            if (refAreaContainment !== ParAreaInclusionKind.Inside) {
+            if (refAreaInclusion !== ParAreaInclusionKind.Inside) {
                 fns.push(
                     {
                         func: (e) =>
@@ -891,8 +891,8 @@ This will delete the whole ${
                 );
             }
             if (
-                refAreaContainment === ParAreaInclusionKind.Outside ||
-                refAreaContainment === ParAreaInclusionKind.AtStart
+                refAreaInclusion === ParAreaInclusionKind.Outside ||
+                refAreaInclusion === ParAreaInclusionKind.IsStart
             ) {
                 fns.push(this.getAddQuestionItem(addAbovePos));
             }

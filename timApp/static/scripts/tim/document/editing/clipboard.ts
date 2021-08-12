@@ -236,10 +236,10 @@ export class ClipboardHandler {
 
     async getPasteFunctions(par: ParContext): Promise<MenuFunctionList> {
         await this.updateClipboardStatus();
-        const {refAreaContainment} = getContextualAreaInfo(par);
-        const isOutside = refAreaContainment === ParAreaInclusionKind.Outside;
-        const isStart = refAreaContainment === ParAreaInclusionKind.AtStart;
-        const isEnd = refAreaContainment === ParAreaInclusionKind.AtEnd;
+        const {refAreaInclusion} = getContextualAreaInfo(par);
+        const isOutside = refAreaInclusion === ParAreaInclusionKind.Outside;
+        const isStart = refAreaInclusion === ParAreaInclusionKind.IsStart;
+        const isEnd = refAreaInclusion === ParAreaInclusionKind.IsEnd;
         return [
             {
                 func: (e) => this.pasteRefAbove(e, par),
