@@ -19,7 +19,7 @@ import {
 } from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {ParContext} from "tim/document/structure/parContext";
-import {createParContext} from "tim/document/structure/parsing";
+import {createParContext} from "tim/document/structure/create";
 import {IAnswer} from "../answer/IAnswer";
 import {addElementToParagraphMargin} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";

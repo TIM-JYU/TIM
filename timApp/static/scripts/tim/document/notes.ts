@@ -7,7 +7,7 @@ import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
 import {ParContext} from "tim/document/structure/parContext";
-import {fromParents} from "tim/document/structure/parsing";
+import {fromParents} from "tim/document/structure/create";
 import {IPluginInfoResponse} from "../editor/parCompiler";
 import {PareditorController} from "../editor/pareditor";
 import {IModalInstance} from "../ui/dialog";
@@ -69,9 +69,6 @@ export class NotesHandler {
                 return;
             }
             const par = fromParents($this);
-            if (par.isHelp) {
-                return;
-            }
             this.toggleNoteEditor(par, {noteData: {id: id}});
             return true;
         });

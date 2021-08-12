@@ -6,7 +6,7 @@ import {TaskId} from "tim/plugin/taskid";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
-import {createParContext} from "tim/document/structure/parsing";
+import {createParContext} from "tim/document/structure/create";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {

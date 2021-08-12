@@ -10,10 +10,11 @@ import {
 } from "tim/document/showDiffDialog";
 import {ParContext} from "tim/document/structure/parContext";
 import {
-    createParContextNoPreview,
     createParContextOrHelp,
+    findParentPar,
     fromParents,
-} from "tim/document/structure/parsing";
+    tryCreateParContextOrHelp,
+} from "tim/document/structure/create";
 import {IItem} from "../item/IItem";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout} from "../util/ngimport";
@@ -99,7 +100,7 @@ export async function markParRead(par: ParContext, readingType: ReadingType) {
     }
 }
 
-async function markParsRead(pars: ParContext[]) {
+async function markParsRead(pars: ParContext[], item: IItem) {
     const parIds = pars
         .filter((e) => !isAlreadyRead(e, ReadingType.ClickRed))
         .map((e) => {
@@ -108,10 +109,9 @@ async function markParsRead(pars: ParContext[]) {
     pars.forEach((p) =>
         p.getReadline()?.classList.add(readClasses[ReadingType.ClickRed])
     );
-    const doc = getActiveDocument();
     const r = await to(
         $http.put(
-            "/read/" + doc.getId() + "/" + "null" + "/" + ReadingType.ClickRed,
+            "/read/" + item.id + "/" + "null" + "/" + ReadingType.ClickRed,
             {pars: parIds}
         )
     );
@@ -202,7 +202,7 @@ async function readlineHandler(elem: JQuery, e: OnClickArg) {
     if ((e.target as HTMLElement).tagName === "BUTTON") {
         return;
     }
-    const par = fromParents(elem);
+    const par = createParContextOrHelp(findParentPar(elem));
     if (par.isHelp) {
         return;
     }
@@ -216,7 +216,7 @@ export async function initReadings(item: IItem) {
         const ev = e.originalEvent as MouseEvent | TouchEvent;
         const pos = posToRelative(p[0], ev);
         const children = p.children();
-        const par = fromParents(p);
+        const par = createParContextOrHelp(findParentPar(p));
         if (par.isHelp) {
             return;
         }
@@ -243,17 +243,18 @@ export async function initReadings(item: IItem) {
         if (!pars) {
             return;
         }
-        markParsRead(pars);
+        markParsRead(pars, item);
         $readsection.remove();
     });
 
-    onMouseOverOut(".par:not('.preamble')", function mouseOverHandler(
+    onMouseOverOut("#pars .par:not('.preamble')", function mouseOverHandler(
         $this,
         e,
         select
     ) {
-        const ctx = createParContextNoPreview($this[0]);
-        if (select && ctx) {
+        const el = $this[0];
+        const ctx = tryCreateParContextOrHelp(el);
+        if (select && ctx && !ctx.isHelp) {
             markParRead(ctx, ReadingType.HoverPar);
         }
     });

@@ -1,84 +1,19 @@
-import {Paragraph} from "tim/document/structure/paragraph";
 import {ParContext} from "tim/document/structure/parContext";
-import {maybeDeref} from "tim/document/structure/maybeDeref";
-import {
-    createParContext,
-    fromHtmlElement,
-    getParContainerElem,
-} from "tim/document/structure/parsing";
-import {DocumentPart} from "tim/document/structure/documentPart";
+import {enumDocParts, PreambleIteration} from "tim/document/structure/parsing";
 import {DerefOption} from "tim/document/structure/derefOption";
-
-function isBottomContainer(e: Element) {
-    return e.classList.contains("addBottomContainer");
-}
+import {getActiveDocument} from "tim/document/activedocument";
+import {getParContainerElem} from "tim/document/structure/create";
 
 export function nextParContext(par: ParContext) {
-    let nh;
-    const d = maybeDeref(par.context);
-    if (d instanceof Paragraph) {
-        nh = d.nextInHtml();
-    } else {
-        let found = false;
-        for (const p of d.enumPars(DerefOption.Deref)) {
-            if (found) {
-                return new ParContext(p, par.context);
-            }
-            if (p.equals(par.par)) {
-                found = true;
-            }
-        }
-        if (!found) {
-            throw Error("par not found from its own area?");
-        }
-        // This was the area end paragraph; just get the next after the area.
-        nh = d.nextInHtml();
-    }
-    if (nh && !isBottomContainer(nh)) {
-        return createParContext(nh);
-    }
-}
-
-export enum PreambleIteration {
-    Exclude,
-    Include,
-}
-
-export function* enumDocParts(pi: PreambleIteration): Generator<DocumentPart> {
-    const parContainer = getParContainerElem();
-    if (!parContainer) {
-        throw Error("pars div not found");
-    }
-    let currelem = parContainer.firstElementChild;
-    while (currelem && !isBottomContainer(currelem)) {
-        if (!(currelem instanceof HTMLElement)) {
-            throw Error("currelem not HTMLElement");
-        }
-        if (currelem.id === "HELP_PAR") {
-            currelem = currelem.nextElementSibling;
-            continue;
-        }
-        const par = fromHtmlElement(currelem);
-        if (
-            !par.getFirstOrigPar()?.preamblePath ||
-            pi === PreambleIteration.Include
-        ) {
-            yield par;
-        }
-        currelem = par.nextInHtml() ?? null;
-    }
+    const next = getActiveDocument().getParMap().get(par.par.htmlElement)![2];
+    return next ? new ParContext(next) : undefined;
 }
 
 export function* enumPars(d: DerefOption) {
-    for (const p of enumDocParts(PreambleIteration.Include)) {
+    for (const p of enumDocParts(
+        PreambleIteration.Include,
+        getParContainerElem()
+    )) {
         yield* p.enumPars(d);
-    }
-}
-
-export function* enumParCtxts() {
-    for (const p of enumDocParts(PreambleIteration.Include)) {
-        for (const x of p.enumPars(DerefOption.Deref)) {
-            yield new ParContext(x, p);
-        }
     }
 }

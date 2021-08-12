@@ -2,64 +2,63 @@ import $ from "jquery";
 import moment from "moment";
 import {Paragraph} from "tim/document/structure/paragraph";
 import {Area} from "tim/document/structure/area";
-import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
-import {BrokenArea} from "tim/document/structure/brokenArea";
 import {ParContext} from "tim/document/structure/parContext";
-import {
-    enumDocParts,
-    PreambleIteration,
-} from "tim/document/structure/iteration";
 import {DerefOption} from "tim/document/structure/derefOption";
+import {maybeDeref} from "tim/document/structure/maybeDeref";
+import {enumDocParts, PreambleIteration} from "tim/document/structure/parsing";
+import {ReadonlyWeakMap} from "tim/util/types/readonlyWeakMap";
 import {documentglobals} from "../util/globals";
 
-function* getInnerPars(p: Paragraph | Area | BrokenArea) {
-    if (p instanceof Paragraph) {
-        yield p;
-    } else if (p instanceof BrokenArea) {
-        yield* p.enumPars(DerefOption.Deref);
-    } else {
-        if (p.collapse) {
-            yield p.startPar.par;
-        }
-        yield* p.enumInnerPars(DerefOption.Deref);
-    }
-}
+type ParMapValue = [
+    prev: Paragraph | undefined,
+    curr: Paragraph,
+    next: Paragraph | undefined
+];
 
-export class Document {
+export class TimDocument {
     getSections() {
         return this.sections;
     }
 
-    getId(): number {
-        return this.id;
-    }
-
     private sections = new WeakMap<Element, ParContext[]>();
     private sectionList: ParContext[][] = [];
+    private parMap = new WeakMap<Element, ParMapValue>();
 
-    constructor(private id: number) {}
+    constructor(private root: HTMLElement) {}
 
     /**
      * Rebuilds the sections and refreshes the section read marks.
      */
     public rebuildSections() {
-        $(".readsection").remove();
+        $(this.root).find(".readsection").remove();
         this.buildSections();
         this.refreshSectionReadMarks();
+    }
+
+    public getParMap(): ReadonlyWeakMap<Element, ParMapValue> {
+        return this.parMap;
     }
 
     /**
      * Hides any visible .readline marks
      */
     public hideReadMarks() {
-        $(".readline").attr("class", "readline read");
+        $(this.root).find(".readline").attr("class", "readline read");
+    }
+
+    public print() {
+        let s = "";
+        for (const p of enumDocParts(PreambleIteration.Include, this.root)) {
+            s += p.format("") + "\n";
+        }
+        console.log(s);
     }
 
     /**
      * Refreshes the section read marks.
      */
     public refreshSectionReadMarks() {
-        $(".readsection").remove();
+        $(this.root).find(".readsection").remove();
         for (const sectionPars of this.sectionList) {
             const readlines: JQuery<Element> = $(
                 sectionPars
@@ -91,10 +90,11 @@ export class Document {
     /**
      * Builds a dictionary of sections that maps the last paragraph id of each section to the section paragraphs.
      */
-    private buildSections() {
+    public buildSections() {
         this.sections = new WeakMap();
         this.sectionList = [];
-        const allpars = enumDocParts(PreambleIteration.Include);
+        this.parMap = new WeakMap();
+        const allpars = enumDocParts(PreambleIteration.Include, this.root);
         let currentSection: ParContext[] = [];
         let prev: Element | undefined;
 
@@ -105,12 +105,28 @@ export class Document {
             }
         };
 
+        let prev1;
+        let prev2;
         for (const p of allpars) {
-            const iter =
-                p instanceof ReferenceParagraph
-                    ? getInnerPars(p.target)
-                    : getInnerPars(p);
+            const iter = p.enumPars(DerefOption.Deref);
             for (const x of iter) {
+                if (prev1) {
+                    this.parMap.set(prev1.htmlElement, [prev2, prev1, x]);
+                }
+
+                prev2 = prev1;
+                prev1 = x;
+                if (x.parent) {
+                    const parent = maybeDeref(x.parent);
+                    if (parent instanceof Area) {
+                        if (!parent.collapse && x.equals(parent.startPar.par)) {
+                            continue;
+                        }
+                        if (x.equals(parent.endPar.par)) {
+                            continue;
+                        }
+                    }
+                }
                 if (x.htmlElement.querySelector("h1, h2, h3")) {
                     addSection();
                     currentSection = [];
@@ -118,8 +134,11 @@ export class Document {
                 if (x.isSetting()) {
                     continue;
                 }
-                currentSection.push(new ParContext(x, p));
+                currentSection.push(new ParContext(x));
                 prev = x.htmlElement;
+            }
+            if (prev1) {
+                this.parMap.set(prev1.htmlElement, [prev2, prev1, undefined]);
             }
         }
         addSection();

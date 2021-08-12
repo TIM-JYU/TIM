@@ -30,12 +30,11 @@ export class AreaEndPar extends AreaPar {
  */
 export class Area implements IDocumentPart {
     public readonly areaname: string;
-
+    public parent: undefined | Area | ReferenceParagraph<Area>;
     constructor(
         public readonly startPar: AreaStartPar,
         public readonly endPar: AreaEndPar,
-        // TODO: This should be DocumentPart[] as soon as nested areas are supported.
-        public readonly inner: Array<Paragraph | ReferenceParagraph<Paragraph>>,
+        public readonly inner: DocumentPart[],
         public readonly collapse: CollapseControls | undefined
     ) {
         if (startPar.areaname !== endPar.areaname) {
@@ -89,6 +88,21 @@ export class Area implements IDocumentPart {
         return `Area(${this.areaname} ${this.startPar.par.toString()}...${
             this.inner.length
         } inner pars...${this.endPar.par.toString()})`;
+    }
+
+    toShortString() {
+        return `Area(${this.areaname})`;
+    }
+
+    format(pad: string): string {
+        let s = pad;
+        s += `Area(${this.areaname}), parent: ${
+            this.parent?.toShortString() ?? "undefined"
+        }`;
+        return [this.startPar.par, ...this.inner, this.endPar.par].reduce(
+            (p, c) => p + "\n" + c.format(pad + "  "),
+            s
+        );
     }
 
     getAreaContainer() {

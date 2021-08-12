@@ -1,6 +1,5 @@
 import {Paragraph} from "tim/document/structure/paragraph";
 import {Area} from "tim/document/structure/area";
-import {BrokenArea} from "tim/document/structure/brokenArea";
 import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 import {NotRemovableElement} from "tim/document/structure/notRemovableElement";
 import {DerefOption} from "tim/document/structure/derefOption";
@@ -11,7 +10,6 @@ import {DerefOption} from "tim/document/structure/derefOption";
 export type DocumentPart =
     | Paragraph
     | Area
-    | BrokenArea
     | ReferenceParagraph<Paragraph | Area>;
 
 export interface IDocumentPart {
@@ -24,10 +22,8 @@ export interface IDocumentPart {
     /**
      * This is essentially a shortcut method for calling {@link enumPars} with the
      * argument {@link DerefOption.NoDeref} and getting the first result.
-     *
-     * This may only be `undefined` for a {@link BrokenArea}.
      */
-    getFirstOrigPar(): Paragraph | undefined;
+    getFirstOrigPar(): Paragraph;
 
     /**
      * Returns a {@link Paragraph} inside this `IDocumentPart` that corresponds to the given {@link Element}.
@@ -51,4 +47,10 @@ export interface IDocumentPart {
      * @param d Specifies the behavior of how {@link ReferenceParagraph}s are iterated. See {@link DerefOption}.
      */
     enumPars(d: DerefOption): Generator<Paragraph>;
+
+    /**
+     * Converts this `IDocumentPart` to a (possibly multiline) string.
+     * @param pad The padding to use.
+     */
+    format(pad: string): string;
 }

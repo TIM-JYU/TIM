@@ -77,7 +77,7 @@ import {
     showTableEditorToolbar,
 } from "tim/plugin/toolbarUtils";
 import {computeHiddenRowsFromFilters} from "tim/plugin/filtering";
-import {createParContext} from "tim/document/structure/parsing";
+import {createParContext} from "tim/document/structure/create";
 import {onClick, OnClickArg} from "../document/eventhandlers";
 import {
     ChangeType,

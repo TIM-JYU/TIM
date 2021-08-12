@@ -171,7 +171,7 @@ par 22
         self.check_menu(pars[17], ref_area_choices)
         self.check_menu(pars[18], ref_area_choices_no_add)
         self.check_menu(pars[20], area_choices('a4'))
-        self.check_menu(pars[21], norm_par_choices)  # TODO should also have "Follow reference"
+        self.check_menu(pars[21], ref_par_choices)
         self.check_menu(pars[22], norm_par_choices)
 
         menu = self.open_menu(pars[1])
