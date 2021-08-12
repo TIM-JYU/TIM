@@ -5,13 +5,11 @@ import {showNameAreaDialog} from "tim/document/editing/showNameAreaDialog";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {UserSelection} from "tim/document/editing/userSelection";
 import {EditType, IParResponse} from "tim/document/editing/edittypes";
-import {Paragraph} from "tim/document/structure/paragraph";
-import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
-import {BrokenArea} from "tim/document/structure/brokenArea";
 import {UnbrokenSelection} from "tim/document/editing/unbrokenSelection";
 import {ParContext} from "tim/document/structure/parContext";
 import {ParSelection} from "tim/document/editing/parSelection";
-import {createParContext} from "tim/document/structure/parsing";
+import {createParContext} from "tim/document/structure/create";
+import {getContextualAreaInfo} from "tim/document/structure/areaContext";
 import {$http} from "../util/ngimport";
 import {ViewCtrl} from "./viewctrl";
 import {onClick} from "./eventhandlers";
@@ -35,16 +33,10 @@ export class AreaHandler {
             }
             const elem = $this[0];
             const area = createParContext(elem);
-
-            let ar;
-            if (area.context instanceof ReferenceParagraph) {
-                ar = area.context.target;
-            } else {
-                ar = area.context;
-            }
-            if (ar instanceof Paragraph || ar instanceof BrokenArea) {
-                return;
-            }
+            const {areasBeforeRef, areasAfterRef} = getContextualAreaInfo(area);
+            const ar =
+                areasAfterRef[areasAfterRef.length - 1] ??
+                areasBeforeRef[areasBeforeRef.length - 1];
             if (!ar.collapse) {
                 return;
             }

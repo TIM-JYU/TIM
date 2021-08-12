@@ -6,7 +6,11 @@ import {
     UnbrokenSelection,
 } from "tim/document/editing/unbrokenSelection";
 import {ParContext} from "tim/document/structure/parContext";
-import {createParContext} from "tim/document/structure/parsing";
+import {createParContext} from "tim/document/structure/create";
+import {
+    getContextualAreaInfo,
+    ParAreaInclusionKind,
+} from "tim/document/structure/areaContext";
 import {Users} from "../../user/userService";
 import {$http} from "../../util/ngimport";
 import {empty, to} from "../../util/utils";
@@ -232,26 +236,38 @@ export class ClipboardHandler {
 
     async getPasteFunctions(par: ParContext): Promise<MenuFunctionList> {
         await this.updateClipboardStatus();
+        const {refAreaInclusion} = getContextualAreaInfo(par);
+        const isOutside = refAreaInclusion === ParAreaInclusionKind.Outside;
+        const isStart = refAreaInclusion === ParAreaInclusionKind.IsStart;
+        const isEnd = refAreaInclusion === ParAreaInclusionKind.IsEnd;
         return [
             {
                 func: (e) => this.pasteRefAbove(e, par),
                 desc: "Above, as a reference",
-                show: this.viewctrl.clipMeta.allowPasteRef,
+                show:
+                    this.viewctrl.clipMeta.allowPasteRef &&
+                    (isStart || isOutside),
             },
             {
                 func: (e) => this.pasteContentAbove(e, par),
                 desc: "Above, as content",
-                show: this.viewctrl.clipMeta.allowPasteContent,
+                show:
+                    this.viewctrl.clipMeta.allowPasteContent &&
+                    (isStart || isOutside),
             },
             {
                 func: (e) => this.pasteRefBelow(e, par),
                 desc: "Below, as a reference",
-                show: this.viewctrl.clipMeta.allowPasteRef,
+                show:
+                    this.viewctrl.clipMeta.allowPasteRef &&
+                    (isEnd || isOutside),
             },
             {
                 func: (e) => this.pasteContentBelow(e, par),
                 desc: "Below, as content",
-                show: this.viewctrl.clipMeta.allowPasteContent,
+                show:
+                    this.viewctrl.clipMeta.allowPasteContent &&
+                    (isEnd || isOutside),
             },
             {
                 func: (e) => {},

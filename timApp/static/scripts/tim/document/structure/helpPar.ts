@@ -1,4 +1,4 @@
-import {Paragraph} from "tim/document/structure/paragraph";
+import {getEditLine} from "tim/document/structure/paragraph";
 
 /**
  * Represents the help paragraph that is only visible when the document is empty.
@@ -6,5 +6,9 @@ import {Paragraph} from "tim/document/structure/paragraph";
 export class HelpPar {
     isHelp = true as const;
 
-    constructor(public par: Paragraph) {}
+    constructor(public el: HTMLElement) {}
+
+    getEditLine() {
+        return getEditLine(this.el);
+    }
 }

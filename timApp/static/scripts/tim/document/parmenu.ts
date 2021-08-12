@@ -7,8 +7,8 @@ import {HelpPar} from "tim/document/structure/helpPar";
 import {ParContext} from "tim/document/structure/parContext";
 import {
     createParContextOrHelp,
-    fromParents,
-} from "tim/document/structure/parsing";
+    findParentPar,
+} from "tim/document/structure/create";
 import {Coords, dist, getPageXY, to} from "../util/utils";
 import {onClick} from "./eventhandlers";
 import {getCitePar} from "./parhelpers";
@@ -27,6 +27,12 @@ function checkIfIgnored(
         element.parents(tagSelector).addBack(tagSelector).length > 0 ||
         element.parents(classSelector).addBack(classSelector).length > 0
     );
+}
+
+function getEditLineOfParOrHelp(par: ParContext | HelpPar) {
+    const editLine =
+        par instanceof ParContext ? par.par.getEditLine() : par.getEditLine();
+    return editLine;
 }
 
 export class ParmenuHandler {
@@ -111,7 +117,7 @@ export class ParmenuHandler {
             ".editline",
             async ($this, e) => {
                 await this.viewctrl.closePopupIfOpen();
-                const par = fromParents($this);
+                const par = createParContextOrHelp(findParentPar($this));
                 if (!par.isHelp) {
                     if (par.preamble) {
                         showMessageDialog(`
@@ -173,13 +179,14 @@ export class ParmenuHandler {
         if (this.updatePopupMenuIfOpen(p)) {
             return;
         }
-        par.par.getEditLine().classList.add("menuopen");
+        const editLine = getEditLineOfParOrHelp(par);
+        editLine.classList.add("menuopen");
         const mi = showPopupMenu(p, pos);
         const dlg = await mi;
         this.viewctrl.registerPopupMenu(dlg);
         await to(dlg.result);
         this.currCtx = undefined;
-        dlg.getCtx().par.getEditLine().classList.remove("menuopen");
+        getEditLineOfParOrHelp(dlg.getCtx()).classList.remove("menuopen");
     }
 
     toggleActionButtons(

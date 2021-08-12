@@ -2,9 +2,9 @@ import $ from "jquery";
 import {Paragraph} from "tim/document/structure/paragraph";
 import {Area} from "tim/document/structure/area";
 import {ParContext} from "tim/document/structure/parContext";
-import {maybeDeref} from "tim/document/structure/maybeDeref";
-import {getParContainerElem} from "tim/document/structure/parsing";
-import {enumParCtxts} from "tim/document/structure/iteration";
+import {enumPars} from "tim/document/structure/iteration";
+import {DerefOption} from "tim/document/structure/derefOption";
+import {getParContainerElem} from "tim/document/structure/create";
 import {IItem} from "../item/IItem";
 import {RightNames} from "../user/IRights";
 import {isInViewport} from "../util/utils";
@@ -51,22 +51,22 @@ export function saveCurrentScreenPar() {
         return;
     }
     let par;
-    for (const p of enumParCtxts()) {
-        if (!isInViewport(p.par.htmlElement)) {
+    for (const p of enumPars(DerefOption.NoDeref)) {
+        if (!isInViewport(p.htmlElement)) {
             continue;
         }
-        const d = maybeDeref(p.context);
+        const d = p.parent;
         if (d instanceof Area && d.collapse?.isCollapsed()) {
             continue;
         }
-        if (!p.par.preamblePath) {
+        if (!p.preamblePath) {
             par = p;
             break;
         }
     }
     if (par) {
         // Don't replace if the hash is going to stay the same.
-        let hash = getParAnchor(par.originalPar);
+        let hash = getParAnchor(par);
         if (hash == null) {
             hash = "";
         }

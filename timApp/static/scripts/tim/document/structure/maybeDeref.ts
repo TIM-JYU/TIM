@@ -1,6 +1,5 @@
 import {Paragraph} from "tim/document/structure/paragraph";
 import {Area} from "tim/document/structure/area";
-import {BrokenArea} from "tim/document/structure/brokenArea";
 import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
 
 /**
@@ -10,17 +9,13 @@ import {ReferenceParagraph} from "tim/document/structure/referenceParagraph";
  */
 export function maybeDeref<
     DerefTarget extends Area | Paragraph,
-    DocPart extends
-        | Paragraph
-        | Area
-        | BrokenArea
-        | ReferenceParagraph<DerefTarget>
+    DocPart extends Paragraph | Area | ReferenceParagraph<DerefTarget>
 >(
     ctx: DocPart
-): DocPart extends BrokenArea
-    ? BrokenArea
-    : DocPart extends Paragraph | ReferenceParagraph<Paragraph>
+): DocPart extends Paragraph | ReferenceParagraph<Paragraph>
     ? Paragraph
+    : DocPart extends Paragraph | ReferenceParagraph<Paragraph | Area>
+    ? Paragraph | Area
     : Area {
     return ctx instanceof ReferenceParagraph ? ctx.target : ctx;
 }

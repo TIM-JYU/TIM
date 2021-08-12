@@ -1,6 +1,6 @@
 import $ from "jquery";
 import {documentglobals} from "tim/util/globals";
-import {getParContainerElem} from "tim/document/structure/parsing";
+import {getParContainerElem} from "tim/document/structure/create";
 import {EditMode} from "../popup-menu-dialog.component";
 
 export function watchEditMode(newVal: EditMode | null) {

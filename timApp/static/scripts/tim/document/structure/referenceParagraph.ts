@@ -11,7 +11,11 @@ import {DerefOption} from "tim/document/structure/derefOption";
  */
 export class ReferenceParagraph<T extends Paragraph | Area>
     implements IDocumentPart {
-    constructor(public original: Paragraph, public target: T) {}
+    public parent?: Area | ReferenceParagraph<Paragraph | Area>;
+    constructor(
+        public readonly original: Paragraph,
+        public readonly target: T
+    ) {}
 
     equals(other: DocumentPart) {
         if (!(other instanceof ReferenceParagraph)) {
@@ -44,6 +48,19 @@ export class ReferenceParagraph<T extends Paragraph | Area>
 
     toString() {
         return `RefPar(${this.original.toString()} -> ${this.target.toString()})`;
+    }
+
+    toShortString() {
+        return `RefPar(${this.original.id})`;
+    }
+
+    format(pad: string) {
+        let s =
+            pad +
+            `RefPar, parent: ${this.parent?.toShortString() ?? "undefined"}\n`;
+        s += `${pad}  ${this.original.toString()} ->\n`;
+        s += `${this.target.format(pad + "  ")}`;
+        return s;
     }
 
     remove() {

@@ -218,7 +218,7 @@ def post_process_pars(
 
 @dataclass
 class Area:
-    index: int
+    name: str
     attrs: Dict
 
 
@@ -234,69 +234,60 @@ def process_areas(
     min_time = pytz.utc.localize(datetime.min)
     max_time = pytz.utc.localize(datetime.max)
 
-    current_areas = {}
-    current_collapsed = []
+    # Currently open areas. Should be empty after the loop unless there are missing area_ends.
+    current_areas: List[Area] = []
+
+    # All areas that we've seen. Only insert here, never remove.
+    encountered_areas: Dict[str, Area] = {}
+
     new_pars = []
-    free_indexes = {0: False, 1: True, 2: True, 3: True}
-
-    def get_free_index():
-        for i in range(1, 4):
-            if free_indexes[i]:
-                free_indexes[i] = False
-                return i
-        return 0
-
+    fix = 'Fix this to get rid of this warning.'
     for p in pars:
         html_par = p.get_final_dict(view_ctx)
-        new_areas = current_areas.copy()
         cur_area = None
         area_start = p.get_attr('area')
         area_end = p.get_attr('area_end')
         if area_start is not None:
-            cur_area = Area(get_free_index(), p.get_attrs())
-            new_areas[area_start] = cur_area
+            cur_area = Area(area_start, p.get_attrs())
+            current_areas.append(cur_area)
+            if area_start in encountered_areas:
+                flash(f'Area {area_start} appears more than once in this document. {fix}')
+            encountered_areas[area_start] = cur_area
         if area_end is not None:
+            if area_start is not None:
+                flash(f'The paragraph {p.get_id()} has both area and area_end. {fix}')
+            if current_areas:
+                # Insert a closing paragraph for the current area.
+                # We do this regardless of whether the area_end name matches because it's reasonable and we
+                # cannot guess what the user is trying to do.
+                new_pars.append(html_par)
+                new_pars.append({'id': '', 'md': '', 'html': '',
+                                 'end_areas': True})
             try:
-                free_indexes[new_areas[area_end].index] = True
-            except KeyError:
-                flash(
-                    f'area_end found for "{area_end}" without corresponding start. Fix this to get rid of this warning.')
-            new_areas.pop(area_end, None)
+                latest_area = current_areas.pop()
+            except IndexError:
+                flash(f'area_end found for "{area_end}" without corresponding start. {fix}')
+            else:
+                if latest_area.name != area_end:
+                    flash(f'area_end found for "{area_end}" without corresponding start. {fix}')
 
-        if new_areas != current_areas:
-            # This paragraph changes the open areas
-            if len(current_areas) > 0:
-                # Insert a closing paragraph for current areas
-                if area_end is not None:
-                    new_pars.append(html_par)
-                    if area_end in current_collapsed:
-                        current_collapsed.remove(area_end)
-                new_pars.append({'id': html_par['id'], 'md': '', 'html': '',
-                                 'end_areas': {a: current_areas[a].index for a in current_areas}})
-
-            if len(new_areas) > 0:
+        if area_start is not None or area_end is not None:
+            if area_start is not None:
                 # Insert an opening paragraph for new areas
-                collapse = cur_area.attrs.get('collapse') if cur_area else None
+                collapse = cur_area.attrs.get('collapse')
+                is_collapsed = False
                 if collapse is not None:
                     html_par['collapse_area'] = area_start
                     is_collapsed = collapse not in ('false', '')
-                    collapse_classes = ['areaexpand' if is_collapsed else 'areacollapse']
-                    collapse_classes.extend(['par'])
-
-                    if len(current_collapsed) > 0:
-                        collapse_classes.append('collapsed')
-                    if is_collapsed:
-                        current_collapsed.append(area_start)
-
-                    html_par['collapse_class'] = ' '.join(collapse_classes)
+                    html_par['collapse_class'] = 'areaexpand' if is_collapsed else 'areacollapse'
                     new_pars.append(html_par)
 
-                new_pars.append({'id': html_par['id'], 'md': '', 'html': '',
-                                 'cls': ' '.join(html_par.get('attrs', {} ).get('classes', [])),
-                                 'start_areas': {a: new_areas[a].index for a in new_areas},
-                                 'collapsed': 'collapsed ' if len(current_collapsed) > 0 else ''})
+                new_pars.append({'id': '', 'md': '', 'html': '',
+                                 'cls': ' '.join(html_par.get('attrs', {}).get('classes', [])),
+                                 'start_areas': area_start,
+                                 'collapsed': 'collapsed' if is_collapsed else ''})
 
-                if collapse is None and area_end is None:
+                if collapse is None:
                     new_pars.append(html_par)
 
                 if cur_area is not None:
@@ -337,7 +328,7 @@ def process_areas(
                     access = False  # TODO: this should be added as some kind of small par that is visible in edit-mode
                 # Timed paragraph
             if access:  # par itself is visible, is it in some area that is not visible
-                for a in current_areas.values():
+                for a in current_areas:
                     vis = a.attrs.get('visible')
                     if vis is not None:
                         vis = get_boolean(vis, True)
@@ -354,8 +345,12 @@ def process_areas(
             if access:
                 new_pars.append(html_par)
 
-        current_areas = new_areas
-
+    # Complete unbalanced areas.
+    if current_areas:
+        flash(f'{len(current_areas)} areas are missing area_end: {current_areas}')
+        for _ in current_areas:
+            new_pars.append({'id': '', 'md': '', 'html': '',
+                             'end_areas': True})
     return new_pars
 
 
