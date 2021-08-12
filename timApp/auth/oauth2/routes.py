@@ -3,7 +3,7 @@ from typing import Union
 from authlib.integrations.flask_oauth2 import current_token
 from authlib.oauth2 import OAuth2Error
 from authlib.oauth2.rfc6749 import BaseGrant, scope_to_list
-from flask import Response, render_template, redirect
+from flask import Response, render_template
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.oauth2.models import OAuth2Client, Scope
@@ -11,7 +11,7 @@ from timApp.auth.oauth2.oauth2 import auth_server, require_oauth
 from timApp.auth.sessioninfo import get_current_user_object, logged_in
 from timApp.tim_app import csrf
 from timApp.user.user import User
-from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.responsehelper import json_response, safe_redirect
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 oauth = TypedBlueprint('oauth', __name__, url_prefix='/oauth')
@@ -23,7 +23,7 @@ def request_authorization() -> Union[str, Response]:
     try:
         grant: BaseGrant = auth_server.get_consent_grant(end_user=user)
     except OAuth2Error:
-        return redirect('/')
+        return safe_redirect("/")
     client: OAuth2Client = grant.client
     scope = client.get_allowed_scope(grant.request.scope)
     return render_template("oauth_authorize.jinja2",
