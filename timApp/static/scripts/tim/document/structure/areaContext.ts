@@ -92,17 +92,7 @@ export function getContextualAreaInfo(par: ParContext) {
         if (ctx instanceof ReferenceParagraph) {
             refEncountered = true;
             if (ctx.target instanceof Area) {
-                const refArea = ctx.target;
-                areasAfterRef.push(refArea);
-                if (areasAfterRef.length > 1) {
-                    refAreaInclusion = ParAreaInclusionKind.Inside;
-                } else if (refArea.startPar.par.equals(par.par)) {
-                    refAreaInclusion = ParAreaInclusionKind.IsStart;
-                } else if (refArea.endPar.par.equals(par.par)) {
-                    refAreaInclusion = ParAreaInclusionKind.IsEnd;
-                } else {
-                    refAreaInclusion = ParAreaInclusionKind.Inside;
-                }
+                // The area will be registered on next iteration; no need to do anything here.
             } else {
                 // TODO: Should be enough to just assign refPar = ctx, but then TypeScript
                 //  doesn't narrow it to ReferenceParagraph<Paragraph>.
@@ -111,6 +101,15 @@ export function getContextualAreaInfo(par: ParContext) {
         } else {
             if (refEncountered) {
                 areasAfterRef.push(ctx);
+                if (areasAfterRef.length > 1) {
+                    refAreaInclusion = ParAreaInclusionKind.Inside;
+                } else if (ctx.startPar.par.equals(par.par)) {
+                    refAreaInclusion = ParAreaInclusionKind.IsStart;
+                } else if (ctx.endPar.par.equals(par.par)) {
+                    refAreaInclusion = ParAreaInclusionKind.IsEnd;
+                } else {
+                    refAreaInclusion = ParAreaInclusionKind.Inside;
+                }
             } else {
                 areasBeforeRef.push(ctx);
             }
