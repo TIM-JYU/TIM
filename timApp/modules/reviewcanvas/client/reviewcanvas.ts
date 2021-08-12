@@ -80,8 +80,15 @@ const PluginMarkupFields = t.intersection([
 
 const PluginFields = t.intersection([
     getTopLevelFields(PluginMarkupFields),
+    t.partial({
+        uploadedfile: nullable(UploadedFile),
+    }),
     t.type({
-        state: nullable(t.type({})),
+        state: nullable(
+            t.type({
+                uploadedfile: nullable(UploadedFile),
+            })
+        ),
     }),
 ]);
 
@@ -164,6 +171,10 @@ export class ReviewCanvasComponent
             .subscribe((newValue) => {
                 this.file = newValue;
             });
+
+        if (this.attrsall.state?.uploadedfile) {
+            this.uploadedFiles.push(this.attrsall.state.uploadedfile);
+        }
     }
 
     ngOnDestroy() {
