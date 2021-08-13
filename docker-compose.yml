@@ -46,6 +46,9 @@ services:
   working_dir: /service/timApp
   command: python3 launch.py --with-gunicorn
   environment:
+   TIM_BIND: 0.0.0.0:5000
+   CARGO_TARGET_DIR: dist_linux
+   TIM_PSQL_ADDRESS: postgresql://postgres@postgresql:5432/tim
    FLASK_APP: tim.py
    PYTHONPATH: /service
    COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:?}

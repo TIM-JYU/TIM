@@ -1,6 +1,6 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 #![feature(nll, try_from)]
-#![feature(futures_api, async_await, await_macro, pin,)]
+#![feature(futures_api, async_await, await_macro, pin)]
 #![recursion_limit = "128"]
 
 #[macro_use]
@@ -11,11 +11,14 @@ extern crate log;
 extern crate diesel;
 #[macro_use]
 extern crate diesel_derive_enum;
+extern crate config;
+extern crate core;
 
 mod db;
 mod document;
 mod models;
 mod schema;
+mod settings;
 mod timerror;
 
 use actix::Addr;
@@ -31,6 +34,7 @@ use crate::document::Document;
 use crate::models::Item;
 use crate::models::ItemKind;
 use crate::models::ItemList;
+use crate::settings::Settings;
 use crate::timerror::TimError;
 use crate::timerror::TimErrorKind;
 use diesel::pg::PgConnection;
@@ -92,8 +96,10 @@ async fn view_item_impl(req: &HttpRequest<AppState>) -> Result<HttpResponse, Tim
             .db
             .send(GetItem {
                 path: path.to_string()
-            }).compat()
-    ).context(TimErrorKind::Db)??;
+            })
+            .compat()
+    )
+    .context(TimErrorKind::Db)??;
     match res {
         ItemKind::Folder(f) => {
             let items = await!(state.db.send(GetItems { path: f.get_path() }).compat())
@@ -103,7 +109,8 @@ async fn view_item_impl(req: &HttpRequest<AppState>) -> Result<HttpResponse, Tim
                 .body(
                     ItemList {
                         items: items.into_iter().map(|i| i.into()).collect(),
-                    }.render()
+                    }
+                    .render()
                     .unwrap(),
                 ))
         }
@@ -112,7 +119,8 @@ async fn view_item_impl(req: &HttpRequest<AppState>) -> Result<HttpResponse, Tim
                 d.id,
                 format!("../timApp/tim_files/docs/{}", d.id),
                 format!("../timApp/tim_files/pars/{}", d.id),
-            ).context(TimErrorKind::DocumentLoad)?;
+            )
+            .context(TimErrorKind::DocumentLoad)?;
             let doc_str = format!("{:#?}", doc);
             Ok(HttpResponse::Ok()
                 .content_type("text/plain; charset=utf-8")
@@ -129,11 +137,11 @@ struct AppState {
     db: Addr<DbExecutor>,
 }
 
-fn main() {
+fn main() -> Result<(), failure::Error> {
     // simple_logger::init().unwrap();
     let sys = actix::System::new("tim");
-    let manager =
-        ConnectionManager::<PgConnection>::new("postgresql://postgres@192.168.99.100:5432/tim");
+    let settings = Settings::new()?;
+    let manager = ConnectionManager::<PgConnection>::new(settings.psql_address);
     let pool = Pool::builder()
         .build(manager)
         .expect("Failed to create pool.");
@@ -142,16 +150,19 @@ fn main() {
         App::with_state(AppState { db: addr.clone() })
             .resource("/view/{Path:.*}", |r| {
                 r.method(http::Method::GET).f(view_item)
-            }).route("/{id}", http::Method::GET, view_document)
+            })
+            .route("/{id}", http::Method::GET, view_document)
             .default_resource(|r| {
                 r.method(http::Method::GET).f(not_found);
                 r.route()
                     .filter(pred::Not(pred::Get()))
                     .f(|_req| HttpResponse::MethodNotAllowed());
             })
-    }).bind("127.0.0.1:80")
+    })
+    .bind(settings.bind)
     .unwrap()
     .start();
     println!("server running");
     let _ = sys.run();
+    Ok(())
 }

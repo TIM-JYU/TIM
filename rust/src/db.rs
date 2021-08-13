@@ -50,7 +50,8 @@ impl Handler<GetItems> for DbExecutor {
                 .filter(
                     name.like(format!("{}/%", msg.path))
                         .and(name.not_like(format!("{}/%/%", msg.path))),
-                ).select((name, docid, public, description))
+                )
+                .select((name, docid, public, description))
                 .load::<DocInfo>(conn)
                 .context(TimErrorKind::Db)?
         };
@@ -90,7 +91,8 @@ impl Handler<GetItem> for DbExecutor {
                 location: "".to_string(),
                 name: "".to_string(),
                 title: Some("All documents".to_string()),
-            }.into());
+            }
+            .into());
         }
         let conn = &self.0.get().context(TimErrorKind::Db)?;
         let d = docentry
