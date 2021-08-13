@@ -39,7 +39,7 @@ def make_celery(appl):
     :return: Celery.
     """
     cel = Celery(appl.import_name, backend=appl.config['CELERY_RESULT_BACKEND'],
-                    broker=appl.config['CELERY_BROKER_URL'])
+                 broker=appl.config['CELERY_BROKER_URL'])
     cel.conf.update(appl.config)
     TaskBase = cel.Task
 
@@ -185,3 +185,17 @@ def do_send_answer_backup(exported_answer: Dict[str, Any]):
         )
         futures.append(f)
     return collect_errors_from_hosts(futures, backup_hosts)
+
+
+@celery.task(ignore_result=True)
+def cleanup_oauth2_tokens():
+    """
+    Remove expired OAuth2 tokens.
+
+    While authlib prevents usage of expired tokens automatically,
+    it does not clean up the database on token expiration.
+    Moreover, some applications may not cache the token and instead might request it for every launch,
+    which can cause tokens to accumulate.
+    """
+    from timApp.auth.oauth2.oauth2 import delete_expired_oauth2_tokens
+    delete_expired_oauth2_tokens()

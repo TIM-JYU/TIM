@@ -141,6 +141,11 @@ export interface IManageGlobals extends IGenericGlobals {
     curr_item: IFullDocument | IFolder;
 }
 
+export interface IOAuthGlobals extends IGenericGlobals {
+    oauthClientName: string;
+    oauthScopes: string[];
+}
+
 export interface ISettingsGlobals extends IGenericGlobals {
     settings: ISettings;
     css_files: Array<ICssFile>;
@@ -182,6 +187,10 @@ export function folderglobals(): IFolderGlobals {
 }
 
 export function manageglobals(): IManageGlobals {
+    return someGlobals();
+}
+
+export function oauthglobals(): IOAuthGlobals {
     return someGlobals();
 }
 
