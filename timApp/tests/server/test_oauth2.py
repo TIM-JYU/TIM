@@ -16,7 +16,7 @@ class OAuth2Test(TimRouteTest):
 
         self.logout()
         # The authorize URI must be valid and return 200
-        self.get(uri, as_tree=True)
+        self.get(uri)
         # Authorization cannot be done for anonymous users
         self.post(uri, expect_status=403, data={"confirm": "true"})
 

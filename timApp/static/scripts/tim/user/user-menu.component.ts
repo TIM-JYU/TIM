@@ -66,7 +66,6 @@ export class UserMenuComponent {
     logout = (user: IUser) => Users.logout(user);
 
     beginLogout($event: Event) {
-        // $event.preventDefault();
         this.logout(this.getCurrentUser());
     }
 }
