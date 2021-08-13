@@ -25,21 +25,19 @@ import {Users} from "./userService";
                     <li role="menuitem"><a
                             href="/view/{{ getCurrentUser().folder!.path }}" i18n="@@myDocuments">My documents</a></li>
                     <li role="menuitem"><a
-                            (click)="addUser()"
-                            href="#">
-                        <ng-container i18n="@@addToSession">Add a user to this session</ng-container>...</a></li>
+                            (click)="addUser()" role="button">
+                        <ng-container i18n="@@addToSession">Add a user to this session</ng-container>
+                        ...</a></li>
                     <li class="divider"></li>
                 </ng-container>
                 <li *ngIf="!loggingout" role="menuitem">
-                    <a (click)="beginLogout($event)"
-                       href="#" [ngSwitch]="numSession() > 0">
+                    <a (click)="beginLogout($event)" role="button" [ngSwitch]="numSession() > 0">
                         <ng-container *ngSwitchCase="true" i18n>Log everyone out</ng-container>
                         <ng-container *ngSwitchCase="false" i18n>Log out</ng-container>
                     </a>
                 </li>
                 <li role="menuitem" *ngFor="let u of getSessionUsers()">
-                    <a (click)="logout(u)"
-                       href="#" i18n>Log {{ u.real_name }} out</a>
+                    <a (click)="logout(u)" role="button" i18n>Log {{ u.real_name }} out</a>
                 </li>
             </ul>
         </div>

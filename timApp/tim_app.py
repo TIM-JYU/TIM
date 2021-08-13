@@ -19,6 +19,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from timApp.answer.answer import Answer, AnswerSaver
 from timApp.answer.answer_models import AnswerTag, AnswerUpload, UserAnswer
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
+from timApp.auth.oauth2.models import OAuth2Token, OAuth2AuthorizationCode
 from timApp.celery_sqlalchemy_scheduler import IntervalSchedule, CrontabSchedule, SolarSchedule, PeriodicTaskChanged, \
     PeriodicTask
 from timApp.document.docentry import DocEntry
@@ -108,6 +109,8 @@ all_models = (
     MessageListExternalMember,
     NewUser,
     Notification,
+    OAuth2AuthorizationCode,
+    OAuth2Token,
     PeerReview,
     PendingNotification,
     PersonalUniqueCode,

@@ -119,24 +119,38 @@ tim-duration-picker {
     &.cl {
         flex-direction: column;
     }
+
     &.rw {
         flex-direction: row;
     }
+
     &.space-between {
         justify-content: space-between;
     }
+
     &.space-around {
         justify-content: space-around;
     }
+
+    &.justify-center {
+        justify-content: center;
+    }
+
     &.space-evenly {
         justify-content: space-evenly;
     }
+
     &.align-center {
         align-items: center;
     }
+
     & > .no-shrink {
         flex-shrink: 0;
     }
+}
+
+.pt-1 {
+    padding-top: 1em;
 }
 
 .flex-grow-5 {

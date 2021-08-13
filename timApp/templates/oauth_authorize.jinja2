@@ -1,0 +1,22 @@
+{% extends "base.jinja2" %}
+{% block title %}Authenticate to {{ client.name }}{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script>
+        ANGULARMODULES = [];
+        JSMODULES = ["oauthAuthorize"];
+        var docSettings = {
+            login: {
+                hide: {
+                    search: true,
+                    sidebar: true,
+                }
+            }
+        };
+        var oauthClientName = {{client.name|tojson}};
+        var oauthScopes = {{scopes|tojson}};
+    </script>
+{% endblock %}
+{% block content %}
+    <tim-oauth-authorize></tim-oauth-authorize>
+{% endblock %}

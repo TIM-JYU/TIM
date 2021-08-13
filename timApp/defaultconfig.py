@@ -82,6 +82,10 @@ CELERYBEAT_SCHEDULE = {
     'process-notifications': {
         'task': 'timApp.tim_celery.process_notifications',
         'schedule': crontab(minute='*/5'),
+    },
+    'cleanup-expired-oauth2-tokens': {
+        'task': 'timApp.tim_celery.cleanup_oauth2_tokens',
+        'schedule': crontab(hour='*/24', minute='0'),
     }
 }
 # This makes the log format a little less verbose by omitting the Celery task id (which is an UUID).
@@ -257,3 +261,19 @@ IP_BLOCK_LOG_ONLY = False
 
 # The set of documents for which the right is inherited from its containing folder.
 INHERIT_FOLDER_RIGHTS_DOCS = {}
+
+# A list of OAuth2 applications that can authenticate with TIM
+# Refer to OAuth2Client class in timApp/auth/oauth2/models.py for documentation of each field
+# Example:
+# [
+#     {
+#        'client_id': 'example',
+#        'client_secret': 'secret',
+#        'client_name': 'Example application',
+#        'redirect_urls': ['https://example.com/login/callback'],
+#        'allowed_scopes': ['profile'],
+#        'response_types': ['code', 'token'],
+#        'grant_types': ['authorization_code'],
+#     }
+# ]
+OAUTH2_CLIENTS = []
