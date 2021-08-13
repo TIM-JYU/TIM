@@ -158,6 +158,8 @@ def get_images_md(query):
             url = ''
     w = get_clean_param(query, "width", "")
     h = get_clean_param(query, "height", "")
+    w = get_clean_param(query, "texwidth", w)
+    h = get_clean_param(query, "texheight", h)
     if w:
         w = 'width=' + w + ' '
     if h:
@@ -174,8 +176,11 @@ def get_image_md(query):
 
     """
     url = get_clean_param(query, "file", "")
+    url = get_clean_param(query, "texfile", url)
     w = get_clean_param(query, "width", "")
     h = get_clean_param(query, "height", "")
+    w = get_clean_param(query, "texwidth", w)
+    h = get_clean_param(query, "texheight", h)
     if w:
         w = 'width=' + w + ' '
     if h:
