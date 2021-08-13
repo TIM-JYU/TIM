@@ -5,6 +5,7 @@ import {
     DoBootstrap,
     ElementRef,
     NgModule,
+    ViewEncapsulation,
     ViewChild,
 } from "@angular/core";
 import {ViewCtrl} from "tim/document/viewctrl";
@@ -71,6 +72,8 @@ const ShowFileAll = t.type({
 // noinspection TypeScriptUnresolvedVariable
 @Component({
     selector: "tim-images",
+    styleUrls: ["./images.component.scss"],
+    encapsulation: ViewEncapsulation.None, // Prevents style isolation
     template: `
         <div [class]="imagesClass" 
              tabindex="0"
@@ -128,7 +131,6 @@ const ShowFileAll = t.type({
             <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
         </div>
     `,
-    styleUrls: ["./images.component.scss"],
 })
 export class ImagesComponent extends AngularPluginBase<
     t.TypeOf<typeof ShowFileMarkup>,
