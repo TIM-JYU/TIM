@@ -543,6 +543,10 @@ auto_number_headings: 0${CURSOR}
         this.viewctrl.areaHandler.cancelSelection();
         this.removeDefaultPars();
         markPageDirty();
+
+        // No await here; we want to call getUpdatedPars in the background.
+        // After that, it will also call getActiveDocument().rebuildSections(),
+        // so the parsed document structure is out of sync with the DOM for a short period.
         this.viewctrl.beginUpdate();
     }
 
