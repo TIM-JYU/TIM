@@ -96,7 +96,7 @@ class ViewContext:
 default_view_ctx = ViewContext(ViewRoute.View, False)
 
 
-def copy_of_default_view_ctx(extramacros) -> ViewContext:
+def copy_of_default_view_ctx(extramacros: ExtraMacros) -> ViewContext:
     return ViewContext(ViewRoute.View, False, extramacros=json.dumps(extramacros))
 
 

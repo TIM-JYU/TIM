@@ -231,7 +231,7 @@ class DocumentPrinter:
         # Get the markdown for each par dict
         for p, (_, settings, pdoc_plugin_attrs, pdoc_macro_env, pdoc_macros, pdoc_macro_delimiter) in zip(pars_to_print,
                                                                                                           par_infos):
-            md = p.get_final_dict(default_view_ctx)['md']
+            md = p.get_final_dict(view_ctx)['md']
             if not p.is_plugin() and not p.is_question():
                 if not p.no_macros() and not self.texplain and not self.textplain:
                     md = expand_macros(
