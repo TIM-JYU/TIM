@@ -35,3 +35,32 @@ test
         self.assertEqual(len(areacontent), 1)
         myclass = doc.cssselect('.myclass')
         self.assertEqual(len(myclass), 1)
+
+    def test_area_duplicate_warning(self):
+        self.login_test1()
+        d = self.create_doc()
+        d.document.add_text(f"""
+#- {{area=a}}
+
+#-
+test
+
+#- {{area_end=a}}
+
+#- {{rd={d.id} ra=a}}
+        """)
+        r = self.get(d.url, as_tree=True)
+        self.assertEqual(0, len(r.cssselect('.alert.alert-info')))
+        d.document.add_text(f"""
+#- {{area=a}}
+
+#-
+test
+
+#- {{area_end=a}}
+        """)
+        r = self.get(d.url, as_tree=True)
+        self.assertEqual(
+            'Area a appears more than once in this document. Fix this to get rid of this warning.',
+            r.cssselect('.alert.alert-info')[0].text_content().strip(),
+        )
