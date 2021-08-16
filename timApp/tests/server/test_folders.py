@@ -8,7 +8,7 @@ from timApp.item.block import BlockType
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User
-from timApp.user.userutils import grant_access, get_default_right_document, get_or_create_default_right_document
+from timApp.user.userutils import grant_access, get_or_create_default_right_document
 
 
 class FolderTest(TimRouteTest):
@@ -159,7 +159,7 @@ class FolderTest(TimRouteTest):
         self.get('/view/' + self.get_personal_item_path('perf'))
         event.remove(eng, 'before_cursor_execute', before_cursor_execute)
 
-        self.assertEqual(stmts, 10)
+        self.assertEqual(stmts, 11)
 
 
 class FolderCopyTest(TimRouteTest):

@@ -160,9 +160,6 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         if is_attribute_loaded('admin_doc', self) and self.admin_doc and self.admin_doc.docentries:
             r['admin_doc_path'] = self.admin_doc.docentries[0].path
 
-        if is_attribute_loaded('external_id', self):
-            r['external_id'] = self.external_id.external_id if self.external_id else None
-
         return r
 
     @property

@@ -6,7 +6,7 @@ from typing import List, Tuple, Dict
 from typing import Optional, Union, Set
 
 from sqlalchemy import func
-from sqlalchemy.orm import Query, joinedload, defaultload, contains_eager
+from sqlalchemy.orm import Query, joinedload, defaultload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.answer.answer import Answer
@@ -711,18 +711,6 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return teacher_group_id is not None
 
     @property
-    def groups_with_scim_info(self) -> List[UserGroup]:
-        groups = db.session.query(UserGroup) \
-            .join(UserGroupMember,
-                  (UserGroup.id == UserGroupMember.usergroup_id)
-                  & (self.id == UserGroupMember.user_id)
-                  & membership_current) \
-            .outerjoin(ScimUserGroup) \
-            .options(contains_eager(UserGroup.external_id)) \
-            .all()
-        return groups
-
-    @property
     def basic_info_dict(self):
         if not self.is_name_hidden:
             info_dict = {
@@ -745,10 +733,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return info_dict
 
     def to_json(self, full: bool = False) -> Dict:
+        external_ids: Dict[int, str] = \
+            {s.group_id: s.external_id for s in
+             ScimUserGroup.query.filter(ScimUserGroup.group_id.in_([g.id for g in self.groups])).all()} if full else []
         return {**self.basic_info_dict,
                 'group': self.get_personal_group(),
-                # TODO: Restore back to self.groups once lists can be automatically created from groups
-                'groups': self.groups_with_scim_info,
+                'groups': [{**g.to_json(), 'external_id': external_ids.get(g.id, None)} for g in self.groups],
                 'folder': self.get_personal_folder() if self.logged_in else None,
                 'consent': self.consent,
                 'last_name': self.last_name,
