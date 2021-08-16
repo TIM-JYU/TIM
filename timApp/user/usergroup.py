@@ -159,7 +159,6 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         }
         if is_attribute_loaded('admin_doc', self) and self.admin_doc and self.admin_doc.docentries:
             r['admin_doc_path'] = self.admin_doc.docentries[0].path
-
         return r
 
     @property
