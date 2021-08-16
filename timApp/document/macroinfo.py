@@ -50,6 +50,9 @@ class MacroInfo:
             if urlmacros:
                 self.macro_map.update(
                     get_url_macros(self.macro_map, urlmacros, {key: val for (key, val) in self.view_ctx.urlmacros}))
+            extramacros = self.view_ctx.extramacros
+            if extramacros:
+                self.macro_map.update(extramacros)
             rndmacros = doc.get_settings().rndmacros()
             if rndmacros:
                 self.macro_map.update(get_rnd_macros(rndmacros, self.user_ctx.user if self.user_ctx else None))

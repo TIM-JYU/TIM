@@ -26,7 +26,6 @@ class ViewRoute(Enum):
 
 teacher_or_see_answers = {ViewRoute.Teacher, ViewRoute.Answers}
 
-
 viewmode_routes = {
     ViewRoute.Lecture,
     ViewRoute.ShowSlide,
@@ -44,12 +43,14 @@ class OriginInfo:
 
 UrlMacros = Tuple[Tuple[str, str], ...]
 
+
 @dataclass(frozen=True)
 class ViewContext:
     route: ViewRoute
     preview: bool
     hide_names_requested: bool = False
     urlmacros: UrlMacros = ()
+    extramacros = {}
     origin: Optional[OriginInfo] = None
 
     @property
@@ -60,11 +61,18 @@ class ViewContext:
     def url_params(self) -> UrlMacros:
         return self.urlmacros  # TODO urlmacros should be a subset of all params
 
+    @property
+    def extra_macros(self):
+        return self.extramacros  # TODO same tape for url and extra macros
+
     def get_url_param(self, key: str) -> Optional[str]:
         for k, v in self.url_params:
             if k == key:
                 return v
         return None
+
+    def get_extra_param(self, key: str) -> Optional[str]:
+        return self.extramacros.get(key)
 
     @property
     def args(self) -> Dict[str, str]:

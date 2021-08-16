@@ -100,6 +100,12 @@ def get_tex_settings_and_macros(d: Document, user_ctx: UserContext):
     pdoc_macros.update(settings.get_texmacroinfo(default_view_ctx).get_macros())
     return settings, pdoc_plugin_attrs, pdoc_macro_env, pdoc_macros, pdoc_macro_delimiter
 
+def get_tex_macros(d: Document):
+    settings = d.get_settings()
+    # texmacros = settings.get_texmacroinfo(default_view_ctx).get_macros()
+    texmacros = settings.get_setting_or_default('texmacros', {})
+
+    return texmacros
 
 class DocumentPrinter:
     def __init__(self, doc_entry: DocInfo, template_to_use: Optional[DocInfo], urlroot: str):
@@ -153,6 +159,8 @@ class DocumentPrinter:
         if self.texfiles and self.texfiles is str:
             self.texfiles = [self.texfiles]
 
+        texmacros = None
+
         par_infos: List[Tuple[DocParagraph, DocSettings, dict, SandboxedEnvironment, Dict[str, object], str]] = []
         for par in pars:
 
@@ -162,6 +170,8 @@ class DocumentPrinter:
 
             p_info = par, *get_tex_settings_and_macros(par.doc, user_ctx)
             _, _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = p_info
+
+            texmacros = get_tex_macros(par.doc)
 
             if self.texplain or self.textplain:
                 if par.get_markdown().find("#") == 0:
@@ -207,8 +217,12 @@ class DocumentPrinter:
         if target_format in (PrintFormat.PDF, PrintFormat.JSON):
             tformat = PrintFormat.LATEX
 
+        view_ctx = default_view_ctx
+        if texmacros:
+             view_ctx.extra_macros.update(texmacros)
+
         # render markdown for plugins
-        presult = pluginify(doc=self._doc_entry.document, pars=pars_to_print, user_ctx=user_ctx, view_ctx=default_view_ctx,
+        presult = pluginify(doc=self._doc_entry.document, pars=pars_to_print, user_ctx=user_ctx, view_ctx=view_ctx,
                             pluginwrap=PluginWrap.Nothing, output_format=PluginOutputFormat.MD,
                             user_print=plugins_user_print, target_format=tformat)
         pars_to_print = presult.pars
