@@ -216,8 +216,11 @@ export async function initReadings(item: IItem) {
         const ev = e.originalEvent as MouseEvent | TouchEvent;
         const pos = posToRelative(p[0], ev);
         const children = p.children();
-        const par = createParContextOrHelp(findParentPar(p));
-        if (par.isHelp) {
+
+        // Workaround: The document might have been edited just now, so creating context may fail
+        // if getActiveDocument().rebuildSections() has not yet been called.
+        const par = tryCreateParContextOrHelp(findParentPar(p));
+        if (!par || par.isHelp) {
             return;
         }
         if (children.length === 0 && canSeeSource(item, par)) {
@@ -253,6 +256,9 @@ export async function initReadings(item: IItem) {
         select
     ) {
         const el = $this[0];
+
+        // Workaround: The document might have been edited just now, so creating context may fail
+        // if getActiveDocument().rebuildSections() has not yet been called.
         const ctx = tryCreateParContextOrHelp(el);
         if (select && ctx && !ctx.isHelp) {
             markParRead(ctx, ReadingType.HoverPar);
