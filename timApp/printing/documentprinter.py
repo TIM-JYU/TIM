@@ -25,7 +25,7 @@ from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import hashfunc
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import default_view_ctx
+from timApp.document.viewcontext import default_view_ctx, copy_of_default_view_ctx
 from timApp.document.yamlblock import strip_code_block
 from timApp.folder.folder import Folder
 from timApp.markdown.htmlSanitize import sanitize_html
@@ -159,7 +159,7 @@ class DocumentPrinter:
         if self.texfiles and self.texfiles is str:
             self.texfiles = [self.texfiles]
 
-        texmacros = None
+        texmacros = get_tex_macros(self._doc_entry.document)
 
         par_infos: List[Tuple[DocParagraph, DocSettings, dict, SandboxedEnvironment, Dict[str, object], str]] = []
         for par in pars:
@@ -171,7 +171,6 @@ class DocumentPrinter:
             p_info = par, *get_tex_settings_and_macros(par.doc, user_ctx)
             _, _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = p_info
 
-            texmacros = get_tex_macros(par.doc)
 
             if self.texplain or self.textplain:
                 if par.get_markdown().find("#") == 0:
@@ -219,7 +218,7 @@ class DocumentPrinter:
 
         view_ctx = default_view_ctx
         if texmacros:
-             view_ctx.extra_macros.update(texmacros)
+            view_ctx = copy_of_default_view_ctx(texmacros)
 
         # render markdown for plugins
         presult = pluginify(doc=self._doc_entry.document, pars=pars_to_print, user_ctx=user_ctx, view_ctx=view_ctx,

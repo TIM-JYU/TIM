@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Tuple, Any, Optional, Dict
 
+import json
+
 
 class ViewRoute(Enum):
     Answers = 'answers'
@@ -42,6 +44,7 @@ class OriginInfo:
 
 
 UrlMacros = Tuple[Tuple[str, str], ...]
+ExtraMacros = Dict[str, object]
 
 
 @dataclass(frozen=True)
@@ -50,7 +53,7 @@ class ViewContext:
     preview: bool
     hide_names_requested: bool = False
     urlmacros: UrlMacros = ()
-    extramacros = {}
+    extramacros: str = ""
     origin: Optional[OriginInfo] = None
 
     @property
@@ -62,17 +65,17 @@ class ViewContext:
         return self.urlmacros  # TODO urlmacros should be a subset of all params
 
     @property
-    def extra_macros(self):
-        return self.extramacros  # TODO same tape for url and extra macros
+    def extra_macros(self) -> ExtraMacros:
+        if not self.extramacros:
+            return {}
+        em = json.loads(self.extramacros)
+        return em  # TODO same tape for url and extra macros
 
     def get_url_param(self, key: str) -> Optional[str]:
         for k, v in self.url_params:
             if k == key:
                 return v
         return None
-
-    def get_extra_param(self, key: str) -> Optional[str]:
-        return self.extramacros.get(key)
 
     @property
     def args(self) -> Dict[str, str]:
@@ -91,6 +94,10 @@ class ViewContext:
 
 
 default_view_ctx = ViewContext(ViewRoute.View, False)
+
+
+def copy_of_default_view_ctx(extramacros):
+    return ViewContext(ViewRoute.View, False, extramacros=json.dumps(extramacros))
 
 
 def viewroute_from_str(s: str) -> Optional[ViewRoute]:
