@@ -74,6 +74,12 @@ export class UserService {
         return false;
     }
 
+    public isSisuTeacher() {
+        return this.current.groups.some((g) =>
+            g.external_id?.endsWith("-teachers")
+        );
+    }
+
     public isGroupAdmin() {
         return userBelongsToGroupOrIsAdmin("Group admins");
     }

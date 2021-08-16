@@ -6,7 +6,7 @@ from typing import List, Tuple, Dict
 from typing import Optional, Union, Set
 
 from sqlalchemy import func
-from sqlalchemy.orm import Query, joinedload, defaultload
+from sqlalchemy.orm import Query, joinedload, defaultload, contains_eager
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.answer.answer import Answer
@@ -23,6 +23,7 @@ from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.messaging.timMessage.internalmessage_models import InternalMessageReadReceipt
 from timApp.notification.notification import Notification
+from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded
 from timApp.user.hakaorganization import HakaOrganization, get_home_organization_id
@@ -700,6 +701,28 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return getattr(self, 'hide_name', False)
 
     @property
+    def is_sisu_teacher(self) -> bool:
+        """Whether the user belongs to at least one Sisu teacher group"""
+        if self.is_special:
+            return False
+        teacher_group_id = db.session.query(ScimUserGroup.group_id) \
+            .join(UserGroup, (ScimUserGroup.group_id == UserGroup.id) & ScimUserGroup.external_id.ilike("%-teachers")) \
+            .join(UserGroupMember, (UserGroupMember.user_id == self.id)).first()
+        return teacher_group_id is not None
+
+    @property
+    def groups_with_scim_info(self) -> List[UserGroup]:
+        groups = db.session.query(UserGroup) \
+            .join(UserGroupMember,
+                  (UserGroup.id == UserGroupMember.usergroup_id)
+                  & (self.id == UserGroupMember.user_id)
+                  & membership_current) \
+            .outerjoin(ScimUserGroup) \
+            .options(contains_eager(UserGroup.external_id)) \
+            .all()
+        return groups
+
+    @property
     def basic_info_dict(self):
         if not self.is_name_hidden:
             info_dict = {
@@ -721,10 +744,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         return info_dict
 
-    def to_json(self, full: bool=False) -> Dict:
+    def to_json(self, full: bool = False) -> Dict:
         return {**self.basic_info_dict,
                 'group': self.get_personal_group(),
-                'groups': self.groups,
+                # TODO: Restore back to self.groups once lists can be automatically created from groups
+                'groups': self.groups_with_scim_info,
                 'folder': self.get_personal_folder() if self.logged_in else None,
                 'consent': self.consent,
                 'last_name': self.last_name,

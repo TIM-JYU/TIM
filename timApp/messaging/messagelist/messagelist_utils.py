@@ -7,8 +7,9 @@ from typing import Optional, List, Dict, Tuple, Iterator
 
 from mailmanclient import MailingList
 
-from timApp.auth.accesshelper import has_manage_access
+from timApp.auth.accesshelper import has_manage_access, AccessDenied
 from timApp.auth.accesstype import AccessType
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document, apply_template
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -25,11 +26,19 @@ from timApp.messaging.messagelist.listinfo import ArchiveType, ListInfo, ReplyTo
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember, \
     MessageListExternalMember, MessageListMember
 from timApp.timdb.sqa import db
+from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars, get_current_time
+
+
+def verify_can_create_lists() -> None:
+    curr_user = get_current_user_object()
+    res = verify_groupadmin(False, curr_user) or curr_user.is_sisu_teacher
+    if not res:
+        raise AccessDenied("This action requires permission to create message lists")
 
 
 def verify_messagelist_name_requirements(name_candidate: str) -> None:
