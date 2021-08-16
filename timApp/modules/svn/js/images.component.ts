@@ -48,6 +48,7 @@ const ShowFileMarkup = t.intersection([
         change: withDefault(t.boolean, true),
         noFlicker: withDefault(t.boolean, false),
         nearFiles: withDefault(t.number, 1),
+        hover: withDefault(t.boolean, true),
         files: withDefault(
             t.array(
                 t.union([
@@ -109,7 +110,7 @@ const ShowFileAll = t.type({
             <br>
             
             <div *ngIf="markup.dots" style="text-align:center" class="images-control" >
-              <span *ngFor="let file of files; let i = index" [ngClass]="{'active': (i+1) === fileIndex}" class="dot" (click)="currentFile(i+1)"></span>
+              <span *ngFor="let file of files; let i = index" [ngClass]="{'active': (i+1) === fileIndex}" class="dot" (click)="currentFile(i+1)" (mouseover)="hoverCurrentFile(i+1)"></span>
             </div>                
 
             <div *ngIf="markup.autoplay" class="flex"  style="justify-content: flex-end">
@@ -202,6 +203,13 @@ export class ImagesComponent extends AngularPluginBase<
         }
         this.stop();
         this.showFile(n);
+    }
+
+    hoverCurrentFile(n: number) {
+        if (!this.markup.hover) {
+            return;
+        }
+        this.currentFile(n);
     }
 
     plusFile(n: number = 1) {
