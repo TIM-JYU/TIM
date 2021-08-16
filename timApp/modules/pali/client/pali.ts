@@ -26,6 +26,7 @@ import {debounceTime, distinctUntilChanged} from "rxjs/operators";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
+import {PurifyModule} from "tim/util/purify.module";
 
 const PluginMarkupFields = t.intersection([
     t.partial({
@@ -57,9 +58,9 @@ function isPalindrome(s: string) {
     template: `
         <tim-plugin-frame [markupError]="markupError">
             <tim-plugin-header *ngIf="header" header>
-                <span [innerHTML]="header"></span>
+                <span [innerHTML]="header | purify"></span>
             </tim-plugin-header>
-            <p stem *ngIf="stem" [innerHTML]="stem"></p>
+            <p stem *ngIf="stem" [innerHTML]="stem | purify"></p>
             <ng-container body>
                 <div class="form-inline">
                     <label>{{inputstem}}
@@ -81,18 +82,18 @@ function isPalindrome(s: string) {
                     <button class="timButton"
                             *ngIf="buttonText()"
                             [disabled]="isRunning || !userword || readonly"
-                            (click)="saveText()">
-                        {{buttonText()}}
+                            (click)="saveText()"
+                            [innerHTML]="buttonText() | purify"                    >
                     </button>
                     <button class="btn btn-default btn-xs"
                             *ngIf="edited"
                             (click)="reset($event)">{{resetText}}</button>
                 </div>
                 <tim-loading *ngIf="isRunning"></tim-loading>
-                <div *ngIf="error" [innerHTML]="error"></div>
-                <pre *ngIf="result">{{result}}</pre>
+                <div *ngIf="error" [innerHTML]="error | purify"></div>
+                <pre *ngIf="result" [innerHTML]="result | purify"></pre>
             </ng-container>
-            <p footer *ngIf="footer" [textContent]="footer"></p>
+            <p footer *ngIf="footer" [innerHTML]="footer | purify"></p>
         </tim-plugin-frame>
     `,
     styleUrls: ["./pali.scss"],
@@ -210,7 +211,13 @@ export class PaliComponent
 
 @NgModule({
     declarations: [PaliComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        PurifyModule,
+    ],
 })
 export class PaliModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

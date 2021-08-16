@@ -37,6 +37,7 @@ import {
     KEY_RIGHT,
 } from "../../../static/scripts/tim/util/keycodes";
 import {VideoLinkComponent} from "./video-link.component";
+import {PurifyModule} from "tim/util/purify.module";
 
 function toSeconds(value: string | number | undefined): number | undefined {
     if (value === null || value === undefined) {
@@ -170,11 +171,11 @@ const ShowFileAll = t.type({
              (keydown.j)="jump(10, $event)"
         >
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-            <p *ngIf="header" [innerHtml]="header"></p>
-            <p *ngIf="stem && isNormalSize" class="stem" [innerHtml]="stem"></p>
+            <p *ngIf="header" [innerHtml]="header | purify"></p>
+            <p *ngIf="stem && isNormalSize" class="stem" [innerHtml]="stem | purify"></p>
 
             <div *ngIf="!isNormalSize" class="videoInfo">
-                <span [innerHtml]="stem"></span>&ngsp;
+                <span [innerHtml]="stem | purify"></span>&ngsp;
                 <a *ngIf="videoname" class="videoname"
                    (click)="toggleVideo()">
                     <i *ngIf="markup.videoicon" class="glyphicon glyphicon-facetime-video"></i>
@@ -278,7 +279,7 @@ const ShowFileAll = t.type({
                 <span>&nbsp;&nbsp;</span>
                 <a (click)="copyStartEnd()" title="Copy start/end to clipboard (c)">Copy</a>
             </div>
-            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
+            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
         </div>
     `,
     styleUrls: ["./video.component.scss"],
@@ -651,7 +652,13 @@ export class VideoComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [VideoComponent, VideoLinkComponent],
-    imports: [BrowserModule, TimUtilityModule, HttpClientModule, FormsModule],
+    imports: [
+        BrowserModule,
+        TimUtilityModule,
+        HttpClientModule,
+        FormsModule,
+        PurifyModule,
+    ],
 })
 export class VideoModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

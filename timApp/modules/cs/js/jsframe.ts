@@ -48,6 +48,7 @@ import {
     toggleFullScreen,
 } from "../../../static/scripts/tim/util/fullscreen";
 import {communicationJS} from "./iframeutils";
+import {PurifyModule} from "tim/util/purify.module";
 
 const JsframeMarkup = t.intersection([
     t.partial({
@@ -174,8 +175,8 @@ export interface Iframesettings {
     selector: "jsframe-runner",
     template: `
         <div [ngClass]="{'warnFrame': isUnSaved(), 'csRunDiv': borders}" class="math que jsframe no-popup-menu">
-            <h4 *ngIf="header" [innerHtml]="header"></h4>
-            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
+            <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
+            <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
             <p *ngIf="!isOpen" class="stem" [innerHtml]="beforeOpen"></p>
             <div *ngIf="isOpen && iframesettings" id="output" class="jsFrameContainer jsframeOutput">
                 <iframe #frame
@@ -194,30 +195,30 @@ export interface Iframesettings {
                 </iframe>
             </div>
             <p class="csRunMenu">
-                <button class="timButton btn-sm" *ngIf="!isOpen" (click)="runShowTask()" [innerHtml]="showButton()"></button>
+                <button class="timButton btn-sm" *ngIf="!isOpen" (click)="runShowTask()" [innerHtml]="showButton() | purify"></button>
                 <button class="timButton btn-sm" *ngIf="isOpen && !norun" [disabled]="isRunning" title="(Ctrl-S)"
                         (click)="getData('getDataSave')"
-                        [innerHtml]="button"></button>
+                        [innerHtml]="button | purify"></button>
                 <button class="timButton btn-sm" *ngIf="saveButton"
                         (click)="getData('getDataSave')"
-                        [disabled]="disableUnchanged && !isUnSaved()" [innerHtml]="saveButton"></button>
+                        [disabled]="disableUnchanged && !isUnSaved()" [innerHtml]="saveButton | purify"></button>
                 &nbsp;
                 <a href="" *ngIf="undoButton && isUnSaved()" [title]="undoTitle" (click)="tryResetChanges($event)">{{undoButton}}</a>
 
                 &nbsp;
                 <span class="jsframe message"
                       *ngIf="message"
-                      [innerHtml]="message"></span>
+                      [innerHtml]="message | purify"></span>
                 <span class="jsframe message"
                       *ngIf="console"
-                      [innerHtml]="console"></span>
+                      [innerHtml]="console | purify"></span>
             </p>
                     <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHtml]="connectionErrorMessage"></div>
             <span class="csRunError"
                   *ngIf="error"
                   [innerHtml]="error"></span>
 
-            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
+            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
         </div>
     `,
 })
@@ -758,7 +759,13 @@ export class JsframeComponent
 
 @NgModule({
     declarations: [JsframeComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        PurifyModule,
+    ],
 })
 export class JsframeModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

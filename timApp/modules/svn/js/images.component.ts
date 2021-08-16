@@ -25,6 +25,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
+import {PurifyModule} from "tim/util/purify.module";
 
 const ShowFileMarkup = t.intersection([
     t.partial({
@@ -87,8 +88,8 @@ const ShowFileAll = t.type({
              (keydown.control.arrowRight)="jumpTo(-1, $event)"
         >
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-            <p *ngIf="header" [innerHtml]="header"></p>
-            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
+            <p *ngIf="header" [innerHtml]="header | purify"></p>
+            <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
 
 
             <div class="images-container"
@@ -128,7 +129,7 @@ const ShowFileAll = t.type({
                     </span>
                 </div>
             </div>
-            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
+            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
         </div>
     `,
 })
@@ -280,7 +281,13 @@ export class ImagesComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [ImagesComponent],
-    imports: [BrowserModule, TimUtilityModule, HttpClientModule, FormsModule],
+    imports: [
+        BrowserModule,
+        TimUtilityModule,
+        HttpClientModule,
+        FormsModule,
+        PurifyModule,
+    ],
 })
 export class ImagesModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

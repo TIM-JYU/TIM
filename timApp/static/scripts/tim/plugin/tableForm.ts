@@ -54,6 +54,7 @@ import {
     TimTableComponent,
     TimTableModule,
 } from "./timTable";
+import {PurifyModule} from "tim/util/purify.module";
 
 const RunScriptModel = t.type({
     script: nullable(t.string),
@@ -186,8 +187,8 @@ const sortLang = "fi";
     template: `
         <div class="tableform" *ngIf="showTable">
             <tim-markup-error *ngIf="markupError" [data]="markupError"></tim-markup-error>
-            <h4 *ngIf="header" [innerHtml]="header"></h4>
-            <p *ngIf="stem" [innerHtml]="stem"></p>
+            <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
+            <p *ngIf="stem" [innerHtml]="stem | purify"></p>
             <tim-table *ngIf="tableCheck()" [data]="data"
                        [taskid]="getTaskId()"></tim-table>
 
@@ -269,7 +270,7 @@ const sortLang = "fi";
             <tim-message-send [recipientList]="recipientList" [docId]="currentDocumentID()"></tim-message-send>
             <pre *ngIf="result">{{result}}</pre>
             <pre *ngIf="error" [innerHtml]="error"></pre>
-            <p *ngIf="footer" [innerText]="footer" class="plgfooter"></p>
+            <p *ngIf="footer" [innerHtml]="footer | purify" class="plgfooter"></p>
         </div>
         <div class="tableOpener" *ngIf="!showTable">
             <button class="timButton"
@@ -1509,6 +1510,7 @@ export class TableFormComponent
         TimUtilityModule,
         TimTableModule,
         TimMessageSendModule,
+        PurifyModule,
     ],
 })
 export class TableFormModule implements DoBootstrap {

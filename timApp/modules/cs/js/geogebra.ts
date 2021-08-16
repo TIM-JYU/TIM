@@ -15,6 +15,7 @@ import {AngularPluginBase} from "tim/plugin/angular-plugin-base.directive";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {PurifyModule} from "tim/util/purify.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClientModule} from "@angular/common/http";
 import {FormsModule} from "@angular/forms";
@@ -65,9 +66,9 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
     selector: "tim-geogebra",
     template: `
         <div [class.csRunDiv]="markup.borders" class="math que geogebra no-popup-menu">
-            <h4 *ngIf="header" [innerHtml]="header"></h4>
-            <p *ngIf="stem" class="stem" [innerHtml]="stem"></p>
-            <p *ngIf="!isOpen" class="stem" [innerHtml]="markup.beforeOpen"></p>
+            <h4 *ngIf="header" [innerHtml]="header | purify"></h4>
+            <p *ngIf="stem" class="stem" [innerHtml]="stem | purify"></p>
+            <p *ngIf="!isOpen" class="stem" [innerHtml]="markup.beforeOpen | purify"></p>
 
             <iframe
                     *ngIf="isOpen && iframesettings"
@@ -85,24 +86,24 @@ interface CustomFrame<T extends Window> extends HTMLIFrameElement {
                 <button *ngIf="!isOpen"
                         class="timButton btn-sm"
                         (click)="runShowTask()"
-                        [innerHtml]="showButton()"></button>
+                        [innerHtml]="showButton() | purify"></button>
                 <button *ngIf="isOpen && !markup.norun"
                         [disabled]="isRunning"
                         title="(Ctrl-S)"
                         (click)="getData()"
                         class="timButton btn-sm"
-                        [innerHtml]="button"></button>
+                        [innerHtml]="button | purify"></button>
                 <span class="geogebra message"
                       *ngIf="message"
-                      [innerHtml]="message"></span>
+                      [innerHtml]="message | purify"></span>
                 <span class="geogebra message"
                       *ngIf="console"
-                      [innerHtml]="console"></span>
+                      [innerHtml]="console | purify"></span>
             </p>
             <span class="csRunError"
                   *ngIf="error"
-                  [innerHtml]="error"></span>
-            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer"></p>
+                  [innerHtml]="error | purify"></span>
+            <p class="plgfooter" *ngIf="footer" [innerHtml]="footer | purify"></p>
         </div>
     `,
 })
@@ -260,7 +261,13 @@ export class GeogebraComponent extends AngularPluginBase<
 
 @NgModule({
     declarations: [GeogebraComponent],
-    imports: [BrowserModule, HttpClientModule, FormsModule, TimUtilityModule],
+    imports: [
+        BrowserModule,
+        HttpClientModule,
+        FormsModule,
+        TimUtilityModule,
+        PurifyModule,
+    ],
 })
 export class GeogebraModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef) {}

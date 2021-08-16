@@ -537,8 +537,8 @@ export enum ClearSort {
                 'width': maxCols
              }"
         >
-            <h4 *ngIf="data.header" [innerHtml]="data.header"></h4>
-            <p *ngIf="data.stem" class="stem" [innerHtml]="data.stem"></p>
+            <h4 *ngIf="data.header" [innerHtml]="data.header | purify"></h4>
+            <p *ngIf="data.stem" class="stem" [innerHtml]="data.stem | purify"></p>
             <div class="timTableContentDiv no-highlight"
                  [ngClass]="{disableSelect: disableSelect}">
                 <div class="buttonsCol">
@@ -691,7 +691,7 @@ export enum ClearSort {
                     <span [hidden]="!result">{{result}}</span>
                 </p>
             </div>
-            <p class="plgfooter" *ngIf="data.footer" [innerHtml]="data.footer"></p>
+            <p class="plgfooter" *ngIf="data.footer" [innerHtml]="data.footer | purify"></p>
             <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px"
                  [innerHtml]="connectionErrorMessage"></div>
         </div>

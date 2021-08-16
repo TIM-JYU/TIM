@@ -7,10 +7,10 @@ import {CsController} from "./csPlugin";
     selector: "cs-text-runner",
     template: `
         <div [ngClass]="{csRunDiv: markup.borders}" class="csTinyDiv" style="text-align: left;">
-            <h4 *ngIf="header" [innerHTML]="header"></h4>
+            <h4 *ngIf="header" [innerHTML]="header | purify"></h4>
             <span *ngIf="stem"
                 class="stem"
-                [innerHTML]="stem"></span>
+                [innerHTML]="stem | purify"></span>
             <input class="csTinyText no-popup-menu"
                 [ngClass]="{warnFrame: isUnSaved()}"
                 *ngIf="!noeditor || viewCode"
@@ -24,14 +24,14 @@ import {CsController} from "./csPlugin";
                     class = "timButton"
                     title="(Ctrl-S)"
                     (click)="runCode();"
-                    [innerHTML]="buttonText()"></button>
+                    [innerHTML]="buttonText() | purify"></button>
             <a href="#" *ngIf="undoButton && isUnSaved()" title="{{undoTitle}}"
                     (click)="tryResetChanges(); $event.preventDefault()">
                     &nbsp;{{undoButton}}
                     </a>
             <span *ngIf="savedText"
                         class="savedText"
-                        [innerHTML]="savedText"></span>
+                        [innerHTML]="savedText | purify"></span>
             <div *ngIf="connectionErrorMessage" class="error" style="font-size: 12px" [innerHTML]="connectionErrorMessage"></div>
 
             &nbsp;&nbsp;<a href="#"
