@@ -30,6 +30,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {HttpClientModule} from "@angular/common/http";
+import {PurifyModule} from "tim/util/purify.module";
 import {Iframesettings} from "../../cs/js/jsframe";
 import {
     getKeyCode,
@@ -37,7 +38,6 @@ import {
     KEY_RIGHT,
 } from "../../../static/scripts/tim/util/keycodes";
 import {VideoLinkComponent} from "./video-link.component";
-import {PurifyModule} from "tim/util/purify.module";
 
 function toSeconds(value: string | number | undefined): number | undefined {
     if (value === null || value === undefined) {

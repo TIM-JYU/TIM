@@ -38,6 +38,7 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {AnswerBrowserController} from "tim/answer/answerbrowser3";
 import {TimDefer} from "tim/util/timdefer";
+import {PurifyModule} from "tim/util/purify.module";
 import {
     ICtrlWithMenuFunctionEntry,
     IMenuFunctionEntry,
@@ -48,7 +49,6 @@ import {
     toggleFullScreen,
 } from "../../../static/scripts/tim/util/fullscreen";
 import {communicationJS} from "./iframeutils";
-import {PurifyModule} from "tim/util/purify.module";
 
 const JsframeMarkup = t.intersection([
     t.partial({
