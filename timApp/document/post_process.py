@@ -237,7 +237,7 @@ def process_areas(
     # Currently open areas. Should be empty after the loop unless there are missing area_ends.
     current_areas: List[Area] = []
 
-    # All areas that we've seen. Only insert here, never remove.
+    # All non-reference areas that we've seen. Only insert here, never remove.
     encountered_areas: Dict[str, Area] = {}
 
     new_pars = []
@@ -250,9 +250,10 @@ def process_areas(
         if area_start is not None:
             cur_area = Area(area_start, p.get_attrs())
             current_areas.append(cur_area)
-            if area_start in encountered_areas:
-                flash(f'Area {area_start} appears more than once in this document. {fix}')
-            encountered_areas[area_start] = cur_area
+            if not p.ref_chain:
+                if area_start in encountered_areas:
+                    flash(f'Area {area_start} appears more than once in this document. {fix}')
+                encountered_areas[area_start] = cur_area
         if area_end is not None:
             if area_start is not None:
                 flash(f'The paragraph {p.get_id()} has both area and area_end. {fix}')
