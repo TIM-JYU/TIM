@@ -211,19 +211,19 @@ const DEFAULT_PIECE_SIZE = 20;
                 </button>
                 <a href="/view/groups" i18n>Browse existing groups</a>
             </ng-container>
-            <ng-container *ngIf="users.isGroupAdmin() && !hideVars.messageListCreate">
-                <h5 i18n>Message lists</h5>
-                <button class="timButton btn-block"
-                        title="Create a new message list"
-                        (click)="createMessagelist()"
-                        i18n-title
-                        i18n
-                >Create a new message list
-                </button>
-                <a href="/view/messagelists" i18n>Browse existing message lists</a> 
-                <br/>
-                <a href="/view/archives" i18n>Browse archives</a>
-            </ng-container>
+        </ng-container>
+        <ng-container *ngIf="(users.isGroupAdmin() || users.isSisuTeacher()) && !hideVars.messageListCreate">
+            <h5 i18n>Message lists</h5>
+            <button class="timButton btn-block"
+                    title="Create a new message list"
+                    (click)="createMessagelist()"
+                    i18n-title
+                    i18n
+            >Create a new message list
+            </button>
+            <a href="/view/messagelists" i18n>Browse existing message lists</a>
+            <br/>
+            <a href="/view/archives" i18n>Browse archives</a>
         </ng-container>
 
         <ng-container *ngIf="docSettings?.cache && item?.rights?.manage">

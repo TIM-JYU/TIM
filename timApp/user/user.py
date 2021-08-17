@@ -23,6 +23,7 @@ from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.messaging.timMessage.internalmessage_models import InternalMessageReadReceipt
 from timApp.notification.notification import Notification
+from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db, TimeStampMixin, is_attribute_loaded
 from timApp.user.hakaorganization import HakaOrganization, get_home_organization_id
@@ -700,6 +701,18 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return getattr(self, 'hide_name', False)
 
     @property
+    def is_sisu_teacher(self) -> bool:
+        """Whether the user belongs to at least one Sisu teacher group"""
+        if self.is_special:
+            return False
+        teacher_group_id = db.session.query(ScimUserGroup.group_id) \
+            .join(UserGroup) \
+            .join(UserGroupMember) \
+            .filter((UserGroupMember.user_id == self.id) & ScimUserGroup.external_id.like("%-teachers")) \
+            .first()
+        return teacher_group_id is not None
+
+    @property
     def basic_info_dict(self):
         if not self.is_name_hidden:
             info_dict = {
@@ -721,10 +734,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         return info_dict
 
-    def to_json(self, full: bool=False) -> Dict:
+    def to_json(self, full: bool = False) -> Dict:
+        external_ids: Dict[int, str] = \
+            {s.group_id: s.external_id for s in
+             ScimUserGroup.query.filter(ScimUserGroup.group_id.in_([g.id for g in self.groups])).all()} if full else []
         return {**self.basic_info_dict,
                 'group': self.get_personal_group(),
-                'groups': self.groups,
+                'groups': [{**g.to_json(), 'external_id': external_ids.get(g.id, None)} for g in self.groups],
                 'folder': self.get_personal_folder() if self.logged_in else None,
                 'consent': self.consent,
                 'last_name': self.last_name,
