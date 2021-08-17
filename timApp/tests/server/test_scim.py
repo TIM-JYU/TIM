@@ -285,8 +285,8 @@ class ScimTest(TimRouteTest):
                 'externalId': eid,
                 'displayName': display_name,
                 'members': add_name_parts([
-                    {'value': 'sisuuser', 'display': 'Sisu User', 'email': 'x@example.com',},
-                    {'value': 'sisuuser3', 'display': 'Sisu User 3', 'email': 'x3@example.com',},
+                    {'value': 'sisuuser', 'display': 'Sisu User', 'email': 'x@example.com', },
+                    {'value': 'sisuuser3', 'display': 'Sisu User 3', 'email': 'x3@example.com', },
                 ]),
             }, auth=a,
             expect_status=201,
@@ -588,6 +588,21 @@ class ScimTest(TimRouteTest):
                 auth=a,
                 expect_status=201,
             )
+
+        # Make sure teachers are correctly assigned
+        teachers = ['urt-1', 'urt-2',
+                    'ut-1', 'ut-2',
+                    'u9515-t1', 'u9515-t2',
+                    'ussg-t1', 'ussg-t2']
+        for u in teachers:
+            self.assertTrue(User.get_by_name(u).is_sisu_teacher, f'User {u} must be a teacher')
+        non_teachers = ['uap-1', 'uap-2',
+                        'us-1', 'us-2',
+                        'u9515-s1', 'u9515-s2',
+                        'u9516-s1', 'u9516-s2',
+                        'ussg-s1', 'ussg-s2']
+        for u in non_teachers:
+            self.assertFalse(User.get_by_name(u).is_sisu_teacher, f'User {u} must not be a teacher')
 
         # Make sure the sisugroup document exists and has proper settings.
         d = DocEntry.find_by_path('groups/2019/itkp102/09/sisugroups')
@@ -944,9 +959,11 @@ class ScimTest(TimRouteTest):
 
     def test_scim_auto_user_merge(self):
         eid = 'jy-CUR-6666-teachers'
-        create_or_update_user(UserInfo(username='korppiguy', email='korppiguy@jyu.fi', full_name='Korppi Guy', origin=UserOrigin.Korppi))
         create_or_update_user(
-            UserInfo(username='korppiguy@example.com', email='korppiguy@example.com', full_name='Korppi Guy', origin=UserOrigin.Korppi))
+            UserInfo(username='korppiguy', email='korppiguy@jyu.fi', full_name='Korppi Guy', origin=UserOrigin.Korppi))
+        create_or_update_user(
+            UserInfo(username='korppiguy@example.com', email='korppiguy@example.com', full_name='Korppi Guy',
+                     origin=UserOrigin.Korppi))
         db.session.commit()
         # Ensure personal folders are created
         self.get('/')

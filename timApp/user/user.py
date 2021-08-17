@@ -706,8 +706,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if self.is_special:
             return False
         teacher_group_id = db.session.query(ScimUserGroup.group_id) \
-            .join(UserGroup, (ScimUserGroup.group_id == UserGroup.id) & ScimUserGroup.external_id.ilike("%-teachers")) \
-            .join(UserGroupMember, (UserGroupMember.user_id == self.id)).first()
+            .join(UserGroup) \
+            .join(UserGroupMember) \
+            .filter((UserGroupMember.user_id == self.id) & ScimUserGroup.external_id.ilike("%-teachers")) \
+            .first()
         return teacher_group_id is not None
 
     @property
