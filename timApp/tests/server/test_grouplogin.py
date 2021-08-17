@@ -12,7 +12,7 @@ class GroupLoginTest(TimRouteTest):
                                      'real_name': TEST_USER_1_NAME,
                                      'last_name': None,
                                      'group': {'id': gid, 'name': 'testuser1'},
-                                     'groups': [{'id': gid, 'name': 'testuser1'}],
+                                     'groups': [{'id': gid, 'name': 'testuser1', 'external_id': None}],
                                      }, 'other_users': []}
         resp['current_user'].pop('folder')
         self.assertEqual(one_user, resp)
@@ -22,7 +22,7 @@ class GroupLoginTest(TimRouteTest):
                                       'real_name': TEST_USER_1_NAME,
                                       'last_name': None,
                                       'group': {'id': gid, 'name': 'testuser1'},
-                                      'groups': [{'id': gid, 'name': 'testuser1'}],
+                                      'groups': [{'id': gid, 'name': 'testuser1', 'external_id': None}],
                                       },
                      'other_users': [
                          {'email': 'test2@example.com',
@@ -51,6 +51,6 @@ class GroupLoginTest(TimRouteTest):
                                            'last_name': None,
                                            'real_name': 'Anonymous user',
                                            'group': {'id': 1, 'name': 'Anonymous users'},
-                                           'groups': [{'id': 1, 'name': 'Anonymous users'}],
+                                           'groups': [{'id': 1, 'name': 'Anonymous users', 'external_id': None}],
                                            },
                           'other_users': []}, resp)

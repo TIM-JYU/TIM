@@ -7,9 +7,9 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import move_document
 from timApp.folder.folder import Folder
 from timApp.item.manage import get_trash_folder
-from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.emaillist import create_new_email_list, \
     delete_email_list, verify_emaillist_name_requirements, get_domain_names, verify_mailman_connection
+from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.listinfo import ListInfo, MemberInfo, GroupAndMembers
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_name_requirements, new_list, \
@@ -19,9 +19,8 @@ from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_na
     set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
     add_new_message_list_group, add_message_list_external_email_member, \
     set_message_list_member_removed_status, set_member_send_delivery, set_message_list_description, \
-    set_message_list_info, check_name_rules
+    set_message_list_info, check_name_rules, verify_can_create_lists
 from timApp.timdb.sqa import db
-from timApp.user.groups import verify_groupadmin
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -35,7 +34,7 @@ messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
 @messagelist.route('/checkname', methods=['POST'])
 def check_name(name: str) -> Response:
     verify_logged_in()
-    verify_groupadmin()
+    verify_can_create_lists()
 
     rule_fails = check_name_rules(name)
     exists = MessageListModel.name_exists(name)
@@ -53,9 +52,8 @@ def create_list(options: ListInfo) -> Response:
     :return: A Response with the list's management doc included. This way the creator can re-directed to the list's
     management page directly.
     """
-    # Access right checks. The creator of the list has to be a group admin. This probably changes in the future.
     verify_logged_in()
-    verify_groupadmin()
+    verify_can_create_lists()
 
     # Current user is set as the default owner.
     owner = get_current_user_object()

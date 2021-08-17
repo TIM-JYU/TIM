@@ -196,11 +196,7 @@
         <target state="translated">Tämä sana on palindromi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/pali/client/pali.ts</context>
-          <context context-type="linenumber">75</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/pali/client/pali.ts</context>
-          <context context-type="linenumber">75</context>
+          <context context-type="linenumber">76</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7b14eebaa576b05c2984b1fdb238e157370dee10" datatype="html">
@@ -208,11 +204,7 @@
         <target state="translated">Tämä sana ei ole palindromi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">modules/pali/client/pali.ts</context>
-          <context context-type="linenumber">76</context>
-        </context-group>
-        <context-group purpose="location">
-          <context context-type="sourcefile">modules/pali/client/pali.ts</context>
-          <context context-type="linenumber">76</context>
+          <context context-type="linenumber">77</context>
         </context-group>
       </trans-unit>
       <trans-unit id="03ed03e33f4b51069ae43486b4c5ae89170eaeed" datatype="html">
@@ -2335,7 +2327,7 @@
         <target state="translated">Viestilistat</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
-          <context context-type="linenumber">215</context>
+          <context context-type="linenumber">216</context>
         </context-group>
       </trans-unit>
       <trans-unit id="df83fe201edcc5efa00223032637e1a2b83d563f" datatype="html">
@@ -2343,15 +2335,15 @@
         <target state="translated">Luo uusi viestilista</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
-          <context context-type="linenumber">217</context>
+          <context context-type="linenumber">218</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="b55ea31837961f7b149c1321069ca21f5dd9b23f" datatype="html">
+      <trans-unit id="5f048bf21592365796063cbb9d4307c7a15578da" datatype="html">
         <source>Create a new message list </source>
         <target state="translated">Luo uusi viestilista </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
-          <context context-type="linenumber">221,222</context>
+          <context context-type="linenumber">222,223</context>
         </context-group>
       </trans-unit>
       <trans-unit id="e74b7201b1554fea9e1873802fc25addb78b16bc" datatype="html">
@@ -2359,7 +2351,7 @@
         <target state="translated">Selaa olemassa olevia viestilistoja</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
-          <context context-type="linenumber">223</context>
+          <context context-type="linenumber">224</context>
         </context-group>
       </trans-unit>
       <trans-unit id="bf9c9aadadc5008e34aa0b699bb7dc7093121b71" datatype="html">
@@ -2367,7 +2359,7 @@
         <target state="translated">Selaa arkistoja</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
-          <context context-type="linenumber">225</context>
+          <context context-type="linenumber">226</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1fa92c6ce274f878b2625587daa7e08b2a3a8b38" datatype="html">
