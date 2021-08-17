@@ -52,7 +52,6 @@ def create_list(options: ListInfo) -> Response:
     :return: A Response with the list's management doc included. This way the creator can re-directed to the list's
     management page directly.
     """
-    # Access right checks. The creator of the list has to be a group admin. This probably changes in the future.
     verify_logged_in()
     verify_can_create_lists()
 

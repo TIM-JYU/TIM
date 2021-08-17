@@ -708,7 +708,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         teacher_group_id = db.session.query(ScimUserGroup.group_id) \
             .join(UserGroup) \
             .join(UserGroupMember) \
-            .filter((UserGroupMember.user_id == self.id) & ScimUserGroup.external_id.ilike("%-teachers")) \
+            .filter((UserGroupMember.user_id == self.id) & ScimUserGroup.external_id.like("%-teachers")) \
             .first()
         return teacher_group_id is not None
 
