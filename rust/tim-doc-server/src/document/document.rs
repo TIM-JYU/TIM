@@ -2,10 +2,7 @@ use crate::document::docblock::AttributeContainer;
 use crate::document::docblock::BlockIdLike;
 use crate::document::BlockId;
 use crate::document::DocBlock;
-use crate::timerror::TimErrorKind;
 use chrono::prelude::*;
-use failure::Error;
-use failure::ResultExt;
 use indexmap::IndexMap;
 use rayon::iter::IntoParallelIterator;
 use rayon::prelude::*;
@@ -17,6 +14,8 @@ use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::path::PathBuf;
+use crate::timerror::TimError;
+use anyhow::Context;
 
 pub trait BlockPath {
     fn get_block_path(&self, d: DocId) -> PathBuf;
@@ -81,7 +80,7 @@ where
 }
 
 impl DocumentStore {
-    fn load_document(&mut self, id: DocId) -> Result<&Document, Error> {
+    fn load_document(&mut self, id: DocId) -> Result<&Document, anyhow::Error> {
         match self.docs.entry(id) {
             Entry::Occupied(o) => Ok(o.into_mut()),
             Entry::Vacant(v) => {
@@ -91,7 +90,7 @@ impl DocumentStore {
         }
     }
 
-    pub fn load_blocklist(&mut self, id: DocId) -> Result<&BlockList, Error> {
+    pub fn load_blocklist(&mut self, id: DocId) -> Result<&BlockList, anyhow::Error> {
         match self.block_lists.entry(id) {
             Entry::Occupied(o) => Ok(o.into_mut()),
             Entry::Vacant(v) => {
@@ -101,7 +100,7 @@ impl DocumentStore {
         }
     }
 
-    pub fn load_area(&mut self, id: DocId, area_name: &str) -> Result<Vec<DocBlock>, Error> {
+    pub fn load_area(&mut self, id: DocId, area_name: &str) -> Result<Vec<DocBlock>, anyhow::Error> {
         let doc = self.load_document(id)?;
         let mut blocks = Vec::new();
         get_area(
@@ -204,18 +203,18 @@ mod changelog_date_format {
     }
 }
 
-fn split_block_line(mut l: String) -> Result<(String, String), Error> {
-    let index = l.find('/').ok_or(TimErrorKind::DocumentLoad)?;
+fn split_block_line(mut l: String) -> Result<(String, String), anyhow::Error> {
+    let index = l.find('/').ok_or(TimError::DocumentLoad)?;
     let mut v = l.split_off(index);
     v.drain(..1);
     Ok((l, v))
 }
 
 impl Document {
-    pub fn load_lines(id: DocId) -> Result<BlockList, Error> {
+    pub fn load_lines(id: DocId) -> Result<BlockList, anyhow::Error> {
         let history_path = id.get_docs_path();
         let changelog = File::open(history_path.join("changelog"))
-            .context(TimErrorKind::NonExistentOrEmptyDocument)?;
+            .context(TimError::NonExistentOrEmptyDocument)?;
         let mut file = BufReader::new(&changelog);
         let mut s = String::new();
         file.read_line(&mut s)?;
@@ -226,7 +225,7 @@ impl Document {
         let lines = cfiler
             .lines()
             .map(|l| {
-                l.map(|line| -> Result<(BlockId, String), Error> {
+                l.map(|line| -> Result<(BlockId, String), anyhow::Error> {
                     let (id, h) = split_block_line(line)?;
                     Ok((BlockId(id), h))
                 })
@@ -235,7 +234,7 @@ impl Document {
         Ok(BlockList::new(lines))
     }
 
-    pub fn load_newest(id: DocId) -> Result<Document, Error> {
+    pub fn load_newest(id: DocId) -> Result<Document, anyhow::Error> {
         let lines = Self::load_lines(id)?;
         let blocks = lines
             .entries

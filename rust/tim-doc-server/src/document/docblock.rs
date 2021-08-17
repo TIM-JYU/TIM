@@ -1,7 +1,4 @@
 use crate::timerror::TimError;
-use crate::timerror::TimErrorKind;
-use failure::Error;
-use failure::ResultExt;
 use serde_derive::Deserialize;
 use serde_json;
 use std::borrow::Borrow;
@@ -10,9 +7,10 @@ use std::convert::TryFrom;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use tera::{Context, Tera};
+use tera::{Tera};
 use yaml_rust::Yaml;
 use yaml_rust::YamlLoader;
+use anyhow::Context;
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
 pub struct BlockId(pub String);
@@ -75,7 +73,7 @@ pub struct DocBlock {
 }
 
 impl DocBlock {
-    pub fn from_path(path: impl AsRef<Path>) -> Result<DocBlock, Error> {
+    pub fn from_path(path: impl AsRef<Path>) -> Result<DocBlock, anyhow::Error> {
         let mut file = File::open(path).context("Failed to open DocParagraph file")?;
         let mut contents = String::new();
         //let mut contents = String::from(r#"{"id": "rehjt804ij043g", "md": "cat is brown", "t": "84u5945t954jt", "attrs": {}}"#);
@@ -84,7 +82,7 @@ impl DocBlock {
         Ok(p)
     }
 
-    pub fn plain_string(path: impl AsRef<Path>) -> Result<String, Error> {
+    pub fn plain_string(path: impl AsRef<Path>) -> Result<String, anyhow::Error> {
         let mut file = File::open(path)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
@@ -95,7 +93,7 @@ impl DocBlock {
         &self.md
     }
 
-    pub fn get_expanded_markdown(self, macros: &Context) -> DocBlock {
+    pub fn get_expanded_markdown(self, macros: &tera::Context) -> DocBlock {
         let md =
             Tera::one_off(&self.md, macros, false).unwrap_or("FAILED TO PROCESS MACROS".to_owned());
         DocBlock {
@@ -108,13 +106,13 @@ impl DocBlock {
 }
 
 impl TryFrom<DocBlock> for Yaml {
-    type Error = TimError;
+    type Error = anyhow::Error;
 
     fn try_from(p: DocBlock) -> Result<Self, Self::Error> {
         let mut r =
-            YamlLoader::load_from_str(p.get_markdown()).context(TimErrorKind::InvalidYaml)?;
+            YamlLoader::load_from_str(p.get_markdown()).context(TimError::InvalidYaml)?;
         let mut drain = r.drain(..);
-        drain.next().ok_or(TimErrorKind::InvalidYaml.into())
+        drain.next().ok_or(TimError::InvalidYaml.into())
     }
 }
 
