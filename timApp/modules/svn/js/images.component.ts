@@ -110,8 +110,14 @@ const ShowFileAll = t.type({
             <br>
             
             <div *ngIf="markup.dots" style="text-align:center" class="images-control" >
-              <span *ngFor="let file of files; let i = index" [ngClass]="{'active': (i+1) === fileIndex}" class="dot" (click)="currentFile(i+1)" (mouseover)="hoverCurrentFile(i+1)"></span>
+              <span *ngFor="let file of files; 
+                let i = index" [ngClass]="{'active': (i+1) === fileIndex}" 
+                    class="dot" 
+                    (click)="currentFile(i+1)" 
+                    (mouseover)="hoverCurrentFile(i+1)" 
+              ></span>
             </div>                
+<!--                    (touchmove)="$event.preventDefault(); hoverCurrentFile(i+1)"-->
 
             <div *ngIf="markup.autoplay" class="flex"  style="justify-content: flex-end">
                 <div class="margin-5-right">
