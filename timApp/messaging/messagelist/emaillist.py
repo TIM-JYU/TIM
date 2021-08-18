@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain, Member
+from mailmanclient.restbase.connection import Connection
 
 from timApp.messaging.messagelist.listinfo import ListInfo, mailman_archive_policy_correlate, ArchiveType, \
     ReplyToListChanges
@@ -153,7 +154,7 @@ def set_default_templates(email_list: MailingList) -> None:
     # Build the URI in case because not giving one is interpreted by Mailman as deleting the template form the list.
     try:
 
-        list_id = email_list.rest_data['list_id']
+        list_id = email_list.rest_data["list_id"]
         template_base_uri = "http://localhost/postorius/api/templates/list/" \
                             f"{list_id}"
         footer_uri = f"{template_base_uri}/list:member:regular:footer"
@@ -223,7 +224,7 @@ def create_new_email_list(list_options: ListInfo, owner: User) -> None:
         # Set content filtering on, so lists can set pass_extensions on and off. Because allowing attachments is not
         # on by default, add pass_extensions value to block attachments.
         mlist_settings["filter_content"] = True
-        mlist_settings["pass_extensions"] = ['no_extension']
+        mlist_settings["pass_extensions"] = ["no_extension"]
 
         # This is to force Mailman generate archivers into its db. It fixes a race condition, where creating a new list
         # without proper engineer interface procedures might make duplicate archiver rows in to db, while Mailman's code
@@ -637,3 +638,39 @@ def unfreeze_list(mlist: MailingList, msg_list: MessageListModel) -> None:
     except HTTPError as e:
         log_mailman(e, "In unfreeze_list()")
         raise
+
+
+def find_members_for_address(address: str) -> List[Member]:
+    """
+    Modified version of
+    https://gitlab.com/mailman/mailmanclient/-/blob/509f19b3f666e54f460e7e5f7d2514c758111df3/src/mailmanclient/restobjects/user.py#L60
+    to find subscriptions for only the given address
+    """
+    # Internal mailmanclient member used for authenticated REST calls
+    # noinspection PyProtectedMember
+    con: Connection = _client._connection
+    content: Dict[str, Any]
+    _, content = con.call("members/find", data={"subscriber": address})
+    try:
+        return [Member(con, entry["self_link"], entry) for entry in content["entries"]]
+    except KeyError as e:
+        pass
+    return []
+
+
+def update_mailing_list_address(old: str, new: str) -> None:
+    if not check_mailman_connection():
+        return
+    try:
+        usr = _client.get_user(old)
+        addr = usr.add_address(new, absorb_existing=True)
+        addr.verify()
+        usr.preferred_address = addr
+        members = find_members_for_address(old)
+        for member in members:
+            # Mailman objects have dynamic attributes
+            # noinspection PyPropertyAccess
+            member.address = new
+            member.save()
+    except HTTPError as e:
+        log_mailman(e, f"Could not reroute emails {old} -> {new}")

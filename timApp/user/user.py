@@ -549,6 +549,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if info.full_name:
             self.real_name = info.full_name
         if info.email:
+            if self.email != info.email:
+                from timApp.messaging.messagelist.emaillist import update_mailing_list_address
+                update_mailing_list_address(self.email, info.email)
             self.email = info.email
         if info.password:
             self.pass_ = create_password_hash(info.password)

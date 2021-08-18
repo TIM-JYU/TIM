@@ -1084,6 +1084,7 @@ class TimMessageListTest(TimRouteTest):
         mailman_client = mc.Client(app.config['MAILMAN_URL'],
                                    app.config['MAILMAN_USER'],
                                    app.config['MAILMAN_PASS'])
+        cls.mailman_client = mailman_client
 
         lists: List[mc.MailingList] = list(mailman_client.lists)
         users: List[mc.User] = list(mailman_client.users)
