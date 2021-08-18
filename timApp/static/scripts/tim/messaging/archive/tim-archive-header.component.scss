@@ -1,0 +1,35 @@
+tim-archive-header {
+  display: block;
+  margin-bottom: 1em;
+  padding-bottom: 1em;
+  border-bottom: 1px solid var(--basic-border-color);
+}
+
+.message-header-info {
+  display: grid;
+  grid-template-columns: max-content auto;
+  gap: 0.5em 1em;
+  font-size: 0.8em;
+
+  & .message-subject {
+    font-weight: bold;
+  }
+
+  & .message-sender .label {
+    margin-right: 0.5em;
+  }
+
+  & .message-recipient-separator::before {
+    content: ';';
+  }
+}
+
+.message-header-jump-links {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5em;
+
+  a .glyphicon {
+    color: #333;
+  }
+}

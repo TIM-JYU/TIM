@@ -1,27 +1,38 @@
 import {Component, Input, OnInit, ViewEncapsulation} from "@angular/core";
-import {ArchivedMessageStateService} from "./archived-message-state.service";
+import {getViewName} from "../../util/utils";
+import {
+    ArchivedMessageStateService,
+    SiblingMessages,
+} from "./archived-message-state.service";
 
 @Component({
-    selector: "app-tim-archive-footer",
+    selector: "tim-archive-footer",
     template: `
-        <p>
-            tim-archive-footer works!
-        </p>
+        <div class="message-footer-jump-links">
+            <a *ngIf="siblings.prev" href="/{{route}}/{{siblings.prev.path}}">
+                Previous: {{siblings.prev.title}}
+            </a>
+            <a *ngIf="siblings.next" href="/{{route}}/{{siblings.next.path}}">
+                Next: {{siblings.next.title}}
+            </a>
+        </div>
     `,
     styleUrls: ["./tim-archive-footer.component.scss"],
     encapsulation: ViewEncapsulation.None,
 })
 export class TimArchiveFooterComponent implements OnInit {
     @Input() message?: string;
+    route: string;
+    siblings: SiblingMessages = {next: undefined, prev: undefined};
 
-    constructor(private state: ArchivedMessageStateService) {}
+    constructor(private state: ArchivedMessageStateService) {
+        this.route = getViewName();
+    }
 
     async ngOnInit() {
         if (this.message) {
             this.state.initState(this.message);
         }
-        console.log(this.state.messageData);
-        const siblings = await this.state.getRelatedMessages();
-        console.log(siblings);
+        this.siblings = await this.state.getRelatedMessages();
     }
 }
