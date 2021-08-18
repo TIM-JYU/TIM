@@ -103,6 +103,8 @@ TIM_SAFE_TAGS = [
     'tim-message-list-admin',
     'tim-message-view',
     'manage-read-receipt',
+    'tim-archive-header',
+    'tim-archive-footer',
 ]
 
 TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
@@ -164,6 +166,9 @@ TIM_SAFE_ATTRS = frozenset([
     # tim-message-list-admin
     'list',
 
+    # tim-archive-header
+    # tim-archive-footer
+    'message',
 ])
 
 c_no_style = Cleaner(
