@@ -9,10 +9,10 @@ import {
     selector: "tim-archive-footer",
     template: `
         <div class="message-footer-jump-links">
-            <a *ngIf="siblings.prev" href="/{{route}}/{{siblings.prev.path}}">
+            <a *ngIf="siblings.prev" href="/{{route}}/{{siblings.prev.path}}" i18n>
                 Previous: {{siblings.prev.title}}
             </a>
-            <a *ngIf="siblings.next" href="/{{route}}/{{siblings.next.path}}">
+            <a *ngIf="siblings.next" href="/{{route}}/{{siblings.next.path}}" i18n>
                 Next: {{siblings.next.title}}
             </a>
         </div>

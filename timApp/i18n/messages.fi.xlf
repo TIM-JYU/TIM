@@ -798,6 +798,22 @@
           <context context-type="linenumber">16</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="e3992452b2541c93f82106e6d20791b24f9e3647" datatype="html">
+        <source> Previous: <x id="INTERPOLATION" equiv-text="{{siblings.prev.title}}"/> </source>
+        <target state="translated"> Edellinen: <x id="INTERPOLATION" equiv-text="{{siblings.prev.title}}"/> </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/archive/tim-archive-footer.component.ts</context>
+          <context context-type="linenumber">12,14</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="0e658efafc9b9b28f65abac2897f51d5b2641670" datatype="html">
+        <source> Next: <x id="INTERPOLATION" equiv-text="{{siblings.next.title}}"/> </source>
+        <target state="translated"> Seuraava: <x id="INTERPOLATION" equiv-text="{{siblings.next.title}}"/> </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/archive/tim-archive-footer.component.ts</context>
+          <context context-type="linenumber">15,17</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="2950949852618231827" datatype="html">
         <source>No archiving</source>
         <target state="translated">Ei arkistointia</target>
@@ -1486,16 +1502,40 @@
         <source>Recipients:</source>
         <target state="translated">Vastaanottajat:</target>
         <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/archive/tim-archive-header.component.ts</context>
+          <context context-type="linenumber">35</context>
+        </context-group>
+        <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
           <context context-type="linenumber">34</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="05fa0bded36de6e73a1fa44838b627349dace044" datatype="html">
+        <source>Date:</source>
+        <target state="translated">Päivämäärä:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/archive/tim-archive-header.component.ts</context>
+          <context context-type="linenumber">43</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4e232c3f05990630360bcf22f0b3b2301e8106e9" datatype="html">
         <source>Subject:</source>
         <target state="translated">Aihe:</target>
         <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/archive/tim-archive-header.component.ts</context>
+          <context context-type="linenumber">28</context>
+        </context-group>
+        <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
           <context context-type="linenumber">38</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="03bdf054225657c3a5e4ee1ef14f2f85f9264648" datatype="html">
+        <source>Sender:</source>
+        <target state="translated">Lähettäjä:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/archive/tim-archive-header.component.ts</context>
+          <context context-type="linenumber">30</context>
         </context-group>
       </trans-unit>
       <trans-unit id="383548eb609b4719226aa0b5d483417f3db23bd7" datatype="html">
