@@ -13,6 +13,7 @@ services:
     volumes:
       - ./mailman/db:/opt/mailmandb
       - ./mailman/core/mailman-extra.cfg:/opt/mailman/mailman-extra.cfg
+      - ./mailman/core/mailman-rest-event.cfg:/opt/mailman/mailman-rest-event.cfg
       - ./mailman/core/logs:/opt/mailman/var/logs
       - ./mailman/plugins:/plugins
     environment:
