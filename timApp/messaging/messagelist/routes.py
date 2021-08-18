@@ -382,7 +382,7 @@ def get_sibling_archive_messages(message_doc_id: int) -> Response:
         if message_doc.id < doc.id and (not next_doc or doc.id < next_doc.id):
             next_doc = doc
 
-    def to_json(d: Optional[DocInfo]) -> Dict[str, Any]:
+    def to_json(d: Optional[DocInfo]) -> Optional[Dict[str, Any]]:
         return {
             "title": d.title,
             "path": d.path,

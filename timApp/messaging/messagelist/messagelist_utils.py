@@ -143,7 +143,7 @@ class EmailAndDisplayName:
     email: str
     name: str
 
-    def to_json(self):
+    def to_json(self) -> Dict[str, str]:
         res = {"email": self.email}
         if self.name:
             res["name"] = self.name
