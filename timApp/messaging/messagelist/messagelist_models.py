@@ -172,7 +172,7 @@ class MessageListModel(db.Model):
         return None
 
     @property
-    def email_address(self):
+    def email_address(self) -> Optional[str]:
         """Full email address of the messagelist, if the list has been assigned an active address.
         Otherwise None."""
         return f"{self.name}@{self.email_list_domain}" if self.email_list_domain else None
