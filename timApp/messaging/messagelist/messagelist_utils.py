@@ -3,9 +3,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from enum import Enum
-from typing import Optional, List, Dict, Tuple, Iterator
+from typing import Optional, List, Dict, Tuple, Iterator, Any
 
-from mailmanclient import MailingList
+from mailmanclient import MailingList, Client, Member
+from mailmanclient.restbase.connection import Connection
 
 from timApp.auth.accesshelper import has_manage_access, AccessDenied
 from timApp.auth.accesstype import AccessType
@@ -917,3 +918,19 @@ def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_info(email_list, info)
+
+
+# Modified version of https://gitlab.com/mailman/mailmanclient/-/blob/master/src/mailmanclient/restobjects/user.py#L60
+# to find subscriptions for only the given address
+def find_members_for_address(client: Client, address: str) -> List[Member]:
+    # Internal mailmanclient member used for authenticated REST calls
+    # noinspection PyProtectedMember
+    con: Connection = client._connection
+    content: Dict[str, Any]
+    _, content = con.call('members/find', data={'subscriber': address})
+    try:
+        return [Member(con, entry['self_link'], entry) for entry in content['entries']]
+    except KeyError as e:
+        print(e)
+        pass
+    return []
