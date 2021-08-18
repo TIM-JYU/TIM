@@ -26,8 +26,12 @@ where
     T: BlockIdLike,
 {
     fn get_block_path(&self, d: DocId) -> PathBuf {
-        d.get_blocks_path().join(&(self.0).get_str()).join(self.1)
+        get_block_path(self.0, &self.1, d)
     }
+}
+
+fn get_block_path<T: BlockIdLike>(b: &T, h: &str, d: DocId) -> PathBuf {
+    d.get_blocks_path().join(b.get_str()).join(h)
 }
 
 impl<'a, T> BlockPath for (T, &'a String)
@@ -238,11 +242,9 @@ impl Document {
         let lines = Self::load_lines(id)?;
         let blocks = lines
             .entries
-            .iter()
-            .collect::<Vec<_>>() // TODO indexmap doesn't support rayon yet
             .into_par_iter()
-            .map(|blockhash| {
-                let p = DocBlock::from_path(blockhash.get_block_path(id));
+            .map(|(blockid, hash)| {
+                let p = DocBlock::from_path(get_block_path(&blockid, &hash, id));
                 p
             })
             .collect::<Result<_, _>>()?;
