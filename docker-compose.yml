@@ -367,6 +367,7 @@ services:
    - dev
   volumes:
    - ./mailman/core/mailman-extra.cfg:/opt/mailman/mailman-extra.cfg
+   - ./mailman/core/mailman-rest-event.cfg:/opt/mailman/mailman-rest-event.cfg
   environment:
    DATABASE_TYPE: sqlite
    DATABASE_URL: sqlite:////opt/mailmandb/mailmanweb.db
