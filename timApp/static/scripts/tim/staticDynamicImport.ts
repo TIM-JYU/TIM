@@ -72,6 +72,8 @@ export function staticDynamicImport(s: string) {
             return import("tim/messaging/manage/message-list-manage.module");
         case "oauthAuthorize":
             return import("tim/user/oauth-authorize.component");
+        case "timArchive":
+            return import("tim/messaging/archive/tim-archive.module");
     }
     throw Error(`Module was not statically known: ${s}`);
 }

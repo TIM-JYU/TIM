@@ -1,7 +1,7 @@
 """Routes for document view."""
 import html
 import time
-from difflib import ndiff, context_diff
+from difflib import context_diff
 from typing import Tuple, Optional, List, Union, Any, ValuesView, Generator
 
 import attr
@@ -20,8 +20,8 @@ from timApp.answer.answers import add_missing_users_from_group, get_points_by_ru
 from timApp.auth.accesshelper import verify_view_access, verify_teacher_access, verify_seeanswers_access, \
     get_doc_or_abort, verify_manage_access, AccessDenied, ItemLockedException
 from timApp.auth.auth_models import BlockAccess
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object, logged_in, save_last_page
-from timApp.auth.sessioninfo import get_session_usergroup_ids
 from timApp.document.caching import check_doc_cache, set_doc_cache, refresh_doc_expire
 from timApp.document.create_item import create_or_copy_item, create_citation_doc
 from timApp.document.docentry import DocEntry, get_documents
@@ -34,7 +34,6 @@ from timApp.document.docviewparams import DocViewParams, ViewModelSchema
 from timApp.document.hide_names import is_hide_names, force_hide_names
 from timApp.document.post_process import post_process_pars
 from timApp.document.preloadoption import PreloadOption
-from timApp.document.translation.translation import Translation
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx, ViewRoute, ViewContext
 from timApp.document.viewparams import ViewParams, ViewParamsSchema
@@ -50,7 +49,7 @@ from timApp.item.scoreboard import get_score_infos_if_enabled
 from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
 from timApp.markdown.htmlSanitize import sanitize_html
-from timApp.messaging.messagelist.messagelist_utils import MESSAGE_LIST_DOC_PREFIX
+from timApp.messaging.messagelist.messagelist_utils import MESSAGE_LIST_DOC_PREFIX, MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX
 from timApp.peerreview.peerreview_utils import generate_review_groups, get_reviews_for_user, check_review_grouping, \
     PeerReviewException, is_peerreview_enabled
 from timApp.plugin.plugin import find_task_ids
@@ -63,7 +62,6 @@ from timApp.user.groups import verify_group_view_access
 from timApp.user.settings.theme import Theme, theme_exists
 from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
 from timApp.user.user import User, has_no_higher_right
-from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.user.usergroup import UserGroup, get_usergroup_eager_query, UserGroupWithSisuInfo
 from timApp.user.users import get_rights_holders_all
 from timApp.user.userutils import DeletedUserException
@@ -730,6 +728,8 @@ def render_doc_view(
     # TODO: Instead add a docsetting that allows to manually import modules/lightweight components
     if doc_info.path.startswith(MESSAGE_LIST_DOC_PREFIX):
         post_process_result.js_paths.append('timMessageListManagement')
+    if doc_info.path.startswith(MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX):
+        post_process_result.js_paths.append('timArchive')
 
     taketime("before render")
     nav_ranges = []

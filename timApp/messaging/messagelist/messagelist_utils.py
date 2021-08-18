@@ -13,7 +13,6 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document, apply_template
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.document.document import Document
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.validation import ItemValidationRule
@@ -141,23 +140,14 @@ def verify_name_rules(name_candidate: str) -> None:
 @dataclass
 class EmailAndDisplayName:
     """Wrapper for parsed email messages containing sender/receiver email and display name."""
-    email_address: str
-    display_name: str
+    email: str
+    name: str
 
-    def __repr__(self) -> str:
-        """The representation of an email and display name for an email message is
-
-        Jane Doe <jane.doe@domain.com>
-
-        or just
-
-        <john.doe@domain.com>
-
-        if no name is associated with the email address.
-        """
-        if self.display_name:
-            return f"{self.display_name} <{self.email_address}>"
-        return f"<{self.email_address}>"
+    def to_json(self):
+        res = {"email": self.email}
+        if self.name:
+            res["name"] = self.name
+        return res
 
 
 @dataclass
@@ -202,7 +192,7 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     """
     # Gather owners of the archive document.
     message_owners: List[UserGroup] = []
-    message_sender = User.get_by_email(message.sender.email_address)
+    message_sender = User.get_by_email(message.sender.email)
 
     # List owners get a default ownership for the messages on a list. This covers the archive policy of SECRET.
     message_owners.extend(get_message_list_owners(message_list))
@@ -266,116 +256,27 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
 
     archive_doc = create_archive_doc_with_permission(archive_subject, archive_doc_path, message_list, message)
 
+    archive_doc.document.add_setting("macros", {
+        "message": {
+            "sender": message.sender.to_json(),
+            "recipients": [r.to_json() for r in message.recipients],
+            "date": message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        }
+    })
+
     # Set header information for archived message.
-    archive_doc.document.add_text(f"""
-#- {{ .mailheader}}\n
-[{message.subject}]{{.mailtitle}}\\
-Sender: {message.sender}\\
-Recipients: {message.recipients}\\
-Date: {message.timestamp.strftime('%Y-%m-%d %H:%M:%S')}
-""")
+    archive_doc.document.add_paragraph("<tim-archive-header message='%%message|tojson%%'></tim-archive-header>",
+                                       attrs={"allowangular": "true"})
 
     # Set message body for archived message.
     # TODO: Check message list's only_text flag.
-    archive_doc.document.add_text(f"{message.message_body}")
+    archive_doc.document.add_paragraph(f"{message.message_body}",
+                                       attrs={"taskId": "message-body"})
 
-    if not len(all_archived_messages):
-        # If the message currently being archived is the very first one, it can't be linked to other messages.
-        db.session.commit()
-        return
-
-    # Linking messages.
-
-    sorted_messages = sorted(all_archived_messages, key=lambda document: document.block.created, reverse=True)
-    # Get all_archived_messages before creating the archive document for the newest message, so the previous newest
-    # message is at index 0.
-    previous_doc = sorted_messages[0]
-
-    if len(all_archived_messages) == 1:
-        # Having only one message in the archive at first before "this newest" is a special case, because at that
-        # point the first links to a next message has not been set. Setting link to a next message assumes that a
-        # link to previous-previous message exits in the previous document.
-        set_message_link_next(previous_doc.document, archive_doc.title, archive_doc.url,
-                              archive_init_flag=True)
-    else:
-        set_message_link_next(previous_doc.document, archive_doc.title, archive_doc.url)
-    set_message_link_previous(archive_doc.document, previous_doc.title, previous_doc.url)
+    archive_doc.document.add_paragraph("<tim-archive-footer message='%%message|tojson%%'></tim-archive-footer>",
+                                       attrs={"allowangular": "true"})
 
     db.session.commit()
-
-
-def set_message_link_next(doc: Document, link_text: str, url_next: str, archive_init_flag: bool = False) -> None:
-    """Set links to a document from another document.
-
-    This function sets a footer link to next archived document and a button to the header section with a link to next
-    archived document.
-
-    :param doc: The document where the link is appended.
-    :param link_text: The text the link gets.
-    :param url_next: The link to another document.
-    :param archive_init_flag: A boolean flag, denoting if doc should be treated as the special case of being very first
-    message in the archive when linking is started.
-    """
-
-    # Also add the directional button to the next document at the start of the header section.
-    direct_button = f"[[>]{{.timButton}}]({url_next})"
-    header = doc.get_paragraphs()[0]
-    header_md = header.get_markdown()
-
-    link_footer = f"[Next Message: {link_text}]({url_next})"
-    if archive_init_flag:
-        # Here we set the very first message's button and link to next. For some reason, the trailing whitespace is
-        # needed for the directional button to appear on the document. The text for the directional button will be
-        # there regardless, but it won't show on the document. So don't remove the trailing whitespace unless you
-        # know that you get the link button to appear on the first archvie document some other way.
-        button_first = f"{direct_button}\n\n{header_md}"
-        header.set_markdown(button_first)
-        header.save()
-
-        footer_text = f"""
-#- {{ .mailfooter}}\n
-{link_footer}
-"""
-        doc.add_text(footer_text)
-    else:
-        # Find the index of character combination of ']{.ma'. That denotes the closing of the area of class
-        # mailbrowsebuttons defined in the else part of this conditional statement. Inject the button to next
-        # document there.
-        limit = header_md.find("]{.ma")
-        new_button_set = f"{header_md[0:limit]}\n{direct_button}{header_md[limit:]}"
-        header.set_markdown(new_button_set)
-        header.save()
-
-        last_par = doc.get_paragraphs()[-1]
-        last_par_md = last_par.get_markdown()
-        # Add a \ and a line break after the previous link, then the new link.
-        modified_footer = f"""{last_par_md}\\
-{link_footer}"""
-        last_par.set_markdown(modified_footer)
-        last_par.save()
-
-
-def set_message_link_previous(doc: Document, link_text: str, url_previous: str) -> None:
-    """Set links to a document from another document.
-
-    This function sets a footer link to previous archived document and a button to the header section with a link to
-    revious archived document.
-
-    :param doc: The document where the link is appended.
-    :param link_text: The text the link gets.
-    :param url_previous: The link to another document.
-    """
-    # Add footer for link to previous document.
-    link_footer = f"""
-#- {{ .mailfooter}}\n
-[Previous message: {link_text}]({url_previous})
-"""
-    doc.add_text(link_footer)
-    # Add a directional button at the start of the header section of document.
-    direct_button = f"[[[<]{{.timButton}}]({url_previous})]{{.mailbrowsebuttons}}\n\n"
-    header = doc.get_paragraphs()[0]
-    header.insert_before_md(direct_button)
-    header.save()
 
 
 def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMessage:
@@ -456,8 +357,8 @@ def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[
 
     if header in original:
         for email_name_pair in original[header]:
-            new_email_name_pair = EmailAndDisplayName(email_address=email_name_pair[1],
-                                                      display_name=email_name_pair[0])
+            new_email_name_pair = EmailAndDisplayName(email=email_name_pair[1],
+                                                      name=email_name_pair[0])
             email_name_pairs.append(new_email_name_pair)
 
     return email_name_pairs

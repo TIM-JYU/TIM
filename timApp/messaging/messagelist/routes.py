@@ -1,10 +1,13 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from flask import Response
+from sqlalchemy.orm import load_only
 
-from timApp.auth.accesshelper import verify_logged_in, has_manage_access, get_doc_or_abort, verify_manage_access
+from timApp.auth.accesshelper import verify_logged_in, has_manage_access, get_doc_or_abort, verify_manage_access, \
+    verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.docinfo import move_document
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import move_document, DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.manage import get_trash_folder
 from timApp.messaging.messagelist.emaillist import create_new_email_list, \
@@ -356,3 +359,36 @@ def get_group_members(list_name: str) -> Response:
         gm = GroupAndMembers(groupName=user_group.name, members=group_members)
         groups_and_members.append(gm)
     return json_response(groups_and_members)
+
+
+@messagelist.get("/archive/siblings/<int:message_doc_id>")
+def get_sibling_archive_messages(message_doc_id: int) -> Response:
+    message_doc = DocEntry.find_by_id(message_doc_id)
+    if not message_doc:
+        raise RouteException("No document found")
+    verify_view_access(message_doc)
+    # Only allow jumping to archive messages that the user can view
+    docs = message_doc.parent.get_all_documents(
+        query_options=load_only(DocEntry.name, DocEntry.id),
+        filter_user=get_current_user_object(),
+    )
+    prev_doc = None
+    next_doc = None
+    for doc in docs:
+        if doc.id == message_doc.id:
+            continue
+        if doc.id < message_doc.id and (not prev_doc or prev_doc.id < doc.id):
+            prev_doc = doc
+        if message_doc.id < doc.id and (not next_doc or doc.id < next_doc.id):
+            next_doc = doc
+
+    def to_json(d: Optional[DocInfo]) -> Dict[str, Any]:
+        return {
+            "title": d.title,
+            "path": d.path,
+        } if d else None
+
+    return json_response({
+        "next": to_json(next_doc),
+        "prev": to_json(prev_doc)
+    })
