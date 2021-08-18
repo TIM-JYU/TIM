@@ -11,9 +11,9 @@ MAILMAN_WEB_SOCIAL_AUTH = [
 SOCIALACCOUNT_PROVIDERS = {
     'tim': {
         'SCOPE': ['profile'],
-        "APP": {
-            "client_id": "mailman_tim",
-            "secret": "test123",
+        'APP': {
+            'client_id': 'mailman_tim',
+            'secret': 'test123',
         },
     },
 }

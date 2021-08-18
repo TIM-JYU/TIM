@@ -74,24 +74,24 @@ class MessageListTest(TimMessageListTest):
             "send_right": True,
             "delivery_right": True
         })
-        self.assertSetEqual({m.address.email for m in mlist.members},
-                            {list_owner.email, list_member.email},
-                            "List should have its owner and member added")
+        self.assertEqual({m.address.email for m in mlist.members},
+                         {list_owner.email, list_member.email},
+                         "List should have its owner and member added")
 
         usr = self.mailman_client.get_user(list_member.email)
-        self.assertSetEqual({a.email for a in usr.addresses},
-                            {list_member.email},
-                            "TIM user should have its email registered with mailman")
+        self.assertEqual({a.email for a in usr.addresses},
+                         {list_member.email},
+                         "TIM user should have its email registered with mailman")
 
         old_email = list_member.email
         list_member = User.get_by_id(list_member.id)
         list_member.update_info(UserInfo(email="list_member_other@user.com"))
         db.session.commit()
 
-        self.assertSetEqual({m.address.email for m in mlist.members},
-                            {list_owner.email, list_member.email},
-                            "List should have user's new email listed as member")
+        self.assertEqual({m.address.email for m in mlist.members},
+                         {list_owner.email, list_member.email},
+                         "List should have user's new email listed as member")
 
-        self.assertSetEqual({a.email for a in usr.addresses},
-                            {list_member.email, old_email},
-                            "TIM user should still have their old email in mailman database")
+        self.assertEqual({a.email for a in usr.addresses},
+                         {list_member.email, old_email},
+                         "TIM user should still have their old email in mailman database")
