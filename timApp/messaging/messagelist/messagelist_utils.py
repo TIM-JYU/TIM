@@ -207,23 +207,22 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     # List owners get a default ownership for the messages on a list. This covers the archive policy of SECRET.
     message_owners.extend(get_message_list_owners(message_list))
 
+    # Sender will always be able to see their message
+    if message_sender:
+        message_owners.append(message_sender.get_personal_group())
+
     # Who gets to see a message in the archives.
     message_viewers: List[UserGroup] = []
 
-    # Gather permissions to the archive doc. The meanings of different archive settings are listed with ArchiveType
-    # class.
-    if message_list.archive_policy is ArchiveType.PUBLIC or ArchiveType.UNLISTED:
+    # Gather additional permissions to the archive doc.
+    # The meanings of different archive settings are listed with ArchiveType class.
+    if message_list.archive_policy is ArchiveType.PUBLIC:
         message_viewers.append(UserGroup.get_anonymous_group())
-        if message_sender:
-            message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.UNLISTED:
         message_viewers.append(UserGroup.get_logged_in_group())
-        if message_sender:
-            message_owners.append(message_sender.get_personal_group())
     elif message_list.archive_policy is ArchiveType.GROUPONLY:
-        message_viewers = [m.user_group for m in message_list.get_tim_members()]
-        if message_sender:
-            message_owners.append(message_sender.get_personal_group())
+        message_viewers.extend([m.user_group for m in message_list.get_tim_members()])
+    # Otherwise it's secret => no one but list owners and sender can see
 
     # If we don't provide at least one owner up front, then current user is set as owner. We don't want that,
     # because in this context that is the anonymous user, which raises an error in document creation.
