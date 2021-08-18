@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from urllib.error import HTTPError
 
-from mailmanclient import Client, MailingList, Domain, Member
+from mailmanclient import Client, MailingList, Domain, Member, Address, User as MUser
 
 from timApp.messaging.messagelist.listinfo import ListInfo, mailman_archive_policy_correlate, ArchiveType, \
     ReplyToListChanges
@@ -637,3 +637,22 @@ def unfreeze_list(mlist: MailingList, msg_list: MessageListModel) -> None:
     except HTTPError as e:
         log_mailman(e, "In unfreeze_list()")
         raise
+
+
+def update_mailing_list_address(old: str, new: str) -> None:
+    from timApp.messaging.messagelist.messagelist_utils import find_members_for_address
+    if not check_mailman_connection():
+        return
+    try:
+        usr: MUser = _client.get_user(old)
+        addr: Address = usr.add_address(new, absorb_existing=True)
+        addr.verify()
+        usr.preferred_address = addr
+        members = find_members_for_address(_client, old)
+        for member in members:
+            # Mailman objects have dynamic attributes
+            # noinspection PyPropertyAccess
+            member.address = new
+            member.save()
+    except HTTPError as e:
+        log_mailman(e, f"Could not reroute emails {old} -> {new}")
