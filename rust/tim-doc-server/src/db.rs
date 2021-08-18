@@ -11,9 +11,7 @@ use anyhow::Context;
 pub fn get_items(db: &PgConnection, path: &str) -> Result<Vec<ItemKind>, TimError> {
     use self::schema::block::dsl::{block, description};
     use self::schema::docentry::dsl::{docentry, id as docid, name, public};
-    use self::schema::folder::dsl::{
-        folder, id as f_id, location as f_location, name as f_name,
-    };
+    use self::schema::folder::dsl::{folder, id as f_id, location as f_location, name as f_name};
     let conn = db;
     let docs = if path.is_empty() {
         docentry
@@ -48,9 +46,7 @@ pub fn get_items(db: &PgConnection, path: &str) -> Result<Vec<ItemKind>, TimErro
 pub fn get_item(db: &PgConnection, path: &str) -> Result<ItemKind, anyhow::Error> {
     use self::schema::block::dsl::{block, description};
     use self::schema::docentry::dsl::{docentry, id as docid, name as docname, public};
-    use self::schema::folder::dsl::{
-        folder, id as f_id, location as f_location, name as f_name,
-    };
+    use self::schema::folder::dsl::{folder, id as f_id, location as f_location, name as f_name};
     if path == "" {
         return Ok(Folder {
             id: -1,
@@ -58,7 +54,7 @@ pub fn get_item(db: &PgConnection, path: &str) -> Result<ItemKind, anyhow::Error
             name: "".to_string(),
             title: Some("All documents".to_string()),
         }
-            .into());
+        .into());
     }
     let conn = db;
     let d = docentry

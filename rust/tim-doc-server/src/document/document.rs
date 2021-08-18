@@ -2,6 +2,8 @@ use crate::document::docblock::AttributeContainer;
 use crate::document::docblock::BlockIdLike;
 use crate::document::BlockId;
 use crate::document::DocBlock;
+use crate::timerror::TimError;
+use anyhow::Context;
 use chrono::prelude::*;
 use indexmap::IndexMap;
 use rayon::iter::IntoParallelIterator;
@@ -14,8 +16,6 @@ use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 use std::path::PathBuf;
-use crate::timerror::TimError;
-use anyhow::Context;
 
 pub trait BlockPath {
     fn get_block_path(&self, d: DocId) -> PathBuf;
@@ -104,7 +104,11 @@ impl DocumentStore {
         }
     }
 
-    pub fn load_area(&mut self, id: DocId, area_name: &str) -> Result<Vec<DocBlock>, anyhow::Error> {
+    pub fn load_area(
+        &mut self,
+        id: DocId,
+        area_name: &str,
+    ) -> Result<Vec<DocBlock>, anyhow::Error> {
         let doc = self.load_document(id)?;
         let mut blocks = Vec::new();
         get_area(

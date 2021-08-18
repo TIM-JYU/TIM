@@ -6,7 +6,7 @@ extern crate diesel;
 
 use std::error::Error;
 
-use actix_web::{get, HttpServer, ResponseError, web};
+use actix_web::{get, web, HttpServer, ResponseError};
 use actix_web::{App, HttpResponse};
 use askama::Template;
 use diesel::pg::PgConnection;
@@ -15,11 +15,11 @@ use diesel::r2d2::ConnectionManager;
 use rayon;
 
 use crate::db::{get_item, get_items};
+use crate::document::document::DocumentStore;
+use crate::document::processing::run_html_pipeline;
 use crate::document::DocBlock;
 use crate::document::DocId;
 use crate::document::Document;
-use crate::document::document::DocumentStore;
-use crate::document::processing::run_html_pipeline;
 use crate::models::Item;
 use crate::models::ItemKind;
 use crate::models::ItemList;
@@ -66,7 +66,10 @@ impl ResponseError for TimError {
 }
 
 #[get("/view/{path}")]
-async fn view_item_impl(pool: web::Data<DbPool>, path: web::Path<String>) -> Result<HttpResponse, actix_web::Error> {
+async fn view_item_impl(
+    pool: web::Data<DbPool>,
+    path: web::Path<String>,
+) -> Result<HttpResponse, actix_web::Error> {
     let conn = pool.get().expect("couldn't get db connection from pool");
     let res = web::block(move || get_item(&conn, &path)).await?;
     let conn2 = pool.get().expect("couldn't get db connection from pool");
@@ -79,8 +82,8 @@ async fn view_item_impl(pool: web::Data<DbPool>, path: web::Path<String>) -> Res
                     ItemList {
                         items: items.into_iter().map(|i| i.into()).collect(),
                     }
-                        .render()
-                        .unwrap(),
+                    .render()
+                    .unwrap(),
                 ))
         }
         ItemKind::DocEntry(d) => {
@@ -109,10 +112,7 @@ async fn main() -> std::io::Result<()> {
         .expect("Failed to create pool.");
 
     // Start HTTP server
-    HttpServer::new(move || {
-        App::new().data(pool.clone())
-            .service(view_item_impl)
-    })
+    HttpServer::new(move || App::new().data(pool.clone()).service(view_item_impl))
         .bind("127.0.0.1:8080")?
         .run()
         .await

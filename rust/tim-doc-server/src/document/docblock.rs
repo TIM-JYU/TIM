@@ -1,4 +1,5 @@
 use crate::timerror::TimError;
+use anyhow::Context;
 use serde_derive::Deserialize;
 use serde_json;
 use std::borrow::Borrow;
@@ -7,10 +8,9 @@ use std::convert::TryFrom;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
-use tera::{Tera};
+use tera::Tera;
 use yaml_rust::Yaml;
 use yaml_rust::YamlLoader;
-use anyhow::Context;
 
 #[derive(Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
 pub struct BlockId(pub String);
@@ -109,8 +109,7 @@ impl TryFrom<DocBlock> for Yaml {
     type Error = anyhow::Error;
 
     fn try_from(p: DocBlock) -> Result<Self, Self::Error> {
-        let mut r =
-            YamlLoader::load_from_str(p.get_markdown()).context(TimError::InvalidYaml)?;
+        let mut r = YamlLoader::load_from_str(p.get_markdown()).context(TimError::InvalidYaml)?;
         let mut drain = r.drain(..);
         drain.next().ok_or(TimError::InvalidYaml.into())
     }
