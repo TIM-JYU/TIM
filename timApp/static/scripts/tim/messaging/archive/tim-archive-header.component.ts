@@ -25,14 +25,14 @@ import {
             </span>
         </div>
         <div class="message-header-info">
-            <span>Subject:</span>
+            <span i18n>Subject:</span>
             <div class="message-subject">{{subject}}</div>
-            <span>Sender:</span>
+            <span i18n>Sender:</span>
             <div class="message-sender">
                 <span>{{messageData.sender.name}} <a class="label label-primary"
                                                      href="mailto:{{messageData.sender.email}}">{{messageData.sender.email}}</a></span>
             </div>
-            <span>Recipients:</span>
+            <span i18n>Recipients:</span>
             <div class="message-recipients">
             <span *ngFor="let recipient of messageData.recipients; last as isLast">
                 {{recipient.name}} <a class="label label-primary"
@@ -40,7 +40,7 @@ import {
                 <span class="message-recipient-separator" *ngIf="!isLast"></span>
             </span>
             </div>
-            <span>Date:</span>
+            <span i18n>Date:</span>
             <div class="message-date">
                 {{messageDate}}
             </div>
