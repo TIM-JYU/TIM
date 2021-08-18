@@ -171,6 +171,12 @@ class MessageListModel(db.Model):
                 return member
         return None
 
+    @property
+    def email_address(self):
+        """Full email address of the messagelist, if the list has been assigned an active address.
+        Otherwise None."""
+        return f"{self.name}@{self.email_list_domain}" if self.email_list_domain else None
+
     def to_info(self) -> ListInfo:
         from timApp.messaging.messagelist.emaillist import get_list_ui_link
         return ListInfo(

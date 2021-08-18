@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from urllib.error import HTTPError
 
-from mailmanclient import Client, MailingList, Domain, Member, Address, User as MUser
+from mailmanclient import Client, MailingList, Domain, Member
 
 from timApp.messaging.messagelist.listinfo import ListInfo, mailman_archive_policy_correlate, ArchiveType, \
     ReplyToListChanges
@@ -644,8 +644,8 @@ def update_mailing_list_address(old: str, new: str) -> None:
     if not check_mailman_connection():
         return
     try:
-        usr: MUser = _client.get_user(old)
-        addr: Address = usr.add_address(new, absorb_existing=True)
+        usr = _client.get_user(old)
+        addr = usr.add_address(new, absorb_existing=True)
         addr.verify()
         usr.preferred_address = addr
         members = find_members_for_address(_client, old)
