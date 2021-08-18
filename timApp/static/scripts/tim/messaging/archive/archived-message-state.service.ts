@@ -7,7 +7,7 @@ import {DateFromString, nullable, withDefault} from "../../plugin/attributes";
 import {to2} from "../../util/utils";
 
 const Address = t.type({
-    name: withDefault(nullable(t.string), null),
+    name: withDefault(nullable(t.string), ""),
     email: t.string,
 });
 
@@ -16,6 +16,8 @@ const ArchivedMessageData = t.type({
     recipients: t.array(Address),
     date: DateFromString,
 });
+
+export type MessageData = t.TypeOf<typeof ArchivedMessageData>;
 
 export interface DocLink {
     title: string;
@@ -29,7 +31,7 @@ export interface SiblingMessages {
 
 @Injectable()
 export class ArchivedMessageStateService {
-    messageData?: t.TypeOf<typeof ArchivedMessageData>;
+    messageData?: MessageData;
     private siblingMessages?: SiblingMessages;
     private relatedMessageInfoPromise?: Promise<SiblingMessages>;
 
@@ -44,6 +46,10 @@ export class ArchivedMessageStateService {
         if (isRight(res)) {
             this.messageData = res.right;
         }
+    }
+
+    get messageSubject() {
+        return documentglobals().curr_item.title;
     }
 
     getRelatedMessages(): Promise<SiblingMessages> {
