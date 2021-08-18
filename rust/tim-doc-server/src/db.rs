@@ -1,14 +1,14 @@
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 
-use crate::document::DocInfo;
+use crate::docinfo::DocInfo;
 use crate::models::Folder;
 use crate::models::ItemKind;
 use crate::schema;
-use crate::timerror::TimError;
 use anyhow::Context;
+use tim_core::timerror::TimError;
 
-pub fn get_items(db: &PgConnection, path: &str) -> Result<Vec<ItemKind>, TimError> {
+pub fn get_items(db: &PgConnection, path: &str) -> Result<Vec<ItemKind>, anyhow::Error> {
     use self::schema::block::dsl::{block, description};
     use self::schema::docentry::dsl::{docentry, id as docid, name, public};
     use self::schema::folder::dsl::{folder, id as f_id, location as f_location, name as f_name};
@@ -19,7 +19,7 @@ pub fn get_items(db: &PgConnection, path: &str) -> Result<Vec<ItemKind>, TimErro
             .filter(name.not_like("%/%"))
             .select((name, docid, public, description))
             .load::<DocInfo>(conn)
-            .map_err(|_| TimError::Db)?
+            .context("asd")?
     } else {
         docentry
             .inner_join(block)
@@ -29,7 +29,7 @@ pub fn get_items(db: &PgConnection, path: &str) -> Result<Vec<ItemKind>, TimErro
             )
             .select((name, docid, public, description))
             .load::<DocInfo>(conn)
-            .map_err(|_| TimError::Db)?
+            .context("asd")?
     };
     let folders = folder
         .inner_join(block)

@@ -1,4 +1,3 @@
-#![feature(box_patterns)]
 #![recursion_limit = "128"]
 
 #[macro_use]
@@ -15,23 +14,22 @@ use diesel::r2d2::ConnectionManager;
 use rayon;
 
 use crate::db::{get_item, get_items};
-use crate::document::document::DocumentStore;
-use crate::document::processing::run_html_pipeline;
-use crate::document::DocBlock;
-use crate::document::DocId;
-use crate::document::Document;
 use crate::models::Item;
 use crate::models::ItemKind;
 use crate::models::ItemList;
 use crate::settings::Settings;
-use crate::timerror::TimError;
+use thiserror::Error;
+use tim_core::document::document::DocumentStore;
+use tim_core::document::processing::run_html_pipeline;
+use tim_core::document::DocBlock;
+use tim_core::document::DocId;
+use tim_core::document::Document;
 
 mod db;
-mod document;
+pub mod docinfo;
 mod models;
 mod schema;
 mod settings;
-mod timerror;
 
 type DbPool = r2d2::Pool<ConnectionManager<PgConnection>>;
 
@@ -51,7 +49,14 @@ impl<'a> From<&'a str> for PathSpec<'a> {
     }
 }
 
-impl ResponseError for TimError {
+#[derive(Error, Debug)]
+#[error("{source}")]
+struct AnyhowWrap {
+    #[from]
+    source: anyhow::Error,
+}
+
+impl ResponseError for AnyhowWrap {
     fn error_response(&self) -> HttpResponse {
         let mut err = format!("{}", self);
         let mut cause = self.source();
@@ -75,7 +80,7 @@ async fn view_item_impl(
     let conn2 = pool.get().expect("couldn't get db connection from pool");
     match res {
         ItemKind::Folder(f) => {
-            let items = get_items(&conn2, &f.get_path())?;
+            let items = get_items(&conn2, &f.get_path()).map_err(AnyhowWrap::from)?;
             Ok(HttpResponse::Ok()
                 .content_type("text/html; charset=utf-8")
                 .body(
@@ -88,8 +93,7 @@ async fn view_item_impl(
         }
         ItemKind::DocEntry(d) => {
             let d_id = DocId(d.id);
-            let doc: Document<DocBlock> =
-                Document::load_newest(d_id).map_err(|_| TimError::DocumentLoad)?;
+            let doc: Document<DocBlock> = Document::load_newest(d_id).map_err(AnyhowWrap::from)?;
             let doc_str = format!("{:#?}", run_html_pipeline(&mut DocumentStore::new(), doc));
             Ok(HttpResponse::Ok()
                 .content_type("text/plain; charset=utf-8")

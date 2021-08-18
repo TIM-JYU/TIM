@@ -1,5 +1,5 @@
 [package]
-name = "tim"
+name = "tim-doc-server"
 version = "0.1.0"
 authors = ["Mika Lehtinen <mikkalle@student.jyu.fi>"]
 edition = "2018"
@@ -20,6 +20,7 @@ indexmap = { version = "1.7.0", features = ["rayon"] }
 thiserror = "1.0.26"
 actix-web = "3.3.2"
 anyhow = "1.0.43"
+tim-core = {path = "../tim-core"}
 
 [dependencies.diesel]
 version = "1.4.7"

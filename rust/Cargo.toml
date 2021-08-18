@@ -3,4 +3,5 @@
 members = [
     "tim-doc-server",
     "tim-yaml",
+    "tim-core"
 ]

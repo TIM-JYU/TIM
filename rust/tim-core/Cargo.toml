@@ -1,0 +1,18 @@
+[package]
+name = "tim-core"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = "1.0.127"
+serde_derive = "1.0.127"
+serde_json = "1.0.66"
+rayon = "1.5.1"
+chrono = { version = "0.4.19", features = ["serde"] }
+indexmap = { version = "1.7.0", features = ["rayon"] }
+thiserror = "1.0.26"
+anyhow = "1.0.43"
+tera = "1.12.1"
+yaml-rust = "0.4.5"

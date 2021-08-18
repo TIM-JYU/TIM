@@ -1,7 +1,6 @@
 use crate::document::docblock::AttributeContainer;
 use crate::document::document::BlockPath;
-use crate::document::document::DocRef;
-use crate::document::document::DocumentStore;
+use crate::document::document::{DocRef, DocumentStore};
 use crate::document::BlockId;
 use crate::document::DocBlock;
 use crate::document::DocId;

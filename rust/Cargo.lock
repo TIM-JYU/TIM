@@ -2122,7 +2122,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "tim"
+name = "tim-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "indexmap",
+ "rayon",
+ "serde 1.0.127",
+ "serde_derive",
+ "serde_json",
+ "tera",
+ "thiserror",
+ "yaml-rust",
+]
+
+[[package]]
+name = "tim-doc-server"
 version = "0.1.0"
 dependencies = [
  "actix-web",
@@ -2140,6 +2156,7 @@ dependencies = [
  "serde_json",
  "tera",
  "thiserror",
+ "tim-core",
  "yaml-rust",
 ]
 
