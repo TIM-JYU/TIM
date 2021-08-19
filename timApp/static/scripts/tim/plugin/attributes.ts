@@ -4,7 +4,6 @@ So, do NOT import anything client-side-specific (like AngularJS) in this module 
 */
 
 import * as t from "io-ts";
-import {either} from "fp-ts/Either";
 
 export const AnswerBrowserSettings = t.type({
     pointsStep: nullable(t.number),
@@ -110,14 +109,3 @@ export const IncludeUsersOption = t.keyof({
     all: null,
     deleted: null,
 });
-
-export const DateFromString = new t.Type<Date, string, unknown>(
-    "DateFromString",
-    (u): u is Date => u instanceof Date,
-    (u, c) =>
-        either.chain(t.string.validate(u, c), (s) => {
-            const d = new Date(s);
-            return isNaN(d.getTime()) ? t.failure(u, c) : t.success(d);
-        }),
-    (a) => a.toISOString()
-);
