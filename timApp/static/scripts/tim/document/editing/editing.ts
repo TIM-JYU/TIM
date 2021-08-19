@@ -90,16 +90,14 @@ function prepareOptions(
     if (forceAttr) {
         forcedClasses = forceAttr.split(" ");
     }
-    const options = {
-        localSaveTag: saveTag,
-        texts: {
-            beforeText: "alkuun",
-            initialText: text ?? "",
-            afterText: "loppuun",
+    return [
+        par,
+        {
+            localSaveTag: saveTag,
+            initialText: text ?? undefined,
+            forcedClasses: forcedClasses,
         },
-        forcedClasses: forcedClasses,
-    };
-    return [par, options];
+    ];
 }
 
 export function getNextId(params: EditPosition) {
