@@ -1,26 +1,16 @@
-from typing import Dict, Any, Tuple
-
 from timApp.auth.accesshelper import get_doc_or_abort
+from timApp.auth.accesstype import AccessType
+from timApp.folder.folder import Folder
 from timApp.messaging.messagelist.listinfo import ArchiveType
-from timApp.messaging.messagelist.messagelist_models import MessageListModel
+from timApp.messaging.messagelist.messagelist_utils import MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX
 from timApp.tests.server.timroutetest import TimMessageListTest
 from timApp.timdb.sqa import db
+from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LOGGED_IN_GROUPNAME
 from timApp.user.user import User, UserInfo
 
 
 class MessageListTest(TimMessageListTest):
     """Server test for message lists."""
-
-    def create_list(self, name: str, archive: ArchiveType) -> Tuple[Dict[str, Any], MessageListModel]:
-        manage_doc = self.json_post("/messagelist/createlist", {
-            "options": {
-                "name": name,
-                "archive": archive.value,
-                "domain": "example.com"
-            }
-        })
-        message_list: MessageListModel = MessageListModel.query.filter_by(name=name).one()
-        return manage_doc, message_list
 
     def test_creation_valid_name(self):
         """Test creating a message list with a valid user and valid list name."""
@@ -95,3 +85,52 @@ class MessageListTest(TimMessageListTest):
         self.assertEqual({a.email for a in usr.addresses},
                          {list_member.email, old_email},
                          "TIM user should still have their old email in mailman database")
+
+    def test_mail_archive_access(self):
+        self.login_test1()
+        self.make_admin(self.test_user_1)
+
+        for atype in (ArchiveType.PUBLIC, ArchiveType.GROUPONLY, ArchiveType.UNLISTED):
+            _, message_list = self.create_list(f"list_access_{atype.name.lower()}1", atype)
+
+            self.json_post("/messagelist/addmember", {
+                "member_candidates": [self.test_user_2.name],
+                "msg_list": message_list.name,
+                "send_right": True,
+                "delivery_right": True
+            })
+
+            self.trigger_message_send(message_list, self.test_user_2, "Test message", "This is a test message")
+
+            archive_folder = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{message_list.name}"
+            folder = Folder.find_by_path(archive_folder)
+            self.assertIsNotNone(folder, f"Archive folder {archive_folder} must be created")
+
+            docs = folder.get_all_documents()
+            self.assertEqual(len(docs), 1, "Sent message should be archived")
+
+            archive_doc = docs[0]
+            self.assertEqual(archive_doc.title, "Test message",
+                             "Archived message must have the same title as the message subject")
+
+            self.assertEqual({a.usergroup.name for a in archive_doc.block.accesses.values()
+                              if a.access_type == AccessType.owner},
+                             {self.test_user_1.name, self.test_user_2.name})
+
+            expected_viewers = {}
+            if atype == ArchiveType.PUBLIC:
+                expected_viewers = {ANONYMOUS_GROUPNAME}
+            elif atype == ArchiveType.UNLISTED:
+                expected_viewers = {LOGGED_IN_GROUPNAME}
+            elif atype == ArchiveType.GROUPONLY:
+                # List owner is not counted as a normal messagelist member
+                # List owner gets full access to the archives either way
+                expected_viewers = {self.test_user_2.name}
+
+            self.assertEqual({a.usergroup.name for a in archive_doc.block.accesses.values()
+                              if a.access_type == AccessType.view},
+                             expected_viewers)
+
+            self.assertEqual(len([a for a in archive_doc.block.accesses.values()
+                                  if a.access_type != AccessType.owner and a.access_type != AccessType.view]), 0,
+                             "Archived message must only have view and owner access types")
