@@ -1,0 +1,12 @@
+tim-archive-footer {
+  display: block;
+  margin-top: 1em;
+  padding-top: 1em;
+  border-top: 1px solid var(--basic-border-color);
+  font-size: 0.8em;
+}
+
+.message-footer-jump-links {
+  display: flex;
+  flex-direction: column;
+}
