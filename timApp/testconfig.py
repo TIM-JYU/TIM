@@ -63,6 +63,8 @@ MESSAGE_LISTS_ENABLED = True
 MAILMAN_URL = "http://mailman-test:8001/3.1"
 MAILMAN_USER = "restadmin"
 MAILMAN_PASS = "restpass"
+MAILMAN_EVENT_API_USER = "apiuser"
+MAILMAN_EVENT_API_KEY = "apikey"
 
 os.environ["AUTHLIB_INSECURE_TRANSPORT"] = "true"
 OAUTH2_CLIENTS = [
