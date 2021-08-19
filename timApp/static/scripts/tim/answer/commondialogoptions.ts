@@ -1,5 +1,6 @@
-import {DateFromString, maybeUndefined} from "tim/plugin/attributes";
+import {maybeUndefined} from "tim/plugin/attributes";
 import * as t from "io-ts";
+import {DateFromString} from "tim/util/utils";
 
 export const CommonDialogOptions = t.type({
     period: t.keyof({

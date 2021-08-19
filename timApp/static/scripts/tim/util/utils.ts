@@ -6,6 +6,7 @@ import {AbstractControl, ValidatorFn} from "@angular/forms";
 import humanizeDuration from "humanize-duration";
 import {isLeft} from "fp-ts/lib/Either";
 import {Pos} from "tim/ui/pos";
+import {either} from "fp-ts/Either";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
@@ -953,3 +954,14 @@ export function mandatoryAndOptional<T extends Props, U extends Props>(
 ) {
     return t.intersection([t.type(mandatory), t.partial(optional)]);
 }
+
+export const DateFromString = new t.Type<Date, string, unknown>(
+    "DateFromString",
+    (u): u is Date => u instanceof Date,
+    (u, c) =>
+        either.chain(t.string.validate(u, c), (s) => {
+            const d = new Date(s);
+            return isNaN(d.getTime()) ? t.failure(u, c) : t.success(d);
+        }),
+    (a) => a.toISOString()
+);
