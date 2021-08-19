@@ -30,6 +30,9 @@ from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_N
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
 from timApp.item.routes import create_item_direct
+from timApp.messaging.messagelist.listinfo import ArchiveType
+from timApp.messaging.messagelist.mailman_events import NewMessageEvent, SubscriptionEvent, EVENTS, MailmanMessageList
+from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.plugin import containerLink
 from timApp.plugin.containerLink import do_request
 from timApp.readmark.readparagraphtype import ReadParagraphType
@@ -1072,6 +1075,7 @@ class TimPluginFix(TimRouteTest):
 
 
 class TimMessageListTest(TimRouteTest):
+    MessageEventType = Union[NewMessageEvent, SubscriptionEvent]
 
     @classmethod
     def setUpClass(cls):
@@ -1094,6 +1098,38 @@ class TimMessageListTest(TimRouteTest):
             ml.delete()
         for mu in users:
             mu.delete()
+
+    def create_list(self, name: str, archive: ArchiveType) -> Tuple[Dict[str, Any], MessageListModel]:
+        manage_doc = self.json_post('/messagelist/createlist', {
+            'options': {
+                'name': name,
+                'archive': archive.value,
+                'domain': 'example.com'
+            }
+        })
+        message_list: MessageListModel = MessageListModel.query.filter_by(name=name).one()
+        return manage_doc, message_list
+
+    def trigger_mailman_event(self, event: MessageEventType) -> None:
+        auth = (app.config.get('MAILMAN_EVENT_API_USER'), app.config.get('MAILMAN_EVENT_API_KEY'))
+        self.json_post('/mailman/event', EVENTS[event.event].dump(event), auth=auth)
+
+    def trigger_message_send(self, message_list: MessageListModel, user: User, subject='Subject', body='Body'):
+        self.trigger_mailman_event(NewMessageEvent(
+            event='new_message',
+            mlist=MailmanMessageList(
+                id=str(message_list.id),
+                name=message_list.name,
+                host=message_list.email_list_domain,
+            ),
+            message={
+                'to': [[message_list.name, message_list.email_address]],
+                'from': [[user.real_name, user.email]],
+                'subject': subject,
+                'body': body,
+                'date': '2020-01-01T12:00:00Z'
+            }
+        ))
 
 
 def get_note_id_from_json(json):

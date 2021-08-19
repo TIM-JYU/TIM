@@ -214,8 +214,7 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
         message_viewers.extend([m.user_group for m in message_list.get_tim_members()])
     # Otherwise it's secret => no one but list owners and sender can see
 
-    # If we don't provide at least one owner up front, then current user is set as owner. We don't want that,
-    # because in this context that is the anonymous user, which raises an error in document creation.
+    # List owner will always be at least one of the message owners
     archive_doc = DocEntry.create(title=archive_subject, path=archive_doc_path, owner_group=message_owners[0])
 
     # Add the rest of the message owners.
