@@ -2,8 +2,8 @@ import {Component} from "@angular/core";
 import {DocumentOrFolder, IFolder, IItem} from "../item/IItem";
 import {Users} from "../user/userService";
 import {folderglobals} from "../util/globals";
-import {$http} from "../util/ngimport";
-import {to} from "../util/utils";
+
+const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
 
 @Component({
     selector: "tim-index",
@@ -86,22 +86,10 @@ export class DirectoryListComponent {
         this.itemList = fg.items;
         this.item = fg.curr_item;
         this.canCreate = Users.isLoggedIn();
-    }
 
-    async getItems() {
-        const r = await to(
-            $http<IItem[]>({
-                method: "GET",
-                url: "/getItems",
-                params: {
-                    folder: this.item.location,
-                },
-            })
-        );
-        if (r.ok) {
-            this.itemList = r.result.data;
-        } else {
-            this.itemList = [];
+        // TODO: Allow to sort all columns instead
+        if (this.item.path.startsWith(MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX)) {
+            this.itemList = this.itemList.sort((a, b) => b.id - a.id);
         }
     }
 

@@ -71,7 +71,8 @@ import {Users} from "../../user/userService";
                                     <ul role="radiogroup"
                                         aria-labelledby="archive-policy-label">
                                         <li *ngFor="let option of archiveOptions">
-                                            <label>
+                                            <label class="not-implemented" title="This option is not implemented yet"
+                                                   i18n-title>
                                                 <input
                                                         name="items-radio"
                                                         type="radio"
@@ -95,7 +96,8 @@ import {Users} from "../../user/userService";
                                             </label>
                                         </li>
                                         <li>
-                                            <label>
+                                            <label class="not-implemented" title="This option is not implemented yet"
+                                                   i18n-title>
                                                 <input type="checkbox" name="tim-users-can-join"
                                                        [(ngModel)]="timUsersCanJoin"
                                                        disabled>
@@ -104,7 +106,8 @@ import {Users} from "../../user/userService";
                                             </label>
                                             <ul>
                                                 <li>
-                                                    <label>
+                                                    <label class="not-implemented"
+                                                           title="This option is not implemented yet" i18n-title>
                                                         <input type="checkbox" name="default-send-right"
                                                                [(ngModel)]="defaultSendRight"
                                                                [disabled]="!timUsersCanJoin">
@@ -113,7 +116,8 @@ import {Users} from "../../user/userService";
                                                     </label>
                                                 </li>
                                                 <li>
-                                                    <label>
+                                                    <label class="not-implemented"
+                                                           title="This option is not implemented yet" i18n-title>
                                                         <input type="checkbox" name="default-delivery-right"
                                                                [(ngModel)]="defaultDeliveryRight"
                                                                [disabled]="!timUsersCanJoin">
@@ -201,6 +205,8 @@ import {Users} from "../../user/userService";
                                     <button class="timButton" (click)="addNewListMember()" i18n>Add new members</button>
                                     <tim-loading *ngIf="addingNewMember"></tim-loading>
                                 </div>
+                                <tim-alert *ngIf="memberAddWarning"
+                                           severity="warning">{{memberAddWarning}}</tim-alert>
                                 <tim-alert *ngIf="memberAddSucceededResponse"
                                            severity="success">{{memberAddSucceededResponse}}</tim-alert>
                                 <tim-alert *ngIf="memberAddFailedResponse"
@@ -335,16 +341,18 @@ export class MessageListAdminComponent implements OnInit {
 
     // Response strings for saving list options.
     savingSettings = false;
-    saveSuccessMessage: string = "";
-    saveFailMessage: string = "";
+    saveSuccessMessage?: string;
+    saveFailMessage?: string;
 
     // Response strings used in giving feedback to the user on adding new members to the message list.
-    memberAddSucceededResponse: string = "";
-    memberAddFailedResponse: string = "";
+    memberAddSucceededResponse?: string;
+    memberAddWarning?: string;
+    memberAddFailedResponse?: string;
+    memberAddResultTimeout?: number;
 
     // Response strings for saving members' state.
-    memberSaveSuccessResponse: string = "";
-    memberSaveFailResponse: string = "";
+    memberSaveSuccessResponse?: string;
+    memberSaveFailResponse?: string;
 
     // Permanent error messages that cannot be recovered from, e.g. loading failed and reload is needed.
     permanentErrorMessage?: string;
@@ -425,25 +433,7 @@ export class MessageListAdminComponent implements OnInit {
                 return;
             }
 
-            // Load list members.
-            const result2 = await this.getListMembers();
-
-            if (result2.ok) {
-                // TODO order members by name.
-                this.membersList = result2.result;
-                // Set the UI value for removed attribute.
-                for (const member of this.membersList) {
-                    if (member.removed) {
-                        member.removedDisplay = moment(member.removed).format(
-                            "DD.MM.YYYY hh:mm"
-                        );
-                    }
-                }
-            } else {
-                this.permanentErrorMessage = $localize`Loading list's members failed: ${result2.result.error.error}`;
-            }
-
-            await this.getGroupMembers();
+            await this.updateMemberList();
         }
     }
 
@@ -458,11 +448,20 @@ export class MessageListAdminComponent implements OnInit {
      * Add new members to message list.
      */
     async addNewListMember() {
+        if (this.memberAddResultTimeout) {
+            window.clearTimeout(this.memberAddResultTimeout);
+            this.memberAddResultTimeout = undefined;
+        }
+        this.memberAddSucceededResponse = undefined;
+        this.memberAddFailedResponse = undefined;
         const memberCandidates = this.parseMembers();
         if (memberCandidates.length == 0) {
             return;
         }
         this.addingNewMember = true;
+        const addWarningTimeout = window.setTimeout(() => {
+            this.memberAddWarning = $localize`Adding large groups might take longer than usual. Please wait.`;
+        }, 2000);
         const result = await to2(
             this.http
                 .post(`${this.urlPrefix}/addmember`, {
@@ -474,10 +473,18 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
         this.addingNewMember = false;
+        this.memberAddWarning = undefined;
+        window.clearTimeout(addWarningTimeout);
+
+        this.memberAddResultTimeout = window.setTimeout(() => {
+            this.memberAddSucceededResponse = undefined;
+            this.memberAddFailedResponse = undefined;
+        }, 5 * 1000);
         if (result.ok) {
             // Empty the text field.
             this.membersTextField = undefined;
             this.memberAddSucceededResponse = $localize`New members added.`;
+            await this.updateMemberList();
         } else {
             this.memberAddFailedResponse = $localize`Adding new members failed: ${result.result.error.error}`;
         }
@@ -598,7 +605,7 @@ export class MessageListAdminComponent implements OnInit {
      */
     async saveOptions() {
         // Reset a failed saving message.
-        this.saveFailMessage = "";
+        this.saveFailMessage = undefined;
         this.savingSettings = true;
         // There is no reason to send this.removed back to server.
         const result = await this.saveOptionsCall({
@@ -647,13 +654,13 @@ export class MessageListAdminComponent implements OnInit {
         if (resultSaveMembers.ok) {
             this.memberSaveSuccessResponse = $localize`Member information updated!`;
             window.setTimeout(
-                () => (this.memberSaveSuccessResponse = ""),
+                () => (this.memberSaveSuccessResponse = undefined),
                 5 * 1000
             );
         } else {
             this.memberSaveFailResponse = $localize`Failed to save member information.`;
             window.setTimeout(
-                () => (this.memberSaveFailResponse = ""),
+                () => (this.memberSaveFailResponse = undefined),
                 5 * 1000
             );
         }
@@ -690,7 +697,10 @@ export class MessageListAdminComponent implements OnInit {
      */
     showTempSaveSuccess() {
         this.saveSuccessMessage = $localize`Saved!`;
-        window.setTimeout(() => (this.saveSuccessMessage = ""), 5 * 1000);
+        window.setTimeout(
+            () => (this.saveSuccessMessage = undefined),
+            5 * 1000
+        );
     }
 
     /**
@@ -741,6 +751,28 @@ export class MessageListAdminComponent implements OnInit {
             );
             if (groupAndMembers) this.groupMembers = groupAndMembers.members;
         }
+    }
+
+    private async updateMemberList() {
+        // Load list members.
+        const result2 = await this.getListMembers();
+
+        if (result2.ok) {
+            // TODO order members by name.
+            this.membersList = result2.result;
+            // Set the UI value for removed attribute.
+            for (const member of this.membersList) {
+                if (member.removed) {
+                    member.removedDisplay = moment(member.removed).format(
+                        "DD.MM.YYYY hh:mm"
+                    );
+                }
+            }
+        } else {
+            this.permanentErrorMessage = $localize`Loading list's members failed: ${result2.result.error.error}`;
+        }
+
+        await this.getGroupMembers();
     }
 
     /**
