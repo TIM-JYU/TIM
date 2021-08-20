@@ -10,6 +10,9 @@ from celery.schedules import crontab
 # NOTE: If you are a different organization (other than JYU), please don't modify this file directly.
 # This avoids merge conflicts. Override the values with prodconfig.py instead.
 
+PRIVACY_NOTICE_DOC = None
+ACCESSIBILITY_STATEMENT_DOC = None
+
 ALLOWED_DOCUMENT_UPLOAD_MIMETYPES = ['text/plain']
 COMPRESS_DEBUG = True
 COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript']

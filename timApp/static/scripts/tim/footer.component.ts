@@ -36,11 +36,12 @@ import {genericglobals} from "tim/util/globals";
                             </div>
                             <div class="col-xs-6 text-right">
                                 <ng-container *ngIf="!hide.links">
-                                    <a href="/view/tim/tietosuojailmoitus" i18n>
+                                    <a *ngIf="footerDocs.privacyNotice" href="/view/{{footerDocs.privacyNotice}}" i18n>
                                         Privacy notice
                                     </a>
                                     <br>
-                                    <a href="/view/tim/saavutettavuusseloste" i18n>
+                                    <a *ngIf="footerDocs.accessibilityStatement"
+                                       href="/view/{{footerDocs.accessibilityStatement}}" i18n>
                                         Accessibility statement
                                     </a>
                                 </ng-container>
@@ -57,4 +58,5 @@ export class FooterComponent {
     hide = getVisibilityVars();
     config = genericglobals().config;
     layout = genericglobals().layout;
+    footerDocs = genericglobals().footerDocs;
 }
