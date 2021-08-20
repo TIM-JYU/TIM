@@ -250,11 +250,12 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
     :param message_list: The message list where the archived message belongs.
     :param message: The message being archived.
     """
-    # Archive policy of no archiving is a special case, where we abort immediately since these won't be archived at all.
-    if message_list.archive_policy is ArchiveType.NONE:
-        return
 
     archive_folder = check_archives_folder_exists(message_list)
+    # Don't archive if there is nothing to archive to (e.g. list's archives are disabled)
+    if not archive_folder:
+        return
+
     archive_doc_path = remove_path_special_chars(f"{archive_folder.path}/{message.subject}-"
                                                  f"{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}")
 
