@@ -23,21 +23,25 @@ import {genericglobals} from "tim/util/globals";
                                     <ng-container *ngIf="!hide.links">
                                         <a href="/view/tim/muutoshistoria">{{config.gitLastestCommitTimestamp}}</a>
                                         <br>
-                                        <ng-container i18n="@@probQuest">Problems and questions about TIM</ng-container>:
+                                        <ng-container i18n="@@probQuest">Problems and questions about TIM</ng-container>
+                                        :
                                         <a href="mailto:{{config.helpEmail}}">{{config.helpEmail}}</a>
                                     </ng-container>
                                     <ng-container *ngIf="config.gitBranch != 'master'">
-                                        (<ng-container i18n>branch</ng-container>: {{config.gitBranch}})
+                                        (
+                                        <ng-container i18n>branch</ng-container>
+                                        : {{config.gitBranch}})
                                     </ng-container>
                                 </p>
                             </div>
                             <div class="col-xs-6 text-right">
                                 <ng-container *ngIf="!hide.links">
-                                    <a href="/view/tim/Rekisteriseloste" i18n>
-                                        Privacy policy
+                                    <a *ngIf="footerDocs.privacyNotice" href="/view/{{footerDocs.privacyNotice}}" i18n>
+                                        Privacy notice
                                     </a>
                                     <br>
-                                    <a href="/view/tim/saavutettavuusseloste" i18n>
+                                    <a *ngIf="footerDocs.accessibilityStatement"
+                                       href="/view/{{footerDocs.accessibilityStatement}}" i18n>
                                         Accessibility statement
                                     </a>
                                 </ng-container>
@@ -54,4 +58,5 @@ export class FooterComponent {
     hide = getVisibilityVars();
     config = genericglobals().config;
     layout = genericglobals().layout;
+    footerDocs = genericglobals().footerDocs;
 }

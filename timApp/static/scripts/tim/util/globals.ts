@@ -62,6 +62,11 @@ interface IConfig {
 
 export type Locale = "fi" | "en-US";
 
+export interface IFooterDocs {
+    privacyNotice?: string;
+    accessibilityStatement?: string;
+}
+
 export interface IGenericGlobals {
     IS_TESTING: boolean;
     current_user: IFullUser;
@@ -75,6 +80,7 @@ export interface IGenericGlobals {
     homeOrganization: string;
     config: IConfig;
     layout: ILayout;
+    footerDocs: IFooterDocs;
     lectureInfo: {in_lecture: boolean; is_lecturer: boolean};
 }
 

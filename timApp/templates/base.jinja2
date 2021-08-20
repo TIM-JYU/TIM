@@ -54,6 +54,10 @@
             var bookmarks = {{ bookmarks|tojson }};
             var locale = {{locale|tojson}};
             var lectureInfo = {{lecture_info|tojson}};
+            var footerDocs = {
+                privacyNotice: {{ config.PRIVACY_NOTICE_DOC|tojson }},
+                accessibilityStatement: {{ config.ACCESSIBILITY_STATEMENT_DOC|tojson }}
+            };
 
             var layout = {};
             layout.col_1_lg = {{col_1_lg|tojson}};

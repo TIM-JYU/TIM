@@ -3570,19 +3570,15 @@
         <target state="translated">haara</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
-          <context context-type="linenumber">30</context>
+          <context context-type="linenumber">32</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="c24029ead0f063af516cd2be15304c0513482ea4" datatype="html">
-        <source>
-                                        Privacy policy
-                                    </source>
-        <target state="translated">
-                                        Tietosuojalauseke, rekisteriseloste ja kerätyt tiedot
-                                    </target>
+      <trans-unit id="70b444e1bc8fe15bd1df8b53187847b91941373c" datatype="html">
+        <source> Privacy notice </source>
+        <target state="translated"> Tietosuojailmoitus </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
-          <context context-type="linenumber">37</context>
+          <context context-type="linenumber">40,41</context>
         </context-group>
       </trans-unit>
       <trans-unit id="a9affc42189379b7344143d4a7196c47a15a82d7" datatype="html">
@@ -3594,7 +3590,7 @@
                                     </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
-          <context context-type="linenumber">41</context>
+          <context context-type="linenumber">44</context>
         </context-group>
       </trans-unit>
     </body>
