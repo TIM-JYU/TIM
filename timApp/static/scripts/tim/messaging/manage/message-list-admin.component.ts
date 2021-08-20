@@ -347,7 +347,6 @@ export class MessageListAdminComponent implements OnInit {
     // Response strings used in giving feedback to the user on adding new members to the message list.
     memberAddSucceededResponse?: string;
     memberAddWarning?: string;
-    addWarningTimeout?: number;
     memberAddFailedResponse?: string;
     memberAddResultTimeout?: number;
 
@@ -460,7 +459,7 @@ export class MessageListAdminComponent implements OnInit {
             return;
         }
         this.addingNewMember = true;
-        this.addWarningTimeout = window.setTimeout(() => {
+        const addWarningTimeout = window.setTimeout(() => {
             this.memberAddWarning = $localize`Adding large groups might take longer than usual. Please wait.`;
         }, 2000);
         const result = await to2(
@@ -475,8 +474,7 @@ export class MessageListAdminComponent implements OnInit {
         );
         this.addingNewMember = false;
         this.memberAddWarning = undefined;
-        window.clearTimeout(this.addWarningTimeout);
-        this.addWarningTimeout = undefined;
+        window.clearTimeout(addWarningTimeout);
 
         this.memberAddResultTimeout = window.setTimeout(() => {
             this.memberAddSucceededResponse = undefined;
