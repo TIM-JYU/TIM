@@ -71,7 +71,8 @@ import {Users} from "../../user/userService";
                                     <ul role="radiogroup"
                                         aria-labelledby="archive-policy-label">
                                         <li *ngFor="let option of archiveOptions">
-                                            <label>
+                                            <label class="not-implemented" title="This option is not implemented yet"
+                                                   i18n-title>
                                                 <input
                                                         name="items-radio"
                                                         type="radio"
@@ -95,7 +96,8 @@ import {Users} from "../../user/userService";
                                             </label>
                                         </li>
                                         <li>
-                                            <label>
+                                            <label class="not-implemented" title="This option is not implemented yet"
+                                                   i18n-title>
                                                 <input type="checkbox" name="tim-users-can-join"
                                                        [(ngModel)]="timUsersCanJoin"
                                                        disabled>
@@ -104,7 +106,8 @@ import {Users} from "../../user/userService";
                                             </label>
                                             <ul>
                                                 <li>
-                                                    <label>
+                                                    <label class="not-implemented"
+                                                           title="This option is not implemented yet" i18n-title>
                                                         <input type="checkbox" name="default-send-right"
                                                                [(ngModel)]="defaultSendRight"
                                                                [disabled]="!timUsersCanJoin">
@@ -113,7 +116,8 @@ import {Users} from "../../user/userService";
                                                     </label>
                                                 </li>
                                                 <li>
-                                                    <label>
+                                                    <label class="not-implemented"
+                                                           title="This option is not implemented yet" i18n-title>
                                                         <input type="checkbox" name="default-delivery-right"
                                                                [(ngModel)]="defaultDeliveryRight"
                                                                [disabled]="!timUsersCanJoin">
