@@ -3,7 +3,7 @@ import {DocumentOrFolder, IFolder, IItem} from "../item/IItem";
 import {Users} from "../user/userService";
 import {folderglobals} from "../util/globals";
 
-const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives";
+const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
 
 @Component({
     selector: "tim-index",
