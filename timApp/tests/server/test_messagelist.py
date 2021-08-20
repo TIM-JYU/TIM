@@ -18,11 +18,7 @@ class MessageListTest(TimMessageListTest):
         self.login_test1()
         testuser1 = self.current_user
         self.make_admin(testuser1)
-        # Create the list. This name corresponds with name requirements. Its long enough, contains only allowed
-        # characters and has at least one digit.
         list_name = "valid_list5"
-        # The archive type is a mandatory value in list creation, but its exact value doesn't have an impact on this
-        # test.
         archive = ArchiveType.PUBLIC
         manage_doc, message_list = self.create_list(list_name, archive)
         # Expected response is in JSON, and it's a DocEntry of the created admin doc. Get the created admin doc of
@@ -33,6 +29,7 @@ class MessageListTest(TimMessageListTest):
         # Verify name and archive type are as intented in the db.
         self.assertEqual(message_list.name, list_name)
         self.assertEqual(message_list.archive, archive)
+        self.assertIsNotNone(Folder.find_by_path(f"archives/{message_list.name}"))
 
     def test_mailman_members(self):
         list_owner, _ = User.create_with_group(UserInfo(
