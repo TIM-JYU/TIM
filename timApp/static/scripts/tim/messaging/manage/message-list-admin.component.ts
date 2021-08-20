@@ -205,6 +205,8 @@ import {Users} from "../../user/userService";
                                     <button class="timButton" (click)="addNewListMember()" i18n>Add new members</button>
                                     <tim-loading *ngIf="addingNewMember"></tim-loading>
                                 </div>
+                                <tim-alert *ngIf="memberAddWarning"
+                                           severity="warning">{{memberAddWarning}}</tim-alert>
                                 <tim-alert *ngIf="memberAddSucceededResponse"
                                            severity="success">{{memberAddSucceededResponse}}</tim-alert>
                                 <tim-alert *ngIf="memberAddFailedResponse"
@@ -344,6 +346,8 @@ export class MessageListAdminComponent implements OnInit {
 
     // Response strings used in giving feedback to the user on adding new members to the message list.
     memberAddSucceededResponse: string = "";
+    memberAddWarning: string = "";
+    addWarningTimeout: number = -1;
     memberAddFailedResponse: string = "";
 
     // Response strings for saving members' state.
@@ -429,25 +433,7 @@ export class MessageListAdminComponent implements OnInit {
                 return;
             }
 
-            // Load list members.
-            const result2 = await this.getListMembers();
-
-            if (result2.ok) {
-                // TODO order members by name.
-                this.membersList = result2.result;
-                // Set the UI value for removed attribute.
-                for (const member of this.membersList) {
-                    if (member.removed) {
-                        member.removedDisplay = moment(member.removed).format(
-                            "DD.MM.YYYY hh:mm"
-                        );
-                    }
-                }
-            } else {
-                this.permanentErrorMessage = $localize`Loading list's members failed: ${result2.result.error.error}`;
-            }
-
-            await this.getGroupMembers();
+            await this.updateMemberList();
         }
     }
 
@@ -467,6 +453,9 @@ export class MessageListAdminComponent implements OnInit {
             return;
         }
         this.addingNewMember = true;
+        this.addWarningTimeout = window.setTimeout(() => {
+            this.memberAddWarning = $localize`Adding large groups might take longer than usual. Please wait.`;
+        }, 2000);
         const result = await to2(
             this.http
                 .post(`${this.urlPrefix}/addmember`, {
@@ -478,10 +467,14 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
         this.addingNewMember = false;
+        this.memberAddWarning = "";
+        window.clearTimeout(this.addWarningTimeout);
+        this.addWarningTimeout = -1;
         if (result.ok) {
             // Empty the text field.
             this.membersTextField = undefined;
-            this.memberAddSucceededResponse = $localize`New members added. Refresh the page to see the changes.`;
+            this.memberAddSucceededResponse = $localize`New members added.`;
+            await this.updateMemberList();
         } else {
             this.memberAddFailedResponse = $localize`Adding new members failed: ${result.result.error.error}`;
         }
@@ -745,6 +738,28 @@ export class MessageListAdminComponent implements OnInit {
             );
             if (groupAndMembers) this.groupMembers = groupAndMembers.members;
         }
+    }
+
+    private async updateMemberList() {
+        // Load list members.
+        const result2 = await this.getListMembers();
+
+        if (result2.ok) {
+            // TODO order members by name.
+            this.membersList = result2.result;
+            // Set the UI value for removed attribute.
+            for (const member of this.membersList) {
+                if (member.removed) {
+                    member.removedDisplay = moment(member.removed).format(
+                        "DD.MM.YYYY hh:mm"
+                    );
+                }
+            }
+        } else {
+            this.permanentErrorMessage = $localize`Loading list's members failed: ${result2.result.error.error}`;
+        }
+
+        await this.getGroupMembers();
     }
 
     /**
