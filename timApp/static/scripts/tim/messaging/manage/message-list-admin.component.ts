@@ -481,7 +481,7 @@ export class MessageListAdminComponent implements OnInit {
         if (result.ok) {
             // Empty the text field.
             this.membersTextField = undefined;
-            this.memberAddSucceededResponse = $localize`New members added.`;
+            this.memberAddSucceededResponse = $localize`New members added. Refresh the page to see the changes.`;
         } else {
             this.memberAddFailedResponse = $localize`Adding new members failed: ${result.result.error.error}`;
         }
