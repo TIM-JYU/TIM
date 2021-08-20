@@ -227,6 +227,23 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     return archive_doc
 
 
+def check_archives_folder_exists(message_list: MessageListModel) -> Optional[Folder]:
+    """
+    Ensures archive folder exists for the given list if the list is archived.
+
+    :param message_list: Message list to check
+    :return: The archive folder for the list if the list should be archived. Otherwise None.
+    """
+    if message_list.archive_policy is ArchiveType.NONE:
+        return None
+    archive_folder_path = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{remove_path_special_chars(message_list.name)}"
+    archive_folder = Folder.find_by_path(archive_folder_path)
+    if archive_folder is None:
+        owners = get_message_list_owners(message_list)
+        archive_folder = Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
+    return archive_folder
+
+
 def archive_message(message_list: MessageListModel, message: BaseMessage) -> None:
     """Archive a message for a message list.
 
@@ -237,24 +254,11 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
     if message_list.archive_policy is ArchiveType.NONE:
         return
 
-    archive_subject = f"{message.subject}"
-    archive_folder_path = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{remove_path_special_chars(message_list.name)}"
-    archive_doc_path = remove_path_special_chars(f"{archive_folder_path}/{archive_subject}-"
+    archive_folder = check_archives_folder_exists(message_list)
+    archive_doc_path = remove_path_special_chars(f"{archive_folder.path}/{message.subject}-"
                                                  f"{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    # From the archive folder, query all documents, sort them by created attribute. We do this to get the previously
-    # newest archived message, before we create a archive document for newest message.
-    # Archive folder for message list.
-    archive_folder = Folder.find_by_path(archive_folder_path)
-    all_archived_messages = []
-    if archive_folder is not None:
-        all_archived_messages = archive_folder.get_all_documents()
-    else:
-        owners = get_message_list_owners(message_list)
-        Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
-
-    archive_doc = create_archive_doc_with_permission(archive_subject, archive_doc_path, message_list, message)
-
+    archive_doc = create_archive_doc_with_permission(message.subject, archive_doc_path, message_list, message)
     archive_doc.document.add_setting("macros", {
         "message": {
             "sender": message.sender.to_json(),
@@ -408,6 +412,7 @@ def new_list(list_options: ListInfo) -> Tuple[DocInfo, MessageListModel]:
     msg_list = MessageListModel(name=list_options.name, archive=list_options.archive)
     db.session.add(msg_list)
     doc_info = create_management_doc(msg_list, list_options)
+    check_archives_folder_exists(msg_list)
     return doc_info, msg_list
 
 
