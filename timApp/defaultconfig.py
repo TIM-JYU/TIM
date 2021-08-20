@@ -10,6 +10,14 @@ from celery.schedules import crontab
 # NOTE: If you are a different organization (other than JYU), please don't modify this file directly.
 # This avoids merge conflicts. Override the values with prodconfig.py instead.
 
+# Path to TIM document containing the privacy notice. The link to the document is shown in page footer.
+# If None, link to the document is not shown
+PRIVACY_NOTICE_DOC = 'tim/tietosuojailmoitus'
+
+# Path to TIM document containing the accessibility notice. The link to the document is shown in page footer.
+# If None, link to the document is not shown
+ACCESSIBILITY_STATEMENT_DOC = 'tim/saavutettavuusseloste'
+
 ALLOWED_DOCUMENT_UPLOAD_MIMETYPES = ['text/plain']
 COMPRESS_DEBUG = True
 COMPRESS_MIMETYPES = ['text/html', 'text/css', 'text/xml', 'application/json', 'application/javascript']
