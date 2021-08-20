@@ -341,18 +341,19 @@ export class MessageListAdminComponent implements OnInit {
 
     // Response strings for saving list options.
     savingSettings = false;
-    saveSuccessMessage: string = "";
-    saveFailMessage: string = "";
+    saveSuccessMessage?: string;
+    saveFailMessage?: string;
 
     // Response strings used in giving feedback to the user on adding new members to the message list.
-    memberAddSucceededResponse: string = "";
-    memberAddWarning: string = "";
-    addWarningTimeout: number = -1;
-    memberAddFailedResponse: string = "";
+    memberAddSucceededResponse?: string;
+    memberAddWarning?: string;
+    addWarningTimeout?: number;
+    memberAddFailedResponse?: string;
+    memberAddResultTimeout?: number;
 
     // Response strings for saving members' state.
-    memberSaveSuccessResponse: string = "";
-    memberSaveFailResponse: string = "";
+    memberSaveSuccessResponse?: string;
+    memberSaveFailResponse?: string;
 
     // Permanent error messages that cannot be recovered from, e.g. loading failed and reload is needed.
     permanentErrorMessage?: string;
@@ -448,6 +449,12 @@ export class MessageListAdminComponent implements OnInit {
      * Add new members to message list.
      */
     async addNewListMember() {
+        if (this.memberAddResultTimeout) {
+            window.clearTimeout(this.memberAddResultTimeout);
+            this.memberAddResultTimeout = undefined;
+        }
+        this.memberAddSucceededResponse = undefined;
+        this.memberAddFailedResponse = undefined;
         const memberCandidates = this.parseMembers();
         if (memberCandidates.length == 0) {
             return;
@@ -467,9 +474,14 @@ export class MessageListAdminComponent implements OnInit {
                 .toPromise()
         );
         this.addingNewMember = false;
-        this.memberAddWarning = "";
+        this.memberAddWarning = undefined;
         window.clearTimeout(this.addWarningTimeout);
-        this.addWarningTimeout = -1;
+        this.addWarningTimeout = undefined;
+
+        this.memberAddResultTimeout = window.setTimeout(() => {
+            this.memberAddSucceededResponse = undefined;
+            this.memberAddFailedResponse = undefined;
+        }, 5 * 1000);
         if (result.ok) {
             // Empty the text field.
             this.membersTextField = undefined;
@@ -595,7 +607,7 @@ export class MessageListAdminComponent implements OnInit {
      */
     async saveOptions() {
         // Reset a failed saving message.
-        this.saveFailMessage = "";
+        this.saveFailMessage = undefined;
         this.savingSettings = true;
         // There is no reason to send this.removed back to server.
         const result = await this.saveOptionsCall({
@@ -644,13 +656,13 @@ export class MessageListAdminComponent implements OnInit {
         if (resultSaveMembers.ok) {
             this.memberSaveSuccessResponse = $localize`Member information updated!`;
             window.setTimeout(
-                () => (this.memberSaveSuccessResponse = ""),
+                () => (this.memberSaveSuccessResponse = undefined),
                 5 * 1000
             );
         } else {
             this.memberSaveFailResponse = $localize`Failed to save member information.`;
             window.setTimeout(
-                () => (this.memberSaveFailResponse = ""),
+                () => (this.memberSaveFailResponse = undefined),
                 5 * 1000
             );
         }
@@ -687,7 +699,10 @@ export class MessageListAdminComponent implements OnInit {
      */
     showTempSaveSuccess() {
         this.saveSuccessMessage = $localize`Saved!`;
-        window.setTimeout(() => (this.saveSuccessMessage = ""), 5 * 1000);
+        window.setTimeout(
+            () => (this.saveSuccessMessage = undefined),
+            5 * 1000
+        );
     }
 
     /**
