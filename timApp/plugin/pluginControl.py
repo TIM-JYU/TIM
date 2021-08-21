@@ -37,6 +37,7 @@ from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFieldsAccess
+from timApp.util.rndutils import SeedClass
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex, Range
 
@@ -145,6 +146,18 @@ class PluginPlacement:
                 block,
                 user_ctx,
             )  # TODO: RND_SEED: get users seed for this plugin
+            if block.get_attr("seed") == "answernr":
+                if user_ctx.answer_nr >= 0:
+                    rnd_seed = SeedClass(rnd_seed, user_ctx.answer_nr)
+                else: # try with length of answers
+                    task_id = block.get_attr("taskId")
+                    doc_id = str(block.doc.doc_id)
+                    if task_id:
+                        answer_and_cnt = answer_map.get(doc_id + "." + task_id, None)
+                        if answer_and_cnt:
+                            cnt = answer_and_cnt[1]
+                            if cnt > 0:
+                                rnd_seed = SeedClass(rnd_seed, cnt)
             new_seed = True
 
         rnd_error = None

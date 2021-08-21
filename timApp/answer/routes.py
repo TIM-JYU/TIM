@@ -595,13 +595,24 @@ def post_answer_impl(
                 raise PluginException(f'User {user_id} not found')
             users = [ctx_user]  # TODO: Vesa's hack to save answer to student
     try:
+        context_user = UserContext(ctx_user or curr_user, curr_user)
+        view_ctx = ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin)
+        doc, found_plugin = get_plugin_from_request(d.document, tid, context_user, view_ctx)
+        if found_plugin.known.useCurrentUser or found_plugin.task_id.is_global:  # For plugins that is saved only for current user
+            users = [curr_user]
+        if users is None:
+            users = [curr_user] + other_session_users
+
+        answerinfo = get_existing_answers_info(users, tid)
+        context_user = UserContext(ctx_user or curr_user, curr_user, answerinfo.count)
+
         vr = verify_task_access(
             d,
             tid,
             AccessType.view,
             TaskIdAccess.ReadWrite,
-            context_user=UserContext(ctx_user or curr_user, curr_user),
-            view_ctx=ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin),
+            context_user=context_user,
+            view_ctx=view_ctx,
             allow_grace_period=True,
         )
         plugin = vr.plugin
@@ -622,8 +633,6 @@ def post_answer_impl(
 
     if not curr_user.logged_in and not plugin.known.anonymous:
         raise RouteException('You must be logged in to answer this task.')
-    if plugin.known.useCurrentUser or plugin.task_id.is_global:  # For plugins that is saved only for current user
-        users = [curr_user]
 
     if isinstance(answerdata, dict):
         file = answerdata.get('uploadedFile', '')
@@ -655,10 +664,6 @@ def post_answer_impl(
 
     # Load old answers
 
-    if users is None:
-        users = [curr_user] + other_session_users
-
-    answerinfo = get_existing_answers_info(users, tid)
     valid, _ = plugin.is_answer_valid(answerinfo.count, {})
     info = plugin.get_info(users, answerinfo.count, look_answer=is_teacher and not save_teacher, valid=valid)
 
@@ -1574,11 +1579,12 @@ def get_answers(task_id: str, user_id: int):
 
     elif d.document.get_settings().get('need_view_for_answers', False):
         verify_view_access(d)
+    user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
+    user_context = user_context_with_logged_in(user, len(user_answers))
     try:
-        p = find_plugin_from_document(d.document, tid, user_context_with_logged_in(user), default_view_ctx)
+        p = find_plugin_from_document(d.document, tid, user_context, default_view_ctx)
     except TaskNotFoundException:
         p = None
-    user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
     if hide_names_in_teacher(d, context_user=user):
         for answer in user_answers:
             for u in answer.users_all:
@@ -1728,6 +1734,7 @@ class GetStateModel:
     doc_id: Optional[int] = None
     review: bool = False
     task_id: Optional[str] = None
+    answernr: Optional[int] = None
 
 
 GetStateSchema = class_schema(GetStateModel)
@@ -1779,7 +1786,7 @@ def get_state(args: GetStateModel):
     doc.insert_preamble_pars()
     if par_id:
         tid.maybe_set_hint(par_id)
-    user_ctx = user_context_with_logged_in(user)
+    user_ctx = user_context_with_logged_in(user, args.answernr)
     try:
         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user_ctx, view_ctx=view_ctx)
     except PluginException as e:

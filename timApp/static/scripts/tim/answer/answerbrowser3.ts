@@ -740,7 +740,17 @@ export class AnswerBrowserController
         };
         let taskOrAnswer: Record<string, string | number>;
         if (this.selectedAnswer) {
+            let idx = -1; // find index of selectedAnswer
+            for (let i = 0; i < this.filteredAnswers.length; i++) {
+                if (this.filteredAnswers[i].id === this.selectedAnswer.id) {
+                    idx = i;
+                    break;
+                }
+            }
             taskOrAnswer = {answer_id: this.selectedAnswer.id};
+            if (idx >= 0) {
+                taskOrAnswer.answernr = this.filteredAnswers.length - idx - 1;
+            }
             if (this.answerLoader) {
                 this.answerLoader(this.selectedAnswer);
             }

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 class UserContext:
     user: User
     logged_user: User
+    answer_nr: int = -1  # needed if varibale tasks, -1 = not task ot not varibale task
 
     @staticmethod
     def from_one_user(u: User) -> UserContext:
@@ -19,3 +20,4 @@ class UserContext:
     @property
     def is_different(self) -> bool:
         return self.user != self.logged_user
+
