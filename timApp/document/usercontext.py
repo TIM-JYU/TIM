@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class UserContext:
     user: User
     logged_user: User
-    answer_nr: int = -1  # needed if varibale tasks, -1 = not task ot not varibale task
+    answer_nr: int = -1  # needed if variable tasks, -1 = not task at all or not variable task
 
     @staticmethod
     def from_one_user(u: User) -> UserContext:

@@ -57,9 +57,10 @@ class Stack(Language):
         get_task = self.query.jso.get("input", {}).get("getTask", False)
         url = f"http://{STACK_API_SERVER_ADDRESS}/api/endpoint.php"
         data = self.query.jso.get("input").get("stackData")
-        stack_data = self.query.jso.get('markup').get('-stackData')
+        markup = self.query.jso.get('markup')
+        stack_data = markup.get('-stackData')
         if not stack_data:
-            stack_data = self.query.jso.get('markup').get('stackData')
+            stack_data = markup.get('stackData')
         if not stack_data:
             err = "stackData missing from plugin"
             return 0, "", err, ""
@@ -86,7 +87,8 @@ class Stack(Language):
             stack_data["score"] = False
         else:
             save = result["save"]
-            save["seed"] = userseed
+            if not markup.get("noseedsave"):
+                save["seed"] = userseed
 
         r = requests.post(url=url, data=json.dumps(stack_data))  # json.dumps(data_to_send, cls=TimJsonEncoder))
         # r = requests.get(url="http://stack-test-container/api/endpoint.html")

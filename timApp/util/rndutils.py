@@ -208,39 +208,40 @@ def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None
     if jso is None:
         return None, rnd_seed, state
 
+    seed_to_use = rnd_seed
     attrs_seed = attrs.get('seed', None)
     if attrs_seed is not None:
         if attrs_seed == '' or attrs_seed == 'time':
-            rnd_seed = int(time.perf_counter() * 1000)
+            seed_to_use = int(time.perf_counter() * 1000)
         elif attrs_seed == 'answernr':
             if isinstance(rnd_seed, SeedClass):
-                rnd_seed = rnd_seed.seed + rnd_seed.extraseed
+                seed_to_use = rnd_seed.seed + rnd_seed.extraseed
         else:
-            rnd_seed = attrs_seed
+            seed_to_use = attrs_seed
 
-    if isinstance(rnd_seed, SeedClass):
-        rnd_seed = rnd_seed.seed
+    if isinstance(seed_to_use, SeedClass):
+        seed_to_use = seed_to_use.seed
 
-    if isinstance(rnd_seed, str):
-        rnd_seed = myhash(rnd_seed)
+    if isinstance(seed_to_use, str):
+        seed_to_use = myhash(seed_to_use)
 
     # noinspection PyBroadException
     try:
-        rnd_seed = int(rnd_seed)
+        seed_to_use = int(seed_to_use)
     except:
-        rnd_seed = int(time.perf_counter()*1000)
+        seed_to_use = int(time.perf_counter()*1000)
     myrandom = Random()
-    myrandom.seed(a=rnd_seed)
+    myrandom.seed(a=seed_to_use)
     if state:
         myrandom.setstate(state)
 
     if jso.startswith('s'):  # s10:[1,7,2], s10, s10:50, s10:[0,50]
-        return get_sample_list(myrandom, jso[1:]), rnd_seed, myrandom.getstate()
+        return get_sample_list(myrandom, jso[1:]), seed_to_use, myrandom.getstate()
     if jso.startswith('u'):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
-        return repeat_rnd(get_uniform_list, myrandom, jso[1:]), rnd_seed, myrandom.getstate()
+        return repeat_rnd(get_uniform_list, myrandom, jso[1:]), seed_to_use, myrandom.getstate()
 
     ret = repeat_rnd(get_int_list, myrandom, jso)
-    return ret, rnd_seed, myrandom.getstate()
+    return ret, seed_to_use, myrandom.getstate()
 
 
 def get_rands_as_dict(attrs: Dict, rnd_seed: Optional[SeedType], state: Optional[State] = None) -> Tuple[Optional[dict], Optional[SeedType], Optional[State]]:
