@@ -20,4 +20,3 @@ class UserContext:
     @property
     def is_different(self) -> bool:
         return self.user != self.logged_user
-
