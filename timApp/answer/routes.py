@@ -602,6 +602,8 @@ def post_answer_impl(
             users = [curr_user]
         if users is None:
             users = [curr_user] + other_session_users
+        if found_plugin.par.get_attr("seed") == "answernr":
+            force_answer = True # variable tasks are allways saved
 
         answerinfo = get_existing_answers_info(users, tid)
         context_user = UserContext(ctx_user or curr_user, curr_user, answerinfo.count)
