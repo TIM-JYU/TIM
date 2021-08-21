@@ -29,7 +29,7 @@ from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
-from timApp.util.rndutils import myhash
+from timApp.util.rndutils import myhash, SeedClass
 from timApp.util.utils import try_load_json, get_current_time, Range
 from tim_common.markupmodels import PointsRule, KnownMarkupFields
 from tim_common.marshmallow_dataclass import class_schema
@@ -259,6 +259,8 @@ class Plugin:
         task_id_name = par.get_attr('taskId')
         plugin_name = par.get_attr('plugin')
         rnd_seed = get_simple_hash_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
+        if user.answer_nr >= 0:
+            rnd_seed = SeedClass(rnd_seed, user.answer_nr)#
         par.insert_rnds(rnd_seed)
         plugin_data = parse_plugin_values(
             par,

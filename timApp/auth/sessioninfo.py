@@ -33,9 +33,9 @@ def get_current_user_object() -> User:
     return g.user
 
 
-def user_context_with_logged_in(u: Optional[User]) -> UserContext:
+def user_context_with_logged_in(u: Optional[User], answer_count: Optional[int] = 0) -> UserContext:
     curr = get_current_user_object()
-    return UserContext(user=u or curr, logged_user=curr)
+    return UserContext(user=u or curr, logged_user=curr, answer_nr=answer_count or 0)
 
 
 def get_other_users() -> Dict[str, Dict[str, str]]:

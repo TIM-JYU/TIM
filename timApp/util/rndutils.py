@@ -4,12 +4,19 @@ For documentation, see: https://tim.jyu.fi/view/tim/ohjeita/satunnaistus
 """
 import json
 import time
+from dataclasses import dataclass
 from random import Random
 from typing import List, Dict, Tuple, Optional, Union, Callable, TypeVar
 
 MAX_RND_LIST_LEN = 100
 
-SeedType = Union[str, int]
+@dataclass
+class SeedClass:
+    seed: int
+    extraseed: int = 0
+
+
+SeedType = Union[str, int, SeedClass]
 
 
 def fix_jso(jso: str) -> str:
@@ -201,9 +208,18 @@ def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None
     if jso is None:
         return None, rnd_seed, state
 
-    rnd_seed = attrs.get('seed', rnd_seed)
-    if not rnd_seed:
-        rnd_seed = int(time.perf_counter()*1000)
+    attrs_seed = attrs.get('seed', None)
+    if attrs_seed is not None:
+        if attrs_seed == '' or attrs_seed == 'time':
+            rnd_seed = int(time.perf_counter() * 1000)
+        elif attrs_seed == 'answernr':
+            if isinstance(rnd_seed, SeedClass):
+                rnd_seed = rnd_seed.seed + rnd_seed.extraseed
+        else:
+            rnd_seed = attrs_seed
+
+    if isinstance(rnd_seed, SeedClass):
+        rnd_seed = rnd_seed.seed
 
     if isinstance(rnd_seed, str):
         rnd_seed = myhash(rnd_seed)
