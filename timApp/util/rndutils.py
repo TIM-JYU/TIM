@@ -226,10 +226,9 @@ def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None
         seed_to_use = myhash(seed_to_use)
 
     # noinspection PyBroadException
-    try:
-        seed_to_use = int(seed_to_use)
-    except:
+    if seed_to_use is None:
         seed_to_use = int(time.perf_counter()*1000)
+
     myrandom = Random()
     myrandom.seed(a=seed_to_use)
     if state:
