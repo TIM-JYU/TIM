@@ -423,7 +423,15 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
             if value:
                 js['markup'][key] = value
 
-    before_open = query.jso.get("markup", {}).get('beforeOpen','')
+    markup = query.jso.get("markup", {})
+
+    if markup.get("askNew", False):
+        js['markup']["askNew"] = True
+    answernr = markup.get("answernr", None)
+    if  answernr != None:
+        js['markup']["ansernr"] = answernr
+
+    before_open = markup.get('beforeOpen','')
     is_rv = is_review(query)
 
 

@@ -133,6 +133,8 @@ class PluginRenderOptions:
     review: bool
     wraptype: PluginWrap
     viewmode: bool
+    ask_new: bool
+    answernr: int
 
     @property
     def is_html(self):

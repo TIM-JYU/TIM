@@ -67,9 +67,14 @@ class Stack(Language):
         seed = stack_data.get("seed", 0)
         userseed = seed
         state = self.query.jso.get("state", {})
-        if isinstance(state, dict):
-            userseed = state.get("seed", seed)
-        nosave = self.query.jso.get('input', {}).get('nosave', False)
+        input = self.query.jso.get('input', {})
+        new_task = markup.get("newtask")
+        ask_new = input.get("askNew", False)
+        if isinstance(state, dict) and not ask_new:
+            # if state.get('usercode') == input.get('usercode'):
+            if not get_task:
+                userseed = state.get("seed", seed)
+        nosave = input.get('nosave', False)
         stack_data["seed"] = userseed
 
         q = stack_data.get("question", "")
@@ -87,8 +92,8 @@ class Stack(Language):
             stack_data["score"] = False
         else:
             save = result["save"]
-            if not markup.get("noseedsave"):
-                save["seed"] = userseed
+            # if not new_task:
+            save["seed"] = userseed
 
         r = requests.post(url=url, data=json.dumps(stack_data))  # json.dumps(data_to_send, cls=TimJsonEncoder))
         # r = requests.get(url="http://stack-test-container/api/endpoint.html")

@@ -12,6 +12,7 @@ class UserContext:
     user: User
     logged_user: User
     answer_nr: int = -1  # needed if variable tasks, -1 = not task at all or not variable task
+    ask_new: bool = False # to send for plugins to force new question
 
     @staticmethod
     def from_one_user(u: User) -> UserContext:

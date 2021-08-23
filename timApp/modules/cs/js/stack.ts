@@ -5,6 +5,11 @@ import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $sce} from "tim/util/ngimport";
 import {defaultTimeout, to, windowAsAny} from "tim/util/utils";
+import {
+    ITimComponent,
+    ViewCtrl,
+} from "../../../static/scripts/tim/document/viewctrl";
+import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
 export const moduleDefs = [stackApp];
@@ -65,11 +70,32 @@ interface IStackData {
     verifyvar: string;
 }
 
-class StackController extends PluginBase<
-    t.TypeOf<typeof StackMarkup>,
-    t.TypeOf<typeof StackAll>,
-    typeof StackAll
-> {
+class StackController
+    extends PluginBase<
+        t.TypeOf<typeof StackMarkup>,
+        t.TypeOf<typeof StackAll>,
+        typeof StackAll
+    >
+    implements ITimComponent {
+    vctrl!: ViewCtrl;
+
+    getContent(): string {
+        return this.userCode;
+    }
+
+    getContentArray?: (() => string[] | undefined) | undefined;
+    isUnSaved(userChange?: boolean | undefined): boolean {
+        return this.userCode !== this.originalUserCode;
+    }
+
+    async save() {
+        await this.runSave();
+        return {saved: true, message: undefined};
+    }
+
+    setPluginWords?: ((words: string[]) => void) | undefined;
+    setForceAnswerSave?: ((force: boolean) => void) | undefined;
+
     get english() {
         return this.attrs.lang === "en";
     }
@@ -85,6 +111,7 @@ class StackController extends PluginBase<
     private span: string = "";
     private error: string = "";
     private userCode: string = "";
+    private originalUserCode: string = "";
     private stackoutput: string = "";
     private stackinputfeedback: string = "";
     private stackpeek: boolean = false;
@@ -102,6 +129,8 @@ class StackController extends PluginBase<
     private lastInputFieldValue: string = "";
     private lastInputFieldElement: HTMLInputElement | undefined;
     private button: string = "";
+    private askNew: boolean = false;
+    private answernr: number = -1;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -112,6 +141,7 @@ class StackController extends PluginBase<
         this.button = this.buttonText();
         const aa = this.attrsall;
         this.userCode = aa.usercode ?? this.attrs.by ?? "";
+        this.originalUserCode = this.userCode;
         this.timWay = aa.timWay ?? this.attrs.timWay ?? false;
 
         this.element.on("keydown", (event) => {
@@ -125,9 +155,14 @@ class StackController extends PluginBase<
             }
         });
 
+        this.askNew = aa.markup.askNew ?? false;
+        this.answernr = aa.markup.answernr ?? -1;
+        if (this.askNew) this.answernr = -1;
         if (this.attrs.open) {
             this.runGetTask();
         }
+        this.vctrl = vctrlInstance!;
+        this.vctrl.addTimComponent(this);
     }
 
     processNodes(
@@ -394,12 +429,22 @@ class StackController extends PluginBase<
         return url;
     }
 
-    async runGetTask() {
-        this.isOpen = true;
-        await this.runSend(true);
+    async runSave() {
+        let askNew = true; // do not use saved seed
+        if (this.answernr >= 0) askNew = false;
+        await this.runSend(false, askNew, this.answernr);
     }
 
-    async runSend(getTask = false) {
+    async runGetTask() {
+        this.isOpen = true;
+        await this.runSend(true, this.askNew, this.answernr);
+    }
+
+    async runSend(
+        getTask = false,
+        askNew: boolean = false,
+        answernr: number = -1
+    ) {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             return;
@@ -414,6 +459,8 @@ class StackController extends PluginBase<
                 getTask: getTask,
                 stackData: stackData,
                 type: "stack",
+                askNew: askNew,
+                answernr: answernr,
                 usercode: this.timWay
                     ? this.userCode
                     : JSON.stringify(stackData.answer),
@@ -559,7 +606,7 @@ stackApp.component("stackRunner", {
                 ng-disabled="$ctrl.isRunning"
                 title="(Ctrl-S)"
                 class="timButton btn-sm"
-                ng-click="$ctrl.runSend()"
+                ng-click="$ctrl.runSave()"
                 ng-bind-html="::$ctrl.button"></button>
         <button ng-if="::!$ctrl.attrs.autopeek"
                 class="timButton btn-sm"

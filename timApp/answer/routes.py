@@ -606,7 +606,17 @@ def post_answer_impl(
             force_answer = True # variable tasks are allways saved
 
         answerinfo = get_existing_answers_info(users, tid)
-        context_user = UserContext(ctx_user or curr_user, curr_user, answerinfo.count)
+        answernr = -1
+        ask_new = False
+        if isinstance(answerdata, dict):
+            answernr = answerdata.get("answernr", -1)
+            ask_new = answerdata.get("askNew", False)
+        answernr_to_user = answernr
+        if (answernr < 0):
+            answernr_to_user = answerinfo.count
+        context_user = UserContext(ctx_user or curr_user, curr_user, answernr_to_user)
+        if ask_new:
+            answernr = -1
 
         vr = verify_task_access(
             d,
@@ -672,6 +682,14 @@ def post_answer_impl(
     # Get the newest answer (state). Only for logged in users.
     state = try_load_json(
         answerinfo.latest_answer.content) if curr_user.logged_in and answerinfo.latest_answer else None
+    # TODO: get state from AB selected answer if new_task == true
+    # TODO: Why state is needed for new answers?
+    # TODO: Stack gets default for the field there???
+    answer_id = answer_browser_data.get('answer_id', None)
+    if answer_id is not None and curr_user.logged_in:
+        answer = Answer.query.get(answer_id)
+        if answer:
+            state = try_load_json(answer.content)
 
     preprocessor = answer_call_preprocessors.get(plugin.type)
     if preprocessor:
@@ -874,8 +892,8 @@ def post_answer_impl(
                         result={'web': {'error': 'Error in JavaScript: ' + e.args[0]}},
                         plugin=plugin,
                     )
-
-            if points or save_object is not None or tags:
+            allow_save = not found_plugin.values.get("newtask", False) or answernr < 0
+            if (points or save_object is not None or tags) and allow_save:
                 a = save_answer(
                     users,
                     tid,
@@ -1737,7 +1755,7 @@ class GetStateModel:
     review: bool = False
     task_id: Optional[str] = None
     answernr: Optional[int] = None
-
+    ask_new: Optional[bool] = False
 
 GetStateSchema = class_schema(GetStateModel)
 
@@ -1788,7 +1806,7 @@ def get_state(args: GetStateModel):
     doc.insert_preamble_pars()
     if par_id:
         tid.maybe_set_hint(par_id)
-    user_ctx = user_context_with_logged_in(user, args.answernr)
+    user_ctx = user_context_with_logged_in(user, args.answernr, args.ask_new)
     try:
         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user_ctx, view_ctx=view_ctx)
     except PluginException as e:
