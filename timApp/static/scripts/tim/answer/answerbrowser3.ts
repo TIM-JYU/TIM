@@ -743,16 +743,10 @@ export class AnswerBrowserController
         };
         let taskOrAnswer: Record<string, string | number | boolean>;
         if (this.selectedAnswer) {
-            let idx = -1; // find index of selectedAnswer
-            for (let i = 0; i < this.filteredAnswers.length; i++) {
-                if (this.filteredAnswers[i].id === this.selectedAnswer.id) {
-                    idx = i;
-                    break;
-                }
-            }
+            const idx = this.findSelectedAnswerIndexRevFromUnFiltered();
             taskOrAnswer = {answer_id: this.selectedAnswer.id};
             if (idx >= 0) {
-                taskOrAnswer.answernr = this.filteredAnswers.length - idx - 1;
+                taskOrAnswer.answernr = idx;
             }
             if (this.answerLoader) {
                 this.answerLoader(this.selectedAnswer);
@@ -1371,6 +1365,12 @@ export class AnswerBrowserController
             }
         }
         return -1;
+    }
+
+    findSelectedAnswerIndexRevFromUnFiltered() {
+        const idx = this.findSelectedAnswerIndex();
+        if (idx < 0) return idx;
+        return this.filteredAnswers.length - idx - 1;
     }
 
     private findSelectedAnswerIndexFromUnFiltered() {

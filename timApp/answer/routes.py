@@ -598,25 +598,29 @@ def post_answer_impl(
         context_user = UserContext(ctx_user or curr_user, curr_user)
         view_ctx = ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin)
         doc, found_plugin = get_plugin_from_request(d.document, tid, context_user, view_ctx)
+        # newtask = found_plugin.value.get("newtask", False)
+        newtask = found_plugin.par.attrs.get("seed", "") == "answernr"
         if found_plugin.known.useCurrentUser or found_plugin.task_id.is_global:  # For plugins that is saved only for current user
             users = [curr_user]
         if users is None:
             users = [curr_user] + other_session_users
-        if found_plugin.par.get_attr("seed") == "answernr":
+        if newtask: # found_plugin.par.get_attr("seed") == "answernr":
             force_answer = True # variable tasks are allways saved
 
         answerinfo = get_existing_answers_info(users, tid)
         answernr = -1
+        answers_to_user = -1
         ask_new = False
-        if isinstance(answerdata, dict):
-            answernr = answerdata.get("answernr", -1)
-            ask_new = answerdata.get("askNew", False)
-        answernr_to_user = answernr
-        if (answernr < 0):
-            answernr_to_user = answerinfo.count
-        context_user = UserContext(ctx_user or curr_user, curr_user, answernr_to_user)
-        if ask_new:
-            answernr = -1
+        if newtask: # only if task is with new random after every answer
+            if isinstance(answerdata, dict):
+                answernr = answerdata.get("answernr", -1)
+                ask_new = answerdata.get("askNew", False)
+            answernr_to_user = answernr
+            if (answernr < 0):
+                answernr_to_user = answerinfo.count
+            context_user = UserContext(ctx_user or curr_user, curr_user, answernr_to_user)
+            if ask_new:
+                answernr = -1
 
         vr = verify_task_access(
             d,
@@ -892,7 +896,7 @@ def post_answer_impl(
                         result={'web': {'error': 'Error in JavaScript: ' + e.args[0]}},
                         plugin=plugin,
                     )
-            allow_save = not found_plugin.values.get("newtask", False) or answernr < 0
+            allow_save = not newtask or answernr < 0
             if (points or save_object is not None or tags) and allow_save:
                 a = save_answer(
                     users,

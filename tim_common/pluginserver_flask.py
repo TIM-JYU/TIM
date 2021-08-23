@@ -88,7 +88,10 @@ class InfoModel:
     look_answer: bool
     max_answers: Optional[int]
     user_id: str
-    valid: bool  # could be False e.g. if answering deadline has passed
+    valid: bool # could be False e.g. if answering deadline has passed
+    # askNew: Optional[bool]
+    # answernr: Optional[int]
+
 
     @property
     def primary_user(self) -> str:

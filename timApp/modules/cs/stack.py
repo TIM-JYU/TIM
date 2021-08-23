@@ -68,7 +68,6 @@ class Stack(Language):
         userseed = seed
         state = self.query.jso.get("state", {})
         input = self.query.jso.get('input', {})
-        new_task = markup.get("newtask")
         ask_new = input.get("askNew", False)
         if isinstance(state, dict) and not ask_new:
             # if state.get('usercode') == input.get('usercode'):

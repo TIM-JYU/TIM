@@ -133,8 +133,6 @@ class PluginRenderOptions:
     review: bool
     wraptype: PluginWrap
     viewmode: bool
-    ask_new: bool
-    answernr: int
 
     @property
     def is_html(self):
@@ -373,7 +371,8 @@ class Plugin:
 
     def render_json(self) -> Dict[str, Any]:
         options = self.options
-        user = options.user_ctx.user
+        userctx = options.user_ctx
+        user = userctx.user
         if self.answer is not None:
             if self.task_id.is_points_ref:
                 p = f'{self.answer.points:g}' if self.answer.points is not None else ''
@@ -388,6 +387,11 @@ class Plugin:
         else:
             state = None
             info = None
+        if userctx.ask_new or userctx.answer_nr >= 0:
+            if not info:
+                info = {}
+            info["answernr"] = userctx.answer_nr
+            info["askNew"] = userctx.ask_new
         access = {}
         if self.task_id and self.task_id.access_specifier == TaskIdAccess.ReadOnly and \
                 not options.user_ctx.logged_user.has_teacher_access(self.par.doc.get_docinfo()):
