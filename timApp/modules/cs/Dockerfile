@@ -159,12 +159,18 @@ RUN wget -q https://downloads.lightbend.com/scala/${SCALA_VERSION}/scala-${SCALA
  rm scala-${SCALA_VERSION}.deb
 
 # Octave
-RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic gnuplot pstoedit liboctave-dev && ${APT_CLEANUP}"
+RUN bash -c "${APT_INSTALL} octave octave-control octave-image octave-signal octave-symbolic gnuplot pstoedit liboctave-dev fonts-freefont-otf && ${APT_CLEANUP}"
 RUN bash -c "${APT_INSTALL} make && ${APT_CLEANUP}"
 RUN printf "pkg install -forge io" | octave && \
  printf "pkg install -forge statistics" | octave && \
  printf "pkg install -forge struct" | octave && \
  printf "pkg install -forge optim" | octave
+
+# Octave and gnuplot use Qt to generate plots and relevant UI (not used by us but it's a hard dependency)
+# Latest gnuplot fails to run on kernel versions below 3.15 (see https://gitlab.com/tim-jyu/tim/-/issues/2349)
+# This adopts the following fix:
+# https://github.com/dnschneid/crouton/wiki/Fix-error-while-loading-shared-libraries:-libQt5Core.so.5
+RUN strip --remove-section=.note.ABI-tag /lib/x86_64-linux-gnu/libQt5Core.so.5
 
 # Swift requirements
 RUN bash -c "${APT_INSTALL} libcurl4 libpython3.8 libxml2 && ${APT_CLEANUP}"
