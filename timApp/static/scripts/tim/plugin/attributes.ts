@@ -40,6 +40,9 @@ export const GenericPluginMarkup = t.partial({
     useCurrentUser: t.boolean,
     connectionErrorMessage: nullable(t.string),
     answerBrowser: nullable(AnswerBrowserSettings),
+    newtask: t.boolean,
+    askNew: t.boolean, // is new task asked? Or save current new task.
+    answernr: t.Integer, // is some old answer selected
 });
 
 export const Info = nullable(

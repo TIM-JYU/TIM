@@ -389,6 +389,8 @@ def pluginify(doc: Document,
         review=review,
         wraptype=pluginwrap,
         viewmode=view_ctx.viewmode,
+        ask_new=user_ctx.ask_new,
+        answernr= user_ctx.answer_nr,
     )
 
     if load_states and custom_answer is None and user_ctx.user.logged_in:
@@ -500,6 +502,8 @@ def pluginify(doc: Document,
 
             plugin_block_map_vals = [*plugin_block_map.values()]
             for p in plugin_block_map_vals:
+                p.values["askNew"] = plugin_opts.ask_new
+                p.values["answernr"] = plugin_opts.answernr
                 all_plugins.append(p)
 
             resp = plugin_reqs(plugin_name)

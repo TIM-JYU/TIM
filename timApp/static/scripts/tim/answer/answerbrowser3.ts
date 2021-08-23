@@ -435,6 +435,7 @@ export class AnswerBrowserController
     private showBrowseAnswers = true;
     private isPeerReview = false;
     private peerReviewEnabled = false;
+    private showNewTask = false;
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -521,6 +522,7 @@ export class AnswerBrowserController
         this.shouldFocus = false;
         this.alerts = [];
         this.feedback = "";
+        this.showNewTask = this.setShowNewTask();
 
         const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
@@ -716,9 +718,10 @@ export class AnswerBrowserController
      * Loads plugin html with selected answer (or user default state if no answer)
      * also sets up points, fetches review data if needed and dims the plugin if teacher-mode and no answers
      * @param changeReviewOnly only fetch and set the plugin review html, without touching anything else
+     * @param askNew true if new task is asked to generate
      * // TODO: Separate function for just fetching the review html
      */
-    async changeAnswer(changeReviewOnly = false) {
+    async changeAnswer(changeReviewOnly = false, askNew: boolean = false) {
         if (!changeReviewOnly) {
             this.updatePoints();
         }
@@ -738,7 +741,7 @@ export class AnswerBrowserController
             review: this.review,
             user_id: this.user.id,
         };
-        let taskOrAnswer: Record<string, string | number>;
+        let taskOrAnswer: Record<string, string | number | boolean>;
         if (this.selectedAnswer) {
             let idx = -1; // find index of selectedAnswer
             for (let i = 0; i < this.filteredAnswers.length; i++) {
@@ -756,6 +759,10 @@ export class AnswerBrowserController
             }
         } else {
             taskOrAnswer = {task_id: this.taskId.docTask().toString()};
+            taskOrAnswer.answernr = this.filteredAnswers.length;
+        }
+        if (askNew) {
+            taskOrAnswer.ask_new = true;
         }
         // get new state as long as the previous answer was not explicitly the same as the one before
         // otherwise we might not see the unanswered plugin exactly how the user sees it
@@ -871,6 +878,15 @@ export class AnswerBrowserController
         }
         this.selectedAnswer = this.filteredAnswers[newIndex];
         await this.changeAnswer();
+    }
+
+    async newTask() {
+        if (!this.trySavePoints(true)) {
+            return;
+        }
+
+        this.selectedAnswer = undefined;
+        await this.changeAnswer(false, true);
     }
 
     findSelectedUserIndex() {
@@ -1277,6 +1293,12 @@ export class AnswerBrowserController
 
     showTeacher() {
         return this.viewctrl.teacherMode && this.viewctrl.item.rights.teacher;
+    }
+
+    setShowNewTask() {
+        const m = this.pluginMarkup();
+        if (!m) return false;
+        return m.newtask ?? false;
     }
 
     showVelpsCheckBox() {
