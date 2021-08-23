@@ -31,12 +31,6 @@ _client = Client(config.MAILMAN_URL, config.MAILMAN_USER, config.MAILMAN_PASS) i
 """A client object to utilize Mailman's REST API. If this is None, mailmanclient-library has not been configured for 
 use. """
 
-# Test mailmanclient's initialization on TIM's boot up.
-if not _client:
-    log_warning("No mailman configuration found, no email support will be enabled.")
-else:
-    log_info("Mailman connection configured.")
-
 
 def log_mailman(err: HTTPError, optional_message: str = "") -> None:
     """Log potentially troublesome Mailman activity when mailmanclient raises HTTPErrors.
