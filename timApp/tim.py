@@ -54,7 +54,8 @@ from timApp.item.routes_tags import tags_blueprint
 from timApp.item.tag import Tag, GROUP_TAG_PREFIX
 from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.lecture.routes import lecture_routes
-from timApp.messaging.messagelist.mailman_events import mailman_events
+from timApp.messaging.messagelist.emaillist import check_mailman_connection
+from timApp.messaging.messagelist.mailman_events import mailman_events, has_valid_event_auth
 from timApp.messaging.messagelist.routes import messagelist
 from timApp.messaging.timMessage.routes import timMessage
 from timApp.modules.fields.cbcountfield import cbcountfield_route
@@ -475,6 +476,11 @@ def init_app():
     if not app.config['DEBUG']:
         if app.config['SECRET_KEY'] == SECRET_KEY:
             raise Exception('SECRET_KEY must not be the same as default SECRET_KEY when DEBUG=False')
+
+    if app.config['MESSAGE_LISTS_ENABLED']:
+        log_info(f'Mailman client credentials configured: {check_mailman_connection()}')
+        log_info(f'Mailman events REST auth configured: {has_valid_event_auth()}')
+
     return app
 
 
