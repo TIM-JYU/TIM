@@ -615,12 +615,17 @@ def post_answer_impl(
             if isinstance(answerdata, dict):
                 answernr = answerdata.get("answernr", -1)
                 ask_new = answerdata.get("askNew", False)
+            if answernr < 0:
+                answernr = answer_browser_data.get("answernr", -1)
             answernr_to_user = answernr
             if (answernr < 0):
                 answernr_to_user = answerinfo.count
+                answernr = answerinfo.count
+            if not ask_new:
+                ask_new == answernr == answerinfo.count
             context_user = UserContext(ctx_user or curr_user, curr_user, answernr_to_user)
-            if ask_new:
-                answernr = -1
+            # if ask_new:
+            #    answernr = -1
 
         vr = verify_task_access(
             d,
@@ -682,6 +687,8 @@ def post_answer_impl(
 
     valid, _ = plugin.is_answer_valid(answerinfo.count, {})
     info = plugin.get_info(users, answerinfo.count, look_answer=is_teacher and not save_teacher, valid=valid)
+    if ask_new:
+        info["askNew"] = True
 
     # Get the newest answer (state). Only for logged in users.
     state = try_load_json(
@@ -896,7 +903,7 @@ def post_answer_impl(
                         result={'web': {'error': 'Error in JavaScript: ' + e.args[0]}},
                         plugin=plugin,
                     )
-            allow_save = not newtask or answernr < 0
+            allow_save = not newtask or answernr == answerinfo.count
             if (points or save_object is not None or tags) and allow_save:
                 a = save_answer(
                     users,
@@ -1810,6 +1817,7 @@ def get_state(args: GetStateModel):
     doc.insert_preamble_pars()
     if par_id:
         tid.maybe_set_hint(par_id)
+
     user_ctx = user_context_with_logged_in(user, args.answernr, args.ask_new)
     try:
         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user_ctx, view_ctx=view_ctx)

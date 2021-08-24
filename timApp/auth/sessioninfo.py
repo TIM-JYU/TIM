@@ -35,7 +35,7 @@ def get_current_user_object() -> User:
 
 def user_context_with_logged_in(u: Optional[User], answer_nr: Optional[int] = -1, ask_new: Optional[bool] = False) -> UserContext:
     curr = get_current_user_object()
-    return UserContext(user=u or curr, logged_user=curr, answer_nr=answer_nr or -1, ask_new=ask_new or False)
+    return UserContext(user=u or curr, logged_user=curr, answer_nr=answer_nr, ask_new=ask_new or False)
 
 
 def get_other_users() -> Dict[str, Dict[str, str]]:

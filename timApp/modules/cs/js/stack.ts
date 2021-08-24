@@ -157,7 +157,7 @@ class StackController
 
         this.askNew = aa.markup.askNew ?? false;
         this.answernr = aa.markup.answernr ?? -1;
-        if (this.askNew) this.answernr = -1;
+        // if (this.askNew) this.answernr = -1;
         if (this.attrs.open) {
             this.runGetTask();
         }
@@ -430,8 +430,9 @@ class StackController
     }
 
     async runSave() {
-        let askNew = true; // do not use saved seed
-        if (this.answernr >= 0) askNew = false;
+        const askNew = this.askNew;
+        // let askNew = true; // do not use saved seed
+        // if (this.answernr >= 0) askNew = false;
         await this.runSend(false, askNew, this.answernr);
     }
 
@@ -487,6 +488,7 @@ class StackController
             return;
         }
         const stackResult = r.result.data.web.stackResult;
+        this.originalUserCode = this.userCode;
         await this.handleServerResult(stackResult, getTask);
         if (this.lastInputFieldId) {
             this.lastInputFieldElement = this.element.find(

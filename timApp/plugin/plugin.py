@@ -259,7 +259,7 @@ class Plugin:
         task_id_name = par.get_attr('taskId')
         plugin_name = par.get_attr('plugin')
         rnd_seed = get_simple_hash_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
-        if user and user.answer_nr >= 0:
+        if user and user.answer_nr is not None and user.answer_nr >= 0:
             rnd_seed = SeedClass(rnd_seed, user.answer_nr)#
         par.insert_rnds(rnd_seed)
         plugin_data = parse_plugin_values(
@@ -387,7 +387,7 @@ class Plugin:
         else:
             state = None
             info = None
-        if userctx.ask_new or userctx.answer_nr >= 0:
+        if userctx.ask_new or (userctx.answer_nr is not None and userctx.answer_nr >= 0):
             if not info:
                 info = {}
             info["answernr"] = userctx.answer_nr

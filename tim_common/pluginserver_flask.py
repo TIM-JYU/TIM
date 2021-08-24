@@ -89,8 +89,6 @@ class InfoModel:
     max_answers: Optional[int]
     user_id: str
     valid: bool # could be False e.g. if answering deadline has passed
-    # askNew: Optional[bool]
-    # answernr: Optional[int]
 
 
     @property

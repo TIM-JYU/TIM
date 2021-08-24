@@ -140,6 +140,7 @@ class PluginPlacement:
         new_seed = False
         rnd_seed = None
         answer_and_cnt = None
+        ask_next = False
 
         if rnd_seed is None:
             rnd_seed = get_simple_hash_from_par_and_user(
@@ -160,6 +161,7 @@ class PluginPlacement:
                             cnt = answer_and_cnt[1]
                             if cnt > 0:
                                 rnd_seed = SeedClass(rnd_seed, cnt)
+                                ask_next = True
             new_seed = True
 
         rnd_error = None
@@ -183,6 +185,8 @@ class PluginPlacement:
             p_range = 0, len(md)
             try:
                 vals = load_markup_from_yaml(md, settings.global_plugin_attrs(), block.get_attr('plugin'))
+                if ask_next:
+                    vals['askNew'] = True
                 if plugin_name in WANT_FIELDS and 'fields' in vals and user_ctx:
                     data, aliases, field_names, _ = get_fields_and_users(
                         vals['fields'],

@@ -389,6 +389,7 @@ export type AnswerBrowserData =
           userId: number;
           points: number | undefined;
           giveCustomPoints: boolean;
+          answernr: number | undefined;
       };
 
 const DEFAULT_MARKUP_CONFIG: IAnswerBrowserMarkupSettings = {
@@ -1023,6 +1024,7 @@ export class AnswerBrowserController
             if (this.isGlobal()) {
                 userId = Users.getCurrent().id;
             }
+            const answernr = this.findSelectedAnswerIndexRevFromUnFiltered();
             return {
                 answer_id: this.selectedAnswer
                     ? this.selectedAnswer.id
@@ -1034,6 +1036,7 @@ export class AnswerBrowserController
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: userId,
+                answernr: answernr,
                 ...common,
             };
         } else {
@@ -1107,8 +1110,17 @@ export class AnswerBrowserController
 
     updateAnswerFromURL() {
         const answerNumber = getURLParameter("answerNumber");
-        const index = this.answers.length - parseInt(answerNumber ?? "1", 10);
+
+        if (answerNumber == null && this.isAskNew()) {
+            this.updateFiltered();
+            this.selectedAnswer = undefined;
+            this.changeAnswer(false, true);
+            return true;
+        }
+
         if (answerNumber != null && this.urlParamMatchesThisTask()) {
+            const index =
+                this.answers.length - parseInt(answerNumber ?? "1", 10);
             if (index >= 0 && index < this.answers.length) {
                 this.onlyValid = false;
                 this.updateFiltered();
@@ -1293,6 +1305,15 @@ export class AnswerBrowserController
         const m = this.pluginMarkup();
         if (!m) return false;
         return m.newtask ?? false;
+    }
+
+    /* If seed=="answernr" show task first time as a new task */
+    isAskNew() {
+        if (this.viewctrl.teacherMode) return false;
+        const m = this.pluginMarkup();
+        if (!m) return false;
+        // TODO: How to bring this directly to ab from tim?
+        return m.askNew ?? false;
     }
 
     showVelpsCheckBox() {

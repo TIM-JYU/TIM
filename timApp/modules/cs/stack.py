@@ -59,6 +59,7 @@ class Stack(Language):
         data = self.query.jso.get("input").get("stackData")
         markup = self.query.jso.get('markup')
         stack_data = markup.get('-stackData')
+        info = self.query.jso.get("info", {})
         if not stack_data:
             stack_data = markup.get('stackData')
         if not stack_data:
@@ -68,7 +69,7 @@ class Stack(Language):
         userseed = seed
         state = self.query.jso.get("state", {})
         input = self.query.jso.get('input', {})
-        ask_new = input.get("askNew", False)
+        ask_new = info.get("askNew", False)
         if isinstance(state, dict) and not ask_new:
             # if state.get('usercode') == input.get('usercode'):
             if not get_task:
