@@ -278,7 +278,14 @@ export class NotesHandler {
      * @param par - Element where the badge needs to be attached
      */
     updateNoteBadge(par: ParContext) {
-        if (this.hideVars.noteBadgeButton || this.viewctrl.actionsDisabled) {
+        // At the moment note badge is not usable for people who can't comment
+        // Moreover, can_comment is false is user is not logged in, in which case other misc functions of notes editor
+        // (e.g. marking block unread) is not usable either
+        if (
+            !this.viewctrl.item.rights.can_comment ||
+            this.hideVars.noteBadgeButton ||
+            this.viewctrl.actionsDisabled
+        ) {
             return;
         }
         if (!par.isActionable()) {
