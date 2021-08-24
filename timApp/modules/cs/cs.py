@@ -308,13 +308,14 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
     if htmldata:
         return tim_sanitize(htmldata) + get_cache_footer(query)
     convert_graphviz(query)
+    markup = query.jso.get("markup", {})
     if get_param(query, "cache", False): # check if we should take the html from cache
         cache_root = "/tmp"
         cache_clear = get_param(query, "cacheClear", True)
         if not cache_clear:
             cache_root = "/tmp/ucache" # maybe user dependent cache that may grow bigger, so to different place
         h = hashlib.new('ripemd160')
-        h.update((str(query.jso['markup']) + str(query.deleted)).encode())
+        h.update((str(markup) + str(query.deleted)).encode())
         task_id = get_param(query, "taskID", False)
         filepath = cache_root + '/imgcache/' + task_id.replace('.', '/')
         if filepath.endswith('/'):
@@ -328,7 +329,7 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
                 htmldata = fh.read()
             return htmldata
 
-        query.jso['markup']['imgname'] = "/csgenerated/" + task_id # + "/" + hash
+        markup['imgname'] = "/csgenerated/" + task_id # + "/" + hash
         query.jso['state']= None
 
         ret = self.do_all(query) # otherwise generate new image
@@ -423,17 +424,14 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
             if value:
                 js['markup'][key] = value
 
-    markup = query.jso.get("markup", {})
     info = query.jso.get("info", None)
 
     if info:
         if info.get("askNew", False):
             js['markup']["askNew"] = True
         answernr = info.get("answernr", None)
-        if  answernr != None:
+        if answernr is not None:
             js['markup']["answernr"] = answernr
-    if markup.get("askNew"):
-        js['markup']["askNew"] = True
 
     before_open = markup.get('beforeOpen','')
     is_rv = is_review(query)

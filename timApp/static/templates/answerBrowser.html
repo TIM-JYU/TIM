@@ -57,7 +57,7 @@
                             <input type="checkbox" ng-model="$ctrl.onlyValid">Show valid only</label>
                         <span ng-show="$ctrl.showTeacher()"> | <a ng-click="$ctrl.getAllAnswers()">All answers</a>
                     </span>
-                        <button class="timButton" ng-if="$ctrl.showNewTask" title="Change to new task" ng-click="$ctrl.newTask()">New task</button>
+                        <button class="timButton" ng-if="$ctrl.showNewTask" title="Change to new task" ng-click="$ctrl.newTask()">{{ $ctrl.buttonNewTask }}</button>
                         <span ng-if="$ctrl.selectedAnswer">
                         | <a title="Link to currently selected answer"
                              ng-click="$event.preventDefault()"

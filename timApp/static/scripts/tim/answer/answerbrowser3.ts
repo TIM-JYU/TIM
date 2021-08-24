@@ -368,6 +368,8 @@ export interface ITaskInfo {
     userMax: number;
     answerLimit: number;
     showPoints: boolean;
+    newtask?: boolean;
+    buttonNewTask: string;
 }
 
 export interface IAnswerSaveEvent {
@@ -437,6 +439,7 @@ export class AnswerBrowserController
     private isPeerReview = false;
     private peerReviewEnabled = false;
     private showNewTask = false;
+    private buttonNewTask = "New task";
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -523,7 +526,7 @@ export class AnswerBrowserController
         this.shouldFocus = false;
         this.alerts = [];
         this.feedback = "";
-        this.showNewTask = this.setShowNewTask();
+        this.showNewTask = this.isShowNewTask();
 
         const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
@@ -1301,19 +1304,15 @@ export class AnswerBrowserController
         return this.viewctrl.teacherMode && this.viewctrl.item.rights.teacher;
     }
 
-    setShowNewTask() {
-        const m = this.pluginMarkup();
-        if (!m) return false;
-        return m.newtask ?? false;
+    isShowNewTask() {
+        return this.taskInfo?.newtask ?? false;
     }
 
     /* If seed=="answernr" show task first time as a new task */
     isAskNew() {
         if (this.viewctrl.teacherMode) return false;
         const m = this.pluginMarkup();
-        if (!m) return false;
-        // TODO: How to bring this directly to ab from tim?
-        return m.askNew ?? false;
+        return m?.askNew ?? false;
     }
 
     showVelpsCheckBox() {
@@ -1351,6 +1350,9 @@ export class AnswerBrowserController
             return;
         }
         this.taskInfo = r.result.data;
+        this.showNewTask = this.isShowNewTask();
+        if (this.taskInfo.buttonNewTask)
+            this.buttonNewTask = this.taskInfo.buttonNewTask;
     }
 
     async checkUsers() {

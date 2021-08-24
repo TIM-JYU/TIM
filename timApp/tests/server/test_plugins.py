@@ -1507,6 +1507,7 @@ a: b
             f'/taskinfo/{d.id}.t',
             expect_content={
                 'answerLimit': None,
+                'buttonNewTask': None,
                 'deadline': None,
                 'maxPoints': None,
                 'pointsText': 'Points:',

@@ -5,11 +5,8 @@ import {GenericPluginMarkup, Info, withDefault} from "tim/plugin/attributes";
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {$http, $sce} from "tim/util/ngimport";
 import {defaultTimeout, to, windowAsAny} from "tim/util/utils";
-import {
-    ITimComponent,
-    ViewCtrl,
-} from "../../../static/scripts/tim/document/viewctrl";
-import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
+import {ITimComponent, ViewCtrl} from "tim/document/viewctrl";
+import {vctrlInstance} from "tim/document/viewctrlinstance";
 
 const stackApp = angular.module("stackApp", ["ngSanitize"]);
 export const moduleDefs = [stackApp];
@@ -130,7 +127,7 @@ class StackController
     private lastInputFieldElement: HTMLInputElement | undefined;
     private button: string = "";
     private askNew: boolean = false;
-    private answernr: number = -1;
+    private answernr?: number = undefined;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -156,7 +153,7 @@ class StackController
         });
 
         this.askNew = aa.markup.askNew ?? false;
-        this.answernr = aa.markup.answernr ?? -1;
+        this.answernr = aa.markup.answernr;
         // if (this.askNew) this.answernr = -1;
         if (this.attrs.open) {
             this.runGetTask();
@@ -431,8 +428,6 @@ class StackController
 
     async runSave() {
         const askNew = this.askNew;
-        // let askNew = true; // do not use saved seed
-        // if (this.answernr >= 0) askNew = false;
         await this.runSend(false, askNew, this.answernr);
     }
 
@@ -444,7 +439,7 @@ class StackController
     async runSend(
         getTask = false,
         askNew: boolean = false,
-        answernr: number = -1
+        answernr: number | undefined = undefined
     ) {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";

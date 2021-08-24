@@ -150,7 +150,7 @@ class PluginPlacement:
 
             # TODO: if possible to look from markup newtask: true, this is not needed
             if block.get_attr("seed") == "answernr":
-                if user_ctx.answer_nr >= 0:
+                if user_ctx.answer_nr is not None:
                     rnd_seed = SeedClass(rnd_seed, user_ctx.answer_nr)
                 else: # try with length of answers
                     task_id = block.get_attr("taskId")

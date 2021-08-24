@@ -174,6 +174,9 @@ class DocParagraph:
             return nm != 'false'
         return self.doc.get_settings().nomacros(False)
 
+    def is_new_task(self):
+        return self.attrs.get("seed", "") == "answernr"
+
     @staticmethod
     def is_no_macros(settings, doc_macros):
         nm = settings.get('nomacros')

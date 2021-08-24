@@ -528,13 +528,73 @@ class AnswerRouteResult:
     plugin: Plugin
 
 
+def get_postanswer_plugin_etc(
+                              d: DocInfo,
+                              tid: str,
+                              answerdata: AnswerData,
+                              answer_browser_data,
+                              curr_user: User,
+                              ctx_user: UserContext,
+                              urlmacros: Tuple[Tuple[str, str], ...],
+                              users: list,
+                              other_session_users: List[User],
+                              origin: Optional[OriginInfo],
+                              ) -> object:
+    try:
+        allow_save = True
+        ask_new = False
+
+        context_user = UserContext(ctx_user or curr_user, curr_user)
+        view_ctx = ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin)
+        doc, found_plugin = get_plugin_from_request(d.document, tid, context_user, view_ctx)
+        # newtask = found_plugin.value.get("newtask", False)
+        newtask = found_plugin.is_new_task()
+        if found_plugin.known.useCurrentUser or found_plugin.task_id.is_global:  # For plugins that is saved only for current user
+            users = [curr_user]
+        if users is None:
+            users = [curr_user] + other_session_users
+        if newtask: # found_plugin.par.get_attr("seed") == "answernr":
+            force_answer = True # variable tasks are always saved even with same answer
+
+        answerinfo = get_existing_answers_info(users, tid)
+        answernr = -1
+
+        if newtask: # only if task is with new random after every answer
+            if isinstance(answerdata, dict):
+                answernr = answerdata.get("answernr", -1)
+                ask_new = answerdata.get("askNew", False)
+            if answernr < 0:
+                answernr = answer_browser_data.get("answernr", -1)
+            answernr_to_user = answernr
+            if (answernr < 0):
+                answernr_to_user = answerinfo.count
+                answernr = answerinfo.count
+            if not ask_new:
+                ask_new = answernr == answerinfo.count
+                allow_save = ask_new
+            context_user = UserContext(ctx_user or curr_user, curr_user, answernr_to_user)
+
+        vr = verify_task_access(
+            d,
+            tid,
+            AccessType.view,
+            TaskIdAccess.ReadWrite,
+            context_user=context_user,
+            view_ctx=view_ctx,
+            allow_grace_period=True,
+        )
+        plugin = vr.plugin
+    except (PluginException, TimDbException) as e:
+        raise PluginException(str(e))
+    return vr, answerinfo, users, allow_save, ask_new
+
 def post_answer_impl(
         task_id_ext: str,
         answerdata: AnswerData,
         answer_browser_data,
         answer_options,
         curr_user: User,
-        urlmacros,
+        urlmacros: Tuple[Tuple[str, str], ...],
         other_session_users: List[User],
         origin: Optional[OriginInfo],
 ) -> AnswerRouteResult:
@@ -563,6 +623,7 @@ def post_answer_impl(
     users = None
 
     ctx_user = None
+
     if is_teacher:
         answer_id = answer_browser_data.get('answer_id', None)
         user_id = answer_browser_data.get('userId', None)
@@ -594,51 +655,12 @@ def post_answer_impl(
             if not ctx_user:
                 raise PluginException(f'User {user_id} not found')
             users = [ctx_user]  # TODO: Vesa's hack to save answer to student
-    try:
-        context_user = UserContext(ctx_user or curr_user, curr_user)
-        view_ctx = ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin)
-        doc, found_plugin = get_plugin_from_request(d.document, tid, context_user, view_ctx)
-        # newtask = found_plugin.value.get("newtask", False)
-        newtask = found_plugin.par.attrs.get("seed", "") == "answernr"
-        if found_plugin.known.useCurrentUser or found_plugin.task_id.is_global:  # For plugins that is saved only for current user
-            users = [curr_user]
-        if users is None:
-            users = [curr_user] + other_session_users
-        if newtask: # found_plugin.par.get_attr("seed") == "answernr":
-            force_answer = True # variable tasks are allways saved
 
-        answerinfo = get_existing_answers_info(users, tid)
-        answernr = -1
-        answers_to_user = -1
-        ask_new = False
-        if newtask: # only if task is with new random after every answer
-            if isinstance(answerdata, dict):
-                answernr = answerdata.get("answernr", -1)
-                ask_new = answerdata.get("askNew", False)
-            if answernr < 0:
-                answernr = answer_browser_data.get("answernr", -1)
-            answernr_to_user = answernr
-            if (answernr < 0):
-                answernr_to_user = answerinfo.count
-                answernr = answerinfo.count
-            if not ask_new:
-                ask_new == answernr == answerinfo.count
-            context_user = UserContext(ctx_user or curr_user, curr_user, answernr_to_user)
-            # if ask_new:
-            #    answernr = -1
-
-        vr = verify_task_access(
-            d,
-            tid,
-            AccessType.view,
-            TaskIdAccess.ReadWrite,
-            context_user=context_user,
-            view_ctx=view_ctx,
-            allow_grace_period=True,
-        )
-        plugin = vr.plugin
-    except (PluginException, TimDbException) as e:
-        raise PluginException(str(e))
+    vr, answerinfo, users, allow_save, ask_new = get_postanswer_plugin_etc(
+        d, tid, answerdata, answer_browser_data,
+        curr_user, ctx_user, urlmacros, users, other_session_users, origin
+    )
+    plugin = vr.plugin
 
     if tid.is_points_ref:
         return AnswerRouteResult(
@@ -903,7 +925,7 @@ def post_answer_impl(
                         result={'web': {'error': 'Error in JavaScript: ' + e.args[0]}},
                         plugin=plugin,
                     )
-            allow_save = not newtask or answernr == answerinfo.count
+
             if (points or save_object is not None or tags) and allow_save:
                 a = save_answer(
                     users,
@@ -1467,7 +1489,10 @@ def find_tim_vars(plugin: Plugin):
         'answerLimit': plugin.answer_limit(),
         'triesText': plugin.known.tries_text(),
         'pointsText': plugin.known.points_text(),
+        'buttonNewTask': plugin.values.get("buttonNewTask", None),
     }
+    if plugin.is_new_task():
+        tim_vars["newtask"] = True
     return tim_vars
 
 

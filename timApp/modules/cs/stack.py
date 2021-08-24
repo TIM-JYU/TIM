@@ -71,7 +71,6 @@ class Stack(Language):
         input = self.query.jso.get('input', {})
         ask_new = info.get("askNew", False)
         if isinstance(state, dict) and not ask_new:
-            # if state.get('usercode') == input.get('usercode'):
             if not get_task:
                 userseed = state.get("seed", seed)
         nosave = input.get('nosave', False)

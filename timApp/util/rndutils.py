@@ -10,7 +10,7 @@ from typing import List, Dict, Tuple, Optional, Union, Callable, TypeVar
 
 MAX_RND_LIST_LEN = 100
 
-@dataclass
+@dataclass(frozen=True)
 class SeedClass:
     seed: int
     extraseed: int = 0
