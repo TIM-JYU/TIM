@@ -227,6 +227,61 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     return archive_doc
 
 
+def message_body_to_md(body: str) -> str:
+    """
+    Converts mail body into markdown.
+    Importantly, the function
+        * adds extra spacing for quotes
+        * adds explicit newline to non-paragraph breaks
+        * makes links clickable
+        * cleans up Outlook safelinks
+
+    :param body: Original message body.
+    :return: Markdown-converted message body.
+    """
+    result: List[str] = []
+    body_lines = body.splitlines(False)
+    code_block = False
+    for i, l in enumerate(body_lines):
+        cur = l.strip()
+        prev = body_lines[i - 1] if i > 0 else ""
+        prev = prev.strip()
+
+        # plaintext boundary if it's present, simply ignore since we'd rather save just the plaintext mail
+        if cur == "--- mail_boundary ---":
+            break
+
+        # Code block, simply flip for convenience
+        if cur.startswith("```"):
+            code_block = not code_block
+            result.append(l)
+            continue
+
+        # Code block -> handle verbatim
+        if code_block:
+            result.append(l)
+            continue
+
+        is_list = cur.startswith("-") or cur.startswith("*")
+
+        # Quote
+        if cur.startswith(">"):
+            # Previous line is not quote or empty line => insert extra empty line for separation
+            if prev and not prev.startswith(">"):
+                result.append("")
+        # Previous and current lines are non-empty lists => force newline on previous line
+        elif not is_list and prev and cur:
+            result[-1] += "  "
+
+        result.append(l)
+
+    # Close the opened code block
+    if code_block:
+        result.append("```")
+
+    return "\n".join(result)
+
+
 def check_archives_folder_exists(message_list: MessageListModel) -> Optional[Folder]:
     """
     Ensures archive folder exists for the given list if the list is archived.
