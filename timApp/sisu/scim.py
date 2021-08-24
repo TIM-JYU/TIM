@@ -8,7 +8,6 @@ from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
 
 from timApp.admin.user_cli import do_merge_users, do_soft_delete
-from tim_common.marshmallow_dataclass import class_schema
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name, SisuDisplayName
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import refresh_sisu_grouplist_doc, send_course_group_mail
@@ -21,6 +20,7 @@ from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import load_data_from_req, JSONException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_warning, log_info
+from tim_common.marshmallow_dataclass import class_schema
 
 scim = Blueprint('scim',
                  __name__,
@@ -54,6 +54,7 @@ class SCIMMemberModel:
     name: SCIMNameModel
     display: str
     email: str
+    workEmail: Optional[str] = None
     ref: Optional[str] = field(metadata={'data_key': '$ref'}, default=None)
     type: Optional[str] = None
 
