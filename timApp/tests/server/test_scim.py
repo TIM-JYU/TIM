@@ -382,6 +382,27 @@ class ScimTest(TimRouteTest):
             auth=a,
         )
 
+    def test_email_resolution(self):
+        self.json_post(
+            '/scim/Groups',
+            json_data={
+                'externalId': 'jy-CUR-1250-teachers',
+                'displayName': 'X001 2019-09-09--2019-12-20: Work Email Test',
+                'members': add_name_parts([
+                    {'value': 'someone', 'display': 'Sisu User', 'email': 'sis1usr@example.com', 'workEmail': None},
+                    {'value': 'someone2', 'display': 'Sisu User 2', 'email': 'sis2usr@example.com',
+                     'workEmail': 'sis2work@example.com'},
+                ]),
+            },
+            auth=a,
+            expect_status=201
+        )
+        self.assertIsNotNone(User.get_by_email('sis1usr@example.com'),
+                             'Sisu User must have their personal email assigned')
+        self.assertIsNotNone(User.get_by_email('sis2work@example.com'),
+                             'Sisu User 2 must have their work email assigned')
+        self.assertIsNone(User.get_by_email('sis2usr@example.com'), 'Sisu User 2 must have their work email assigned')
+
     def test_duplicate_email(self):
         self.json_post(
             '/scim/Groups',

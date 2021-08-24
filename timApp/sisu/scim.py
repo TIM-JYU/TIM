@@ -1,5 +1,6 @@
 import re
 from dataclasses import field, dataclass
+from functools import cached_property
 from typing import List, Optional, Dict, Any, Generator
 
 from flask import Blueprint, request, current_app, Response
@@ -29,7 +30,7 @@ scim = Blueprint('scim',
 UNPROCESSABLE_ENTITY = 422
 
 
-@dataclass
+@dataclass(frozen=True)
 class SCIMNameModel:
     familyName: str
     givenName: str
@@ -48,7 +49,7 @@ class SCIMNameModel:
                 return f'{self.givenName} {self.familyName}'
 
 
-@dataclass
+@dataclass(frozen=True)
 class SCIMMemberModel:
     value: str
     name: SCIMNameModel
@@ -58,21 +59,25 @@ class SCIMMemberModel:
     ref: Optional[str] = field(metadata={'data_key': '$ref'}, default=None)
     type: Optional[str] = None
 
+    @cached_property
+    def primary_email(self) -> str:
+        return self.workEmail or self.email
 
-@dataclass
+
+@dataclass(frozen=True)
 class SCIMCommonModel:
     externalId: str
     displayName: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SCIMEmailModel:
     value: str
     type: Optional[str] = None
     primary: bool = True
 
 
-@dataclass
+@dataclass(frozen=True)
 class SCIMUserModel(SCIMCommonModel):
     userName: str
     emails: List[SCIMEmailModel]
@@ -81,7 +86,7 @@ class SCIMUserModel(SCIMCommonModel):
 SCIMUserModelSchema = class_schema(SCIMUserModel)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SCIMGroupModel(SCIMCommonModel):
     members: List[SCIMMemberModel]
     id: Optional[str] = None
@@ -91,7 +96,7 @@ class SCIMGroupModel(SCIMCommonModel):
 SCIMGroupModelSchema = class_schema(SCIMGroupModel)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SCIMException(Exception):
     code: int
     msg: str
@@ -313,7 +318,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
         ms.set_expired()
     p = parse_sisu_group_display_name_or_error(args)
     ug.display_name = args.displayName
-    emails = [m.email for m in args.members if m.email is not None]
+    emails = [m.primary_email for m in args.members if m.primary_email is not None]
     unique_emails = set(emails)
     if len(emails) != len(unique_emails):
         raise SCIMException(422, f'The users do not have distinct emails.')
@@ -342,8 +347,8 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
             name_to_use = expected_name
             user = existing_accounts_dict.get(u.value)
             if user:
-                if u.email is not None:
-                    user_email = existing_accounts_by_email_dict.get(u.email)
+                if u.primary_email is not None:
+                    user_email = existing_accounts_by_email_dict.get(u.primary_email)
                     if user_email and user != user_email:
                         if not user_email.is_email_user:
                             raise SCIMException(
@@ -357,19 +362,19 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                 user.update_info(UserInfo(
                     username=u.value,
                     full_name=name_to_use,
-                    email=u.email,
+                    email=u.primary_email,
                     last_name=u.name.familyName,
                     given_name=u.name.givenName,
                 ))
             else:
-                user = existing_accounts_by_email_dict.get(u.email)
+                user = existing_accounts_by_email_dict.get(u.primary_email)
                 if user:
                     if not user.is_email_user:
                         raise SCIMException(422, f'Key (email)=({user.email}) already exists. Conflicting username is: {u.value}')
                     user.update_info(UserInfo(
                         username=u.value,
                         full_name=name_to_use,
-                        email=u.email,
+                        email=u.primary_email,
                         last_name=u.name.familyName,
                         given_name=u.name.givenName,
                     ))
@@ -377,7 +382,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                     user, _ = User.create_with_group(UserInfo(
                         username=u.value,
                         full_name=name_to_use,
-                        email=u.email,
+                        email=u.primary_email,
                         origin=UserOrigin.Sisu,
                         last_name=u.name.familyName,
                         given_name=u.name.givenName,
@@ -418,7 +423,7 @@ def raise_conflict_error(args: SCIMGroupModel, e: IntegrityError) -> None:
         em = m.group('email')
         member = None
         for x in args.members:
-            if x.email == em:
+            if x.primary_email == em:
                 member = x
                 break
         assert member is not None
