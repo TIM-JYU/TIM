@@ -9,6 +9,7 @@ use indexmap::IndexMap;
 use rayon::iter::IntoParallelIterator;
 use rayon::prelude::*;
 use serde_derive::Deserialize;
+use serde_derive::Serialize;
 use serde_json;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
@@ -84,12 +85,22 @@ where
 }
 
 impl DocumentStore {
-    fn load_document(&mut self, id: DocId) -> Result<&Document, anyhow::Error> {
+    pub fn load_document(&mut self, id: DocId) -> Result<&Document, anyhow::Error> {
         match self.docs.entry(id) {
             Entry::Occupied(o) => Ok(o.into_mut()),
             Entry::Vacant(v) => {
                 let doc = Document::load_newest(id)?;
                 Ok(v.insert(doc))
+            }
+        }
+    }
+
+    pub fn drain_document(&mut self, id: DocId) -> Result<Document, anyhow::Error> {
+        match self.docs.entry(id) {
+            Entry::Occupied(o) => Ok(o.remove()),
+            Entry::Vacant(_) => {
+                let doc = Document::load_newest(id)?;
+                Ok(doc)
             }
         }
     }
@@ -136,7 +147,7 @@ impl DocumentStore {
     }
 }
 
-#[derive(Debug, Eq, Hash, PartialEq, Copy, Clone)]
+#[derive(Debug, Eq, Hash, PartialEq, Copy, Clone, Serialize)]
 pub struct DocId(pub i32);
 
 impl DocId {

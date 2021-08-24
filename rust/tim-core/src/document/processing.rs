@@ -5,6 +5,7 @@ use crate::document::BlockId;
 use crate::document::DocBlock;
 use crate::document::DocId;
 use crate::document::Document;
+use serde_derive::Serialize;
 use std::collections::HashSet;
 
 #[derive(Debug)]
@@ -30,7 +31,7 @@ impl From<CtxBlock> for PP {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct CtxBlock {
     doc: DocId,
     p: DocBlock,

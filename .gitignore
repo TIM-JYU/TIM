@@ -3,6 +3,7 @@
 *.log
 *.printing_whitelist.*
 *.pyc
+*.so
 *~
 .cabal-sandbox/
 .cache/
@@ -56,6 +57,7 @@ bower_components/
 cargo-cache/
 certs/
 dist/
+target/
 dist_*/
 log.txt
 MIRToolbox/
@@ -64,6 +66,7 @@ pg_backup
 redate-settings
 temp
 Thumbs.db
+tim_core_template.pyi
 yubi.key
 /mailman/web/diskcache/
 /mailman/web/fulltext_index/

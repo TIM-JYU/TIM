@@ -3,6 +3,7 @@ import os
 import signal
 import subprocess
 import sys
+from pprint import pprint
 from types import FrameType
 
 import timApp.tim
@@ -17,7 +18,13 @@ def quit_fast(_sig: signal.Signals, _frame: FrameType) -> None:
     sys.exit(0)
 
 
-if __name__ == '__main__':
+def main() -> None:
+    try:
+        from timApp.rust_ext.tim_core import load_document
+    except ModuleNotFoundError:
+        print('Rust extension modules were not found. Run: ./build_rust.sh')
+        sys.exit(1)
+    # pprint(load_document(3))
     # quit faster when running in PyCharm
     if pycharm_running():
         signal.signal(signal.SIGINT, quit_fast)
@@ -35,3 +42,7 @@ if __name__ == '__main__':
         p.wait()
     else:
         raise Exception('Unknown command line argument: ' + sys.argv[1])
+
+
+if __name__ == '__main__':
+    main()

@@ -1,6 +1,7 @@
 use crate::timerror::TimError;
 use anyhow::Context;
 use serde_derive::Deserialize;
+use serde_derive::Serialize;
 use serde_json;
 use std::borrow::Borrow;
 use std::collections::HashMap;
@@ -12,7 +13,7 @@ use tera::Tera;
 use yaml_rust::Yaml;
 use yaml_rust::YamlLoader;
 
-#[derive(Deserialize, Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Deserialize, Debug, Clone, Eq, PartialEq, Hash, Serialize)]
 pub struct BlockId(pub String);
 
 pub struct BlockIdRef<'a>(pub &'a str);
@@ -57,14 +58,14 @@ impl<'a> BlockIdLike for BlockIdRef<'a> {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Serialize)]
 pub struct AttributeSet {
     classes: Option<Vec<String>>,
     #[serde(flatten)]
     pub others: HashMap<String, String>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Serialize)]
 pub struct DocBlock {
     pub id: BlockId,
     md: String,

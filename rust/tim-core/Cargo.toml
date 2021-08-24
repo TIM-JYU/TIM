@@ -16,3 +16,15 @@ thiserror = "1.0.26"
 anyhow = "1.0.43"
 tera = "1.12.1"
 yaml-rust = "0.4.5"
+pythonize = "0.14.0"
+
+[lib]
+name = "tim_core"
+crate-type = [
+    "cdylib",
+    # "rlib",
+]
+
+[dependencies.pyo3]
+version = "0.14.2"
+features = ["extension-module"]
