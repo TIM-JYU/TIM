@@ -41,14 +41,17 @@ export const GenericPluginMarkup = t.partial({
     connectionErrorMessage: nullable(t.string),
     answerBrowser: nullable(AnswerBrowserSettings),
     newtask: t.boolean,
-    askNew: t.boolean, // is new task asked? Or save current new task.
-    answernr: t.Integer, // is some old answer selected
+    askNew: nullable(t.boolean), // is new task asked? Or save current new task.
+    answernr: nullable(t.Integer), // is some old answer selected
 });
 
 export const Info = nullable(
     t.type({
         // TODO add the rest of the fields
         earlier_answers: t.Integer,
+        // TODO: How to write those so that if they are missing, it is not error?
+        // askNew: nullable(t.boolean), // is new task asked? Or save current new task.
+        // answernr: nullable(t.Integer), // is some old answer selected
     })
 );
 

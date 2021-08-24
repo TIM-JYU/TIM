@@ -390,10 +390,11 @@ class Plugin:
         else:
             state = None
             info = None
-        if userctx.ask_new or (userctx.answer_nr is not None):
+        if self.is_new_task() and (userctx.ask_new or (userctx.answer_nr is not None)):
             if not info:
                 info = {}
-            info["answernr"] = userctx.answer_nr
+            if userctx.answer_nr is not None:
+                info["answernr"] = userctx.answer_nr
             info["askNew"] = userctx.ask_new
         access = {}
         if self.task_id and self.task_id.access_specifier == TaskIdAccess.ReadOnly and \

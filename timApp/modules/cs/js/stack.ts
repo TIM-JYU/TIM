@@ -153,7 +153,7 @@ class StackController
         });
 
         this.askNew = aa.markup.askNew ?? false;
-        this.answernr = aa.markup.answernr;
+        this.answernr = aa.markup.answernr ?? -1;
         // if (this.askNew) this.answernr = -1;
         if (this.attrs.open) {
             this.runGetTask();
