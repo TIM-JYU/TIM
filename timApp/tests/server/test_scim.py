@@ -62,7 +62,8 @@ class ScimTest(TimRouteTest):
                 'displayName': display_name,
                 'members': add_name_parts([
                     {'value': 'sisuuser', 'display': 'Sisu User', 'email': 'x@example.com'},
-                    {'value': 'sisuuser3', 'display': 'Sisu User 3', 'email': 'x3@example.com'},
+                    {'value': 'sisuuser3', 'display': 'Sisu User 3', 'email': 'x3@example.com',
+                     'workEmail': 'x3work@example.com'},
                 ]),
             }, auth=a,
             expect_status=201,
