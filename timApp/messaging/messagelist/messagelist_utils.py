@@ -257,7 +257,7 @@ def message_body_to_md(body: str) -> str:
         # Outlook safelink
         if "safelinks.protection.outlook.com" in url.netloc:
             qs = parse_qs(url.query)
-            real_url = qs.get("url", [None])[0]
+            real_url = qs.get("url", [""])[0]
         real_url = real_url or url.geturl()
         return f"<{real_url}>" if not code_block else real_url
 
