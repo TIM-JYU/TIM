@@ -56,7 +56,7 @@ Some code
 This must behave normally with no extra spaces.
 ```""")
 
-    def test_mailbody_convert_special(self):
+    def test_mailbody_convert_codeblocks(self):
         self.assertEqual(message_body_to_md("""
 Special cases:
 
@@ -122,3 +122,41 @@ This should be converted to a plain link:
 <https://tim.education/static/images/favicon.ico>
 
 This is an inline link: [Example 1](<https://example.com>) and some text""")
+
+    def test_mailbody_convert_quote(self):
+        self.assertEqual(message_body_to_md("""
+> Quote
+> Quote 2
+Non-quote
+
+> Quote
+>> Subquote
+>> Subquote 2
+> Quote 2
+
+> Level 1
+>> Level 2
+>>> Level 3
+> Level 1 back
+Non-quote"""), """
+> Quote
+> Quote 2
+
+Non-quote
+
+> Quote
+>
+>> Subquote  
+>> Subquote 2
+>
+> Quote 2
+
+> Level 1
+>
+>> Level 2
+>>
+>>> Level 3
+>
+> Level 1 back
+
+Non-quote""")
