@@ -24,7 +24,7 @@
                 </div>
             </div>
             <div class="no-shrink">
-            <span>
+            <span class="user-index-count">
                 {{ $ctrl.findSelectedUserIndex() + 1 }}/{{ $ctrl.users.length }}
             </span>
                 <a ng-href="mailto:{{$ctrl.user.email}}">email</a>
@@ -50,7 +50,7 @@
                         </div>
                     </div>
                     <div class="no-shrink">
-                    <span>{{ $ctrl.filteredAnswers.length - $ctrl.findSelectedAnswerIndex() }}/<a tabindex="0"
+                    <span class="answer-index-count">{{ $ctrl.filteredAnswers.length - $ctrl.findSelectedAnswerIndex() }}/<a tabindex="0"
                                                                                                   title="Newest answer"
                                                                                                   ng-click="$ctrl.setNewest()">{{ $ctrl.filteredAnswers.length }}</a></span>
                         <label class="checkbox-inline" ng-show="$ctrl.anyInvalid">

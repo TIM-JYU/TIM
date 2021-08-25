@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class UserContext:
     user: User
     logged_user: User
-    answer_nr: Optional[int] = None  # needed if variable tasks, -1 = not task at all or not variable task
+    answer_nr: Optional[int] = None  # needed if variable tasks, None = not task at all or not variable task
     ask_new: Optional[bool] = None # to send for plugins to force new question
     # TODO: UserContext is not the best place for task dependent values
     # TODO: reason for those is that rndutils has only user_ctx to use

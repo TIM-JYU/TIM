@@ -127,7 +127,7 @@ class StackController
     private lastInputFieldElement: HTMLInputElement | undefined;
     private button: string = "";
     private askNew: boolean = false;
-    private answernr?: number = undefined;
+    private answernr?: number;
 
     private timer: NodeJS.Timer | undefined;
 

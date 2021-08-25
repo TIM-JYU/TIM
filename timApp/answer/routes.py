@@ -18,11 +18,11 @@ from webargs.flaskparser import use_args
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_existing_answers_info, save_answer, get_all_answers, \
-    valid_answers_query, valid_taskid_filter
+    valid_answers_query, valid_taskid_filter, ExistingAnswersInfo
 from timApp.answer.backup import send_answer_backup_if_enabled
 from timApp.answer.exportedanswer import ExportedAnswer
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access, AccessDenied, \
-    verify_admin, get_origin_from_request, verify_ip_ok
+    verify_admin, get_origin_from_request, verify_ip_ok, TaskAccessVerification
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
     verify_view_access, get_plugin_from_request
@@ -38,7 +38,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document, dereference_pars
 from timApp.document.hide_names import hide_names_in_teacher
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx, OriginInfo
+from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx, OriginInfo, UrlMacros
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.notification.send_email import multi_send_email
@@ -529,64 +529,71 @@ class AnswerRouteResult:
 
 
 def get_postanswer_plugin_etc(
-                              d: DocInfo,
-                              tid: str,
-                              answerdata: AnswerData,
-                              answer_browser_data,
-                              curr_user: User,
-                              ctx_user: UserContext,
-                              urlmacros: Tuple[Tuple[str, str], ...],
-                              users: list,
-                              other_session_users: List[User],
-                              origin: Optional[OriginInfo],
-                              ) -> object:
+      d: DocInfo,
+      tid: str,
+      answerdata: AnswerData,
+      answer_browser_data,
+      curr_user: User,
+      ctx_user: UserContext,
+      urlmacros: UrlMacros,
+      users: Optional[List[User]],
+      other_session_users: List[User],
+      origin: Optional[OriginInfo],
+      force_answer: bool
+      ) -> Tuple[TaskAccessVerification,
+                 ExistingAnswersInfo,
+                 List[User],
+                 bool,
+                 bool,
+                 bool
+        ]:
+    allow_save = True
+    ask_new = False
+
+    context_user = UserContext(ctx_user or curr_user, curr_user)
+    view_ctx = ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin)
+    doc, found_plugin = get_plugin_from_request(d.document, tid, context_user, view_ctx)
+    # newtask = found_plugin.value.get("newtask", False)
+    newtask = found_plugin.is_new_task()
+    if found_plugin.known.useCurrentUser or found_plugin.task_id.is_global:  # For plugins that is saved only for current user
+        users = [curr_user]
+    if users is None:
+        users = [curr_user] + other_session_users
+    if newtask: # found_plugin.par.get_attr("seed") == "answernr":
+        force_answer = True # variable tasks are always saved even with same answer
+
+    answerinfo = get_existing_answers_info(users, tid)
+    answernr = -1
+
+    if newtask: # only if task is with new random after every answer
+        # Next three lines was there originally for stack, but let's see if we manage without them
+        # if isinstance(answerdata, dict):
+            # answernr = answerdata.get("answernr", -1)
+            # ask_new = answerdata.get("askNew", False)
+        if answernr < 0:
+            answernr = answer_browser_data.get("answernr", -1)
+        answernr_to_user = answernr
+        if (answernr < 0):
+            answernr_to_user = answerinfo.count
+            answernr = answerinfo.count
+        if not ask_new:
+            ask_new = answernr == answerinfo.count
+            allow_save = ask_new
+        context_user = UserContext(ctx_user or curr_user, curr_user, answernr_to_user)
+
     try:
-        allow_save = True
-        ask_new = False
-
-        context_user = UserContext(ctx_user or curr_user, curr_user)
-        view_ctx = ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin)
-        doc, found_plugin = get_plugin_from_request(d.document, tid, context_user, view_ctx)
-        # newtask = found_plugin.value.get("newtask", False)
-        newtask = found_plugin.is_new_task()
-        if found_plugin.known.useCurrentUser or found_plugin.task_id.is_global:  # For plugins that is saved only for current user
-            users = [curr_user]
-        if users is None:
-            users = [curr_user] + other_session_users
-        if newtask: # found_plugin.par.get_attr("seed") == "answernr":
-            force_answer = True # variable tasks are always saved even with same answer
-
-        answerinfo = get_existing_answers_info(users, tid)
-        answernr = -1
-
-        if newtask: # only if task is with new random after every answer
-            if isinstance(answerdata, dict):
-                answernr = answerdata.get("answernr", -1)
-                ask_new = answerdata.get("askNew", False)
-            if answernr < 0:
-                answernr = answer_browser_data.get("answernr", -1)
-            answernr_to_user = answernr
-            if (answernr < 0):
-                answernr_to_user = answerinfo.count
-                answernr = answerinfo.count
-            if not ask_new:
-                ask_new = answernr == answerinfo.count
-                allow_save = ask_new
-            context_user = UserContext(ctx_user or curr_user, curr_user, answernr_to_user)
-
         vr = verify_task_access(
-            d,
-            tid,
-            AccessType.view,
-            TaskIdAccess.ReadWrite,
-            context_user=context_user,
-            view_ctx=view_ctx,
-            allow_grace_period=True,
+        d,
+        tid,
+        AccessType.view,
+        TaskIdAccess.ReadWrite,
+        context_user=context_user,
+        view_ctx=view_ctx,
+        allow_grace_period=True,
         )
-        plugin = vr.plugin
     except (PluginException, TimDbException) as e:
         raise PluginException(str(e))
-    return vr, answerinfo, users, allow_save, ask_new
+    return vr, answerinfo, users, allow_save, ask_new, force_answer
 
 def post_answer_impl(
         task_id_ext: str,
@@ -594,7 +601,7 @@ def post_answer_impl(
         answer_browser_data,
         answer_options,
         curr_user: User,
-        urlmacros: Tuple[Tuple[str, str], ...],
+        urlmacros: UrlMacros,
         other_session_users: List[User],
         origin: Optional[OriginInfo],
 ) -> AnswerRouteResult:
@@ -656,9 +663,10 @@ def post_answer_impl(
                 raise PluginException(f'User {user_id} not found')
             users = [ctx_user]  # TODO: Vesa's hack to save answer to student
 
-    vr, answerinfo, users, allow_save, ask_new = get_postanswer_plugin_etc(
+    vr, answerinfo, users, allow_save, ask_new, force_answer = get_postanswer_plugin_etc(
         d, tid, answerdata, answer_browser_data,
-        curr_user, ctx_user, urlmacros, users, other_session_users, origin
+        curr_user, ctx_user, urlmacros, users,
+        other_session_users, origin, force_answer
     )
     plugin = vr.plugin
 
@@ -727,6 +735,8 @@ def post_answer_impl(
     preprocessor = answer_call_preprocessors.get(plugin.type)
     if preprocessor:
         preprocessor(answerdata, curr_user, d, plugin)
+
+    # print(json.dumps(answerdata))  # uncomment this to follow what answers are used in browser tests
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,

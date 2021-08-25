@@ -91,7 +91,6 @@ class Stack(Language):
             stack_data["score"] = False
         else:
             save = result["save"]
-            # if not new_task:
             save["seed"] = userseed
 
         r = requests.post(url=url, data=json.dumps(stack_data))  # json.dumps(data_to_send, cls=TimJsonEncoder))

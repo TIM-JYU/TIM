@@ -46,13 +46,16 @@ export const GenericPluginMarkup = t.partial({
 });
 
 export const Info = nullable(
-    t.type({
-        // TODO add the rest of the fields
-        earlier_answers: t.Integer,
-        // TODO: How to write those so that if they are missing, it is not error?
-        // askNew: nullable(t.boolean), // is new task asked? Or save current new task.
-        // answernr: nullable(t.Integer), // is some old answer selected
-    })
+    t.intersection([
+        t.type({
+            // TODO add the rest of the fields
+            earlier_answers: t.Integer,
+        }),
+        t.partial({
+            askNew: t.boolean,
+            answernr: nullable(t.Integer),
+        }),
+    ])
 );
 
 export function getTopLevelFields<M extends IGenericPluginMarkup>(
