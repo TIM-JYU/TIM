@@ -55,3 +55,43 @@ Foo said:
 Some code
 This must behave normally with no extra spaces.
 ```""")
+
+    def test_mailbody_convert_special(self):
+        self.assertEqual(message_body_to_md("""
+Special cases:
+
+```
+> No newline on top
+```
+
+> Quote with code:
+> ```
+> Some code
+> ```
+
+``````
+Below ticks should be handled verbatim
+```
+``````
+
+Test:
+> Foo"""), """
+Special cases:
+
+```
+> No newline on top
+```
+
+> Quote with code:
+> ```
+> Some code
+> ```
+
+``````
+Below ticks should be handled verbatim
+```
+``````
+
+Test:
+
+> Foo""")

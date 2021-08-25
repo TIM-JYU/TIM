@@ -241,7 +241,7 @@ def message_body_to_md(body: str) -> str:
     """
     result: List[str] = []
     body_lines = body.splitlines(False)
-    code_block = False
+    code_block = None
     for i, l in enumerate(body_lines):
         cur = l.strip()
         prev = body_lines[i - 1] if i > 0 else ""
@@ -251,9 +251,13 @@ def message_body_to_md(body: str) -> str:
         if cur == "--- mail_boundary ---":
             break
 
-        # Code block, simply flip for convenience
+        # Code block start/end
         if cur.startswith("```"):
-            code_block = not code_block
+            if not code_block:
+                code_block_end = next((i for i, c in enumerate(cur) if c != "`"), len(cur))
+                code_block = cur[:code_block_end]
+            elif cur.startswith(code_block):
+                code_block = None
             result.append(l)
             continue
 
