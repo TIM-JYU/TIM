@@ -384,7 +384,7 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
                                                  f"{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}")
 
     message_doc_subject = message.subject
-    if message_list.subject_prefix and message_doc_subject.startswith(message_list.subject_prefix):
+    if message_list.subject_prefix:
         message_doc_subject = message_doc_subject.removeprefix(message_list.subject_prefix)
 
     archive_doc = create_archive_doc_with_permission(message.subject, archive_doc_path, message_list, message)
