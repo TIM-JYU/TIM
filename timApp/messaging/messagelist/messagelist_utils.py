@@ -3,7 +3,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from enum import Enum
+from re import Match
 from typing import Optional, List, Dict, Tuple, Iterator
+from urllib.parse import SplitResult, parse_qs, urlsplit
 
 from mailmanclient import MailingList
 
@@ -227,6 +229,12 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     return archive_doc
 
 
+# Based on https://mathiasbynens.be/demo/url-regex with minor edits
+# This is one of the simplest patterns and it matches all cases correctly except for some special cases
+url_pattern = r'(https?|ftp)://[^\s/$.?#].[^\s]*'
+md_url_pattern = re.compile(rf"(\[([^]]*)\]\(({url_pattern})\))|({url_pattern})", re.IGNORECASE)
+
+
 def message_body_to_md(body: str) -> str:
     """
     Converts mail body into markdown.
@@ -242,8 +250,27 @@ def message_body_to_md(body: str) -> str:
     result: List[str] = []
     body_lines = body.splitlines(False)
     code_block = None
-    for i, l in enumerate(body_lines):
-        cur = l.strip()
+
+    def fix_url(url: SplitResult) -> str:
+        real_url = None
+        # Outlook safelink
+        if "safelinks.protection.outlook.com" in url.netloc:
+            qs = parse_qs(url.query)
+            real_url = qs.get("url", [None])[0]
+        real_url = real_url or url.geturl()
+        return f"<{real_url}>" if not code_block else real_url
+
+    def handle_md_url(m: Match) -> str:
+        md_url, raw_url = m.group(1), m.group(5)
+        if raw_url:
+            return fix_url(urlsplit(raw_url))
+        else:
+            return f"[{m.group(2)}]({fix_url(urlsplit(m.group(3)))})"
+
+    for i, line in enumerate(body_lines):
+        line = md_url_pattern.sub(handle_md_url, line)
+        # Try to fix links first because Outlook can sometimes misinterpret text as URLs
+        cur = line.strip()
         prev = body_lines[i - 1] if i > 0 else ""
         prev = prev.strip()
 
@@ -258,12 +285,12 @@ def message_body_to_md(body: str) -> str:
                 code_block = cur[:code_block_end]
             elif cur.startswith(code_block):
                 code_block = None
-            result.append(l)
+            result.append(line)
             continue
 
         # Code block -> handle verbatim
         if code_block:
-            result.append(l)
+            result.append(line)
             continue
 
         is_list = cur.startswith("-") or cur.startswith("*")
@@ -277,11 +304,11 @@ def message_body_to_md(body: str) -> str:
         elif not is_list and prev and cur:
             result[-1] += "  "
 
-        result.append(l)
+        result.append(line)
 
     # Close the opened code block
     if code_block:
-        result.append("```")
+        result.append(code_block)
 
     return "\n".join(result)
 

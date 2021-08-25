@@ -66,7 +66,7 @@ def count_chars_from_beginning(md: str, char: str) -> int:
     return num
 
 
-def get_error_html(message: Union[str, Exception], response: Optional[str]=None) -> str:
+def get_error_html(message: Union[str, Exception], response: Optional[str] = None) -> str:
     """Wraps an error message in an HTML element with class 'error'.
 
     :param response: The plugin response string.
@@ -90,7 +90,7 @@ def get_error_tex(title: str, message: Union[str, Exception]) -> str:
     return f'\\timpluginerror{{ {title} }}{{ {str(message)} }}'
 
 
-def del_content(directory: Path, onerror: Optional[Callable[[Any, str, Any], Any]]=None) -> None:
+def del_content(directory: Path, onerror: Optional[Callable[[Any, str, Any], Any]] = None) -> None:
     for f in os.listdir(directory):
         f_path = os.path.join(directory, f)
         try:
@@ -111,9 +111,11 @@ def split_location(path: str) -> Tuple[str, str]:
 def join_location(location: str, name: str) -> str:
     return name if location == '' else location + '/' + name
 
+
 def relative_location(location: str, base: str) -> str:
     """Returns the location of location relative to base."""
     return str(PurePosixPath(location).relative_to(base))
+
 
 def get_sql_template(value_list: List) -> str:
     return ','.join(['%s'] * len(value_list))
@@ -251,7 +253,7 @@ def get_error_message(e: Exception) -> str:
 
 Range = Tuple[int, int]
 
-TASK_PROG = re.compile('([\w\.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)') # see https://regex101.com/r/ZZuizF/4
+TASK_PROG = re.compile('([\w\.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)')  # see https://regex101.com/r/ZZuizF/4
 TASK_NAME_PROG = re.compile("(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
 
 
@@ -316,7 +318,7 @@ def get_alias(name: str) -> str:
 
 
 fin_timezone = pytz.timezone('Europe/Helsinki')
-local_timezone = fin_timezone  #  TODO: find real local timezone somewhere
+local_timezone = fin_timezone  # TODO: find real local timezone somewhere
 temp_folder_path = Path('/tmp')
 cache_folder_path = Path('/cache')
 
