@@ -269,7 +269,7 @@ def message_body_to_md(body: str) -> str:
             return f"[{m.group(2)}]({fix_url(urlsplit(m.group(3)))})"
 
     def append_line(line_str: str = "") -> None:
-        result.append((quote_level * ">") + (" " if quote_level > 0 else "") + line_str)
+        result.append((quote_level * ">") + line_str)
 
     def count_prefix_char(s: str, prefix_char: str) -> int:
         res = 0
@@ -278,7 +278,16 @@ def message_body_to_md(body: str) -> str:
                 continue
             if c == prefix_char:
                 res += 1
+            else:
+                break
         return res
+
+    def strip_quotes(s: str) -> str:
+        for _ in range(quote_level):
+            index = next((ci for ci, c in enumerate(s) if c == ">"), None)
+            if index is not None:
+                s = s[index + 1:]
+        return s
 
     for i, line in enumerate(body_lines):
         # plaintext boundary if it's present, simply ignore since we'd rather save just the plaintext mail
@@ -287,11 +296,27 @@ def message_body_to_md(body: str) -> str:
 
         line = md_url_pattern.sub(handle_md_url, line)
         prev = body_lines[i - 1] if i > 0 else ""
+        cur_quote_level = count_prefix_char(line, ">")
+        prev_quote_level = count_prefix_char(prev, ">")
+        # Strip quotes after computing line's quote level
+        line = strip_quotes(line)
         cur = line.strip()
         prev = prev.strip()
-        cur_quote_level = count_prefix_char(cur, ">")
-        prev_quote_level = count_prefix_char(prev, ">")
-        cur = cur.lstrip(" >")
+
+        # Code block start/end
+        if cur.startswith("```"):
+            if not code_block:
+                code_block_end = count_prefix_char(cur, "`")
+                code_block = cur[:code_block_end]
+            elif cur.startswith(code_block):
+                code_block = None
+            append_line(line)
+            continue
+
+        # Code block -> handle verbatim
+        if code_block:
+            append_line(line)
+            continue
 
         # Quote level mismatch => quote level is changed, append newline and change quote level
         if cur_quote_level != prev_quote_level:
@@ -302,30 +327,17 @@ def message_body_to_md(body: str) -> str:
             # If we return from quote, add newline on new level
             if cur_quote_level < prev_quote_level and cur:
                 append_line()
-            # Previous line is not technically empty
+            # Reset line and current values since we changed quote level
+            line = strip_quotes(line)
+            cur = line.strip()
             prev = ""
-
-        # Code block start/end
-        if cur.startswith("```"):
-            if not code_block:
-                code_block_end = count_prefix_char(cur, "`")
-                code_block = cur[:code_block_end]
-            elif cur.startswith(code_block):
-                code_block = None
-            append_line(cur)
-            continue
-
-        # Code block -> handle verbatim
-        if code_block:
-            append_line(cur)
-            continue
 
         is_list = cur.startswith("-") or cur.startswith("*")
         # Previous and current lines are non-empty lists => force newline on previous line
         if not is_list and prev and cur:
             result[-1] += "  "
 
-        append_line(cur)
+        append_line(line)
 
     # Close the opened code block
     if code_block:

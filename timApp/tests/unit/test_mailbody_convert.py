@@ -43,12 +43,12 @@ This is a new paragraph.
 * List item 2
 * List item 3
 
-> Foo
+> Foo  
 > Bar
 
 Foo said:
 
-> Foo
+> Foo  
 > Bar
 
 ```
@@ -64,7 +64,7 @@ Special cases:
 > No newline on top
 ```
 
-> Quote with code:
+> Quote with code:  
 > ```
 > Some code
 > ```
@@ -82,7 +82,7 @@ Special cases:
 > No newline on top
 ```
 
-> Quote with code:
+> Quote with code:  
 > ```
 > Some code
 > ```
@@ -145,18 +145,18 @@ Non-quote"""), """
 Non-quote
 
 > Quote
-> 
+>
 >> Subquote  
 >> Subquote 2
-> 
+>
 > Quote 2
 
 > Level 1
-> 
+>
 >> Level 2
->> 
+>>
 >>> Level 3
-> 
+>
 > Level 1 back
 
 Non-quote""")
