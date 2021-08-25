@@ -138,7 +138,13 @@ Non-quote
 >> Level 2
 >>> Level 3
 > Level 1 back
-Non-quote"""), """
+Non-quote
+
+> Quote
+> ```
+> Code
+> ```
+> Quote"""), """
 > Quote  
 > Quote 2
 
@@ -159,4 +165,19 @@ Non-quote
 >
 > Level 1 back
 
-Non-quote""")
+Non-quote
+
+> Quote
+> ```
+> Code
+> ```  
+> Quote""")
+
+    def test_mailbody_convert_border(self):
+        self.assertEqual(message_body_to_md("""
+Some message
+
+--- mail_boundary ---
+<b>Some message</b>"""), """
+Some message
+""")
