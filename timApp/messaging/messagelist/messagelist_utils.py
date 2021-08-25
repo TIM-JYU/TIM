@@ -379,13 +379,13 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
     if message.subject.lower().startswith("[spam]"):
         return
 
-    message_doc_name = message.subject.replace("/", "-")
-    archive_doc_path = remove_path_special_chars(f"{archive_folder.path}/{message_doc_name}-"
-                                                 f"{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}")
-
     message_doc_subject = message.subject
     if message_list.subject_prefix:
         message_doc_subject = message_doc_subject.removeprefix(message_list.subject_prefix)
+
+    message_doc_name = message_doc_subject.replace("/", "-")
+    archive_doc_path = remove_path_special_chars(f"{archive_folder.path}/{message_doc_name}-"
+                                                 f"{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}")
 
     archive_doc = create_archive_doc_with_permission(message.subject, archive_doc_path, message_list, message)
     archive_doc.document.add_setting("macros", {
