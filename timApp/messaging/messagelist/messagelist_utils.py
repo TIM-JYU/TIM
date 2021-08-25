@@ -250,6 +250,7 @@ def message_body_to_md(body: str) -> str:
     result: List[str] = []
     body_lines = body.splitlines(False)
     code_block = None
+    quote_level = 0
 
     def fix_url(url: SplitResult) -> str:
         real_url = None
@@ -267,48 +268,68 @@ def message_body_to_md(body: str) -> str:
         else:
             return f"[{m.group(2)}]({fix_url(urlsplit(m.group(3)))})"
 
-    for i, line in enumerate(body_lines):
-        line = md_url_pattern.sub(handle_md_url, line)
-        # Try to fix links first because Outlook can sometimes misinterpret text as URLs
-        cur = line.strip()
-        prev = body_lines[i - 1] if i > 0 else ""
-        prev = prev.strip()
+    def append_line(line_str: str = "") -> None:
+        result.append((quote_level * ">") + (" " if quote_level > 0 else "") + line_str)
 
+    def count_prefix_char(s: str, prefix_char: str) -> int:
+        res = 0
+        for c in s:
+            if c.isspace():
+                continue
+            if c == prefix_char:
+                res += 1
+        return res
+
+    for i, line in enumerate(body_lines):
         # plaintext boundary if it's present, simply ignore since we'd rather save just the plaintext mail
-        if cur == "--- mail_boundary ---":
+        if line == "--- mail_boundary ---":
             break
+
+        line = md_url_pattern.sub(handle_md_url, line)
+        prev = body_lines[i - 1] if i > 0 else ""
+        cur = line.strip()
+        prev = prev.strip()
+        cur_quote_level = count_prefix_char(cur, ">")
+        prev_quote_level = count_prefix_char(prev, ">")
+        cur = cur.lstrip(" >")
+
+        # Quote level mismatch => quote level is changed, append newline and change quote level
+        if cur_quote_level != prev_quote_level:
+            # If we go deeper, add newline on current level
+            if cur_quote_level > prev_quote_level and prev:
+                append_line()
+            quote_level = cur_quote_level
+            # If we return from quote, add newline on new level
+            if cur_quote_level < prev_quote_level and cur:
+                append_line()
+            # Previous line is not technically empty
+            prev = ""
 
         # Code block start/end
         if cur.startswith("```"):
             if not code_block:
-                code_block_end = next((i for i, c in enumerate(cur) if c != "`"), len(cur))
+                code_block_end = count_prefix_char(cur, "`")
                 code_block = cur[:code_block_end]
             elif cur.startswith(code_block):
                 code_block = None
-            result.append(line)
+            append_line(cur)
             continue
 
         # Code block -> handle verbatim
         if code_block:
-            result.append(line)
+            append_line(cur)
             continue
 
         is_list = cur.startswith("-") or cur.startswith("*")
-
-        # Quote
-        if cur.startswith(">"):
-            # Previous line is not quote or empty line => insert extra empty line for separation
-            if prev and not prev.startswith(">"):
-                result.append("")
         # Previous and current lines are non-empty lists => force newline on previous line
-        elif not is_list and prev and cur:
+        if not is_list and prev and cur:
             result[-1] += "  "
 
-        result.append(line)
+        append_line(cur)
 
     # Close the opened code block
     if code_block:
-        result.append(code_block)
+        append_line(code_block)
 
     return "\n".join(result)
 

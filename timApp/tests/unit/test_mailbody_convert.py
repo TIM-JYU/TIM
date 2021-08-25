@@ -139,24 +139,24 @@ Non-quote
 >>> Level 3
 > Level 1 back
 Non-quote"""), """
-> Quote
+> Quote  
 > Quote 2
 
 Non-quote
 
 > Quote
->
+> 
 >> Subquote  
 >> Subquote 2
->
+> 
 > Quote 2
 
 > Level 1
->
+> 
 >> Level 2
->>
+>> 
 >>> Level 3
->
+> 
 > Level 1 back
 
 Non-quote""")
