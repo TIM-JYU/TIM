@@ -24,7 +24,7 @@ from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
-from timApp.plugin.plugintype import CONTENT_FIELD_NAME_MAP, PluginType
+from timApp.plugin.plugintype import CONTENT_FIELD_NAME_MAP, PluginType, PluginTypeLazy
 from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
@@ -208,7 +208,7 @@ class Plugin:
         except ValidationError as e:
             raise PluginException(f'Invalid markup: {e}') from e
         self.type = plugin_type
-        self.ptype = PluginType.resolve(plugin_type)
+        self.ptype = PluginTypeLazy(plugin_type)
         self.par = par
         self.output = None
         self.plugin_lazy = None
