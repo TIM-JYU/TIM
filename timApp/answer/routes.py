@@ -530,8 +530,7 @@ class AnswerRouteResult:
 
 def get_postanswer_plugin_etc(
       d: DocInfo,
-      tid: str,
-      answerdata: AnswerData,
+      tid: TaskId,
       answer_browser_data,
       curr_user: User,
       ctx_user: UserContext,
@@ -559,13 +558,13 @@ def get_postanswer_plugin_etc(
         users = [curr_user]
     if users is None:
         users = [curr_user] + other_session_users
-    if newtask: # found_plugin.par.get_attr("seed") == "answernr":
-        force_answer = True # variable tasks are always saved even with same answer
+    if newtask:  # found_plugin.par.get_attr("seed") == "answernr":
+        force_answer = True  # variable tasks are always saved even with same answer
 
     answerinfo = get_existing_answers_info(users, tid)
     answernr = -1
 
-    if newtask: # only if task is with new random after every answer
+    if newtask:  # only if task is with new random after every answer
         # Next three lines was there originally for stack, but let's see if we manage without them
         # if isinstance(answerdata, dict):
             # answernr = answerdata.get("answernr", -1)
@@ -573,7 +572,7 @@ def get_postanswer_plugin_etc(
         if answernr < 0:
             answernr = answer_browser_data.get("answernr", -1)
         answernr_to_user = answernr
-        if (answernr < 0):
+        if answernr < 0:
             answernr_to_user = answerinfo.count
             answernr = answerinfo.count
         if not ask_new:
@@ -583,17 +582,18 @@ def get_postanswer_plugin_etc(
 
     try:
         vr = verify_task_access(
-        d,
-        tid,
-        AccessType.view,
-        TaskIdAccess.ReadWrite,
-        context_user=context_user,
-        view_ctx=view_ctx,
-        allow_grace_period=True,
+            d,
+            tid,
+            AccessType.view,
+            TaskIdAccess.ReadWrite,
+            context_user=context_user,
+            view_ctx=view_ctx,
+            allow_grace_period=True,
         )
     except (PluginException, TimDbException) as e:
         raise PluginException(str(e))
     return vr, answerinfo, users, allow_save, ask_new, force_answer
+
 
 def post_answer_impl(
         task_id_ext: str,
@@ -664,7 +664,7 @@ def post_answer_impl(
             users = [ctx_user]  # TODO: Vesa's hack to save answer to student
 
     vr, answerinfo, users, allow_save, ask_new, force_answer = get_postanswer_plugin_etc(
-        d, tid, answerdata, answer_browser_data,
+        d, tid, answer_browser_data,
         curr_user, ctx_user, urlmacros, users,
         other_session_users, origin, force_answer
     )
