@@ -24,7 +24,7 @@
                 </div>
             </div>
             <div class="no-shrink">
-            <span>
+            <span class="user-index-count">
                 {{ $ctrl.findSelectedUserIndex() + 1 }}/{{ $ctrl.users.length }}
             </span>
                 <a ng-href="mailto:{{$ctrl.user.email}}">email</a>
@@ -50,13 +50,14 @@
                         </div>
                     </div>
                     <div class="no-shrink">
-                    <span>{{ $ctrl.filteredAnswers.length - $ctrl.findSelectedAnswerIndex() }}/<a tabindex="0"
+                    <span class="answer-index-count">{{ $ctrl.filteredAnswers.length - $ctrl.findSelectedAnswerIndex() }}/<a tabindex="0"
                                                                                                   title="Newest answer"
                                                                                                   ng-click="$ctrl.setNewest()">{{ $ctrl.filteredAnswers.length }}</a></span>
                         <label class="checkbox-inline" ng-show="$ctrl.anyInvalid">
                             <input type="checkbox" ng-model="$ctrl.onlyValid">Show valid only</label>
                         <span ng-show="$ctrl.showTeacher()"> | <a ng-click="$ctrl.getAllAnswers()">All answers</a>
                     </span>
+                        <button class="timButton" ng-if="$ctrl.showNewTask" title="Change to new task" ng-click="$ctrl.newTask()">{{ $ctrl.buttonNewTask }}</button>
                         <span ng-if="$ctrl.selectedAnswer">
                         | <a title="Link to currently selected answer"
                              ng-click="$event.preventDefault()"
@@ -67,7 +68,7 @@
                          <a ng-if="$ctrl.peerReviewEnabled && !$ctrl.isPeerReview"
                             title="Link to peer review"
                             ng-href="{{ $ctrl.getReviewLink() }}">Review</a>
-                    </span>
+                        </span>
                     </div>
                 </div>
                 </div>

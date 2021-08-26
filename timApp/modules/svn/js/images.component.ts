@@ -101,7 +101,7 @@ const ShowFileAll = t.type({
                     <div [class]="{fade: markup.fade}" *ngIf="noFlicker || isNear(i+1)" [hidden]="fileIndex!==(i+1)"  (click)="jump(1)">
                         <div *ngIf="markup.counter" class="numbertext">{{(i+1)}} / {{files.length}}</div>
                         <img src="{{file.name}}" alt="{{file.alt}}" style="width:100%">
-                        <div class="text">{{file.caption}}</div>
+                        <div class="text"><span [innerHTML]="file.caption | purify"></span></div>
                     </div>
                 </ng-container>
                 <a *ngIf="markup.change" class="prev" (click)="jump(-1)">&#10094;</a>
@@ -114,7 +114,8 @@ const ShowFileAll = t.type({
                 let i = index" [ngClass]="{'active': (i+1) === fileIndex}" 
                     class="dot" 
                     (click)="currentFile(i+1)" 
-                    (mouseover)="hoverCurrentFile(i+1)" 
+                    (mouseover)="hoverCurrentFile(i+1)"
+                    (touchstart)="$event.preventDefault(); hoverCurrentFile(i+1)"
               ></span>
             </div>                
 <!--                    (touchmove)="$event.preventDefault(); hoverCurrentFile(i+1)"-->

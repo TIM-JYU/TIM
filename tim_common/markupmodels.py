@@ -64,12 +64,14 @@ class KnownMarkupFields(HiddenFieldsMixin):
     anonymous: Union[bool, None, Missing] = missing
     answerLimit: Union[int, None, Missing] = missing
     automd: Union[bool, None, Missing] = missing
+    buttonNewTask: Union[str, None, Missing] = missing
     cache: Union[bool, None, Missing] = missing
     deadline: Union[PluginDateTime, datetime, None, Missing] = missing
     fields: Union[List[str], None, Missing] = missing
     header: Union[str, None, Missing] = missing
     headerText: Union[str, None, Missing] = missing
     hideBrowser: Union[bool, Missing, None] = missing
+    initNewAnswer: Union[str, None, Missing] = missing
     lazy: Union[bool, Missing] = missing
     maxHeight: Union[str, None, Missing] = field(metadata={'data_key': 'max-height'}, default=missing)
     minHeight: Union[str, None, Missing] = field(metadata={'data_key': 'min-height'}, default=missing)
