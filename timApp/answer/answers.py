@@ -16,7 +16,7 @@ from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerTag, UserAnswer
 from timApp.answer.pointsumrule import PointSumRule, PointType, Group
 from timApp.document.viewcontext import OriginInfo
-from timApp.plugin.plugintype import PluginType
+from timApp.plugin.plugintype import PluginType, PluginTypeLazy, PluginTypeBase
 from timApp.plugin.taskid import TaskId
 from timApp.timdb.sqa import db
 from timApp.upload.upload import get_pluginupload
@@ -64,13 +64,13 @@ def get_latest_valid_answers_query(task_id: TaskId, users: List[User]) -> Query:
     return datas
 
 
-def is_redundant_answer(content: str, existing_answers: ExistingAnswersInfo, ptype: Optional[PluginType],
+def is_redundant_answer(content: str, existing_answers: ExistingAnswersInfo, ptype: Optional[PluginTypeBase],
                         valid: bool) -> bool:
     la = existing_answers.latest_answer
     is_redundant = la and (la.content == content and la.valid == valid)
     if is_redundant:
         return True
-    if existing_answers.count == 0 and ptype and ptype.type == 'rbfield' and json.loads(content)['c'] == '0':
+    if existing_answers.count == 0 and ptype and ptype.get_type() == 'rbfield' and json.loads(content)['c'] == '0':
         return True
     return False
 
@@ -89,7 +89,7 @@ def save_answer(
         points_given_by: Optional[int] = None,
         force_save: bool = False,
         saver: Optional[User] = None,
-        plugintype: Optional[PluginType] = None,
+        plugintype: Optional[PluginTypeLazy] = None,
         max_content_len: Optional[int] = None,
         origin: Optional[OriginInfo] = None,
 ) -> Optional[Answer]:
@@ -130,7 +130,7 @@ def save_answer(
                valid=valid,
                last_points_modifier=points_given_by,
                origin_doc_id=origin.doc_id if origin else None,
-               plugin_type=plugintype
+               plugin_type=plugintype.resolve() if plugintype else None
                )
     db.session.add(a)
 

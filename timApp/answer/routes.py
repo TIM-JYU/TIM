@@ -51,7 +51,7 @@ from timApp.plugin.plugin import Plugin, PluginWrap, NEVERLAZY, TaskNotFoundExce
 from timApp.plugin.plugin import find_plugin_from_document
 from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginexception import PluginException
-from timApp.plugin.plugintype import PluginType
+from timApp.plugin.plugintype import PluginType, PluginTypeBase
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
@@ -1025,7 +1025,7 @@ answer_call_preprocessors: Dict[str, Callable[[AnswerData, User, DocInfo, Plugin
 }
 
 
-def handle_points_ref(answerdata: AnswerData, curr_user: User, d: DocInfo, ptype: PluginType, tid: TaskId):
+def handle_points_ref(answerdata: AnswerData, curr_user: User, d: DocInfo, ptype: PluginTypeBase, tid: TaskId):
     verify_teacher_access(d, user=curr_user)
     given_points = answerdata.get(ptype.get_content_field_name())
     if given_points is not None:
