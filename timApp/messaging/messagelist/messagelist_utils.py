@@ -402,7 +402,7 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
 
     # Set message body for archived message.
     # TODO: Check message list's only_text flag.
-    archive_doc.document.add_paragraph(f"{message.message_body}",
+    archive_doc.document.add_paragraph(message_body_to_md(message.message_body),
                                        attrs={"taskId": "message-body"})
 
     archive_doc.document.add_paragraph("<tim-archive-footer message='%%message|tojson%%'></tim-archive-footer>",
