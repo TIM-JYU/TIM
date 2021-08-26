@@ -57,18 +57,23 @@ class Stack(Language):
         get_task = self.query.jso.get("input", {}).get("getTask", False)
         url = f"http://{STACK_API_SERVER_ADDRESS}/api/endpoint.php"
         data = self.query.jso.get("input").get("stackData")
-        stack_data = self.query.jso.get('markup').get('-stackData')
+        markup = self.query.jso.get('markup')
+        stack_data = markup.get('-stackData')
+        info = self.query.jso.get("info", {})
         if not stack_data:
-            stack_data = self.query.jso.get('markup').get('stackData')
+            stack_data = markup.get('stackData')
         if not stack_data:
             err = "stackData missing from plugin"
             return 0, "", err, ""
         seed = stack_data.get("seed", 0)
         userseed = seed
         state = self.query.jso.get("state", {})
-        if isinstance(state, dict):
-            userseed = state.get("seed", seed)
-        nosave = self.query.jso.get('input', {}).get('nosave', False)
+        input = self.query.jso.get('input', {})
+        ask_new = info.get("askNew", False)
+        if isinstance(state, dict) and not ask_new:
+            if not get_task:
+                userseed = state.get("seed", seed)
+        nosave = input.get('nosave', False)
         stack_data["seed"] = userseed
 
         q = stack_data.get("question", "")

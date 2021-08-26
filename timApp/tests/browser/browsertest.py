@@ -9,7 +9,8 @@ from typing import Union, List, Optional
 from urllib.parse import urlencode
 
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException, ScreenshotException
+from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException, ScreenshotException, \
+    ElementNotInteractableException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -328,7 +329,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
                     e.click()
                 else:
                     self.touch(e)
-            except StaleElementReferenceException:
+            except (StaleElementReferenceException, ElementNotInteractableException):
                 tries -= 1
                 if tries == 0:
                     raise

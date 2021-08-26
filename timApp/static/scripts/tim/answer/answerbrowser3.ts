@@ -368,6 +368,8 @@ export interface ITaskInfo {
     userMax: number;
     answerLimit: number;
     showPoints: boolean;
+    newtask?: boolean;
+    buttonNewTask: string;
 }
 
 export interface IAnswerSaveEvent {
@@ -389,6 +391,7 @@ export type AnswerBrowserData =
           userId: number;
           points: number | undefined;
           giveCustomPoints: boolean;
+          answernr: number | undefined;
       };
 
 const DEFAULT_MARKUP_CONFIG: IAnswerBrowserMarkupSettings = {
@@ -435,6 +438,8 @@ export class AnswerBrowserController
     private showBrowseAnswers = true;
     private isPeerReview = false;
     private peerReviewEnabled = false;
+    private showNewTask = false;
+    private buttonNewTask = "New task";
 
     constructor(private scope: IScope, private element: JQLite) {
         super(scope, element);
@@ -521,6 +526,7 @@ export class AnswerBrowserController
         this.shouldFocus = false;
         this.alerts = [];
         this.feedback = "";
+        this.showNewTask = this.isShowNewTask();
 
         const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
@@ -716,9 +722,10 @@ export class AnswerBrowserController
      * Loads plugin html with selected answer (or user default state if no answer)
      * also sets up points, fetches review data if needed and dims the plugin if teacher-mode and no answers
      * @param changeReviewOnly only fetch and set the plugin review html, without touching anything else
+     * @param askNew true if new task is asked to generate
      * // TODO: Separate function for just fetching the review html
      */
-    async changeAnswer(changeReviewOnly = false) {
+    async changeAnswer(changeReviewOnly = false, askNew: boolean = false) {
         if (!changeReviewOnly) {
             this.updatePoints();
         }
@@ -738,14 +745,22 @@ export class AnswerBrowserController
             review: this.review,
             user_id: this.user.id,
         };
-        let taskOrAnswer: Record<string, string | number>;
+        let taskOrAnswer: Record<string, string | number | boolean>;
         if (this.selectedAnswer) {
+            const idx = this.findSelectedAnswerIndexRevFromUnFiltered();
             taskOrAnswer = {answer_id: this.selectedAnswer.id};
+            if (idx >= 0) {
+                taskOrAnswer.answernr = idx;
+            }
             if (this.answerLoader) {
                 this.answerLoader(this.selectedAnswer);
             }
         } else {
             taskOrAnswer = {task_id: this.taskId.docTask().toString()};
+            taskOrAnswer.answernr = this.filteredAnswers.length;
+        }
+        if (askNew) {
+            taskOrAnswer.ask_new = true;
         }
         // get new state as long as the previous answer was not explicitly the same as the one before
         // otherwise we might not see the unanswered plugin exactly how the user sees it
@@ -861,6 +876,15 @@ export class AnswerBrowserController
         }
         this.selectedAnswer = this.filteredAnswers[newIndex];
         await this.changeAnswer();
+    }
+
+    async newTask() {
+        if (!this.trySavePoints(true)) {
+            return;
+        }
+
+        this.selectedAnswer = undefined;
+        await this.changeAnswer(false, true);
     }
 
     findSelectedUserIndex() {
@@ -1003,6 +1027,7 @@ export class AnswerBrowserController
             if (this.isGlobal()) {
                 userId = Users.getCurrent().id;
             }
+            const answernr = this.findSelectedAnswerIndexRevFromUnFiltered();
             return {
                 answer_id: this.selectedAnswer
                     ? this.selectedAnswer.id
@@ -1014,6 +1039,7 @@ export class AnswerBrowserController
                 points: this.points,
                 giveCustomPoints: this.giveCustomPoints,
                 userId: userId,
+                answernr: answernr,
                 ...common,
             };
         } else {
@@ -1087,8 +1113,17 @@ export class AnswerBrowserController
 
     updateAnswerFromURL() {
         const answerNumber = getURLParameter("answerNumber");
-        const index = this.answers.length - parseInt(answerNumber ?? "1", 10);
+
+        if (answerNumber == null && this.isAskNew()) {
+            this.updateFiltered();
+            this.selectedAnswer = undefined;
+            this.changeAnswer(false, true);
+            return true;
+        }
+
         if (answerNumber != null && this.urlParamMatchesThisTask()) {
+            const index =
+                this.answers.length - parseInt(answerNumber ?? "1", 10);
             if (index >= 0 && index < this.answers.length) {
                 this.onlyValid = false;
                 this.updateFiltered();
@@ -1269,6 +1304,17 @@ export class AnswerBrowserController
         return this.viewctrl.teacherMode && this.viewctrl.item.rights.teacher;
     }
 
+    isShowNewTask() {
+        return this.taskInfo?.newtask ?? false;
+    }
+
+    /* If seed=="answernr" show task first time as a new task */
+    isAskNew() {
+        if (this.viewctrl.teacherMode) return false;
+        const m = this.pluginMarkup();
+        return m?.askNew ?? false;
+    }
+
     showVelpsCheckBox() {
         // return this.$parent.teacherMode || $window.velpMode; // && this.$parent.item.rights.teacher;
         return (
@@ -1304,6 +1350,9 @@ export class AnswerBrowserController
             return;
         }
         this.taskInfo = r.result.data;
+        this.showNewTask = this.isShowNewTask();
+        if (this.taskInfo.buttonNewTask)
+            this.buttonNewTask = this.taskInfo.buttonNewTask;
     }
 
     async checkUsers() {
@@ -1339,6 +1388,12 @@ export class AnswerBrowserController
             }
         }
         return -1;
+    }
+
+    findSelectedAnswerIndexRevFromUnFiltered() {
+        const idx = this.findSelectedAnswerIndex();
+        if (idx < 0) return idx;
+        return this.filteredAnswers.length - idx - 1;
     }
 
     private findSelectedAnswerIndexFromUnFiltered() {

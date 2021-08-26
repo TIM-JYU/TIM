@@ -18,11 +18,11 @@ from webargs.flaskparser import use_args
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
 from timApp.answer.answers import get_existing_answers_info, save_answer, get_all_answers, \
-    valid_answers_query, valid_taskid_filter
+    valid_answers_query, valid_taskid_filter, ExistingAnswersInfo
 from timApp.answer.backup import send_answer_backup_if_enabled
 from timApp.answer.exportedanswer import ExportedAnswer
 from timApp.auth.accesshelper import verify_logged_in, get_doc_or_abort, verify_manage_access, AccessDenied, \
-    verify_admin, get_origin_from_request, verify_ip_ok
+    verify_admin, get_origin_from_request, verify_ip_ok, TaskAccessVerification
 from timApp.auth.accesshelper import verify_task_access, verify_teacher_access, verify_seeanswers_access, \
     has_teacher_access, \
     verify_view_access, get_plugin_from_request
@@ -38,7 +38,7 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document, dereference_pars
 from timApp.document.hide_names import hide_names_in_teacher
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx, OriginInfo
+from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx, OriginInfo, UrlMacros
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.notification.send_email import multi_send_email
@@ -528,13 +528,80 @@ class AnswerRouteResult:
     plugin: Plugin
 
 
+def get_postanswer_plugin_etc(
+      d: DocInfo,
+      tid: TaskId,
+      answer_browser_data,
+      curr_user: User,
+      ctx_user: UserContext,
+      urlmacros: UrlMacros,
+      users: Optional[List[User]],
+      other_session_users: List[User],
+      origin: Optional[OriginInfo],
+      force_answer: bool
+      ) -> Tuple[TaskAccessVerification,
+                 ExistingAnswersInfo,
+                 List[User],
+                 bool,
+                 bool,
+                 bool
+        ]:
+    allow_save = True
+    ask_new = False
+
+    context_user = UserContext(ctx_user or curr_user, curr_user)
+    view_ctx = ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin)
+    doc, found_plugin = get_plugin_from_request(d.document, tid, context_user, view_ctx)
+    # newtask = found_plugin.value.get("newtask", False)
+    newtask = found_plugin.is_new_task()
+    if found_plugin.known.useCurrentUser or found_plugin.task_id.is_global:  # For plugins that is saved only for current user
+        users = [curr_user]
+    if users is None:
+        users = [curr_user] + other_session_users
+    if newtask:  # found_plugin.par.get_attr("seed") == "answernr":
+        force_answer = True  # variable tasks are always saved even with same answer
+
+    answerinfo = get_existing_answers_info(users, tid)
+    answernr = -1
+
+    if newtask:  # only if task is with new random after every answer
+        # Next three lines was there originally for stack, but let's see if we manage without them
+        # if isinstance(answerdata, dict):
+            # answernr = answerdata.get("answernr", -1)
+            # ask_new = answerdata.get("askNew", False)
+        if answernr < 0:
+            answernr = answer_browser_data.get("answernr", -1)
+        answernr_to_user = answernr
+        if answernr < 0:
+            answernr_to_user = answerinfo.count
+            answernr = answerinfo.count
+        if not ask_new:
+            ask_new = answernr == answerinfo.count
+            allow_save = ask_new
+        context_user = UserContext(ctx_user or curr_user, curr_user, answernr_to_user)
+
+    try:
+        vr = verify_task_access(
+            d,
+            tid,
+            AccessType.view,
+            TaskIdAccess.ReadWrite,
+            context_user=context_user,
+            view_ctx=view_ctx,
+            allow_grace_period=True,
+        )
+    except (PluginException, TimDbException) as e:
+        raise PluginException(str(e))
+    return vr, answerinfo, users, allow_save, ask_new, force_answer
+
+
 def post_answer_impl(
         task_id_ext: str,
         answerdata: AnswerData,
         answer_browser_data,
         answer_options,
         curr_user: User,
-        urlmacros,
+        urlmacros: UrlMacros,
         other_session_users: List[User],
         origin: Optional[OriginInfo],
 ) -> AnswerRouteResult:
@@ -563,6 +630,7 @@ def post_answer_impl(
     users = None
 
     ctx_user = None
+
     if is_teacher:
         answer_id = answer_browser_data.get('answer_id', None)
         user_id = answer_browser_data.get('userId', None)
@@ -594,19 +662,13 @@ def post_answer_impl(
             if not ctx_user:
                 raise PluginException(f'User {user_id} not found')
             users = [ctx_user]  # TODO: Vesa's hack to save answer to student
-    try:
-        vr = verify_task_access(
-            d,
-            tid,
-            AccessType.view,
-            TaskIdAccess.ReadWrite,
-            context_user=UserContext(ctx_user or curr_user, curr_user),
-            view_ctx=ViewContext(ViewRoute.View, False, urlmacros=urlmacros, origin=origin),
-            allow_grace_period=True,
-        )
-        plugin = vr.plugin
-    except (PluginException, TimDbException) as e:
-        raise PluginException(str(e))
+
+    vr, answerinfo, users, allow_save, ask_new, force_answer = get_postanswer_plugin_etc(
+        d, tid, answer_browser_data,
+        curr_user, ctx_user, urlmacros, users,
+        other_session_users, origin, force_answer
+    )
+    plugin = vr.plugin
 
     if tid.is_points_ref:
         return AnswerRouteResult(
@@ -622,8 +684,6 @@ def post_answer_impl(
 
     if not curr_user.logged_in and not plugin.known.anonymous:
         raise RouteException('You must be logged in to answer this task.')
-    if plugin.known.useCurrentUser or plugin.task_id.is_global:  # For plugins that is saved only for current user
-        users = [curr_user]
 
     if isinstance(answerdata, dict):
         file = answerdata.get('uploadedFile', '')
@@ -655,20 +715,28 @@ def post_answer_impl(
 
     # Load old answers
 
-    if users is None:
-        users = [curr_user] + other_session_users
-
-    answerinfo = get_existing_answers_info(users, tid)
     valid, _ = plugin.is_answer_valid(answerinfo.count, {})
     info = plugin.get_info(users, answerinfo.count, look_answer=is_teacher and not save_teacher, valid=valid)
+    if ask_new:
+        info["askNew"] = True
 
     # Get the newest answer (state). Only for logged in users.
     state = try_load_json(
         answerinfo.latest_answer.content) if curr_user.logged_in and answerinfo.latest_answer else None
+    # TODO: get state from AB selected answer if new_task == true
+    # TODO: Why state is needed for new answers?
+    # TODO: Stack gets default for the field there???
+    answer_id = answer_browser_data.get('answer_id', None)
+    if answer_id is not None and curr_user.logged_in:
+        answer = Answer.query.get(answer_id)
+        if answer:
+            state = try_load_json(answer.content)
 
     preprocessor = answer_call_preprocessors.get(plugin.type)
     if preprocessor:
         preprocessor(answerdata, curr_user, d, plugin)
+
+    # print(json.dumps(answerdata))  # uncomment this to follow what answers are used in browser tests
 
     answer_call_data = {'markup': plugin.values,
                         'state': state,
@@ -868,7 +936,7 @@ def post_answer_impl(
                         plugin=plugin,
                     )
 
-            if points or save_object is not None or tags:
+            if (points or save_object is not None or tags) and allow_save:
                 a = save_answer(
                     users,
                     tid,
@@ -1431,7 +1499,10 @@ def find_tim_vars(plugin: Plugin):
         'answerLimit': plugin.answer_limit(),
         'triesText': plugin.known.tries_text(),
         'pointsText': plugin.known.points_text(),
+        'buttonNewTask': plugin.values.get("buttonNewTask", None),
     }
+    if plugin.is_new_task():
+        tim_vars["newtask"] = True
     return tim_vars
 
 
@@ -1574,11 +1645,12 @@ def get_answers(task_id: str, user_id: int):
 
     elif d.document.get_settings().get('need_view_for_answers', False):
         verify_view_access(d)
+    user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
+    user_context = user_context_with_logged_in(user, len(user_answers))
     try:
-        p = find_plugin_from_document(d.document, tid, user_context_with_logged_in(user), default_view_ctx)
+        p = find_plugin_from_document(d.document, tid, user_context, default_view_ctx)
     except TaskNotFoundException:
         p = None
-    user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
     if hide_names_in_teacher(d, context_user=user):
         for answer in user_answers:
             for u in answer.users_all:
@@ -1728,7 +1800,8 @@ class GetStateModel:
     doc_id: Optional[int] = None
     review: bool = False
     task_id: Optional[str] = None
-
+    answernr: Optional[int] = None
+    ask_new: Optional[bool] = False
 
 GetStateSchema = class_schema(GetStateModel)
 
@@ -1779,7 +1852,8 @@ def get_state(args: GetStateModel):
     doc.insert_preamble_pars()
     if par_id:
         tid.maybe_set_hint(par_id)
-    user_ctx = user_context_with_logged_in(user)
+
+    user_ctx = user_context_with_logged_in(user, args.answernr, args.ask_new)
     try:
         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user_ctx, view_ctx=view_ctx)
     except PluginException as e:

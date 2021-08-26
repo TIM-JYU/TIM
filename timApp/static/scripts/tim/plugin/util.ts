@@ -124,6 +124,7 @@ export function baseOnInit<
     // These can be uncommented for debugging:
     // console.log(parsed);
     // console.log(this);
+    // console.log(validated);
     if (isLeft(validated)) {
         this.markupError = getErrors(validated);
         return undefined;

@@ -4,12 +4,19 @@ For documentation, see: https://tim.jyu.fi/view/tim/ohjeita/satunnaistus
 """
 import json
 import time
+from dataclasses import dataclass
 from random import Random
 from typing import List, Dict, Tuple, Optional, Union, Callable, TypeVar
 
 MAX_RND_LIST_LEN = 100
 
-SeedType = Union[str, int]
+@dataclass(frozen=True)
+class SeedClass:
+    seed: int
+    extraseed: int = 0
+
+
+SeedType = Union[str, int, SeedClass]
 
 
 def fix_jso(jso: str) -> str:
@@ -201,30 +208,39 @@ def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None
     if jso is None:
         return None, rnd_seed, state
 
-    rnd_seed = attrs.get('seed', rnd_seed)
-    if not rnd_seed:
-        rnd_seed = int(time.perf_counter()*1000)
+    seed_to_use = rnd_seed
+    attrs_seed = attrs.get('seed', None)
+    if attrs_seed is not None:
+        if attrs_seed == '' or attrs_seed == 'time':
+            seed_to_use = int(time.perf_counter() * 1000)
+        elif attrs_seed == 'answernr':
+            if isinstance(rnd_seed, SeedClass):
+                seed_to_use = rnd_seed.seed + rnd_seed.extraseed
+        else:
+            seed_to_use = attrs_seed
 
-    if isinstance(rnd_seed, str):
-        rnd_seed = myhash(rnd_seed)
+    if isinstance(seed_to_use, SeedClass):
+        seed_to_use = seed_to_use.seed
+
+    if isinstance(seed_to_use, str):
+        seed_to_use = myhash(seed_to_use)
 
     # noinspection PyBroadException
-    try:
-        rnd_seed = int(rnd_seed)
-    except:
-        rnd_seed = int(time.perf_counter()*1000)
+    if seed_to_use is None:
+        seed_to_use = int(time.perf_counter()*1000)
+
     myrandom = Random()
-    myrandom.seed(a=rnd_seed)
+    myrandom.seed(a=seed_to_use)
     if state:
         myrandom.setstate(state)
 
     if jso.startswith('s'):  # s10:[1,7,2], s10, s10:50, s10:[0,50]
-        return get_sample_list(myrandom, jso[1:]), rnd_seed, myrandom.getstate()
+        return get_sample_list(myrandom, jso[1:]), seed_to_use, myrandom.getstate()
     if jso.startswith('u'):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
-        return repeat_rnd(get_uniform_list, myrandom, jso[1:]), rnd_seed, myrandom.getstate()
+        return repeat_rnd(get_uniform_list, myrandom, jso[1:]), seed_to_use, myrandom.getstate()
 
     ret = repeat_rnd(get_int_list, myrandom, jso)
-    return ret, rnd_seed, myrandom.getstate()
+    return ret, seed_to_use, myrandom.getstate()
 
 
 def get_rands_as_dict(attrs: Dict, rnd_seed: Optional[SeedType], state: Optional[State] = None) -> Tuple[Optional[dict], Optional[SeedType], Optional[State]]:

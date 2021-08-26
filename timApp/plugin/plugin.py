@@ -29,7 +29,7 @@ from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
 from timApp.user.user import User
-from timApp.util.rndutils import myhash
+from timApp.util.rndutils import myhash, SeedClass
 from timApp.util.utils import try_load_json, get_current_time, Range
 from tim_common.markupmodels import PointsRule, KnownMarkupFields
 from tim_common.marshmallow_dataclass import class_schema
@@ -259,6 +259,8 @@ class Plugin:
         task_id_name = par.get_attr('taskId')
         plugin_name = par.get_attr('plugin')
         rnd_seed = get_simple_hash_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
+        if user and user.answer_nr is not None:
+            rnd_seed = SeedClass(rnd_seed, user.answer_nr)
         par.insert_rnds(rnd_seed)
         plugin_data = parse_plugin_values(
             par,
@@ -272,6 +274,9 @@ class Plugin:
             par=par,
         )
         return p
+
+    def is_new_task(self):
+        return self.par.is_new_task()
 
     def deadline(self, default=None):
         return self.known.deadline or default
@@ -369,7 +374,8 @@ class Plugin:
 
     def render_json(self) -> Dict[str, Any]:
         options = self.options
-        user = options.user_ctx.user
+        userctx = options.user_ctx
+        user = userctx.user
         if self.answer is not None:
             if self.task_id.is_points_ref:
                 p = f'{self.answer.points:g}' if self.answer.points is not None else ''
@@ -384,6 +390,12 @@ class Plugin:
         else:
             state = None
             info = None
+        if self.is_new_task() and (userctx.ask_new or (userctx.answer_nr is not None)):
+            if not info:
+                info = {}
+            if userctx.answer_nr is not None:
+                info["answernr"] = userctx.answer_nr
+            info["askNew"] = userctx.ask_new
         access = {}
         if self.task_id and self.task_id.access_specifier == TaskIdAccess.ReadOnly and \
                 not options.user_ctx.logged_user.has_teacher_access(self.par.doc.get_docinfo()):
