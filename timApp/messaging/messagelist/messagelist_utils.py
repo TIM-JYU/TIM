@@ -3,7 +3,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from enum import Enum
+from re import Match
 from typing import Optional, List, Dict, Tuple, Iterator
+from urllib.parse import SplitResult, parse_qs, urlsplit
 
 from mailmanclient import MailingList
 
@@ -227,6 +229,123 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     return archive_doc
 
 
+# Based on https://mathiasbynens.be/demo/url-regex with minor edits
+# This is one of the simplest patterns and it matches all cases correctly except for some special cases
+url_pattern = r'(https?|ftp)://[^\s/$.?#].[^\s]*'
+md_url_pattern = re.compile(rf"(\[([^]]*)\]\(({url_pattern})\))|({url_pattern})", re.IGNORECASE)
+
+
+def message_body_to_md(body: str) -> str:
+    """
+    Converts mail body into markdown.
+    Importantly, the function
+        * adds extra spacing for quotes
+        * adds explicit newline to non-paragraph breaks
+        * makes links clickable
+        * cleans up Outlook safelinks
+
+    :param body: Original message body.
+    :return: Markdown-converted message body.
+    """
+    result: List[str] = []
+    body_lines = body.splitlines(False)
+    code_block = None
+    quote_level = 0
+
+    def fix_url(url: SplitResult) -> str:
+        real_url = None
+        # Outlook safelink
+        if "safelinks.protection.outlook.com" in url.netloc:
+            qs = parse_qs(url.query)
+            real_url = qs.get("url", [""])[0]
+        real_url = real_url or url.geturl()
+        return f"<{real_url}>" if not code_block else real_url
+
+    def handle_md_url(m: Match) -> str:
+        md_url, raw_url = m.group(1), m.group(5)
+        if raw_url:
+            return fix_url(urlsplit(raw_url))
+        else:
+            return f"[{m.group(2)}]({fix_url(urlsplit(m.group(3)))})"
+
+    def append_line(line_str: str = "") -> None:
+        result.append((quote_level * ">") + line_str)
+
+    def count_prefix_char(s: str, prefix_char: str) -> int:
+        res = 0
+        for c in s:
+            if c.isspace():
+                continue
+            if c == prefix_char:
+                res += 1
+            else:
+                break
+        return res
+
+    def strip_quotes(s: str) -> str:
+        for _ in range(quote_level):
+            index = next((ci for ci, c in enumerate(s) if c == ">"), None)
+            if index is not None:
+                s = s[index + 1:]
+        return s
+
+    for i, line in enumerate(body_lines):
+        # plaintext boundary if it's present, simply ignore since we'd rather save just the plaintext mail
+        if line == "--- mail_boundary ---":
+            break
+
+        line = md_url_pattern.sub(handle_md_url, line)
+        prev = body_lines[i - 1] if i > 0 else ""
+        cur_quote_level = count_prefix_char(line, ">")
+        prev_quote_level = count_prefix_char(prev, ">")
+        # Strip quotes after computing line's quote level
+        line = strip_quotes(line)
+        cur = line.strip()
+        prev = prev.strip()
+
+        # Code block start/end
+        if cur.startswith("```"):
+            if not code_block:
+                code_block_end = count_prefix_char(cur, "`")
+                code_block = cur[:code_block_end]
+            elif cur.startswith(code_block):
+                code_block = None
+            append_line(line)
+            continue
+
+        # Code block -> handle verbatim
+        if code_block:
+            append_line(line)
+            continue
+
+        # Quote level mismatch => quote level is changed, append newline and change quote level
+        if cur_quote_level != prev_quote_level:
+            # If we go deeper, add newline on current level
+            if cur_quote_level > prev_quote_level and prev:
+                append_line()
+            quote_level = cur_quote_level
+            # If we return from quote, add newline on new level
+            if cur_quote_level < prev_quote_level and cur:
+                append_line()
+            # Reset line and current values since we changed quote level
+            line = strip_quotes(line)
+            cur = line.strip()
+            prev = ""
+
+        is_list = cur.startswith("-") or cur.startswith("*")
+        # Previous and current lines are non-empty lists => force newline on previous line
+        if not is_list and prev and cur:
+            result[-1] += "  "
+
+        append_line(line)
+
+    # Close the opened code block
+    if code_block:
+        append_line(code_block)
+
+    return "\n".join(result)
+
+
 def check_archives_folder_exists(message_list: MessageListModel) -> Optional[Folder]:
     """
     Ensures archive folder exists for the given list if the list is archived.
@@ -256,7 +375,16 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
     if not archive_folder:
         return
 
-    archive_doc_path = remove_path_special_chars(f"{archive_folder.path}/{message.subject}-"
+    # Don't save spam
+    if message.subject.lower().startswith("[spam]"):
+        return
+
+    message_doc_subject = message.subject
+    if message_list.subject_prefix:
+        message_doc_subject = message_doc_subject.removeprefix(message_list.subject_prefix)
+
+    message_doc_name = message_doc_subject.replace("/", "-")
+    archive_doc_path = remove_path_special_chars(f"{archive_folder.path}/{message_doc_name}-"
                                                  f"{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}")
 
     archive_doc = create_archive_doc_with_permission(message.subject, archive_doc_path, message_list, message)

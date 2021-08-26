@@ -83,6 +83,35 @@ class MessageListTest(TimMessageListTest):
                          {list_member.email, old_email},
                          "TIM user should still have their old email in mailman database")
 
+    def test_mail_archiving_processing(self):
+        self.login_test1()
+        self.make_admin(self.test_user_1)
+        _, message_list = self.create_list(f"list_archive_test1", ArchiveType.PUBLIC)
+
+        self.trigger_message_send(message_list, self.test_user_1, "Test message", "Test message")
+
+        archive_folder = f"{MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX}/{message_list.name}"
+        folder = Folder.find_by_path(archive_folder)
+        self.assertIsNotNone(folder, f"Archive folder {archive_folder} must be created")
+
+        doc = next((d for d in folder.get_all_documents() if d.short_name.startswith("Test-message")), None)
+        self.assertIsNotNone(doc, f"Archived document named 'Test-message' must be created")
+
+        doc_count = len(folder.get_all_documents())
+        self.trigger_message_send(message_list, self.test_user_1, "[SPAM] Test spam message", "Test message")
+        self.assertEqual(len(folder.get_all_documents()), doc_count, "Spam messages must not be archived")
+
+        self.trigger_message_send(message_list, self.test_user_1, "try/to/fool/title", "Test message")
+
+        doc = next((d for d in folder.get_all_documents() if d.short_name.startswith("try-to-fool-title")), None)
+        self.assertIsNotNone(doc, f"Archived document named 'try-to-fool-title' must be created")
+
+        self.trigger_message_send(message_list, self.test_user_1, f"[{message_list.name}] Test message 2",
+                                  "Test message")
+
+        doc = next((d for d in folder.get_all_documents() if d.short_name.startswith("Test-message-2")), None)
+        self.assertIsNotNone(doc, f"Archived document named 'Test-message-2' must be created")
+
     def test_mail_archive_access(self):
         self.login_test1()
         self.make_admin(self.test_user_1)
