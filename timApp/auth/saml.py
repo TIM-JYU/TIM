@@ -1,9 +1,11 @@
+import json
+import os
 from copy import copy
-from typing import Dict, List, Optional
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import xmlsec
-from dataclasses import dataclass, field
 from flask import request, redirect, session, make_response, Blueprint, Request, url_for
 from lxml import etree
 from lxml.cssselect import CSSSelector
@@ -34,6 +36,54 @@ saml = Blueprint('saml',
 
 class FingerPrintException(Exception):
     pass
+
+
+def load_sp_settings(hostname=None, try_new_cert=False, sp_validation_only=False) \
+        -> Tuple[str, OneLogin_Saml2_Settings]:
+    """
+    Loads OneLogin Saml2 settings for the given hostname.
+
+    Behaves like OneLogin_Saml2_Settings constructor with custom_base_path set, but allows to dynamically change
+    Assertion Consumer Service URL. If the ACS URL has $hostname variable, it's replaced with the given hostname
+    argument.
+    Templating is used because OneLogin does not support multiple ACSs at the moment, see
+    https://github.com/onelogin/python-saml/issues/207
+
+    :param hostname: Hostname for which to generate the ACS callback URL. If None, TIM_HOST is used.
+    :param try_new_cert: If True, settings and certificate from /new folder is used.
+    :param sp_validation_only: If True, the SP settings are only validated.
+    :return: Tuple (str, OneLogin_Saml2_Settings) contains path to current Saml2 settings and generated SP settings
+                object
+    """
+    saml_path = app.config['SAML_PATH']
+    if try_new_cert:
+        saml_path += '/new'
+
+    filename = os.path.join(saml_path, 'settings.json')
+    try:
+        with open(filename, 'r') as json_data:
+            settings = json.loads(json_data.read())
+    except FileNotFoundError:
+        raise OneLogin_Saml2_Error(
+            'Settings file not found: %s',
+            OneLogin_Saml2_Error.SETTINGS_FILE_NOT_FOUND,
+            filename
+        )
+
+    try:
+        advanced_filename = os.path.join(saml_path, 'advanced_settings.json')
+        with open(advanced_filename, 'r') as json_data:
+            settings.update(json.loads(json_data.read()))
+    except FileNotFoundError:
+        pass
+
+    acs_info = settings['sp']['assertionConsumerService']
+    acs_info['url'] = acs_info['url'].replace("$hostname", hostname or app.config['TIM_HOST'])
+
+    ol_settings = OneLogin_Saml2_Settings(settings=settings,
+                                          custom_base_path=saml_path,
+                                          sp_validation_only=sp_validation_only)
+    return saml_path, ol_settings
 
 
 @return_false_on_exception
@@ -93,11 +143,11 @@ OneLogin_Saml2_Utils.validate_node_sign = validate_node_sign
 def do_validate_metadata(idp_metadata_xml: str, fingerprint: str) -> None:
     try:
         if not OneLogin_Saml2_Utils.validate_metadata_sign(
-            idp_metadata_xml,
-            validatecert=False,
-            fingerprint=fingerprint,
-            raise_exceptions=True,
-            fingerprintalg='sha256',
+                idp_metadata_xml,
+                validatecert=False,
+                fingerprint=fingerprint,
+                raise_exceptions=True,
+                fingerprintalg='sha256',
         ):
             raise RouteException('Failed to validate Haka metadata')
     except OneLogin_Saml2_ValidationError as e:
@@ -118,10 +168,7 @@ def init_saml_auth(req, entity_id: str, try_new_cert: bool) -> OneLogin_Saml2_Au
         except FingerPrintException as e:
             raise RouteException(f'Failed to validate Haka metadata: {e}')
 
-    saml_path = app.config['SAML_PATH']
-    if try_new_cert:
-        saml_path += '/new'
-    osett = OneLogin_Saml2_Settings(custom_base_path=saml_path, sp_validation_only=True)
+    saml_path, osett = load_sp_settings(req['http_host'], try_new_cert, sp_validation_only=True)
     sp = osett.get_sp_data()
 
     settings = OneLogin_Saml2_IdPMetadataParser.merge_settings({'sp': sp}, idp_data)
@@ -356,8 +403,7 @@ def try_process_saml_response(entity_id: str, try_new_cert: bool):
 
 @saml.get('')
 def get_metadata():
-    saml_path = app.config['SAML_PATH']
-    settings = OneLogin_Saml2_Settings(custom_base_path=saml_path, sp_validation_only=True)
+    _, settings = load_sp_settings(request.host, sp_validation_only=True)
     metadata = settings.get_sp_metadata()
     errors = settings.validate_metadata(metadata)
 
