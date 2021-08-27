@@ -16,6 +16,7 @@
 /Dumbo/cache/
 /Dumbo/out/
 /Dumbo/tmp/
+/profiling/*.prof
 /screenshots
 /tim_logs/
 /timApp/celerybeat-schedule.db

@@ -460,7 +460,12 @@ def close_db_appcontext(_e):
 
 def init_app():
     if app.config['PROFILE']:
-        app.wsgi_app = ProfilerMiddleware(app.wsgi_app, sort_by=('cumtime',), restrictions=[100])
+        app.wsgi_app = ProfilerMiddleware(
+            app.wsgi_app,
+            sort_by=('cumtime',),
+            restrictions=[100],
+            profile_dir='/service/profiling',
+        )
 
     for var in [
         'DB_URI',
