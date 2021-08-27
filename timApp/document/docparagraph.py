@@ -232,7 +232,9 @@ class DocParagraph:
         """
         from timApp.timdb.dbaccess import get_files_path
         froot = get_files_path()
-        return (froot / 'pars' / str(doc.doc_id) / par_id / t).as_posix()
+        # For performance, we use string concatenation. The "/" operator of Path is slower
+        # and it shows in perf profiles.
+        return f'{froot}/pars/{doc.doc_id}/{par_id}/{t}'
 
     @classmethod
     def _get_base_path(cls, doc, par_id: str) -> str:
