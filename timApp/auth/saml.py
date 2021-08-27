@@ -46,6 +46,8 @@ def load_sp_settings(hostname=None, try_new_cert=False, sp_validation_only=False
     Behaves like OneLogin_Saml2_Settings constructor with custom_base_path set, but allows to dynamically change
     Assertion Consumer Service URL. If the ACS URL has $hostname variable, it's replaced with the given hostname
     argument.
+    Templating is used because OneLogin does not support multiple ACSs at the moment, see
+    https://github.com/onelogin/python-saml/issues/207
 
     :param hostname: Hostname for which to generate the ACS callback URL. If None, TIM_HOST is used.
     :param try_new_cert: If True, settings and certificate from /new folder is used.
