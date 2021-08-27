@@ -60,23 +60,25 @@ def load_sp_settings(hostname=None, try_new_cert=False, sp_validation_only=False
         saml_path += '/new'
 
     filename = os.path.join(saml_path, 'settings.json')
-    if not os.path.exists(filename):
+    try:
+        with open(filename, 'r') as json_data:
+            settings = json.loads(json_data.read())
+    except FileNotFoundError:
         raise OneLogin_Saml2_Error(
             'Settings file not found: %s',
             OneLogin_Saml2_Error.SETTINGS_FILE_NOT_FOUND,
             filename
         )
 
-    with open(filename, 'r') as json_data:
-        settings = json.loads(json_data.read())
+    try:
+        advanced_filename = os.path.join(saml_path, 'advanced_settings.json')
+        with open(advanced_filename, 'r') as json_data:
+            settings.update(json.loads(json_data.read()))
+    except FileNotFoundError:
+        pass
 
     acs_info = settings['sp']['assertionConsumerService']
     acs_info['url'] = acs_info['url'].replace("$hostname", hostname or app.config['TIM_HOST'])
-
-    advanced_filename = os.path.join(saml_path, 'advanced_settings.json')
-    if os.path.exists(advanced_filename):
-        with open(advanced_filename, 'r') as json_data:
-            settings.update(json.loads(json_data.read()))
 
     ol_settings = OneLogin_Saml2_Settings(settings=settings,
                                           custom_base_path=saml_path,
@@ -166,7 +168,7 @@ def init_saml_auth(req, entity_id: str, try_new_cert: bool) -> OneLogin_Saml2_Au
         except FingerPrintException as e:
             raise RouteException(f'Failed to validate Haka metadata: {e}')
 
-    saml_path, osett = load_sp_settings(req['http_host'], try_new_cert, True)
+    saml_path, osett = load_sp_settings(req['http_host'], try_new_cert, sp_validation_only=True)
     sp = osett.get_sp_data()
 
     settings = OneLogin_Saml2_IdPMetadataParser.merge_settings({'sp': sp}, idp_data)
