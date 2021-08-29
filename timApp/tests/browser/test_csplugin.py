@@ -256,8 +256,8 @@ postprogram: |!!
 
     def test_csplugin_answernr_stack1(self):
 
-        #if (self):  # This is slow! comment this if stack answernr test is needed
-        #    return  # Also this is a bit unstable with those sleeps, so not good for CI
+        if (self):  # This is slow! comment this if stack answernr test is needed
+            return  # Also this is a bit unstable with those sleeps, so not good for CI
 
         self.login_browser_quick_test1()
         self.login_test1()
