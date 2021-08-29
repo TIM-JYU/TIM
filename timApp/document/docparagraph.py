@@ -64,6 +64,8 @@ class DocParagraph:
         self.nomacros = False
         self.nocache = False
         self.ref_chain = None
+        self.answer_nr: Optional[int] = None  # needed if variable tasks, None = not task at all or not variable task
+        self.ask_new: Optional[bool] = None # to send for plugins to force new question
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):

@@ -421,17 +421,8 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
         for key in state_copy:
             # value = get_json_eparam(query.jso, "state", key, "")
             value = state.get(key, None)
-            if value:
+            if value is not None:
                 js['markup'][key] = value
-
-    info = query.jso.get("info", None)
-
-    if info:
-        if info.get("askNew", False):
-            js['markup']["askNew"] = True
-        answernr = info.get("answernr", None)
-        if answernr is not None:
-            js['markup']["answernr"] = answernr
 
     before_open = markup.get('beforeOpen','')
     is_rv = is_review(query)

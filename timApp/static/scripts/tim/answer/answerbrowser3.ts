@@ -12,6 +12,7 @@ import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {
     IAnswerBrowserMarkupSettings,
     IGenericPluginMarkup,
+    IGenericPluginTopLevelFields,
 } from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
 import {IUser, sortByRealName} from "../user/IUser";
@@ -846,6 +847,7 @@ export class AnswerBrowserController
                 this.unDimPlugin();
             }
         }
+        this.isShowNewTask();
     }
 
     /**
@@ -884,6 +886,7 @@ export class AnswerBrowserController
         }
 
         this.selectedAnswer = undefined;
+        this.showNewTask = false;
         await this.changeAnswer(false, true);
     }
 
@@ -1157,6 +1160,7 @@ export class AnswerBrowserController
             return;
         }
         await this.handleAnswerFetch(data);
+        this.isShowNewTask();
         return data;
     }
 
@@ -1215,7 +1219,9 @@ export class AnswerBrowserController
         return user;
     }
 
-    public pluginMarkup(): IGenericPluginMarkup | undefined {
+    public pluginAttrs():
+        | IGenericPluginTopLevelFields<IGenericPluginMarkup>
+        | undefined {
         if (!this.viewctrl || !this.taskId) {
             return undefined;
         }
@@ -1225,8 +1231,17 @@ export class AnswerBrowserController
         if (!c) {
             return undefined;
         }
-        const a = c.attrsall;
+        return c.attrsall;
+    }
+
+    public pluginMarkup(): IGenericPluginMarkup | undefined {
+        const a = this.pluginAttrs();
         return a?.markup;
+    }
+
+    public pluginInfo() {
+        const a = this.pluginAttrs();
+        return a?.info;
     }
 
     public isUseCurrentUser(): boolean {
@@ -1269,6 +1284,7 @@ export class AnswerBrowserController
             return undefined;
         }
         this.fetchedUser = user;
+        this.isShowNewTask();
         return r.result.data;
     }
 
@@ -1305,14 +1321,17 @@ export class AnswerBrowserController
     }
 
     isShowNewTask() {
-        return this.taskInfo?.newtask ?? false;
+        const result = this.taskInfo?.newtask ?? false;
+        if (!result) return (this.showNewTask = false);
+        const selidx = this.findSelectedAnswerIndexFromUnFiltered();
+        return (this.showNewTask = selidx >= 0);
     }
 
     /* If seed=="answernr" show task first time as a new task */
     isAskNew() {
         if (this.viewctrl.teacherMode) return false;
-        const m = this.pluginMarkup();
-        return m?.askNew ?? false;
+        const info = this.pluginInfo();
+        return info?.askNew ?? false;
     }
 
     showVelpsCheckBox() {

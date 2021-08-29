@@ -149,9 +149,9 @@ class PluginPlacement:
             )  # TODO: RND_SEED: get users seed for this plugin
 
             # TODO: if possible to look from markup newtask: true, this is not needed
-            if block.get_attr("seed") == "answernr":
-                if user_ctx.answer_nr is not None:
-                    rnd_seed = SeedClass(rnd_seed, user_ctx.answer_nr)
+            if block.is_new_task():
+                if block.answer_nr is not None and not block.ask_new:
+                    rnd_seed = SeedClass(rnd_seed, block.answer_nr)
                 else: # try with length of answers
                     task_id = block.get_attr("taskId")
                     doc_id = str(block.doc.doc_id)
@@ -186,7 +186,10 @@ class PluginPlacement:
             try:
                 vals = load_markup_from_yaml(md, settings.global_plugin_attrs(), block.get_attr('plugin'))
                 if ask_next:
-                    vals['askNew'] = True
+                    block.ask_new = True
+                    if vals.get("initNewAnswer", None) == "":
+                        load_states = False
+
                 if plugin_name in WANT_FIELDS and 'fields' in vals and user_ctx:
                     data, aliases, field_names, _ = get_fields_and_users(
                         vals['fields'],
@@ -428,7 +431,6 @@ def pluginify(doc: Document,
                                                       '</pre><p>From block:</p><pre>' + \
                                                       md + \
                                                       '</pre></div>'
-
         pplace = PluginPlacement.from_par(block=block, load_states=load_states, macroinfo=macroinfo,
                                           plugin_opts=plugin_opts, user_ctx=user_ctx, view_ctx=view_ctx, settings=settings,
                                           answer_map=answer_map, custom_answer=custom_answer,

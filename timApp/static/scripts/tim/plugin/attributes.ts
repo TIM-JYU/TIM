@@ -40,20 +40,18 @@ export const GenericPluginMarkup = t.partial({
     useCurrentUser: t.boolean,
     connectionErrorMessage: nullable(t.string),
     answerBrowser: nullable(AnswerBrowserSettings),
-    newtask: t.boolean,
-    askNew: nullable(t.boolean), // is new task asked? Or save current new task.
-    answernr: nullable(t.Integer), // is some old answer selected
+    // newtask: t.boolean,
+    // askNew: nullable(t.boolean), // is new task asked? Or save current new task.
 });
 
 export const Info = nullable(
     t.intersection([
         t.type({
             // TODO add the rest of the fields
-            earlier_answers: t.Integer,
         }),
         t.partial({
+            earlier_answers: t.Integer,
             askNew: t.boolean,
-            answernr: nullable(t.Integer),
         }),
     ])
 );
