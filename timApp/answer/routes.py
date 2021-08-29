@@ -932,6 +932,7 @@ def post_answer_impl(
                     save_object = data.get("save_object", save_object)
                     is_valid = data.get("is_valid", is_valid)
                     force_answer = data.get("force_answer", force_answer)
+                    allow_save = data.get("allow_save", allow_save)
                     postprogram_result(data, output)
                 except JsRunnerError as e:
                     return AnswerRouteResult(
