@@ -733,16 +733,18 @@ class Document:
                                     last_par_id=all_par_ids[end_index + 1]
                                     if end_index + 1 < len(all_par_ids) else None)
 
-    def update(self, text: str, original: str, strict_validation=True) -> Tuple[str, str, DocumentEditResult]:
+    def update(self, text: str, original: str, strict_validation=True, regenerate_ids=False) -> Tuple[
+        str, str, DocumentEditResult]:
         """Replaces the document's contents with the specified text.
 
         :param text: The new text for the document.
         :param original: The original text for the document.
         :param strict_validation: Whether to use stricter validation rules for areas etc.
+        :param regenerate_ids: If True, paragraph IDs are regenerated for all blocks.
 
         """
         dp = DocumentParser(text)
-        dp.add_missing_attributes()
+        dp.add_missing_attributes(force_new_ids=regenerate_ids)
         vr = dp.validate_structure()
         if strict_validation:
             vr.raise_if_has_any_issues()

@@ -64,11 +64,11 @@ class DocumentParser:
         self._parse_document()
         return self._blocks
 
-    def add_missing_attributes(self, hash_func=hashfunc, id_func=random_id):
+    def add_missing_attributes(self, hash_func=hashfunc, id_func=random_id, force_new_ids=False):
         self._parse_document()
         for r in self._blocks:
             r['t'] = hash_func(r['md'], r['attrs'])
-            if not r.get('id'):
+            if force_new_ids or not r.get('id'):
                 r['id'] = id_func()
         return self
 
