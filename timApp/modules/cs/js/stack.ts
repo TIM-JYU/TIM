@@ -126,8 +126,6 @@ class StackController
     private lastInputFieldValue: string = "";
     private lastInputFieldElement: HTMLInputElement | undefined;
     private button: string = "";
-    private askNew: boolean = false;
-    private answernr?: number;
 
     private timer: NodeJS.Timer | undefined;
 
@@ -152,9 +150,6 @@ class StackController
             }
         });
 
-        this.askNew = aa.markup.askNew ?? false;
-        this.answernr = aa.markup.answernr ?? undefined;
-        // if (this.askNew) this.answernr = -1;
         if (this.attrs.open) {
             this.runGetTask();
         }
@@ -427,20 +422,15 @@ class StackController
     }
 
     async runSave() {
-        const askNew = this.askNew;
-        await this.runSend(false, askNew, this.answernr);
+        await this.runSend(false);
     }
 
     async runGetTask() {
         this.isOpen = true;
-        await this.runSend(true, this.askNew, this.answernr);
+        await this.runSend(true);
     }
 
-    async runSend(
-        getTask = false,
-        askNew: boolean = false,
-        answernr: number | undefined = undefined
-    ) {
+    async runSend(getTask = false) {
         if (this.pluginMeta.isPreview()) {
             this.error = "Cannot run plugin while previewing.";
             return;
@@ -455,8 +445,6 @@ class StackController
                 getTask: getTask,
                 stackData: stackData,
                 type: "stack",
-                askNew: askNew,
-                answernr: answernr,
                 usercode: this.timWay
                     ? this.userCode
                     : JSON.stringify(stackData.answer),

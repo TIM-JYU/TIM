@@ -140,6 +140,8 @@ TEST_USER_3_USERNAME = 'testuser3'
 
 
 GITLAB_SKIP_TESTS = {
+    # STACK image is not yet pulled in CI
+    'tests.browser.test_csplugin.CsPluginTest.test_csplugin_answernr_stack1'
 }
 
 

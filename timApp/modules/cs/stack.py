@@ -54,25 +54,26 @@ class Stack(Language):
         return res
 
     def run(self, result, sourcelines, points_rule):
-        get_task = self.query.jso.get("input", {}).get("getTask", False)
         url = f"http://{STACK_API_SERVER_ADDRESS}/api/endpoint.php"
-        data = self.query.jso.get("input").get("stackData")
+        input = self.query.jso.get('input', {})
+        data = input.get("stackData")
         markup = self.query.jso.get('markup')
-        stack_data = markup.get('-stackData')
         info = self.query.jso.get("info", {})
+        state = self.query.jso.get("state", {})
+
+        stack_data = markup.get('-stackData')
         if not stack_data:
             stack_data = markup.get('stackData')
         if not stack_data:
             err = "stackData missing from plugin"
             return 0, "", err, ""
+
         seed = stack_data.get("seed", 0)
         userseed = seed
-        state = self.query.jso.get("state", {})
-        input = self.query.jso.get('input', {})
+        get_task = input.get("getTask", False)
         ask_new = info.get("askNew", False)
-        if isinstance(state, dict) and not ask_new:
-            if not get_task:
-                userseed = state.get("seed", seed)
+        if isinstance(state, dict) and not ask_new and not get_task:
+            userseed = state.get("seed", seed)
         nosave = input.get('nosave', False)
         stack_data["seed"] = userseed
 
