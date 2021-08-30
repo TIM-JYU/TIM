@@ -1,3 +1,4 @@
+from timApp.document.docentry import DocEntry
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.util.utils import static_tim_doc
@@ -78,3 +79,25 @@ class CopyCiteTest(TimRouteTest):
                             'error': f'The following errors must be fixed before copying:\n'
                                      f'Multiple areas with same name noticed in paragraph {pars[2].get_id()}\n'
                                      f'Duplicate area end noticed in paragraph {pars[3].get_id()}'})
+
+    def test_copy_preamble(self):
+        self.login_test1()
+        f = self.test_user_1.get_personal_folder().path
+        d = self.create_doc(f'{f}/folder/doc', initial_par='Test')
+        # Create top-level preamble first
+        p = self.create_preamble_for(d.parent, initial_par='Preamble')
+        pars = d.document.get_paragraphs(include_preamble=True)
+        self.assertEqual(len(pars), 2, 'Created document must have preamble par')
+
+        preamble_par_id = p.document.get_paragraphs()[0].get_id()
+        # Create second preamble for document level that copies from top-level preamble
+        p2 = self.create_preamble_for(d, copy_from=p.id)
+        preamble2_par_id = p2.document.get_paragraphs()[0].get_id()
+        self.assertNotEqual(preamble_par_id, preamble2_par_id, 'Copied preamble must have fresh block IDs')
+
+        # Clear cached document object and regenerate it
+        db.session.expunge(d)
+        d = DocEntry.find_by_id(d.id)
+
+        pars = d.document.get_paragraphs(include_preamble=True)
+        self.assertEqual(len(pars), 3, 'Document must have both original and copied preamble')

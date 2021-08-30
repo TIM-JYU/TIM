@@ -3,11 +3,10 @@ from typing import List, Generator, Tuple, Union, Optional
 from timApp.auth.accesshelper import grant_access_to_session_users, reset_request_access_cache, get_doc_or_abort, \
     verify_edit_access
 from timApp.auth.sessioninfo import get_current_user_object, get_current_user_group_object
-from timApp.bookmark.bookmarks import Bookmarks
 from timApp.document.docentry import DocEntry, get_documents, create_document_and_block
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import apply_citation
-from timApp.document.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME
+from timApp.document.specialnames import FORCED_TEMPLATE_NAME, TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
 from timApp.document.translation.translation import Translation, add_tr_entry
 from timApp.folder.folder import Folder
 from timApp.item.block import copy_default_rights, BlockType
@@ -94,6 +93,8 @@ def apply_template(item: DocInfo, template_name: Optional[str] = None):
 
 def copy_document_and_enum_translations(source: DocInfo, target: DocInfo, copy_uploads: bool) -> Generator[
     Tuple[DocInfo, DocInfo], None, None]:
+    is_preamble = f'/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/' in source.path
+
     if copy_uploads:
         target.children.extend(source.children)  # required to retain rights to uploaded files
 
@@ -104,7 +105,8 @@ def copy_document_and_enum_translations(source: DocInfo, target: DocInfo, copy_u
 
     target.document.update(source.document.export_markdown(),
                            target.document.export_markdown(),
-                           strict_validation=False)
+                           strict_validation=False,
+                           regenerate_ids=is_preamble)
     for tr in source.translations:  # type: Translation
         doc_id = target.id
         new_tr = None
@@ -113,7 +115,10 @@ def copy_document_and_enum_translations(source: DocInfo, target: DocInfo, copy_u
             doc_id = document.doc_id
             new_tr = add_tr_entry(doc_id, target, tr)
             document.docinfo = new_tr
-            document.update(tr.document.export_markdown(), document.export_markdown(), strict_validation=False)
+            document.update(tr.document.export_markdown(),
+                            document.export_markdown(),
+                            strict_validation=False,
+                            regenerate_ids=is_preamble)
         elif tr.lang_id:
             add_tr_entry(doc_id, target, tr)
         if not tr.is_original_translation:
