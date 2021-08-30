@@ -11,6 +11,7 @@ from sqlalchemy.orm import joinedload
 
 from timApp.admin.datetimetype import DateTimeType
 from timApp.admin.timitemtype import TimDocumentType, TimItemType
+from timApp.admin.util import commit_if_not_dry
 from timApp.answer.answer import Answer, AnswerSaver
 from timApp.answer.answer_models import UserAnswer, AnswerUpload
 from timApp.answer.answers import valid_answers_query
@@ -19,7 +20,6 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.item import Item
 from timApp.plugin.taskid import TaskId
-from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import PluginUpload
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
@@ -139,13 +139,6 @@ def revalidate(doc: DocInfo, deadline: datetime, group: str, dry_run: bool, may_
     click.echo(f'Changing {changed_to_valid} to valid, {changed_to_invalid} to invalid.')
     click.echo(f'Total answers in document for group: {total}')
     commit_if_not_dry(dry_run)
-
-
-def commit_if_not_dry(dry_run: bool) -> None:
-    if not dry_run:
-        db.session.commit()
-    else:
-        click.echo('Dry run enabled, nothing changed.')
 
 
 @answer_cli.command()
