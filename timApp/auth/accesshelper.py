@@ -317,7 +317,11 @@ def verify_comment_right(b: ItemOrBlock):
         raise AccessDenied()
 
 
-def get_plugin_from_request(doc: Document, task_id: TaskId, u: UserContext, view_ctx: ViewContext, answernr: int = None) -> Tuple[Document, Plugin]:
+def get_plugin_from_request(doc: Document,
+                            task_id: TaskId,
+                            u: UserContext,
+                            view_ctx: ViewContext,
+                            answernr: Optional[int]=None) -> Tuple[Document, Plugin]:
     assert doc.doc_id == task_id.doc_id
     orig_info = view_ctx.origin
     orig_doc_id, orig_par_id = (orig_info.doc_id, orig_info.par_id) if orig_info else (None, None)
@@ -370,7 +374,7 @@ def verify_task_access(
         context_user: UserContext,
         view_ctx: ViewContext,
         allow_grace_period: bool = False,
-        answernr: int = None
+        answernr: Optional[int] = None
 ) -> TaskAccessVerification:
     assert d.id == task_id.doc_id
     doc, found_plugin = get_plugin_from_request(d.document, task_id, context_user, view_ctx, answernr)

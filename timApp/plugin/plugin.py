@@ -393,8 +393,6 @@ class Plugin:
         if self.is_new_task() and (self.par.ask_new or (self.par.answer_nr is not None)):
             if not info:
                 info = {}
-            # if self.par.answer_nr is not None: # these may not be needed
-            #    info["answernr"] = self.par.answer_nr
             info["askNew"] = self.par.ask_new
         access = {}
         if self.task_id and self.task_id.access_specifier == TaskIdAccess.ReadOnly and \

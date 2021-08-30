@@ -1860,10 +1860,10 @@ def get_state(args: GetStateModel):
     user_ctx = user_context_with_logged_in(user)
     try:
         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user_ctx, view_ctx=view_ctx)
-        plug.par.answer_nr = args.answernr
-        plug.par.ask_new = args.ask_new
     except PluginException as e:
         raise RouteException(str(e))
+    plug.par.answer_nr = args.answernr
+    plug.par.ask_new = args.ask_new
     block = plug.par
 
     def deref():

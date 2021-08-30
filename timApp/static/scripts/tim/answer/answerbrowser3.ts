@@ -527,7 +527,7 @@ export class AnswerBrowserController
         this.shouldFocus = false;
         this.alerts = [];
         this.feedback = "";
-        this.showNewTask = this.isShowNewTask();
+        this.showNewTask = this.isAndSetShowNewTask();
 
         const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
@@ -847,7 +847,7 @@ export class AnswerBrowserController
                 this.unDimPlugin();
             }
         }
-        this.isShowNewTask();
+        this.isAndSetShowNewTask();
     }
 
     /**
@@ -1160,7 +1160,7 @@ export class AnswerBrowserController
             return;
         }
         await this.handleAnswerFetch(data);
-        this.isShowNewTask();
+        this.isAndSetShowNewTask();
         return data;
     }
 
@@ -1284,7 +1284,7 @@ export class AnswerBrowserController
             return undefined;
         }
         this.fetchedUser = user;
-        this.isShowNewTask();
+        this.isAndSetShowNewTask();
         return r.result.data;
     }
 
@@ -1320,11 +1320,15 @@ export class AnswerBrowserController
         return this.viewctrl.teacherMode && this.viewctrl.item.rights.teacher;
     }
 
-    isShowNewTask() {
+    isAndSetShowNewTask() {
         const result = this.taskInfo?.newtask ?? false;
-        if (!result) return (this.showNewTask = false);
+        if (!result) {
+            this.showNewTask = false;
+            return false;
+        }
         const selidx = this.findSelectedAnswerIndexFromUnFiltered();
-        return (this.showNewTask = selidx >= 0);
+        this.showNewTask = selidx >= 0;
+        return this.showNewTask;
     }
 
     /* If seed=="answernr" show task first time as a new task */
@@ -1369,7 +1373,7 @@ export class AnswerBrowserController
             return;
         }
         this.taskInfo = r.result.data;
-        this.showNewTask = this.isShowNewTask();
+        this.showNewTask = this.isAndSetShowNewTask();
         if (this.taskInfo.buttonNewTask)
             this.buttonNewTask = this.taskInfo.buttonNewTask;
     }
