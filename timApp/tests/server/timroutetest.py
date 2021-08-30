@@ -29,6 +29,7 @@ from timApp.document.document import Document
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME
 from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.document.translation.translation import Translation
+from timApp.item.item import Item
 from timApp.item.routes import create_item_direct
 from timApp.messaging.messagelist.listinfo import ArchiveType
 from timApp.messaging.messagelist.mailman_events import NewMessageEvent, SubscriptionEvent, EVENTS, MailmanMessageList
@@ -817,7 +818,7 @@ class TimRouteTest(TimDbTest):
     def show(self, doc: DocInfo):
         self.get('/clipboard', query_string={'doc_id': doc.id})
 
-    def create_preamble_for(self, d: DocInfo, preamble_name='preamble', **kwargs):
+    def create_preamble_for(self, d: Item, preamble_name='preamble', **kwargs):
         folder = d.location
         p = self.create_doc(f'{folder}/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name}', **kwargs)
         return p
