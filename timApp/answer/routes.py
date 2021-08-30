@@ -563,6 +563,7 @@ def get_postanswer_plugin_etc(
 
     answerinfo = get_existing_answers_info(users, tid)
     answernr = -1
+    answernr_to_user = None
 
     if newtask:  # only if task is with new random after every answer
         # Next three lines was there originally for stack, but let's see if we manage without them
@@ -578,7 +579,8 @@ def get_postanswer_plugin_etc(
         if not ask_new:
             ask_new = answernr == answerinfo.count
             allow_save = ask_new
-        context_user = UserContext(ctx_user or curr_user, curr_user, answernr_to_user)
+        context_user = UserContext(ctx_user or curr_user, curr_user)
+        found_plugin.par.answernr = answernr_to_user
 
     try:
         vr = verify_task_access(
@@ -589,6 +591,7 @@ def get_postanswer_plugin_etc(
             context_user=context_user,
             view_ctx=view_ctx,
             allow_grace_period=True,
+            answernr = answernr_to_user
         )
     except (PluginException, TimDbException) as e:
         raise PluginException(str(e))
@@ -929,6 +932,7 @@ def post_answer_impl(
                     save_object = data.get("save_object", save_object)
                     is_valid = data.get("is_valid", is_valid)
                     force_answer = data.get("force_answer", force_answer)
+                    allow_save = data.get("allow_save", allow_save)
                     postprogram_result(data, output)
                 except JsRunnerError as e:
                     return AnswerRouteResult(
@@ -1646,7 +1650,7 @@ def get_answers(task_id: str, user_id: int):
     elif d.document.get_settings().get('need_view_for_answers', False):
         verify_view_access(d)
     user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
-    user_context = user_context_with_logged_in(user, len(user_answers))
+    user_context = user_context_with_logged_in(user)
     try:
         p = find_plugin_from_document(d.document, tid, user_context, default_view_ctx)
     except TaskNotFoundException:
@@ -1853,11 +1857,13 @@ def get_state(args: GetStateModel):
     if par_id:
         tid.maybe_set_hint(par_id)
 
-    user_ctx = user_context_with_logged_in(user, args.answernr, args.ask_new)
+    user_ctx = user_context_with_logged_in(user)
     try:
         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user_ctx, view_ctx=view_ctx)
     except PluginException as e:
         raise RouteException(str(e))
+    plug.par.answer_nr = args.answernr
+    plug.par.ask_new = args.ask_new
     block = plug.par
 
     def deref():

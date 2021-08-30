@@ -317,7 +317,11 @@ def verify_comment_right(b: ItemOrBlock):
         raise AccessDenied()
 
 
-def get_plugin_from_request(doc: Document, task_id: TaskId, u: UserContext, view_ctx: ViewContext) -> Tuple[Document, Plugin]:
+def get_plugin_from_request(doc: Document,
+                            task_id: TaskId,
+                            u: UserContext,
+                            view_ctx: ViewContext,
+                            answernr: Optional[int]=None) -> Tuple[Document, Plugin]:
     assert doc.doc_id == task_id.doc_id
     orig_info = view_ctx.origin
     orig_doc_id, orig_par_id = (orig_info.doc_id, orig_info.par_id) if orig_info else (None, None)
@@ -340,6 +344,8 @@ def get_plugin_from_request(doc: Document, task_id: TaskId, u: UserContext, view
     ctx_doc = orig_doc if (not orig_doc.get_docinfo().is_original_translation and orig_par.is_translation()) else doc
     for p in pars:
         if p.get_id() == par_id:
+            if answernr is not None:
+                p.answer_nr = answernr
             return ctx_doc, maybe_get_plugin_from_par(p, task_id, u, view_ctx)
     return doc, plug
 
@@ -368,9 +374,10 @@ def verify_task_access(
         context_user: UserContext,
         view_ctx: ViewContext,
         allow_grace_period: bool = False,
+        answernr: Optional[int] = None
 ) -> TaskAccessVerification:
     assert d.id == task_id.doc_id
-    doc, found_plugin = get_plugin_from_request(d.document, task_id, context_user, view_ctx)
+    doc, found_plugin = get_plugin_from_request(d.document, task_id, context_user, view_ctx, answernr)
     access = verify_access(doc.get_docinfo(), access_type, require=False, user=context_user.logged_user)
     is_expired = False
     if not access:

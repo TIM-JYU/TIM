@@ -12,6 +12,7 @@ import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {
     IAnswerBrowserMarkupSettings,
     IGenericPluginMarkup,
+    IGenericPluginTopLevelFields,
 } from "../plugin/attributes";
 import {DestroyScope} from "../ui/destroyScope";
 import {IUser, sortByRealName} from "../user/IUser";
@@ -526,7 +527,7 @@ export class AnswerBrowserController
         this.shouldFocus = false;
         this.alerts = [];
         this.feedback = "";
-        this.showNewTask = this.isShowNewTask();
+        this.showNewTask = this.isAndSetShowNewTask();
 
         const markup = this.loader.pluginMarkup();
         if (markup?.answerBrowser) {
@@ -846,6 +847,7 @@ export class AnswerBrowserController
                 this.unDimPlugin();
             }
         }
+        this.isAndSetShowNewTask();
     }
 
     /**
@@ -884,6 +886,7 @@ export class AnswerBrowserController
         }
 
         this.selectedAnswer = undefined;
+        this.showNewTask = false;
         await this.changeAnswer(false, true);
     }
 
@@ -1157,6 +1160,7 @@ export class AnswerBrowserController
             return;
         }
         await this.handleAnswerFetch(data);
+        this.isAndSetShowNewTask();
         return data;
     }
 
@@ -1215,7 +1219,9 @@ export class AnswerBrowserController
         return user;
     }
 
-    public pluginMarkup(): IGenericPluginMarkup | undefined {
+    public pluginAttrs():
+        | IGenericPluginTopLevelFields<IGenericPluginMarkup>
+        | undefined {
         if (!this.viewctrl || !this.taskId) {
             return undefined;
         }
@@ -1225,8 +1231,17 @@ export class AnswerBrowserController
         if (!c) {
             return undefined;
         }
-        const a = c.attrsall;
+        return c.attrsall;
+    }
+
+    public pluginMarkup(): IGenericPluginMarkup | undefined {
+        const a = this.pluginAttrs();
         return a?.markup;
+    }
+
+    public pluginInfo() {
+        const a = this.pluginAttrs();
+        return a?.info;
     }
 
     public isUseCurrentUser(): boolean {
@@ -1269,6 +1284,7 @@ export class AnswerBrowserController
             return undefined;
         }
         this.fetchedUser = user;
+        this.isAndSetShowNewTask();
         return r.result.data;
     }
 
@@ -1304,15 +1320,22 @@ export class AnswerBrowserController
         return this.viewctrl.teacherMode && this.viewctrl.item.rights.teacher;
     }
 
-    isShowNewTask() {
-        return this.taskInfo?.newtask ?? false;
+    isAndSetShowNewTask() {
+        const result = this.taskInfo?.newtask ?? false;
+        if (!result) {
+            this.showNewTask = false;
+            return false;
+        }
+        const selidx = this.findSelectedAnswerIndexFromUnFiltered();
+        this.showNewTask = selidx >= 0;
+        return this.showNewTask;
     }
 
     /* If seed=="answernr" show task first time as a new task */
     isAskNew() {
         if (this.viewctrl.teacherMode) return false;
-        const m = this.pluginMarkup();
-        return m?.askNew ?? false;
+        const info = this.pluginInfo();
+        return info?.askNew ?? false;
     }
 
     showVelpsCheckBox() {
@@ -1350,7 +1373,7 @@ export class AnswerBrowserController
             return;
         }
         this.taskInfo = r.result.data;
-        this.showNewTask = this.isShowNewTask();
+        this.showNewTask = this.isAndSetShowNewTask();
         if (this.taskInfo.buttonNewTask)
             this.buttonNewTask = this.taskInfo.buttonNewTask;
     }

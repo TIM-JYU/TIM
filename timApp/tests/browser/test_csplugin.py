@@ -144,6 +144,14 @@ stem: ""
 
 
     def test_csplugin_answernr1(self):
+        def input_and_send(s):
+            input = self.find_element(".csEditArea")
+            input.clear()
+            input.send_keys(s)
+            button = self.find_element(".csRunDiv .timButton")
+            button.click()
+            self.wait_until_hidden('tim-loading')
+
         self.login_browser_quick_test1()
         self.login_test1()
         # Do not change id below because the sequence of question will be with that id:
@@ -177,24 +185,17 @@ postprogram: |!!
         self.goto_document(d)
         stem = self.find_element(".stem")
         self.assertEqual("Laske: -6 + -3", stem.text)
+        # how to test that there is no new button
 
         # answer to first (new) question
-        input = self.find_element(".csEditArea")
-        input.send_keys("-9")
-        button = self.find_element(".csRunDiv .timButton")
-        button.click()
-        # sleep(0.3)
-        self.wait_until_hidden('tim-loading')
+        input_and_send("-9")
         button_new = self.find_element_by_text("Uusi")
         count = self.find_element(".answer-index-count")
         self.assertEqual("1/1", count.text)
         self.assertEqual("-6 + -3 = -9; -9 on OK", self.find_element(".console").text)
 
         # make a new anwser, that is not saved (see later)
-        input.clear()
-        input.send_keys("3")
-        button.click()
-        self.wait_until_hidden('tim-loading')
+        input_and_send("3")
         self.assertEqual("1/1", count.text)
         self.assertEqual("-6 + -3 = -9; 3 on väärin!", self.find_element(".console").text)
 
@@ -204,18 +205,14 @@ postprogram: |!!
         self.assertEqual("2/1", count.text)
         stem = self.find_element(".stem")
         self.assertEqual("Laske: 1 + -5", stem.text)
-        input = self.find_element(".csEditArea")
-        input.clear()
-        input.send_keys("-4")
-        self.find_element(".csRunDiv .timButton").click()
-        self.wait_until_hidden('tim-loading')
+
+        input_and_send("-4")
         self.assertEqual("2/2", count.text)
         self.assertEqual("Laske: 1 + -5", stem.text)
         self.assertEqual("1 + -5 = -4; -4 on OK", self.find_element(".console").text)
 
         # Make new answer to same task => no changes
-        self.find_element(".csRunDiv .timButton").click()
-        self.wait_until_hidden('tim-loading')
+        input_and_send("-4")
         self.assertEqual("2/2", count.text)
         self.assertEqual("1 + -5 = -4; -4 on OK", self.find_element(".console").text)
 
@@ -228,25 +225,22 @@ postprogram: |!!
         # answer again to task 1/2
         self.assertEqual("1/2", count.text)
         self.assertEqual("Laske: -6 + -3", self.find_element(".stem").text)
-        input = self.find_element(".csEditArea")
-        input.clear()
-        input.send_keys("4")
-        self.find_element(".csRunDiv .timButton").click()
-        self.wait_until_hidden('tim-loading')
+
+        input_and_send("4")
         self.assertEqual("1/2", count.text)
         self.assertEqual("Laske: -6 + -3", self.find_element(".stem").text)
         self.assertEqual("-6 + -3 = -9; 4 on väärin!", self.find_element(".console").text)
+        sleep(0.3)
 
         # Answer to new task 3
+        button_new = self.find_element_by_text("Uusi")
         button_new.click()
         sleep(0.3)
+        # how to test that there is no new button
         self.assertEqual("3/2", count.text)
         self.assertEqual("Laske: -2 + -1", self.find_element(".stem").text)
-        input = self.find_element(".csEditArea")
-        input.clear()
-        input.send_keys("-3")
-        self.find_element(".csRunDiv .timButton").click()
-        self.wait_until_hidden('tim-loading')
+
+        input_and_send("-3")
         self.assertEqual("3/3", count.text)
         self.assertEqual("Laske: -2 + -1", self.find_element(".stem").text)
         self.assertEqual("-2 + -1 = -3; -3 on OK", self.find_element(".console").text)
@@ -255,10 +249,7 @@ postprogram: |!!
         self.goto_document(d)
         input = self.find_element(".csEditArea")
         input.click()
-        input.send_keys("-9")
-        # sleep(0.3)
-        button_new = self.find_element_by_text("Uusi")
-        self.assertEqual("Uusi", button_new.text)
+        # self.assertEqual("Uusi", button_new.text) # how to test that there is no new button
         self.assertEqual("Laske: 10 + -3", self.find_element(".stem").text)
         self.assertEqual("4/3", self.find_element(".answer-index-count").text)
 
@@ -266,7 +257,7 @@ postprogram: |!!
     def test_csplugin_answernr_stack1(self):
 
         if (self):  # This is slow! comment this if stack answernr test is needed
-            return  # Alswo this is a bit unstable with those sleeps, so not good for CI
+            return  # Also this is a bit unstable with those sleeps, so not good for CI
 
         self.login_browser_quick_test1()
         self.login_test1()

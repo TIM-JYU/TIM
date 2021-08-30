@@ -259,8 +259,8 @@ class Plugin:
         task_id_name = par.get_attr('taskId')
         plugin_name = par.get_attr('plugin')
         rnd_seed = get_simple_hash_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
-        if user and user.answer_nr is not None:
-            rnd_seed = SeedClass(rnd_seed, user.answer_nr)
+        if par.answer_nr is not None:
+            rnd_seed = SeedClass(rnd_seed, par.answer_nr)
         par.insert_rnds(rnd_seed)
         plugin_data = parse_plugin_values(
             par,
@@ -390,12 +390,10 @@ class Plugin:
         else:
             state = None
             info = None
-        if self.is_new_task() and (userctx.ask_new or (userctx.answer_nr is not None)):
+        if self.is_new_task() and (self.par.ask_new or (self.par.answer_nr is not None)):
             if not info:
                 info = {}
-            if userctx.answer_nr is not None:
-                info["answernr"] = userctx.answer_nr
-            info["askNew"] = userctx.ask_new
+            info["askNew"] = self.par.ask_new
         access = {}
         if self.task_id and self.task_id.access_specifier == TaskIdAccess.ReadOnly and \
                 not options.user_ctx.logged_user.has_teacher_access(self.par.doc.get_docinfo()):
