@@ -5,6 +5,8 @@ import shutil
 import click
 from flask.cli import AppGroup
 
+from timApp.admin.util import commit_if_not_dry
+from timApp.admin.fix_orphan_documents import fix_orphans_without_docentry, move_docs_without_block
 from timApp.document.translation.translation import Translation
 from timApp.item.block import Block, BlockType
 from timApp.notification.pending_notification import PendingNotification
@@ -72,3 +74,17 @@ def cleanup_bookmark_docs(dry_run: bool) -> None:
         pars_dir = fp / 'pars' / str(d)
         shutil.move(doc_dir.as_posix(), deleted_docs)
         shutil.move(pars_dir.as_posix(), deleted_pars)
+
+
+@item_cli.command()
+@click.option('--dry-run/--no-dry-run', default=True)
+def fix_orphans(dry_run: bool) -> None:
+    """Finds and fixes or cleans up orphaned documents.
+
+    * Finds all documents (in Block table) that do not have a DocEntry and
+      creates a DocEntry for them under 'orphans' directory.
+    * Moves all documents from tim_files/docs to tim_files/orphans that don't have a Block entry in database.
+    """
+    fix_orphans_without_docentry()
+    move_docs_without_block(dry_run)
+    commit_if_not_dry(dry_run)

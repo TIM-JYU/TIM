@@ -4,6 +4,8 @@ from typing import Generator, Tuple, Optional, Callable, Union, TypeVar, Any, It
 
 import attr
 import sre_constants
+
+import click
 from flask import current_app
 
 from timApp.document.docentry import DocEntry
@@ -141,3 +143,10 @@ def get_url_for_match(args: BasicArguments, d: DocInfo, p: DocParagraph) -> str:
 
 def print_match(args: DryrunnableArguments, d: DocInfo, p: DocParagraph, msg: str) -> None:
     print(f'{"Found" if args.dryrun else "Fixed"} {get_url_for_match(args, d, p)}: {msg}')
+
+
+def commit_if_not_dry(dry_run: bool) -> None:
+    if not dry_run:
+        db.session.commit()
+    else:
+        click.echo('Dry run enabled, nothing changed.')
