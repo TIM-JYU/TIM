@@ -163,6 +163,10 @@ interface LanguageType {
 }
 
 class LanguageTypes {
+    // For ACE editor mode check
+    // * ACE editor preview http://ace.c9.io/build/kitchen-sink.html
+    // * ACE editor demo sourcecode http://ace.c9.io/build/demo/kitchen-sink/demo.js
+
     languages: Record<string, LanguageType> = {
         go: {ace: "golang", comment: "//"},
         pascal: {ace: "pascal", comment: "//"},
@@ -218,16 +222,15 @@ class LanguageTypes {
 
     // What are known language types (be careful not to include partial word):
     runTypes: string[] = [];
-
-    // For editor modes see: http://ace.c9.io/build/kitchen-sink.html ja sieltä http://ace.c9.io/build/demo/kitchen-sink/demo.js
     aceModes: string[] = [];
 
     constructor() {
-        for (const lt in this.languages) {
-            if (!Object.prototype.hasOwnProperty.call(this.languages, lt))
-                continue;
+        // Sort by length to account for fuzzy run type selection
+        const languageEntries = Object.entries(this.languages).sort(
+            (a, b) => a[0].length - b[0].length
+        );
+        for (const [lt, language] of languageEntries) {
             this.runTypes.push(lt);
-            const language = this.languages[lt];
             this.aceModes.push(language.ace);
         }
     }

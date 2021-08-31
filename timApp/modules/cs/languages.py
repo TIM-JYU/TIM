@@ -30,10 +30,7 @@ Adding new language to csPlugin:
 2. Add language name to 'ttype' variable
 3. Mimic some existing language when creating the new class
     - the simplest one is CC that works when just compiler name end extensions are enough to change
-4. Add language to csPlugin.ts LanguageTypes.languages list
-     - if there is a shorter language name in the list, add a new name before the
-       shorter name.  For example there is "r", so every language name starting with "r"
-       must be before "r" in the list (TODO: fix the list to be not dependent on the order)
+4. Add language to csPlugin.ts LanguageTypes.languages dictionary
 """
 
 cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
