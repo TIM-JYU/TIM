@@ -220,7 +220,7 @@ class LanguageTypes {
         maxima: {ace: "matlab", comment: "/* */"},
     };
 
-    // What are known language types (be careful not to include partial word):
+    // The known language types
     runTypes: string[] = [];
     aceModes: string[] = [];
 
