@@ -1,21 +1,19 @@
 from base64 import b64encode
 from io import BytesIO
+from os.path import splitext
+from subprocess import check_output
+from traceback import print_exc
+from typing import Optional
 from zipfile import ZipFile
 
 import requests
 
-from subprocess import check_output
-from typing import Optional
-
-from tim_common.cs_sanitizer import cs_min_sanitize
+from file_util import File, default_filename
+from modifiers import Modifier
 from points import *
 from run import *
-from os.path import splitext
-from modifiers import Modifier
-from traceback import print_exc
-
+from tim_common.cs_sanitizer import cs_min_sanitize
 from tim_common.fileParams import *
-from file_util import File, default_filename
 
 """
 Adding new language to csPlugin:
@@ -23,18 +21,16 @@ Adding new language to csPlugin:
 0. Install new compiler to cs/Dockerfile and build new Docker container from that
     - in /opt/tim directory, run:
      - DEV=0 ./dc build csplugin
-     - DEV=1 ./dc build csplugin
+     - DEV=0 CSPLUGIN_TARGET=base ./dc build csplugin
+     - DEV=0 CSPLUGIN_TARGET=sudo ./dc build csplugin
      - DEV=0 ./dc push csplugin
-     - DEV=1 ./dc push csplugin
+     - DEV=0 CSPLUGIN_TARGET=base ./dc push csplugin
+     - DEV=0 CSPLUGIN_TARGET=sudo ./dc push csplugin
 1. Add the language class starting with capital letter to this or new file
 2. Add language name to 'ttype' variable
 3. Mimic some existing language when creating the new class
     - the simplest one is CC that works when just compiler name end extensions are enough to change
-4. Add language to csPlugin.ts languageTypes.runTypes list
-   and to exactly same place the Ace editor highlighter name to languageTypes.aceModes
-     - if there is a shorter language name in the list, add a new name before the
-       shorter name.  For example there is "r", so every language name starting with "r"
-       must be before "r" in the list (TODO: fix the list to be not dependent on the order)
+4. Add language to csPlugin.ts LanguageTypes.languages dictionary
 """
 
 cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
@@ -98,7 +94,8 @@ class Language:
         self.userargs = get_json_param(query.jso, "input", "userargs", None)
         if not self.userargs:
             self.userargs = get_json_param(query.jso, "markup", "userargs", None)
-        self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer", f"timimages/cs3{CS3_TARGET}:{CS3_TAG}")
+        self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer",
+                                              f"timimages/cs3{CS3_TARGET}:{CS3_TAG}")
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
         self.opt = get_param(query, "opt", "")
@@ -477,6 +474,23 @@ class CS(Language):
         return code, out, err, pwddir
 
 
+class GoLang(Language):
+    ttype = ["go", "golang"]
+
+    def __init__(self, query, sourcecode):
+        super().__init__(query, sourcecode)
+        self.compiler = "go"
+
+    def extensions(self):
+        return [".go"], ".go", ".exe"
+
+    def get_cmdline(self):
+        return f"{self.compiler} build {self.opt} -o {self.exename} {self.sourcefilename}"
+
+    def run(self, result, sourcelines, points_rule):
+        return self.runself([self.pure_exename])
+
+
 class Jypeli(CS, Modifier):
     ttype = "jypeli"
 
@@ -674,7 +688,7 @@ class Java(Language):
 
     def get_cmdline(self):
         return f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib" + \
-               f" --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath}" +\
+               f" --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath}" + \
                f" {self.javaname}"
 
     def run(self, result, sourcelines, points_rule):
@@ -1524,6 +1538,7 @@ class Mathcheck(Language):
             out = out.replace("No errors found. Please notice that the check was not complete.", correct_text)
         return 0, out, "", ""
 
+
 # Pre sentences to make maxima plot2d etc possible in TIM
 MAXIMA_T_PLOT = """
 plotcnt: 1$
@@ -1555,6 +1570,7 @@ t_mandelbrot([args]) := block(openplot(), apply(mandelbrot, args),  closeplot())
 alias(plot2d, t_plot2d, contour_plot, t_contour_plot, plot3d, t_plot3d, julia, t_julia, mandelbrot, t_mandelbrot)$
 """
 
+
 class Maxima(Language):
     ttype = "maxima"
 
@@ -1576,10 +1592,9 @@ class Maxima(Language):
             sourcelines = MAXIMA_T_PLOT + sourcelines
 
         r = requests.post("http://maxima:8080/maxima", data={
-                "input": sourcelines.strip(),
-                "timeout": 10000,
-             })
-
+            "input": sourcelines.strip(),
+            "timeout": 10000,
+        })
 
         htmldata = ""
         result["web"]["md"] = ""
@@ -1598,12 +1613,12 @@ class Maxima(Language):
                             sdata = data[:100].decode()  # take svg viewBox
                             match = re.search(r'viewBox="0 0 ([0-9]+) ([0-9]+)', sdata)
                             if match:
-                                image_attributes = ' style="width: '+match.group(1)+'px;"'
+                                image_attributes = ' style="width: ' + match.group(1) + 'px;"'
                         pngenc = b64encode(data)
                         # _,imgext = splitext(fn.filename)
                         # imgext = imgext[1:]
                         imgext = 'svg+xml'  # pure svg is not enough
-                        htmldata += '<img src="data:image/'+imgext+';base64, ' + \
+                        htmldata += '<img src="data:image/' + imgext + ';base64, ' + \
                                     pngenc.decode() + '" ' + image_attributes + '/>'
                 result["web"]["md"] = htmldata
         else:
@@ -1685,7 +1700,8 @@ class Octave(Language):
     def run(self, result, sourcelines, points_rule):
         # print("octave: ", self.exename)
         extra = get_param(self.query, "extra", "").format(self.pure_exename, self.userargs)
-        self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer", f"timimages/cs3{CS3_TARGET}:{CS3_TAG}")
+        self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer",
+                                              f"timimages/cs3{CS3_TARGET}:{CS3_TAG}")
         code, out, err, pwddir = self.runself(["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],
                                               timeout=20,
                                               ulimit=df(self.ulimit, "ulimit -t 30 -f 80000"), no_x11=True,
