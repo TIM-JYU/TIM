@@ -164,6 +164,7 @@ interface LanguageType {
 
 class LanguageTypes {
     languages: Record<string, LanguageType> = {
+        go: {ace: "golang", comment: "//"},
         pascal: {ace: "pascal", comment: "//"},
         fortran: {ace: "fortran", comment: "c"},
         css: {ace: "css", comment: "/* */"},
