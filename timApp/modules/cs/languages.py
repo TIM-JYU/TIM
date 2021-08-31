@@ -1,21 +1,19 @@
 from base64 import b64encode
 from io import BytesIO
+from os.path import splitext
+from subprocess import check_output
+from traceback import print_exc
+from typing import Optional
 from zipfile import ZipFile
 
 import requests
 
-from subprocess import check_output
-from typing import Optional
-
-from tim_common.cs_sanitizer import cs_min_sanitize
+from file_util import File, default_filename
+from modifiers import Modifier
 from points import *
 from run import *
-from os.path import splitext
-from modifiers import Modifier
-from traceback import print_exc
-
+from tim_common.cs_sanitizer import cs_min_sanitize
 from tim_common.fileParams import *
-from file_util import File, default_filename
 
 """
 Adding new language to csPlugin:
@@ -23,9 +21,11 @@ Adding new language to csPlugin:
 0. Install new compiler to cs/Dockerfile and build new Docker container from that
     - in /opt/tim directory, run:
      - DEV=0 ./dc build csplugin
-     - DEV=1 ./dc build csplugin
+     - DEV=0 CSPLUGIN_TARGET=base ./dc build csplugin
+     - DEV=0 CSPLUGIN_TARGET=sudo ./dc build csplugin
      - DEV=0 ./dc push csplugin
-     - DEV=1 ./dc push csplugin
+     - DEV=0 CSPLUGIN_TARGET=base ./dc push csplugin
+     - DEV=0 CSPLUGIN_TARGET=sudo ./dc push csplugin
 1. Add the language class starting with capital letter to this or new file
 2. Add language name to 'ttype' variable
 3. Mimic some existing language when creating the new class
