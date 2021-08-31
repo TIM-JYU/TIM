@@ -225,9 +225,9 @@ class LanguageTypes {
     aceModes: string[] = [];
 
     constructor() {
-        // Sort by length to account for fuzzy run type selection
+        // Sort by length (shortest last) to account for fuzzy run type selection
         const languageEntries = Object.entries(this.languages).sort(
-            (a, b) => a[0].length - b[0].length
+            (a, b) => b[0].length - a[0].length
         );
         for (const [lt, language] of languageEntries) {
             this.runTypes.push(lt);
