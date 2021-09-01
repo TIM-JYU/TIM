@@ -16,7 +16,6 @@
 /Dumbo/cache/
 /Dumbo/out/
 /Dumbo/tmp/
-/profiling/*.prof
 /screenshots
 /tim_logs/
 /timApp/celerybeat-schedule.db
@@ -40,6 +39,8 @@
 /timApp/Output.txt
 /timApp/static/gen/
 /timApp/static/generated/
+/timApp/static/profiling/*.prof
+/timApp/static/profiling/*.svg
 /timApp/static/scripts/build-ide/
 /timApp/static/scripts/decls/
 /timApp/static/scripts/jspm_packages/
