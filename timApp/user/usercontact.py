@@ -1,10 +1,7 @@
-from typing import List
+from typing import Dict
 
-from timApp.messaging.messagelist.listoptions import Channel
+from timApp.messaging.messagelist.listinfo import Channel
 from timApp.timdb.sqa import db
-from timApp.user.user import User
-
-from tim_common.marshmallow_dataclass import dataclass
 
 
 class UserContact(db.Model):
@@ -33,18 +30,14 @@ class UserContact(db.Model):
     For a value of False, this means that a user has made a claim for a contact info, but has not yet verified it's 
     ownership. """
 
+    user = db.relationship('User', back_populates='contacts', lazy='select')
+    """User that the contact is associated with.
+    """
 
-@dataclass
-class ContactInfo:
-    """User contact information. Simplified version of a UserContact row."""
-    channel: Channel
-    primary: bool
-    contact: str
-
-
-def user_contact_infos(user: User) -> List[ContactInfo]:
-    """Get all additional verified user contact informations for a user."""
-    user_verified_contacts = UserContact.query.filter_by(user_id=user.id, verified=True).all()
-    contacts = [ContactInfo(contact.channel, contact.primary, contact.contact) for contact
-                in user_verified_contacts]
-    return contacts
+    def to_json(self) -> Dict:
+        return {
+            "contact": self.contact,
+            "channel": self.channel,
+            "primary": self.primary,
+            "verified": self.verified
+        }

@@ -8,10 +8,10 @@ Create Date: 2021-06-18 09:56:55.241594
 
 # revision identifiers, used by Alembic.
 revision = '57cc4ade1bf4'
-down_revision = '132d3c908b54'
+down_revision = '8770c4966dc5'
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # This enum has a value 'EMAIL' added to it in it's class in between migrations, but adding a new enum value in db

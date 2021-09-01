@@ -8,7 +8,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound  # type: igno
 
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.messaging.messagelist.listoptions import Channel
+from timApp.messaging.messagelist.listinfo import Channel
 from timApp.messaging.messagelist.messagelist_utils import sync_new_contact_info
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
@@ -146,7 +146,7 @@ def send_verification_messsage(contact_info: str, verification_url: str, channel
         raise RouteException("03")
 
 
-@verification.route("/contact/<verification_token>", methods=['GET', 'POST'])
+@verification.route("/contact/<verification_token>", methods=["GET", "POST"])
 def contact_info_verification(verification_token: str) -> Union[Response, str]:
     """Verify user's additional contact information.
 
@@ -203,3 +203,4 @@ def contact_info_verification(verification_token: str) -> Union[Response, str]:
         log_error(f"Multiple verification tokens found in db (with token: '{verification_token}').")
         return render_template(template, verification_token=verification_token, error=True,
                                error_code="Invalid verification link.", title="Verification error", type=None)
+    return ok_response()
