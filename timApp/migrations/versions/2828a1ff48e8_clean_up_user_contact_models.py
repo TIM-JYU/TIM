@@ -31,15 +31,14 @@ def upgrade():
                     )
     op.add_column('usercontact', sa.Column('channel', channel_enum, nullable=False))
     op.create_table('verification',
-                    sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('contact_id', sa.Integer(), nullable=True),
                     sa.Column('verification_pending', sa.DateTime(timezone=True), nullable=True),
                     sa.Column('verification_token', sa.Text(), nullable=False),
                     sa.Column('verified_at', sa.DateTime(timezone=True), nullable=True),
                     sa.ForeignKeyConstraint(['contact_id'], ['usercontact.id'], ),
-                    sa.PrimaryKeyConstraint('id')
                     )
     op.add_column('verification', sa.Column('verification_type', verification_type, nullable=False))
+    op.create_primary_key('pk_verification', 'verification', ['verification_type', 'verification_token'])
     op.drop_table('verifications')
     op.drop_table('user_emails')
 
@@ -68,14 +67,13 @@ def downgrade():
                     )
     op.create_table('verifications',
                     sa.Column('id', sa.INTEGER(), autoincrement=True, nullable=False),
-                    sa.Column('verification_type', verification_type, autoincrement=False,
-                              nullable=True),
                     sa.Column('verification_pending', postgresql.TIMESTAMP(timezone=True), autoincrement=False,
                               nullable=True),
                     sa.Column('verified', postgresql.TIMESTAMP(timezone=True), autoincrement=False, nullable=True),
                     sa.Column('verification_link', sa.TEXT(), autoincrement=False, nullable=True),
                     sa.PrimaryKeyConstraint('id', name='verifications_pkey')
                     )
+    op.add_column('verifications', sa.Column('verification_type', verification_type, nullable=False))
     op.drop_table('verification')
     op.drop_table('usercontact')
     # ### end Alembic commands ###
