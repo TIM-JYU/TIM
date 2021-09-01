@@ -16,11 +16,11 @@ class Verification(db.Model):
     """For various pending verifications, such as message list joining and contact information ownership
     verification."""
 
-    __tablename__ = "verifications"
+    __tablename__ = "verification"
 
     id = db.Column(db.Integer, primary_key=True)
 
-    contact_id = db.Column(db.Integer, db.ForeignKey("user_contact.id"))
+    contact_id = db.Column(db.Integer, db.ForeignKey("usercontact.id"))
 
     verification_type = db.Column(db.Enum(VerificationType), nullable=False)
     """The type of verification, see VerificationType class for details."""
