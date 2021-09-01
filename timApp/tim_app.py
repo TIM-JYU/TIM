@@ -78,15 +78,12 @@ from timApp.user.hakaorganization import HakaOrganization
 from timApp.user.newuser import NewUser
 from timApp.user.personaluniquecode import PersonalUniqueCode
 from timApp.user.user import User
+from timApp.user.usercontact import UserContact
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember
-from timApp.util.flask.filters import (
-    map_format,
-    timdate,
-    humanize_timedelta,
-    humanize_datetime,
-)
+from timApp.user.verification import Verification
+from timApp.util.flask.filters import map_format, timdate, humanize_timedelta, humanize_datetime
 from timApp.util.flask.user_agent import SimpleUserAgent
 from timApp.util.logger import setup_logging
 from timApp.util.utils import datestr_to_relative, date_to_relative
@@ -163,6 +160,7 @@ all_models = (
     User,
     Useractivity,
     UserAnswer,
+    UserContact,
     UserGroup,
     UserGroupDoc,
     UserGroupMember,
@@ -178,6 +176,7 @@ all_models = (
     VelpLabel,
     VelpLabelContent,
     VelpVersion,
+    Verification,
     CrontabSchedule,
     IntervalSchedule,
     PeriodicTask,
