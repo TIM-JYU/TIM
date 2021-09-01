@@ -464,7 +464,7 @@ def init_app():
             app.wsgi_app,
             sort_by=('cumtime',),
             restrictions=[100],
-            profile_dir='/service/profiling',
+            profile_dir='/service/timApp/static/profiling',
         )
 
     for var in [
