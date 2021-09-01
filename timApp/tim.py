@@ -60,14 +60,14 @@ from timApp.item.tag import Tag, GROUP_TAG_PREFIX
 from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.lecture.routes import lecture_routes
 from timApp.messaging.messagelist.emaillist import check_mailman_connection
+from timApp.messaging.messagelist.mailman_events import has_valid_event_auth
+from timApp.messaging.messagelist.mailman_events import mailman_events
 from timApp.messaging.messagelist.mailman_events import (
     mailman_events,
     has_valid_event_auth,
 )
 from timApp.messaging.messagelist.routes import messagelist
 from timApp.messaging.timMessage.routes import timMessage
-from timApp.messaging.messagelist.mailman_events import mailman_events
-from timApp.messaging.messagelist.routes import messagelist
 from timApp.modules.fields.cbcountfield import cbcountfield_route
 from timApp.note.routes import notes
 from timApp.notification.notify import notify
@@ -90,7 +90,7 @@ from timApp.upload.upload import upload
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.usergroup import UserGroup
-from timApp.user.verification import verification
+from timApp.user.verification.routes import verification
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import (
     get_request_message,
