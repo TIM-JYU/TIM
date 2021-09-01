@@ -1,0 +1,23 @@
+{% extends "base.jinja2" %}
+{% block title %}Verify action{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script>
+        ANGULARMODULES = [];
+        JSMODULES = ["userActionVerify"];
+        var docSettings = {
+            login: {
+                hide: {
+                    search: true,
+                    sidebar: true,
+                }
+            }
+        };
+        var error = {{ error|tojson }};
+        var verifyType = {{ verify_type|tojson }};
+        var verifyInfo = {{ verify_info|tojson }};
+    </script>
+{% endblock %}
+{% block content %}
+    <tim-user-action-verify></tim-user-action-verify>
+{% endblock %}

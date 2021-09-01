@@ -1,4 +1,3 @@
-import secrets
 from dataclasses import field
 from typing import Union
 
@@ -13,7 +12,8 @@ from timApp.notification.send_email import send_email
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.usercontact import UserContact
-from timApp.user.verification.verification import Verification, VerificationType
+from timApp.user.verification.verification import Verification, VerificationType, request_verification, \
+    ContactAddVerification
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -23,7 +23,7 @@ from timApp.util.utils import is_valid_email, get_current_time
 verification = TypedBlueprint('verification', __name__, url_prefix='/verification')
 
 
-@verification.route("/addnewcontact", methods=['POST'])
+@verification.post("/addnewcontact")
 def add_contact_info(contact_info: str, contact_info_type: Channel = field(metadata={'by_value': True})) \
         -> Response:
     """Add a new contact information for a TIM user.
@@ -33,38 +33,52 @@ def add_contact_info(contact_info: str, contact_info_type: Channel = field(metad
     :return: OK response.
     """
     verify_logged_in()
-    u_id = get_current_user_object().id
+    user = get_current_user_object()
     # Check for duplicate contact information.
-    existing_contact_info = UserContact.query.filter_by(user_id=u_id, contact=contact_info,
-                                                        channel=contact_info_type).first()
+    existing_contact_info = db.session.query(UserContact.verified).filter(
+        (UserContact.user == user) & (UserContact.channel == contact_info_type) & (
+                UserContact.contact == contact_info)).first()
 
-    if existing_contact_info and existing_contact_info.verified:
+    if existing_contact_info:
         # If the contact info already exists and is verified by the user, then inform them about it.
         raise RouteException("02")
 
-    # Random string for verification URL.
-    verification_string = secrets.token_urlsafe(32)
-    verification_url = f"{app.config['TIM_HOST']}/verification/contact/{verification_string}"
-    uc = None
     # Add appropriate contact info.
     if contact_info_type is Channel.EMAIL:
         if not is_valid_email(contact_info):
             raise RouteException("01")
-        if not existing_contact_info:
-            # Generate new contact info in db, with verified = False to wait for the user to verify this.
-            uc = UserContact(user_id=u_id, contact=contact_info, channel=Channel.EMAIL, verified=False, primary=False)
-            db.session.add(uc)
-    # Generate verification information for db.
-    ver = Verification(verification_type=VerificationType.CONTACT_OWNERSHIP, verification_pending=get_current_time(),
-                       verification_token=verification_string, contact=uc)
-    db.session.add(ver)
-    send_verification_messsage(contact_info, verification_url, contact_info_type)
+
+    uc = UserContact(user=user, contact=contact_info, channel=Channel.EMAIL, verified=False, primary=False)
+    db.session.add(uc)
+
+    request_verification(user, ContactAddVerification(contact=uc), "Verify test", """
+This is a verification message.
+
+URL: {{ verify_url }}
+
+""")
+
     db.session.commit()
     return ok_response()
 
 
-@verification.route("/contact/<verification_token>", methods=["GET", "POST"])
-def contact_info_verification(verification_token: str) -> Union[Response, str]:
+@verification.get("/<verify_type>/<verify_token>")
+def show_verify_page(verify_type: str, verify_token: str):
+    verify_type_parsed = VerificationType.parse(verify_type)
+    error = None
+    if not verify_type_parsed:
+        error = "Invalid verification type"
+    verification_obj = Verification.query.get((verify_token, verify_type_parsed))
+    if not verification_obj:
+        error = "No verification found for the given data"
+    return render_template("user_action_verification.jinja2",
+                           error=error,
+                           verify_type=verify_type,
+                           verify_info=verification_obj)
+
+
+@verification.route("/old/contact/<verification_token>", methods=["GET", "POST"])
+def tmp_contact_info_verification(verification_token: str) -> Union[Response, str]:
     """Verify user's additional contact information.
 
     :param verification_token: Generated string token to identify user's not-yet-verified contact information.
@@ -77,7 +91,7 @@ def contact_info_verification(verification_token: str) -> Union[Response, str]:
       - Return error code '02' if during a GET call the user's contact information has already been verified.
       - Return error code '03' if the user tries to verify the same contact info in multiple POST calls.
     """
-    template = 'contact-info-verification.jinja2'
+    template = 'user_action_verification.jinja2'
     try:
         v = Verification.query.filter_by(verification_token=verification_token).one()
         if v.verification_type == VerificationType.CONTACT_OWNERSHIP:

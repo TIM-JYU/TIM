@@ -76,6 +76,8 @@ export function staticDynamicImport(s: string) {
             return import("tim/messaging/archive/tim-archive.module");
         case "slideView":
             return import("tim/item/slide-view.component");
+        case "userActionVerify":
+            return import("tim/user/user-action-verify.component");
     }
     throw Error(`Module was not statically known: ${s}`);
 }

@@ -1,7 +1,6 @@
 import {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {HeaderIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
 import {IDocScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
-import {Channel} from "tim/messaging/listOptionTypes";
 import {IDocSettings, ISlideDocSettings} from "../document/IDocSettings";
 import {EditMode} from "../document/popup-menu-dialog.component";
 import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
@@ -165,18 +164,14 @@ export interface ISettingsGlobals extends IGenericGlobals {
 
 // See VerificationType on verification.py for details.
 export enum VerificationType {
-    LIST_JOIN = 1,
-    CONTACT_OWNERSHIP = 2,
+    LIST_JOIN = "list",
+    CONTACT_OWNERSHIP = "contact",
 }
 
 export interface IVerificationGlobals extends IGenericGlobals {
-    verification_token: string;
-    type?: VerificationType;
-    title: string;
-    error: boolean;
-    error_code?: string;
-    channel?: Channel;
-    contact_info: string;
+    verifyType: VerificationType;
+    verifyInfo: {type: string};
+    error?: string;
 }
 
 export type SomeGlobals =

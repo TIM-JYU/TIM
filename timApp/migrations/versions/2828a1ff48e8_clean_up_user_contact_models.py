@@ -32,13 +32,13 @@ def upgrade():
     op.add_column('usercontact', sa.Column('channel', channel_enum, nullable=False))
     op.create_table('verification',
                     sa.Column('contact_id', sa.Integer(), nullable=True),
-                    sa.Column('verification_pending', sa.DateTime(timezone=True), nullable=True),
-                    sa.Column('verification_token', sa.Text(), nullable=False),
+                    sa.Column('requested_at', sa.DateTime(timezone=True), nullable=True),
+                    sa.Column('token', sa.Text(), nullable=False),
                     sa.Column('verified_at', sa.DateTime(timezone=True), nullable=True),
                     sa.ForeignKeyConstraint(['contact_id'], ['usercontact.id'], ),
                     )
-    op.add_column('verification', sa.Column('verification_type', verification_type, nullable=False))
-    op.create_primary_key('pk_verification', 'verification', ['verification_type', 'verification_token'])
+    op.add_column('verification', sa.Column('type', verification_type, nullable=False))
+    op.create_primary_key('pk_verification', 'verification', ['type', 'token'])
     op.drop_table('verifications')
     op.drop_table('user_emails')
 

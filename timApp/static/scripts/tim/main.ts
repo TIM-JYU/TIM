@@ -125,11 +125,6 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "timRelevanceEdit", RelevanceEditComponent);
     doDowngrade(dg, "timMessageView", TimMessageViewComponent);
     doDowngrade(dg, "manageReadReceipt", ManageReadReceiptComponent);
-    doDowngrade(
-        dg,
-        "contactInfoVerification",
-        ContactInfoVerificationComponent
-    );
     return dg;
 }
 
