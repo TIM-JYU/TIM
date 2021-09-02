@@ -44,3 +44,8 @@
     }
   }
 }
+
+.account-info {
+  display: grid;
+  grid-template-columns: max-content auto;
+}

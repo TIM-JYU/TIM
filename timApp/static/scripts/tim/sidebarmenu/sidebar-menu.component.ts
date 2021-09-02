@@ -10,8 +10,7 @@ import {TabEntry} from "tim/sidebarmenu/menu-tab.directive";
 import {TabEntryListService} from "tim/sidebarmenu/services/tab-entry-list.service";
 import {TabContainerComponent} from "tim/sidebarmenu/tab-container.component";
 import {isScreenSizeOrLower, TimStorage} from "tim/util/utils";
-import {ISettings} from "tim/user/settings.component";
-import {genericglobals} from "tim/util/globals";
+import {genericglobals, ISettings} from "tim/util/globals";
 import {getVisibilityVars, IVisibilityVars} from "tim/timRoot";
 import * as t from "io-ts";
 

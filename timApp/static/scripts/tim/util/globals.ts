@@ -20,7 +20,6 @@ import {
     IUser,
     IUserListEntry,
 } from "../user/IUser";
-import {ICssFile, INotification, ISettings} from "../user/settings.component";
 
 interface ILayout {
     col_1_lg: number;
@@ -129,6 +128,32 @@ export interface IDocumentGlobals extends IItemGlobals {
     score_infos: IDocScoreInfo[] | null;
     current_list_user?: IUser;
     show_unpublished_bg: boolean;
+}
+
+export interface INotification {
+    email_comment_add: boolean;
+    email_comment_modify: boolean;
+    email_doc_modify: boolean;
+    item: DocumentOrFolder;
+}
+
+export interface ICssFile {
+    name: string;
+    desc: string;
+}
+
+export interface ISettings {
+    css_combined: string;
+    css_files: Record<string, boolean>;
+    custom_css: string;
+    disable_menu_hover: boolean;
+    remember_last_sidebar_menu_tab: boolean;
+    remember_last_sidebar_menu_state: boolean;
+    email_exclude: string;
+    language: string | null;
+    use_document_word_list: boolean;
+    word_list: string;
+    auto_mark_all_read: boolean;
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {

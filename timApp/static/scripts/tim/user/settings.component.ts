@@ -1,30 +1,31 @@
-import {HttpClient} from "@angular/common/http";
-import {Component, DoCheck, Input} from "@angular/core";
-import {DocumentOrFolder} from "tim/item/IItem";
+import {HttpClient, HttpClientModule} from "@angular/common/http";
+import {
+    ApplicationRef,
+    Component,
+    DoBootstrap,
+    DoCheck,
+    Input,
+    NgModule,
+} from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
 import {Channel} from "tim/messaging/listOptionTypes";
+import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import {createDowngradedModule, doDowngrade} from "tim/downgrade";
+import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
+import {BrowserModule} from "@angular/platform-browser";
+import {FormsModule} from "@angular/forms";
 import {ConsentType} from "../ui/consent";
-import {settingsglobals} from "../util/globals";
+import {
+    ICssFile,
+    INotification,
+    ISettings,
+    settingsglobals,
+} from "../util/globals";
 import {IOkResponse, timeout, to2} from "../util/utils";
 import {IContactInfo, IFullUser} from "./IUser";
 
-export interface ISettings {
-    css_combined: string;
-    css_files: Record<string, boolean>;
-    custom_css: string;
-    disable_menu_hover: boolean;
-    remember_last_sidebar_menu_tab: boolean;
-    remember_last_sidebar_menu_state: boolean;
-    email_exclude: string;
-    language: string | null;
-    use_document_word_list: boolean;
-    word_list: string;
-    auto_mark_all_read: boolean;
-    max_uncollapsed_toc_items: number | null;
-}
-
-export async function setConsent(http: HttpClient, c: ConsentType) {
+async function setConsent(http: HttpClient, c: ConsentType) {
     const r = await to2(
         http
             .post<IOkResponse>("/settings/updateConsent", {consent: c})
@@ -35,18 +36,6 @@ export async function setConsent(http: HttpClient, c: ConsentType) {
     } else {
         void showMessageDialog(r.result.error.error);
     }
-}
-
-export interface INotification {
-    email_comment_add: boolean;
-    email_comment_modify: boolean;
-    email_doc_modify: boolean;
-    item: DocumentOrFolder;
-}
-
-export interface ICssFile {
-    name: string;
-    desc: string;
 }
 
 @Component({
@@ -66,6 +55,13 @@ export class SaveButtonComponent {
         this.saving = false;
     }
 }
+
+@Component({
+    selector: "user-settings",
+    template: `
+    `,
+})
+export class UserSettingsComponent {}
 
 @Component({
     selector: "tim-settings",
@@ -214,13 +210,22 @@ export class SaveButtonComponent {
                 <button class="btn btn-default" (click)="clearLocalStorage()">Clear local settings storage</button>
                 <span *ngIf="storageClear">Local storage cleared.</span>
             </bootstrap-panel>
+
             <bootstrap-panel title="Your account information">
-                <p>Id: {{user.id}}</p>
-                <p>Username: {{user.name}}</p>
-                <p>Full name: {{user.real_name}}</p>
-                <p>Email: {{user.email}}</p>
-                <p *ngFor="let contactInfo of user.contact_infos">{{userContactPrint(contactInfo)}}</p>
+                <div class="account-info">
+                    <span>Account ID</span> <span>{{user.id}}</span>
+                    <span>Username</span> <span>{{user.name}}</span>
+                    <span>Full name</span> <span>{{user.real_name}}</span>
+                    <span>Primary email</span> <span>{{user.email}}</span>
+                    <span>Emails</span>
+                    <div>
+
+                    </div>
+                    <!--                    <p>Email: {{user.email}}</p>-->
+                    <!--                    <p *ngFor="let contactInfo of user.contact_infos">{{userContactPrint(contactInfo)}}</p>    -->
+                </div>
             </bootstrap-panel>
+
             <bootstrap-panel title="Additional contact information">
                 <!-- TODO: Remove when feature is complete. -->
                 <p><a href="https://gitlab.com/tim-jyu/tim/-/merge_requests/253">Merge request #253</a></p>
@@ -398,3 +403,23 @@ export class SettingsComponent implements DoCheck {
         }
     }
 }
+
+@NgModule({
+    declarations: [
+        UserSettingsComponent,
+        SettingsComponent,
+        SaveButtonComponent,
+    ],
+    exports: [SettingsComponent],
+    imports: [BrowserModule, TimUtilityModule, HttpClientModule, FormsModule],
+})
+export class SettingsModule implements DoBootstrap {
+    ngDoBootstrap(appRef: ApplicationRef): void {}
+}
+
+export const angularJsModule = createDowngradedModule((extraProviders) => {
+    const platformRef = platformBrowserDynamic(extraProviders);
+    return platformRef.bootstrapModule(SettingsModule);
+});
+doDowngrade(angularJsModule, "timSettings", SettingsComponent);
+export const moduleDefs = [angularJsModule];

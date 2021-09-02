@@ -24,9 +24,7 @@ import {BookmarkFolderBoxComponent} from "tim/bookmark/bookmark-folder-box.compo
 import {SiteHeaderComponent} from "tim/header/site-header.component";
 import {SearchBoxComponent} from "tim/search/search-box.component";
 import {TypeaheadModule} from "ngx-bootstrap/typeahead";
-import {SettingsComponent} from "tim/user/settings.component";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {LanguageSelectorComponent} from "tim/user/language-selector.component";
 import {AccessCountdownComponent} from "tim/item/access-countdown.component";
 import {SideBarMenuModule} from "tim/sidebarmenu/side-bar-menu.module";
 import {DirectoryListComponent} from "tim/folder/directory-list.component";
@@ -57,8 +55,6 @@ import {CopyFolderComponent} from "tim/folder/copy-folder.component";
         BookmarkFolderBoxComponent,
         SiteHeaderComponent,
         SearchBoxComponent,
-        SettingsComponent,
-        LanguageSelectorComponent,
         AccessCountdownComponent,
         DirectoryListComponent,
         TemplateListComponent,

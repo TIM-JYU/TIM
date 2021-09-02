@@ -21,7 +21,6 @@ import {BootstrapPanelComponent} from "tim/ui/bootstrap-panel.component";
 import {LogoComponent} from "tim/ui/logo.component";
 import {LoginMenuComponent} from "tim/user/login-menu.component";
 import * as timRoot from "tim/timRoot";
-import {SettingsComponent} from "tim/user/settings.component";
 import {markAsUsed, ModuleArray, StringArray} from "tim/util/utils";
 import {AnnotationComponent} from "tim/velp/annotation.component";
 import * as velpSelection from "tim/velp/velpSelection";
@@ -109,7 +108,6 @@ function createDowngradedAppModule() {
     doDowngrade(dg, "bootstrapPanel", BootstrapPanelComponent);
     doDowngrade(dg, "timStart", FrontPageComponent);
     doDowngrade(dg, "timSiteHeader", SiteHeaderComponent);
-    doDowngrade(dg, "timSettings", SettingsComponent);
     doDowngrade(dg, "timAccessCountdown", AccessCountdownComponent);
     doDowngrade(dg, "timGotoLink", GotoLinkComponent);
     doDowngrade(dg, "timTimeLeft", TimeLeftComponent);
