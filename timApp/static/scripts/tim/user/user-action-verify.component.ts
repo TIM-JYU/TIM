@@ -12,13 +12,20 @@ import {
     ViewContainerRef,
 } from "@angular/core";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {verificationglobals, VerificationType} from "tim/util/globals";
+import {
+    genericglobals,
+    verificationglobals,
+    VerificationType,
+} from "tim/util/globals";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {BrowserModule} from "@angular/platform-browser";
 import * as t from "io-ts";
 import {isRight} from "fp-ts/Either";
+import {AlertSeverity} from "tim/ui/formErrorMessage";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
+import {Channel} from "../messaging/listOptionTypes";
+import {to2} from "../util/utils";
 
 const GeneralInfoMarkup = t.type({
     type: t.string,
@@ -47,22 +54,38 @@ const ConstactOwnershipMarkup = t.type({
     contact: t.string,
 });
 
+type ContactChannels = Exclude<
+    Channel,
+    Channel.EMAIL_LIST | Channel.TIM_MESSAGE
+>;
+
+const TYPE_NAMES: Record<ContactChannels, string> = {
+    [Channel.EMAIL]: $localize`E-mail address`,
+};
+
 @Component({
     selector: "contact-ownership-info",
     template: `
-        <p>Contact ownership!</p>
+        <p>The following contact information will be added to your account:</p>
+        <ul>
+            <li>Type: {{ contactType }}</li>
+            <li>Contact information: <code>{{info.contact}}</code></li>
+        </ul>
     `,
 })
 export class ContactOwnershipInfoComponent
     extends InfoComponentBase<t.TypeOf<typeof ConstactOwnershipMarkup>>
     implements OnInit {
+    contactType!: string;
+
     get infoType() {
         return ConstactOwnershipMarkup;
     }
 
     ngOnInit() {
         super.ngOnInit();
-        console.log(this.info);
+
+        this.contactType = TYPE_NAMES[this.info.channel as ContactChannels];
     }
 }
 
@@ -74,52 +97,35 @@ const INFO_MAP: Record<VerificationType, Type<unknown> | undefined> = {
 @Component({
     selector: "tim-user-action-verify",
     template: `
-        <tim-alert *ngIf="verifyGlobals.error" i18n>
-            Cannot verify because: {{verifyGlobals.error}}
+        <tim-alert *ngIf="verifyGlobals.verifyError" i18n>
+            Cannot verify because: {{verifyGlobals.verifyError}}
         </tim-alert>
-        <ng-container *ngIf="!verifyGlobals.error">
-            <h1>Verification</h1>
-            <bootstrap-panel title="Verify">
-                <div>
-                    <ng-container #infoContainer></ng-container>
-                </div>
-                <!--            <div *ngIf="!error && verificationToken">-->
-                <!--                <p>Are you sure you wish to verify this contact information?</p>-->
-                <!--                <p>Type: {{channel}}</p>-->
-                <!--                <p>Information: {{contactInfo}} </p>-->
-                <!--                <button class="timButton" (click)="callVerify()" [disabled]="verificationSucceeded">Verify</button>-->
-                <!--            </div>-->
-                <!--            <div *ngIf="error">-->
-                <!--                <p>An error has occured.<span *ngIf="errorCode"> Details below:</span></p>-->
-                <!--                <tim-alert severity="danger" *ngIf="errorCode == '01'">Invalid verification link. Check that the link in-->
-                <!--                    the browser's address bar is the same as in the message you used to arrive to this site.-->
-                <!--                </tim-alert>-->
-                <!--                <tim-alert severity="danger" *ngIf="errorCode == '02'">This contact info is already verified.-->
-                <!--                </tim-alert>-->
-                <!--                <tim-alert severity="danger" *ngIf="errorCode == '03'">This contact info is already verified.-->
-                <!--                </tim-alert>-->
-                <!--            -->
-                <!--            </div>-->
-                <!--            <div *ngIf="verificationSucceeded !== undefined">-->
-                <!--                <tim-alert severity="success" *ngIf="verificationSucceeded">Verification succeeded! Your new contact-->
-                <!--                    information has been linked with your TIM profile.-->
-                <!--                </tim-alert>-->
-                <!--                <tim-alert severity="danger" *ngIf="!verificationSucceeded">Verification failed! If the problem-->
-                <!--                    persists, please contact TIM's support (details in the site footer).-->
-                <!--                </tim-alert>-->
-                <!--            </div>-->
-            </bootstrap-panel>
-        </ng-container>
+        <tim-alert *ngIf="verificationResult" [severity]="verificationResult.type">
+            {{verificationResult.message}}
+        </tim-alert>
+        <bootstrap-panel [class.hidden]="verifyGlobals.verifyError" title="Verify action" i18n-title>
+            <div>
+                <ng-container #infoContainer></ng-container>
+            </div>
+            <p class="verify-prompt">Please verify or deny the action. You will not be able to access this page once you
+                select either option.</p>
+            <form>
+                <fieldset [disabled]="processing">
+                    <button class="btn btn-danger" (click)="verify($event, false)" i18n>Decline</button>
+                    <tim-loading *ngIf="processing"></tim-loading>
+                    <button class="btn btn-default" (click)="verify($event, true)" i18n>Accept</button>
+                </fieldset>
+            </form>
+        </bootstrap-panel>
     `,
+    styleUrls: ["user-action-verify.component.scss"],
 })
 export class UserActionVerifyComponent implements AfterViewInit {
     verifyGlobals = verificationglobals();
     @ViewChild("infoContainer", {read: ViewContainerRef})
     infoContainer!: ViewContainerRef;
-
-    // A flag if the verification succeeded. For the value of undefined assume that the verification POST call has not
-    // yet been made.
-    verificationSucceeded?: boolean = undefined;
+    processing: boolean = false;
+    verificationResult?: {type: AlertSeverity; message: string};
 
     constructor(
         private http: HttpClient,
@@ -127,9 +133,13 @@ export class UserActionVerifyComponent implements AfterViewInit {
     ) {}
 
     ngAfterViewInit(): void {
+        if (!this.verifyGlobals.verifyInfo) {
+            return;
+        }
         const infoType =
             INFO_MAP[this.verifyGlobals.verifyInfo.type as VerificationType];
         if (!infoType) {
+            this.verifyGlobals.verifyError = $localize`This verification type is not yet supported.`;
             return;
         }
         const factory = this.cfr.resolveComponentFactory(infoType);
@@ -138,33 +148,36 @@ export class UserActionVerifyComponent implements AfterViewInit {
         componentRef.changeDetectorRef.detectChanges();
     }
 
-    // /**
-    //  * HTTP POST to server to finalize verifying a user's new contact information.
-    //  */
-    // async callVerify() {
-    //     // If verification would for some reason be undefined, then there is no reason to call the server with a POST
-    //     // method. Also helps in typing.
-    //     if (!this.verificationToken) {
-    //         return;
-    //     }
-    //     // If any kind of error flag is up, then calling for verification doesn't make sense.
-    //     if (this.error) {
-    //         return;
-    //     }
-    //
-    //     const r = await to2(
-    //         this.http
-    //             .post(`/verification/contact/${this.verificationToken}`, {})
-    //             .toPromise()
-    //     );
-    //
-    //     if (r.ok) {
-    //         this.verificationSucceeded = true;
-    //     } else {
-    //         this.error = true;
-    //         this.errorCode = r.result.error.error;
-    //     }
-    // }
+    async verify(e: Event, verify: boolean) {
+        e.preventDefault();
+        this.processing = true;
+        const res = await to2(
+            this.http.post(window.location.href, {verify}).toPromise()
+        );
+        this.processing = false;
+        if (res.ok) {
+            if (verify) {
+                this.verificationResult = {
+                    type: "success",
+                    message: $localize`Verification successful. You can now close the page.`,
+                };
+            } else {
+                this.verificationResult = {
+                    type: "warning",
+                    message: $localize`Verification was successfully denied. If you believe you got this link by mistake, please report this to ${
+                        genericglobals().config.helpEmail
+                    }.`,
+                };
+            }
+        } else {
+            this.verificationResult = {
+                type: "danger",
+                message: $localize`Could not verify action because of an error: ${
+                    res.result.error.error
+                }. Please report this to ${genericglobals().config.helpEmail}.`,
+            };
+        }
+    }
 }
 
 @NgModule({

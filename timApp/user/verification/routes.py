@@ -3,7 +3,8 @@ from typing import Union, Optional
 from flask import Response, request, render_template
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound  # type: ignore
 
-from timApp.auth.sessioninfo import logged_in, get_current_user_id
+from timApp.auth.accesshelper import verify_logged_in
+from timApp.auth.sessioninfo import get_current_user_id
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.messaging.messagelist.messagelist_utils import sync_new_contact_info
 from timApp.notification.send_email import send_email
@@ -21,15 +22,16 @@ verify = TypedBlueprint('verify', __name__, url_prefix='/verify')
 
 @verify.get("/<verify_type>/<verify_token>")
 def show_verify_page(verify_type: str, verify_token: str):
+    verify_logged_in()
     verify_type_parsed = VerificationType.parse(verify_type)
     error = None
     if not verify_type_parsed:
         error = "Invalid verification type"
 
     verification_obj: Optional[Verification] \
-        = Verification.query.filter_by(token=verify_token, type=verify_type_parsed).first() if logged_in() else None
+        = Verification.query.filter_by(token=verify_token, type=verify_type_parsed).first()
 
-    if logged_in() and not verification_obj:
+    if not verification_obj:
         error = "No verification found for the given data"
 
     if verification_obj and verification_obj.user_id != get_current_user_id():
