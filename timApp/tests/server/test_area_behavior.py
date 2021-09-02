@@ -64,3 +64,11 @@ test
             'Area a appears more than once in this document. Fix this to get rid of this warning.',
             r.cssselect('.alert.alert-info')[0].text_content().strip(),
         )
+
+    def test_area_no_wrong_warning(self):
+        """If preview has a broken area temporarily, TIM shouldn't complain about it."""
+        self.login_test1()
+        d = self.create_doc()
+        self.post_preview(d, '#- {area=a}')
+        r = self.get(d.url, as_tree=True)
+        self.assertFalse(r.cssselect('.alert.alert-info'))
