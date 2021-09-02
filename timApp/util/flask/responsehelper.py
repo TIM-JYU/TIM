@@ -5,9 +5,10 @@ from io import StringIO
 from typing import Any, Optional, Dict
 from urllib.parse import urlparse, urljoin
 
-from flask import request, redirect, url_for, Response, stream_with_context, render_template
+from flask import request, redirect, url_for, Response, stream_with_context, render_template, flash
 
 from timApp.document.timjsonencoder import TimJsonEncoder
+from timApp.document.viewcontext import ViewContext
 from timApp.timdb.sqa import db
 
 
@@ -144,3 +145,8 @@ def get_grid_modules():
         "ui.grid.autoResize",
         "ui.grid.saveState",
     ]
+
+
+def flash_if_not_preview(message: str, view_ctx: ViewContext) -> None:
+    if not view_ctx.preview:
+        flash(message)
