@@ -34,8 +34,10 @@ def upgrade():
                     sa.Column('contact_id', sa.Integer(), nullable=True),
                     sa.Column('requested_at', sa.DateTime(timezone=True), nullable=True),
                     sa.Column('token', sa.Text(), nullable=False),
-                    sa.Column('verified_at', sa.DateTime(timezone=True), nullable=True),
+                    sa.Column('reacted_at', sa.DateTime(timezone=True), nullable=True),
+                    sa.Column('user_id', sa.Integer(), nullable=False),
                     sa.ForeignKeyConstraint(['contact_id'], ['usercontact.id'], ),
+                    sa.ForeignKeyConstraint(['user_id'], ['useraccount.id'], ),
                     )
     op.add_column('verification', sa.Column('type', verification_type, nullable=False))
     op.create_primary_key('pk_verification', 'verification', ['type', 'token'])

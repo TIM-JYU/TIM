@@ -6,7 +6,6 @@ from typing import Optional, Dict
 from flask import render_template_string, url_for
 
 from timApp.timdb.sqa import db
-from timApp.user.user import User
 from timApp.user.usercontact import UserContact
 from timApp.util.utils import get_current_time
 
@@ -44,11 +43,17 @@ class Verification(db.Model):
     type: VerificationType = db.Column(db.Enum(VerificationType), primary_key=True)
     """The type of verification, see VerificationType class for details."""
 
+    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
+    """User that can react to verification request."""
+
     requested_at = db.Column(db.DateTime(timezone=True))
     """When a verification has been added to db, pending sending to a user."""
 
-    verified_at = db.Column(db.DateTime(timezone=True))
-    """When the user used the link to verify."""
+    reacted_at = db.Column(db.DateTime(timezone=True))
+    """When the user reacted to verification request."""
+
+    user = db.relationship("User", lazy="select")
+    """User that can react to verification request."""
 
     def to_json(self) -> Dict:
         return {
@@ -78,14 +83,15 @@ class ContactAddVerification(Verification):
     }
 
 
-def request_verification(user: User, verification: Verification, message_title: str, message_body: str) -> None:
+def request_verification(verification: Verification, message_title: str, message_body: str) -> None:
     from timApp.notification.send_email import send_email
     from timApp.tim_app import app
 
     verification.token = secrets.token_urlsafe(VERIFICATION_TOKEN_LEN)
     verification.requested_at = get_current_time()
+    user = verification.user
 
-    url = app.config["TIM_HOST"] + url_for("verification.show_verify_page",
+    url = app.config["TIM_HOST"] + url_for("verify.show_verify_page",
                                            verify_type=verification.type.value,
                                            verify_token=verification.token)
     title = render_template_string(message_title, user=user, verification=verification)
