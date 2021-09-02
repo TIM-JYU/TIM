@@ -341,6 +341,10 @@ def belongs_placeholder(s):
     return get_error_html('The belongs filter requires nocache=true attribute.')
 
 
+def fmt(x, f: str):
+    return format(x, f)
+
+
 tim_filters = {
     'Pz': Pz,
     'gfields': genfields,
@@ -354,6 +358,7 @@ tim_filters = {
     'preinc': preinc,
     'postinc': postinc,
     'belongs': belongs_placeholder,
+    'fmt': fmt,
 }
 
 
