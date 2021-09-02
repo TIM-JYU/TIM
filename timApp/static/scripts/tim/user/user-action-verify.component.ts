@@ -66,10 +66,10 @@ const TYPE_NAMES: Record<ContactChannels, string> = {
 @Component({
     selector: "contact-ownership-info",
     template: `
-        <p>The following contact information will be added to your account:</p>
+        <p i18n>The following contact information will be added to your account:</p>
         <ul>
-            <li>Type: {{ contactType }}</li>
-            <li>Contact information: <code>{{info.contact}}</code></li>
+            <li i18n>Type: {{contactType}}</li>
+            <li i18n>Contact information: <code>{{info.contact}}</code></li>
         </ul>
     `,
 })

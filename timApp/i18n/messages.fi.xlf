@@ -819,7 +819,7 @@
         <target state="translated">Ei arkistointia</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/listOptionTypes.ts</context>
-          <context context-type="linenumber">64</context>
+          <context context-type="linenumber">65</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2028814551074000227" datatype="html">
@@ -827,7 +827,7 @@
         <target state="translated">Vain omistajat</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/listOptionTypes.ts</context>
-          <context context-type="linenumber">68</context>
+          <context context-type="linenumber">69</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8921978962685482749" datatype="html">
@@ -835,7 +835,7 @@
         <target state="translated">Vain jäsenet</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/listOptionTypes.ts</context>
-          <context context-type="linenumber">72</context>
+          <context context-type="linenumber">73</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1176354097377939877" datatype="html">
@@ -843,7 +843,7 @@
         <target state="translated">Sisäänkirjautuneet käyttäjät</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/listOptionTypes.ts</context>
-          <context context-type="linenumber">76</context>
+          <context context-type="linenumber">77</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6534056417716630629" datatype="html">
@@ -851,7 +851,7 @@
         <target state="translated">Kaikki</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/listOptionTypes.ts</context>
-          <context context-type="linenumber">80</context>
+          <context context-type="linenumber">81</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3784000c7848fcf49ee9ae6ad32045f9f116ba52" datatype="html">
@@ -2833,7 +2833,7 @@
         <target state="translated">Avaa sivuvalikko</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/sidebar-menu.component.ts</context>
-          <context context-type="linenumber">45</context>
+          <context context-type="linenumber">44</context>
         </context-group>
       </trans-unit>
       <trans-unit id="b9204333a0f50dad1b58fd9c4bbcaf3276096afd" datatype="html">
@@ -2841,7 +2841,7 @@
         <target state="translated">Näytä valikko</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/sidebar-menu.component.ts</context>
-          <context context-type="linenumber">44</context>
+          <context context-type="linenumber">43</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4b9ac45e513aed03f2111217aa5612355a10a777" datatype="html">
@@ -3543,6 +3543,110 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">56</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5830520205989474611" datatype="html">
+        <source>E-mail address</source>
+        <target state="translated">Sähköpostiosoite</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">63</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="a598937a552d9272f58f705463fa575724109890" datatype="html">
+        <source>The following contact information will be added to your account:</source>
+        <target state="translated">Seuraava yhteystieto lisätään tunnuksellesi:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">69</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9e9a0c5c5ac66f1ada6003558530c1580e5aeb39" datatype="html">
+        <source>Type: <x id="INTERPOLATION" equiv-text="{{contactType}}"/></source>
+        <target state="translated">Tyyppi: <x id="INTERPOLATION" equiv-text="{{contactType}}"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">71</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="10a25f89683563516403f355a4e655e4c5539ee2" datatype="html">
+        <source>Contact information: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/></source>
+        <target state="translated">Yhteystieto: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/></target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">72</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="17ef75d17299a3878a5c0c8007b8b3f05942276e" datatype="html">
+        <source> Cannot verify: <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/> </source>
+        <target state="translated"> Vahvistaminen epäonnistui: <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/> </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">100,102</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="140ba630ee83f929e5414d15d6dfbcaee90e258d" datatype="html">
+        <source>Verify action</source>
+        <target state="translated">Vahvista toimenpide</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">106</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="e4d02232bf65754955798ffae3c361cde41e42a5" datatype="html">
+        <source> Please verify or deny the action. You will not be able to access this page once you select either option. </source>
+        <target state="translated"> Ole hyvä ja vahvista tai kiellä toimenpide</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">111,113</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="ce3bb7411069c96e2065502c115323680e7f1ce0" datatype="html">
+        <source>Decline</source>
+        <target state="translated">Kiellä</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">116</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6fc5e65900ae1415d3170d5d2842f0dcae1b6645" datatype="html">
+        <source>Accept</source>
+        <target state="translated">Vahvista</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">118</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7777471189814028806" datatype="html">
+        <source>This verification type is not yet supported.</source>
+        <target state="translated">Tätä vahvistustyyppiä ei vielä tueta.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">145</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="394623590198342947" datatype="html">
+        <source>Verification successful. You can now close the page.</source>
+        <target state="translated">Vahvistus onnistui. Voit nyt sulkea tämän sivun.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">166</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1952397367456792334" datatype="html">
+        <source>Verification was successfully denied. If you believe you got this link by mistake, please report this to <x id="PH" equiv-text="genericglobals().config.helpEmail                     "/>.</source>
+        <target state="translated">Vahvistus kiellettiin onnistuneesti. Mikäli uskot saaneesi linkin vahingossa, ole hyvä ja ilmoita se osoitteeseen <x id="PH" equiv-text="genericglobals().config.helpEmail                     "/>.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">171,173</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4285864746501832121" datatype="html">
+        <source>Could not verify action because of an error: <x id="PH" equiv-text="res.result.error.error                 "/>. Please report this to <x id="PH_1" equiv-text="genericglobals().config.helpEmail"/>.</source>
+        <target state="translated">Vahvistaminen epäonnistui virheen takia: <x id="PH" equiv-text="res.result.error.error                 "/>. Ole hyvä ja ilmoita tästä osoitteeseen <x id="PH_1" equiv-text="genericglobals().config.helpEmail"/>.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
+          <context context-type="linenumber">180,182</context>
         </context-group>
       </trans-unit>
       <trans-unit id="69e9773e3c4a051d4cc972ecbd0752c8639da771" datatype="html">
