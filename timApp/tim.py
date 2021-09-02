@@ -90,7 +90,7 @@ from timApp.upload.upload import upload
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.usergroup import UserGroup
-from timApp.user.verification.routes import verification
+from timApp.user.verification.routes import verify
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import (
     get_request_message,
@@ -153,7 +153,7 @@ blueprints = [
     user_select_plugin,
     messagelist,
     timMessage,
-    verification,
+    verify,
 ]
 
 if app.config["BOOKMARKS_ENABLED"]:

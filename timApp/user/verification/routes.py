@@ -1,83 +1,48 @@
-from dataclasses import field
-from typing import Union
+from typing import Union, Optional
 
 from flask import Response, request, render_template
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound  # type: ignore
 
-from timApp.auth.accesshelper import verify_logged_in
-from timApp.auth.sessioninfo import get_current_user_object
+from timApp.auth.sessioninfo import logged_in, get_current_user_id
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.messaging.messagelist.messagelist_utils import sync_new_contact_info
 from timApp.notification.send_email import send_email
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
-from timApp.user.usercontact import UserContact
-from timApp.user.verification.verification import Verification, VerificationType, request_verification, \
-    ContactAddVerification
+from timApp.user.verification.verification import Verification, VerificationType
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_error, log_warning
-from timApp.util.utils import is_valid_email, get_current_time
+from timApp.util.utils import get_current_time
 
-verification = TypedBlueprint('verification', __name__, url_prefix='/verification')
-
-
-@verification.post("/addnewcontact")
-def add_contact_info(contact_info: str, contact_info_type: Channel = field(metadata={'by_value': True})) \
-        -> Response:
-    """Add a new contact information for a TIM user.
-
-    :param contact_info_type: The channel user wishes to add a new contact information.
-    :param contact_info: The contact information.
-    :return: OK response.
-    """
-    verify_logged_in()
-    user = get_current_user_object()
-    # Check for duplicate contact information.
-    existing_contact_info = db.session.query(UserContact.verified).filter(
-        (UserContact.user == user) & (UserContact.channel == contact_info_type) & (
-                UserContact.contact == contact_info)).first()
-
-    if existing_contact_info:
-        # If the contact info already exists and is verified by the user, then inform them about it.
-        raise RouteException("02")
-
-    # Add appropriate contact info.
-    if contact_info_type is Channel.EMAIL:
-        if not is_valid_email(contact_info):
-            raise RouteException("01")
-
-    uc = UserContact(user=user, contact=contact_info, channel=Channel.EMAIL, verified=False, primary=False)
-    db.session.add(uc)
-
-    request_verification(user, ContactAddVerification(contact=uc), "Verify test", """
-This is a verification message.
-
-URL: {{ verify_url }}
-
-""")
-
-    db.session.commit()
-    return ok_response()
+verify = TypedBlueprint('verify', __name__, url_prefix='/verify')
 
 
-@verification.get("/<verify_type>/<verify_token>")
+@verify.get("/<verify_type>/<verify_token>")
 def show_verify_page(verify_type: str, verify_token: str):
     verify_type_parsed = VerificationType.parse(verify_type)
     error = None
     if not verify_type_parsed:
         error = "Invalid verification type"
-    verification_obj = Verification.query.get((verify_token, verify_type_parsed))
-    if not verification_obj:
+
+    verification_obj: Optional[Verification] \
+        = Verification.query.filter_by(token=verify_token, type=verify_type_parsed).first() if logged_in() else None
+
+    if logged_in() and not verification_obj:
         error = "No verification found for the given data"
+
+    if verification_obj and verification_obj.user_id != get_current_user_id():
+        error = "You are not authorized to verify this action"
+        verification_obj = None
+
     return render_template("user_action_verification.jinja2",
-                           error=error,
+                           verify_error=error,
                            verify_type=verify_type,
                            verify_info=verification_obj)
 
 
-@verification.route("/old/contact/<verification_token>", methods=["GET", "POST"])
+@verify.route("/old/contact/<verification_token>", methods=["GET", "POST"])
 def tmp_contact_info_verification(verification_token: str) -> Union[Response, str]:
     """Verify user's additional contact information.
 

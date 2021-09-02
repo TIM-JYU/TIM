@@ -1,8 +1,10 @@
 """Routes for settings view."""
+from dataclasses import field
+from typing import Dict, Any
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from flask import Blueprint, render_template, session, flash, Response
+from flask import render_template, session, flash, Response
 from flask import request
 from jinja2 import TemplateNotFound
 
@@ -14,6 +16,7 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.block import Block, BlockType
+from timApp.messaging.messagelist.listinfo import Channel
 from timApp.notification.notify import get_current_user_notifications
 from timApp.timdb.sqa import db
 from timApp.user.consentchange import ConsentChange
@@ -27,9 +30,16 @@ from timApp.util.flask.requesthelper import (
     use_model,
     NotExist,
 )
+from timApp.user.usercontact import UserContact
+from timApp.user.verification.verification import request_verification, ContactAddVerification
+from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.utils import is_valid_email
 
-settings_page = Blueprint("settings_page", __name__, url_prefix="/settings")
+settings_page = TypedBlueprint("settings_page",
+                               __name__,
+                               url_prefix="/settings")
 
 
 @settings_page.before_request
@@ -85,21 +95,15 @@ def save_settings() -> Response:
     return json_response(user.get_prefs())
 
 
-@dataclass
-class LangModel:
-    lang: str
-
-
 @settings_page.put("/save/lang")
-@use_model(LangModel)
-def save_language_route(m: LangModel) -> Response:
+def save_language_route(lang: str) -> Response:
     u = get_current_user_object()
     prefs = u.get_prefs()
-    prefs.language = m.lang
+    prefs.language = lang
     u.set_prefs(prefs)
     db.session.commit()
     r = ok_response()
-    r.set_cookie("lang", m.lang)
+    r.set_cookie("lang", lang)
     return r
 
 
@@ -155,28 +159,28 @@ def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
     }
 
 
-@settings_page.get("/info")
-@settings_page.get("/info/<username>")
-def get_info_route(username: Optional[str] = None) -> Response:
-    if username:
-        verify_admin()
-        u = User.get_by_name(username)
-        if not u:
-            raise NotExist("User not found")
-    else:
-        u = get_current_user_object()
-    include_doc_content = get_option(request, "content", False)
+def get_info_for(u: User) -> Response:
+    include_doc_content = get_option(request, 'content', False)
     return json_response(get_user_info(u, include_doc_content))
 
 
-@settings_page.post("/updateConsent")
-def update_consent() -> Response:
+@settings_page.get('/info')
+def get_info_current() -> Response:
+    return get_info_for(get_current_user_object())
+
+
+@settings_page.get('/info/<username>')
+def get_info_any(username: str) -> Response:
+    verify_admin()
+    u = User.get_by_name(username)
+    if not u:
+        raise NotExist('User not found')
+    return get_info_for(u)
+
+
+@settings_page.post('/updateConsent')
+def update_consent(consent: Consent = field(metadata={'by_value': True})) -> Response:
     u = get_current_user_object()
-    (v,) = verify_json_params("consent")
-    try:
-        consent = Consent(v)
-    except ValueError:
-        raise RouteException("Invalid consent value.")
     if u.consent != consent:
         u.consent = consent
         u.consents.append(ConsentChange(consent=consent))
@@ -196,4 +200,44 @@ def delete_account() -> Response:
     db.session.commit()
     session.clear()
     flash("Your account has been deleted.")
+    return ok_response()
+
+
+@settings_page.post("/contacts/add")
+def add_contact_info(contact_info: str,
+                     contact_info_type: Channel = field(metadata={'by_value': True})) \
+        -> Response:
+    """Add a new contact information for a TIM user.
+
+    :param contact_info_type: The channel user wishes to add a new contact information.
+    :param contact_info: The contact information.
+    :return: OK response.
+    """
+    verify_logged_in()
+    user = get_current_user_object()
+    # Check for duplicate contact information.
+    existing_contact_info = db.session.query(UserContact.verified).filter(
+        (UserContact.user == user) & (UserContact.channel == contact_info_type) & (
+                UserContact.contact == contact_info)).first()
+
+    if existing_contact_info:
+        # If the contact info already exists and is verified by the user, then inform them about it.
+        raise RouteException("The contact is already added")
+
+    # Add appropriate contact info.
+    if contact_info_type is Channel.EMAIL:
+        if not is_valid_email(contact_info):
+            raise RouteException("Email format is invalid")
+
+    uc = UserContact(user=user, contact=contact_info, channel=Channel.EMAIL, verified=False, primary=False)
+    db.session.add(uc)
+
+    request_verification(ContactAddVerification(user=user, contact=uc), "Verify test", """
+This is a verification message.
+
+URL: {{ verify_url }}
+
+""")
+
+    db.session.commit()
     return ok_response()

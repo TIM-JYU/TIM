@@ -171,7 +171,7 @@ export enum VerificationType {
 export interface IVerificationGlobals extends IGenericGlobals {
     verifyType: VerificationType;
     verifyInfo: {type: string};
-    error?: string;
+    verifyError?: string;
 }
 
 export type SomeGlobals =
