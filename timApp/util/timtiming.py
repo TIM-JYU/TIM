@@ -49,12 +49,13 @@ def with_timing(*print_args: str) -> Callable:
         def wrapper(*args: Any, **kwargs: Any) -> Callable:
             time_before = time.time()
             result = f(*args, **kwargs)
+            time_after = time.time()
             all_params = {
                 k: args[n] if n < len(args) else kwargs[k]
                 for n, k in enumerate(sig_params.keys())
             }
             args_str = ', '.join(f'{name}={all_params[name]}' for name in print_args)
-            print(f'{f.__name__}: {time.time() - time_before:.4g} {args_str}')
+            print(f'{f.__name__}: {time_after - time_before:.4g} {args_str}')
             return result
 
         return wrapper
