@@ -1,5 +1,3 @@
-import secrets
-from dataclasses import field
 from typing import List, Optional, Dict, Any
 
 from flask import Response
@@ -20,7 +18,7 @@ from timApp.item.manage import get_trash_folder
 from timApp.messaging.messagelist.emaillist import create_new_email_list, \
     delete_email_list, verify_emaillist_name_requirements, get_domain_names, verify_mailman_connection
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
-from timApp.messaging.messagelist.listinfo import ListInfo, MemberInfo, GroupAndMembers, Channel
+from timApp.messaging.messagelist.listinfo import ListInfo, MemberInfo, GroupAndMembers
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_name_requirements, new_list, \
     set_message_list_notify_owner_on_change, \
@@ -30,8 +28,6 @@ from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_na
     add_new_message_list_group, add_message_list_external_email_member, \
     set_message_list_member_removed_status, set_member_send_delivery, set_message_list_description, \
     set_message_list_info, verify_can_create_lists, check_name_rules
-from timApp.notification.send_email import send_email
-from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
@@ -453,39 +449,3 @@ def get_sibling_archive_messages(message_doc_id: int) -> Response:
 
     return json_response({"next": to_json(next_doc), "prev": to_json(prev_doc)})
 
-
-@messagelist.post("/addnewcontact")
-def add_contact_info(contact_info: str, contact_info_type: Channel = field(metadata={'by_value': True})) \
-        -> Response:
-    """Add a new contact information for a TIM user.
-
-    :param contact_info_type: The channel user wishes to add a new contact information.
-    :param contact_info: The contact information.
-    :return: OK response.
-    """
-    verify_logged_in()
-    # TODO: Check for duplicate contact information.
-    # TODO: Generate verification information for db.
-    # Random string for verification URL.
-    verification_string = secrets.token_urlsafe(32)
-    verification_url = f"{app.config['TIM_HOST']}/verification/contact/{verification_string}"
-    # TODO: Send verification link to the contact information.
-    if contact_info_type is Channel.EMAIL:
-        if not is_valid_email(contact_info):
-            # If the email contact information is considered to not be a valid email address, then return an
-            # exception to the user.
-            raise RouteException("01")
-        send_email(contact_info, "New TIM contact information verification link", f"""Hey, 
-
-someone requested to add a new email ({contact_info}) to their TIM account. If this person was you, then you may 
-click the link at the end of this message and your contact information will be added to your user profile in TIM. 
-
-If this was not you, then please disregard this message, someone most likely accidentally wrote the wrong contact 
-information for themselves. If, however, this is among a multitude of requests that are not from you, then please 
-forward this message to {app.config['HELP_EMAIL']} and TIM support will be deal with it.
-
-Verification link (click only if you requested this action):
-{verification_url}
-
-""")
-    return ok_response()
