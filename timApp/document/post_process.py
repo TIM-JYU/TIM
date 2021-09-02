@@ -5,10 +5,9 @@ from datetime import datetime
 from typing import List, Dict, DefaultDict, Tuple, Optional
 
 import pytz
-from flask import flash
 from jinja2.sandbox import SandboxedEnvironment
 
-from timApp.auth.sessioninfo import get_session_usergroup_ids, get_current_user_object
+from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
@@ -27,6 +26,7 @@ from timApp.readmark.readmarkcollection import ReadMarkCollection
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.user.user import User, has_no_higher_right
 from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
+from timApp.util.flask.responsehelper import flash_if_not_preview
 from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
 
@@ -252,11 +252,11 @@ def process_areas(
             current_areas.append(cur_area)
             if not p.ref_chain:
                 if area_start in encountered_areas:
-                    flash(f'Area {area_start} appears more than once in this document. {fix}')
+                    flash_if_not_preview(f'Area {area_start} appears more than once in this document. {fix}', view_ctx)
                 encountered_areas[area_start] = cur_area
         if area_end is not None:
             if area_start is not None:
-                flash(f'The paragraph {p.get_id()} has both area and area_end. {fix}')
+                flash_if_not_preview(f'The paragraph {p.get_id()} has both area and area_end. {fix}', view_ctx)
             if current_areas:
                 # Insert a closing paragraph for the current area.
                 # We do this regardless of whether the area_end name matches because it's reasonable and we
@@ -267,10 +267,10 @@ def process_areas(
             try:
                 latest_area = current_areas.pop()
             except IndexError:
-                flash(f'area_end found for "{area_end}" without corresponding start. {fix}')
+                flash_if_not_preview(f'area_end found for "{area_end}" without corresponding start. {fix}', view_ctx)
             else:
                 if latest_area.name != area_end:
-                    flash(f'area_end found for "{area_end}" without corresponding start. {fix}')
+                    flash_if_not_preview(f'area_end found for "{area_end}" without corresponding start. {fix}', view_ctx)
 
         if area_start is not None or area_end is not None:
             if area_start is not None:
@@ -348,7 +348,7 @@ def process_areas(
 
     # Complete unbalanced areas.
     if current_areas:
-        flash(f'{len(current_areas)} areas are missing area_end: {current_areas}')
+        flash_if_not_preview(f'{len(current_areas)} areas are missing area_end: {current_areas}', view_ctx)
         for _ in current_areas:
             new_pars.append({'id': '', 'md': '', 'html': '',
                              'end_areas': True})
