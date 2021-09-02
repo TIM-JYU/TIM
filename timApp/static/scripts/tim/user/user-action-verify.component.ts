@@ -98,7 +98,7 @@ const INFO_MAP: Record<VerificationType, Type<unknown> | undefined> = {
     selector: "tim-user-action-verify",
     template: `
         <tim-alert *ngIf="verifyGlobals.verifyError" i18n>
-            Cannot verify because: {{verifyGlobals.verifyError}}
+            Cannot verify: {{verifyGlobals.verifyError}}
         </tim-alert>
         <tim-alert *ngIf="verificationResult" [severity]="verificationResult.type">
             {{verificationResult.message}}
@@ -107,10 +107,12 @@ const INFO_MAP: Record<VerificationType, Type<unknown> | undefined> = {
             <div>
                 <ng-container #infoContainer></ng-container>
             </div>
-            <p class="verify-prompt">Please verify or deny the action. You will not be able to access this page once you
-                select either option.</p>
+            <p class="verify-prompt" i18n>
+                Please verify or deny the action. You will not be able to access this page once you select either
+                option.
+            </p>
             <form>
-                <fieldset [disabled]="processing">
+                <fieldset [disabled]="processing || verifyComplete">
                     <button class="btn btn-danger" (click)="verify($event, false)" i18n>Decline</button>
                     <tim-loading *ngIf="processing"></tim-loading>
                     <button class="btn btn-default" (click)="verify($event, true)" i18n>Accept</button>
@@ -125,6 +127,7 @@ export class UserActionVerifyComponent implements AfterViewInit {
     @ViewChild("infoContainer", {read: ViewContainerRef})
     infoContainer!: ViewContainerRef;
     processing: boolean = false;
+    verifyComplete: boolean = false;
     verificationResult?: {type: AlertSeverity; message: string};
 
     constructor(
@@ -152,7 +155,8 @@ export class UserActionVerifyComponent implements AfterViewInit {
         e.preventDefault();
         this.processing = true;
         const res = await to2(
-            this.http.post(window.location.href, {verify}).toPromise()
+            // Use pathname to ensure relative URL so that CSRF token is passed along
+            this.http.post(window.location.pathname, {verify}).toPromise()
         );
         this.processing = false;
         if (res.ok) {
@@ -169,6 +173,7 @@ export class UserActionVerifyComponent implements AfterViewInit {
                     }.`,
                 };
             }
+            this.verifyComplete = true;
         } else {
             this.verificationResult = {
                 type: "danger",

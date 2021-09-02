@@ -56,6 +56,12 @@ class Verification(db.Model):
     user = db.relationship("User", lazy="select")
     """User that can react to verification request."""
 
+    def approve(self) -> None:
+        raise NotImplemented()
+
+    def deny(self) -> None:
+        raise NotImplemented()
+
     def to_json(self) -> Dict:
         return {
             'type': self.type
@@ -71,6 +77,12 @@ class ContactAddVerification(Verification):
 
     contact: UserContact = db.relationship("UserContact", lazy="select", uselist=False)
     """Relationship to UserContact, to allow connecting without db flushing first."""
+
+    def deny(self) -> None:
+        self.contact.verified = False
+
+    def approve(self) -> None:
+        self.contact.verified = True
 
     def to_json(self) -> Dict:
         return {
