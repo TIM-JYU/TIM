@@ -154,6 +154,18 @@ def initialize_database(create_docs: bool = True) -> None:
                 [admin_group], error_codes_folder, AccessType.owner, BlockType.Document
             )
 
+            verify_contact_message_template = import_document_from_file(
+                static_tim_doc('initial/contact_verify_message.md'),
+                'settings/verify-templates/contact',
+                admin_group,
+                title='Contact verify'
+            )
+            verify_contact_message_template.document.set_settings({
+                'subject': 'Verify new contact',
+                'textplain': True
+            })
+            verify_contact_message_template.block.add_rights([UserGroup.get_logged_in_group()], AccessType.view)
+
         sess.commit()
         log_info("Database initialization done.")
 

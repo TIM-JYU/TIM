@@ -5,6 +5,7 @@ from typing import Optional, Dict
 
 from flask import render_template_string, url_for
 
+from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
 from timApp.user.usercontact import UserContact
 from timApp.util.utils import get_current_time
@@ -83,7 +84,7 @@ class ContactAddVerification(Verification):
     }
 
 
-def request_verification(verification: Verification, message_title: str, message_body: str) -> None:
+def request_verification_raw(verification: Verification, message_title: str, message_body: str) -> None:
     from timApp.notification.send_email import send_email
     from timApp.tim_app import app
 
@@ -100,3 +101,18 @@ def request_verification(verification: Verification, message_title: str, message
     db.session.add(verification)
     # TODO: Send to primary email
     send_email(user.email, title, body)
+
+
+def request_verification(verification: Verification, message_template_doc: str) -> None:
+    subject = f"Verify {verification.type.value}"
+    body = "{{verify_url}}"
+
+    # noinspection PyBroadException
+    try:
+        doc = DocEntry.find_by_path(message_template_doc)
+        subject = doc.document.get_settings().get("subject", f"Verify {verification.type.value}")
+        body = doc.document.export_markdown(export_ids=False, export_settings=False)
+    except:
+        pass
+
+    return request_verification_raw(verification, subject, body)

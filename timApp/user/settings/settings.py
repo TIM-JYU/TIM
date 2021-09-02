@@ -31,7 +31,7 @@ from timApp.util.flask.requesthelper import (
     NotExist,
 )
 from timApp.user.usercontact import UserContact
-from timApp.user.verification.verification import request_verification, ContactAddVerification
+from timApp.user.verification.verification import ContactAddVerification, request_verification
 from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
@@ -232,12 +232,7 @@ def add_contact_info(contact_info: str,
     uc = UserContact(user=user, contact=contact_info, channel=Channel.EMAIL, verified=False, primary=False)
     db.session.add(uc)
 
-    request_verification(ContactAddVerification(user=user, contact=uc), "Verify test", """
-This is a verification message.
-
-URL: {{ verify_url }}
-
-""")
+    request_verification(ContactAddVerification(user=user, contact=uc), "settings/verify-templates/contact")
 
     db.session.commit()
     return ok_response()
