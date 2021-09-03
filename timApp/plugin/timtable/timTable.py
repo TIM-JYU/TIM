@@ -187,7 +187,8 @@ def tim_table_get_html(jso, review):
     values = jso[MARKUP]
     state = jso.get("state", {})
     userdata = None
-    if state != None:
+    values['isPreview'] = jso.get('preview', False)
+    if state is not None:
         userdata = state.get(USERDATA, None)
         headers = state.get("headers", None)
         if not userdata:  # if no userdata use matrix to init data
