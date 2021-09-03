@@ -29,7 +29,7 @@ RUN echo "Europe/Helsinki" > /etc/timezone; dpkg-reconfigure -f noninteractive t
 RUN add-apt-repository ppa:deadsnakes/ppa && apt-get update
 RUN bash -c "${APT_INSTALL} python3.9 wget dirmngr gpg-agent curl python3-distutils && ${APT_CLEANUP}"
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3.9 get-pip.py && rm get-pip.py
-RUN python3.9 -m pip install Flask bleach && bash -c "${APT_CLEANUP}"
+RUN python3.9 -m pip install Flask bleach lxml && bash -c "${APT_CLEANUP}"
 
 # Keep above same as SVN Dockerfile for better caching
 
