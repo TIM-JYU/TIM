@@ -52,7 +52,6 @@ P.setData = function(geostate) {
 //GEOJAVASCRIPT
 
 var geostate = GEOSTATE;
-var geoversion = "GEOVERSION";
 
 P.appletOnLoad = function(api) {
     if ( !P.setDataInit ) return;
@@ -66,7 +65,7 @@ P.appletOnLoad = function(api) {
 
 
 var applet = new GGBApplet(P, '5.0', 'geogebra_container');
-applet.setHTML5Codebase("https://www.geogebra.org/apps/" + geoversion + "/web3d");
+applet.setHTML5Codebase("https://www.geogebra.org/apps/GEOVERSION/web3d");
 
   window.onload = function() { applet.inject('geogebra_container');
 }
