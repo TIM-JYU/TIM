@@ -1,6 +1,10 @@
 import json
 from base64 import b64encode
+
 from languages import Language, get_by_id, html_change
+
+# We can't use newer version yet, see https://gitlab.com/tim-jyu/tim/-/issues/2359
+GEOGEBRA_DEFAULT_VERSION = "5.0.642.0"
 
 GEOGEBRA_DEFAULT_SRC_HTML = """
 <!DOCTYPE html>
@@ -11,7 +15,7 @@ GEOGEBRA_DEFAULT_SRC_HTML = """
 </head>
 <body>
 <div>
-<script type="text/javascript" src="https://cdn.geogebra.org/apps/deployggb.js"></script>
+<script type="text/javascript" src="https://www.geogebra.org/apps/deployggb.js"></script>
 <script type="text/javascript" src="/cs/geogebra/timgeo.js"></script>
 
 <script type="text/javascript">
@@ -48,6 +52,7 @@ P.setData = function(geostate) {
 //GEOJAVASCRIPT
 
 var geostate = GEOSTATE;
+var geoversion = "GEOVERSION";
 
 P.appletOnLoad = function(api) {
     if ( !P.setDataInit ) return;
@@ -61,8 +66,7 @@ P.appletOnLoad = function(api) {
 
 
 var applet = new GGBApplet(P, '5.0', 'geogebra_container');
-//  when used with Math Apps Bundle, uncomment this:
-//  applet.setHTML5Codebase('GeoGebra/HTML5/5.0/web3d/');
+applet.setHTML5Codebase("https://www.geogebra.org/apps/" + geoversion + "/web3d");
 
   window.onload = function() { applet.inject('geogebra_container');
 }
@@ -297,5 +301,6 @@ class Geogebra(Language):
             state["objxml"] = objxml
         geostate = b64encode(json.dumps(state).encode("UTF-8")).decode().strip()
         srchtml = srchtml.replace('GEOSTATE', f"'{geostate}'")
+        srchtml = srchtml.replace('GEOVERSION', ma.get('version', GEOGEBRA_DEFAULT_VERSION))
         return srchtml
 
