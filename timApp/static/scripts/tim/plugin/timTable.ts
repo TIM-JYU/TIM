@@ -543,9 +543,11 @@ export enum ClearSort {
                  [ngClass]="{disableSelect: disableSelect}">
                 <div class="buttonsCol">
                     <button class="timButton" title="Remove column"
+                            [disabled]="isPreview()"
                             *ngIf="delColEnabled()"
                             (click)="handleClickRemoveColumn()"><span class="glyphicon glyphicon-minus"></span></button>
                     <button class="timButton" title="Add column" *ngIf="addColEnabled()"
+                            [disabled]="isPreview()"
                             (click)="handleClickAddColumn()"><span class="glyphicon glyphicon-plus"></span></button>
                 </div>
                 <ng-container *ngIf="dataView; else tableView">
@@ -646,9 +648,11 @@ export enum ClearSort {
                 </ng-template>
                 <div class="buttonsRow">
                     <button class="timButton" title="Remove row" *ngIf="delRowEnabled()"
+                            [disabled]="isPreview()"
                             (click)="handleClickRemoveRow()"><span
                             class="glyphicon glyphicon-minus"></span></button>
                     <button class="timButton" title="Add row" *ngIf="addRowEnabled()"
+                            [disabled]="isPreview()"
                             (click)="handleClickAddRow()"><span
                             class="glyphicon glyphicon-plus" [innerText]="addRowButtonText"></span></button>
                 </div>
@@ -656,9 +660,9 @@ export enum ClearSort {
                     <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
                 </ng-container>
                 <ng-template #inlineEditorTemplate>
-                <div #inlineEditor class="timTableEditor inlineEditorDiv no-highlight" *ngIf="currentCell">
-                    <input class="editInput" #editInput autocomplete="off"
-                           (blur)="smallEditorLostFocus($event)"
+                    <div #inlineEditor class="timTableEditor inlineEditorDiv no-highlight" *ngIf="currentCell">
+                        <input class="editInput" #editInput autocomplete="off"
+                               (blur)="smallEditorLostFocus($event)"
                            (keyup)="handleKeyUpSmallEditor($event)"
                            [(ngModel)]="currentCell.editedCellContent">
                     <span #inlineEditorButtons
@@ -2714,6 +2718,10 @@ export class TimTableComponent
         event?: MouseEvent,
         forceOne: boolean = false
     ) {
+        if (this.isPreview()) {
+            return;
+        }
+
         const parId = this.getOwnParId();
 
         if (
