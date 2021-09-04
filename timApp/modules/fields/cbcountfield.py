@@ -23,6 +23,7 @@ from tim_common.utils import Missing
 @dataclass
 class CbcountfieldMarkupModel(TextfieldMarkupModel):
     groups: Union[List[str], Missing] = missing
+    limit: Union[int, Missing] = missing
 
 
 @dataclass
@@ -95,11 +96,19 @@ def cb_answer(args: CbcountfieldAnswerModel) -> CbAnswerResp:
             count -= 1
     nosave = args.input.nosave
 
+    limit = args.markup.limit
+    if limit and count > limit:
+        web['result'] = "error"
+        web['count'] = limit
+        web['new'] = 0
+        return result
+
     if not nosave:
         save = {"c": c}
         result["save"] = save
         web['result'] = "saved"
         web['count'] = count
+        web['new'] = c
 
     return result
 

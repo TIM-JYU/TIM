@@ -34,6 +34,7 @@ const CbcountfieldMarkup = t.intersection([
         readOnlyStyle: nullable(t.string),
         showname: nullable(t.number),
         autosave: t.boolean,
+        limit: nullable(t.number),
     }),
     GenericPluginMarkup,
     t.type({
@@ -73,6 +74,7 @@ class CbcountfieldController
     };
     private preventedAutosave = false;
     private count = 0;
+    private disabled = false;
 
     getDefaultMarkup() {
         return {};
@@ -119,6 +121,17 @@ class CbcountfieldController
         if (this.attrs.showname) {
             this.initCode();
         }
+        this.checkDisabled();
+    }
+
+    checkDisabled() {
+        // Note: changes the disabled value
+        if (this.isReadOnly()) return (this.disabled = true);
+        if (this.attrsall.markup.limit == null) return (this.disabled = false);
+        if (this.userword) return (this.disabled = false);
+        if (this.count >= this.attrsall.markup.limit)
+            return (this.disabled = true);
+        return (this.disabled = false);
     }
 
     /**
@@ -304,10 +317,14 @@ class CbcountfieldController
         }
         const url = this.pluginMeta.getAnswerUrl();
         const r = await to(
-            $http.put<{web: {count: number; result: string; error?: string}}>(
-                url,
-                params
-            )
+            $http.put<{
+                web: {
+                    count: number;
+                    new: number;
+                    result: string;
+                    error?: string;
+                };
+            }>(url, params)
         );
         this.isRunning = false;
         if (r.ok) {
@@ -317,6 +334,11 @@ class CbcountfieldController
             this.errormessage = data.web.error;
             this.count = data.web.count;
             this.result = data.web.result;
+            if (this.userword && data.web.new == 0) {
+                // value was changed, so disable
+                this.userword = false;
+                this.disabled = true;
+            }
             this.initialValue = this.userword;
             this.hideSavedText = false;
             this.saveResponse.saved = true;
@@ -359,7 +381,7 @@ cbcountfieldApp.component("cbcountfieldRunner", {
                class="form-control"
                ng-model="$ctrl.userword"
                ng-change="$ctrl.autoSave()"
-               ng-disabled="::$ctrl.readonly"
+               ng-disabled="$ctrl.disabled"
                ng-model-options="::$ctrl.modelOpts"
                uib-tooltip="{{ $ctrl.errormessage }}"
                tooltip-is-open="$ctrl.f.$invalid && $ctrl.f.$dirty"
