@@ -73,6 +73,7 @@ size="{{ cols or '' }}"></span></label>
 
 class CbAnswerWeb(PluginAnswerWeb, total=False):
     count: int
+    new: int
 
 
 class CbAnswerResp(PluginAnswerResp, total=False):
@@ -97,18 +98,20 @@ def cb_answer(args: CbcountfieldAnswerModel) -> CbAnswerResp:
     nosave = args.input.nosave
 
     limit = args.markup.limit
-    if limit and count > limit:
-        web['result'] = "error"
-        web['count'] = limit
-        web['new'] = 0
-        return result
+    if limit:
+        limit = int(limit)
+        if count > limit:
+            web['result'] = "error"
+            web['count'] = limit
+            web['new'] = 0
+            return result
 
     if not nosave:
         save = {"c": c}
         result["save"] = save
         web['result'] = "saved"
         web['count'] = count
-        web['new'] = c
+        web['new'] = 1 if c == '1' else 0
 
     return result
 
