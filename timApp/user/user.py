@@ -757,6 +757,14 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def belongs_to_any_of(self, *groups: UserGroup):
         return bool(set(groups) & set(self.groups))
 
+    @staticmethod
+    def get_model_id():
+        modeluser = User.get_by_name("mallivastaus")
+        # TODO: think other languages also
+        modelid = -1
+        if modeluser:
+            modelid = modeluser.id
+        return modelid
 
 def get_membership_end(u: User, group_ids: Set[int]):
     relevant_memberships: List[UserGroupMember] = [m for m in u.memberships if m.usergroup_id in group_ids]
