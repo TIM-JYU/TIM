@@ -758,7 +758,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return bool(set(groups) & set(self.groups))
 
     @staticmethod
-    def get_model_id():
+    def get_model_answer_user_id() -> int:
         modeluser = User.get_by_name("mallivastaus")
         # TODO: think other languages also
         modelid = -1

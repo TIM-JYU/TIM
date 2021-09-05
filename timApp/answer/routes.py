@@ -1656,7 +1656,7 @@ def get_answers(task_id: str, user_id: int):
     except TaskNotFoundException:
         p = None
     if hide_names_in_teacher(d, context_user=user):
-        modelid = User.get_model_id()
+        modelid = User.get_model_answer_user_id()
         for answer in user_answers:
             for u in answer.users_all:
                 maybe_hide_name(d, u, modelid)
@@ -1954,7 +1954,7 @@ def get_task_users(task_id):
             q = q.filter(UserGroup.name.in_([usergroup]))
         users = q.all()
     if hide_names_in_teacher(d):
-        modelid = User.get_model_id()
+        modelid = User.get_model_answer_user_id()
         for user in users:
             maybe_hide_name(d, user, modelid)
     return json_response(users)

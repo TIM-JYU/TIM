@@ -480,7 +480,7 @@ def quick_login(username: str) -> Response:
         verify_admin()
         raise NotExist('User not found.')
 
-    if (user.id == User.get_model_id()):
+    if (user.id == User.get_model_answer_user_id()):
         curr_user = get_current_user_object()
         # TODO: change or add belongs to some group that can quicklogin with some name
         if curr_user not in UserGroup.get_teachers_group().users\
