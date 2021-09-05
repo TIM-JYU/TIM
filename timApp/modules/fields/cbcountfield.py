@@ -98,8 +98,8 @@ def cb_answer(args: CbcountfieldAnswerModel) -> CbAnswerResp:
     nosave = args.input.nosave
 
     limit = args.markup.limit
-    if limit:
-        limit = int(limit)
+    if isinstance(limit, int):
+        limit = int(limit)  # not needed?
         if count > limit:
             web['result'] = "error"
             web['count'] = limit
