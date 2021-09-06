@@ -2,7 +2,7 @@ import ipaddress
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Union
 
 from flask import flash, current_app
 from flask import request, g
@@ -286,7 +286,7 @@ def has_ownership(b: ItemOrBlock):
     return get_current_user_object().has_ownership(b)
 
 
-def check_admin_access(block_id=None, user=None):
+def check_admin_access(block_id=None, user=None) -> Union[BlockAccess, None]:
     curr_user = user
     if curr_user is None:
         curr_user = get_current_user_object()

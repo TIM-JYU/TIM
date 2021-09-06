@@ -13,7 +13,7 @@ from flask import url_for
 from flask.sessions import SecureCookieSession
 
 from timApp.admin.user_cli import do_merge_users, do_soft_delete
-from timApp.auth.accesshelper import verify_admin, AccessDenied, verify_ip_ok
+from timApp.auth.accesshelper import verify_admin, AccessDenied, verify_ip_ok, check_admin_access
 from timApp.auth.sessioninfo import get_current_user_id, logged_in
 from timApp.auth.sessioninfo import get_other_users, get_session_users_ids, get_other_users_as_list, \
     get_current_user_object
@@ -470,15 +470,26 @@ def save_came_from() -> None:
 
 @login_page.get("/quickLogin/<username>")
 def quick_login(username: str) -> Response:
-    """A debug helping method for logging in as another user.
-
-    For developer use only.
+    """Logs in as another user.
 
     """
-    verify_admin()
     user = User.get_by_name(username)
     if user is None:
+        verify_admin()
         raise NotExist('User not found.')
+
+    if user == User.get_model_answer_user():
+        curr_user = get_current_user_object()
+        if not (User.query.join(UserGroup, User.groups)
+                        .filter(User.id == curr_user.id)
+                        .filter(UserGroup.name.in_(current_app.config['QUICKLOGIN_ALLOWED_MODEL_ANSWER_GROUPS']))
+                        .with_entities(User.id)
+                        .first()
+                and not check_admin_access(user=user)):
+            raise AccessDenied("Sorry, you don't have permission to quickLogin.")
+    else:
+        verify_admin()
+
     set_single_user_to_session(user)
     flash(f"Logged in as: {username}")
     return safe_redirect(url_for('view_page.index_page'))
