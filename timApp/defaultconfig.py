@@ -12,6 +12,8 @@ from celery.schedules import crontab
 
 # Path to TIM document containing the privacy notice. The link to the document is shown in page footer.
 # If None, link to the document is not shown
+from timApp.user.special_group_names import TEACHERS_GROUPNAME
+
 PRIVACY_NOTICE_DOC = 'tim/tietosuojailmoitus'
 
 # Path to TIM document containing the accessibility notice. The link to the document is shown in page footer.
@@ -285,3 +287,12 @@ INHERIT_FOLDER_RIGHTS_DOCS = {}
 #     }
 # ]
 OAUTH2_CLIENTS = []
+
+# Name of user that is used for displaying model/example answers.
+MODEL_ANSWER_USER_NAME = 'mallivastaus'
+
+# User groups who are allowed to log in as model answer user with quickLogin route.
+QUICKLOGIN_ALLOWED_MODEL_ANSWER_GROUPS = {
+    'ohj1',
+    TEACHERS_GROUPNAME,
+}

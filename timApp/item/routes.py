@@ -705,10 +705,11 @@ def render_doc_view(
         post_process_result.texts = partition_texts(post_process_result.texts, view_range, preamble_count)
 
     if force_hide_names(current_user, doc_info) or view_ctx.hide_names_requested:
-        modelid = User.get_model_answer_user_id()
+        model_u = User.get_model_answer_user()
+        model_u_id = model_u.id if model_u else None
         for entry in user_list:
             eid = entry['user'].id
-            if  eid != current_user.id and eid != modelid:
+            if eid != current_user.id and eid != model_u_id:
                 entry['user'].hide_name = True
 
     show_unpublished_bg = doc_info.block.is_unpublished() and not app.config['TESTING']

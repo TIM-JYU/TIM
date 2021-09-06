@@ -5,6 +5,7 @@ from enum import Enum
 from typing import List, Tuple, Dict
 from typing import Optional, Union, Set
 
+from flask import current_app
 from sqlalchemy import func
 from sqlalchemy.orm import Query, joinedload, defaultload
 from sqlalchemy.orm.collections import attribute_mapped_collection
@@ -758,13 +759,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return bool(set(groups) & set(self.groups))
 
     @staticmethod
-    def get_model_answer_user_id() -> int:
-        modeluser = User.get_by_name("mallivastaus")
+    def get_model_answer_user() -> Optional['User']:
         # TODO: think other languages also
-        modelid = -1
-        if modeluser:
-            modelid = modeluser.id
-        return modelid
+        return User.get_by_name(current_app.config['MODEL_ANSWER_USER_NAME'])
+
 
 def get_membership_end(u: User, group_ids: Set[int]):
     relevant_memberships: List[UserGroupMember] = [m for m in u.memberships if m.usergroup_id in group_ids]

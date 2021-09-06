@@ -470,9 +470,7 @@ def save_came_from() -> None:
 
 @login_page.get("/quickLogin/<username>")
 def quick_login(username: str) -> Response:
-    """A debug helping method for logging in as another user.
-
-    For developer use only.
+    """Logs in as another user.
 
     """
     user = User.get_by_name(username)
@@ -480,13 +478,15 @@ def quick_login(username: str) -> Response:
         verify_admin()
         raise NotExist('User not found.')
 
-    if (user.id == User.get_model_answer_user_id()):
+    if user == User.get_model_answer_user():
         curr_user = get_current_user_object()
-        # TODO: change or add belongs to some group that can quicklogin with some name
-        if curr_user not in UserGroup.get_teachers_group().users\
-           and curr_user not in UserGroup.query.filter_by(name="ohj1").one()\
-           and not check_admin_access(user=user):
-               raise AccessDenied("Sorry, you don't have permission to quickLogin.")
+        if not (User.query.join(UserGroup, User.groups)
+                        .filter(User.id == curr_user.id)
+                        .filter(UserGroup.name.in_(current_app.config['QUICKLOGIN_ALLOWED_MODEL_ANSWER_GROUPS']))
+                        .with_entities(User.id)
+                        .first()
+                and not check_admin_access(user=user)):
+            raise AccessDenied("Sorry, you don't have permission to quickLogin.")
     else:
         verify_admin()
 

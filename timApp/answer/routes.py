@@ -1457,14 +1457,14 @@ def get_hidden_name(user_id):
     return 'Student %d' % user_id
 
 
-def should_hide_name(d: DocInfo, user: User, modelid: int):
+def should_hide_name(d: DocInfo, user: User, model_u: Optional[User]):
     # return True
     # return not user.has_teacher_access(d) and user.id != get_current_user_id()
-    return user.id != get_current_user_id() and user.id != modelid
+    return user.id != get_current_user_id() and user != model_u
 
 
-def maybe_hide_name(d: DocInfo, u: User, modelid: int):
-    if should_hide_name(d, u, modelid):
+def maybe_hide_name(d: DocInfo, u: User, model_u: Optional[User]):
+    if should_hide_name(d, u, model_u):
         # NOTE! To anonymize user, do NOT assign to u's real_name, name, etc. attributes here (or anywhere else either)
         # because it is
         #  1) dangerous (the anonymization would be persisted if db.session.commit() was called after the assignment)
@@ -1656,10 +1656,10 @@ def get_answers(task_id: str, user_id: int):
     except TaskNotFoundException:
         p = None
     if hide_names_in_teacher(d, context_user=user):
-        modelid = User.get_model_answer_user_id()
+        model_u = User.get_model_answer_user()
         for answer in user_answers:
             for u in answer.users_all:
-                maybe_hide_name(d, u, modelid)
+                maybe_hide_name(d, u, model_u)
     if p and not p.known.show_points() and not curr_user.has_teacher_access(d):
         user_answers = list(map(hide_points, user_answers))
     return json_response(user_answers)
@@ -1954,9 +1954,9 @@ def get_task_users(task_id):
             q = q.filter(UserGroup.name.in_([usergroup]))
         users = q.all()
     if hide_names_in_teacher(d):
-        modelid = User.get_model_answer_user_id()
+        model_u = User.get_model_answer_user()
         for user in users:
-            maybe_hide_name(d, user, modelid)
+            maybe_hide_name(d, user, model_u)
     return json_response(users)
 
 
