@@ -769,7 +769,11 @@ auto_number_headings: 0${CURSOR}
             ) {
                 fns.push(this.getAddParagraphItem(addAbovePos));
             }
-            if (showSingleParFns) {
+            if (
+                showSingleParFns ||
+                refAreaInclusion === ParAreaInclusionKind.IsStart ||
+                refAreaInclusion === ParAreaInclusionKind.IsEnd
+            ) {
                 fns.push({
                     func: (e) =>
                         this.showEditWindow(
