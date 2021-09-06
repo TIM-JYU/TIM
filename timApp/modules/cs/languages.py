@@ -140,12 +140,10 @@ class Language:
                 _, self.rootpath = self.rootpath.split("/", 1)
                 self.rootpath = self.mustpath + "/" + (self.rootpath if self.rootpath else "")
             self.delete_tmp = False
-            mkdirs("/tmp/user")
             # print(self.task_id, self.doc_id, self.fullpath)
         else:
             # Generate random cs and exe filenames
             self.basename = "tmp/" + self.rndname
-            mkdirs("/tmp/tmp")
 
         self.fullpath = "/tmp/" + self.basename  # check it is sure under userpath
 
