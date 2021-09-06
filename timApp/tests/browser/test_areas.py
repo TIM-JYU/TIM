@@ -99,6 +99,7 @@ par 22
             'Comment/note',
             'Follow reference',
             'Add paragraph above',
+            'Edit',
             'Add question above',
             'Close menu',
         ]
@@ -113,6 +114,7 @@ par 22
             'Comment/note',
             'Follow reference',
             'Add paragraph above',
+            'Edit',
             'Paste...',
             'Add question above',
             'Start selection',
@@ -122,6 +124,7 @@ par 22
             'View source',
             'Comment/note',
             'Follow reference',
+            'Edit',
             'Paste...',
             'Start selection',
             'Close menu',
