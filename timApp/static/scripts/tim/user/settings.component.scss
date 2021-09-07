@@ -48,4 +48,76 @@
 .account-info {
   display: grid;
   grid-template-columns: max-content auto;
+  gap: 1em 5em;
+  align-items: baseline;
+
+  input.form-control {
+    background-color: white;
+    cursor: text;
+  }
+
+  @media (max-width: $screen-xs-max) {
+    grid-template-columns: auto;
+    gap: 0.5em;
+
+    & > *:nth-child(2n) {
+      margin-bottom: 1em;
+    }
+  }
+}
+
+.contact-info {
+  display: flex;
+  align-items: stretch;
+
+  & > *:not(:last-child) {
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+    border-right-width: 0;
+  }
+
+  & > *:not(:first-child) {
+    border-bottom-left-radius: 0;
+    border-top-left-radius: 0;
+  }
+
+  & > span {
+    display: flex;
+    align-items: center;
+    padding-left: 0.325em;
+    padding-right: 0.325em;
+    background-color: #e2e2e2;
+    border: 1px solid #ccc;
+    color: #3e3e3e;
+    cursor: default;
+  }
+
+  .primary-badge {
+    background-color: #d6ffd6;
+    color: #023811;
+    //border-color: #023802;
+  }
+
+  //.verified-badge {
+  //  background-color: #ebebff;
+  //  color: #00226c;
+  //}
+}
+
+.contact-collection {
+  display: flex;
+  flex-direction: column;
+
+  & > *:not(:last-child) {
+    margin-bottom: 0.5em;
+  }
+}
+
+.form-label {
+  font-weight: bold;
+  cursor: default;
+}
+
+.button-panel {
+  margin-top: 1em;
 }

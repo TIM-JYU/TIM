@@ -50,6 +50,10 @@ export class SaveButtonComponent {
 })
 export class UserSettingsComponent {}
 
+const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
+    [Channel.EMAIL]: $localize`Emails`,
+};
+
 @Component({
     selector: "tim-settings",
     template: `
@@ -141,7 +145,6 @@ export class UserSettingsComponent {}
                 </div>
 
             </bootstrap-panel>
-
             <bootstrap-panel title="Menus">
                 <form>
                     <fieldset class="form-view" [disabled]="saving">
@@ -187,7 +190,6 @@ export class UserSettingsComponent {}
 
                 <tim-save-button [saved]="submit"></tim-save-button>
             </bootstrap-panel>
-
             <bootstrap-panel title="Other settings">
                 <div class="checkbox" id="othersettings"><label>
                     <input type="checkbox" name="auto_mark_all_read" [(ngModel)]="settings.auto_mark_all_read"
@@ -197,26 +199,39 @@ export class UserSettingsComponent {}
                 <button class="btn btn-default" (click)="clearLocalStorage()">Clear local settings storage</button>
                 <span *ngIf="storageClear">Local storage cleared.</span>
             </bootstrap-panel>
-
             <bootstrap-panel title="Your account information">
-                <div class="account-info">
-                    <span>Account ID</span> <span>{{user.id}}</span>
-                    <span>Username</span> <span>{{user.name}}</span>
-                    <span>Full name</span> <span>{{user.real_name}}</span>
-                    <span>Primary email</span> <span>{{user.email}}</span>
-                    <span>Emails</span>
+                <form class="account-info">
+                    <label for="account-name">Username</label>
+                    <div><input id="account-name" class="form-control" type="text" [value]="user.name" disabled></div>
+                    <label for="account-id">Account ID</label>
+                    <div><input id="account-id" class="form-control" type="text" [value]="user.id" disabled></div>
+                    <label for="account-real-name">Full name</label>
+                    <div><input id="account-real-name" class="form-control" type="text" [value]="user.real_name"
+                                disabled></div>
+                    <label for="account-email-primary">Primary email</label>
                     <div>
-
+                        <select id="account-email-primary" class="form-control">
+                            <option>{{user.email}}</option>
+                        </select>
                     </div>
-                    <!--                    <p>Email: {{user.email}}</p>-->
-                    <!--                    <p *ngFor="let contactInfo of user.contact_infos">{{userContactPrint(contactInfo)}}</p>    -->
+                    <ng-container *ngFor="let entry of userContacts.entries()">
+                        <span class="form-label">{{channelNames[entry[0]]}}</span>
+                        <div class="contact-collection">
+                            <div class="contact-info" *ngFor="let contact of entry[1]">
+                                <input type="text" class="form-control" [value]="contact.contact" disabled>
+                                <span *ngIf="contact.primary" class="primary-badge">Primary</span>
+                                <span *ngIf="contact.verified" class="verified-badge">Verified</span>
+                                <button *ngIf="!contact.verified" class="btn btn-default">Resend verification</button>
+                                <button class="btn btn-danger" type="button" [disabled]="contact.primary">
+                                    <i class="glyphicon glyphicon-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </ng-container>
+                </form>
+                <div class="button-panel">
+                    <button class="timButton" (click)="openContactInfoDialog()">Add new contact</button>
                 </div>
-            </bootstrap-panel>
-
-            <bootstrap-panel title="Additional contact information">
-                <!-- TODO: Remove when feature is complete. -->
-                <p><a href="https://gitlab.com/tim-jyu/tim/-/merge_requests/253">Merge request #253</a></p>
-                <button class="timButton" (click)="openContactInfoDialog()">Add new</button>
             </bootstrap-panel>
             <bootstrap-panel title="Delete your account">
                 <button class="timButton btn-danger"
@@ -251,6 +266,8 @@ export class SettingsComponent implements DoCheck {
     user: IFullUser;
     deletingAccount = false;
     deleteConfirmName = "";
+    userContacts = new Map<Channel, IContactInfo[]>();
+    channelNames = EDITABLE_CONTACT_CHANNELS;
     private readonly style: HTMLStyleElement;
     private readonly consent: ConsentType | undefined;
     private allNotificationsFetched = false;
@@ -261,6 +278,7 @@ export class SettingsComponent implements DoCheck {
         this.settings = settingsglobals().userPrefs;
         this.cssFiles = settingsglobals().css_files;
         this.notifications = settingsglobals().notifications;
+        this.collectUserContacts();
         this.updateCss();
         this.style = document.createElement("style");
         this.style.type = "text/css";
@@ -376,15 +394,15 @@ export class SettingsComponent implements DoCheck {
         return await showAddContactDialog();
     }
 
-    /**
-     * Pretty print user contact infos.
-     */
-    userContactPrint(c: IContactInfo) {
-        switch (c.channel) {
-            case Channel.EMAIL:
-                return `Email: ${c.contact}`;
-            default:
-                return "Error";
+    private collectUserContacts() {
+        for (const contactInfo of this.user.contact_infos) {
+            if (!EDITABLE_CONTACT_CHANNELS[contactInfo.channel]) {
+                continue;
+            }
+            if (!this.userContacts.has(contactInfo.channel)) {
+                this.userContacts.set(contactInfo.channel, []);
+            }
+            this.userContacts.get(contactInfo.channel)!.push(contactInfo);
         }
     }
 

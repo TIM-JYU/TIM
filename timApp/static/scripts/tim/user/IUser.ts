@@ -26,6 +26,7 @@ export interface IContactInfo {
     channel: Channel;
     contact: string;
     primary: boolean;
+    verified: boolean;
 }
 
 export interface IFullUser extends IUser {
