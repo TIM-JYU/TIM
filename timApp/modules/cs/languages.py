@@ -90,7 +90,6 @@ class Language:
         self.task_id = get_param(query, "taskID", "")
         self.doc_id, self.dummy = (self.task_id + "NONE.none").split(".", 1)
         self.no_x11 = get_json_param(query.jso, "markup", "noX11", False)
-        self.env = dict(os.environ)
         self.userargs = get_json_param(query.jso, "input", "userargs", None)
         if not self.userargs:
             self.userargs = get_json_param(query.jso, "markup", "userargs", None)
@@ -320,7 +319,7 @@ class Language:
                                              shell=df(shell, False),
                                              kill_tree=df(kill_tree, True),
                                              timeout=df(timeout, self.timeout),
-                                             env=df(env, self.env),
+                                             env=df(env, dict(os.environ)),
                                              stdin=df(stdin, self.stdin),
                                              uargs=uargs,
                                              code=df(code, "utf-8"),
