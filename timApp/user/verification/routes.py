@@ -53,6 +53,8 @@ def do_verify(verify_type: str, verify_token: str, verify: bool) -> Response:
     verification, error = get_verification_data(verify_type, verify_token)
     if error:
         raise RouteException(error)
+    if not verification:
+        raise RouteException("No valid verification found for the token")
 
     if verify:
         verification.approve()

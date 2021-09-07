@@ -1,7 +1,7 @@
 import secrets
 from enum import Enum
 from functools import cache
-from typing import Optional, Dict
+from typing import Optional, Dict, Set
 
 from flask import render_template_string, url_for
 
@@ -22,7 +22,7 @@ class VerificationType(Enum):
 
     @staticmethod
     @cache
-    def get_verification_types():
+    def get_verification_types() -> Set[str]:
         return set(v.value for v in VerificationType)
 
     @staticmethod
@@ -57,10 +57,10 @@ class Verification(db.Model):
     """User that can react to verification request."""
 
     def approve(self) -> None:
-        raise NotImplemented()
+        raise NotImplementedError
 
     def deny(self) -> None:
-        raise NotImplemented()
+        raise NotImplementedError
 
     def to_json(self) -> Dict:
         return {
@@ -122,6 +122,7 @@ def request_verification(verification: Verification, message_template_doc: str) 
     # noinspection PyBroadException
     try:
         doc = DocEntry.find_by_path(message_template_doc)
+        assert doc is not None
         subject = doc.document.get_settings().get("subject", f"Verify {verification.type.value}")
         body = doc.document.export_markdown(export_ids=False, export_settings=False)
     except:
