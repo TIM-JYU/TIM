@@ -266,6 +266,7 @@ export class SettingsComponent implements DoCheck {
     user: IFullUser;
     deletingAccount = false;
     deleteConfirmName = "";
+    contacts: IContactInfo[];
     userContacts = new Map<Channel, IContactInfo[]>();
     channelNames = EDITABLE_CONTACT_CHANNELS;
     private readonly style: HTMLStyleElement;
@@ -278,6 +279,7 @@ export class SettingsComponent implements DoCheck {
         this.settings = settingsglobals().userPrefs;
         this.cssFiles = settingsglobals().css_files;
         this.notifications = settingsglobals().notifications;
+        this.contacts = settingsglobals().contacts;
         this.collectUserContacts();
         this.updateCss();
         this.style = document.createElement("style");
@@ -395,7 +397,7 @@ export class SettingsComponent implements DoCheck {
     }
 
     private collectUserContacts() {
-        for (const contactInfo of this.user.contact_infos) {
+        for (const contactInfo of this.contacts) {
             if (!EDITABLE_CONTACT_CHANNELS[contactInfo.channel]) {
                 continue;
             }

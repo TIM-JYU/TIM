@@ -14,6 +14,7 @@ import {
 } from "../item/IItem";
 import {ILecture} from "../lecture/lecturetypes";
 import {
+    IContactInfo,
     IFullUser,
     IGroup,
     IGroupWithSisuPath,
@@ -185,6 +186,7 @@ export interface ISettingsGlobals extends IGenericGlobals {
     css_files: Array<ICssFile>;
     notifications: INotification[];
     notificationLimit: number;
+    contacts: IContactInfo[];
 }
 
 // See VerificationType on verification.py for details.

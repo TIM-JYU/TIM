@@ -3545,6 +3545,14 @@
           <context context-type="linenumber">56</context>
         </context-group>
       </trans-unit>
+      <trans-unit id="6786637141307824568" datatype="html">
+        <source>Emails</source>
+        <target state="translated">Sähköpostiosoitteet</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">54</context>
+        </context-group>
+      </trans-unit>
       <trans-unit id="5830520205989474611" datatype="html">
         <source>E-mail address</source>
         <target state="translated">Sähköpostiosoite</target>
@@ -3595,7 +3603,7 @@
       </trans-unit>
       <trans-unit id="e4d02232bf65754955798ffae3c361cde41e42a5" datatype="html">
         <source> Please verify or deny the action. You will not be able to access this page once you select either option. </source>
-        <target state="translated"> Ole hyvä ja vahvista tai kiellä toimenpide</target>
+        <target state="translated"> Ole hyvä ja vahvista tai kiellä toimenpide </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">111,113</context>

@@ -1,13 +1,10 @@
 """Unit tests for TIM routes."""
-import unittest
 from unittest.mock import patch
 
 from flask import current_app
 from lxml.cssselect import CSSSelector
 
-from timApp.auth import sessioninfo
 from timApp.auth.accesstype import AccessType
-from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.document import Document
 from timApp.document.viewcontext import default_view_ctx
 from timApp.markdown.markdownconverter import md_to_html
@@ -466,8 +463,8 @@ class TimTest(TimRouteTest):
 
         self.assertEqual(2, len(self.current_user.consents))
 
-        self.json_post(f"/settings/updateConsent", {"consent": 9999}, expect_status=400)
-        self.json_post(f"/settings/updateConsent", {"consent": "x"}, expect_status=400)
+        self.json_post(f"/settings/updateConsent", {"consent": 9999}, expect_status=422)
+        self.json_post(f"/settings/updateConsent", {"consent": "x"}, expect_status=422)
 
     def test_no_db_for_js(self):
         """Database is not accessed during a JS file request."""
