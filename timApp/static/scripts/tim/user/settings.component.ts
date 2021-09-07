@@ -25,19 +25,6 @@ import {
 import {IOkResponse, timeout, to2} from "../util/utils";
 import {IContactInfo, IFullUser} from "./IUser";
 
-async function setConsent(http: HttpClient, c: ConsentType) {
-    const r = await to2(
-        http
-            .post<IOkResponse>("/settings/updateConsent", {consent: c})
-            .toPromise()
-    );
-    if (r.ok) {
-        // Nothing to do.
-    } else {
-        void showMessageDialog(r.result.error.error);
-    }
-}
-
 @Component({
     selector: "tim-save-button",
     template: `
@@ -257,17 +244,15 @@ export class UserSettingsComponent {}
 })
 export class SettingsComponent implements DoCheck {
     saving = false;
-    private readonly style: HTMLStyleElement;
     settings: ISettings;
     cssFiles: Array<ICssFile>;
     notifications: INotification[];
-    private readonly consent: ConsentType | undefined;
     storageClear = false;
     user: IFullUser;
     deletingAccount = false;
     deleteConfirmName = "";
-    private style: HTMLStyleElement;
-    private consent: ConsentType | undefined;
+    private readonly style: HTMLStyleElement;
+    private readonly consent: ConsentType | undefined;
     private allNotificationsFetched = false;
 
     constructor(private http: HttpClient) {
@@ -293,13 +278,13 @@ export class SettingsComponent implements DoCheck {
                 .post<ISettings>("/settings/save", this.settings)
                 .toPromise()
         );
+        this.saving = false;
         if (r.ok) {
             this.settings = r.result;
             this.updateCss();
         } else {
-            void showMessageDialog(r.result.error.error);
+            await showMessageDialog(r.result.error.error);
         }
-        this.saving = false;
     };
 
     async updateConsent() {
@@ -307,7 +292,7 @@ export class SettingsComponent implements DoCheck {
             return;
         }
         this.saving = true;
-        await setConsent(this.http, this.consent);
+        await this.setConsent(this.consent);
         this.saving = false;
     }
 
@@ -351,7 +336,7 @@ export class SettingsComponent implements DoCheck {
             this.notifications = resp.result;
             this.allNotificationsFetched = true;
         } else {
-            void showMessageDialog(resp.result.error.error);
+            await showMessageDialog(resp.result.error.error);
         }
     }
 
@@ -400,6 +385,19 @@ export class SettingsComponent implements DoCheck {
                 return `Email: ${c.contact}`;
             default:
                 return "Error";
+        }
+    }
+
+    private async setConsent(c: ConsentType) {
+        const r = await to2(
+            this.http
+                .post<IOkResponse>("/settings/updateConsent", {consent: c})
+                .toPromise()
+        );
+        if (r.ok) {
+            // Nothing to do.
+        } else {
+            await showMessageDialog(r.result.error.error);
         }
     }
 }
