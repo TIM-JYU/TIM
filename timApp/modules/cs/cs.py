@@ -1777,6 +1777,11 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         # print(err)
 
 
+def init_directories():
+    mkdirs("/tmp/user")
+    mkdirs("/tmp/tmp")
+
+
 # Kun debuggaa Windowsissa, pitää vaihtaa ThreadingMixIn
 # Jos ajaa Linuxissa ThreadingMixIn, niin chdir vaihtaa kaikkien hakemistoa?
 # Ongelmaa korjattu siten, että kaikki run-kommennot saavat prgpathin käyttöönsä
@@ -1795,7 +1800,9 @@ else:
 
     print("Normal mode/ForkingMixIn")
 
+
 if __name__ == '__main__':
+    init_directories()
     server = ThreadedHTTPServer(('', PORT), TIMServer)
     print('Starting server, use <Ctrl-C> to stop')
     server.serve_forever()
