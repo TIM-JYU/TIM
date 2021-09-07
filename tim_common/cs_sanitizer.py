@@ -1,25 +1,38 @@
-import bleach
+"""
+Functions for HTML sanitization used by csplugin.
+"""
+from typing import Optional
+
 import html5lib
 from html5lib.constants import namespaces
 from html5lib.filters import sanitizer
 from html5lib.filters.sanitizer import allowed_elements, allowed_attributes, allowed_css_properties
 from html5lib.serializer import HTMLSerializer
+from lxml.html.clean import Cleaner
 
-'''
-"kirjasto cs-pluginissa tarvittaville sanitoinneille
-'''
+from tim_common.html_sanitize import sanitize_html, sanitize_with_cleaner
+
 
 cs_allowed_tags = ['em', 'strong', 'tt', 'a', 'b', 'code', 'i', 'kbd', 'span', 'li', 'ul', 'ol']
-cs_allowed_attrs = {
-    'a': ['href'],
-    'span': ['class']
-}
+cs_allowed_attrs = frozenset([
+    'href',
+    'class',
+])
 
 
-def allow_minimal(s: str) -> str:
+cs_cleaner = Cleaner(
+    allow_tags=cs_allowed_tags,
+    comments=False,
+    forms=False,
+    remove_unknown_tags=False,
+    safe_attrs=cs_allowed_attrs,
+)
+
+
+def allow_minimal(s: Optional[str]) -> Optional[str]:
     if not s:
         return s
-    return bleach.clean(s, cs_allowed_tags, cs_allowed_attrs)
+    return sanitize_with_cleaner(s, cs_cleaner)
 
 
 cs_svg_tim_allowed_elements = set(allowed_elements).union({
@@ -68,80 +81,7 @@ def cs_min_sanitize(s: str) -> str:
     return s
 
 
-TIM_SAFE_TAGS = ['a',
-                 'abbr',
-                 'acronym',
-                 'b',
-                 'blockquote',
-                 'code',
-                 'em',
-                 'figcaption',
-                 'figure',
-                 'i',
-                 'li',
-                 'ol',
-                 'strong',
-                 'ul',
-                 'video',
-                 'p',
-                 'code',
-                 'div',
-                 'span',
-                 'br',
-                 'pre',
-                 'img',
-                 'h1',
-                 'h2',
-                 'h3',
-                 'h4',
-                 'h5',
-                 'h6',
-                 'h7',
-                 'hr',
-                 'table',
-                 'tbody',
-                 'thead',
-                 'tfoot',
-                 'td',
-                 'tr',
-                 'th',
-                 'caption',
-                 'colgroup',
-                 'col',
-                 'sub',
-                 'sup',
-                 'u',
-                 's',
-                 'style',
-                 'svg',
-                 'tt']
-
-TIM_SAFE_ATTRS_MAP = {'*': ['class', 'id', 'align'],
-                      'video': ['src', 'controls'],
-                      'abbr': ['title'],
-                      'acronym': ['title'],
-                      'img': ['src', 'width', 'height', 'style', 'title'],
-                      'a': ['href', 'title', 'target'],
-                      'svg': ['*']
-                      }
-
-TIM_SAFE_ATTRS = frozenset([
-    'abbr', 'accept', 'accept-charset', 'accesskey', 'action', 'align',
-    'alt', 'axis', 'border', 'cellpadding', 'cellspacing', 'char', 'charoff',
-    'charset', 'checked', 'cite', 'class', 'clear', 'cols', 'colspan',
-    'color', 'compact', 'coords', 'datetime', 'dir', 'disabled', 'enctype',
-    'for', 'frame', 'headers', 'height', 'href', 'hreflang', 'hspace', 'id',
-    'ismap', 'label', 'lang', 'longdesc', 'maxlength', 'media', 'method',
-    'multiple', 'name', 'nohref', 'noshade', 'nowrap', 'prompt', 'readonly',
-    'rel', 'rev', 'rows', 'rowspan', 'rules', 'scope', 'selected', 'shape',
-    'size', 'span', 'src', 'start', 'style', 'summary', 'tabindex', 'target', 'title',
-    'type', 'usemap', 'valign', 'value', 'vspace', 'width', 'controls', 'plugin'])
-
-TIM_SAFE_PROTOCOLS = ['http', 'https', 'smb', 'data']
-TIM_SAFE_STYLES = ['width', 'height', 'vertical-align']
-
-
-def tim_sanitize(s: str) -> str:
+def tim_sanitize(s: Optional[str]) -> Optional[str]:
     if not s:
         return s
-    return bleach.clean(s, TIM_SAFE_TAGS, TIM_SAFE_ATTRS_MAP, protocols=TIM_SAFE_PROTOCOLS, styles=TIM_SAFE_STYLES)
+    return sanitize_html(s)

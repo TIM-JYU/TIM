@@ -13,7 +13,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
-from timApp.markdown.htmlSanitize import sanitize_html, presanitize_html_body
+from tim_common.html_sanitize import sanitize_html, presanitize_html_body
 from timApp.util.utils import get_error_html, title_to_id
 from timApp.util.utils import widen_fields
 

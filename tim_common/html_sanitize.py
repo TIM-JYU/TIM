@@ -191,6 +191,10 @@ c_with_styles = Cleaner(
 # NOTE: lxml cleaner is a LOT faster than bleach.
 def sanitize_html(html_string: str, allow_styles: bool = False) -> str:
     cleaner = c_with_styles if allow_styles else c_no_style
+    return sanitize_with_cleaner(html_string, cleaner)
+
+
+def sanitize_with_cleaner(html_string: str, cleaner: Cleaner) -> str:
     try:
         doc = fromstring(html_string)
         cleaner(doc)

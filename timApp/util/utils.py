@@ -17,7 +17,7 @@ import pytz
 import requests
 from lxml.html import HtmlElement
 
-from timApp.markdown.htmlSanitize import sanitize_html
+from tim_common.html_sanitize import sanitize_html
 
 
 def datestr_to_relative(d: Union[str, datetime]) -> str:

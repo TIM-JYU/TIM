@@ -28,7 +28,7 @@ from timApp.document.validationresult import ValidationResult
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
-from timApp.markdown.htmlSanitize import presanitize_html_body
+from tim_common.html_sanitize import presanitize_html_body
 from timApp.timdb.exceptions import TimDbException, PreambleException, InvalidReferenceException
 from timApp.timtypes import DocInfoType
 from timApp.util.utils import get_error_html, trim_markdown, cache_folder_path
