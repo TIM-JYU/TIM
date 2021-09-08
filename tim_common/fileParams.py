@@ -64,28 +64,30 @@ class QueryClass:
 
 
 def check_key(query: QueryClass, key: str):
-    # return key
-    key2 = "-" + key
     if key in query.query:
         return key
+    key2 = "-" + key
     if key2 in query.query:
         return key2
     if key in query.get_query:
         return key
     if key2 in query.get_query:
         return key2
-    if not query.jso:
+    q_jso = query.jso
+    if not q_jso:
         return key
-    if "input" in query.jso:
-        if key in query.jso["input"]:
+    q_input = q_jso.get('input')
+    if q_input:
+        if key in q_input:
             return key
-        if key2 in query.jso["input"]:
+        if key2 in q_input:
             return key2
-    if "markup" not in query.jso:
+    m = q_jso.get('markup')
+    if not m:
         return key
-    if key in query.jso["markup"]:
+    if key in m:
         return key
-    if key2 in query.jso["markup"]:
+    if key2 in m:
         return key2
     return key
 
@@ -112,25 +114,26 @@ def get_value(jso, default, *keys):
 def get_param(query: QueryClass, key, default):
     key = check_key(query, key)
     dvalue = default
-    if key in query.query:
-        dvalue = normalize_bool(query.query[key][0])
-    if dvalue == 'undefined':
-        dvalue = default
+    q_val = query.query.get(key)
+    if q_val:
+        dvalue = normalize_bool(q_val[0])
+        if dvalue == 'undefined':
+            dvalue = default
 
-    if key not in query.get_query:
+    gq_val = query.get_query.get(key)
+    if not gq_val:
         if query.jso is None:
             return dvalue
-        if "input" in query.jso and key in query.jso["input"]:
-            value = query.jso["input"][key]
+        q_input = query.jso.get('input')
+        if q_input:
+            value = q_input.get(key, 'undefined')
             if value != 'undefined':
                 return value
-
-        if "markup" not in query.jso:
+        m = query.jso.get('markup')
+        if not m:
             return dvalue
-        if key in query.jso["markup"]:
-            return query.jso["markup"][key]
-        return dvalue
-    value = query.get_query[key][0]
+        return m.get(key, dvalue)
+    value = gq_val[0]
     if value == 'undefined':
         return dvalue
     return normalize_bool(value)
