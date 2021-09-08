@@ -257,6 +257,33 @@ RUN (curl -sL https://deb.nodesource.com/setup_14.x | bash -) && bash -c "${APT_
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
+# dotnet
+# Based on https://github.com/dotnet/dotnet-docker/blob/main/documentation/scenarios/installing-dotnet.md#installing-from-dotnet-install-script
+ENV \
+    # Do not generate certificate
+    DOTNET_GENERATE_ASPNET_CERTIFICATE=false \
+    # Version channel from which to install dotnet
+    DOTNET_VERSION_CHANNEL=5.0 \
+    # Enable correct mode for dotnet watch (only mode supported in a container)
+    DOTNET_USE_POLLING_FILE_WATCHER=true \
+    # Skip extraction of XML docs - generally not useful within an image/container - helps performance
+    NUGET_XMLDOC_MODE=skip
+
+RUN bash -c "${APT_INSTALL} \
+    libc6 \
+    libgcc1 \
+    libgssapi-krb5-2 \
+    libicu66 \
+    libssl1.1 \
+    libstdc++6 \
+    zlib1g \
+&& ${APT_CLEANUP}"
+
+# Install .NET SDK and check that it works
+RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel $DOTNET_VERSION_CHANNEL --install-dir /usr/share/dotnet \
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
+    && dotnet help
+
 USER agent
 
 FROM complete as sudo
