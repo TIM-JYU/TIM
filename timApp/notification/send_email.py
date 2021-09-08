@@ -72,7 +72,7 @@ def multi_send_email(
         mail_from: str = app.config['MAIL_FROM'],
         reply_to: str = app.config['NOREPLY_EMAIL'],
         bcc: str = '',
-        reply_all=False
+        reply_all: bool = False
 ) -> None:
     if is_testing():
         sent_mails_in_testing.append(locals())
@@ -89,14 +89,12 @@ def multi_send_email_impl(
         mail_from: str = app.config['MAIL_FROM'],
         reply_to: str = app.config['NOREPLY_EMAIL'],
         bcc: str = '',
-        reply_all=False
+        reply_all: bool = False
 ) -> None:
     with flask_app.app_context():
         s = smtplib.SMTP(flask_app.config['MAIL_HOST']) if not is_localhost() else None
         rcpts = rcpt.split(";")
-        mail_targets: List[Union[str, List[str]]] = list(rcpts)
-        if reply_all:
-            mail_targets = [mail_targets]
+        mail_targets: List[Union[str, List[str]]] = list(rcpts) if not reply_all else [rcpts]
         bccmail = bcc
         extra = ''
         if bcc:
@@ -121,10 +119,10 @@ def multi_send_email_impl(
                     if reply_to:
                         mime_msg.add_header('Reply-To', reply_to)
 
-                    if is_localhost():
+                    if not s:
                         # don't use log_* function because this is typically run in Celery
                         print(
-                            f'Skipping mail send on localhost, from: {mail_from}, send_to: {send_to},  message: {mime_msg.as_string()}')
+                            f'Dry run send mail, from: {mail_from}, send_to: {send_to},  message: {mime_msg.as_string()}')
                     else:
                         s.sendmail(mail_from, send_to, mime_msg.as_string())
                 except (smtplib.SMTPSenderRefused,
