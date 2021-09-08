@@ -48,7 +48,7 @@ from timApp.item.partitioning import get_piece_size_from_cookie, decide_view_ran
 from timApp.item.scoreboard import get_score_infos_if_enabled
 from timApp.item.tag import GROUP_TAG_PREFIX
 from timApp.item.validation import has_special_chars
-from timApp.markdown.htmlSanitize import sanitize_html
+from tim_common.html_sanitize import sanitize_html
 from timApp.messaging.messagelist.messagelist_utils import MESSAGE_LIST_DOC_PREFIX, MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX
 from timApp.peerreview.peerreview_utils import generate_review_groups, get_reviews_for_user, check_review_grouping, \
     PeerReviewException, is_peerreview_enabled

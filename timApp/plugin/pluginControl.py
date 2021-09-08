@@ -18,13 +18,13 @@ from timApp.auth.accesshelper import has_edit_access, verify_view_access
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
-from timApp.document.document import dereference_pars, Document
+from timApp.document.document import Document
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
-from timApp.markdown.htmlSanitize import sanitize_html
+from tim_common.html_sanitize import sanitize_html
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
@@ -34,8 +34,6 @@ from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
-from timApp.timdb.sqa import db
-from timApp.user.user import User
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFieldsAccess
 from timApp.util.rndutils import SeedClass
 from timApp.util.timtiming import taketime

@@ -20,7 +20,7 @@ from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import random_id, hashfunc
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.markdown.dumboclient import DumboOptions, MathType, InputFormat
-from timApp.markdown.htmlSanitize import sanitize_html, strip_div
+from tim_common.html_sanitize import sanitize_html, strip_div
 from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macros, format_heading
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.timtypes import DocumentType

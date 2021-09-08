@@ -567,8 +567,6 @@ def handle_common_params(query: QueryClass, ttype: TType):
             bycode = js["by"]
     if get_param(query, "noeditor", False):
         bycode = ""
-    qso = json.dumps(query.jso)
-    # print(qso)
     uf = get_param(query, "uploadedFile", None)
     ut = get_param(query, "uploadedType", None)
     uf = get_json_eparam(query.jso, "state", "uploadedFile", uf)
