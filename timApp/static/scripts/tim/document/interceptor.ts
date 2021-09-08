@@ -66,7 +66,7 @@ export function prepareAnswerRequest(taskIdFull: string, url: string) {
 
 export function getTaskIdIfAnswerUrl(url: string): string | undefined {
     const fullUrl = new URL(url, window.location.origin);
-    const re = /\/[^/]+\/([^/]+)\/answer\/$/;
+    const re = /\/[^/]+\/([^/]+)\/answer$/;
     const match = re.exec(fullUrl.pathname);
     if (match) {
         return decodeURIComponent(match[1]);

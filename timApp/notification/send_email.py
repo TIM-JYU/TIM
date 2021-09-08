@@ -1,9 +1,9 @@
 import smtplib
 from email.mime.text import MIMEText
 from threading import Thread
+from typing import Optional, List, Union
 
 from flask import Flask
-from typing import Optional
 
 from timApp.tim_app import app
 from timApp.util.flask.requesthelper import is_testing, is_localhost
@@ -71,18 +71,14 @@ def multi_send_email(
         msg: str,
         mail_from: str = app.config['MAIL_FROM'],
         reply_to: str = app.config['NOREPLY_EMAIL'],
-        bcc: str = ''
+        bcc: str = '',
+        reply_all: bool = False
 ) -> None:
     if is_testing():
         sent_mails_in_testing.append(locals())
         return
 
-    if is_localhost():
-        # don't use log_* function because this is typically run in Celery
-        print(f'Skipping mail send on localhost, rcpt: {rcpt}, message: {msg}')
-        return
-
-    Thread(target=multi_send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to, bcc)).start()
+    Thread(target=multi_send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to, bcc, reply_all)).start()
 
 
 def multi_send_email_impl(
@@ -92,33 +88,43 @@ def multi_send_email_impl(
         msg: str,
         mail_from: str = app.config['MAIL_FROM'],
         reply_to: str = app.config['NOREPLY_EMAIL'],
-        bcc: str = ''
+        bcc: str = '',
+        reply_all: bool = False
 ) -> None:
     with flask_app.app_context():
-        s = smtplib.SMTP(flask_app.config['MAIL_HOST'])
+        s = smtplib.SMTP(flask_app.config['MAIL_HOST']) if not is_localhost() else None
         rcpts = rcpt.split(";")
+        mail_targets: List[Union[str, List[str]]] = list(rcpts) if not reply_all else [rcpts]
         bccmail = bcc
         extra = ''
         if bcc:
             if len(rcpts) > 3:
-                rcpts.append(bcc)
+                mail_targets.append(bcc)
                 bccmail = ''
                 extra = "\n\n" + "\n".join(rcpts)
         try:
-            for rcp in rcpts:
+            for rcp in mail_targets:
                 try:
                     # TODO: Mailmerge here possible templates.
                     send_extra = ''
+                    send_to = [*rcp, bccmail] if isinstance(rcp, list) else [rcp, bccmail]
+                    send_to = [m for m in send_to if m]
                     if rcp == bcc:
                         send_extra = extra
                     mime_msg = MIMEText(msg + send_extra)  # + flask_app.config['MAIL_SIGNATURE'])
                     mime_msg['Subject'] = subject
                     mime_msg['From'] = mail_from
                     mime_msg['Bcc'] = bccmail
-                    mime_msg['To'] = rcp
+                    mime_msg['To'] = ",".join(send_to)
                     if reply_to:
                         mime_msg.add_header('Reply-To', reply_to)
-                    s.sendmail(mail_from, [rcp, bccmail], mime_msg.as_string() )
+
+                    if not s:
+                        # don't use log_* function because this is typically run in Celery
+                        print(
+                            f'Dry run send mail, from: {mail_from}, send_to: {send_to},  message: {mime_msg.as_string()}')
+                    else:
+                        s.sendmail(mail_from, send_to, mime_msg.as_string())
                 except (smtplib.SMTPSenderRefused,
                         smtplib.SMTPRecipientsRefused,
                         smtplib.SMTPHeloError,
@@ -128,4 +134,5 @@ def multi_send_email_impl(
                 else:
                     pass
         finally:
-            s.quit()
+            if s:
+                s.quit()
