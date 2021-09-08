@@ -52,7 +52,6 @@ from timApp.plugin.pluginControl import pluginify
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.plugintype import PluginType, PluginTypeBase
 from timApp.plugin.taskid import TaskId, TaskIdAccess
-from timApp.tim_app import get_home_organization_group
 from timApp.timdb.exceptions import TimDbException
 from timApp.timdb.sqa import db
 from timApp.user.groups import do_create_group, verify_group_edit_access
@@ -420,35 +419,6 @@ class JsRunnerAnswerModel:
 
 
 JsRunnerAnswerSchema = class_schema(JsRunnerAnswerModel)
-
-
-@answers.post('/sendemail/')
-def send_email(
-        rcpts: str,
-        msg: str,
-        subject: str,
-        bccme: bool = False
-):
-    """
-    Route for sending email
-    TODO: combine with multisendemail
-    :return:
-    """
-    curr_user = get_current_user_object()
-    if curr_user not in UserGroup.get_teachers_group().users and curr_user not in get_home_organization_group().users:
-        raise AccessDenied("Sorry, you don't have permission to use this resource.")
-    curr_user = get_current_user_object()
-    if bccme:
-        bcc = curr_user.email
-    multi_send_email(
-        rcpt=rcpts,
-        subject=subject,
-        msg=msg,
-        mail_from=curr_user.email,
-        reply_to=curr_user.email,
-        bcc=bcc
-    )
-    return ok_response()
 
 
 @answers.post("/multiSendEmail/<doc_id>")
