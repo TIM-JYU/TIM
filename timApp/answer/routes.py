@@ -80,9 +80,15 @@ answers = TypedBlueprint('answers',
                          __name__,
                          url_prefix='')
 
+PointsType = Union[
+    float,  # Points as float
+    str,  # Points as string, convert them to float
+    None  # Clear points, only by teacher
+]
+
 
 @answers.put("/savePoints/<int:user_id>/<int:answer_id>")
-def save_points(answer_id: int, user_id: int, points: Union[str, float]):
+def save_points(answer_id: int, user_id: int, points: PointsType = None):
     answer, _ = verify_answer_access(
         answer_id,
         user_id,
@@ -261,8 +267,8 @@ def call_plugin_answer_and_parse(answer_call_data, plugintype):
 
 
 @answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>")
-def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int):
-    get_iframehtml_answer(plugintype, task_id_ext, user_id)
+def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int) -> Response:
+    return get_iframehtml_answer(plugintype, task_id_ext, user_id)
 
 
 def get_useranswers_for_task(user: User, task_ids: List[TaskId], answer_map):
@@ -491,11 +497,6 @@ def post_answer(plugintype: str,
             get_other_session_users_objs(),
             get_origin_from_request(),
         ).result)
-
-
-@answers.put("/<plugintype>/<task_id_ext>/answer/")
-def post_answer_alt(plugintype: str, task_id_ext: str):
-    post_answer(plugintype, task_id_ext)
 
 
 @dataclass

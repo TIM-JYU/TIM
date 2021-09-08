@@ -83,7 +83,7 @@ export class PluginMeta {
     }
 
     public getAnswerUrl() {
-        return `${this.getTaskIdUrl()}/answer/`;
+        return `${this.getTaskIdUrl()}/answer`;
     }
 
     public getIframeHtmlUrl(user: IUser, answer: IAnswer | undefined) {

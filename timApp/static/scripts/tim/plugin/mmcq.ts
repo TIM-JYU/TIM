@@ -101,7 +101,7 @@ class MMCQ extends MCQBase<null | boolean[]> {
         const r = await to(
             $http<{web: MMCQ["content"]}>({
                 method: "PUT",
-                url: `/mmcq/${ident}/answer/`,
+                url: `/mmcq/${ident}/answer`,
                 data: message,
             })
         );
@@ -183,7 +183,7 @@ class MCQ extends MCQBase<number | null> {
         const r = await to(
             $http<{web: MCQ["content"]}>({
                 method: "PUT",
-                url: `/mcq/${ident}/answer/`,
+                url: `/mcq/${ident}/answer`,
                 data: message,
             })
         );
