@@ -147,8 +147,7 @@ services:
   restart: unless-stopped
   read_only: true
  showfile:
-  image: timimages/svn:bionic
-  build: ./timApp/modules/svn
+  image: timimages/cs3${CSPLUGIN_TARGET:-}:focal
   volumes:
    - ./timApp/modules/svn:/app/svn:ro
    - ./tim_common:/app/tim_common:ro

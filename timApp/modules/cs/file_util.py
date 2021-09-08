@@ -15,6 +15,9 @@ def listify(item):
     return item if isinstance(item, list) else [item]
 
 
+nonascii_pat = re.compile(r"[^A-Za-z0-9_]")
+
+
 def default_filename(query):
     filename = get_param(query, "filename", None)
     if filename is None:
@@ -24,7 +27,7 @@ def default_filename(query):
             pass
         else:
             tid = tid.split(".", 1)[-1]
-            asciified = re.sub(r"[^A-Za-z0-9_]", "", tid)
+            asciified = re.sub(nonascii_pat, "", tid)
             # taskID variable may end with a dot (when the plugin doesn't have a task id),
             # so need to ensure asciified is not empty. Can also happen if task id has only non-ascii chars.
             if asciified:

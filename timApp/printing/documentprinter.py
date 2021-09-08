@@ -28,7 +28,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx, copy_of_default_view_ctx
 from timApp.document.yamlblock import strip_code_block
 from timApp.folder.folder import Folder
-from timApp.markdown.htmlSanitize import sanitize_html
+from tim_common.html_sanitize import sanitize_html
 from timApp.markdown.markdownconverter import expand_macros, create_environment
 from timApp.plugin.plugin import get_value, PluginWrap
 from timApp.plugin.plugin import parse_plugin_values_macros
