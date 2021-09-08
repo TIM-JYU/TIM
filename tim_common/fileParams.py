@@ -677,17 +677,20 @@ def query_params_to_attribute(query, leave_away):
     return result + ""
 
 
+def default_value_transform(x):
+    return x[0]
+
+
 def query_params_to_map(query: Dict[str, Any], transform=None, deny: Dict[str, Any] = None):
     if transform is None:
-        def transform(x):
-            return x[0]
+        transform = default_value_transform
     result = {}
-    for field in query.keys():
+    for field, value in query.items():
         if field.startswith("-"):
             continue
         if deny and field in deny:
             continue
-        result[field] = transform(query[field])
+        result[field] = transform(value)
     m = result.get("markup")
     if m:
         result["markup"] = query_params_to_map(m, transform=lambda x: x, deny=deny)
