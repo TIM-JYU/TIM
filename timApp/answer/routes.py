@@ -6,14 +6,13 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict
 
-from flask import Blueprint, session, current_app
 from flask import Response
 from flask import request
+from flask import session, current_app
 from marshmallow import validates_schema, ValidationError
 from marshmallow.utils import missing
 from sqlalchemy import func
 from sqlalchemy.orm import lazyload
-from webargs.flaskparser import use_args
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import AnswerUpload
@@ -62,9 +61,10 @@ from timApp.user.user import maxdate
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.answerutil import period_handling
-from timApp.util.flask.requesthelper import verify_json_params, get_option, get_consent_opt, RouteException, use_model, \
-    get_urlmacros_from_request, NotExist, get_from_url
+from timApp.util.flask.requesthelper import get_option, get_consent_opt, RouteException, get_urlmacros_from_request, \
+    NotExist, get_from_url
 from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, \
     ALL_ANSWERED_WILDCARD, GetFieldsAccess
 from timApp.util.logger import log_info
@@ -76,13 +76,13 @@ from tim_common.marshmallow_dataclass import class_schema
 from tim_common.pluginserver_flask import value_or_default
 from tim_common.utils import Missing
 
-answers = Blueprint('answers',
-                    __name__,
-                    url_prefix='')
+answers = TypedBlueprint('answers',
+                         __name__,
+                         url_prefix='')
 
 
 @answers.put("/savePoints/<int:user_id>/<int:answer_id>")
-def save_points(answer_id, user_id):
+def save_points(answer_id: int, user_id: int, points: Union[str, float]):
     answer, _ = verify_answer_access(
         answer_id,
         user_id,
@@ -91,7 +91,6 @@ def save_points(answer_id, user_id):
     )
     tid = TaskId.parse(answer.task_id)
     d = get_doc_or_abort(tid.doc_id)
-    points, = verify_json_params('points')
     try:
         plugin, _ = Plugin.from_task_id(
             answer.task_id,
@@ -114,46 +113,29 @@ def save_points(answer_id, user_id):
     return ok_response()
 
 
-@dataclass
-class AnswerIdModel:
-    answer_id: int
-
-
-@dataclass
-class ValidityModel(AnswerIdModel):
-    valid: bool
-
-
-@dataclass
-class DeleteCollabModel(AnswerIdModel):
-    user_id: int
-
-
 @answers.put("/answer/saveValidity")
-@use_model(ValidityModel)
-def save_validity(m: ValidityModel):
+def save_validity(answer_id: int, valid: bool):
     a, doc_id = verify_answer_access(
-        m.answer_id,
+        answer_id,
         get_current_user_object().id,
         default_view_ctx,
         require_teacher_if_not_own=True,
     )
     verify_teacher_access(get_doc_or_abort(doc_id))
-    a.valid = m.valid
+    a.valid = valid
     db.session.commit()
     return ok_response()
 
 
 @answers.post("/answer/delete")
-@use_model(AnswerIdModel)
-def delete_answer(m: AnswerIdModel):
+def delete_answer(answer_id: int):
     """Deletes an answer.
 
     This does not completely delete the answer but only removes user associations from it,
     so it is no longer visible in TIM.
     """
     a, doc_id = verify_answer_access(
-        m.answer_id,
+        answer_id,
         get_current_user_object().id,
         default_view_ctx,
         require_teacher_if_not_own=True,
@@ -169,21 +151,20 @@ def delete_answer(m: AnswerIdModel):
 
 
 @answers.post("/answer/deleteCollaborator")
-@use_model(DeleteCollabModel)
-def delete_answer_collab(m: DeleteCollabModel):
+def delete_answer_collab(answer_id: int, user_id: int):
     """Deletes an answer collaborator.
     """
     a, doc_id = verify_answer_access(
-        m.answer_id,
+        answer_id,
         get_current_user_object().id,
         default_view_ctx,
         require_teacher_if_not_own=True,
     )
     verify_teacher_access(get_doc_or_abort(doc_id))
     verify_admin()
-    collab_to_remove = User.get_by_id(m.user_id)
+    collab_to_remove = User.get_by_id(user_id)
     if not collab_to_remove:
-        raise RouteException(f'Answer {m.answer_id} does not have collaborator {m.user_id}')
+        raise RouteException(f'Answer {answer_id} does not have collaborator {user_id}')
     a.users_all.remove(collab_to_remove)
     db.session.commit()
     u = get_current_user_object()
@@ -201,9 +182,8 @@ def points_to_float(points: Union[str, float]):
     return float(points)
 
 
-@answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>")
 @answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<int:answer_id>")
-def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int, answer_id: Optional[int] = None):
+def get_iframehtml_answer(plugintype: str, task_id_ext: str, user_id: int, answer_id: Optional[int] = None):
     """
     Gets the HTML to be used in iframe.
 
@@ -280,6 +260,11 @@ def call_plugin_answer_and_parse(answer_call_data, plugintype):
     return jsonresp
 
 
+@answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>")
+def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int):
+    get_iframehtml_answer(plugintype, task_id_ext, user_id)
+
+
 def get_useranswers_for_task(user: User, task_ids: List[TaskId], answer_map):
     """
     Performs a query for latest valid answers by given user for given task
@@ -326,23 +311,12 @@ def get_globals_for_tasks(task_ids: List[TaskId], answer_map):
     return cnt, answers_all
 
 
-@dataclass
-class UserAnswersForTasksModel:
-    tasks: List[str]
-    user: int
-
-
-UserAnswersForTasksSchema = class_schema(UserAnswersForTasksModel)
-
-
 @answers.post("/userAnswersForTasks")
-@use_args(UserAnswersForTasksSchema())
-def get_answers_for_tasks(args: UserAnswersForTasksModel):
+def get_answers_for_tasks(tasks: List[str], user_id: int):
     """
     Route for getting latest valid answers for given user and list of tasks
     :return: {"answers": {taskID: Answer}, "userId": user_id}
     """
-    tasks, user_id = args.tasks, args.user
     user = User.get_by_id(user_id)
     if user is None:
         raise RouteException('Non-existent user')
@@ -438,26 +412,18 @@ class JsRunnerAnswerModel:
 JsRunnerAnswerSchema = class_schema(JsRunnerAnswerModel)
 
 
-@dataclass
-class SendEmailModel:
-    rcpts: str
-    msg: str
-    subject: str
-    bccme: Union[bool, Missing, None] = missing
-
-
-SendEmailSchema = class_schema(SendEmailModel)
-
-
 @answers.post('/sendemail/')
-@use_args(SendEmailSchema())
-def send_email(args: SendEmailModel):
+def send_email(
+        rcpts: str,
+        msg: str,
+        subject: str,
+        bccme: bool = False
+):
     """
     Route for sending email
     TODO: combine with multisendemail
     :return:
     """
-    rcpts, msg, subject, bccme = args.rcpts, args.msg, args.subject, args.bccme
     curr_user = get_current_user_object()
     if curr_user not in UserGroup.get_teachers_group().users and curr_user not in get_home_organization_group().users:
         raise AccessDenied("Sorry, you don't have permission to use this resource.")
@@ -476,12 +442,11 @@ def send_email(args: SendEmailModel):
 
 
 @answers.post("/multiSendEmail/<doc_id>")
-def multisendemail(doc_id: int):
+def multisendemail(doc_id: int, bccme: bool = False, replyall: bool = False):
     d = get_doc_or_abort(doc_id)
     verify_teacher_access(d)
     mail_from = get_current_user_object().email
     bcc = ""
-    bccme = request.json.get('bccme', False)
     if bccme:
         bcc = mail_from
     multi_send_email(
@@ -489,37 +454,48 @@ def multisendemail(doc_id: int):
         subject=request.json.get('subject'),
         msg=request.json.get('msg'),
         mail_from=mail_from,
-        reply_to=mail_from,
-        bcc=bcc
+        reply_to=mail_from if not replyall else None,
+        bcc=bcc,
+        reply_all=replyall
     )
     return ok_response()
 
 
-@answers.put("/<plugintype>/<task_id_ext>/answer/")
+# noinspection PyShadowingBuiltins
 @answers.put("/<plugintype>/<task_id_ext>/answer")
-def post_answer(plugintype: str, task_id_ext: str):
+def post_answer(plugintype: str,
+                task_id_ext: str,
+                input: Union[AnswerData, List[Any]],
+                abData: Dict[str, Any] = field(default_factory=dict),
+                options: Dict[str, Any] = field(default_factory=dict)
+                ):
     """Saves the answer submitted by user for a plugin in the database.
 
     :param plugintype: The type of the plugin, e.g. csPlugin.
      TODO: No longer needed because it is checked from the document block's plugin attribute.
     :param task_id_ext: The extended task id of the form "22.palidrome.par_id".
-
+    :param input: Answer data to save
+    :param options: Options to apply for answer saving
+    :param abData: Data applied from answer browser
     """
-    answerdata, = verify_json_params('input')
-    answer_browser_data, answer_options = verify_json_params('abData', 'options', require=False, default={})
     curr_user = get_current_user_object()
     verify_ip_ok(user=curr_user, msg='Answering is not allowed from this IP address.')
     return json_response(
         post_answer_impl(
             task_id_ext,
-            answerdata,
-            answer_browser_data,
-            answer_options,
+            input,
+            abData,
+            options,
             curr_user,
             get_urlmacros_from_request(),
             get_other_session_users_objs(),
             get_origin_from_request(),
         ).result)
+
+
+@answers.put("/<plugintype>/<task_id_ext>/answer/")
+def post_answer_alt(plugintype: str, task_id_ext: str):
+    post_answer(plugintype, task_id_ext)
 
 
 @dataclass
@@ -529,23 +505,23 @@ class AnswerRouteResult:
 
 
 def get_postanswer_plugin_etc(
-      d: DocInfo,
-      tid: TaskId,
-      answer_browser_data,
-      curr_user: User,
-      ctx_user: UserContext,
-      urlmacros: UrlMacros,
-      users: Optional[List[User]],
-      other_session_users: List[User],
-      origin: Optional[OriginInfo],
-      force_answer: bool
-      ) -> Tuple[TaskAccessVerification,
-                 ExistingAnswersInfo,
-                 List[User],
-                 bool,
-                 bool,
-                 bool
-        ]:
+        d: DocInfo,
+        tid: TaskId,
+        answer_browser_data,
+        curr_user: User,
+        ctx_user: UserContext,
+        urlmacros: UrlMacros,
+        users: Optional[List[User]],
+        other_session_users: List[User],
+        origin: Optional[OriginInfo],
+        force_answer: bool
+) -> Tuple[TaskAccessVerification,
+           ExistingAnswersInfo,
+           List[User],
+           bool,
+           bool,
+           bool
+]:
     allow_save = True
     ask_new = False
 
@@ -568,8 +544,8 @@ def get_postanswer_plugin_etc(
     if newtask:  # only if task is with new random after every answer
         # Next three lines was there originally for stack, but let's see if we manage without them
         # if isinstance(answerdata, dict):
-            # answernr = answerdata.get("answernr", -1)
-            # ask_new = answerdata.get("askNew", False)
+        # answernr = answerdata.get("answernr", -1)
+        # ask_new = answerdata.get("askNew", False)
         if answernr < 0:
             answernr = answer_browser_data.get("answernr", -1)
         answernr_to_user = answernr
@@ -591,7 +567,7 @@ def get_postanswer_plugin_etc(
             context_user=context_user,
             view_ctx=view_ctx,
             allow_grace_period=True,
-            answernr = answernr_to_user
+            answernr=answernr_to_user
         )
     except (PluginException, TimDbException) as e:
         raise PluginException(str(e))
@@ -600,7 +576,7 @@ def get_postanswer_plugin_etc(
 
 def post_answer_impl(
         task_id_ext: str,
-        answerdata: AnswerData,
+        answerdata: Union[AnswerData, List[Any]],
         answer_browser_data,
         answer_options,
         curr_user: User,
@@ -1549,18 +1525,14 @@ def export_answers(doc_path: str):
     } for a, email in answer_list])
 
 
-@dataclass
-class ImportAnswersModel:
-    answers: List[ExportedAnswer]
-    allow_missing_users: bool = False
-    doc_map: Dict[str, str] = field(default_factory=dict)
-
-
 @answers.post('/importAnswers')
-@use_model(ImportAnswersModel)
-def import_answers(m: ImportAnswersModel):
+def import_answers(
+        answers: List[ExportedAnswer],
+        allow_missing_users: bool = False,
+        doc_map: Dict[str, str] = field(default_factory=dict)
+):
     verify_admin()
-    doc_paths = set(m.doc_map.get(a.doc, a.doc) for a in m.answers)
+    doc_paths = set(doc_map.get(a.doc, a.doc) for a in answers)
     docs = DocEntry.query.filter(DocEntry.name.in_(doc_paths)).all()
     doc_path_map = {d.path: d for d in docs}
     missing_docs = doc_paths - set(doc_path_map)
@@ -1581,19 +1553,19 @@ def import_answers(m: ImportAnswersModel):
     existing_set = set((a.parsed_task_id.doc_id, a.task_name, a.answered_on, a.valid, a.points, email) for a, email in
                        existing_answers)
     dupes = 0
-    users = {u.email: u for u in User.query.filter(User.email.in_([a.email for a in m.answers])).all()}
-    requested_users = set(a.email for a in m.answers)
+    users = {u.email: u for u in User.query.filter(User.email.in_([a.email for a in answers])).all()}
+    requested_users = set(a.email for a in answers)
     missing_users = requested_users - set(users.keys())
-    if missing_users and not m.allow_missing_users:
+    if missing_users and not allow_missing_users:
         raise RouteException(f'Email(s) not found: {seq_to_str(list(missing_users))}')
-    m.answers.sort(key=lambda a: a.time)
+    answers.sort(key=lambda a: a.time)
     all_imported = []
-    for a in m.answers:
-        doc_id = doc_path_map[m.doc_map.get(a.doc, a.doc)].id
+    for a in answers:
+        doc_id = doc_path_map[doc_map.get(a.doc, a.doc)].id
         if (doc_id, a.task, a.time, a.valid, a.points, a.email) not in existing_set:
             u = users.get(a.email)
             if not u:
-                if not m.allow_missing_users:
+                if not allow_missing_users:
                     raise Exception('Missing user should have been reported earlier')
                 continue
             imported_answer = Answer(
@@ -1797,28 +1769,17 @@ def get_jsframe_data(task_id, user_id):
         # return json_response({})
 
 
-@dataclass
-class GetStateModel:
-    user_id: int
-    answer_id: Optional[int] = None
-    par_id: Optional[str] = None
-    doc_id: Optional[int] = None
-    review: bool = False
-    task_id: Optional[str] = None
-    answernr: Optional[int] = None
-    ask_new: Optional[bool] = False
-
-GetStateSchema = class_schema(GetStateModel)
-
-
 @answers.get("/getState")
-@use_args(GetStateSchema())
-def get_state(args: GetStateModel):
-    par_id = args.par_id
-    user_id = args.user_id
-    answer_id = args.answer_id
-    review = args.review
-    task_id = args.task_id
+def get_state(
+        user_id: int,
+        answer_id: Optional[int] = None,
+        par_id: Optional[str] = None,
+        doc_id: Optional[int] = None,
+        review: bool = False,
+        task_id: Optional[str] = None,
+        answernr: Optional[int] = None,
+        ask_new: Optional[bool] = False
+):
     answer = None
     user = User.get_by_id(user_id)
     if user is None:
@@ -1863,8 +1824,8 @@ def get_state(args: GetStateModel):
         doc, plug = get_plugin_from_request(doc, task_id=tid, u=user_ctx, view_ctx=view_ctx)
     except PluginException as e:
         raise RouteException(str(e))
-    plug.par.answer_nr = args.answernr
-    plug.par.ask_new = args.ask_new
+    plug.par.answer_nr = answernr
+    plug.par.ask_new = ask_new
     block = plug.par
 
     def deref():
