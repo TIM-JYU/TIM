@@ -1022,7 +1022,7 @@ export class ViewCtrl implements IController {
                 tasks: Array.from(formAnswerBrowsers.keys()).map((task) =>
                     task.toString()
                 ),
-                user: user.id,
+                user_id: user.id,
             })
         );
         if (!r.ok) {

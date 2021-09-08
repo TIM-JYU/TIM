@@ -345,42 +345,20 @@ export class TimMessageSendComponent {
         }
         this.messageMsg = ""; // JSON.stringify(response);
         const url = `/multiSendEmail/${this.docId}`;
-        let response;
-        // if reply all is chosen
-        if (this.replyAll) {
-            response = await to2(
-                this.http
-                    .post<string[]>(url, {
-                        rcpt: this.recipientList.replace(/\n/g, ";"),
-                        subject: this.messageSubject,
-                        msg: this.messageBody,
-                        bccme: this.emailbccme,
-                    })
-                    .toPromise()
-            );
-            if (!response.ok) {
-                this.messageMsg = response.result.error.error;
-            } else {
-                this.resetForm();
-            }
+        const response = await to2(
+            this.http
+                .post<string[]>(url, {
+                    rcpt: this.recipientList.replace(/\n/g, ";"),
+                    subject: this.messageSubject,
+                    msg: this.messageBody,
+                    bccme: this.emailbccme,
+                    replyall: this.replyAll,
+                })
+                .toPromise()
+        );
+        if (!response.ok) {
+            this.messageMsg = response.result.error.error;
         } else {
-            // if only reply to sender is chosen
-            const recipients = this.recipientList.split(/\n/g);
-            for (const recipient of recipients) {
-                response = await to2(
-                    this.http
-                        .post<string[]>(url, {
-                            rcpt: recipient,
-                            subject: this.messageSubject,
-                            msg: this.messageBody,
-                            bccme: this.emailbccme,
-                        })
-                        .toPromise()
-                );
-                if (!response.ok) {
-                    this.messageMsg = response.result.error.error;
-                }
-            }
             this.resetForm();
         }
     }
