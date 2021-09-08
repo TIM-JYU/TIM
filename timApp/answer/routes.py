@@ -188,8 +188,7 @@ def points_to_float(points: Union[str, float]):
     return float(points)
 
 
-@answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<int:answer_id>")
-def get_iframehtml_answer(plugintype: str, task_id_ext: str, user_id: int, answer_id: Optional[int] = None):
+def get_iframehtml_answer_impl(plugintype: str, task_id_ext: str, user_id: int, answer_id: Optional[int] = None):
     """
     Gets the HTML to be used in iframe.
 
@@ -266,9 +265,14 @@ def call_plugin_answer_and_parse(answer_call_data, plugintype):
     return jsonresp
 
 
+@answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>/<int:answer_id>")
+def get_iframehtml_answer(plugintype: str, task_id_ext: str, user_id: int, answer_id: Optional[int] = None):
+    return get_iframehtml_answer_impl(plugintype, task_id_ext, user_id, answer_id)
+
+
 @answers.get("/iframehtml/<plugintype>/<task_id_ext>/<int:user_id>")
 def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int) -> Response:
-    return get_iframehtml_answer(plugintype, task_id_ext, user_id)
+    return get_iframehtml_answer_impl(plugintype, task_id_ext, user_id)
 
 
 def get_useranswers_for_task(user: User, task_ids: List[TaskId], answer_map):
