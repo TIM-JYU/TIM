@@ -441,11 +441,16 @@ def multisendemail(doc_id: int, bccme: bool = False, replyall: bool = False):
     return ok_response()
 
 
+# TODO: Fix plugins to generally send only specific answer type
+# TODO: Write tests to ensure plugins send correct data type
+InputAnswer = Union[AnswerData, List[Any], int, float, str]
+
+
 # noinspection PyShadowingBuiltins
 @answers.put("/<plugintype>/<task_id_ext>/answer")
 def post_answer(plugintype: str,
                 task_id_ext: str,
-                input: Union[AnswerData, List[Any]],
+                input: InputAnswer,
                 abData: Dict[str, Any] = field(default_factory=dict),
                 options: Dict[str, Any] = field(default_factory=dict)
                 ):
@@ -551,7 +556,7 @@ def get_postanswer_plugin_etc(
 
 def post_answer_impl(
         task_id_ext: str,
-        answerdata: Union[AnswerData, List[Any]],
+        answerdata: InputAnswer,
         answer_browser_data,
         answer_options,
         curr_user: User,
