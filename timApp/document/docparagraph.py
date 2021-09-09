@@ -859,15 +859,6 @@ class DocParagraph:
         """Returns the filesystem path for this paragraph."""
         return self._get_path(self.doc, self.__data['id'], self.__data['t'])
 
-    def __read(self) -> bool:
-        if not os.path.isfile(self.get_path()):
-            return False
-        with open(self.get_path(), 'r') as f:
-            self.__data = json.loads(f.read())
-            self._cache_props()
-            self.final_dict = None
-            return True
-
     def __write(self):
         file_name = self.get_path()
         does_exist = os.path.isfile(file_name)

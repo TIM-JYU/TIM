@@ -1176,16 +1176,16 @@ class DocParagraphIter:
             if line != '\n':
                 if len(line) > 14:
                     # Line contains both par_id and t
-                    par_id, t = line.replace('\n', '').split('/')
+                    par_id, t = line.rstrip('\n').split('/')
                     cached = self.doc.single_par_cache.get(par_id)
-                    if self.doc.single_par_cache.get(par_id):
+                    if cached:
                         return cached
                     fetched = DocParagraph.get(self.doc, par_id, t)
                     self.doc.single_par_cache[par_id] = fetched
                     return fetched
                 else:
                     # Line contains just par_id, use the latest t
-                    return DocParagraph.get_latest(self.doc, line.replace('\n', ''))
+                    return DocParagraph.get_latest(self.doc, line.rstrip('\n'))
 
     def close(self):
         if self.f:
