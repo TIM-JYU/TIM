@@ -447,13 +447,12 @@ InputAnswer = Union[AnswerData, List[Any], int, float, str]
 
 
 # noinspection PyShadowingBuiltins
-@answers.put("/<plugintype>/<task_id_ext>/answer")
-def post_answer(plugintype: str,
-                task_id_ext: str,
-                input: InputAnswer,
-                abData: Dict[str, Any] = field(default_factory=dict),
-                options: Dict[str, Any] = field(default_factory=dict)
-                ):
+def post_answer_route_impl(plugintype: str,
+                           task_id_ext: str,
+                           input: InputAnswer,
+                           abData: Dict[str, Any] = field(default_factory=dict),
+                           options: Dict[str, Any] = field(default_factory=dict)
+                           ):
     """Saves the answer submitted by user for a plugin in the database.
 
     :param plugintype: The type of the plugin, e.g. csPlugin.
@@ -476,6 +475,27 @@ def post_answer(plugintype: str,
             get_other_session_users_objs(),
             get_origin_from_request(),
         ).result)
+
+
+@answers.put("/<plugintype>/<task_id_ext>/answer")
+def post_answer(plugintype: str,
+                task_id_ext: str,
+                input: InputAnswer,
+                abData: Dict[str, Any] = field(default_factory=dict),
+                options: Dict[str, Any] = field(default_factory=dict)
+                ):
+    return post_answer_route_impl(plugintype, task_id_ext, input, abData, options)
+
+
+# TODO: Remove once verified that all users' clientside code was updated
+@answers.put("/<plugintype>/<task_id_ext>/answer/")
+def post_answer_alt(plugintype: str,
+                    task_id_ext: str,
+                    input: InputAnswer,
+                    abData: Dict[str, Any] = field(default_factory=dict),
+                    options: Dict[str, Any] = field(default_factory=dict)
+                    ):
+    return post_answer_route_impl(plugintype, task_id_ext, input, abData, options)
 
 
 @dataclass
