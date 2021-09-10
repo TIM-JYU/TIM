@@ -212,7 +212,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              "-w", "/home/agent", dockercontainer, "/cs/rcmd.sh", urndname + ".sh", str(no_x11), str(savestate)]
     # dargs = ["docker", "exec", "kana",
     #         "/cs/rcmd.sh", urndname + ".sh", str(no_x11), str(savestate)]
-    # print(" ".join(dargs))
+    print(" ".join(dargs))
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     errcode = 0
     errtxt = ""

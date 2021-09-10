@@ -576,30 +576,34 @@ class Jypeli(CS, Modifier):
 
 class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers but they are used as such
     ttype = "comtest"
-    nunit = None
 
     def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
         self.testdll = u"./{0:s}Test.dll".format(self.filename)
         self.hide_compile_out = True
 
+    @staticmethod
+    @functools.cache
+    def get_build_refs():
+        with open("/dotnet_tim/configs/nunit_test.build.deps", "r", encoding="utf-8") as f:
+            dep_paths = [os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip()) for dep_line in f.readlines()]
+            return " ".join([f"-r:{p}" for p in dep_paths])
+
     def get_cmdline(self):
         testcs = "/tmp/%s/%sTest.cs" % (self.basename, self.filename)
-        if not CSComtest.nunit:
-            frms = os.listdir("/usr/lib/mono/gac/nunit.framework/")
-            CSComtest.nunit = "/usr/lib/mono/gac/nunit.framework/" + frms[0] + "/nunit.framework.dll"
-        jypeliref = ("/r:System.Numerics.dll /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
-                     "/r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll "
-                     "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll")
-        cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && %s /out:%s /target:library " +
-                   jypeliref +
-                   " /reference:%s %s %s /cs/dotnet/shims/TIMconsole.cs") % \
-                  (self.sourcefilename, self.compiler, self.testdll, CSComtest.nunit, self.sourcefilename, testcs)
+        cmdline = f"java -jar /cs/java/cs/ComTest.jar nunit {self.sourcefilename} && {self.compiler} -nologo -out:{self.testdll} -target:library {CSComtest.get_build_refs()} {Jypeli.get_build_refs()} {self.sourcefilename} {testcs} /cs/dotnet/shims/TIMconsole.cs"
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
         eri = -1
-        code, out, err, pwddir = self.runself(["nunit-console", "-nologo", "-nodots", self.testdll])
+        code, out, err, pwddir = self.runself([
+            "dotnet", "exec",
+            *CS.runtime_config(),
+            "--additional-deps",
+            "/dotnet_tim/configs/jypeli.deps.json:/dotnet_tim/configs/nunit_test.deps.json",
+            "--roll-forward", "LatestMajor",  # Force to use latest available .NET
+            "/dotnet_tools/nunit.console.dll",
+            self.testdll])
         # print(code, out, err)
         out = remove_before("Execution Runtime:", out)
         if code == -9:
