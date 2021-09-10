@@ -20,7 +20,7 @@ fi
 
 if [ $2 != "True" ]; then
   # For X server emulation
-  Xvfb $DISPLAY -screen 0 "$XVFB_WHD" -nolisten tcp &
+  Xvfb $DISPLAY -screen 0 "$XVFB_WHD" -nolisten tcp -nolisten unix &
 fi
 export GNUTERM=png
 cmd=$1
