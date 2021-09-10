@@ -121,7 +121,7 @@ services:
   environment:
    POSTGRES_PASSWORD: postgresql
  csplugin:
-  image: timimages/cs3${CSPLUGIN_TARGET:-}:focal
+  image: timimages/cs3${CSPLUGIN_TARGET:-}:dotnet
   build:
    context: ./timApp/modules/cs
    target: ${CSPLUGIN_TARGET:-complete}
@@ -170,7 +170,7 @@ services:
   tmpfs:
     - /tmp
  imagex:
-  image: timimages/cs3${CSPLUGIN_TARGET:-}:focal
+  image: timimages/cs3${CSPLUGIN_TARGET:-}:dotnet
   volumes:
    - ./timApp/modules/imagex:/app/imagex:ro
    - ./tim_common:/app/tim_common:ro

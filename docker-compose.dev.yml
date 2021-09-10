@@ -34,7 +34,7 @@ services:
    POSTGRES_PASSWORD: postgresql
  imagex:
   << : *common-root
-  image: timimages/cs3sudo:focal
+  image: timimages/cs3sudo:dotnet
   command: ${IMAGEX_DEV_COMMAND:-/usr/sbin/sshd -D}
   ports:
    - "49995:22"

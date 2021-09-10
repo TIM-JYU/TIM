@@ -7,7 +7,7 @@ from subprocess import PIPE, Popen
 
 from tim_common.fileParams import *
 
-CS3_TAG = 'focal'
+CS3_TAG = 'dotnet'
 CS3_TARGET = os.environ.get('CSPLUGIN_TARGET', '')
 
 def wait_file(f1):
