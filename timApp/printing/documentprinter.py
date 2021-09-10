@@ -233,7 +233,7 @@ class DocumentPrinter:
                                                                                                           par_infos):
             md = p.get_final_dict(view_ctx)['md']
             if not p.is_plugin() and not p.is_question():
-                if not p.no_macros() and not self.texplain and not self.textplain:
+                if not p.get_nomacros() and not self.texplain and not self.textplain:
                     md = expand_macros(
                         text=md,
                         macros=pdoc_macros,
