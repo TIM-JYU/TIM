@@ -1,3 +1,4 @@
+import functools
 from base64 import b64encode
 from io import BytesIO
 from os.path import splitext
@@ -426,16 +427,24 @@ class All(Language):
     ttype = "all"
 
 
+GLOBAL_NUGET_PACKAGES_PATH = "/nuget/global_packages"
+
+
 class CS(Language):
     ttype = ["cs", "c#", "csharp"]
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.compiler = "csc"
+        self.compiler = "/dotnet_tim/csc"
         self.fileext = "cs"
         self.filedext = ".cs"
         self.sourcefilename = "/tmp/%s/%s.cs" % (self.basename, self.filename)
         self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
+
+    @staticmethod
+    @functools.cache
+    def runtime_config():
+        return ["--runtimeconfig", "/dotnet_tim/configs/runtimeconfig.json"]
 
     def get_sourcefiles(self, main=None):
         sourcefiles = self.markup.get("sourcefiles", None)
@@ -455,15 +464,13 @@ class CS(Language):
     def get_cmdline(self):
         options = ""
         if self.just_compile:
-            options = "/target:library"
-        cmdline = "%s /nologo /r:System.Numerics.dll /out:%s %s %s /cs/jypeli/TIMconsole.cs" % (
+            options = "-target:library"
+        cmdline = "%s -nologo -out:%s %s %s /cs/dotnet/shims/TIMconsole.cs" % (
             self.compiler, self.exename, options, self.get_sourcefiles())
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
-        # result["tim_info"]["valid"] = False  # kokeilu että valit toimii
-        # result["tim_info"]["validMsg"] = "Et voi enää saada pisteitä kun katsoit vastauksen"
-        code, out, err, pwddir = self.runself(["mono", "-O=all", self.pure_exename])
+        code, out, err, pwddir = self.runself(["dotnet", "exec", *CS.runtime_config(), self.pure_exename])
         if err.find("Unhandled Exception:") >= 0:
             if err.find("StackOverflowException") >= 0:
                 err = err[0:300]
@@ -493,46 +500,54 @@ class Jypeli(CS, Modifier):
 
     def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
-        self.imgsource = "/tmp/%s/output.bmp" % self.basename
-        self.pure_bmpname = "./%s.bmp" % self.filename
+        self.imgsource = "/tmp/%s/Output/0.bmp" % self.basename
         self.imgdest = "/csgenerated/%s.png" % self.rndname
         self.pure_exename = u"{0:s}.exe".format(self.filename)
         self.pure_mgdest = u"{0:s}.png".format(self.rndname)
 
+    @staticmethod
+    @functools.cache
+    def get_build_refs():
+        with open("/dotnet_tim/configs/jypeli.build.deps", "r", encoding="utf-8") as f:
+            dep_paths = [os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip()) for dep_line in f.readlines()]
+            return " ".join([f"-r:{p}" for p in dep_paths])
+
+    @staticmethod
+    @functools.cache
+    def get_run_args():
+        return ["--depsfile", "/dotnet_tim/configs/jypeli.deps.json"]
+
     def get_cmdline(self):
-        mainfile = "/cs/jypeli/Ohjelma.cs"
+        mainfile = ""
         options = ""
         if self.just_compile:
-            options = "/target:library"
+            options = "-target:library"
         sourcecode = self.sourcefiles[0].content
-        if sourcecode.find(" Main(") >= 0 or self.just_compile:
-            mainfile = ""
-        else:
+        if sourcecode.find(" Main(") < 0 and not self.just_compile:
             classname = self.markup.get("classname", None)
             if not classname:
                 classname = find_cs_class(sourcecode)
-            if classname != "Peli":
-                maincode = codecs.open(mainfile, 'r', "utf-8").read()
-                maincode = re.sub("Peli", classname, maincode, flags=re.M)
-                mainfile = "/tmp/%s/%s.cs" % (self.basename, "Ohjelma")
-                codecs.open(mainfile, "w", "utf-8").write(maincode)
+                mainfile = "/tmp/%s/%s.cs" % (self.basename, "MainProgram")
+                codecs.open(mainfile, "w", "utf-8").write(f"using var game = new {classname}();game.Run();")
 
-        # cmdline = "%s /out:%s /r:/cs/jypeli/Jypeli.dll
-        # /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll
-        # /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll
-        # /cs/jypeli/Ohjelma.cs %s" % (
-        cmdline = ("%s /nologo /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
-                   "/r:/cs/jypeli/Jypeli.Physics2d.dll  "
-                   "/r:System.Numerics.dll /r:System.Drawing.dll %s %s") % (
-                      self.compiler, self.exename, options, self.get_sourcefiles(mainfile))
-        # /r:/cs/jypeli/Tao.Sdl.dll  /r:/cs/jypeli/OpenTK.dll
+        cmdline = f"{self.compiler} -nologo -out:{self.exename} {Jypeli.get_build_refs()} {options} {self.get_sourcefiles(mainfile)}"
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["mono", self.pure_exename],
+        code, out, err, pwddir = self.runself(["dotnet",
+                                               "exec",
+                                               *CS.runtime_config(),
+                                               *Jypeli.get_run_args(),
+                                               self.pure_exename,
+                                               "--headless", "true",
+                                               "--save", "true",
+                                               "--framesToRun", "2",  # First frame not saved
+                                               "--skipFrames", "0"],
                                               ulimit=df(self.ulimit, "ulimit -f 80000"))
         if err.find("Compile") >= 0:
             return code, out, err, pwddir
+
+        # TODO: These might not be needed anymore with Jypeli headless mode
         err = re.sub("^ALSA.*\n", "", err, flags=re.M)
         err = re.sub("^W: \\[pulse.*\n", "", err, flags=re.M)
         err = re.sub("^AL lib:.*\n", "", err, flags=re.M)
@@ -578,7 +593,7 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
                      "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll")
         cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && %s /out:%s /target:library " +
                    jypeliref +
-                   " /reference:%s %s %s /cs/jypeli/TIMconsole.cs") % \
+                   " /reference:%s %s %s /cs/dotnet/shims/TIMconsole.cs") % \
                   (self.sourcefilename, self.compiler, self.testdll, CSComtest.nunit, self.sourcefilename, testcs)
         return cmdline
 

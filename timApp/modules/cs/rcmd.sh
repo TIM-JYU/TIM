@@ -6,7 +6,6 @@ export CLASSPATH=.:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtes
 export MONO_PATH=/cs/jypeli
 export PATH="/cs/jypeli:$PATH"
 
-
 printf "\n" >~/run/time.txt
 if [ -e run/compile.sh ]
     then
@@ -21,8 +20,7 @@ fi
 
 if [ $2 != "True" ]; then
   # For X server emulation
-  Xvfb :1 -screen 0 1280x1024x24 2>/dev/null &
-  export DISPLAY=:1 
+  Xvfb $DISPLAY -screen 0 "$XVFB_WHD" -nolisten tcp &
 fi
 export GNUTERM=png
 cmd=$1

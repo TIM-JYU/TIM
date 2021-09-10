@@ -4,7 +4,6 @@ import time
 import uuid
 from pathlib import PurePath, PureWindowsPath
 from subprocess import PIPE, Popen
-from typing import List
 
 from tim_common.fileParams import *
 
@@ -88,7 +87,7 @@ def get_user_mappings(root_dir, mounts):
     user_mappings = []
     # TODO: add mapping command to this list
     know_user_mappings = {
-        "ohj1Content" : ["-v", f"{root_dir.as_posix()}/timApp/static/ohj1/Content:/home/agent/Content:ro"]
+        "ohj1Content": ["-v", f"{root_dir.as_posix()}/timApp/static/ohj1/Content:/home/agent/Content:ro"],
     }
     for mnt_name in mounts:
         mapping = know_user_mappings.get(mnt_name)
@@ -202,7 +201,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
         root_dir = PurePath('/') / drive_letter / root_dir.relative_to(root_dir.anchor)
 
     path_mappings = [["-v", f"{root_dir.as_posix()}/timApp/modules/cs/{p}:/cs/{p}:ro"] for p in
-                     ["rcmd.sh", "cpp", "java", "jypeli", "doxygen", "mathcheck", "fs", "data", "simcir", "MIRToolbox"]]
+                     ["rcmd.sh", "cpp", "java", "dotnet", "doxygen", "mathcheck", "fs", "data", "simcir", "MIRToolbox"]]
 
     user_mappings = get_user_mappings(root_dir, mounts)
 
@@ -213,7 +212,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
              "-w", "/home/agent", dockercontainer, "/cs/rcmd.sh", urndname + ".sh", str(no_x11), str(savestate)]
     # dargs = ["docker", "exec", "kana",
     #         "/cs/rcmd.sh", urndname + ".sh", str(no_x11), str(savestate)]
-    # print(dargs)
+    # print(" ".join(dargs))
     p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
     errcode = 0
     errtxt = ""

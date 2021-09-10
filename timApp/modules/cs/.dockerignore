@@ -1,2 +1,4 @@
 # We don't have to send any context when building the image because the image does not use any local files.
 *
+!dotnet
+dotnet/shims
