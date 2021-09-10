@@ -590,8 +590,10 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
             return " ".join([f"-r:{p}" for p in dep_paths])
 
     def get_cmdline(self):
-        testcs = "/tmp/%s/%sTest.cs" % (self.basename, self.filename)
-        cmdline = f"java -jar /cs/java/cs/ComTest.jar nunit {self.sourcefilename} && {self.compiler} -nologo -out:{self.testdll} -target:library {CSComtest.get_build_refs()} {Jypeli.get_build_refs()} {self.sourcefilename} {testcs} /cs/dotnet/shims/TIMconsole.cs"
+        testcs = f"/tmp/{self.basename}/{self.filename}Test.cs"
+        cmdline = (f"java -jar /cs/java/cs/ComTest.jar nunit {self.sourcefilename} && "
+                   f"{self.compiler} -nologo -out:{self.testdll} -target:library {CSComtest.get_build_refs()} "
+                   f"{Jypeli.get_build_refs()} {self.sourcefilename} {testcs} /cs/dotnet/shims/TIMconsole.cs")
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
@@ -603,9 +605,12 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
             "/dotnet_tim/configs/jypeli.deps.json:/dotnet_tim/configs/nunit_test.deps.json",
             "--roll-forward", "LatestMajor",  # Force to use latest available .NET
             "/dotnet_tools/nunit.console.dll",
+            "--noheader",
+            "--nocolor",
+            "--noresult",  # TODO: Maybe parse resulting XML file to provide better error messages
             self.testdll])
         # print(code, out, err)
-        out = remove_before("Execution Runtime:", out)
+        out = remove_before("Test Files", out)
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
             eri = 0
@@ -616,9 +621,9 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
         out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
         out = out.strip(' \t\n\r')
         if eri < 0:
-            eri = out.find("Test Failure")
+            eri = out.find("Failed : ")
         if eri < 0:
-            eri = out.find("Test Error")
+            eri = out.find("Error : ")
         if is_compile_error(out, err):
             return code, out, err, pwddir
         if out.find("Unhandled exceptions:") >= 0:
