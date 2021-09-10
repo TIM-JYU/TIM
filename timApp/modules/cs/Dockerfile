@@ -57,6 +57,17 @@ valgrind \
 xvfb \
 && ${APT_CLEANUP}"
 
+# We use Mesa drivers by default for GUI rendering
+# For this, we specifically force software rendering mode and use the fast "llvmpipe" driver
+# Note that llvmpipe is not "pixel stable", i.e. images can vary very slightly between runs
+# Pixel-perfect mode can be achieved with "softpipe" driver
+# Additionaly, we disable shader cache because of read-only permissions in this container
+ENV XVFB_WHD="1280x1024x24"\
+    DISPLAY=":99" \
+    LIBGL_ALWAYS_SOFTWARE="1" \
+    GALLIUM_DRIVER="llvmpipe" \
+    MESA_GLSL_CACHE_DISABLE="true"
+
 # Docker client binary
 ENV DOCKER_VERSION 20.10.3
 RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${DOCKER_VERSION}.tgz && \
@@ -100,6 +111,33 @@ RUN wget https://download2.gluonhq.com/openjfx/${OPENJFX_VERSION}/openjfx-${OPEN
     unzip openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip && \
     rm openjfx-${OPENJFX_VERSION}_linux-x64_bin-sdk.zip
 
+# dotnet
+# Based on https://github.com/dotnet/dotnet-docker/blob/main/documentation/scenarios/installing-dotnet.md#installing-from-dotnet-install-script
+ENV \
+    # Do not generate certificate
+    DOTNET_GENERATE_ASPNET_CERTIFICATE=false \
+    # Version channel from which to install dotnet
+    DOTNET_VERSION_CHANNEL=5.0 \
+    # Enable correct mode for dotnet watch (only mode supported in a container)
+    DOTNET_USE_POLLING_FILE_WATCHER=true \
+    # Skip extraction of XML docs - generally not useful within an image/container - helps performance
+    NUGET_XMLDOC_MODE=skip
+
+RUN bash -c "${APT_INSTALL} \
+    libc6 \
+    libgcc1 \
+    libgssapi-krb5-2 \
+    libicu66 \
+    libssl1.1 \
+    libstdc++6 \
+    zlib1g \
+&& ${APT_CLEANUP}"
+
+# Install .NET SDK and check that it works
+RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel $DOTNET_VERSION_CHANNEL --install-dir /usr/share/dotnet \
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet
+
+# Set active Python version to 3.9
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 20
 
 RUN useradd -m agent
@@ -107,8 +145,10 @@ ENV HOME /home/agent
 RUN mkdir -p /service
 RUN chown -R agent /service
 
-# Kokeile seuraavaa, saisiko sillä pois matplotlib:in cache varoituksen
-# RUN python -c "import matplotlib.pyplot"
+# Add .local cache and NuGet package store as volumes to allow dotnet commands to restore NuGet packages
+VOLUME /home/agent/.local
+VOLUME /home/agent/.nuget/packages
+# Add a special global package cache that will contain packages used for building directly with `csc`
 
 # RUN groupadd docker
 #RUN gpasswd -a agent docker
@@ -131,6 +171,15 @@ ENV MYPASSWORD password
 
 # Run the container as agent by default.
 USER agent
+
+# Trigger first-time scripts and folder creation
+RUN dotnet help && \
+    # Generate dotnet config folder
+    dotnet new --list && \
+    # Generate default NuGet config
+    dotnet nuget list source && \
+    # Clean up NuGet locks
+    rm -rf /tmp/NuGetScratch
 
 EXPOSE 5000
 
@@ -257,32 +306,9 @@ RUN (curl -sL https://deb.nodesource.com/setup_14.x | bash -) && bash -c "${APT_
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
-# dotnet
-# Based on https://github.com/dotnet/dotnet-docker/blob/main/documentation/scenarios/installing-dotnet.md#installing-from-dotnet-install-script
-ENV \
-    # Do not generate certificate
-    DOTNET_GENERATE_ASPNET_CERTIFICATE=false \
-    # Version channel from which to install dotnet
-    DOTNET_VERSION_CHANNEL=5.0 \
-    # Enable correct mode for dotnet watch (only mode supported in a container)
-    DOTNET_USE_POLLING_FILE_WATCHER=true \
-    # Skip extraction of XML docs - generally not useful within an image/container - helps performance
-    NUGET_XMLDOC_MODE=skip
-
-RUN bash -c "${APT_INSTALL} \
-    libc6 \
-    libgcc1 \
-    libgssapi-krb5-2 \
-    libicu66 \
-    libssl1.1 \
-    libstdc++6 \
-    zlib1g \
-&& ${APT_CLEANUP}"
-
-# Install .NET SDK and check that it works
-RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel $DOTNET_VERSION_CHANNEL --install-dir /usr/share/dotnet \
-    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
-    && dotnet help
+RUN mkdir -p /nuget/global_packages
+COPY ./dotnet/ /dotnet_tim/
+RUN cd /dotnet_tim && ./gen_deps.py && rm -rf /dotnet_tim/deps
 
 USER agent
 
