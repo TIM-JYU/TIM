@@ -310,6 +310,15 @@ RUN mkdir -p /nuget/global_packages
 COPY ./dotnet/ /dotnet_tim/
 RUN cd /dotnet_tim && ./gen_deps.py && rm -rf /dotnet_tim/deps
 
+# Install NUnit runner for .NET 5
+RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore --version 3.12.0-beta2 && \
+    # At this moment NUnity runner actually targets .NET Core 3.1 which causes dotnet to not execute it
+    # See https://github.com/nunit/nunit-console/issues/858
+    # This fixed script executes the runner directly with version rollower enabled
+    echo "#!/bin/bash\ndotnet exec --roll-forward LatestMajor /dotnet_tools/.store/nunit.consolerunner.netcore/3.12.0-beta2/nunit.consolerunner.netcore/3.12.0-beta2/tools/netcoreapp3.1/any/nunit3-console.dll \"\$@\"" > /dotnet_tools/nunit_dotnet && \
+    chmod a+x /dotnet_tools/nunit_dotnet
+
+
 USER agent
 
 FROM complete as sudo
