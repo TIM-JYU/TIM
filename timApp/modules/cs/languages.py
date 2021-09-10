@@ -435,7 +435,8 @@ class CS(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.compiler = "/dotnet_tim/csc"
+        # Use command from mounted folder instead of /dotnet_tim as the folder is not available in CI
+        self.compiler = "/cs/dotnet/csc"
         self.fileext = "cs"
         self.filedext = ".cs"
         self.sourcefilename = "/tmp/%s/%s.cs" % (self.basename, self.filename)
@@ -444,7 +445,7 @@ class CS(Language):
     @staticmethod
     @functools.cache
     def runtime_config():
-        return ["--runtimeconfig", "/dotnet_tim/configs/runtimeconfig.json"]
+        return ["--runtimeconfig", "/cs/dotnet/configs/runtimeconfig.json"]
 
     def get_sourcefiles(self, main=None):
         sourcefiles = self.markup.get("sourcefiles", None)
