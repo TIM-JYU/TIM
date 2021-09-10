@@ -556,7 +556,6 @@ def get_postanswer_plugin_etc(
             ask_new = answernr == answerinfo.count
             allow_save = ask_new
         context_user = UserContext(ctx_user or curr_user, curr_user)
-        found_plugin.par.answernr = answernr_to_user
 
     try:
         vr = verify_task_access(
