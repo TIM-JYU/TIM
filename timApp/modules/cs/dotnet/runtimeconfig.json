@@ -10,7 +10,7 @@
     },
     "additionalProbingPaths": [
       "/home/agent/.dotnet/store/|arch|/|tfm|",
-      "/nuget/global_packages",
+      "/cs/dotnet/nuget_cache",
       "/home/agent/.nuget/packages"
     ]
   }

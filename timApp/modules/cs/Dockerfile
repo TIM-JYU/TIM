@@ -306,10 +306,6 @@ RUN (curl -sL https://deb.nodesource.com/setup_14.x | bash -) && bash -c "${APT_
 RUN npm i npm@latest -g && bash -c "${APT_CLEANUP}"
 RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
-RUN mkdir -p /nuget/global_packages
-COPY ./dotnet/ /dotnet_tim/
-RUN cd /dotnet_tim && ./gen_deps.py && rm -rf /dotnet_tim/deps
-
 # Install NUnit runner for .NET 5
 RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore --version 3.12.0-beta2 && \
     # At this moment NUnity runner actually targets .NET Core 3.1 which causes dotnet to not execute it

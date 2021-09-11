@@ -80,7 +80,12 @@ def gen_deps(csproj_file: str, base_dir: str):
 
 
 def main():
-    print('Generating dependency lists')
+    if os.path.exists('configs'):
+        print('`configs` folder exists, skipping dotnet run generation')
+        return
+    print('Generating dependency lists for dotnet')
+    os.makedirs('configs', exist_ok=True)
+    os.makedirs('nuget_cache', exist_ok=True)
     for dirpath, dirnames, filenames in os.walk('deps'):
         for filename in filenames:
             name, ext = os.path.splitext(filename)

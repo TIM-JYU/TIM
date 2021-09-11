@@ -427,7 +427,7 @@ class All(Language):
     ttype = "all"
 
 
-GLOBAL_NUGET_PACKAGES_PATH = "/nuget/global_packages"
+GLOBAL_NUGET_PACKAGES_PATH = "/cs/dotnet/nuget_cache"
 
 
 class CS(Language):
@@ -435,7 +435,6 @@ class CS(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        # Use command from mounted folder instead of /dotnet_tim as the folder is not available in CI
         self.compiler = "/cs/dotnet/csc"
         self.fileext = "cs"
         self.filedext = ".cs"
@@ -445,7 +444,7 @@ class CS(Language):
     @staticmethod
     @functools.cache
     def runtime_config():
-        return ["--runtimeconfig", "/cs/dotnet/configs/runtimeconfig.json"]
+        return ["--runtimeconfig", "/cs/dotnet/runtimeconfig.json"]
 
     def get_sourcefiles(self, main=None):
         sourcefiles = self.markup.get("sourcefiles", None)
@@ -509,14 +508,14 @@ class Jypeli(CS, Modifier):
     @staticmethod
     @functools.cache
     def get_build_refs():
-        with open("/dotnet_tim/configs/jypeli.build.deps", "r", encoding="utf-8") as f:
+        with open("/cs/dotnet/configs/jypeli.build.deps", "r", encoding="utf-8") as f:
             dep_paths = [os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip()) for dep_line in f.readlines()]
             return " ".join([f"-r:{p}" for p in dep_paths])
 
     @staticmethod
     @functools.cache
     def get_run_args():
-        return ["--depsfile", "/dotnet_tim/configs/jypeli.deps.json"]
+        return ["--depsfile", "/cs/dotnet/configs/jypeli.deps.json"]
 
     def get_cmdline(self):
         mainfile = ""
@@ -586,7 +585,7 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
     @staticmethod
     @functools.cache
     def get_build_refs():
-        with open("/dotnet_tim/configs/nunit_test.build.deps", "r", encoding="utf-8") as f:
+        with open("/cs/dotnet/configs/nunit_test.build.deps", "r", encoding="utf-8") as f:
             dep_paths = [os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip()) for dep_line in f.readlines()]
             return " ".join([f"-r:{p}" for p in dep_paths])
 
@@ -603,7 +602,7 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
             "dotnet", "exec",
             *CS.runtime_config(),
             "--additional-deps",
-            "/dotnet_tim/configs/jypeli.deps.json:/dotnet_tim/configs/nunit_test.deps.json",
+            "/cs/dotnet/configs/jypeli.deps.json:/cs/dotnet/configs/nunit_test.deps.json",
             "--roll-forward", "LatestMajor",  # Force to use latest available .NET
             "/dotnet_tools/nunit.console.dll",
             "--noheader",

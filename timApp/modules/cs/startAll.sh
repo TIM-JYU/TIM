@@ -10,7 +10,6 @@ Xvfb $DISPLAY -screen 0 "$XVFB_WHD" -nolisten tcp -nolisten unix &
 
 cd /cs
 export CLASSPATH=".:/cs/java/*"
-export MONO_PATH=/cs/jypeli
 
 # Run the server.
 python3 -O /cs/cs.py
