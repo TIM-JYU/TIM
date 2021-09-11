@@ -76,7 +76,7 @@ services:
    - "49992:22"
  showfile:
   << : *common-agent
-  image: timimages/cs3sudo:focal
+  image: timimages/cs3sudo:dotnet
   build:
    context: ./timApp/modules/cs
    target: sudo
