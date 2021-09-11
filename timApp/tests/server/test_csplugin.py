@@ -75,5 +75,4 @@ public class Run {
     }
 }"""},
         )
-        # TODO: Remove error message after CI is debugged
-        self.assertEqual('Hello world\n', r, str(r))
+        self.assertEqual('Hello world\n', r['web']['console'])
