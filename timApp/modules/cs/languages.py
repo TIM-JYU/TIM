@@ -611,15 +611,13 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
             "--noresult",  # TODO: Maybe parse resulting XML file to provide better error messages
             self.testdll])
         # print(code, out, err)
-        out = remove_before("Test Files", out)
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
             eri = 0
-        # out = out[1:]  # alussa oleva . pois
-        # out = re.sub("at .*", "", out, flags=re.M)
-        # out = re.sub("\n\n+", "", out, flags=re.M)
-        out = re.sub("^at .*\n", "", out, flags=re.M)
-        out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
+        out = remove_before("Test.dll", out)
+        out = re.sub("\nErrors, Failures and Warnings\n\n", "", out, flags=re.M)
+        out = re.sub("Run Settings(.|\n)*Test Count:", "TestCount:", out, flags=re.M)
+        out = re.sub("Failed Tests(.|\n)*", "", out, flags=re.M)
         out = out.strip(' \t\n\r')
         if eri < 0:
             eri = out.find("Failed : ")
@@ -638,16 +636,19 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
         if eri >= 0:
             web["testGreen"] = False
             web["testRed"] = True
-            lni = out.find(", line ")
-            if lni >= 0:  # and not nocode:
+            web["comtestError"] = ""
+            lines = sourcelines.split("\n")
+            lf = ""
+            lni = out.find(", line ", 0)
+            # copy failed comtest lines from source
+            # In out there is text like: "in method Keskiarvo, line 24"
+            while lni >= 0:  # and not nocode:
                 lns = out[lni + 7:]
                 lns = lns[0:lns.find("\n")]
                 lnro = int(lns)
-                # lines = codecs.open(sourcefilename, "r", "utf-8").readlines()
-                lines = sourcelines.split("\n")
-                # print("Line nr: "+str(lnro))
-                # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
-                web["comtestError"] = str(lnro) + " " + lines[lnro - 1]
+                web["comtestError"] += lf + str(lnro) + " " + lines[lnro - 1]
+                lni = out.find(", line ", lni + 1)
+                lf = "\n"
         else:
             give_points(points_rule, "test")
             self.run_points_given = True
