@@ -97,7 +97,6 @@ def main():
         return
     remove('configs')
     remove('nuget_cache')
-    remove('refresh')
     print('Generating dependency lists for dotnet')
     os.makedirs('configs', exist_ok=True)
     os.makedirs('nuget_cache', exist_ok=True)
@@ -106,6 +105,7 @@ def main():
             name, ext = os.path.splitext(filename)
             if ext == '.csproj':
                 gen_deps(filename, dirpath)
+    remove('refresh')
 
 
 if __name__ == '__main__':
