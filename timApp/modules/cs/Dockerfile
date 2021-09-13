@@ -62,7 +62,7 @@ x11-utils \
 # For this, we specifically force software rendering mode and use the fast "llvmpipe" driver
 # Note that llvmpipe is not "pixel stable", i.e. images can vary very slightly between runs
 # Pixel-perfect mode can be achieved with "softpipe" driver
-# Additionaly, we disable shader cache because of read-only permissions in this container
+# Additionally, we disable shader cache because of read-only permissions in this container
 ENV XVFB_WHD="1280x1024x24"\
     DISPLAY=":99" \
     LIBGL_ALWAYS_SOFTWARE="1" \
