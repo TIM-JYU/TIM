@@ -55,6 +55,7 @@ sbcl \
 sqlite3 \
 valgrind \
 xvfb \
+x11-utils \
 && ${APT_CLEANUP}"
 
 # We use Mesa drivers by default for GUI rendering
