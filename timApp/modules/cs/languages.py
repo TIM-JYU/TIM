@@ -614,9 +614,10 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
             out = "Runtime exceeded, maybe loop forever\n" + out
             eri = 0
         out = remove_before("Test.dll", out)
-        out = re.sub("\nErrors, Failures and Warnings\n\n", "", out, flags=re.M)
-        out = re.sub("Run Settings(.|\n)*Test Count:", "TestCount:", out, flags=re.M)
-        out = re.sub("Failed Tests(.|\n)*", "", out, flags=re.M)
+        out = re.sub(r"\nErrors, Failures and Warnings\n\n", "", out, flags=re.M)
+        out = re.sub(r"Run Settings(.|\n)*Test Count:", "Test Count:", out, flags=re.M)
+        out = re.sub(r"\s*Start time(.|\s)*Duration:.*$", "", out, flags=re.M)
+        out = re.sub(r"Failed Tests(.|\n)*", "", out, flags=re.M)
         out = out.strip(' \t\n\r')
         if eri < 0:
             eri = out.find("Failed : ")
