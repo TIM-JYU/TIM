@@ -4,7 +4,7 @@ import {isRight} from "fp-ts/Either";
 import {HttpClient} from "@angular/common/http";
 import {documentglobals} from "tim/util/globals";
 import {nullable, withDefault} from "../../plugin/attributes";
-import {DateFromString, to2} from "../../util/utils";
+import {MomentFromString, to2} from "../../util/utils";
 
 const Address = t.type({
     name: withDefault(nullable(t.string), ""),
@@ -14,7 +14,7 @@ const Address = t.type({
 const ArchivedMessageData = t.type({
     sender: Address,
     recipients: t.array(Address),
-    date: DateFromString,
+    date: MomentFromString,
 });
 
 export type MessageData = t.TypeOf<typeof ArchivedMessageData>;
