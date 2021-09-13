@@ -18,8 +18,7 @@ fi
 
 if [ $2 != "True" ]; then
   # For X server emulation
-  Xvfb $DISPLAY -screen 0 "$XVFB_WHD" -nolisten tcp -nolisten unix &
-  while ! xdpyinfo -display "${DISPLAY}" > /dev/null 2>&1; do sleep 0.1; done
+  Xvfb $DISPLAY -ac -screen 0 "$XVFB_WHD" -nolisten tcp +extension GLX +render -noreset -nolisten unix 1>&2 &
 fi
 export GNUTERM=png
 cmd=$1
