@@ -965,3 +965,14 @@ export const DateFromString = new t.Type<Date, string, unknown>(
         }),
     (a) => a.toISOString()
 );
+
+export const MomentFromString = new t.Type<moment.Moment, string, unknown>(
+    "DateFromString",
+    (u): u is moment.Moment => moment.isMoment(u),
+    (u, c) =>
+        either.chain(t.string.validate(u, c), (s) => {
+            const d = moment.utc(s);
+            return d.isValid() ? t.success(d) : t.failure(u, c);
+        }),
+    (a) => a.toISOString()
+);

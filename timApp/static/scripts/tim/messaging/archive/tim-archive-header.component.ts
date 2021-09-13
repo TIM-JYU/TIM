@@ -1,5 +1,4 @@
 import {Component, Input, OnInit, ViewEncapsulation} from "@angular/core";
-import moment from "moment";
 import {getViewName} from "tim/util/utils";
 import {
     ArchivedMessageStateService,
@@ -67,9 +66,9 @@ export class TimArchiveHeaderComponent implements OnInit {
         }
         this.subject = this.state.messageSubject;
         this.messageData = this.state.messageData!;
-        this.messageDate = moment(this.messageData.date).format(
-            "dddd, MMMM Do YYYY, h:mm:ss a"
-        );
+        this.messageDate = this.messageData.date
+            .local()
+            .format("dddd, MMMM Do YYYY, h:mm:ss a");
         this.siblings = await this.state.getRelatedMessages();
     }
 }
