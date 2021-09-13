@@ -327,7 +327,6 @@ RUN echo agent:kissa | chpasswd
 
 ENV LANG en_US.UTF-8
 ENV CLASSPATH .:/cs/java/junit.jar:/cs/java/hamcrest-core.jar:/cs/java/comtest.jar:/cs/java/Ali.jar:/cs/java/Graphics.jar:/cs/java/fxgui.jar:/cs/java/gui.jar
-ENV MONO_PATH /cs/jypeli
 
 EXPOSE 22
 # CMD service /opt/cs/startAllSudo.sh && /bin/bash -c "su agent"
