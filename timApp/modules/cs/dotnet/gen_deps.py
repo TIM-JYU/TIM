@@ -91,7 +91,7 @@ def remove(path):
 
 
 def main():
-    if should_run():
+    if not should_run():
         print('Skipping dotnet run generation, all necessary folders exist. If you want to regenerate, create file '
               'named `refresh`')
         return
