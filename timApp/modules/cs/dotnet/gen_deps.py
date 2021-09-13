@@ -79,10 +79,25 @@ def gen_deps(csproj_file: str, base_dir: str):
         f.writelines([f'{b}\n' for b in build_deps])
 
 
+def should_run():
+    return not os.path.exists('configs') or not os.path.exists('nuget_cache') or os.path.exists('refresh')
+
+
+def remove(path):
+    if os.path.isfile(path) or os.path.islink(path):
+        os.remove(path)
+    elif os.path.isdir(path):
+        shutil.rmtree(path, ignore_errors=True)
+
+
 def main():
-    if os.path.exists('configs'):
-        print('`configs` folder exists, skipping dotnet run generation')
+    if should_run():
+        print('Skipping dotnet run generation, all necessary folders exist. If you want to regenerate, create file '
+              'named `refresh`')
         return
+    remove('configs')
+    remove('nuget_cache')
+    remove('refresh')
     print('Generating dependency lists for dotnet')
     os.makedirs('configs', exist_ok=True)
     os.makedirs('nuget_cache', exist_ok=True)
