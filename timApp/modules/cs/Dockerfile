@@ -309,7 +309,7 @@ RUN npm i ts-node -g && bash -c "${APT_CLEANUP}"
 
 # Install NUnit runner for .NET 5
 RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore --version 3.12.0-beta2 && \
-    # At this moment NUnity runner actually targets .NET Core 3.1 which causes dotnet to not execute it
+    # At this moment NUnit runner actually targets .NET Core 3.1 which causes dotnet to not execute it
     # See https://github.com/nunit/nunit-console/issues/858
     # As such, we save the full path to NUnit console runner so we can invoke it directly via dotnet with rollforward param
     ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/3.12.0-beta2/nunit.consolerunner.netcore/3.12.0-beta2/tools/netcoreapp3.1/any/nunit3-console.dll /dotnet_tools/nunit.console.dll

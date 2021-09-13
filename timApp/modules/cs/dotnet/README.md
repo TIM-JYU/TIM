@@ -62,5 +62,3 @@ csplugin is set up so that you can install any NuGet packages you want. Note tha
 dramatically.
 
 NuGet packages are not cached in this approach to save space.
-
- 
