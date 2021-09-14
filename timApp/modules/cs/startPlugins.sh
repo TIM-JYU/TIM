@@ -37,9 +37,9 @@ chown agent:agent /cs/log.txt
 #  it's not possible to change socket permissions (it has no effect).
 chmod 766 /var/run/docker.sock
 
-# Copy Jypeli dll's
-cd /cs/jypeli
-curl https://kurssit.it.jyu.fi/npo/MonoJypeli/TIM/Jypeli.headless.tar.gz | tar -xz --overwrite --warning=none
+# Refresh dotnet dependency cache
+cd /cs/dotnet
+./gen_deps.py
 
 cd /cs/java
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar -O comtest.jar.tmp -nv && mv comtest.jar.tmp comtest.jar

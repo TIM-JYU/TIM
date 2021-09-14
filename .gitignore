@@ -24,6 +24,8 @@
 /timApp/auth/saml/prod/settings.json
 /timApp/auth/saml/prod/new/
 /timApp/messages.xlf
+# Outdated folder
+/timApp/modules/cs/jypeli/
 /timApp/modules/cs/data/
 /timApp/modules/cs/generated
 /timApp/modules/cs/java/cs/ComTest.jar

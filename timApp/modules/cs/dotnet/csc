@@ -1,0 +1,15 @@
+#!/bin/sh
+
+sdkver=$(LC_ALL=C dotnet --version)
+fwkver=$(LC_ALL=C dotnet --list-runtimes | \
+    LC_ALL=C sed --posix -n '/^Microsoft.NETCore.App \([^ ]*\) .*$/{s//\1/p;q;}')
+
+dotnethome=/usr/share/dotnet
+dotnetlib=$dotnethome/shared/Microsoft.NETCore.App/$fwkver
+dotnet_cscdll=$dotnethome/sdk/$sdkver/Roslyn/bincore/csc.dll
+dotnet_csclib='-r:netstandard.dll -r:Microsoft.CSharp.dll -r:System.dll'
+for x in "$dotnetlib"/System.*.dll; do
+	dotnet_csclib="$dotnet_csclib -r:${x##*/}"
+done
+
+exec dotnet "$dotnet_cscdll" "-lib:$dotnetlib" $dotnet_csclib "$@"
