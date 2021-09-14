@@ -9,6 +9,12 @@ class UserContact(db.Model):
 
     __tablename__ = "usercontact"
 
+    __table_args__ = (
+        # A user should not have the same contact for the channel
+        # Different users are fine though
+        db.UniqueConstraint("user_id", "contact", "channel", name="unique_user_contact_constraint"),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
 
     user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
@@ -19,10 +25,6 @@ class UserContact(db.Model):
 
     channel = db.Column(db.Enum(Channel), nullable=False)
     """Channel the contact information points to."""
-
-    primary = db.Column(db.Boolean, nullable=False)
-    """If a contact information is a fallback contact to be used is cases where a user has not configured other 
-    contact information for a specific channel or a message list. """
 
     verified = db.Column(db.Boolean, nullable=False)
     """The user has to verify they are in the possession of the contact information.
@@ -38,6 +40,5 @@ class UserContact(db.Model):
         return {
             "contact": self.contact,
             "channel": self.channel,
-            "primary": self.primary,
             "verified": self.verified
         }

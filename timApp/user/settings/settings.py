@@ -228,7 +228,7 @@ def add_contact_info(contact_info: str,
         if not is_valid_email(contact_info):
             raise RouteException("Email format is invalid")
 
-    uc = UserContact(user=user, contact=contact_info, channel=Channel.EMAIL, verified=False, primary=False)
+    uc = UserContact(user=user, contact=contact_info, channel=Channel.EMAIL, verified=False)
     db.session.add(uc)
 
     request_verification(ContactAddVerification(user=user, contact=uc), "settings/verify-templates/contact")

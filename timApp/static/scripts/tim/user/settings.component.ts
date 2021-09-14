@@ -23,7 +23,7 @@ import {
     settingsglobals,
 } from "../util/globals";
 import {IOkResponse, timeout, to2} from "../util/utils";
-import {IContactInfo, IFullUser} from "./IUser";
+import {IFullUser, IUserContact} from "./IUser";
 
 @Component({
     selector: "tim-save-button",
@@ -219,10 +219,11 @@ const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
                         <div class="contact-collection">
                             <div class="contact-info" *ngFor="let contact of entry[1]">
                                 <input type="text" class="form-control" [value]="contact.contact" disabled>
-                                <span *ngIf="contact.primary" class="primary-badge">Primary</span>
+                                <span *ngIf="primaryContacts[contact.channel] == contact.contact" class="primary-badge">Primary</span>
                                 <span *ngIf="contact.verified" class="verified-badge">Verified</span>
                                 <button *ngIf="!contact.verified" class="btn btn-default">Resend verification</button>
-                                <button class="btn btn-danger" type="button" [disabled]="contact.primary">
+                                <button class="btn btn-danger" type="button"
+                                        [disabled]="primaryContacts[contact.channel] == contact.contact">
                                     <i class="glyphicon glyphicon-trash"></i>
                                 </button>
                             </div>
@@ -266,8 +267,9 @@ export class SettingsComponent implements DoCheck {
     user: IFullUser;
     deletingAccount = false;
     deleteConfirmName = "";
-    contacts: IContactInfo[];
-    userContacts = new Map<Channel, IContactInfo[]>();
+    contacts: IUserContact[];
+    userContacts = new Map<Channel, IUserContact[]>();
+    primaryContacts: Partial<Record<Channel, string>> = {};
     channelNames = EDITABLE_CONTACT_CHANNELS;
     private readonly style: HTMLStyleElement;
     private readonly consent: ConsentType | undefined;
@@ -396,15 +398,34 @@ export class SettingsComponent implements DoCheck {
         return await showAddContactDialog();
     }
 
+    private getContactsFor(channel: Channel): IUserContact[] {
+        if (!EDITABLE_CONTACT_CHANNELS[channel]) {
+            return [];
+        }
+        if (!this.userContacts.has(channel)) {
+            this.userContacts.set(channel, []);
+        }
+        return this.userContacts.get(channel)!;
+    }
+
     private collectUserContacts() {
+        this.primaryContacts[Channel.EMAIL] = this.user.email ?? "";
+        this.getContactsFor(Channel.EMAIL).push({
+            channel: Channel.EMAIL,
+            contact: this.user.email ?? "",
+            verified: true,
+        });
         for (const contactInfo of this.contacts) {
             if (!EDITABLE_CONTACT_CHANNELS[contactInfo.channel]) {
                 continue;
             }
-            if (!this.userContacts.has(contactInfo.channel)) {
-                this.userContacts.set(contactInfo.channel, []);
-            }
-            this.userContacts.get(contactInfo.channel)!.push(contactInfo);
+            this.getContactsFor(contactInfo.channel).push(contactInfo);
+        }
+        for (const [ch, contacts] of this.userContacts.entries()) {
+            this.userContacts.set(
+                ch,
+                contacts.sort((a, b) => a.contact.localeCompare(b.contact))
+            );
         }
     }
 

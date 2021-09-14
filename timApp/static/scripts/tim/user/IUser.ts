@@ -21,11 +21,9 @@ export interface IUserListEntry {
     user: IUser;
 }
 
-// See ContactInfo Python class
-export interface IContactInfo {
+export interface IUserContact {
     channel: Channel;
     contact: string;
-    primary: boolean;
     verified: boolean;
 }
 

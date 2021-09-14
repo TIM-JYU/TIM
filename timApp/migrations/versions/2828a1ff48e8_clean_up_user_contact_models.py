@@ -24,7 +24,6 @@ def upgrade():
                     sa.Column('id', sa.Integer(), nullable=False),
                     sa.Column('user_id', sa.Integer(), nullable=False),
                     sa.Column('contact', sa.Text(), nullable=False),
-                    sa.Column('primary', sa.Boolean(), nullable=False),
                     sa.Column('verified', sa.Boolean(), nullable=False),
                     sa.ForeignKeyConstraint(['user_id'], ['useraccount.id'], ),
                     sa.PrimaryKeyConstraint('id')
