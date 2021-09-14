@@ -83,9 +83,10 @@ const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
                     <textarea rows="15" id="customCssArea" class="form-control"
                               [(ngModel)]="settings.custom_css"></textarea>
                 </div>
-                <tim-save-button [saved]="submit"></tim-save-button>
-                <button class="btn btn-default" (click)="addPrintSettings()">Add Print Settings</button>
-
+                <div class="button-panel">
+                    <tim-save-button [saved]="submit"></tim-save-button>
+                    <button class="btn btn-default" (click)="addPrintSettings()">Add Print Settings</button>
+                </div>
             </bootstrap-panel>
             <bootstrap-panel title="Editor">
                 <div class="checkbox">
@@ -195,42 +196,52 @@ const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
                     <input type="checkbox" name="auto_mark_all_read" [(ngModel)]="settings.auto_mark_all_read"
                            [disabled]="saving"> Automatically mark document as read when opening it for the first time
                 </label></div>
-                <span class="space-right"><tim-save-button [saved]="submit"></tim-save-button></span>
-                <button class="btn btn-default" (click)="clearLocalStorage()">Clear local settings storage</button>
-                <span *ngIf="storageClear">Local storage cleared.</span>
+                <div class="button-panel">
+                    <tim-save-button [saved]="submit"></tim-save-button>
+                    <button class="btn btn-default" (click)="clearLocalStorage()">Clear local settings storage</button>
+                    <span *ngIf="storageClear">Local storage cleared.</span>
+                </div>
             </bootstrap-panel>
             <bootstrap-panel title="Your account information">
-                <form class="account-info">
-                    <label for="account-name">Username</label>
-                    <div><input id="account-name" class="form-control" type="text" [value]="user.name" disabled></div>
-                    <label for="account-id">Account ID</label>
-                    <div><input id="account-id" class="form-control" type="text" [value]="user.id" disabled></div>
-                    <label for="account-real-name">Full name</label>
-                    <div><input id="account-real-name" class="form-control" type="text" [value]="user.real_name"
-                                disabled></div>
-                    <label for="account-email-primary">Primary email</label>
-                    <div>
-                        <select id="account-email-primary" class="form-control">
-                            <option>{{user.email}}</option>
-                        </select>
-                    </div>
-                    <ng-container *ngFor="let entry of userContacts.entries()">
-                        <span class="form-label">{{channelNames[entry[0]]}}</span>
-                        <div class="contact-collection">
-                            <div class="contact-info" *ngFor="let contact of entry[1]">
-                                <input type="text" class="form-control" [value]="contact.contact" disabled>
-                                <span *ngIf="primaryContacts[contact.channel] == contact.contact" class="primary-badge">Primary</span>
-                                <span *ngIf="contact.verified" class="verified-badge">Verified</span>
-                                <button *ngIf="!contact.verified" class="btn btn-default">Resend verification</button>
-                                <button class="btn btn-danger" type="button"
-                                        [disabled]="primaryContacts[contact.channel] == contact.contact">
-                                    <i class="glyphicon glyphicon-trash"></i>
-                                </button>
-                            </div>
+                <form>
+                    <fieldset class="account-info" [disabled]="saving">
+                        <label for="account-name">Username</label>
+                        <div><input id="account-name" class="form-control" type="text" [value]="user.name" disabled>
                         </div>
-                    </ng-container>
+                        <label for="account-id">Account ID</label>
+                        <div><input id="account-id" class="form-control" type="text" [value]="user.id" disabled></div>
+                        <label for="account-real-name">Full name</label>
+                        <div><input id="account-real-name" class="form-control" type="text" [value]="user.real_name"
+                                    disabled></div>
+                        <label for="account-email-primary">Primary email</label>
+                        <div>
+                            <select id="account-email-primary" name="primary-email-select" class="form-control"
+                                    [(ngModel)]="primaryEmail">
+                                <option *ngFor="let contact of userEmailContacts"
+                                        [value]="contact.contact">{{contact.contact}}</option>
+                            </select>
+                        </div>
+                        <ng-container *ngFor="let entry of userContactEntries">
+                            <span class="form-label">{{channelNames[entry[0]]}}</span>
+                            <div class="contact-collection">
+                                <div class="contact-info" *ngFor="let contact of entry[1]">
+                                    <input type="text" class="form-control" [value]="contact.contact" disabled>
+                                    <span *ngIf="primaryContacts[contact.channel] == contact.contact"
+                                          class="primary-badge">Primary</span>
+                                    <span *ngIf="contact.verified" class="verified-badge">Verified</span>
+                                    <button *ngIf="!contact.verified" class="btn btn-default">Resend verification
+                                    </button>
+                                    <button class="btn btn-danger" type="button"
+                                            [disabled]="primaryContacts[contact.channel] == contact.contact">
+                                        <i class="glyphicon glyphicon-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </ng-container>
+                    </fieldset>
                 </form>
                 <div class="button-panel">
+                    <tim-save-button [saved]="saveUserAccountInfo"></tim-save-button>
                     <button class="timButton" (click)="openContactInfoDialog()">Add new contact</button>
                 </div>
             </bootstrap-panel>
@@ -269,6 +280,8 @@ export class SettingsComponent implements DoCheck {
     deleteConfirmName = "";
     contacts: IUserContact[];
     userContacts = new Map<Channel, IUserContact[]>();
+    userEmailContacts: IUserContact[] = [];
+    primaryEmail!: string;
     primaryContacts: Partial<Record<Channel, string>> = {};
     channelNames = EDITABLE_CONTACT_CHANNELS;
     private readonly style: HTMLStyleElement;
@@ -277,6 +290,7 @@ export class SettingsComponent implements DoCheck {
 
     constructor(private http: HttpClient) {
         this.user = settingsglobals().current_user;
+        this.primaryEmail = this.user.email ?? "";
         this.consent = this.user.consent;
         this.settings = settingsglobals().userPrefs;
         this.cssFiles = settingsglobals().css_files;
@@ -287,6 +301,10 @@ export class SettingsComponent implements DoCheck {
         this.style = document.createElement("style");
         this.style.type = "text/css";
         document.getElementsByTagName("head")[0].appendChild(this.style);
+    }
+
+    get userContactEntries() {
+        return [...this.userContacts.entries()];
     }
 
     ngDoCheck() {
@@ -307,6 +325,12 @@ export class SettingsComponent implements DoCheck {
         } else {
             await showMessageDialog(r.result.error.error);
         }
+    };
+
+    saveUserAccountInfo = async () => {
+        this.saving = true;
+        await timeout(3000);
+        this.saving = false;
     };
 
     async updateConsent() {
@@ -341,13 +365,15 @@ export class SettingsComponent implements DoCheck {
     async addPrintSettings() {
         const resp = await to2(
             this.http
-                .get<string>("/static/stylesheets/userPrintSettings.css")
+                .get("/static/stylesheets/userPrintSettings.css", {
+                    responseType: "text",
+                })
                 .toPromise()
         );
         if (!resp.ok) {
             return;
         }
-        this.settings.custom_css = resp.result;
+        this.settings.custom_css += resp.result;
     }
 
     async getAllNotifications() {
@@ -402,15 +428,19 @@ export class SettingsComponent implements DoCheck {
         if (!EDITABLE_CONTACT_CHANNELS[channel]) {
             return [];
         }
-        if (!this.userContacts.has(channel)) {
-            this.userContacts.set(channel, []);
+        let result = this.userContacts.get(channel);
+        if (!result) {
+            result = [];
+            this.userContacts.set(channel, result);
         }
-        return this.userContacts.get(channel)!;
+        return result;
     }
 
     private collectUserContacts() {
-        this.primaryContacts[Channel.EMAIL] = this.user.email ?? "";
-        this.getContactsFor(Channel.EMAIL).push({
+        this.userContacts.clear();
+        this.primaryContacts[Channel.EMAIL] = this.primaryEmail;
+        this.userEmailContacts = this.getContactsFor(Channel.EMAIL);
+        this.userEmailContacts.push({
             channel: Channel.EMAIL,
             contact: this.user.email ?? "",
             verified: true,

@@ -84,6 +84,7 @@
   & > span {
     display: flex;
     align-items: center;
+    white-space: nowrap;
     padding-left: 0.325em;
     padding-right: 0.325em;
     background-color: #e2e2e2;
@@ -120,4 +121,11 @@
 
 .button-panel {
   margin-top: 1em;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+
+  & > *:not(:last-child) {
+    margin-right: 0.5em;
+  }
 }
