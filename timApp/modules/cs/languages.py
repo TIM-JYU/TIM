@@ -541,7 +541,7 @@ class Jypeli(CS, Modifier):
                                                self.pure_exename,
                                                "--headless", "true",
                                                "--save", "true",
-                                               "--framesToRun", "2",  # First frame not saved
+                                               "--framesToRun", "1",
                                                "--skipFrames", "0"],
                                               ulimit=df(self.ulimit, "ulimit -f 80000"))
         if err.find("Compile") >= 0:
