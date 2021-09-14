@@ -1,3 +1,4 @@
+import functools
 from base64 import b64encode
 from io import BytesIO
 from os.path import splitext
@@ -426,16 +427,24 @@ class All(Language):
     ttype = "all"
 
 
+GLOBAL_NUGET_PACKAGES_PATH = "/cs/dotnet/nuget_cache"
+
+
 class CS(Language):
     ttype = ["cs", "c#", "csharp"]
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.compiler = "csc"
+        self.compiler = "/cs/dotnet/csc"
         self.fileext = "cs"
         self.filedext = ".cs"
         self.sourcefilename = "/tmp/%s/%s.cs" % (self.basename, self.filename)
         self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
+
+    @staticmethod
+    @functools.cache
+    def runtime_config():
+        return ["--runtimeconfig", "/cs/dotnet/runtimeconfig.json"]
 
     def get_sourcefiles(self, main=None):
         sourcefiles = self.markup.get("sourcefiles", None)
@@ -455,15 +464,13 @@ class CS(Language):
     def get_cmdline(self):
         options = ""
         if self.just_compile:
-            options = "/target:library"
-        cmdline = "%s /nologo /r:System.Numerics.dll /out:%s %s %s /cs/jypeli/TIMconsole.cs" % (
+            options = "-target:library"
+        cmdline = "%s -nologo -out:%s %s %s /cs/dotnet/shims/TIMconsole.cs" % (
             self.compiler, self.exename, options, self.get_sourcefiles())
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
-        # result["tim_info"]["valid"] = False  # kokeilu että valit toimii
-        # result["tim_info"]["validMsg"] = "Et voi enää saada pisteitä kun katsoit vastauksen"
-        code, out, err, pwddir = self.runself(["mono", "-O=all", self.pure_exename])
+        code, out, err, pwddir = self.runself(["dotnet", "exec", *CS.runtime_config(), self.pure_exename])
         if err.find("Unhandled Exception:") >= 0:
             if err.find("StackOverflowException") >= 0:
                 err = err[0:300]
@@ -493,46 +500,54 @@ class Jypeli(CS, Modifier):
 
     def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
-        self.imgsource = "/tmp/%s/output.bmp" % self.basename
-        self.pure_bmpname = "./%s.bmp" % self.filename
+        self.imgsource = "/tmp/%s/Output/0.bmp" % self.basename
         self.imgdest = "/csgenerated/%s.png" % self.rndname
         self.pure_exename = u"{0:s}.exe".format(self.filename)
         self.pure_mgdest = u"{0:s}.png".format(self.rndname)
 
+    @staticmethod
+    @functools.cache
+    def get_build_refs():
+        with open("/cs/dotnet/configs/jypeli.build.deps", "r", encoding="utf-8") as f:
+            dep_paths = [os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip()) for dep_line in f.readlines()]
+            return " ".join([f"-r:{p}" for p in dep_paths])
+
+    @staticmethod
+    @functools.cache
+    def get_run_args():
+        return ["--depsfile", "/cs/dotnet/configs/jypeli.deps.json"]
+
     def get_cmdline(self):
-        mainfile = "/cs/jypeli/Ohjelma.cs"
+        mainfile = ""
         options = ""
         if self.just_compile:
-            options = "/target:library"
+            options = "-target:library"
         sourcecode = self.sourcefiles[0].content
-        if sourcecode.find(" Main(") >= 0 or self.just_compile:
-            mainfile = ""
-        else:
+        if sourcecode.find(" Main(") < 0 and not self.just_compile:
             classname = self.markup.get("classname", None)
             if not classname:
                 classname = find_cs_class(sourcecode)
-            if classname != "Peli":
-                maincode = codecs.open(mainfile, 'r', "utf-8").read()
-                maincode = re.sub("Peli", classname, maincode, flags=re.M)
-                mainfile = "/tmp/%s/%s.cs" % (self.basename, "Ohjelma")
-                codecs.open(mainfile, "w", "utf-8").write(maincode)
+                mainfile = "/tmp/%s/%s.cs" % (self.basename, "MainProgram")
+                codecs.open(mainfile, "w", "utf-8").write(f"using var game = new {classname}();game.Run();")
 
-        # cmdline = "%s /out:%s /r:/cs/jypeli/Jypeli.dll
-        # /r:/cs/jypeli/MonoGame.Framework.dll /r:/cs/jypeli/Jypeli.Physics2d.dll
-        # /r:/cs/jypeli/OpenTK.dll /r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll
-        # /cs/jypeli/Ohjelma.cs %s" % (
-        cmdline = ("%s /nologo /out:%s /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
-                   "/r:/cs/jypeli/Jypeli.Physics2d.dll  "
-                   "/r:System.Numerics.dll /r:System.Drawing.dll %s %s") % (
-                      self.compiler, self.exename, options, self.get_sourcefiles(mainfile))
-        # /r:/cs/jypeli/Tao.Sdl.dll  /r:/cs/jypeli/OpenTK.dll
+        cmdline = f"{self.compiler} -nologo -out:{self.exename} {Jypeli.get_build_refs()} {options} {self.get_sourcefiles(mainfile)}"
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["mono", self.pure_exename],
+        code, out, err, pwddir = self.runself(["dotnet",
+                                               "exec",
+                                               *CS.runtime_config(),
+                                               *Jypeli.get_run_args(),
+                                               self.pure_exename,
+                                               "--headless", "true",
+                                               "--save", "true",
+                                               "--framesToRun", "1",
+                                               "--skipFrames", "0"],
                                               ulimit=df(self.ulimit, "ulimit -f 80000"))
         if err.find("Compile") >= 0:
             return code, out, err, pwddir
+
+        # TODO: These might not be needed anymore with Jypeli headless mode
         err = re.sub("^ALSA.*\n", "", err, flags=re.M)
         err = re.sub("^W: \\[pulse.*\n", "", err, flags=re.M)
         err = re.sub("^AL lib:.*\n", "", err, flags=re.M)
@@ -561,45 +576,53 @@ class Jypeli(CS, Modifier):
 
 class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers but they are used as such
     ttype = "comtest"
-    nunit = None
 
     def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
         self.testdll = u"./{0:s}Test.dll".format(self.filename)
         self.hide_compile_out = True
 
+    @staticmethod
+    @functools.cache
+    def get_build_refs():
+        with open("/cs/dotnet/configs/nunit_test.build.deps", "r", encoding="utf-8") as f:
+            dep_paths = [os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip()) for dep_line in f.readlines()]
+            return " ".join([f"-r:{p}" for p in dep_paths])
+
     def get_cmdline(self):
-        testcs = "/tmp/%s/%sTest.cs" % (self.basename, self.filename)
-        if not CSComtest.nunit:
-            frms = os.listdir("/usr/lib/mono/gac/nunit.framework/")
-            CSComtest.nunit = "/usr/lib/mono/gac/nunit.framework/" + frms[0] + "/nunit.framework.dll"
-        jypeliref = ("/r:System.Numerics.dll /r:/cs/jypeli/Jypeli.dll /r:/cs/jypeli/MonoGame.Framework.dll "
-                     "/r:/cs/jypeli/Jypeli.Physics2d.dll /r:/cs/jypeli/OpenTK.dll "
-                     "/r:/cs/jypeli/Tao.Sdl.dll /r:System.Drawing.dll")
-        cmdline = ("java -jar /cs/java/cs/ComTest.jar nunit %s && %s /out:%s /target:library " +
-                   jypeliref +
-                   " /reference:%s %s %s /cs/jypeli/TIMconsole.cs") % \
-                  (self.sourcefilename, self.compiler, self.testdll, CSComtest.nunit, self.sourcefilename, testcs)
+        testcs = f"/tmp/{self.basename}/{self.filename}Test.cs"
+        cmdline = (f"java -jar /cs/java/cs/ComTest.jar nunit {self.sourcefilename} && "
+                   f"{self.compiler} -nologo -out:{self.testdll} -target:library {CSComtest.get_build_refs()} "
+                   f"{Jypeli.get_build_refs()} {self.sourcefilename} {testcs} /cs/dotnet/shims/TIMconsole.cs")
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
         eri = -1
-        code, out, err, pwddir = self.runself(["nunit-console", "-nologo", "-nodots", self.testdll])
+        code, out, err, pwddir = self.runself([
+            "dotnet", "exec",
+            *CS.runtime_config(),
+            "--additional-deps",
+            "/cs/dotnet/configs/jypeli.deps.json:/cs/dotnet/configs/nunit_test.deps.json",
+            "--roll-forward", "LatestMajor",  # Force to use latest available .NET
+            "/dotnet_tools/nunit.console.dll",
+            "--noheader",
+            "--nocolor",
+            "--noresult",  # TODO: Maybe parse resulting XML file to provide better error messages
+            self.testdll])
         # print(code, out, err)
-        out = remove_before("Execution Runtime:", out)
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
             eri = 0
-        # out = out[1:]  # alussa oleva . pois
-        # out = re.sub("at .*", "", out, flags=re.M)
-        # out = re.sub("\n\n+", "", out, flags=re.M)
-        out = re.sub("^at .*\n", "", out, flags=re.M)
-        out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
+        out = remove_before("Test.dll", out)
+        out = re.sub(r"\nErrors, Failures and Warnings\n\n", "", out, flags=re.M)
+        out = re.sub(r"Run Settings(.|\n)*Test Count:", "Test Count:", out, flags=re.M)
+        out = re.sub(r"\s*Start time(.|\s)*Duration:.*$", "", out, flags=re.M)
+        out = re.sub(r"Failed Tests(.|\n)*", "", out, flags=re.M)
         out = out.strip(' \t\n\r')
         if eri < 0:
-            eri = out.find("Test Failure")
+            eri = out.find("Failed : ")
         if eri < 0:
-            eri = out.find("Test Error")
+            eri = out.find("Error : ")
         if is_compile_error(out, err):
             return code, out, err, pwddir
         if out.find("Unhandled exceptions:") >= 0:
@@ -613,16 +636,19 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
         if eri >= 0:
             web["testGreen"] = False
             web["testRed"] = True
-            lni = out.find(", line ")
-            if lni >= 0:  # and not nocode:
+            web["comtestError"] = ""
+            lines = sourcelines.split("\n")
+            lf = ""
+            lni = out.find(", line ", 0)
+            # copy failed comtest lines from source
+            # In out there is text like: "in method Keskiarvo, line 24"
+            while lni >= 0:  # and not nocode:
                 lns = out[lni + 7:]
                 lns = lns[0:lns.find("\n")]
                 lnro = int(lns)
-                # lines = codecs.open(sourcefilename, "r", "utf-8").readlines()
-                lines = sourcelines.split("\n")
-                # print("Line nr: "+str(lnro))
-                # # out += "\n" + str(lnro) + " " + lines[lnro - 1]
-                web["comtestError"] = str(lnro) + " " + lines[lnro - 1]
+                web["comtestError"] += lf + str(lnro) + " " + lines[lnro - 1]
+                lni = out.find(", line ", lni + 1)
+                lf = "\n"
         else:
             give_points(points_rule, "test")
             self.run_points_given = True
