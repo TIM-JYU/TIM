@@ -314,6 +314,9 @@ RUN dotnet tool install --tool-path /dotnet_tools/ NUnit.ConsoleRunner.NetCore -
     # As such, we save the full path to NUnit console runner so we can invoke it directly via dotnet with rollforward param
     ln -s /dotnet_tools/.store/nunit.consolerunner.netcore/3.12.0-beta2/nunit.consolerunner.netcore/3.12.0-beta2/tools/netcoreapp3.1/any/nunit3-console.dll /dotnet_tools/nunit.console.dll
 
+# Install ffmpeg for transcoding videos
+RUN bash -c "${APT_INSTALL} ffmpeg && ${APT_CLEANUP}"
+
 USER agent
 
 FROM complete as sudo
