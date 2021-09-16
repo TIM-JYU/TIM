@@ -70,6 +70,7 @@ import {
 export interface IParEditorOptions {
     forcedClasses?: string[];
     showDelete?: boolean;
+    showSettings?: boolean;
     localSaveTag?: string;
     initialText?: string;
 }
@@ -271,9 +272,10 @@ This will delete the whole ${
                 showPlugins: true,
                 cursorPosition: cursorPos,
                 showSettings:
-                    params.type === EditType.Edit
+                    options.showSettings ??
+                    (params.type === EditType.Edit
                         ? params.pars.start.isSetting()
-                        : false,
+                        : false),
                 tags: tagsDescs,
                 touchDevice: isMobileDevice(),
             },
@@ -450,10 +452,14 @@ This will delete the whole ${
                     initialText: `\`\`\` {settings=""}
 auto_number_headings: 0${CURSOR}
 \`\`\``,
+                    showSettings: true,
                 }
             );
         } else {
-            await this.toggleParEditor({type: EditType.Edit, pars: pars}, {});
+            await this.toggleParEditor(
+                {type: EditType.Edit, pars: pars},
+                {showSettings: true}
+            );
         }
     }
 
