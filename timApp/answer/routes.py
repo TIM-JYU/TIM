@@ -1835,7 +1835,7 @@ def get_state(
     plug = presult.custom_answer_plugin
     html = plug.get_final_output()
     if review:
-        block.final_dict = None
+        block.prepared_par = None
         presult2 = pluginify(doc, deref(), user_ctx, view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
                              review=review, pluginwrap=PluginWrap.Nothing)
         rplug = presult2.custom_answer_plugin

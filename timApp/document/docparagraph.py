@@ -18,6 +18,8 @@ from timApp.document.documentwriter import DocumentWriter
 from timApp.document.macroinfo import MacroInfo
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import random_id, hashfunc
+from timApp.document.prepared_par import PreparedPar
+from timApp.document.par_basic_data import ParBasicData
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.markdown.dumboclient import DumboOptions, MathType, InputFormat
 from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macros, format_heading
@@ -29,7 +31,6 @@ from tim_common.html_sanitize import sanitize_html, strip_div
 
 if TYPE_CHECKING:
     from timApp.document.document import Document
-
 
 SKIPPED_ATTRS = {'r', 'rd', 'rp', 'ra', 'rt', 'settings'}
 
@@ -50,7 +51,7 @@ class DocParagraph:
         'ask_new',
         'attrs',
         'doc',
-        'final_dict',
+        'prepared_par',
         'html',
         'html_sanitized',
         'nomacros',
@@ -81,7 +82,7 @@ class DocParagraph:
         self.original: Optional['DocParagraph'] = None
         self.html_sanitized = False
         self.html = None
-        self.final_dict = None
+        self.prepared_par: Optional[PreparedPar] = None
 
         # Cache for referenced paragraphs. Keys {True, False} correspond to the values of set_html parameter in
         # get_referenced_pars.
@@ -281,62 +282,60 @@ class DocParagraph:
             d['h'] = self.html_cache
         return d
 
-    def get_final_dict(self, view_ctx: ViewContext, use_md: bool = False):
-        """Prepares the internal __htmldata dictionary that contains all the information required for embedding the
-        paragraph in HTML.
-        """
-        if self.final_dict:
-            return self.final_dict
-        self._cache_props()
+    def get_basic_data(self):
+        return ParBasicData(
+            attrs=self.attrs,
+            doc_id=self.doc.doc_id,
+            hash=self.hash,
+            id=self.id,
+            md=self.md,
+        )
+
+    def prepare(self, view_ctx: ViewContext, use_md: bool = False) -> PreparedPar:
+        """Returns the corresponding PreparedPar."""
+        if self.prepared_par:
+            return self.prepared_par
 
         if self.original:
-            self.final_dict = self.original.dict()
-            self.final_dict['attrs_str'] = self.original.get_attrs_str()
-            self.final_dict['doc_id'] = self.original.doc.doc_id
-
-            self.final_dict['ref_doc_id'] = self.ref_doc.doc_id
-            self.final_dict['ref_id'] = self.id
-            self.final_dict['ref_t'] = self.hash
-            self.final_dict['ref_attrs'] = self.attrs
-            self.final_dict['ref_attrs_str'] = self.get_attrs_str()
+            basic_data = self.original.get_basic_data()
+            target_data = self.get_basic_data()
+            target_data.doc_id = self.ref_doc.doc_id
         else:
-            self.final_dict = self.dict()
-            self.final_dict['attrs_str'] = self.get_attrs_str()
-            self.final_dict['doc_id'] = self.doc.doc_id
+            basic_data = self.get_basic_data()
+            target_data = None
 
         if use_md:
-            self.final_dict['md'] = self.md
+            output = self.md
         else:
             try:
-                self.final_dict['html'] = self.get_html(view_ctx, no_persist=True)
-
+                output = self.get_html(view_ctx, no_persist=True)
             except Exception as e:
-                self.final_dict['html'] = get_error_html(e)
+                output = get_error_html(e)
 
         preamble = self.from_preamble()
-        plugintype = self.get_attr('plugin')
         class_str = 'par'
         if not self.get_attr('area'):
-            for c in self.get_classes():
-                class_str += ' ' + c
+            if classes := self.get_classes():
+                for c in classes:
+                    class_str += ' ' + c
         if self.is_question():
             class_str += ' questionPar'
+        else:
+            plugintype = self.get_attr('plugin')
+            if plugintype:
+                class_str += f' {plugintype}'
         if preamble:
             class_str += ' preamble'
-        if self.is_plugin() and not self.is_question():
-            class_str += ' ' + plugintype
-        self.final_dict['cls'] = class_str
 
-        # Need to check for gamification attribute to avoid ng-non-bindable directive being added in the par.
-        # As an AngularJS component it needs to be processed by AngularJS. is_plugin also shouldn't return True
-        # for gamification because it isn't a proper plugin.
-        self.final_dict['is_plugin'] = self.is_plugin() or self.has_plugins() or self.get_attr('gamification') is not None
-        if preamble:
-            self.final_dict['from_preamble'] = preamble.path
-        self.final_dict['is_question'] = self.is_question()
-        self.final_dict['is_setting'] = self.is_setting()
-        self.final_dict['style'] = None
-        return self.final_dict
+        fd = PreparedPar(
+            data=basic_data,
+            target=target_data,
+            output=output,
+            html_class=class_str,
+            from_preamble=preamble.path if preamble else None,
+        )
+        self.prepared_par = fd
+        return fd
 
     def _cache_props(self):
         """Caches some boolean properties about this paragraph in internal attributes."""
@@ -680,13 +679,17 @@ class DocParagraph:
 
     def has_class(self, class_name):
         """Returns whether this paragraph has the specified class."""
-        return class_name in self.get_classes()
+        if classes := self.get_classes():
+            return class_name in classes
+        return False
 
     def add_class(self, *classes: str):
         """Adds the specified class to this paragraph."""
         for class_name in classes:
             if not self.has_class(class_name):
                 curr_classes = self.get_classes()
+                if curr_classes is None:
+                    curr_classes = []
                 curr_classes.append(class_name)
                 self.set_attr('classes', curr_classes)
 
@@ -781,8 +784,8 @@ class DocParagraph:
 
         """
         self.html = new_html
-        if self.final_dict is not None:
-            self.final_dict['html'] = new_html
+        if self.prepared_par is not None:
+            self.prepared_par.output = new_html
         self.html_sanitized = sanitized
         return self.html
 
@@ -830,12 +833,8 @@ class DocParagraph:
     def get_attrs(self) -> Dict:
         return self.attrs
 
-    def get_attrs_str(self) -> str:
-        """Returns the attributes as a JSON string."""
-        return json.dumps(self.attrs, sort_keys=True)
-
-    def get_classes(self) -> List[str]:
-        return self.get_attr('classes', [])
+    def get_classes(self) -> Optional[List[str]]:
+        return self.get_attr('classes')
 
     def get_base_path(self) -> str:
         """Returns the filesystem path for the versions of this paragraph."""
@@ -1151,7 +1150,7 @@ def create_final_par(reached_par: DocParagraph, view_ctx: Optional[ViewContext])
     final_par.original = first_ref
     final_par.ref_doc = reached_par.doc
     final_par._cache_props()
-    final_par.final_dict = None
+    final_par.prepared_par = None
     if first_ref.from_preamble():
         final_par.preamble_doc = first_ref.from_preamble()
         if first_ref.is_translation():
