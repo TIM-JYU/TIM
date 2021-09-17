@@ -81,10 +81,10 @@
 
         {{ editline|safe }}
         {%- if not should_mark_all_read and not t.from_preamble and t.status -%}
-            <div class="{{ t.status.class_str() }}"
+            <div class="{{ t.status.class_str }}"
                  title="Click to mark this paragraph as read"
                  {% for r in t.status.marks %}
-                    time-{{ r.type.class_str() }}="{{ r.timestamp.isoformat() }}"
+                    time-{{ r.type.class_str }}="{{ r.timestamp.isoformat() }}"
                  {% endfor %}
             ></div>
         {%- endif -%}
@@ -117,7 +117,7 @@
             {% endif %}
             <div class="areatitle">{{ (t.output|safe) or ('&nbsp;'|safe) }}</div>
             {% if t.status %}
-            <div class="{{ t.status.class_str() }}" title="Click to mark this area as read"></div>
+            <div class="{{ t.status.class_str }}" title="Click to mark this area as read"></div>
             {% endif %}
             {{ editline|safe }}
             {{ notes(t) }}
