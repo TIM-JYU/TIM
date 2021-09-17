@@ -502,6 +502,8 @@ class Jypeli(CS, Modifier):
         super().__init__(query, sourcecode)
         self.imgsource = "/tmp/%s/Output/0.bmp" % self.basename
         self.imgdest = "/csgenerated/%s.png" % self.rndname
+        self.videosource = "/tmp/%s/Output/out.mp4" % self.basename
+        self.videodest = "/csgenerated/%s.mp4" % self.rndname
         self.pure_exename = u"{0:s}.exe".format(self.filename)
         self.pure_mgdest = u"{0:s}.png".format(self.rndname)
 
@@ -534,6 +536,34 @@ class Jypeli(CS, Modifier):
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
+        save_video = self.markup.get("save_video", False)
+        if save_video is None:  # allow `save_video: ` syntax
+            save_video = {}
+        video_params = []
+        frames_to_run = "1"
+        skip_frames = "0"
+        if isinstance(save_video, dict):
+            frames_to_run = str(save_video.get("frames", "60"))
+            skip_frames = str(save_video.get("skip_frames", "0"))
+            video_params = [
+                "--saveToStdout", "true",
+                "|", "ffmpeg",
+                "-y",
+                "-f", "image2pipe",
+                "-vcodec", "bmp",
+                "-framerate", str(save_video.get("fps", "30")),
+                "-probesize", "16M",
+                "-i",
+                "-",
+                "-loglevel", "quiet",
+                "-vf", "vflip",
+                "-vcodec", "libx264",
+                "-pix_fmt", "yuv420p",
+                "Output/out.mp4",
+            ]
+        else:
+            self.videosource = ""
+
         code, out, err, pwddir = self.runself(["dotnet",
                                                "exec",
                                                *CS.runtime_config(),
@@ -541,31 +571,31 @@ class Jypeli(CS, Modifier):
                                                self.pure_exename,
                                                "--headless", "true",
                                                "--save", "true",
-                                               "--framesToRun", "1",
-                                               "--skipFrames", "0"],
+                                               "--framesToRun", frames_to_run,
+                                               "--skipFrames", skip_frames,
+                                               *video_params,
+                                               ],
                                               ulimit=df(self.ulimit, "ulimit -f 80000"))
         if err.find("Compile") >= 0:
             return code, out, err, pwddir
 
-        # TODO: These might not be needed anymore with Jypeli headless mode
-        err = re.sub("^ALSA.*\n", "", err, flags=re.M)
-        err = re.sub("^W: \\[pulse.*\n", "", err, flags=re.M)
-        err = re.sub("^AL lib:.*\n", "", err, flags=re.M)
-        out = re.sub("^Could not open AL device - OpenAL Error: OutOfMemory.*\n", "", out, flags=re.M)
-
-        wait_file(self.imgsource)
-        run(["convert", "-flip", self.imgsource, self.imgdest], cwd=self.prgpath, timeout=20)
-        remove(self.imgsource)
+        if (self.videosource):
+            wait_file(self.videosource)
+            run(["mv", self.videosource, self.videodest])
+            self.imgdest = ""
+        else:
+            wait_file(self.imgsource)
+            run(["convert", "-flip", self.imgsource, self.imgdest], cwd=self.prgpath, timeout=20)
+            remove(self.imgsource)
+            self.videodest = ""
         # print("*** Screenshot: https://tim.jyu.fi/csgenerated/%s\n" % self.pure_imgdest)
         out = re.sub('Number of joysticks:.*\n.*', "", out)
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
         else:
             web = result["web"]
-            if self.imgname:
-                web["image"] = self.imgdest
-            else:
-                web["image"] = self.imgdest
+            web["image"] = self.imgdest
+            web["video"] = self.videodest
             give_points(points_rule, "run")
             self.run_points_given = True
         if self.delete_tmp:

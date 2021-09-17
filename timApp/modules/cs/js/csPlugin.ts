@@ -814,6 +814,7 @@ interface IRunResponseWeb {
     error?: string;
     pwd?: string;
     image?: string;
+    video?: string;
     wav?: string;
     testGreen?: boolean;
     testRed?: boolean;
@@ -883,6 +884,7 @@ export class CsController extends CsBase implements ITimComponent {
     htmlresult: string;
     iframeClientHeight: number;
     imgURL: string;
+    videoURL: string;
     indent!: number;
     initUserCode: boolean = false;
     isRunning: boolean = false;
@@ -1220,6 +1222,7 @@ export class CsController extends CsBase implements ITimComponent {
         this.result = "";
         this.htmlresult = ""; // '<span class="math display">\\[-\\]</span>';
         this.imgURL = "";
+        this.videoURL = "";
         this.runSuccess = false;
         this.copyingFromTauno = false;
         this.lastMD = "";
@@ -2305,6 +2308,7 @@ ${fhtml}
         }
         this.isRunning = true;
         this.imgURL = "";
+        this.videoURL = "";
         this.wavURL = "";
         this.runSuccess = false;
         if (
@@ -2481,6 +2485,7 @@ ${fhtml}
             this.runError = this.error;
 
             const imgURL = data.web.image;
+            const videoURL = data.web.video;
             // if ( !imgURL ) imgURL = data.web["-replyImage"];
             this.imgURL = data.web["-replyImage"] ?? "";
             this.htmlresult =
@@ -2516,8 +2521,12 @@ ${fhtml}
                 this.result = err.trim();
             }
 
+            if (videoURL) {
+                this.videoURL = videoURL;
+            }
+
             if (imgURL) {
-                this.imgURL = imgURL + this.imgURL;
+                this.imgURL = imgURL + this.imgURL; // TODO: What's the point to catanate ULR's?
                 this.result = err.trim();
             } else {
                 if (this.runSuccess) {
@@ -2747,6 +2756,7 @@ ${fhtml}
     async initCode() {
         this.muokattu = false;
         this.imgURL = "";
+        this.videoURL = "";
         this.runSuccess = false;
         this.runError = false;
         this.result = "";
@@ -3585,8 +3595,9 @@ ${fhtml}
                    [height]="height"
     ></tim-variables> <!-- TODO: why direct markup.jsparam does not work -->
     <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
+    <video *ngIf="videoURL" [src]="videoURL" type="video/mp4" style="width: 100%;" controls="" autoplay></video>
     <video *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
-            height="40"></video>
+           height="40"></video>
     <div *ngIf="docURL" class="docurl">
         <p class="pull-right">
             <tim-close-button (click)="closeDocument()"></tim-close-button>
