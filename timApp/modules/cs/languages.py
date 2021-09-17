@@ -536,13 +536,15 @@ class Jypeli(CS, Modifier):
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
-        save_video = self.markup.get("save_video", None)
+        save_video = self.markup.get("save_video", False)
+        if save_video is None: # for yaml like "save_video:"  to give defaults
+            save_video = {"skip_frames": "0"}
         video_params = []
         frames_to_run = "1"
-        skip_frames = "1"
+        skip_frames = "0"
         if save_video:
-            frames_to_run = str(save_video.get("frames" , "10"))
-            skip_frames = str(save_video.get("skip_frames" , "1"))
+            frames_to_run = str(save_video.get("frames" , "60"))
+            skip_frames = str(save_video.get("skip_frames" , "0"))
             video_params = [
                 "--saveToStdout", "true",
                 "|", "ffmpeg",
@@ -553,6 +555,7 @@ class Jypeli(CS, Modifier):
                 "-probesize", "16M",
                 "-i",
                 "-",
+                "-loglevel", "quiet",
                 "-vf", "vflip",
                 "-vcodec", "libx264",
                 "-pix_fmt", "yuv420p",
@@ -569,7 +572,7 @@ class Jypeli(CS, Modifier):
                                                "--headless", "true",
                                                "--save", "true",
                                                "--framesToRun", frames_to_run,
-                                               "--skip", skip_frames,
+                                               "--skipFrames", skip_frames,
                                                *video_params,
                                                ],
                                               ulimit=df(self.ulimit, "ulimit -f 80000"))
@@ -579,8 +582,7 @@ class Jypeli(CS, Modifier):
         if (self.videosource):
             wait_file(self.videosource)
             run(["mv", self.videosource, self.videodest])
-            self.imgname = ""
-            err = ""
+            self.imgdest = ""
         else:
             wait_file(self.imgsource)
             run(["convert", "-flip", self.imgsource, self.imgdest], cwd=self.prgpath, timeout=20)
@@ -592,10 +594,7 @@ class Jypeli(CS, Modifier):
             out = "Runtime exceeded, maybe loop forever\n" + out
         else:
             web = result["web"]
-            if self.imgname:
-                web["image"] = self.imgdest
-            else:
-                web["image"] = self.imgdest
+            web["image"] = self.imgdest
             web["video"] = self.videodest
             give_points(points_rule, "run")
             self.run_points_given = True
