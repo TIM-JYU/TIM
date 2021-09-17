@@ -6,7 +6,8 @@ import {TaskId} from "tim/plugin/taskid";
 import {DrawCanvasComponent} from "tim/plugin/drawCanvas";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAllAnswersDialog} from "tim/answer/showAllAnswersDialog";
-import {createParContext} from "tim/document/structure/create";
+import {tryCreateParContextOrHelp} from "tim/document/structure/create";
+import {ParContext} from "tim/document/structure/parContext";
 import {ITimComponent, ViewCtrl} from "../document/viewctrl";
 import {compileWithViewctrl, ParCompiler} from "../editor/parCompiler";
 import {
@@ -593,7 +594,11 @@ export class AnswerBrowserController
         } else if (this.hasUserChanged()) {
             this.dimPlugin();
             const par = this.getPar();
-            this.viewctrl.reviewCtrl.clearAnswerAnnotationsFromParMargin(par);
+            if (par) {
+                this.viewctrl.reviewCtrl.clearAnswerAnnotationsFromParMargin(
+                    par
+                );
+            }
         } else {
             this.unDimPlugin();
         }
@@ -734,6 +739,9 @@ export class AnswerBrowserController
             return;
         }
         const par = this.getPar();
+        if (!par) {
+            return;
+        }
         const orig = par.originalPar;
         const parParams = {
             doc_id: par.par.docId,
@@ -857,6 +865,9 @@ export class AnswerBrowserController
     public setImageReview = (canvas: DrawCanvasComponent) => {
         if (this.selectedAnswer && this.reviewHtml) {
             const par = this.getPar();
+            if (!par) {
+                return;
+            }
             this.viewctrl.reviewCtrl.setCanvas(this.selectedAnswer.id, canvas);
             this.viewctrl.reviewCtrl.loadAnnotationsToAnswer(
                 this.selectedAnswer.id,
@@ -1086,6 +1097,9 @@ export class AnswerBrowserController
             newroute = "view";
         } // TODO: think other routes also?
         const par = this.getPar();
+        if (!par) {
+            return;
+        }
         const parId = par.originalPar.id;
         const params = getUrlParams();
         const group = params.get("group"); // TODO: should we save other params also?
@@ -1108,7 +1122,7 @@ export class AnswerBrowserController
 
     getReviewLink() {
         return `/review/${this.viewctrl.item.path}?${$httpParamSerializer({
-            b: this.getPar().originalPar.id,
+            b: this.getPar()?.originalPar.id ?? "",
             size: 1,
             group: getUrlParams().get("group"),
         })}`;
@@ -1342,7 +1356,7 @@ export class AnswerBrowserController
         // return this.$parent.teacherMode || $window.velpMode; // && this.$parent.item.rights.teacher;
         return (
             documentglobals().velpMode ||
-            this.getPar().hasClass("has-annotation")
+            (this.getPar()?.hasClass("has-annotation") ?? false)
         );
     }
 
@@ -1559,7 +1573,12 @@ export class AnswerBrowserController
     }
 
     getPar() {
-        return createParContext(this.element.parents(".par")[0]);
+        const parEl = this.element.parents(".par")[0];
+        const ctx = tryCreateParContextOrHelp(parEl);
+        if (ctx instanceof ParContext) {
+            return ctx;
+        }
+        return undefined;
     }
 }
 
