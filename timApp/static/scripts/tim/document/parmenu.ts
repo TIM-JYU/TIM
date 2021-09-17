@@ -8,6 +8,7 @@ import {ParContext} from "tim/document/structure/parContext";
 import {
     createParContextOrHelp,
     findParentPar,
+    tryCreateParContextOrHelp,
 } from "tim/document/structure/create";
 import {Coords, dist, getPageXY, to} from "../util/utils";
 import {onClick} from "./eventhandlers";
@@ -53,8 +54,8 @@ export class ParmenuHandler {
                 }
 
                 const target = $(e.target) as JQuery;
-                const par = createParContextOrHelp($this.parents(".par")[0]);
-                if (par.isHelp || !par.isActionable()) {
+                const par = tryCreateParContextOrHelp($this.parents(".par")[0]);
+                if (!par || par.isHelp || !par.isActionable()) {
                     return;
                 }
                 this.viewctrl.notesHandler.updateNoteBadge(par);
