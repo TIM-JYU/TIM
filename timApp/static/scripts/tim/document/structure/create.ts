@@ -15,11 +15,14 @@ export function fromParents(p: JQuery) {
 }
 
 export function createParContext(el: Element) {
-    const c = createParContextOrHelp(el);
+    const c = tryCreateParContextOrHelp(el);
     if (c instanceof ParContext) {
         return c;
     }
-    throw Error("unexpected help par");
+    if (c instanceof HelpPar) {
+        throw Error("Unexpected HelpPar");
+    }
+    throw Error("Failed to create ParContext");
 }
 
 function getDocumentForElement(el: Element) {
