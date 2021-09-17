@@ -159,6 +159,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     cmdf = cwd + "/" + urndname + ".sh"  # varsinaisen ajoskriptin nimi
     compf = cwd + "/run/compile.sh"
     cmnds = ' '.join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
+    cmnds = cmnds.replace("'|'", "|")
     source = ''
     if savestate and cmnds.endswith('.sh'): # source works only for shell scripts
         source = 'source '
