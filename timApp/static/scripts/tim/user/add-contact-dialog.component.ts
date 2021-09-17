@@ -14,52 +14,46 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
 @Component({
     selector: "add-contact-dialog",
     template: `
-        <tim-dialog-frame>
+        <tim-dialog-frame [minimizable]="false">
             <ng-container header>
                 {{dialogName}}
             </ng-container>
             <ng-container body>
-                <div class="form-group">
-                    <label class="control-label" for="name-select">
-                        Channel</label>
-                    <select class="form-control" name="channel-select" [(ngModel)]="chosenChannel">
-                        <option value="email">Email</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="control-label" for="contact-info-text">
-                        Contact info</label>
-                    <input class="form-control" type="text" name="contact-info-text"
-                           [(ngModel)]="contactInfo">
-                </div>
-                <div>
-                    <tim-alert *ngIf="verificationSend" severity="success">A message with a verification link will be
-                        sent to the contact info you provided. Remember to check your spam folder if you don't see the
-                        email. You may close this
-                        dialog.
-                    </tim-alert>
-                    <tim-alert *ngIf="notValidEmailError" severity="danger">The email you attempted to provide is of
-                        invalid form. Please check it.
-                    </tim-alert>
-                    <tim-alert *ngIf="alreadyVerifiedError" severity="danger">You have already verified this contact
-                        information.
-                    </tim-alert>
-                    <tim-alert *ngIf="unhandledChannelError" severity="danger">An error has occured in TIM that has
-                        prevented the sending of a verification message.
-                    </tim-alert>
-                    <tim-alert *ngIf="noChannelChosenError" severity="danger">Choose a channel for the user contact
-                        information.
-                    </tim-alert>
-                    <tim-alert *ngIf="noInfoError" severity="danger">The contact information field is empty.
-                    </tim-alert>
-                    <tim-alert *ngIf="unspecifiedError" severity="danger">An error has occured in TIM.
-                    </tim-alert>
-                </div>
+                <form>
+                    <fieldset [disabled]="saving || verificationSent">
+                        <div class="form-group">
+                            <label class="control-label" for="name-select">
+                                Channel</label>
+                            <select class="form-control" name="channel-select" [(ngModel)]="chosenChannel">
+                                <option value="email">Email</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label" for="contact-info-text">
+                                Contact info</label>
+                            <input class="form-control" type="text" name="contact-info-text"
+                                   [(ngModel)]="contactInfo">
+                        </div>
+                        <div>
+                            <tim-alert *ngIf="verificationSent" severity="success">
+                                A verification link was sent to this contact.
+                                Please check possible spam filters.
+                            </tim-alert>
+                            <tim-alert *ngIf="addError" severity="danger">
+                                Could not add the new contact: {{addError}}
+                            </tim-alert>
+                        </div>
+                    </fieldset>
+                </form>
             </ng-container>
             <ng-container footer>
-                <button class="timButton" (click)="addNewContact()" [disabled]="!(chosenChannel && contactInfo)">Add
+                <tim-loading *ngIf="saving" style="margin-right: 1em;"></tim-loading>
+                <button class="timButton"
+                        (click)="addNewContact()"
+                        [disabled]="!(chosenChannel && contactInfo) || verificationSent">
+                    Add
                 </button>
-                <button class="timButton" (click)="dismiss()">Cancel</button>
+                <button class="timButton" (click)="dismiss()">Close</button>
             </ng-container>
         </tim-dialog-frame>
     `,
@@ -75,22 +69,9 @@ export class AddContactDialogComponent extends AngularDialogComponent<
     // The contact information.
     contactInfo?: string;
 
-    // Flag if the contact info was accepted by TIM.
-    verificationSend = false;
-    // Flag if the user tried to provided an invalid email address.
-    notValidEmailError = false;
-    // Flag if user has already verified a contact info.
-    alreadyVerifiedError = false;
-    // Flag if user tries to add a contact info to a channel that is not for some reason handled in TIM.
-    unhandledChannelError = false;
-    // Flag if a generic, unspecified error happened.
-    unspecifiedError = false;
-    // Flag if the user did not choose a channel for their new contact info. This should only happen if the user fiddled
-    // with the sending with dev tools.
-    noChannelChosenError = false;
-    // Flag if the user left the text field empty.  This should only happen if the user fiddled with the sending with
-    // dev tools.
-    noInfoError = false;
+    verificationSent = false;
+    saving = false;
+    addError?: string;
 
     // Used only to get HttpClient initialized.
     constructor(private http: HttpClient) {
@@ -99,56 +80,24 @@ export class AddContactDialogComponent extends AngularDialogComponent<
 
     // Send a new contact information for a user to server.
     async addNewContact() {
-        // Reset error messages.
-        this.notValidEmailError = false;
-        this.alreadyVerifiedError = false;
-        this.unspecifiedError = false;
-        this.unhandledChannelError = false;
-        this.verificationSend = false;
-        this.noInfoError = false;
-        this.noChannelChosenError = false;
-
-        // Sending contact info is meaningless if contact info and it's channel isn't given.
-        if (!this.chosenChannel) {
-            this.noChannelChosenError = true;
-            return;
-        }
-        if (!this.contactInfo) {
-            this.noInfoError = true;
-            return;
-        }
-
+        this.saving = true;
         // Call the server.
         const result = await to2(
             this.http
-                .post("/settings/contacts/add", {
-                    contact_info_type: this.chosenChannel,
-                    contact_info: this.contactInfo,
-                })
+                .post<{requireVerification: boolean}>(
+                    "/settings/contacts/add",
+                    {
+                        contact_info_type: this.chosenChannel,
+                        contact_info: this.contactInfo,
+                    }
+                )
                 .toPromise()
         );
+        this.saving = false;
         if (result.ok) {
-            this.verificationSend = true;
+            this.verificationSent = result.result.requireVerification;
         } else {
-            switch (result.result.error.error) {
-                case "01":
-                    // Users email is not a valid email address.
-                    this.notValidEmailError = true;
-                    break;
-                case "02":
-                    // User has already verified the contact info.
-                    this.alreadyVerifiedError = true;
-                    break;
-                case "03":
-                    // A slip-up has happened and TIM does not handle the message channel where the user has attempted
-                    // to add a new contact info.
-                    this.unhandledChannelError = true;
-                    break;
-                default:
-                    // Something unspecified has happened on the server.
-                    this.unspecifiedError = true;
-                    break;
-            }
+            this.addError = result.result.error.error;
         }
     }
 }

@@ -216,22 +216,24 @@ def add_contact_info(contact_info: str,
     user = get_current_user_object()
     # Check for duplicate contact information.
     existing_contact_info = db.session.query(UserContact.verified).filter(
-        (UserContact.user == user) & (UserContact.channel == contact_info_type) & (
-                UserContact.contact == contact_info)).first()
+        (UserContact.user == user) &
+        (UserContact.channel == contact_info_type) &
+        (UserContact.contact == contact_info)).first()
 
     if existing_contact_info:
         # If the contact info already exists and is verified by the user, then inform them about it.
         raise RouteException("The contact is already added")
 
     # Add appropriate contact info.
-    if contact_info_type is Channel.EMAIL:
+    require_verification = False
+    if contact_info_type == Channel.EMAIL:
+        require_verification = True
         if not is_valid_email(contact_info):
             raise RouteException("Email format is invalid")
 
-    uc = UserContact(user=user, contact=contact_info, channel=Channel.EMAIL, verified=False)
-    db.session.add(uc)
-
-    request_verification(ContactAddVerification(user=user, contact=uc), "settings/verify-templates/contact")
+        uc = UserContact(user=user, contact=contact_info, channel=Channel.EMAIL, verified=False)
+        db.session.add(uc)
+        request_verification(ContactAddVerification(user=user, contact=uc), "settings/verify-templates/contact")
 
     db.session.commit()
-    return ok_response()
+    return json_response({"requireVerification": require_verification})
