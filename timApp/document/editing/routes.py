@@ -18,6 +18,7 @@ from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_curr
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
+from timApp.document.prepared_par import PreparedPar
 from timApp.document.document import Document, get_duplicate_id_msg
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
@@ -468,14 +469,9 @@ def par_response(
     if spellcheck:
         proofed_text = proofread_pars(post_process_result.texts)
         for p, r in zip(post_process_result.texts, proofed_text):
-            p['html'] = r.new_html
+            p.output = r.new_html
 
     final_texts = post_process_result.texts
-    if filter_return:
-        # We might be posting/editing a note that is in the start or end paragraph of an area,
-        # so we need to make sure that the server won't return stray start/end area markers.
-        final_texts = [t for t in final_texts if not is_area_start_or_end(t)]
-
     r = json_response({'texts': render_template('partials/paragraphs.jinja2',
                                                 text=final_texts,
                                                 rights=get_user_rights_for_item(doc.get_docinfo(), user_ctx.logged_user),
@@ -483,7 +479,7 @@ def par_response(
                        'js': post_process_result.js_paths,
                        'css': post_process_result.css_paths,
                        'trdiff': trdiff,
-                       'changed_pars': {p['id']: render_template(
+                       'changed_pars': {p.id: render_template(
                            'partials/paragraphs.jinja2',
                            text=[p],
                            rights=get_user_rights_for_item(doc.get_docinfo(), user_ctx.logged_user)) for p
@@ -499,8 +495,8 @@ def par_response(
     return r
 
 
-def is_area_start_or_end(p):
-    return p.get('start_areas') or p.get('end_areas')
+def is_area_start_or_end(p: PreparedPar):
+    return p.areainfo is not None
 
 
 # Gets next available name for plugin
