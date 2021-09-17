@@ -7,7 +7,7 @@ fwkver=$(LC_ALL=C dotnet --list-runtimes | \
 dotnethome=/usr/share/dotnet
 dotnetlib=$dotnethome/shared/Microsoft.NETCore.App/$fwkver
 dotnet_cscdll=$dotnethome/sdk/$sdkver/Roslyn/bincore/csc.dll
-dotnet_csclib='-r:netstandard.dll -r:Microsoft.CSharp.dll -r:System.dll'
+dotnet_csclib='-r:netstandard.dll -r:Microsoft.CSharp.dll -r:Microsoft.Win32.Primitives.dll -r:Microsoft.Win32.Registry.dll -r:System.dll'
 for x in "$dotnetlib"/System.*.dll; do
 	dotnet_csclib="$dotnet_csclib -r:${x##*/}"
 done
