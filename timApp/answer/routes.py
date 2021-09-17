@@ -556,7 +556,6 @@ def get_postanswer_plugin_etc(
             ask_new = answernr == answerinfo.count
             allow_save = ask_new
         context_user = UserContext(ctx_user or curr_user, curr_user)
-        found_plugin.par.answernr = answernr_to_user
 
     try:
         vr = verify_task_access(
@@ -1836,7 +1835,7 @@ def get_state(
     plug = presult.custom_answer_plugin
     html = plug.get_final_output()
     if review:
-        block.final_dict = None
+        block.prepared_par = None
         presult2 = pluginify(doc, deref(), user_ctx, view_ctx, custom_answer=answer, task_id=task_id, do_lazy=NEVERLAZY,
                              review=review, pluginwrap=PluginWrap.Nothing)
         rplug = presult2.custom_answer_plugin
