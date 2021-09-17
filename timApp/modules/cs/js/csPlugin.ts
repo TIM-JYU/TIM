@@ -3594,10 +3594,10 @@ ${fhtml}
                    [jsparams]="jsparams"
                    [height]="height"
     ></tim-variables> <!-- TODO: why direct markup.jsparam does not work -->
-    <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt="" />
-    <video *ngIf="videoURL" [src]="videoURL" type="video/mp4"style="width: 100%;" controls="" autoplay></video>
+    <img *ngIf="imgURL" class="grconsole" [src]="imgURL" alt=""/>
+    <video *ngIf="videoURL" [src]="videoURL" type="video/mp4" style="width: 100%;" controls="" autoplay></video>
     <video *ngIf="wavURL" [src]="wavURL" type="video/mp4" controls="" autoplay="true" width="300"
-            height="40"></video>
+           height="40"></video>
     <div *ngIf="docURL" class="docurl">
         <p class="pull-right">
             <tim-close-button (click)="closeDocument()"></tim-close-button>

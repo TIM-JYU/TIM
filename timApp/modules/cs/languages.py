@@ -537,21 +537,21 @@ class Jypeli(CS, Modifier):
 
     def run(self, result, sourcelines, points_rule):
         save_video = self.markup.get("save_video", False)
-        if save_video is None: # for yaml like "save_video:"  to give defaults
-            save_video = {"skip_frames": "0"}
+        if save_video is None:  # allow `save_video: ` syntax
+            save_video = {}
         video_params = []
         frames_to_run = "1"
         skip_frames = "0"
-        if save_video:
-            frames_to_run = str(save_video.get("frames" , "60"))
-            skip_frames = str(save_video.get("skip_frames" , "0"))
+        if isinstance(save_video, dict):
+            frames_to_run = str(save_video.get("frames", "60"))
+            skip_frames = str(save_video.get("skip_frames", "0"))
             video_params = [
                 "--saveToStdout", "true",
                 "|", "ffmpeg",
                 "-y",
                 "-f", "image2pipe",
                 "-vcodec", "bmp",
-                "-framerate", str(save_video.get("fps" , "30")),
+                "-framerate", str(save_video.get("fps", "30")),
                 "-probesize", "16M",
                 "-i",
                 "-",
