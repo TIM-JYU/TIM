@@ -365,6 +365,7 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
     htmldata = get_param(query, "cacheHtml", None)  # check if constant html
     if htmldata:
         return tim_sanitize(htmldata) + get_cache_footer(query)
+    video_start = '<video src="'
     convert_graphviz(query)
     markup = query.jso.get("markup", {})
     if get_param(query, "cache", False):  # check if we should take the html from cache
@@ -385,7 +386,16 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
         if os.path.isfile(filename):  # if we have cache, use that
             with open(filename) as fh:
                 htmldata = fh.read()
-            return htmldata
+            video_index = htmldata.find(video_start)
+            if video_index >= 0:
+                video_i1 = video_index + len(video_start)
+                video_i2 = htmldata.find('"', video_i1)
+                video_name = htmldata[video_i1:video_i2]
+                # video_name = video_name.replace("/csgen", "/cs/gen")
+                if os.path.isfile(video_name):
+                    return htmldata
+            else:
+                return htmldata
 
         markup["imgname"] = "/csgenerated/" + task_id  # + "/" + hash
         query.jso["state"] = None
@@ -441,6 +451,9 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
 
         img = ret["web"].get("image", None)
         if img:
+            qidx = img.find('?')
+            if qidx >= 0: # remove timestamp with ?
+                img = img[0: qidx]
             with open(img, "rb") as fh:
                 pngdata = fh.read()
             pngenc = b64encode(pngdata)
@@ -460,6 +473,10 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
             except:
                 pass
 
+        video = ret['web'].get('video', None)
+        if video:
+            htmldata += video_start + video + '" ' + """
+type = "video/mp4" controls = "" style = "width: 100%;"></video>"""
         htmldata += get_cache_footer(query)
 
         if cache_clear:

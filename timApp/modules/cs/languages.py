@@ -94,6 +94,12 @@ def is_compile_error(out, err):
     return out.find("Compile error") >= 0 or err.find("Compile error") >= 0
 
 
+def file_hash(s):
+    h = hashlib.new('ripemd160')
+    h.update(s.encode())
+    return h.hexdigest()
+
+
 class Language:
     ttype = "_language"
 
@@ -109,10 +115,14 @@ class Language:
         self.query = query
         self.user_id = "--"
         self.nofilesave = False  # if no need to save files
-        if query.jso:
-            self.user_id = df(query.jso.get("info"), {}).get("user_id", "--")
-            self.markup = query.jso.get("markup", {})
+        jso = query.jso
         self.rndname = generate_filename()
+        if jso:
+            self.user_id = df(jso.get('info'), {}).get('user_id', '--')
+            self.markup = jso.get('markup', {})
+            self.genname = file_hash(self.user_id + jso.get('taskID', ''))
+        else:
+            self.genname = self.rndname
         self.delete_tmp = True
         self.opt = get_param(query, "opt", "")
         self.timeout = get_param(query, "timeout", 10)
@@ -564,11 +574,11 @@ class Jypeli(CS, Modifier):
     def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
         self.imgsource = "/tmp/%s/Output/0.bmp" % self.basename
-        self.imgdest = "/csgenerated/%s.png" % self.rndname
+        self.imgdest = "/csgenerated/%s.png" % self.genname
         self.videosource = "/tmp/%s/Output/out.mp4" % self.basename
         self.videodest = "/csgenerated/%s.mp4" % self.rndname
-        self.pure_exename = f"{self.filename:s}.exe"
-        self.pure_mgdest = f"{self.rndname:s}.png"
+        self.pure_exename = u"{0:s}.exe".format(self.filename)
+        self.pure_mgdest = u"{0:s}.png".format(self.rndname)
 
     @staticmethod
     @functools.cache
@@ -604,6 +614,14 @@ class Jypeli(CS, Modifier):
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
+        jso = self.query.jso
+        state = jso.get('state', {})
+        if state is None:
+            state = {}
+        old_hash = state.get('save_hash', '')
+        force_run = self.markup.get("force_run", "RandomGen")
+        if force_run and re.search(force_run, sourcelines, re.MULTILINE):
+            old_hash = ""
         save_video = self.markup.get("save_video", False)
         if save_video is None:  # allow `save_video: ` syntax
             save_video = {}
@@ -639,42 +657,36 @@ class Jypeli(CS, Modifier):
                 "yuv420p",
                 "Output/out.mp4",
             ]
+            self.imgsource = ""
+            self.imgdest = ""
+            saved_file = self.videodest
         else:
             self.videosource = ""
+            self.videodest = ""
+            saved_file = self.imgdest
 
-        code, out, err, pwddir = self.runself(
-            [
-                "dotnet",
-                "exec",
-                *CS.runtime_config(),
-                *Jypeli.get_run_args(),
-                self.pure_exename,
-                "--headless",
-                "true",
-                "--save",
-                "true",
-                "--framesToRun",
-                frames_to_run,
-                "--skipFrames",
-                skip_frames,
-                *video_params,
-            ],
-            ulimit=df(self.ulimit, "ulimit -f 80000"),
-        )
+        code, out, err, pwddir = self.runself(["dotnet",
+                                               "exec",
+                                               *CS.runtime_config(),
+                                               *Jypeli.get_run_args(),
+                                               self.pure_exename,
+                                               "--headless", "true",
+                                               "--save", "true",
+                                               "--framesToRun", frames_to_run,
+                                               "--skipFrames", skip_frames,
+                                               *video_params,
+                                               ],
+                                              ulimit=df(self.ulimit, "ulimit -f 80000"))
         if err.find("Compile") >= 0:
             return code, out, err, pwddir
 
-        if self.videosource:
+        if (self.videosource):
             wait_file(self.videosource)
             run(["mv", self.videosource, self.videodest])
             self.imgdest = ""
         else:
             wait_file(self.imgsource)
-            run(
-                ["convert", "-flip", self.imgsource, self.imgdest],
-                cwd=self.prgpath,
-                timeout=20,
-            )
+            run(["convert", "-flip", self.imgsource, self.imgdest], cwd=self.prgpath, timeout=20)
             remove(self.imgsource)
             self.videodest = ""
         # print("*** Screenshot: https://tim.jyu.fi/csgenerated/%s\n" % self.pure_imgdest)
