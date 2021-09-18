@@ -588,18 +588,19 @@ export class VideoComponent extends AngularPluginBase<
             this.isPdf =
                 src.includes(".pdf") && // TODO: hack for Mac Safari see https://gitlab.com/tim-jyu/tim/-/issues/2114
                 isSafari();
+            const iframeopts = parseIframeopts(
+                this.markup.iframeopts ??
+                    // Some GeoGebra instances use showVideo plugin.
+                    // The allow-same-origin is needed for GeoGebra on iPad.
+                    'sandbox="allow-scripts allow-same-origin"',
+                src
+            );
             this.iframesettings = {
                 src: this.domSanitizer.bypassSecurityTrustResourceUrl(src),
                 width: this.width ?? null,
                 height: this.height ?? null,
-                sandbox: parseIframeopts(
-                    this.markup.iframeopts ??
-                        // Some GeoGebra instances use showVideo plugin.
-                        // The allow-same-origin is needed for GeoGebra on iPad.
-                        'sandbox="allow-scripts allow-same-origin"',
-                    src
-                ).sandbox,
-                allow: null,
+                sandbox: iframeopts.sandbox,
+                allow: iframeopts.allow,
             };
         } else {
             let tbe = "";
