@@ -6,8 +6,6 @@ from typing import List, Tuple, Dict
 import requests
 from bs4 import BeautifulSoup, PageElement
 
-from timApp.document.prepared_par import PreparedPar
-
 
 @dataclass
 class Word:
@@ -21,8 +19,8 @@ class SpellCheckResult:
     new_html: str
 
 
-def proofread_pars(pars: List[PreparedPar]) -> List[SpellCheckResult]:
-    return [process_spelling_errors(p.output) for p in pars]
+def proofread_pars(pars: List[dict]) -> List[SpellCheckResult]:
+    return [process_spelling_errors(p['html']) for p in pars]
 
 
 banned_tags = {'code'}

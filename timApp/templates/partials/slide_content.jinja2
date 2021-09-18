@@ -11,16 +11,16 @@
                 {% set _ = prev_is_empty.append(prev_is_empty.pop() or True) %}
             {% endif %}
         {% else %}
-            {% if (t.output.startswith("<h1") or
-                   t.output.startswith("<h2") or
-                   t.output.startswith("<h3")) and not prev_is_empty[0] %}
+            {% if (t.html.startswith("<h1") or
+                   t.html.startswith("<h2") or
+                   t.html.startswith("<h3")) and not prev_is_empty[0] %}
                 {{ sectionchange }}
             {% endif %}
-            <div class="{{ t.html_class }}"
+            <div class="{{ t.cls }}"
                  id="{{ t.id }}"
-                 t="{{ t.hash }}"
+                 t="{{ t.t }}"
                  attrs="{{ t.attrs_str }}">
-                {{ t.output|safe }}
+                {{ t.html|safe }}
             </div>
             {% set _ = prev_is_empty.append(prev_is_empty.pop() and False) %}
         {% endif %}

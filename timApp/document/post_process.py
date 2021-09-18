@@ -7,9 +7,7 @@ from typing import List, Dict, DefaultDict, Tuple, Optional
 import pytz
 from jinja2.sandbox import SandboxedEnvironment
 
-from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.areainfo import AreaStart, AreaEnd
 from timApp.document.docentry import DocEntry
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
@@ -17,8 +15,6 @@ from timApp.document.document import Document, dereference_pars
 from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.hide_names import force_hide_names
 from timApp.document.macroinfo import get_user_specific_macros
-from timApp.document.par_basic_data import ParBasicData
-from timApp.document.prepared_par import PreparedPar
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.markdown.markdownconverter import expand_macros
@@ -29,6 +25,7 @@ from timApp.readmark.readings import get_common_readings, get_read_expiry_condit
 from timApp.readmark.readmarkcollection import ReadMarkCollection
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.user.user import User, has_no_higher_right
+from timApp.auth.get_user_rights_for_item import get_user_rights_for_item
 from timApp.util.flask.responsehelper import flash_if_not_preview
 from timApp.util.timtiming import taketime
 from timApp.util.utils import getdatetime, get_boolean
@@ -36,7 +33,7 @@ from timApp.util.utils import getdatetime, get_boolean
 
 @dataclass
 class PostProcessResult:
-    texts: List[PreparedPar]
+    texts: List[dict]
     js_paths: List[str]
     css_paths: List[str]
     should_mark_all_read: bool
@@ -87,14 +84,9 @@ def post_process_pars(
             # p.insert_rnds(0)
             no_macros = DocParagraph.is_no_macros(p.get_attrs(), doc_nomacros)
             if not no_macros:
-                ppar = p.prepare(view_ctx)
-                ppar.output = expand_macros(
-                    ppar.output,
-                    user_macros,
-                    settings,
-                    env=env,
-                    ignore_errors=True,
-                )
+                f_dict = p.get_final_dict(view_ctx)
+                f_dict['html'] = expand_macros(f_dict['html'], user_macros, settings, env=env,
+                                               ignore_errors=True)
 
     # taketime("macros done")
 
@@ -118,22 +110,22 @@ def post_process_pars(
                     if isinstance(a, User):
                         a.hide_name = True
         for p in final_pars:
-            ppar = p.prepare(view_ctx)
-            ppar.authorinfo = authors.get(ppar.id)
+            f_dict = p.get_final_dict(view_ctx)
+            f_dict['authorinfo'] = authors.get(f_dict['id'])
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
-    pars_dict: DefaultDict[Tuple[str, int], List[PreparedPar]] = defaultdict(list)
+    pars_dict: DefaultDict[Tuple[str, int], List[dict]] = defaultdict(list)
 
     docinfo = doc.get_docinfo()
     curr_user = user_ctx.logged_user
     if not curr_user.has_edit_access(docinfo):
         for p in final_pars:
             if p.is_question():
-                d = p.prepare(view_ctx)
-                d.output = ' '
-                d.html_class = 'hidden'
+                d = p.get_final_dict(view_ctx)
+                d['html'] = ' '
+                d['cls'] = 'hidden'
             if p.is_setting():
-                d = p.prepare(view_ctx)
-                d.output = ' '
+                d = p.get_final_dict(view_ctx)
+                d['html'] = ' '
     else:
         ids = doc.get_par_ids()
         first_par = doc.get_paragraph(ids[0]) if ids else None
@@ -142,23 +134,22 @@ def post_process_pars(
         if not show_settings_yaml:
             for p in final_pars:
                 if p.is_setting():
-                    d = p.prepare(view_ctx)
-                    d.output = ' '
+                    d = p.get_final_dict(view_ctx)
+                    d['html'] = ' '
 
     for p in final_pars:
-        d = p.prepare(view_ctx)
+        d = p.get_final_dict(view_ctx)
         if p.original and not p.original.is_translation():
-            target = d.target
-            key = target.id, target.doc_id
+            key = d.get('ref_id'), d.get('ref_doc_id')
             pars_dict[key].append(d)
 
-        key = d.data.id, d.data.doc_id
+        key = d['id'], d['doc_id']
         pars_dict[key].append(d)
 
     for p in final_pars:
-        d = p.prepare(view_ctx)
-        d.status = ReadMarkCollection()
-        d.notes = []
+        d = p.get_final_dict(view_ctx)
+        d['status'] = ReadMarkCollection()
+        d['notes'] = []
     # taketime("pars done")
 
     group = curr_user.get_personal_group().id
@@ -182,10 +173,10 @@ def post_process_pars(
             pars = pars_dict.get(key)
             if pars:
                 for p in pars:
-                    if r.par_hash == p.data.hash or (p.target and r.par_hash == p.target.hash):
-                        p.status.add(r)
+                    if r.par_hash == p['t'] or r.par_hash == p.get('ref_t'):
+                        p['status'].add(r)
                     else:
-                        p.status.add(r, modified=True)
+                        p['status'].add(r, modified=True)
 
     taketime("read mixed")
     notes = get_notes(group, doc)
@@ -208,11 +199,11 @@ def post_process_pars(
             editable = n.usergroup_id == group or has_teacher
             private = n.access == 'justme'
             for p in pars:
-                if p.notes is None:
-                    p.notes = []
+                if 'notes' not in p:
+                    p['notes'] = []
                 if should_hide_names and u.id != curr_user.id:
                     u.hide_name = True
-                p.notes.append(UserNoteAndUser(user=u, note=n, editable=editable, private=private))
+                p['notes'].append(UserNoteAndUser(user=u, note=n, editable=editable, private=private))
     # taketime("notes mixed")
 
     return PostProcessResult(
@@ -231,7 +222,6 @@ class Area:
     attrs: Dict
 
 
-# TODO: It would be better to return a tree-like structure of the document instead of a flat list.
 def process_areas(
         settings: DocSettings,
         pars: List[DocParagraph],
@@ -239,12 +229,7 @@ def process_areas(
         delimiter,
         env: SandboxedEnvironment,
         view_ctx: ViewContext,
-) -> List[PreparedPar]:
-    # If we're only dealing with a single paragraph (happens e.g. when posting a comment),
-    # we don't want to include area start/end markers in the final output
-    # because the HTML would be broken.
-    is_single = len(pars) == 1
-
+) -> List[Dict]:
     now = pytz.utc.localize(datetime.now())
     min_time = pytz.utc.localize(datetime.min)
     max_time = pytz.utc.localize(datetime.max)
@@ -255,10 +240,10 @@ def process_areas(
     # All non-reference areas that we've seen. Only insert here, never remove.
     encountered_areas: Dict[str, Area] = {}
 
-    new_pars: List[PreparedPar] = []
+    new_pars = []
     fix = 'Fix this to get rid of this warning.'
     for p in pars:
-        html_par = p.prepare(view_ctx)
+        html_par = p.get_final_dict(view_ctx)
         cur_area = None
         area_start = p.get_attr('area')
         area_end = p.get_attr('area_end')
@@ -276,9 +261,9 @@ def process_areas(
                 # Insert a closing paragraph for the current area.
                 # We do this regardless of whether the area_end name matches because it's reasonable and we
                 # cannot guess what the user is trying to do.
-                if not is_single:
-                    html_par.areainfo = AreaEnd(area_end)
                 new_pars.append(html_par)
+                new_pars.append({'id': '', 'md': '', 'html': '',
+                                 'end_areas': True})
             try:
                 latest_area = current_areas.pop()
             except IndexError:
@@ -290,14 +275,21 @@ def process_areas(
         if area_start is not None or area_end is not None:
             if area_start is not None:
                 # Insert an opening paragraph for new areas
+                collapse = cur_area.attrs.get('collapse')
+                is_collapsed = False
+                if collapse is not None:
+                    html_par['collapse_area'] = area_start
+                    is_collapsed = collapse not in ('false', '')
+                    html_par['collapse_class'] = 'areaexpand' if is_collapsed else 'areacollapse'
+                    new_pars.append(html_par)
 
-                if not is_single:
-                    collapse = cur_area.attrs.get('collapse')
-                    html_par.areainfo = AreaStart(
-                        area_start,
-                        collapse not in ('false', '') if collapse is not None else None,
-                    )
-                new_pars.append(html_par)
+                new_pars.append({'id': '', 'md': '', 'html': '',
+                                 'cls': ' '.join(html_par.get('attrs', {}).get('classes', [])),
+                                 'start_areas': area_start,
+                                 'collapsed': 'collapsed' if is_collapsed else ''})
+
+                if collapse is None:
+                    new_pars.append(html_par)
 
                 if cur_area is not None:
                     vis = cur_area.attrs.get('visible')
@@ -320,8 +312,8 @@ def process_areas(
                                     alttext = "This area can only be viewed from <STARTTIME> to <ENDTIME>"
                                 alttext = alttext.replace('<STARTTIME>', str(starttime)).replace('<ENDTIME>', str(endtime))
                                 new_pars.append(
-                                    DocParagraph.create(doc=Document(html_par.doc_id), par_id=html_par.id,
-                                                        md=alttext).prepare(view_ctx))
+                                    DocParagraph.create(doc=Document(html_par['doc_id']), par_id=html_par['id'],
+                                                        md=alttext).get_final_dict(view_ctx))
 
         else:
             # Just a normal paragraph
@@ -355,17 +347,11 @@ def process_areas(
                 new_pars.append(html_par)
 
     # Complete unbalanced areas.
-    if current_areas and not is_single:
+    if current_areas:
         flash_if_not_preview(f'{len(current_areas)} areas are missing area_end: {current_areas}', view_ctx)
         for _ in current_areas:
-            new_pars.append(PreparedPar(
-                data=ParBasicData(attrs={}, doc_id=-1, hash='', id='', md=''),
-                output='',
-                from_preamble=None,
-                target=None,
-                areainfo=AreaEnd(name=''),
-                html_class='',
-            ))
+            new_pars.append({'id': '', 'md': '', 'html': '',
+                             'end_areas': True})
     return new_pars
 
 

@@ -378,7 +378,7 @@ def pluginify(doc: Document,
     md_out = (output_format == PluginOutputFormat.MD)
     html_out = False if md_out else (output_format == PluginOutputFormat.HTML)
 
-    html_pars = [par.prepare(view_ctx, use_md=md_out) for par in pars]
+    html_pars = [par.get_final_dict(view_ctx, use_md=md_out) for par in pars]
 
     if custom_answer is not None or task_id is not None:
         if len(pars) != 1:
@@ -421,10 +421,10 @@ def pluginify(doc: Document,
             try:
                 gd = YamlBlock.from_markdown(md).values
                 runner = 'gamification-map'
-                html_pars[idx].output = f'<{runner} data={quoteattr(json.dumps(gd))}></{runner}>'
+                html_pars[idx][output_format.value] = f'<{runner} data={quoteattr(json.dumps(gd))}></{runner}>'
             except yaml.YAMLError as e:
                 has_errors = True
-                html_pars[idx].output = '<div class="error"><p>Gamification error:</p><pre>' + \
+                html_pars[idx][output_format.value] = '<div class="error"><p>Gamification error:</p><pre>' + \
                                                       str(e) + \
                                                       '</pre><p>From block:</p><pre>' + \
                                                       md + \
@@ -446,7 +446,7 @@ def pluginify(doc: Document,
                 # if block.get_nocache():
                 texts = [block.get_expanded_markdown(macroinfo)]
                 htmls = call_dumbo(texts, options=block.get_dumbo_options(base_opts=settings.get_dumbo_options()))
-                html_pars[idx].output = sanitize_html(htmls[0])  # to collect all together before dumbo
+                html_pars[idx][output_format.value] = sanitize_html(htmls[0])  # to collect all together before dumbo
 
                 # taketime("answ", "markup", len(plugins))
 
@@ -600,7 +600,7 @@ def pluginify(doc: Document,
 
     for idx, place in placements.items():
         par = html_pars[idx]
-        par.output = place.get_block_output()
+        par[output_format.value] = place.get_block_output()
 
     taketime("plc", "Placement done")
 
@@ -611,13 +611,13 @@ def pluginify(doc: Document,
         taketime("dumbo", "start 1")
         for k, v in dumbo_opts.items():
             # Need to wrap in div because otherwise dumbo might generate invalid HTML
-            htmls_to_dumbo.append({'content': '<div>' + html_pars[k].output + '</div>', **v.dict()})
+            htmls_to_dumbo.append({'content': '<div>' + html_pars[k][output_format.value] + '</div>', **v.dict()})
             settings_to_dumbo.append(v)
         taketime("dumbo", "start 2")
         for h, (idx, s) in zip(call_dumbo(htmls_to_dumbo,
                                           options=doc.get_settings().get_dumbo_options()),
                                dumbo_opts.items()):
-            html_pars[idx].output = sanitize_html(h)
+            html_pars[idx][output_format.value] = sanitize_html(h)
     taketime("phtml done")
 
     return PluginifyResult(

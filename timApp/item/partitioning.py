@@ -9,7 +9,6 @@ from flask import json, Request
 from lxml import html
 
 from timApp.document.docinfo import DocInfo
-from timApp.document.prepared_par import PreparedPar
 from timApp.document.viewcontext import default_view_ctx
 from timApp.util.utils import Range
 
@@ -98,7 +97,7 @@ class RequestedViewRange:
         return self.e
 
 
-def partition_texts(texts: List[PreparedPar], view_range: IndexedViewRange, preamble_count):
+def partition_texts(texts, view_range: IndexedViewRange, preamble_count):
     """
     Partition document with preambles taken into account.
     :param texts: List of processed paragraphs.
@@ -111,6 +110,13 @@ def partition_texts(texts: List[PreparedPar], view_range: IndexedViewRange, prea
     b = view_range.start_index + preamble_count
     e = view_range.end_index + preamble_count
     for text in texts:
+        # Areas take two slots in texts, so adjust the indices.
+        if text.get('start_areas') or text.get('end_areas'):
+            if i <= b:
+                b += 1
+                e += 1
+            else:
+                e += 1
         if i >= e:
             break
         if i < preamble_count or i >= b:

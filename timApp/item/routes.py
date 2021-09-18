@@ -696,7 +696,7 @@ def render_doc_view(
             user_list = get_points_by_rule(points_sum_rule, task_ids, user_list)
 
     if index is None:
-        index = get_index_from_html_list(t.output for t in post_process_result.texts)
+        index = get_index_from_html_list(t['html'] for t in post_process_result.texts)
         doc_hash = get_doc_version_hash(doc_info)
         save_index(index, index_cache_folder / f"{doc_hash}.json")
 
