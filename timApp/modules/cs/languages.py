@@ -117,12 +117,16 @@ class Language:
         self.nofilesave = False  # if no need to save files
         jso = query.jso
         self.rndname = generate_filename()
+        self.markup = {}
         if jso:
             self.user_id = df(jso.get('info'), {}).get('user_id', '--')
             self.markup = jso.get('markup', {})
             self.genname = file_hash(self.user_id + jso.get('taskID', ''))
         else:
             self.genname = self.rndname
+        self.hash_by_code = self.markup.get("hashByCode", False)
+        if self.hash_by_code:
+            self.genname = file_hash(sourcefiles)
         self.delete_tmp = True
         self.opt = get_param(query, "opt", "")
         self.timeout = get_param(query, "timeout", 10)
@@ -665,20 +669,29 @@ class Jypeli(CS, Modifier):
             self.videodest = ""
             saved_file = self.imgdest
 
-        code, out, err, pwddir = self.runself(["dotnet",
-                                               "exec",
-                                               *CS.runtime_config(),
-                                               *Jypeli.get_run_args(),
-                                               self.pure_exename,
-                                               "--headless", "true",
-                                               "--save", "true",
-                                               "--framesToRun", frames_to_run,
-                                               "--skipFrames", skip_frames,
-                                               *video_params,
-                                               ],
-                                              ulimit=df(self.ulimit, "ulimit -f 80000"))
-        if err.find("Compile") >= 0:
-            return code, out, err, pwddir
+        extra_key = str(video_params)
+        if self.hash_by_code:
+            extra_key = ""
+
+        save_hash = file_hash(str(sourcelines) + extra_key)
+        if (save_hash == old_hash or self.hash_by_code) and os.path.isfile(saved_file):
+            code, out, err, pwddir = 0, "", "", ""
+            result["nosave"] = True
+        else:
+            code, out, err, pwddir = self.runself(["dotnet",
+                                                   "exec",
+                                                   *CS.runtime_config(),
+                                                   *Jypeli.get_run_args(),
+                                                   self.pure_exename,
+                                                   "--headless", "true",
+                                                   "--save", "true",
+                                                   "--framesToRun", frames_to_run,
+                                                   "--skipFrames", skip_frames,
+                                                   *video_params,
+                                                   ],
+                                                  ulimit=df(self.ulimit, "ulimit -f 80000"))
+            if err.find("Compile") >= 0:
+                return code, out, err, pwddir
 
         if (self.videosource):
             wait_file(self.videosource)
