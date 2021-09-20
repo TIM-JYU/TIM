@@ -63,3 +63,35 @@ I am testuser1: %%'testuser1'|belongs%%
             'I am testuser1: True',
             "I am testuser1: The belongs filter requires nocache=true attribute.",
         ])
+
+    def test_area_visible(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+1
+
+#- {area=a visible="%%'testuser1'|belongs%%" nocache=true}
+a title
+#-
+2
+
+#- {area_end=a}
+
+#-
+3
+        """)
+        self.test_user_2.grant_access(d, AccessType.view)
+        db.session.commit()
+        self.assert_content(self.get(d.url, as_tree=True), [
+            '1',
+            'a title',
+            '2',
+            '',
+            '3',
+        ])
+        self.login_test2()
+        self.assert_content(self.get(d.url, as_tree=True), [
+            '1',
+            'a title',  # TODO: Possibly title should not be visible here.
+            '',
+            '3',
+        ])

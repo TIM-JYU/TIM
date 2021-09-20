@@ -11,9 +11,9 @@ from timApp.readmark.readparagraph import ReadParagraph
 readline_selector = CSSSelector('div.readline')
 
 UNREAD = ''
-READ = ReadParagraphType.click_red.class_str()
+READ = ReadParagraphType.click_red.class_str
 MODIFIED = READ + '-modified'
-PAR_CLICK = ReadParagraphType.click_par.class_str()
+PAR_CLICK = ReadParagraphType.click_par.class_str
 PAR_CLICK_MODIFIED = PAR_CLICK + '-modified'
 
 
