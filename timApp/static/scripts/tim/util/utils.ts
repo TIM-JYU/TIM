@@ -835,7 +835,7 @@ export function parseIframeopts(iframeopts: string, framesrc: string) {
     );
     const parsed = parse(`<div ${iframeopts}></div>`);
     let sandbox = "";
-    let allow = "";
+    let allow = null;
     for (const c of parsed.firstElementChild?.attributes ?? []) {
         if (c.name === "sandbox") {
             sandbox = c.value;
