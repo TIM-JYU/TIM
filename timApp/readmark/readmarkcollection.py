@@ -12,8 +12,9 @@ class ReadMarkCollection:
         self.marks.append(r)
         r.modified = modified
 
+    @property
     def class_str(self):
         s = 'readline'
-        for c in (r.type.class_str() + ('-modified' if r.modified else '') for r in self.marks):
+        for c in (r.type.class_str + ('-modified' if r.modified else '') for r in self.marks):
             s += ' ' + c
         return s
