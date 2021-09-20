@@ -229,6 +229,7 @@ def post_process_pars(
 class Area:
     name: str
     attrs: Dict
+    visible: Optional[bool] = None
 
 
 # TODO: It would be better to return a tree-like structure of the document instead of a flat list.
@@ -299,29 +300,30 @@ def process_areas(
                     )
                 new_pars.append(html_par)
 
-                if cur_area is not None:
+                vis = cur_area.visible
+                if vis is None:
                     vis = cur_area.attrs.get('visible')
-                    if vis is None:
-                        vis = True
-                    else:
-                        if str(vis).find(delimiter) >= 0:
-                            vis = expand_macros(vis, macros, settings, env=env, ignore_errors=True)
-                        vis = get_boolean(vis, True)
-                        cur_area.attrs['visible'] = vis
-                    if vis:
-                        st = cur_area.attrs.get('starttime')
-                        et = cur_area.attrs.get('endtime')
-                        if st or et:
-                            starttime = getdatetime(st, default_val=min_time)
-                            endtime = getdatetime(et, default_val=max_time)
-                            if not starttime <= now < endtime:
-                                alttext = cur_area.attrs.get('alttext')
-                                if alttext is None:
-                                    alttext = "This area can only be viewed from <STARTTIME> to <ENDTIME>"
-                                alttext = alttext.replace('<STARTTIME>', str(starttime)).replace('<ENDTIME>', str(endtime))
-                                new_pars.append(
-                                    DocParagraph.create(doc=Document(html_par.doc_id), par_id=html_par.id,
-                                                        md=alttext).prepare(view_ctx))
+                if vis is None:
+                    vis = True
+                elif isinstance(vis, str):
+                    if vis.find(delimiter) >= 0:
+                        vis = expand_macros(vis, macros, settings, env=env, ignore_errors=True)
+                    vis = get_boolean(vis, True)
+                cur_area.visible = vis
+                if vis:
+                    st = cur_area.attrs.get('starttime')
+                    et = cur_area.attrs.get('endtime')
+                    if st or et:
+                        starttime = getdatetime(st, default_val=min_time)
+                        endtime = getdatetime(et, default_val=max_time)
+                        if not starttime <= now < endtime:
+                            alttext = cur_area.attrs.get('alttext')
+                            if alttext is None:
+                                alttext = "This area can only be viewed from <STARTTIME> to <ENDTIME>"
+                            alttext = alttext.replace('<STARTTIME>', str(starttime)).replace('<ENDTIME>', str(endtime))
+                            new_pars.append(
+                                DocParagraph.create(doc=Document(html_par.doc_id), par_id=html_par.id,
+                                                    md=alttext).prepare(view_ctx))
 
         else:
             # Just a normal paragraph
@@ -338,11 +340,10 @@ def process_areas(
                 # Timed paragraph
             if access:  # par itself is visible, is it in some area that is not visible
                 for a in current_areas:
-                    vis = a.attrs.get('visible')
-                    if vis is not None:
-                        vis = get_boolean(vis, True)
-                        if not vis:
-                            access = False
+                    assert a.visible is not None
+                    if not a.visible:
+                        access = False
+                        break
                     if access: # is there time limitation in area where par is included
                         st = a.attrs.get('starttime')
                         et = a.attrs.get('endtime')
