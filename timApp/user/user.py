@@ -505,7 +505,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             )
         return q
 
-    def add_to_group(self, ug: UserGroup, added_by: Optional['User']) -> bool:
+    def add_to_group(self, ug: UserGroup, added_by: Optional['User'], sync_mailing_lists=True) -> bool:
         # Avoid cyclical importing.
         from timApp.messaging.messagelist.messagelist_utils import sync_message_list_on_add
         existing: UserGroupMember = self.id is not None and self.memberships_dyn.filter_by(group=ug).first()
@@ -517,7 +517,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             self.memberships.append(UserGroupMember(group=ug, adder=added_by))
             new_add = True
         # On changing of group, sync this person to the user goup's message lists.
-        sync_message_list_on_add(self, ug)
+        if sync_mailing_lists:
+            sync_message_list_on_add(self, ug)
         return new_add
 
     @staticmethod
@@ -538,6 +539,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def update_info(
             self,
             info: UserInfo,
+            sync_mailing_lists=True
     ):
         if info.username and self.name != info.username:
             group = self.get_personal_group()
@@ -550,7 +552,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if info.full_name:
             self.real_name = info.full_name
         if info.email:
-            if self.email != info.email:
+            if self.email != info.email and sync_mailing_lists:
                 from timApp.messaging.messagelist.emaillist import update_mailing_list_address
                 update_mailing_list_address(self.email, info.email)
             self.email = info.email
