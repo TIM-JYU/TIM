@@ -980,37 +980,48 @@ class ScimTest(TimRouteTest):
         self.assertIn('teachers', [x.usergroup.name for x in year_folder.block.accesses.values()])
 
     def test_scim_auto_user_merge(self):
-        eid = 'jy-CUR-6666-teachers'
-        create_or_update_user(
-            UserInfo(username='korppiguy', email='korppiguy@jyu.fi', full_name='Korppi Guy', origin=UserOrigin.Korppi))
-        create_or_update_user(
-            UserInfo(username='korppiguy@example.com', email='korppiguy@example.com', full_name='Korppi Guy',
-                     origin=UserOrigin.Korppi))
-        db.session.commit()
-        # Ensure personal folders are created
-        self.get('/')
-        self.login(username='korppiguy')
-        self.get('/')
-        self.login(username='korppiguy@example.com')
-        self.get('/')
-        self.json_post(
-            '/scim/Groups', {
-                'externalId': eid,
-                'displayName': 'ITKP102 2020-09-09--2020-12-20: Rooli - teacher',
-                'members': add_name_parts([
-                    {'value': u, 'display': f'User {u}', 'email': f'{u}@example.com'} for u in ['korppiguy']
-                ]),
-            },
-            auth=a,
-            expect_status=201,
-        )
-        self.assertIsNone(User.get_by_name('korppiguy@example.com'))
-        self.assertIsNotNone(User.get_by_name('korppiguy@example.com_deleted'))
-        self.assertIsNotNone(User.get_by_name('korppiguy'))
+        def test_case(eid: str, usr1: UserInfo, usr2: UserInfo):
+            create_or_update_user(usr1)
+            create_or_update_user(usr2)
+            db.session.commit()
+            # Ensure personal folders are created
+            self.get('/')
+            self.login(username=usr1.username)
+            self.get('/')
+            self.login(username=usr2.username)
+            self.get('/')
+            self.json_post(
+                '/scim/Groups', {
+                    'externalId': eid,
+                    'displayName': 'ITKP102 2020-09-09--2020-12-20: Rooli - teacher',
+                    'members': add_name_parts([
+                        {'value': usr1.username, 'display': f'User {usr1.username}', 'email': usr2.email}
+                    ]),
+                },
+                auth=a,
+                expect_status=201,
+            )
+            self.assertIsNone(User.get_by_name(usr2.email))
+            self.assertIsNotNone(User.get_by_name(f'{usr2.email}_deleted'))
+            self.assertIsNotNone(User.get_by_name(usr1.username))
 
-        self.login(username='korppiguy')
-        # Make sure there are no multiple personal folders. Otherwise an exception would be thrown here.
-        self.get('/')
+            self.login(username=usr1.username)
+            # Make sure there are no multiple personal folders. Otherwise an exception would be thrown here.
+            self.get('/')
+
+        # Basic case: full names match
+        test_case('jy-CUR-6666-teachers',
+                  UserInfo(username='korppiguy', email='korppiguy@jyu.fi', full_name='Korppi Guy',
+                           origin=UserOrigin.Korppi),
+                  UserInfo(username='korppiguy@example.com', email='korppiguy@example.com', full_name='Korppi Guy',
+                           origin=UserOrigin.Korppi))
+
+        # Special case: no common info
+        test_case('jy-CUR-9999-teachers',
+                  UserInfo(username='someuser', email='someuser@jyu.fi', full_name='Some User',
+                           origin=UserOrigin.Sisu),
+                  UserInfo(username='custom@example.com', email='custom@example.com', full_name='SomeUserWrong',
+                           origin=UserOrigin.Korppi))
 
     def test_scim_permission_update_on_new_teachers_group(self):
         """Make sure the rights of already activated groups are updated if the teachers group is provisioned later."""

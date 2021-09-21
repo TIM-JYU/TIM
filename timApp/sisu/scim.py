@@ -11,7 +11,7 @@ from webargs.flaskparser import use_args
 
 from timApp.admin.user_cli import do_merge_users, do_soft_delete
 from timApp.messaging.messagelist.emaillist import update_mailing_list_address
-from timApp.messaging.messagelist.messagelist_utils import sync_message_list_on_add
+from timApp.messaging.messagelist.messagelist_utils import sync_message_list_on_add, sync_message_list_on_expire
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name, SisuDisplayName
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import refresh_sisu_grouplist_doc, send_course_group_mail
@@ -309,15 +309,19 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     external_id = args.externalId
     if not ug.external_id:
         if not external_id_re.fullmatch(external_id):
-            raise SCIMException(422, f'Unexpected externalId format: "{external_id}" (displayName: "{args.displayName}")')
+            raise SCIMException(422,
+                                f'Unexpected externalId format: "{external_id}" (displayName: "{args.displayName}")')
         ug.external_id = ScimUserGroup(external_id=external_id)
     else:
         if ug.external_id.external_id != args.externalId:
             raise SCIMException(422, 'externalId unexpectedly changed')
     current_usernames = set(u.value for u in args.members)
     removed_user_names = set(u.name for u in ug.users) - current_usernames
-    for ms in get_scim_memberships(ug).filter(User.name.in_(removed_user_names)).with_entities(UserGroupMember):
-        ms.set_expired()
+    expired_memberships: List[UserGroupMember] = list(get_scim_memberships(ug)
+                                                      .filter(User.name.in_(removed_user_names))
+                                                      .with_entities(UserGroupMember))
+    for ms in expired_memberships:
+        ms.set_expired(sync_mailing_lists=False)
     p = parse_sisu_group_display_name_or_error(args)
     ug.display_name = args.displayName
     emails = [m.primary_email for m in args.members if m.primary_email is not None]
@@ -414,6 +418,9 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
 
     for added_user in added_users:
         sync_message_list_on_add(added_user, ug)
+
+    for expired_membership in expired_memberships:
+        sync_message_list_on_expire(expired_membership.user, expired_membership.group)
 
     # Possibly just checking is_responsible_teacher could be enough.
     if (
