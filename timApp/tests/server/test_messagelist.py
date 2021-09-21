@@ -7,10 +7,77 @@ from timApp.tests.server.timroutetest import TimMessageListTest
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LOGGED_IN_GROUPNAME
 from timApp.user.user import User, UserInfo
+from timApp.user.usergroup import UserGroup
 
 
 class MessageListTest(TimMessageListTest):
     """Server test for message lists."""
+
+    def test_scim_mail_sync(self):
+        from timApp.tests.server.test_scim import add_name_parts, a
+        eid = "jy-CUR-7777-students"
+        display_name = "ITKP103 2022-09-09--2022-12-20: Opiskelijat"
+        list_name = "students-7777"
+        self.login_test1()
+        self.make_admin(self.current_user)
+        manage_doc, message_list = self.create_list(list_name, ArchiveType.PUBLIC)
+        r = self.json_post(
+            "/scim/Groups",
+            json_data={
+                "externalId": eid,
+                "displayName": display_name,
+                "members": add_name_parts([
+                    {"value": "sisuuser", "display": "Sisu User", "email": "x@example.com"},
+                    {"value": "sisuuser3", "display": "Sisu User 3", "email": "x3@example.com"},
+                ]),
+            }, auth=a,
+            expect_status=201)
+        group_id = r["id"]
+
+        self.json_post(
+            '/sisu/createGroupDocs', json_data=[
+                {'externalId': eid},
+            ],
+        )
+
+        ug = UserGroup.get_by_external_id(eid)
+        self.json_post("/messagelist/addmember", {
+            "member_candidates": [ug.name],
+            "msg_list": list_name,
+            "send_right": True,
+            "delivery_right": True
+        })
+
+        mlist = self.mailman_client.get_list(message_list.email_address)
+        self.assertEqual(len(mlist.members), 3, "New Sisu email list should have owner and its members")
+
+        self.json_put(
+            f"/scim/Groups/{group_id}",
+            json_data={
+                "externalId": eid,
+                "displayName": display_name,
+                "members": add_name_parts([
+                    {"value": "sisuuser", "display": "Sisu User", "email": "x@example.com"},
+                    {"value": "sisuuser3", "display": "Sisu User 3", "email": "x3@example.com"},
+                    {"value": "sisuuser4", "display": "Sisu User 4", "email": "x4@example.com"},
+                ]),
+            }, auth=a)
+
+        self.assertEqual(len(mlist.members), 4, "Sisu email list should have new added user")
+
+        self.json_put(
+            f"/scim/Groups/{group_id}",
+            json_data={
+                "externalId": eid,
+                "displayName": display_name,
+                "members": add_name_parts([
+                    {"value": "sisuuser", "display": "Sisu User", "email": "x@example.com"},
+                    {"value": "sisuuser3", "display": "Sisu User 3", "email": "x3@example.com"},
+                ]),
+            }, auth=a)
+
+        self.assertEqual(len([m for m in mlist.members if m.moderation_action == "reject"]), 1,
+                         "One user must be removed from the Sisu email list")
 
     def test_creation_valid_name(self):
         """Test creating a message list with a valid user and valid list name."""
@@ -42,7 +109,7 @@ class MessageListTest(TimMessageListTest):
             username="list_member",
             email="list_member@user.com",
             password="list_member"
-        ), is_admin=True)
+        ))
         db.session.commit()
 
         self.login(list_owner.email, "list_owner", list_owner.name)

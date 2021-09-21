@@ -653,6 +653,8 @@ def find_members_for_address(address: str) -> List[Member]:
 
 
 def update_mailing_list_address(old: str, new: str) -> None:
+    if old == new:
+        return
     if not check_mailman_connection():
         return
     try:

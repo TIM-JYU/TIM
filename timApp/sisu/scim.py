@@ -413,8 +413,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
 
     # Sync info with mailing lists after all information got successfully updated
     for old, new in email_updates:
-        if old != new:
-            update_mailing_list_address(old, new)
+        update_mailing_list_address(old, new)
 
     for added_user in added_users:
         sync_message_list_on_add(added_user, ug)
