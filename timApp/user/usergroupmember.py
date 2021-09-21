@@ -24,7 +24,7 @@ class UserGroupMember(db.Model):
         'UserGroup',
     )
 
-    def set_expired(self, sync_mailing_lists=True):
+    def set_expired(self, sync_mailing_lists: bool = True) -> None:
         # Avoid cyclical importing.
         self.membership_end = get_current_time()
         if sync_mailing_lists:
