@@ -703,6 +703,11 @@ def qst_get_md(jso):
     sep = ''
     tc = ' '
     for h in headers:
+        # Some legacy qst plugin instances have dicts in `headers`,
+        # so we need to handle that case.
+        # TODO: Use some script to update all legacy qst instances.
+        if isinstance(h, dict):
+            h = h.get('text', '')
         if h:
             empty_theader = False
         theader += sep + h
