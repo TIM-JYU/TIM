@@ -1017,7 +1017,7 @@ class ScimTest(TimRouteTest):
                            origin=UserOrigin.Korppi))
 
         # Special case: no common info
-        test_case('jy-CUR-9999-teachers',
+        test_case('jy-CUR-6667-teachers',
                   UserInfo(username='someuser', email='someuser@jyu.fi', full_name='Some User',
                            origin=UserOrigin.Sisu),
                   UserInfo(username='custom@example.com', email='custom@example.com', full_name='SomeUserWrong',
