@@ -260,7 +260,7 @@ def put_group(group_id: str) -> Response:
         update_users(ug, d)
         db.session.commit()
         return json_response(group_scim(ug))
-    except Exception as e:
+    except Exception:
         log_warning(traceback.format_exc())
         raise
 
@@ -356,7 +356,9 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                                 f'Users {user.name} and {user_email.name} were not automatically merged because neither was an email user.',
                             )
                         log_warning(f'Merging users {user.name} and {user_email.name}')
-                        do_merge_users(user, user_email)
+                        # Unlike in manual merging, we always merge the users because emails are automatically
+                        # verified by Sisu
+                        do_merge_users(user, user_email, force=True)
                         do_soft_delete(user_email)
                         db.session.flush()
                 user.update_info(UserInfo(
