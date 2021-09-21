@@ -703,6 +703,9 @@ def qst_get_md(jso):
     sep = ''
     tc = ' '
     for h in headers:
+        # TODO: Use strong typing for QST
+        if isinstance(h, dict):
+            h = h.get('text', '')
         if h:
             empty_theader = False
         theader += sep + h
