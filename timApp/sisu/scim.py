@@ -1,4 +1,5 @@
 import re
+import traceback
 from dataclasses import field, dataclass
 from functools import cached_property
 from typing import List, Optional, Dict, Any, Generator
@@ -9,6 +10,8 @@ from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
 
 from timApp.admin.user_cli import do_merge_users, do_soft_delete
+from timApp.messaging.messagelist.emaillist import update_mailing_list_address
+from timApp.messaging.messagelist.messagelist_utils import sync_message_list_on_add, sync_message_list_on_expire
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name, SisuDisplayName
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import refresh_sisu_grouplist_doc, send_course_group_mail
@@ -114,7 +117,7 @@ def handle_error(error: Any) -> Response:
     return handle_error_msg_code(error.code, error.description)
 
 
-def handle_error_msg_code(code: int, msg: str, headers: Optional[Dict[str, str]]=None) -> Response:
+def handle_error_msg_code(code: int, msg: str, headers: Optional[Dict[str, str]] = None) -> Response:
     return json_response(
         scim_error_json(code, msg),
         status_code=code,
@@ -250,7 +253,6 @@ def get_group(group_id: str) -> Response:
 @csrf.exempt
 @scim.put('/Groups/<group_id>')
 def put_group(group_id: str) -> Response:
-    # log_info(get_request_message(include_body=True))
     try:
         ug = get_group_by_scim(group_id)
         try:
@@ -260,8 +262,8 @@ def put_group(group_id: str) -> Response:
         update_users(ug, d)
         db.session.commit()
         return json_response(group_scim(ug))
-    except Exception as e:
-        # log_error(traceback.format_exc())
+    except Exception:
+        log_warning(traceback.format_exc())
         raise
 
 
@@ -307,15 +309,19 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     external_id = args.externalId
     if not ug.external_id:
         if not external_id_re.fullmatch(external_id):
-            raise SCIMException(422, f'Unexpected externalId format: "{external_id}" (displayName: "{args.displayName}")')
+            raise SCIMException(422,
+                                f'Unexpected externalId format: "{external_id}" (displayName: "{args.displayName}")')
         ug.external_id = ScimUserGroup(external_id=external_id)
     else:
         if ug.external_id.external_id != args.externalId:
             raise SCIMException(422, 'externalId unexpectedly changed')
     current_usernames = set(u.value for u in args.members)
     removed_user_names = set(u.name for u in ug.users) - current_usernames
-    for ms in get_scim_memberships(ug).filter(User.name.in_(removed_user_names)).with_entities(UserGroupMember):
-        ms.set_expired()
+    expired_memberships: List[UserGroupMember] = list(get_scim_memberships(ug)
+                                                      .filter(User.name.in_(removed_user_names))
+                                                      .with_entities(UserGroupMember))
+    for ms in expired_memberships:
+        ms.set_expired(sync_mailing_lists=False)
     p = parse_sisu_group_display_name_or_error(args)
     ug.display_name = args.displayName
     emails = [m.primary_email for m in args.members if m.primary_email is not None]
@@ -332,6 +338,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     existing_accounts: List[User] = User.query.filter(User.name.in_(current_usernames) | User.email.in_(emails)).all()
     existing_accounts_dict: Dict[str, User] = {u.name: u for u in existing_accounts}
     existing_accounts_by_email_dict: Dict[str, User] = {u.email: u for u in existing_accounts}
+    email_updates = []
     with db.session.no_autoflush:
         for u in args.members:
             expected_name = u.name.derive_full_name(last_name_first=True)
@@ -356,28 +363,35 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                                 f'Users {user.name} and {user_email.name} were not automatically merged because neither was an email user.',
                             )
                         log_warning(f'Merging users {user.name} and {user_email.name}')
-                        do_merge_users(user, user_email)
+                        # Unlike in manual merging, we always merge the users because emails are automatically
+                        # verified by Sisu
+                        do_merge_users(user, user_email, force=True)
                         do_soft_delete(user_email)
                         db.session.flush()
+                email_updates.append((user.email, u.primary_email))
                 user.update_info(UserInfo(
                     username=u.value,
                     full_name=name_to_use,
                     email=u.primary_email,
                     last_name=u.name.familyName,
-                    given_name=u.name.givenName,
-                ))
+                    given_name=u.name.givenName, ),
+                    sync_mailing_lists=False
+                )
             else:
                 user = existing_accounts_by_email_dict.get(u.primary_email)
                 if user:
                     if not user.is_email_user:
-                        raise SCIMException(422, f'Key (email)=({user.email}) already exists. Conflicting username is: {u.value}')
+                        raise SCIMException(422,
+                                            f'Key (email)=({user.email}) already exists. Conflicting username is: {u.value}')
+                    email_updates.append((user.email, u.primary_email))
                     user.update_info(UserInfo(
                         username=u.value,
                         full_name=name_to_use,
                         email=u.primary_email,
                         last_name=u.name.familyName,
-                        given_name=u.name.givenName,
-                    ))
+                        given_name=u.name.givenName),
+                        sync_mailing_lists=False
+                    )
                 else:
                     user, _ = User.create_with_group(UserInfo(
                         username=u.value,
@@ -387,7 +401,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         last_name=u.name.familyName,
                         given_name=u.name.givenName,
                     ))
-            added = user.add_to_group(ug, added_by=scimuser)
+            added = user.add_to_group(ug, added_by=scimuser, sync_mailing_lists=False)
             if added:
                 added_users.add(user)
 
@@ -398,8 +412,19 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
         return raise_conflict_error(args, e)
     refresh_sisu_grouplist_doc(ug)
 
+    # Sync info with mailing lists after all information got successfully updated
+    for old, new in email_updates:
+        update_mailing_list_address(old, new)
+
+    for added_user in added_users:
+        sync_message_list_on_add(added_user, ug)
+
+    for expired_membership in expired_memberships:
+        sync_message_list_on_expire(expired_membership.user, expired_membership.group)
+
     # Possibly just checking is_responsible_teacher could be enough.
-    if (ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup) or ug.external_id.is_administrative_person:
+    if (ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup) \
+            or ug.external_id.is_administrative_person:
         tg = UserGroup.get_teachers_group()
         for u in added_users:
             if tg not in u.groups:

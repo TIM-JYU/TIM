@@ -127,16 +127,16 @@ def find_and_merge_users(primary: str, secondary: str) -> MergeResult:
     return do_merge_users(u_prim, u_sec)
 
 
-def do_merge_users(u_prim: User, u_sec: User) -> MergeResult:
+def do_merge_users(u_prim: User, u_sec: User, force=False) -> MergeResult:
     if u_prim.is_special:
         raise RouteException(f'User {u_prim.name} is a special user')
     if u_sec.is_special:
         raise RouteException(f'User {u_sec.name} is a special user')
     if u_prim == u_sec:
         raise RouteException('Users cannot be the same')
-    if not has_anything_in_common(u_prim, u_sec):
+    if not force and not has_anything_in_common(u_prim, u_sec):
         raise RouteException(f'Users {u_prim.name} and {u_sec.name} do not appear to be duplicates. '
-                          f'Merging not allowed to prevent accidental errors.')
+                             f'Merging not allowed to prevent accidental errors.')
     moved_data = MergeResult(u_prim, u_sec)
     for a in ('owned_lectures', 'lectureanswers', 'messages', 'answers', 'annotations', 'velps'):
         a_alt = a + '_alt'
