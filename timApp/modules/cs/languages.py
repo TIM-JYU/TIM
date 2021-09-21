@@ -119,9 +119,9 @@ class Language:
         self.rndname = generate_filename()
         self.markup = {}
         if jso:
-            self.user_id = df(jso.get('info'), {}).get('user_id', '--')
-            self.markup = jso.get('markup', {})
-            self.genname = file_hash(self.user_id + jso.get('taskID', ''))
+            self.user_id = df(jso.get("info"), {}).get("user_id", "--")
+            self.markup = jso.get("markup", {})
+            self.genname = file_hash(self.user_id + jso.get("taskID", ""))
         else:
             self.genname = self.rndname
         self.hash_by_code = self.markup.get("hashByCode", False)
@@ -582,7 +582,6 @@ class Jypeli(CS, Modifier):
         self.videosource = "/tmp/%s/Output/out.mp4" % self.basename
         self.videodest = "/csgenerated/%s.mp4" % self.rndname
         self.pure_exename = u"{0:s}.exe".format(self.filename)
-        self.pure_mgdest = u"{0:s}.png".format(self.rndname)
 
     @staticmethod
     @functools.cache
@@ -619,10 +618,10 @@ class Jypeli(CS, Modifier):
 
     def run(self, result, sourcelines, points_rule):
         jso = self.query.jso
-        state = jso.get('state', {})
+        state = jso.get("state", {})
         if state is None:
             state = {}
-        old_hash = state.get('save_hash', '')
+        old_hash = state.get("save_hash", "")
         force_run = self.markup.get("force_run", "RandomGen")
         if force_run and re.search(force_run, sourcelines, re.MULTILINE):
             old_hash = ""
@@ -693,16 +692,18 @@ class Jypeli(CS, Modifier):
             if err.find("Compile") >= 0:
                 return code, out, err, pwddir
 
-        if (self.videosource):
-            wait_file(self.videosource)
-            run(["mv", self.videosource, self.videodest])
-            self.imgdest = ""
-        else:
-            wait_file(self.imgsource)
-            run(["convert", "-flip", self.imgsource, self.imgdest], cwd=self.prgpath, timeout=20)
-            remove(self.imgsource)
-            self.videodest = ""
-        # print("*** Screenshot: https://tim.jyu.fi/csgenerated/%s\n" % self.pure_imgdest)
+            if self.videosource:
+                wait_file(self.videosource)
+                run(["mv", "-f", self.videosource, self.videodest])
+                self.imgdest = ""
+            else:
+                wait_file(self.imgsource)
+                remove(self.imgdest)
+                run(["convert", "-flip", self.imgsource, self.imgdest], cwd=self.prgpath, timeout=20)
+                remove(self.imgsource)
+                self.videodest = ""
+                self.imgdest += f"?{time.time_ns()}"
+        result["save"]["save_hash"] = save_hash
         out = re.sub("Number of joysticks:.*\n.*", "", out)
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out

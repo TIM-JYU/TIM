@@ -391,7 +391,6 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
                 video_i1 = video_index + len(video_start)
                 video_i2 = htmldata.find('"', video_i1)
                 video_name = htmldata[video_i1:video_i2]
-                # video_name = video_name.replace("/csgen", "/cs/gen")
                 if os.path.isfile(video_name):
                     return htmldata
             else:
@@ -475,8 +474,7 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
 
         video = ret['web'].get('video', None)
         if video:
-            htmldata += video_start + video + '" ' + """
-type = "video/mp4" controls = "" style = "width: 100%;"></video>"""
+            htmldata += video_start + video + '" ' + 'type="video/mp4" controls="" style = "width: 100%;"></video>'
         htmldata += get_cache_footer(query)
 
         if cache_clear:
