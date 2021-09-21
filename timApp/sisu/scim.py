@@ -10,6 +10,8 @@ from sqlalchemy.orm import aliased
 from webargs.flaskparser import use_args
 
 from timApp.admin.user_cli import do_merge_users, do_soft_delete
+from timApp.messaging.messagelist.emaillist import update_mailing_list_address
+from timApp.messaging.messagelist.messagelist_utils import sync_message_list_on_add
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name, SisuDisplayName
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import refresh_sisu_grouplist_doc, send_course_group_mail
@@ -332,6 +334,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     existing_accounts: List[User] = User.query.filter(User.name.in_(current_usernames) | User.email.in_(emails)).all()
     existing_accounts_dict: Dict[str, User] = {u.name: u for u in existing_accounts}
     existing_accounts_by_email_dict: Dict[str, User] = {u.email: u for u in existing_accounts}
+    email_updates = []
     with db.session.no_autoflush:
         for u in args.members:
             expected_name = u.name.derive_full_name(last_name_first=True)
@@ -361,25 +364,29 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         do_merge_users(user, user_email, force=True)
                         do_soft_delete(user_email)
                         db.session.flush()
+                email_updates.append((user.email, u.primary_email))
                 user.update_info(UserInfo(
                     username=u.value,
                     full_name=name_to_use,
                     email=u.primary_email,
                     last_name=u.name.familyName,
-                    given_name=u.name.givenName,
-                ))
+                    given_name=u.name.givenName, ),
+                    sync_mailing_lists=False
+                )
             else:
                 user = existing_accounts_by_email_dict.get(u.primary_email)
                 if user:
                     if not user.is_email_user:
                         raise SCIMException(422, f'Key (email)=({user.email}) already exists. Conflicting username is: {u.value}')
+                    email_updates.append((user.email, u.primary_email))
                     user.update_info(UserInfo(
                         username=u.value,
                         full_name=name_to_use,
                         email=u.primary_email,
                         last_name=u.name.familyName,
-                        given_name=u.name.givenName,
-                    ))
+                        given_name=u.name.givenName),
+                        sync_mailing_lists=False
+                    )
                 else:
                     user, _ = User.create_with_group(UserInfo(
                         username=u.value,
@@ -389,7 +396,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         last_name=u.name.familyName,
                         given_name=u.name.givenName,
                     ))
-            added = user.add_to_group(ug, added_by=scimuser)
+            added = user.add_to_group(ug, added_by=scimuser, sync_mailing_lists=False)
             if added:
                 added_users.add(user)
 
@@ -400,8 +407,17 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
         return raise_conflict_error(args, e)
     refresh_sisu_grouplist_doc(ug)
 
+    # Sync info with mailing lists after all information got successfully updated
+    for old, new in email_updates:
+        if old != new:
+            update_mailing_list_address(old, new)
+
+    for added_user in added_users:
+        sync_message_list_on_add(added_user, ug)
+
     # Possibly just checking is_responsible_teacher could be enough.
-    if (ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup) or ug.external_id.is_administrative_person:
+    if (
+            ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup) or ug.external_id.is_administrative_person:
         tg = UserGroup.get_teachers_group()
         for u in added_users:
             if tg not in u.groups:
