@@ -1,4 +1,5 @@
 import re
+import traceback
 from dataclasses import field, dataclass
 from functools import cached_property
 from typing import List, Optional, Dict, Any, Generator
@@ -250,7 +251,6 @@ def get_group(group_id: str) -> Response:
 @csrf.exempt
 @scim.put('/Groups/<group_id>')
 def put_group(group_id: str) -> Response:
-    # log_info(get_request_message(include_body=True))
     try:
         ug = get_group_by_scim(group_id)
         try:
@@ -261,7 +261,7 @@ def put_group(group_id: str) -> Response:
         db.session.commit()
         return json_response(group_scim(ug))
     except Exception as e:
-        # log_error(traceback.format_exc())
+        log_warning(traceback.format_exc())
         raise
 
 
