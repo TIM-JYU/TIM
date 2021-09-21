@@ -117,7 +117,7 @@ def handle_error(error: Any) -> Response:
     return handle_error_msg_code(error.code, error.description)
 
 
-def handle_error_msg_code(code: int, msg: str, headers: Optional[Dict[str, str]]=None) -> Response:
+def handle_error_msg_code(code: int, msg: str, headers: Optional[Dict[str, str]] = None) -> Response:
     return json_response(
         scim_error_json(code, msg),
         status_code=code,
@@ -381,7 +381,8 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                 user = existing_accounts_by_email_dict.get(u.primary_email)
                 if user:
                     if not user.is_email_user:
-                        raise SCIMException(422, f'Key (email)=({user.email}) already exists. Conflicting username is: {u.value}')
+                        raise SCIMException(422,
+                                            f'Key (email)=({user.email}) already exists. Conflicting username is: {u.value}')
                     email_updates.append((user.email, u.primary_email))
                     user.update_info(UserInfo(
                         username=u.value,
@@ -422,8 +423,8 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
         sync_message_list_on_expire(expired_membership.user, expired_membership.group)
 
     # Possibly just checking is_responsible_teacher could be enough.
-    if (
-            ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup) or ug.external_id.is_administrative_person:
+    if (ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup) \
+            or ug.external_id.is_administrative_person:
         tg = UserGroup.get_teachers_group()
         for u in added_users:
             if tg not in u.groups:
