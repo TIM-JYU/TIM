@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 from dataclasses import dataclass
@@ -11,12 +12,13 @@ from requests import Response
 
 from timApp.document.docsettings import DocSettings
 from timApp.document.timjsonencoder import TimJsonEncoder
-from timApp.markdown.dumboclient import call_dumbo, DumboOptions
+from timApp.markdown.dumboclient import DumboOptions, call_dumbo_async, async_to_sync
 from timApp.plugin.plugin import Plugin, AUTOMD
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.timtable import timTable
 from timApp.util.logger import log_warning
+from tim_common.vendor.requests_futures import FuturesSession
 
 CSPLUGIN_DOMAIN = 'csplugin'
 DRAGPLUGIN_DOMAIN = 'drag'
@@ -117,6 +119,44 @@ def get_plugin_regex_obj(plugin_name: str) -> Pattern:
     return regex_obj
 
 
+async def call_plugin_generic_async(
+        sess: FuturesSession,
+        plugin: str,
+        method: str,
+        route: str,
+        data: Any = None,
+        headers: Any = None,
+        params: Any = None,
+        read_timeout: int = 30,
+) -> Response:
+    plug = get_plugin(plugin)
+    host = plug.host
+    if route == 'multimd' and (plugin == "mmcq" or plugin == "mcq"):  # hack to handle mcq and mmcq in tim by qst
+        plug = get_plugin('qst')
+        host = plug.host + plugin + '/'
+    url = host + route
+    try:
+        r = await asyncio.wrap_future(sess.request(
+            method,
+            url,
+            data=data,
+            timeout=(current_app.config['PLUGIN_CONNECT_TIMEOUT'], read_timeout),
+            headers=headers,
+            params=params,
+        ))
+        r.encoding = 'utf-8'
+    except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError) as e:
+        log_warning(f'Connection failed to plugin {plugin}: {e}')
+        raise PluginException(f"Connect timeout when calling {plugin} ({url}).")
+    except requests.exceptions.ReadTimeout as e:
+        log_warning(f'Read timeout occurred for plugin {plugin} in route {route}: {e}')
+        raise PluginException(f"Read timeout when calling {plugin} ({url}).")
+    else:
+        if r.status_code >= 500:
+            raise PluginException(f'Got response with status code {r.status_code}')
+        return r
+
+
 def call_plugin_generic(
         plugin: str,
         method: str,
@@ -173,9 +213,9 @@ plugin_request_fn = do_request
 def render_plugin(docsettings: DocSettings, plugin: Plugin, output_format: PluginOutputFormat) -> str:
     plugin_data = plugin.render_json()
     if docsettings.plugin_md():
-        convert_md([plugin_data],
-                   options=plugin.par.get_dumbo_options(base_opts=docsettings.get_dumbo_options()),
-                   outtype='md' if output_format == PluginOutputFormat.HTML else 'latex')
+        async_to_sync(convert_md, [plugin_data],
+                      options=plugin.par.get_dumbo_options(base_opts=docsettings.get_dumbo_options()),
+                      outtype='md' if output_format == PluginOutputFormat.HTML else 'latex')
     return call_plugin_generic(plugin.type,
                                'post',
                                output_format.value,
@@ -232,14 +272,15 @@ def dict_to_dumbo(pm: Dict) -> None:
         pm[mkey] = v
 
 
-def convert_md(
+async def convert_md(
+        sess: FuturesSession,
         plugin_data: List[dict],
         options: DumboOptions,
         outtype: str = 'md',
         plugin_opts: Optional[List[DumboOptions]] = None,
 ) -> None:
     markups = [p for p in plugin_data]
-    html_markups = call_dumbo(markups, f'/{outtype}keys', options=options, data_opts=plugin_opts)
+    html_markups = await call_dumbo_async(sess, markups, f'/{outtype}keys', options=options, data_opts=plugin_opts)
     for p, h in zip(plugin_data, html_markups):
         p.clear()
         p.update(h)
@@ -279,9 +320,14 @@ def convert_tex_mock(plugin_data: Union[dict, list]) -> None:
         dict_to_dumbo(pm)
 
 
-def render_plugin_multi(docsettings: DocSettings, plugin: str, plugin_data: List[Plugin],
-                        plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML,
-                        default_auto_md: bool = False) -> str:
+async def render_plugin_multi(
+        sess: FuturesSession,
+        docsettings: DocSettings,
+        plugin: str,
+        plugin_data: List[Plugin],
+        plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML,
+        default_auto_md: bool = False,
+) -> str:
     opts = docsettings.get_dumbo_options()
     plugin_dumbo_opts = [p.par.get_dumbo_options(base_opts=opts) for p in plugin_data]
     plugin_dicts = [p.render_json() for p in plugin_data]
@@ -304,19 +350,24 @@ def render_plugin_multi(docsettings: DocSettings, plugin: str, plugin_data: List
                 raise PluginException("automd for non-inner plugins not implemented yet") # TODO implement
 
     if docsettings.plugin_md():
-        convert_md(plugin_dicts,
-                   options=opts,
-                   plugin_opts=plugin_dumbo_opts,
-                   outtype='md' if plugin_output_format == PluginOutputFormat.HTML else 'latex')
+        await convert_md(
+            sess,
+            plugin_dicts,
+            options=opts,
+            plugin_opts=plugin_dumbo_opts,
+            outtype='md' if plugin_output_format == PluginOutputFormat.HTML else 'latex')
 
     if plugin_reg.instance and plugin_output_format == PluginOutputFormat.HTML:
         return plugin_reg.instance.multihtml_direct_call(plugin_dicts)
 
-    return call_plugin_generic(plugin,
-                                'post',
-                                ('multimd' if plugin_output_format == PluginOutputFormat.MD else 'multihtml'),
-                                data=json.dumps(plugin_dicts, cls=TimJsonEncoder),
-                                headers={'Content-type': 'application/json'}).text
+    r = await call_plugin_generic_async(
+        sess,
+        plugin,
+        'post',
+        ('multimd' if plugin_output_format == PluginOutputFormat.MD else 'multihtml'),
+        data=json.dumps(plugin_dicts, cls=TimJsonEncoder),
+        headers={'Content-type': 'application/json'})
+    return r.text
 
 
 def has_auto_md(data: Dict, default: bool) -> bool:

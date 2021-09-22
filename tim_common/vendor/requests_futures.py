@@ -85,7 +85,7 @@ class FuturesSession(Session):
         self.session_args = args
         self.session_kwargs = kwargs
 
-    def request(self, *args, **kwargs):
+    def request(self, *args, **kwargs) -> Future:
         """Maintains the existing api for Session.request.
         Used by all of the higher level methods, e.g. Session.get.
         The background_callback param allows you to do some processing on the

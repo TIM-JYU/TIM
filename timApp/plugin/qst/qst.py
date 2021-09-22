@@ -18,7 +18,7 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.lecture.askedjson import normalize_question_json
 from timApp.lecture.question_utils import qst_set_array_order, qst_pick_expls, qst_rand_array, qst_handle_randomization, \
     calculate_points_from_json_answer, create_points_table, qst_filter_markup_points
-from timApp.markdown.dumboclient import DumboOptions
+from timApp.markdown.dumboclient import DumboOptions, async_to_sync
 from timApp.plugin.containerLink import convert_md
 from timApp.plugin.containerLink import prepare_for_dumbo_attr_list_recursive, get_plugin_regex_obj
 from timApp.plugin.plugin import Plugin, PluginException
@@ -860,7 +860,7 @@ def convert_qst_md(plugindata: Dict, dumbo_opts: Optional[DumboOptions] = None) 
     if not dumbo_opts:
         dumbo_opts = DumboOptions.default()
     prepare_for_dumbo_attr_list_recursive(get_plugin_regex_obj('qst'), plugindata)
-    convert_md([plugindata], options=dumbo_opts)
+    async_to_sync(convert_md, [plugindata], options=dumbo_opts)
 
 
 def render_static_qst(m: QstHtmlModel):

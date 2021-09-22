@@ -1,11 +1,14 @@
 """Defines a client interface for using Dumbo, the markdown converter."""
+import asyncio
 import json
 from enum import Enum
-from typing import List, Union, Dict, NamedTuple, Optional, overload
+from typing import List, Union, Dict, NamedTuple, Optional, overload, Callable
 
 import requests
+from requests import Response
 
 from timApp.document.timjsonencoder import TimJsonEncoder
+from tim_common.vendor.requests_futures import FuturesSession
 
 
 class DumboHTMLException(Exception):
@@ -87,10 +90,36 @@ def call_dumbo(data: List[Dict], path='',
                data_opts: Optional[List[DumboOptions]]=None) -> List[Dict]: ...
 
 
-def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='',
-               options: DumboOptions = DumboOptions.default(),
-               data_opts: Optional[List[DumboOptions]]=None) -> Union[
-    List[str], Dict, List[Dict]]:
+def call_dumbo(
+        data: Union[List[str], Dict, List[Dict]],
+        path='',
+        options: DumboOptions = DumboOptions.default(),
+        data_opts: Optional[List[DumboOptions]] = None,
+) -> Union[List[str], Dict, List[Dict]]:
+    return async_to_sync(call_dumbo_async, data, path, options, data_opts)
+
+
+# T = TypeVar('T')
+# P = ParamSpec('P')
+# def async_to_sync(f: Callable[Concatenate[FuturesSession, P], Awaitable[T]], *args, **kwargs) -> T:
+def async_to_sync(f: Callable, *args, **kwargs):
+    async def x():
+        sess = FuturesSession()
+        r = await f(sess, *args, **kwargs)
+        sess.close()
+        return r
+
+    result = asyncio.run(x())
+    return result
+
+
+async def call_dumbo_async(
+        session: FuturesSession,
+        data: Union[List[str], Dict, List[Dict]],
+        path='',
+        options: DumboOptions = DumboOptions.default(),
+        data_opts: Optional[List[DumboOptions]] = None,
+) -> Union[List[str], Dict, List[Dict]]:
     """Calls Dumbo for converting the given markdown to HTML.
 
     :param options: Options for Dumbo.
@@ -116,7 +145,8 @@ def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='',
                     data_to_send = {'content': [{'content': d} for d in data], **opts}
         else:
             data_to_send = {'content': data, **opts}
-        r = requests.post(url=DUMBO_URL + path, data=json.dumps(data_to_send, cls=TimJsonEncoder))
+        f = session.post(url=DUMBO_URL + path, data=json.dumps(data_to_send, cls=TimJsonEncoder))
+        r: Response = await asyncio.wrap_future(f)
         r.encoding = 'utf-8'
     except requests.ConnectionError:
         raise Exception('Failed to connect to Dumbo')

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
+import asyncio
 import json
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
 from itertools import chain
-from typing import List, Tuple, Optional, Dict, Union, DefaultDict
+from typing import List, Tuple, Optional, Dict, Union, DefaultDict, Coroutine
 from xml.sax.saxutils import quoteattr
 
 import attr
@@ -24,9 +25,8 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
-from tim_common.html_sanitize import sanitize_html
-from timApp.plugin.containerLink import plugin_reqs, get_plugin
-from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
+from timApp.plugin.containerLink import plugin_reqs, get_plugin, PluginReg
+from timApp.plugin.containerLink import render_plugin_multi, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
     find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap, WANT_FIELDS, find_task_ids, \
     get_simple_hash_from_par_and_user
@@ -38,6 +38,8 @@ from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFie
 from timApp.util.rndutils import SeedClass
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex, Range
+from tim_common.html_sanitize import sanitize_html
+from tim_common.vendor.requests_futures import FuturesSession
 
 
 def get_error_plugin(plugin_name, message, response=None,
@@ -498,12 +500,11 @@ def pluginify(doc: Document,
     taketime("glb/ucu", "done")
     settings = doc.get_settings()
     all_plugins = []
+    req_dict: Dict[str, Tuple[Dict, PluginReg]] = {}
     for plugin_name, plugin_block_map in plugins.items():
         taketime("plg", plugin_name)
         try:
             plugin = get_plugin(plugin_name)
-            plugin_lazy = plugin.lazy
-
             plugin_block_map_vals = [*plugin_block_map.values()]
             for p in plugin_block_map_vals:
                 all_plugins.append(p)
@@ -517,6 +518,7 @@ def pluginify(doc: Document,
         # taketime("plg e", plugin_name)
         try:
             reqs = json.loads(resp)
+            req_dict[plugin_name] = reqs, plugin
             plugin.can_give_task = reqs.get("canGiveTask", False)
             if plugin_name == 'mmcq' or plugin_name == 'mcq':
                 reqs['multihtml'] = True
@@ -540,60 +542,60 @@ def pluginify(doc: Document,
             else:
                 css_paths.append(f"/{plugin_name}/{src}")
 
-        # Remove duplicates, preserving order TODO: could this be done out of the loop?
-        # taketime("rmv", "Remove dupl")
-        js_paths = list(OrderedDict.fromkeys(js_paths))
-        css_paths = list(OrderedDict.fromkeys(css_paths))
-
+    coros = []
+    sess = FuturesSession()
+    for plugin_name, plugin_block_map in plugins.items():
+        r = req_dict.get(plugin_name)
+        if not r:
+            continue
+        reqs, pluginreq = r
         default_auto_md = reqs.get('default_automd', False)
+        fut = render_plugin_multi(
+            sess,
+            settings,
+            plugin_name,
+            list(plugin_block_map.values()),
+            plugin_output_format=output_format,
+            default_auto_md=default_auto_md,
+        )
+        coros.append(fut)
+    if coros:
+        results = asyncio.run(gather_coros(coros))
+        sess.close()
+        results.reverse()
+    else:
+        results = []
+        sess.close()
 
-        if (html_out and reqs.get('multihtml')) or (md_out and reqs.get('multimd')):
-            try:
-                # taketime("plg m", plugin_name)
-                response = render_plugin_multi(
-                    settings,
-                    plugin_name,
-                    list(plugin_block_map.values()),
-                    plugin_output_format=output_format,
-                    default_auto_md=default_auto_md)
-                taketime("plg e", plugin_name)
-            except PluginException as e:
-                has_errors = True
-                for idx, r in plugin_block_map.keys():
-                    placements[idx].set_error(r, str(e))
-                continue
-            try:
-                plugin_htmls = json.loads(response)
-            except ValueError as e:
-                has_errors = True
-                for idx, r in plugin_block_map.keys():
-                    placements[idx].set_error(r, f'Failed to parse plugin response from multihtml route: {e}')
-                continue
-            if not isinstance(plugin_htmls, list):
-                for ((idx, r), plugin) in plugin_block_map.items():
-                    plugin.plugin_lazy = plugin_lazy
-                    placements[idx].set_error(r, f'Multihtml response of {plugin_name} was not a list: {plugin_htmls}')
-            else:
-                for ((idx, r), plugin), html in zip(plugin_block_map.items(), plugin_htmls):
-                    plugin.plugin_lazy = plugin_lazy
-                    placements[idx].set_output(r, html)
+    for plugin_name, plugin_block_map in plugins.items():
+        r = req_dict.get(plugin_name)
+        if not r:
+            continue
+        reqs, pluginreq = r
+        result = results.pop()
+        if isinstance(result, PluginException):
+            has_errors = True
+            for idx, r in plugin_block_map.keys():
+                placements[idx].set_error(r, str(result))
+            continue
+        try:
+            plugin_htmls = json.loads(result)
+        except ValueError as e:
+            has_errors = True
+            for idx, r in plugin_block_map.keys():
+                placements[idx].set_error(r, f'Failed to parse plugin response from multihtml route: {e}')
+            continue
+        if not isinstance(plugin_htmls, list):
+            for ((idx, r), plugin) in plugin_block_map.items():
+                plugin.plugin_lazy = pluginreq.lazy
+                placements[idx].set_error(r, f'Multihtml response of {plugin_name} was not a list: {plugin_htmls}')
         else:
-            for (idx, r), plugin in plugin_block_map.items():
-                if md_out:
-                    err_msg_md = "Plugin does not support printing yet. " \
-                                 "Please refer to TIM help pages if you want to learn how you can manually " \
-                                 "define what to print here."
-                    placements[idx].set_error(r, err_msg_md)
-                else:
-                    try:
-                        html = render_plugin(docsettings=settings,
-                                             plugin=plugin,
-                                             output_format=output_format)
-                    except PluginException as e:
-                        has_errors = True
-                        placements[idx].set_error(r, str(e))
-                        continue
-                    placements[idx].set_output(r, html)
+            for ((idx, r), plugin), html in zip(plugin_block_map.items(), plugin_htmls):
+                plugin.plugin_lazy = pluginreq.lazy
+                placements[idx].set_output(r, html)
+
+    js_paths = list(OrderedDict.fromkeys(js_paths))
+    css_paths = list(OrderedDict.fromkeys(css_paths))
     taketime("plg m", "Plugins done")
 
     taketime("plc", "Placement start")
@@ -627,6 +629,13 @@ def pluginify(doc: Document,
         custom_answer_plugin=custom_answer_plugin,
         all_plugins=all_plugins,
         has_errors=has_errors,
+    )
+
+
+async def gather_coros(futures: List[Coroutine]):
+    return await asyncio.gather(
+        *futures,
+        return_exceptions=True,
     )
 
 
