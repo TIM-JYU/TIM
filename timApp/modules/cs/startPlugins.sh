@@ -37,9 +37,11 @@ chown agent:agent /cs/log.txt
 #  it's not possible to change socket permissions (it has no effect).
 chmod 766 /var/run/docker.sock
 
-# Refresh dotnet dependency cache
-cd /cs/dotnet
-./gen_deps.py
+if [ "$CSPLUGIN_TARGET" != "base" ]; then
+  # Refresh dotnet dependency cache
+  cd /cs/dotnet
+  ./gen_deps.py
+fi
 
 cd /cs/java
 wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/vesa/trunk/comtest.jar -O comtest.jar.tmp -nv && mv comtest.jar.tmp comtest.jar
