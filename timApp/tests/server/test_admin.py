@@ -164,7 +164,7 @@ class MergeTest(TimRouteTest):
         do_merge_users(u1_new, u1)
         do_soft_delete(u1)
         db.session.commit()
-        self.assertEqual(u1.email, "user1@example.com_deleted")
+        self.assertEqual(u1.email, f"user1@example.com_deleted_{u1.id}")
 
         # Create a user again with the same info as original u1
         # This should pass since previous u1 has been disabled
@@ -181,8 +181,9 @@ class MergeTest(TimRouteTest):
         # Simulate u1_new logging in again (e.g. via HAKA)
         do_merge_users(u1_new, u1_again)
         do_soft_delete(u1_again)
-
         db.session.commit()
+
+        self.assertEqual(u1_again.email, f"user1@example.com_deleted_{u1_again.id}")
 
 
 class UserDeleteTest(TimRouteTest):

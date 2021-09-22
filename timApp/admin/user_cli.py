@@ -201,11 +201,12 @@ def find_and_soft_delete(name: str) -> None:
 
 
 def do_soft_delete(u: User) -> None:
-    if u.name.endswith(deleted_user_suffix) or u.email.endswith(deleted_user_suffix):
+    if u.is_deleted:
         raise RouteException('User is already soft-deleted.')
+
     u.update_info(UserInfo(
-        username=u.name + deleted_user_suffix,
-        email=u.email + deleted_user_suffix,
+        username=f'{u.name}{deleted_user_suffix}_{u.id}',
+        email=f'{u.email}{deleted_user_suffix}_{u.id}',
         full_name=u.real_name,
     ))
 
