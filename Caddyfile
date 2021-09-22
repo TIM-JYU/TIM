@@ -41,7 +41,8 @@
 		reverse_proxy * http://stack-api-server
 	}
 	handle_errors {
-		rewrite * /html/updating.html
+		rewrite * /html/error.html
+		templates
 		import static
 	}
 }
