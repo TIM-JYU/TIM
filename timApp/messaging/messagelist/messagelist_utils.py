@@ -5,9 +5,11 @@ from email.utils import parsedate_to_datetime
 from enum import Enum
 from re import Match
 from typing import Optional, List, Dict, Tuple, Iterator
+from urllib.error import HTTPError
 from urllib.parse import SplitResult, parse_qs, urlsplit
 
 from mailmanclient import MailingList
+from sqlalchemy.orm import load_only
 
 from timApp.auth.accesshelper import has_manage_access, AccessDenied
 from timApp.auth.accesstype import AccessType
@@ -22,7 +24,7 @@ from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_n
     set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
     set_email_list_allow_nonmember, set_email_list_allow_attachments, set_email_list_default_reply_type, \
     add_email, get_email_list_member, remove_email_list_membership, set_email_list_member_send_status, \
-    set_email_list_member_delivery_status, set_email_list_description, set_email_list_info
+    set_email_list_member_delivery_status, set_email_list_description, set_email_list_info, log_mailman
 from timApp.messaging.messagelist.listinfo import ArchiveType, ListInfo, ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember, \
     MessageListExternalMember, MessageListMember
@@ -950,3 +952,36 @@ def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -
     if message_list.email_list_domain:
         email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
         set_email_list_info(email_list, info)
+
+
+@dataclass
+class UserGroupDiff:
+    add_user_ids: List[int]
+    remove_user_ids: List[int]
+
+
+def sync_usergroup_messagelist_members(diffs: Dict[id, UserGroupDiff], permanent_delete: bool = False):
+    user_ids = set(sum([u.add_user_ids + u.remove_user_ids for u in diffs.values()], []))
+
+    if not user_ids:
+        return
+    user_query = User.query.filter(User.id.in_(user_ids)).options(load_only(User.id, User.email, User.real_name))
+    users = {user.id: user for user in user_query}
+    try:
+        for ug_id, diff in diffs.items():
+            ug_memberships = MessageListTimMember.query.filter_by(group_id=ug_id).all()
+            for group_tim_member in ug_memberships:
+                group_message_list: MessageListModel = group_tim_member.message_list
+                if group_message_list.email_list_domain:
+                    email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
+
+                    for add_id in diff.add_user_ids:
+                        user = users[add_id]
+                        add_email(email_list, user.email, True, user.real_name,
+                                  group_tim_member.member.send_right, group_tim_member.member.delivery_right)
+
+                    for remove_id in diff.remove_user_ids:
+                        user = users[remove_id]
+                        remove_email_list_membership(get_email_list_member(email_list, user.email), permanent_delete)
+    except HTTPError as e:
+        log_mailman(e, "Failed to sync usergroups")

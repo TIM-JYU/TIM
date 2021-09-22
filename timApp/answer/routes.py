@@ -40,6 +40,7 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx, OriginInfo, UrlMacros
 from timApp.item.block import Block, BlockType
 from timApp.markdown.dumboclient import call_dumbo
+from timApp.messaging.messagelist.messagelist_utils import UserGroupDiff, sync_usergroup_messagelist_members
 from timApp.notification.send_email import multi_send_email
 from timApp.peerreview.peerreview_utils import has_review_access, get_reviews_for_user, is_peerreview_enabled
 from timApp.plugin.containerLink import call_plugin_answer
@@ -1112,6 +1113,7 @@ def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User)
     if not groupdata:
         return
     groups_created = 0
+    group_members_initial = {}
     for op, group_set in groupdata.items():
         for name, uids in group_set.items():
             ug = UserGroup.get_by_name(name)
@@ -1127,6 +1129,8 @@ def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User)
                     raise RouteException(f'Group does not exist: {name}')
             else:
                 verify_group_edit_access(ug, curr_user)
+            if ug not in group_members_initial:
+                group_members_initial[ug] = set(um.user_id for um in ug.memberships_sel)
             users: List[User] = User.query.filter(User.id.in_(uids)).all()
             found_user_ids = set(u.id for u in users)
             missing_ids = set(uids) - found_user_ids
@@ -1136,11 +1140,22 @@ def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User)
                 ug.memberships_sel = [UserGroupMember(user=u, adder=curr_user) for u in users]
             elif op == 'add':
                 for u in users:
-                    u.add_to_group(ug, added_by=curr_user)
+                    u.add_to_group(ug, added_by=curr_user, sync_mailing_lists=False)
             elif op == 'remove':
                 ug.memberships_sel = [ugm for ugm in ug.memberships_sel if ugm.user_id not in found_user_ids]
             else:
                 raise RouteException(f'Unexpected group operation: {op}')
+
+    diffs = {}
+    for group, members in group_members_initial.items():
+        # Handle both transient objects (only has relationship) and DB objects (has columns assigned)
+        new_members = set(um.user_id if um.user_id is not None else um.user.id for um in group.memberships_sel)
+        added_members = list(new_members - members)
+        removed_members = list(members - new_members)
+        diffs[group.id] = UserGroupDiff(add_user_ids=added_members, remove_user_ids=removed_members)
+
+    # JSRunner group actions are permanent unlike with normal UI
+    sync_usergroup_messagelist_members(diffs, permanent_delete=True)
 
 
 class UserFieldEntry(TypedDict):
