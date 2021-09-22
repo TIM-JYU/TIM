@@ -131,15 +131,16 @@ class MergeTest(TimRouteTest):
         self.assertEqual(0, r.velps)
         self.assertEqual(0, r.groups)
         db.session.commit()
-        check_memberships(self.test_user_1, self.test_user_2, t1pg, t2pg)
+        test_user_2 = self.test_user_2
+        check_memberships(self.test_user_1, test_user_2, t1pg, t2pg)
 
         find_and_soft_delete('testuser2')
         self.assertIsNone(User.get_by_name('testuser2'))
-        self.assertIsNotNone(User.get_by_name('testuser2_deleted'))
+        self.assertIsNotNone(User.get_by_name(f'testuser2_deleted_{test_user_2.id}'))
         with self.assertRaises(RouteException):
             find_and_soft_delete('testuser2')
         with self.assertRaises(RouteException):
-            find_and_soft_delete('testuser2_deleted')
+            find_and_soft_delete(f'testuser2_deleted_{test_user_2.id}')
 
     def test_merge_multi(self):
         u1, ug1 = User.create_with_group(
@@ -197,7 +198,7 @@ class UserDeleteTest(TimRouteTest):
         db.session.commit()
         self.get(d.url, expect_status=302, expect_content='')
         self.get(d.url, expect_status=403)
-        self.login(username='m@example.com_deleted')
+        self.login(username=f'm@example.com_deleted_{u.id}')
         self.post_answer(
             'x', f'{d.id}.t',
             user_input={},

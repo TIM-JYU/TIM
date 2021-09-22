@@ -982,7 +982,7 @@ class ScimTest(TimRouteTest):
     def test_scim_auto_user_merge(self):
         def test_case(eid: str, usr1: UserInfo, usr2: UserInfo):
             create_or_update_user(usr1)
-            create_or_update_user(usr2)
+            u2 = create_or_update_user(usr2)
             db.session.commit()
             # Ensure personal folders are created
             self.get('/')
@@ -1002,7 +1002,7 @@ class ScimTest(TimRouteTest):
                 expect_status=201,
             )
             self.assertIsNone(User.get_by_name(usr2.email))
-            self.assertIsNotNone(User.get_by_name(f'{usr2.email}_deleted'))
+            self.assertIsNotNone(User.get_by_name(f'{usr2.email}_deleted_{u2.id}'))
             self.assertIsNotNone(User.get_by_name(usr1.username))
 
             self.login(username=usr1.username)
