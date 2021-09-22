@@ -300,7 +300,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def is_deleted(self) -> bool:
-        return deleted_user_pattern.match(self.email) is not None or deleted_user_pattern.match(self.name) is not None
+        return (self.email and deleted_user_pattern.match(self.email) is not None) or \
+               (self.name and deleted_user_pattern.match(self.name) is not None)
 
     @property
     def group_ids(self):
