@@ -1,4 +1,5 @@
 import json
+import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -161,6 +162,7 @@ def last_name_to_last(full_name: Optional[str]):
 
 
 deleted_user_suffix = '_deleted'
+deleted_user_pattern = re.compile(fr".*{deleted_user_suffix}(_\d+)?$")
 
 
 def user_query_with_joined_groups() -> Query:
@@ -297,8 +299,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return self.id > 0
 
     @property
-    def is_deleted(self):
-        return self.name.endswith(deleted_user_suffix) and self.email.endswith(deleted_user_suffix)
+    def is_deleted(self) -> bool:
+        return (self.email and deleted_user_pattern.match(self.email) is not None) or \
+               (self.name and deleted_user_pattern.match(self.name) is not None)
 
     @property
     def group_ids(self):
