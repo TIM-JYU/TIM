@@ -1,4 +1,4 @@
-from timApp.admin.user_cli import find_and_merge_users, find_and_soft_delete
+from timApp.admin.user_cli import find_and_merge_users, find_and_soft_delete, do_merge_users, do_soft_delete
 from timApp.document.docentry import DocEntry
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_3_ID
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -140,6 +140,49 @@ class MergeTest(TimRouteTest):
             find_and_soft_delete('testuser2')
         with self.assertRaises(RouteException):
             find_and_soft_delete('testuser2_deleted')
+
+    def test_merge_multi(self):
+        u1, ug1 = User.create_with_group(
+            UserInfo(
+                username="user1",
+                email="user1@example.com",
+                full_name="User 1"
+            )
+        )
+
+        u1_new, ug1_new = User.create_with_group(
+            UserInfo(
+                username="user1_new",
+                email="user1_new@example.com",
+                full_name="User 1 New"
+            )
+        )
+
+        db.session.commit()
+
+        # First, merge two users
+        do_merge_users(u1_new, u1)
+        do_soft_delete(u1)
+        db.session.commit()
+        self.assertEqual(u1.email, "user1@example.com_deleted")
+
+        # Create a user again with the same info as original u1
+        # This should pass since previous u1 has been disabled
+        u1_again, ug1 = User.create_with_group(
+            UserInfo(
+                username="user1",
+                email="user1@example.com",
+                full_name="User 1"
+            )
+        )
+
+        db.session.commit()
+
+        # Simulate u1_new logging in again (e.g. via HAKA)
+        do_merge_users(u1_new, u1_again)
+        do_soft_delete(u1_again)
+
+        db.session.commit()
 
 
 class UserDeleteTest(TimRouteTest):
