@@ -9,7 +9,13 @@
     <link href="/static/images/favicon.ico" rel="shortcut icon" type="image/x-icon"/>
     <meta name="google-site-verification" content="GHYGje2NiYlQM66xyggsnzQht1OHSgtv_9baHbFIklU"/>
     <link rel="stylesheet" href="/static/generated/default.css">
-    <title>Update in progress - TIM</title>
+    <title>
+        {{ if eq (placeholder "http.error.status_code") "404" }}
+            Not found - TIM
+        {{ else }}
+            Update in progress - TIM
+        {{ end }}
+    </title>
 </head>
 <body>
 <div class="container-fluid">
@@ -30,7 +36,13 @@
         <div class="col-md-8 col-md-offset-2">
             <div class="row">
                 <div class="col-md-12">
-                    <p class="text-center">TIM is being updated at the moment. Please wait.</p>
+                    <p class="text-center">
+                        {{ if eq (placeholder "http.error.status_code") "404" }}
+                            The file was not found. The URL might be wrong or the file has been moved/deleted.
+                        {{ else }}
+                            TIM is being updated at the moment. Please wait.
+                        {{ end }}
+                    </p>
                 </div>
             </div>
         </div>
