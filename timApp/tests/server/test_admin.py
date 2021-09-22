@@ -1,4 +1,4 @@
-from timApp.admin.user_cli import find_and_merge_users, find_and_soft_delete
+from timApp.admin.user_cli import find_and_merge_users, find_and_soft_delete, do_merge_users, do_soft_delete
 from timApp.document.docentry import DocEntry
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_3_ID
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -131,15 +131,60 @@ class MergeTest(TimRouteTest):
         self.assertEqual(0, r.velps)
         self.assertEqual(0, r.groups)
         db.session.commit()
-        check_memberships(self.test_user_1, self.test_user_2, t1pg, t2pg)
+        test_user_2 = self.test_user_2
+        check_memberships(self.test_user_1, test_user_2, t1pg, t2pg)
 
         find_and_soft_delete('testuser2')
         self.assertIsNone(User.get_by_name('testuser2'))
-        self.assertIsNotNone(User.get_by_name('testuser2_deleted'))
+        self.assertIsNotNone(User.get_by_name(f'testuser2_deleted_{test_user_2.id}'))
         with self.assertRaises(RouteException):
             find_and_soft_delete('testuser2')
         with self.assertRaises(RouteException):
-            find_and_soft_delete('testuser2_deleted')
+            find_and_soft_delete(f'testuser2_deleted_{test_user_2.id}')
+
+    def test_merge_multi(self):
+        u1, ug1 = User.create_with_group(
+            UserInfo(
+                username="user1",
+                email="user1@example.com",
+                full_name="User 1"
+            )
+        )
+
+        u1_new, ug1_new = User.create_with_group(
+            UserInfo(
+                username="user1_new",
+                email="user1_new@example.com",
+                full_name="User 1 New"
+            )
+        )
+
+        db.session.commit()
+
+        # First, merge two users
+        do_merge_users(u1_new, u1)
+        do_soft_delete(u1)
+        db.session.commit()
+        self.assertEqual(u1.email, f"user1@example.com_deleted_{u1.id}")
+
+        # Create a user again with the same info as original u1
+        # This should pass since previous u1 has been disabled
+        u1_again, ug1 = User.create_with_group(
+            UserInfo(
+                username="user1",
+                email="user1@example.com",
+                full_name="User 1"
+            )
+        )
+
+        db.session.commit()
+
+        # Simulate u1_new logging in again (e.g. via HAKA)
+        do_merge_users(u1_new, u1_again)
+        do_soft_delete(u1_again)
+        db.session.commit()
+
+        self.assertEqual(u1_again.email, f"user1@example.com_deleted_{u1_again.id}")
 
 
 class UserDeleteTest(TimRouteTest):
@@ -153,7 +198,7 @@ class UserDeleteTest(TimRouteTest):
         db.session.commit()
         self.get(d.url, expect_status=302, expect_content='')
         self.get(d.url, expect_status=403)
-        self.login(username='m@example.com_deleted')
+        self.login(username=f'm@example.com_deleted_{u.id}')
         self.post_answer(
             'x', f'{d.id}.t',
             user_input={},

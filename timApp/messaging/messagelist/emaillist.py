@@ -9,7 +9,7 @@ from timApp.messaging.messagelist.listinfo import ListInfo, mailman_archive_poli
     ReplyToListChanges
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.tim_app import app
-from timApp.user.user import User
+from timApp.user.user import User, deleted_user_pattern
 from timApp.util.flask.requesthelper import NotExist, RouteException
 from timApp.util.logger import log_warning, log_info, log_error
 from tim_common.marshmallow_dataclass import class_schema
@@ -654,6 +654,9 @@ def find_members_for_address(address: str) -> List[Member]:
 
 def update_mailing_list_address(old: str, new: str) -> None:
     if old == new:
+        return
+    # Don't try to update info for "soft" deleted emails (since the emails are invalid)
+    if deleted_user_pattern.match(old) or deleted_user_pattern.match(new):
         return
     if not check_mailman_connection():
         return
