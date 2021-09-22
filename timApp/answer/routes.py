@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict
+from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict, Set
 
 from flask import Response
 from flask import request
@@ -1109,11 +1109,17 @@ class JsrunnerGroups(TypedDict, total=False):
 MAX_GROUPS_PER_CALL = 10
 
 
+@dataclass
+class UserGroupMembersState:
+    before: Set[int]
+    after: Set[int]
+
+
 def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User):
     if not groupdata:
         return
     groups_created = 0
-    group_members_initial = {}
+    group_members_state = {}
     for op, group_set in groupdata.items():
         for name, uids in group_set.items():
             ug = UserGroup.get_by_name(name)
@@ -1129,8 +1135,9 @@ def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User)
                     raise RouteException(f'Group does not exist: {name}')
             else:
                 verify_group_edit_access(ug, curr_user)
-            if ug not in group_members_initial:
-                group_members_initial[ug] = set(um.user_id for um in ug.memberships_sel)
+            if ug not in group_members_state:
+                current_state = set(um.user_id for um in ug.memberships_sel)
+                group_members_state[ug] = UserGroupMembersState(before=current_state, after=set(current_state))
             users: List[User] = User.query.filter(User.id.in_(uids)).all()
             found_user_ids = set(u.id for u in users)
             missing_ids = set(uids) - found_user_ids
@@ -1138,23 +1145,26 @@ def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User)
                 raise RouteException(f'Users not found: {missing_ids}')
             if op == 'set':
                 ug.memberships_sel = [UserGroupMember(user=u, adder=curr_user) for u in users]
+                group_members_state[ug].after = set(um.user.id for um in ug.memberships_sel)
             elif op == 'add':
+                # Add by hand because memberships_sel is not updated in add_to_group
+                after_set = group_members_state[ug].after
                 for u in users:
                     u.add_to_group(ug, added_by=curr_user, sync_mailing_lists=False)
+                    after_set.add(u.id)
             elif op == 'remove':
                 ug.memberships_sel = [ugm for ugm in ug.memberships_sel if ugm.user_id not in found_user_ids]
+                group_members_state[ug].after = set(um.user.id for um in ug.memberships_sel)
             else:
                 raise RouteException(f'Unexpected group operation: {op}')
 
-    diffs = {}
-    for group, members in group_members_initial.items():
-        # Handle both transient objects (only has relationship) and DB objects (has columns assigned)
-        new_members = set(um.user_id if um.user_id is not None else um.user.id for um in group.memberships_sel)
-        added_members = list(new_members - members)
-        removed_members = list(members - new_members)
-        diffs[group.id] = UserGroupDiff(add_user_ids=added_members, remove_user_ids=removed_members)
+    diffs = {
+        group.id: UserGroupDiff(add_user_ids=list(diff.after - diff.before),
+                                remove_user_ids=list(diff.before - diff.after))
+        for group, diff in group_members_state.items()
+    }
 
-    # JSRunner group actions are permanent unlike with normal UI
+    # JSRunner group actions are permanent unlike with user UI
     sync_usergroup_messagelist_members(diffs, permanent_delete=True)
 
 

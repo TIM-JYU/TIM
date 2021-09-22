@@ -960,11 +960,11 @@ class UserGroupDiff:
     remove_user_ids: List[int]
 
 
-def sync_usergroup_messagelist_members(diffs: Dict[id, UserGroupDiff], permanent_delete: bool = False):
+def sync_usergroup_messagelist_members(diffs: Dict[int, UserGroupDiff], permanent_delete: bool = False) -> None:
     user_ids = set(sum([u.add_user_ids + u.remove_user_ids for u in diffs.values()], []))
-
     if not user_ids:
         return
+
     user_query = User.query.filter(User.id.in_(user_ids)).options(load_only(User.id, User.email, User.real_name))
     users = {user.id: user for user in user_query}
     try:

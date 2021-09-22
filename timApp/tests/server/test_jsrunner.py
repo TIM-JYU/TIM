@@ -42,6 +42,16 @@ class JsRunnerTestBase(TimRouteTest):
             **kwargs,
         )
 
+    def create_group_jsrun(self, grouplist, group="tg1", method='setGroup'):
+        d = self.create_jsrun(f"""
+fields: []
+group: testuser1
+program: ''
+postprogram: |!!
+tools.{method}("{group}", {grouplist});
+!!""")
+        return d
+
 
 class JsRunnerTest(JsRunnerTestBase):
     def setUp(self):
@@ -1180,13 +1190,3 @@ tools.print(tools.getUserName());
             user_input={"userNames":["testuser3"]},
             expect_content={'web': {'errors': [], 'output': '', 'outdata': {}}},
         )
-
-    def create_group_jsrun(self, grouplist, method='setGroup'):
-        d = self.create_jsrun(f"""
-fields: []
-group: testuser1
-program: ''
-postprogram: |!!
-tools.{method}("tg1", {grouplist});
-!!""")
-        return d

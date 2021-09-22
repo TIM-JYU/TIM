@@ -3,6 +3,7 @@ from timApp.auth.accesstype import AccessType
 from timApp.folder.folder import Folder
 from timApp.messaging.messagelist.listinfo import ArchiveType
 from timApp.messaging.messagelist.messagelist_utils import MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX
+from timApp.tests.server.test_jsrunner import JsRunnerTestBase
 from timApp.tests.server.timroutetest import TimMessageListTest
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LOGGED_IN_GROUPNAME
@@ -41,12 +42,7 @@ class MessageListTest(TimMessageListTest):
         )
 
         ug = UserGroup.get_by_external_id(eid)
-        self.json_post("/messagelist/addmember", {
-            "member_candidates": [ug.name],
-            "msg_list": list_name,
-            "send_right": True,
-            "delivery_right": True
-        })
+        self.add_list_member(list_name, [ug.name])
 
         mlist = self.mailman_client.get_list(message_list.email_address)
         self.assertEqual(len(mlist.members), 3, "New Sisu email list should have owner and its members")
@@ -122,12 +118,7 @@ class MessageListTest(TimMessageListTest):
         self.assertEqual(len(mlist.owners), 1, "List owner should be counted as owner of the mailing list")
 
         # Add user to the list
-        self.json_post("/messagelist/addmember", {
-            "member_candidates": [list_member.name],
-            "msg_list": list_name,
-            "send_right": True,
-            "delivery_right": True
-        })
+        self.add_list_member(list_name, [list_member.name])
         self.assertEqual({m.address.email for m in mlist.members},
                          {list_owner.email, list_member.email},
                          "List should have its owner and member added")
@@ -186,12 +177,7 @@ class MessageListTest(TimMessageListTest):
         for atype in (ArchiveType.PUBLIC, ArchiveType.GROUPONLY, ArchiveType.UNLISTED):
             _, message_list = self.create_list(f"list_access_{atype.name.lower()}1", atype)
 
-            self.json_post("/messagelist/addmember", {
-                "member_candidates": [self.test_user_2.name],
-                "msg_list": message_list.name,
-                "send_right": True,
-                "delivery_right": True
-            })
+            self.add_list_member(message_list.name, [self.test_user_2.name])
 
             self.trigger_message_send(message_list, self.test_user_2, "Test message", "This is a test message")
 
@@ -227,3 +213,43 @@ class MessageListTest(TimMessageListTest):
             self.assertEqual(len([a for a in archive_doc.block.accesses.values()
                                   if a.access_type != AccessType.owner and a.access_type != AccessType.view]), 0,
                              "Archived message must only have view and owner access types")
+
+
+class JSRunnerMessageListTest(TimMessageListTest, JsRunnerTestBase):
+
+    def test_jsrunner_mail_sync(self):
+        """Test JSRunner group actions sync with mailman"""
+
+        self.login_test1()
+        self.make_admin(self.current_user)
+        manage_doc, message_list = self.create_list("test-jsrunner-list-1", ArchiveType.PUBLIC)
+        mlist = self.mailman_client.get_list(message_list.email_address)
+
+        d = self.create_group_jsrun([self.test_user_2.id], group="jg1")
+        self.do_jsrun(d)
+
+        self.assertIsNotNone(UserGroup.get_by_name("jg1"), "Group jg1 should be created")
+        self.add_list_member("test-jsrunner-list-1", ["jg1"])
+
+        self.assertEqual(set(m.address.email for m in mlist.members),
+                         {self.test_user_1.email, self.test_user_2.email},
+                         "Group jg1 should have testuser1 and testuser2")
+
+        d = self.create_group_jsrun([self.test_user_3.id], group="jg1", method="addToGroup")
+        self.do_jsrun(d)
+
+        self.assertEqual(set(m.address.email for m in mlist.members),
+                         {self.test_user_1.email, self.test_user_2.email, self.test_user_3.email},
+                         "Group jg1 should have testuser3 added")
+
+        d = self.create_group_jsrun([self.test_user_2.id], group="jg1", method="removeFromGroup")
+        self.do_jsrun(d)
+        self.assertEqual(set(m.address.email for m in mlist.members),
+                         {self.test_user_1.email, self.test_user_3.email},
+                         "Group jg1 should have testuser2 removed")
+
+        d = self.create_group_jsrun([self.test_user_2.id], group="jg1")
+        self.do_jsrun(d)
+        self.assertEqual(set(m.address.email for m in mlist.members),
+                         {self.test_user_1.email, self.test_user_2.email},
+                         "Group jg1 should have testuser3 removed and testuser2 added")
