@@ -114,7 +114,8 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     # For groups created from SCIM API
     external_id: ScimUserGroup = db.relationship('ScimUserGroup', lazy='select', uselist=False)
 
-    messagelist_membership: MessageListTimMember = db.relationship("MessageListTimMember", back_populates="user_group")
+    messagelist_membership: List[MessageListTimMember] = db.relationship("MessageListTimMember",
+                                                                         back_populates="user_group")
 
     internalmessage_display: Optional[InternalMessageDisplay] = db.relationship('InternalMessageDisplay',
                                                                                 back_populates='usergroup')
