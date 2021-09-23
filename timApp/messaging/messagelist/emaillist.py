@@ -391,8 +391,6 @@ def add_email(
             display_name=real_name,
         )
         # Set member's send and delivery rights to email list.
-        # TODO: These functions call Mailman for every invocation. Investigate if it's possible to skip the save
-        #  method, and save after these calls.
         set_email_list_member_send_status(new_member, send_right)
         set_email_list_member_delivery_status(new_member, delivery_right)
     except HTTPError as e:
@@ -400,8 +398,6 @@ def add_email(
             # With code 409, Mailman indicates that the member is already in the list. We assume that a member has
             # been soft removed previously, and is now re-added to email list. Set send and delivery rights.
             member = get_email_list_member(mlist, email)
-            # TODO: These functions call Mailman for every invocation. Investigate if it's possible to skip the save
-            #  method, and save after these calls.
             set_email_list_member_send_status(member, send_right)
             set_email_list_member_delivery_status(member, delivery_right)
         else:

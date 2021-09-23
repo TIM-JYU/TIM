@@ -1,12 +1,11 @@
 """Routes for settings view."""
 from dataclasses import field
-from typing import Dict, Any
-from dataclasses import dataclass
 from typing import Any, Optional
 
 from flask import render_template, session, flash, Response
 from flask import request
 from jinja2 import TemplateNotFound
+from sqlalchemy.orm import load_only
 
 from timApp.admin.user_cli import do_soft_delete
 from timApp.answer.answer_models import AnswerUpload
@@ -23,23 +22,18 @@ from timApp.user.consentchange import ConsentChange
 from timApp.user.preferences import Preferences
 from timApp.user.settings.theme import get_available_themes
 from timApp.user.user import User, Consent, get_owned_objects_query
-from timApp.util.flask.requesthelper import (
-    get_option,
-    verify_json_params,
-    RouteException,
-    use_model,
-    NotExist,
-)
 from timApp.user.usercontact import UserContact
-from timApp.user.verification.verification import ContactAddVerification, request_verification
+from timApp.user.verification.verification import (
+    ContactAddVerification,
+    request_verification,
+    resend_verification,
+)
 from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import is_valid_email
 
-settings_page = TypedBlueprint("settings_page",
-                               __name__,
-                               url_prefix="/settings")
+settings_page = TypedBlueprint("settings_page", __name__, url_prefix="/settings")
 
 
 @settings_page.before_request
@@ -56,11 +50,13 @@ def show() -> str:
 
     try:
         limit = 50
-        return render_template('settings.jinja2',
-                               css_files=available_css_files,
-                               notification_limit=limit,
-                               notifications=get_current_user_notifications(limit=limit),
-                               contacts=get_current_user_object().contacts)
+        return render_template(
+            "settings.jinja2",
+            css_files=available_css_files,
+            notification_limit=limit,
+            notifications=get_current_user_notifications(limit=limit),
+            contacts=get_current_user_object().contacts,
+        )
     except TemplateNotFound:
         raise NotExist()
 
@@ -159,26 +155,26 @@ def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
 
 
 def get_info_for(u: User) -> Response:
-    include_doc_content = get_option(request, 'content', False)
+    include_doc_content = get_option(request, "content", False)
     return json_response(get_user_info(u, include_doc_content))
 
 
-@settings_page.get('/info')
+@settings_page.get("/info")
 def get_info_current() -> Response:
     return get_info_for(get_current_user_object())
 
 
-@settings_page.get('/info/<username>')
+@settings_page.get("/info/<username>")
 def get_info_any(username: str) -> Response:
     verify_admin()
     u = User.get_by_name(username)
     if not u:
-        raise NotExist('User not found')
+        raise NotExist("User not found")
     return get_info_for(u)
 
 
-@settings_page.post('/updateConsent')
-def update_consent(consent: Consent = field(metadata={'by_value': True})) -> Response:
+@settings_page.post("/updateConsent")
+def update_consent(consent: Consent = field(metadata={"by_value": True})) -> Response:
     u = get_current_user_object()
     if u.consent != consent:
         u.consent = consent
@@ -203,9 +199,9 @@ def delete_account() -> Response:
 
 
 @settings_page.post("/contacts/add")
-def add_contact_info(contact_info: str,
-                     contact_info_type: Channel = field(metadata={'by_value': True})) \
-        -> Response:
+def add_contact_info(
+    contact_info: str, contact_info_type: Channel = field(metadata={"by_value": True})
+) -> Response:
     """Add a new contact information for a TIM user.
 
     :param contact_info_type: The channel user wishes to add a new contact information.
@@ -215,14 +211,24 @@ def add_contact_info(contact_info: str,
     verify_logged_in()
     user = get_current_user_object()
     # Check for duplicate contact information.
-    existing_contact_info = db.session.query(UserContact.verified).filter(
-        (UserContact.user == user) &
-        (UserContact.channel == contact_info_type) &
-        (UserContact.contact == contact_info)).first()
+    existing_contact_info: Optional[UserContact] = (
+        UserContact.query.filter(
+            (UserContact.user == user)
+            & (UserContact.channel == contact_info_type)
+            & (UserContact.contact == contact_info)
+        )
+        .options(load_only(UserContact.id, UserContact.verified))
+        .first()
+    )
 
     if existing_contact_info:
-        # If the contact info already exists and is verified by the user, then inform them about it.
-        raise RouteException("The contact is already added")
+        # If the contact info already exists and is verified by the user, resend verification
+        if existing_contact_info.verified:
+            raise RouteException("The contact is already added")
+        resend_verification(
+            ContactAddVerification.query.filter_by(contact=existing_contact_info).one()
+        )
+        return json_response({"requireVerification": False})
 
     # Add appropriate contact info.
     require_verification = False
@@ -231,9 +237,11 @@ def add_contact_info(contact_info: str,
         if not is_valid_email(contact_info):
             raise RouteException("Email format is invalid")
 
-        uc = UserContact(user=user, contact=contact_info, channel=Channel.EMAIL, verified=False)
+        uc = UserContact(
+            user=user, contact=contact_info, channel=Channel.EMAIL, verified=False
+        )
         db.session.add(uc)
-        request_verification(ContactAddVerification(user=user, contact=uc), "settings/verify-templates/contact")
+        request_verification(ContactAddVerification(user=user, contact=uc))
 
     db.session.commit()
     return json_response({"requireVerification": require_verification})

@@ -954,9 +954,17 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
         # Propagate the adding on message list's message channels.
         if group_message_list.email_list_domain:
             # TODO: Find user's contact info for emails and add them accordingly.
-            email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
-            add_email(email_list, user.email, True, user.real_name,
-                      group_tim_member.member.send_right, group_tim_member.member.delivery_right)
+            email_list = get_email_list_by_name(
+                group_message_list.name, group_message_list.email_list_domain
+            )
+            add_email(
+                email_list,
+                user.email,
+                True,
+                user.real_name,
+                group_tim_member.member.send_right,
+                group_tim_member.member.delivery_right,
+            )
 
 
 def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
@@ -977,7 +985,9 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
         # Propagate the deletion on message list's message channels.
         if group_message_list.email_list_domain:
             # TODO: Find user's contact info for emails and remove them accordingly.
-            email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
+            email_list = get_email_list_by_name(
+                group_message_list.name, group_message_list.email_list_domain
+            )
             email_list_member = get_email_list_member(email_list, user.email)
             remove_email_list_membership(email_list_member)
 
@@ -1125,19 +1135,28 @@ def sync_new_contact_info(user_contact: UserContact) -> None:
 
     :param user_contact: Contact information to be synced to message lists.
     """
+    if not user_contact.channel != Channel.EMAIL:
+        return
     user = User.get_by_id(user_contact.user_id)
-    # This is mostly for typing, but what if we *didn't* find this user here?
-    if user:
-        for group in user.groups:
-            for membership in group.messagelist_membership:
-                # Go through all message user's groups and the message lists those groups are a member.
-                message_list = membership.message_list
-                # Add new emails to email lists.
-                if user_contact.channel is Channel.EMAIL_LIST and message_list.email_list_domain:
-                    email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
-                    # TODO: add_email calls Mailman for every invocation. This might become a performance bottleneck?
-                    add_email(email_list, user_contact.contact, True, user.real_name, membership.send_right,
-                              membership.delivery_right)
+    assert user is not None
+    for group in user.groups:
+        for membership in group.messagelist_membership:
+            # Go through all message user's groups and the message lists those groups are a member.
+            message_list = membership.message_list
+            # Add new emails to email lists.
+            if message_list.email_list_domain:
+                email_list = get_email_list_by_name(
+                    message_list.name, message_list.email_list_domain
+                )
+                # TODO: add_email calls Mailman for every invocation. This might become a performance bottleneck?
+                add_email(
+                    email_list,
+                    user_contact.contact,
+                    True,
+                    user.real_name,
+                    membership.send_right,
+                    membership.delivery_right,
+                )
 
 
 @dataclass

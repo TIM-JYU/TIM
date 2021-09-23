@@ -281,10 +281,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def scim_extra_data(self):
         return {"emails": [{"value": self.email}] if self.email else []}
 
-    consents = db.relationship('ConsentChange', back_populates='user', lazy='select')
-    contacts = db.relationship('UserContact', back_populates='user', lazy='select')
-    notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
-    notifications_alt = db.relationship('Notification')
+    consents = db.relationship("ConsentChange", back_populates="user", lazy="select")
+    contacts = db.relationship("UserContact", back_populates="user", lazy="select")
+    notifications = db.relationship(
+        "Notification", back_populates="user", lazy="dynamic"
+    )
+    notifications_alt = db.relationship("Notification")
 
     groups: list[UserGroup] = db.relationship(
         UserGroup,

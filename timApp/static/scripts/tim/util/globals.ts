@@ -155,6 +155,7 @@ export interface ISettings {
     use_document_word_list: boolean;
     word_list: string;
     auto_mark_all_read: boolean;
+    max_uncollapsed_toc_items: number | null;
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {

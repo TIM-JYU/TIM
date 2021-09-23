@@ -3,9 +3,9 @@ import {
     documentglobals,
     genericglobals,
     isDocumentGlobals,
+    ISettings,
     someglobals,
 } from "tim/util/globals";
-import {ISettings} from "tim/user/settings.component";
 import {IDocSettings} from "tim/document/IDocSettings";
 
 export interface IHeader {

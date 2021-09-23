@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional
 
 from flask import render_template, Response
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound  # type: ignore
@@ -12,18 +12,21 @@ from timApp.util.flask.responsehelper import ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import get_current_time
 
-verify = TypedBlueprint('verify', __name__, url_prefix='/verify')
+verify = TypedBlueprint("verify", __name__, url_prefix="/verify")
 
 
-def get_verification_data(verify_type: str, verify_token: str) -> Tuple[Optional[Verification], Optional[str]]:
+def get_verification_data(
+    verify_type: str, verify_token: str
+) -> tuple[Optional[Verification], Optional[str]]:
     verify_logged_in()
     verify_type_parsed = VerificationType.parse(verify_type)
     error = None
     if not verify_type_parsed:
         error = "Invalid verification type"
 
-    verification: Optional[Verification] \
-        = Verification.query.filter_by(token=verify_token, type=verify_type_parsed).first()
+    verification: Optional[Verification] = Verification.query.filter_by(
+        token=verify_token, type=verify_type_parsed
+    ).first()
 
     if not verification:
         error = "No verification found for the given data"
@@ -42,10 +45,12 @@ def get_verification_data(verify_type: str, verify_token: str) -> Tuple[Optional
 @verify.get("/<verify_type>/<verify_token>")
 def show_verify_page(verify_type: str, verify_token: str) -> str:
     verification, error = get_verification_data(verify_type, verify_token)
-    return render_template("user_action_verification.jinja2",
-                           verify_error=error,
-                           verify_type=verify_type,
-                           verify_info=verification)
+    return render_template(
+        "user_action_verification.jinja2",
+        verify_error=error,
+        verify_type=verify_type,
+        verify_info=verification,
+    )
 
 
 @verify.post("/<verify_type>/<verify_token>")

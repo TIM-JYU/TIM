@@ -20,7 +20,7 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
             </ng-container>
             <ng-container body>
                 <form>
-                    <fieldset [disabled]="saving || verificationSent">
+                    <fieldset [disabled]="saving || saved">
                         <div class="form-group">
                             <label class="control-label" for="name-select">
                                 Channel</label>
@@ -47,10 +47,11 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
                 </form>
             </ng-container>
             <ng-container footer>
+                <i class="glyphicon glyphicon-ok success" *ngIf="saved"></i>
                 <tim-loading *ngIf="saving" style="margin-right: 1em;"></tim-loading>
                 <button class="timButton"
                         (click)="addNewContact()"
-                        [disabled]="!(chosenChannel && contactInfo) || verificationSent">
+                        [disabled]="!(chosenChannel && contactInfo) || saved">
                     Add
                 </button>
                 <button class="timButton" (click)="dismiss()">Close</button>
@@ -70,6 +71,7 @@ export class AddContactDialogComponent extends AngularDialogComponent<
     contactInfo?: string;
 
     verificationSent = false;
+    saved = false;
     saving = false;
     addError?: string;
 
@@ -96,6 +98,7 @@ export class AddContactDialogComponent extends AngularDialogComponent<
         this.saving = false;
         if (result.ok) {
             this.verificationSent = result.result.requireVerification;
+            this.saved = true;
         } else {
             this.addError = result.result.error.error;
         }

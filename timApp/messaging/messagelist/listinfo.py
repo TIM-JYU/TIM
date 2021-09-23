@@ -6,6 +6,7 @@ from typing import Optional
 
 class Channel(Enum):
     """The message channels TIM uses and provides for users or message lists."""
+
     TIM_MESSAGE = "tim_message"
     EMAIL_LIST = "email_list"
     EMAIL = "email"

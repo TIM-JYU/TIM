@@ -83,7 +83,12 @@ from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.user.verification.verification import Verification, ContactAddVerification
-from timApp.util.flask.filters import map_format, timdate, humanize_timedelta, humanize_datetime
+from timApp.util.flask.filters import (
+    map_format,
+    timdate,
+    humanize_timedelta,
+    humanize_datetime,
+)
 from timApp.util.flask.user_agent import SimpleUserAgent
 from timApp.util.logger import setup_logging
 from timApp.util.utils import datestr_to_relative, date_to_relative

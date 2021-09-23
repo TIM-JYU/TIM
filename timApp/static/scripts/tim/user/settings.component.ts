@@ -1,6 +1,7 @@
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {
     ApplicationRef,
+    ChangeDetectorRef,
     Component,
     DoBootstrap,
     DoCheck,
@@ -217,8 +218,10 @@ const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
                         <div>
                             <select id="account-email-primary" name="primary-email-select" class="form-control"
                                     [(ngModel)]="primaryEmail">
-                                <option *ngFor="let contact of userEmailContacts"
-                                        [value]="contact.contact">{{contact.contact}}</option>
+                                <ng-container *ngFor="let contact of userEmailContacts">
+                                    <option *ngIf="contact.verified"
+                                            [value]="contact.contact">{{contact.contact}}</option>
+                                </ng-container>
                             </select>
                         </div>
                         <ng-container *ngFor="let entry of userContactEntries">
@@ -229,7 +232,16 @@ const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
                                     <span *ngIf="primaryContacts[contact.channel] == contact.contact"
                                           class="primary-badge">Primary</span>
                                     <span *ngIf="contact.verified" class="verified-badge">Verified</span>
-                                    <button *ngIf="!contact.verified" class="btn btn-default">Resend verification
+                                    <button *ngIf="!contact.verified" class="btn btn-default"
+                                            (click)="resendVerification(contact)"
+                                            [disabled]="verificationSentSet.has(contact)">
+                                        <ng-container
+                                                *ngIf="!verificationSentSet.has(contact); else verificationSentMessage">
+                                            Resend verification
+                                        </ng-container>
+                                        <ng-template #verificationSentMessage>
+                                            Verification sent!
+                                        </ng-template>
                                     </button>
                                     <button class="btn btn-danger" type="button"
                                             [disabled]="primaryContacts[contact.channel] == contact.contact">
@@ -287,8 +299,9 @@ export class SettingsComponent implements DoCheck {
     private readonly style: HTMLStyleElement;
     private readonly consent: ConsentType | undefined;
     private allNotificationsFetched = false;
+    verificationSentSet = new Set<IUserContact>();
 
-    constructor(private http: HttpClient) {
+    constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
         this.user = settingsglobals().current_user;
         this.primaryEmail = this.user.email ?? "";
         this.consent = this.user.consent;
@@ -309,6 +322,21 @@ export class SettingsComponent implements DoCheck {
 
     ngDoCheck() {
         this.style.innerHTML = this.settings.custom_css;
+    }
+
+    async resendVerification(contact: IUserContact) {
+        this.saving = true;
+        await to2(
+            this.http
+                .post("/settings/contacts/add", {
+                    contact_info_type: contact.channel,
+                    contact_info: contact.contact,
+                })
+                .toPromise()
+        );
+        this.saving = false;
+        this.verificationSentSet.add(contact);
+        this.cdr.detectChanges();
     }
 
     submit = async () => {

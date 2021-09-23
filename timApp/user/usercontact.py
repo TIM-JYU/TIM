@@ -1,5 +1,3 @@
-from typing import Dict
-
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.timdb.sqa import db
 
@@ -12,7 +10,9 @@ class UserContact(db.Model):
     __table_args__ = (
         # A user should not have the same contact for the channel
         # Different users are fine though
-        db.UniqueConstraint("user_id", "contact", "channel", name="unique_user_contact_constraint"),
+        db.UniqueConstraint(
+            "user_id", "contact", "channel", name="unique_user_contact_constraint"
+        ),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -32,13 +32,13 @@ class UserContact(db.Model):
     For a value of False, this means that a user has made a claim for a contact info, but has not yet verified it's 
     ownership. """
 
-    user = db.relationship('User', back_populates='contacts', lazy='select')
+    user = db.relationship("User", back_populates="contacts", lazy="select")
     """User that the contact is associated with.
     """
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         return {
             "contact": self.contact,
             "channel": self.channel,
-            "verified": self.verified
+            "verified": self.verified,
         }
