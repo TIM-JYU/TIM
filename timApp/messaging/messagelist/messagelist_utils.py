@@ -1,3 +1,4 @@
+import itertools
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -961,7 +962,7 @@ class UserGroupDiff:
 
 
 def sync_usergroup_messagelist_members(diffs: Dict[int, UserGroupDiff], permanent_delete: bool = False) -> None:
-    user_ids = set(sum([u.add_user_ids + u.remove_user_ids for u in diffs.values()], []))
+    user_ids = set(itertools.chain.from_iterable([*u.add_user_ids, *u.remove_user_ids] for u in diffs.values()))
     if not user_ids:
         return
 
