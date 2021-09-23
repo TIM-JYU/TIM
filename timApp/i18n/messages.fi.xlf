@@ -1832,7 +1832,7 @@
       </trans-unit>
       <trans-unit id="1a71533afadc47d6fd31369f6afcda59ae7392da" datatype="html">
         <source> Read receipt can be cancelled in <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/messages/tim-messages&quot;>"/>your messages<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
-        <target state="translated"> Lukumerkintää voi peruuttaa <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/messages/tim-messages&quot;>"/>viestikansiossa<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
+        <target state="translated"> Lukumerkinnän voi peruuttaa <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/messages/tim-messages&quot;>"/>viestikansiossa<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
           <context context-type="linenumber">66</context>
