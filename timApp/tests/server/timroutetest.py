@@ -1100,6 +1100,14 @@ class TimMessageListTest(TimRouteTest):
         for mu in users:
             mu.delete()
 
+    def add_list_member(self, list_name: str, candidates: List[str]) -> None:
+        self.json_post("/messagelist/addmember", {
+            "member_candidates": candidates,
+            "msg_list": list_name,
+            "send_right": True,
+            "delivery_right": True
+        })
+
     def create_list(self, name: str, archive: ArchiveType) -> Tuple[Dict[str, Any], MessageListModel]:
         manage_doc = self.json_post('/messagelist/createlist', {
             'options': {

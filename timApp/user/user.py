@@ -519,7 +519,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         else:
             self.memberships.append(UserGroupMember(group=ug, adder=added_by))
             new_add = True
-        # On changing of group, sync this person to the user goup's message lists.
+        # On changing of group, sync this person to the user group's message lists.
         if sync_mailing_lists:
             sync_message_list_on_add(self, ug)
         return new_add
