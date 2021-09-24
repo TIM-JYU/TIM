@@ -118,8 +118,9 @@ interface TimMessageOptions {
                             <div>
                                 <input type="checkbox" [(ngModel)]="timMessageOptions.important"
                                        name="tim-message-important" id="tim-message-important">
-                                <label for="tim-message-important" i18n>Message is sticky</label>
-                                <a tooltip="Message will persist on user's screen" i18n-tooltip>
+                                <label for="tim-message-important" i18n>Message is important</label>
+                                <a tooltip="Message will persist on user's screen until they mark it as read"
+                                   i18n-tooltip>
                                     <i class="glyphicon glyphicon-info-sign"></i>
                                 </a>
                             </div>
@@ -263,26 +264,6 @@ export class TimMessageSendComponent {
         setTimeout((): void => {
             this.messageMsg = "";
         }, 5000);
-        this.showOptions = false;
-        this.emailbcc = false;
-        this.emailbccme = true;
-        this.email = true;
-        this.defaultEmail = false;
-        this.replyAll = false;
-        this.timMessage = false;
-        this.formChanged = false;
-        this.timMessageOptions = {
-            messageChannel: false,
-            archive: false,
-            important: false,
-            isPrivate: false,
-            pageList: "",
-            readReceipt: true,
-            reply: false,
-            expires: undefined,
-            sender: Users.getCurrent().real_name,
-            senderEmail: Users.getCurrent().email,
-        };
     }
 
     public async sendMessage() {
@@ -326,7 +307,6 @@ export class TimMessageSendComponent {
                 "&" +
                 "bcc=" +
                 bcc;
-            this.resetForm();
         }
         this.resetForm();
     }
