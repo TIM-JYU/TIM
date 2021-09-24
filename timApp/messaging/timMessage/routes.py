@@ -20,14 +20,14 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
-from timApp.item.manage import get_trash_folder
+from timApp.item.manage import TRASH_FOLDER_PATH
 from timApp.messaging.timMessage.internalmessage_models import InternalMessage, DisplayType, InternalMessageDisplay, \
     InternalMessageReadReceipt
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
-from timApp.util.flask.responsehelper import ok_response, json_response, error_generic
+from timApp.util.flask.responsehelper import ok_response, json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars, static_tim_doc
 
@@ -69,17 +69,14 @@ class MessageBody:
 
 @dataclass
 class TimMessageData:
-    # Information about the message sent to browser
     id: int
-    sender: str
-    doc_id: int
-    par_id: str
+    sender: Optional[str]
+    doc_path: str
     can_mark_as_read: bool
     can_reply: bool
-    display_type: int
+    display_type: DisplayType
     message_body: str
     message_subject: str
-    recipients: List[str]
 
 
 @dataclass
@@ -97,11 +94,9 @@ def get_tim_messages(item_id: int) -> Response:
     Retrieve messages displayed for current based on item id and return them in json format.
 
     :param item_id: Identifier for document or folder where message is displayed
-    :return:
+    :return: List of TIM messages to display
     """
-    fullmessages = get_tim_messages_as_list(item_id)
-
-    return json_response(fullmessages)
+    return json_response(get_tim_messages_as_list(item_id))
 
 
 def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
@@ -136,8 +131,7 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
         InternalMessage.replies_to).all()
     replies_to_ids = [a for a, in replies]  # list of messages that have been replied to
 
-    messages = []
-    recipients = []
+    messages: List[InternalMessage] = []
     for display in displays:
         receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id,
                                                              message_id=display.message_id).first()
@@ -145,33 +139,30 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
         # message is shown if it has not been marked as read or replied to, and has not expired
         if receipt.marked_as_read_on is None and (expires.expires is None or expires.expires > datetime.now()):
             messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
-            recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
 
-    fullmessages = []
+    full_messages = []
     for message in messages:
         document = DocEntry.query.filter_by(id=message.doc_id).first()
         if not document:
-            return error_generic('Message document not found', 404)
+            raise NotExist(f'No document or folder found for the message {message.id}')
 
-        # Hides the message if the corresponding document has been deleted
-        trash_folder_path = get_trash_folder().path
-        if document.name.startswith(trash_folder_path):
+        sender = document.owners[0].name if document.owners else None
+        if document.name.startswith(TRASH_FOLDER_PATH):
             continue
 
-        fullmessages.append(TimMessageData(id=message.id,
-                                           sender=document.owners.pop().name,
-                                           doc_id=message.doc_id,
-                                           par_id=message.par_id,
-                                           can_mark_as_read=message.can_mark_as_read,
-                                           can_reply=message.reply,
-                                           display_type=message.display_type,
-                                           message_body=Document.get_paragraph(document.document,
-                                                                               message.par_id).get_html(
-                                               default_view_ctx),
-                                           message_subject=document.title,
-                                           recipients=recipients))
+        body = Document.get_paragraph(document.document, message.par_id).get_html(default_view_ctx)
+        data = TimMessageData(id=message.id,
+                              sender=sender,
+                              doc_path=document.name,
+                              can_mark_as_read=message.can_mark_as_read,
+                              can_reply=message.reply,
+                              display_type=message.display_type,
+                              message_body=body,
+                              message_subject=document.title)
 
-    return fullmessages
+        full_messages.append(data)
+
+    return full_messages
 
 
 @timMessage.get("/get_read_receipt/<int:doc_id>")

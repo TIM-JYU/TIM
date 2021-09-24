@@ -265,7 +265,8 @@ def do_confirm_permission(m: PermissionRemoveModel, i: DocInfo):
     if not ba:
         raise RouteException('Right not found.')
     if not ba.require_confirm:
-        raise RouteException(f'{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed.')
+        raise RouteException(
+            f'{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed.')
     ba.do_confirm()
     ug: UserGroup = UserGroup.query.get(m.group)
     log_right(f'confirmed {ba.info_str} for {ug.name} in {i.path}')
@@ -281,7 +282,8 @@ def edit_permissions(m: PermissionMassEditModel):
     if nonexistent:
         raise RouteException(f'Non-existent groups: {nonexistent}')
     items = Block.query.filter(Block.id.in_(m.ids)
-                               & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])).order_by(Block.id).all()
+                               & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])).order_by(
+        Block.id).all()
     a = None
     owned_items_before = set()
     for i in items:
@@ -306,7 +308,8 @@ def edit_permissions(m: PermissionMassEditModel):
             raise AccessDenied('You cannot remove ownership from yourself.')
     if a:
         action = 'added' if m.action == EditOption.Add else 'removed'
-        log_right(f'{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}')
+        log_right(
+            f'{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}')
         db.session.commit()
     return permission_response(m)
 
@@ -584,11 +587,13 @@ def del_document(doc_id):
     return ok_response()
 
 
+TRASH_FOLDER_PATH = f'roskis'
+
+
 def get_trash_folder() -> Folder:
-    trash_folder_path = f'roskis'
-    f = Folder.find_by_path(trash_folder_path)
+    f = Folder.find_by_path(TRASH_FOLDER_PATH)
     if not f:
-        f = Folder.create(trash_folder_path, owner_groups=UserGroup.get_admin_group(), title='Roskakori')
+        f = Folder.create(TRASH_FOLDER_PATH, owner_groups=UserGroup.get_admin_group(), title='Roskakori')
     return f
 
 

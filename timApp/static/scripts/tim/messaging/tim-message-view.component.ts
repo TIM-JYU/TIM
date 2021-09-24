@@ -98,15 +98,13 @@ export enum DisplayType {
 export interface TimMessageData {
     // Information about the message retrieved from server
     id: number;
-    sender: string;
-    doc_id: number;
-    par_id: string;
+    sender?: string;
+    doc_path: string;
     can_mark_as_read: boolean;
     can_reply: boolean;
     display_type: DisplayType;
     message_body: string;
     message_subject: string;
-    recipients: [string];
 }
 
 @NgModule({
