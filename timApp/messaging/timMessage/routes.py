@@ -1,12 +1,13 @@
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from flask import Response
+from isodate import datetime_isoformat
 from sqlalchemy import tuple_
 
-from timApp.auth.accesshelper import verify_edit_access
+from timApp.auth.accesshelper import verify_edit_access, verify_manage_access
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
@@ -26,8 +27,9 @@ from timApp.messaging.timMessage.internalmessage_models import InternalMessage, 
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import RouteException, NotExist
-from timApp.util.flask.responsehelper import ok_response, json_response
+from timApp.util.flask.responsehelper import ok_response, json_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars, static_tim_doc
 
@@ -357,6 +359,41 @@ def cancel_read_receipt(message_id: int) -> Response:
     db.session.commit()
 
     return ok_response()
+
+
+@timMessage.get("/readReceipts")
+def get_read_recepits(message_doc: int, include_read: bool = False, include_unread: bool = False) -> Response:
+    verify_logged_in()
+    doc = DocEntry.find_by_id(message_doc)
+    if not doc:
+        raise NotExist("No document found")
+    verify_manage_access(doc)
+
+    read_users = db.session.query(InternalMessageReadReceipt.user_id, InternalMessageReadReceipt.marked_as_read_on) \
+        .join(InternalMessage) \
+        .filter(InternalMessage.doc_id == doc.id)
+
+    read_user_map: Dict[int, datetime] = {user_id: read_time for user_id, read_time in read_users}
+
+    all_recepients = User.query \
+        .join(UserGroupMember, User.memberships) \
+        .join(InternalMessageDisplay, InternalMessageDisplay.usergroup_id == UserGroupMember.usergroup_id) \
+        .join(InternalMessage) \
+        .filter(InternalMessage.doc_id == doc.id)
+
+    result = "id;email;name;read_on\n"
+
+    for u in all_recepients:
+        read_time = ""
+        if u.id in read_user_map:
+            if not include_read:
+                continue
+            read_time = datetime_isoformat(read_user_map[u.id])
+        elif not include_unread:
+            continue
+        result += f"{u.id};{u.email};{u.real_name};{read_time}\n"
+
+    return text_response(result)
 
 
 def get_recipient_users(recipients: List[str]) -> List[UserGroup]:

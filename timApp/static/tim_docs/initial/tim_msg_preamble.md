@@ -20,7 +20,18 @@ span.messagetitle {
 !!
 ```
 
-#- {.messageheader}
+``` {plugin="timMenu" .hidden-print nocache="true"}
+menu: |!!
+- Read receipts
+  rights: manage
+  - [Read users](/timMessage/readReceipts?message_doc=%%docid%%&include_read=true)
+  - [Unread users](/timMessage/readReceipts?message_doc=%%docid%%&include_unread=true)
+  - [All users](/timMessage/readReceipts?message_doc=%%docid%%&include_unread=true&include_read=true)
+!!
+```
+
+# - {.messageheader}
+
 [%%subject%%]{.messagetitle} \
 Sender: %%sendername%%, %%senderemail%% \
 Recipients: %%recipients%%
