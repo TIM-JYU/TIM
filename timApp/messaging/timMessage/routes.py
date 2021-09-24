@@ -262,7 +262,7 @@ def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Resp
 
     tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires,
                                   replies_to=options.repliesTo)
-    create_tim_message(tim_message, options, message)
+    message_doc = create_tim_message(tim_message, options, message)
     db.session.add(tim_message)
 
     pages = get_display_pages(options.pageList.splitlines())
@@ -273,7 +273,7 @@ def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Resp
 
     db.session.commit()
 
-    return ok_response()
+    return json_response({'docPath': message_doc.path})
 
 
 def create_tim_message(tim_message: InternalMessage, options: MessageOptions, message_body: MessageBody) -> DocInfo:

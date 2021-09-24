@@ -26,136 +26,148 @@ interface TimMessageOptions {
 @Component({
     selector: "tim-message-send",
     template: `
-        <tim-alert *ngIf="errorMessage">{{errorMessage}}</tim-alert>
         <div class="csRunDiv tableEmail" style="padding: 1em;" *ngIf="recipientList">
             <tim-close-button (click)="closeComponent()"></tim-close-button>
             <form>
-                <div class="message-info">
-                    <label for="recipients" i18n>Recipients:</label>
-                    <textarea class="form-control" id="recipients" name="recipients" [(ngModel)]="recipientList"
-                              rows="4" (input)="somethingChanged()"></textarea>
+                <fieldset [disabled]="sending">
+                    <div class="message-info">
+                        <label for="recipients" i18n>Recipients:</label>
+                        <textarea class="form-control" id="recipients" name="recipients" [(ngModel)]="recipientList"
+                                  rows="4" (input)="somethingChanged()"></textarea>
 
-                    <label for="subject" i18n>Subject:</label>
-                    <input class="form-control" [(ngModel)]="messageSubject" (input)="somethingChanged()" id="subject"
-                           name="subject">
-                </div>
-                <label for="message" i18n>Message content:</label>
-                <textarea class="form-control" [(ngModel)]="messageBody" rows="10" (input)="somethingChanged()"
-                          id="message" name="message"></textarea>
-                <div class="extra-options" (click)="toggleOptions(); somethingChanged()">
-                    <i class="glyphicon" [ngClass]="showOptions ? 'glyphicon-minus' : 'glyphicon-plus'"></i>
-                    <ng-container *ngIf="showOptions; else hideOptions" i18n>Hide message options</ng-container>
-                    <ng-template #hideOptions i18n>Show message options</ng-template>
-                </div>
-                <div *ngIf="showOptions">
-                    <div class="send-as-label">
-                        <span i18n>Send as</span>
-                        <a tooltip="Select at least one channel" i18n-tooltip><i
-                                class="glyphicon glyphicon-info-sign"></i></a>
+                        <label for="subject" i18n>Subject:</label>
+                        <input class="form-control" [(ngModel)]="messageSubject" (input)="somethingChanged()"
+                               id="subject"
+                               name="subject">
                     </div>
-
-                    <div class="cb-collection">
-                        <div>
-                            <input type="checkbox" (change)="notDefault()" [(ngModel)]="email" id="send-email"
-                                   name="send-email" i18n>
-                            <label for="send-email" i18n>email</label>
+                    <label for="message" i18n>Message content:</label>
+                    <textarea class="form-control" [(ngModel)]="messageBody" rows="10" (input)="somethingChanged()"
+                              id="message" name="message"></textarea>
+                    <div class="extra-options" (click)="toggleOptions(); somethingChanged()">
+                        <i class="glyphicon" [ngClass]="showOptions ? 'glyphicon-minus' : 'glyphicon-plus'"></i>
+                        <ng-container *ngIf="showOptions; else hideOptions" i18n>Hide message options</ng-container>
+                        <ng-template #hideOptions i18n>Show message options</ng-template>
+                    </div>
+                    <div *ngIf="showOptions">
+                        <div class="send-as-label">
+                            <span i18n>Send as</span>
+                            <a tooltip="Select at least one channel" i18n-tooltip><i
+                                    class="glyphicon glyphicon-info-sign"></i></a>
                         </div>
-                        <div class="cb-collection" *ngIf="email">
+
+                        <div class="cb-collection">
                             <div>
-                                <input type="radio" [(ngModel)]="defaultEmail" name="send-tim-message" id="send-tim"
-                                       [value]="false">
-                                <label for="send-tim" i18n>Use TIM to send</label>
+                                <input type="checkbox" (change)="notDefault()" [(ngModel)]="email" id="send-email"
+                                       name="send-email" i18n>
+                                <label for="send-email" i18n>email</label>
                             </div>
-                            <div>
-                                <input type="radio" [(ngModel)]="defaultEmail" name="email-use-local-app"
-                                       id="email-use-local-app" [value]="true">
-                                <label for="email-use-local-app" i18n>Use your default email client</label>
-                                <a tooltip="Recipients will see each others' addresses" i18n-tooltip><i
-                                        class="glyphicon glyphicon-info-sign"></i></a>
-                            </div>
-                            <ng-container *ngIf="email && !defaultEmail">
-                                <div class="top-space">
-                                    <input type="radio" [(ngModel)]="replyAll" name="email-reply-sender"
-                                           id="email-reply-sender" [value]="false" checked>
-                                    <label for="email-reply-sender" i18n>Recipient only replies to sender</label>
-                                    <a tooltip="Recipients can only reply to you" i18n-tooltip><i
-                                            class="glyphicon glyphicon-info-sign"></i></a>
+                            <div class="cb-collection" *ngIf="email">
+                                <div>
+                                    <input type="radio" [(ngModel)]="defaultEmail" name="send-tim-message" id="send-tim"
+                                           [value]="false">
+                                    <label for="send-tim" i18n>Use TIM to send</label>
                                 </div>
                                 <div>
-                                    <input type="radio" [(ngModel)]="replyAll" name="email-reply-all"
-                                           id="email-reply-all" [value]="true">
-                                    <label for="email-reply-all" i18n>Recipient replies all by default</label>
-                                    <a tooltip="Recipients can reply to all other recipients" i18n-tooltip><i
+                                    <input type="radio" [(ngModel)]="defaultEmail" name="email-use-local-app"
+                                           id="email-use-local-app" [value]="true">
+                                    <label for="email-use-local-app" i18n>Use your default email client</label>
+                                    <a tooltip="Recipients will see each others' addresses" i18n-tooltip><i
                                             class="glyphicon glyphicon-info-sign"></i></a>
                                 </div>
-                            </ng-container>
-                        </div>
-                        <div *ngIf="!defaultEmail">
-                            <input type="checkbox" (change)="emptyPageList()" [(ngModel)]="timMessage"
-                                   name="send-tim-message" id="send-tim-message">
-                            <label for="send-tim-message" i18n>TIM message</label>
-                            <a href="/view/tim/ohjeita/kayttoohjeet-tim-viesteille"
-                               target="_blank"
-                               title="Help for TIM messages (in Finnish)"
-                               i18n-title>
-                                <i class="helpButton glyphicon glyphicon-question-sign"></i>
-                            </a>
-                        </div>
-                        <div class="cb-collection" *ngIf="timMessage && !defaultEmail">
-                            <div class="page-list">
+                                <ng-container *ngIf="email && !defaultEmail">
+                                    <div class="top-space">
+                                        <input type="radio" [(ngModel)]="replyAll" name="email-reply-sender"
+                                               id="email-reply-sender" [value]="false" checked>
+                                        <label for="email-reply-sender" i18n>Recipient only replies to sender</label>
+                                        <a tooltip="Recipients can only reply to you" i18n-tooltip><i
+                                                class="glyphicon glyphicon-info-sign"></i></a>
+                                    </div>
+                                    <div>
+                                        <input type="radio" [(ngModel)]="replyAll" name="email-reply-all"
+                                               id="email-reply-all" [value]="true">
+                                        <label for="email-reply-all" i18n>Recipient replies all by default</label>
+                                        <a tooltip="Recipients can reply to all other recipients" i18n-tooltip><i
+                                                class="glyphicon glyphicon-info-sign"></i></a>
+                                    </div>
+                                </ng-container>
+                            </div>
+                            <div *ngIf="!defaultEmail">
+                                <input type="checkbox" (change)="emptyPageList()" [(ngModel)]="timMessage"
+                                       name="send-tim-message" id="send-tim-message">
+                                <label for="send-tim-message" i18n>TIM message</label>
+                                <a href="/view/tim/ohjeita/kayttoohjeet-tim-viesteille"
+                                   target="_blank"
+                                   title="Help for TIM messages (in Finnish)"
+                                   i18n-title>
+                                    <i class="helpButton glyphicon glyphicon-question-sign"></i>
+                                </a>
+                            </div>
+                            <div class="cb-collection" *ngIf="timMessage && !defaultEmail">
+                                <div class="page-list">
                                 <span class="pages-label">
                                     <label for="tim-message-pages" i18n>Pages to send TIM message to</label>
                                     <a tooltip="Enter URL addresses of the pages one per line. URLs will be automatically shortened."
                                        i18n-tooltip><i class="glyphicon glyphicon-info-sign"></i></a>
                                 </span>
-                                <tim-alert *ngIf="urlError" severity="danger">
-                                    {{ urlError }}
-                                </tim-alert>
-                                <textarea class="form-control" [(ngModel)]="timMessageOptions.pageList"
-                                          (input)="checkUrls()" rows="4" name="tim-message-pages"
-                                          id="tim-message-pages"></textarea>
-                            </div>
-                            <div>
-                                <input type="checkbox" [(ngModel)]="timMessageOptions.important"
-                                       name="tim-message-important" id="tim-message-important">
-                                <label for="tim-message-important" i18n>Message is important</label>
-                                <a tooltip="Message will persist on user's screen until they mark it as read"
-                                   i18n-tooltip>
-                                    <i class="glyphicon glyphicon-info-sign"></i>
-                                </a>
-                            </div>
-                            <div>
-                                <input type="checkbox" [(ngModel)]="timMessageOptions.isPrivate"
-                                       name="tim-message-private" id="tim-message-private" disabled>
-                                <label for="tim-message-private" i18n>Recipient sees TIM message as private</label>
-                            </div>
-                            <div>
-                                <input type="checkbox" [(ngModel)]="timMessageOptions.reply"
-                                       name="tim-message-can-reply" id="tim-message-can-reply">
-                                <label for="tim-message-can-reply" i18n>TIM message can be replied to</label>
-                            </div>
-                            <div>
-                                <input type="checkbox" [(ngModel)]="timMessageOptions.readReceipt"
-                                       name="tim-message-can-mark-read" id="tim-message-can-mark-read" disabled>
-                                <label for="tim-message-can-mark-read" i18n>TIM message can be marked as read</label>
-                            </div>
-                            <div class="message-expiration">
-                                <label for="expiration-selector" i18n>TIM message will be removed on:</label>
-                                <tim-datetime-picker inputId="expiration-selector"
-                                                     [(time)]="timMessageOptions.expires"
-                                                     placeholder="No automatic date" i18n-placeholder>
-                                </tim-datetime-picker>
+                                    <tim-alert *ngIf="urlError" severity="danger">
+                                        {{ urlError }}
+                                    </tim-alert>
+                                    <textarea class="form-control" [(ngModel)]="timMessageOptions.pageList"
+                                              (input)="checkUrls()" rows="4" name="tim-message-pages"
+                                              id="tim-message-pages"></textarea>
+                                </div>
+                                <div>
+                                    <input type="checkbox" [(ngModel)]="timMessageOptions.important"
+                                           name="tim-message-important" id="tim-message-important">
+                                    <label for="tim-message-important" i18n>Message is important</label>
+                                    <a tooltip="Message will persist on user's screen until they mark it as read"
+                                       i18n-tooltip>
+                                        <i class="glyphicon glyphicon-info-sign"></i>
+                                    </a>
+                                </div>
+                                <div>
+                                    <input type="checkbox" [(ngModel)]="timMessageOptions.isPrivate"
+                                           name="tim-message-private" id="tim-message-private" disabled>
+                                    <label for="tim-message-private" i18n>Recipient sees TIM message as private</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" [(ngModel)]="timMessageOptions.reply"
+                                           name="tim-message-can-reply" id="tim-message-can-reply">
+                                    <label for="tim-message-can-reply" i18n>TIM message can be replied to</label>
+                                </div>
+                                <div>
+                                    <input type="checkbox" [(ngModel)]="timMessageOptions.readReceipt"
+                                           name="tim-message-can-mark-read" id="tim-message-can-mark-read" disabled>
+                                    <label for="tim-message-can-mark-read" i18n>TIM message can be marked as
+                                        read</label>
+                                </div>
+                                <div class="message-expiration">
+                                    <label for="expiration-selector" i18n>TIM message will be removed on:</label>
+                                    <tim-datetime-picker inputId="expiration-selector"
+                                                         [(time)]="timMessageOptions.expires"
+                                                         placeholder="No automatic date" i18n-placeholder>
+                                    </tim-datetime-picker>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div>
-                    <button class="timButton" id="sendButton" [disabled]="disableSendButton()"
-                            (click)="sendMessage()" i18n>
-                        Send
-                    </button>
-                    <span class="savedtext" *ngIf="messageMsg"> {{messageMsg}}</span>
-                </div>
+                    <div class="button-panel">
+                        <button class="timButton" id="sendButton" [disabled]="disableSendButton()"
+                                (click)="sendMessage()" i18n>
+                            Send
+                        </button>
+                        <tim-loading *ngIf="sending"></tim-loading>
+                    </div>
+                </fieldset>
+                <tim-alert severity="success" *ngIf="messageSentOk">
+                    <ng-container i18n>
+                        Message sent!
+                    </ng-container>
+                    <ng-container *ngIf="timMessageDoc">
+                        <a [href]="timMessageDoc" target="_blank" i18n>View sent TIM message</a>
+                    </ng-container>
+                </tim-alert>
+                <tim-alert severity="danger" *ngIf="messageSendError">{{messageSendError}}</tim-alert>
             </form>
         </div>
     `,
@@ -181,11 +193,13 @@ export class TimMessageSendComponent {
     email: boolean = true;
     defaultEmail: boolean = false;
     replyAll: boolean | undefined = false;
-    messageMsg: string = "";
+    messageSendError?: string;
+    messageSentOk: boolean = false;
+    timMessageDoc?: string;
     timMessage: boolean = false;
-    urlError: string = "";
-    errorMessage?: string;
+    urlError?: string;
     formChanged: boolean = true;
+    sending = false;
     timMessageOptions: TimMessageOptions = {
         messageChannel: false,
         archive: false,
@@ -259,26 +273,32 @@ export class TimMessageSendComponent {
     }
 
     // resets form to its initial values
-    resetForm() {
-        this.messageMsg = "Sent!";
-        setTimeout((): void => {
-            this.messageMsg = "";
-        }, 5000);
-    }
+    resetForm = () => {
+        this.messageSendError = undefined;
+        this.messageSentOk = false;
+        this.timMessageDoc = undefined;
+    };
 
     public async sendMessage() {
-        this.errorMessage = undefined;
+        this.sending = true;
+        this.resetForm();
         // send as TIM message
         if (this.timMessage) {
             const result = await this.postTimMessage(this.timMessageOptions);
             if (!result.ok) {
-                this.errorMessage = $localize`Failed to send as TIM message: ${result.result.error.error}`;
+                this.messageSendError = $localize`Failed to send as TIM message: ${result.result.error.error}`;
+                this.sending = false;
                 return;
+            } else {
+                this.messageSentOk = true;
+                this.timMessageDoc = `/view/${result.result.docPath}`;
             }
         }
         // send as email in TIM
         if (this.email && !this.defaultEmail) {
             await this.sendEmailTim();
+            this.sending = false;
+            window.setTimeout(this.resetForm, 5000);
             return;
         }
         // TODO: iPad do not like ;
@@ -308,26 +328,16 @@ export class TimMessageSendComponent {
                 "bcc=" +
                 bcc;
         }
-        this.resetForm();
-    }
-
-    private postTimMessage(options: TimMessageOptions) {
-        const message = {
-            messageBody: this.messageBody,
-            messageSubject: this.messageSubject,
-            recipients: this.recipientList.split(/\n/g),
-        };
-        return to2(
-            this.http.post("/timMessage/send", {options, message}).toPromise()
-        );
+        this.sending = false;
+        window.setTimeout(this.resetForm, 5000);
     }
 
     async sendEmailTim() {
         if (!this.docId) {
-            this.messageMsg = $localize`Cannot send email without docId`;
+            this.messageSendError = $localize`Cannot send email without docId`;
             return;
         }
-        this.messageMsg = ""; // JSON.stringify(response);
+        this.messageSendError = ""; // JSON.stringify(response);
         const url = `/multiSendEmail/${this.docId}`;
         const response = await to2(
             this.http
@@ -341,10 +351,24 @@ export class TimMessageSendComponent {
                 .toPromise()
         );
         if (!response.ok) {
-            this.messageMsg = response.result.error.error;
+            this.messageSendError = response.result.error.error;
         } else {
-            this.resetForm();
+            this.messageSentOk = true;
+            window.setTimeout(this.resetForm, 5000);
         }
+    }
+
+    private postTimMessage(options: TimMessageOptions) {
+        const message = {
+            messageBody: this.messageBody,
+            messageSubject: this.messageSubject,
+            recipients: this.recipientList.split(/\n/g),
+        };
+        return to2(
+            this.http
+                .post<{docPath: string}>("/timMessage/send", {options, message})
+                .toPromise()
+        );
     }
 }
 

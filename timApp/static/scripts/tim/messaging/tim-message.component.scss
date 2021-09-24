@@ -51,8 +51,9 @@ tim-alert {
     .readReceiptArea {
         margin-top: 5px;
         display: grid;
-        grid-template-columns: 12% 40% 48%;
+        grid-template-columns: auto 1fr auto;
         grid-template-areas: "checkbox link button";
+        column-gap: 1em;
 
         input[type='checkbox'] {
             grid-area: checkbox;
