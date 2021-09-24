@@ -233,6 +233,7 @@ services:
   image: timimages/tim:${TIM_IMAGE_TAG:?}
   build: ./timApp/modules/reviewcanvas
   volumes:
+   - ${FILES_ROOT:?}/blocks/uploads:/uploads:ro
    - ./timApp/modules/reviewcanvas:/app/reviewcanvas:ro
    - ./tim_common:/app/tim_common:ro
   working_dir: /app/reviewcanvas
