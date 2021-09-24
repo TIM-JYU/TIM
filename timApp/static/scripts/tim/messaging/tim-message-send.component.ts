@@ -48,16 +48,6 @@ interface TimMessageOptions {
                     <ng-template #hideOptions i18n>Show message options</ng-template>
                 </div>
                 <div *ngIf="showOptions">
-                    <div class="cb-collection" *ngIf="!defaultEmail">
-                        <div>
-                            <input type="checkbox" [(ngModel)]="timMessageOptions.important" name="important-message"
-                                   id="important-message" disabled>
-                            <label for="important-message" *ngIf="!defaultEmail" i18n>Archive message</label>
-                            <a tooltip="Currently only applies to TIM messages" i18n-tooltip><i
-                                    class="glyphicon glyphicon-info-sign"></i></a>
-                        </div>
-                    </div>
-
                     <div class="send-as-label">
                         <span i18n>Send as</span>
                         <a tooltip="Select at least one channel" i18n-tooltip><i
@@ -104,6 +94,12 @@ interface TimMessageOptions {
                             <input type="checkbox" (change)="emptyPageList()" [(ngModel)]="timMessage"
                                    name="send-tim-message" id="send-tim-message">
                             <label for="send-tim-message" i18n>TIM message</label>
+                            <a href="/view/tim/ohjeita/kayttoohjeet-tim-viesteille"
+                               target="_blank"
+                               title="Help for TIM messages (in Finnish)"
+                               i18n-title>
+                                <i class="helpButton glyphicon glyphicon-question-sign"></i>
+                            </a>
                         </div>
                         <div class="cb-collection" *ngIf="timMessage && !defaultEmail">
                             <div class="page-list">
@@ -118,6 +114,14 @@ interface TimMessageOptions {
                                 <textarea class="form-control" [(ngModel)]="timMessageOptions.pageList"
                                           (input)="checkUrls()" rows="4" name="tim-message-pages"
                                           id="tim-message-pages"></textarea>
+                            </div>
+                            <div>
+                                <input type="checkbox" [(ngModel)]="timMessageOptions.important"
+                                       name="tim-message-important" id="tim-message-important">
+                                <label for="tim-message-important" i18n>Message is sticky</label>
+                                <a tooltip="Message will persist on user's screen" i18n-tooltip>
+                                    <i class="glyphicon glyphicon-info-sign"></i>
+                                </a>
                             </div>
                             <div>
                                 <input type="checkbox" [(ngModel)]="timMessageOptions.isPrivate"

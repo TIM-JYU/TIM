@@ -16,15 +16,23 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
     selector: "tim-message-view",
     template: `
         <tim-alert *ngIf="messageError" i18n>
-           Could not load messages for the page: {{messageError}}
+            Could not load messages for the page: {{messageError}}
         </tim-alert>
-        <ng-container #messageContainer></ng-container>
+        <div class="sticky">
+            <ng-container #messageContainerSticky></ng-container>
+        </div>
+        <div>
+            <ng-container #messageContainerNormal></ng-container>
+        </div>
+
     `,
     styleUrls: ["tim-message-view.component.scss"],
 })
 export class TimMessageViewComponent implements OnInit {
-    @ViewChild("messageContainer", {read: ViewContainerRef, static: true})
-    container!: ViewContainerRef;
+    @ViewChild("messageContainerNormal", {read: ViewContainerRef, static: true})
+    containerNormal!: ViewContainerRef;
+    @ViewChild("messageContainerSticky", {read: ViewContainerRef, static: true})
+    containerSticky!: ViewContainerRef;
     messageError?: string;
 
     ngOnInit(): void {
@@ -44,7 +52,7 @@ export class TimMessageViewComponent implements OnInit {
     timMessages?: TimMessageData[];
 
     async loadMessages(itemId: number) {
-        this.container.clear();
+        this.containerNormal.clear();
         const messages = await to2(
             // get messages shown on current page
             this.http
@@ -57,14 +65,34 @@ export class TimMessageViewComponent implements OnInit {
                 .TimMessageComponent;
             const factory = this.cfr.resolveComponentFactory(component);
 
-            for (const message of messages.result) {
-                const res = this.container.createComponent(factory);
-                res.instance.message = message;
-            }
+            const normal = messages.result.filter(
+                (m) => m.display_type == DisplayType.TOP_OF_PAGE
+            );
+            const sticky = messages.result.filter(
+                (m) => m.display_type == DisplayType.STICKY
+            );
+
+            const addMessages = (
+                msgs: TimMessageData[],
+                vcr: ViewContainerRef
+            ) => {
+                for (const message of msgs) {
+                    const res = vcr.createComponent(factory);
+                    res.instance.message = message;
+                }
+            };
+
+            addMessages(normal, this.containerNormal);
+            addMessages(sticky, this.containerSticky);
         } else {
             this.messageError = messages.result.error.error;
         }
     }
+}
+
+export enum DisplayType {
+    TOP_OF_PAGE = 1,
+    STICKY = 2,
 }
 
 export interface TimMessageData {
@@ -75,7 +103,7 @@ export interface TimMessageData {
     par_id: string;
     can_mark_as_read: boolean;
     can_reply: boolean;
-    display_type: number;
+    display_type: DisplayType;
     message_body: string;
     message_subject: string;
     recipients: [string];
