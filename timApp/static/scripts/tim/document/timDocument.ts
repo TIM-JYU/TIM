@@ -23,6 +23,7 @@ export class TimDocument {
     private sections = new WeakMap<Element, ParContext[]>();
     private sectionList: ParContext[][] = [];
     private parMap = new WeakMap<Element, ParMapValue>();
+    private uncollapsibleAreaMap = new WeakMap<Element, Area>();
 
     constructor(private root: HTMLElement) {}
 
@@ -37,6 +38,10 @@ export class TimDocument {
 
     public getParMap(): ReadonlyWeakMap<Element, ParMapValue> {
         return this.parMap;
+    }
+
+    public getUncollapsibleAreaMap(): ReadonlyWeakMap<Element, Area> {
+        return this.uncollapsibleAreaMap;
     }
 
     /**
@@ -94,6 +99,7 @@ export class TimDocument {
         this.sections = new WeakMap();
         this.sectionList = [];
         this.parMap = new WeakMap();
+        this.uncollapsibleAreaMap = new WeakMap();
         const allpars = enumDocParts(PreambleIteration.Include, this.root);
         let currentSection: ParContext[] = [];
         let prev: Element | undefined;
@@ -119,6 +125,12 @@ export class TimDocument {
                 if (x.parent) {
                     const parent = maybeDeref(x.parent);
                     if (parent instanceof Area) {
+                        if (!parent.collapse) {
+                            this.uncollapsibleAreaMap.set(
+                                parent.getAreaContainer(),
+                                parent
+                            );
+                        }
                         if (!parent.collapse && x.equals(parent.startPar.par)) {
                             continue;
                         }

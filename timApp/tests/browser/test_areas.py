@@ -1,4 +1,7 @@
+from typing import List
+
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 
 from timApp.tests.browser.browsertest import BrowserTest
 
@@ -202,7 +205,7 @@ par 22
     def close_menu(self, menu):
         self.find_element('tim-close-button', parent=menu).click()
 
-    def open_menu(self, p):
+    def open_menu(self, p) -> WebElement:
         self.find_element('.editline', parent=p).click()
         menu = self.find_element('tim-popup-menu-dialog')
         return menu
@@ -222,7 +225,7 @@ par 2
         """)
         self.login_browser_quick_test1()
         self.goto_document(d)
-        pars = self.drv.find_elements(By.CSS_SELECTOR, '.par:not(#HELP_PAR)')
+        pars = self.find_par_elems()
         menu = self.open_menu(pars[2])
         self.find_element_by_text('Edit', parent=menu).click()
         self.wait_until_present_and_vis('pareditor')
@@ -231,5 +234,163 @@ par 2
         self.find_element_by_text('Delete').click()
         self.drv.switch_to.alert.accept()
         self.wait_until_hidden('pareditor')
-        pars = self.drv.find_elements(By.CSS_SELECTOR, '.par:not(#HELP_PAR)')
+        pars = self.find_par_elems()
         self.assertEqual(old_len - 1, len(pars))
+
+    def test_cut_two_areas(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+par1
+
+#- {area="a"}
+
+#- {.par2}
+par2
+
+#- {area_end="a"}
+
+#- {area="b"}
+
+#- {.par3}
+par3
+
+#- {area_end="b"}
+
+#- {.par4}
+par4
+        """)
+        self.login_browser_quick_test1()
+        self.goto_document(d)
+
+        # Select across 2 areas.
+        menu = self.select_pars('.par2', '.par3', toggle_edit=True)
+        self.find_element_by_text('Cut selection', parent=menu).click()
+        self.wait_until_hidden('.par2')
+        pars = self.find_par_elems()
+        self.check_par_texts(
+            pars,
+            ['par1', 'par4'],
+        )
+
+    def test_edit_multiple_in_area(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {.par1}
+par1
+
+#- {area="a"}
+
+#- {.par2}
+par2
+
+#- {.par3}
+par3
+
+#- {.par4}
+par4
+
+#- {area_end="a"}
+
+#- {area="b" collapse=true}
+areatitle
+
+#- {.par5}
+par5
+
+#- {.par6}
+par6
+
+#- {.par7}
+par7
+
+#- {area_end="b"}
+
+#- {.par8}
+par8
+        """)
+        self.login_browser_quick_test1()
+        self.goto_document(d)
+        self.disable_ace()
+
+        # Start and end inside a non-collapsible area.
+        menu = self.select_pars('.par3', '.par4', toggle_edit=True)
+        self.edit_selection_and_save(menu)
+        pars = self.find_par_elems()
+        self.check_par_texts(pars, ['par1', '', 'par2', 'paredit3', 'paredit4', '', 'areatitle', '', '', '', '', 'par8'])
+
+        self.find_element_by_text('areatitle').click()
+
+        # Start and end inside a collapsible area.
+        menu = self.select_pars('.par6', '.par7')
+        self.edit_selection_and_save(menu)
+        pars = self.find_par_elems()
+        self.check_par_texts(
+            pars,
+            ['par1', '', 'par2', 'paredit3', 'paredit4', '', 'areatitle', 'par5', 'paredit6', 'paredit7', '', 'par8'],
+        )
+
+    def test_edit_selection_collapsible(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {.par1}
+par1
+
+#- {area="a" collapse=true}
+areatitle
+
+#- {.par2}
+par2
+
+#- {.par3}
+par3
+
+#- {area_end="a"}
+
+#- {.par4}
+par4
+        """)
+        self.login_browser_quick_test1()
+        self.goto_document(d)
+        self.disable_ace()
+        self.find_element_by_text('areatitle').click()
+
+        # Start outside a collapsible area, end inside.
+        menu = self.select_pars('.par1', '.par3', toggle_edit=True)
+        self.edit_selection_and_save(menu)
+        self.find_element_by_text('areatitle').click()
+        pars = self.find_par_elems()
+        self.check_par_texts(
+            pars,
+            ['paredit1', 'areatitle', 'paredit2', 'paredit3', '', 'par4'],
+        )
+
+    def find_par_elems(self):
+        return self.drv.find_elements(By.CSS_SELECTOR, '.par:not(#HELP_PAR)')
+
+    def save_editor(self):
+        self.find_element('.save').click()
+        self.wait_until_hidden('pareditor')
+
+    def edit_selection_and_save(self, menu: WebElement):
+        self.find_element_by_text('Edit selection', parent=menu).click()
+        self.wait_for_editor_load()
+        txtelem = self.find_element('.editorContainer textarea')
+        txt = txtelem.get_attribute('value')
+        txtelem.clear()
+        txtelem.send_keys(txt.replace('par', 'paredit'))
+        self.save_editor()
+
+    def select_pars(self, start: str, end: str, toggle_edit: bool = False):
+        menu = self.open_menu(self.find_element(start))
+        if toggle_edit:
+            self.find_element('.parEditButton').click()
+        self.find_element_by_text('Start selection', parent=menu).click()
+        self.find_element(end).click()
+        menu = self.open_menu(self.find_element(start))
+        return menu
+
+    def check_par_texts(self, pars: List[WebElement], expected: List[str]):
+        self.assertEqual(expected, [p.text for p in pars])
+
+    def disable_ace(self):
+        self.drv.execute_script("""window.localStorage.setItem('oldModepar','"text"');""")
