@@ -266,7 +266,8 @@ def do_confirm_permission(m: PermissionRemoveModel, i: DocInfo):
         raise RouteException('Right not found.')
     if not ba.require_confirm:
         raise RouteException(
-            f'{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed.')
+            f'{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed.'
+        )
     ba.do_confirm()
     ug: UserGroup = UserGroup.query.get(m.group)
     log_right(f'confirmed {ba.info_str} for {ug.name} in {i.path}')
@@ -281,9 +282,9 @@ def edit_permissions(m: PermissionMassEditModel):
     nonexistent = set(m.groups) - set(g.name for g in groups)
     if nonexistent:
         raise RouteException(f'Non-existent groups: {nonexistent}')
-    items = Block.query.filter(Block.id.in_(m.ids)
-                               & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])).order_by(
-        Block.id).all()
+    items = Block.query \
+        .filter(Block.id.in_(m.ids) & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])) \
+        .order_by(Block.id).all()
     a = None
     owned_items_before = set()
     for i in items:
@@ -309,7 +310,8 @@ def edit_permissions(m: PermissionMassEditModel):
     if a:
         action = 'added' if m.action == EditOption.Add else 'removed'
         log_right(
-            f'{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}')
+            f'{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}'
+        )
         db.session.commit()
     return permission_response(m)
 

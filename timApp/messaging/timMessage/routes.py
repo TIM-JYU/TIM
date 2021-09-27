@@ -362,7 +362,7 @@ def cancel_read_receipt(message_id: int) -> Response:
 
 
 @timMessage.get("/readReceipts")
-def get_read_recepits(message_doc: int, include_read: bool = False, include_unread: bool = False) -> Response:
+def get_read_receipts(message_doc: int, include_read: bool = False, include_unread: bool = False) -> Response:
     verify_logged_in()
     doc = DocEntry.find_by_id(message_doc)
     if not doc:
@@ -375,7 +375,7 @@ def get_read_recepits(message_doc: int, include_read: bool = False, include_unre
 
     read_user_map: Dict[int, datetime] = {user_id: read_time for user_id, read_time in read_users}
 
-    all_recepients = User.query \
+    all_recipients = User.query \
         .join(UserGroupMember, User.memberships) \
         .join(InternalMessageDisplay, InternalMessageDisplay.usergroup_id == UserGroupMember.usergroup_id) \
         .join(InternalMessage) \
@@ -383,7 +383,7 @@ def get_read_recepits(message_doc: int, include_read: bool = False, include_unre
 
     result = "id;email;name;read_on\n"
 
-    for u in all_recepients:
+    for u in all_recipients:
         read_time = ""
         if u.id in read_user_map:
             if not include_read:
