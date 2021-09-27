@@ -1,3 +1,10 @@
+:host {
+    display: block;
+    @media (min-width: 1400px) {
+        margin: 0 10% 0 10%;
+    }
+}
+
 tim-alert {
     display: block;
     margin-bottom: 1em;
@@ -9,9 +16,6 @@ tim-alert {
     padding: 6px 8px 8px 8px;
     background-color: var(--basic-color-inverse);
 
-    @media (min-width: 1400px) {
-        margin: 0 10% 0 10%;
-    }
 
     .fullMessageContent, .cutMessageContent {
         text-align: justify;
@@ -47,8 +51,9 @@ tim-alert {
     .readReceiptArea {
         margin-top: 5px;
         display: grid;
-        grid-template-columns: 12% 40% 48%;
+        grid-template-columns: auto 1fr auto;
         grid-template-areas: "checkbox link button";
+        column-gap: 1em;
 
         input[type='checkbox'] {
             grid-area: checkbox;

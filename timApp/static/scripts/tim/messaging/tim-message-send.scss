@@ -111,3 +111,13 @@ label {
     margin-left: 0 !important;
   }
 }
+
+.button-panel {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  & > *:not(:last-child) {
+    margin-right: 0.5em;
+  }
+}
