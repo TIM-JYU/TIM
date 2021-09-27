@@ -53,13 +53,7 @@ export class Area implements IDocumentPart {
     }
 
     nextInHtml() {
-        if (this.collapse) {
-            return this.startPar.par.htmlElement.nextElementSibling
-                ?.nextElementSibling;
-        } else {
-            return this.startPar.par.htmlElement.parentElement?.parentElement
-                ?.nextElementSibling;
-        }
+        return this.getAreaContainer().nextElementSibling;
     }
 
     getSinglePar(el: Element, d: DerefOption) {

@@ -38,7 +38,7 @@
     <div class="editorContainer">
     </div>
     <div class="editButtonArea">
-        <button class="timButton" ng-disabled="$ctrl.saving" title="Save (Ctrl-S)" ng-click="$ctrl.saveClicked()">Save</button>
+        <button class="timButton save" ng-disabled="$ctrl.saving" title="Save (Ctrl-S)" ng-click="$ctrl.saveClicked()">Save</button>
         <button class="timButton" ng-disabled="$ctrl.saving" ng-click="$ctrl.cancelClicked()">Cancel</button>
         <span ng-show="$ctrl.proeditor">
         <button class="btn btn-danger" ng-disabled="$ctrl.saving" ng-show="$ctrl.getOptions().showDelete" ng-click="$ctrl.deleteClicked()">Delete</button>

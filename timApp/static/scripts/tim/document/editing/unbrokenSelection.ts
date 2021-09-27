@@ -42,8 +42,25 @@ export class UnbrokenSelection extends ParSelection {
             // We know there should be at least one more element because curr != last.
             const next = curr.nextInHtml()!;
 
-            curr = doc.getParMap().get(next)![1];
-            todelete.push(curr.parent ?? curr);
+            const par = doc.getParMap().get(next);
+            if (par) {
+                curr = par[1];
+                if (
+                    curr.parent instanceof Area &&
+                    curr.parent.collapse &&
+                    curr.parent.isStartOrEnd(curr)
+                ) {
+                    // The par might be the start par of a collapsible area,
+                    // in which case the next DocumentPart we're looking for is the area.
+                    curr = curr.parent;
+                }
+                todelete.push(curr);
+            } else {
+                // If parMap didn't have an entry, this must be an uncollapsible area.
+                const area = doc.getUncollapsibleAreaMap().get(next)!;
+                todelete.push(area);
+                curr = area;
+            }
         }
         for (const d of todelete) {
             d.remove();

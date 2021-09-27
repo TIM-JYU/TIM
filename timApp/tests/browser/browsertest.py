@@ -392,6 +392,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         return self.find_element('.breadcrumb .current')
 
     def wait_for_editor_load(self):
+        self.wait_until_present('pareditor')
         self.wait_until_hidden('.editor-loading')
 
 
