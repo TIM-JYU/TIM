@@ -1,33 +1,34 @@
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from flask import Response
+from isodate import datetime_isoformat
 from sqlalchemy import tuple_
 
-from timApp.auth.accesshelper import verify_edit_access
+from timApp.auth.accesshelper import verify_edit_access, verify_manage_access
 from timApp.auth.accesshelper import verify_logged_in
 from timApp.auth.accesstype import AccessType
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.document.document import Document
 from timApp.document.documents import import_document_from_file
 from timApp.document.translation.translation import Translation
 from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
-from timApp.item.manage import get_trash_folder
+from timApp.item.manage import TRASH_FOLDER_PATH
 from timApp.messaging.timMessage.internalmessage_models import InternalMessage, DisplayType, InternalMessageDisplay, \
     InternalMessageReadReceipt
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
+from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import RouteException, NotExist
-from timApp.util.flask.responsehelper import ok_response, json_response, error_generic
+from timApp.util.flask.responsehelper import ok_response, json_response, text_response, csv_string
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars, static_tim_doc
 
@@ -69,17 +70,14 @@ class MessageBody:
 
 @dataclass
 class TimMessageData:
-    # Information about the message sent to browser
     id: int
-    sender: str
-    doc_id: int
-    par_id: str
+    sender: Optional[str]
+    doc_path: str
     can_mark_as_read: bool
     can_reply: bool
-    display_type: int
+    display_type: DisplayType
     message_body: str
     message_subject: str
-    recipients: List[str]
 
 
 @dataclass
@@ -97,11 +95,9 @@ def get_tim_messages(item_id: int) -> Response:
     Retrieve messages displayed for current based on item id and return them in json format.
 
     :param item_id: Identifier for document or folder where message is displayed
-    :return:
+    :return: List of TIM messages to display
     """
-    fullmessages = get_tim_messages_as_list(item_id)
-
-    return json_response(fullmessages)
+    return json_response(get_tim_messages_as_list(item_id))
 
 
 def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
@@ -132,12 +128,7 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
                 & ((InternalMessageDisplay.display_doc_id == current_page_obj.id)
                    | (tuple_(Folder.location, Folder.name).in_(parent_paths))))
 
-    replies = InternalMessage.query.filter(InternalMessage.replies_to.isnot(None)).with_entities(
-        InternalMessage.replies_to).all()
-    replies_to_ids = [a for a, in replies]  # list of messages that have been replied to
-
-    messages = []
-    recipients = []
+    messages: List[InternalMessage] = []
     for display in displays:
         receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id,
                                                              message_id=display.message_id).first()
@@ -145,33 +136,30 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
         # message is shown if it has not been marked as read or replied to, and has not expired
         if receipt.marked_as_read_on is None and (expires.expires is None or expires.expires > datetime.now()):
             messages.append(InternalMessage.query.filter_by(id=display.message_id).first())
-            recipients.append(UserGroup.query.filter_by(id=display.usergroup_id).first())
 
-    fullmessages = []
+    full_messages = []
     for message in messages:
         document = DocEntry.query.filter_by(id=message.doc_id).first()
         if not document:
-            return error_generic('Message document not found', 404)
+            raise NotExist(f'No document or folder found for the message {message.id}')
 
-        # Hides the message if the corresponding document has been deleted
-        trash_folder_path = get_trash_folder().path
-        if document.name.startswith(trash_folder_path):
+        sender = document.owners[0].name if document.owners else None
+        if document.name.startswith(TRASH_FOLDER_PATH):
             continue
 
-        fullmessages.append(TimMessageData(id=message.id,
-                                           sender=document.owners.pop().name,
-                                           doc_id=message.doc_id,
-                                           par_id=message.par_id,
-                                           can_mark_as_read=message.can_mark_as_read,
-                                           can_reply=message.reply,
-                                           display_type=message.display_type,
-                                           message_body=Document.get_paragraph(document.document,
-                                                                               message.par_id).get_html(
-                                               default_view_ctx),
-                                           message_subject=document.title,
-                                           recipients=recipients))
+        body = document.document.get_paragraph(message.par_id).get_html(default_view_ctx)
+        data = TimMessageData(id=message.id,
+                              sender=sender,
+                              doc_path=document.name,
+                              can_mark_as_read=message.can_mark_as_read,
+                              can_reply=message.reply,
+                              display_type=message.display_type,
+                              message_body=body,
+                              message_subject=document.title)
 
-    return fullmessages
+        full_messages.append(data)
+
+    return full_messages
 
 
 @timMessage.get("/get_read_receipt/<int:doc_id>")
@@ -262,7 +250,7 @@ def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Resp
 
     tim_message = InternalMessage(can_mark_as_read=options.readReceipt, reply=options.reply, expires=options.expires,
                                   replies_to=options.repliesTo)
-    create_tim_message(tim_message, options, message)
+    message_doc = create_tim_message(tim_message, options, message)
     db.session.add(tim_message)
 
     pages = get_display_pages(options.pageList.splitlines())
@@ -273,7 +261,7 @@ def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Resp
 
     db.session.commit()
 
-    return ok_response()
+    return json_response({'docPath': message_doc.path})
 
 
 def create_tim_message(tim_message: InternalMessage, options: MessageOptions, message_body: MessageBody) -> DocInfo:
@@ -304,12 +292,7 @@ def create_tim_message(tim_message: InternalMessage, options: MessageOptions, me
     message_doc.document.add_paragraph('<manage-read-receipt></manage-read-receipt>', attrs={"allowangular": "true"})
     tim_message.block = message_doc.block
     tim_message.par_id = message_par.get_id()
-
-    if options.important:
-        # Important messages are interpreted as 'sticky' display type
-        tim_message.display_type = DisplayType.STICKY  # TODO actual functionality
-    else:
-        tim_message.display_type = DisplayType.TOP_OF_PAGE  # default display type
+    tim_message.display_type = DisplayType.STICKY if options.important else DisplayType.TOP_OF_PAGE
 
     return message_doc
 
@@ -371,6 +354,44 @@ def cancel_read_receipt(message_id: int) -> Response:
     db.session.commit()
 
     return ok_response()
+
+
+@timMessage.get("/readReceipts")
+def get_read_receipts(message_doc: int,
+                      include_read: bool = False,
+                      include_unread: bool = False,
+                      separator: str = ";") -> Response:
+    verify_logged_in()
+    doc = DocEntry.find_by_id(message_doc)
+    if not doc:
+        raise NotExist("No document found")
+    verify_manage_access(doc)
+
+    read_users = db.session.query(InternalMessageReadReceipt.user_id, InternalMessageReadReceipt.marked_as_read_on) \
+        .join(InternalMessage) \
+        .filter(InternalMessage.doc_id == doc.id)
+
+    read_user_map: Dict[int, datetime] = {user_id: read_time for user_id, read_time in read_users}
+
+    all_recipients = User.query \
+        .join(UserGroupMember, User.active_memberships) \
+        .join(InternalMessageDisplay, InternalMessageDisplay.usergroup_id == UserGroupMember.usergroup_id) \
+        .join(InternalMessage) \
+        .filter(InternalMessage.doc_id == doc.id)
+
+    data = [["id", "email", "name", "read_on"]]
+
+    for u in all_recipients:
+        read_time = ""
+        if u.id in read_user_map:
+            if not include_read:
+                continue
+            read_time = datetime_isoformat(read_user_map[u.id])
+        elif not include_unread:
+            continue
+        data.append([u.id, u.email, u.real_name, read_time])
+
+    return text_response(csv_string(data, "excel", separator))
 
 
 def get_recipient_users(recipients: List[str]) -> List[UserGroup]:

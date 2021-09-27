@@ -16,6 +16,8 @@ interface ReplyOptions {
     repliesTo?: number;
 }
 
+const MAX_DISPLAY_LENGTH = 210;
+
 @Component({
     selector: "tim-message",
     template: `
@@ -25,16 +27,16 @@ interface ReplyOptions {
             </tim-alert>
             <div class="timMessageDisplay">
                 <tim-close-button class="closeButton" (click)="closeMessage()"></tim-close-button>
-                <p class="messageInformation">
+                <p class="messageInformation" *ngIf="message.sender">
                     <span class="from" i18n>From: </span>
-                    <span class="sender">{{sender}}</span>
+                    <span class="sender">{{message.sender}}</span>
                     <!-- TODO Display what group the message is related to
                     <span class="group" *ngIf="messageToGroup">, {{group}}</span> 
                     -->
                 </p>
-                <p class="messageHeading">{{heading}}</p>
+                <p class="messageHeading">{{message.message_subject}}</p>
                 <div class="fullMessageContent" *ngIf="showFullContent">
-                    <div class="fullContentText" [innerHTML]="fullContent"></div>
+                    <div class="fullContentText" [innerHTML]="message.message_body"></div>
                     <p class="toggleReadMore" *ngIf="messageOverMaxLength">
                         <a (click)="toggleDisplayedContentLength()" i18n>Read less</a>
                     </p>
@@ -44,10 +46,10 @@ interface ReplyOptions {
                     <p class="toggleReadMore"><a (click)="toggleDisplayedContentLength()" i18n>Read more</a></p>
                 </div>
                 <div class="buttonArea">
-                    <button class="timButton" *ngIf="canReply" (click)="reply()" i18n>Reply</button>
+                    <button class="timButton" *ngIf="message.can_reply" (click)="reply()" i18n>Reply</button>
                 </div>
-                <div class="replyArea" *ngIf="showReply">
-                    <p class="replyTo">To: {{sender}}</p>
+                <div class="replyArea" *ngIf="showReply && message.sender">
+                    <p class="replyTo">To: {{message.sender}}</p>
                     <textarea class="replyTextarea" id="reply-message" name="reply-message"
                               [(ngModel)]="replyMessage"></textarea>
                     <div class="sent">
@@ -56,14 +58,14 @@ interface ReplyOptions {
                     </div>
                 </div>
                 <form class="readReceiptArea">
-                    <label class="markAsReadLabel"><input class="markAsReadCheckbox" 
-                                                          type="checkbox" 
+                    <label class="markAsReadLabel"><input class="markAsReadCheckbox"
+                                                          type="checkbox"
                                                           name="mark-as-read"
                                                           id="mark-as-read"
                                                           [disabled]="!canMarkAsRead || markedAsRead"
                                                           (click)="markAsRead()" i18n/> Mark as Read</label>
                     <span class="readReceiptLink" *ngIf="markedAsRead" i18n>
-                        Read receipt can be cancelled in <a href="/view/messages/tim-messages">your messages</a>
+                        Read receipt can be cancelled in <a href="/view/{{message.doc_path}}">the message document</a>
                     </span>
                     <button class="timButton" title="Close Message" (click)="closeMessage()" i18n>
                         Close
@@ -79,10 +81,8 @@ export class TimMessageComponent implements OnInit {
     message!: TimMessageData;
     errorMessage?: string;
 
-    messageMaxLength: number = 210;
     messageOverMaxLength: boolean = false;
     showMessage: boolean = true;
-    fullContent?: string;
     shownContent?: string;
     showFullContent: boolean = true;
     showReply: boolean = false;
@@ -90,12 +90,9 @@ export class TimMessageComponent implements OnInit {
     markedAsRead: boolean = false;
     replyMessage: string = "";
     replySent: boolean = false;
-    canReply: boolean = true; // show/hide 'Reply' button
     canSendReply: boolean = true; // enable/disable 'Send' button
-    sender?: string;
     messageToGroup: boolean = true; // can't get from database
     group?: string; // can't get from database
-    heading?: string;
     replyOptions: ReplyOptions = {
         archive: true,
         messageChannel: false,
@@ -146,10 +143,10 @@ export class TimMessageComponent implements OnInit {
     async sendReply() {
         this.replySent = true;
         this.canSendReply = false;
-        if (!this.sender) {
+        if (!this.message.sender) {
             return;
         }
-        this.replyOptions.recipient = this.sender;
+        this.replyOptions.recipient = this.message.sender;
         this.replyOptions.repliesTo = this.message.id;
         const result = await to2(
             this.http
@@ -157,7 +154,7 @@ export class TimMessageComponent implements OnInit {
                     options: this.replyOptions,
                     messageBody: {
                         messageBody: this.replyMessage,
-                        messageSubject: this.heading + " [Re]",
+                        messageSubject: `[Re] ${this.message.message_subject}`,
                         recipients: [this.replyOptions.recipient],
                     },
                 })
@@ -175,29 +172,21 @@ export class TimMessageComponent implements OnInit {
     async closeMessage() {
         this.showMessage = false;
 
-        if (!this.canReply && !this.canMarkAsRead) {
+        if (!this.message.can_reply && !this.canMarkAsRead) {
             await markAsRead(this.http, this.message.id);
         }
     }
 
     ngOnInit(): void {
-        this.setValues(this.message);
-    }
-
-    setValues(timMessage: TimMessageData) {
-        this.sender = timMessage.sender;
         // TODO Display what group the message is related to; currently can't retrieve from database
-        // this.group = "ohj1k21";
-        this.heading = timMessage.message_subject;
-        this.fullContent = timMessage.message_body;
-        this.canMarkAsRead = timMessage.can_mark_as_read;
-        this.canReply = timMessage.can_reply;
 
-        if (this.fullContent.length > this.messageMaxLength) {
+        if (this.message.message_body.length > MAX_DISPLAY_LENGTH) {
             this.messageOverMaxLength = true;
             this.showFullContent = false;
-            this.shownContent =
-                this.fullContent.substr(0, this.messageMaxLength) + "...";
+            this.shownContent = `${this.message.message_body.substr(
+                0,
+                MAX_DISPLAY_LENGTH
+            )}...`;
         }
     }
 }

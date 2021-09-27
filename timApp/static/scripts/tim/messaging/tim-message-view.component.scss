@@ -7,3 +7,15 @@ tim-alert {
   display: block;
   margin-bottom: 1em;
 }
+
+.sticky {
+  position: fixed;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  width: 100%;
+
+  ::ng-deep & > tim-message {
+    margin: 0 !important;
+  }
+}
