@@ -1680,7 +1680,7 @@
       </trans-unit>
       <trans-unit id="cfd02eeb500fd5f2b14bb352bb98b1d036496e03" datatype="html">
         <source>Help for TIM messages (in Finnish)</source>
-        <target state="translated">Ohje TIM-viesteistä</target>
+        <target state="translated">TIM-viestien ohje</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
           <context context-type="linenumber">100</context>
@@ -1712,7 +1712,7 @@
       </trans-unit>
       <trans-unit id="d1a946b565f39edf8f900dfa817ddc9c6bc01c23" datatype="html">
         <source>Message will persist on user's screen until they mark it as read</source>
-        <target state="translated">Viesti pysyy käyttäjän näytöllä kunnes hän merkitsee sen luetuksi</target>
+        <target state="translated">Viesti pysyy käyttäjän näytöllä, kunnes hän merkitsee sen luetuksi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
           <context context-type="linenumber">123</context>
@@ -1736,7 +1736,7 @@
       </trans-unit>
       <trans-unit id="326acfe22792b3d09c7eea3c65259c5355663977" datatype="html">
         <source>TIM message can be marked as read</source>
-        <target state="translated">TIM-viesti voi merkitä luetuksi</target>
+        <target state="translated">TIM-viestin voi merkitä luetuksi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
           <context context-type="linenumber">141,142</context>

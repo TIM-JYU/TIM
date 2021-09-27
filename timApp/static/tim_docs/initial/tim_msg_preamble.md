@@ -20,7 +20,7 @@ span.messagetitle {
 !!
 ```
 
-``` {plugin="timMenu" .hidden-print nocache="true"}
+``` {plugin="timMenu" .hidden-print}
 menu: |!!
 - Read receipts
   rights: manage

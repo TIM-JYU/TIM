@@ -14,7 +14,6 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
-from timApp.document.document import Document
 from timApp.document.documents import import_document_from_file
 from timApp.document.translation.translation import Translation
 from timApp.document.viewcontext import default_view_ctx
@@ -29,7 +28,7 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.util.flask.requesthelper import RouteException, NotExist
-from timApp.util.flask.responsehelper import ok_response, json_response, text_response
+from timApp.util.flask.responsehelper import ok_response, json_response, text_response, csv_string
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import remove_path_special_chars, static_tim_doc
 
@@ -129,10 +128,6 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
                 & ((InternalMessageDisplay.display_doc_id == current_page_obj.id)
                    | (tuple_(Folder.location, Folder.name).in_(parent_paths))))
 
-    replies = InternalMessage.query.filter(InternalMessage.replies_to.isnot(None)).with_entities(
-        InternalMessage.replies_to).all()
-    replies_to_ids = [a for a, in replies]  # list of messages that have been replied to
-
     messages: List[InternalMessage] = []
     for display in displays:
         receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id,
@@ -152,7 +147,7 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
         if document.name.startswith(TRASH_FOLDER_PATH):
             continue
 
-        body = Document.get_paragraph(document.document, message.par_id).get_html(default_view_ctx)
+        body = document.document.get_paragraph(message.par_id).get_html(default_view_ctx)
         data = TimMessageData(id=message.id,
                               sender=sender,
                               doc_path=document.name,
@@ -362,7 +357,10 @@ def cancel_read_receipt(message_id: int) -> Response:
 
 
 @timMessage.get("/readReceipts")
-def get_read_receipts(message_doc: int, include_read: bool = False, include_unread: bool = False) -> Response:
+def get_read_receipts(message_doc: int,
+                      include_read: bool = False,
+                      include_unread: bool = False,
+                      separator: str = ";") -> Response:
     verify_logged_in()
     doc = DocEntry.find_by_id(message_doc)
     if not doc:
@@ -376,12 +374,12 @@ def get_read_receipts(message_doc: int, include_read: bool = False, include_unre
     read_user_map: Dict[int, datetime] = {user_id: read_time for user_id, read_time in read_users}
 
     all_recipients = User.query \
-        .join(UserGroupMember, User.memberships) \
+        .join(UserGroupMember, User.active_memberships) \
         .join(InternalMessageDisplay, InternalMessageDisplay.usergroup_id == UserGroupMember.usergroup_id) \
         .join(InternalMessage) \
         .filter(InternalMessage.doc_id == doc.id)
 
-    result = "id;email;name;read_on\n"
+    data = [["id", "email", "name", "read_on"]]
 
     for u in all_recipients:
         read_time = ""
@@ -391,9 +389,9 @@ def get_read_receipts(message_doc: int, include_read: bool = False, include_unre
             read_time = datetime_isoformat(read_user_map[u.id])
         elif not include_unread:
             continue
-        result += f"{u.id};{u.email};{u.real_name};{read_time}\n"
+        data.append([u.id, u.email, u.real_name, read_time])
 
-    return text_response(result)
+    return text_response(csv_string(data, "excel", separator))
 
 
 def get_recipient_users(recipients: List[str]) -> List[UserGroup]:

@@ -267,7 +267,7 @@ const sortLang = "fi";
                     Copy
                 </button>
             </div>
-            <tim-message-send [recipientList]="recipientList" (recipientListChange)="recipientList = $event"
+            <tim-message-send [(recipientList)]="recipientList"
                               [docId]="currentDocumentID()"></tim-message-send>
             <pre *ngIf="result">{{result}}</pre>
             <pre *ngIf="error" [innerHtml]="error"></pre>
