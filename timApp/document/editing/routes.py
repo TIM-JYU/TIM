@@ -496,7 +496,7 @@ def par_response(
 
 
 def is_area_start_or_end(p: PreparedPar):
-    return p.areainfo is not None
+    return p.areainfo is not None or p.attrs.get('area') is not None
 
 
 # Gets next available name for plugin
