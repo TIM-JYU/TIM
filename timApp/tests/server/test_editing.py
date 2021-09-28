@@ -293,6 +293,25 @@ macros:
         r = self.get_updated_pars(d)
         self.assertEqual({pid}, set(r['changed_pars'].keys()))
 
+    def test_no_area_start_update(self):
+        """getUpdatedPars shouldn't return area start or end pars because it will break the DOM structure."""
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {area=a collapse=true}
+title
+
+#-
+1
+
+#- {area_end=a}
+        """)
+        self.get_updated_pars(d)  # refresh cache
+        pars = d.document.get_paragraphs()
+        md = d.document.export_markdown().replace('title', 'titleedit')
+        self.post_area(d, md, area_start=pars[0].get_id(), area_end=pars[-1].get_id())
+        r = self.get_updated_pars(d)
+        self.assertEqual({}, r['changed_pars'])
+
     def test_cache_no_extra_div(self):
         self.login_test1()
         d = self.create_doc()
