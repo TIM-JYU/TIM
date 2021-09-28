@@ -793,11 +793,21 @@ class TimRouteTest(TimDbTest):
     def get_personal_item_path(self, path):
         return f'{self.current_user.get_personal_folder().path}/{path}'
 
-    def copy(self,
-             doc: DocInfo,
-             par_start: DocParagraph,
-             par_end: DocParagraph, **kwargs):
-        self.json_post(f'/clipboard/copy/{doc.id}/{par_start.get_id()}/{par_end.get_id()}', **kwargs)
+    def copy(
+            self,
+            doc: DocInfo,
+            par_start: DocParagraph,
+            par_end: DocParagraph,
+            area_name: Optional[str] = None,
+            **kwargs,
+    ):
+        self.json_post(
+            f'/clipboard/copy/{doc.id}/{par_start.get_id()}/{par_end.get_id()}',
+            {
+                'area_name': area_name,
+            },
+            **kwargs,
+        )
 
     def cut(self,
             doc: DocInfo,
