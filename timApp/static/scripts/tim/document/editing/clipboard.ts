@@ -11,6 +11,7 @@ import {
     getContextualAreaInfo,
     ParAreaInclusionKind,
 } from "tim/document/structure/areaContext";
+import {Area} from "tim/document/structure/area";
 import {Users} from "../../user/userService";
 import {$http} from "../../util/ngimport";
 import {empty, to} from "../../util/utils";
@@ -377,11 +378,18 @@ export class ClipboardHandler {
             });
             this.viewctrl.editingHandler.setSelection(undefined);
         } else {
+            let areaName = null;
+            if (
+                unb.start.par.parent instanceof Area &&
+                unb.end.par.parent instanceof Area &&
+                unb.start.par.parent.equals(unb.end.par.parent)
+            ) {
+                areaName = unb.start.par.parent.areaname;
+            }
             const r = await to(
-                $http.post(
-                    `/clipboard/copy/${docId}/${areaStart}/${areaEnd}`,
-                    {}
-                )
+                $http.post(`/clipboard/copy/${docId}/${areaStart}/${areaEnd}`, {
+                    area_name: areaName,
+                })
             );
             if (!r.ok) {
                 await showMessageDialog(r.result.data.error);
