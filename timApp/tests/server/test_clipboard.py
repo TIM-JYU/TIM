@@ -253,3 +253,25 @@ stem: x
         d2 = self.create_doc(initial_par='x')
         p2 = d2.document.get_paragraphs()[0]
         self.paste(d2, par_after=p2)
+
+    def test_copy_area_as_ref(self):
+        self.login_test1()
+        d = self.create_doc(initial_par="""
+#- {area=a}
+
+#-
+1
+
+#-
+2
+
+#- {area_end=a}
+        """)
+        d2 = self.create_doc(initial_par="test")
+        d_pars = d.document.get_paragraphs()
+        self.copy(d, d_pars[0], d_pars[-1], area_name='a')
+        self.paste(d2, par_after=d2.document.get_paragraphs()[0], as_ref=True)
+        d2.document.clear_mem_cache()
+        d2_par = d2.document.get_paragraphs()[-1]
+        self.assertEqual('a', d2_par.attrs['ra'])
+        self.assertEqual(str(d.id), d2_par.attrs['rd'])
