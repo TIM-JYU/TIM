@@ -62,6 +62,7 @@ public class Main {{
         d = self.create_doc(initial_par="""
 ``` {#t plugin="csPlugin"}
 type: cs
+timeout: 20
 ```
         """)
         r = self.post_answer(
