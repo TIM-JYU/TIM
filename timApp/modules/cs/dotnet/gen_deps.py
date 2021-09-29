@@ -4,7 +4,7 @@ import os
 import shutil
 import subprocess
 import tempfile
-from typing import TypedDict, Dict, Optional
+from typing import TypedDict, Optional
 
 
 class DotNetPackage(TypedDict, total=False):

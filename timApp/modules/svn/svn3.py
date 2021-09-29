@@ -24,15 +24,12 @@
 #                                                  -> print only the first line where is main and next line
 #
 import http.server
-import socketserver
-import time
+import json
 import math
 import os
-
-import json
-
 import re
-
+import socketserver
+import time
 
 from tim_common.fileParams import get_param, get_surrounding_headers2, is_user_lazy, add_lazy, NOLAZY, get_clean_param, \
     replace_template_param, replace_template_params, query_params_to_map_check_parts, encode_json_data, make_lazy, \

@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import Optional
 
 from timApp.document.docsettings import DocSettings
 from timApp.user.user import User

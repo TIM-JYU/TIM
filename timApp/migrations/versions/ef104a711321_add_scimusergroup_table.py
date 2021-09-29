@@ -7,7 +7,6 @@ Create Date: 2019-08-19 15:14:05.991302
 """
 
 # revision identifiers, used by Alembic.
-from typing import List
 
 from sqlalchemy import orm, any_
 

@@ -1,10 +1,10 @@
 import csv
-from typing import Tuple, List, Optional
+from typing import Optional
 
-from timApp.util.utils import is_valid_email
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
 from timApp.user.userutils import create_password_hash
+from timApp.util.utils import is_valid_email
 
 
 class ImportException(Exception):

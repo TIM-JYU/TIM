@@ -1,11 +1,9 @@
 import math
 import os
-import socket
-import traceback
 from base64 import b64decode
 from io import BytesIO
 from pprint import pprint
-from typing import Union, List, Optional
+from typing import Union, Optional
 from urllib.parse import urlencode
 
 from selenium import webdriver

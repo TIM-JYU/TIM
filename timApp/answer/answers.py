@@ -3,7 +3,7 @@ import json
 from collections import defaultdict, OrderedDict
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Optional, Dict, Tuple, Iterable, Any, Generator, TypeVar, SupportsRound, DefaultDict, Union, \
+from typing import Optional, Iterable, Any, Generator, TypeVar, SupportsRound, DefaultDict, Union, \
     TypedDict, ItemsView
 
 from bs4 import UnicodeDammit

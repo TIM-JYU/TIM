@@ -1,6 +1,6 @@
 import json
 from datetime import datetime, timezone
-from typing import Optional, List
+from typing import Optional
 
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.timdb.sqa import db

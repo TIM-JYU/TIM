@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Optional, Dict, TYPE_CHECKING, List, Iterable
+from typing import TYPE_CHECKING, Iterable
 
 from jinja2 import TemplateSyntaxError
 from jinja2.sandbox import SandboxedEnvironment
@@ -13,9 +13,9 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
-from tim_common.html_sanitize import sanitize_html, presanitize_html_body
 from timApp.util.utils import get_error_html, title_to_id
 from timApp.util.utils import widen_fields
+from tim_common.html_sanitize import sanitize_html, presanitize_html_body
 
 if TYPE_CHECKING:
     from timApp.document.docparagraph import DocParagraph

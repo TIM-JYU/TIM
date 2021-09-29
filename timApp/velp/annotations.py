@@ -8,7 +8,6 @@ annotations as well as adding comments to the annotations. The module also retri
 """
 
 from enum import Enum, unique
-from typing import List, Any
 
 from sqlalchemy import func, true
 from sqlalchemy.orm import joinedload, contains_eager, Query

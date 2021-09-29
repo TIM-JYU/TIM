@@ -1,5 +1,3 @@
-from typing import Tuple
-
 """Document version number.
 
 Format is major, minor.

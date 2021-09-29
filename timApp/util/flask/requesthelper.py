@@ -5,7 +5,7 @@ import pprint
 import time
 import warnings
 from dataclasses import is_dataclass, dataclass
-from typing import Optional, Type, TypeVar, Callable, Any, List, Tuple, Union
+from typing import Optional, TypeVar, Callable, Any, Union
 from urllib.parse import urlparse
 
 import requests
@@ -18,9 +18,9 @@ from werkzeug.user_agent import UserAgent
 
 from timApp.auth.sessioninfo import get_current_user_name
 from timApp.document.viewcontext import ViewRoute, ViewContext
+from timApp.user.user import Consent
 from tim_common.marshmallow_dataclass import class_schema
 from tim_common.utils import DurationSchema
-from timApp.user.user import Consent
 
 
 class EmptyWarning:

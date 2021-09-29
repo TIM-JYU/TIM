@@ -1,11 +1,9 @@
-from typing import Tuple
-
 from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import DocInfo
 from timApp.document.randutils import random_id
 from timApp.notification.notify import process_pending_notifications
-from timApp.notification.send_email import sent_mails_in_testing
 from timApp.notification.pending_notification import PendingNotification, DocumentNotification
+from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 

@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Generator, List, Optional, Tuple
+from typing import Generator, Optional
 
 from flask import Blueprint, render_template
 from flask import redirect

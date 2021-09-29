@@ -1,7 +1,7 @@
 # const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,]*) *(!?) */g;
 import re
 from operator import ge, gt, ne, eq, le, lt
-from typing import List, Union, Tuple
+from typing import Union
 
 num_filter_expression = '([<=>!]=?) *(-?[\\w.,]*) *(!?) *'
 

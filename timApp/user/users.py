@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Tuple, Optional
+from typing import Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload

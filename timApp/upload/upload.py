@@ -5,7 +5,7 @@ import os
 import posixpath
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 from urllib.parse import unquote, urlparse
 
 from flask import Blueprint, request, send_file, Response

@@ -6,7 +6,7 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Optional, List, Tuple, Dict
+from typing import Optional
 
 from flask import current_app
 from jinja2.sandbox import SandboxedEnvironment
@@ -28,7 +28,6 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx, copy_of_default_view_ctx
 from timApp.document.yamlblock import strip_code_block
 from timApp.folder.folder import Folder
-from tim_common.html_sanitize import sanitize_html
 from timApp.markdown.markdownconverter import expand_macros, create_environment
 from timApp.plugin.plugin import get_value, PluginWrap
 from timApp.plugin.plugin import parse_plugin_values_macros
@@ -40,6 +39,7 @@ from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.dbaccess import get_files_path
 from timApp.user.user import User
 from timApp.util.utils import cache_folder_path
+from tim_common.html_sanitize import sanitize_html
 
 DEFAULT_PRINTING_FOLDER = cache_folder_path / 'printed_documents'
 TEMPLATES_FOLDER = Path(TEMPLATE_FOLDER_NAME) / PRINT_FOLDER_NAME

@@ -2,7 +2,7 @@ import json
 import sys
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Tuple, Sequence
+from typing import Sequence
 
 import click
 from flask.cli import AppGroup

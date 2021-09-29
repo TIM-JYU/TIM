@@ -2,7 +2,7 @@ import csv
 import http.client
 import json
 from io import StringIO
-from typing import Any, Optional, Dict
+from typing import Any, Optional
 from urllib.parse import urlparse, urljoin
 
 from flask import request, redirect, url_for, Response, stream_with_context, render_template, flash

@@ -1,7 +1,7 @@
 """Defines a client interface for using Dumbo, the markdown converter."""
 import json
 from enum import Enum
-from typing import List, Union, Dict, NamedTuple, Optional, overload
+from typing import Union, NamedTuple, Optional, overload
 
 import requests
 

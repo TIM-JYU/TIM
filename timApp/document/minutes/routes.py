@@ -4,7 +4,7 @@ Routes related to handling faculty council documents, such as meeting invitation
 import ast
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 from urllib.parse import urlencode
 
 from flask import Blueprint, send_file, Response

@@ -36,20 +36,15 @@ The command should print a json string to standard output with the following str
 }
 """
 
-import shutil
-import distutils.dir_util
-from copy import deepcopy
 from pathlib import Path
-import json
-import time
-import html
+
 from marshmallow import RAISE, ValidationError
 
-from tim_common.fileParams import *
-from run import *
-from points import *
-from languages import Language
 from extchecklib import *
+from languages import Language
+from points import *
+from run import *
+
 
 class ExtCheck(Language):
     ttype="extcheck"

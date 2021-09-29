@@ -3,7 +3,7 @@ Functions related to document partitioning.
 """
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 from flask import json, Request
 from lxml import html

@@ -3,7 +3,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import timedelta
 from random import randrange
-from typing import List, Optional
+from typing import Optional
 
 import dateutil.parser
 from flask import Blueprint, render_template, g

@@ -1,10 +1,9 @@
+import sre_constants
 import sys
 from argparse import ArgumentParser
-from typing import Generator, Tuple, Optional, Callable, Union, TypeVar, Any, Iterable, Set
+from typing import Generator, Optional, Callable, Union, TypeVar, Any, Iterable
 
 import attr
-import sre_constants
-
 import click
 from flask import current_app
 

@@ -1,4 +1,4 @@
-from typing import List, Generator, Tuple, Union, Optional
+from typing import Generator, Union, Optional
 
 from timApp.auth.accesshelper import grant_access_to_session_users, reset_request_access_cache, get_doc_or_abort, \
     verify_edit_access

@@ -1,8 +1,6 @@
 import base64
-from unittest import mock
-
 from dataclasses import dataclass
-from flask import session
+from unittest import mock
 
 from timApp.auth.login import test_pws, create_or_update_user, set_single_user_to_session
 from timApp.tests.server.timroutetest import TimRouteTest

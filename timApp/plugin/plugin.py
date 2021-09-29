@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Tuple, Optional, Union, Iterable, Dict, Generator, Match, List, Any
+from typing import Optional, Union, Iterable, Generator, Match, Any
 
 import yaml
 from jinja2 import Environment, BaseLoader
@@ -24,7 +24,7 @@ from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
-from timApp.plugin.plugintype import CONTENT_FIELD_NAME_MAP, PluginType, PluginTypeLazy
+from timApp.plugin.plugintype import CONTENT_FIELD_NAME_MAP, PluginTypeLazy
 from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException

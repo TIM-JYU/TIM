@@ -2,7 +2,7 @@
 import random
 import re
 import string
-from typing import Optional, Dict, Union
+from typing import Optional, Union
 
 from flask import current_app, Response
 from flask import flash

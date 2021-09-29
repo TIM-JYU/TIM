@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
 from authlib.integrations.sqla_oauth2 import OAuth2TokenMixin, OAuth2AuthorizationCodeMixin
 from authlib.oauth2.rfc6749 import ClientMixin, scope_to_list, list_to_scope

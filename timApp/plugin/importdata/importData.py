@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, asdict, field
 from enum import Enum
-from typing import Union, List, DefaultDict, Dict, Generator, Any, Optional
+from typing import Union, DefaultDict, Generator, Any, Optional
 
 import requests
 from flask import render_template_string

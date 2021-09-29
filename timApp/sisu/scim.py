@@ -2,7 +2,7 @@ import re
 import traceback
 from dataclasses import field, dataclass
 from functools import cached_property
-from typing import List, Optional, Dict, Any, Generator
+from typing import Optional, Any, Generator
 
 from flask import Blueprint, request, current_app, Response
 from sqlalchemy.exc import IntegrityError

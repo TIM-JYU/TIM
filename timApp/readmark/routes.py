@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from typing import Optional
 
 from flask import Blueprint, request
 from flask import current_app, Response

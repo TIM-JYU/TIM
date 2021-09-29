@@ -1,18 +1,17 @@
-from typing import Optional, Union, Dict, Any
-from pathlib import Path
-import os.path
-from shutil import rmtree
-from git.util import *
-import re
-import urllib
-from urllib.request import urlopen, Request
-from dataclasses import dataclass, field
-import subprocess
-from datetime import datetime, timedelta
-from threading import Lock
-from shutil import copy2
-from file_util import File, copy_files_glob, rm
 import json
+import os.path
+import re
+import subprocess
+import urllib
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from pathlib import Path
+from threading import Lock
+from typing import Optional, Union, Any
+from urllib.request import urlopen, Request
+
+from file_util import File, copy_files_glob, rm
+from git.util import *
 
 git_libs = {}
 git_lib_urls = {}
@@ -307,8 +306,6 @@ def pull_or_clone(path: str, rinfo: RemoteInfo):
 
 
 def populate():
-    from git.gitea import GiteaLib
-    from git.gitea_aalto import GiteaAaltoLib
     global git_libs, git_lib_urls
     classes =  [GitLib] + GitLib.all_subclasses()
 

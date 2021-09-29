@@ -1,7 +1,6 @@
 import os
 import shutil
 from os.path import isfile
-from typing import List
 
 from timApp.document.docentry import DocEntry
 from timApp.document.translation.translation import Translation

@@ -1,5 +1,5 @@
 from time import sleep
-from typing import List, Tuple, Dict, Union, Optional
+from typing import Union, Optional
 
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver import ActionChains

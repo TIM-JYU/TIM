@@ -1,5 +1,5 @@
 import time
-from typing import List, Dict, Optional
+from typing import Optional
 
 from authlib.integrations.flask_oauth2 import AuthorizationServer, ResourceProtector
 from authlib.integrations.sqla_oauth2 import create_save_token_func, \

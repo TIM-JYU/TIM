@@ -2,7 +2,7 @@
 import json
 import re
 from dataclasses import dataclass, asdict
-from typing import Dict, Optional, List, Union, Any
+from typing import Optional, Union, Any
 
 import yaml
 from flask import Blueprint, render_template_string

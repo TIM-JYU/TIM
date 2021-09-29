@@ -1,7 +1,7 @@
 import copy
 import json
 import re
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 from xml.sax.saxutils import quoteattr
 
 from flask import Blueprint

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Optional, List
+from typing import Optional
 
 
 class Channel(Enum):

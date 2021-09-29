@@ -1,7 +1,7 @@
 import urllib.parse
 from collections import defaultdict
 from threading import Thread
-from typing import Optional, List, DefaultDict, Set
+from typing import Optional, DefaultDict
 
 from flask import current_app
 from sqlalchemy.orm import joinedload

@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional
 
 from timApp.document.docinfo import DocInfo
 from timApp.tests.browser.browsertest import BrowserTest

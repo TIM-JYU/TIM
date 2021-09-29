@@ -6,7 +6,7 @@ import json
 import time
 from dataclasses import dataclass
 from random import Random
-from typing import List, Dict, Tuple, Optional, Union, Callable, TypeVar
+from typing import Optional, Union, Callable, TypeVar
 
 MAX_RND_LIST_LEN = 100
 

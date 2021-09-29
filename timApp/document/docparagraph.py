@@ -5,7 +5,7 @@ import os
 import shelve
 from collections import defaultdict
 from copy import copy
-from typing import Optional, Dict, List, Tuple, Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 import commonmark
 import filelock
@@ -16,10 +16,10 @@ from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
 from timApp.document.documentwriter import DocumentWriter
 from timApp.document.macroinfo import MacroInfo
-from timApp.document.preloadoption import PreloadOption
-from timApp.document.randutils import random_id, hashfunc
-from timApp.document.prepared_par import PreparedPar
 from timApp.document.par_basic_data import ParBasicData
+from timApp.document.preloadoption import PreloadOption
+from timApp.document.prepared_par import PreparedPar
+from timApp.document.randutils import random_id, hashfunc
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.markdown.dumboclient import DumboOptions, MathType, InputFormat
 from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macros, format_heading

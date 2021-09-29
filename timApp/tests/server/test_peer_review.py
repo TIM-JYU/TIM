@@ -1,5 +1,4 @@
 """Server tests for peer review."""
-from typing import List
 
 from timApp.peerreview.peerreview import PeerReview
 from timApp.tests.server.timroutetest import TimRouteTest

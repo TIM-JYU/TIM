@@ -1,6 +1,6 @@
 import hashlib
 from datetime import datetime, timedelta
-from typing import Optional, List, Union, Dict
+from typing import Optional, Union
 
 import bcrypt
 

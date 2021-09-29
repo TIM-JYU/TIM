@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from itertools import accumulate
-from typing import TYPE_CHECKING, Optional, List, Tuple
+from typing import TYPE_CHECKING
 
 from flask import current_app
 from sqlalchemy import tuple_, func

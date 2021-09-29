@@ -1,7 +1,7 @@
 import argparse
 import os
 import sqlite3
-from typing import Optional, Dict
+from typing import Optional
 
 import psycopg2
 

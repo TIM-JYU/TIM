@@ -1,7 +1,7 @@
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Optional, List, Any
+from typing import Optional, Any
 from urllib.parse import urlparse
 
 import bs4

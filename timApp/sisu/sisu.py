@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from json import JSONDecodeError
 from textwrap import dedent
-from typing import List, Optional, Dict, Union, Any, Generator
+from typing import Optional, Union, Any, Generator
 
 import requests
 from flask import Blueprint, current_app, request, Response
@@ -23,8 +23,6 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
 from timApp.item.block import Block, BlockType
 from timApp.item.validation import ItemValidationRule, validate_item_and_create_intermediate_folders, validate_item
-from tim_common.marshmallow_dataclass import class_schema
-from tim_common.utils import Missing
 from timApp.notification.send_email import send_email
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
@@ -41,6 +39,8 @@ from timApp.util.flask.responsehelper import json_response
 from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFieldObj, RequestedGroups
 from timApp.util.logger import log_warning
 from timApp.util.utils import remove_path_special_chars, seq_to_str, split_location, get_current_time, fin_timezone
+from tim_common.marshmallow_dataclass import class_schema
+from tim_common.utils import Missing
 
 sisu = Blueprint('sisu',
                  __name__,

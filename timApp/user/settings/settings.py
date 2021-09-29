@@ -1,6 +1,6 @@
 """Routes for settings view."""
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 from flask import Blueprint, render_template, session, flash, Response
 from flask import request

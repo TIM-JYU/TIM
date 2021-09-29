@@ -2,11 +2,8 @@ import datetime
 import glob
 import io
 import logging
-import os
 import signal
 import socketserver
-from base64 import b64encode
-from os.path import splitext
 from pathlib import Path
 
 from file_handler import FileHandler

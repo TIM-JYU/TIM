@@ -1,6 +1,6 @@
 import hashlib
 from dataclasses import dataclass
-from typing import Optional, Union, Tuple
+from typing import Optional, Union
 
 import redis
 from redis import ResponseError

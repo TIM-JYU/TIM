@@ -1,4 +1,4 @@
-from typing import List, Tuple, NamedTuple
+from typing import NamedTuple
 
 from sqlalchemy.orm import lazyload
 
@@ -6,7 +6,6 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.note.usernote import UserNote
-from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 

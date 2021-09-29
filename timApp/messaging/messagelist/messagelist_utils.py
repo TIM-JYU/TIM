@@ -5,7 +5,7 @@ from datetime import datetime
 from email.utils import parsedate_to_datetime
 from enum import Enum
 from re import Match
-from typing import Optional, List, Dict, Tuple, Iterator
+from typing import Optional, Iterator
 from urllib.error import HTTPError
 from urllib.parse import SplitResult, parse_qs, urlsplit
 

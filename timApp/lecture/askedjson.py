@@ -1,6 +1,6 @@
 import json
 from copy import deepcopy
-from typing import Optional, Dict, Any, Union, List, Set
+from typing import Optional, Any, Union
 
 from timApp.timdb.sqa import db
 

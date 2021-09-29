@@ -1,7 +1,7 @@
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List, Dict
+from typing import Optional
 
 from flask import Response
 from isodate import datetime_isoformat

@@ -1,7 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
 from threading import Thread
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 from flask import Flask
 

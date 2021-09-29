@@ -1,7 +1,7 @@
 """"""
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, DefaultDict
+from typing import Optional, DefaultDict
 
 from sqlalchemy.orm import joinedload, Query
 

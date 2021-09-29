@@ -1,6 +1,5 @@
 """Defines all data models related to velps."""
 from datetime import datetime
-from typing import List
 
 from sqlalchemy.orm.collections import attribute_mapped_collection
 

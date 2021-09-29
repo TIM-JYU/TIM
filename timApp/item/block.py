@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Optional, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sqlalchemy import func
 from sqlalchemy.orm.collections import attribute_mapped_collection

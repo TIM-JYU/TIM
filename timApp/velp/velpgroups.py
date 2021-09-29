@@ -11,7 +11,7 @@ selections from the database.
 """
 
 import copy
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo

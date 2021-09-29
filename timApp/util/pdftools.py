@@ -8,7 +8,7 @@ from os import remove
 from pathlib import Path
 from re import escape as re_escape, compile as re_compile
 from subprocess import Popen, PIPE, run as subprocess_run
-from typing import Union, List, Optional
+from typing import Union, Optional
 
 from flask import current_app
 

@@ -1,6 +1,6 @@
 from dataclasses import field, dataclass
 from datetime import datetime
-from typing import Dict, Any, Optional, List, Generator
+from typing import Any, Optional, Generator
 
 from flask import current_app, Response
 from isodate import Duration

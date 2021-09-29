@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, List, TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.orm import foreign
 

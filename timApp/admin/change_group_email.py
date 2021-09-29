@@ -1,5 +1,3 @@
-from typing import List
-
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.timdb.timdb import TimDb

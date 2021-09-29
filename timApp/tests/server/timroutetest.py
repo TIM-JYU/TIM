@@ -8,7 +8,7 @@ import warnings
 from base64 import b64encode
 from contextlib import contextmanager
 from functools import lru_cache
-from typing import Union, Optional, List, Dict, Tuple, Any
+from typing import Union, Optional, Any
 from urllib.parse import urlparse
 
 import responses

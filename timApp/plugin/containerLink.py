@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass
 from functools import lru_cache
 from re import Pattern
-from typing import List, Optional, Any, Dict, Union
+from typing import Optional, Any, Union
 
 import requests
 from flask import current_app

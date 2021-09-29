@@ -4,7 +4,7 @@ TIM plugin: a numericfield
 
 import re
 from dataclasses import dataclass, asdict
-from typing import Union, List, Any, Dict
+from typing import Union, Any
 
 from flask import render_template_string
 from marshmallow.utils import missing

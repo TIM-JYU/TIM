@@ -1,6 +1,6 @@
 import json
 from json import JSONDecodeError
-from typing import Optional, List, Tuple
+from typing import Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import lazyload

@@ -1,12 +1,10 @@
-from typing import List
-
 import shutil
 
 import click
 from flask.cli import AppGroup
 
-from timApp.admin.util import commit_if_not_dry
 from timApp.admin.fix_orphan_documents import fix_orphans_without_docentry, move_docs_without_block
+from timApp.admin.util import commit_if_not_dry
 from timApp.document.translation.translation import Translation
 from timApp.item.block import Block, BlockType
 from timApp.notification.pending_notification import PendingNotification

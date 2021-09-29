@@ -7,7 +7,7 @@ and their labels. The module also retrieves the data related to velps and their 
 
 """
 
-from typing import Optional, List, Tuple, Dict, Iterable
+from typing import Optional, Iterable
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload

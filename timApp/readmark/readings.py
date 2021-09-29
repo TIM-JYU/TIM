@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import timedelta
-from typing import List, DefaultDict
+from typing import DefaultDict
 
 from sqlalchemy.orm import Query
 

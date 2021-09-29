@@ -1,12 +1,11 @@
 import os
 import re
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List
-from dataclasses import dataclass, field
 
 from werkzeug.utils import secure_filename
-from timApp.util.utils import cached_property
 
+from timApp.util.utils import cached_property
 
 THEME_DIR = Path('static/stylesheets/themes')
 

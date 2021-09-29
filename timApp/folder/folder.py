@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-from typing import List, Iterable, Union, Any, TYPE_CHECKING
-from typing import Optional
+from typing import Iterable, Any, TYPE_CHECKING
 
 from sqlalchemy import true, and_
 
+from timApp.auth.auth_models import BlockAccess
+from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME
 from timApp.folder.createopts import FolderCreationOptions
-from timApp.timdb.exceptions import ItemAlreadyExistsException
-from timApp.item.item import Item
 from timApp.item.block import Block, insert_block, copy_default_rights, BlockType
-from timApp.document.docentry import DocEntry, get_documents
+from timApp.item.item import Item
+from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
-from timApp.auth.auth_models import BlockAccess
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import split_location, join_location, relative_location
 

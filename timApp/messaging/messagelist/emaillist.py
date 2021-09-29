@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional, Dict, Any
+from typing import Optional, Any
 from urllib.error import HTTPError
 
 from mailmanclient import Client, MailingList, Domain, Member

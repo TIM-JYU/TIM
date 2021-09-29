@@ -9,7 +9,7 @@ the document.
 :version: 1.0.0
 
 """
-from typing import Dict, List, Optional
+from typing import Optional
 
 from flask import Blueprint
 from flask import request

@@ -8,7 +8,7 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from tempfile import mkstemp
 from time import time
-from typing import List, Optional, Set, Tuple, Union, Iterable, Generator, Dict
+from typing import Iterable, Generator
 from typing import TYPE_CHECKING
 
 from filelock import FileLock
@@ -28,10 +28,10 @@ from timApp.document.validationresult import ValidationResult
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
-from tim_common.html_sanitize import presanitize_html_body
 from timApp.timdb.exceptions import TimDbException, PreambleException, InvalidReferenceException
 from timApp.timtypes import DocInfoType
 from timApp.util.utils import get_error_html, trim_markdown, cache_folder_path
+from tim_common.html_sanitize import presanitize_html_body
 
 if TYPE_CHECKING:
     from timApp.document.docinfo import DocInfo

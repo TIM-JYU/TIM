@@ -1,5 +1,5 @@
 from textwrap import dedent
-from typing import Dict, List, Optional
+from typing import Optional
 
 from flask import session, g, request, current_app
 from sqlalchemy.orm import joinedload

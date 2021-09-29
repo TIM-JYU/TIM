@@ -1,5 +1,5 @@
 from difflib import HtmlDiff
-from typing import Optional, Tuple
+from typing import Optional
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings

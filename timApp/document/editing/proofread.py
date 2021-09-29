@@ -1,7 +1,6 @@
 import json
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import List, Tuple, Dict
 
 import requests
 from bs4 import BeautifulSoup, PageElement

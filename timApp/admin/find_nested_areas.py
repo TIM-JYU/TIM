@@ -1,5 +1,3 @@
-from typing import List
-
 from timApp.admin.util import enum_pars, process_items, create_argparser, DryrunnableArguments
 from timApp.document.docinfo import DocInfo
 

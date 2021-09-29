@@ -7,7 +7,7 @@ import logging
 from concurrent.futures import Future
 from copy import copy
 from logging import Logger
-from typing import Any, Dict, List
+from typing import Any
 
 from celery import Celery
 from celery.signals import after_setup_logger

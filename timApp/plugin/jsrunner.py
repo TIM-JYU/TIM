@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Tuple
+from typing import Any
 
 import requests
 

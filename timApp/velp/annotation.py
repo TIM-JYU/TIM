@@ -8,7 +8,7 @@ as well as adding comments to the annotations. The module also retrieves the ann
 """
 import re
 from dataclasses import dataclass, field
-from typing import Optional, List, Tuple
+from typing import Optional
 
 from flask import Blueprint, Response
 

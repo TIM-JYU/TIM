@@ -4,7 +4,7 @@ TIM example plugin: a tableFormndrome checker.
 import datetime
 import json
 from dataclasses import dataclass, asdict, field
-from typing import Union, List, Optional, Dict, Any, TypedDict, Type, Sequence
+from typing import Union, Optional, Any, TypedDict, Sequence
 
 from flask import render_template_string, Response
 from marshmallow.utils import missing

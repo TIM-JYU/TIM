@@ -1,9 +1,8 @@
+import json
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Tuple, Any, Optional, Dict
-
-import json
+from typing import Any, Optional
 
 
 class ViewRoute(Enum):

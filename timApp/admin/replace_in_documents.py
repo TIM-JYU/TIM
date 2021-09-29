@@ -1,7 +1,7 @@
 from argparse import ArgumentTypeError
 from copy import copy
 from dataclasses import dataclass
-from typing import Tuple, Generator, Optional, Union
+from typing import Generator, Optional, Union
 
 import attr
 from yaml import YAMLError

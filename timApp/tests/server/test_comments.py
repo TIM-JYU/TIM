@@ -1,5 +1,3 @@
-from typing import List
-
 from lxml import html
 from lxml.cssselect import CSSSelector
 from lxml.html import HtmlElement

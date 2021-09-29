@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from timApp.auth.accesstype import AccessType
 

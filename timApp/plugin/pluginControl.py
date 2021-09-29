@@ -3,7 +3,7 @@ import json
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
 from itertools import chain
-from typing import List, Tuple, Optional, Dict, Union, DefaultDict
+from typing import Optional, Union, DefaultDict
 from xml.sax.saxutils import quoteattr
 
 import attr
@@ -23,7 +23,6 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
-from tim_common.html_sanitize import sanitize_html
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
@@ -37,6 +36,7 @@ from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFie
 from timApp.util.rndutils import SeedClass
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex, Range
+from tim_common.html_sanitize import sanitize_html
 
 
 def get_error_plugin(plugin_name, message, response=None,

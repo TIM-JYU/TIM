@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from email.mime.text import MIMEText
 from io import TextIOWrapper
 from pprint import pprint
-from typing import List, Optional, Set, Tuple
+from typing import Optional
 
 import click
 from flask import current_app

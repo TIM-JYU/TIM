@@ -2,7 +2,6 @@
 Routes related to tags.
 """
 from datetime import datetime
-from typing import List
 
 from flask import Blueprint
 from flask import request

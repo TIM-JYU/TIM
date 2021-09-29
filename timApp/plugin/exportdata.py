@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
 
 from tim_common.marshmallow_dataclass import class_schema
 

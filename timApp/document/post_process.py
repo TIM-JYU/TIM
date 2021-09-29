@@ -2,7 +2,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Dict, DefaultDict, Tuple, Optional
+from typing import DefaultDict, Optional
 
 import pytz
 from jinja2.sandbox import SandboxedEnvironment

@@ -4,7 +4,7 @@ TIM example plugin: a palindrome checker.
 import os
 import re
 from dataclasses import dataclass, asdict
-from typing import Union, List
+from typing import Union
 
 from flask import render_template_string
 from marshmallow import validates, ValidationError, missing

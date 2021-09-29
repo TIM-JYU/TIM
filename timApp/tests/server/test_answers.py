@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List
 from unittest.mock import patch
 
 from timApp import tim_celery

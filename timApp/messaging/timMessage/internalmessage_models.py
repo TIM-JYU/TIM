@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, Any
+from typing import Any
 
 from timApp.timdb.sqa import db
 

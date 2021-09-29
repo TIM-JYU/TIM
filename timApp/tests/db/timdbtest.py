@@ -4,7 +4,7 @@ import sys
 import unittest
 from contextlib import contextmanager
 from io import StringIO
-from typing import Union, List
+from typing import Union
 
 import sqlalchemy.exc
 from sqlalchemy.orm import close_all_sessions

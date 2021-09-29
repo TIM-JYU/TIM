@@ -2,7 +2,7 @@
 A button plugin to save other plugins on the same page
 """
 from dataclasses import dataclass, asdict
-from typing import Union, List
+from typing import Union
 
 from flask import render_template_string
 from marshmallow.utils import missing

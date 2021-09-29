@@ -1,6 +1,6 @@
 import re
 import sre_constants
-from typing import Dict, Optional, List
+from typing import Optional
 
 import attr
 

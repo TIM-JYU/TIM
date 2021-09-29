@@ -1,7 +1,7 @@
 import json
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Optional, Any
 
 from timApp.auth.accesshelper import can_see_par_source
 from timApp.document.docparagraph import DocParagraph, is_real_id

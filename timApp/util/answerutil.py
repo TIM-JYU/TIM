@@ -1,6 +1,5 @@
 """Answer-related routes."""
 from datetime import datetime, timezone, timedelta
-from typing import List, Set, Tuple
 
 import dateutil.parser
 import dateutil.relativedelta

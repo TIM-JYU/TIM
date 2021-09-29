@@ -1,6 +1,5 @@
 import csv
 import os
-from typing import List
 
 from timApp.admin.import_accounts import import_accounts_impl, ImportException
 from timApp.tests.db.timdbtest import TimDbTest

@@ -4,7 +4,7 @@ from concurrent.futures import Future
 from dataclasses import dataclass, replace, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Literal, Union, Tuple, List, Dict, Optional, DefaultDict, Callable, TypeVar
+from typing import Literal, Union, Optional, DefaultDict, Callable, TypeVar
 from urllib.parse import urlparse
 
 import filelock

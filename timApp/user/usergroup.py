@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import List, Dict, Tuple, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import attr
 from sqlalchemy.orm import joinedload

@@ -1,13 +1,9 @@
 import json
 import os
-
 import re
 from base64 import b64encode
 
-from collections import Iterable
-
 from languages import Language, get_by_id
-from typing import Match
 
 JSREADYHTML = {}
 

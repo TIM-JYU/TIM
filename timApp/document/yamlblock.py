@@ -3,7 +3,7 @@ from collections import Generator
 from copy import deepcopy
 from enum import Enum
 from textwrap import shorten
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 import yaml
 from yaml import YAMLError, CSafeLoader, Event, AliasEvent, NodeEvent

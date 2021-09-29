@@ -1,11 +1,11 @@
 import enum
 import re
 from dataclasses import dataclass, field
-from typing import Dict, Union, List, Generator, Optional
-from timApp.plugin.taskid import TaskId
+from typing import Union, Generator, Optional
 
 from marshmallow import ValidationError
 
+from timApp.plugin.taskid import TaskId
 from tim_common.marshmallow_dataclass import class_schema
 
 

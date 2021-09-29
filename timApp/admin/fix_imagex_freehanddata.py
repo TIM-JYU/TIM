@@ -1,5 +1,4 @@
 import json
-from typing import List
 
 from timApp.admin.util import process_items, create_argparser, DryrunnableArguments
 from timApp.answer.answer import Answer

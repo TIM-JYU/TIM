@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 from sqlalchemy import func
 
 from timApp.document.version import Version

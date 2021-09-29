@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, Dict, Any, Union, Tuple
+from typing import Optional, Any, Union
 
 from flask import Response
 from sqlalchemy import true

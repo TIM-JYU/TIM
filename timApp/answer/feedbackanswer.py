@@ -1,7 +1,7 @@
 import csv
 import json
 from datetime import datetime
-from typing import List, Tuple, Iterable
+from typing import Iterable
 
 from flask import Blueprint, request
 

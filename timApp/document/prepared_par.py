@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from timApp.document.par_basic_data import ParBasicData
 

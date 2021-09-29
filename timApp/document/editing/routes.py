@@ -1,7 +1,7 @@
 """Routes for editing a document."""
 import re
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from flask import Blueprint, render_template
 from flask import current_app
@@ -18,7 +18,6 @@ from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_curr
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
-from timApp.document.prepared_par import PreparedPar
 from timApp.document.document import Document, get_duplicate_id_msg
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
@@ -28,6 +27,7 @@ from timApp.document.exceptions import ValidationException, ValidationWarning
 from timApp.document.hide_names import is_hide_names
 from timApp.document.post_process import post_process_pars
 from timApp.document.preloadoption import PreloadOption
+from timApp.document.prepared_par import PreparedPar
 from timApp.document.translation.synchronize_translations import synchronize_translations
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx

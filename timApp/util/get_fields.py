@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
-from typing import List, Optional, Tuple, DefaultDict, Dict, TypedDict, Any, Union
+from typing import Optional, DefaultDict, TypedDict, Any, Union
 
 import attr
 import dateutil.parser
@@ -17,7 +17,6 @@ from sqlalchemy.orm import lazyload, joinedload
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_answers_query
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
-from timApp.auth.sessioninfo import user_context_with_logged_in
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext

@@ -1,12 +1,11 @@
 import json
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 from xml.sax.saxutils import quoteattr
 
 from flask import Blueprint, Response
 from flask import request
 
 from timApp.tim_app import csrf
-from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import json_response
 
 tape_plugin = Blueprint('tape_plugin',

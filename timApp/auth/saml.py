@@ -2,7 +2,7 @@ import json
 import os
 from copy import copy
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 from urllib.parse import urlparse
 
 import xmlsec

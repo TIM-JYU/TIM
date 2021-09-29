@@ -2,7 +2,7 @@
 TIM feedback-plugin.
 """
 from dataclasses import dataclass, asdict
-from typing import Union, Any, List
+from typing import Union, Any
 
 from flask import render_template_string
 from marshmallow import validates, ValidationError

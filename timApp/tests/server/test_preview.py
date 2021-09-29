@@ -1,5 +1,4 @@
 """Server tests for preview."""
-from typing import List
 
 from lxml.html import HtmlElement
 

@@ -1,8 +1,9 @@
-from typing import List, Dict, Union, Optional
 from dataclasses import field
-from tim_common.marshmallow_dataclass import dataclass
+from typing import Union, Optional
 
 from loadable import Loadable
+from tim_common.marshmallow_dataclass import dataclass
+
 
 @dataclass
 class AngularComponent(Loadable):

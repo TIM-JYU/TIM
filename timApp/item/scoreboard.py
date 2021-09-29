@@ -1,6 +1,6 @@
-from dataclasses import dataclass
-from typing import List, Dict, Optional
 from collections import OrderedDict
+from dataclasses import dataclass
+from typing import Optional
 
 from timApp.answer.pointsumrule import PointCountMethod
 from timApp.document.docinfo import DocInfo

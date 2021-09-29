@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 
 from timApp.timdb.sqa import db
 

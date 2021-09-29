@@ -1,12 +1,11 @@
 from dataclasses import dataclass, fields
 from datetime import timedelta
-from typing import Optional, List, Dict, Tuple, Iterable, TypeVar, Any, TYPE_CHECKING, Union
+from typing import Optional, Iterable, TypeVar, Any, TYPE_CHECKING, Union
 
 import yaml
 from marshmallow import ValidationError
 from marshmallow.fields import Field
 
-from tim_common.marshmallow_dataclass import field_for_schema
 from timApp.answer.pointsumrule import PointSumRule
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.macroinfo import MacroInfo
@@ -17,6 +16,7 @@ from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import MathType, DumboOptions, InputFormat
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
+from tim_common.marshmallow_dataclass import field_for_schema
 
 if TYPE_CHECKING:
     from timApp.document.document import Document

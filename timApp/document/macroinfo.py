@@ -4,7 +4,7 @@ import re
 from copy import deepcopy
 from dataclasses import dataclass, field
 from html import escape
-from typing import Dict, Optional, TYPE_CHECKING, Any, Union, Mapping
+from typing import TYPE_CHECKING, Any, Mapping
 
 from jinja2.sandbox import SandboxedEnvironment
 

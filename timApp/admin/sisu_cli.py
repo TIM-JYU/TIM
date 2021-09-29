@@ -1,5 +1,3 @@
-from typing import List
-
 import click
 from flask.cli import AppGroup
 from sqlalchemy import true

@@ -5,7 +5,7 @@ Revises: ef104a711321
 Create Date: 2019-09-04 06:39:22.902132
 
 """
-from typing import List, Tuple, Any
+from typing import Any
 
 from sqlalchemy.orm import scoped_session, sessionmaker
 

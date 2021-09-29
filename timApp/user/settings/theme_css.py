@@ -1,6 +1,7 @@
 from pathlib import Path
-from typing import List
+
 from flask import current_app
+
 from timApp.user.settings.theme import Theme
 
 static_folder = Path('static')
