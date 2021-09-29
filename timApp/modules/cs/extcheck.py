@@ -35,15 +35,16 @@ The command should print a json string to standard output with the following str
     }
 }
 """
-
+import json
+import os
 from pathlib import Path
 
 from marshmallow import RAISE, ValidationError
 
-from extchecklib import *
+from extchecklib import RunResult
 from languages import Language
-from points import *
-from run import *
+from points import get_points_rule, give_points
+from tim_common.fileParams import get_param
 
 
 class ExtCheck(Language):

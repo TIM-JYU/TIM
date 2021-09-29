@@ -11,7 +11,7 @@ from typing import Optional, Union, Any
 from urllib.request import urlopen, Request
 
 from file_util import File, copy_files_glob, rm
-from git.util import *
+from git.util import Settings, RemoteInfo, NotInAGitRepo
 
 git_libs = {}
 git_lib_urls = {}

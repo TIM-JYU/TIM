@@ -1,14 +1,12 @@
 import re
 
+from file_util import listify
+from git.gitlib import get_lib
+from git.util import Options, RemoteInfo, Settings
 from languages import Language
 from modifiers import Modifier
-from marshmallow import EXCLUDE
+from tim_common.fileParams import get_json_param, get_param
 
-from git.util import Options, RemoteInfo, Settings
-
-from tim_common.fileParams import *
-from git.gitlib import GitLib, get_lib
-from file_util import listify, FileSpecification
 
 def get_lib_and_options(query):
     options = get_json_param(query.jso, "markup", "git", None)

@@ -1,5 +1,4 @@
-from traceback import print_exc
-
+# TODO: Import and register all languages etc explicitly (= without using star imports).
 from modifiers import *
 from languages import *
 from jsframe import *

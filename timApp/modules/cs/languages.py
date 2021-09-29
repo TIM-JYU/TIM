@@ -1,4 +1,11 @@
+import codecs
 import functools
+import json
+import os
+import re
+import shlex
+import shutil
+import subprocess
 from base64 import b64encode
 from io import BytesIO
 from os.path import splitext
@@ -11,10 +18,11 @@ import requests
 
 from file_util import File, default_filename
 from modifiers import Modifier
-from points import *
-from run import *
+from points import give_points
+from run import generate_filename, CS3_TARGET, CS3_TAG, get_imgsource, run2_subdir, copy_file, wait_file, run
 from tim_common.cs_sanitizer import cs_min_sanitize
-from tim_common.fileParams import *
+from tim_common.fileParams import QueryClass, get_param, get_json_param, hash_user_dir, remove, find_cs_class, \
+    remove_before, find_java_package, mkdirs, getint, get_value
 
 """
 Adding new language to csPlugin:
