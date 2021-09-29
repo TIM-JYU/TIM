@@ -1,10 +1,9 @@
-# -*- coding: utf-8 -*-
 """Functions for dealing with plugin paragraphs."""
 import json
 from collections import OrderedDict, defaultdict
 from dataclasses import dataclass
 from itertools import chain
-from typing import List, Tuple, Optional, Dict, Union, DefaultDict
+from typing import Optional, Union, DefaultDict
 from xml.sax.saxutils import quoteattr
 
 import attr
@@ -24,7 +23,6 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
-from tim_common.html_sanitize import sanitize_html
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
 from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
@@ -38,6 +36,7 @@ from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFie
 from timApp.util.rndutils import SeedClass
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex, Range
+from tim_common.html_sanitize import sanitize_html
 
 
 def get_error_plugin(plugin_name, message, response=None,
@@ -55,8 +54,8 @@ def get_error_plugin(plugin_name, message, response=None,
 
 
 PluginOrError = Union[Plugin, str]  # str represent HTML markup of error
-AnswerMap = Dict[str, Tuple[Answer, int]]
-ErrorMap = Dict[Range, Tuple[str, str]]
+AnswerMap = dict[str, tuple[Answer, int]]
+ErrorMap = dict[Range, tuple[str, str]]
 
 
 @attr.s
@@ -69,7 +68,7 @@ class PluginPlacement:
 
     In case of a block-level plugin, the range spans the entire block's expanded markdown.
     """
-    plugins: Dict[Range, Plugin] = attr.ib(kw_only=True)  # ordered
+    plugins: dict[Range, Plugin] = attr.ib(kw_only=True)  # ordered
 
     errors: ErrorMap = attr.ib(kw_only=True)  # ordered
     block: DocParagraph = attr.ib(kw_only=True)
@@ -293,7 +292,7 @@ def check_task_access(errs: ErrorMap, p_range: Range, plugin_name: str, tid: Tas
     return True
 
 
-KeyType = Tuple[int, Range]
+KeyType = tuple[int, Range]
 
 
 def get_answers(user, task_ids, answer_map):
@@ -312,7 +311,7 @@ def get_answers(user, task_ids, answer_map):
                .add_columns(col, cnt)
                .with_entities(col, cnt)
                .group_by(Answer.task_id).subquery())
-    answers: List[Tuple[Answer, int]] = (
+    answers: list[tuple[Answer, int]] = (
         Answer.query.join(sub, Answer.id == sub.c.col)
             .with_entities(Answer, sub.c.cnt)
             .all()
@@ -324,16 +323,16 @@ def get_answers(user, task_ids, answer_map):
 
 @dataclass
 class PluginifyResult:
-    pars: List[DocParagraph]
-    js_paths: List[str]
-    css_paths: List[str]
+    pars: list[DocParagraph]
+    js_paths: list[str]
+    css_paths: list[str]
     custom_answer_plugin: Optional[Plugin]
-    all_plugins: List[Plugin]
+    all_plugins: list[Plugin]
     has_errors: bool
 
 
 def pluginify(doc: Document,
-              pars: List[DocParagraph],
+              pars: list[DocParagraph],
               user_ctx: UserContext,
               view_ctx: ViewContext,
               custom_answer: Optional[Answer] = None,
@@ -383,7 +382,7 @@ def pluginify(doc: Document,
     if custom_answer is not None or task_id is not None:
         if len(pars) != 1:
             raise PluginException('len(blocks) must be 1 if custom state is specified')
-    plugins: DefaultDict[str, Dict[KeyType, Plugin]] = defaultdict(OrderedDict)
+    plugins: DefaultDict[str, dict[KeyType, Plugin]] = defaultdict(OrderedDict)
 
     answer_map: AnswerMap = {}
     plugin_opts = PluginRenderOptions(
@@ -647,7 +646,7 @@ def get_all_reqs():
     return allreqs
 
 
-def plugin_deps(p: Dict) -> Tuple[List[str], List[str]]:
+def plugin_deps(p: dict) -> tuple[list[str], list[str]]:
     """
 
     :param p: is json of plugin requirements of the form:

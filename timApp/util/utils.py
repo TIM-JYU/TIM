@@ -10,7 +10,7 @@ from dataclasses import fields, asdict
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path, PurePosixPath
-from typing import List, Optional, Tuple, Union, Dict, Any, Sequence, Callable, Set
+from typing import Optional, Union, Any, Sequence, Callable
 
 import dateutil.parser
 import pytz
@@ -102,7 +102,7 @@ def del_content(directory: Path, onerror: Optional[Callable[[Any, str, Any], Any
             print(e)
 
 
-def split_location(path: str) -> Tuple[str, str]:
+def split_location(path: str) -> tuple[str, str]:
     """Given a path 'a/b/c/d', returns a tuple ('a/b/c', 'd')."""
     rs = path.rfind('/')
     return ('', path) if rs < 0 else (path[:rs], path[rs + 1:])
@@ -117,7 +117,7 @@ def relative_location(location: str, base: str) -> str:
     return str(PurePosixPath(location).relative_to(base))
 
 
-def get_sql_template(value_list: List) -> str:
+def get_sql_template(value_list: list) -> str:
     return ','.join(['%s'] * len(value_list))
 
 
@@ -164,11 +164,11 @@ def remove_prefix(text: str, prefix: str) -> str:
     return text
 
 
-def include_keys(obj: Dict[str, Any], *keys: str) -> Dict[str, Any]:
+def include_keys(obj: dict[str, Any], *keys: str) -> dict[str, Any]:
     return {k: v for k, v in obj.items() if k in keys}
 
 
-def exclude_keys(obj: Dict[str, Any], *keys: str) -> Dict[str, Any]:
+def exclude_keys(obj: dict[str, Any], *keys: str) -> dict[str, Any]:
     return {k: v for k, v in obj.items() if k not in keys}
 
 
@@ -223,7 +223,7 @@ def static_tim_doc(path: str) -> str:
     return f'static/tim_docs/{path}'
 
 
-def decode_csplugin(text: HtmlElement) -> Dict[str, Any]:
+def decode_csplugin(text: HtmlElement) -> dict[str, Any]:
     return json.loads(base64.b64decode(text.get('json')))['markup']
 
 
@@ -238,7 +238,7 @@ def seq_to_str(lst: Sequence[str]) -> str:
         return f', '.join(lst[:-1]) + ' and ' + lst[-1]
 
 
-def split_by_semicolon(p: str) -> List[str]:
+def split_by_semicolon(p: str) -> list[str]:
     return [s.strip() for s in p.split(';')]
 
 
@@ -251,13 +251,13 @@ def get_error_message(e: Exception) -> str:
     return f"{str(e.__class__.__name__)}: {str(e)}"
 
 
-Range = Tuple[int, int]
+Range = tuple[int, int]
 
-TASK_PROG = re.compile('([\w\.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)')  # see https://regex101.com/r/ZZuizF/4
-TASK_NAME_PROG = re.compile("(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
+TASK_PROG = re.compile(r'([\w\.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)')  # see https://regex101.com/r/ZZuizF/4
+TASK_NAME_PROG = re.compile(r"(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
 
 
-def widen_fields(fields: Union[List[str], str]) -> List[str]:
+def widen_fields(fields: Union[list[str], str]) -> list[str]:
     """
     if there is syntax d(1,3) in fileds, it is made d1,d2
     from d(1,3)=t  would come d1=t1, d2=t2
@@ -332,9 +332,9 @@ def is_valid_email(email: str) -> bool:
     if username.startswith('.') or username.endswith('.') or '..' in username:
         return False
     return (
-            re.match('^[\w.+-]+$', username) is not None
+            re.match(r'^[\w.+-]+$', username) is not None
             and
-            re.match('^([\w-]+\.)+[\w-]{2,}$', domain) is not None
+            re.match(r'^([\w-]+\.)+[\w-]{2,}$', domain) is not None
     )
 
 
@@ -344,8 +344,8 @@ def approximate_real_name(email: str) -> str:
     return approx_name
 
 
-def get_dataclass_field_names(d: Any) -> Set[str]:
-    return set(f.name for f in fields(d))
+def get_dataclass_field_names(d: Any) -> set[str]:
+    return {f.name for f in fields(d)}
 
 
 def dataclass_to_bytearray(x: Any) -> bytearray:
@@ -378,7 +378,7 @@ def append_to_bytearray(b: bytearray, v: Any) -> None:
         raise Exception(f'Unhandled type: {type(v)}')
 
 
-def read_json_lines(file_to_read: Path) -> List[Dict]:
+def read_json_lines(file_to_read: Path) -> list[dict]:
     with file_to_read.open() as f:
         content = f.read()
     json_str = f'[{",".join(content.splitlines())}]'
@@ -386,7 +386,7 @@ def read_json_lines(file_to_read: Path) -> List[Dict]:
     return loaded_json
 
 
-def wait_response_and_collect_error(f: Future, h: str, errors: List[str]) -> None:
+def wait_response_and_collect_error(f: Future, h: str, errors: list[str]) -> None:
     try:
         resp: requests.Response = f.result()
     except Exception as e:
@@ -396,8 +396,8 @@ def wait_response_and_collect_error(f: Future, h: str, errors: List[str]) -> Non
             errors.append(f'{resp.request.url} returned status {resp.status_code} and text {resp.text}')
 
 
-def collect_errors_from_hosts(futures: List[Future], hosts: List[str]) -> List[str]:
-    errors: List[str] = []
+def collect_errors_from_hosts(futures: list[Future], hosts: list[str]) -> list[str]:
+    errors: list[str] = []
     for f, h in zip(futures, hosts):
         wait_response_and_collect_error(f, h, errors)
     return errors

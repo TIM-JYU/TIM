@@ -24,7 +24,7 @@ def inject_global_notifications() -> dict:
     """"Injects global notification message (if the file exists) to all templates."""
     notifications = []
     try:
-        with open(current_app.config['GLOBAL_NOTIFICATION_FILE'], 'r') as f:
+        with open(current_app.config['GLOBAL_NOTIFICATION_FILE']) as f:
             notifications.append(f.read())
     except FileNotFoundError:
         pass

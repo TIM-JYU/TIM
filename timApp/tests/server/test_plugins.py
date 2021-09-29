@@ -550,12 +550,12 @@ type: upload
                     if t in rule.groups[k].point_types:
                         pass
                     else:
-                        sum1 = "{0:.1f}".format(pts[k]['total_sum'])
-                        sum2 = "{0:.1f}".format(pts2[k]['total_sum'])
+                        sum1 = "{:.1f}".format(pts[k]['total_sum'])
+                        sum2 = "{:.1f}".format(pts2[k]['total_sum'])
                         pts[k]['total_sum'] -= pts[k][n]
                         pts2[k]['total_sum'] -= pts2[k][n]
-                        nsum1 = "{0:.1f}".format(pts[k]['total_sum'])
-                        nsum2 = "{0:.1f}".format(pts2[k]['total_sum'])
+                        nsum1 = "{:.1f}".format(pts[k]['total_sum'])
+                        nsum2 = "{:.1f}".format(pts2[k]['total_sum'])
                         pts[k]['text'] = pts[k]['text'].replace(sum1, nsum1)
                         pts2[k]['text'] = pts2[k]['text'].replace(sum2, nsum2)
                         pts[k][n] = None

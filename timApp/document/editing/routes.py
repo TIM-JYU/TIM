@@ -1,7 +1,7 @@
 """Routes for editing a document."""
 import re
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Optional
 
 from flask import Blueprint, render_template
 from flask import current_app
@@ -18,7 +18,6 @@ from timApp.auth.sessioninfo import get_current_user_object, logged_in, get_curr
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
-from timApp.document.prepared_par import PreparedPar
 from timApp.document.document import Document, get_duplicate_id_msg
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.editrequest import get_pars_from_editor_text, EditRequest
@@ -28,6 +27,7 @@ from timApp.document.exceptions import ValidationException, ValidationWarning
 from timApp.document.hide_names import is_hide_names
 from timApp.document.post_process import post_process_pars
 from timApp.document.preloadoption import PreloadOption
+from timApp.document.prepared_par import PreparedPar
 from timApp.document.translation.synchronize_translations import synchronize_translations
 from timApp.document.version import Version
 from timApp.document.viewcontext import ViewRoute, ViewContext, default_view_ctx
@@ -126,7 +126,7 @@ def update_document(doc_id):
     return manage_response(docentry, pars, timdb, ver_before)
 
 
-def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_before: Version):
+def manage_response(docentry: DocInfo, pars: list[DocParagraph], timdb, ver_before: Version):
     doc = docentry.document_as_current_user
     chg = doc.get_changelog()
     notify_doc_watchers(docentry, '', NotificationType.DocModified, old_version=ver_before)
@@ -325,8 +325,8 @@ def mark_as_translated(p: DocParagraph):
     return deref
 
 
-def abort_if_duplicate_ids(doc: Document, pars_to_add: List[DocParagraph]):
-    conflicting_ids = set(p.get_id() for p in pars_to_add) & set(doc.get_par_ids())
+def abort_if_duplicate_ids(doc: Document, pars_to_add: list[DocParagraph]):
+    conflicting_ids = {p.get_id() for p in pars_to_add} & set(doc.get_par_ids())
     if conflicting_ids:
         raise RouteException(get_duplicate_id_msg(conflicting_ids))
 
@@ -360,7 +360,7 @@ def preview_paragraphs(doc_id):
         return json_response({'texts': comment_html, 'js': [], 'css': []})
 
 
-def update_associated_uploads(pars: List[DocParagraph], doc: DocInfo):
+def update_associated_uploads(pars: list[DocParagraph], doc: DocInfo):
     for p in pars:
         md = p.get_markdown()
         for r in upload_regexes:
@@ -379,7 +379,7 @@ def update_associated_uploads(pars: List[DocParagraph], doc: DocInfo):
 
 
 def par_response(
-        pars: List[DocParagraph],
+        pars: list[DocParagraph],
         docu: DocInfo,
         spellcheck=False,
         update_cache=False,
@@ -565,7 +565,7 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
 
 
 # Automatically rename plugins with name pluginnamehere
-def check_and_rename_pluginnamehere(blocks: List[DocParagraph], doc: Document):
+def check_and_rename_pluginnamehere(blocks: list[DocParagraph], doc: Document):
     # Get the paragraphs from the document with taskids
     old_pars = None  # lazy load for old_pars
     i = 1

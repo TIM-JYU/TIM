@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Any
+from typing import Optional, Any
 
 from flask import Response
 from sqlalchemy.orm import load_only
@@ -105,7 +105,7 @@ def domains() -> Response:
     :return: If domains are configured, return them as an array.
     """
     verify_mailman_connection()
-    possible_domains: List[str] = get_domain_names()
+    possible_domains: list[str] = get_domain_names()
     return json_response(possible_domains)
 
 
@@ -200,7 +200,7 @@ def save_list_options(options: ListInfo) -> Response:
 
 
 @messagelist.post("/savemembers")
-def save_members(listname: str, members: List[MemberInfo]) -> Response:
+def save_members(listname: str, members: list[MemberInfo]) -> Response:
     """Save the state of existing list members, e.g. send and delivery rights.
 
     :param listname: The name of the message list where the members will be saved.
@@ -231,7 +231,7 @@ def save_members(listname: str, members: List[MemberInfo]) -> Response:
     return ok_response()
 
 
-def parse_external_member(external_member_candidate: str) -> Optional[List[str]]:
+def parse_external_member(external_member_candidate: str) -> Optional[list[str]]:
     """Parse the information of an external member.
 
     There are two supported ways to give external members. The user can write
@@ -267,7 +267,7 @@ def parse_external_member(external_member_candidate: str) -> Optional[List[str]]
 
 
 @messagelist.post("/addmember")
-def add_member(member_candidates: List[str], msg_list: str, send_right: bool, delivery_right: bool) -> Response:
+def add_member(member_candidates: list[str], msg_list: str, send_right: bool, delivery_right: bool) -> Response:
     """Add new members to a message list.
 
     :param member_candidates: Names of member candidates.
@@ -382,7 +382,7 @@ def get_sibling_archive_messages(message_doc_id: int) -> Response:
         if message_doc.id < doc.id and (not next_doc or doc.id < next_doc.id):
             next_doc = doc
 
-    def to_json(d: Optional[DocInfo]) -> Optional[Dict[str, Any]]:
+    def to_json(d: Optional[DocInfo]) -> Optional[dict[str, Any]]:
         return {
             "title": d.title,
             "path": d.path,

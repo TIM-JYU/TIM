@@ -1,7 +1,6 @@
 import os
 import shutil
 from os.path import isfile
-from typing import List
 
 from timApp.document.docentry import DocEntry
 from timApp.document.translation.translation import Translation
@@ -17,7 +16,7 @@ def fix_orphans_without_docentry() -> None:
     creates a DocEntry for them under 'orphans' directory."""
     orphan_folder_title = 'orphans'
     f = Folder.create('orphans', UserGroup.get_admin_group())
-    orphans: List[Block] = Block.query.filter(
+    orphans: list[Block] = Block.query.filter(
         (Block.type_id == 0) &
         Block.id.notin_(DocEntry.query.with_entities(DocEntry.id)) &
         Block.id.notin_(Translation.query.with_entities(Translation.doc_id))
@@ -36,7 +35,7 @@ def move_docs_without_block(dry_run: bool) -> None:
     docs_folder = os.path.join(files_root, 'docs')
     pars_folder = os.path.join(files_root, 'pars')
     doc_folders = [f for f in os.listdir(docs_folder) if not isfile(f)]
-    existing_blocks = set(str(i) for i, in Block.query.filter_by(type_id=BlockType.Document.value).with_entities(Block.id).all())
+    existing_blocks = {str(i) for i, in Block.query.filter_by(type_id=BlockType.Document.value).with_entities(Block.id).all()}
     docs_orphans = os.path.join(files_root, 'orphans', 'docs')
     pars_orphans = os.path.join(files_root, 'orphans', 'pars')
     if not dry_run:

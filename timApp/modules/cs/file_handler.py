@@ -1,15 +1,16 @@
 import os.path
-from typing import Optional, List
 from pathlib import Path
-from tim_common.fileParams import get_json_param, get_param, mkdirs
-from marshmallow import EXCLUDE
-from shutil import chown, copy2
+from shutil import copy2, chown
 
+from marshmallow import EXCLUDE
+
+from file_util import FileSpecification, File, rm, is_relative_subpath, copy_files_regex, \
+    copy_files_glob, default_filename, listify, is_parent_of
 from git.gitlib import get_lib
 from git.util import Settings as GitSettings, RemoteInfo
-
 from languages import Language
-from file_util import *
+from tim_common.fileParams import get_json_param, get_param, mkdirs
+
 
 def classinstancemethod(func):
     """Decorator for getting cls and self"""
@@ -33,7 +34,7 @@ class FileSource:
     def matches(self, file: File) -> bool:
         raise NotImplementedError("Matches not implemented")
 
-    def load(self, file: File) -> List[File]:
+    def load(self, file: File) -> list[File]:
         raise NotImplementedError("Load not implemented")
 
     def copy(self, destination_path: str) -> None:
@@ -67,10 +68,10 @@ class ExternalFileSource(FileSource):
     """Base class for file sources"""
     id = "_esource"
 
-    def load_external(self) -> List[File]:
+    def load_external(self) -> list[File]:
         raise NotImplementedError("Load_external not implemented")
 
-    def load(self, file: File) -> List[File]:
+    def load(self, file: File) -> list[File]:
         return [file]
 
     @property
@@ -85,7 +86,7 @@ class EditorSource(FileSource):
         return file.source == "editor" and file.path == self.specification.path
 
     @classinstancemethod
-    def load(cls, self, file: File) -> List[File]:
+    def load(cls, self, file: File) -> list[File]:
         return [file]
 
     @classinstancemethod
@@ -132,7 +133,7 @@ class UploadByCodeSource(FileSource):
         return file.path == self.specification.path or (self.specification.paths is not None and file.path in self.specification.paths)
 
     @classinstancemethod
-    def load(cls, self, file: File) -> List[File]:
+    def load(cls, self, file: File) -> list[File]:
         return [file]
 
     @classinstancemethod
@@ -169,7 +170,7 @@ class UploadSource(FileSource):
         return file.source.startswith("upload") and (file.path == self.specification.path or file.path in self.specification.paths)
 
     @classinstancemethod
-    def load(cls, self, file: File) -> List[File]:
+    def load(cls, self, file: File) -> list[File]:
         path = Path(file.source[len("upload:"):])
 
         if not path.is_file():
@@ -238,7 +239,7 @@ class MasterSource(FileSource):
         return file.source == self.specification.source
 
     @classinstancemethod
-    def load(cls, self, file: File) -> List[File]:
+    def load(cls, self, file: File) -> list[File]:
         raise PermissionError(f"Files from master path cannot be submitted")
 
     @classinstancemethod
@@ -297,7 +298,7 @@ class GitSource(ExternalFileSource):
         return file.source == self.specification.source
 
     @classinstancemethod
-    def load_external(cls, self) -> List[File]:
+    def load_external(cls, self) -> list[File]:
         max_size = self.specification.maxSize
         max_total_size = self.specification.maxTotalSize
 
@@ -393,7 +394,7 @@ class FileHandler:
 
         return os.path.join(rootpath if is_root else prgpath, path)
 
-    def load_files(self, files: List[File]):
+    def load_files(self, files: list[File]):
         """Loads files from markup sources and orders them in the same order as in markup"""
         mapping = []
         for source in self.sources:

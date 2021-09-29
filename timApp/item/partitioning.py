@@ -3,7 +3,7 @@ Functions related to document partitioning.
 """
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 from flask import json, Request
 from lxml import html
@@ -98,7 +98,7 @@ class RequestedViewRange:
         return self.e
 
 
-def partition_texts(texts: List[PreparedPar], view_range: IndexedViewRange, preamble_count):
+def partition_texts(texts: list[PreparedPar], view_range: IndexedViewRange, preamble_count):
     """
     Partition document with preambles taken into account.
     :param texts: List of processed paragraphs.
@@ -140,7 +140,7 @@ def load_index(file_path: Path) -> Optional[dict]:
     try:
         with file_path.open("r", encoding='utf-8') as file:
             return json.load(file)
-    except (FileNotFoundError, ValueError, IOError, TypeError):
+    except (FileNotFoundError, ValueError, OSError, TypeError):
         return None
 
 
@@ -196,7 +196,7 @@ def get_preamble_count(d: DocInfo) -> int:
     return len(preambles)
 
 
-def get_document_areas(doc: DocInfo) -> List[Range]:
+def get_document_areas(doc: DocInfo) -> list[Range]:
     """
     Get a list of areas in the document.
     Note: Areas inside areas are ignored.
@@ -217,7 +217,7 @@ def get_document_areas(doc: DocInfo) -> List[Range]:
     return areas
 
 
-def adjust_to_areas(areas: List[Range], b: int, e: int) -> Range:
+def adjust_to_areas(areas: list[Range], b: int, e: int) -> Range:
     """
     Ensure range doesn't cut any areas.
     :param areas: List of areas.
@@ -245,7 +245,7 @@ def decide_view_range(
         preferred_set_size: int,
         index: int = 0,
         forwards: bool = True,
-        areas: Optional[List[Range]] = None,
+        areas: Optional[list[Range]] = None,
         min_set_size_modifier: float = 0.5,
 ) -> IndexedViewRange:
     """

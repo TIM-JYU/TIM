@@ -2,7 +2,7 @@ import csv
 import http.client
 import json
 from io import StringIO
-from typing import Any, Optional, Dict
+from typing import Any, Optional
 from urllib.parse import urlparse, urljoin
 
 from flask import request, redirect, url_for, Response, stream_with_context, render_template, flash
@@ -28,7 +28,7 @@ def safe_redirect(url: str, **values) -> Response:
 def json_response(
         jsondata: Any,
         status_code: int = 200,
-        headers: Optional[Dict[str, str]] = None,
+        headers: Optional[dict[str, str]] = None,
         date_conversion: bool = False,
 ) -> Response:
     if not date_conversion:

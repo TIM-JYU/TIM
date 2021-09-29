@@ -1,6 +1,6 @@
-from dataclasses import dataclass
-from typing import List, Dict, Optional
 from collections import OrderedDict
+from dataclasses import dataclass
+from typing import Optional
 
 from timApp.answer.pointsumrule import PointCountMethod
 from timApp.document.docinfo import DocInfo
@@ -25,15 +25,15 @@ class DocScoreInfo:
     doc: DocInfo
     total: float
     maxTotal: float
-    tasks: List[TaskScoreInfo]
+    tasks: list[TaskScoreInfo]
 
 
 def get_score_infos(
         folder: Folder,
-        doc_paths: List[str],
+        doc_paths: list[str],
         user_ctx: UserContext,
         lang_id: Optional[str] = None,
-) -> List[DocScoreInfo]:
+) -> list[DocScoreInfo]:
     total_table = OrderedDict()
     u = user_ctx.logged_user
     docs = folder.get_all_documents(
@@ -65,7 +65,7 @@ def get_score_infos(
         count_method = point_sum_rule.point_count_method if point_sum_rule else PointCountMethod.latest
 
         # cycle through all tasks in current document, resolving user's progress on each scored assignment
-        point_dict: Dict[str, TaskScoreInfo] = {}
+        point_dict: dict[str, TaskScoreInfo] = {}
         for task_id in task_ids:
             try:
                 plugin, _ = Plugin.from_task_id(task_id.doc_task, user_ctx, default_view_ctx)
@@ -126,8 +126,8 @@ def get_score_infos(
 
         tasks = list(point_dict.values())
 
-        user_total = sum((t.points for t in tasks if t.points is not None))
-        max_total = sum((t.maxPoints for t in tasks if t.maxPoints is not None))
+        user_total = sum(t.points for t in tasks if t.points is not None)
+        max_total = sum(t.maxPoints for t in tasks if t.maxPoints is not None)
 
         total_table[folder.relative_path(d)] = DocScoreInfo(d, user_total, max_total, tasks)
 
@@ -138,7 +138,7 @@ def get_score_infos_if_enabled(
         doc_info: DocInfo,
         doc_settings: DocSettings,
         user_ctx: UserContext,
-) -> Optional[List[DocScoreInfo]]:
+) -> Optional[list[DocScoreInfo]]:
     score_infos = None
     if user_ctx.logged_user.logged_in and doc_settings.show_scoreboard():
         scoreboard_docs = doc_settings.scoreboard_docs()

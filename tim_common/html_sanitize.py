@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import lxml
 import lxml.etree
 from lxml.html import fromstring, tostring

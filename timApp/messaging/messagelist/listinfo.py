@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Optional, List
+from typing import Optional
 
 
 class Channel(Enum):
@@ -120,12 +120,12 @@ class MemberInfo:
 class GroupAndMembers:
     """Helper class for querying user group and its members."""
     groupName: str
-    members: List[MemberInfo]
+    members: list[MemberInfo]
 
 
 # A mapping of TIM's archive policies to Mailman's archive policies. Mailman's archive policies are listed here:
 # https://gitlab.com/mailman/mailman/-/blob/master/src/mailman/interfaces/archiver.py
-mailman_archive_policy_correlate: Dict[ArchiveType, str] = {
+mailman_archive_policy_correlate: dict[ArchiveType, str] = {
     ArchiveType.NONE: "never",
     # Secret archive type doesn't exist in Mailman. Because Mailman's private archive policy is open for list
     # member's, we turn Mailman's archiving off and rely solely on TIM's archiving.

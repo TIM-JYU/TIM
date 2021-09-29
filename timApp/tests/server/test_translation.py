@@ -45,7 +45,7 @@ class TranslationTest(TimRouteTest):
         j = self.create_translation(doc, 'MMCQ fi', 'fi')
         tr_doc = j.document
         pars = doc.document.get_paragraphs()
-        par_ids = set(p.get_id() for p in pars)
+        par_ids = {p.get_id() for p in pars}
         tr_pars = tr_doc.get_paragraphs()
         plugin_tr_par = tr_pars[1]
         old_md = self.get(f'/getBlock/{tr_doc.doc_id}/{plugin_tr_par.get_id()}')

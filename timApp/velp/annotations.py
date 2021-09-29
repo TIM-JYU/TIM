@@ -8,7 +8,6 @@ annotations as well as adding comments to the annotations. The module also retri
 """
 
 from enum import Enum, unique
-from typing import List, Any
 
 from sqlalchemy import func, true
 from sqlalchemy.orm import joinedload, contains_eager, Query
@@ -32,7 +31,7 @@ class AnnotationVisibility(Enum):
     everyone = 4
 
 
-def get_annotations_with_comments_in_document(user: User, d: DocInfo) -> List[Annotation]:
+def get_annotations_with_comments_in_document(user: User, d: DocInfo) -> list[Annotation]:
     """Gets all annotations with comments the user can see / has access to.
     """
     language_id = 'FI'

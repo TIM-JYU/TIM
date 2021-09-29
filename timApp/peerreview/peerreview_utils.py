@@ -1,7 +1,7 @@
 """"""
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, DefaultDict
+from typing import Optional, DefaultDict
 
 from sqlalchemy.orm import joinedload, Query
 
@@ -20,7 +20,7 @@ class PeerReviewException(Exception):
 
 
 # Generate reviews groups for list
-def generate_review_groups(doc: DocInfo, tasks: List[Plugin]) -> None:
+def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
     task_ids = []
 
     for task in tasks:
@@ -42,7 +42,7 @@ def generate_review_groups(doc: DocInfo, tasks: List[Plugin]) -> None:
 
     # Dictionary containing review pairs,
     # has reviewer user ID as key and value is list containing reviewable user IDs
-    pairing: DefaultDict[int, List[int]] = defaultdict(list)
+    pairing: DefaultDict[int, list[int]] = defaultdict(list)
 
     if len(users) < 2:
         raise PeerReviewException(f'Not enough users to form pairs ({len(users)} but at least 2 users needed)')
@@ -70,8 +70,8 @@ def generate_review_groups(doc: DocInfo, tasks: List[Plugin]) -> None:
                 pairing[users[idx].id].append(users[x].id)
 
     for t in task_ids:
-        answers: List[Answer] = get_latest_valid_answers_query(t, users).all()
-        excluded_users: List[User] = []
+        answers: list[Answer] = get_latest_valid_answers_query(t, users).all()
+        excluded_users: list[User] = []
         filtered_answers = []
         if not answers:
             # Skip tasks that has no answers
@@ -126,7 +126,7 @@ def save_review(answer: Answer,
     return review
 
 
-def get_reviews_for_user(d: DocInfo, user: User) -> List[PeerReview]:
+def get_reviews_for_user(d: DocInfo, user: User) -> list[PeerReview]:
     q = get_reviews_for_user_query(d, user).options(joinedload(PeerReview.reviewable))
     return q.all()
 

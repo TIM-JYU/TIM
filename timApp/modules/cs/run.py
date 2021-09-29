@@ -1,11 +1,15 @@
+import codecs
 import itertools
+import os
+import shlex
+import shutil
 import subprocess
 import time
 import uuid
 from pathlib import PurePath, PureWindowsPath
 from subprocess import PIPE, Popen
 
-from tim_common.fileParams import *
+from tim_common.fileParams import remove, mkdirs, tquote, get_param
 
 CS3_TAG = 'dotnet'
 CS3_TARGET = os.environ.get('CSPLUGIN_TARGET', '')
@@ -70,7 +74,7 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
             stdout, stderr = p.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
         return -9, '', ''
-    except IOError as e:
+    except OSError as e:
         return -2, '', ('IO Error ' + str(e))
     return p.returncode, stdout.decode(), stderr.decode()
 
@@ -97,7 +101,7 @@ def get_user_mappings(root_dir, mounts):
 
 
 class RunCleaner:
-    def __init__(self, p: Popen, container: str, files: List[str]):
+    def __init__(self, p: Popen, container: str, files: list[str]):
         self.p = p
         self.files = files
         self.container = container
@@ -263,7 +267,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
             # print("stderr", stderr)
         except subprocess.TimeoutExpired:
             return -9, '', '', pwddir
-        except IOError as e:
+        except OSError as e:
             return -2, '', ("IO Error" + str(e)), pwddir
     return errcode, stdout, errtxt + stderr, pwddir
 

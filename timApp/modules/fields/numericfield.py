@@ -4,7 +4,7 @@ TIM plugin: a numericfield
 
 import re
 from dataclasses import dataclass, asdict
-from typing import Union, List, Any, Dict
+from typing import Union, Any
 
 from flask import render_template_string
 from marshmallow.utils import missing
@@ -32,7 +32,7 @@ class NumericfieldMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[int, Missing, None] = missing
     inputstem: Union[str, Missing, None] = missing
     nosave: Union[bool, Missing] = missing
-    points_array: Union[List[List[str]], Missing] = missing
+    points_array: Union[list[list[str]], Missing] = missing
     readOnlyStyle: Union[str, Missing, None] = missing
     save: Union[str, Missing, None] = missing  # TODO default 'double' or missing?
     step: Union[float, Missing, None] = missing
@@ -142,7 +142,7 @@ def answer(args: NumericfieldAnswerModel) -> PluginAnswerResp:
         return result
 
     if not nosave:
-        save: Dict[str, Any] = {"c": c}
+        save: dict[str, Any] = {"c": c}
         if not args.markup.clearstyles and args.state is not None:
             if args.state.styles:
                 save = {"c": c, "styles": args.state.styles}
@@ -156,7 +156,7 @@ def answer(args: NumericfieldAnswerModel) -> PluginAnswerResp:
 
 
 def reqs() -> PluginReqs:
-    templates = ["""``` {#PLUGINNAMEHERE plugin="numericfield"}
+    templates = [r"""``` {#PLUGINNAMEHERE plugin="numericfield"}
 header:          # otsikko, tyhjä = ei otsikkoa
 stem:            # kysymys, tyhjä = ei kysymystä
 step:            # numeraalinen askellus, tyhjä = oletus 1.0

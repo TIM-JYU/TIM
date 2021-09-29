@@ -1,13 +1,9 @@
 import json
 import os
-
 import re
 from base64 import b64encode
 
-from collections import Iterable
-
 from languages import Language, get_by_id
-from typing import Match
 
 JSREADYHTML = {}
 
@@ -31,7 +27,7 @@ class JSframe(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.txt"
         self.fileext = "txt"
         self.readpoints_default = 'Score: (.*)'
         self.delete_tmp = False
@@ -167,7 +163,7 @@ class ChartJS(JSframe):
         return
 
 
-with open('jsframehtml/simpleDrawIO.html', 'r', encoding='utf-8') as f:
+with open('jsframehtml/simpleDrawIO.html', encoding='utf-8') as f:
     JSREADYHTML['simpleDrawIO'] = f.read()
 
 # see: https://regex101.com/r/eEPcs2/1/

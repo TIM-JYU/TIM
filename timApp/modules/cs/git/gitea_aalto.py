@@ -1,7 +1,7 @@
-
 from git.gitea import GiteaLib, sanitize_name
 from git.gitlib import LibResponse
-from git.util import Options, generate_password, RepoSettings
+from git.util import generate_password
+
 
 class GiteaAaltoLib(GiteaLib):
     id = "gitea_aalto"

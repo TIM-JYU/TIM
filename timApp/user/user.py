@@ -3,8 +3,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import List, Tuple, Dict
-from typing import Optional, Union, Set
+from typing import Optional, Union
 
 from flask import current_app
 from sqlalchemy import func
@@ -133,7 +132,7 @@ class UserInfo:
     origin: Optional[UserOrigin] = None
     password: Optional[str] = None
     password_hash: Optional[str] = None
-    unique_codes: List[SchacPersonalUniqueCode] = field(default_factory=list)
+    unique_codes: list[SchacPersonalUniqueCode] = field(default_factory=list)
 
     def __post_init__(self):
         assert self.password is None or self.password_hash is None, 'Cannot pass both password and password_hash to UserInfo'
@@ -239,7 +238,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
     notifications_alt = db.relationship('Notification')
 
-    groups: List[UserGroup] = db.relationship(
+    groups: list[UserGroup] = db.relationship(
         UserGroup,
         UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,
@@ -263,7 +262,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         foreign_keys="UserGroupMember.user_id",
         lazy='dynamic',
     )
-    memberships: List[UserGroupMember] = db.relationship(
+    memberships: list[UserGroupMember] = db.relationship(
         UserGroupMember,
         foreign_keys="UserGroupMember.user_id",
     )
@@ -305,7 +304,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def group_ids(self):
-        return set(g.id for g in self.groups)
+        return {g.id for g in self.groups}
 
     @cached_property
     def is_admin(self):
@@ -338,7 +337,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             info: UserInfo,
             is_admin: bool = False,
             uid: Optional[int] = None,
-    ) -> Tuple['User', UserGroup]:
+    ) -> tuple['User', UserGroup]:
         p_hash = create_password_hash(info.password) if info.password is not None else info.password_hash
         user = User(
             id=uid,
@@ -373,11 +372,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return user_query_with_joined_groups().filter_by(email=email).first()
 
     @staticmethod
-    def get_by_email_case_insensitive(email: str) -> List['User']:
+    def get_by_email_case_insensitive(email: str) -> list['User']:
         return user_query_with_joined_groups().filter(func.lower(User.email).in_([email])).all()
 
     @staticmethod
-    def get_by_email_case_insensitive_or_username(email_or_username: str) -> List['User']:
+    def get_by_email_case_insensitive_or_username(email_or_username: str) -> list['User']:
         users = User.get_by_email_case_insensitive(email_or_username)
         if users:
             return users
@@ -454,7 +453,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             group_condition = UserGroup.name == self.name
         else:
             group_condition = UserGroup.name == ANONYMOUS_GROUPNAME
-        folders: List[Folder] = Folder.query.join(
+        folders: list[Folder] = Folder.query.join(
             BlockAccess, BlockAccess.block_id == Folder.id
         ).join(
             UserGroup, UserGroup.id == BlockAccess.usergroup_id
@@ -565,7 +564,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             self.pass_ = info.password_hash
         self.set_unique_codes(info.unique_codes)
 
-    def set_unique_codes(self, codes: List[SchacPersonalUniqueCode]):
+    def set_unique_codes(self, codes: list[SchacPersonalUniqueCode]):
         for c in codes:
             ho = HakaOrganization.get_or_create(name=c.org)
             if ho.id is None or self.id is None:
@@ -581,7 +580,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def has_some_access(
             self,
             i: ItemOrBlock,
-            vals: Set[int],
+            vals: set[int],
             allow_admin: bool = True,
             grace_period: timedelta = timedelta(seconds=0),
     ) -> Optional[BlockAccess]:
@@ -743,8 +742,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         return info_dict
 
-    def to_json(self, full: bool = False) -> Dict:
-        external_ids: Dict[int, str] = \
+    def to_json(self, full: bool = False) -> dict:
+        external_ids: dict[int, str] = \
             {s.group_id: s.external_id for s in
              ScimUserGroup.query.filter(ScimUserGroup.group_id.in_([g.id for g in self.groups])).all()} if full else []
         return {**self.basic_info_dict,
@@ -769,8 +768,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return User.get_by_name(current_app.config['MODEL_ANSWER_USER_NAME'])
 
 
-def get_membership_end(u: User, group_ids: Set[int]):
-    relevant_memberships: List[UserGroupMember] = [m for m in u.memberships if m.usergroup_id in group_ids]
+def get_membership_end(u: User, group_ids: set[int]):
+    relevant_memberships: list[UserGroupMember] = [m for m in u.memberships if m.usergroup_id in group_ids]
     membership_end = None
     # If the user is not active in any of the groups, we'll show the lastly-ended membership.
     # TODO: It might be possible in the future that the membership_end is in the future.

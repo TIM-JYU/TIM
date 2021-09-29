@@ -1,16 +1,16 @@
-from typing import Optional, List
+from typing import Optional
 
 from timApp.document.docparagraph import DocParagraph
 
 
 class DocumentEditResult:
     def __init__(self,
-                 added: Optional[List[DocParagraph]]=None,
-                 deleted: Optional[List[DocParagraph]]=None,
-                 changed: Optional[List[DocParagraph]]=None):
-        self.added: List[DocParagraph] = added or []
-        self.deleted: List[DocParagraph] = deleted or []
-        self.changed: List[DocParagraph] = changed or []
+                 added: Optional[list[DocParagraph]]=None,
+                 deleted: Optional[list[DocParagraph]]=None,
+                 changed: Optional[list[DocParagraph]]=None):
+        self.added: list[DocParagraph] = added or []
+        self.deleted: list[DocParagraph] = deleted or []
+        self.changed: list[DocParagraph] = changed or []
 
     @property
     def empty(self):

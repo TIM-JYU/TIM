@@ -1,4 +1,11 @@
+import codecs
 import functools
+import json
+import os
+import re
+import shlex
+import shutil
+import subprocess
 from base64 import b64encode
 from io import BytesIO
 from os.path import splitext
@@ -11,10 +18,11 @@ import requests
 
 from file_util import File, default_filename
 from modifiers import Modifier
-from points import *
-from run import *
+from points import give_points
+from run import generate_filename, CS3_TARGET, CS3_TAG, get_imgsource, run2_subdir, copy_file, wait_file, run
 from tim_common.cs_sanitizer import cs_min_sanitize
-from tim_common.fileParams import *
+from tim_common.fileParams import QueryClass, get_param, get_json_param, hash_user_dir, remove, find_cs_class, \
+    remove_before, find_java_package, mkdirs, getint, get_value
 
 """
 Adding new language to csPlugin:
@@ -161,14 +169,14 @@ class Language:
         self.check_extensions(extensions)
 
         for i in range(len(self.filenames)):
-            self.sourcefiles[i].path = "/tmp/%s/%s%s" % (self.basename, self.filenames[i], self.sourcefiles[i].filedext)
+            self.sourcefiles[i].path = f"/tmp/{self.basename}/{self.filenames[i]}{self.sourcefiles[i].filedext}"
 
         self.ifilename = get_param(query, "inputfilename", "/input.txt")
-        self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
+        self.exename = f"/tmp/{self.basename}/{self.filename}.exe"
         # self.sourcefilename = "./%s%s" % (self.filename, self.filedext)
         # self.exename = "./%s.exe" % self.filename
         self.pure_exename = "/home/agent/%s.exe" % self.filename
-        self.inputfilename = "/tmp/%s/%s" % (self.basename, self.ifilename)
+        self.inputfilename = f"/tmp/{self.basename}/{self.ifilename}"
         self.prgpath = "/tmp/%s" % self.basename
         self.filepath = self.prgpath
         # self.imgsource = ""
@@ -438,8 +446,8 @@ class CS(Language):
         self.compiler = "/cs/dotnet/csc"
         self.fileext = "cs"
         self.filedext = ".cs"
-        self.sourcefilename = "/tmp/%s/%s.cs" % (self.basename, self.filename)
-        self.exename = "/tmp/%s/%s.exe" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.cs"
+        self.exename = f"/tmp/{self.basename}/{self.filename}.exe"
 
     @staticmethod
     @functools.cache
@@ -465,7 +473,7 @@ class CS(Language):
         options = ""
         if self.just_compile:
             options = "-target:library"
-        cmdline = "%s -nologo -out:%s %s %s /cs/dotnet/shims/TIMconsole.cs" % (
+        cmdline = "{} -nologo -out:{} {} {} /cs/dotnet/shims/TIMconsole.cs".format(
             self.compiler, self.exename, options, self.get_sourcefiles())
         return cmdline
 
@@ -504,13 +512,13 @@ class Jypeli(CS, Modifier):
         self.imgdest = "/csgenerated/%s.png" % self.rndname
         self.videosource = "/tmp/%s/Output/out.mp4" % self.basename
         self.videodest = "/csgenerated/%s.mp4" % self.rndname
-        self.pure_exename = u"{0:s}.exe".format(self.filename)
-        self.pure_mgdest = u"{0:s}.png".format(self.rndname)
+        self.pure_exename = f"{self.filename:s}.exe"
+        self.pure_mgdest = f"{self.rndname:s}.png"
 
     @staticmethod
     @functools.cache
     def get_build_refs():
-        with open("/cs/dotnet/configs/jypeli.build.deps", "r", encoding="utf-8") as f:
+        with open("/cs/dotnet/configs/jypeli.build.deps", encoding="utf-8") as f:
             dep_paths = [os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip()) for dep_line in f.readlines()]
             return " ".join([f"-r:{p}" for p in dep_paths])
 
@@ -529,7 +537,7 @@ class Jypeli(CS, Modifier):
             classname = self.markup.get("classname", None)
             if not classname:
                 classname = find_cs_class(sourcecode)
-                mainfile = "/tmp/%s/%s.cs" % (self.basename, "MainProgram")
+                mainfile = "/tmp/{}/{}.cs".format(self.basename, "MainProgram")
                 codecs.open(mainfile, "w", "utf-8").write(f"using var game = new {classname}();game.Run();")
 
         cmdline = f"{self.compiler} -nologo -out:{self.exename} {Jypeli.get_build_refs()} {options} {self.get_sourcefiles(mainfile)}"
@@ -609,13 +617,13 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
 
     def __init__(self, query, sourcecode=""):
         super().__init__(query, sourcecode)
-        self.testdll = u"./{0:s}Test.dll".format(self.filename)
+        self.testdll = f"./{self.filename:s}Test.dll"
         self.hide_compile_out = True
 
     @staticmethod
     @functools.cache
     def get_build_refs():
-        with open("/cs/dotnet/configs/nunit_test.build.deps", "r", encoding="utf-8") as f:
+        with open("/cs/dotnet/configs/nunit_test.build.deps", encoding="utf-8") as f:
             dep_paths = [os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip()) for dep_line in f.readlines()]
             return " ".join([f"-r:{p}" for p in dep_paths])
 
@@ -690,7 +698,7 @@ class Shell(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.sh" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.sh"
         self.exename = self.sourcefilename
         self.pure_exename = "/home/agent/%s.sh" % self.filename
         self.fileext = "sh"
@@ -764,7 +772,7 @@ class Kotlin(Java):
         self.jarname = self.classname + ".jar"
 
     def get_cmdline(self):
-        return "kotlinc  %s -include-runtime -d %s" % (self.filename, self.jarname)
+        return f"kotlinc  {self.filename} -include-runtime -d {self.jarname}"
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "-jar", self.jarname],
@@ -840,7 +848,7 @@ class JComtest(Java, Modifier):
         self.hide_compile_out = True
 
     def get_cmdline(self):
-        return "java comtest.ComTest %s && javac %s %s" % (self.sourcefilename, self.sourcefilename, self.testcs)
+        return f"java comtest.ComTest {self.sourcefilename} && javac {self.sourcefilename} {self.testcs}"
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.testdll], no_uargs=True)
@@ -895,7 +903,7 @@ class Scala(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.scala" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.scala"
         self.classname = self.filename
         self.fileext = "scala"
 
@@ -918,7 +926,7 @@ class CC(Language):
         return [".h", ".c", ".cc"], ".c", ".exe"
 
     def get_cmdline(self):
-        return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sources(), self.exename)
+        return self.compiler + f" -Wall {self.opt} {self.sources()} -o {self.exename} -lm"
 
     def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
@@ -949,9 +957,9 @@ class CComtest(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.cpp" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.cpp"
         self.fileext = "cpp"
-        self.testcs = u"{0:s}.cpp".format(self.filename)
+        self.testcs = f"{self.filename:s}.cpp"
         self.hide_compile_out = True
 
     def run(self, result, sourcelines, points_rule):
@@ -968,14 +976,14 @@ class Fortran(Language):
         extension = os.path.splitext(self.filename)[1]
         if extension.startswith(".f"):
             self.fileext = extension[1:]
-            self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
+            self.sourcefilename = f"/tmp/{self.basename}/{self.filename}"
         else:
             self.fileext = 'f'
-            self.sourcefilename = "/tmp/%s/%s.f" % (self.basename, self.filename)
+            self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.f"
         self.compiler = "gfortran"
 
     def get_cmdline(self):
-        return self.compiler + " -Wall %s %s -o %s -lm" % (self.opt, self.sourcefilename, self.exename)
+        return self.compiler + f" -Wall {self.opt} {self.sourcefilename} -o {self.exename} -lm"
 
     def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
@@ -986,7 +994,7 @@ class PY3(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.py" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.py"
         self.exename = self.sourcefilename
         self.pure_exename = "./%s.py" % self.filename
         self.fileext = "py"
@@ -1019,7 +1027,7 @@ class Swift(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.swift" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.swift"
         self.exename = self.sourcefilename
         self.pure_exename = "./%s.swift" % self.filename
         self.fileext = "swift"
@@ -1038,7 +1046,7 @@ class Lua(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.lua" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.lua"
         self.exename = self.sourcefilename
         self.pure_exename = "./%s.lua" % self.filename
         self.fileext = "lua"
@@ -1056,10 +1064,10 @@ class CLisp(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.lisp" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.lisp"
         self.exename = self.sourcefilename
         self.fileext = "lisp"
-        self.pure_exename = u"./{0:s}.lisp".format(self.filename)
+        self.pure_exename = f"./{self.filename:s}.lisp"
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["sbcl", "--script", self.pure_exename])
@@ -1075,10 +1083,10 @@ class Quorum(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.q" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.q"
         self.exename = self.sourcefilename
         self.fileext = "q"
-        self.pure_exename = u"./{0:s}.jar".format(self.filename)
+        self.pure_exename = f"./{self.filename:s}.jar"
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["/cs/java/quorum/runquorum", self.filename])
@@ -1093,8 +1101,8 @@ class Text(Language):
         super().__init__(query, sourcecode)
         if self.userargs:
             self.filename = self.userargs
-        self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
-        self.pure_exename = u"./{0:s}".format(self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}"
+        self.pure_exename = f"./{self.filename:s}"
 
     def run(self, result, sourcelines, points_rule):
         showname = self.filename
@@ -1111,7 +1119,7 @@ class XML(Text):
     def run(self, result, sourcelines, points_rule):
         convert = self.query.jso.get('markup', {}).get('convert', None)
         if not convert:
-            return super(XML, self).run(result, sourcelines, points_rule)
+            return super().run(result, sourcelines, points_rule)
 
         # language_class = languages.get(convert.lower(), Language)
         from ttype import TType
@@ -1129,9 +1137,9 @@ class NodeJS(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.js" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.js"
         self.exename = self.sourcefilename
-        self.pure_exename = u"./{0:s}.js".format(self.filename)
+        self.pure_exename = f"./{self.filename:s}.js"
         self.fileext = "js"
         self.is_jjs = "jjs" in self.markup.get("type", "")
         if self.is_jjs:
@@ -1150,9 +1158,9 @@ class TS(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.ts" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.ts"
         self.exename = self.sourcefilename
-        self.pure_exename = u"./{0:s}.ts".format(self.filename)
+        self.pure_exename = f"./{self.filename:s}.ts"
         self.fileext = "ts"
 
     def run(self, result, sourcelines, points_rule):
@@ -1205,9 +1213,9 @@ class SQL(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.sql" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.sql"
         self.exename = self.sourcefilename
-        self.pure_exename = u"{0:s}.sql".format(self.filename)
+        self.pure_exename = f"{self.filename:s}.sql"
         self.fileext = "sql"
         self.dbname = get_param(query, "dbname", "db")
         self.stdin = self.pure_exename
@@ -1235,7 +1243,7 @@ class Alloy(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.als" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.als"
         self.exename = self.sourcefilename
         self.pure_exename = "./%s.als" % self.filename
         self.imgsource = "%s/mm.png" % self.prgpath
@@ -1253,7 +1261,7 @@ class Run(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}"
         self.exename = self.sourcefilename
         self.pure_exename = "/home/agent/%s" % self.filename
         self.imgdest = "/csgenerated/%s.png" % self.rndname
@@ -1428,7 +1436,7 @@ class Jsav(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.txt"
         self.fileext = "txt"
         self.readpoints_default = 'Score: (.*)'
         self.delete_tmp = False
@@ -1518,7 +1526,7 @@ class R(Language):
         self.is_optional_image = True
         self.prgpath = "/tmp/%s/r" % self.basename
         self.filepath = self.prgpath
-        self.sourcefilename = "%s/%s.r" % (self.prgpath, self.filename)
+        self.sourcefilename = f"{self.prgpath}/{self.filename}.r"
         self.fileext = "r"
         self.exename = self.sourcefilename
         mkdirs(self.filepath)
@@ -1526,8 +1534,8 @@ class R(Language):
         self.pure_exename = "./%s.r" % self.filename
         #  self.imgsource = "%s/Rplot001.%s" % (self.prgpath, self.image_ext)
         self.imgsource = "Rplot001.%s" % self.image_ext
-        self.pure_imgdest = u"{0:s}.{1:s}".format(self.rndname, self.image_ext)
-        self.imgdest = "/csgenerated/%s.%s" % (self.rndname, self.image_ext)
+        self.pure_imgdest = f"{self.rndname:s}.{self.image_ext:s}"
+        self.imgdest = f"/csgenerated/{self.rndname}.{self.image_ext}"
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["Rscript", "--save", "--restore", self.pure_exename],
@@ -1547,11 +1555,11 @@ class FS(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.fs" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.fs"
         self.fileext = "fs"
 
     def get_cmdline(self):
-        return "fsharpc --nologo --out:%s %s" % (self.exename, self.sourcefilename)
+        return f"fsharpc --nologo --out:{self.exename} {self.sourcefilename}"
 
     def run(self, result, sourcelines, points_rule):
         return self.runself(["mono", self.pure_exename])
@@ -1572,7 +1580,7 @@ class Mathcheck(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.txt"
         self.fileext = "txt"
         self.readpoints_default = '<!--!points! (.*) -->'
 
@@ -1629,7 +1637,7 @@ class Maxima(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.mc" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.mc"
         # self.dir = "/tmp/%s/" % self.basename
         self.fileext = "mc"
         self.nofilesave = True
@@ -1703,7 +1711,7 @@ class Upload(Language):
         if not cmds:
             self.filename = None
             return
-        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.txt"
         fn = self.query.jso["input"]["uploadedFile"]
         dn = os.path.dirname(fn)
         ldn = "/tmp/" + self.basename + dn
@@ -1737,7 +1745,7 @@ class Octave(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.m" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.m"
         self.exename = self.sourcefilename
         self.pure_exename = "./%s.m" % self.filename
         self.fileext = "m"
@@ -1745,9 +1753,9 @@ class Octave(Language):
         self.imgsource = get_imgsource(query)
         self.wavsource = get_param(query, "wavsource", "")
         # wavdest = "/csgenerated/%s/%s" % (self.user_id, wavsource)
-        self.wavdest = "/csgenerated/%s%s" % (self.rndname, self.wavsource)  # rnd name to avoid browser cache problems
+        self.wavdest = f"/csgenerated/{self.rndname}{self.wavsource}"  # rnd name to avoid browser cache problems
         # wavname = "%s/%s" % (self.user_id, wavsource)
-        self.wavname = "%s%s" % (self.rndname, self.wavsource)
+        self.wavname = f"{self.rndname}{self.wavsource}"
         mkdirs("/csgenerated/%s" % self.user_id)
 
     def run(self, result, sourcelines, points_rule):
@@ -1825,7 +1833,7 @@ class Pascal(Language):
         return [".pp", ".pas"], ".pas", ".exe"
 
     def get_cmdline(self):
-        return self.compiler + " %s %s -o%s" % (self.opt, self.sourcefilename, self.exename)
+        return self.compiler + f" {self.opt} {self.sourcefilename} -o{self.exename}"
 
     def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])

@@ -1,5 +1,3 @@
-from typing import List
-
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db
 from timApp.timdb.timdb import TimDb
@@ -15,7 +13,7 @@ def change_email() -> None:
         # groupname = input("Input group to edit: ")
         groupname = "mallikurssinryhma1"
         group = UserGroup.query.filter_by(name="mallikurssinryhma1").first()
-        users: List[User] = group.users
+        users: list[User] = group.users
         new_email = input("Input new email suffix: ")
         print("New values:")
         for user in users:

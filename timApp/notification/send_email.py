@@ -1,7 +1,7 @@
 import smtplib
 from email.mime.text import MIMEText
 from threading import Thread
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 from flask import Flask
 
@@ -94,7 +94,7 @@ def multi_send_email_impl(
     with flask_app.app_context():
         s = smtplib.SMTP(flask_app.config['MAIL_HOST']) if not is_localhost() else None
         rcpts = rcpt.split(";")
-        mail_targets: List[Union[str, List[str]]] = list(rcpts) if not reply_all else [rcpts]
+        mail_targets: list[Union[str, list[str]]] = list(rcpts) if not reply_all else [rcpts]
         bccmail = bcc
         extra = ''
         if bcc:

@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, Any, Optional, Union
+from typing import Any, Optional, Union
 
 import requests
 import yaml
@@ -38,7 +38,7 @@ class Stack(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.txt"
         self.fileext = "txt"
         self.readpoints_default = 'Score: (.*)'
         self.delete_tmp = False
@@ -118,7 +118,7 @@ class Stack(Language):
         r = r.json()
         return 0, r.get('yaml'), "", ""
 
-    def parse_stack_question(self, stack_question: Union[str, Dict[str, Any]], replace_jsxgraph_blocks: bool = True):
+    def parse_stack_question(self, stack_question: Union[str, dict[str, Any]], replace_jsxgraph_blocks: bool = True):
         if not stack_question:
             return {}
         if isinstance(stack_question, str):

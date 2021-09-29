@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from itertools import accumulate
-from typing import TYPE_CHECKING, Optional, List, Tuple
+from typing import TYPE_CHECKING
 
 from flask import current_app
 from sqlalchemy import tuple_, func
@@ -138,7 +138,7 @@ class Item(ItemBase):
             crumbs.append(Folder.get_root())
         return crumbs
 
-    def parent_paths(self) -> List[Tuple[str, str]]:
+    def parent_paths(self) -> list[tuple[str, str]]:
         path_parts = self.path_without_lang.split('/')
         paths = list(p[1:] for p in accumulate('/' + part for part in path_parts[:-1]))
         return [split_location(p) for p in paths]
@@ -157,7 +157,7 @@ class Item(ItemBase):
     def public(self):
         return True
 
-    def to_json(self, curr_user: Optional[User] = None):
+    def to_json(self, curr_user: User | None = None):
         if curr_user is None:
             from timApp.auth.sessioninfo import get_current_user_object
             curr_user = get_current_user_object()

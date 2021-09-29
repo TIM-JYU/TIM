@@ -7,7 +7,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Match, Union, Tuple
+from typing import Match, Union
 
 from flask import Blueprint, json
 from flask import request
@@ -68,7 +68,7 @@ def get_subfolders(m: GetFoldersModel):
     return json_response(folders_viewable)
 
 
-def get_common_search_params(req) -> Tuple[str, str, bool, bool, bool, bool]:
+def get_common_search_params(req) -> tuple[str, str, bool, bool, bool, bool]:
     """
     Picks parameters that are common in the search routes from a request.
     :param req: Request.
@@ -437,7 +437,7 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
                           ensure_ascii=False) + '\n'
 
 
-def get_doc_par_id(line: str) -> Union[Tuple[int, str, str], None]:
+def get_doc_par_id(line: str) -> Union[tuple[int, str, str], None]:
     """
     Takes doc id, par id and par data from one grep search result line.
     :param line: Tim pars grep search result line.

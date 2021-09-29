@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, unique
-from typing import List, Optional, Tuple, DefaultDict, Dict, TypedDict, Any, Union
+from typing import Optional, DefaultDict, TypedDict, Any, Union
 
 import attr
 import dateutil.parser
@@ -17,7 +17,6 @@ from sqlalchemy.orm import lazyload, joinedload
 from timApp.answer.answer import Answer
 from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_answers_query
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
-from timApp.auth.sessioninfo import user_context_with_logged_in
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
@@ -32,7 +31,7 @@ from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
 
 ALL_ANSWERED_WILDCARD = '*'
 
-def chunks(l: List, n: int):
+def chunks(l: list, n: int):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
@@ -103,7 +102,7 @@ member_filter_relation_map = {
 }
 
 FieldValue = Union[str, float, None]
-UserFields = Dict[str, FieldValue]
+UserFields = dict[str, FieldValue]
 
 
 class UserFieldObj(TypedDict):
@@ -114,11 +113,11 @@ class UserFieldObj(TypedDict):
 
 @dataclass
 class RequestedGroups:
-    groups: List[UserGroup]
+    groups: list[UserGroup]
     include_all_answered:  bool = False
 
     @staticmethod
-    def from_name_list(group_names: List[str]):
+    def from_name_list(group_names: list[str]):
         return RequestedGroups(
             groups=UserGroup.query.filter(UserGroup.name.in_(group_names)).all(),
             include_all_answered=ALL_ANSWERED_WILDCARD in group_names
@@ -136,7 +135,7 @@ class GetFieldsAccess(Enum):
 
 
 def get_fields_and_users(
-        u_fields: List[str],
+        u_fields: list[str],
         requested_groups: RequestedGroups,
         d: DocInfo,
         current_user: User,
@@ -146,7 +145,7 @@ def get_fields_and_users(
         access_option: GetFieldsAccess = GetFieldsAccess.RequireTeacher,
         member_filter_type: MembershipFilter = MembershipFilter.Current,
         user_filter=None,
-) -> Tuple[List[UserFieldObj], Dict[str, str], List[str], Optional[List[UserGroup]]]:
+) -> tuple[list[UserFieldObj], dict[str, str], list[str], Optional[list[UserGroup]]]:
     """
     Return fielddata, aliases, field_names
     :param view_ctx: The view context.
@@ -191,7 +190,7 @@ def get_fields_and_users(
         raise RouteException(f"Problem with field names: {u_fields}\n{e}")
 
     tasks_without_fields = []
-    tally_fields: List[Tuple[TallyField, Optional[str]]] = []
+    tally_fields: list[tuple[TallyField, Optional[str]]] = []
     for field in u_fields:
         try:
             t, a, *rest = field.split("=")
@@ -267,7 +266,7 @@ def get_fields_and_users(
             except KeyError:
                 pass
 
-    group_id_set = set(ug.id for ug in groups)
+    group_id_set = {ug.id for ug in groups}
     group_filter = UserGroup.id.in_([ug.id for ug in groups])
     if user_filter is not None:
         group_filter = group_filter & user_filter
@@ -320,7 +319,7 @@ def get_fields_and_users(
     q = q.with_entities(User).order_by(User.id).options(lazyload(User.groups))
     if member_filter_type != MembershipFilter.Current:
         q = q.options(joinedload(User.memberships))
-    users: List[User] = q.all()
+    users: list[User] = q.all()
     user_map = {}
     for u in users:
         user_map[u.id] = u
@@ -328,7 +327,7 @@ def get_fields_and_users(
     global_answer_ids = valid_answers_query(global_taskids).group_by(Answer.task_id).with_entities(
         func.max(Answer.id)).all()
     answs = Answer.query.filter(Answer.id.in_(itertools.chain((aid for aid, _ in sub), global_answer_ids))).all()
-    answers_with_users: List[Tuple[int, Optional[Answer]]] = []
+    answers_with_users: list[tuple[int, Optional[Answer]]] = []
     for a in answs:
         uids = aid_uid_map.get(a.id)
         if uids is not None:
@@ -338,7 +337,7 @@ def get_fields_and_users(
             # This is a global task, so add the answer for all users.
             for uid in user_map.keys():
                 answers_with_users.append((uid, a))
-    missing_users = set(u.id for u in users) - set(uid for uid, _ in answers_with_users)
+    missing_users = {u.id for u in users} - {uid for uid, _ in answers_with_users}
     for mu in missing_users:
         answers_with_users.append((mu, None))
     answers_with_users.sort(key=lambda au: au[0])
@@ -346,7 +345,7 @@ def get_fields_and_users(
     user_tasks = None
     user_fieldstyles = None
     user_index = -1
-    res: List[UserFieldObj] = []
+    res: list[UserFieldObj] = []
     for uid, a in answers_with_users:
         if last_user != uid:
             user_index += 1
@@ -409,14 +408,14 @@ def get_fields_and_users(
 
 def get_tally_field_values(
         d: DocInfo,
-        doc_map: Dict[int, DocInfo],
+        doc_map: dict[int, DocInfo],
         group_filter,
         join_relation,
-        tally_fields: List[Tuple[TallyField, Optional[str]]],
+        tally_fields: list[tuple[TallyField, Optional[str]]],
         view_ctx: ViewContext,
         user_ctx: UserContext
 ):
-    tally_field_values: DefaultDict[int, List[Tuple[float, str]]] = defaultdict(list)
+    tally_field_values: DefaultDict[int, list[tuple[float, str]]] = defaultdict(list)
     task_id_cache = {}
     field_groups = itertools.groupby(tally_fields, key=lambda f: f[0].grouping_key)
     for _, x in field_groups:

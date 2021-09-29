@@ -1,17 +1,17 @@
 import csv
-from typing import Tuple, List, Optional
+from typing import Optional
 
-from timApp.util.utils import is_valid_email
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserInfo
 from timApp.user.userutils import create_password_hash
+from timApp.util.utils import is_valid_email
 
 
 class ImportException(Exception):
     pass
 
 
-def import_accounts_impl(file: str, password: Optional[str]) -> Tuple[List[User], List[User]]:
+def import_accounts_impl(file: str, password: Optional[str]) -> tuple[list[User], list[User]]:
     existing = []
     added = []
     with open(file) as csvfile:

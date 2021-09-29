@@ -2,7 +2,7 @@
 Module for serving drag item-plugin.
 """
 from dataclasses import dataclass, asdict
-from typing import Union, List
+from typing import Union
 
 from flask import render_template_string
 from marshmallow.utils import missing
@@ -15,7 +15,7 @@ from tim_common.utils import Missing
 
 @dataclass
 class DragStateModel:
-    c: List[str]
+    c: list[str]
 
 
 @dataclass
@@ -30,13 +30,13 @@ class DragMarkupModel(GenericMarkupModel):
     shuffle: Union[bool, Missing] = missing
     trash: Union[bool, Missing] = missing
     type: Union[str, Missing] = missing
-    words: Union[List[str], Missing] = missing
+    words: Union[list[str], Missing] = missing
     autoSave: Union[bool, Missing] = missing
 
 
 @dataclass
 class DragInputModel:
-    words: List[str]
+    words: list[str]
 
     copy: Union[str, Missing] = missing
     max: Union[int, Missing] = missing

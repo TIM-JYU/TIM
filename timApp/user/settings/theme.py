@@ -1,12 +1,11 @@
 import os
 import re
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List
-from dataclasses import dataclass, field
 
 from werkzeug.utils import secure_filename
-from timApp.util.utils import cached_property
 
+from timApp.util.utils import cached_property
 
 THEME_DIR = Path('static/stylesheets/themes')
 
@@ -42,5 +41,5 @@ def theme_exists(filename: str) -> bool:
     return get_theme_path(filename).exists()
 
 
-def get_available_themes() -> List[Theme]:
+def get_available_themes() -> list[Theme]:
     return [Theme(file[:-5]) for file in os.listdir(THEME_DIR) if file.endswith('.scss')]

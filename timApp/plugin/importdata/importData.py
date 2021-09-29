@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, asdict, field
 from enum import Enum
-from typing import Union, List, DefaultDict, Dict, Generator, Any, Optional
+from typing import Union, DefaultDict, Generator, Any, Optional
 
 import requests
 from flask import render_template_string
@@ -28,7 +28,7 @@ class ImportDataStateModel:
     """Model for the information that is stored in TIM database for each answer."""
     url: Union[str, Missing, None] = missing
     separator: Union[str, Missing, None] = missing
-    fields: Union[List[str], Missing] = missing
+    fields: Union[list[str], Missing] = missing
 
 
 @dataclass
@@ -41,7 +41,7 @@ class ImportDataMarkupModel(GenericMarkupModel):
     allowMissing: Union[bool, Missing, None] = missing
     beforeOpen: Union[str, Missing, None] = missing
     docid: Union[int, Missing, None] = missing
-    fields: Union[List[str], Missing] = missing
+    fields: Union[list[str], Missing] = missing
     loadButtonText: Union[str, Missing, None] = missing
     open: Union[bool, Missing, None] = missing
     placeholder: Union[str, Missing, None] = missing
@@ -72,7 +72,7 @@ class ImportDataInputModel:
     createMissingUsers: Union[bool, Missing] = missing
     separator: Union[str, Missing] = missing
     url: Union[str, Missing] = missing
-    fields: Union[List[str], Missing] = missing
+    fields: Union[list[str], Missing] = missing
 
 
 @dataclass
@@ -132,18 +132,18 @@ class FieldLineError:
 
 @dataclass
 class FieldValues:
-    values: DefaultDict[str, Dict[str, str]] = field(default_factory=lambda: defaultdict(dict))
-    error_lines: List[FieldLineError] = field(default_factory=list)
+    values: DefaultDict[str, dict[str, str]] = field(default_factory=lambda: defaultdict(dict))
+    error_lines: list[FieldLineError] = field(default_factory=list)
 
     def add_val(self, user_ident: str, field_name: str, value: str) -> None:
         self.values[user_ident][field_name] = value
 
-    def to_tim_format(self, separator: str = ';') -> List[str]:
+    def to_tim_format(self, separator: str = ';') -> list[str]:
         return [f'{u}{separator}{separator.join(f"{n}{separator}{v}" for n, v in vals.items())}' for u, vals in
                 self.values.items()]
 
     @staticmethod
-    def from_tim_format(data: List[str], separator: str = ';') -> 'FieldValues':
+    def from_tim_format(data: list[str], separator: str = ';') -> 'FieldValues':
         v = FieldValues()
         for d in data:
             parts = d.split(separator)
@@ -161,7 +161,7 @@ class FieldValues:
             yield str(e)
 
 
-def conv_data_csv(data: List[str], field_names: List[str], separator: str) -> FieldValues:
+def conv_data_csv(data: list[str], field_names: list[str], separator: str) -> FieldValues:
     """
     Convert csv format "akankka;1,2,3" to TIM format ["akankka;d1;1", "akankka;d2;2" ...]
     using field names.  If there are too few fields on data, only those
@@ -186,7 +186,7 @@ def conv_data_csv(data: List[str], field_names: List[str], separator: str) -> Fi
     return res
 
 
-def conv_data_field_names(data: List[str], field_names: List[str], separator: str) -> FieldValues:
+def conv_data_field_names(data: list[str], field_names: list[str], separator: str) -> FieldValues:
     """
     Converts field names on TIM format akankka;demo;2 so that demo is changed if
     found from field_names.
@@ -226,7 +226,7 @@ def conv_data_field_names(data: List[str], field_names: List[str], separator: st
     return res
 
 
-def convert_data(data: List[str], field_names: List[str], separator: str) -> FieldValues:
+def convert_data(data: list[str], field_names: list[str], separator: str) -> FieldValues:
     """
     If there is field_names, then convert data either by changing names (field_names has =)
     or csv data
@@ -246,16 +246,16 @@ def convert_data(data: List[str], field_names: List[str], separator: str) -> Fie
 @dataclass
 class MissingUser:
     user: UserInfo
-    fields: Dict[str, str]
+    fields: dict[str, str]
 
 
 class ImportDataAnswerResp(PluginAnswerResp, total=False):
     ignoreMissing: Union[bool, Missing, None]
     allowMissing: Union[bool, Missing, None]
-    savedata: List[Dict[str, Any]]
-    groups: Optional[Dict[str, Dict[str, List[str]]]]
+    savedata: list[dict[str, Any]]
+    groups: Optional[dict[str, dict[str, list[str]]]]
     createMissingUsers: bool
-    missingUsers: List[MissingUser]
+    missingUsers: list[MissingUser]
 
 
 def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
@@ -300,7 +300,7 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
             vals = FieldValues.from_tim_format(processed_data)
     elif aalto_data:
         field_name_re = re.compile(r'(?P<num>\d+) (?P<type>Total|Ratio|Count)')
-        fvals: DefaultDict[str, Dict[str, str]] = defaultdict(dict)
+        fvals: DefaultDict[str, dict[str, str]] = defaultdict(dict)
         for d in aalto_data:
             user_vals = {}
             for k, v in d.items():
@@ -322,7 +322,7 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
     idents = [r for r in vals.values.keys()]
 
     m = re.fullmatch(r'studentID\((?P<org>[a-z.]+)\)', id_prop)
-    users: Dict[str, User]
+    users: dict[str, User]
     org = None
     if m:
         org = m.group('org')
@@ -430,7 +430,7 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
         },
     }
 
-    save: Dict[str, Any] = {}
+    save: dict[str, Any] = {}
 
     if args.input.url != args.markup.url or \
             (args.state and args.state.url and args.state.url != args.input.url):
@@ -455,7 +455,7 @@ def reqs() -> PluginReqs:
 ``` {#ImportData plugin="importData"}
 buttonText: Import
 ```"""]
-    editor_tabs: List[EditorTab] = [
+    editor_tabs: list[EditorTab] = [
         {
             'text': 'Fields',
             'items': [

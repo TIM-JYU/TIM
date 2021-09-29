@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Any
 
 import timApp
 from timApp.timdb.sqa import db
@@ -23,7 +23,7 @@ class PluginTypeBase:
         plugin_class = timApp.plugin.containerLink.get_plugin(self.get_type())  # type: ignore[attr-defined]
         return plugin_class.can_give_task
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {
             'type': self.get_type()
         }

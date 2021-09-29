@@ -7,7 +7,7 @@ import logging
 from concurrent.futures import Future
 from copy import copy
 from logging import Logger
-from typing import Any, Dict, List
+from typing import Any
 
 from celery import Celery
 from celery.signals import after_setup_logger
@@ -81,11 +81,11 @@ def process_notifications():
 
 
 @celery.task(ignore_result=True)
-def run_user_function(user_id: int, task_id: str, plugin_input: Dict[str, Any]):
+def run_user_function(user_id: int, task_id: str, plugin_input: dict[str, Any]):
     do_run_user_function(user_id, task_id, plugin_input)
 
 
-def do_run_user_function(user_id: int, task_id: str, plugin_input: Dict[str, Any]):
+def do_run_user_function(user_id: int, task_id: str, plugin_input: dict[str, Any]):
     next_runner = task_id
     encountered_runners = set()
     u = User.get_by_id(user_id)
@@ -161,7 +161,7 @@ def handle_exportdata(result: AnswerRouteResult, u: User, wod: WithOutData) -> N
 @celery.task
 def send_unlock_op(
         email: str,
-        target: List[str],
+        target: list[str],
 ):
     op = UnlockOp(type='unlock', email=email, timestamp=get_current_time())
     return register_op_to_hosts(op, target, is_receiving_backup=False)
@@ -169,15 +169,15 @@ def send_unlock_op(
 
 @celery.task
 def send_answer_backup(
-        exported_answer: Dict[str, Any]
+        exported_answer: dict[str, Any]
 ):
     return do_send_answer_backup(exported_answer)
 
 
-def do_send_answer_backup(exported_answer: Dict[str, Any]):
+def do_send_answer_backup(exported_answer: dict[str, Any]):
     backup_hosts = app.config["BACKUP_ANSWER_HOSTS"]
     session = FuturesSession()
-    futures: List[Future] = []
+    futures: list[Future] = []
     for h in backup_hosts:
         f = session.post(
             f'{h}/backup/answer',

@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 # server to get a file from selected range
 # Get parameters (every param can have n after, f.ex file1=)
 # file    = URL for file to get
@@ -26,15 +24,12 @@
 #                                                  -> print only the first line where is main and next line
 #
 import http.server
-import socketserver
-import time
+import json
 import math
 import os
-
-import json
-
 import re
-
+import socketserver
+import time
 
 from tim_common.fileParams import get_param, get_surrounding_headers2, is_user_lazy, add_lazy, NOLAZY, get_clean_param, \
     replace_template_param, replace_template_params, query_params_to_map_check_parts, encode_json_data, make_lazy, \
@@ -116,7 +111,7 @@ def sec_2_timestr(t: float):
     h = math.floor(t / 3600)
     t = (t - h * 3600)
     m = math.floor(t / 60)
-    s = int((t - m * 60))
+    s = int(t - m * 60)
     if not h:
         h = ""
     else:
@@ -165,7 +160,7 @@ def get_images_md(query):
     if h:
         h = 'height=' + h + ' '
     header, footer = get_surrounding_md_headers2(query, "pluginHeader", None)
-    result = header + "\n\n" + "![{0}]({1}){{{2}{3}}}".format(footer, url, w, h)
+    result = header + "\n\n" + f"![{footer}]({url}){{{w}{h}}}"
     return result
 
 def get_image_md(query):
@@ -186,7 +181,7 @@ def get_image_md(query):
     if h:
         h = 'height=' + h + ' '
     header, footer = get_surrounding_md_headers2(query, "pluginHeader", None)
-    result = header + "\n\n" + "![{0}]({1}){{{2}{3}}}".format(footer, url, w, h)
+    result = header + "\n\n" + f"![{footer}]({url}){{{w}{h}}}"
     return result
 
 

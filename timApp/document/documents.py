@@ -84,6 +84,6 @@ def import_document_from_file(document_file: str,
     :returns: The created document object.
 
     """
-    with open(document_file, 'r', encoding='utf-8') as f:
+    with open(document_file, encoding='utf-8') as f:
         content = f.read()  # todo: use a stream instead
     return import_document(content, path, owner_group, title=title)

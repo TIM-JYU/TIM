@@ -1,12 +1,10 @@
-from typing import List
-
 import shutil
 
 import click
 from flask.cli import AppGroup
 
-from timApp.admin.util import commit_if_not_dry
 from timApp.admin.fix_orphan_documents import fix_orphans_without_docentry, move_docs_without_block
+from timApp.admin.util import commit_if_not_dry
 from timApp.document.translation.translation import Translation
 from timApp.item.block import Block, BlockType
 from timApp.notification.pending_notification import PendingNotification
@@ -21,7 +19,7 @@ item_cli = AppGroup('item')
 
 @item_cli.command('cleanup_default_rights_names')
 def cleanup_default_right_doc_names() -> None:
-    bs: List[Block] = Block.query.filter(
+    bs: list[Block] = Block.query.filter(
         Block.description.in_(
             [
                 'templates/DefaultDocumentRights',
@@ -40,7 +38,7 @@ def cleanup_default_right_doc_names() -> None:
 @item_cli.command()
 @click.option('--dry-run/--no-dry-run', default=True)
 def cleanup_bookmark_docs(dry_run: bool) -> None:
-    new_bookmark_users: List[User] = User.query.filter(User.prefs.contains('"bookmarks":')).all()
+    new_bookmark_users: list[User] = User.query.filter(User.prefs.contains('"bookmarks":')).all()
     docs_to_delete = set()
     for u in new_bookmark_users:
         prefs = u.get_prefs()

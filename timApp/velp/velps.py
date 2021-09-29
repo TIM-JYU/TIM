@@ -7,7 +7,7 @@ and their labels. The module also retrieves the data related to velps and their 
 
 """
 
-from typing import Optional, List, Tuple, Dict, Iterable
+from typing import Optional, Iterable
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -78,7 +78,7 @@ def create_velp_content(version: VelpVersion, language_id: str, content: str, de
 
 def create_new_velp(creator_id: int, content: str, default_points: Optional[float] = None,
                     default_comment: Optional[str] = None, valid_until: Optional[str] = None, language_id: str = "FI",
-                    visible_to: Optional[int] = None, color: Optional[int] = None) -> Tuple[Velp, VelpVersion]:
+                    visible_to: Optional[int] = None, color: Optional[int] = None) -> tuple[Velp, VelpVersion]:
     """Creates a new velp with all information.
 
     Creates a new velp with all necessary information in one function using three others.
@@ -164,7 +164,7 @@ def get_latest_velp_version(velp_id: int, language_id: str = "FI") -> Optional[V
             .first())
 
 
-def get_velp_content_for_document(doc_id: int, user_id: int, language_id: str = 'FI') -> List[Velp]:
+def get_velp_content_for_document(doc_id: int, user_id: int, language_id: str = 'FI') -> list[Velp]:
     """Gets velps for document.
 
     Uses VelpGroupsInDocument table data to determine which velp groups and via those which velps are usable
@@ -196,7 +196,7 @@ def get_velp_content_for_document(doc_id: int, user_id: int, language_id: str = 
     return vq.all()
 
 
-def get_velp_label_content_for_document(doc_id: int, user_id: int, language_id: str = 'FI') -> Dict:
+def get_velp_label_content_for_document(doc_id: int, user_id: int, language_id: str = 'FI') -> dict:
     """Gets velp label content for document.
 
     Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable

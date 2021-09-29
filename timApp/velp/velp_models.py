@@ -1,6 +1,5 @@
 """Defines all data models related to velps."""
 from datetime import datetime
-from typing import List
 
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
@@ -78,7 +77,7 @@ class Velp(db.Model):
         secondary=VelpInGroup.__table__,
         collection_class=attribute_mapped_collection('id'),
     )
-    velp_versions: List['VelpVersion'] = db.relationship('VelpVersion', order_by='VelpVersion.id.desc()')
+    velp_versions: list['VelpVersion'] = db.relationship('VelpVersion', order_by='VelpVersion.id.desc()')
 
     def to_json(self):
         vv = self.velp_versions[0]
@@ -206,4 +205,4 @@ class VelpVersion(db.Model):
     modify_time = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.utcnow)
 
     velp: Velp = db.relationship('Velp')
-    content: List[VelpContent] = db.relationship('VelpContent')
+    content: list[VelpContent] = db.relationship('VelpContent')

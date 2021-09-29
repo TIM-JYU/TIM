@@ -43,7 +43,7 @@ class DocInfo(Item):
         return self.id
 
     @property
-    def src_doc(self) -> 'DocInfo':
+    def src_doc(self) -> DocInfo:
         """Returns the source document in case of a translation or the document itself otherwise."""
         if self.is_original_translation:
             return self
@@ -76,18 +76,18 @@ class DocInfo(Item):
         return self.block.modified if self.block else None
 
     @property
-    def translations(self) -> List[Translation]:
+    def translations(self) -> list[Translation]:
         """Returns the translations of the document. NOTE: The list *includes* the document itself."""
         raise NotImplementedError
 
     @property
-    def lang_id(self) -> Optional[str]:
+    def lang_id(self) -> str | None:
         raise NotImplementedError
 
     def update_last_modified(self) -> None:
         self.block.modified = get_current_time()
 
-    def get_preamble_docs(self) -> List['DocInfo']:
+    def get_preamble_docs(self) -> list[DocInfo]:
         """Gets the list of preamble documents for this document.
         The first document in the list is nearest root.
         """
@@ -96,7 +96,7 @@ class DocInfo(Item):
             self._preamble_docs = self._get_preamble_docs_impl(preamble_setting) if isinstance(preamble_setting, str) else []
         return self._preamble_docs
 
-    def get_preamble_pars_with_class(self, class_names: List[str]):
+    def get_preamble_pars_with_class(self, class_names: list[str]):
         """
         Get all preamble pars with any of the given classes.
         :param class_names: Class names.
@@ -107,7 +107,7 @@ class DocInfo(Item):
     def get_preamble_pars(self) -> Generator[DocParagraph, None, None]:
         return get_non_settings_pars_from_docs(self.get_preamble_docs())
 
-    def _get_preamble_docs_impl(self, preamble_setting: str) -> List['DocInfo']:
+    def _get_preamble_docs_impl(self, preamble_setting: str) -> list[DocInfo]:
         preamble_names = preamble_setting.split(',')
         path_parts = self.path_without_lang.split('/')
         paths = list(
@@ -117,7 +117,7 @@ class DocInfo(Item):
         if not paths:
             return []
 
-        path_index_map = dict((path, i) for i, path in enumerate(paths))
+        path_index_map = {path: i for i, path in enumerate(paths)}
 
         # Templates don't have preambles.
         if any(p == TEMPLATE_FOLDER_NAME for p in path_parts):
@@ -142,7 +142,7 @@ class DocInfo(Item):
             length = getattr(self, 'changelog_length', 100)
         return self.document.get_changelog(length)
 
-    def get_notifications(self, condition) -> List[Notification]:
+    def get_notifications(self, condition) -> list[Notification]:
         items = set()
         for a in self.aliases:
             items.update(a.parents_to_root())
@@ -180,7 +180,7 @@ def get_non_settings_pars_from_docs(docs: Iterable[DocInfo]) -> Generator[DocPar
                 yield p
 
 
-def get_pars_with_class_from_docs(docs: Iterable[DocInfo], class_names: List[str]) -> Generator[DocParagraph, None, None]:
+def get_pars_with_class_from_docs(docs: Iterable[DocInfo], class_names: list[str]) -> Generator[DocParagraph, None, None]:
     """
     Loads all non-settings pars that have the given class.
     :param docs: Document.

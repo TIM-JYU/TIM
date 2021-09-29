@@ -1,11 +1,9 @@
-from typing import Tuple
-
 from timApp.auth.accesstype import AccessType
 from timApp.document.docinfo import DocInfo
 from timApp.document.randutils import random_id
 from timApp.notification.notify import process_pending_notifications
-from timApp.notification.send_email import sent_mails_in_testing
 from timApp.notification.pending_notification import PendingNotification, DocumentNotification
+from timApp.notification.send_email import sent_mails_in_testing
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 
@@ -18,7 +16,7 @@ class NotifyTestBase(TimRouteTest):
     def update_notify_settings(self, d, new_settings):
         self.json_post(f'/notify/{d.id}', new_settings)
 
-    def prepare_doc(self, add_new_par=True) -> Tuple[DocInfo, str, str]:
+    def prepare_doc(self, add_new_par=True) -> tuple[DocInfo, str, str]:
         self.login_test1()
         d = self.create_doc()
         title = d.title

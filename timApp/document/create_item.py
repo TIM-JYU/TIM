@@ -1,4 +1,4 @@
-from typing import List, Generator, Tuple, Union, Optional
+from typing import Generator, Union, Optional
 
 from timApp.auth.accesshelper import grant_access_to_session_users, reset_request_access_cache, get_doc_or_abort, \
     verify_edit_access
@@ -19,7 +19,7 @@ from timApp.util.flask.requesthelper import RouteException
 from timApp.util.utils import split_location
 
 
-def get_templates_for_folder(folder: Folder) -> List[DocEntry]:
+def get_templates_for_folder(folder: Folder) -> list[DocEntry]:
     current_path = folder.path
     templates = []
     u = get_current_user_object()
@@ -92,7 +92,7 @@ def apply_template(item: DocInfo, template_name: Optional[str] = None):
 
 
 def copy_document_and_enum_translations(source: DocInfo, target: DocInfo, copy_uploads: bool) -> Generator[
-    Tuple[DocInfo, DocInfo], None, None]:
+    tuple[DocInfo, DocInfo], None, None]:
     is_preamble = f'/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/' in source.path
 
     if copy_uploads:

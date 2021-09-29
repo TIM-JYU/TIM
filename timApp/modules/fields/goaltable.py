@@ -3,7 +3,7 @@ TIM plugin: a radiobutton field
 """
 import json
 from dataclasses import dataclass, asdict
-from typing import Union, List, Dict
+from typing import Union
 
 from flask import render_template_string
 from marshmallow.utils import missing
@@ -17,8 +17,8 @@ from tim_common.utils import Missing
 @dataclass
 class GoalTableStateModel:
     """Model for the information that is stored in TIM database for each answer."""
-    c: Union[Dict[str, str], Missing] = missing
-    styles: Union[Dict[str, str], Missing] = missing
+    c: Union[dict[str, str], Missing] = missing
+    styles: Union[dict[str, str], Missing] = missing
 
 
 @dataclass
@@ -27,8 +27,8 @@ class GoalTableMarkupModel(GenericMarkupModel):
     goalText: Union[str, Missing, None] = missing
     bloom: Union[bool, Missing, None] = missing
     borders: Union[bool, Missing, None] = missing
-    goals: Union[List[str], Missing, None] = missing
-    goalscale: Union[List[str], Missing, None] = missing
+    goals: Union[list[str], Missing, None] = missing
+    goalscale: Union[list[str], Missing, None] = missing
     mingoal: Union[int, Missing, None] = missing
     maxgoal: Union[int, Missing, None] = missing
     initgoal: Union[int, Missing, None] = missing
@@ -39,7 +39,7 @@ class GoalTableMarkupModel(GenericMarkupModel):
     def get_maxgoal(self) -> int:
         return value_or_default(self.maxgoal, 6)
 
-    def get_goals(self) -> List[str]:
+    def get_goals(self) -> list[str]:
         goals = self.goals
         if not isinstance(goals, list):
             return []
@@ -50,7 +50,7 @@ class GoalTableMarkupModel(GenericMarkupModel):
 class GoalTableInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
     # c: str
-    c: Union[Dict[str, str], Missing] = missing
+    c: Union[dict[str, str], Missing] = missing
     nosave: Union[bool, Missing] = missing
 
 

@@ -35,21 +35,17 @@ The command should print a json string to standard output with the following str
     }
 }
 """
-
-import shutil
-import distutils.dir_util
-from copy import deepcopy
-from pathlib import Path
 import json
-import time
-import html
+import os
+from pathlib import Path
+
 from marshmallow import RAISE, ValidationError
 
-from tim_common.fileParams import *
-from run import *
-from points import *
+from extchecklib import RunResult
 from languages import Language
-from extchecklib import *
+from points import get_points_rule, give_points
+from tim_common.fileParams import get_param
+
 
 class ExtCheck(Language):
     ttype="extcheck"
@@ -154,7 +150,7 @@ class ExtCheck(Language):
                 continue
 
             data = {}
-            with open(str(file), 'r') as f:
+            with open(str(file)) as f:
                 data = json.load(f)
 
             tmp = data.get(attr, [])

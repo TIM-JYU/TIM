@@ -1,6 +1,6 @@
 import json
 from datetime import datetime, timezone
-from typing import Optional, List
+from typing import Optional
 
 from timApp.lecture.lectureusers import LectureUsers
 from timApp.timdb.sqa import db
@@ -35,7 +35,7 @@ class Lecture(db.Model):
         return Lecture.query.filter_by(lecture_code=lecture_code, doc_id=doc_id).first()
 
     @staticmethod
-    def get_all_in_document(doc_id: int, time: Optional[datetime]=None) -> List['Lecture']:
+    def get_all_in_document(doc_id: int, time: Optional[datetime]=None) -> list['Lecture']:
         if not time:
             time = datetime.min.replace(tzinfo=timezone.utc)
         return Lecture.query.filter_by(doc_id=doc_id).filter(Lecture.end_time > time).order_by(Lecture.lecture_code.asc()).all()

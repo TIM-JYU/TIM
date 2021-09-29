@@ -4,7 +4,7 @@ Routes related to handling faculty council documents, such as meeting invitation
 import ast
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Union
+from typing import Union
 from urllib.parse import urlencode
 
 from flask import Blueprint, send_file, Response
@@ -145,7 +145,7 @@ def create_minute_extracts(doc: str) -> Response:
 
         #  Next must be add_text to avoid first coming as text and then changing to different paragraph
         #  and #- must be on the column 1!
-        docentry.document.add_text(f"""
+        docentry.document.add_text(fr"""
 PÖYTÄKIRJANOTE - Lista {extract_number} -  {extract_title}      
 \        
 #- {{rd="{d.id}" ra="ETUSIVU"}}
@@ -240,7 +240,7 @@ def get_attachment_list(doc: str) -> Response:
 
 @dataclass
 class MergeAttachmentsModel:
-    urls: List[str]
+    urls: list[str]
     doc_id: int
 
 

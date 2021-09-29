@@ -1,9 +1,8 @@
+import json
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Tuple, Any, Optional, Dict
-
-import json
+from typing import Any, Optional, Tuple
 
 
 class ViewRoute(Enum):
@@ -43,8 +42,9 @@ class OriginInfo:
     par_id: str
 
 
-UrlMacros = Tuple[Tuple[str, str], ...]
-ExtraMacros = Dict[str, object]
+# Mypy needs capital "Tuple" here.
+UrlMacros = Tuple[tuple[str, str], ...]
+ExtraMacros = dict[str, object]
 
 
 @dataclass(frozen=True)
@@ -78,7 +78,7 @@ class ViewContext:
         return None
 
     @property
-    def args(self) -> Dict[str, str]:
+    def args(self) -> dict[str, str]:
         return {k: v for k, v in self.url_params}
 
     def isview(self, ret_val: bool, mode: Any = None) -> bool:

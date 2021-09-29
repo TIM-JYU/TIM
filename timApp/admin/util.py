@@ -1,10 +1,9 @@
+import sre_constants
 import sys
 from argparse import ArgumentParser
-from typing import Generator, Tuple, Optional, Callable, Union, TypeVar, Any, Iterable, Set
+from typing import Generator, Optional, Callable, Union, TypeVar, Any, Iterable
 
 import attr
-import sre_constants
-
 import click
 from flask import current_app
 
@@ -37,7 +36,7 @@ class DryrunnableArguments(BasicArguments, DryrunnableOnly):
 
 
 def enum_docs(folder: Optional[Folder] = None) -> Generator[DocInfo, None, None]:
-    visited_docs: Set[int] = set()
+    visited_docs: set[int] = set()
     admin_id = UserGroup.get_admin_group().id
     if not folder:
         folder = Folder.get_root()
@@ -61,7 +60,7 @@ def iterate_pars_skip_exceptions(d: DocInfo) -> Generator[DocParagraph, None, No
             print(e)
 
 
-def enum_pars(item: Union[Folder, DocInfo, None] = None) -> Generator[Tuple[DocInfo, DocParagraph], None, None]:
+def enum_pars(item: Union[Folder, DocInfo, None] = None) -> Generator[tuple[DocInfo, DocParagraph], None, None]:
     if isinstance(item, Folder) or item is None:
         collection: Iterable[DocInfo] = enum_docs(item)
     else:

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Dict
 
 from flask import current_app
 
@@ -40,7 +39,7 @@ class SCIMEntity:
     def scim_extra_data(self):
         return {}
 
-    def get_scim_data(self) -> Dict:
+    def get_scim_data(self) -> dict:
         return {
             'schemas': [f"urn:ietf:params:scim:schemas:core:2.0:{self.scim_resource_type}"],
             'id': self.scim_id,
