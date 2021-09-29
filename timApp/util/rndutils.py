@@ -6,7 +6,7 @@ import json
 import time
 from dataclasses import dataclass
 from random import Random
-from typing import Optional, Union, Callable, TypeVar
+from typing import Optional, Union, Callable, TypeVar, Tuple
 
 MAX_RND_LIST_LEN = 100
 
@@ -188,7 +188,8 @@ def repeat_rnd(list_func: Callable[[Random, str], list[T]], myrandom: Random, js
     return ret
 
 
-State = tuple[int, ...]
+# Mypy needs capital "Tuple" here.
+State = Tuple[int, ...]
 
 
 def get_rnds(attrs: dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None, state: Optional[State] = None) \

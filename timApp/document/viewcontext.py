@@ -2,7 +2,7 @@ import json
 import re
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 
 class ViewRoute(Enum):
@@ -42,7 +42,8 @@ class OriginInfo:
     par_id: str
 
 
-UrlMacros = tuple[tuple[str, str], ...]
+# Mypy needs capital "Tuple" here.
+UrlMacros = Tuple[tuple[str, str], ...]
 ExtraMacros = dict[str, object]
 
 
