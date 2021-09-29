@@ -82,7 +82,7 @@ def perform_migration(sqlite_path: str, postgre_path: str):
 def migrate_table(sq3c, pgc,
                   old_table: str,
                   new_table: Optional[str] = None,
-                  placeholders: Optional[Dict[str, str]] = None,
+                  placeholders: Optional[dict[str, str]] = None,
                   id_column: Optional[str] = 'id',
                   extra_clause='',
                   new_columns=None):

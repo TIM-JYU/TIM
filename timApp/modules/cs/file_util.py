@@ -45,7 +45,7 @@ class Listify(fields.List):
         return super()._deserialize(value, attr, data, **kwargs)
 
 
-ListifiedStr = NewType("Listify", List[str], field=Listify, cls_or_instance=fields.String())
+ListifiedStr = NewType("Listify", list[str], field=Listify, cls_or_instance=fields.String())
 
 
 @dataclass

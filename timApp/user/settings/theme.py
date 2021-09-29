@@ -42,5 +42,5 @@ def theme_exists(filename: str) -> bool:
     return get_theme_path(filename).exists()
 
 
-def get_available_themes() -> List[Theme]:
+def get_available_themes() -> list[Theme]:
     return [Theme(file[:-5]) for file in os.listdir(THEME_DIR) if file.endswith('.scss')]

@@ -70,7 +70,7 @@ class TimTable:
 
 
 class RelativeDataBlockValue:
-    def __init__(self, row: int, column: int, data: Union[str, Dict[str, Any]]):
+    def __init__(self, row: int, column: int, data: Union[str, dict[str, Any]]):
         self.row = row
         self.column = column
         self.data = data
@@ -577,7 +577,7 @@ def tim_table_add_datablock_column():
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
-def get_column_counts(plug: Plugin, row_len: int) -> Tuple[Dict[int, int], List[RelativeDataBlockValue]]:
+def get_column_counts(plug: Plugin, row_len: int) -> tuple[dict[int, int], list[RelativeDataBlockValue]]:
     """
     Returns the number of columns for each row.
     Takes both the regular table structure and the datablock into account.
@@ -880,7 +880,7 @@ def get_plugin_from_paragraph(doc_id, par_id) -> (DocEntry, Plugin):
     return d, Plugin.from_paragraph(par, default_view_ctx)
 
 
-def is_datablock(yaml: Dict[str, Any]) -> bool:
+def is_datablock(yaml: dict[str, Any]) -> bool:
     """
     Checks if tableDataBlock exists
     :param yaml:
@@ -895,7 +895,7 @@ def is_datablock(yaml: Dict[str, Any]) -> bool:
         return False
 
 
-def create_datablock(table: Dict[str, Any]):
+def create_datablock(table: dict[str, Any]):
     """
     Creates tableDatablock
     :param table:
@@ -999,7 +999,7 @@ def tim_table_save_cell_value(cell_content, docid, parid, row, col):
     return json_response(multi)
 
 
-def save_cell(datablock: Dict[str, Any], row: int, col: int, cell_content: Union[str, Dict[str, Any]]):
+def save_cell(datablock: dict[str, Any], row: int, col: int, cell_content: Union[str, dict[str, Any]]):
     """
     Updates datablock with the content and the coordinate of a cell.
     :param datablock:
@@ -1081,7 +1081,7 @@ def colnum_to_letters(column_index: int) -> str:
     return colnum_to_letters(remainder - 1) + last_char
 
 
-def datablock_key_to_indexes(datablock_key: str) -> Tuple[int, int]:
+def datablock_key_to_indexes(datablock_key: str) -> tuple[int, int]:
     """
     Gets the column and row indexes from a single relative datablock entry.
     :param datablock_key: The entry in the relative datablock.
@@ -1224,7 +1224,7 @@ def is_primitive(value):
     return is_of_unconvertible_type(value) or isinstance(value, str)
 
 
-def construct_datablock_entry_list_from_yaml(plug: Plugin) -> List[RelativeDataBlockValue]:
+def construct_datablock_entry_list_from_yaml(plug: Plugin) -> list[RelativeDataBlockValue]:
     """
     Parses a relative datablock and returns its data as a list of
     RelativeDataBlockValue instances.
@@ -1246,7 +1246,7 @@ def construct_datablock_entry_list_from_yaml(plug: Plugin) -> List[RelativeDataB
     return final_list
 
 
-def create_datablock_from_entry_list(relative_data_block_values: list) -> Dict[str, Any]:
+def create_datablock_from_entry_list(relative_data_block_values: list) -> dict[str, Any]:
     """
     Creates the datablock from a list of RelativeDataBlockValues.
     :param relative_data_block_values: The list of RelativeDataBlockValues.

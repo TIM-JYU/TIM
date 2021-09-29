@@ -128,7 +128,7 @@ class MessageListModel(db.Model):
     def archive_policy(self) -> ArchiveType:
         return self.archive
 
-    def get_individual_members(self) -> List['MessageListMember']:
+    def get_individual_members(self) -> list['MessageListMember']:
         """Get all the members that are not groups.
 
         :return: A list of message list's members, who are individual TIM users (MessageListTimMember objects) or
@@ -140,7 +140,7 @@ class MessageListModel(db.Model):
                 individuals.append(member)
         return individuals
 
-    def get_tim_members(self) -> List['MessageListTimMember']:
+    def get_tim_members(self) -> list['MessageListTimMember']:
         """Get all members that have belong to a user group, i.e. TIM users and user groups.
 
         :return: A list of MessageListTimMember objects.
@@ -317,7 +317,7 @@ class MessageListTimMember(MessageListMember):
 
     __mapper_args__ = {"polymorphic_identity": "tim_member"}
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {
             "name": self.get_name(),
             "username": self.get_username(),
@@ -368,7 +368,7 @@ class MessageListExternalMember(MessageListMember):
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {
             "name": self.get_name(),
             "username": self.get_username(),

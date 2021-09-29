@@ -8,7 +8,7 @@ EMPTY_JSON = '{}'
 
 @dataclass
 class ParBasicData:
-    attrs: Dict[str, str]
+    attrs: dict[str, str]
     doc_id: int
     hash: str
     id: str

@@ -49,7 +49,7 @@ def check_doc_cache(
         return not_cached
 
     try:
-        cached: Tuple[bytes, bytes, bytes] = rclient.lrange(cache_key, 0, -1)  # type: ignore
+        cached: tuple[bytes, bytes, bytes] = rclient.lrange(cache_key, 0, -1)  # type: ignore
     except ResponseError:
         return not_cached
     if cached:

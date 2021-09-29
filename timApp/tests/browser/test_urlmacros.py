@@ -41,7 +41,7 @@ print("Hello World")
         self.check_console(d, 'Hello TIM!\nHello World', query={'m': 'TIM'})
         check_first_par('Macro is: TIM.')
 
-    def check_console(self, d: DocInfo, console_text: str, query: Optional[Dict[str, str]] = None):
+    def check_console(self, d: DocInfo, console_text: str, query: Optional[dict[str, str]] = None):
         self.goto_document(d, query=query)
         runbutton = self.find_element_avoid_staleness('#t button')
         runbutton.click()

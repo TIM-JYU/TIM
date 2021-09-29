@@ -45,8 +45,8 @@ class Options(Loadable):
     onError: str = field(default="raise")
     repo: Optional[RepoSettings] = field(default=None)
     library: Optional[str] = field(default=None)
-    fields: Dict[str, Any] = field(default_factory=lambda: {})
-    askFields: Optional[List[str]] = field(default=None)
+    fields: dict[str, Any] = field(default_factory=lambda: {})
+    askFields: Optional[list[str]] = field(default=None)
 
 
 @dataclass
@@ -100,7 +100,7 @@ class RemoteInfo:
         if settings.user:
             setting_vars[3] = settings.user
 
-        protocol, host, repo, user = [main if main is not None else setting for main, setting in zip(main_vars, setting_vars)]
+        protocol, host, repo, user = (main if main is not None else setting for main, setting in zip(main_vars, setting_vars))
 
         if host is None:
             raise ValueError(f"Git host couldn't be determined from {url} or {settings.urlPrefix}")

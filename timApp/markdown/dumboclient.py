@@ -70,27 +70,27 @@ KEYS_PATHS = {'/mdkeys', '/latexkeys'}
 
 
 @overload
-def call_dumbo(data: List[str], path='',
+def call_dumbo(data: list[str], path='',
                options: DumboOptions = DumboOptions.default(),
-               data_opts: Optional[List[DumboOptions]]=None) -> List[str]: ...
+               data_opts: Optional[list[DumboOptions]]=None) -> list[str]: ...
 
 
 @overload
-def call_dumbo(data: Dict, path='',
+def call_dumbo(data: dict, path='',
                options: DumboOptions = DumboOptions.default(),
-               data_opts: Optional[List[DumboOptions]]=None) -> Dict: ...
+               data_opts: Optional[list[DumboOptions]]=None) -> dict: ...
 
 
 @overload
-def call_dumbo(data: List[Dict], path='',
+def call_dumbo(data: list[dict], path='',
                options: DumboOptions = DumboOptions.default(),
-               data_opts: Optional[List[DumboOptions]]=None) -> List[Dict]: ...
+               data_opts: Optional[list[DumboOptions]]=None) -> list[dict]: ...
 
 
-def call_dumbo(data: Union[List[str], Dict, List[Dict]], path='',
+def call_dumbo(data: Union[list[str], dict, list[dict]], path='',
                options: DumboOptions = DumboOptions.default(),
-               data_opts: Optional[List[DumboOptions]]=None) -> Union[
-    List[str], Dict, List[Dict]]:
+               data_opts: Optional[list[DumboOptions]]=None) -> Union[
+    list[str], dict, list[dict]]:
     """Calls Dumbo for converting the given markdown to HTML.
 
     :param options: Options for Dumbo.

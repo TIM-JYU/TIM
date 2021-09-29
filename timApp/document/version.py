@@ -8,8 +8,8 @@ Major version is incremented whenever a paragraph is added, inserted or deleted 
 zero.
 Minor version is incremented whenever a paragraph is modified.
 """
-Version = Tuple[int, int]
+Version = tuple[int, int]
 
 
 def ver_to_str(v: Version):
-    return ','.join((str(x) for x in v))
+    return ','.join(str(x) for x in v)

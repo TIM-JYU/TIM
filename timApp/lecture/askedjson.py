@@ -50,7 +50,7 @@ MANDATORY_FIELDS = {'answerFieldType', 'headers', 'questionTitle', 'questionText
 CONDITIONALLY_MANDATORY_FIELDS = {'matrix': 'matrixType'}
 
 
-def normalize_question_json(q: Dict[str, Any]):
+def normalize_question_json(q: dict[str, Any]):
     """Normalizes the JSON data of a question.
 
     The question data format has changed a few times over the years. This function normalizes all possible formats
@@ -104,9 +104,9 @@ def make_error_question(desc: str):
     }
 
 
-def process_json(json_data: Dict[str, Any],
-                 normalized: Dict[str, Union[str, Dict, List]],
-                 skip_keys: Set[str] = None):
+def process_json(json_data: dict[str, Any],
+                 normalized: dict[str, Union[str, dict, list]],
+                 skip_keys: set[str] = None):
     skip_keys = skip_keys or set()
     for k, v in json_data.items():
         if k in skip_keys:

@@ -154,8 +154,8 @@ T = TypeVar('T', bound=RightOp)
 @dataclass
 class RightLog:
     initial_right: Right
-    group_cache: Dict[str, List[Email]] = field(default_factory=dict)
-    op_history: DefaultDict[Email, List[RightLogEntry]] = field(default_factory=lambda: defaultdict(list))
+    group_cache: dict[str, list[Email]] = field(default_factory=dict)
+    op_history: DefaultDict[Email, list[RightLogEntry]] = field(default_factory=lambda: defaultdict(list))
 
     def add_op(self, r: RightOp) -> None:
         if isinstance(r, ChangeTimeGroupOp):
@@ -207,7 +207,7 @@ class RightLog:
 
     def process_group_rights(
             self,
-            emails: List[Email],
+            emails: list[Email],
             fn: Callable[[Right, T], None],
             r: T,
     ) -> None:
@@ -220,7 +220,7 @@ class RightLog:
             fn(rig, r)
             op_history[e].append(RightLogEntry(r, rig))
 
-    def get_group_emails(self, r: GroupOp) -> List[Email]:
+    def get_group_emails(self, r: GroupOp) -> list[Email]:
         emails = self.group_cache.get(r.group)
         if not emails:
             emails = [e for e, in (
@@ -276,7 +276,7 @@ def confirm_group(right: Right, op: ConfirmGroupOp) -> None:
     do_confirm(right, op.timestamp)
 
 
-def get_current_rights(target: str) -> Tuple[RightLog, Path]:
+def get_current_rights(target: str) -> tuple[RightLog, Path]:
     fp = Path(app.config['FILES_PATH'])
     initial_rights, lines = read_rights(fp / f'{target}.rights.initial', 1)
     rights_log_path = fp / f'{target}.rights.log'
@@ -291,12 +291,12 @@ def get_current_rights(target: str) -> Tuple[RightLog, Path]:
     return rights, rights_log_path
 
 
-def read_rights(path: Path, index: int) -> Tuple[List[RightOp], List[Dict]]:
+def read_rights(path: Path, index: int) -> tuple[list[RightOp], list[dict]]:
     lines = read_json_lines(path)
     return [RightOpSchema.deserialize(line) for line in lines[index:]], lines
 
 
-def do_register_right(op: RightOp, target: str) -> Tuple[Optional[RightLog], Optional[str]]:
+def do_register_right(op: RightOp, target: str) -> tuple[Optional[RightLog], Optional[str]]:
     rights, right_log_path = get_current_rights(target)
     if not isinstance(op, GroupOps):
         latest_op = rights.latest_op(op.email)
@@ -310,7 +310,7 @@ def do_register_right(op: RightOp, target: str) -> Tuple[Optional[RightLog], Opt
     return rights, None
 
 
-def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> List[str]:
+def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> list[str]:
     emails = rights.group_cache[op.group] if isinstance(op, GroupOps) else [op.email]
     session = FuturesSession()
     futures = []
@@ -335,10 +335,10 @@ def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> List[str]:
 
 def register_right_impl(
         op: RightOp,
-        target: Union[str, List[str]],
+        target: Union[str, list[str]],
         backup: bool = True,
         distribute: bool = True,
-) -> List[str]:
+) -> list[str]:
     targets = [target] if isinstance(target, str) else target
     errors = []
     for tgt in targets:
@@ -363,7 +363,7 @@ def register_right_impl(
 @csrf.exempt
 def register_right(
         op: RightOp,
-        target: Union[str, List[str]],
+        target: Union[str, list[str]],
         secret: str,
         is_receiving_backup: bool = False,
 ) -> Response:
@@ -382,7 +382,7 @@ class RightEntry:
 @dist_bp.put('/receive')
 @csrf.exempt
 def receive_right(
-        rights: List[RightEntry],
+        rights: list[RightEntry],
         item_path: str,
         secret: str,
 ) -> Response:
@@ -390,7 +390,7 @@ def receive_right(
     uges = (
         UserGroup.query
             .join(User, UserGroup.name == User.name)
-            .filter(User.email.in_((re.email for re in rights)))
+            .filter(User.email.in_(re.email for re in rights))
             .with_entities(UserGroup, User.email)
             .all()
     )
@@ -454,11 +454,11 @@ def change_starttime_route(
     return safe_redirect(request.host_url + redir)
 
 
-def register_op_to_hosts(op: RightOp, target: Union[str, List[str]], is_receiving_backup: bool) -> List[str]:
+def register_op_to_hosts(op: RightOp, target: Union[str, list[str]], is_receiving_backup: bool) -> list[str]:
     curr_host = app.config['TIM_HOST']
     register_hosts = [h for h in app.config['DIST_RIGHTS_REGISTER_HOSTS'] if h != curr_host]
     session = FuturesSession()
-    futures: List[Future] = []
+    futures: list[Future] = []
     for h in register_hosts:
         f = session.post(
             f'{h}/distRights/register',

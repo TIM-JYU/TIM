@@ -429,7 +429,7 @@ def verify_name_availability(name_candidate: str, domain: str) -> None:
     """
     try:
         checked_domain = _client.get_domain(domain)
-        mlists: List[MailingList] = checked_domain.get_lists()
+        mlists: list[MailingList] = checked_domain.get_lists()
         fqdn_name_candidate = f"{name_candidate}@{domain}"
         for name in [mlist.fqdn_listname for mlist in mlists]:
             if fqdn_name_candidate == name:
@@ -576,14 +576,14 @@ def set_email_list_default_reply_type(email_list: MailingList, default_reply_typ
         raise
 
 
-def get_domain_names() -> List[str]:
+def get_domain_names() -> list[str]:
     """Returns a list of all domain names, that are configured for our instance of Mailman.
 
     :return: A list of possible domain names.
     """
     try:
-        domains: List[Domain] = _client.domains
-        domain_names: List[str] = [domain.mail_host for domain in domains]
+        domains: list[Domain] = _client.domains
+        domain_names: list[str] = [domain.mail_host for domain in domains]
         return domain_names
     except HTTPError as e:
         log_mailman(e, "In get_domain_names()")
@@ -634,7 +634,7 @@ def unfreeze_list(mlist: MailingList, msg_list: MessageListModel) -> None:
         raise
 
 
-def find_members_for_address(address: str) -> List[Member]:
+def find_members_for_address(address: str) -> list[Member]:
     """
     Modified version of
     https://gitlab.com/mailman/mailmanclient/-/blob/509f19b3f666e54f460e7e5f7d2514c758111df3/src/mailmanclient/restobjects/user.py#L60
@@ -643,7 +643,7 @@ def find_members_for_address(address: str) -> List[Member]:
     # Internal mailmanclient member used for authenticated REST calls
     # noinspection PyProtectedMember
     con: Connection = _client._connection
-    content: Dict[str, Any]
+    content: dict[str, Any]
     _, content = con.call("members/find", data={"subscriber": address})
     try:
         return [Member(con, entry["self_link"], entry) for entry in content["entries"]]

@@ -36,18 +36,18 @@ from timApp.util.utils import getdatetime, get_boolean
 
 @dataclass
 class PostProcessResult:
-    texts: List[PreparedPar]
-    js_paths: List[str]
-    css_paths: List[str]
+    texts: list[PreparedPar]
+    js_paths: list[str]
+    css_paths: list[str]
     should_mark_all_read: bool
-    plugins: List[Plugin]
+    plugins: list[Plugin]
     has_plugin_errors: bool
 
 
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??
 def post_process_pars(
         doc: Document,
-        pars: List[DocParagraph],
+        pars: list[DocParagraph],
         user_ctx: UserContext,
         view_ctx: ViewContext,
         sanitize: bool = True,
@@ -121,7 +121,7 @@ def post_process_pars(
             ppar = p.prepare(view_ctx)
             ppar.authorinfo = authors.get(ppar.id)
     # There can be several references of the same paragraph in the document, which is why we need a dict of lists
-    pars_dict: DefaultDict[Tuple[str, int], List[PreparedPar]] = defaultdict(list)
+    pars_dict: DefaultDict[tuple[str, int], list[PreparedPar]] = defaultdict(list)
 
     docinfo = doc.get_docinfo()
     curr_user = user_ctx.logged_user
@@ -228,19 +228,19 @@ def post_process_pars(
 @dataclass
 class Area:
     name: str
-    attrs: Dict
+    attrs: dict
     visible: Optional[bool] = None
 
 
 # TODO: It would be better to return a tree-like structure of the document instead of a flat list.
 def process_areas(
         settings: DocSettings,
-        pars: List[DocParagraph],
+        pars: list[DocParagraph],
         macros,
         delimiter,
         env: SandboxedEnvironment,
         view_ctx: ViewContext,
-) -> List[PreparedPar]:
+) -> list[PreparedPar]:
     # If we're only dealing with a single paragraph (happens e.g. when posting a comment),
     # we don't want to include area start/end markers in the final output
     # because the HTML would be broken.
@@ -251,12 +251,12 @@ def process_areas(
     max_time = pytz.utc.localize(datetime.max)
 
     # Currently open areas. Should be empty after the loop unless there are missing area_ends.
-    current_areas: List[Area] = []
+    current_areas: list[Area] = []
 
     # All non-reference areas that we've seen. Only insert here, never remove.
-    encountered_areas: Dict[str, Area] = {}
+    encountered_areas: dict[str, Area] = {}
 
-    new_pars: List[PreparedPar] = []
+    new_pars: list[PreparedPar] = []
     fix = 'Fix this to get rid of this warning.'
     for p in pars:
         html_par = p.prepare(view_ctx)
@@ -370,7 +370,7 @@ def process_areas(
     return new_pars
 
 
-def should_auto_read(doc: Document, usergroup_ids: List[int], user: User) -> bool:
+def should_auto_read(doc: Document, usergroup_ids: list[int], user: User) -> bool:
     return not has_anything_read(usergroup_ids, doc) and (
             has_no_higher_right(
             doc.get_settings().exam_mode(),

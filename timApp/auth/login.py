@@ -63,7 +63,7 @@ def login_response() -> Response:
     return json_response(login_user_data())
 
 
-def login_user_data() -> Dict:
+def login_user_data() -> dict:
     return dict(
         current_user=get_current_user_object().to_json(full=True),
         other_users=get_other_users_as_list(),
@@ -360,7 +360,7 @@ def email_login(
 def do_email_login(
         email_or_u: str,
         password: str,
-) -> Dict:
+) -> dict:
     email_or_username = convert_email_to_lower(email_or_u)
 
     users = User.get_by_email_case_insensitive_or_username(email_or_username)

@@ -33,7 +33,7 @@ answer_cli = AppGroup('answer')
 @answer_cli.command()
 @click.option('--dry-run/--no-dry-run', default=True)
 def fix_double_c(dry_run: bool) -> None:
-    answers: List[Answer] = (
+    answers: list[Answer] = (
         Answer.query
             .filter((Answer.answered_on > datetime(year=2020, month=2, day=9)) & Answer.content.startswith('{"c": {"c":'))
             .order_by(Answer.id)
@@ -79,7 +79,7 @@ def clear_all(doc: DocInfo, dry_run: bool) -> None:
 @click.argument('doc', type=TimDocumentType())
 @click.option('--dry-run/--no-dry-run', default=True)
 @click.option('--task', '-t', multiple=True)
-def clear(doc: DocInfo, dry_run: bool, task: List[str]) -> None:
+def clear(doc: DocInfo, dry_run: bool, task: list[str]) -> None:
     tasks_to_delete = [f'{doc.id}.{t}' for t in task]
     ids = Answer.query.filter(Answer.task_id.in_(tasks_to_delete)).with_entities(Answer.id).all()
     cnt = len(ids)
@@ -88,7 +88,7 @@ def clear(doc: DocInfo, dry_run: bool, task: List[str]) -> None:
     commit_if_not_dry(dry_run)
 
 
-def delete_answers_with_ids(ids: List[int]) -> AnswerDeleteResult:
+def delete_answers_with_ids(ids: list[int]) -> AnswerDeleteResult:
     if not isinstance(ids, list):
         raise TypeError('ids should be a list of answer ids')
     d_ua = UserAnswer.query.filter(UserAnswer.answer_id.in_(ids)).delete(synchronize_session=False)
@@ -114,7 +114,7 @@ def delete_answers_with_ids(ids: List[int]) -> AnswerDeleteResult:
 @click.option('--dry-run/--no-dry-run', default=True)
 @click.option('--may-invalidate/--no-may-invalidate', default=False)
 def revalidate(doc: DocInfo, deadline: datetime, group: str, dry_run: bool, may_invalidate: bool) -> None:
-    answers: List[Tuple[Answer, str]] = (
+    answers: list[tuple[Answer, str]] = (
         Answer.query
             .filter(Answer.task_id.startswith(f'{doc.id}.'))
             .join(User, Answer.users)
@@ -152,7 +152,7 @@ def truncate_large(doc: DocInfo, limit: int, to: int, dry_run: bool) -> None:
         sys.exit(1)
     q = Answer.query.filter(Answer.task_id.startswith(f'{doc.id}.'))
     total = q.count()
-    anss: List[Answer] = (
+    anss: list[Answer] = (
         q
         .filter(func.length(Answer.content) > limit)
         .options(joinedload(Answer.users_all))
@@ -193,7 +193,7 @@ def truncate_large(doc: DocInfo, limit: int, to: int, dry_run: bool) -> None:
 def compress_uploads(item: Item, dry_run: bool) -> None:
     docs = collect_docs(item)
     for d in docs:
-        uploads: List[Block] = (
+        uploads: list[Block] = (
             Answer.query
                 .filter(Answer.task_id.startswith(f'{d.id}.'))
                 .join(AnswerUpload)
@@ -254,7 +254,7 @@ class DeleteResult:
         return self.total - self.deleted
 
 
-def delete_old_answers(d: DocInfo, tasks: List[str]) -> DeleteResult:
+def delete_old_answers(d: DocInfo, tasks: list[str]) -> DeleteResult:
     base_query = (
         valid_answers_query([TaskId(doc_id=d.id, task_name=t) for t in tasks])
             .join(User, Answer.users)
@@ -276,7 +276,7 @@ def delete_old_answers(d: DocInfo, tasks: List[str]) -> DeleteResult:
 @click.argument('item', type=TimItemType())
 @click.option('--task', '-t', multiple=True)
 @click.option('--dry-run/--no-dry-run', default=True)
-def delete_old(item: Item, task: List[str], dry_run: bool) -> None:
+def delete_old(item: Item, task: list[str], dry_run: bool) -> None:
     """Deletes all older than latest answers from the specified tasks.
 
     This is useful especially for deleting field history in documents where jsrunner is used a lot.

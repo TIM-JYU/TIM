@@ -80,7 +80,7 @@ def get_sorted_lists(items, item_name: str):
     items = sorted(filtered_items, key=itemgetter('path'))
 
     # If demos don't match the documents fetched from their paths, there's an error.
-    invalid_paths = set(d['path'] for d in items) - set(d.path for d in docs)
+    invalid_paths = {d['path'] for d in items} - {d.path for d in docs}
     if invalid_paths:
         raise GamificationException(f"Failed to fetch following {item_name} document(s): {invalid_paths}")
     return items, docs

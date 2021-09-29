@@ -32,7 +32,7 @@ class AnnotationVisibility(Enum):
     everyone = 4
 
 
-def get_annotations_with_comments_in_document(user: User, d: DocInfo) -> List[Annotation]:
+def get_annotations_with_comments_in_document(user: User, d: DocInfo) -> list[Annotation]:
     """Gets all annotations with comments the user can see / has access to.
     """
     language_id = 'FI'

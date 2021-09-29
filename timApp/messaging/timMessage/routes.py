@@ -65,7 +65,7 @@ class ReplyOptions:
 class MessageBody:
     messageBody: str
     messageSubject: str
-    recipients: List[str]
+    recipients: list[str]
 
 
 @dataclass
@@ -100,7 +100,7 @@ def get_tim_messages(item_id: int) -> Response:
     return json_response(get_tim_messages_as_list(item_id))
 
 
-def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
+def get_tim_messages_as_list(item_id: int) -> list[TimMessageData]:
     """
     Retrieve messages displayed for current user based on item id and return them as a list.
 
@@ -128,7 +128,7 @@ def get_tim_messages_as_list(item_id: int) -> List[TimMessageData]:
                 & ((InternalMessageDisplay.display_doc_id == current_page_obj.id)
                    | (tuple_(Folder.location, Folder.name).in_(parent_paths))))
 
-    messages: List[InternalMessage] = []
+    messages: list[InternalMessage] = []
     for display in displays:
         receipt = InternalMessageReadReceipt.query.filter_by(rcpt_id=display.usergroup_id,
                                                              message_id=display.message_id).first()
@@ -197,7 +197,7 @@ def check_urls(urls: str) -> Response:
     """
     url_list = list(
         filter(None, urls.splitlines()))  # turn URL string into a list with empty values (new lines) removed
-    valid_urls: List[str] = []
+    valid_urls: list[str] = []
     error_message: str = ""
     status_code: int
 
@@ -371,7 +371,7 @@ def get_read_receipts(message_doc: int,
         .join(InternalMessage) \
         .filter(InternalMessage.doc_id == doc.id)
 
-    read_user_map: Dict[int, datetime] = {user_id: read_time for user_id, read_time in read_users}
+    read_user_map: dict[int, datetime] = {user_id: read_time for user_id, read_time in read_users}
 
     all_recipients = User.query \
         .join(UserGroupMember, User.active_memberships) \
@@ -394,7 +394,7 @@ def get_read_receipts(message_doc: int,
     return text_response(csv_string(data, "excel", separator))
 
 
-def get_recipient_users(recipients: List[str]) -> List[UserGroup]:
+def get_recipient_users(recipients: list[str]) -> list[UserGroup]:
     """
     Finds UserGroup objects of recipients based on their email
 
@@ -410,14 +410,14 @@ def get_recipient_users(recipients: List[str]) -> List[UserGroup]:
     return users
 
 
-def get_display_pages(pagelist: List[str]) -> List[Item]:
+def get_display_pages(pagelist: list[str]) -> list[Item]:
     """
     Finds folders and documents based on their paths.
 
     :param pagelist: list of paths
     :return: list of folders and documents
     """
-    pages: List[Item] = []
+    pages: list[Item] = []
     for page in pagelist:
         folder = Folder.find_by_path(page)
         if folder:
@@ -510,7 +510,7 @@ def update_tim_msg_doc_settings(message_doc: DocInfo, sender: User, message_body
     message_doc.document.add_setting('macros', s)
 
 
-def create_message_displays(msg: InternalMessage, pages: List[Item], recipients: List[UserGroup]) -> None:
+def create_message_displays(msg: InternalMessage, pages: list[Item], recipients: list[UserGroup]) -> None:
     """
     Creates InternalMessageDisplay entries for all recipients and display pages.
 
@@ -540,7 +540,7 @@ def create_message_displays(msg: InternalMessage, pages: List[Item], recipients:
         db.session.add(display)
 
 
-def create_read_receipts(msg: InternalMessage, recipients: List[UserGroup]) -> None:
+def create_read_receipts(msg: InternalMessage, recipients: list[UserGroup]) -> None:
     """
     Create InternalMessageReadReceipt entries for all recipients.
 

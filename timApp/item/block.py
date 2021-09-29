@@ -56,7 +56,7 @@ class Block(db.Model):
         cascade='all, delete-orphan',
         collection_class=attribute_mapped_collection('block_collection_key'),
     )
-    tags: List[Tag] = db.relationship('Tag', back_populates='block', lazy='select')
+    tags: list[Tag] = db.relationship('Tag', back_populates='block', lazy='select')
     children = db.relationship('Block',
                                secondary=BlockAssociation.__table__,
                                primaryjoin=id == BlockAssociation.__table__.c.parent,
@@ -72,7 +72,7 @@ class Block(db.Model):
     relevance = db.relationship('BlockRelevance', back_populates='_block', uselist=False)
 
     # If this Block corresponds to a group's manage document, indicates the group being managed.
-    managed_usergroup: Optional[UserGroup] = db.relationship(
+    managed_usergroup: UserGroup | None = db.relationship(
         'UserGroup',
         secondary=UserGroupDoc.__table__,
         lazy='select',
@@ -81,18 +81,18 @@ class Block(db.Model):
 
     #  If this Block corresponds to a message list's manage document, indicates the message list
     #  being managed.
-    managed_messagelist: Optional[MessageListModel] = db.relationship("MessageListModel", back_populates="block",
+    managed_messagelist: MessageListModel | None = db.relationship("MessageListModel", back_populates="block",
                                                                       lazy="select")
 
-    internalmessage: Optional[InternalMessage] = db.relationship('InternalMessage', back_populates='block')
-    internalmessage_display: Optional[InternalMessageDisplay] = db.relationship('InternalMessageDisplay',
+    internalmessage: InternalMessage | None = db.relationship('InternalMessage', back_populates='block')
+    internalmessage_display: InternalMessageDisplay | None = db.relationship('InternalMessageDisplay',
                                                                                 back_populates='display_block')
 
     def __json__(self):
         return ['id', 'type_id', 'description', 'created', 'modified']
 
     @property
-    def owners(self) -> List[UserGroup]:
+    def owners(self) -> list[UserGroup]:
         return [o.usergroup for o in self.owner_accesses]
 
     @property
@@ -154,8 +154,8 @@ class BlockType(Enum):
         return BlockType[type_name.title()]
 
 
-def insert_block(block_type: BlockType, description: Optional[str],
-                 owner_groups: Optional[List[UserGroup]] = None) -> Block:
+def insert_block(block_type: BlockType, description: str | None,
+                 owner_groups: list[UserGroup] | None = None) -> Block:
     """Inserts a block to database.
 
     :param description: The name (description) of the block.
@@ -177,10 +177,10 @@ def insert_block(block_type: BlockType, description: Optional[str],
     return b
 
 
-def copy_default_rights(item, item_type: BlockType, owners_to_skip: Optional[List[UserGroup]] = None):
+def copy_default_rights(item, item_type: BlockType, owners_to_skip: list[UserGroup] | None = None):
     from timApp.user.userutils import grant_access
     from timApp.user.users import get_default_rights_holders
-    default_rights: List[BlockAccess] = []
+    default_rights: list[BlockAccess] = []
     folder = item.parent
     while folder is not None:
         default_rights += get_default_rights_holders(folder, item_type)

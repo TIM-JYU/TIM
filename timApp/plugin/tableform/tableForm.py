@@ -56,7 +56,7 @@ class DataViewVirtualScrollingModel:
 class DataViewSettingsModel:
     virtual: Union[DataViewVirtualScrollingModel, Missing, None] = missing
     rowHeight: Union[int, Missing] = missing
-    columnWidths: Union[Dict[str, int], Missing] = missing
+    columnWidths: Union[dict[str, int], Missing] = missing
     tableWidth: Union[str, Missing] = missing
     fixedColumns: Union[int, Missing] = missing
 
@@ -84,13 +84,13 @@ class TableFormMarkupModel(GenericMarkupModel):
     fixedColor: Union[str, Missing, None] = missing
     fontSize: Union[str, Missing, None] = missing
     forceUpdateButtonText: Union[str, Missing, None] = missing
-    groups: Union[List[str], Missing] = missing
-    hiddenColumns: Union[List[int], Missing, None] = missing
-    hiddenRows: Union[List[int], Missing, None] = missing
-    hide: Union[Dict[Any, Any], Missing, None] = missing
+    groups: Union[list[str], Missing] = missing
+    hiddenColumns: Union[list[int], Missing, None] = missing
+    hiddenRows: Union[list[int], Missing, None] = missing
+    hide: Union[dict[Any, Any], Missing, None] = missing
     hideButtonText: Union[str, Missing, None] = missing
     includeUsers: MembershipFilter = field(default=MembershipFilter.Current, metadata={'by_value': True})
-    lockedFields: Union[List[str], Missing] = missing
+    lockedFields: Union[list[str], Missing] = missing
     maxCols: Union[str, Missing, None] = missing
     maxRows: Union[str, Missing, None] = missing
     maxWidth: Union[str, Missing] = missing
@@ -105,7 +105,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     report: Union[bool, Missing] = missing
     reportButton: Union[str, Missing, None] = missing
     reportFilter: Union[str, Missing, None] = missing
-    runScripts: Union[List[Union[str, RunScriptModel]], Missing] = missing
+    runScripts: Union[list[Union[str, RunScriptModel]], Missing] = missing
     saveStyles: Union[bool, Missing] = True
     separator: Union[str, Missing, None] = missing
     showToolbar: Union[bool, Missing, None] = missing
@@ -113,7 +113,7 @@ class TableFormMarkupModel(GenericMarkupModel):
     sisugroups: Union[str, Missing] = missing
     sortBy: Union[str, Missing, None] = missing
     table: Union[bool, Missing] = missing
-    toolbarTemplates: Union[List[Dict[Any, Any]], Missing] = missing
+    toolbarTemplates: Union[list[dict[Any, Any]], Missing] = missing
     userListButtonText: Union[str, Missing, None] = missing
     usernames: Union[bool, Missing] = missing
     dataView: Union[DataViewSettingsModel, Missing, None] = missing
@@ -125,7 +125,7 @@ TableFormMarkupSchema = class_schema(TableFormMarkupModel)
 @dataclass
 class TableFormInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
-    replyRows: Dict[int, Any]
+    replyRows: dict[int, Any]
     nosave: Union[bool, Missing] = missing
 
 
@@ -195,13 +195,13 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
     def show_in_view_default(self) -> bool:
         return False
 
-    def get_json_encoder(self) -> Type[TimJsonEncoder]:
+    def get_json_encoder(self) -> type[TimJsonEncoder]:
         return TimJsonEncoder
 
     def get_static_html(self) -> str:
         return render_static_table_form(self)
 
-    def get_browser_json(self) -> Dict:
+    def get_browser_json(self) -> dict:
         r = super().get_browser_json()
         if self.markup.open:
             doc_id = TaskId.parse_doc_id(self.taskID)
@@ -247,24 +247,24 @@ def render_static_table_form(m: TableFormHtmlModel) -> str:
 @dataclass
 class GenerateCSVModel:
     docId: int
-    fields: List[str]
-    groups: List[str]
+    fields: list[str]
+    groups: list[str]
     separator: str
-    userFilter: List[str] = field(default_factory=list)
+    userFilter: list[str] = field(default_factory=list)
     usernames: Union[bool, Missing] = True
     realnames: Union[bool, Missing] = missing
     removeDocIds: Union[bool, Missing] = missing
     emails: Union[bool, Missing] = missing
     reportFilter: Union[str, Missing] = missing
-    filterFields: List[str] = field(default_factory=list)
-    filterValues: List[str] = field(default_factory=list)
+    filterFields: list[str] = field(default_factory=list)
+    filterValues: list[str] = field(default_factory=list)
 
 
 GenerateCSVSchema = class_schema(GenerateCSVModel)
 
 
 class TableformAnswerResp(PluginAnswerResp):
-    savedata: List[Dict[str, Any]]
+    savedata: list[dict[str, Any]]
 
 
 def answer(args: TableFormAnswerModel) -> PluginAnswerResp:
@@ -320,7 +320,7 @@ showToolbar: true # toolbar for editing the table
 #    enabled: true  # toggles virtual mode on or off; default true
 #  fixedColumns: 1 # how many not scrolling columns in left
 ```"""]
-    editor_tabs: List[EditorTab] = [
+    editor_tabs: list[EditorTab] = [
         {
             'text': 'Fields',
             'items': [
@@ -392,7 +392,7 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
         user_filter=user_filter,
         # TODO: group_filter_type=self.markup.includeUsers,
     )
-    data: List[List[Union[str, float, None]]] = [[]]
+    data: list[list[Union[str, float, None]]] = [[]]
     if show_real_names:
         data[0].append("Real name")
     if show_user_names:
@@ -415,7 +415,7 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
         raise RouteException("Too many filters")
 
     for rowkey, row in sorted(r['rows'].items()):
-        row_data: List[Union[str, float, None]] = []
+        row_data: list[Union[str, float, None]] = []
         u = r['users'].get(rowkey)
         if show_real_names:
             if u is None:
@@ -513,8 +513,8 @@ def load_tableform_markup(plug: Plugin) -> TableFormMarkupModel:
 
 @dataclass
 class FetchTableDataModelPreview(FetchTableDataModel):
-    fields: List[str]
-    groups: List[str]
+    fields: list[str]
+    groups: list[str]
     removeDocIds: bool = True
 
 
@@ -547,13 +547,13 @@ def fetch_rows_preview(m: FetchTableDataModelPreview) -> Response:
 @dataclass
 class UpdateFieldsModel:
     taskid: str
-    fields: List[str]
+    fields: list[str]
 
 
 @tableForm_plugin.get('/updateFields')
 @use_model(UpdateFieldsModel)
 def update_fields(m: UpdateFieldsModel) -> Response:
-    r: Dict[str, Any] = {}
+    r: dict[str, Any] = {}
     fields_to_update = m.fields
     taskid = m.taskid
     tid = TaskId.parse(taskid, require_doc_id=True, allow_block_hint=False)
@@ -601,24 +601,24 @@ class TableFormUserInfo(TypedDict):
 
 
 class TableFormObj(TypedDict):
-    rows: Dict[str, UserFields]
-    users: Dict[str, TableFormUserInfo]
-    membershipmap: Dict[str, Union[datetime.datetime, None]]
-    fields: List[str]
-    aliases: Dict[str, str]
-    styles: Dict[str, Dict[str, Union[str, None]]]
+    rows: dict[str, UserFields]
+    users: dict[str, TableFormUserInfo]
+    membershipmap: dict[str, Union[datetime.datetime, None]]
+    fields: list[str]
+    aliases: dict[str, str]
+    styles: dict[str, dict[str, Union[str, None]]]
 
 
 def tableform_get_fields(
-        flds: List[str],
-        groupnames: List[str],
+        flds: list[str],
+        groupnames: list[str],
         doc: DocInfo,
         curr_user: User,
         view_ctx: ViewContext,
         remove_doc_ids: bool,
         allow_non_teacher: bool,
         group_filter_type: MembershipFilter = MembershipFilter.Current,
-        user_filter: Optional[List[str]] = None,
+        user_filter: Optional[list[str]] = None,
 ) -> TableFormObj:
     fielddata, aliases, field_names, groups = \
         get_fields_and_users(
@@ -634,9 +634,9 @@ def tableform_get_fields(
             user_filter=User.name.in_(user_filter) if user_filter else None,
         )
     rows = {}
-    users: Dict[str, TableFormUserInfo] = {}
+    users: dict[str, TableFormUserInfo] = {}
     styles = {}
-    group_ids = set(g.id for g in groups) if groups else None
+    group_ids = {g.id for g in groups} if groups else None
     membershipmap = {}
     for f in fielddata:
         u: User = f['user']

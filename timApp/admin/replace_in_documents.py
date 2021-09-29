@@ -52,7 +52,7 @@ class ReplacementResult:
         new_md = self.search_result.match.re.sub(self.replacement, old_md, count=0)
         return new_md
 
-    def get_replacement(self) -> Tuple[str, str]:
+    def get_replacement(self) -> tuple[str, str]:
         return self.search_result.match.group(0), self.search_result.match.expand(self.replacement)
 
     def get_replacement_desc(self) -> str:

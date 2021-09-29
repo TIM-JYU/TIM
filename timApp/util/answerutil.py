@@ -13,11 +13,11 @@ from timApp.util.flask.requesthelper import get_option
 from timApp.util.utils import get_current_time
 
 
-def task_ids_to_strlist(ids: List[TaskId]) -> List[str]:
+def task_ids_to_strlist(ids: list[TaskId]) -> list[str]:
     return [t.doc_task for t in ids]
 
 
-def period_handling(task_ids: List[TaskId], doc_ids: Set[int], period: str) -> Tuple[datetime, datetime]:
+def period_handling(task_ids: list[TaskId], doc_ids: set[int], period: str) -> tuple[datetime, datetime]:
     """
     Returns start and end of an period for answer results.
     :param task_ids: Task ids containing the answers.

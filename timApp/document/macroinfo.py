@@ -24,12 +24,12 @@ class MacroInfo:
     """Represents information required for expanding macros in a DocParagraph.
     """
     view_ctx: ViewContext
-    doc: Optional[Document] = None
-    macro_map: Dict[str, object] = field(default_factory=dict)
+    doc: Document | None = None
+    macro_map: dict[str, object] = field(default_factory=dict)
     """The mapping of macro keys to their values."""
     macro_delimiter: str = '%%'
     """The delimiter used for macros in the markdown."""
-    user_ctx: Optional[UserContext] = None
+    user_ctx: UserContext | None = None
     preserve_user_macros: bool = False
     """If True and user is not provided, get_macros() will preserve the user-specific-macros
      (instead of replacing them with empty values)."""
@@ -57,7 +57,7 @@ class MacroInfo:
             if rndmacros:
                 self.macro_map.update(get_rnd_macros(rndmacros, self.user_ctx.user if self.user_ctx else None))
 
-    def get_macros(self) -> Dict[str, object]:
+    def get_macros(self) -> dict[str, object]:
         user = self.user_ctx
         if user is None:
             if not self.preserve_user_macros:
@@ -74,7 +74,7 @@ class MacroInfo:
     def jinja_env(self) -> SandboxedEnvironment:
         return create_environment(self.macro_delimiter, self.user_ctx, self.view_ctx)
 
-    def get_macros_preserving_user(self) -> Dict[str, object]:
+    def get_macros_preserving_user(self) -> dict[str, object]:
         """Gets the macros and defines user-specific variables in such a way that the macro replacement for user
         variables does effectively nothing."""
         macros = deepcopy(self.macro_map)
@@ -86,7 +86,7 @@ class MacroInfo:
         })
         return macros
 
-    def get_macros_with_user_specific(self, user: Optional[UserContext] = None) -> Dict[str, object]:
+    def get_macros_with_user_specific(self, user: UserContext | None = None) -> dict[str, object]:
         if not user:
             return self.macro_map
         macros = deepcopy(self.macro_map)
@@ -94,7 +94,7 @@ class MacroInfo:
         return macros
 
 
-def get_user_specific_macros(user_ctx: UserContext) -> Dict[str, Optional[str]]:
+def get_user_specific_macros(user_ctx: UserContext) -> dict[str, str | None]:
     user = user_ctx.user
     return {
         'username': escape(user.name),
@@ -104,7 +104,7 @@ def get_user_specific_macros(user_ctx: UserContext) -> Dict[str, Optional[str]]:
     }
 
 
-def get_rnd_macros(rndmacros_setting: Dict[str, str], user: Optional['User']) -> Dict[str, str]:
+def get_rnd_macros(rndmacros_setting: dict[str, str], user: User | None) -> dict[str, str]:
     rnd_seed = user.name if user else None
     state = None
     ret = {}
@@ -126,10 +126,10 @@ urlmacros_tester = re.compile(r"[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/@]+")
 
 
 def get_url_macros(
-        docmacros: Dict[str, Any],
-        urlmacros: Mapping[str, Union[int, float, str]],
-        urlargs: Dict[str, str],
-) -> Dict[str, str]:
+        docmacros: dict[str, Any],
+        urlmacros: Mapping[str, int | float | str],
+        urlargs: dict[str, str],
+) -> dict[str, str]:
     ret = {}
     for um in urlmacros:
         if not um:

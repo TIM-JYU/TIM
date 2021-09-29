@@ -5,7 +5,7 @@ from timApp.document.docinfo import DocInfo
 
 
 def find_nested_areas(d: DocInfo, _args: DryrunnableArguments) -> int:
-    active_areas: List[str] = []
+    active_areas: list[str] = []
     for _, p in enum_pars(d):
         area = p.get_attr('area')
         if area:

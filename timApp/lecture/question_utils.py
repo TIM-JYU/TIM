@@ -8,7 +8,7 @@ def qst_rand_array(max_count: int,
                    randoms: int,
                    seed_word: str,
                    random_seed: int = 0,
-                   locks: Optional[Union[int, List[int]]] = None) -> List[int]:
+                   locks: Optional[Union[int, list[int]]] = None) -> list[int]:
     """
     get array of count integers between 1 and max_count (incl.) using word and extra number as seed
     :param max_count: highest possible number (incl.) and max return list length
@@ -33,7 +33,7 @@ def qst_rand_array(max_count: int,
     total = randoms + len(locks)
     if total > max_count:
         total = max_count
-    ret: List[int] = []
+    ret: list[int] = []
     seed_array = []
     orig = list(range(1, max_count + 1))
     for i, val in enumerate(locks):
@@ -69,7 +69,7 @@ def qst_rand_array(max_count: int,
 T = TypeVar('T')
 
 
-def qst_set_array_order(arr: List[T], order_array: List[int]) -> List[T]:
+def qst_set_array_order(arr: list[T], order_array: list[int]) -> list[T]:
     """
     pick items from arr in order given by order_array
     indices start from 1
@@ -83,7 +83,7 @@ def qst_set_array_order(arr: List[T], order_array: List[int]) -> List[T]:
     return ret
 
 
-def qst_pick_expls(orig_expls: Dict[str, T], order_array: List[int]) -> Dict[str, T]:
+def qst_pick_expls(orig_expls: dict[str, T], order_array: list[int]) -> dict[str, T]:
     """
     pick items from dict where keys are str converted integers in order given by order_array
     indices start from 1
@@ -99,7 +99,7 @@ def qst_pick_expls(orig_expls: Dict[str, T], order_array: List[int]) -> Dict[str
     return ret
 
 
-def create_points_table(points: str) -> List[Dict[str, float]]:
+def create_points_table(points: str) -> list[dict[str, float]]:
     points_table = []
     if points and points != '':
         points = str(points)
@@ -121,8 +121,8 @@ def create_points_table(points: str) -> List[Dict[str, float]]:
     return points_table
 
 
-def calculate_points_from_json_answer(single_answers: List[List[str]],
-                                      points_table: Optional[List[Dict[str, float]]],
+def calculate_points_from_json_answer(single_answers: list[list[str]],
+                                      points_table: Optional[list[dict[str, float]]],
                                       default_points: Union[float, None, Missing] = 0) -> float:
     points = 0.0
     if not isinstance(default_points, float) and not isinstance(default_points, int):
@@ -138,7 +138,7 @@ def calculate_points_from_json_answer(single_answers: List[List[str]],
     return points
 
 
-def qst_filter_markup_points(points: str, question_type: str, rand_arr: List[int]) -> str:
+def qst_filter_markup_points(points: str, question_type: str, rand_arr: list[int]) -> str:
     """
     filter markup's points field based on pre-generated array
     """
@@ -156,7 +156,7 @@ def qst_filter_markup_points(points: str, question_type: str, rand_arr: List[int
     return ret
 
 
-def qst_handle_randomization(jso: Dict) -> None:
+def qst_handle_randomization(jso: dict) -> None:
     """
     Check if markup calls for randomization, or previous state contains randomization data
     Update answer options, explanations and points accordingly

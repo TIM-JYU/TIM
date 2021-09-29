@@ -12,7 +12,7 @@ class DocumentVersion(Document):
 
     def __init__(self, doc_id: int, doc_ver: Version,
                  modifier_group_id: Optional[int] = 0, preload_option=PreloadOption.none):
-        super(DocumentVersion, self).__init__(doc_id, modifier_group_id, preload_option)
+        super().__init__(doc_id, modifier_group_id, preload_option)
         self.does_exist = None
         self.settings = None
         self.version = doc_ver
@@ -24,7 +24,7 @@ class DocumentVersion(Document):
     def cache_index(self):
         if self.index is None:
             self.index = {}
-            with open(self.get_version_path(self.version), 'r') as f:
+            with open(self.get_version_path(self.version)) as f:
                 while True:
                     line = f.readline()
                     if line == '':
@@ -73,7 +73,7 @@ class DocumentVersion(Document):
 
     def get_settings(self) -> DocSettings:
         if self.settings is None:
-            self.settings = super(DocumentVersion, self).get_settings()
+            self.settings = super().get_settings()
         return self.settings
 
     def add_paragraph_obj(self, p: DocParagraph) -> DocParagraph:
@@ -106,7 +106,7 @@ class DocumentVersion(Document):
     def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict] = None) -> DocParagraph:
         raise Exception("Called DocumentVersion.modify_paragraph")
 
-    def update_section(self, text: str, par_id_first: str, par_id_last: str) -> Tuple[str, str]:
+    def update_section(self, text: str, par_id_first: str, par_id_last: str) -> tuple[str, str]:
         raise Exception("Called DocumentVersion.update_section")
 
     def update(self, text: str, original: str, strict_validation=True):

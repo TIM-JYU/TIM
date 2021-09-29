@@ -55,7 +55,7 @@ class Clipboard:
                 if name.is_file():
                     name.unlink()
 
-        def read_metadata(self) -> Dict[str, Any]:
+        def read_metadata(self) -> dict[str, Any]:
             try:
                 with self.get_metafilename().open('rt', encoding='utf-8') as metafile:
                     metadata = json.loads(metafile.read())
@@ -65,7 +65,7 @@ class Clipboard:
                 return {'empty': True}
 
         def read(self, as_ref: Optional[bool] = False, force_parrefs: Optional[bool] = False)\
-                -> Optional[List[Dict[str, str]]]:
+                -> Optional[list[dict[str, str]]]:
 
             if as_ref:
                 clipfilename = self.get_parreffilename() if force_parrefs else self.get_reffilename()
@@ -90,13 +90,13 @@ class Clipboard:
             metadata.update(kwargs)
             self.write_metadata(**metadata)
 
-        def write(self, pars: List[Dict[str, Any]]):
+        def write(self, pars: list[dict[str, Any]]):
             self.path.mkdir(exist_ok=True, parents=True)
             text = DocumentWriter(pars).get_text()
             with self.get_clipfilename().open('wt', encoding='utf-8') as clipfile:
                 clipfile.write(text)
 
-        def write_refs(self, pars: List[DocParagraph], area_name: Optional[str]):
+        def write_refs(self, pars: list[DocParagraph], area_name: Optional[str]):
             self.path.mkdir(exist_ok=True, parents=True)
             ref_pars = [p.create_reference(p.doc).dict() for p in pars]
             reftext = DocumentWriter(ref_pars).get_text()
@@ -113,7 +113,7 @@ class Clipboard:
                 shutil.copy(self.get_parreffilename(), self.get_reffilename())
 
         def cut_pars(self, doc: Document, par_start: str, par_end: str,
-                     area_name: Optional[str] = None) -> List[DocParagraph]:
+                     area_name: Optional[str] = None) -> list[DocParagraph]:
 
             pars = self.copy_pars(doc, par_start, par_end, area_name, disable_ref=True)
             doc.delete_section(par_start, par_end)
@@ -121,7 +121,7 @@ class Clipboard:
             return pars
 
         def copy_pars(self, doc: Document, par_start: str, par_end: str, area_name: Optional[str] = None,
-                      disable_ref: bool = False) -> List[DocParagraph]:
+                      disable_ref: bool = False) -> list[DocParagraph]:
 
             par_objs = doc.get_section(par_start, par_end)
             pars = [p.dict() for p in par_objs]
@@ -136,7 +136,7 @@ class Clipboard:
 
             return par_objs
 
-        def paste_before(self, doc: Document, par_id: str, as_ref: bool = False) -> List[DocParagraph]:
+        def paste_before(self, doc: Document, par_id: str, as_ref: bool = False) -> list[DocParagraph]:
             pars = self.read(as_ref)
             if pars is None:
                 raise TimDbException('There is nothing to paste.')
@@ -163,7 +163,7 @@ class Clipboard:
             doc_pars.reverse()
             return doc_pars
 
-        def paste_after(self, doc: Document, par_id: str, as_ref: bool = False) -> List[DocParagraph]:
+        def paste_after(self, doc: Document, par_id: str, as_ref: bool = False) -> list[DocParagraph]:
             par_before = None
 
             if is_real_id(par_id):

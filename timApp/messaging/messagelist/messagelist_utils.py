@@ -148,7 +148,7 @@ class EmailAndDisplayName:
     email: str
     name: str
 
-    def to_json(self) -> Dict[str, str]:
+    def to_json(self) -> dict[str, str]:
         res = {"email": self.email}
         if self.name:
             res["name"] = self.name
@@ -164,7 +164,7 @@ class BaseMessage:
 
     # Header information. Mandatory values for all messages.
     sender: EmailAndDisplayName
-    recipients: List[EmailAndDisplayName]
+    recipients: list[EmailAndDisplayName]
     subject: str
 
     # Message body. Mandatory value for all messages.
@@ -196,7 +196,7 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     :return: The archive document.
     """
     # Gather owners of the archive document.
-    message_owners: List[UserGroup] = []
+    message_owners: list[UserGroup] = []
     message_sender = User.get_by_email(message.sender.email)
 
     # List owners get a default ownership for the messages on a list. This covers the archive policy of SECRET.
@@ -207,7 +207,7 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
         message_owners.append(message_sender.get_personal_group())
 
     # Who gets to see a message in the archives.
-    message_viewers: List[UserGroup] = []
+    message_viewers: list[UserGroup] = []
 
     # Gather additional permissions to the archive doc.
     # The meanings of different archive settings are listed with ArchiveType class.
@@ -250,7 +250,7 @@ def message_body_to_md(body: str) -> str:
     :param body: Original message body.
     :return: Markdown-converted message body.
     """
-    result: List[str] = []
+    result: list[str] = []
     body_lines = body.splitlines(False)
     code_block = None
     quote_level = 0
@@ -414,7 +414,7 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
     db.session.commit()
 
 
-def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMessage:
+def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMessage:
     """Modify an email message sent from Mailman to TIM's universal message format.
 
     :param original: An email message sent from Mailman.
@@ -422,7 +422,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
     :return: A BaseMessage object corresponding the original email message.
     """
     # original message is of form specified in https://pypi.org/project/mail-parser/
-    visible_recipients: List[EmailAndDisplayName] = []
+    visible_recipients: list[EmailAndDisplayName] = []
     maybe_to_addresses = parse_mailman_message_address(original, "to")
     if maybe_to_addresses is not None:
         visible_recipients.extend(maybe_to_addresses)
@@ -474,7 +474,7 @@ def parse_mailman_message(original: Dict, msg_list: MessageListModel) -> BaseMes
     return message
 
 
-def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[EmailAndDisplayName]]:
+def parse_mailman_message_address(original: dict, header: str) -> Optional[list[EmailAndDisplayName]]:
     """Parse (potentially existing) fields 'from' 'to', 'cc', or 'bcc' from a dict representing Mailman's email message.
     The fields are in lists, with individual list indicies being lists themselves of the form
         ['Display Name', 'email@domain.fi']
@@ -488,7 +488,7 @@ def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[
     if header not in ["from", "to", "cc", "bcc"]:
         return None
 
-    email_name_pairs: List[EmailAndDisplayName] = []
+    email_name_pairs: list[EmailAndDisplayName] = []
 
     if header in original:
         for email_name_pair in original[header]:
@@ -499,7 +499,7 @@ def parse_mailman_message_address(original: Dict, header: str) -> Optional[List[
     return email_name_pairs
 
 
-def get_message_list_owners(mlist: MessageListModel) -> List[UserGroup]:
+def get_message_list_owners(mlist: MessageListModel) -> list[UserGroup]:
     """Get the owners of a message list.
 
     :param mlist: The message list we want to know the owners.
@@ -533,7 +533,7 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListIn
     return doc
 
 
-def new_list(list_options: ListInfo) -> Tuple[DocInfo, MessageListModel]:
+def new_list(list_options: ListInfo) -> tuple[DocInfo, MessageListModel]:
     """Adds a new message list into the database and creates the list's management doc.
 
     :param list_options: The list information for creating a new message list. Used to carry list's name and archive
@@ -957,11 +957,11 @@ def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -
 
 @dataclass
 class UserGroupDiff:
-    add_user_ids: List[int]
-    remove_user_ids: List[int]
+    add_user_ids: list[int]
+    remove_user_ids: list[int]
 
 
-def sync_usergroup_messagelist_members(diffs: Dict[int, UserGroupDiff], permanent_delete: bool = False) -> None:
+def sync_usergroup_messagelist_members(diffs: dict[int, UserGroupDiff], permanent_delete: bool = False) -> None:
     user_ids = set(itertools.chain.from_iterable([*u.add_user_ids, *u.remove_user_ids] for u in diffs.values()))
     if not user_ids:
         return

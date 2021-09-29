@@ -26,7 +26,7 @@ def generate_map():
     # Get map
     mapname = select_map(len(lecturejson), len(demojson))
     # Read map
-    with open(mapname, "r") as f:
+    with open(mapname) as f:
         g_map = json.loads(f.read())
     # Dict for properties added to every layer.
     properties = {
@@ -243,7 +243,7 @@ def replace_table_with_dict(layer):
     data = {}
     for tile in toptiles:
         # Dict is updated with line tile:image id
-        data.update({u"" + str(tile): layer['data'][tile]})
+        data.update({"" + str(tile): layer['data'][tile]})
 
     # Replace data with dict
     layer['data'] = data

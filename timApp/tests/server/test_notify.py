@@ -18,7 +18,7 @@ class NotifyTestBase(TimRouteTest):
     def update_notify_settings(self, d, new_settings):
         self.json_post(f'/notify/{d.id}', new_settings)
 
-    def prepare_doc(self, add_new_par=True) -> Tuple[DocInfo, str, str]:
+    def prepare_doc(self, add_new_par=True) -> tuple[DocInfo, str, str]:
         self.login_test1()
         d = self.create_doc()
         title = d.title

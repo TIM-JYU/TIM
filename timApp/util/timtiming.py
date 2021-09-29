@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Functions for dealing taking time."""
 import inspect
 import time

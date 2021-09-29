@@ -13,7 +13,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from tim_common.marshmallow_dataclass import class_schema
 
-ALLOWED_CLIENTS: Dict[str, OAuth2Client] = {}
+ALLOWED_CLIENTS: dict[str, OAuth2Client] = {}
 
 
 class RefreshTokenGrant(grants.RefreshTokenGrant):
@@ -98,7 +98,7 @@ def init_oauth(app: Flask) -> None:
     global ALLOWED_CLIENTS
     clients = app.config.get('OAUTH2_CLIENTS', [])
     schema = class_schema(OAuth2Client)()
-    clients_obj: List[OAuth2Client] = [schema.load(c) for c in clients]
+    clients_obj: list[OAuth2Client] = [schema.load(c) for c in clients]
     ALLOWED_CLIENTS = {c.client_id: c for c in clients_obj}
 
     auth_server.init_app(app)

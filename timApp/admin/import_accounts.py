@@ -11,7 +11,7 @@ class ImportException(Exception):
     pass
 
 
-def import_accounts_impl(file: str, password: Optional[str]) -> Tuple[List[User], List[User]]:
+def import_accounts_impl(file: str, password: Optional[str]) -> tuple[list[User], list[User]]:
     existing = []
     added = []
     with open(file) as csvfile:

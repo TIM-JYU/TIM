@@ -45,7 +45,7 @@ class ScheduledFunctionItem:
     last_run_at: Optional[datetime]
     total_run_count: int
     interval: Interval
-    owners: List[UserGroup]
+    owners: list[UserGroup]
     doc_path: str
 
 
@@ -74,7 +74,7 @@ def get_scheduled_functions(all_users: bool = False) -> Response:
     if not all_users:
         q = q.filter(BlockAccess.block_id.in_(get_owned_objects_query(u).subquery()))
 
-    scheduled_fns: List[PeriodicTask] = q.all()
+    scheduled_fns: list[PeriodicTask] = q.all()
 
     docentries = DocEntry.query.filter(DocEntry.id.in_([t.task_id.doc_id for t in scheduled_fns])).all()
     d_map = {d.id: d for d in docentries}
@@ -101,7 +101,7 @@ def add_scheduled_function(
         plugin_name: str,
         interval: Duration,
         expires: datetime,
-        args: Dict[str, Any] = field(default_factory=dict),
+        args: dict[str, Any] = field(default_factory=dict),
 ) -> Response:
     d = get_doc_or_abort(doc_id)
 

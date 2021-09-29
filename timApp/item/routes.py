@@ -82,9 +82,9 @@ view_page = TypedBlueprint(
     url_prefix='',
 )
 
-DocumentSlice = Tuple[List[DocParagraph], IndexedViewRange]
+DocumentSlice = tuple[list[DocParagraph], IndexedViewRange]
 ViewRange = Union[RequestedViewRange, IndexedViewRange]
-FlaskViewResult = Union[Response, Tuple[Any, int]]
+FlaskViewResult = Union[Response, tuple[Any, int]]
 
 
 def get_partial_document(doc: Document, view_range: ViewRange) -> DocumentSlice:
@@ -211,7 +211,7 @@ def doc_access_info(doc_name):
 @attr.s(auto_attribs=True)
 class ItemWithRights:
     i: Item
-    rights: List[BlockAccess]
+    rights: list[BlockAccess]
 
     def to_json(self):
         return {
@@ -292,15 +292,15 @@ def gen_cache(
     else:
         # Compute users from the current rights.
         accesses: ValuesView[BlockAccess] = doc_info.block.accesses.values()
-        group_ids = set(a.usergroup_id for a in accesses if not a.expired)
-        users: List[Tuple[User, UserGroup]] = (
+        group_ids = {a.usergroup_id for a in accesses if not a.expired}
+        users: list[tuple[User, UserGroup]] = (
             User.query
                 .join(UserGroup, User.groups)
                 .filter(UserGroup.id.in_(group_ids))
                 .with_entities(User, UserGroup).all()
         )
-        groups_that_need_access_check = set(g for u, g in users if u.get_personal_group() != g)
-        user_set = set(u for u, _ in users)
+        groups_that_need_access_check = {g for u, g in users if u.get_personal_group() != g}
+        user_set = {u for u, _ in users}
     for g in groups_that_need_access_check:
         verify_group_view_access(g)
     view_ctx = default_view_ctx
@@ -316,7 +316,7 @@ def gen_cache(
     # This wouldn't cause any user-facing bugs, but it makes it easier to compare cached HTMLs.
     _ = doc_info.block.tags
 
-    def generate() -> Generator[Tuple[str, Optional[DocRenderResult]], None, None]:
+    def generate() -> Generator[tuple[str, Optional[DocRenderResult]], None, None]:
         first_cache = None
         for i, u in enumerate(users_uniq):
             start = f'{i + 1:>{digits}}/{total} {u.name}: '
@@ -377,7 +377,7 @@ def show_time(s):
     debug_time = now
 
 
-def get_module_ids(js_paths: List[str]):
+def get_module_ids(js_paths: list[str]):
     for jsfile in js_paths:
         yield jsfile.lstrip('/').rstrip('.js')
 
@@ -511,7 +511,7 @@ def render_doc_view(
     if current_user.has_manage_access(doc_info):
         linked_groups, group_tags = get_linked_groups(doc_info)
         if group_tags:
-            names = set(ug.ug.name for ug in linked_groups)
+            names = {ug.ug.name for ug in linked_groups}
             missing = set(group_tags) - names
             if missing:
                 flash(f'Document has incorrect group tags: {seq_to_str(list(missing))}')
@@ -875,7 +875,7 @@ def get_items(folder: str, recurse=False):
     return [f for f in folders if u.has_view_access(f)] + docs
 
 
-def get_linked_groups(i: Item) -> Tuple[List[UserGroupWithSisuInfo], List[str]]:
+def get_linked_groups(i: Item) -> tuple[list[UserGroupWithSisuInfo], list[str]]:
     group_tags = [t.get_group_name() for t in i.block.tags if t.name.startswith(GROUP_TAG_PREFIX)]
     if group_tags:
         return list(map(UserGroupWithSisuInfo, get_usergroup_eager_query().filter(UserGroup.name.in_(group_tags)).all()

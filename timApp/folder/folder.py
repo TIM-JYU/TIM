@@ -41,19 +41,19 @@ class Folder(db.Model, Item):
     _block = db.relationship('Block', back_populates='folder', lazy='joined')
 
     @staticmethod
-    def get_root() -> 'Folder':
+    def get_root() -> Folder:
         return Folder(id=ROOT_FOLDER_ID, name='', location='')
 
     @staticmethod
-    def get_by_id(fid) -> Optional['Folder']:
+    def get_by_id(fid) -> Folder | None:
         return Folder.query.get(fid) if fid != ROOT_FOLDER_ID else Folder.get_root()
 
     @staticmethod
-    def find_by_location(location, name) -> Optional['Folder']:
+    def find_by_location(location, name) -> Folder | None:
         return Folder.query.filter_by(name=name, location=location).first()
 
     @staticmethod
-    def find_by_path(path, fallback_to_id=False) -> Optional['Folder']:
+    def find_by_path(path, fallback_to_id=False) -> Folder | None:
         if path == '':
             return Folder.get_root()
         parent_loc, name = split_location(path)
@@ -66,7 +66,7 @@ class Folder(db.Model, Item):
         return f
 
     @staticmethod
-    def find_first_existing(path: str) -> Optional['Folder']:
+    def find_first_existing(path: str) -> Folder | None:
         """Finds the first existing folder for the given path.
 
         For example, if the folders
@@ -92,9 +92,9 @@ class Folder(db.Model, Item):
     @staticmethod
     def get_all_in_path(
             root_path: str = '',
-            filter_ids: Optional[Iterable[int]] = None,
+            filter_ids: Iterable[int] | None = None,
             recurse=False,
-    ) -> List['Folder']:
+    ) -> list[Folder]:
         """Gets all the folders under a path.
 
         :param recurse: Whether to search recursively.
@@ -140,7 +140,7 @@ class Folder(db.Model, Item):
 
     def rename_content(self, old_path: str, new_path: str):
         """Renames contents of the folder."""
-        docs_in_folder: List[DocEntry] = DocEntry.query.filter(DocEntry.name.like(old_path + '/%')).all()
+        docs_in_folder: list[DocEntry] = DocEntry.query.filter(DocEntry.name.like(old_path + '/%')).all()
         for d in docs_in_folder:
             d.name = d.name.replace(old_path, new_path, 1)
 
@@ -158,7 +158,7 @@ class Folder(db.Model, Item):
         return not db.session.query(q.exists()).scalar()
 
     @property
-    def parent(self) -> Optional['Folder']:
+    def parent(self) -> Folder | None:
         if self.is_root():
             return None
         return super().parent
@@ -183,7 +183,7 @@ class Folder(db.Model, Item):
         return self.path
 
     @property
-    def block(self) -> Optional[Block]:
+    def block(self) -> Block | None:
         """Overridden for optimization: root folder does not have a db entry, so we won't try to query for it."""
         if self.is_root():
             return None
@@ -192,8 +192,8 @@ class Folder(db.Model, Item):
     def get_full_path(self) -> str:
         return join_location(self.location, self.name)
 
-    def get_document(self, relative_path: str, create_if_not_exist=False, creator_group = None) -> Optional[
-        DocEntry]:
+    def get_document(self, relative_path: str, create_if_not_exist=False, creator_group = None) -> None | (
+        DocEntry):
         doc = DocEntry.query.filter_by(name=join_location(self.get_full_path(), relative_path)).first()
         if doc is not None:
             return doc
@@ -208,12 +208,12 @@ class Folder(db.Model, Item):
 
     def get_all_documents(
             self,
-            relative_paths: List[str] = None,
+            relative_paths: list[str] = None,
             include_subdirs: bool = False,
             custom_filter: Any=None,
             query_options: Any=None,
-            filter_user: Optional[User]=None,
-    ) -> List[DocInfo]:
+            filter_user: User | None=None,
+    ) -> list[DocInfo]:
         if relative_paths is not None:
             include_subdirs = True
             paths = [join_location(self.get_full_path(), path) for path in relative_paths]
@@ -230,7 +230,7 @@ class Folder(db.Model, Item):
             filter_user=filter_user,
         )
 
-    def get_all_folders(self) -> List['Folder']:
+    def get_all_folders(self) -> list[Folder]:
         return Folder.get_all_in_path(self.path)
 
     def relative_path(self, item: Item) -> str:
@@ -239,10 +239,10 @@ class Folder(db.Model, Item):
     @staticmethod
     def create(
             path: str,
-            owner_groups: Union[List[UserGroup], UserGroup, None] = None,
+            owner_groups: list[UserGroup] | UserGroup | None = None,
             title=None,
             creation_opts: FolderCreationOptions = FolderCreationOptions(),
-    ) -> 'Folder':
+    ) -> Folder:
         """Creates a new folder with the specified name. If the folder already exists, it is returned.
 
         :param title: The folder title.

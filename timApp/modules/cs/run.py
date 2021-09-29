@@ -70,7 +70,7 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
             stdout, stderr = p.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
         return -9, '', ''
-    except IOError as e:
+    except OSError as e:
         return -2, '', ('IO Error ' + str(e))
     return p.returncode, stdout.decode(), stderr.decode()
 
@@ -263,7 +263,7 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
             # print("stderr", stderr)
         except subprocess.TimeoutExpired:
             return -9, '', '', pwddir
-        except IOError as e:
+        except OSError as e:
             return -2, '', ("IO Error" + str(e)), pwddir
     return errcode, stdout, errtxt + stderr, pwddir
 

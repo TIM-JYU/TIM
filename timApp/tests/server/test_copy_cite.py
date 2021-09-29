@@ -51,7 +51,7 @@ class CopyCiteTest(TimRouteTest):
         copy_trs.sort(key=lambda tr: tr.lang_id)
         copy_trs.sort(key=lambda tr: tr.is_original_translation)  # original is the last in the list after this
 
-        self.assertFalse(set(tr.id for tr in orig_trs) & set(tr.id for tr in copy_trs))
+        self.assertFalse({tr.id for tr in orig_trs} & {tr.id for tr in copy_trs})
         self.assertEqual(copy_trs[0].document.get_source_document().doc_id, copy.id)
         self.assertEqual(copy_trs[1].document.get_source_document().doc_id, copy.id)
         self.assertEqual(copy_trs[2].document.get_source_document(), None)

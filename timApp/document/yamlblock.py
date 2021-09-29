@@ -34,7 +34,7 @@ class MergeStyle(Enum):
     ReplaceIfNotExist = 'r?'
 
 
-YamlMergeInfo = Dict[str, MergeStyle]
+YamlMergeInfo = dict[str, MergeStyle]
 
 yaml_loader = CSafeLoader
 
@@ -78,9 +78,9 @@ class YamlBlock:
         return yaml.dump(self.values, default_flow_style=False)
 
 
-missing_space_after_colon = re.compile("^[ \t]*[^ :[\]()'\"]*:[^ /=:]")  # kissa:istuu mutta ei http://koti tai a:=5
+missing_space_after_colon = re.compile("^[ \t]*[^ :[\\]()'\"]*:[^ /=:]")  # kissa:istuu mutta ei http://koti tai a:=5
 multiline_unindented_string = re.compile(
-    """^( *)([^ :"']+): *(\|[+-]?)([0-9]*) *([^ 0-9+-]+[^ ]*)( (a|r|r\?))? *$""")  # program: ||| or  program: |!!!
+    r"""^( *)([^ :"']+): *(\|[+-]?)([0-9]*) *([^ 0-9+-]+[^ ]*)( (a|r|r\?))? *$""")  # program: ||| or  program: |!!!
 normal_multiline_indented_string = re.compile(
     """^( *)([^ :"']+): *([|>][+-]?)([0-9]*) *$""")  # program: | or  program: |+2
 multiline_unindented_obj_string = re.compile(
@@ -243,7 +243,7 @@ def correct_obj(text: str) -> str:
     # until n = 0
 
 
-def correct_yaml(text: str) -> Tuple[str, YamlMergeInfo]:
+def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
     """Inserts missing spaces after `:` Like  `width:20` => `width: 20`
     Also gives an other way to write multiline attributes, by starting
     the multiline like: `program: |!!`  (`!!` could any combinations of chars except space
@@ -369,7 +369,7 @@ def verify_anchor_depth(text: str, max_depth=3) -> None:
             current_context = p.anchor
 
 
-def parse_yaml(text: str) -> Tuple[dict, YamlMergeInfo]:
+def parse_yaml(text: str) -> tuple[dict, YamlMergeInfo]:
     """Parses the specified text as (customized) YAML.
 
     :param text: The text to parse.

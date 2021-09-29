@@ -39,7 +39,7 @@ class FingerPrintException(Exception):
 
 
 def load_sp_settings(hostname=None, try_new_cert=False, sp_validation_only=False) \
-        -> Tuple[str, OneLogin_Saml2_Settings]:
+        -> tuple[str, OneLogin_Saml2_Settings]:
     """
     Loads OneLogin Saml2 settings for the given hostname.
 
@@ -61,7 +61,7 @@ def load_sp_settings(hostname=None, try_new_cert=False, sp_validation_only=False
 
     filename = os.path.join(saml_path, 'settings.json')
     try:
-        with open(filename, 'r') as json_data:
+        with open(filename) as json_data:
             settings = json.loads(json_data.read())
     except FileNotFoundError:
         raise OneLogin_Saml2_Error(
@@ -72,7 +72,7 @@ def load_sp_settings(hostname=None, try_new_cert=False, sp_validation_only=False
 
     try:
         advanced_filename = os.path.join(saml_path, 'advanced_settings.json')
-        with open(advanced_filename, 'r') as json_data:
+        with open(advanced_filename) as json_data:
             settings.update(json.loads(json_data.read()))
     except FileNotFoundError:
         pass
@@ -215,7 +215,7 @@ def prepare_and_init(entity_id: str, try_new_cert: bool) -> OneLogin_Saml2_Auth:
 @dataclass
 class TimRequestedAttributes:
     saml_auth: OneLogin_Saml2_Auth
-    friendly_name_map: Dict = field(init=False)
+    friendly_name_map: dict = field(init=False)
 
     def __post_init__(self):
         self.friendly_name_map = {}
@@ -227,7 +227,7 @@ class TimRequestedAttributes:
         values = self.get_attributes_by_friendly_name(name)
         return values[0] if values else None
 
-    def get_attributes_by_friendly_name(self, name: str) -> Optional[List[str]]:
+    def get_attributes_by_friendly_name(self, name: str) -> Optional[list[str]]:
         return self.saml_auth.get_attribute(self.friendly_name_map[name])
 
     @property
@@ -267,7 +267,7 @@ class TimRequestedAttributes:
         return self.eppn_parts[1]
 
     @property
-    def unique_codes(self) -> Optional[List[str]]:
+    def unique_codes(self) -> Optional[list[str]]:
         return self.get_attributes_by_friendly_name('schacPersonalUniqueCode')
 
     @property

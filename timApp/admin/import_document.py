@@ -15,7 +15,7 @@ def main() -> None:
     args = parser.parse_args()
     file: str = args.file
     with app.app_context():  # type: ignore[no-untyped-call]
-        with open(file, 'r', encoding='utf8') as f:
+        with open(file, encoding='utf8') as f:
             data = json.load(f)
         if not isinstance(data, list):
             print('File must be a list of JSON objects')

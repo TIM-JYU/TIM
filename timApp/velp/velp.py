@@ -104,7 +104,7 @@ def get_default_velp_group(doc_id: int):
     for v in found_velp_groups:
         # if has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
         velp_groups.append(v.id)
-    def_velp_groups: List[VelpGroup] = VelpGroup.query.filter(VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True).all()
+    def_velp_groups: list[VelpGroup] = VelpGroup.query.filter(VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True).all()
     if def_velp_groups:
         default_group = def_velp_groups[0]
         return no_cache_json_response({
@@ -202,7 +202,7 @@ def get_velp_groups(doc_id: int):
 
 
 @velps.get("/<int:doc_id>/get_velp_group_personal_selections")
-def get_velp_group_personal_selections(doc_id: int) -> Dict:
+def get_velp_group_personal_selections(doc_id: int) -> dict:
     """Gets default velp group selections for velp groups user has access to in document.
 
     :param doc_id: ID of document
@@ -216,7 +216,7 @@ def get_velp_group_personal_selections(doc_id: int) -> Dict:
 
 
 @velps.get("/<int:doc_id>/get_velp_group_default_selections")
-def get_velp_group_default_selections(doc_id: int) -> Dict:
+def get_velp_group_default_selections(doc_id: int) -> dict:
     """Gets default velp group selections for velp groups user has access to in document.
 
     :param doc_id: ID of document
@@ -286,7 +286,7 @@ def add_velp() -> int:
     current_user_id = get_current_user_id()
 
     # Check where user has edit rights and only add new velp to those
-    velp_groups: List[VelpGroup] = [
+    velp_groups: list[VelpGroup] = [
         vg for vg in VelpGroup.query.filter(VelpGroup.id.in_(velp_group_ids)).all() if has_edit_access(vg.block)
     ]
 
@@ -366,7 +366,7 @@ def update_velp_route(doc_id: int):
     groups_to_remove = [vg for vg in get_groups_from_document_table(doc_id, user_id) if has_edit_access(vg.block)]
 
     # Check that user has edit access to velp groups in given velp group list and add them to an add list
-    groups_to_add: List[VelpGroup] = [
+    groups_to_add: list[VelpGroup] = [
         vg for vg in VelpGroup.query.filter(VelpGroup.id.in_(velp_group_ids)).all() if has_edit_access(vg.block)
     ]
 
@@ -382,7 +382,7 @@ def update_velp_route(doc_id: int):
 
     old_default_comment = old_velp.default_comment
 
-    old_labels = set(lbl.id for lbl in velp.labels.values())
+    old_labels = {lbl.id for lbl in velp.labels.values()}
     if old_content != new_content or old_default_comment != default_comment:
         # Todo this does not really work correctly, now any update to any language creates a new version, and we can not
         # produce different contents with the same version but different language.
@@ -568,7 +568,7 @@ def reset_all_selections_to_defaults(doc_id: int):
 
 
 @velps.post("/<int:doc_id>/create_velp_group")
-def create_velp_group_route(doc_id: int) -> Dict:
+def create_velp_group_route(doc_id: int) -> dict:
     """Creates a new velp group.
 
     Required key(s):
@@ -742,7 +742,7 @@ def get_velp_groups_from_tree(doc: DocInfo):
     user = get_current_user_object()
     personal_velps_path = user.get_personal_folder().path + "/" + velp_group_folder
 
-    velp_groups: List[DocEntry] = []
+    velp_groups: list[DocEntry] = []
 
     # Velp groups for areas, plugins etc
     folders = Folder.get_all_in_path(doc_velp_path)
@@ -781,7 +781,7 @@ def get_velp_groups_from_tree(doc: DocInfo):
     return results
 
 
-def get_folder_velp_groups(folder, u: User) -> List[DocEntry]:
+def get_folder_velp_groups(folder, u: User) -> list[DocEntry]:
     return get_documents(include_nonpublic=False,
                          filter_folder=folder,
                          search_recursively=False,

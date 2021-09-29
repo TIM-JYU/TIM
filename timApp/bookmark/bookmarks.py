@@ -40,7 +40,7 @@ class Bookmarks:
         return self
 
     @staticmethod
-    def _delete_item_from_group(groupitems: List[Dict[str, str]], name: str):
+    def _delete_item_from_group(groupitems: list[dict[str, str]], name: str):
         to_remove = [item for item in groupitems if item.get(name) is not None]
         if to_remove:
             groupitems.remove(to_remove[0])
@@ -52,7 +52,7 @@ class Bookmarks:
         return self
 
     def _add_item_to_group(self,
-                           groupitems: List[Dict[str, str]],
+                           groupitems: list[dict[str, str]],
                            name: str,
                            link: str,
                            move_to_top: bool = False,
@@ -102,7 +102,7 @@ class Bookmarks:
         p.bookmarks = bookmark_data
         self.user.set_prefs(p)
 
-    def as_dict(self) -> List[Dict]:
+    def as_dict(self) -> list[dict]:
         result = []
         for group in self.get_bookmarks():
             group_name = next(group.__iter__())

@@ -16,7 +16,7 @@ class DocSassTest(TimRouteTest):
 }
         """})
         r = self.get(d.url, as_tree=True)
-        s: List[HtmlElement] = r.cssselect('style')
+        s: list[HtmlElement] = r.cssselect('style')
         self.assertEqual("""
 .test .inner1 { display: block; }
 

@@ -8,10 +8,10 @@ Missing = _Missing
 
 
 class DurationField(marshmallow.fields.Field):
-    def _serialize(self, value: Duration, attr: Optional[str], obj: Any, **kwargs: Dict[str, Any]) -> str:
+    def _serialize(self, value: Duration, attr: Optional[str], obj: Any, **kwargs: dict[str, Any]) -> str:
         return duration_isoformat(value)
 
-    def _deserialize(self, value: Any, attr: Optional[str], data: Optional[Mapping[str, Any]], **kwargs: Dict[str, Any]) -> Duration:
+    def _deserialize(self, value: Any, attr: Optional[str], data: Optional[Mapping[str, Any]], **kwargs: dict[str, Any]) -> Duration:
         try:
             return parse_duration(value)
         except:

@@ -66,7 +66,7 @@ class SetTaskValueAction:
 @dataclass
 class DistributeRightAction:
     operation: Literal["confirm", "quit", "unlock", "changetime"]
-    target: Union[str, List[str]]
+    target: Union[str, list[str]]
     timestamp: Optional[datetime] = None
     minutes: float = 0.0
 
@@ -75,7 +75,7 @@ class DistributeRightAction:
         return self.timestamp or get_current_time()
 
 
-RIGHT_TO_OP: Dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
+RIGHT_TO_OP: dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
     "confirm": lambda r, usr: ConfirmOp(type="confirm", email=usr, timestamp=r.timestamp_or_now),
     "quit": lambda r, usr: QuitOp(type="quit", email=usr, timestamp=r.timestamp_or_now),
     "unlock": lambda r, usr: UnlockOp(type="unlock", email=usr, timestamp=r.timestamp_or_now),
@@ -88,10 +88,10 @@ RIGHT_TO_OP: Dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
 
 @dataclass
 class ActionCollection:
-    addPermission: List[AddPermission] = field(default_factory=list)
-    removePermission: List[RemovePermission] = field(default_factory=list)
-    distributeRight: List[DistributeRightAction] = field(default_factory=list)
-    setValue: List[SetTaskValueAction] = field(default_factory=list)
+    addPermission: list[AddPermission] = field(default_factory=list)
+    removePermission: list[RemovePermission] = field(default_factory=list)
+    distributeRight: list[DistributeRightAction] = field(default_factory=list)
+    setValue: list[SetTaskValueAction] = field(default_factory=list)
 
 
 @dataclass
@@ -124,12 +124,12 @@ class UserSelectMarkupModel(GenericMarkupModel):
     selectOnce: bool = False
     maxMatches: int = 10
     scanner: ScannerOptions = field(default_factory=ScannerOptions)
-    groups: List[str] = field(default_factory=list)
-    fields: List[str] = field(default_factory=list)
+    groups: list[str] = field(default_factory=list)
+    fields: list[str] = field(default_factory=list)
     actions: Optional[ActionCollection] = None
     text: TextOptions = field(default_factory=TextOptions)
-    displayFields: List[str] = field(default_factory=lambda: ["username", "realname"])
-    sortBy: List[str] = field(default_factory=list)
+    displayFields: list[str] = field(default_factory=lambda: ["username", "realname"])
+    sortBy: list[str] = field(default_factory=list)
 
 
 UserSelectMarkupModelSchema = class_schema(UserSelectMarkupModel, base_schema=DurationSchema)
@@ -161,7 +161,7 @@ def reqs_handler() -> PluginReqs:
 
 
 def get_plugin_markup(task_id: Optional[str], par: Optional[GlobalParId]) \
-        -> Tuple[UserSelectMarkupModel, DocInfo, User, ViewContext]:
+        -> tuple[UserSelectMarkupModel, DocInfo, User, ViewContext]:
     verify_logged_in()
     user = get_current_user_object()
     user_ctx = UserContext.from_one_user(user)
@@ -199,7 +199,7 @@ def fetch_users(task_id: Optional[str] = None, doc_id: Optional[int] = None, par
     })
 
 
-def match_query(query_words: List[str], keywords: List[str]) -> bool:
+def match_query(query_words: list[str], keywords: list[str]) -> bool:
     kw = set(keywords)
     for qw in query_words:
         found = next((k for k in kw if qw in k), None)
@@ -210,7 +210,7 @@ def match_query(query_words: List[str], keywords: List[str]) -> bool:
 
 
 @user_select_plugin.post('/search')
-def search_users(search_strings: List[str], task_id: Optional[str] = None,
+def search_users(search_strings: list[str], task_id: Optional[str] = None,
                  par: Optional[GlobalParId] = None) -> Response:
     model, doc, user, view_ctx = get_plugin_markup(task_id, par)
     verify_view_access(doc)
@@ -229,7 +229,7 @@ def search_users(search_strings: List[str], task_id: Optional[str] = None,
     for field_obj in field_data:
         fields = field_obj["fields"]
         usr = field_obj["user"]
-        values_to_check: List[Optional[Union[str, float, None]]] = [usr.name, usr.real_name, usr.email,
+        values_to_check: list[Optional[Union[str, float, None]]] = [usr.name, usr.real_name, usr.email,
                                                                     *fields.values()]
 
         for field_val in values_to_check:
@@ -263,7 +263,7 @@ def has_distribution_moderation_access(doc: DocInfo) -> bool:
 
 
 def get_plugin_info(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) \
-        -> Tuple[UserSelectMarkupModel, User, UserGroup, User]:
+        -> tuple[UserSelectMarkupModel, User, UserGroup, User]:
     model, doc, _, _ = get_plugin_markup(task_id, par)
     # Ensure user actually has access to document with the plugin
     verify_view_access(doc)
@@ -343,7 +343,7 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
     if not model.actions:
         return ok_response()
 
-    permission_actions: List[PermissionActionBase] = [*model.actions.addPermission, *model.actions.removePermission]
+    permission_actions: list[PermissionActionBase] = [*model.actions.addPermission, *model.actions.removePermission]
     doc_entries = {}
 
     # Verify first that all documents can be accessed and permissions edited + cache doc entries

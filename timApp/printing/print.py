@@ -302,7 +302,7 @@ def get_printed_document(doc_path):
                  '<body>\n' + \
                  '<div class="program">\n'
         n = 1
-        with open(cached, "r", encoding='utf8') as f:
+        with open(cached, encoding='utf8') as f:
             for rivi in f:
                 cl = ""
                 if str(n) == line:

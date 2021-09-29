@@ -353,7 +353,7 @@ def parse_error(message: str) -> str:
         return message
 
 
-def merge_pdfs(pdf_file_list: List[UploadedFile], output_path: Path):
+def merge_pdfs(pdf_file_list: list[UploadedFile], output_path: Path):
     """
     Merges a list of PDFs using pdftk.
     :param pdf_file_list: List of the uploaded files (as objects) to merge.
@@ -390,7 +390,7 @@ def parse_tim_url(par_file: str) -> Optional[Path]:
     return None
 
 
-def get_attachments_from_pars(paragraphs: List[DocParagraph]) -> List[Attachment]:
+def get_attachments_from_pars(paragraphs: list[DocParagraph]) -> list[Attachment]:
     """
     Goes through paragraphs and gets attachments from showPdf-macros.
     Checks file validity with pdftk.
@@ -556,7 +556,7 @@ def stamp_pdf(
     return output_path
 
 
-def call_popen(args: List[str], timeout_seconds=default_subprocess_timeout) -> None:
+def call_popen(args: list[str], timeout_seconds=default_subprocess_timeout) -> None:
     """
     Calls Popen with args list, checks return code and
     raises error if timeouted.
@@ -575,7 +575,7 @@ def call_popen(args: List[str], timeout_seconds=default_subprocess_timeout) -> N
 
 
 def remove_temp_files(
-        dir_path: Path, temp_file_name: str, ext_list: List[str]) -> None:
+        dir_path: Path, temp_file_name: str, ext_list: list[str]) -> None:
     """
     Deletes temp files created for the stamping process.
     :param dir_path: Temp-file folder path.
@@ -592,7 +592,7 @@ def remove_temp_files(
             continue
 
 
-def check_stamp_data_validity(stamp_data_list: List[AttachmentStampData]) -> None:
+def check_stamp_data_validity(stamp_data_list: list[AttachmentStampData]) -> None:
     """
     Raises a specific error if stamp_data is invalid.
     :param stamp_data_list: List of objects containing the stamp data.
@@ -619,9 +619,9 @@ def create_tex_file(content: str, folder: Path = temp_folder_path) -> Path:
 
 
 def stamp_pdfs(
-        stamp_data: List[AttachmentStampData],
+        stamp_data: list[AttachmentStampData],
         stamp_model_path: Path = stamp_model_default_path,
-        stamp_text_format: str = default_stamp_format) -> List[Path]:
+        stamp_text_format: str = default_stamp_format) -> list[Path]:
     """
     Creates new stamps and stamps the corresponding pdfs based on
     the data in a list of AttachmentStampData objects.

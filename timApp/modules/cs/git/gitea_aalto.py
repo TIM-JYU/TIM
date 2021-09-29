@@ -1,4 +1,3 @@
-
 from git.gitea import GiteaLib, sanitize_name
 from git.gitlib import LibResponse
 from git.util import Options, generate_password, RepoSettings

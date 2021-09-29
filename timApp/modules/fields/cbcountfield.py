@@ -22,7 +22,7 @@ from tim_common.utils import Missing
 
 @dataclass
 class CbcountfieldMarkupModel(TextfieldMarkupModel):
-    groups: Union[List[str], Missing] = missing
+    groups: Union[list[str], Missing] = missing
     limit: Union[int, Missing] = missing
 
 
@@ -41,7 +41,7 @@ class CbcountfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, CbcountfieldMa
     def get_static_html(self) -> str:
         return render_static_cdfield(self)
 
-    def get_browser_json(self) -> Dict:
+    def get_browser_json(self) -> dict:
         r = super().get_browser_json()
         count, _ = get_checked_count(self.markup, self.taskID, self.current_user_id)
         r['count'] = count
@@ -116,7 +116,7 @@ def cb_answer(args: CbcountfieldAnswerModel) -> CbAnswerResp:
     return result
 
 
-def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: str) -> Tuple[int, FieldValue]:
+def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: str) -> tuple[int, FieldValue]:
     groups = ['*']
     if isinstance(markup.groups, list):
         groups = markup.groups

@@ -33,17 +33,17 @@ def tape_multihtml() -> Response:
     Route for getting the HTML of all tape plugins in a document.
     :return:
     """
-    jsondata: Optional[Union[Dict[str, Any], List[Dict[str, Any]]]] = request.get_json()
+    jsondata: Optional[Union[dict[str, Any], list[dict[str, Any]]]] = request.get_json()
     if not jsondata:
         return json_response([])
-    args: List[Dict[str, Any]] = jsondata if isinstance(jsondata, list) else [jsondata]
+    args: list[dict[str, Any]] = jsondata if isinstance(jsondata, list) else [jsondata]
     multi = []
     for jso in args:
         multi.append(tape_get_html(jso))
     return json_response(multi)
 
 
-def tape_get_html(jso: Dict[Any, Any]) -> str:
+def tape_get_html(jso: dict[Any, Any]) -> str:
     """
     Returns the HTML of a single tape paragraph.
     :param jso:

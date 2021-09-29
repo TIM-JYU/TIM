@@ -61,7 +61,7 @@ def get_lecture_info():
     messages = lecture.messages.order_by(Message.timestamp.asc()).all()
     is_lecturer = is_lecturer_of(lecture)
     u = get_current_user_object()
-    lecture_questions: List[AskedQuestion] = (
+    lecture_questions: list[AskedQuestion] = (
         lecture.asked_questions
             .options(joinedload(AskedQuestion.answers_all).raiseload(LectureAnswer.asked_question))
             .options(joinedload(AskedQuestion.answers_all).joinedload(LectureAnswer.user).raiseload(User.groups))
@@ -69,7 +69,7 @@ def get_lecture_info():
     )
 
     if is_lecturer or u.is_admin:
-        answers: List[LectureAnswer] = [a for q in lecture_questions for a in q.answers_all]
+        answers: list[LectureAnswer] = [a for q in lecture_questions for a in q.answers_all]
         answerers = list({a.user for a in answers})
     else:
         answers = [a for q in lecture_questions for a in q.answers_all if a.user_id == u.id]
@@ -324,7 +324,7 @@ def get_new_question(lecture: Lecture, current_question_id=None, current_points_
     """
     current_user = get_current_user_id()
     u = get_current_user_object()
-    rqs: List[Runningquestion] = lecture.running_questions
+    rqs: list[Runningquestion] = lecture.running_questions
     with user_activity_lock(u):
         if rqs and rqs[0].asked_question.is_running:
             question: AskedQuestion = rqs[0].asked_question
@@ -784,7 +784,7 @@ def extend_question():
 
 def get_current_lecture() -> Optional[Lecture]:
     u = get_current_user_object()
-    lectures: List[Lecture] = u.lectures
+    lectures: list[Lecture] = u.lectures
     if not lectures:
         return None
     if len(lectures) > 1:
@@ -901,7 +901,7 @@ def update_question_points():
     asked_question.points = points
     asked_question.expl = expl
     points_table = create_points_table(points)
-    question_answers: List[LectureAnswer] = asked_question.answers.all()
+    question_answers: list[LectureAnswer] = asked_question.answers.all()
     default_points = asked_question.get_default_points()
     for answer in question_answers:
         answer.points = calculate_points_from_json_answer(answer.get_parsed_answer(), points_table, default_points)
@@ -990,7 +990,7 @@ def get_lecture_answers():
 
 @dataclass
 class AnswerToQuestionModel(AskedIdModel):
-    input: List[List[str]]
+    input: list[list[str]]
 
 
 @lecture_routes.put("/answerToQuestion")

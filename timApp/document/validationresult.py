@@ -112,7 +112,7 @@ class ValidationResult:
         return any(isinstance(i, j) for j in issues for i in self.issues)
 
     def __str__(self):
-        return '\n'.join((str(i) for i in self.issues))
+        return '\n'.join(str(i) for i in self.issues)
 
     @property
     def has_critical_issues(self):

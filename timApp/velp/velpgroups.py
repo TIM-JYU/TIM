@@ -59,7 +59,7 @@ def create_velp_group(name: str, owner_group: UserGroup, new_group_path: str, va
     return vg
 
 
-def get_groups_from_document_table(doc_id: int, user_id: int) -> List[VelpGroup]:
+def get_groups_from_document_table(doc_id: int, user_id: int) -> list[VelpGroup]:
     """Gets velp groups from VelpGroupsInDocument table of specific document / user combo.
 
     :param doc_id: ID of document
@@ -98,12 +98,12 @@ def make_document_a_velp_group(name: str, velp_group_id: int, valid_until: Optio
 VelpGroupOrDocInfo = Union[VelpGroup, DocInfo]
 
 
-def add_groups_to_document(velp_groups: List[VelpGroupOrDocInfo], doc: DocInfo, user: User):
+def add_groups_to_document(velp_groups: list[VelpGroupOrDocInfo], doc: DocInfo, user: User):
     """Adds velp groups to VelpGroupsInDocument table.
 
     """
-    existing: List[VelpGroupsInDocument] = VelpGroupsInDocument.query.filter_by(user_id=user.id, doc_id=doc.id).all()
-    existing_ids = set(vgd.velp_group_id for vgd in existing)
+    existing: list[VelpGroupsInDocument] = VelpGroupsInDocument.query.filter_by(user_id=user.id, doc_id=doc.id).all()
+    existing_ids = {vgd.velp_group_id for vgd in existing}
     for velp_group in velp_groups:
         velp_group_id = velp_group.id
         if velp_group_id not in existing_ids:
@@ -156,7 +156,7 @@ def change_all_target_area_default_selections(doc_id: int, target_type: int, tar
 
     """
     VelpGroupDefaults.query.filter_by(doc_id=doc_id, target_type=target_type, target_id=target_id).delete()
-    vgids: List[VelpGroupsInDocument] = VelpGroupsInDocument.query.filter_by(doc_id=doc_id, user_id=user_id).all()
+    vgids: list[VelpGroupsInDocument] = VelpGroupsInDocument.query.filter_by(doc_id=doc_id, user_id=user_id).all()
     for vgid in vgids:
         vgd = VelpGroupDefaults(
             doc_id=doc_id,
@@ -186,7 +186,7 @@ def change_all_target_area_selections(doc_id: int, target_type: int, target_id: 
         VelpGroupSelection.query.filter_by(doc_id=doc_id, target_id=target_id, user_id=user_id, target_type=target_type).delete()
         # target_type is 0 because only 0 always contains all velp groups user has access to.
         # Other target types will get added to database only after they've been clicked once in interface.
-        vgss: List[VelpGroupSelection] = VelpGroupSelection.query.filter_by(
+        vgss: list[VelpGroupSelection] = VelpGroupSelection.query.filter_by(
             doc_id=doc_id,
             user_id=user_id,
             target_type=0,
@@ -257,7 +257,7 @@ def add_groups_to_selection_table(velp_group: VelpGroup, doc_id: int, user_id: i
         db.session.add(vgs)
 
 
-def process_selection_info(vgss: Union[List[VelpGroupSelection], List[VelpGroupDefaults]]):
+def process_selection_info(vgss: Union[list[VelpGroupSelection], list[VelpGroupDefaults]]):
     if vgss:
         target_id = vgss[0].target_id
         list_help = []

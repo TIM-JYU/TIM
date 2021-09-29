@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 # server to get a file from selected range
 # Get parameters (every param can have n after, f.ex file1=)
 # file    = URL for file to get
@@ -116,7 +114,7 @@ def sec_2_timestr(t: float):
     h = math.floor(t / 3600)
     t = (t - h * 3600)
     m = math.floor(t / 60)
-    s = int((t - m * 60))
+    s = int(t - m * 60)
     if not h:
         h = ""
     else:
@@ -165,7 +163,7 @@ def get_images_md(query):
     if h:
         h = 'height=' + h + ' '
     header, footer = get_surrounding_md_headers2(query, "pluginHeader", None)
-    result = header + "\n\n" + "![{0}]({1}){{{2}{3}}}".format(footer, url, w, h)
+    result = header + "\n\n" + f"![{footer}]({url}){{{w}{h}}}"
     return result
 
 def get_image_md(query):
@@ -186,7 +184,7 @@ def get_image_md(query):
     if h:
         h = 'height=' + h + ' '
     header, footer = get_surrounding_md_headers2(query, "pluginHeader", None)
-    result = header + "\n\n" + "![{0}]({1}){{{2}{3}}}".format(footer, url, w, h)
+    result = header + "\n\n" + f"![{footer}]({url}){{{w}{h}}}"
     return result
 
 

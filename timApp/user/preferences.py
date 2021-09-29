@@ -12,7 +12,7 @@ from timApp.util.utils import cached_property
 
 @attr.s(auto_attribs=True)
 class Preferences:
-    css_files: Dict[str, bool] = attr.Factory(dict)
+    css_files: dict[str, bool] = attr.Factory(dict)
     custom_css: str = ''
     use_document_word_list: bool = False
     disable_menu_hover: bool = False
@@ -21,13 +21,13 @@ class Preferences:
     word_list: str = ''
     email_exclude: str = ''
     language: Optional[str] = None
-    last_answer_fetch: Dict[str, str] = attr.Factory(dict)
+    last_answer_fetch: dict[str, str] = attr.Factory(dict)
     css_combined: str = attr.ib(init=False)
     auto_mark_all_read: bool = False
-    bookmarks: Optional[List[Dict[str, List[Dict[str, str]]]]] = None
+    bookmarks: Optional[list[dict[str, list[dict[str, str]]]]] = None
 
     @staticmethod
-    def from_json(j: Dict) -> 'Preferences':
+    def from_json(j: dict) -> 'Preferences':
         j.pop('css_combined', None)
         return Preferences(**j)
 
@@ -35,7 +35,7 @@ class Preferences:
         self.css_combined = generate_theme(self.themes, get_default_scss_gen_dir())
 
     @property
-    def themes(self) -> List[Theme]:
+    def themes(self) -> list[Theme]:
         css_file_list = [css for css, v in self.css_files.items() if v]
         return [Theme(f) for f in css_file_list]
 

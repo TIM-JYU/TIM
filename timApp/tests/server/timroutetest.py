@@ -58,7 +58,7 @@ orig_getaddrinfo = socket.getaddrinfo
 TEXTUAL_MIMETYPES = {'text/html', 'application/json', 'text/plain'}
 LOCALHOST = 'http://localhost/'
 
-BasicAuthParams = Tuple[str, str]
+BasicAuthParams = tuple[str, str]
 
 
 @lru_cache(maxsize=100)
@@ -73,7 +73,7 @@ testclient: FlaskClient = timApp.tim.app.test_client()
 testclient = testclient.__enter__()
 
 
-def get_content(element: HtmlElement, selector: str = '.parContent') -> List[str]:
+def get_content(element: HtmlElement, selector: str = '.parContent') -> list[str]:
     return [r.text_content().strip() for r in element.cssselect(selector)]
 
 
@@ -86,7 +86,7 @@ def get_cookie_value(resp: Response, key: str) -> Optional[str]:
     """
     cookies = resp.headers.getlist('Set-Cookie')
     for cookie in cookies:
-        match = re.match(f"{key}=(?P<value>\d+);", cookie)
+        match = re.match(fr"{key}=(?P<value>\d+);", cookie)
         if match:
             return match.group('value')
     return None
@@ -111,12 +111,12 @@ class TimRouteTest(TimDbTest):
             url: str,
             as_tree: bool = False,
             expect_status: Optional[int] = 200,
-            expect_content: Union[None, str, Dict, List] = None,
-            expect_contains: Union[None, str, List[str], Dict] = None,
+            expect_content: Union[None, str, dict, list] = None,
+            expect_contains: Union[None, str, list[str], dict] = None,
             expect_xpath: Optional[str] = None,
-            expect_cookie: Optional[Tuple[str, Optional[str]]] = None,
+            expect_cookie: Optional[tuple[str, Optional[str]]] = None,
             json_key: Optional[str] = None,
-            headers: Optional[List[Tuple[str, str]]] = None,
+            headers: Optional[list[tuple[str, str]]] = None,
             auth: Optional[BasicAuthParams] = None,
             **kwargs):
         """Performs a GET request.
@@ -141,11 +141,11 @@ class TimRouteTest(TimDbTest):
              url: str,
              as_tree: bool = False,
              expect_status: Optional[int] = 200,
-             expect_content: Union[None, str, Dict, List] = None,
-             expect_contains: Union[None, str, List[str]] = None,
+             expect_content: Union[None, str, dict, list] = None,
+             expect_contains: Union[None, str, list[str]] = None,
              expect_xpath: Optional[str] = None,
              json_key: Optional[str] = None,
-             headers: Optional[List[Tuple[str, str]]] = None,
+             headers: Optional[list[tuple[str, str]]] = None,
              **kwargs):
         """Performs a POST request.
 
@@ -167,11 +167,11 @@ class TimRouteTest(TimDbTest):
                url: str,
                as_tree: bool = False,
                expect_status: Optional[int] = 200,
-               expect_content: Union[None, str, Dict, List] = None,
-               expect_contains: Union[None, str, List[str]] = None,
+               expect_content: Union[None, str, dict, list] = None,
+               expect_contains: Union[None, str, list[str]] = None,
                expect_xpath: Optional[str] = None,
                json_key: Optional[str] = None,
-               headers: Optional[List[Tuple[str, str]]] = None,
+               headers: Optional[list[tuple[str, str]]] = None,
                **kwargs):
         """Performs a DELETE request.
 
@@ -195,17 +195,17 @@ class TimRouteTest(TimDbTest):
                 as_tree: bool = False,
                 as_response: bool = False,
                 expect_status: Optional[int] = 200,
-                expect_content: Union[None, str, Dict, List] = None,
-                expect_contains: Union[None, str, List[str]] = None,
+                expect_content: Union[None, str, dict, list] = None,
+                expect_contains: Union[None, str, list[str]] = None,
                 expect_mimetype: Optional[str] = None,
                 expect_xpath: Optional[str] = None,
-                expect_cookie: Optional[Tuple[str, Optional[str]]] = None,
+                expect_cookie: Optional[tuple[str, Optional[str]]] = None,
                 json_key: Optional[str] = None,
-                headers: Optional[List[Tuple[str, str]]] = None,
+                headers: Optional[list[tuple[str, str]]] = None,
                 xhr=True,
                 auth: Optional[BasicAuthParams] = None,
                 force_return_text=False,
-                **kwargs) -> Union[Response, str, Dict]:
+                **kwargs) -> Union[Response, str, dict]:
         """Performs a request.
 
         For JSON POST/PUT requests, use the shortcut json_* methods.
@@ -306,14 +306,14 @@ class TimRouteTest(TimDbTest):
 
     def json_put(self,
                  url: str,
-                 json_data: Optional[Dict] = None,
+                 json_data: Optional[dict] = None,
                  as_tree: bool = False,
                  expect_status: Optional[int] = 200,
-                 expect_content: Union[None, str, Dict, List] = None,
-                 expect_contains: Union[None, str, List[str]] = None,
+                 expect_content: Union[None, str, dict, list] = None,
+                 expect_contains: Union[None, str, list[str]] = None,
                  expect_xpath: Optional[str] = None,
                  json_key: Optional[str] = None,
-                 headers: Optional[List[Tuple[str, str]]] = None,
+                 headers: Optional[list[tuple[str, str]]] = None,
                  **kwargs):
         """Performs a JSON PUT request.
 
@@ -337,14 +337,14 @@ class TimRouteTest(TimDbTest):
 
     def json_delete(self,
                     url: str,
-                    json_data: Optional[Dict] = None,
+                    json_data: Optional[dict] = None,
                     as_tree: bool = False,
                     expect_status: Optional[int] = 200,
-                    expect_content: Union[None, str, Dict, List] = None,
-                    expect_contains: Union[None, str, List[str]] = None,
+                    expect_content: Union[None, str, dict, list] = None,
+                    expect_contains: Union[None, str, list[str]] = None,
                     expect_xpath: Optional[str] = None,
                     json_key: Optional[str] = None,
-                    headers: Optional[List[Tuple[str, str]]] = None,
+                    headers: Optional[list[tuple[str, str]]] = None,
                     auth: Optional[BasicAuthParams] = None,
                     **kwargs):
         """Performs a JSON DELETE request.
@@ -370,15 +370,15 @@ class TimRouteTest(TimDbTest):
 
     def json_post(self,
                   url: str,
-                  json_data: Optional[Union[Dict, List]] = None,
+                  json_data: Optional[Union[dict, list]] = None,
                   as_tree: bool = False,
                   expect_status: Optional[int] = 200,
-                  expect_content: Union[None, str, Dict, List] = None,
-                  expect_contains: Union[None, str, List[str], Dict] = None,
+                  expect_content: Union[None, str, dict, list] = None,
+                  expect_contains: Union[None, str, list[str], dict] = None,
                   expect_xpath: Optional[str] = None,
-                  expect_cookie: Optional[Tuple[str, Optional[str]]] = None,
+                  expect_cookie: Optional[tuple[str, Optional[str]]] = None,
                   json_key: Optional[str] = None,
-                  headers: Optional[List[Tuple[str, str]]] = None,
+                  headers: Optional[list[tuple[str, str]]] = None,
                   auth: Optional[BasicAuthParams] = None,
                   **kwargs):
         """Performs a JSON POST request.
@@ -405,16 +405,16 @@ class TimRouteTest(TimDbTest):
 
     def json_req(self,
                  url: str,
-                 json_data: Optional[Dict] = None,
+                 json_data: Optional[dict] = None,
                  method: str = 'GET',
                  as_tree: bool = False,
                  expect_status: Optional[int] = 200,
-                 expect_content: Union[None, str, Dict, List] = None,
-                 expect_contains: Union[None, str, List[str]] = None,
+                 expect_content: Union[None, str, dict, list] = None,
+                 expect_contains: Union[None, str, list[str]] = None,
                  expect_xpath: Optional[str] = None,
-                 expect_cookie: Optional[Tuple[str, Optional[str]]] = None,
+                 expect_cookie: Optional[tuple[str, Optional[str]]] = None,
                  json_key: Optional[str] = None,
-                 headers: Optional[List[Tuple[str, str]]] = None,
+                 headers: Optional[list[tuple[str, str]]] = None,
                  auth: Optional[BasicAuthParams] = None,
                  content_type: Optional[str] = None,
                  **kwargs):
@@ -654,8 +654,8 @@ class TimRouteTest(TimDbTest):
 
     def create_doc(self, path: Optional[str] = None,
                    from_file: Optional[str] = None,
-                   initial_par: Optional[Union[str, List[str]]] = None,
-                   settings: Optional[Dict] = None,
+                   initial_par: Optional[Union[str, list[str]]] = None,
+                   settings: Optional[dict] = None,
                    copy_from: Optional[int] = None,
                    cite: Optional[int] = None,
                    template: Optional[str] = None,
@@ -746,7 +746,7 @@ class TimRouteTest(TimDbTest):
         for s in scripts:
             variables = s.text
             # '\s*' are zero or more whitespaces, '(.*)' is variable content between '=' and ';'.
-            matches = re.findall(f"{variable_name}\s*=\s*(.*);", variables)
+            matches = re.findall(fr"{variable_name}\s*=\s*(.*);", variables)
             if matches:
                 var = json.loads(matches[0])
                 return var
@@ -783,7 +783,7 @@ class TimRouteTest(TimDbTest):
                            **kwargs)
         return Translation.query.get(j['id']) if expect_status == 200 else None
 
-    def assert_content(self, element: HtmlElement, expected: List[str]):
+    def assert_content(self, element: HtmlElement, expected: list[str]):
         pars = get_content(element)
         self.assertEqual(expected, pars)
 
@@ -932,7 +932,7 @@ class TimRouteTest(TimDbTest):
         b64str = e.attrib['json']
         return json.loads(base64.b64decode(b64str))
 
-    def assert_plugin_json(self, e: HtmlElement, content: Dict[str, Any]):
+    def assert_plugin_json(self, e: HtmlElement, content: dict[str, Any]):
         json_str = self.get_plugin_json(e)
         self.assertEqual(content, json_str)
 
@@ -946,7 +946,7 @@ class TimRouteTest(TimDbTest):
                  )
 
     def verify_answer_content(self, task: str, content_field: Optional[str], content, u: User, expected_count=1):
-        anss: List[Answer] = u.answers.filter_by(task_id=task).order_by(Answer.answered_on.desc()).all()
+        anss: list[Answer] = u.answers.filter_by(task_id=task).order_by(Answer.answered_on.desc()).all()
         self.assertEqual(expected_count, len(anss))
         if expected_count == 0:
             return None
@@ -1040,7 +1040,7 @@ class TimRouteTest(TimDbTest):
             yield
 
     @contextmanager
-    def temp_config(self, settings: Dict[str, Any]):
+    def temp_config(self, settings: dict[str, Any]):
         old_settings = {k: current_app.config[k] for k in settings.keys()}
         for k, v in settings.items():
             current_app.config[k] = v
@@ -1101,8 +1101,8 @@ class TimMessageListTest(TimRouteTest):
                                    app.config['MAILMAN_PASS'])
         cls.mailman_client = mailman_client
 
-        lists: List[mc.MailingList] = list(mailman_client.lists)
-        users: List[mc.User] = list(mailman_client.users)
+        lists: list[mc.MailingList] = list(mailman_client.lists)
+        users: list[mc.User] = list(mailman_client.users)
 
         # Delete previous lists and users before testing
         for ml in lists:
@@ -1110,7 +1110,7 @@ class TimMessageListTest(TimRouteTest):
         for mu in users:
             mu.delete()
 
-    def add_list_member(self, list_name: str, candidates: List[str]) -> None:
+    def add_list_member(self, list_name: str, candidates: list[str]) -> None:
         self.json_post("/messagelist/addmember", {
             "member_candidates": candidates,
             "msg_list": list_name,
@@ -1118,7 +1118,7 @@ class TimMessageListTest(TimRouteTest):
             "delivery_right": True
         })
 
-    def create_list(self, name: str, archive: ArchiveType) -> Tuple[Dict[str, Any], MessageListModel]:
+    def create_list(self, name: str, archive: ArchiveType) -> tuple[dict[str, Any], MessageListModel]:
         manage_doc = self.json_post('/messagelist/createlist', {
             'options': {
                 'name': name,

@@ -30,7 +30,7 @@ Hi {#t3#} $x$
             't2',
             'Lm7y6R7n5XIb',
         )
-        self.assert_same_html(e, f"""
+        self.assert_same_html(e, fr"""
 <div class="par" id="Lm7y6R7n5XIb" t="MHgyN2U5NDhhMA==" attrs='{{"defaultplugin": "pali"}}'>
 <div tabindex="0" class="parContent">
                 <em>Hello</em> <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1"><span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali">
@@ -67,7 +67,7 @@ Hi {#t3#} $x$
             },
             state=s,
         )
-        self.assert_same_html(e, f"""
+        self.assert_same_html(e, fr"""
 <div class="par" id="Lm7y6R7n5XIb" t="MHgyN2U5NDhhMA==" attrs='{{"defaultplugin": "pali"}}'>
 <div tabindex="0" class="parContent">
 <em>Hello</em>

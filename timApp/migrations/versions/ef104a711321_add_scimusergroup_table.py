@@ -34,7 +34,7 @@ def upgrade():
     bind = op.get_bind()
     s = orm.Session(bind=bind)
 
-    ugs: List[UserGroup] = s.query(UserGroup).filter(UserGroup.name.startswith('sisu:')).all()
+    ugs: list[UserGroup] = s.query(UserGroup).filter(UserGroup.name.startswith('sisu:')).all()
     used_names = set()
     for ug in ugs:
         external_id = ug.name.replace('sisu:', '')
@@ -45,7 +45,7 @@ def upgrade():
         used_names.add(default_name)
         ug.name = default_name
 
-    ugs: List[UserGroup] = s.query(UserGroup).filter(
+    ugs: list[UserGroup] = s.query(UserGroup).filter(
         UserGroup.name.like(any_(['deleted:sisu:%', 'cumulative:sisu:%']))
     ).all()
     for ug in ugs:

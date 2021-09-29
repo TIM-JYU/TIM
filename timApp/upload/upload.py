@@ -72,7 +72,7 @@ def get_upload(relfilename: str):
     return send_file(up.filesystem_path.as_posix(), mimetype=mt, etag=False)
 
 
-def get_pluginupload(relfilename: str) -> Tuple[str, PluginUpload]:
+def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
     slashes = relfilename.count('/')
     if slashes < 2:
         raise RouteException()
@@ -211,7 +211,7 @@ class AttachmentModel:
 
 @dataclass
 class RestampModel:
-    attachments: List[AttachmentModel]
+    attachments: list[AttachmentModel]
     meetingDate: str
     stampFormat: Optional[str] = None
     customStampModel: Optional[str] = None

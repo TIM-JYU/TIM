@@ -21,7 +21,7 @@ class DropdownStateModel:
 
 @dataclass
 class DropdownMarkupModel(GenericMarkupModel):
-    words: Union[List[str], Missing] = missing
+    words: Union[list[str], Missing] = missing
     instruction: Union[bool, Missing] = missing
     radio: Union[bool, Missing] = missing
     shuffle: Union[bool, Missing] = missing

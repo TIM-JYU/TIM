@@ -52,7 +52,7 @@ class TimMenuItem:
     Menu item with mandatory attributes (content, level, id, list of contained menu items and opening state)
     and optional styles.
     """
-    def __init__(self, text: str, level: int, items: List['TimMenuItem'], is_open: bool = False) -> None:
+    def __init__(self, text: str, level: int, items: list['TimMenuItem'], is_open: bool = False) -> None:
         self.text = text
         self.level = level
         self.id = ""
@@ -82,7 +82,7 @@ class TimMenuItem:
     def __repr__(self) -> str:
         return str(self)
 
-    def to_json(self) -> Dict:
+    def to_json(self) -> dict:
         s = {"level": self.level, "id": self.id, "text": self.text, "open": self.open, "items": self.items}
         if self.width:
             s.update({"width": self.width})
@@ -129,7 +129,7 @@ class TimMenuInputModel:
 def decide_menu_level(
         index: int,
         previous_level: int,
-        level_indentations: List[TimMenuIndentation],
+        level_indentations: list[TimMenuIndentation],
         max_level: int = 3,
 ) -> int:
     """
@@ -200,7 +200,7 @@ def get_attribute(line: str, attr_name: str) -> Optional[str]:
         return None
 
 
-def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> List[TimMenuItem]:
+def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> list[TimMenuItem]:
     """
     Converts menu-attribute string into a menu structure with html content.
     Note: string uses a custom syntax similar to markdown lists, with hyphen (-) marking
@@ -283,10 +283,10 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
         """Renders a static version of the plugin."""
         return render_static_timmenu(self)
 
-    def get_json_encoder(self) -> Type[TimJsonEncoder]:
+    def get_json_encoder(self) -> type[TimJsonEncoder]:
         return TimJsonEncoder
 
-    def get_browser_json(self) -> Dict:
+    def get_browser_json(self) -> dict:
         r = super().get_browser_json()
         r['menu'] = parse_menu_string(r['markup']['menu'], replace_tabs=True)
         return r
@@ -411,7 +411,7 @@ menu: |!!
 !!
 ```
 """]
-    editor_tabs: List[EditorTab] = [
+    editor_tabs: list[EditorTab] = [
             {
                 'text': 'Insert',
                 'items': [

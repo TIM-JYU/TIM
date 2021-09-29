@@ -42,7 +42,7 @@ class InternalMessage(db.Model):
     readreceipts = db.relationship('InternalMessageReadReceipt', back_populates='message')
     block = db.relationship('Block', back_populates='internalmessage')
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {'id': self.id,
                 'doc_id': self.doc_id,
                 'par_id': self.par_id,
@@ -78,7 +78,7 @@ class InternalMessageDisplay(db.Model):
     usergroup = db.relationship('UserGroup', back_populates='internalmessage_display')
     display_block = db.relationship('Block', back_populates='internalmessage_display')
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {'id': self.id,
                 'message_id': self.message_id,
                 'usergroup_id': self.usergroup_id,
@@ -107,7 +107,7 @@ class InternalMessageReadReceipt(db.Model):
     message = db.relationship('InternalMessage', back_populates='readreceipts')
     user = db.relationship('User', back_populates='internalmessage_readreceipt')
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {'rcpt_id': self.rcpt_id,
                 'message_id': self.message_id,
                 'user_id': self.user_id,

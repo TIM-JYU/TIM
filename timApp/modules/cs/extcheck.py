@@ -154,7 +154,7 @@ class ExtCheck(Language):
                 continue
 
             data = {}
-            with open(str(file), 'r') as f:
+            with open(str(file)) as f:
                 data = json.load(f)
 
             tmp = data.get(attr, [])

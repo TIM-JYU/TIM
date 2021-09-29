@@ -293,7 +293,7 @@ def preinc(v, delta=1):
 def expand_macros(
         text: str,
         macros,
-        settings: Optional[DocSettings],
+        settings: DocSettings | None,
         env: SandboxedEnvironment,
         ignore_errors: bool = False,
 ):
@@ -364,7 +364,7 @@ tim_filters = {
 
 def create_environment(
         macro_delimiter: str,
-        user_ctx: Optional[UserContext],
+        user_ctx: UserContext | None,
         view_ctx: ViewContext,
 ) -> SandboxedEnvironment:
     env = SandboxedEnvironment(
@@ -387,7 +387,7 @@ def create_environment(
 
 def md_to_html(text: str,
                sanitize: bool = True,
-               macros: Optional[Dict[str, object]] = None) -> str:
+               macros: dict[str, object] | None = None) -> str:
     """Converts the specified markdown text to HTML.
 
     :param macros: The macros to use.
@@ -413,10 +413,10 @@ def md_to_html(text: str,
 
 
 def par_list_to_html_list(
-        pars: List[DocParagraph],
+        pars: list[DocParagraph],
         settings: DocSettings,
         view_ctx: ViewContext,
-        auto_macros: Optional[Iterable[dict]] = None,
+        auto_macros: Iterable[dict] | None = None,
 ):
     """Converts the specified list of DocParagraphs to an HTML list.
 

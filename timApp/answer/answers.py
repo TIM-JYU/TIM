@@ -34,7 +34,7 @@ class ExistingAnswersInfo:
     count: int
 
 
-def get_latest_answers_query(task_id: TaskId, users: List[User]) -> Query:
+def get_latest_answers_query(task_id: TaskId, users: list[User]) -> Query:
     if task_id.is_global:
         q = Answer.query.filter_by(task_id=task_id.doc_task).order_by(Answer.id.desc())
     else:
@@ -45,14 +45,14 @@ def get_latest_answers_query(task_id: TaskId, users: List[User]) -> Query:
                 .filter(User.id.in_([u.id for u in users]))
                 .group_by(Answer.id)
                 .with_entities(Answer.id)
-                .having((func.array_agg(aggregate_order_by(User.id, User.id))) == sorted([u.id for u in users]))
+                .having((func.array_agg(aggregate_order_by(User.id, User.id))) == sorted(u.id for u in users))
                 .subquery()
         )
         q = Answer.query.filter(Answer.id.in_(q)).order_by(Answer.id.desc())
     return q
 
 
-def get_latest_valid_answers_query(task_id: TaskId, users: List[User]) -> Query:
+def get_latest_valid_answers_query(task_id: TaskId, users: list[User]) -> Query:
     sq = (Answer.query
           .filter_by(task_id=task_id.doc_task, valid=True)
           .join(User, Answer.users)
@@ -80,11 +80,11 @@ class TooLargeAnswerException(Exception):
 
 
 def save_answer(
-        users: List[User],
+        users: list[User],
         task_id: TaskId,
         content: Any,
         points: Optional[float],
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
         valid: bool = True,
         points_given_by: Optional[int] = None,
         force_save: bool = False,
@@ -146,7 +146,7 @@ def save_answer(
     return a
 
 
-def get_all_answers(task_ids: List[TaskId],
+def get_all_answers(task_ids: list[TaskId],
                     usergroup: Optional[int],
                     hide_names: bool,
                     age: str,
@@ -157,7 +157,7 @@ def get_all_answers(task_ids: List[TaskId],
                     period_from: datetime,
                     period_to: datetime,
                     data_format: str,
-                    consent: Optional[Consent]) -> Union[List[str], List[Dict]]:
+                    consent: Optional[Consent]) -> Union[list[str], list[dict]]:
     """Gets all answers to the specified tasks.
 
     :param data_format: The data format to use, currently supports "text" and "json".
@@ -212,7 +212,7 @@ def get_all_answers(task_ids: List[TaskId],
     if print_opt == "answersnoline":
         lf = ""
 
-    qq: Iterable[Tuple[Answer, User, int]] = q
+    qq: Iterable[tuple[Answer, User, int]] = q
     cnt = 0
     for a, u, n in qq:
         cnt += 1
@@ -287,7 +287,7 @@ def get_all_answers(task_ids: List[TaskId],
 def get_all_answer_initial_query(
         period_from: datetime,
         period_to: datetime,
-        task_ids: List[TaskId],
+        task_ids: list[TaskId],
         valid: str,
 ) -> Query:
     q = (Answer
@@ -304,7 +304,7 @@ def get_all_answer_initial_query(
     return q
 
 
-def get_existing_answers_info(users: List[User], task_id: TaskId) -> ExistingAnswersInfo:
+def get_existing_answers_info(users: list[User], task_id: TaskId) -> ExistingAnswersInfo:
     q = get_latest_answers_query(task_id, users)
     latest = q.first()
     count = q.count()
@@ -320,12 +320,12 @@ basic_tally_fields = [
 ]
 
 
-def valid_answers_query(task_ids: List[TaskId]) -> Query:
+def valid_answers_query(task_ids: list[TaskId]) -> Query:
     return (Answer.query
             .filter(valid_taskid_filter(task_ids)))
 
 
-def valid_taskid_filter(task_ids: List[TaskId]) -> Query:
+def valid_taskid_filter(task_ids: list[TaskId]) -> Query:
     return Answer.task_id.in_(task_ids_to_strlist(task_ids)) & (Answer.valid == True)
 
 
@@ -340,12 +340,12 @@ class UserTaskEntry(TypedDict):
 
 
 def get_users_for_tasks(
-        task_ids: List[TaskId],
-        user_ids: Optional[List[int]] = None,
+        task_ids: list[TaskId],
+        user_ids: Optional[list[int]] = None,
         group_by_user: bool = True,
         group_by_doc: bool = False,
         answer_filter: Optional[Any] = None,
-) -> List[UserTaskEntry]:
+) -> list[UserTaskEntry]:
     if not task_ids:
         return []
 
@@ -379,7 +379,7 @@ def get_users_for_tasks(
         group_by_cols.append(tmp.c.task_id)
         cols.append(min_task_id)
     if group_by_doc:
-        doc_id = func.substring(tmp.c.task_id, '(\d+)\..+').label('doc_id')
+        doc_id = func.substring(tmp.c.task_id, r'(\d+)\..+').label('doc_id')
         group_by_cols.append(doc_id)
         cols.append(doc_id)
     if user_ids is not None:
@@ -450,7 +450,7 @@ class SumFields(TypedDict):
 
 
 class UserPointGroup(SumFields):
-    tasks: List[UserTaskEntry]
+    tasks: list[UserTaskEntry]
     velped_task_count: int
 
 
@@ -470,17 +470,17 @@ class UserPoints(TypedDict):
     velp_points: Optional[float]
     task_count: int
     velped_task_count: int
-    groups: Dict[str, ResultGroup]
+    groups: dict[str, ResultGroup]
     user: User
 
 
 def get_points_by_rule(
         rule: Optional[PointSumRule],
-        task_ids: List[TaskId],
-        user_ids: Optional[List[int]] = None,
+        task_ids: list[TaskId],
+        user_ids: Optional[list[int]] = None,
         answer_filter: Optional[Any] = None,
         force_user: Optional[User] = None,
-) -> Union[List[UserPoints], List[UserTaskEntry]]:  # TODO: Would be better to return always same kind of list.
+) -> Union[list[UserPoints], list[UserTaskEntry]]:  # TODO: Would be better to return always same kind of list.
     """Computes the point sum from given tasks according to the given point rule.
 
     :param force_user: Whether to force at least one result user if the result would be empty otherwise.
@@ -508,7 +508,7 @@ def get_points_by_rule(
             'total_sum': None,
         })
     )
-    task_counts: Dict[int, int] = {}
+    task_counts: dict[int, int] = {}
     user_map = {}
     if not tasks_users and rule.force and force_user:
         for t in task_ids:
@@ -579,11 +579,11 @@ def get_points_by_rule(
 
 def flatten_points_result(
         rule: PointSumRule,
-        rule_groups: Dict[str, Group],
+        rule_groups: dict[str, Group],
         result: DefaultDict[int, UserPointInfo],
-        task_counts: Dict[int, int],
-        user_map: Dict[int, User],
-) -> List[UserPoints]:
+        task_counts: dict[int, int],
+        user_map: dict[int, User],
+) -> list[UserPoints]:
     result_list = []
     hide_list = rule.hide
     for user_id, task_groups in result.items():
@@ -599,7 +599,7 @@ def flatten_points_result(
         )
 
         if rule.sort:
-            rulegroups: Union[ItemsView[str, Group], List[Tuple[str, Group]]] = sorted(rule_groups.items())
+            rulegroups: Union[ItemsView[str, Group], list[tuple[str, Group]]] = sorted(rule_groups.items())
         else:
             rulegroups = rule_groups.items()
         for groupname, rg in rulegroups:
@@ -641,7 +641,7 @@ def flatten_points_result(
     return result_list
 
 
-def add_missing_users_from_group(result: List, usergroup: UserGroup) -> List:
+def add_missing_users_from_group(result: list, usergroup: UserGroup) -> list:
     users = set(usergroup.users)
     existing_users = set()
     for d in result:

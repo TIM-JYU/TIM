@@ -31,14 +31,14 @@ class FeedbackMarkupModel(GenericMarkupModel):
     dragSource: Union[str, Missing] = missing
     matchElement: Union[Any, Missing] = missing
     nextTask: Union[str, Missing] = missing
-    points_array: Union[List[float], Missing] = missing
+    points_array: Union[list[float], Missing] = missing
     practiceID: Union[str, Missing] = missing
     questionItems: Union[Any, Missing] = missing
     showAnswers: Union[bool, Missing] = missing
     shuffle: Union[bool, Missing] = missing
 
     @validates('points_array')
-    def validate_points_array(self, value: List[float]) -> None:
+    def validate_points_array(self, value: list[float]) -> None:
         if len(value) != 2:
             raise ValidationError('Must be of size 1 x 2.')
 

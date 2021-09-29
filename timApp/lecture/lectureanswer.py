@@ -10,8 +10,8 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 
 
-def unshuffle_lectureanswer(answer: List[List[str]], question_type: str,
-                         row_count: int, rand_arr: List[int]) -> List[List[str]]:
+def unshuffle_lectureanswer(answer: list[list[str]], question_type: str,
+                         row_count: int, rand_arr: list[int]) -> list[list[str]]:
     if question_type == 'matrix' or question_type == 'true-false':
         unshuffled_ans = [[] for x in range(row_count)]
         for i, pos in enumerate(rand_arr):
@@ -72,7 +72,7 @@ class LectureAnswer(db.Model):
         return result
 
 
-def get_totals(lecture: Lecture, user: Optional[User]=None) -> List[Tuple[User, float, int]]:
+def get_totals(lecture: Lecture, user: Optional[User]=None) -> list[tuple[User, float, int]]:
     q = User.query
     if user:
         q = q.filter_by(id=user.id)

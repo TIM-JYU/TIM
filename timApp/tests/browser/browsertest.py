@@ -190,7 +190,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
 
     def assert_same_screenshot(self,
                                element: WebElement,
-                               filename: Union[str, List[str]],
+                               filename: Union[str, list[str]],
                                move_to_element: bool = False,
                                attempts=1):
         """Asserts that the provided element looks the same as in the provided screenshot.
@@ -412,5 +412,5 @@ def find_by_ngclick(element: WebElement, value: str, tagname='*') -> WebElement:
     return element.find_element(By.CSS_SELECTOR, f'{tagname}[ng-click="{value}"]')
 
 
-def find_all_by_ngmodel(element: WebElement, model: str, tagname='*') -> List[WebElement]:
+def find_all_by_ngmodel(element: WebElement, model: str, tagname='*') -> list[WebElement]:
     return element.find_elements(By.CSS_SELECTOR, f'{tagname}[ng-model="{model}"]')

@@ -119,7 +119,7 @@ class PreviewTest(TimRouteTest):
         )
 
     def check_spelling(self, d, expected, markdown):
-        e: List[HtmlElement] = self.post_preview(d, text=markdown, json_key='texts', as_tree='fragments', spellcheck=True)
+        e: list[HtmlElement] = self.post_preview(d, text=markdown, json_key='texts', as_tree='fragments', spellcheck=True)
         self.assertEqual(len(e), len(expected))
         for i, ex in enumerate(expected):
             children = e[i].cssselect('.parContent')[0].getchildren()

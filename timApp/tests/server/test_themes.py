@@ -7,7 +7,7 @@ from os.path import basename
 
 
 def get_theme_style_name(html: HtmlElement):
-    s: List[HtmlElement] = html.cssselect("link[rel='stylesheet'][href^='/static/generated/']")
+    s: list[HtmlElement] = html.cssselect("link[rel='stylesheet'][href^='/static/generated/']")
     href: str = s[0].attrib["href"]
     url: ParseResult = urlparse(href)
     return basename(url.path)

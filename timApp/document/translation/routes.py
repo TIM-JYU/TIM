@@ -17,7 +17,7 @@ from timApp.util.flask.responsehelper import json_response, ok_response
 
 
 def valid_language_id(lang_id):
-    return re.match('^\w+$', lang_id) is not None
+    return re.match(r'^\w+$', lang_id) is not None
 
 
 tr_bp = Blueprint('translation',

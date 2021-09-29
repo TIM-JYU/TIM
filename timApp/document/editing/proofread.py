@@ -12,16 +12,16 @@ from timApp.document.prepared_par import PreparedPar
 @dataclass
 class Word:
     word: str
-    suggestions: List[str]
+    suggestions: list[str]
 
 
 @dataclass
 class SpellCheckResult:
-    words: List[Word]
+    words: list[Word]
     new_html: str
 
 
-def proofread_pars(pars: List[PreparedPar]) -> List[SpellCheckResult]:
+def proofread_pars(pars: list[PreparedPar]) -> list[SpellCheckResult]:
     return [process_spelling_errors(p.output) for p in pars]
 
 
@@ -44,9 +44,9 @@ class VoikkoClient:
     """Provides an API to libvoikko that exists in another container as an HTTP service.
     The API is intended to be identical to libvoikko.
     """
-    data: List[str]
-    phrase_data: Dict[str, List[VoikkoToken]] = field(init=False)
-    spelling: Dict[str, Tuple[bool, List[str]]] = field(init=False)
+    data: list[str]
+    phrase_data: dict[str, list[VoikkoToken]] = field(init=False)
+    spelling: dict[str, tuple[bool, list[str]]] = field(init=False)
 
     def __post_init__(self):
         r = requests.post('http://oiko:5000/api/v1/proofread', json=self.data)
@@ -59,13 +59,13 @@ class VoikkoClient:
             )
         )
 
-    def tokens(self, s: str) -> List[VoikkoToken]:
+    def tokens(self, s: str) -> list[VoikkoToken]:
         return self.phrase_data[s]
 
     def spell(self, s: str) -> bool:
         return self.spelling[s][0]
 
-    def suggest(self, s: str) -> List[str]:
+    def suggest(self, s: str) -> list[str]:
         return self.spelling[s][1]
 
 

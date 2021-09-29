@@ -29,7 +29,7 @@ def upgrade():
     bind = op.get_bind()
     tmp: Any = scoped_session(session_factory=sessionmaker(bind=bind))
     db.session = tmp
-    ugs: List[Tuple[UserGroup, ScimUserGroup]] = (
+    ugs: list[tuple[UserGroup, ScimUserGroup]] = (
         UserGroup.query
             .join(ScimUserGroup)
             .with_entities(UserGroup, ScimUserGroup)

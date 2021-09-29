@@ -12,7 +12,7 @@ class AnnotationCoordinate:
     offset: Optional[int] = None
     depth: Optional[int] = None
     node: Optional[int] = None
-    el_path: Optional[List[int]] = None
+    el_path: Optional[list[int]] = None
     t: Optional[str] = None
 
 

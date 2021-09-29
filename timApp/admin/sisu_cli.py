@@ -23,7 +23,7 @@ def create_docs() -> None:
 
 @sisu_cli.command('sendmail')
 @click.argument('courses', nargs=-1)
-def send_course_mail_cli(courses: List[str]) -> None:
+def send_course_mail_cli(courses: list[str]) -> None:
     for course in courses:
         ug = UserGroup.get_by_external_id(f'{course}-responsible-teachers')
         if not ug:

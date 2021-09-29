@@ -26,7 +26,7 @@ class PointCountMethod(enum.Enum):
 
 class Group:
 
-    def __init__(self, name: str, data: Union[str, Dict]) -> None:
+    def __init__(self, name: str, data: Union[str, dict]) -> None:
         self.name = name
         if isinstance(data, str):
             self.matchers = {data}
@@ -66,7 +66,7 @@ class Group:
 
 @dataclass(frozen=True)
 class ScoreboardOptions:
-    groups: List[str] = field(default_factory=list)
+    groups: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -89,9 +89,9 @@ PointSumRuleSchema = class_schema(PointSumRuleModel)
 
 class PointSumRule:
 
-    def __init__(self, data: Dict) -> None:
+    def __init__(self, data: dict) -> None:
         try:
-            self.groups = dict((k, Group(k, v)) for k, v in data['groups'].items())
+            self.groups = {k: Group(k, v) for k, v in data['groups'].items()}
         except (AttributeError, KeyError):
             self.groups = {}
 
@@ -122,7 +122,7 @@ class PointSumRule:
             if g.check_match(task_id):
                 yield g.name
 
-    def get_groups(self, task_ids: Optional[List[TaskId]] = None) -> Dict[str, Group]:
+    def get_groups(self, task_ids: Optional[list[TaskId]] = None) -> dict[str, Group]:
         if task_ids is None:
             return self.groups
         groups = dict(self.groups)

@@ -41,7 +41,7 @@ class DocEntry(db.Model, DocInfo):
 
     _block = db.relationship('Block', back_populates='docentries', lazy='joined')
 
-    trs: List[Translation] = db.relationship(
+    trs: list[Translation] = db.relationship(
         'Translation',
         primaryjoin=id == foreign(Translation.src_docid),
         back_populates='docentry',
@@ -55,7 +55,7 @@ class DocEntry(db.Model, DocInfo):
     __table_args__ = (db.Index('docentry_id_idx', 'id'),)
 
     @property
-    def tr(self) -> Optional[Translation]:
+    def tr(self) -> Translation | None:
         return next((tr for tr in self.trs if tr.doc_id == self.id), None)
 
     @property
@@ -67,7 +67,7 @@ class DocEntry(db.Model, DocInfo):
         return self.name
 
     @property
-    def lang_id(self) -> Optional[str]:
+    def lang_id(self) -> str | None:
         return self.tr.lang_id if self.tr else None
 
     @lang_id.setter
@@ -79,22 +79,22 @@ class DocEntry(db.Model, DocInfo):
             self.trs.append(Translation(src_docid=self.id, lang_id=value, doc_id=self.id))
 
     @property
-    def translations(self) -> List['Translation']:
+    def translations(self) -> list[Translation]:
         trs = self.trs
         if not self.tr:
             self.trs.append(Translation(src_docid=self.id, doc_id=self.id, lang_id=''))
         return trs
 
     @staticmethod
-    def get_all() -> List['DocEntry']:
+    def get_all() -> list[DocEntry]:
         return DocEntry.query.all()
 
     @staticmethod
-    def find_all_by_id(doc_id: int) -> List['DocEntry']:
+    def find_all_by_id(doc_id: int) -> list[DocEntry]:
         return DocEntry.query.filter_by(id=doc_id).all()
 
     @staticmethod
-    def find_by_id(doc_id: int, docentry_load_opts: Any=None) -> Optional['DocInfo']:
+    def find_by_id(doc_id: int, docentry_load_opts: Any=None) -> DocInfo | None:
         """Finds a DocInfo by id.
 
         TODO: This method doesn't really belong in DocEntry class.
@@ -113,7 +113,7 @@ class DocEntry(db.Model, DocInfo):
             fallback_to_id: bool = False,
             try_translation: bool = True,
             docentry_load_opts: Any = None
-    ) -> Optional['DocInfo']:
+    ) -> DocInfo | None:
         """Finds a DocInfo by path, falling back to id if specified.
 
         TODO: This method doesn't really belong in DocEntry class.
@@ -140,17 +140,17 @@ class DocEntry(db.Model, DocInfo):
         return d
 
     @staticmethod
-    def get_dummy(title: str) -> 'DocEntry':
+    def get_dummy(title: str) -> DocEntry:
         return DocEntry(id=-1, name=title)
 
     @staticmethod
     def create(path: str,
-               owner_group: Optional[UserGroup] = None,
-               title: Optional[str] = None,
-               from_file: Optional[str]=None,
-               initial_par: Optional[str]=None,
-               settings: Optional[Dict]=None,
-               folder_opts: FolderCreationOptions=FolderCreationOptions()) -> 'DocEntry':
+               owner_group: UserGroup | None = None,
+               title: str | None = None,
+               from_file: str | None=None,
+               initial_par: str | None=None,
+               settings: dict | None=None,
+               folder_opts: FolderCreationOptions=FolderCreationOptions()) -> DocEntry:
         """Creates a new document with the specified properties.
 
         :param from_file: If provided, loads the document content from a file.
@@ -190,7 +190,7 @@ class DocEntry(db.Model, DocInfo):
         return docentry
 
 
-def create_document_and_block(owner_group: Optional[UserGroup], desc: Optional[str] = None) -> Document:
+def create_document_and_block(owner_group: UserGroup | None, desc: str | None = None) -> Document:
     block = insert_block(BlockType.Document, desc, [owner_group] if owner_group else None)
     # Must flush because we need to know the document id in order to create the document in the filesystem.
     db.session.flush()
@@ -201,11 +201,11 @@ def create_document_and_block(owner_group: Optional[UserGroup], desc: Optional[s
 
 
 def get_documents(include_nonpublic: bool = False,
-                  filter_folder: Optional[str] = None,
+                  filter_folder: str | None = None,
                   search_recursively: bool = True,
-                  filter_user: Optional[User] = None,
+                  filter_user: User | None = None,
                   custom_filter: Any=None,
-                  query_options: Any=None) -> List[DocEntry]:
+                  query_options: Any=None) -> list[DocEntry]:
     """Gets all the documents in the database matching the given criteria.
 
     :param filter_user: If specified, returns only the documents that the user has view access to.
@@ -239,7 +239,7 @@ def get_documents(include_nonpublic: bool = False,
 
 
 def get_documents_in_folder(folder_pathname: str,
-                            include_nonpublic: bool = False) -> List[DocEntry]:
+                            include_nonpublic: bool = False) -> list[DocEntry]:
     """Gets all the documents in a folder.
 
     :param folder_pathname: path to be searched for documents without ending '/'

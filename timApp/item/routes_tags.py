@@ -93,7 +93,7 @@ def set_group_tags(doc):
     if not d:
         raise NotExist()
     verify_manage_access(d)
-    tags: List[Tag] = d.block.tags
+    tags: list[Tag] = d.block.tags
     tags_to_remove = [t for t in tags
                       if t.get_group_name() or t.type in (TagType.CourseCode, TagType.Subject)]
     for t in tags_to_remove:

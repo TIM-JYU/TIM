@@ -19,7 +19,7 @@ def get_default_scss_gen_dir() -> Path:
     return static_folder / current_app.config['SASS_GEN_PATH']
 
 
-def generate_theme(themes: List[Theme], gen_dir: Path) -> str:
+def generate_theme(themes: list[Theme], gen_dir: Path) -> str:
     """Generates an SCSS file based on the given themes.
 
     Uses generate_theme_scss to first generate a theme file and then
@@ -42,7 +42,7 @@ def generate_theme(themes: List[Theme], gen_dir: Path) -> str:
     return get_combined_css_filename(themes)
 
 
-def generate_theme_scss(themes: List[Theme], gen_dir: Path) -> None:
+def generate_theme_scss(themes: list[Theme], gen_dir: Path) -> None:
     """Generates an SCSS file based on the given theme names.
 
     .. note::
@@ -90,7 +90,7 @@ def generate_theme_scss(themes: List[Theme], gen_dir: Path) -> None:
             f.write(f'@include {t.filename};\n')
 
 
-def get_combined_css_filename(themes: List[Theme]) -> str:
+def get_combined_css_filename(themes: list[Theme]) -> str:
     """Returns the combined file name based on the given list of theme names.
 
     :param themes: The list of themes.

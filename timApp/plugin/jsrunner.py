@@ -16,7 +16,7 @@ class JsRunnerError(Exception):
     pass
 
 
-def jsrunner_run(params: JsRunnerParams) -> Tuple[Any, str]:
+def jsrunner_run(params: JsRunnerParams) -> tuple[Any, str]:
     """
     Run JavaScript code in jsrunner.
     """

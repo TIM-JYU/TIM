@@ -389,7 +389,7 @@ par4
         menu = self.open_menu(self.find_element(start))
         return menu
 
-    def check_par_texts(self, pars: List[WebElement], expected: List[str]):
+    def check_par_texts(self, pars: list[WebElement], expected: list[str]):
         self.assertEqual(expected, [p.text for p in pars])
 
     def disable_ace(self):

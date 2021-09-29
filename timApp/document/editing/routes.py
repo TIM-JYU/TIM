@@ -126,7 +126,7 @@ def update_document(doc_id):
     return manage_response(docentry, pars, timdb, ver_before)
 
 
-def manage_response(docentry: DocInfo, pars: List[DocParagraph], timdb, ver_before: Version):
+def manage_response(docentry: DocInfo, pars: list[DocParagraph], timdb, ver_before: Version):
     doc = docentry.document_as_current_user
     chg = doc.get_changelog()
     notify_doc_watchers(docentry, '', NotificationType.DocModified, old_version=ver_before)
@@ -325,8 +325,8 @@ def mark_as_translated(p: DocParagraph):
     return deref
 
 
-def abort_if_duplicate_ids(doc: Document, pars_to_add: List[DocParagraph]):
-    conflicting_ids = set(p.get_id() for p in pars_to_add) & set(doc.get_par_ids())
+def abort_if_duplicate_ids(doc: Document, pars_to_add: list[DocParagraph]):
+    conflicting_ids = {p.get_id() for p in pars_to_add} & set(doc.get_par_ids())
     if conflicting_ids:
         raise RouteException(get_duplicate_id_msg(conflicting_ids))
 
@@ -360,7 +360,7 @@ def preview_paragraphs(doc_id):
         return json_response({'texts': comment_html, 'js': [], 'css': []})
 
 
-def update_associated_uploads(pars: List[DocParagraph], doc: DocInfo):
+def update_associated_uploads(pars: list[DocParagraph], doc: DocInfo):
     for p in pars:
         md = p.get_markdown()
         for r in upload_regexes:
@@ -379,7 +379,7 @@ def update_associated_uploads(pars: List[DocParagraph], doc: DocInfo):
 
 
 def par_response(
-        pars: List[DocParagraph],
+        pars: list[DocParagraph],
         docu: DocInfo,
         spellcheck=False,
         update_cache=False,
@@ -565,7 +565,7 @@ def get_next_available_task_id(attrs, old_pars, duplicates, par_id):
 
 
 # Automatically rename plugins with name pluginnamehere
-def check_and_rename_pluginnamehere(blocks: List[DocParagraph], doc: Document):
+def check_and_rename_pluginnamehere(blocks: list[DocParagraph], doc: Document):
     # Get the paragraphs from the document with taskids
     old_pars = None  # lazy load for old_pars
     i = 1

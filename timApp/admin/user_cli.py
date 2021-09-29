@@ -27,7 +27,7 @@ from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.utils import approximate_real_name
 
 
-def create_user_info_set(u: User) -> Set[str]:
+def create_user_info_set(u: User) -> set[str]:
     """Returns a set of strings constructed from various parts of user info.
     This set is meant to be intersected with another user to determine whether they have anything in common.
     """
@@ -47,7 +47,7 @@ def has_anything_in_common(u1: User, u2: User) -> bool:
     if u1_set & u2_set:
         return True
     # This allows e.g. testuser1 and testuser2 to be merged.
-    return bool(set(n[:-1] for n in u1_set) & set(n[:-1] for n in u2_set))
+    return bool({n[:-1] for n in u1_set} & {n[:-1] for n in u2_set})
 
 
 user_cli = AppGroup('user')
@@ -150,7 +150,7 @@ def do_merge_users(u_prim: User, u_sec: User, force=False) -> MergeResult:
     docs = u_sec_folder.get_all_documents(include_subdirs=True)
 
     # Move group memberships.
-    curr_prim_memberships = set(m.usergroup_id for m in u_prim.memberships)
+    curr_prim_memberships = {m.usergroup_id for m in u_prim.memberships}
     for m in u_sec.memberships:
         # Skip personal usergroup.
         if m.usergroup_id == u_sec_group.id:
@@ -301,7 +301,7 @@ From {lowerlimit} to {higherlimit}.
 
 @user_cli.command()
 def fix_aalto_student_ids() -> None:
-    users_to_fix: List[User] = UserGroup.query.filter(
+    users_to_fix: list[User] = UserGroup.query.filter(
         UserGroup.name.in_(['aalto19test', 'cs-a1141-2017-2018'])).join(User, UserGroup.users).with_entities(
         User).all()
     for u in users_to_fix:
@@ -428,9 +428,9 @@ def find_duplicate_accounts() -> None:
             click.echo(f'{primary.name};{s.name}')
 
 
-def find_duplicate_accounts_by_email() -> List[Tuple[User, Set[User]]]:
+def find_duplicate_accounts_by_email() -> list[tuple[User, set[User]]]:
     email_lwr = func.lower(User.email)
-    dupes: List[User] = User.query.filter(
+    dupes: list[User] = User.query.filter(
         email_lwr.in_(User.query.group_by(email_lwr).having(func.count('*') > 1).with_entities(email_lwr).all())
     ).order_by(User.email).all()
     result = []

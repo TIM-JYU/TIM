@@ -971,10 +971,10 @@ class ScimTest(TimRouteTest):
         )
         d = DocEntry.find_by_path('groups/2020/itkp222/09/sisugroups')
         expected_set = {'itkp222-200909-teachers', 'itkp222-200919-teachers', 'itkp222-200919-administrative-persons'}
-        rights_set = set([x.usergroup.name for x in d.block.accesses.values()])
+        rights_set = {x.usergroup.name for x in d.block.accesses.values()}
         self.assertEqual(expected_set, rights_set)
-        self.assertEqual(expected_set, set([x.usergroup.name for x in d.block.parent.block.accesses.values()]))
-        self.assertEqual(expected_set, set([x.usergroup.name for x in d.block.parent.parent.block.accesses.values()]))
+        self.assertEqual(expected_set, {x.usergroup.name for x in d.block.parent.block.accesses.values()})
+        self.assertEqual(expected_set, {x.usergroup.name for x in d.block.parent.parent.block.accesses.values()})
         year_folder = d.block.parent.parent.parent
         self.assertEqual('2020', year_folder.title)
         self.assertIn('teachers', [x.usergroup.name for x in year_folder.block.accesses.values()])
@@ -1146,7 +1146,7 @@ class ScimTest(TimRouteTest):
             f'/groups/removemember/{ug.name}', {'names': ['mameikal']}
         )
 
-    def check_no_group_access(self, username: str, externalids: List[str], no_access_expected=None):
+    def check_no_group_access(self, username: str, externalids: list[str], no_access_expected=None):
         self.login(username=username)
         if no_access_expected is None:
             no_access_expected = externalids
@@ -1260,9 +1260,9 @@ def scim_error(msg: str, code=422):
 class SendGradeTestBase(TimRouteTest):
     def check_send_grade_result(
             self,
-            grade_params: Dict[str, Any],
-            expect_content: Dict[str, Any],
-            mock_sisu_response: Optional[Dict[str, Any]],
+            grade_params: dict[str, Any],
+            expect_content: dict[str, Any],
+            mock_sisu_response: Optional[dict[str, Any]],
             mock_sisu_status=200,
             expect_status=200,
     ):

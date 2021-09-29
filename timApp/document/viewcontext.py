@@ -43,8 +43,8 @@ class OriginInfo:
     par_id: str
 
 
-UrlMacros = Tuple[Tuple[str, str], ...]
-ExtraMacros = Dict[str, object]
+UrlMacros = tuple[tuple[str, str], ...]
+ExtraMacros = dict[str, object]
 
 
 @dataclass(frozen=True)
@@ -78,7 +78,7 @@ class ViewContext:
         return None
 
     @property
-    def args(self) -> Dict[str, str]:
+    def args(self) -> dict[str, str]:
         return {k: v for k, v in self.url_params}
 
     def isview(self, ret_val: bool, mode: Any = None) -> bool:

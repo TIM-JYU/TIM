@@ -18,7 +18,7 @@ from timApp.util.utils import read_json_lines
 
 class AnswerTest(TimRouteTest):
 
-    def check_totals(self, user: User, task_ids: List[TaskId], task_count, total_points):
+    def check_totals(self, user: User, task_ids: list[TaskId], task_count, total_points):
         self.assertEqual([{'user': user,
                            'task_count': task_count,
                            'task_points': total_points,
@@ -110,7 +110,7 @@ class AnswerTest(TimRouteTest):
             expect_status=400,
         )
 
-        result: List[Answer] = self.test_user_1.answers.filter_by(task_id=f'{d.id}.t').order_by(Answer.id).all()
+        result: list[Answer] = self.test_user_1.answers.filter_by(task_id=f'{d.id}.t').order_by(Answer.id).all()
         for a, b in zip(result, result[1:]):
             self.assertLess(a.answered_on, b.answered_on)
 
@@ -166,18 +166,18 @@ class AnswerTest(TimRouteTest):
         self.assertEqual(0, r.adr.answer)
         self.assertEqual(0, r.adr.answersaver)
 
-        anss: List[Answer] = self.test_user_1.get_answers_for_task(f'{d.id}.t1').all()
+        anss: list[Answer] = self.test_user_1.get_answers_for_task(f'{d.id}.t1').all()
         self.assertEqual(1, len(anss))
         self.assertEqual('y1', anss[0].content_as_json.get('c'))
-        anss: List[Answer] = self.test_user_1.get_answers_for_task(f'{d.id}.t2').all()
+        anss: list[Answer] = self.test_user_1.get_answers_for_task(f'{d.id}.t2').all()
         self.assertEqual(2, len(anss))
         self.assertEqual('y1inv', anss[0].content_as_json.get('c'))
         self.assertEqual('y1', anss[1].content_as_json.get('c'))
 
-        anss: List[Answer] = self.test_user_2.get_answers_for_task(f'{d.id}.t1').all()
+        anss: list[Answer] = self.test_user_2.get_answers_for_task(f'{d.id}.t1').all()
         self.assertEqual(1, len(anss))
         self.assertEqual('y2', anss[0].content_as_json.get('c'))
-        anss: List[Answer] = self.test_user_2.get_answers_for_task(f'{d.id}.t2').all()
+        anss: list[Answer] = self.test_user_2.get_answers_for_task(f'{d.id}.t2').all()
         self.assertEqual(2, len(anss))
         self.assertEqual('y2inv', anss[0].content_as_json.get('c'))
         self.assertEqual('y2', anss[1].content_as_json.get('c'))
@@ -198,7 +198,7 @@ class AnswerTest(TimRouteTest):
                     self.post_answer('textfield', task_id, user_input={'c': '1'})
                     self.post_answer('textfield', task_id, user_input={'c': '2'})
                 self.assertEqual(2, m.call_count)
-        anss: List[Answer] = self.test_user_1.answers.filter_by(task_id=task_id).order_by(Answer.id.asc()).all()
+        anss: list[Answer] = self.test_user_1.answers.filter_by(task_id=task_id).order_by(Answer.id.asc()).all()
         file_to_read = get_backup_answer_file()
         loaded_json = read_json_lines(file_to_read)
         for a, backup in zip(anss, loaded_json):

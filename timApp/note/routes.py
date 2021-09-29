@@ -71,7 +71,7 @@ class DeletedNote:
     def access(self) -> str:
         return 'everyone'
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         d = self.notification.block.docentries[0]
         return {
             'id': None,
@@ -195,7 +195,7 @@ def post_note(
         text: str,
         access: str,
         ctx: ParContext,
-        tags: Optional[Dict[str, bool]] = None,
+        tags: Optional[dict[str, bool]] = None,
 ) -> Response:
     is_public = access == "everyone"
     got_tags = []
@@ -221,7 +221,7 @@ def post_note(
     return comment_response(ctx, orig_docinfo, p)
 
 
-def check_permissions_and_get_orig(ctx: ParContext, is_public: bool) -> Tuple[DocInfo, DocParagraph]:
+def check_permissions_and_get_orig(ctx: ParContext, is_public: bool) -> tuple[DocInfo, DocParagraph]:
     orig_docinfo = get_doc_or_abort(ctx.orig.doc_id)
     orig_doc = orig_docinfo.document
     check_note_access_ok(is_public, orig_doc)
@@ -250,7 +250,7 @@ def edit_note(
         ctx: ParContext,
         text: str,
         access: str,
-        tags: Optional[Dict[str, bool]] = None,
+        tags: Optional[dict[str, bool]] = None,
 ) -> Response:
     verify_logged_in()
     note_id = id

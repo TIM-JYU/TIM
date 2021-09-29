@@ -81,7 +81,7 @@ def get_group_prefix(g: UserGroup) -> Optional[str]:
     return None
 
 
-def get_potential_groups(u: User, course_filter: Optional[str] = None) -> List[UserGroup]:
+def get_potential_groups(u: User, course_filter: Optional[str] = None) -> list[UserGroup]:
     """Returns all the Sisu groups that the user shall have access to."""
     sisu_group_memberships = u.groups_dyn.join(UserGroup).join(ScimUserGroup).with_entities(UserGroup).all()
     ug_filter = true()
@@ -103,7 +103,7 @@ class GroupCreateModel:
 GroupCreateSchema = class_schema(GroupCreateModel)
 
 
-def get_sisu_group_rights(g: UserGroup) -> List[UserGroup]:
+def get_sisu_group_rights(g: UserGroup) -> list[UserGroup]:
     group_names = []
     if g.external_id.is_studysubgroup:
         group_names.append(g.external_id.without_role + 'teachers')
@@ -115,21 +115,21 @@ def get_sisu_group_rights(g: UserGroup) -> List[UserGroup]:
 
 @sisu.post('/createGroupDocs')
 @use_args(GroupCreateSchema(many=True), locations=("json",))
-def create_groups_route(args: List[GroupCreateModel]) -> Response:
+def create_groups_route(args: list[GroupCreateModel]) -> Response:
     u = get_current_user_object()
 
     # First, make sure user is eligible for access to all the requested groups.
     allowed_groups = get_potential_groups(u)
-    allowed_external_ids = set(g.external_id.external_id for g in allowed_groups)
-    requested_external_ids = set(a.externalId for a in args)
+    allowed_external_ids = {g.external_id.external_id for g in allowed_groups}
+    requested_external_ids = {a.externalId for a in args}
     not_allowed = requested_external_ids - allowed_external_ids
     if not_allowed:
         raise AccessDenied(f"You don't have access to all the requested groups: {seq_to_str(sorted(list(not_allowed)))}")
 
     # Now, create the admin documents for groups that don't yet exist.
     # Rights to already existing documents need to be updated too.
-    name_map: Dict[str, Union[str, Missing]] = {a.externalId: a.name for a in args}
-    group_map: Dict[str, UserGroup] = {g.external_id.external_id: g for g in allowed_groups}
+    name_map: dict[str, Union[str, Missing]] = {a.externalId: a.name for a in args}
+    group_map: dict[str, UserGroup] = {g.external_id.external_id: g for g in allowed_groups}
     created = []
     updated = []
     admin_id = UserGroup.get_admin_group().id
@@ -330,10 +330,10 @@ class PostGradesModel:
     docId: int
     dryRun: bool
     partial: bool
-    filterUsers: Optional[List[str]] = None
+    filterUsers: Optional[list[str]] = None
     includeUsers: MembershipFilter = field(default=MembershipFilter.All, metadata={'by_value': True})
     completionDate: Optional[datetime] = None
-    groups: Optional[List[str]] = None
+    groups: Optional[list[str]] = None
 
 
 @sisu.post('/sendGrades')
@@ -372,12 +372,12 @@ class PostAssessmentsErrorValue:
     gradeId: Optional[str] = None
 
 
-AssessmentErrors = Dict[str, PostAssessmentsErrorValue]
+AssessmentErrors = dict[str, PostAssessmentsErrorValue]
 
 
 @dataclass
 class PostAssessmentsBody:
-    assessments: Dict[int, AssessmentErrors]
+    assessments: dict[int, AssessmentErrors]
 
 
 @dataclass
@@ -427,7 +427,7 @@ class CandidateAssessment:
             self,
             completion_date: Optional[str] = None,
             ensure_int_credit: bool = False,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         result = {
             'userName': self.user.name,
             'gradeId': self.gradeId,
@@ -470,7 +470,7 @@ def mock_assessments(sisuid: str) -> Response:
     }}, status_code=207 if partial else 400)
 
 
-def call_sisu_assessments(sisu_id: str, json: Dict[str, Any]) -> requests.Response:
+def call_sisu_assessments(sisu_id: str, json: dict[str, Any]) -> requests.Response:
     url = f'{app.config["SISU_ASSESSMENTS_URL"]}{sisu_id}'
     return requests.post(
         url,
@@ -479,7 +479,7 @@ def call_sisu_assessments(sisu_id: str, json: Dict[str, Any]) -> requests.Respon
     )
 
 
-def get_assessment_fields_to_save(doc: DocInfo, c: CandidateAssessment) -> Dict[str, str]:
+def get_assessment_fields_to_save(doc: DocInfo, c: CandidateAssessment) -> dict[str, str]:
     result = {
         f'{doc.id}.completionDate': c.completionDate,
         f'{doc.id}.sentGrade': c.gradeId,
@@ -502,10 +502,10 @@ def send_grades_to_sisu(
         partial: bool,
         dry_run: bool,
         completion_date: Optional[date],
-        filter_users: Optional[List[str]],
-        groups: Optional[List[str]],
+        filter_users: Optional[list[str]],
+        groups: Optional[list[str]],
         membership_filter: MembershipFilter,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     assessments = get_sisu_assessments(sisu_id, teacher, doc, groups, filter_users, membership_filter)
     if not completion_date:
         completion_date = get_current_time().date()
@@ -564,7 +564,7 @@ def send_grades_to_sisu(
     if pr.error:
         raise SisuError(pr.error.reason)
     assert pr.body is not None
-    invalid_assessments = set(n for n in pr.body.assessments.keys())
+    invalid_assessments = {n for n in pr.body.assessments.keys()}
     ok_assessments = [a for i, a in enumerate(assessments) if i not in invalid_assessments]
     if not dry_run and r.status_code < 400:
         for a in ok_assessments:
@@ -596,7 +596,7 @@ def send_grades_to_sisu(
         for k, v in pr.body.assessments.items()
     ]
     all_errors = errs + validation_errors
-    error_users = set(a.assessment.user.id for a in all_errors)
+    error_users = {a.assessment.user.id for a in all_errors}
     return {
         'sent_assessments': ok_assessments if r.status_code < 400 else [],
         'assessment_errors': all_errors,
@@ -616,10 +616,10 @@ def get_sisu_assessments(
         sisu_id: str,
         teacher: User,
         doc: DocInfo,
-        groups: Optional[List[str]],
-        filter_users: Optional[List[str]],
+        groups: Optional[list[str]],
+        filter_users: Optional[list[str]],
         membership_filter: MembershipFilter,
-) -> List[CandidateAssessment]:
+) -> list[CandidateAssessment]:
     teachers_group = UserGroup.get_teachers_group()
     if teacher not in teachers_group.users:
         raise AccessDenied('You are not a TIM teacher.')
@@ -643,7 +643,7 @@ def get_sisu_assessments(
         usergroups = groups
     ugs = UserGroup.query.filter(UserGroup.name.in_(usergroups)).all()
     requested = set(usergroups)
-    found = set(ug.name for ug in ugs)
+    found = {ug.name for ug in ugs}
     not_found_gs = requested - found
     if not_found_gs:
         raise IncorrectSettings(f'Usergroup {seq_to_str(sorted(list(not_found_gs)))} not found.')

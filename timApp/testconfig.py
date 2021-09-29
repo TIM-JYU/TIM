@@ -42,10 +42,10 @@ class Schedule(TypedDict):
     schedule: crontab
 
 
-CELERYBEAT_SCHEDULE: Dict[str, Schedule] = {
+CELERYBEAT_SCHEDULE: dict[str, Schedule] = {
     # don't schedule anything while testing
 }
-WTF_CSRF_METHODS: List[str] = []
+WTF_CSRF_METHODS: list[str] = []
 SCIM_USERNAME = 't'
 SCIM_PASSWORD = 'pass'
 SISU_CERT_PATH: Optional[str] = None

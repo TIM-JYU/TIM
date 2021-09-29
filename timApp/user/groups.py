@@ -48,7 +48,7 @@ def verify_groupadmin(
     return True
 
 
-def get_uid_gid(groupname, usernames) -> Tuple[UserGroup, List[User]]:
+def get_uid_gid(groupname, usernames) -> tuple[UserGroup, list[User]]:
     users = User.query.filter(User.name.in_(usernames)).all()
     group = UserGroup.query.filter_by(name=groupname).first()
     raise_group_not_found_if_none(groupname, group)
@@ -122,7 +122,7 @@ def create_group(groupname: str):
     return json_response(doc)
 
 
-def do_create_group(groupname: str) -> Tuple[UserGroup, DocInfo]:
+def do_create_group(groupname: str) -> tuple[UserGroup, DocInfo]:
     verify_groupadmin(action=f'Creating group {groupname}')
     validate_groupname(groupname)
     u = UserGroup.create(groupname)
@@ -156,7 +156,7 @@ def add_group_infofield_template(doc: DocInfo) -> None:
     doc.document.add_text(text)
 
 
-def update_group_doc_settings(doc: DocInfo, groupname: str, extra_macros: Dict[str, Any] = None):
+def update_group_doc_settings(doc: DocInfo, groupname: str, extra_macros: dict[str, Any] = None):
     s = doc.document.get_settings().get_dict().get('macros', {})
     s['group'] = groupname
     s['fields'] = ['info']
@@ -211,19 +211,19 @@ def verify_group_view_access(ug: UserGroup, user=None, require=True):
     return verify_group_access(ug, view_access_set, user, require=require)
 
 
-def get_member_infos(groupname: str, usernames: List[str]):
+def get_member_infos(groupname: str, usernames: list[str]):
     usernames = get_usernames(usernames)
     group, users = get_uid_gid(groupname, usernames)
     verify_group_edit_access(group)
-    existing_usernames = set(u.name for u in users)
-    existing_ids = set(u.id for u in group.users)
+    existing_usernames = {u.name for u in users}
+    existing_ids = {u.id for u in group.users}
     not_exist = [name for name in usernames if name not in existing_usernames]
     return existing_ids, group, not_exist, usernames, users
 
 
 @dataclass
 class NamesModel:
-    names: List[str]
+    names: list[str]
 
 
 NamesModelSchema = class_schema(NamesModel)
@@ -235,7 +235,7 @@ def add_member(groupname):
     existing_ids, group, not_exist, usernames, users = get_member_infos(groupname, nm.names)
     if set(nm.names) & SPECIAL_USERNAMES:
         raise RouteException('Cannot add special users.')
-    already_exists = set(u.name for u in group.users) & set(usernames)
+    already_exists = {u.name for u in group.users} & set(usernames)
     added = []
     curr = get_current_user_object()
     for u in users:
@@ -274,7 +274,7 @@ def remove_member(groupname):
     })
 
 
-def get_usernames(usernames: List[str]):
-    usernames = list(set([name.strip() for name in usernames]))
+def get_usernames(usernames: list[str]):
+    usernames = list({name.strip() for name in usernames})
     usernames.sort()
     return usernames

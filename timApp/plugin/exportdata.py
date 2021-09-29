@@ -13,7 +13,7 @@ class ExportData:
 
 @dataclass
 class WithExportData:
-    exportdata: List[ExportData]
+    exportdata: list[ExportData]
 
 
 @dataclass

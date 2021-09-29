@@ -28,7 +28,7 @@ def fix_jso(jso: str) -> str:
     return '[[' + jso + ']]'
 
 
-def sep_n_and_jso(jso: str) -> Tuple[int, str]:
+def sep_n_and_jso(jso: str) -> tuple[int, str]:
     """
     Separates repeat factor and json string from string. Separator is * or :
     If no repeat factor, return just json string.
@@ -55,7 +55,7 @@ def sep_n_and_jso(jso: str) -> Tuple[int, str]:
     return n, fix_jso(jso)
 
 
-def get_sample_list(myrandom: Random, jso: str) -> List[int]:
+def get_sample_list(myrandom: Random, jso: str) -> list[int]:
     """
     Returns a list of unique ints from the given interval.
     :param myrandom: random number generator
@@ -112,7 +112,7 @@ def get_sample_list(myrandom: Random, jso: str) -> List[int]:
     return ret
 
 
-def get_int_list(myrandom: Random, jso: str) -> List[int]:
+def get_int_list(myrandom: Random, jso: str) -> list[int]:
     """
     Returns list of random ints from given interval.
     :param myrandom: random number generator
@@ -136,7 +136,7 @@ def get_int_list(myrandom: Random, jso: str) -> List[int]:
     return ret
 
 
-def get_uniform_list(myrandom: Random, jso: str) -> List[float]:
+def get_uniform_list(myrandom: Random, jso: str) -> list[float]:
     """
     Returns list of uniformely distributed random floats from given interval.
     :param myrandom: random number generator
@@ -160,7 +160,7 @@ def get_uniform_list(myrandom: Random, jso: str) -> List[float]:
 T = TypeVar('T')
 
 
-def repeat_rnd(list_func: Callable[[Random, str], List[T]], myrandom: Random, jso: str) -> Optional[List[T]]:
+def repeat_rnd(list_func: Callable[[Random, str], list[T]], myrandom: Random, jso: str) -> Optional[list[T]]:
     """
 
     :param list_func: function to produce random list
@@ -188,11 +188,11 @@ def repeat_rnd(list_func: Callable[[Random, str], List[T]], myrandom: Random, js
     return ret
 
 
-State = Tuple[int, ...]
+State = tuple[int, ...]
 
 
-def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None, state: Optional[State] = None) \
-        -> Tuple[Optional[Union[List[float], List[int]]], Optional[SeedType], Optional[State]]:
+def get_rnds(attrs: dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None, state: Optional[State] = None) \
+        -> tuple[Optional[Union[list[float], list[int]]], Optional[SeedType], Optional[State]]:
     """
     Returns list of random numbers based on attribute name (def: rnd) and rnd_seed.
     :param attrs: dict of attributes
@@ -243,7 +243,7 @@ def get_rnds(attrs: Dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None
     return ret, seed_to_use, myrandom.getstate()
 
 
-def get_rands_as_dict(attrs: Dict, rnd_seed: Optional[SeedType], state: Optional[State] = None) -> Tuple[Optional[dict], Optional[SeedType], Optional[State]]:
+def get_rands_as_dict(attrs: dict, rnd_seed: Optional[SeedType], state: Optional[State] = None) -> tuple[Optional[dict], Optional[SeedType], Optional[State]]:
     """
     Returns a dict of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
@@ -267,7 +267,7 @@ def get_rands_as_dict(attrs: Dict, rnd_seed: Optional[SeedType], state: Optional
     return ret, rnd_seed, state
 
 
-def get_rands_as_str(attrs: Dict, rnd_seed: Optional[SeedType], state: Optional[State] = None) -> Tuple[str, Optional[SeedType], Optional[State]]:
+def get_rands_as_str(attrs: dict, rnd_seed: Optional[SeedType], state: Optional[State] = None) -> tuple[str, Optional[SeedType], Optional[State]]:
     """
     Returns a Jinja2 str of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"

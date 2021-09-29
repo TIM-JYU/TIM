@@ -36,23 +36,23 @@ def get_minimal_visibility_settings(item: Optional['Document']):
                                      hide_sidemenu=settings.hide_sidemenu() is not None)
 
 
-UrlMacroMap = Dict[str, Union[int, float, str]]
+UrlMacroMap = dict[str, Union[int, float, str]]
 
 
 # TODO: Start moving DocSettings keys to this dataclass
 @dataclass
 class DocSettingTypes:
-    themes: List[str]
+    themes: list[str]
     override_user_themes: bool
     hide_sidemenu: Optional[str]
     answer_submit_time_tolerance: int
-    scoreboard_docs: List[str]
+    scoreboard_docs: list[str]
     show_scoreboard: bool
     hideBrowser: bool
-    macros: Dict[str, Any]
-    texmacros: Dict[str, Any]
+    macros: dict[str, Any]
+    texmacros: dict[str, Any]
     urlmacros: UrlMacroMap
-    rndmacros: Dict[str, str]
+    rndmacros: dict[str, str]
     cache: bool
     peer_review: bool
     peer_review_count: int
@@ -60,7 +60,7 @@ class DocSettingTypes:
     disable_answer: str
 
 
-doc_setting_field_map: Dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
+doc_setting_field_map: dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
 
 
 T = TypeVar('T')
@@ -188,7 +188,7 @@ class DocSettings:
     def get_macro_delimiter(self) -> str:
         return self.__dict.get(self.macro_delimiter_key, '%%')
 
-    def get_globalmacros(self) -> Dict[str, str]:
+    def get_globalmacros(self) -> dict[str, str]:
         return self.__dict.get(self.globalmacros_key, {})
 
     def get_doctexmacros(self) -> str:
@@ -222,7 +222,7 @@ class DocSettings:
     def lazy(self, default=False):
         return self.__dict.get(self.lazy_key, default)
 
-    def set_bookmarks(self, bookmarks: List[Dict]):
+    def set_bookmarks(self, bookmarks: list[dict]):
         self.__dict[self.bookmark_key] = bookmarks
 
     def set_source_document(self, source_docid: Optional[int]):
@@ -409,7 +409,7 @@ class DocSettings:
             return timedelta(minutes=5)
         return timedelta(minutes=r)
 
-    def themes(self) -> List[str]:
+    def themes(self) -> list[str]:
         return self.get_setting_or_default('themes', [])
 
     def override_user_themes(self) -> bool:
@@ -422,7 +422,7 @@ class DocSettings:
         r = self.get_setting_or_default('answer_submit_time_tolerance', 1000)
         return timedelta(milliseconds=r if r >= 0 else 0)
 
-    def scoreboard_docs(self) -> List[str]:
+    def scoreboard_docs(self) -> list[str]:
         return self.get_setting_or_default('scoreboard_docs', [])
 
     def show_scoreboard(self) -> bool:
@@ -434,7 +434,7 @@ class DocSettings:
     def urlmacros(self) -> UrlMacroMap:
         return self.get_setting_or_default('urlmacros', {})
 
-    def rndmacros(self) -> Dict[str, str]:
+    def rndmacros(self) -> dict[str, str]:
         return self.get_setting_or_default('rndmacros', {})
 
     def is_cached(self):
@@ -458,7 +458,7 @@ def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     return result
 
 
-def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> Tuple[YamlBlock, bool]:
+def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> tuple[YamlBlock, bool]:
     result = YamlBlock()
     had_settings = False
     for curr in pars:

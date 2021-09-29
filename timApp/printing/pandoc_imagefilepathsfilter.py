@@ -62,14 +62,14 @@ def init_whitelist():
 
         try:
             open(PRINTING_WHITELIST_FILE, 'a').close()
-        except IOError:
+        except OSError:
             pass
 
     content = []
     try:
-        with open(PRINTING_WHITELIST_FILE, 'r') as f:
+        with open(PRINTING_WHITELIST_FILE) as f:
             content = f.readlines()
-    except IOError:
+    except OSError:
         pass
 
     return [x.strip() for x in content]
@@ -125,7 +125,7 @@ window.onload = init;
            "--no-sandbox",
            "--headless",
            "--disable-gpu",
-           "--print-to-pdf={}".format(pdf),
+           f"--print-to-pdf={pdf}",
            temp
            ]
     # cmd = "./svg2pdf.sh {} {}".format(image_path, pdf)
@@ -236,7 +236,7 @@ def handle_images(key, value, fmt, meta):
                     img_dl_path = convert_svg_to_pdf(img_dl_path)
                 return Image(attrs, alt_text_inlines, [img_dl_path, title])
 
-            except IOError:
+            except OSError:
                 # could not download image, so display the image as a link to the imageURL
                 pass
             except:
@@ -245,7 +245,7 @@ def handle_images(key, value, fmt, meta):
             # For other external images, transform the element to appear as a link
             # to the image resource in the LaTeX-output.
             return [
-                RawInline('latex', "\externalimagelink{"),
+                RawInline('latex', r"\externalimagelink{"),
                 Link(attrs, [Str(url)], [url, title]),
                 RawInline('latex', "}")
             ]

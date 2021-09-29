@@ -274,7 +274,7 @@ class FolderCopyTest(TimRouteTest):
         self.assertEqual(['hello_en'], [p.get_markdown() for p in trs[1].document.get_paragraphs()])
         self.assertEqual(['hello_sv'], [p.get_markdown() for p in trs[2].document.get_paragraphs()])
         f1d1 = DocEntry.find_by_id(f1d1.id)
-        self.assertFalse(set(tr.id for tr in f1d1.translations) & set(tr.id for tr in f1d1c.translations))
+        self.assertFalse({tr.id for tr in f1d1.translations} & {tr.id for tr in f1d1c.translations})
 
         self.json_post(f'/copy/{a.id}',
                        {'destination': self.get_personal_item_path('b'), 'exclude': None},

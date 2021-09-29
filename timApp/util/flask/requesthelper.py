@@ -34,8 +34,8 @@ class EmptyWarning:
 warnings = EmptyWarning()  # type: ignore[assignment]
 
 
-def verify_json_params(*args: str, require: bool = True, default: Any = None, error_msgs: Optional[List[str]] = None) -> \
-List[Any]:
+def verify_json_params(*args: str, require: bool = True, default: Any = None, error_msgs: Optional[list[str]] = None) -> \
+list[Any]:
     """Gets the specified JSON parameters from the request.
 
     :param default: The default value for the parameter if it is not found from the request.
@@ -60,7 +60,7 @@ List[Any]:
     return result
 
 
-def get_option(req: Union[Request, ViewContext], name: str, default: Any, cast: Optional[Type] = None) -> Any:
+def get_option(req: Union[Request, ViewContext], name: str, default: Any, cast: Optional[type] = None) -> Any:
     if name not in req.args:
         return default
     result = req.args[name]
@@ -150,7 +150,7 @@ class JSONException(Exception):
     code: int = 400
 
 
-def load_data_from_req(schema: Type[Schema]) -> Any:
+def load_data_from_req(schema: type[Schema]) -> Any:
     ps = schema()
     try:
         j = request.get_json()
@@ -165,7 +165,7 @@ def load_data_from_req(schema: Type[Schema]) -> Any:
 ModelType = TypeVar('ModelType')
 
 
-def use_model(m: Type[ModelType]) -> Callable[[Callable[[ModelType], Response]], Callable[[ModelType], Response]]:
+def use_model(m: type[ModelType]) -> Callable[[Callable[[ModelType], Response]], Callable[[ModelType], Response]]:
     if not is_dataclass(m):
         raise Exception('use_model requires a dataclass')
     return use_args(class_schema(m, base_schema=DurationSchema)())
@@ -174,7 +174,7 @@ def use_model(m: Type[ModelType]) -> Callable[[Callable[[ModelType], Response]],
 never_urlmacros = {'unlock', 'nocache'}
 
 
-def get_urlmacros_from_request() -> Tuple[Tuple[str, str], ...]:
+def get_urlmacros_from_request() -> tuple[tuple[str, str], ...]:
     urlmacros = tuple((key, val) for key, val in request.args.items() if key not in never_urlmacros)
     return urlmacros
 

@@ -11,8 +11,8 @@ from timApp.answer.answer import Answer
 from timApp.document.yamlblock import YamlBlock
 from timApp.tests.browser.browsertest import BrowserTest, find_button_by_text, find_by_attr_name
 
-ChoiceList = List[Tuple[str, str]]
-ElementList = List[WebElement]
+ChoiceList = list[tuple[str, str]]
+ElementList = list[WebElement]
 
 
 def create_yaml(field_type: str,
@@ -38,7 +38,7 @@ def create_yaml(field_type: str,
     }
 
 
-def get_matrix_fields(dialog: WebElement) -> Tuple[ElementList, ElementList, ElementList, ElementList]:
+def get_matrix_fields(dialog: WebElement) -> tuple[ElementList, ElementList, ElementList, ElementList]:
     choice_elems = dialog.find_elements(By.CSS_SELECTOR, 'textarea[id^="r"]')
     reason_elems = dialog.find_elements(By.CSS_SELECTOR, 'textarea[placeholder="Optional: Explain why answer is right/wrong"]')
     point_elems = dialog.find_elements(By.CSS_SELECTOR, 'input[placeholder="pts"]')
@@ -160,13 +160,13 @@ class QuestionTest(BrowserTest):
         )
 
     def do_question_test(self,
-                         answer_choices: Union[List[int], List[str]],
+                         answer_choices: Union[list[int], list[str]],
                          choices: ChoiceList,
                          expected_answer: str,
                          expected_points: Optional[float],
-                         expected_yaml: Dict,
-                         headers: List[str],
-                         points: List[str],
+                         expected_yaml: dict,
+                         headers: list[str],
+                         points: list[str],
                          questiontype: str,
                          type_choice: str,
                          answer_type_choice=None,

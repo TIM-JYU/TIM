@@ -23,12 +23,12 @@ feedback = Blueprint('feedback',
                      url_prefix='/feedback')
 
 
-def get_all_feedback_answers(task_ids: List[TaskId],
+def get_all_feedback_answers(task_ids: list[TaskId],
                              hide_names: bool,
                              printname: bool,
                              valid: str,
                              exp_answers: str,
-                             users: List[str],
+                             users: list[str],
                              period_from: datetime,
                              period_to: datetime,
                              dec: str):
@@ -55,12 +55,12 @@ def get_all_feedback_answers(task_ids: List[TaskId],
     q = q.with_entities(Answer, User)
 
     # Makes q query an iterable qq for for-loop.
-    qq: Iterable[Tuple[Answer, User]] = q
+    qq: Iterable[tuple[Answer, User]] = q
 
     return compile_csv(qq, printname, hide_names, exp_answers, users, dec)
 
 
-def compile_csv(qq: Iterable[Tuple[Answer, User]], printname: bool, hide_names: bool, exp_answers: str, s_user: [str],
+def compile_csv(qq: Iterable[tuple[Answer, User]], printname: bool, hide_names: bool, exp_answers: str, s_user: [str],
                 dec: str):
     """
     Compile data into more csv friendly form.
