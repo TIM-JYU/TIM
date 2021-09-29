@@ -8,7 +8,6 @@ import time
 import uuid
 from pathlib import PurePath, PureWindowsPath
 from subprocess import PIPE, Popen
-from typing import List
 
 from tim_common.fileParams import remove, mkdirs, tquote, get_param
 
@@ -102,7 +101,7 @@ def get_user_mappings(root_dir, mounts):
 
 
 class RunCleaner:
-    def __init__(self, p: Popen, container: str, files: List[str]):
+    def __init__(self, p: Popen, container: str, files: list[str]):
         self.p = p
         self.files = files
         self.container = container
