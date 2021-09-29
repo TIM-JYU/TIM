@@ -17,16 +17,16 @@ class PointsRule:
     allowUserMin: Union[int, float, None, Missing] = missing
     allowUserMax: Union[int, float, None, Missing] = missing
     multiplier: Union[int, float, None, Missing] = missing
-    penalties: Union[Dict[str, float], None, Missing] = missing
+    penalties: Union[dict[str, float], None, Missing] = missing
 
 
 class PluginDateTimeField(marshmallow.fields.Field):
 
-    def _serialize(self, value: Any, attr: str, obj: Any, **kwargs: Dict[str, Any]) -> Any:
+    def _serialize(self, value: Any, attr: str, obj: Any, **kwargs: dict[str, Any]) -> Any:
         raise NotImplementedError
 
     def _deserialize(self, value: Any, attr: Optional[str],
-                     data: Optional[Mapping[str, Any]], **kwargs: Dict[str, Any]) -> datetime:
+                     data: Optional[Mapping[str, Any]], **kwargs: dict[str, Any]) -> datetime:
         d = None
         if isinstance(value, datetime):
             d = value
@@ -48,7 +48,7 @@ PluginDateTime._marshmallow_field = PluginDateTimeField  # type: ignore
 
 class HiddenFieldsMixin:
     @pre_load
-    def process_minus(self, data: Any, **_: Dict[str, Any]) -> Any:
+    def process_minus(self, data: Any, **_: dict[str, Any]) -> Any:
         if isinstance(data, dict):
             data = copy(data)  # Don't modify the original.
             hidden_keys = {k[1:] for k in data.keys() if isinstance(k, str) and k.startswith('-')}
@@ -67,7 +67,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
     buttonNewTask: Union[str, None, Missing] = missing
     cache: Union[bool, None, Missing] = missing
     deadline: Union[PluginDateTime, datetime, None, Missing] = missing
-    fields: Union[List[str], None, Missing] = missing
+    fields: Union[list[str], None, Missing] = missing
     header: Union[str, None, Missing] = missing
     headerText: Union[str, None, Missing] = missing
     hideBrowser: Union[bool, Missing, None] = missing
@@ -105,7 +105,7 @@ class KnownMarkupFields(HiddenFieldsMixin):
         return 'Points:'
 
 
-def asdict_skip_missing(obj: Any) -> Dict[str, Any]:
+def asdict_skip_missing(obj: Any) -> dict[str, Any]:
     result = []
     for f in fields(obj):
         v = getattr(obj, f.name)
@@ -116,7 +116,7 @@ def asdict_skip_missing(obj: Any) -> Dict[str, Any]:
     return dict(result)
 
 
-def list_not_missing_fields(inst: Any) -> List:
+def list_not_missing_fields(inst: Any) -> list:
     return list(((k, v) for k, v in asdict_skip_missing(inst).items()))
 
 
@@ -137,7 +137,7 @@ class GenericMarkupModel(KnownMarkupFields):
     TODO: Some fields here should be moved to KnownMarkupFields.
     """
 
-    hidden_keys: Union[List[str], Missing] = missing
+    hidden_keys: Union[list[str], Missing] = missing
     """Meta field that keeps track which markup fields were hidden (that is, prefixed with "-").
     Hidden keys are never sent to browser.
     """
@@ -154,6 +154,6 @@ class GenericMarkupModel(KnownMarkupFields):
     connectionErrorMessage: Union[str, Missing] = missing
     undo: Union[UndoInfo, Missing, None] = missing
 
-    def get_visible_data(self) -> Dict:
+    def get_visible_data(self) -> dict:
         assert isinstance(self.hidden_keys, list)
         return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys and k != 'hidden_keys'}

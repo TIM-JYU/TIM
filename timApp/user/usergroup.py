@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import List, Dict, Tuple, TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import attr
 from sqlalchemy.orm import joinedload
@@ -94,7 +94,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         back_populates='usergroup',
         lazy='dynamic',
     )
-    accesses_alt: Dict[Tuple[int, int], BlockAccess] = db.relationship(
+    accesses_alt: dict[tuple[int, int], BlockAccess] = db.relationship(
         'BlockAccess',
         collection_class=attribute_mapped_collection('group_collection_key'),
         cascade='all, delete-orphan',
@@ -114,12 +114,12 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     # For groups created from SCIM API
     external_id: ScimUserGroup = db.relationship('ScimUserGroup', lazy='select', uselist=False)
 
-    messagelist_membership: List[MessageListTimMember] = db.relationship("MessageListTimMember",
+    messagelist_membership: list[MessageListTimMember] = db.relationship("MessageListTimMember",
                                                                          back_populates="user_group")
 
-    internalmessage_display: Optional[InternalMessageDisplay] = db.relationship('InternalMessageDisplay',
+    internalmessage_display: InternalMessageDisplay | None = db.relationship('InternalMessageDisplay',
                                                                                 back_populates='usergroup')
-    internalmessage_readreceipt: Optional[InternalMessageReadReceipt] = db.relationship('InternalMessageReadReceipt',
+    internalmessage_readreceipt: InternalMessageReadReceipt | None = db.relationship('InternalMessageReadReceipt',
                                                                                         back_populates='recipient')
 
     def __repr__(self):
@@ -180,7 +180,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return self.is_sisu and self.external_id.external_id.endswith('-students')
 
     @staticmethod
-    def create(name: str) -> 'UserGroup':
+    def create(name: str) -> UserGroup:
         """Creates a new user group.
 
         :param name: The name of the user group.
@@ -193,55 +193,55 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return ug
 
     @staticmethod
-    def get_by_external_id(name: str) -> 'UserGroup':
+    def get_by_external_id(name: str) -> UserGroup:
         r = get_sisu_groups_by_filter(ScimUserGroup.external_id == name)
         return r[0] if r else None
 
     @staticmethod
-    def get_by_name(name) -> 'UserGroup':
+    def get_by_name(name) -> UserGroup:
         return UserGroup.query.filter_by(name=name).first()
 
     @staticmethod
-    def get_anonymous_group() -> 'UserGroup':
+    def get_anonymous_group() -> UserGroup:
         return UserGroup.query.filter_by(name=ANONYMOUS_GROUPNAME).one()
 
     @staticmethod
-    def get_admin_group() -> 'UserGroup':
+    def get_admin_group() -> UserGroup:
         return UserGroup.query.filter_by(name=ADMIN_GROUPNAME).one()
 
     @staticmethod
-    def get_groupadmin_group() -> 'UserGroup':
+    def get_groupadmin_group() -> UserGroup:
         return UserGroup.query.filter_by(name=GROUPADMIN_GROUPNAME).one()
 
     @staticmethod
-    def get_organization_group(org: str) -> 'UserGroup':
+    def get_organization_group(org: str) -> UserGroup:
         gname = org + ORG_GROUP_SUFFIX
         return UserGroup.get_or_create_group(gname)
 
     @staticmethod
-    def get_haka_group() -> 'UserGroup':
+    def get_haka_group() -> UserGroup:
         haka_group_name = 'Haka users'
         return UserGroup.get_or_create_group(haka_group_name)
 
     @staticmethod
-    def get_organizations() -> List['UserGroup']:
+    def get_organizations() -> list[UserGroup]:
         return UserGroup.query.filter(UserGroup.name.endswith(' users') & UserGroup.name.notin_(SPECIAL_GROUPS)).all()
 
     @staticmethod
-    def get_teachers_group() -> 'UserGroup':
+    def get_teachers_group() -> UserGroup:
         return UserGroup.query.filter_by(name=TEACHERS_GROUPNAME).one()
 
     @staticmethod
-    def get_user_creator_group() -> 'UserGroup':
+    def get_user_creator_group() -> UserGroup:
         user_creator_group_name = 'User creators'
         return UserGroup.get_or_create_group(user_creator_group_name)
 
     @staticmethod
-    def get_function_scheduler_group() -> 'UserGroup':
+    def get_function_scheduler_group() -> UserGroup:
         return UserGroup.get_or_create_group(FUNCTIONSCHEDULER_GROUPNAME)
 
     @staticmethod
-    def get_or_create_group(group_name: str) -> 'UserGroup':
+    def get_or_create_group(group_name: str) -> UserGroup:
         ug = UserGroup.get_by_name(group_name)
         if not ug:
             ug = UserGroup.create(group_name)
@@ -249,16 +249,16 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return ug
 
     @staticmethod
-    def get_logged_in_group() -> 'UserGroup':
+    def get_logged_in_group() -> UserGroup:
         return UserGroup.query.filter_by(name=LOGGED_IN_GROUPNAME).one()
 
 
-@lru_cache()
+@lru_cache
 def get_logged_in_group_id() -> int:
     return UserGroup.get_logged_in_group().id
 
 
-@lru_cache()
+@lru_cache
 def get_anonymous_group_id() -> int:
     return UserGroup.get_anonymous_group().id
 
@@ -273,8 +273,8 @@ def get_usergroup_eager_query():
     )
 
 
-def get_sisu_groups_by_filter(f) -> List[UserGroup]:
-    gs: List[UserGroup] = (
+def get_sisu_groups_by_filter(f) -> list[UserGroup]:
+    gs: list[UserGroup] = (
         get_usergroup_eager_query()
             .join(ScimUserGroup)
             .filter(f)

@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Tuple, Optional, Union, Iterable, Dict, Generator, Match, List, Any
+from typing import Optional, Union, Iterable, Generator, Match, Any
 
 import yaml
 from jinja2 import Environment, BaseLoader
@@ -24,7 +24,7 @@ from timApp.document.yamlblock import strip_code_block, YamlBlock, merge
 from timApp.markdown.markdownconverter import expand_macros
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
-from timApp.plugin.plugintype import CONTENT_FIELD_NAME_MAP, PluginType, PluginTypeLazy
+from timApp.plugin.plugintype import CONTENT_FIELD_NAME_MAP, PluginTypeLazy
 from timApp.plugin.taskid import TaskId, UnvalidatedTaskId, TaskIdAccess
 from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.exceptions import TimDbException
@@ -222,7 +222,7 @@ class Plugin:
     @staticmethod
     def from_global_par(global_par_id: GlobalParId,
                         user_ctx: UserContext,
-                        view_ctx: ViewContext, ) -> Tuple['Plugin', DocInfo]:
+                        view_ctx: ViewContext, ) -> tuple['Plugin', DocInfo]:
         doc = DocEntry.find_by_id(global_par_id.doc_id)
         if not doc:
             raise PluginException(f'Document not found: {global_par_id.doc_id}')
@@ -238,7 +238,7 @@ class Plugin:
             user_ctx: UserContext,
             view_ctx: ViewContext,
             cached_doc: Optional[DocInfo] = None,
-    ) -> Tuple['Plugin', DocInfo]:
+    ) -> tuple['Plugin', DocInfo]:
         tid = TaskId.parse(task_id)
         if not cached_doc:
             d = DocEntry.find_by_id(tid.doc_id)
@@ -367,12 +367,12 @@ class Plugin:
             'valid': valid
         }
 
-    def set_render_options(self, answer: Optional[Tuple[Answer, int]], options: PluginRenderOptions):
+    def set_render_options(self, answer: Optional[tuple[Answer, int]], options: PluginRenderOptions):
         if answer:
             self.answer, self.answer_count = answer
         self.options = options
 
-    def render_json(self) -> Dict[str, Any]:
+    def render_json(self) -> dict[str, Any]:
         options = self.options
         userctx = options.user_ctx
         user = userctx.user
@@ -569,9 +569,9 @@ class Plugin:
 
 
 def parse_plugin_values_macros(par: DocParagraph,
-                               global_attrs: Dict[str, str],
-                               macros: Dict[str, object],
-                               env: SandboxedEnvironment) -> Dict:
+                               global_attrs: dict[str, str],
+                               macros: dict[str, object],
+                               env: SandboxedEnvironment) -> dict:
     """
     Parses the markup values for a plugin paragraph, taking document attributes and macros into account.
 
@@ -601,7 +601,7 @@ def expand_macros_for_plugin(par: DocParagraph, macros, env: SandboxedEnvironmen
     return yaml_str
 
 
-def load_markup_from_yaml(yaml_str: str, global_attrs: Dict[str, str], plugin_type: str):
+def load_markup_from_yaml(yaml_str: str, global_attrs: dict[str, str], plugin_type: str):
     try:
         values = YamlBlock.from_markdown(yaml_str).values
     except Exception:
@@ -624,9 +624,9 @@ def load_markup_from_yaml(yaml_str: str, global_attrs: Dict[str, str], plugin_ty
 
 def parse_plugin_values(
         par: DocParagraph,
-        global_attrs: Dict[str, str],
+        global_attrs: dict[str, str],
         macroinfo: MacroInfo,
-) -> Dict:
+) -> dict:
     return parse_plugin_values_macros(par, global_attrs, macroinfo.get_macros(), macroinfo.jinja_env)
 
 
@@ -634,7 +634,7 @@ TASK_MATCH_PROG = re.compile(r'{#([\.\w:]*)([\s\S]*?)?#}')  # see https://regex1
 
 
 def find_inline_plugins_from_str(md) -> Generator[
-    Tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
+    tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
     # TODO make task id optional
     matches: Iterable[Match] = TASK_MATCH_PROG.finditer(md)
     for m in matches:
@@ -646,7 +646,7 @@ def find_inline_plugins_from_str(md) -> Generator[
 
 
 def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
-    Tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
+    tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
     md = block.get_expanded_markdown(macroinfo=macroinfo)
     return find_inline_plugins_from_str(md)
 
@@ -697,10 +697,10 @@ class TaskNotFoundException(PluginException):
 
 @dataclass
 class CachedPluginFinder:
-    doc_map: Dict[int, DocInfo]
+    doc_map: dict[int, DocInfo]
     curr_user: UserContext
     view_ctx: ViewContext
-    cache: Dict[str, Optional[Plugin]] = field(default_factory=dict)
+    cache: dict[str, Optional[Plugin]] = field(default_factory=dict)
 
     def find(self, task_id: TaskId) -> Optional[Plugin]:
         cached = self.cache.get(task_id.doc_task, missing)
@@ -771,11 +771,11 @@ def finalize_inline_yaml(p_yaml: Optional[str]):
 
 
 def find_task_ids(
-        blocks: List[DocParagraph],
+        blocks: list[DocParagraph],
         view_ctx: ViewContext,
         user_ctx: UserContext,
         check_access=True,
-) -> Tuple[List[TaskId], int, List[TaskId]]:
+) -> tuple[list[TaskId], int, list[TaskId]]:
     """Finds all task plugins from the given list of paragraphs and returns their ids.
     :param user_ctx:
     """

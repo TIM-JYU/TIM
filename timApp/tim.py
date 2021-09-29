@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Optional, List, Any
+from typing import Optional, Any
 from urllib.parse import urlparse
 
 import bs4
@@ -201,7 +200,7 @@ def get_angularscripts(index_file: str, locale: Optional[str] = None):
     with open(index_file) as f:
         html_data = f.read()
         bs = BeautifulSoup(html_data, 'lxml')
-        scripts: List[bs4.element.Tag] = [e for e in bs.find_all('script')]
+        scripts: list[bs4.element.Tag] = [e for e in bs.find_all('script')]
         n = BeautifulSoup("", 'lxml')
         style = bs.find('link')
         for s in scripts:

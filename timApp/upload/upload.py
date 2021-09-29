@@ -5,7 +5,7 @@ import os
 import posixpath
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Union
 from urllib.parse import unquote, urlparse
 
 from flask import Blueprint, request, send_file, Response
@@ -72,7 +72,7 @@ def get_upload(relfilename: str):
     return send_file(up.filesystem_path.as_posix(), mimetype=mt, etag=False)
 
 
-def get_pluginupload(relfilename: str) -> Tuple[str, PluginUpload]:
+def get_pluginupload(relfilename: str) -> tuple[str, PluginUpload]:
     slashes = relfilename.count('/')
     if slashes < 2:
         raise RouteException()
@@ -211,7 +211,7 @@ class AttachmentModel:
 
 @dataclass
 class RestampModel:
-    attachments: List[AttachmentModel]
+    attachments: list[AttachmentModel]
     meetingDate: str
     stampFormat: Optional[str] = None
     customStampModel: Optional[str] = None

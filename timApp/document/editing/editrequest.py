@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
 from timApp.auth.accesshelper import has_view_access
 from timApp.document.docentry import DocEntry
@@ -20,11 +20,11 @@ class EditRequest:
     text: Optional[str] = None
     next_par_id: Optional[str] = None
     preview: bool = False
-    forced_classes: List[str] = field(default_factory=list)
+    forced_classes: list[str] = field(default_factory=list)
     mark_translated: Optional[bool] = None
     viewname: Optional[ViewRoute] = None
     old_doc_version: Version = field(init=False)
-    editor_pars: Optional[List[DocParagraph]] = field(init=False)
+    editor_pars: Optional[list[DocParagraph]] = field(init=False)
     original_par: Optional[DocParagraph] = field(init=False)
     context_par: Optional[DocParagraph] = field(init=False)
 
@@ -102,7 +102,7 @@ class EditRequest:
 
 
 def get_pars_from_editor_text(doc: Document, text: str,
-                              break_on_elements: bool = False, skip_access_check: bool = False) -> List[DocParagraph]:
+                              break_on_elements: bool = False, skip_access_check: bool = False) -> list[DocParagraph]:
     blocks, validation_result = doc.text_to_paragraphs(text, break_on_elements)
     for p in blocks:
         if p.is_reference():

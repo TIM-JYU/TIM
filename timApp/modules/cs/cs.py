@@ -1,19 +1,39 @@
-# -*- coding: utf-8 -*-
+import binascii
+import codecs
 import datetime
 import glob
+import hashlib
+import http.server
 import io
+import json
 import logging
 import os
+import re
+import shlex
+import shutil
 import signal
 import socketserver
+import subprocess
+import time
 from base64 import b64encode
 from os.path import splitext
 from pathlib import Path
+from subprocess import Popen, PIPE, check_output
+from traceback import print_exc
+from urllib.request import urlopen
 
 from file_handler import FileHandler
-from manager import *
+from languages import dummy_language, sanitize_cmdline
+from manager import all_js_files, all_css_files
+from points import return_points, get_points_rule, check_number_rule, give_points
+from run import generate_filename, run2_subdir
 from tim_common.cs_sanitizer import cs_min_sanitize, svg_sanitize, tim_sanitize
-from tim_common.fileParams import encode_json_data
+from tim_common.fileParams import encode_json_data, replace_random, get_url_lines_as_string, get_json_eparam, \
+    str_to_int, NOLAZY, is_lazy, is_review, get_tiny_surrounding_headers, get_surrounding_headers, LAZYSTART, LAZYEND, \
+    get_param_del, query_params_to_map_check_parts, get_2_items, get_param_table, get_clean_param, get_params, \
+    do_headers, post_params, multi_post_params, get_all_templates, file_to_string, get_template, get_chache_keys, \
+    clear_cache, replace_scripts, string_to_string_replace_url, FileParams, get_file_to_output, mkdirs, get_json_param, \
+    get_param, QueryClass
 from ttype import TType
 
 #  uid = pwd.getpwnam('agent')[2]
@@ -93,10 +113,6 @@ from ttype import TType
 PORT = 5000
 
 
-def generate_filename():
-    return str(uuid.uuid4())
-
-
 def get_process_children(pid):
     p = Popen('ps --no-headers -o pid --ppid %d' % pid, shell=True,
               stdout=PIPE, stderr=PIPE)
@@ -115,7 +131,7 @@ def print_lines(file, lines, n1, n2):
     for i in range(n1, n2 + 1):
         line = lines[i]
         ln = linefmt.format(i + 1)
-        file.write((ln + line + "\n"))
+        file.write(ln + line + "\n")
 
 
 def write_json_error(file, err, result, points_rule=None):
@@ -252,13 +268,13 @@ def get_md(ttype: TType, query):
 
     # plain
     s = '''
-{0}
+{}
 
-{1}
+{}
 
-{2}
+{}
 
-{3}
+{}
 '''.format(header, stem, usercode, footer)
     return s
 
@@ -324,7 +340,7 @@ def get_html(self: 'TIMServer', ttype: TType, query: QueryClass):
         contenthash = h.hexdigest()
         filename = filepath + '/' + contenthash + '.html'
         if os.path.isfile(filename):  # if we have cache, use that
-            with open(filename, "r") as fh:
+            with open(filename) as fh:
                 htmldata = fh.read()
             return htmldata
 
@@ -655,14 +671,14 @@ def check_code(out, err, compiler_output, ttype):
             "Freely distributed under the Apache 2.0 Open Source License\n",
             "")
 
-    if type('') != type(err):
+    if str != type(err):
         err = err.decode()
     # if type(out) != type(''): out = out.decode()
     # noinspection PyBroadException
     try:
         if out and out[0] in [254, 255]:
             out = out.decode('UTF16')
-        elif type('') != type(out):
+        elif str != type(out):
             out = out.decode('utf-8-sig')
     except:
         # out = out.decode('iso-8859-1')
@@ -779,7 +795,7 @@ def doc_address(query, check = False):
     task_id = re.sub(r'(https:)|([^a-zA-Z0-9])', '', task_id)
     userdoc = "/csgenerated/docs/%s" % task_id
     docrnd = docaddr
-    dochtml = "%s/%s/html/%s" % (userdoc, docrnd, "files.html")
+    dochtml = "{}/{}/html/{}".format(userdoc, docrnd, "files.html")
     if check:
         if not os.path.isfile(dochtml):
             return None
@@ -815,7 +831,7 @@ def update_markup_from_file(query):
     if "markup" not in query.jso:
         query.jso["markup"] = {}
 
-    with open(str(file), "r") as f:
+    with open(str(file)) as f:
         query.jso["markup"] = dict(list(json.load(f).items()) + list(query.jso["markup"].items()))
 
 # see: http://stackoverflow.com/questions/366682/how-to-limit-execution-time-of-a-function-call-in-python
@@ -953,7 +969,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         log(self)
         t2 = time.perf_counter()
         t2t = time.time()
-        ts = "multihtml: %7.4f %7.4f" % (t2 - t1, t2t - t1t)
+        ts = f"multihtml: {t2 - t1:7.4f} {t2t - t1t:7.4f}"
         print(ts)
 
     def do_PUT(self):
@@ -1480,16 +1496,16 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 if doc_addr:
                     userdoc = doc_addr['userdoc']
                     docrnd = doc_addr['docrnd']
-                doccmd = "/cs/doxygen/csdoc.sh %s %s/%s %s" % (locsource, userdoc, docrnd, userdoc)
+                doccmd = f"/cs/doxygen/csdoc.sh {locsource} {userdoc}/{docrnd} {userdoc}"
                 doccmd = sanitize_cmdline(doccmd)
-                p = re.compile('\.java')
+                p = re.compile(r'\.java')
                 docfilename = p.sub("", language.filename)
-                p = re.compile('[^.]*\.')
+                p = re.compile(r'[^.]*\.')
                 docfilename = p.sub("", docfilename)
                 docfilename = docfilename.replace("_", "__")  # jostakin syystä tekee näin
-                dochtml = "%s/%s/html/%s_8%s.html" % (
+                dochtml = "{}/{}/html/{}_8{}.html".format(
                     userdoc, docrnd, docfilename, language.fileext)
-                docfile = "%s/%s/html/%s_8%s.html" % (userdoc, docrnd, docfilename, language.fileext)
+                docfile = f"{userdoc}/{docrnd}/html/{docfilename}_8{language.fileext}.html"
                 # print("XXXXXXXXXXXXXXXXXXXXXX", language.filename)
                 # print("XXXXXXXXXXXXXXXXXXXXXX", docfilename)
                 # print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
@@ -1497,7 +1513,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                 check_output([doccmd], stderr=subprocess.STDOUT, shell=True).decode("utf-8")
                 if not os.path.isfile(
                         docfile):  # There is maybe more files with same name and it is difficult to guess the name
-                    dochtml = "%s/%s/html/%s" % (userdoc, docrnd, "files.html")
+                    dochtml = "{}/{}/html/{}".format(userdoc, docrnd, "files.html")
                     # print("XXXXXXXXXXXXXXXXXXXXXX", dochtml)
 
                 web["docurl"] = dochtml
@@ -1748,7 +1764,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
         web["language"] = language.web_data()
 
         t2 = time.time()
-        ts = "%7.3f %7.3f" % ((t2 - t1start), t_run_time)
+        ts = f"{(t2 - t1start):7.3f} {t_run_time:7.3f}"
         ts += times_string
         # print(ts)
         web["runtime"] = cs_min_sanitize(ts)

@@ -216,7 +216,7 @@ class Geogebra(Language):
 
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
-        self.sourcefilename = "/tmp/%s/%s.txt" % (self.basename, self.filename)
+        self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.txt"
         self.fileext = "txt"
         self.readpoints_default = 'Score: (.*)'
         self.delete_tmp = False

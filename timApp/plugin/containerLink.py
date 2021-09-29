@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass
 from functools import lru_cache
 from re import Pattern
-from typing import List, Optional, Any, Dict, Union
+from typing import Optional, Any, Union
 
 import requests
 from flask import current_app
@@ -47,7 +47,7 @@ class PluginReg:
 
     # List of regexp for yaml attribute names that are handled as markdown when automd attribute is true or
     # plugin has automd=True
-    regexattrs: Optional[List[str]] = None
+    regexattrs: Optional[list[str]] = None
     skip_reqs: bool = False
     lazy: bool = True
     can_give_task: bool = False
@@ -58,8 +58,8 @@ class PluginReg:
         return f'http://{self.domain}:{self.port}{self.path}'
 
 
-@lru_cache()
-def get_plugins() -> Dict[str, PluginReg]:
+@lru_cache
+def get_plugins() -> dict[str, PluginReg]:
     qst_port = current_app.config['QST_PLUGIN_PORT']
     internal_domain = current_app.config['INTERNAL_PLUGIN_DOMAIN']
     plugin_list = [
@@ -108,7 +108,7 @@ def get_plugins() -> Dict[str, PluginReg]:
     return plugins
 
 
-@lru_cache()
+@lru_cache
 def get_plugin_regex_obj(plugin_name: str) -> Pattern:
     plugin = get_plugin(plugin_name)
     assert plugin.regexattrs is not None
@@ -191,7 +191,7 @@ def call_mock_dumbo_s(s: str) -> str:
     return s
 
 
-def list_to_dumbo(markup_list: List[Any]) -> None:
+def list_to_dumbo(markup_list: list[Any]) -> None:
     i = 0
     for val in markup_list:
         ic = i
@@ -212,7 +212,7 @@ def list_to_dumbo(markup_list: List[Any]) -> None:
         markup_list[ic] = v
 
 
-def dict_to_dumbo(pm: Dict) -> None:
+def dict_to_dumbo(pm: dict) -> None:
     for mkey in pm:
         val = pm[mkey]
         if type(val) is dict:
@@ -233,10 +233,10 @@ def dict_to_dumbo(pm: Dict) -> None:
 
 
 def convert_md(
-        plugin_data: List[dict],
+        plugin_data: list[dict],
         options: DumboOptions,
         outtype: str = 'md',
-        plugin_opts: Optional[List[DumboOptions]] = None,
+        plugin_opts: Optional[list[DumboOptions]] = None,
 ) -> None:
     markups = [p for p in plugin_data]
     html_markups = call_dumbo(markups, f'/{outtype}keys', options=options, data_opts=plugin_opts)
@@ -279,7 +279,7 @@ def convert_tex_mock(plugin_data: Union[dict, list]) -> None:
         dict_to_dumbo(pm)
 
 
-def render_plugin_multi(docsettings: DocSettings, plugin: str, plugin_data: List[Plugin],
+def render_plugin_multi(docsettings: DocSettings, plugin: str, plugin_data: list[Plugin],
                         plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML,
                         default_auto_md: bool = False) -> str:
     opts = docsettings.get_dumbo_options()
@@ -319,7 +319,7 @@ def render_plugin_multi(docsettings: DocSettings, plugin: str, plugin_data: List
                                 headers={'Content-type': 'application/json'}).text
 
 
-def has_auto_md(data: Dict, default: bool) -> bool:
+def has_auto_md(data: dict, default: bool) -> bool:
     return data.get(AUTOMD, default)
 
 
@@ -336,7 +336,7 @@ def call_plugin_resource(plugin: str, filename: str, args: Any=None) -> requests
         raise PluginException("Could not connect to plugin: " + plugin)
 
 
-def call_plugin_answer(plugin: str, answer_data: Dict) -> str:
+def call_plugin_answer(plugin: str, answer_data: dict) -> str:
     markup = answer_data.get('markup') or {}
     timeout = markup.get('timeout')
     if not isinstance(timeout, int):

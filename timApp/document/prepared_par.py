@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from timApp.document.par_basic_data import ParBasicData
 
@@ -18,14 +18,14 @@ NEEDS_ANGULAR_ATTRS = ('plugin', 'defaultplugin', 'gamification')
 class PreparedPar:
     """Represents a "prepared" paragraph that is ready to be rendered (e.g. to HTML)."""
     data: ParBasicData
-    target: Optional[ParBasicData]
+    target: ParBasicData | None
     output: str
     html_class: str
-    from_preamble: Optional[str]
-    authorinfo: Optional[AuthorInfo] = None
-    status: Optional[ReadMarkCollection] = None
-    notes: Optional[List[UserNoteAndUser]] = None
-    areainfo: Optional[AreaBoundary] = None
+    from_preamble: str | None
+    authorinfo: AuthorInfo | None = None
+    status: ReadMarkCollection | None = None
+    notes: list[UserNoteAndUser] | None = None
+    areainfo: AreaBoundary | None = None
 
     @property
     def target_data(self) -> ParBasicData:
@@ -44,7 +44,7 @@ class PreparedPar:
         return self.data.hash
 
     @property
-    def attrs(self) -> Dict[str, str]:
+    def attrs(self) -> dict[str, str]:
         return self.data.attrs
 
     @property

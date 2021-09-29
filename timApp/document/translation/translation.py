@@ -1,5 +1,3 @@
-from typing import List
-
 from sqlalchemy import UniqueConstraint
 
 from timApp.document.docinfo import DocInfo
@@ -47,11 +45,11 @@ class Translation(db.Model, DocInfo):
         return self.docentry.public
 
     @property
-    def translations(self) -> List['Translation']:
+    def translations(self) -> list['Translation']:
         return self.docentry.trs
 
     def to_json(self, **kwargs):
-        return {**super(Translation, self).to_json(**kwargs),
+        return {**super().to_json(**kwargs),
                 'src_docid': self.src_docid,
                 'lang_id': self.lang_id}
 

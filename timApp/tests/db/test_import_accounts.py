@@ -1,6 +1,5 @@
 import csv
 import os
-from typing import List
 
 from timApp.admin.import_accounts import import_accounts_impl, ImportException
 from timApp.tests.db.timdbtest import TimDbTest
@@ -42,12 +41,12 @@ class AccountImportTest(TimDbTest):
             self.write_and_test(accounts)
         self.assertEqual('Either name or email must be provided', e.exception.args[0])
 
-    def write_and_test(self, accounts: List[UserInfo], username_is_email=False, expected_existing=None):
+    def write_and_test(self, accounts: list[UserInfo], username_is_email=False, expected_existing=None):
         if expected_existing is None:
             expected_existing = []
         csv_path = self.write_test_csv(accounts)
         _, existing = import_accounts_impl(csv_path, 'testpass')
-        self.assertEqual(set(expected_existing), set(u.name for u in existing))
+        self.assertEqual(set(expected_existing), {u.name for u in existing})
         for a in accounts:
             if a.email:
                 u = User.get_by_email(a.email)

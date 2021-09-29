@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Optional, Dict, TYPE_CHECKING, List, Iterable
+from typing import TYPE_CHECKING, Iterable
 
 from jinja2 import TemplateSyntaxError
 from jinja2.sandbox import SandboxedEnvironment
@@ -13,9 +13,9 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
-from tim_common.html_sanitize import sanitize_html, presanitize_html_body
 from timApp.util.utils import get_error_html, title_to_id
 from timApp.util.utils import widen_fields
+from tim_common.html_sanitize import sanitize_html, presanitize_html_body
 
 if TYPE_CHECKING:
     from timApp.document.docparagraph import DocParagraph
@@ -293,7 +293,7 @@ def preinc(v, delta=1):
 def expand_macros(
         text: str,
         macros,
-        settings: Optional[DocSettings],
+        settings: DocSettings | None,
         env: SandboxedEnvironment,
         ignore_errors: bool = False,
 ):
@@ -364,7 +364,7 @@ tim_filters = {
 
 def create_environment(
         macro_delimiter: str,
-        user_ctx: Optional[UserContext],
+        user_ctx: UserContext | None,
         view_ctx: ViewContext,
 ) -> SandboxedEnvironment:
     env = SandboxedEnvironment(
@@ -387,7 +387,7 @@ def create_environment(
 
 def md_to_html(text: str,
                sanitize: bool = True,
-               macros: Optional[Dict[str, object]] = None) -> str:
+               macros: dict[str, object] | None = None) -> str:
     """Converts the specified markdown text to HTML.
 
     :param macros: The macros to use.
@@ -413,10 +413,10 @@ def md_to_html(text: str,
 
 
 def par_list_to_html_list(
-        pars: List[DocParagraph],
+        pars: list[DocParagraph],
         settings: DocSettings,
         view_ctx: ViewContext,
-        auto_macros: Optional[Iterable[dict]] = None,
+        auto_macros: Iterable[dict] | None = None,
 ):
     """Converts the specified list of DocParagraphs to an HTML list.
 

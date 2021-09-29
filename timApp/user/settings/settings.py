@@ -1,6 +1,6 @@
 """Routes for settings view."""
 from dataclasses import dataclass
-from typing import Dict, Any, Optional
+from typing import Any, Optional
 
 from flask import Blueprint, render_template, session, flash, Response
 from flask import request
@@ -100,7 +100,7 @@ def get_setting(name: str) -> Response:
     return json_response({name: getattr(prefs, name, None)})
 
 
-def get_user_info(u: User, include_doc_content: bool=False) -> Dict[str, Any]:
+def get_user_info(u: User, include_doc_content: bool=False) -> dict[str, Any]:
     """Returns all data associated with a user."""
     block_query = get_owned_objects_query(u)
     docs = DocEntry.query.filter(DocEntry.id.in_(block_query)).all()

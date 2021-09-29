@@ -4,7 +4,7 @@ TIM example plugin: a palindrome checker.
 import os
 import re
 from dataclasses import dataclass, asdict
-from typing import Union, List
+from typing import Union
 
 from flask import render_template_string
 from marshmallow import validates, ValidationError, missing
@@ -23,7 +23,7 @@ class PaliStateModel:
 
 @dataclass
 class PaliMarkupModel(GenericMarkupModel):
-    points_array: Union[List[List[float]], Missing] = missing
+    points_array: Union[list[list[float]], Missing] = missing
     inputstem: Union[str, Missing] = missing
     needed_len: Union[int, Missing] = missing
     initword: Union[str, Missing] = missing
@@ -31,7 +31,7 @@ class PaliMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing] = missing
 
     @validates('points_array')
-    def validate_points_array(self, value: Union[List[List[float]], Missing]) -> None:
+    def validate_points_array(self, value: Union[list[list[float]], Missing]) -> None:
         if isinstance(value, list) and (len(value) != 2 or not all(len(v) == 2 for v in value)):
             raise ValidationError('Must be of size 2 x 2.')
 
@@ -146,7 +146,7 @@ answerLimit: 4
 initword: muikku
 cols: 20
 ```"""]
-    editor_tabs: List[EditorTab] = [
+    editor_tabs: list[EditorTab] = [
             {
                 'text': 'Plugins',
                 'items': [

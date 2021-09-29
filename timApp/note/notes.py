@@ -1,4 +1,4 @@
-from typing import List, Tuple, NamedTuple
+from typing import NamedTuple
 
 from sqlalchemy.orm import lazyload
 
@@ -6,12 +6,11 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.markdown.markdownconverter import md_to_html
 from timApp.note.usernote import UserNote
-from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 
 
-def tagstostr(tags: List[str]) -> str:
+def tagstostr(tags: list[str]) -> str:
     tagstr = ''
     if 'difficult' in tags:
         tagstr += 'd'
@@ -20,7 +19,7 @@ def tagstostr(tags: List[str]) -> str:
     return tagstr
 
 
-def strtotags(tagstr: str) -> List[str]:
+def strtotags(tagstr: str) -> list[str]:
     tags = []
     if 'd' in tagstr:
         tags.append("difficult")
@@ -36,14 +35,14 @@ class UserNoteAndUser(NamedTuple):
     private: bool
 
 
-def process_notes(result: List[Tuple[UserNote, User]]) -> List[Tuple[UserNote, User]]:
+def process_notes(result: list[tuple[UserNote, User]]) -> list[tuple[UserNote, User]]:
     for note, u in result:
         if note.html is None:
             note.html = md_to_html(note.content)
     return result
 
 
-def get_notes(usergroup_id: int, doc: Document, include_public=True) -> List[Tuple[UserNote, User]]:
+def get_notes(usergroup_id: int, doc: Document, include_public=True) -> list[tuple[UserNote, User]]:
     """Gets all notes for a document a particular user has access to.
 
     :param usergroup_id: The usergroup id.

@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Union, List, Tuple, Dict, Optional, Any, Callable, TypedDict, DefaultDict, Set
+from typing import Union, Optional, Any, Callable, TypedDict, DefaultDict
 
 from flask import Response
 from flask import request
@@ -275,7 +275,7 @@ def get_iframehtml(plugintype: str, task_id_ext: str, user_id: int) -> Response:
     return get_iframehtml_answer_impl(plugintype, task_id_ext, user_id)
 
 
-def get_useranswers_for_task(user: User, task_ids: List[TaskId], answer_map):
+def get_useranswers_for_task(user: User, task_ids: list[TaskId], answer_map):
     """
     Performs a query for latest valid answers by given user for given task
     Similar to pluginControl.get_answers but without counting
@@ -291,7 +291,7 @@ def get_useranswers_for_task(user: User, task_ids: List[TaskId], answer_map):
            .add_columns(col)
            .with_entities(col)
            .group_by(Answer.task_id).subquery())
-    answs: List[Answer] = Answer.query.join(sub, Answer.id == sub.c.col).all()
+    answs: list[Answer] = Answer.query.join(sub, Answer.id == sub.c.col).all()
     for answer in answs:
         if len(answer.users_all) > 1:
             answer_map[answer.task_id] = answer
@@ -302,7 +302,7 @@ def get_useranswers_for_task(user: User, task_ids: List[TaskId], answer_map):
     return answs
 
 
-def get_globals_for_tasks(task_ids: List[TaskId], answer_map):
+def get_globals_for_tasks(task_ids: list[TaskId], answer_map):
     col = func.max(Answer.id).label('col')
     cnt = func.count(Answer.id).label('cnt')
     sub = (valid_answers_query(task_ids)
@@ -310,7 +310,7 @@ def get_globals_for_tasks(task_ids: List[TaskId], answer_map):
            .with_entities(col, cnt)
            .group_by(Answer.task_id).subquery()
            )
-    answers_all: List[Tuple[Answer, int]] = (
+    answers_all: list[tuple[Answer, int]] = (
         Answer.query.join(sub, Answer.id == sub.c.col)
             .with_entities(Answer, sub.c.cnt)
             .all()
@@ -322,7 +322,7 @@ def get_globals_for_tasks(task_ids: List[TaskId], answer_map):
 
 
 @answers.post("/userAnswersForTasks")
-def get_answers_for_tasks(tasks: List[str], user_id: int):
+def get_answers_for_tasks(tasks: list[str], user_id: int):
     """
     Route for getting latest valid answers for given user and list of tasks
     :return: {"answers": {taskID: Answer}, "userId": user_id}
@@ -358,7 +358,7 @@ def get_answers_for_tasks(tasks: List[str], user_id: int):
 @dataclass
 class JsRunnerMarkupModel(GenericMarkupModel):
     fields: Union[
-        List[str], Missing] = missing  # This is actually required, but we cannot use non-default arguments here...
+        list[str], Missing] = missing  # This is actually required, but we cannot use non-default arguments here...
     autoadd: Union[bool, Missing] = missing
     autoUpdateTables: Union[bool, Missing] = True
     creditField: Union[str, Missing] = missing
@@ -366,13 +366,13 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     failGrade: Union[str, Missing] = missing
     fieldhelper: Union[bool, Missing] = missing
     gradeField: Union[str, Missing] = missing
-    gradingScale: Union[Dict[Any, Any], Missing] = missing
+    gradingScale: Union[dict[Any, Any], Missing] = missing
     group: Union[str, Missing] = missing
-    groups: Union[List[str], Missing] = missing
+    groups: Union[list[str], Missing] = missing
     includeUsers: Union[MembershipFilter, Missing] = field(default=MembershipFilter.Current,
                                                            metadata={'by_value': True})
     selectIncludeUsers: bool = False
-    paramFields: Union[List[str], Missing] = missing
+    paramFields: Union[list[str], Missing] = missing
     postprogram: Union[str, Missing] = missing
     preprogram: Union[str, Missing] = missing
     program: Union[str, Missing] = missing
@@ -380,7 +380,7 @@ class JsRunnerMarkupModel(GenericMarkupModel):
     showInView: bool = False
     confirmText: Union[str, Missing] = missing
     timeout: Union[int, Missing] = missing
-    updateFields: Union[List[str], Missing] = missing
+    updateFields: Union[list[str], Missing] = missing
     nextRunner: Union[str, Missing] = missing
     timeZoneDiff: Union[int, Missing] = missing
 
@@ -398,8 +398,8 @@ JsRunnerMarkupSchema = class_schema(JsRunnerMarkupModel)
 @dataclass
 class JsRunnerInputModel:
     nosave: Union[bool, Missing] = missing
-    userNames: Union[List[str], Missing] = missing
-    paramComps: Union[Dict[str, str], Missing] = missing
+    userNames: Union[list[str], Missing] = missing
+    paramComps: Union[dict[str, str], Missing] = missing
     includeUsers: Union[MembershipFilter, Missing] = field(default=missing, metadata={'by_value': True})
 
 
@@ -409,7 +409,7 @@ class RefFrom:
     par: str
 
 
-AnswerData = Dict[str, Any]
+AnswerData = dict[str, Any]
 
 
 @dataclass
@@ -444,15 +444,15 @@ def multisendemail(doc_id: int, bccme: bool = False, replyall: bool = False):
 
 # TODO: Fix plugins to generally send only specific answer type
 # TODO: Write tests to ensure plugins send correct data type
-InputAnswer = Union[AnswerData, List[Any], int, float, str]
+InputAnswer = Union[AnswerData, list[Any], int, float, str]
 
 
 # noinspection PyShadowingBuiltins
 def post_answer_route_impl(plugintype: str,
                            task_id_ext: str,
                            input: InputAnswer,
-                           abData: Dict[str, Any] = field(default_factory=dict),
-                           options: Dict[str, Any] = field(default_factory=dict)
+                           abData: dict[str, Any] = field(default_factory=dict),
+                           options: dict[str, Any] = field(default_factory=dict)
                            ):
     """Saves the answer submitted by user for a plugin in the database.
 
@@ -482,8 +482,8 @@ def post_answer_route_impl(plugintype: str,
 def post_answer(plugintype: str,
                 task_id_ext: str,
                 input: InputAnswer,
-                abData: Dict[str, Any] = field(default_factory=dict),
-                options: Dict[str, Any] = field(default_factory=dict)
+                abData: dict[str, Any] = field(default_factory=dict),
+                options: dict[str, Any] = field(default_factory=dict)
                 ):
     return post_answer_route_impl(plugintype, task_id_ext, input, abData, options)
 
@@ -493,15 +493,15 @@ def post_answer(plugintype: str,
 def post_answer_alt(plugintype: str,
                     task_id_ext: str,
                     input: InputAnswer,
-                    abData: Dict[str, Any] = field(default_factory=dict),
-                    options: Dict[str, Any] = field(default_factory=dict)
+                    abData: dict[str, Any] = field(default_factory=dict),
+                    options: dict[str, Any] = field(default_factory=dict)
                     ):
     return post_answer_route_impl(plugintype, task_id_ext, input, abData, options)
 
 
 @dataclass
 class AnswerRouteResult:
-    result: Dict[str, Any]
+    result: dict[str, Any]
     plugin: Plugin
 
 
@@ -512,13 +512,13 @@ def get_postanswer_plugin_etc(
         curr_user: User,
         ctx_user: UserContext,
         urlmacros: UrlMacros,
-        users: Optional[List[User]],
-        other_session_users: List[User],
+        users: Optional[list[User]],
+        other_session_users: list[User],
         origin: Optional[OriginInfo],
         force_answer: bool
-) -> Tuple[TaskAccessVerification,
+) -> tuple[TaskAccessVerification,
            ExistingAnswersInfo,
-           List[User],
+           list[User],
            bool,
            bool,
            bool
@@ -581,7 +581,7 @@ def post_answer_impl(
         answer_options,
         curr_user: User,
         urlmacros: UrlMacros,
-        other_session_users: List[User],
+        other_session_users: list[User],
         origin: Optional[OriginInfo],
 ) -> AnswerRouteResult:
     receive_time = get_current_time()
@@ -681,7 +681,7 @@ def post_answer_impl(
             # if upload.answer_id is not None:
             #    raise PluginException(f'File was already uploaded: {file}')
 
-        files: List[int] = answerdata.get('uploadedFiles', None)
+        files: list[int] = answerdata.get('uploadedFiles', None)
         if files is not None:
             for file in files:
                 trimmed_file = file["path"].replace('/uploads/', '')
@@ -1011,7 +1011,7 @@ def preprocess_jsrunner_answer(answerdata: AnswerData, curr_user: User, d: DocIn
     if groupnames is missing:
         groupnames = [runnermarkup.group]
     requested_groups = RequestedGroups.from_name_list(groupnames)
-    not_found_groups = sorted(list(set(groupnames) - set(g.name for g in requested_groups.groups)
+    not_found_groups = sorted(list(set(groupnames) - {g.name for g in requested_groups.groups}
                                    - {ALL_ANSWERED_WILDCARD}))  # Ensure the wildcard is removed
     if not_found_groups:
         raise PluginException(f'The following groups were not found: {", ".join(not_found_groups)}')
@@ -1068,7 +1068,7 @@ def ensure_grade_and_credit(prg, flds):
             flds.append('credit')
 
 
-answer_call_preprocessors: Dict[str, Callable[[AnswerData, User, DocInfo, Plugin], None]] = {
+answer_call_preprocessors: dict[str, Callable[[AnswerData, User, DocInfo, Plugin], None]] = {
     'jsrunner': preprocess_jsrunner_answer,
 }
 
@@ -1101,9 +1101,9 @@ def handle_points_ref(answerdata: AnswerData, curr_user: User, d: DocInfo, ptype
 
 
 class JsrunnerGroups(TypedDict, total=False):
-    set: Dict[str, List[int]]
-    add: Dict[str, List[int]]
-    remove: Dict[str, List[int]]
+    set: dict[str, list[int]]
+    add: dict[str, list[int]]
+    remove: dict[str, list[int]]
 
 
 MAX_GROUPS_PER_CALL = 10
@@ -1111,8 +1111,8 @@ MAX_GROUPS_PER_CALL = 10
 
 @dataclass
 class UserGroupMembersState:
-    before: Set[int]
-    after: Set[int]
+    before: set[int]
+    after: set[int]
 
 
 def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User):
@@ -1136,16 +1136,16 @@ def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User)
             else:
                 verify_group_edit_access(ug, curr_user)
             if ug not in group_members_state:
-                current_state = set(um.user_id for um in ug.memberships_sel)
+                current_state = {um.user_id for um in ug.memberships_sel}
                 group_members_state[ug] = UserGroupMembersState(before=current_state, after=set(current_state))
-            users: List[User] = User.query.filter(User.id.in_(uids)).all()
-            found_user_ids = set(u.id for u in users)
+            users: list[User] = User.query.filter(User.id.in_(uids)).all()
+            found_user_ids = {u.id for u in users}
             missing_ids = set(uids) - found_user_ids
             if missing_ids:
                 raise RouteException(f'Users not found: {missing_ids}')
             if op == 'set':
                 ug.memberships_sel = [UserGroupMember(user=u, adder=curr_user) for u in users]
-                group_members_state[ug].after = set(um.user.id for um in ug.memberships_sel)
+                group_members_state[ug].after = {um.user.id for um in ug.memberships_sel}
             elif op == 'add':
                 # Add by hand because memberships_sel is not updated in add_to_group
                 after_set = group_members_state[ug].after
@@ -1154,7 +1154,7 @@ def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User)
                     after_set.add(u.id)
             elif op == 'remove':
                 ug.memberships_sel = [ugm for ugm in ug.memberships_sel if ugm.user_id not in found_user_ids]
-                group_members_state[ug].after = set(um.user.id for um in ug.memberships_sel)
+                group_members_state[ug].after = {um.user.id for um in ug.memberships_sel}
             else:
                 raise RouteException(f'Unexpected group operation: {op}')
 
@@ -1170,10 +1170,10 @@ def handle_jsrunner_groups(groupdata: Optional[JsrunnerGroups], curr_user: User)
 
 class UserFieldEntry(TypedDict):
     user: int
-    fields: Dict[str, str]
+    fields: dict[str, str]
 
 
-def create_missing_users(users: List[MissingUser]) -> Tuple[List[UserFieldEntry], List[User]]:
+def create_missing_users(users: list[MissingUser]) -> tuple[list[UserFieldEntry], list[User]]:
     created_users = []
     for mu in users:
         ui = mu.user
@@ -1203,8 +1203,8 @@ MissingUserSchema = class_schema(MissingUser)
 
 @dataclass
 class FieldSaveResult:
-    users_created: List[User] = field(default_factory=list)
-    users_missing: List[UserInfo] = field(default_factory=list)
+    users_created: list[User] = field(default_factory=list)
+    users_missing: list[UserInfo] = field(default_factory=list)
     fields_changed: int = 0
     fields_unchanged: int = 0
     fields_ignored: int = 0
@@ -1212,11 +1212,11 @@ class FieldSaveResult:
 
 class FieldSaveUserEntry(TypedDict):
     user: int
-    fields: Dict[str, str]
+    fields: dict[str, str]
 
 
 class FieldSaveRequest(TypedDict, total=False):
-    savedata: Optional[List[FieldSaveUserEntry]]
+    savedata: Optional[list[FieldSaveUserEntry]]
     ignoreMissing: Optional[bool]
     allowMissing: Optional[bool]
     createMissingUsers: Optional[bool]
@@ -1249,7 +1249,7 @@ def save_fields(
     if save_obj is None:
         save_obj = []
     if missing_users:
-        m_users: List[MissingUser] = MissingUserSchema().load(missing_users, many=True)
+        m_users: list[MissingUser] = MissingUserSchema().load(missing_users, many=True)
         if jsonresp.get('createMissingUsers'):
             verify_user_create_right(curr_user)
             new_fields, users = create_missing_users(m_users)
@@ -1260,8 +1260,8 @@ def save_fields(
     if not save_obj:
         return saveresult
     tasks = set()
-    doc_map: Dict[int, DocInfo] = {}
-    user_map: Dict[int, User] = {u.id: u for u in User.query.filter(User.id.in_(x['user'] for x in save_obj)).all()}
+    doc_map: dict[int, DocInfo] = {}
+    user_map: dict[int, User] = {u.id: u for u in User.query.filter(User.id.in_(x['user'] for x in save_obj)).all()}
 
     # We need this separate "add_users_to_group" parameter because the plugin may have reported missing users.
     # They are created above, so the plugin cannot report them with "groups" in jsonresp because the user IDs are not
@@ -1355,7 +1355,7 @@ def save_fields(
         if not u:
             raise RouteException(f'User id {u_id} not found')
         user_fields = user['fields']
-        task_map: DefaultDict[str, Dict[str, Any]] = defaultdict(dict)
+        task_map: DefaultDict[str, dict[str, Any]] = defaultdict(dict)
         for key, value in user_fields.items():
             task_id = parsed_task_ids[key]
             if ignore_fields.get(task_id.doc_task, False):
@@ -1443,7 +1443,7 @@ def save_fields(
     return saveresult
 
 
-def get_global_answers(parsed_task_ids: Dict[str, TaskId]) -> List[Answer]:
+def get_global_answers(parsed_task_ids: dict[str, TaskId]) -> list[Answer]:
     sq2 = (Answer.query
            .filter(Answer.task_id.in_([tid.doc_task for tid in parsed_task_ids.values() if tid.is_global]))
            .group_by(Answer.task_id)
@@ -1531,7 +1531,7 @@ def export_answers(doc_path: str):
     if not d:
         raise RouteException('Document not found')
     verify_teacher_access(d)
-    answer_list: List[Tuple[Answer, str]] = (
+    answer_list: list[tuple[Answer, str]] = (
         Answer.query
             .filter(Answer.task_id.startswith(f'{d.id}.'))
             .join(User, Answer.users)
@@ -1551,12 +1551,12 @@ def export_answers(doc_path: str):
 
 @answers.post('/importAnswers')
 def import_answers(
-        answers: List[ExportedAnswer],
+        answers: list[ExportedAnswer],
         allow_missing_users: bool = False,
-        doc_map: Dict[str, str] = field(default_factory=dict)
+        doc_map: dict[str, str] = field(default_factory=dict)
 ):
     verify_admin()
-    doc_paths = set(doc_map.get(a.doc, a.doc) for a in answers)
+    doc_paths = {doc_map.get(a.doc, a.doc) for a in answers}
     docs = DocEntry.query.filter(DocEntry.name.in_(doc_paths)).all()
     doc_path_map = {d.path: d for d in docs}
     missing_docs = doc_paths - set(doc_path_map)
@@ -1567,18 +1567,18 @@ def import_answers(
     filter_cond = Answer.task_id.startswith(f'{docs[0].id}.')
     for d in docs[1:]:
         filter_cond |= Answer.task_id.startswith(f'{d.id}.')
-    existing_answers: List[Tuple[Answer, str]] = (
+    existing_answers: list[tuple[Answer, str]] = (
         Answer.query
             .filter(filter_cond)
             .join(User, Answer.users)
             .with_entities(Answer, User.email)
             .all()
     )
-    existing_set = set((a.parsed_task_id.doc_id, a.task_name, a.answered_on, a.valid, a.points, email) for a, email in
-                       existing_answers)
+    existing_set = {(a.parsed_task_id.doc_id, a.task_name, a.answered_on, a.valid, a.points, email) for a, email in
+                       existing_answers}
     dupes = 0
     users = {u.email: u for u in User.query.filter(User.email.in_([a.email for a in answers])).all()}
-    requested_users = set(a.email for a in answers)
+    requested_users = {a.email for a in answers}
     missing_users = requested_users - set(users.keys())
     if missing_users and not allow_missing_users:
         raise RouteException(f'Email(s) not found: {seq_to_str(list(missing_users))}')
@@ -1645,7 +1645,7 @@ def get_answers(task_id: str, user_id: int):
 
     elif d.document.get_settings().get('need_view_for_answers', False):
         verify_view_access(d)
-    user_answers: List[Answer] = user.get_answers_for_task(tid.doc_task).all()
+    user_answers: list[Answer] = user.get_answers_for_task(tid.doc_task).all()
     user_context = user_context_with_logged_in(user)
     try:
         p = find_plugin_from_document(d.document, tid, user_context, default_view_ctx)
@@ -1674,7 +1674,7 @@ def get_all_answers_plain(task_id):
     return get_all_answers_list_plain([TaskId.parse(task_id)])
 
 
-def get_all_answers_list_plain(task_ids: List[TaskId]):
+def get_all_answers_list_plain(task_ids: list[TaskId]):
     all_answers, format_opt = get_all_answers_as_list(task_ids)
     if format_opt == 'json':
         return json_response(all_answers)
@@ -1687,7 +1687,7 @@ def get_all_answers_list_plain(task_ids: List[TaskId]):
     return Response(text, mimetype='text/plain')
 
 
-def get_all_answers_as_list(task_ids: List[TaskId]):
+def get_all_answers_as_list(task_ids: list[TaskId]):
     verify_logged_in()
     format_opt = get_option(request, 'format', 'text')
     if not task_ids:
@@ -1736,15 +1736,15 @@ def get_all_answers_as_list(task_ids: List[TaskId]):
 
 
 class GraphData(TypedDict):
-    data: List[Union[str, float, None]]
-    labels: List[str]
+    data: list[Union[str, float, None]]
+    labels: list[str]
 
 
 @dataclass
 class FieldInfo:
     data: UserFields
-    aliases: Dict[str, str]
-    fieldnames: List[str]
+    aliases: dict[str, str]
+    fieldnames: list[str]
     graphdata: GraphData
 
 
@@ -1877,7 +1877,7 @@ def verify_answer_access(
         require_teacher_if_not_own=False,
         required_task_access_level: TaskIdAccess = TaskIdAccess.ReadOnly,
         allow_grace_period: bool = False,
-) -> Tuple[Answer, int]:
+) -> tuple[Answer, int]:
     answer: Answer = Answer.query.get(answer_id)
     if answer is None:
         raise RouteException('Non-existent answer')

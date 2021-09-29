@@ -1,5 +1,4 @@
 import json
-from typing import List
 
 from lxml.html import HtmlElement
 
@@ -23,6 +22,6 @@ test
 test2
         """)
         r = self.get(d.url, as_tree=True)
-        pars: List[HtmlElement] = r.cssselect('.par')
+        pars: list[HtmlElement] = r.cssselect('.par')
         self.assertEqual({'area': 'a', 'visible': '%%true%%'}, json.loads(pars[0].attrib['attrs']))
         self.assertEqual({'visible': '%%true%%'}, json.loads(pars[-1].attrib['attrs']))

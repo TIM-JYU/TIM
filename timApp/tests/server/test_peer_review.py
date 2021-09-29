@@ -1,5 +1,4 @@
 """Server tests for peer review."""
-from typing import List
 
 from timApp.peerreview.peerreview import PeerReview
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -31,7 +30,7 @@ class PeerReviewTest(TimRouteTest):
         self.assertNotIn('Not enough users to form pairs (1 but at least 2 users needed)', r)
 
         def check_peerreview_rows():
-            prs: List[PeerReview] = PeerReview.query.filter_by(block_id=d.id).order_by(
+            prs: list[PeerReview] = PeerReview.query.filter_by(block_id=d.id).order_by(
                 PeerReview.reviewer_id,
                 PeerReview.task_name,
             ).all()

@@ -2,7 +2,7 @@ import re
 import traceback
 from dataclasses import field, dataclass
 from functools import cached_property
-from typing import List, Optional, Dict, Any, Generator
+from typing import Optional, Any, Generator
 
 from flask import Blueprint, request, current_app, Response
 from sqlalchemy.exc import IntegrityError
@@ -83,7 +83,7 @@ class SCIMEmailModel:
 @dataclass(frozen=True)
 class SCIMUserModel(SCIMCommonModel):
     userName: str
-    emails: List[SCIMEmailModel]
+    emails: list[SCIMEmailModel]
 
 
 SCIMUserModelSchema = class_schema(SCIMUserModel)
@@ -91,9 +91,9 @@ SCIMUserModelSchema = class_schema(SCIMUserModel)
 
 @dataclass(frozen=True)
 class SCIMGroupModel(SCIMCommonModel):
-    members: List[SCIMMemberModel]
+    members: list[SCIMMemberModel]
     id: Optional[str] = None
-    schemas: Optional[List[str]] = None
+    schemas: Optional[list[str]] = None
 
 
 SCIMGroupModelSchema = class_schema(SCIMGroupModel)
@@ -103,7 +103,7 @@ SCIMGroupModelSchema = class_schema(SCIMGroupModel)
 class SCIMException(Exception):
     code: int
     msg: str
-    headers: Optional[Dict[str, str]] = None
+    headers: Optional[dict[str, str]] = None
 
 
 @scim.errorhandler(SCIMException)
@@ -117,7 +117,7 @@ def handle_error(error: Any) -> Response:
     return handle_error_msg_code(error.code, error.description)
 
 
-def handle_error_msg_code(code: int, msg: str, headers: Optional[Dict[str, str]] = None) -> Response:
+def handle_error_msg_code(code: int, msg: str, headers: Optional[dict[str, str]] = None) -> Response:
     return json_response(
         scim_error_json(code, msg),
         status_code=code,
@@ -128,7 +128,7 @@ def handle_error_msg_code(code: int, msg: str, headers: Optional[Dict[str, str]]
 scim.errorhandler(UNPROCESSABLE_ENTITY)(handle_error)
 
 
-def scim_error_json(code: int, msg: str) -> Dict:
+def scim_error_json(code: int, msg: str) -> dict:
     return {
         "detail": msg,
         "schemas": ["urn:ietf:params:scim:api:messages:2.0:Error"],
@@ -183,7 +183,7 @@ def get_groups(args: GetGroupsModel) -> Response:
     groups = ScimUserGroup.query.filter(ScimUserGroup.external_id.startswith(scim_group_to_tim(m.group(1)))).join(
         UserGroup).with_entities(UserGroup).all()
 
-    def gen_groups() -> Generator[Dict, None, None]:
+    def gen_groups() -> Generator[dict, None, None]:
         for g in groups:  # type: UserGroup
             yield {
                 'id': g.scim_id,
@@ -315,9 +315,9 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     else:
         if ug.external_id.external_id != args.externalId:
             raise SCIMException(422, 'externalId unexpectedly changed')
-    current_usernames = set(u.value for u in args.members)
-    removed_user_names = set(u.name for u in ug.users) - current_usernames
-    expired_memberships: List[UserGroupMember] = list(get_scim_memberships(ug)
+    current_usernames = {u.value for u in args.members}
+    removed_user_names = {u.name for u in ug.users} - current_usernames
+    expired_memberships: list[UserGroupMember] = list(get_scim_memberships(ug)
                                                       .filter(User.name.in_(removed_user_names))
                                                       .with_entities(UserGroupMember))
     for ms in expired_memberships:
@@ -329,15 +329,15 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     if len(emails) != len(unique_emails):
         raise SCIMException(422, f'The users do not have distinct emails.')
 
-    unique_usernames = set(m.value for m in args.members)
+    unique_usernames = {m.value for m in args.members}
     if len(args.members) != len(unique_usernames):
         raise SCIMException(422, f'The users do not have distinct usernames.')
 
     added_users = set()
     scimuser = User.get_scimuser()
-    existing_accounts: List[User] = User.query.filter(User.name.in_(current_usernames) | User.email.in_(emails)).all()
-    existing_accounts_dict: Dict[str, User] = {u.name: u for u in existing_accounts}
-    existing_accounts_by_email_dict: Dict[str, User] = {u.email: u for u in existing_accounts}
+    existing_accounts: list[User] = User.query.filter(User.name.in_(current_usernames) | User.email.in_(emails)).all()
+    existing_accounts_dict: dict[str, User] = {u.name: u for u in existing_accounts}
+    existing_accounts_by_email_dict: dict[str, User] = {u.email: u for u in existing_accounts}
     email_updates = []
     with db.session.no_autoflush:
         for u in args.members:
@@ -475,8 +475,8 @@ def get_scim_memberships(ug: UserGroup) -> Any:
             )
 
 
-def group_scim(ug: UserGroup) -> Dict:
-    def members() -> Generator[Dict, None, None]:
+def group_scim(ug: UserGroup) -> dict:
+    def members() -> Generator[dict, None, None]:
         db.session.expire(ug)
         for u in get_scim_memberships(ug).with_entities(User):
             yield {

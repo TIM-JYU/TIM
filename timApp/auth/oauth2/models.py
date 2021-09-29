@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
+from typing import Optional
 
 from authlib.integrations.sqla_oauth2 import OAuth2TokenMixin, OAuth2AuthorizationCodeMixin
 from authlib.oauth2.rfc6749 import ClientMixin, scope_to_list, list_to_scope
@@ -26,10 +26,10 @@ class OAuth2Client(ClientMixin):
     client_secret: str = ''
     """Client secret that is used to allow OAUTH2 authentication."""
 
-    redirect_urls: List[str] = field(default_factory=list)
+    redirect_urls: list[str] = field(default_factory=list)
     """List of valid URLs that TIM is allowed to redirect the user to upon successful authentication."""
 
-    allowed_scopes: List[Scope] = field(default_factory=list)
+    allowed_scopes: list[Scope] = field(default_factory=list)
     """Resource scopes that the client can ask for. Scopes are used to limit what REST API can be used."""
 
     token_endpoint_auth_method = 'client_secret_post'
@@ -44,13 +44,13 @@ class OAuth2Client(ClientMixin):
             OAuth 2.0
     """
 
-    response_types: List[str] = field(default_factory=list)
+    response_types: list[str] = field(default_factory=list)
     """What response types the client can handle.
     In other words, tells TIM how to send user's OAUTH2 token to the client.
     Allowed values: "code" and "token".
     """
 
-    grant_types: List[str] = field(default_factory=list)
+    grant_types: list[str] = field(default_factory=list)
     """What grant types the client can handle. Default values:
         * authorization_code
         * implicit
@@ -75,7 +75,7 @@ class OAuth2Client(ClientMixin):
     def get_allowed_scope(self, scope: str) -> Optional[str]:
         if not scope:
             return ''
-        allowed = set([s.name for s in self.allowed_scopes])
+        allowed = {s.name for s in self.allowed_scopes}
         scopes = scope_to_list(scope)
         return list_to_scope([s for s in scopes if s in allowed])
 

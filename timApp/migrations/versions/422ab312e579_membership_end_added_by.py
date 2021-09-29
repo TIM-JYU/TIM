@@ -5,7 +5,7 @@ Revises: ef104a711321
 Create Date: 2019-09-04 06:39:22.902132
 
 """
-from typing import List, Tuple, Any
+from typing import Any
 
 from sqlalchemy.orm import scoped_session, sessionmaker
 
@@ -29,7 +29,7 @@ def upgrade():
     bind = op.get_bind()
     tmp: Any = scoped_session(session_factory=sessionmaker(bind=bind))
     db.session = tmp
-    ugs: List[Tuple[UserGroup, ScimUserGroup]] = (
+    ugs: list[tuple[UserGroup, ScimUserGroup]] = (
         UserGroup.query
             .join(ScimUserGroup)
             .with_entities(UserGroup, ScimUserGroup)

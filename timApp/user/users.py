@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Tuple, Optional
+from typing import Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -22,17 +22,17 @@ def remove_access(group, i: ItemOrBlock, access_type: AccessType):
     return b.accesses.pop((group.id, access_type.value), None)
 
 
-RightsList = List[BlockAccess]
+RightsList = list[BlockAccess]
 
 
 def get_rights_holders(block_id: int) -> RightsList:
     return get_rights_holders_all([block_id])[block_id]
 
 
-def get_rights_holders_all(block_ids: List[int], order_by=None):
+def get_rights_holders_all(block_ids: list[int], order_by=None):
     if not order_by:
         order_by = User.name
-    result: List[Tuple[BlockAccess, UserGroup, Optional[User]]] = (BlockAccess.query
+    result: list[tuple[BlockAccess, UserGroup, Optional[User]]] = (BlockAccess.query
               .options(
         joinedload(BlockAccess.usergroup)
             .joinedload(UserGroup.admin_doc)

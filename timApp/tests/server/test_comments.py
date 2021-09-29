@@ -1,5 +1,3 @@
-from typing import List
-
 from lxml import html
 from lxml.cssselect import CSSSelector
 from lxml.html import HtmlElement
@@ -84,7 +82,7 @@ class CommentTest(NotifyTestBase):
         )
         self.assertEqual({'all': 6, 'everyone': 3, 'justme': 3}, cms['counts'])
 
-    def post_comment_and_return_html(self, text: str, par: DocParagraph, public: bool = True) -> List[HtmlElement]:
+    def post_comment_and_return_html(self, text: str, par: DocParagraph, public: bool = True) -> list[HtmlElement]:
         resp = self.post_comment(par, public, text)
         h: HtmlElement = html.fromstring(resp['texts'])
         comments = comment_selector(h)

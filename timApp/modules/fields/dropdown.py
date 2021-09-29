@@ -2,7 +2,7 @@
 Module for serving dropdown item-plugin.
 """
 from dataclasses import dataclass, asdict
-from typing import Union, List
+from typing import Union
 
 from flask import render_template_string
 from marshmallow import validates
@@ -21,7 +21,7 @@ class DropdownStateModel:
 
 @dataclass
 class DropdownMarkupModel(GenericMarkupModel):
-    words: Union[List[str], Missing] = missing
+    words: Union[list[str], Missing] = missing
     instruction: Union[bool, Missing] = missing
     radio: Union[bool, Missing] = missing
     shuffle: Union[bool, Missing] = missing

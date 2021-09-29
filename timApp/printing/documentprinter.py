@@ -6,7 +6,7 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Optional, List, Tuple, Dict
+from typing import Optional
 
 from flask import current_app
 from jinja2.sandbox import SandboxedEnvironment
@@ -28,7 +28,6 @@ from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import default_view_ctx, copy_of_default_view_ctx
 from timApp.document.yamlblock import strip_code_block
 from timApp.folder.folder import Folder
-from tim_common.html_sanitize import sanitize_html
 from timApp.markdown.markdownconverter import expand_macros, create_environment
 from timApp.plugin.plugin import get_value, PluginWrap
 from timApp.plugin.plugin import parse_plugin_values_macros
@@ -40,6 +39,7 @@ from timApp.printing.printsettings import PrintFormat
 from timApp.timdb.dbaccess import get_files_path
 from timApp.user.user import User
 from timApp.util.utils import cache_folder_path
+from tim_common.html_sanitize import sanitize_html
 
 DEFAULT_PRINTING_FOLDER = cache_folder_path / 'printed_documents'
 TEMPLATES_FOLDER = Path(TEMPLATE_FOLDER_NAME) / PRINT_FOLDER_NAME
@@ -60,7 +60,7 @@ class LaTeXError(Exception):
 
 
 def add_nonumber(md: str) -> str:
-    """
+    r"""
     Adds {.unnumbered} after every heading line that starts with #
         Special cases:
             - many # lines in same md
@@ -161,7 +161,7 @@ class DocumentPrinter:
 
         texmacros = get_tex_macros(self._doc_entry.document)
 
-        par_infos: List[Tuple[DocParagraph, DocSettings, dict, SandboxedEnvironment, Dict[str, object], str]] = []
+        par_infos: list[tuple[DocParagraph, DocSettings, dict, SandboxedEnvironment, dict[str, object], str]] = []
         for par in pars:
 
             # do not print document settings pars
@@ -318,7 +318,7 @@ class DocumentPrinter:
                     f"The content in the template document {self._template_to_use.path} is not valid.")
 
             top_level = 'section'
-            if re.search("^\\\\documentclass\[[^\n]*(book|report)\}", template_content, flags=re.S):
+            if re.search("^\\\\documentclass\\[[^\n]*(book|report)\\}", template_content, flags=re.S):
                 top_level = 'chapter'
 
             src = self.get_content(user_ctx, plugins_user_print=plugins_user_print, target_format=target_format)
@@ -402,7 +402,7 @@ class DocumentPrinter:
         return path
 
     @staticmethod
-    def get_user_templates(doc_entry: DocEntry, current_user: User) -> List[DocEntry]:
+    def get_user_templates(doc_entry: DocEntry, current_user: User) -> list[DocEntry]:
         templates = []
 
         if doc_entry is None or current_user is None:
@@ -422,7 +422,7 @@ class DocumentPrinter:
         return templates
 
     @staticmethod
-    def get_all_templates(doc_entry: DocEntry, current_user: User) -> List[DocEntry]:
+    def get_all_templates(doc_entry: DocEntry, current_user: User) -> list[DocEntry]:
         templates = []
 
         if doc_entry is None or current_user is None:
@@ -464,11 +464,11 @@ class DocumentPrinter:
 
         default_templates = list(set(all_templates) - set(user_templates))
 
-        user_templates_list: List[DocInfo] = []
+        user_templates_list: list[DocInfo] = []
         for t in user_templates:
             user_templates_list.append(t)
 
-        default_templates_list: List[DocInfo] = []
+        default_templates_list: list[DocInfo] = []
         for t in default_templates:
             default_templates_list.append(t)
 
@@ -551,7 +551,7 @@ def number_lines(s: str, start: int = 1):
     i = start
     result = ""
     for line in lines:
-        result += "{0:3}: {1}\n".format(i, line)
+        result += f"{i:3}: {line}\n"
         i += 1
     return result
 
@@ -665,7 +665,7 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
             raise RuntimeError('Pandoc died with exitcode "%s" during conversion. \nSource=\n%s' %
                                (stdout + stderr, number_lines(source)))
 
-        with open(latex_file, "r", encoding='utf-8') as r:
+        with open(latex_file, encoding='utf-8') as r:
             lines = r.readlines()
         with open(latex_file, "w", encoding='utf-8') as f:
             for line in lines:
@@ -713,7 +713,7 @@ def run_latex(outputfile, latex_file, new_env, string_input):
         # something else than 'None' indicates that the process already terminated
         if not (p.returncode is None):
             raise RuntimeError(
-                'LaTeX died with exitcode "%s" before receiving input: %s' % (p.returncode, p.stderr.read())
+                f'LaTeX died with exitcode "{p.returncode}" before receiving input: {p.stderr.read()}'
             )
 
         stdout, stderr = p.communicate(None)
@@ -727,7 +727,7 @@ def run_latex(outputfile, latex_file, new_env, string_input):
             line = ''
             if i >= 0:
                 stdout = stdout[i:]
-                stdout = re.sub("\n\(/usr/.*[^\n]", "", stdout)
+                stdout = re.sub("\n\\(/usr/.*[^\n]", "", stdout)
                 stdout = stdout.replace(latex_file, '')
                 i = stdout.find('/var/lib')
                 if i >= 0:

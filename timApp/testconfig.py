@@ -1,7 +1,7 @@
 import logging
 import os
 from datetime import timedelta
-from typing import List, Optional, Dict, TypedDict
+from typing import Optional, TypedDict
 
 from celery.schedules import crontab
 
@@ -42,10 +42,10 @@ class Schedule(TypedDict):
     schedule: crontab
 
 
-CELERYBEAT_SCHEDULE: Dict[str, Schedule] = {
+CELERYBEAT_SCHEDULE: dict[str, Schedule] = {
     # don't schedule anything while testing
 }
-WTF_CSRF_METHODS: List[str] = []
+WTF_CSRF_METHODS: list[str] = []
 SCIM_USERNAME = 't'
 SCIM_PASSWORD = 'pass'
 SISU_CERT_PATH: Optional[str] = None

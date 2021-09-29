@@ -1,14 +1,15 @@
-import re
 import os
-from typing import Optional, List
-from pathlib import Path
-from tim_common.fileParams import get_json_param, get_param, mkdirs
-from tim_common.marshmallow_dataclass import dataclass, NewType
-from marshmallow import fields
+import re
 from dataclasses import field
+from pathlib import Path
 from shutil import rmtree, copy2, chown, copytree
+from typing import Optional
+
+from marshmallow import fields
 
 from loadable import Loadable
+from tim_common.fileParams import get_param, mkdirs
+from tim_common.marshmallow_dataclass import dataclass, NewType
 
 
 def listify(item):
@@ -45,7 +46,7 @@ class Listify(fields.List):
         return super()._deserialize(value, attr, data, **kwargs)
 
 
-ListifiedStr = NewType("Listify", List[str], field=Listify, cls_or_instance=fields.String())
+ListifiedStr = NewType("Listify", list[str], field=Listify, cls_or_instance=fields.String())
 
 
 @dataclass

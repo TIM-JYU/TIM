@@ -231,25 +231,25 @@ class JSRunnerMessageListTest(TimMessageListTest, JsRunnerTestBase):
         self.assertIsNotNone(UserGroup.get_by_name("jg1"), "Group jg1 should be created")
         self.add_list_member("test-jsrunner-list-1", ["jg1"])
 
-        self.assertEqual(set(m.address.email for m in mlist.members),
+        self.assertEqual({m.address.email for m in mlist.members},
                          {self.test_user_1.email, self.test_user_2.email},
                          "Group jg1 should have testuser1 and testuser2")
 
         d = self.create_group_jsrun([self.test_user_3.id], group="jg1", method="addToGroup")
         self.do_jsrun(d)
 
-        self.assertEqual(set(m.address.email for m in mlist.members),
+        self.assertEqual({m.address.email for m in mlist.members},
                          {self.test_user_1.email, self.test_user_2.email, self.test_user_3.email},
                          "Group jg1 should have testuser3 added")
 
         d = self.create_group_jsrun([self.test_user_2.id], group="jg1", method="removeFromGroup")
         self.do_jsrun(d)
-        self.assertEqual(set(m.address.email for m in mlist.members),
+        self.assertEqual({m.address.email for m in mlist.members},
                          {self.test_user_1.email, self.test_user_3.email},
                          "Group jg1 should have testuser2 removed")
 
         d = self.create_group_jsrun([self.test_user_2.id], group="jg1")
         self.do_jsrun(d)
-        self.assertEqual(set(m.address.email for m in mlist.members),
+        self.assertEqual({m.address.email for m in mlist.members},
                          {self.test_user_1.email, self.test_user_2.email},
                          "Group jg1 should have testuser3 removed and testuser2 added")

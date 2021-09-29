@@ -1,6 +1,6 @@
 import hashlib
 from datetime import datetime, timedelta
-from typing import Optional, List, Union, Dict
+from typing import Optional, Union
 
 import bcrypt
 
@@ -26,7 +26,7 @@ KORPPI_GROUP_ID = None
 DOC_DEFAULT_RIGHT_NAME = 'DefaultDocumentRights'
 FOLDER_DEFAULT_RIGHT_NAME = 'DefaultFolderRights'
 
-access_type_map: Dict[str, int] = {}
+access_type_map: dict[str, int] = {}
 
 default_right_paths = {BlockType.Document: f'{TEMPLATE_FOLDER_NAME}/{DOC_DEFAULT_RIGHT_NAME}',
                        BlockType.Folder: f'{TEMPLATE_FOLDER_NAME}/{FOLDER_DEFAULT_RIGHT_NAME}'}
@@ -169,7 +169,7 @@ def get_default_right_document(
     return doc
 
 
-def grant_default_access(groups: List[UserGroup],
+def grant_default_access(groups: list[UserGroup],
                          folder: Folder,
                          access_type: AccessType,
                          object_type: BlockType,
@@ -177,7 +177,7 @@ def grant_default_access(groups: List[UserGroup],
                          accessible_to: Optional[datetime] = None,
                          duration_from: Optional[datetime] = None,
                          duration_to: Optional[datetime] = None,
-                         duration: Optional[timedelta] = None) -> List[BlockAccess]:
+                         duration: Optional[timedelta] = None) -> list[BlockAccess]:
     doc = get_or_create_default_right_document(folder, object_type)
     accesses = []
     for group in groups:

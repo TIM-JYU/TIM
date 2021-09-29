@@ -2,7 +2,7 @@
 A button plugin to save other plugins on the same page
 """
 from dataclasses import dataclass, asdict
-from typing import Union, List
+from typing import Union
 
 from flask import render_template_string
 from marshmallow.utils import missing
@@ -20,22 +20,22 @@ class MultisaveStateModel:
 
 @dataclass
 class MultisaveMarkupModel(GenericMarkupModel):
-    areas: Union[List[str], Missing] = missing
+    areas: Union[list[str], Missing] = missing
     autoUpdateDuplicates: Union[bool, Missing] = True
     autoUpdateTables: Union[bool, Missing] = True
     allSavedText: Union[str, Missing] = missing
-    fields: Union[List[str], Missing] = missing
+    fields: Union[list[str], Missing] = missing
     jumplink: Union[str, Missing, None] = missing
     jumptarget: Union[str, Missing, None] = missing
     listener: Union[bool, Missing] = False
     livefeed: Union[bool, Missing] = False
     savedText: Union[str, Missing] = missing
-    tags: Union[List[str], Missing] = missing
+    tags: Union[list[str], Missing] = missing
     unsavedText: Union[str, Missing] = missing
 
     # Sisu export-related fields; TODO: Should be a separate plugin.
     destCourse: Union[str, Missing] = missing
-    group: Union[str, List[str], Missing] = missing  # for destCourse
+    group: Union[str, list[str], Missing] = missing  # for destCourse
     includeUsers: Union[str, Missing] = missing  # TODO: Should be MembershipFilter, but cannot import
     testOnly: Union[bool, Missing] = missing
 

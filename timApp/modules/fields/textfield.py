@@ -2,7 +2,7 @@
 TIM plugin: a textfield
 """
 from dataclasses import dataclass, asdict
-from typing import Union, List, Any, Dict
+from typing import Union, Any
 
 from flask import render_template_string
 from marshmallow.utils import missing
@@ -29,7 +29,7 @@ class TextfieldMarkupModel(GenericMarkupModel):
     inputplaceholder: Union[str, Missing, None] = missing
     inputstem: Union[str, Missing, None] = missing
     nosave: Union[bool, Missing] = missing
-    points_array: Union[List[List[float]], Missing] = missing
+    points_array: Union[list[list[float]], Missing] = missing
     readOnlyStyle: Union[str, Missing, None] = missing
     showname: Union[int, Missing, None] = missing
     tag: Union[str, Missing, None] = missing
@@ -94,7 +94,7 @@ def answer(args: TextfieldAnswerModel) -> PluginAnswerResp:
         nosave = True
 
     if not nosave:
-        save: Dict[str, Any] = {"c": c}
+        save: dict[str, Any] = {"c": c}
         if not args.markup.clearstyles and args.state is not None:
             if args.state.styles:
                 save = {"c": c, "styles": args.state.styles}

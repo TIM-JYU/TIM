@@ -672,7 +672,7 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(initial_par=r"""
 ``` {plugin="timTable"}
     table:
       columns:

@@ -4,7 +4,7 @@ import sys
 import unittest
 from contextlib import contextmanager
 from io import StringIO
-from typing import Union, List
+from typing import Union
 
 import sqlalchemy.exc
 from sqlalchemy.orm import close_all_sessions
@@ -71,7 +71,7 @@ class TimDbTest(unittest.TestCase):
         close_all_sessions()
         self.db.close()
 
-    def create_doc(self, from_file=None, initial_par: Union[str, List[str]]=None, settings=None) -> DocInfo:
+    def create_doc(self, from_file=None, initial_par: Union[str, list[str]]=None, settings=None) -> DocInfo:
         d = DocEntry.create(
             f'test{TimDbTest.i}',
             UserGroup.get_anonymous_group(), 'test', from_file=from_file, initial_par=initial_par,
@@ -79,7 +79,7 @@ class TimDbTest(unittest.TestCase):
         TimDbTest.i += 1
         return d
 
-    def init_doc(self, doc: Document, from_file, initial_par: Union[str, List[str]], settings):
+    def init_doc(self, doc: Document, from_file, initial_par: Union[str, list[str]], settings):
         if from_file is not None:
             with open(from_file, encoding='utf-8') as f:
                 doc.add_text(f.read())

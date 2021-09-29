@@ -1,8 +1,6 @@
 import base64
-from unittest import mock
-
 from dataclasses import dataclass
-from flask import session
+from unittest import mock
 
 from timApp.auth.login import test_pws, create_or_update_user, set_single_user_to_session
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -364,7 +362,7 @@ class TestSignUp(TimRouteTest):
         self.assertEqual('Doe John Matt', self.current_user.real_name)
         self.assertEqual('johmadoenew', self.current_user.name)
         self.assertEqual('john.m.doenew@student.jyu.fi', self.current_user.email)
-        self.assertEqual(set(g.name for g in self.current_user.groups),
+        self.assertEqual({g.name for g in self.current_user.groups},
                          {'johmadoenew', get_home_organization_group().name})
 
     def create_or_update_test_user(self, username='johmadoe', real_name='Doe John Matt',
@@ -424,7 +422,7 @@ class TestSignUp(TimRouteTest):
         self.assertEqual(self.current_user.name, 'johmadoz')
         self.assertEqual(self.current_user.email, 'john.doe@student.jyu.fi')
         self.assertEqual(self.current_user.real_name, 'Doe John Matthew')
-        self.assertEqual(set(g.name for g in self.current_user.groups),
+        self.assertEqual({g.name for g in self.current_user.groups},
                          {'johmadoz', get_home_organization_group().name})
 
         # If both username and email is different, there's no way to identify the user.

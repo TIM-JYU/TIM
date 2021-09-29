@@ -1,18 +1,17 @@
-from typing import Optional, Union, Dict, Any
-from pathlib import Path
-import os.path
-from shutil import rmtree
-from git.util import *
-import re
-import urllib
-from urllib.request import urlopen, Request
-from dataclasses import dataclass, field
-import subprocess
-from datetime import datetime, timedelta
-from threading import Lock
-from shutil import copy2
-from file_util import File, copy_files_glob, rm
 import json
+import os.path
+import re
+import subprocess
+import urllib
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+from pathlib import Path
+from threading import Lock
+from typing import Optional, Union, Any
+from urllib.request import urlopen, Request
+
+from file_util import File, copy_files_glob, rm
+from git.util import Settings, RemoteInfo, NotInAGitRepo
 
 git_libs = {}
 git_lib_urls = {}
@@ -229,7 +228,7 @@ def get_remote_and_branch(path: str) -> (str, str):
     if not is_in_git_repo(Path(path)):
         raise NotInAGitRepo(path)
 
-    response = subprocess.run(["git", "-C", path, "status", "-sb"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+    response = subprocess.run(["git", "-C", path, "status", "-sb"], capture_output=True, encoding='utf-8')
     if response.returncode != 0 or len(response.stdout) == 0:
         raise Exception(f"Git status: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
 
@@ -244,7 +243,7 @@ def get_remote_and_branch(path: str) -> (str, str):
 def get_remote_info(path: str) -> RemoteInfo:
     remote, remote_branch = get_remote_and_branch(path)
 
-    response = subprocess.run(["git", "-C", path, "config", "--get", f"remote.{remote}.url"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+    response = subprocess.run(["git", "-C", path, "config", "--get", f"remote.{remote}.url"], capture_output=True, encoding='utf-8')
     if response.returncode != 0 or len(response.stdout) == 0:
         raise Exception(f"Git config: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
 
@@ -270,7 +269,7 @@ def clone(path: Union[str, Path], host: str, repo: str, protocol: str = "ssh", u
         prefix = f"{user}@"
 
     # using ssh:// allows specifying a different port
-    response = subprocess.run(["git", "clone", f"{protocol}://{prefix}{host}/{repo}", "-o", remote, "-b", branch, str(path)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+    response = subprocess.run(["git", "clone", f"{protocol}://{prefix}{host}/{repo}", "-o", remote, "-b", branch, str(path)], capture_output=True, encoding='utf-8')
     if response.returncode != 0:
         raise Exception(f"Git clone: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
 
@@ -281,15 +280,15 @@ def checkout(path: str, sub_path = ".", do_fetch=True, remote="origin", branch="
     if force:
         options.append("-f")
     if do_fetch:
-        response = subprocess.run(["git", "-C", path, "fetch"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+        response = subprocess.run(["git", "-C", path, "fetch"], capture_output=True, encoding='utf-8')
         if response.returncode != 0:
             raise Exception(f"Git fetch: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
 
-    response = subprocess.run(["git", "-C", path, "rm", "-rf", sub_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+    response = subprocess.run(["git", "-C", path, "rm", "-rf", sub_path], capture_output=True, encoding='utf-8')
     if response.returncode != 0:
         raise Exception(f"Git rm: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
 
-    response = subprocess.run(["git", "-C", path, "checkout", *options, checkout_branch, "--", sub_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+    response = subprocess.run(["git", "-C", path, "checkout", *options, checkout_branch, "--", sub_path], capture_output=True, encoding='utf-8')
     if response.returncode != 0:
         raise Exception(f"Git checkout: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
 
@@ -307,8 +306,6 @@ def pull_or_clone(path: str, rinfo: RemoteInfo):
 
 
 def populate():
-    from git.gitea import GiteaLib
-    from git.gitea_aalto import GiteaAaltoLib
     global git_libs, git_lib_urls
     classes =  [GitLib] + GitLib.all_subclasses()
 

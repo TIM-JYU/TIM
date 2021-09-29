@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any
 
 from timApp.timdb.sqa import db
 
@@ -40,7 +40,7 @@ class PeerReview(db.Model):
     reviewable = db.relationship('User', foreign_keys=[reviewable_id])
 
     @property
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {
             'id': self.id,
             'answer_id': self.answer_id,

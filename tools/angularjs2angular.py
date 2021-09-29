@@ -25,8 +25,7 @@ class TypeScriptSrcEditor:
         return m.groups(1)[0] if m else None
 
     def search_all(self, s):
-        for r in re.findall(s, self.src, re.DOTALL):
-            yield r
+        yield from re.findall(s, self.src, re.DOTALL)
 
     def regex_replace(self, pat, to, flags=0, count=0):
         self.src = re.sub(pat, to, self.src, count=count, flags=flags)
@@ -49,12 +48,12 @@ import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-compon
 import {angularDialog} from "tim/ui/angulardialog/dialog.service";""")
         s.delete_line('import {DialogController} from ')
         s.replace('extends DialogController', 'extends AngularDialogComponent')
-        s.regex_replace('{params: (\w+|{\w+: \w+})}', r'\1')
+        s.regex_replace(r'{params: (\w+|{\w+: \w+})}', r'\1')
         s.replace('extends DialogController', 'extends AngularDialogComponent')
         s.replace('static component', 'protected dialogName')
 
     if is_dialog:
-        comp_name_orig = s.search('protected dialogName = "(\w+)"( as const)?;')
+        comp_name_orig = s.search(r'protected dialogName = "(\w+)"( as const)?;')
         comp_name = re.sub(r'Dialog$', '', comp_name_orig)
         module_var = None
     else:

@@ -2,14 +2,11 @@
 TIM plugin: a checkbox field
 """
 from dataclasses import dataclass, asdict
-from typing import Union, Dict, List, Tuple
+from typing import Union
 
 from flask import render_template_string
 from marshmallow.utils import missing
 
-from tim_common.common_schemas import TextfieldStateModel
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    create_blueprint, GenericAnswerModel, PluginAnswerWeb, PluginAnswerResp, PluginReqs
 from timApp.document.docentry import DocEntry
 from timApp.document.viewcontext import default_view_ctx
 from timApp.modules.fields.textfield import TextfieldMarkupModel
@@ -17,12 +14,15 @@ from timApp.plugin.taskid import TaskId
 from timApp.tim_app import csrf
 from timApp.user.user import User
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFieldsAccess, FieldValue
+from tim_common.common_schemas import TextfieldStateModel
+from tim_common.pluginserver_flask import GenericHtmlModel, \
+    create_blueprint, GenericAnswerModel, PluginAnswerWeb, PluginAnswerResp, PluginReqs
 from tim_common.utils import Missing
 
 
 @dataclass
 class CbcountfieldMarkupModel(TextfieldMarkupModel):
-    groups: Union[List[str], Missing] = missing
+    groups: Union[list[str], Missing] = missing
     limit: Union[int, Missing] = missing
 
 
@@ -41,7 +41,7 @@ class CbcountfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, CbcountfieldMa
     def get_static_html(self) -> str:
         return render_static_cdfield(self)
 
-    def get_browser_json(self) -> Dict:
+    def get_browser_json(self) -> dict:
         r = super().get_browser_json()
         count, _ = get_checked_count(self.markup, self.taskID, self.current_user_id)
         r['count'] = count
@@ -116,7 +116,7 @@ def cb_answer(args: CbcountfieldAnswerModel) -> CbAnswerResp:
     return result
 
 
-def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: str) -> Tuple[int, FieldValue]:
+def get_checked_count(markup: CbcountfieldMarkupModel, task_id: str, user_id: str) -> tuple[int, FieldValue]:
     groups = ['*']
     if isinstance(markup.groups, list):
         groups = markup.groups

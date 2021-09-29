@@ -1,12 +1,11 @@
 from dataclasses import dataclass, field
-from typing import List
 
 from timApp.readmark.readparagraph import ReadParagraph
 
 
 @dataclass
 class ReadMarkCollection:
-    marks: List[ReadParagraph] = field(default_factory=list)
+    marks: list[ReadParagraph] = field(default_factory=list)
 
     def add(self, r: ReadParagraph, modified=False):
         self.marks.append(r)

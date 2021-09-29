@@ -1,8 +1,9 @@
-from typing import List, Dict, Union, Optional
 from dataclasses import field
-from tim_common.marshmallow_dataclass import dataclass
+from typing import Union, Optional
 
 from loadable import Loadable
+from tim_common.marshmallow_dataclass import dataclass
+
 
 @dataclass
 class AngularComponent(Loadable):
@@ -11,7 +12,7 @@ class AngularComponent(Loadable):
 
 @dataclass
 class AngularModule(Loadable):
-    components: Dict[str, AngularComponent] = field(default_factory=dict)
+    components: dict[str, AngularComponent] = field(default_factory=dict)
     entry: str = ""
 
 @dataclass
@@ -29,8 +30,8 @@ class OutputContainer(Loadable):
 
 @dataclass
 class RunResult(Loadable):
-    output_boxes: List[OutputContainer] = field(default_factory=list)
-    penalties: Dict[str, Union[bool, str]] = field(default_factory=dict)
+    output_boxes: list[OutputContainer] = field(default_factory=list)
+    penalties: dict[str, Union[bool, str]] = field(default_factory=dict)
     points: float = 0.0
     max_points: Optional[float] = None
 

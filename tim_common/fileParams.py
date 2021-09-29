@@ -192,7 +192,7 @@ def check(matcher, line: str):
     return match
 
 
-def get_json_eparam(jso: Dict[str, Any], key1: str, key2: str, default: Any, escape_html_special_chars: bool = True):
+def get_json_eparam(jso: dict[str, Any], key1: str, key2: str, default: Any, escape_html_special_chars: bool = True):
     # escaped param
     result = get_json_param(jso, key1, key2, default)
     if result is None:
@@ -205,7 +205,7 @@ def get_json_eparam(jso: Dict[str, Any], key1: str, key2: str, default: Any, esc
     return html.unescape(result)
 
 
-def get_json_param(jso: Dict[str, Any], key1: str, key2: str, default: Any):
+def get_json_param(jso: dict[str, Any], key1: str, key2: str, default: Any):
     # noinspection PyBroadException
     try:
         if jso is None:
@@ -237,7 +237,7 @@ def get_scan_value(s: str):
     return direction, match
 
 
-def scan_lines(lines: List[str], n: int, i: int, scanner, direction: int):
+def scan_lines(lines: list[str], n: int, i: int, scanner, direction: int):
     if not scanner:
         return i
     i += direction
@@ -290,7 +290,7 @@ def get_url_lines(url: str):
     # if False and os.path.isfile(diskcache):
     if os.path.isfile(diskcache):
         try:
-            result = open(diskcache, "r", encoding='iso8859_15').read()
+            result = open(diskcache, encoding='iso8859_15').read()
             result = result.split("\n")
             print("from DISK cache: ", diskcache)
             cache[url] = result
@@ -362,7 +362,7 @@ def get_url_lines_as_string(url: str):
 
     if os.path.isfile(diskcache):
         try:
-            result = open(diskcache, "r").read()
+            result = open(diskcache).read()
             cache[cachename] = result
             return result
         except:
@@ -586,7 +586,7 @@ def get_file_to_output(query: QueryClass, show_html: bool):
 number_of_multi_html_reqs = 0
 
 
-def multi_post_params(self) -> List[QueryClass]:
+def multi_post_params(self) -> list[QueryClass]:
     content_length = int(self.headers['Content-Length'])
     f = self.rfile.read(content_length)
     u = f.decode("UTF8")
@@ -662,7 +662,7 @@ def file_to_string(name: str):
     return result
 
 
-def query_params_to_angular(query: Dict[str, Any]):
+def query_params_to_angular(query: dict[str, Any]):
     result = ""
     for field in query.keys():
         result = result + field + "=\"" + query[field][0] + "\";\n"
@@ -684,7 +684,7 @@ def default_value_transform(x):
     return x[0]
 
 
-def query_params_to_map(query: Dict[str, Any], transform=None, deny: Dict[str, Any] = None):
+def query_params_to_map(query: dict[str, Any], transform=None, deny: dict[str, Any] = None):
     if transform is None:
         transform = default_value_transform
     result = {}
@@ -700,7 +700,7 @@ def query_params_to_map(query: Dict[str, Any], transform=None, deny: Dict[str, A
     return result
 
 
-def query_params_to_map_check_parts(query: QueryClass, deny: Dict[str, Any] = None):
+def query_params_to_map_check_parts(query: QueryClass, deny: dict[str, Any] = None):
     result = query_params_to_map(query.query, deny=deny)
     return result
 
@@ -853,14 +853,14 @@ def do_headers(self, content_type):
 def find_java_package(s):
     p = ""
     c = ""
-    r = re.search("package\s*([\s.a-zA-Z0-9_]+)", s, flags=re.M)
+    r = re.search(r"package\s*([\s.a-zA-Z0-9_]+)", s, flags=re.M)
     if r:
         p = re.sub(r"\s*", "", r.group(1))
-    r = re.search("public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
+    r = re.search(r"public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
     if r:
         c = r.group(1)
     else:
-        r = re.search("public\s*interface\s*([a-zA-Z0-9_]+)", s, flags=re.M)
+        r = re.search(r"public\s*interface\s*([a-zA-Z0-9_]+)", s, flags=re.M)
         if r:
             c = r.group(1)
 
@@ -871,10 +871,10 @@ def find_java_package(s):
 def find_cs_class(s):
     # TODO: better check if class is inside namespace
     c = "Peli"
-    r = re.search("public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
+    r = re.search(r"public\s*class\s*([a-zA-Z0-9_]+)", s, flags=re.M)
     if r:
         c = r.group(1)
-    r = re.search("namespace\s*([a-zA-Z0-9_]+)", s, flags=re.M)
+    r = re.search(r"namespace\s*([a-zA-Z0-9_]+)", s, flags=re.M)
     if r:
         c = r.group(1) + "." + c
 

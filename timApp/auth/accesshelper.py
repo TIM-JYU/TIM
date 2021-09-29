@@ -2,7 +2,7 @@ import ipaddress
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
-from typing import Optional, Tuple, List, Union
+from typing import Optional, Union
 
 from flask import flash, current_app
 from flask import request, g
@@ -237,7 +237,7 @@ def maybe_auto_confirm(block: ItemOrBlock):
                     for a in asc:
                         if isinstance(a, str):
                             allowed.add(a)
-                aliases = set(a.path for a in block.aliases)
+                aliases = {a.path for a in block.aliases}
                 if allowed & aliases:
                     try:
                         acc = get_single_view_access(target, allow_group=True)
@@ -321,7 +321,7 @@ def get_plugin_from_request(doc: Document,
                             task_id: TaskId,
                             u: UserContext,
                             view_ctx: ViewContext,
-                            answernr: Optional[int]=None) -> Tuple[Document, Plugin]:
+                            answernr: Optional[int]=None) -> tuple[Document, Plugin]:
     assert doc.doc_id == task_id.doc_id
     orig_info = view_ctx.origin
     orig_doc_id, orig_par_id = (orig_info.doc_id, orig_info.par_id) if orig_info else (None, None)
@@ -435,10 +435,10 @@ class AccessDenied(Exception):
 
 def get_single_view_access(i: Item, allow_group: bool = False) -> BlockAccess:
     u = get_current_user_object()
-    accs: List[BlockAccess] = u.get_personal_group().accesses.filter_by(block_id=i.id).all()
+    accs: list[BlockAccess] = u.get_personal_group().accesses.filter_by(block_id=i.id).all()
     if not accs and allow_group:
         lig = UserGroup.get_logged_in_group()
-        ugroups = set(gid for gid, in u.groups_dyn.with_entities(UserGroup.id).all())
+        ugroups = {gid for gid, in u.groups_dyn.with_entities(UserGroup.id).all()}
         for (ugid, act), acc in i.block.accesses.items():
             if (ugid == lig.id or ugid in ugroups) and act == AccessType.view.value:
                 new_acc = u.grant_access(

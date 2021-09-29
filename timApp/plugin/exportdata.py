@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
 
 from tim_common.marshmallow_dataclass import class_schema
 
@@ -13,7 +13,7 @@ class ExportData:
 
 @dataclass
 class WithExportData:
-    exportdata: List[ExportData]
+    exportdata: list[ExportData]
 
 
 @dataclass

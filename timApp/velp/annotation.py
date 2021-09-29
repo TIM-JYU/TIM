@@ -8,7 +8,7 @@ as well as adding comments to the annotations. The module also retrieves the ann
 """
 import re
 from dataclasses import dataclass, field
-from typing import Optional, List, Tuple
+from typing import Optional
 
 from flask import Blueprint, Response
 
@@ -46,7 +46,7 @@ class AddAnnotationModel:
     color: Optional[str] = None
     icon_id: Optional[int] = None
     answer_id: Optional[int] = None
-    draw_data: Optional[List[dict]] = None
+    draw_data: Optional[list[dict]] = None
 
 
 @annotations.post("/add_annotation")
@@ -114,10 +114,10 @@ class UpdateAnnotationModel(AnnotationIdModel):
     points: Optional[float] = None
     color: Optional[str] = None
     coord: Optional[AnnotationPosition] = None
-    draw_data: Optional[List[dict]] = None
+    draw_data: Optional[list[dict]] = None
 
 
-def check_visibility_and_maybe_get_doc(user: User, ann: Annotation) -> Tuple[bool, Optional[DocInfo]]:
+def check_visibility_and_maybe_get_doc(user: User, ann: Annotation) -> tuple[bool, Optional[DocInfo]]:
     d = None
     if user.id == ann.annotator_id:
         return True, d
@@ -131,7 +131,7 @@ def check_visibility_and_maybe_get_doc(user: User, ann: Annotation) -> Tuple[boo
     return False, d
 
 
-def check_annotation_edit_access_and_maybe_get_doc(user: User, ann: Annotation) -> Tuple[bool, Optional[DocInfo]]:
+def check_annotation_edit_access_and_maybe_get_doc(user: User, ann: Annotation) -> tuple[bool, Optional[DocInfo]]:
     vis, d = check_visibility_and_maybe_get_doc(user, ann)
     if not vis:
         return False, d

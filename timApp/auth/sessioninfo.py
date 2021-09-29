@@ -1,5 +1,5 @@
 from textwrap import dedent
-from typing import Dict, List, Optional
+from typing import Optional
 
 from flask import session, g, request, current_app
 from sqlalchemy.orm import joinedload
@@ -38,11 +38,11 @@ def user_context_with_logged_in(u: Optional[User]) -> UserContext:
     return UserContext(user=u or curr, logged_user=curr)
 
 
-def get_other_users() -> Dict[str, Dict[str, str]]:
+def get_other_users() -> dict[str, dict[str, str]]:
     return session.get('other_users', {})
 
 
-def get_other_users_as_list() -> List[Dict[str, str]]:
+def get_other_users_as_list() -> list[dict[str, str]]:
     return list(session.get('other_users', {}).values())
 
 
@@ -50,19 +50,19 @@ def get_session_users():
     return [get_current_user()] + get_other_users_as_list()
 
 
-def get_session_users_objs() -> List[User]:
+def get_session_users_objs() -> list[User]:
     return get_users_objs(get_session_users())
 
 
-def get_other_session_users_objs() -> List[User]:
+def get_other_session_users_objs() -> list[User]:
     return get_users_objs(get_other_users_as_list())
 
 
-def get_users_objs(lis) -> List[User]:
+def get_users_objs(lis) -> list[User]:
     return User.query.filter(User.id.in_([u['id'] for u in lis])).all()
 
 
-def get_session_users_ids() -> List[int]:
+def get_session_users_ids() -> list[int]:
     return [u['id'] for u in get_session_users()]
 
 

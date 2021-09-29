@@ -2,7 +2,7 @@
 import json
 import re
 from dataclasses import dataclass, asdict
-from typing import Dict, Optional, List, Union, Any
+from typing import Optional, Union, Any
 
 import yaml
 from flask import Blueprint, render_template_string
@@ -40,7 +40,7 @@ qst_plugin = Blueprint('qst_plugin',
 
 @dataclass
 class QuestionInDocument:
-    markup: Dict
+    markup: dict
     qst: bool
     taskId: Optional[str]
     docId: int
@@ -102,7 +102,7 @@ def qst_mmcq_answer():
 
 @dataclass
 class QstInputModel:
-    answers: List[List[str]]
+    answers: list[list[str]]
     nosave: Union[bool, Missing] = missing
 
 
@@ -122,22 +122,22 @@ class QstMarkupModel(GenericMarkupModel):
     questionText: Union[str, None, Missing] = missing
     questionTitle: Union[str, None, Missing] = missing
     questionType: Union[str, None, Missing] = missing
-    rows: Union[List[Any], Missing] = missing
+    rows: Union[list[Any], Missing] = missing
     randomizedRows: Union[int, None, Missing] = missing
     randomSeed: Union[int, Missing] = missing
-    doNotMove: Union[List[int], int, None, Missing] = missing
+    doNotMove: Union[list[int], int, None, Missing] = missing
     defaultPoints: Union[int, float, None, Missing] = missing
     savedText: Union[str, None, Missing] = missing
     size: Union[str, None, Missing] = missing
 
 
-QstBasicState = List[List[str]]
+QstBasicState = list[list[str]]
 
 
 @dataclass
 class QstRandomState:
     c: QstBasicState
-    order: List[int]
+    order: list[int]
 
 
 # Store answer in original row order if no randomizedRows specified in markup:
@@ -452,13 +452,13 @@ def qst_str(state):
 def mcq_get_md(jso):
     """
     Gives question in format:
-        \mcq{Onko kuu}{Valitse tosi lause}
+        \\mcq{Onko kuu}{Valitse tosi lause}
         {|l l|}
         {
-        \hline $\bigcirc$ & Kuu on lähempänä kuin aurinko \\
-        \hline $\bigcirc$ & Kuu on yhtä iso kuin aurinko \\
-        \hline $\bigcirc$ & Kuu on juustoa \\
-        \hline
+        \\hline $\bigcirc$ & Kuu on lähempänä kuin aurinko \\
+        \\hline $\bigcirc$ & Kuu on yhtä iso kuin aurinko \\
+        \\hline $\bigcirc$ & Kuu on juustoa \\
+        \\hline
         }
 
     :param jso: json block to make the markdown or TeX
@@ -490,7 +490,7 @@ def mcq_get_md(jso):
         if user_print:
             reason = ' & ' + choice.get('reason', '')
             if idx == user_answer:
-                user_mark = ' \, \\cmark' if correct else ' \, \\xmark'
+                user_mark = ' \\, \\cmark' if correct else ' \\, \\xmark'
                 checked = '*'
         line = texhline + '\\radiobutton' + checked + user_mark + '& ' + choice.get('text', '') + reason + ' \\\\\n'
         cstr += line
@@ -535,13 +535,13 @@ def format_qst_tex(header, stem, question_text, texcolumns, cstr, footer):
 def mmcq_get_md(jso):
     """
     Gives question in format:
-        \mcq{Onko kuu}{Valitse tosi lause}
+        \\mcq{Onko kuu}{Valitse tosi lause}
         {|l l|}
         {
-        \hline $\bigcirc$ & Kuu on lähempänä kuin aurinko \\
-        \hline $\bigcirc$ & Kuu on yhtä iso kuin aurinko \\
-        \hline $\bigcirc$ & Kuu on juustoa \\
-        \hline
+        \\hline $\bigcirc$ & Kuu on lähempänä kuin aurinko \\
+        \\hline $\bigcirc$ & Kuu on yhtä iso kuin aurinko \\
+        \\hline $\bigcirc$ & Kuu on juustoa \\
+        \\hline
         }
 
     :param jso: json block to make the markdown or TeX
@@ -679,7 +679,7 @@ def qst_get_md(jso):
     texboxh = markup.get('texboxh', '10')
     stem = markup.get('stem', '')
     if stem:
-        stem += '\par'
+        stem += r'\par'
     qjson = markup  # .get('json',{})
     question_text = qjson.get('questionText', '')
     question_type = qjson.get('questionType', '')
@@ -762,9 +762,9 @@ def qst_get_md(jso):
                     if ua:
                         box += '*'
                     if cell_points > 0:
-                        box = "\correct{" + box + "}"
+                        box = r"\correct{" + box + "}"
                     if cell_points:
-                        box = "\lbpoints{" + str(cell_points) + "}{" + box + "}"
+                        box = r"\lbpoints{" + str(cell_points) + "}{" + box + "}"
             else:
                 box += boxdef
             lbox += sep + box
@@ -789,7 +789,7 @@ def qst_get_md(jso):
     return result
 
 
-def question_convert_js_to_yaml(markup: Dict, is_task: bool, task_id: Optional[str]):
+def question_convert_js_to_yaml(markup: dict, is_task: bool, task_id: Optional[str]):
     # save question. How to pick up question see lecture.py, get_question_data_from_document
     markup = normalize_question_json(markup)
     question_title = markup["questionTitle"]
@@ -856,7 +856,7 @@ def get_question_data_from_document(d: DocInfo, par_id: str, edit=False) -> Ques
     )
 
 
-def convert_qst_md(plugindata: Dict, dumbo_opts: Optional[DumboOptions] = None) -> None:
+def convert_qst_md(plugindata: dict, dumbo_opts: Optional[DumboOptions] = None) -> None:
     if not dumbo_opts:
         dumbo_opts = DumboOptions.default()
     prepare_for_dumbo_attr_list_recursive(get_plugin_regex_obj('qst'), plugindata)

@@ -3,10 +3,10 @@ from datetime import timedelta
 from lxml.cssselect import CSSSelector
 
 from timApp.document.docinfo import DocInfo
-from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.readmark.readings import get_readings, get_read_expiry_condition
-from timApp.readmark.readparagraphtype import ReadParagraphType
 from timApp.readmark.readparagraph import ReadParagraph
+from timApp.readmark.readparagraphtype import ReadParagraphType
+from timApp.tests.server.timroutetest import TimRouteTest
 
 readline_selector = CSSSelector('div.readline')
 
@@ -196,8 +196,8 @@ testuser2,3,0,0,0,0
             self.assertEqual(set(r.keys()), known_keys)
         self.assertNotEqual(rs[0]['id'], rs[1]['id'])
         self.assertEqual(rs[0]['timestamp'], rs[1]['timestamp'])
-        self.assertEqual(set(p.get_id() for p in pars), set(r['par_id'] for r in rs))
-        self.assertEqual(set(p.get_hash() for p in pars), set(r['par_hash'] for r in rs))
+        self.assertEqual({p.get_id() for p in pars}, {r['par_id'] for r in rs})
+        self.assertEqual({p.get_hash() for p in pars}, {r['par_hash'] for r in rs})
 
     def test_tr_separate_readings(self):
         self.login_test1()

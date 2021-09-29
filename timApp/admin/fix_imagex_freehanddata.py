@@ -1,5 +1,4 @@
 import json
-from typing import List
 
 from timApp.admin.util import process_items, create_argparser, DryrunnableArguments
 from timApp.answer.answer import Answer
@@ -13,7 +12,7 @@ def fix_imagex_freehanddata(doc: DocInfo, args: DryrunnableArguments) -> int:
     :param args: The arguments.
     """
     errors = 0
-    answers: List[Answer] = Answer.query.filter(Answer.task_id.startswith(f'{doc.id}.')).all()
+    answers: list[Answer] = Answer.query.filter(Answer.task_id.startswith(f'{doc.id}.')).all()
     for a in answers:
         data = a.content_as_json
         freehanddata = data.get('freeHandData')

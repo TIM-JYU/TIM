@@ -10,7 +10,7 @@ from timApp.user.usergroup import UserGroup
 class ClipboardTest(TimDbTest):
 
     def setUp(self):
-        super(ClipboardTest, self).setUp()
+        super().setUp()
         self.clipboard = Clipboard()
         self.clipboard.clear_all()
 

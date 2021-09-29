@@ -4,12 +4,12 @@ import os
 import shutil
 import subprocess
 import tempfile
-from typing import TypedDict, Dict, Optional
+from typing import TypedDict, Optional
 
 
 class DotNetPackage(TypedDict, total=False):
-    dependencies: Dict[str, str]
-    runtime: Dict[str, str]
+    dependencies: dict[str, str]
+    runtime: dict[str, str]
 
 
 class DotNetLibrary(TypedDict, total=False):
@@ -18,10 +18,10 @@ class DotNetLibrary(TypedDict, total=False):
 
 
 class DotNetDeps(TypedDict):
-    runtimeTarget: Dict
-    compilationOptions: Dict
-    targets: Dict[str, Dict[str, DotNetPackage]]
-    libraries: Dict[str, DotNetLibrary]
+    runtimeTarget: dict
+    compilationOptions: dict
+    targets: dict[str, dict[str, DotNetPackage]]
+    libraries: dict[str, DotNetLibrary]
 
 
 def gen_deps(csproj_file: str, base_dir: str):
@@ -34,7 +34,7 @@ def gen_deps(csproj_file: str, base_dir: str):
         shutil.copy(os.path.join(base_dir, csproj_file), tmp_folder)
         shutil.copy(os.path.join(base_dir, "NuGet.Config"), tmp_folder)
         subprocess.run(['dotnet', 'build', '-c', 'Release', tmp_folder])
-        with open(os.path.join(tmp_folder, 'bin', 'Release', f'{name}.deps.json'), 'r', encoding='utf-8') as f:
+        with open(os.path.join(tmp_folder, 'bin', 'Release', f'{name}.deps.json'), encoding='utf-8') as f:
             deps_obj = json.load(f)
 
     if not deps_obj:

@@ -56,7 +56,7 @@ class MergeTest(TimRouteTest):
         db.session.commit()
 
         def membership_set(user: User):
-            return set((m.usergroup_id, m.added_by) for m in user.memberships)
+            return {(m.usergroup_id, m.added_by) for m in user.memberships}
 
         def check_memberships(
                 primary: User,

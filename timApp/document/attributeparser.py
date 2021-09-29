@@ -1,5 +1,3 @@
-
-
 class AttributeParser:
     """
     :type string: str

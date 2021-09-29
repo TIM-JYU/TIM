@@ -1,13 +1,14 @@
+from os.path import basename
+from urllib.parse import urlparse, ParseResult
+
+from lxml.html import HtmlElement
+
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.user.preferences import Preferences
-from lxml.html import HtmlElement
-from typing import List
-from urllib.parse import urlparse, ParseResult
-from os.path import basename
 
 
 def get_theme_style_name(html: HtmlElement):
-    s: List[HtmlElement] = html.cssselect("link[rel='stylesheet'][href^='/static/generated/']")
+    s: list[HtmlElement] = html.cssselect("link[rel='stylesheet'][href^='/static/generated/']")
     href: str = s[0].attrib["href"]
     url: ParseResult = urlparse(href)
     return basename(url.path)

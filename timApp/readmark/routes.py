@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from typing import Optional
 
 from flask import Blueprint, request
 from flask import current_app, Response
@@ -70,7 +70,7 @@ def unread_paragraph(doc_id, par_id):
 
 @dataclass
 class ReadModel:
-    pars: Optional[List[Tuple[int, str]]] = None
+    pars: Optional[list[tuple[int, str]]] = None
 
 
 ReadModelSchema = class_schema(ReadModel)

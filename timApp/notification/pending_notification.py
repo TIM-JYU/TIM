@@ -1,5 +1,3 @@
-from typing import List, Tuple
-
 from sqlalchemy import func
 
 from timApp.document.version import Version
@@ -7,7 +5,7 @@ from timApp.notification.notification import NotificationType
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 
-GroupingKey = Tuple[int, str]
+GroupingKey = tuple[int, str]
 
 
 class PendingNotification(db.Model):
@@ -75,6 +73,6 @@ class CommentNotification(PendingNotification):
     }
 
 
-def get_pending_notifications() -> List[PendingNotification]:
+def get_pending_notifications() -> list[PendingNotification]:
     return PendingNotification.query.filter(PendingNotification.processed == None).order_by(
         PendingNotification.created.asc()).all()

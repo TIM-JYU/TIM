@@ -53,7 +53,7 @@ class TimInfo(TypedDict, total=False):
 
 class PluginAnswerResp(TypedDict, total=False):
     web: PluginAnswerWeb
-    save: Dict[str, Any]
+    save: dict[str, Any]
     tim_info: TimInfo
 
 
@@ -65,20 +65,20 @@ class EditorMenuItem(TypedDict):
 
 class EditorMenu(TypedDict):
     text: str
-    items: List[EditorMenuItem]
+    items: list[EditorMenuItem]
 
 
 class EditorTab(TypedDict):
     text: str
-    items: List[EditorMenu]
+    items: list[EditorMenu]
 
 
 class PluginReqs(TypedDict, total=False):
-    js: List[str]
+    js: list[str]
     multihtml: bool
     multimd: bool
-    editor_tabs: List[EditorTab]
-    css: List[str]
+    editor_tabs: list[EditorTab]
+    css: list[str]
 
 
 @dataclass
@@ -156,7 +156,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         """
         return not self.markup.anonymous
 
-    def get_browser_json(self) -> Dict:
+    def get_browser_json(self) -> dict:
         r = dict(list_not_missing_fields(self))
         r['markup'] = self.markup.get_visible_data()
         return r
@@ -209,7 +209,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
 
         return self.get_md()
 
-    def get_json_encoder(self) -> Type[json.JSONEncoder]:
+    def get_json_encoder(self) -> type[json.JSONEncoder]:
         return PluginJsonEncoder
 
     def get_component_html_name(self) -> str:
@@ -276,7 +276,7 @@ def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMark
     )
 
 
-def make_base64(d: dict, json_encoder: Optional[Type[JSONEncoder]] = None) -> str:
+def make_base64(d: dict, json_encoder: Optional[type[JSONEncoder]] = None) -> str:
     """Converts the given dict to a base64-encoded JSON string."""
     return base64.b64encode(json.dumps(d, sort_keys=True, cls=json_encoder).encode()).decode()
 
@@ -328,7 +328,7 @@ def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginStat
     return m.get_real_html()
 
 
-def render_multihtml(args: List[dict], schema: Schema) -> Response:
+def render_multihtml(args: list[dict], schema: Schema) -> Response:
     """Renders HTMLs according to the given Schema.
 
     :param schema: The marshmallow schema to use for validating the plugin data.
@@ -357,7 +357,7 @@ def render_plugin_md(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
     return m.get_real_md()
 
 
-def render_multimd(args: List[dict], schema: Schema) -> Response:
+def render_multimd(args: list[dict], schema: Schema) -> Response:
     """Renders HTMLs according to the given Schema.
 
     :param args: Partially validated HTML arguments.
@@ -386,7 +386,7 @@ def create_app(name: str) -> Flask:
 
 def register_html_routes(
         app: Union[Flask, Blueprint],
-        html_schema: Type[Schema],
+        html_schema: type[Schema],
         reqs_handler: Callable[[], PluginReqs],
         csrf: Optional[CSRFProtect] = None,
 ) -> None:
@@ -440,8 +440,8 @@ def value_or_default(val: Union[T, None, Missing], default: T) -> T:
 def create_blueprint(
         name: str,
         plugin_name: str,
-        html_model: Type[HtmlModel],
-        answer_model: Type[AnswerModel],
+        html_model: type[HtmlModel],
+        answer_model: type[AnswerModel],
         answer_handler: Callable[[AnswerModel], PluginAnswerResp],
         reqs_handler: Callable[[], PluginReqs],
         csrf: Optional[CSRFProtect] = None,
@@ -454,7 +454,7 @@ def create_blueprint(
 def create_nontask_blueprint(
         name: str,
         plugin_name: str,
-        html_model: Type[HtmlModel],
+        html_model: type[HtmlModel],
         reqs_handler: Callable[[], PluginReqs],
         csrf: Optional[CSRFProtect] = None,
 ) -> Blueprint:
@@ -468,7 +468,7 @@ def create_nontask_blueprint(
 
 def register_answer_route(
         app: Union[Flask, Blueprint],
-        answer_model: Type[AnswerModel],
+        answer_model: type[AnswerModel],
         answer_handler: Callable[[AnswerModel], PluginAnswerResp],
         csrf: Optional[CSRFProtect] = None,
 ) -> None:
@@ -485,8 +485,8 @@ def register_answer_route(
 
 def register_plugin_app(
         name: str,
-        html_model: Type[HtmlModel],
-        answer_model: Type[AnswerModel],
+        html_model: type[HtmlModel],
+        answer_model: type[AnswerModel],
         answer_handler: Callable[[AnswerModel], PluginAnswerResp],
         reqs_handler: Callable[[], PluginReqs],
 ) -> Flask:

@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import timedelta
-from typing import List, DefaultDict
+from typing import DefaultDict
 
 from sqlalchemy.orm import Query
 
@@ -17,11 +17,11 @@ def get_read_expiry_condition(delta: timedelta):
             (ReadParagraph.timestamp > get_current_time() - delta))
 
 
-def get_readings(usergroup_id: int, doc: Document, filter_condition=None) -> List[ReadParagraph]:
+def get_readings(usergroup_id: int, doc: Document, filter_condition=None) -> list[ReadParagraph]:
     return get_readings_filtered_query(usergroup_id, doc, filter_condition).all()
 
 
-def has_anything_read(usergroup_ids: List[int], doc: Document) -> bool:
+def has_anything_read(usergroup_ids: list[int], doc: Document) -> bool:
     # Custom query for speed
     ids = doc.get_referenced_document_ids()
     ids.add(doc.doc_id)
@@ -114,8 +114,8 @@ def copy_readings(src_par: DocParagraph, dest_par: DocParagraph):
                                      ))
 
 
-def get_common_readings(usergroup_ids: List[int], doc: Document, filter_condition=None):
-    users: List[DefaultDict[str, DefaultDict[ReadParagraphType, ReadParagraph]]] = []
+def get_common_readings(usergroup_ids: list[int], doc: Document, filter_condition=None):
+    users: list[DefaultDict[str, DefaultDict[ReadParagraphType, ReadParagraph]]] = []
     for u in usergroup_ids:
         reading_map = defaultdict(lambda: defaultdict(lambda: ReadParagraph(par_hash=None)))
         rs = get_readings(u, doc, filter_condition)

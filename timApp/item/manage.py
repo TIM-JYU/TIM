@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Generator, List, Optional, Tuple
+from typing import Generator, Optional
 
 from flask import Blueprint, render_template
 from flask import redirect
@@ -139,7 +139,7 @@ class EditOption(Enum):
 class PermissionEditModel:
     type: AccessType = field(metadata={'by_value': True})
     time: TimeOpt
-    groups: List[str]
+    groups: list[str]
     confirm: Optional[bool]
 
     def __post_init__(self):
@@ -152,7 +152,7 @@ class PermissionEditModel:
 
     @property
     def nonexistent_groups(self):
-        return sorted(list(set(self.groups) - set(g.name for g in self.group_objects)))
+        return sorted(list(set(self.groups) - {g.name for g in self.group_objects}))
 
 
 @dataclass
@@ -184,7 +184,7 @@ class DefaultPermissionRemoveModel(PermissionRemoveModel):
 
 @dataclass
 class PermissionMassEditModel(PermissionEditModel):
-    ids: List[int]
+    ids: list[int]
     action: EditOption = field(metadata={'by_value': True})
 
 
@@ -211,7 +211,7 @@ def log_right(s: str):
     log_info(f'RIGHTS: {u.name} {s}')
 
 
-def get_group_and_doc(doc_id: int, username: str) -> Tuple[UserGroup, DocInfo]:
+def get_group_and_doc(doc_id: int, username: str) -> tuple[UserGroup, DocInfo]:
     i = get_item_or_abort(doc_id)
     verify_permission_edit_access(i, AccessType.view)
     g = UserGroup.get_by_name(username)
@@ -279,7 +279,7 @@ def do_confirm_permission(m: PermissionRemoveModel, i: DocInfo):
 @use_model(PermissionMassEditModel)
 def edit_permissions(m: PermissionMassEditModel):
     groups = m.group_objects
-    nonexistent = set(m.groups) - set(g.name for g in groups)
+    nonexistent = set(m.groups) - {g.name for g in groups}
     if nonexistent:
         raise RouteException(f'Non-existent groups: {nonexistent}')
     items = Block.query \
@@ -319,7 +319,7 @@ def edit_permissions(m: PermissionMassEditModel):
 def add_perm(
         p: PermissionEditModel,
         item: Item,
-) -> List[BlockAccess]:
+) -> list[BlockAccess]:
     if get_current_user_object().get_personal_folder().id == item.id:
         if p.type == AccessType.owner:
             raise AccessDenied('You cannot add owners to your personal folder.')
@@ -359,7 +359,7 @@ def remove_permission(m: PermissionRemoveModel):
 
 @dataclass
 class PermissionClearModel:
-    paths: List[str]
+    paths: list[str]
     type: AccessType = field(metadata={'by_value': True})
 
 

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Dict, Tuple, Optional
+from typing import List, Tuple, Optional
 
 import timApp
 from timApp.document.changelogentry import ChangelogEntry
@@ -8,7 +8,7 @@ from timApp.timdb.sqa import db
 from timApp.timtypes import UserOrGroup
 
 
-def get_author_str(u: UserOrGroup, es: List[ChangelogEntry]):
+def get_author_str(u: UserOrGroup, es: list[ChangelogEntry]):
     display_name = u.pretty_full_name
     num_changes = len(es)
     return display_name if num_changes <= 1 else f'{display_name} ({num_changes} edits)'
@@ -16,9 +16,9 @@ def get_author_str(u: UserOrGroup, es: List[ChangelogEntry]):
 
 class AuthorInfo:
     def __init__(self,
-                 user_map: Dict[int, UserOrGroup],
-                 entries: Dict[int, List[ChangelogEntry]]) -> None:
-        self.authors: Dict[UserOrGroup, List[ChangelogEntry]] = {}
+                 user_map: dict[int, UserOrGroup],
+                 entries: dict[int, list[ChangelogEntry]]) -> None:
+        self.authors: dict[UserOrGroup, list[ChangelogEntry]] = {}
         for k, v in entries.items():
             self.authors[user_map[k]] = v
 
@@ -33,7 +33,7 @@ class AuthorInfo:
 
 class Changelog:
     def __init__(self) -> None:
-        self.entries: List[ChangelogEntry] = []
+        self.entries: list[ChangelogEntry] = []
 
     def append(self, entry: ChangelogEntry):
         self.entries.append(entry)
@@ -41,13 +41,13 @@ class Changelog:
     def to_json(self):
         return self.entries
 
-    def get_authorinfo(self, pars: List[DocParagraph]) -> Dict[str, AuthorInfo]:
+    def get_authorinfo(self, pars: list[DocParagraph]) -> dict[str, AuthorInfo]:
         usergroup_ids = set()
-        par_ids = set(p.get_id() for p in pars)
+        par_ids = {p.get_id() for p in pars}
         par_author_map = {}
         if not par_ids:
             return par_author_map
-        par_entry_map: Dict[str, Dict[int, List[ChangelogEntry]]] = defaultdict(lambda: defaultdict(list))
+        par_entry_map: dict[str, dict[int, list[ChangelogEntry]]] = defaultdict(lambda: defaultdict(list))
         ug_obj_map = {}
         for e in self.entries:
             if e.par_id in par_ids:

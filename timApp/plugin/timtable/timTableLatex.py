@@ -6,7 +6,7 @@ Visa Naukkarinen
 
 import copy
 import re
-from typing import List, Union, Tuple, Callable, Dict, Any
+from typing import Union, Callable, Any
 
 # Default values:
 
@@ -97,7 +97,7 @@ class CellBorders:
     def __repr__(self) -> str:
         return custom_repr(self)
 
-    def set_all_borders(self, color: Tuple[str, bool]) -> None:
+    def set_all_borders(self, color: tuple[str, bool]) -> None:
         """
         Set all borders visible and with same color.
         :param color: Tuple containing color name or hex and whether it's in hex.
@@ -191,7 +191,7 @@ class Cell:
         content = self.content
         # Minipage doesn't handle cell width always properly even if it's given,
         # and when using auto like \linewidth it's blind to what other cells are doing.
-        if "\[" in content:
+        if r"\[" in content:
             minipage_width = self.cell_width
             if "*" in str(minipage_width):
                 minipage_width = default_minipage_width
@@ -260,7 +260,7 @@ class Row:
     LaTeX-table row.
     """
 
-    def __init__(self, index: int, cells: List[Cell], height: Union[float, None] = None) -> None:
+    def __init__(self, index: int, cells: list[Cell], height: Union[float, None] = None) -> None:
         """
         :param index: Row index.
         :param cells: A list of the cells this row contains.
@@ -361,7 +361,7 @@ class HorizontalBorder:
         self.row_below = row_below
 
     def __str__(self) -> str:
-        """
+        r"""
         Draws line "-" between cells if there's a border coming from above or below,
         otherwise no line "~".
         :return: LaTeX \hhline with colored lines.
@@ -490,7 +490,7 @@ def estimate_cell_height(cell, width_constraint):
     return (cell.font_size + 70) * len(cell.content) / width_constraint
 
 
-def estimate_table_width(self) -> Tuple[float, bool]:
+def estimate_table_width(self) -> tuple[float, bool]:
     """
     Get total width of the table (i.e. width of longest row).
     :return: Width.
@@ -553,7 +553,7 @@ class Table:
     Table with rows, cells in rows, and horizontal borders between rows.
     """
 
-    def __init__(self, rows: List[Row], width=default_table_width,
+    def __init__(self, rows: list[Row], width=default_table_width,
                  height=default_table_height, fit_to_page_width: bool = False) -> None:
         """
         :param rows: List of the rows of the table.
@@ -581,7 +581,7 @@ class Table:
         # Always uses max amount because this doesn't cause problems and avoids errors caused by having too few.
         columns = "c" * default_max_col_count
         prefix = f"\\begin{{table}}{default_table_float}\n" \
-                 "\centering\n" \
+                 "\\centering\n" \
                  f"\\begin{{tabular}}{{{columns}}}"
         postfix = "\\end{tabular}\n\\end{table}"
         resize = self.fit_to_page_width
@@ -811,7 +811,7 @@ def get_column_style_list(table_data, key):
     return l
 
 
-def get_column_format_list(table_data, f: Callable[[Dict, Any], Any]):
+def get_column_format_list(table_data, f: Callable[[dict, Any], Any]):
     """
     Forms a list of font families from the columns data.
     :param table_data:
@@ -901,7 +901,7 @@ def get_datablock_cell_data(datablock, row: int, cell: int):
         return None
 
 
-def convert_datablock_index(datablock_index) -> Tuple[int, int]:
+def convert_datablock_index(datablock_index) -> tuple[int, int]:
     """
     A 1 -> 0, 0
     ZZ13 -> 51, 12
@@ -1063,7 +1063,7 @@ def parse_hex_color(color, default_color=None) -> Union[str, None]:
     return color
 
 
-def get_border_color(border_data) -> Tuple[str, bool]:
+def get_border_color(border_data) -> tuple[str, bool]:
     """
     Parses border color from HTML border format.
     :param border_data: HTML border format with line thickness, style, color.

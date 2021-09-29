@@ -1,7 +1,7 @@
 import urllib.parse
 from collections import defaultdict
 from threading import Thread
-from typing import Optional, List, DefaultDict, Set
+from typing import Optional, DefaultDict
 
 from flask import current_app
 from sqlalchemy.orm import joinedload
@@ -107,7 +107,7 @@ def notify_doc_watchers(doc: DocInfo, content_msg: str, notify_type: Notificatio
     db.session.add(p)
 
 
-def get_name_string(users: List[User], show_names: bool):
+def get_name_string(users: list[User], show_names: bool):
     num_users = len(users)
     if show_names:
         return seq_to_str(list(u.pretty_full_name for u in users))
@@ -123,7 +123,7 @@ def get_diff_link(docentry: DocInfo, ver_before: Version, ver_after: Version):
     return f"""{current_app.config['TIM_HOST']}/diff/{docentry.id}/{ver_before[0]}/{ver_before[1]}/{ver_after[0]}/{ver_after[1]}"""
 
 
-def get_message_for(ps: List[PendingNotification], d: DocInfo, show_text: bool, show_names: bool):
+def get_message_for(ps: list[PendingNotification], d: DocInfo, show_text: bool, show_names: bool):
     msg = ''
     num_chgs = len(ps)
     if ps[0].notify_type.is_document_modification and num_chgs > 1 and show_text:
@@ -184,9 +184,9 @@ def get_message_for(ps: List[PendingNotification], d: DocInfo, show_text: bool, 
     return msg.strip()
 
 
-def get_subject_for(ps: List[PendingNotification], d: DocInfo, show_names: bool):
+def get_subject_for(ps: list[PendingNotification], d: DocInfo, show_names: bool):
     num_mods = len(ps)
-    distinct_users = list(set(p.user for p in ps))
+    distinct_users = list({p.user for p in ps})
     type_of_all = get_type_of_notify(ps)
     name_str = get_name_string(distinct_users, show_names)
     if type_of_all == NotificationType.DocModified or type_of_all == MIXED_DOC_MODIFY:
@@ -249,8 +249,8 @@ def get_comment_count_str(num_mods):
 
 def process_pending_notifications():
     pns = get_pending_notifications()
-    grouped_pns: DefaultDict[GroupingKey, List[PendingNotification]] = defaultdict(list)
-    email_threads: List[Thread] = []
+    grouped_pns: DefaultDict[GroupingKey, list[PendingNotification]] = defaultdict(list)
+    email_threads: list[Thread] = []
     for p in pns:
         grouped_pns[p.grouping_key].append(p)
     for (doc_id, t), ps in grouped_pns.items():
@@ -266,7 +266,7 @@ def process_pending_notifications():
             condition = (Notification.email_comment_add == True) | (Notification.email_comment_modify == True)
         else:
             assert False, 'Unknown notify type'
-        users_to_notify: Set[User] = set(n.user for n in doc.get_notifications(condition))
+        users_to_notify: set[User] = {n.user for n in doc.get_notifications(condition)}
         for user in users_to_notify:
             if not user.email or not user.has_view_access(doc) or user.get_prefs().is_item_excluded_from_emails(doc):
                 continue
@@ -291,7 +291,7 @@ def process_pending_notifications():
                 show_names=show_names
             )
 
-            is_unique_user = len(set(p.user for p in ps_to_consider)) == 1
+            is_unique_user = len({p.user for p in ps_to_consider}) == 1
             reply_to = ps_to_consider[0].user.email if show_names and is_unique_user else None
             result = send_email(
                 user.email,

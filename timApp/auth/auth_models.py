@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from timApp.auth.accesstype import AccessType
 
@@ -88,7 +88,7 @@ class BlockAccess(db.Model):
         return self.duration_to and get_current_time() >= self.duration_to
 
     @property
-    def time_until_access_start(self) -> Optional[float]:
+    def time_until_access_start(self) -> float | None:
         if self.accessible_from is None:
             return None
         return (self.accessible_from - get_current_time()).total_seconds()
@@ -132,7 +132,7 @@ class BlockAccess(db.Model):
                      self.duration_from,
                      self.duration_to))
 
-    def __eq__(self, other: 'BlockAccess'):
+    def __eq__(self, other: BlockAccess):
         return self.block_id == other.block_id and self.usergroup_id == other.usergroup_id and self.type == other.type
 
     def __ne__(self, other):
@@ -153,13 +153,13 @@ class BlockAccess(db.Model):
         }
 
 
-def get_duration_now(a: Union[BlockAccess, Right], curr_time: datetime):
+def get_duration_now(a: BlockAccess | Right, curr_time: datetime):
     if a.duration_from and a.accessible_to:
         return min(a.duration, a.accessible_to - curr_time)
     return a.duration
 
 
-def do_confirm(a: Union[BlockAccess, Right], curr_time: datetime):
+def do_confirm(a: BlockAccess | Right, curr_time: datetime):
     a.require_confirm = False
     # When confirming a distributable Right, it is possible that accessible_from is set.
     # In that case, we don't want to reset it.

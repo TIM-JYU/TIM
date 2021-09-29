@@ -1,7 +1,7 @@
 # const numFilterEx: RegExp = /([<=>!]=?) *(-?[\w.,]*) *(!?) */g;
 import re
 from operator import ge, gt, ne, eq, le, lt
-from typing import List, Union, Tuple
+from typing import Union
 
 num_filter_expression = '([<=>!]=?) *(-?[\\w.,]*) *(!?) *'
 
@@ -18,7 +18,7 @@ num_filter_expression = '([<=>!]=?) *(-?[\\w.,]*) *(!?) *'
 #     ">=": ((a: NumStr, b: NumStr) => a >= b),
 # };
 
-def float_or_str_tuple(a: Union[str, float], b: Union[str, float]) -> Union[Tuple[str, str], Tuple[float, float]]:
+def float_or_str_tuple(a: Union[str, float], b: Union[str, float]) -> Union[tuple[str, str], tuple[float, float]]:
     """
     Attempts to convert two parameters to float
     :param a: first parameter to convert
@@ -86,7 +86,7 @@ class RegexOrComparator:
 
 class ComparatorFilter:
     def __init__(self, fltr: str):
-        self.values: List[Union[str, float]] = []
+        self.values: list[Union[str, float]] = []
         self.funcs = []
         self.negate = False
         for result in re.findall(num_filter_expression, fltr):
