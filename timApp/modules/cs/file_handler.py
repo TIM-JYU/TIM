@@ -6,6 +6,7 @@ from file_util import *
 from git.gitlib import get_lib
 from git.util import Settings as GitSettings, RemoteInfo
 from languages import Language
+from tim_common.fileParams import get_json_param
 
 
 def classinstancemethod(func):
