@@ -75,7 +75,7 @@ code_navigation:
   allow_failure: true  # https://gitlab.com/gitlab-org/gitlab/-/issues/224101
 
 ts_lint:
-  stage: test
+  stage: lint
   image: node:lts-slim
   script:
   - cd timApp
@@ -96,7 +96,7 @@ stats:
     - timApp/report.html
 
 jsrunner_lint:
-  stage: test
+  stage: lint
   image: node:lts  # cannot use lts-slim here; some part of this requires Python
   script:
   - cd timApp
