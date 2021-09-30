@@ -147,10 +147,12 @@ def initialize_database(create_docs: bool = True) -> None:
             )
 
             admin_group = UserGroup.get_by_name(ADMIN_GROUPNAME)
-            error_codes_folder = Folder.create(ERROR_CODES_FOLDER,
-                                               admin_group,
-                                               title='Error code database')
-            grant_default_access([admin_group], error_codes_folder, AccessType.owner, BlockType.Document)
+            error_codes_folder = Folder.create(
+                ERROR_CODES_FOLDER, admin_group, title="Error code database"
+            )
+            grant_default_access(
+                [admin_group], error_codes_folder, AccessType.owner, BlockType.Document
+            )
 
         sess.commit()
         log_info("Database initialization done.")
