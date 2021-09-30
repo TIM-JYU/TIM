@@ -217,7 +217,7 @@ def register_errorhandlers(app: Flask):
         message = f"""
 Exception happened on {get_current_time()} at {request.url}
 
-Exception database: {host}/view/{ERROR_CODES_FOLDER}/{error_code}
+Exception database: {host}/view/{ERROR_CODES_FOLDER}/{error_code.lower()}
 
 {req_msg}
 
