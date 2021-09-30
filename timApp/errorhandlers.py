@@ -1,6 +1,10 @@
+import re
 import shutil
 import sys
 import traceback
+from dataclasses import dataclass
+from functools import wraps
+from typing import Type, Callable, Any, Optional
 
 from flask import request, render_template, session, flash, Flask, redirect
 from markupsafe import Markup
@@ -33,6 +37,31 @@ from timApp.util.logger import log_error
 from timApp.util.utils import get_current_time, get_exception_code
 
 ERROR_CODES_FOLDER = 'error-codes'
+
+
+@dataclass
+class SuppressedError(Exception):
+    msg: str
+
+
+def suppress_wuff(ex_type: Type[Exception], message_regex: Optional[str] = None) -> Callable:
+    def decorator(f: Callable) -> Callable:
+        @wraps(f)
+        def wrapped(*args: Any, **kwargs: Any) -> Any:
+            try:
+                return f(*args, **kwargs)
+            except Exception as e:
+                if isinstance(e, ex_type):
+                    ex_msg = str(e)
+                    if message_regex and not re.search(message_regex, ex_msg):
+                        raise
+                    # Pass the error forwards to the exception handler to catch the entire stack trace
+                    raise SuppressedError(f'The error was suppressed. Original message: {e}') from e
+                raise
+
+        return wrapped
+
+    return decorator
 
 
 def register_errorhandlers(app: Flask):
@@ -170,7 +199,8 @@ def register_errorhandlers(app: Flask):
     def handle_500(error):
         # NOTE: Rollback must be the first operation here. Otherwise any db access might fail.
         db.session.rollback()
-        log_error(get_request_message(500, include_body=True))
+        req_msg = get_request_message(500, include_body=True)
+        log_error(req_msg)
         help_email = app.config["HELP_EMAIL"]
         host = app.config["TIM_HOST"]
         error.description = Markup(
@@ -180,14 +210,16 @@ def register_errorhandlers(app: Flask):
             f'<a href="mailto:{help_email}">{help_email}</a>.'
         )
         _, ex, tb_obj = sys.exc_info()
-        error_code = get_exception_code(ex, tb_obj)
+        if isinstance(ex, SuppressedError):
+            return error_generic(error.description, 500)
         tb_str = traceback.format_exc()
+        error_code = get_exception_code(ex, tb_obj)
         message = f"""
 Exception happened on {get_current_time()} at {request.url}
 
 Exception database: {host}/view/{ERROR_CODES_FOLDER}/{error_code}
 
-{get_request_message(500, include_body=True)}
+{req_msg}
 
 {tb_str}
     """.strip()
