@@ -1,4 +1,5 @@
 import shutil
+import sys
 import traceback
 
 from flask import request, render_template, session, flash, Flask, redirect
@@ -29,7 +30,9 @@ from timApp.util.flask.requesthelper import (
 )
 from timApp.util.flask.responsehelper import error_generic, html_error
 from timApp.util.logger import log_error
-from timApp.util.utils import get_current_time
+from timApp.util.utils import get_current_time, get_exception_code
+
+ERROR_CODES_FOLDER = 'error-codes'
 
 
 def register_errorhandlers(app: Flask):
@@ -169,24 +172,29 @@ def register_errorhandlers(app: Flask):
         db.session.rollback()
         log_error(get_request_message(500, include_body=True))
         help_email = app.config["HELP_EMAIL"]
+        host = app.config["TIM_HOST"]
         error.description = Markup(
             "Something went wrong with the server, sorry. "
             "TIM developers have been notified about this. "
             "If the problem persists, please send email to "
             f'<a href="mailto:{help_email}">{help_email}</a>.'
         )
-        tb = traceback.format_exc()
+        _, ex, tb_obj = sys.exc_info()
+        error_code = get_exception_code(ex, tb_obj)
+        tb_str = traceback.format_exc()
         message = f"""
 Exception happened on {get_current_time()} at {request.url}
 
+Exception database: {host}/view/{ERROR_CODES_FOLDER}/{error_code}
+
 {get_request_message(500, include_body=True)}
 
-{tb}
+{tb_str}
     """.strip()
         u = get_current_user_object()
         send_email(
             rcpt=app.config["ERROR_EMAIL"],
-            subject=f'{app.config["TIM_HOST"]}: Error at {request.path} ({u.name})',
+            subject=f"{host}: Error at {request.path} ({u.name})",
             mail_from=app.config["WUFF_EMAIL"],
             reply_to=f'{app.config["ERROR_EMAIL"]},{u.email}',
             msg=message,

@@ -1,15 +1,18 @@
 """Utility functions."""
 import base64
+import hashlib
 import json
 import os
 import re
 import shutil
 import struct
+import traceback
 from concurrent.futures import Future
 from dataclasses import fields, asdict
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path, PurePosixPath
+from types import TracebackType, FrameType
 from typing import Optional, Union, Any, Sequence, Callable
 
 import dateutil.parser
@@ -18,6 +21,26 @@ import requests
 from lxml.html import HtmlElement
 
 from tim_common.html_sanitize import sanitize_html
+
+
+def get_exception_code(ex: Exception, tb: Optional[TracebackType] = None):
+    """
+    Creates a unique code for the exception and the optional traceback.
+    The code can be used for short identification of errors.
+
+    :param ex: Exception object
+    :param tb: Optional traceback object
+    :return: A string code of format ExceptionType[_HexCode] where _HexCode is generated from the traceback
+    """
+    t = type(ex)
+    result = f"{t.__module__}.{t.__qualname__}"
+    if tb:
+        h = hashlib.shake_128()
+        for f, _ in traceback.walk_tb(tb):
+            f: FrameType
+            h.update(f.f_code.co_name.encode())
+        result += f"_{h.hexdigest(2)}"
+    return result
 
 
 def datestr_to_relative(d: Union[str, datetime]) -> str:
