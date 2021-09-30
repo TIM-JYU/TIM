@@ -44,7 +44,7 @@ class SuppressedError(Exception):
     msg: str
 
 
-def suppress_wuff(ex_type: Type[Exception], message_regex: Optional[str] = None) -> Callable:
+def suppress_wuff(ex_type: Type[Exception], details_url: str, message_regex: Optional[str] = None) -> Callable:
     """
     Decorator to prevent sending email errors ("wuffs") on the specified error.
 
@@ -53,6 +53,7 @@ def suppress_wuff(ex_type: Type[Exception], message_regex: Optional[str] = None)
     When decorating a function, it is suggested to include a comment that links to a clear description of the problem.
 
     :param ex_type: Exception type to suppress
+    :param details_url: URL to a page with details about the issue (e.g. issue URL)
     :param message_regex: RegEx to check messages exception messages against.
                             If specified, exception is also matched against the message.
     :return: Wrapped function
@@ -69,7 +70,9 @@ def suppress_wuff(ex_type: Type[Exception], message_regex: Optional[str] = None)
                     if message_regex and not re.search(message_regex, ex_msg):
                         raise
                     # Wrap the error to detect suppression in main error handler
-                    raise SuppressedError(f'The error was suppressed. Original message: {e}') from e
+                    raise SuppressedError(
+                        f'The error was suppressed. Original message: {e}\nMore info: {details_url}'
+                    ) from e
                 raise
 
         return wrapped

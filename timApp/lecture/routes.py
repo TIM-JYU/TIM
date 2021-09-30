@@ -176,9 +176,9 @@ def lecture_before_request():
 EXTRA_FIELD_NAME = "extra"
 
 
-# Can occur with too many participants
-# See https://gitlab.com/tim-jyu/tim/-/issues/1975
-@suppress_wuff(OperationalError, r"LockNotAvailable.*canceling statement due to lock timeout")
+@suppress_wuff(OperationalError,
+               "https://gitlab.com/tim-jyu/tim/-/issues/1975",
+               r"LockNotAvailable.*canceling statement due to lock timeout")
 def do_get_updates(m: GetUpdatesModel):
     """Gets updates from some lecture.
 
