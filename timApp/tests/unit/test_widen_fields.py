@@ -34,9 +34,11 @@ class TestWidenFields(TestCase):
 
     def test_widen_fields4(self):
         s1 = ["189279.t(1,3).points[2018-04-06 15:66:94, 2019-06-05 12:12:12] = tp"]
-        e1 = ["189279.t1.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]=tp1",
-              "189279.t2.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]=tp2",
-              "189279.t3.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]=tp3"]
+        e1 = [
+            "189279.t1.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]=tp1",
+            "189279.t2.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]=tp2",
+            "189279.t3.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]=tp3",
+        ]
 
         r1 = widen_fields(s1)
         self.assertEqual(e1, r1, "Not same range format with docid, points and date")
@@ -70,24 +72,35 @@ class TestWidenFields(TestCase):
 
 
 class TestgetAlias(TestCase):
-
     def test_get_name1(self):
         self.assertEqual("d", get_alias("d"), "Not same in pure name")
         self.assertEqual("d3", get_alias("d3"), "Not same in pure name")
 
     def test_get_name2(self):
-        self.assertEqual("d3", get_alias("543.d3.points"), "Not same with docid and points")
+        self.assertEqual(
+            "d3", get_alias("543.d3.points"), "Not same with docid and points"
+        )
 
     def test_get_name3(self):
-        self.assertEqual("t", get_alias("189279.t(1,4).points[2018-04-06 15:66:94, 2019-06-05 12:12:12]"),
-                         "Not same in complex version")
+        self.assertEqual(
+            "t",
+            get_alias("189279.t(1,4).points[2018-04-06 15:66:94, 2019-06-05 12:12:12]"),
+            "Not same in complex version",
+        )
 
     def test_get_name4(self):
-        self.assertEqual("t3", get_alias("189279.t3.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]"),
-                         "Not same with points and date")
+        self.assertEqual(
+            "t3",
+            get_alias("189279.t3.points[2018-04-06 15:66:94, 2019-06-05 12:12:12]"),
+            "Not same with points and date",
+        )
 
     def test_get_name5(self):
-        self.assertEqual("t3", get_alias("189279.t3.[2018-04-06 15:66:94, 2019-06-05 12:12:12]"), "Not same with date")
+        self.assertEqual(
+            "t3",
+            get_alias("189279.t3.[2018-04-06 15:66:94, 2019-06-05 12:12:12]"),
+            "Not same with date",
+        )
 
     def test_get_name6(self):
         self.assertEqual("t3", get_alias("189279.t3.points"), "Not same with points")

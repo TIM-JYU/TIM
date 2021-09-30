@@ -10,14 +10,23 @@ from flask import render_template_string
 from marshmallow import validates, ValidationError, missing
 
 from tim_common.markupmodels import GenericMarkupModel
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, register_plugin_app, launch_if_main, PluginAnswerResp, PluginAnswerWeb, PluginReqs, EditorTab
+from tim_common.pluginserver_flask import (
+    GenericHtmlModel,
+    GenericAnswerModel,
+    register_plugin_app,
+    launch_if_main,
+    PluginAnswerResp,
+    PluginAnswerWeb,
+    PluginReqs,
+    EditorTab,
+)
 from tim_common.utils import Missing
 
 
 @dataclass
 class PaliStateModel:
     """Model for the information that is stored in TIM database for each answer."""
+
     userword: str
 
 
@@ -30,36 +39,41 @@ class PaliMarkupModel(GenericMarkupModel):
     cols: Union[int, Missing] = missing
     inputplaceholder: Union[str, Missing] = missing
 
-    @validates('points_array')
+    @validates("points_array")
     def validate_points_array(self, value: Union[list[list[float]], Missing]) -> None:
-        if isinstance(value, list) and (len(value) != 2 or not all(len(v) == 2 for v in value)):
-            raise ValidationError('Must be of size 2 x 2.')
+        if isinstance(value, list) and (
+            len(value) != 2 or not all(len(v) == 2 for v in value)
+        ):
+            raise ValidationError("Must be of size 2 x 2.")
 
 
 @dataclass
 class PaliInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
+
     userword: str
     paliOK: Union[bool, Missing] = missing
     nosave: Union[bool, Missing] = missing
 
-    @validates('userword')
+    @validates("userword")
     def validate_userword(self, word: str) -> None:
         if not word:
-            raise ValidationError('Must not be empty.')
+            raise ValidationError("Must not be empty.")
 
 
 @dataclass
 class PaliHtmlModel(GenericHtmlModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
     def get_component_html_name(self) -> str:
-        return 'pali-runner'
+        return "pali-runner"
 
     def get_static_html(self) -> str:
         return render_static_pali(self)
 
 
 @dataclass
-class PaliAnswerModel(GenericAnswerModel[PaliInputModel, PaliMarkupModel, PaliStateModel]):
+class PaliAnswerModel(
+    GenericAnswerModel[PaliInputModel, PaliMarkupModel, PaliStateModel]
+):
     pass
 
 
@@ -79,13 +93,13 @@ def render_static_pali(m: PaliHtmlModel) -> str:
 </div>
         """.strip(),
         **asdict(m.markup),
-        userword=m.state.userword if m.state else '',
+        userword=m.state.userword if m.state else "",
     )
 
 
 def answer(args: PaliAnswerModel) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
-    result: PluginAnswerResp = {'web': web}
+    result: PluginAnswerResp = {"web": web}
     needed_len = args.markup.needed_len
     userword = args.input.userword
     pali_ok = args.input.paliOK or False
@@ -93,10 +107,14 @@ def answer(args: PaliAnswerModel) -> PluginAnswerResp:
     if not isinstance(needed_len, Missing):
         len_ok = check_letters(userword, needed_len)
     if not len_ok:
-        web['error'] = "Wrong length"
+        web["error"] = "Wrong length"
     if not needed_len and not pali_ok:
         len_ok = False
-    points_array = args.markup.points_array if isinstance(args.markup.points_array, list) else [[0, 0.25], [0.5, 1]]
+    points_array = (
+        args.markup.points_array
+        if isinstance(args.markup.points_array, list)
+        else [[0, 0.25], [0.5, 1]]
+    )
     p_index = 1 if pali_ok else 0
     l_index = 1 if len_ok else 0
     points = points_array[p_index][l_index]
@@ -107,7 +125,7 @@ def answer(args: PaliAnswerModel) -> PluginAnswerResp:
         save = {"userword": userword}
         result["save"] = save
         result["tim_info"] = {"points": points}
-        web['result'] = "saved"
+        web["result"] = "saved"
 
     return result
 
@@ -125,7 +143,8 @@ def check_letters(word: str, needed_len: int) -> bool:
 
 
 def reqs() -> PluginReqs:
-    templates = ["""
+    templates = [
+        """
 ``` {#ekapali plugin="pali"}
 header: Kirjoita palindromi
 stem: Kirjoita palindromi, jossa on 5 kirjainta.
@@ -135,7 +154,8 @@ needed_len: 5
 answerLimit: 3
 initword: muikku
 cols: 20
-```""", """
+```""",
+        """
 ``` {#tokapali plugin="pali"}
 header: Kirjoita palindromi
 stem: Kirjoita palindromi, jossa on 7 kirjainta.
@@ -145,37 +165,38 @@ needed_len: 7
 answerLimit: 4
 initword: muikku
 cols: 20
-```"""]
+```""",
+    ]
     editor_tabs: list[EditorTab] = [
-            {
-                'text': 'Plugins',
-                'items': [
-                    {
-                        'text': 'Pali',
-                        'items': [
-                            {
-                                'data': templates[0].strip(),
-                                'text': '5 letters',
-                                'expl': 'Add a 5-letter palindrome task',
-                            },
-                            {
-                                'data': templates[1].strip(),
-                                'text': '7 letters',
-                                'expl': 'Add a 7-letter palindrome task',
-                            },
-                        ],
-                    },
-                ],
-            },
-        ]
+        {
+            "text": "Plugins",
+            "items": [
+                {
+                    "text": "Pali",
+                    "items": [
+                        {
+                            "data": templates[0].strip(),
+                            "text": "5 letters",
+                            "expl": "Add a 5-letter palindrome task",
+                        },
+                        {
+                            "data": templates[1].strip(),
+                            "text": "7 letters",
+                            "expl": "Add a 7-letter palindrome task",
+                        },
+                    ],
+                },
+            ],
+        },
+    ]
     result: PluginReqs = {
         "js": ["js/build/pali.js"],
         "multihtml": True,
     }
 
     # Show pali templates only in development mode.
-    if os.environ['COMPOSE_PROFILES'] == 'dev':
-        result['editor_tabs'] = editor_tabs
+    if os.environ["COMPOSE_PROFILES"] == "dev":
+        result["editor_tabs"] = editor_tabs
 
     return result
 

@@ -10,7 +10,6 @@ from sqlalchemy.ext.declarative import DeclarativeMeta
 
 
 class TimJsonEncoder(json.JSONEncoder):
-
     def default(self, o):
         if isinstance(o, datetime.datetime):
             if o.tzinfo is None:
@@ -23,17 +22,22 @@ class TimJsonEncoder(json.JSONEncoder):
         if isinstance(o, Undefined):
             return None
 
-        tojson = getattr(o, 'to_json', None)
+        tojson = getattr(o, "to_json", None)
         if tojson:
             return tojson()
         # from http://stackoverflow.com/a/31569287 with some changes
         if isinstance(o.__class__, DeclarativeMeta):
             data = {}
-            if hasattr(o, '__json__'):
+            if hasattr(o, "__json__"):
                 flds = o.__json__()
             else:
                 flds = dir(o)
-                flds = [f for f in flds if not f.startswith('_') and f not in ['metadata', 'query', 'query_class']]
+                flds = [
+                    f
+                    for f in flds
+                    if not f.startswith("_")
+                    and f not in ["metadata", "query", "query_class"]
+                ]
             for field in flds:
                 value = o.__getattribute__(field)
                 try:

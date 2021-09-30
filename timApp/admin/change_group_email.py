@@ -21,8 +21,8 @@ def change_email() -> None:
                 continue
             uprefix = str(user.name).replace("@malli", "")
             print(user.name + ": " + uprefix + "@" + new_email)
-        yesno = input('Is this correct? y/n/quit: ')
-        if yesno == 'y':
+        yesno = input("Is this correct? y/n/quit: ")
+        if yesno == "y":
             for user in users:
                 if "@malli" not in user.name:
                     continue
@@ -35,12 +35,12 @@ def change_email() -> None:
                     )
                 )
             break
-        elif yesno == 'q' or yesno == 'quit':
+        elif yesno == "q" or yesno == "quit":
             timdb.close()
             exit()
     db.session.commit()
     timdb.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     change_email()

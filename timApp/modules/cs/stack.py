@@ -14,9 +14,9 @@ JSXGRAPHAPI_BLOCK_PREFIX = "jsxgraphapi_tmp"
 
 
 def do_jsxgraph_replace(q):
-    q = q.replace('[[jsxgraph ', '[[jsxgraphapi ')
-    q = q.replace('[[jsxgraph]]', '[[jsxgraphapi]]')
-    q = q.replace('[[/jsxgraph]]', '[[/jsxgraphapi]]')
+    q = q.replace("[[jsxgraph ", "[[jsxgraphapi ")
+    q = q.replace("[[jsxgraph]]", "[[jsxgraphapi]]")
+    q = q.replace("[[/jsxgraph]]", "[[/jsxgraphapi]]")
     return q
 
 
@@ -40,7 +40,7 @@ class Stack(Language):
         super().__init__(query, sourcecode)
         self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.txt"
         self.fileext = "txt"
-        self.readpoints_default = 'Score: (.*)'
+        self.readpoints_default = "Score: (.*)"
         self.delete_tmp = False
 
     def modify_usercode(self, s):
@@ -48,22 +48,22 @@ class Stack(Language):
             return s
         s = s.replace("&quot;", '"')
         js = json.loads(s)
-        res = ''
+        res = ""
         for key in js:
             res += js[key] + "\n"
         return res
 
     def run(self, result, sourcelines, points_rule):
         url = f"http://{STACK_API_SERVER_ADDRESS}/api/endpoint.php"
-        input = self.query.jso.get('input', {})
+        input = self.query.jso.get("input", {})
         data = input.get("stackData")
-        markup = self.query.jso.get('markup')
+        markup = self.query.jso.get("markup")
         info = self.query.jso.get("info", {})
         state = self.query.jso.get("state", {})
 
-        stack_data = markup.get('-stackData')
+        stack_data = markup.get("-stackData")
         if not stack_data:
-            stack_data = markup.get('stackData')
+            stack_data = markup.get("stackData")
         if not stack_data:
             err = "stackData missing from plugin"
             return 0, "", err, ""
@@ -74,27 +74,31 @@ class Stack(Language):
         ask_new = info.get("askNew", False)
         if isinstance(state, dict) and not ask_new and not get_task:
             userseed = state.get("seed", seed)
-        nosave = input.get('nosave', False)
+        nosave = input.get("nosave", False)
         stack_data["seed"] = userseed
 
         q = stack_data.get("question", "")
-        q_data = self.parse_stack_question(q, not self.query.jso.get('markup').get('stackjsx'))
+        q_data = self.parse_stack_question(
+            q, not self.query.jso.get("markup").get("stackjsx")
+        )
         stack_data["question"] = q_data
 
         if nosave or get_task:
-            stack_data['score'] = False
-            stack_data['feedback'] = False
+            stack_data["score"] = False
+            stack_data["feedback"] = False
         stack_data["answer"] = data.get("answer")
         stack_data["prefix"] = data.get("prefix")
         stack_data["verifyvar"] = data.get("verifyvar", "")
-        stack_data["ploturl"] = '/stackserver/plots/'
+        stack_data["ploturl"] = "/stackserver/plots/"
         if stack_data["verifyvar"]:
             stack_data["score"] = False
         else:
             save = result["save"]
             save["seed"] = userseed
 
-        r = requests.post(url=url, data=json.dumps(stack_data))  # json.dumps(data_to_send, cls=TimJsonEncoder))
+        r = requests.post(
+            url=url, data=json.dumps(stack_data)
+        )  # json.dumps(data_to_send, cls=TimJsonEncoder))
         # r = requests.get(url="http://stack-test-container/api/endpoint.html")
 
         try:
@@ -113,12 +117,16 @@ class Stack(Language):
 
     def convert(self, sourcelines):
         url = "http://stack-api-server/api/xmltoyaml.php"
-        data = {'xml': sourcelines}
+        data = {"xml": sourcelines}
         r = requests.post(url=url, data=json.dumps(data))
         r = r.json()
-        return 0, r.get('yaml'), "", ""
+        return 0, r.get("yaml"), "", ""
 
-    def parse_stack_question(self, stack_question: Union[str, dict[str, Any]], replace_jsxgraph_blocks: bool = True):
+    def parse_stack_question(
+        self,
+        stack_question: Union[str, dict[str, Any]],
+        replace_jsxgraph_blocks: bool = True,
+    ):
         if not stack_question:
             return {}
         if isinstance(stack_question, str):
@@ -179,7 +187,7 @@ def value_between(s: str, start: str, end: str) -> Optional[str]:
     end_index = s.find(end, start_index)
     if end_index < 0:
         return None
-    return s[start_index:end_index + len(end)]
+    return s[start_index : end_index + len(end)]
 
 
 def sanitize_stack_question(d):

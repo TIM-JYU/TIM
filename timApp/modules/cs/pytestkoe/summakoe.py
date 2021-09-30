@@ -1,8 +1,7 @@
-__author__ = 'vesal'
+__author__ = "vesal"
 
 
 class Laskut:
-
     def summa(self):
         """Lasketaan a ja b yhteen.
 
@@ -17,7 +16,7 @@ class Laskut:
         return self.a + self.b
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     s = Laskut()
     s.a = 3
     s.b = 2

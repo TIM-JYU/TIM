@@ -14,7 +14,9 @@ from timApp.document.document import Document, par_list_to_text
 from timApp.document.editing.clipboard import Clipboard
 from timApp.document.editing.documenteditresult import DocumentEditResult
 from timApp.document.editing.routes import par_response, verify_par_edit_access
-from timApp.document.translation.synchronize_translations import synchronize_translations
+from timApp.document.translation.synchronize_translations import (
+    synchronize_translations,
+)
 from timApp.note.notes import move_notes
 from timApp.notification.notification import NotificationType
 from timApp.notification.notify import notify_doc_watchers
@@ -25,9 +27,9 @@ from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 clipboard = TypedBlueprint(
-    'clipboard',
+    "clipboard",
     __name__,
-    url_prefix='',  # TODO: Better URL prefix.
+    url_prefix="",  # TODO: Better URL prefix.
 )
 
 
@@ -42,8 +44,8 @@ wd: WithDocData = g
 
 @clipboard.url_value_preprocessor
 def pull_doc_id(endpoint, values):
-    if current_app.url_map.is_endpoint_expecting(endpoint, 'doc_id'):
-        doc_id = values['doc_id']
+    if current_app.url_map.is_endpoint_expecting(endpoint, "doc_id"):
+        doc_id = values["doc_id"]
         if doc_id is None:
             raise RouteException()
         wd.doc_id = doc_id
@@ -52,7 +54,7 @@ def pull_doc_id(endpoint, values):
             raise NotExist()
 
 
-@clipboard.post('/clipboard/cut/<int:doc_id>/<from_par>/<to_par>')
+@clipboard.post("/clipboard/cut/<int:doc_id>/<from_par>/<to_par>")
 def cut_to_clipboard(doc_id, from_par, to_par, area_name: Optional[str] = None):
     verify_logged_in()
     verify_edit_access(wd.docentry)
@@ -69,17 +71,24 @@ def cut_to_clipboard(doc_id, from_par, to_par, area_name: Optional[str] = None):
     wd.docentry.update_last_modified()
     db.session.commit()
     synchronize_translations(wd.docentry, DocumentEditResult(deleted=pars))
-    notify_doc_watchers(wd.docentry, par_list_to_text(pars), NotificationType.ParDeleted, old_version=version_before)
+    notify_doc_watchers(
+        wd.docentry,
+        par_list_to_text(pars),
+        NotificationType.ParDeleted,
+        old_version=version_before,
+    )
     db.session.commit()
-    return json_response({'doc_ver': doc.get_version(), 'pars': [{'id': p.get_id()} for p in pars]})
+    return json_response(
+        {"doc_ver": doc.get_version(), "pars": [{"id": p.get_id()} for p in pars]}
+    )
 
 
-@clipboard.post('/clipboard/copy/<int:doc_id>/<from_par>/<to_par>')
+@clipboard.post("/clipboard/copy/<int:doc_id>/<from_par>/<to_par>")
 def copy_to_clipboard(
-        doc_id,
-        from_par,
-        to_par,
-        area_name: Optional[str] = None,
+    doc_id,
+    from_par,
+    to_par,
+    area_name: Optional[str] = None,
 ):
     verify_logged_in()
     verify_view_access(wd.docentry)
@@ -94,12 +103,12 @@ def copy_to_clipboard(
     return ok_response()
 
 
-@clipboard.post('/clipboard/paste/<int:doc_id>')
+@clipboard.post("/clipboard/paste/<int:doc_id>")
 def paste_from_clipboard(
-        doc_id,
-        par_before: Optional[str] = None,
-        par_after: Optional[str] = None,
-        as_ref: bool = False,
+    doc_id,
+    par_before: Optional[str] = None,
+    par_after: Optional[str] = None,
+    as_ref: bool = False,
 ):
     verify_logged_in()
     verify_edit_access(wd.docentry)
@@ -108,14 +117,16 @@ def paste_from_clipboard(
     version_before = doc.get_version()
     clip = Clipboard().get(get_current_user_object())
     meta = clip.read_metadata()
-    was_cut = meta.get('last_action') == 'cut'
+    was_cut = meta.get("last_action") == "cut"
 
-    if meta.get('empty', True):
-        raise RouteException('The clipboard is empty.')
-    if not as_ref and meta.get('disable_content'):
-        raise AccessDenied('The contents of the clipboard cannot be pasted as content.')
-    if as_ref and meta.get('disable_ref'):
-        raise RouteException('The contents of the clipboard cannot be pasted as a reference.')
+    if meta.get("empty", True):
+        raise RouteException("The clipboard is empty.")
+    if not as_ref and meta.get("disable_content"):
+        raise AccessDenied("The contents of the clipboard cannot be pasted as content.")
+    if as_ref and meta.get("disable_ref"):
+        raise RouteException(
+            "The contents of the clipboard cannot be pasted as a reference."
+        )
 
     try:
         if par_before and not par_after:
@@ -123,7 +134,9 @@ def paste_from_clipboard(
         elif not par_before and par_after:
             pars = clip.paste_after(doc, par_after, as_ref)
         else:
-            raise RouteException('Missing required parameter in request: par_before or par_after (not both)')
+            raise RouteException(
+                "Missing required parameter in request: par_before or par_after (not both)"
+            )
     except TimDbException as e:
         raise RouteException(str(e))
 
@@ -131,8 +144,8 @@ def paste_from_clipboard(
     parrefs = clip.read(as_ref=True, force_parrefs=True)
     for (src_par_dict, dest_par) in zip(parrefs, pars):
         try:
-            src_docid = int(src_par_dict['attrs']['rd'])
-            src_parid = src_par_dict['attrs']['rp']
+            src_docid = int(src_par_dict["attrs"]["rd"])
+            src_parid = src_par_dict["attrs"]["rp"]
             par_id = dest_par.get_id()
             if (doc_id, par_id) != (src_docid, src_parid):
                 if src_doc is None or str(src_doc.doc_id) != str(src_docid):
@@ -161,7 +174,7 @@ def paste_from_clipboard(
 
 
 # TODO unused route?
-@clipboard.post('/clipboard/deletesrc/<int:doc_id>')
+@clipboard.post("/clipboard/deletesrc/<int:doc_id>")
 def delete_from_source(doc_id):
     verify_logged_in()
     verify_edit_access(wd.docentry)
@@ -170,16 +183,18 @@ def delete_from_source(doc_id):
     clip = Clipboard().get(get_current_user_object())
     pars = clip.read(as_ref=True, force_parrefs=True)
     if not pars:
-        return json_response({'doc_ver': doc.get_version(), 'pars': []})
+        return json_response({"doc_ver": doc.get_version(), "pars": []})
 
-    my_pars = [{'id': p['attrs']['rp']} for p in pars if p['attrs']['rd'] == str(doc_id)]
+    my_pars = [
+        {"id": p["attrs"]["rp"]} for p in pars if p["attrs"]["rd"] == str(doc_id)
+    ]
     clip.delete_from_source()
     clip.clear()
 
-    return json_response({'doc_ver': doc.get_version(), 'pars': my_pars})
+    return json_response({"doc_ver": doc.get_version(), "pars": my_pars})
 
 
-@clipboard.get('/clipboard')
+@clipboard.get("/clipboard")
 def show_clipboard(doc_id: int):
     verify_logged_in()
 
@@ -192,7 +207,7 @@ def show_clipboard(doc_id: int):
     return par_response(pars, d)
 
 
-@clipboard.get('/clipboardstatus')
+@clipboard.get("/clipboardstatus")
 def get_clipboard_status():
     verify_logged_in()
     clip = Clipboard().get(get_current_user_object())

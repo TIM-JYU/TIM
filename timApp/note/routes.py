@@ -6,8 +6,14 @@ from flask import Response
 from sqlalchemy import true
 from sqlalchemy.orm import joinedload
 
-from timApp.auth.accesshelper import verify_comment_right, verify_logged_in, get_doc_or_abort, \
-    AccessDenied, verify_teacher_access, has_manage_access
+from timApp.auth.accesshelper import (
+    verify_comment_right,
+    verify_logged_in,
+    get_doc_or_abort,
+    AccessDenied,
+    verify_teacher_access,
+    has_manage_access,
+)
 from timApp.auth.accesshelper import verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.caching import clear_doc_cache
@@ -34,12 +40,12 @@ from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import get_current_time
 
 notes = TypedBlueprint(
-    'notes',
+    "notes",
     __name__,
-    url_prefix='',
+    url_prefix="",
 )
 
-KNOWN_TAGS = ['difficult', 'unclear']
+KNOWN_TAGS = ["difficult", "unclear"]
 
 
 def has_note_edit_access(n: UserNote) -> bool:
@@ -51,7 +57,7 @@ def has_note_edit_access(n: UserNote) -> bool:
 def get_comment_and_check_exists(note_id: int) -> UserNote:
     note = get_comment_by_id(note_id)
     if not note:
-        raise NotExist('Comment not found. It may have been deleted.')
+        raise NotExist("Comment not found. It may have been deleted.")
     return note
 
 
@@ -60,7 +66,9 @@ def get_note(note_id: int) -> Response:
     note = get_comment_and_check_exists(note_id)
     if not has_note_edit_access(note):
         raise AccessDenied()
-    return json_response({'text': note.content, 'extraData': note}, date_conversion=True)
+    return json_response(
+        {"text": note.content, "extraData": note}, date_conversion=True
+    )
 
 
 @dataclass
@@ -69,34 +77,34 @@ class DeletedNote:
 
     @property
     def access(self) -> str:
-        return 'everyone'
+        return "everyone"
 
     def to_json(self) -> dict[str, Any]:
         d = self.notification.block.docentries[0]
         return {
-            'id': None,
-            'doc_id': self.notification.doc_id,
-            'doc_title': d.title,
-            'par_id': self.notification.par_id,
-            'par_hash': None,
-            'content': self.notification.text,
-            'created': None,
-            'modified': None,
-            'deleted_on': self.notification.created,
-            'access': 'everyone',
-            'usergroup': None,
-            'user_who_deleted': self.notification.user,
-            'url': d.url + '#' + self.notification.par_id,
+            "id": None,
+            "doc_id": self.notification.doc_id,
+            "doc_title": d.title,
+            "par_id": self.notification.par_id,
+            "par_hash": None,
+            "content": self.notification.text,
+            "created": None,
+            "modified": None,
+            "deleted_on": self.notification.created,
+            "access": "everyone",
+            "usergroup": None,
+            "user_who_deleted": self.notification.user,
+            "url": d.url + "#" + self.notification.par_id,
         }
 
 
 @notes.get("/notes/<path:item_path>")
 def get_notes(
-        item_path: str,
-        private: bool = False,
-        deleted: bool = False,
-        start: Optional[datetime] = None,
-        end: Optional[datetime] = None,
+    item_path: str,
+    private: bool = False,
+    deleted: bool = False,
+    start: Optional[datetime] = None,
+    end: Optional[datetime] = None,
 ) -> Response:
     """Gets all notes in a document or folder.
 
@@ -110,19 +118,21 @@ def get_notes(
     if not i:
         i = DocEntry.find_by_path(item_path)
     if not i:
-        raise RouteException('Item not found.')
+        raise RouteException("Item not found.")
     u = get_current_user_object()
     if isinstance(i, Folder):
         all_docs = i.get_all_documents(
             include_subdirs=True,
         )
         if not all(u.has_teacher_access(d) for d in all_docs):
-            raise AccessDenied('You do not have teacher access to all documents in this folder.')
+            raise AccessDenied(
+                "You do not have teacher access to all documents in this folder."
+            )
         docs = all_docs
     else:
         verify_teacher_access(i)
         docs = [i]
-    access_restriction = UserNote.access == 'everyone'
+    access_restriction = UserNote.access == "everyone"
     if private:
         access_restriction = true()
     time_restriction = true()
@@ -131,18 +141,31 @@ def get_notes(
     if end:
         time_restriction = time_restriction & (UserNote.created < end)
     d_ids = [d.id for d in docs]
-    ns = (UserNote.query
-          .filter(UserNote.doc_id.in_(d_ids) & access_restriction & time_restriction)
-          .options(joinedload(UserNote.usergroup))
-          .options(joinedload(UserNote.block).joinedload(Block.docentries))
-          .all())
+    ns = (
+        UserNote.query.filter(
+            UserNote.doc_id.in_(d_ids) & access_restriction & time_restriction
+        )
+        .options(joinedload(UserNote.usergroup))
+        .options(joinedload(UserNote.block).joinedload(Block.docentries))
+        .all()
+    )
     all_count = len(ns)
     if not u.is_admin:
-        ns = [n for n in ns if n.access == 'everyone']
+        ns = [n for n in ns if n.access == "everyone"]
     if deleted:
-        deleted_notes = list(map(DeletedNote, PendingNotification.query.filter(PendingNotification.doc_id.in_(d_ids) & (
-                    PendingNotification.kind == NotificationType.CommentDeleted)).options(
-            joinedload(PendingNotification.block).joinedload(Block.docentries)).all()))
+        deleted_notes = list(
+            map(
+                DeletedNote,
+                PendingNotification.query.filter(
+                    PendingNotification.doc_id.in_(d_ids)
+                    & (PendingNotification.kind == NotificationType.CommentDeleted)
+                )
+                .options(
+                    joinedload(PendingNotification.block).joinedload(Block.docentries)
+                )
+                .all(),
+            )
+        )
         ns += deleted_notes
         all_count += len(deleted_notes)
     public_count = 0
@@ -150,30 +173,34 @@ def get_notes(
     for n in ns:
         if isinstance(n, DeletedNote):
             deleted_count += 1
-        if n.access == 'everyone':
+        if n.access == "everyone":
             public_count += 1
     extra = {}
     if deleted:
-        extra['deleted_everyone'] = deleted_count
-        extra['not_deleted_everyone'] = public_count - deleted_count
+        extra["deleted_everyone"] = deleted_count
+        extra["not_deleted_everyone"] = public_count - deleted_count
     if private:
-        extra['justme'] = all_count - public_count
-    return json_response({
-        'counts': {
-            **extra,
-            'everyone': public_count,
-            'all': all_count,
-        },
-        'notes': ns,
-    })
+        extra["justme"] = all_count - public_count
+    return json_response(
+        {
+            "counts": {
+                **extra,
+                "everyone": public_count,
+                "all": all_count,
+            },
+            "notes": ns,
+        }
+    )
 
 
 def check_note_access_ok(is_public: bool, doc: Document) -> None:
-    if is_public and doc.get_settings().comments() == 'private':
-        raise AccessDenied('Only private comments can be posted on this document.')
+    if is_public and doc.get_settings().comments() == "private":
+        raise AccessDenied("Only private comments can be posted on this document.")
 
 
-def clear_doc_cache_after_comment(docinfo: DocInfo, user: User, is_public: bool) -> None:
+def clear_doc_cache_after_comment(
+    docinfo: DocInfo, user: User, is_public: bool
+) -> None:
     if is_public:
         clear_doc_cache(docinfo, user=None)
     else:
@@ -183,6 +210,7 @@ def clear_doc_cache_after_comment(docinfo: DocInfo, user: User, is_public: bool)
 @dataclass
 class ParContext:
     """This roughly corresponds to the ParContext TypeScript class."""
+
     curr: GlobalParId
     orig: GlobalParId
 
@@ -192,10 +220,10 @@ class ParContext:
 
 @notes.post("/postNote")
 def post_note(
-        text: str,
-        access: str,
-        ctx: ParContext,
-        tags: Optional[dict[str, bool]] = None,
+    text: str,
+    access: str,
+    ctx: ParContext,
+    tags: Optional[dict[str, bool]] = None,
 ) -> Response:
     is_public = access == "everyone"
     got_tags = []
@@ -205,14 +233,16 @@ def post_note(
     orig_docinfo, p = check_permissions_and_get_orig(ctx, is_public)
 
     curr_user = get_current_user_object()
-    n = UserNote(usergroup=curr_user.get_personal_group(),
-                 doc_id=p.get_doc_id(),
-                 par_id=p.get_id(),
-                 par_hash=p.get_hash(),
-                 content=text,
-                 access=access,
-                 html=md_to_html(text),
-                 tags=tagstostr(got_tags))
+    n = UserNote(
+        usergroup=curr_user.get_personal_group(),
+        doc_id=p.get_doc_id(),
+        par_id=p.get_id(),
+        par_hash=p.get_hash(),
+        content=text,
+        access=access,
+        html=md_to_html(text),
+        tags=tagstostr(got_tags),
+    )
     db.session.add(n)
 
     if is_public:
@@ -221,7 +251,9 @@ def post_note(
     return comment_response(ctx, orig_docinfo, p)
 
 
-def check_permissions_and_get_orig(ctx: ParContext, is_public: bool) -> tuple[DocInfo, DocParagraph]:
+def check_permissions_and_get_orig(
+    ctx: ParContext, is_public: bool
+) -> tuple[DocInfo, DocParagraph]:
     orig_docinfo = get_doc_or_abort(ctx.orig.doc_id)
     orig_doc = orig_docinfo.document
     check_note_access_ok(is_public, orig_doc)
@@ -246,11 +278,11 @@ def check_permissions_and_get_orig(ctx: ParContext, is_public: bool) -> tuple[Do
 
 @notes.post("/editNote")
 def edit_note(
-        id: int,
-        ctx: ParContext,
-        text: str,
-        access: str,
-        tags: Optional[dict[str, bool]] = None,
+    id: int,
+    ctx: ParContext,
+    text: str,
+    access: str,
+    tags: Optional[dict[str, bool]] = None,
 ) -> Response:
     verify_logged_in()
     note_id = id
@@ -282,8 +314,8 @@ def edit_note(
 
 @notes.post("/deleteNote")
 def delete_note(
-        id: int,
-        ctx: ParContext,
+    id: int,
+    ctx: ParContext,
 ) -> Response:
     note_id = id
     note = get_comment_and_check_exists(note_id)
@@ -294,26 +326,33 @@ def delete_note(
     try:
         orig_p = orig_docinfo.document.get_paragraph(ctx.orig.par_id)
     except TimDbException:
-        raise RouteException('Cannot delete the note because the paragraph has been deleted.')
+        raise RouteException(
+            "Cannot delete the note because the paragraph has been deleted."
+        )
     db.session.delete(note)
     is_public = note.is_public
     if is_public:
-        notify_doc_watchers(orig_docinfo, note.content, NotificationType.CommentDeleted, orig_p)
+        notify_doc_watchers(
+            orig_docinfo, note.content, NotificationType.CommentDeleted, orig_p
+        )
     clear_doc_cache_after_comment(orig_docinfo, get_current_user_object(), is_public)
     return comment_response(ctx, orig_docinfo, p)
 
 
-def comment_response(ctx: ParContext, orig_docinfo: DocInfo, p: DocParagraph) -> Response:
+def comment_response(
+    ctx: ParContext, orig_docinfo: DocInfo, p: DocParagraph
+) -> Response:
     return par_response(
         [orig_docinfo.document.get_paragraph(ctx.orig.par_id)],
         orig_docinfo,
-        filter_return=ctx.curr if not p.is_translation() else GlobalParId(doc_id=ctx.orig.doc_id,
-                                                                          par_id=ctx.curr.par_id),
+        filter_return=ctx.curr
+        if not p.is_translation()
+        else GlobalParId(doc_id=ctx.orig.doc_id, par_id=ctx.curr.par_id),
     )
 
 
 def check_note_ctx_match(n: UserNote, p: DocParagraph) -> None:
     if n.par_id != p.get_id():
-        raise RouteException('par_id mismatch')
+        raise RouteException("par_id mismatch")
     if n.doc_id != p.get_doc_id():
-        raise RouteException('doc_id mismatch')
+        raise RouteException("doc_id mismatch")

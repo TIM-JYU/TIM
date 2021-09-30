@@ -5,8 +5,12 @@ from urllib.error import HTTPError
 from mailmanclient import Client, MailingList, Domain, Member
 from mailmanclient.restbase.connection import Connection
 
-from timApp.messaging.messagelist.listinfo import ListInfo, mailman_archive_policy_correlate, ArchiveType, \
-    ReplyToListChanges
+from timApp.messaging.messagelist.listinfo import (
+    ListInfo,
+    mailman_archive_policy_correlate,
+    ArchiveType,
+    ReplyToListChanges,
+)
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
 from timApp.tim_app import app
 from timApp.user.user import User, deleted_user_pattern
@@ -23,11 +27,22 @@ class MailmanConfig:
     MAILMAN_UI_LINK_PREFIX: Optional[str]
 
     def __bool__(self) -> bool:
-        return bool(self.MAILMAN_URL and self.MAILMAN_USER and self.MAILMAN_PASS and self.MAILMAN_UI_LINK_PREFIX)
+        return bool(
+            self.MAILMAN_URL
+            and self.MAILMAN_USER
+            and self.MAILMAN_PASS
+            and self.MAILMAN_UI_LINK_PREFIX
+        )
 
 
-config: MailmanConfig = class_schema(MailmanConfig)().load(app.config, unknown="EXCLUDE")
-_client = Client(config.MAILMAN_URL, config.MAILMAN_USER, config.MAILMAN_PASS) if config else None
+config: MailmanConfig = class_schema(MailmanConfig)().load(
+    app.config, unknown="EXCLUDE"
+)
+_client = (
+    Client(config.MAILMAN_URL, config.MAILMAN_USER, config.MAILMAN_PASS)
+    if config
+    else None
+)
 """A client object to utilize Mailman's REST API. If this is None, mailmanclient-library has not been configured for 
 use. """
 
@@ -49,7 +64,9 @@ def log_mailman(err: HTTPError, optional_message: str = "") -> None:
     code_category = err.code // 100
     # If an optional message is given, it sets a slightly different format for the message.
     if optional_message:
-        log_message = f"Mailman log: {optional_message}; Mailman returned status code {err}"
+        log_message = (
+            f"Mailman log: {optional_message}; Mailman returned status code {err}"
+        )
     else:
         log_message = f"Mailman log: Mailman returned status code {err}"
     # Check for 5xx, 4xx and 3xx status codes, they are logged with different severity.
@@ -60,13 +77,15 @@ def log_mailman(err: HTTPError, optional_message: str = "") -> None:
     elif code_category == 3:
         log_info(log_message)
     else:
-        log_warning(f"Mailman log: Error that should not have happened, happened: {err}")
+        log_warning(
+            f"Mailman log: Error that should not have happened, happened: {err}"
+        )
 
 
 def verify_mailman_connection() -> None:
     """Verifies if the connection to Mailman is possible. Aborts if connection is not possible due to connection not
     being configured in the first place. Used for operations that are meaningless without configured connection to
-    Mailman. """
+    Mailman."""
     if not _client:
         raise NotExist("No connection to Mailman configured.")
 
@@ -98,7 +117,9 @@ def set_notify_owner_on_list_change(mlist: MailingList, on_change_flag: bool) ->
         raise
 
 
-def delete_email_list(list_to_delete: MailingList, permanent_deletion: bool = False) -> None:
+def delete_email_list(
+    list_to_delete: MailingList, permanent_deletion: bool = False
+) -> None:
     """Delete a mailing list.
 
     :param permanent_deletion: If True, then the list is permanently gone. If False, perform a soft deletion.
@@ -115,7 +136,9 @@ def delete_email_list(list_to_delete: MailingList, permanent_deletion: bool = Fa
         raise
 
 
-def remove_email_list_membership(member: Member, permanent_deletion: bool = False) -> None:
+def remove_email_list_membership(
+    member: Member, permanent_deletion: bool = False
+) -> None:
     """Remove membership from an email list.
 
     :param member: The membership to be terminated on a list.
@@ -149,8 +172,9 @@ def set_default_templates(email_list: MailingList) -> None:
     try:
 
         list_id = email_list.rest_data["list_id"]
-        template_base_uri = "http://localhost/postorius/api/templates/list/" \
-                            f"{list_id}"
+        template_base_uri = (
+            "http://localhost/postorius/api/templates/list/" f"{list_id}"
+        )
         footer_uri = f"{template_base_uri}/list:member:regular:footer"
         header_uri = f"{template_base_uri}/list:member:regular:header"
 
@@ -163,7 +187,9 @@ def set_default_templates(email_list: MailingList) -> None:
         raise
 
 
-def set_email_list_archive_policy(email_list: MailingList, archive: ArchiveType) -> None:
+def set_email_list_archive_policy(
+    email_list: MailingList, archive: ArchiveType
+) -> None:
     """Set email list's archive policy.
 
     :param email_list: Email list
@@ -190,7 +216,9 @@ def create_new_email_list(list_options: ListInfo, owner: User) -> None:
         verify_name_availability(list_options.name, list_options.domain)
     else:
         log_warning("Tried to create an email list without selected domain part.")
-        raise RouteException("Tried to create an email list without selected domain part.")
+        raise RouteException(
+            "Tried to create an email list without selected domain part."
+        )
 
     try:
         domain: Domain = _client.get_domain(list_options.domain)
@@ -238,8 +266,13 @@ def create_new_email_list(list_options: ListInfo, owner: User) -> None:
         # Mailman.
         email_list.add_owner(owner.email)
         # Add owner automatically as a member of a list, so they receive the posts on the list.
-        email_list.subscribe(owner.email, display_name=owner.real_name, pre_approved=True, pre_verified=True,
-                             pre_confirmed=True)
+        email_list.subscribe(
+            owner.email,
+            display_name=owner.real_name,
+            pre_approved=True,
+            pre_verified=True,
+            pre_confirmed=True,
+        )
     except HTTPError as e:
         log_mailman(e, "In create_new_email_list()")
         raise
@@ -269,7 +302,9 @@ def get_list_ui_link(listname: str, domain: Optional[str]) -> Optional[str]:
         return link
     except HTTPError as e:
         log_mailman(e, "In get_list_ui_link()")
-        raise RouteException("Connection to Mailman failed while getting list's UI link.")
+        raise RouteException(
+            "Connection to Mailman failed while getting list's UI link."
+        )
 
 
 def set_email_list_description(mlist: MailingList, new_description: str) -> None:
@@ -315,8 +350,14 @@ def get_email_list_by_name(list_name: str, list_domain: str) -> MailingList:
         raise
 
 
-def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool, real_name: Optional[str],
-              send_right: bool = True, delivery_right: bool = False) -> None:
+def add_email(
+    mlist: MailingList,
+    email: str,
+    email_owner_pre_confirmation: bool,
+    real_name: Optional[str],
+    send_right: bool = True,
+    delivery_right: bool = False,
+) -> None:
     """Add a new email to a email list.
 
     :param mlist: Email list where a new member is being added.
@@ -342,11 +383,13 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
     # wants that email onto a list. Otherwise they would have to afterwards manually moderate their subscription
     # request.
     try:
-        new_member = mlist.subscribe(email,
-                                     pre_verified=True,
-                                     pre_approved=True,
-                                     pre_confirmed=email_owner_pre_confirmation,
-                                     display_name=real_name)
+        new_member = mlist.subscribe(
+            email,
+            pre_verified=True,
+            pre_approved=True,
+            pre_confirmed=email_owner_pre_confirmation,
+            display_name=real_name,
+        )
         # Set member's send and delivery rights to email list.
         set_email_list_member_send_status(new_member, send_right)
         set_email_list_member_delivery_status(new_member, delivery_right)
@@ -363,7 +406,7 @@ def add_email(mlist: MailingList, email: str, email_owner_pre_confirmation: bool
 
 
 def set_email_list_member_send_status(member: Member, status: bool) -> None:
-    """ Change user's send status on an email list. Send right / status is changed by changing the member's
+    """Change user's send status on an email list. Send right / status is changed by changing the member's
     moderation status.
 
     This function can fail if connection to Mailman is lost.
@@ -383,7 +426,9 @@ def set_email_list_member_send_status(member: Member, status: bool) -> None:
         raise
 
 
-def set_email_list_member_delivery_status(member: Member, status: bool, by_moderator: bool = True) -> None:
+def set_email_list_member_delivery_status(
+    member: Member, status: bool, by_moderator: bool = True
+) -> None:
     """Change email list's member's delivery status on a list.
 
     This function can fail if connection to Mailman is lost.
@@ -451,7 +496,9 @@ def verify_reserved_names(name_candidate: str) -> None:
     """
     reserved_names = app.config.get("RESERVED_NAMES")
     if reserved_names and name_candidate in reserved_names:
-        raise RouteException(f"Name '{name_candidate}' is a reserved name and cannot be used.")
+        raise RouteException(
+            f"Name '{name_candidate}' is a reserved name and cannot be used."
+        )
 
 
 def get_email_list_member(mlist: MailingList, email: str) -> Member:
@@ -469,7 +516,9 @@ def get_email_list_member(mlist: MailingList, email: str) -> Member:
         raise
 
 
-def set_email_list_unsubscription_policy(email_list: MailingList, can_unsubscribe_flag: bool) -> None:
+def set_email_list_unsubscription_policy(
+    email_list: MailingList, can_unsubscribe_flag: bool
+) -> None:
     """Set the unsubscription policy of an email list.
 
     :param email_list: The email list where the policy is to be set.
@@ -524,7 +573,9 @@ def set_email_list_only_text(email_list: MailingList, only_text: bool) -> None:
         raise
 
 
-def set_email_list_allow_nonmember(email_list: MailingList, non_member_message_pass_flag: bool) -> None:
+def set_email_list_allow_nonmember(
+    email_list: MailingList, non_member_message_pass_flag: bool
+) -> None:
     """Set email list's non member (message pass) action.
 
     :param email_list: The email list where the non member message pass action is set.
@@ -542,7 +593,9 @@ def set_email_list_allow_nonmember(email_list: MailingList, non_member_message_p
         raise
 
 
-def set_email_list_allow_attachments(email_list: MailingList, allow_attachments_flag: bool) -> None:
+def set_email_list_allow_attachments(
+    email_list: MailingList, allow_attachments_flag: bool
+) -> None:
     """Set email list allowed attachments.
 
     :param email_list: The email list where allowed attachment extensions are set.
@@ -551,7 +604,9 @@ def set_email_list_allow_attachments(email_list: MailingList, allow_attachments_
     """
     try:
         if allow_attachments_flag:
-            email_list.settings["pass_extensions"] = app.config.get("PERMITTED_ATTACHMENTS")
+            email_list.settings["pass_extensions"] = app.config.get(
+                "PERMITTED_ATTACHMENTS"
+            )
         else:
             # There might not be a direct option to disallow all attachments to a list. We pass a value we don't expect
             # to find as a file extension. Then the only type of extension that would be allowed is file.no_extensions.
@@ -562,7 +617,9 @@ def set_email_list_allow_attachments(email_list: MailingList, allow_attachments_
         raise
 
 
-def set_email_list_default_reply_type(email_list: MailingList, default_reply_type: ReplyToListChanges) -> None:
+def set_email_list_default_reply_type(
+    email_list: MailingList, default_reply_type: ReplyToListChanges
+) -> None:
     """Set the email list's default reply type, i.e. perform Reply-To munging.
 
     :param email_list: The email list where the reply type is set.

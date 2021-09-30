@@ -3,7 +3,7 @@ import re
 from operator import ge, gt, ne, eq, le, lt
 from typing import Union
 
-num_filter_expression = '([<=>!]=?) *(-?[\\w.,]*) *(!?) *'
+num_filter_expression = "([<=>!]=?) *(-?[\\w.,]*) *(!?) *"
 
 
 # const filterComparatorOperators = {
@@ -18,7 +18,10 @@ num_filter_expression = '([<=>!]=?) *(-?[\\w.,]*) *(!?) *'
 #     ">=": ((a: NumStr, b: NumStr) => a >= b),
 # };
 
-def float_or_str_tuple(a: Union[str, float], b: Union[str, float]) -> Union[tuple[str, str], tuple[float, float]]:
+
+def float_or_str_tuple(
+    a: Union[str, float], b: Union[str, float]
+) -> Union[tuple[str, str], tuple[float, float]]:
     """
     Attempts to convert two parameters to float
     :param a: first parameter to convert
@@ -62,7 +65,7 @@ class RegexOrComparator:
 
     def __init__(self, fltr: str):
         if not is_num_filter(fltr):
-            self.reg = rf'{re.escape(fltr.lower())}'
+            self.reg = rf"{re.escape(fltr.lower())}"
             self.is_comparator = False
         else:
             self.comparator = ComparatorFilter(fltr)
@@ -71,7 +74,7 @@ class RegexOrComparator:
     def is_match(self, value: Union[str, float, None]) -> bool:
         if not self.is_comparator:
             if value is None:
-                field_value = ''
+                field_value = ""
             elif not isinstance(value, str):
                 field_value = str(value)
             else:
@@ -103,7 +106,7 @@ class ComparatorFilter:
 
     def is_match(self, s: Union[str, float, None]) -> bool:
         if s is None:
-            s = ''
+            s = ""
         if isinstance(s, str):
             s = s.lower()
         res = True

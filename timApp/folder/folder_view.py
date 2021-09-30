@@ -2,7 +2,11 @@ from flask import request, render_template
 
 from timApp.auth.accesshelper import verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
-from timApp.document.create_item import get_templates_for_folder, apply_template, create_document
+from timApp.document.create_item import (
+    get_templates_for_folder,
+    apply_template,
+    create_document,
+)
 from timApp.document.specialnames import FORCED_TEMPLATE_NAME
 from timApp.document.viewcontext import ViewRoute
 from timApp.folder.folder import Folder
@@ -17,28 +21,33 @@ def try_return_folder(item_name):
     if f is None:
         f = Folder.find_first_existing(item_name)
         templates = get_templates_for_folder(f)
-        template_to_find = get_option(request, 'template', FORCED_TEMPLATE_NAME)
+        template_to_find = get_option(request, "template", FORCED_TEMPLATE_NAME)
         template_item = None
         for t in templates:
             if t.short_name == template_to_find:
                 template_item = t
 
         if template_item and template_item.short_name == FORCED_TEMPLATE_NAME:
-            ind = item_name.rfind('/')
+            ind = item_name.rfind("/")
             if ind >= 0:
-                item = create_document(item_name, item_name[ind + 1:])
+                item = create_document(item_name, item_name[ind + 1 :])
                 apply_template(item, template_item.path)
                 db.session.commit()
                 return view(item_name, ViewRoute.View)
 
-        return render_template('create_new.jinja2',
-                               show_create_new=get_current_user_object().can_write_to_folder(f),
-                               new_item=item_name,
-                               found_item=f,
-                               forced_template=template_to_find if template_item else None), 404
+        return (
+            render_template(
+                "create_new.jinja2",
+                show_create_new=get_current_user_object().can_write_to_folder(f),
+                new_item=item_name,
+                found_item=f,
+                forced_template=template_to_find if template_item else None,
+            ),
+            404,
+        )
     verify_view_access(f)
     return render_template(
-        'index.jinja2',
+        "index.jinja2",
         item=f,
         items=get_items(item_name),
     )

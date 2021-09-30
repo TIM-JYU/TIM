@@ -12,7 +12,7 @@ def is_lecturer_of(l: Lecture) -> bool:
 def verify_is_lecturer(l: Lecture) -> None:
     u = get_current_user_object()
     if not is_lecturer_of(l) and not u.is_admin:
-        raise RouteException('Only lecturer can perform this action.')
+        raise RouteException("Only lecturer can perform this action.")
 
 
 @dataclass

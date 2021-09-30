@@ -11,8 +11,14 @@ from marshmallow.utils import missing
 
 from tim_common.common_schemas import TextfieldStateModel
 from tim_common.markupmodels import GenericMarkupModel
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, create_blueprint, PluginAnswerResp, PluginAnswerWeb, PluginReqs
+from tim_common.pluginserver_flask import (
+    GenericHtmlModel,
+    GenericAnswerModel,
+    create_blueprint,
+    PluginAnswerResp,
+    PluginAnswerWeb,
+    PluginReqs,
+)
 from tim_common.utils import Missing
 
 NumericfieldStateModel = TextfieldStateModel
@@ -45,14 +51,19 @@ class NumericfieldMarkupModel(GenericMarkupModel):
 @dataclass
 class NumericfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
+
     c: Union[str, Missing, None] = missing
     nosave: Union[bool, Missing] = missing
 
 
 @dataclass
-class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, NumericfieldMarkupModel, NumericfieldStateModel]):
+class NumericfieldHtmlModel(
+    GenericHtmlModel[
+        NumericfieldInputModel, NumericfieldMarkupModel, NumericfieldStateModel
+    ]
+):
     def get_component_html_name(self) -> str:
-        return 'numericfield-runner'
+        return "numericfield-runner"
 
     def get_static_html(self) -> str:
         return render_static_numericfield(self)
@@ -62,13 +73,17 @@ class NumericfieldHtmlModel(GenericHtmlModel[NumericfieldInputModel, Numericfiel
 
 
 @dataclass
-class NumericfieldAnswerModel(GenericAnswerModel[NumericfieldInputModel,
-                                                 NumericfieldMarkupModel, NumericfieldStateModel]):
+class NumericfieldAnswerModel(
+    GenericAnswerModel[
+        NumericfieldInputModel, NumericfieldMarkupModel, NumericfieldStateModel
+    ]
+):
     pass
 
 
 def render_static_numericfield(m: NumericfieldHtmlModel) -> str:
-    return render_template_string("""
+    return render_template_string(
+        """
 <div>
 <h4>{{ header or '' }}</h4>
 <p class="stem">{{ stem or '' }}</p>
@@ -90,6 +105,7 @@ size="{{cols}}"></span></label>
 
 REDOUBLE = re.compile(r"[^0-9,.e\-+]+")
 
+
 def get_double(c: Union[float, int, str]) -> float:
     if isinstance(c, float):
         return c
@@ -99,7 +115,7 @@ def get_double(c: Union[float, int, str]) -> float:
         c = REDOUBLE.sub("", c)
         c = c.replace(",", ".")
         if c.startswith("e"):
-            c = "1"+c
+            c = "1" + c
         return float(c)
     return 0
 
@@ -111,7 +127,7 @@ class NumericFieldAnswerWeb(PluginAnswerWeb, total=False):
 
 def answer(args: NumericfieldAnswerModel) -> PluginAnswerResp:
     web: NumericFieldAnswerWeb = {}
-    result: PluginAnswerResp = {'web': web}
+    result: PluginAnswerResp = {"web": web}
     c_input = args.input.c
 
     nosave = args.input.nosave
@@ -119,8 +135,8 @@ def answer(args: NumericfieldAnswerModel) -> PluginAnswerResp:
         nosave = True
 
     if isinstance(c_input, Missing) or c_input is None:
-        web['result'] = "unsaved"
-        web['error'] = "Please enter a number"
+        web["result"] = "unsaved"
+        web["error"] = "Please enter a number"
         return result
     try:
         if c_input.strip() == "":
@@ -134,11 +150,11 @@ def answer(args: NumericfieldAnswerModel) -> PluginAnswerResp:
             c = get_double(c_input)
             c = round(c, 0)
         else:
-            raise ValueError(f'Unknown save attribute value: {args.markup.save}')
+            raise ValueError(f"Unknown save attribute value: {args.markup.save}")
     except ValueError as e:
         error = str(e)
-        web['result'] = "error"
-        web['error'] = error + " " + c_input
+        web["result"] = "error"
+        web["error"] = error + " " + c_input
         return result
 
     if not nosave:
@@ -147,16 +163,17 @@ def answer(args: NumericfieldAnswerModel) -> PluginAnswerResp:
             if args.state.styles:
                 save = {"c": c, "styles": args.state.styles}
         result["save"] = save
-        web['result'] = "saved"
-        web['value'] = c
+        web["result"] = "saved"
+        web["value"] = c
         if args.markup.clearstyles:
-            web['clear'] = True
+            web["clear"] = True
 
     return result
 
 
 def reqs() -> PluginReqs:
-    templates = [r"""``` {#PLUGINNAMEHERE plugin="numericfield"}
+    templates = [
+        r"""``` {#PLUGINNAMEHERE plugin="numericfield"}
 header:          # otsikko, tyhjä = ei otsikkoa
 stem:            # kysymys, tyhjä = ei kysymystä
 step:            # numeraalinen askellus, tyhjä = oletus 1.0
@@ -168,87 +185,90 @@ cols: 7          # kentän koko, numeraalinen
 autosave: false  # autosave, pois päältä
 validinput: '^\d{0,3}(\.\d{0,3})?$' # käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
 errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
-```""", """#- {defaultplugin="numericfield" readonly="view" .fieldCell}
+```""",
+        """#- {defaultplugin="numericfield" readonly="view" .fieldCell}
 %% 'd=;dsum=summa' | gfrange(1,5,'cols: 3') %%
-```""", """#- {defaultplugin="numericfield" readonly="view" .fieldCell}
+```""",
+        """#- {defaultplugin="numericfield" readonly="view" .fieldCell}
 %% 'ht=Harhoitustyö;osa=Osasuoritus' |  gfields('cols: 3')  %%
-""", ]
+""",
+    ]
     return {
         "js": ["/field/js/build/numericfield.js"],
         "multihtml": True,
         "multimd": True,
         "css": ["/field/css/field.css"],
-        'editor_tabs': [
+        "editor_tabs": [
             {
-                'text': 'Fields',
-                'items': [
+                "text": "Fields",
+                "items": [
                     {
-                        'text': 'Numeric',
-                        'items': [
+                        "text": "Numeric",
+                        "items": [
                             {
-                                'data': '#- {defaultplugin="numericfield" readonly="view" .fieldCell}\n',
-                                'text': 'defaultplugin/numericfield',
-                                'expl': 'Attribuutit kappaleelle jossa inline numericfield',
+                                "data": '#- {defaultplugin="numericfield" readonly="view" .fieldCell}\n',
+                                "text": "defaultplugin/numericfield",
+                                "expl": "Attribuutit kappaleelle jossa inline numericfield",
                             },
                             {
-                                'data': 'numericfield',
-                                'text': 'teksti: numericfield',
-                                'expl': 'Pelkkä kentän tyyppi: numericfield',
+                                "data": "numericfield",
+                                "text": "teksti: numericfield",
+                                "expl": "Pelkkä kentän tyyppi: numericfield",
                             },
                             {
-                                'data': "%% 'd;dsum' | gfrange(1,5,'cols: 3') %%\n",
-                                'text': 'Joukko kenttiä',
-                                'expl': 'Valmis joukko samannimisiä kenttä',
+                                "data": "%% 'd;dsum' | gfrange(1,5,'cols: 3') %%\n",
+                                "text": "Joukko kenttiä",
+                                "expl": "Valmis joukko samannimisiä kenttä",
                             },
                             {
-                                'data': '{#nf1 #}',
-                                'text': 'Numeerinen kenttä (inline, autosave)',
-                                'expl': 'Luo kenttä jonka syötteet ovat vain numeroita',
+                                "data": "{#nf1 #}",
+                                "text": "Numeerinen kenttä (inline, autosave)",
+                                "expl": "Luo kenttä jonka syötteet ovat vain numeroita",
                             },
                             {
-                                'data': templates[0].strip(),
-                                'text': 'Numeerinen kenttä (laajennettu)',
-                                'expl': 'Luo kenttä jonka syöte ovat vain numero',
+                                "data": templates[0].strip(),
+                                "text": "Numeerinen kenttä (laajennettu)",
+                                "expl": "Luo kenttä jonka syöte ovat vain numero",
                             },
                             {
-                                'data': "{#nf3 autosave: false, readOnlyStyle: plaintext #}",
-                                'text': 'Label kenttä (read only)',
-                                'expl': 'Luo kenttä jonka syötettä käyttäjä ei voi muokata',
+                                "data": "{#nf3 autosave: false, readOnlyStyle: plaintext #}",
+                                "text": "Label kenttä (read only)",
+                                "expl": "Luo kenttä jonka syötettä käyttäjä ei voi muokata",
                             },
                             {
-                                'data': templates[1].strip() + '\n',
-                                'text': 'Joukko numeroituja numeerisia kenttiä ja summa',
-                                'expl': 'Lohko jossa joukko numeroituja numeerisia kenttiä ja niiden summa',
+                                "data": templates[1].strip() + "\n",
+                                "text": "Joukko numeroituja numeerisia kenttiä ja summa",
+                                "expl": "Lohko jossa joukko numeroituja numeerisia kenttiä ja niiden summa",
                             },
                             {
-                                'data': templates[2].strip() + '\n',
-                                'text': 'Joukko erikseen nimettyjä numeerisia kenttiä',
-                                'expl': 'Lohko jossa eri tavoin nimettyjä numeerisia kenttiä',
+                                "data": templates[2].strip() + "\n",
+                                "text": "Joukko erikseen nimettyjä numeerisia kenttiä",
+                                "expl": "Lohko jossa eri tavoin nimettyjä numeerisia kenttiä",
                             },
                         ],
                     },
                     {
-                        'text': 'Settings',
-                        'items': [
+                        "text": "Settings",
+                        "items": [
                             {
-                                'data': 'autosave: false,',
-                                'text': 'autosave: false',
-                                'expl': 'ei automaattista tallennusta',
+                                "data": "autosave: false,",
+                                "text": "autosave: false",
+                                "expl": "ei automaattista tallennusta",
                             },
                             {
-                                'data': 'readonly="view"',
-                                'text': 'readonly="view"',
-                                'expl': 'kenttää ei voi muokata view-näkymässä, tämä lohkon otsikkoon',
+                                "data": 'readonly="view"',
+                                "text": 'readonly="view"',
+                                "expl": "kenttää ei voi muokata view-näkymässä, tämä lohkon otsikkoon",
                             },
                             {
-                                'data': 'visible="%% False | isview%%" nocache="true"',
-                                'text': 'lohko ei näy View-näkymässä',
-                                'expl': 'tällä merkitään lohko, jonka ei haluta näkyvän View-näkymässä',
+                                "data": 'visible="%% False | isview%%" nocache="true"',
+                                "text": "lohko ei näy View-näkymässä",
+                                "expl": "tällä merkitään lohko, jonka ei haluta näkyvän View-näkymässä",
                             },
                             {
-                                'data': 'cols: 4,',
-                                'text': 'Sarakkeiden määrä',
-                                'expl': 'Sarakkeiden määrä',
+                                "data": "cols: 4,",
+                                "text": "Sarakkeiden määrä",
+                                "expl": "Sarakkeiden määrä",
                             },
                         ],
                     },
@@ -260,7 +280,7 @@ errormessage:    # inputcheckerin virheselite, tyhjä = selite on inputchecker
 
 numericfield_route = create_blueprint(
     __name__,
-    'nf',
+    "nf",
     NumericfieldHtmlModel,
     NumericfieldAnswerModel,
     answer,

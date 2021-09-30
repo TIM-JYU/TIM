@@ -9,8 +9,14 @@ from marshmallow.utils import missing
 
 from tim_common.common_schemas import TextfieldStateModel
 from tim_common.markupmodels import GenericMarkupModel
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, create_blueprint, PluginAnswerResp, PluginAnswerWeb, PluginReqs
+from tim_common.pluginserver_flask import (
+    GenericHtmlModel,
+    GenericAnswerModel,
+    create_blueprint,
+    PluginAnswerResp,
+    PluginAnswerWeb,
+    PluginReqs,
+)
 from tim_common.utils import Missing
 
 
@@ -40,26 +46,32 @@ class TextfieldMarkupModel(GenericMarkupModel):
 @dataclass
 class TextfieldInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
+
     c: str
     nosave: Union[bool, Missing] = missing
 
 
 @dataclass
-class TextfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
+class TextfieldHtmlModel(
+    GenericHtmlModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]
+):
     def get_component_html_name(self) -> str:
-        return 'textfield-runner'
+        return "textfield-runner"
 
     def get_static_html(self) -> str:
         return render_static_textfield(self)
 
 
 @dataclass
-class TextfieldAnswerModel(GenericAnswerModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
+class TextfieldAnswerModel(
+    GenericAnswerModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]
+):
     pass
 
 
 def render_static_textfield(m: TextfieldHtmlModel) -> str:
-    return render_template_string("""
+    return render_template_string(
+        """
 <div>
 <h4>{{ header or '' }}</h4>
 <p class="stem">{{ stem or '' }}</p>
@@ -85,9 +97,8 @@ class TextfieldAnswerWeb(PluginAnswerWeb, total=False):
 
 def answer(args: TextfieldAnswerModel) -> PluginAnswerResp:
     web: TextfieldAnswerWeb = {}
-    result: PluginAnswerResp = {'web': web}
+    result: PluginAnswerResp = {"web": web}
     c = args.input.c
-
 
     nosave = args.input.nosave
     if args.markup.nosave:
@@ -99,16 +110,16 @@ def answer(args: TextfieldAnswerModel) -> PluginAnswerResp:
             if args.state.styles:
                 save = {"c": c, "styles": args.state.styles}
         result["save"] = save
-        web['result'] = "saved"
+        web["result"] = "saved"
         if args.markup.clearstyles:
-            web['clear'] = True
+            web["clear"] = True
 
     return result
 
 
 def reqs() -> PluginReqs:
     templates = [
-"""``` {#PLUGINNAMEHERE plugin="textfield"}
+        """``` {#PLUGINNAMEHERE plugin="textfield"}
 header:          # otsikko, tyhjä = ei otsikkoa
 stem:            # kysymys, tyhjä = ei kysymystä
 inputstem:       # vastaus, tyhjä = ei vastausta
@@ -120,52 +131,52 @@ autosave: false  # autosave, pois päältä
 validinput: '^(hyv|hyl|[12345])$' # käyttäjäsyötteen rajoitin, tyhjä = ei rajoitusta
 errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
 ```""",
-]
+    ]
     return {
         "js": ["/field/js/build/textfield.js"],
         "multihtml": True,
         "css": ["/field/css/field.css"],
-        'editor_tabs': [
+        "editor_tabs": [
             {
-                'text': 'Fields',
-                'items': [
+                "text": "Fields",
+                "items": [
                     {
-                        'text': 'Text',
-                        'items': [
+                        "text": "Text",
+                        "items": [
                             {
-                                'data': '#- {defaultplugin="textfield" readonly="view" .fieldCell}\n',
-                                'text': 'defaultplugin/textfield',
-                                'expl': 'Attribuutit kappaleelle jossa inline textfield',
+                                "data": '#- {defaultplugin="textfield" readonly="view" .fieldCell}\n',
+                                "text": "defaultplugin/textfield",
+                                "expl": "Attribuutit kappaleelle jossa inline textfield",
                             },
                             {
-                                'data': 'textfield',
-                                'text': 'teksti: textfield',
-                                'expl': 'Pelkkä kentän tyyppi: textfield',
+                                "data": "textfield",
+                                "text": "teksti: textfield",
+                                "expl": "Pelkkä kentän tyyppi: textfield",
                             },
                             {
-                                'data': "%% 'd;dsum' | gfrange(1,5,'cols: 5') %%\n",
-                                'text': 'Joukko numeroituja kenttiä',
-                                'expl': 'Valmis joukko samannimisiä numeroituja kenttiä',
+                                "data": "%% 'd;dsum' | gfrange(1,5,'cols: 5') %%\n",
+                                "text": "Joukko numeroituja kenttiä",
+                                "expl": "Valmis joukko samannimisiä numeroituja kenttiä",
                             },
                             {
-                                'data': "{#tf1#}",
-                                'text': 'Tekstikenttä (inline, autosave)',
-                                'expl': 'Luo kenttä jonka syöte on tekstiä',
+                                "data": "{#tf1#}",
+                                "text": "Tekstikenttä (inline, autosave)",
+                                "expl": "Luo kenttä jonka syöte on tekstiä",
                             },
                             {
-                                'data': templates[0].strip(),
-                                'text': 'Tekstikenttä (laajennettu)',
-                                'expl': 'Luo kenttä jonka syöte on tekstiä',
+                                "data": templates[0].strip(),
+                                "text": "Tekstikenttä (laajennettu)",
+                                "expl": "Luo kenttä jonka syöte on tekstiä",
                             },
                             {
-                                'data': "{#tf2 readOnlyStyle: plaintext #}",
-                                'text': 'Label kenttä (inline, read only)',
-                                'expl': 'Luo kenttä jonka syötettä käyttäjä ei voi muokata',
+                                "data": "{#tf2 readOnlyStyle: plaintext #}",
+                                "text": "Label kenttä (inline, read only)",
+                                "expl": "Luo kenttä jonka syötettä käyttäjä ei voi muokata",
                             },
                             {
-                                'data': "{#username showname: 1, inputstem: 'Nimi: '#}",
-                                'text': 'Käyttäjän nimi (inline)',
-                                'expl': 'Kenttä joka näyttää käyttäjän nimen, tarvitsee lohkon alkuun defaultplugin',
+                                "data": "{#username showname: 1, inputstem: 'Nimi: '#}",
+                                "text": "Käyttäjän nimi (inline)",
+                                "expl": "Kenttä joka näyttää käyttäjän nimen, tarvitsee lohkon alkuun defaultplugin",
                             },
                         ],
                     },
@@ -177,7 +188,7 @@ errormessage:    #inputcheckerin virheselite, tyhjä = selite on inputchecker
 
 textfield_route = create_blueprint(
     __name__,
-    'tf',
+    "tf",
     TextfieldHtmlModel,
     TextfieldAnswerModel,
     answer,

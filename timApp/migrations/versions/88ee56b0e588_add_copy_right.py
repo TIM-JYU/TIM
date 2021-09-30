@@ -11,8 +11,8 @@ from sqlalchemy import orm
 
 from timApp.auth.auth_models import AccessTypeModel
 
-revision = '88ee56b0e588'
-down_revision = 'c8a64d9429b1'
+revision = "88ee56b0e588"
+down_revision = "c8a64d9429b1"
 
 from alembic import op
 
@@ -20,7 +20,7 @@ from alembic import op
 def upgrade():
     bind = op.get_bind()
     s = orm.Session(bind=bind)
-    s.add(AccessTypeModel(id=7, name='copy'))
+    s.add(AccessTypeModel(id=7, name="copy"))
     s.flush()
 
 

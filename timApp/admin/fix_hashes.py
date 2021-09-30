@@ -1,4 +1,9 @@
-from timApp.admin.util import process_items, create_argparser, DryrunnableArguments, print_match
+from timApp.admin.util import (
+    process_items,
+    create_argparser,
+    DryrunnableArguments,
+    print_match,
+)
 from timApp.document.docinfo import DocInfo
 
 
@@ -20,14 +25,24 @@ def fix_hashes(doc: DocInfo, args: DryrunnableArguments) -> int:
             errors += 1
             if not args.dryrun:
                 d.modify_paragraph_obj(p.get_id(), p)
-            print_match(args, doc, p, f'invalid hash in {p.get_id()}: expected {new_hash} but was {old_hash}')
+            print_match(
+                args,
+                doc,
+                p,
+                f"invalid hash in {p.get_id()}: expected {new_hash} but was {old_hash}",
+            )
         elif new_hash != list_hash:
             errors += 1
             if not args.dryrun:
                 d.modify_paragraph_obj(p.get_id(), p)
-            print_match(args, doc, p, f'invalid hash in paragraph list: expected {new_hash} but was {list_hash}')
+            print_match(
+                args,
+                doc,
+                p,
+                f"invalid hash in paragraph list: expected {new_hash} but was {list_hash}",
+            )
     return errors
 
 
-if __name__ == '__main__':
-    process_items(fix_hashes, create_argparser('Fixes paragraph hashes in documents'))
+if __name__ == "__main__":
+    process_items(fix_hashes, create_argparser("Fixes paragraph hashes in documents"))

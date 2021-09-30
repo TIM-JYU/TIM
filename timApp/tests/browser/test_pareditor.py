@@ -11,18 +11,22 @@ from timApp.timdb.sqa import db
 
 
 def get_change_editor_button(pareditor) -> WebElement:
-    change_editor_button = pareditor.find_elements(by=By.CSS_SELECTOR, value='.editorOptions label')[1]
+    change_editor_button = pareditor.find_elements(
+        by=By.CSS_SELECTOR, value=".editorOptions label"
+    )[1]
     return change_editor_button
 
 
 def get_cancel_button(pareditor) -> WebElement:
-    button = find_button_by_text(pareditor, 'Cancel')
+    button = find_button_by_text(pareditor, "Cancel")
     return button
 
 
 class ParEditorTest(BrowserTest):
     def wait_for_preview_to_finish(self):
-        self.wait.until_not(ec.text_to_be_present_in_element((By.CSS_SELECTOR, '.previewDiv'), '...'))
+        self.wait.until_not(
+            ec.text_to_be_present_in_element((By.CSS_SELECTOR, ".previewDiv"), "...")
+        )
 
     def test_add_bottom_focus_switch(self):
         """Ensures:
@@ -38,64 +42,74 @@ class ParEditorTest(BrowserTest):
         self.goto_document(d)
         self.open_editor_from_bottom()
         pareditor = self.get_editor_element()
-        ActionChains(self.drv).send_keys('# hello\n\nworld').perform()
-        preview = self.find_element_avoid_staleness('.previewcontent', parent=pareditor)
+        ActionChains(self.drv).send_keys("# hello\n\nworld").perform()
+        preview = self.find_element_avoid_staleness(".previewcontent", parent=pareditor)
         self.wait_for_preview_to_finish()
-        ActionChains(self.drv).move_to_element(preview).perform()  # avoids having mouse above a toolbar button
-        self.assert_same_screenshot(pareditor, [
-            'pareditor/ace_hello_world',
-            'pareditor/ace_hello_world_2',
-            'pareditor/ace_hello_world_3',
-        ])
+        ActionChains(self.drv).move_to_element(
+            preview
+        ).perform()  # avoids having mouse above a toolbar button
+        self.assert_same_screenshot(
+            pareditor,
+            [
+                "pareditor/ace_hello_world",
+                "pareditor/ace_hello_world_2",
+                "pareditor/ace_hello_world_3",
+            ],
+        )
         change_editor_button = get_change_editor_button(pareditor)
         change_editor_button.click()
         self.wait_for_editor_load()
-        ActionChains(self.drv).send_keys('!').perform()
+        ActionChains(self.drv).send_keys("!").perform()
         preview.click()  # stop cursor blinking
         self.wait_for_preview_to_finish()
-        self.assert_same_screenshot(pareditor, 'pareditor/textarea_hello_world', move_to_element=True)
+        self.assert_same_screenshot(
+            pareditor, "pareditor/textarea_hello_world", move_to_element=True
+        )
         change_editor_button.click()
         self.wait_for_editor_load()
-        self.wait_until_present_and_vis('.ace_content')
+        self.wait_until_present_and_vis(".ace_content")
         # after deleting the '!', the screenshot should be the same
         ActionChains(self.drv).send_keys(Keys.PAGE_DOWN, Keys.BACKSPACE).perform()
         self.wait_for_preview_to_finish()
         ActionChains(self.drv).move_to_element(preview).perform()
-        self.assert_same_screenshot(pareditor, [
-            'pareditor/ace_hello_world',
-            'pareditor/ace_hello_world_2',
-            'pareditor/ace_hello_world_3',
-        ])
+        self.assert_same_screenshot(
+            pareditor,
+            [
+                "pareditor/ace_hello_world",
+                "pareditor/ace_hello_world_2",
+                "pareditor/ace_hello_world_3",
+            ],
+        )
 
     def get_editor_element(self) -> WebElement:
-        pareditor = self.drv.find_element(by=By.CSS_SELECTOR, value='pareditor')
+        pareditor = self.drv.find_element(by=By.CSS_SELECTOR, value="pareditor")
         return pareditor
 
     def open_editor_from_bottom(self):
         sleep(0.1)
-        self.find_element_avoid_staleness('.addBottom', click=True)
+        self.find_element_avoid_staleness(".addBottom", click=True)
         self.wait_for_editor_load()
-        self.wait_until_present_and_vis('.ace_content')
+        self.wait_until_present_and_vis(".ace_content")
 
     def test_autocomplete(self):
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par='words in the document')
+        d = self.create_doc(initial_par="words in the document")
         prefs = self.current_user.get_prefs()
         prefs.use_document_word_list = True
-        prefs.word_list = '\n'.join(('cat', 'dog', 'mouse'))
+        prefs.word_list = "\n".join(("cat", "dog", "mouse"))
         self.current_user.set_prefs(prefs)
         db.session.commit()
         self.goto_document(d)
         self.open_editor_from_bottom()
         pareditor = self.get_editor_element()
-        cb = self.find_element_by_text('Autocomplete', 'label', parent=pareditor)
+        cb = self.find_element_by_text("Autocomplete", "label", parent=pareditor)
         cb.click()
-        editor = self.find_element_and_move_to('.ace_editor')
+        editor = self.find_element_and_move_to(".ace_editor")
         editor.click()
-        ActionChains(self.drv).send_keys('d').perform()
+        ActionChains(self.drv).send_keys("d").perform()
         self.wait_for_preview_to_finish()
-        self.assert_same_screenshot(pareditor, 'pareditor/autocomplete')
+        self.assert_same_screenshot(pareditor, "pareditor/autocomplete")
         prefs = self.current_user.get_prefs()
         prefs.use_document_word_list = False
         self.current_user.set_prefs(prefs)
@@ -106,8 +120,11 @@ class ParEditorTest(BrowserTest):
         self.goto_document(d)
         self.open_editor_from_bottom()
         pareditor = self.get_editor_element()
-        ActionChains(self.drv).send_keys('d').perform()
+        ActionChains(self.drv).send_keys("d").perform()
         self.wait_for_preview_to_finish()
-        self.assert_same_screenshot(pareditor,
-                                    ['pareditor/autocomplete_no_document',
-                                     ])
+        self.assert_same_screenshot(
+            pareditor,
+            [
+                "pareditor/autocomplete_no_document",
+            ],
+        )

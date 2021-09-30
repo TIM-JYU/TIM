@@ -10,6 +10,7 @@ from typing import Optional, Union, Callable, TypeVar, Tuple
 
 MAX_RND_LIST_LEN = 100
 
+
 @dataclass(frozen=True)
 class SeedClass:
     seed: int
@@ -20,12 +21,12 @@ SeedType = Union[str, int, SeedClass]
 
 
 def fix_jso(jso: str) -> str:
-    """ If jso does not start with [ and two to make it list of lists."""
-    if jso == '':
-        return '[[1]]'
+    """If jso does not start with [ and two to make it list of lists."""
+    if jso == "":
+        return "[[1]]"
     if jso.startswith("["):
         return jso
-    return '[[' + jso + ']]'
+    return "[[" + jso + "]]"
 
 
 def sep_n_and_jso(jso: str) -> tuple[int, str]:
@@ -38,13 +39,13 @@ def sep_n_and_jso(jso: str) -> tuple[int, str]:
     :param jso: string to check
     :return: repeat factor and json-str that stands for a list
     """
-    idx = jso.find(':')
+    idx = jso.find(":")
     if idx < 0:
-        idx = jso.find('*')
+        idx = jso.find("*")
     if idx < 0:
         return -1, fix_jso(jso)  # means no repeat factor
     n_str = jso[:idx]
-    jso = jso[idx+1:]
+    jso = jso[idx + 1 :]
     try:
         n = int(n_str)
         if n < 0:
@@ -62,15 +63,15 @@ def get_sample_list(myrandom: Random, jso: str) -> list[int]:
     :param jso: string to find the values
     :return: list of unique ints
     """
-    idx = jso.find(':')
+    idx = jso.find(":")
     if idx < 0:
-        idx = jso.find('*')
+        idx = jso.find("*")
     if idx < 0:
         n_str = jso
-        jso = ''
+        jso = ""
     else:
         n_str = jso[:idx]
-        jso = jso[idx+1:]
+        jso = jso[idx + 1 :]
     try:
         n = int(n_str)
     except ValueError:
@@ -83,7 +84,7 @@ def get_sample_list(myrandom: Random, jso: str) -> list[int]:
         myrandom.shuffle(ints)
         return ints
 
-    if not jso.startswith("["): # s10*50
+    if not jso.startswith("["):  # s10*50
         jso = "[" + jso + "]"
 
     r = json.loads(jso)
@@ -100,7 +101,7 @@ def get_sample_list(myrandom: Random, jso: str) -> list[int]:
 
     count = r[1] - r[0]
     if count > 500:
-        raise ValueError(f'Too big range for s: {r[0]}-{r[1]}')
+        raise ValueError(f"Too big range for s: {r[0]}-{r[1]}")
     ints = list(range(r[0], r[1] + 1, step))
     i = n
     while i >= len(ints):
@@ -148,7 +149,9 @@ def get_uniform_list(myrandom: Random, jso: str) -> list[float]:
         return [myrandom.uniform(0, ranges)]
     ret = []
     for r in ranges:
-        if isinstance(ranges, float) or isinstance(ranges, int):  # only on item, rnd=[6, 4]
+        if isinstance(ranges, float) or isinstance(
+            ranges, int
+        ):  # only on item, rnd=[6, 4]
             ret.append(myrandom.uniform(0, r))
         else:
             if len(r) < 2:
@@ -157,10 +160,12 @@ def get_uniform_list(myrandom: Random, jso: str) -> list[float]:
     return ret
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
-def repeat_rnd(list_func: Callable[[Random, str], list[T]], myrandom: Random, jso: str) -> Optional[list[T]]:
+def repeat_rnd(
+    list_func: Callable[[Random, str], list[T]], myrandom: Random, jso: str
+) -> Optional[list[T]]:
     """
 
     :param list_func: function to produce random list
@@ -192,8 +197,14 @@ def repeat_rnd(list_func: Callable[[Random, str], list[T]], myrandom: Random, js
 State = Tuple[int, ...]
 
 
-def get_rnds(attrs: dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None, state: Optional[State] = None) \
-        -> tuple[Optional[Union[list[float], list[int]]], Optional[SeedType], Optional[State]]:
+def get_rnds(
+    attrs: dict,
+    name: str = "rnd",
+    rnd_seed: Optional[SeedType] = None,
+    state: Optional[State] = None,
+) -> tuple[
+    Optional[Union[list[float], list[int]]], Optional[SeedType], Optional[State]
+]:
     """
     Returns list of random numbers based on attribute name (def: rnd) and rnd_seed.
     :param attrs: dict of attributes
@@ -210,11 +221,11 @@ def get_rnds(attrs: dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None
         return None, rnd_seed, state
 
     seed_to_use = rnd_seed
-    attrs_seed = attrs.get('seed', None)
+    attrs_seed = attrs.get("seed", None)
     if attrs_seed is not None:
-        if attrs_seed == '' or attrs_seed == 'time':
+        if attrs_seed == "" or attrs_seed == "time":
             seed_to_use = int(time.perf_counter() * 1000)
-        elif attrs_seed == 'answernr':
+        elif attrs_seed == "answernr":
             if isinstance(rnd_seed, SeedClass):
                 seed_to_use = rnd_seed.seed + rnd_seed.extraseed
         else:
@@ -228,23 +239,29 @@ def get_rnds(attrs: dict, name: str = "rnd", rnd_seed: Optional[SeedType] = None
 
     # noinspection PyBroadException
     if seed_to_use is None:
-        seed_to_use = int(time.perf_counter()*1000)
+        seed_to_use = int(time.perf_counter() * 1000)
 
     myrandom = Random()
     myrandom.seed(a=seed_to_use)
     if state:
         myrandom.setstate(state)
 
-    if jso.startswith('s'):  # s10:[1,7,2], s10, s10:50, s10:[0,50]
+    if jso.startswith("s"):  # s10:[1,7,2], s10, s10:50, s10:[0,50]
         return get_sample_list(myrandom, jso[1:]), seed_to_use, myrandom.getstate()
-    if jso.startswith('u'):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
-        return repeat_rnd(get_uniform_list, myrandom, jso[1:]), seed_to_use, myrandom.getstate()
+    if jso.startswith("u"):  # u[[0,1],[100,110],[-30,-20],[0.001,0.002]], u6
+        return (
+            repeat_rnd(get_uniform_list, myrandom, jso[1:]),
+            seed_to_use,
+            myrandom.getstate(),
+        )
 
     ret = repeat_rnd(get_int_list, myrandom, jso)
     return ret, seed_to_use, myrandom.getstate()
 
 
-def get_rands_as_dict(attrs: dict, rnd_seed: Optional[SeedType], state: Optional[State] = None) -> tuple[Optional[dict], Optional[SeedType], Optional[State]]:
+def get_rands_as_dict(
+    attrs: dict, rnd_seed: Optional[SeedType], state: Optional[State] = None
+) -> tuple[Optional[dict], Optional[SeedType], Optional[State]]:
     """
     Returns a dict of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
@@ -255,7 +272,7 @@ def get_rands_as_dict(attrs: dict, rnd_seed: Optional[SeedType], state: Optional
     """
     if attrs is None:
         return None, rnd_seed, state
-    names = attrs.get('rndnames', 'rnd').split(',')
+    names = attrs.get("rndnames", "rnd").split(",")
     ret: dict = {}
     for name in names:
         rnds, rnd_seed, state = get_rnds(attrs, name, rnd_seed, state)
@@ -264,11 +281,13 @@ def get_rands_as_dict(attrs: dict, rnd_seed: Optional[SeedType], state: Optional
         ret[name] = rnds
     if not ret:
         return None, rnd_seed, state
-    ret['seed'] = rnd_seed
+    ret["seed"] = rnd_seed
     return ret, rnd_seed, state
 
 
-def get_rands_as_str(attrs: dict, rnd_seed: Optional[SeedType], state: Optional[State] = None) -> tuple[str, Optional[SeedType], Optional[State]]:
+def get_rands_as_str(
+    attrs: dict, rnd_seed: Optional[SeedType], state: Optional[State] = None
+) -> tuple[str, Optional[SeedType], Optional[State]]:
     """
     Returns a Jinja2 str of random numbers variables (each is a list of random numbers).
     :param attrs: dict where may be attrinute rndnames:"rnd1,rnd2,..,rndn".  Of no names, "rnd"
@@ -278,15 +297,15 @@ def get_rands_as_str(attrs: dict, rnd_seed: Optional[SeedType], state: Optional[
     :return: Jinja 2 str of random variables
     """
     if attrs is None:
-        return '', rnd_seed, state
+        return "", rnd_seed, state
     rands, rnd_seed, state = get_rands_as_dict(attrs, rnd_seed, state)
     if rands is None:
-        return '', rnd_seed, state
-    ret = ''
+        return "", rnd_seed, state
+    ret = ""
     for name, rnds in rands.items():
         if rnds is None:
             continue
-        ret += '{% set ' + name + '=' + str(rnds) + ' %}\n'
+        ret += "{% set " + name + "=" + str(rnds) + " %}\n"
     return ret, rnd_seed, state
 
 

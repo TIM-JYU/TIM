@@ -9,8 +9,8 @@ Create Date: 2018-06-28 08:18:41.512816
 # revision identifiers, used by Alembic.
 from timApp.admin.associate_old_uploads import associate_old_uploads
 
-revision = 'b90f139826dc'
-down_revision = '801381ef8cfc'
+revision = "b90f139826dc"
+down_revision = "801381ef8cfc"
 
 
 def upgrade():

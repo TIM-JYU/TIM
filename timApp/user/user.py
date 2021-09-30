@@ -22,7 +22,9 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
-from timApp.messaging.timMessage.internalmessage_models import InternalMessageReadReceipt
+from timApp.messaging.timMessage.internalmessage_models import (
+    InternalMessageReadReceipt,
+)
 from timApp.notification.notification import Notification
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.exceptions import TimDbException
@@ -32,61 +34,103 @@ from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniq
 from timApp.user.preferences import Preferences
 from timApp.user.scimentity import SCIMEntity
 from timApp.user.settings.theme import Theme
-from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME, LOGGED_IN_GROUPNAME, \
-    SPECIAL_USERNAMES
-from timApp.user.usergroup import UserGroup, get_logged_in_group_id, get_anonymous_group_id
-from timApp.user.usergroupmember import UserGroupMember, membership_current, membership_deleted
-from timApp.user.userutils import grant_access, get_access_type_id, \
-    create_password_hash, check_password_hash, check_password_hash_old
-from timApp.util.utils import remove_path_special_chars, cached_property, get_current_time
+from timApp.user.special_group_names import (
+    ANONYMOUS_GROUPNAME,
+    ANONYMOUS_USERNAME,
+    LOGGED_IN_GROUPNAME,
+    SPECIAL_USERNAMES,
+)
+from timApp.user.usergroup import (
+    UserGroup,
+    get_logged_in_group_id,
+    get_anonymous_group_id,
+)
+from timApp.user.usergroupmember import (
+    UserGroupMember,
+    membership_current,
+    membership_deleted,
+)
+from timApp.user.userutils import (
+    grant_access,
+    get_access_type_id,
+    create_password_hash,
+    check_password_hash,
+    check_password_hash_old,
+)
+from timApp.util.utils import (
+    remove_path_special_chars,
+    cached_property,
+    get_current_time,
+)
 
 ItemOrBlock = Union[ItemBase, Block]
 maxdate = datetime.max.replace(tzinfo=timezone.utc)
 
-view_access_set = {t.value for t in [
-    AccessType.view,
-    AccessType.copy,
-    AccessType.edit,
-    AccessType.owner,
-    AccessType.teacher,
-    AccessType.see_answers,
-    AccessType.manage,
-]}
+view_access_set = {
+    t.value
+    for t in [
+        AccessType.view,
+        AccessType.copy,
+        AccessType.edit,
+        AccessType.owner,
+        AccessType.teacher,
+        AccessType.see_answers,
+        AccessType.manage,
+    ]
+}
 
-edit_access_set = {t.value for t in [
-    AccessType.edit,
-    AccessType.owner,
-    AccessType.manage,
-]}
+edit_access_set = {
+    t.value
+    for t in [
+        AccessType.edit,
+        AccessType.owner,
+        AccessType.manage,
+    ]
+}
 
-manage_access_set = {t.value for t in [
-    AccessType.owner,
-    AccessType.manage,
-]}
+manage_access_set = {
+    t.value
+    for t in [
+        AccessType.owner,
+        AccessType.manage,
+    ]
+}
 
-owner_access_set = {t.value for t in [
-    AccessType.owner,
-]}
+owner_access_set = {
+    t.value
+    for t in [
+        AccessType.owner,
+    ]
+}
 
-teacher_access_set = {t.value for t in [
-    AccessType.owner,
-    AccessType.manage,
-    AccessType.teacher,
-]}
+teacher_access_set = {
+    t.value
+    for t in [
+        AccessType.owner,
+        AccessType.manage,
+        AccessType.teacher,
+    ]
+}
 
-seeanswers_access_set = {t.value for t in [
-    AccessType.owner,
-    AccessType.teacher,
-    AccessType.see_answers,
-    AccessType.manage,
-]}
+seeanswers_access_set = {
+    t.value
+    for t in [
+        AccessType.owner,
+        AccessType.teacher,
+        AccessType.see_answers,
+        AccessType.manage,
+    ]
+}
 
-copy_access_set = {t.value for t in [
-    AccessType.copy,
-    AccessType.edit,
-    AccessType.owner,
-    AccessType.manage,
-]}
+copy_access_set = {
+    t.value
+    for t in [
+        AccessType.copy,
+        AccessType.edit,
+        AccessType.owner,
+        AccessType.manage,
+    ]
+}
 
 access_sets = {
     AccessType.copy: copy_access_set,
@@ -98,7 +142,7 @@ access_sets = {
     AccessType.view: view_access_set,
 }
 
-SCIM_USER_NAME = ':scimuser'
+SCIM_USER_NAME = ":scimuser"
 
 
 class Consent(Enum):
@@ -111,6 +155,7 @@ class UserOrigin(Enum):
 
     Only Email, Korppi and Sisu are used so far; the others are speculative.
     """
+
     Email = 1
     Korppi = 2
     Sisu = 3
@@ -135,32 +180,32 @@ class UserInfo:
     unique_codes: list[SchacPersonalUniqueCode] = field(default_factory=list)
 
     def __post_init__(self):
-        assert self.password is None or self.password_hash is None, 'Cannot pass both password and password_hash to UserInfo'
+        assert (
+            self.password is None or self.password_hash is None
+        ), "Cannot pass both password and password_hash to UserInfo"
 
 
 def last_name_to_first(full_name: Optional[str]):
-    """Converts a name of the form "Firstname Middlenames Lastname" to "Lastname Firstname Middlenames".
-    """
+    """Converts a name of the form "Firstname Middlenames Lastname" to "Lastname Firstname Middlenames"."""
     if full_name is None:
         return None
-    names = full_name.split(' ')
+    names = full_name.split(" ")
     if len(names) > 1:
         return f'{names[-1]} {" ".join(names[:-1])}'
     return full_name
 
 
 def last_name_to_last(full_name: Optional[str]):
-    """Converts a name of the form "Lastname Firstname Middlenames" to "Firstname Middlenames Lastname".
-    """
+    """Converts a name of the form "Lastname Firstname Middlenames" to "Firstname Middlenames Lastname"."""
     if full_name is None:
         return None
-    names = full_name.split(' ')
+    names = full_name.split(" ")
     if len(names) > 1:
         return f'{" ".join(names[1:])} {names[0]}'
     return full_name
 
 
-deleted_user_suffix = '_deleted'
+deleted_user_suffix = "_deleted"
 deleted_user_pattern = re.compile(fr".*{deleted_user_suffix}(_\d+)?$")
 
 
@@ -173,7 +218,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     A special user 'Anonymous user' denotes a user that is not logged in. Its id is 0.
     """
-    __tablename__ = 'useraccount'
+
+    __tablename__ = "useraccount"
     id = db.Column(db.Integer, primary_key=True)
     """User identifier."""
 
@@ -192,7 +238,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     prefs = db.Column(db.Text)
     """Preferences as a JSON string."""
 
-    pass_ = db.Column('pass', db.Text)
+    pass_ = db.Column("pass", db.Text)
     """Password hashed with bcrypt."""
 
     consent = db.Column(db.Enum(Consent), nullable=True)
@@ -202,13 +248,14 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     """How the user registered to TIM."""
 
     uniquecodes = db.relationship(
-        'PersonalUniqueCode',
-        back_populates='user',
-        collection_class=attribute_mapped_collection('user_collection_key'),
+        "PersonalUniqueCode",
+        back_populates="user",
+        collection_class=attribute_mapped_collection("user_collection_key"),
     )
 
-    internalmessage_readreceipt: Optional[InternalMessageReadReceipt] = db.relationship('InternalMessageReadReceipt',
-                                                                                        back_populates='user')
+    internalmessage_readreceipt: Optional[InternalMessageReadReceipt] = db.relationship(
+        "InternalMessageReadReceipt", back_populates="user"
+    )
 
     @property
     def scim_display_name(self):
@@ -228,39 +275,41 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def scim_resource_type(self):
-        return 'User'
+        return "User"
 
     @property
     def scim_extra_data(self):
-        return {'emails': [{'value': self.email}] if self.email else []}
+        return {"emails": [{"value": self.email}] if self.email else []}
 
-    consents = db.relationship('ConsentChange', back_populates='user', lazy='select')
-    notifications = db.relationship('Notification', back_populates='user', lazy='dynamic')
-    notifications_alt = db.relationship('Notification')
+    consents = db.relationship("ConsentChange", back_populates="user", lazy="select")
+    notifications = db.relationship(
+        "Notification", back_populates="user", lazy="dynamic"
+    )
+    notifications_alt = db.relationship("Notification")
 
     groups: list[UserGroup] = db.relationship(
         UserGroup,
         UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.user_id) & membership_current,
-        back_populates='users',
-        lazy='select',
+        back_populates="users",
+        lazy="select",
     )
     groups_dyn = db.relationship(
         UserGroup,
         UserGroupMember.__table__,
         primaryjoin=id == UserGroupMember.user_id,
-        lazy='dynamic',
+        lazy="dynamic",
     )
     groups_inactive = db.relationship(
         UserGroup,
         UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.user_id) & membership_deleted,
-        lazy='dynamic',
+        lazy="dynamic",
     )
     memberships_dyn = db.relationship(
         UserGroupMember,
         foreign_keys="UserGroupMember.user_id",
-        lazy='dynamic',
+        lazy="dynamic",
     )
     memberships: list[UserGroupMember] = db.relationship(
         UserGroupMember,
@@ -272,26 +321,37 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         collection_class=attribute_mapped_collection("UserGroupMember.usergroup_id"),
         # back_populates="group",
     )
-    lectures = db.relationship('Lecture', secondary=LectureUsers.__table__,
-                               back_populates='users', lazy='select')
-    owned_lectures = db.relationship('Lecture', back_populates='owner', lazy='dynamic')
-    owned_lectures_alt = db.relationship('Lecture')
-    lectureanswers = db.relationship('LectureAnswer', back_populates='user', lazy='dynamic')
-    lectureanswers_alt = db.relationship('LectureAnswer')
-    messages = db.relationship('Message', back_populates='user', lazy='dynamic')
-    messages_alt = db.relationship('Message')
-    questionactivity = db.relationship('QuestionActivity', back_populates='user', lazy='select')
-    useractivity = db.relationship('Useractivity', back_populates='user', lazy='select')
-    answers = db.relationship('Answer', secondary=UserAnswer.__table__,
-                              back_populates='users', lazy='dynamic')
-    answers_alt = db.relationship('Answer', secondary=UserAnswer.__table__)
-    annotations = db.relationship('Annotation', back_populates='annotator', lazy='dynamic')
-    annotations_alt = db.relationship('Annotation')
-    velps = db.relationship('Velp', back_populates='creator', lazy='dynamic')
-    velps_alt = db.relationship('Velp')
+    lectures = db.relationship(
+        "Lecture",
+        secondary=LectureUsers.__table__,
+        back_populates="users",
+        lazy="select",
+    )
+    owned_lectures = db.relationship("Lecture", back_populates="owner", lazy="dynamic")
+    owned_lectures_alt = db.relationship("Lecture")
+    lectureanswers = db.relationship(
+        "LectureAnswer", back_populates="user", lazy="dynamic"
+    )
+    lectureanswers_alt = db.relationship("LectureAnswer")
+    messages = db.relationship("Message", back_populates="user", lazy="dynamic")
+    messages_alt = db.relationship("Message")
+    questionactivity = db.relationship(
+        "QuestionActivity", back_populates="user", lazy="select"
+    )
+    useractivity = db.relationship("Useractivity", back_populates="user", lazy="select")
+    answers = db.relationship(
+        "Answer", secondary=UserAnswer.__table__, back_populates="users", lazy="dynamic"
+    )
+    answers_alt = db.relationship("Answer", secondary=UserAnswer.__table__)
+    annotations = db.relationship(
+        "Annotation", back_populates="annotator", lazy="dynamic"
+    )
+    annotations_alt = db.relationship("Annotation")
+    velps = db.relationship("Velp", back_populates="creator", lazy="dynamic")
+    velps_alt = db.relationship("Velp")
 
     def __repr__(self):
-        return f'<User(id={self.id}, name={self.name}, email={self.email}, real_name={self.real_name})>'
+        return f"<User(id={self.id}, name={self.name}, email={self.email}, real_name={self.real_name})>"
 
     @property
     def logged_in(self):
@@ -299,8 +359,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def is_deleted(self) -> bool:
-        return (self.email and deleted_user_pattern.match(self.email) is not None) or \
-               (self.name and deleted_user_pattern.match(self.name) is not None)
+        return (self.email and deleted_user_pattern.match(self.email) is not None) or (
+            self.name and deleted_user_pattern.match(self.name) is not None
+        )
 
     @property
     def group_ids(self):
@@ -309,36 +370,40 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     @cached_property
     def is_admin(self):
         for g in self.groups:
-            if g.name == 'Administrators':
+            if g.name == "Administrators":
                 return True
         return False
 
     @property
     def is_email_user(self):
         """Returns whether the user signed up via email and has not been "upgraded" to Korppi or Sisu user."""
-        return '@' in self.name or self.name.startswith('testuser')
+        return "@" in self.name or self.name.startswith("testuser")
 
     @property
     def pretty_full_name(self):
         """Returns the user's full name."""
         if self.is_name_hidden:
-            return f'User {self.id}'
+            return f"User {self.id}"
         if self.given_name and self.last_name:
-            return f'{self.given_name} {self.last_name}'
+            return f"{self.given_name} {self.last_name}"
         if self.real_name is None:
-            return '(real_name is null)'
-        parts = self.real_name.split(' ')
+            return "(real_name is null)"
+        parts = self.real_name.split(" ")
         if len(parts) == 1:
             return self.real_name
-        return ' '.join(parts[1:]) + ' ' + parts[0]
+        return " ".join(parts[1:]) + " " + parts[0]
 
     @staticmethod
     def create_with_group(
-            info: UserInfo,
-            is_admin: bool = False,
-            uid: Optional[int] = None,
-    ) -> tuple['User', UserGroup]:
-        p_hash = create_password_hash(info.password) if info.password is not None else info.password_hash
+        info: UserInfo,
+        is_admin: bool = False,
+        uid: Optional[int] = None,
+    ) -> tuple["User", UserGroup]:
+        p_hash = (
+            create_password_hash(info.password)
+            if info.password is not None
+            else info.password_hash
+        )
         user = User(
             id=uid,
             name=info.username,
@@ -358,25 +423,31 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return user, group
 
     @staticmethod
-    def get_by_name(name: str) -> Optional['User']:
+    def get_by_name(name: str) -> Optional["User"]:
         return user_query_with_joined_groups().filter_by(name=name).first()
 
     @staticmethod
-    def get_by_id(uid: int) -> Optional['User']:
+    def get_by_id(uid: int) -> Optional["User"]:
         return user_query_with_joined_groups().get(uid)
 
     @staticmethod
-    def get_by_email(email: str) -> Optional['User']:
+    def get_by_email(email: str) -> Optional["User"]:
         if email is None:
-            raise Exception('Tried to find an user by null email')
+            raise Exception("Tried to find an user by null email")
         return user_query_with_joined_groups().filter_by(email=email).first()
 
     @staticmethod
-    def get_by_email_case_insensitive(email: str) -> list['User']:
-        return user_query_with_joined_groups().filter(func.lower(User.email).in_([email])).all()
+    def get_by_email_case_insensitive(email: str) -> list["User"]:
+        return (
+            user_query_with_joined_groups()
+            .filter(func.lower(User.email).in_([email]))
+            .all()
+        )
 
     @staticmethod
-    def get_by_email_case_insensitive_or_username(email_or_username: str) -> list['User']:
+    def get_by_email_case_insensitive_or_username(
+        email_or_username: str,
+    ) -> list["User"]:
         users = User.get_by_email_case_insensitive(email_or_username)
         if users:
             return users
@@ -387,7 +458,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def email_name_part(self):
-        parts = self.email.split('@')
+        parts = self.email.split("@")
         return parts[0]
 
     @property
@@ -398,7 +469,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def get_user_id(self):
         return self.id
 
-    def check_password(self, password: str, allow_old=False, update_if_old=True) -> bool:
+    def check_password(
+        self, password: str, allow_old=False, update_if_old=True
+    ) -> bool:
         if not self.pass_:
             return False
         is_ok = check_password_hash(password, self.pass_)
@@ -418,7 +491,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     def get_home_org_student_id(self):
         home_org_id = get_home_organization_id()
-        puc = self.uniquecodes.get((home_org_id, 'studentID'), None)
+        puc = self.uniquecodes.get((home_org_id, "studentID"), None)
         return puc.code if puc is not None else None
 
     def get_personal_group(self) -> UserGroup:
@@ -432,15 +505,15 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         for g in self.groups:
             if g.name == group_to_find:
                 return g
-        raise TimDbException(f'Personal usergroup for user {self.name} was not found!')
+        raise TimDbException(f"Personal usergroup for user {self.name} was not found!")
 
     def derive_personal_folder_name(self):
         real_name = self.real_name
         if not real_name:
             real_name = "anonymous"
         basename = remove_path_special_chars(real_name).lower()
-        index = ''
-        while Folder.find_by_path('users/' + basename + index):
+        index = ""
+        while Folder.find_by_path("users/" + basename + index):
             index = str(int(index or 1) + 1)
         return basename + index
 
@@ -453,32 +526,39 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             group_condition = UserGroup.name == self.name
         else:
             group_condition = UserGroup.name == ANONYMOUS_GROUPNAME
-        folders: list[Folder] = Folder.query.join(
-            BlockAccess, BlockAccess.block_id == Folder.id
-        ).join(
-            UserGroup, UserGroup.id == BlockAccess.usergroup_id
-        ).filter(
-            (Folder.location == 'users') &
-            group_condition &
-            (BlockAccess.type == AccessType.owner.value)
-        ).with_entities(Folder).options(
-            defaultload(Folder._block)
+        folders: list[Folder] = (
+            Folder.query.join(BlockAccess, BlockAccess.block_id == Folder.id)
+            .join(UserGroup, UserGroup.id == BlockAccess.usergroup_id)
+            .filter(
+                (Folder.location == "users")
+                & group_condition
+                & (BlockAccess.type == AccessType.owner.value)
+            )
+            .with_entities(Folder)
+            .options(
+                defaultload(Folder._block)
                 .joinedload(Block.accesses)
                 .joinedload(BlockAccess.usergroup)
-        ).all()
+            )
+            .all()
+        )
         if len(folders) >= 2:
-            raise TimDbException(f'Found multiple personal folders for user {self.name}: {[f.name for f in folders]}')
+            raise TimDbException(
+                f"Found multiple personal folders for user {self.name}: {[f.name for f in folders]}"
+            )
         if not folders:
-            f = Folder.create('users/' + self.derive_personal_folder_name(),
-                              self.get_personal_group(),
-                              title=f"{self.real_name}",
-                              creation_opts=FolderCreationOptions(apply_default_rights=True))
+            f = Folder.create(
+                "users/" + self.derive_personal_folder_name(),
+                self.get_personal_group(),
+                title=f"{self.real_name}",
+                creation_opts=FolderCreationOptions(apply_default_rights=True),
+            )
             db.session.commit()
             return f
         return folders[0]
 
     def get_prefs(self) -> Preferences:
-        prefs = json.loads(self.prefs or '{}')
+        prefs = json.loads(self.prefs or "{}")
         try:
             return Preferences.from_json(prefs)
         except TypeError:
@@ -499,18 +579,27 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if self.logged_in:
             special_groups.append(LOGGED_IN_GROUPNAME)
         q = UserGroup.query.filter(
-            UserGroup.id.in_(db.session.query(UserGroupMember.usergroup_id).filter_by(user_id=self.id))
+            UserGroup.id.in_(
+                db.session.query(UserGroupMember.usergroup_id).filter_by(
+                    user_id=self.id
+                )
+            )
         )
         if include_special:
-            q = q.union(
-                UserGroup.query.filter(UserGroup.name.in_(special_groups))
-            )
+            q = q.union(UserGroup.query.filter(UserGroup.name.in_(special_groups)))
         return q
 
-    def add_to_group(self, ug: UserGroup, added_by: Optional['User'], sync_mailing_lists=True) -> bool:
+    def add_to_group(
+        self, ug: UserGroup, added_by: Optional["User"], sync_mailing_lists=True
+    ) -> bool:
         # Avoid cyclical importing.
-        from timApp.messaging.messagelist.messagelist_utils import sync_message_list_on_add
-        existing: UserGroupMember = self.id is not None and self.memberships_dyn.filter_by(group=ug).first()
+        from timApp.messaging.messagelist.messagelist_utils import (
+            sync_message_list_on_add,
+        )
+
+        existing: UserGroupMember = (
+            self.id is not None and self.memberships_dyn.filter_by(group=ug).first()
+        )
         if existing:
             existing.membership_end = None
             existing.adder = added_by
@@ -524,25 +613,23 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return new_add
 
     @staticmethod
-    def get_scimuser() -> 'User':
+    def get_scimuser() -> "User":
         u = User.get_by_name(SCIM_USER_NAME)
         if not u:
-            u, _ = User.create_with_group(UserInfo(
-                username=SCIM_USER_NAME,
-                full_name='Scim User',
-                email='scimuser@example.com',
-            ))
+            u, _ = User.create_with_group(
+                UserInfo(
+                    username=SCIM_USER_NAME,
+                    full_name="Scim User",
+                    email="scimuser@example.com",
+                )
+            )
         return u
 
     @staticmethod
-    def get_anon() -> 'User':
+    def get_anon() -> "User":
         return User.get_by_id(0)
 
-    def update_info(
-            self,
-            info: UserInfo,
-            sync_mailing_lists=True
-    ):
+    def update_info(self, info: UserInfo, sync_mailing_lists=True):
         if info.username and self.name != info.username:
             group = self.get_personal_group()
             self.name = info.username
@@ -555,7 +642,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             self.real_name = info.full_name
         if info.email:
             if self.email != info.email and sync_mailing_lists:
-                from timApp.messaging.messagelist.emaillist import update_mailing_list_address
+                from timApp.messaging.messagelist.emaillist import (
+                    update_mailing_list_address,
+                )
+
                 update_mailing_list_address(self.email, info.email)
             self.email = info.email
         if info.password:
@@ -578,17 +668,19 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 self.uniquecodes[puc.user_collection_key] = puc
 
     def has_some_access(
-            self,
-            i: ItemOrBlock,
-            vals: set[int],
-            allow_admin: bool = True,
-            grace_period: timedelta = timedelta(seconds=0),
+        self,
+        i: ItemOrBlock,
+        vals: set[int],
+        allow_admin: bool = True,
+        grace_period: timedelta = timedelta(seconds=0),
     ) -> Optional[BlockAccess]:
         if allow_admin and self.is_admin:
-            return BlockAccess(block_id=i.id,
-                               accessible_from=datetime.min.replace(tzinfo=timezone.utc),
-                               type=AccessType.owner.value,
-                               usergroup_id=self.get_personal_group().id)
+            return BlockAccess(
+                block_id=i.id,
+                accessible_from=datetime.min.replace(tzinfo=timezone.utc),
+                type=AccessType.owner.value,
+                usergroup_id=self.get_personal_group().id,
+            )
         if isinstance(i, ItemBase):
             b = i.block
         else:
@@ -622,14 +714,16 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return best_access
 
     def has_access(
-            self,
-            i: ItemOrBlock,
-            access: AccessType,
-            grace_period=timedelta(seconds=0),
+        self,
+        i: ItemOrBlock,
+        access: AccessType,
+        grace_period=timedelta(seconds=0),
     ) -> Optional[BlockAccess]:
         from timApp.auth.accesshelper import check_inherited_right
-        return check_inherited_right(self, i, access, grace_period) or self.has_some_access(i, access_sets[access],
-                                                                                            grace_period=grace_period)
+
+        return check_inherited_right(
+            self, i, access, grace_period
+        ) or self.has_some_access(i, access_sets[access], grace_period=grace_period)
 
     def has_view_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
         return self.has_some_access(i, view_access_set)
@@ -649,51 +743,63 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     def has_copy_access(self, i: ItemOrBlock) -> Optional[BlockAccess]:
         return self.has_some_access(i, copy_access_set)
 
-    def has_ownership(self, i: ItemOrBlock, allow_admin: bool = True) -> Optional[BlockAccess]:
+    def has_ownership(
+        self, i: ItemOrBlock, allow_admin: bool = True
+    ) -> Optional[BlockAccess]:
         return self.has_some_access(i, owner_access_set, allow_admin)
 
     def can_write_to_folder(self, f: Folder):
         # not even admins are allowed to create new items in 'users' folder
-        if f.path == 'users':
+        if f.path == "users":
             return False
         return self.has_edit_access(f)
 
-    def grant_access(self, block: ItemOrBlock,
-                     access_type: AccessType,
-                     accessible_from: Optional[datetime] = None,
-                     accessible_to: Optional[datetime] = None,
-                     duration_from: Optional[datetime] = None,
-                     duration_to: Optional[datetime] = None,
-                     duration: Optional[timedelta] = None,
-                     require_confirm: Optional[bool] = None):
-        return grant_access(group=self.get_personal_group(),
-                            block=block,
-                            access_type=access_type,
-                            accessible_from=accessible_from,
-                            accessible_to=accessible_to,
-                            duration_from=duration_from,
-                            duration_to=duration_to,
-                            duration=duration,
-                            require_confirm=require_confirm)
+    def grant_access(
+        self,
+        block: ItemOrBlock,
+        access_type: AccessType,
+        accessible_from: Optional[datetime] = None,
+        accessible_to: Optional[datetime] = None,
+        duration_from: Optional[datetime] = None,
+        duration_to: Optional[datetime] = None,
+        duration: Optional[timedelta] = None,
+        require_confirm: Optional[bool] = None,
+    ):
+        return grant_access(
+            group=self.get_personal_group(),
+            block=block,
+            access_type=access_type,
+            accessible_from=accessible_from,
+            accessible_to=accessible_to,
+            duration_from=duration_from,
+            duration_to=duration_to,
+            duration=duration,
+            require_confirm=require_confirm,
+        )
 
     def remove_access(self, block_id: int, access_type: str):
-        BlockAccess.query.filter_by(block_id=block_id,
-                                    usergroup_id=self.get_personal_group().id,
-                                    type=get_access_type_id(access_type)).delete()
+        BlockAccess.query.filter_by(
+            block_id=block_id,
+            usergroup_id=self.get_personal_group().id,
+            type=get_access_type_id(access_type),
+        ).delete()
 
     def get_notify_settings(self, doc: DocInfo):
         n = self.notifications.filter_by(doc_id=doc.id).first()
         if not n:
-            n = Notification(doc_id=doc.id,
-                             user_id=self.id,
-                             email_doc_modify=False,
-                             email_comment_add=False,
-                             email_comment_modify=False
-                             )
+            n = Notification(
+                doc_id=doc.id,
+                user_id=self.id,
+                email_doc_modify=False,
+                email_comment_add=False,
+                email_comment_modify=False,
+            )
             db.session.add(n)
         return n
 
-    def set_notify_settings(self, doc: DocInfo, doc_modify: bool, comment_add: bool, comment_modify: bool):
+    def set_notify_settings(
+        self, doc: DocInfo, doc_modify: bool, comment_add: bool, comment_modify: bool
+    ):
         n = self.get_notify_settings(doc)
         n.email_comment_add = comment_add
         n.email_doc_modify = doc_modify
@@ -702,81 +808,108 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             db.session.delete(n)
 
     def get_answers_for_task(self, task_id: str):
-        return self.answers.options(joinedload(Answer.users_all)).order_by(Answer.id.desc()).filter_by(task_id=task_id)
+        return (
+            self.answers.options(joinedload(Answer.users_all))
+            .order_by(Answer.id.desc())
+            .filter_by(task_id=task_id)
+        )
 
     @property
     def is_name_hidden(self):
-        return getattr(self, 'hide_name', False)
+        return getattr(self, "hide_name", False)
 
     @property
     def is_sisu_teacher(self) -> bool:
         """Whether the user belongs to at least one Sisu teacher group"""
         if self.is_special:
             return False
-        teacher_group_id = db.session.query(ScimUserGroup.group_id) \
-            .join(UserGroup) \
-            .join(UserGroupMember) \
-            .filter((UserGroupMember.user_id == self.id) & ScimUserGroup.external_id.like("%-teachers")) \
+        teacher_group_id = (
+            db.session.query(ScimUserGroup.group_id)
+            .join(UserGroup)
+            .join(UserGroupMember)
+            .filter(
+                (UserGroupMember.user_id == self.id)
+                & ScimUserGroup.external_id.like("%-teachers")
+            )
             .first()
+        )
         return teacher_group_id is not None
 
     @property
     def basic_info_dict(self):
         if not self.is_name_hidden:
             info_dict = {
-                'id': self.id,
-                'name': self.name,
-                'real_name': self.real_name,
-                'email': self.email,
+                "id": self.id,
+                "name": self.name,
+                "real_name": self.real_name,
+                "email": self.email,
             }
         else:
             info_dict = {
-                'id': self.id,
-                'name': f'user{self.id}',
-                'real_name': f'User {self.id}',
-                'email': f'user{self.id}@example.com',
+                "id": self.id,
+                "name": f"user{self.id}",
+                "real_name": f"User {self.id}",
+                "email": f"user{self.id}@example.com",
             }
 
         if is_attribute_loaded("uniquecodes", self):
-            info_dict['student_id'] = self.get_home_org_student_id()
+            info_dict["student_id"] = self.get_home_org_student_id()
 
         return info_dict
 
     def to_json(self, full: bool = False) -> dict:
-        external_ids: dict[int, str] = \
-            {s.group_id: s.external_id for s in
-             ScimUserGroup.query.filter(ScimUserGroup.group_id.in_([g.id for g in self.groups])).all()} if full else []
-        return {**self.basic_info_dict,
-                'group': self.get_personal_group(),
-                'groups': [{**g.to_json(), 'external_id': external_ids.get(g.id, None)} for g in self.groups],
-                'folder': self.get_personal_folder() if self.logged_in else None,
-                'consent': self.consent,
-                'last_name': self.last_name,
-                } if full else self.basic_info_dict
+        external_ids: dict[int, str] = (
+            {
+                s.group_id: s.external_id
+                for s in ScimUserGroup.query.filter(
+                    ScimUserGroup.group_id.in_([g.id for g in self.groups])
+                ).all()
+            }
+            if full
+            else []
+        )
+        return (
+            {
+                **self.basic_info_dict,
+                "group": self.get_personal_group(),
+                "groups": [
+                    {**g.to_json(), "external_id": external_ids.get(g.id, None)}
+                    for g in self.groups
+                ],
+                "folder": self.get_personal_folder() if self.logged_in else None,
+                "consent": self.consent,
+                "last_name": self.last_name,
+            }
+            if full
+            else self.basic_info_dict
+        )
 
     @cached_property
     def bookmarks(self):
         from timApp.bookmark.bookmarks import Bookmarks
+
         return Bookmarks(self)
 
     def belongs_to_any_of(self, *groups: UserGroup):
         return bool(set(groups) & set(self.groups))
 
     @staticmethod
-    def get_model_answer_user() -> Optional['User']:
+    def get_model_answer_user() -> Optional["User"]:
         # TODO: think other languages also
-        return User.get_by_name(current_app.config['MODEL_ANSWER_USER_NAME'])
+        return User.get_by_name(current_app.config["MODEL_ANSWER_USER_NAME"])
 
 
 def get_membership_end(u: User, group_ids: set[int]):
-    relevant_memberships: list[UserGroupMember] = [m for m in u.memberships if m.usergroup_id in group_ids]
+    relevant_memberships: list[UserGroupMember] = [
+        m for m in u.memberships if m.usergroup_id in group_ids
+    ]
     membership_end = None
     # If the user is not active in any of the groups, we'll show the lastly-ended membership.
     # TODO: It might be possible in the future that the membership_end is in the future.
-    if relevant_memberships and all(m.membership_end is not None for m in relevant_memberships):
-        membership_end = (
-            max(m.membership_end for m in relevant_memberships)
-        )
+    if relevant_memberships and all(
+        m.membership_end is not None for m in relevant_memberships
+    ):
+        membership_end = max(m.membership_end for m in relevant_memberships)
     return membership_end
 
 
@@ -791,12 +924,17 @@ def has_no_higher_right(access_type: Optional[str], rights: UserItemRights) -> b
     :return True if access_type is one of view, edit, see_answers or teacher and there is no higher right in the
      UserItemRights, False otherwise.
     """
-    return {'view': not rights['editable'] and not rights['see_answers'],
-            'edit': not rights['see_answers'],
-            'see_answers': not rights['teacher'],
-            'teacher': not rights['manage']}.get(access_type, False)
+    return {
+        "view": not rights["editable"] and not rights["see_answers"],
+        "edit": not rights["see_answers"],
+        "see_answers": not rights["teacher"],
+        "teacher": not rights["manage"],
+    }.get(access_type, False)
 
 
 def get_owned_objects_query(u: User):
-    return u.get_personal_group().accesses.filter_by(type=AccessType.owner.value).with_entities(
-        BlockAccess.block_id)
+    return (
+        u.get_personal_group()
+        .accesses.filter_by(type=AccessType.owner.value)
+        .with_entities(BlockAccess.block_id)
+    )

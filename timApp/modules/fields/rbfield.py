@@ -6,23 +6,30 @@ from dataclasses import dataclass, asdict
 from flask import render_template_string
 
 from tim_common.common_schemas import TextfieldStateModel
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    create_blueprint, PluginAnswerResp, PluginAnswerWeb, PluginReqs
-from .textfield import TextfieldAnswerModel, TextfieldInputModel, \
-    TextfieldMarkupModel
+from tim_common.pluginserver_flask import (
+    GenericHtmlModel,
+    create_blueprint,
+    PluginAnswerResp,
+    PluginAnswerWeb,
+    PluginReqs,
+)
+from .textfield import TextfieldAnswerModel, TextfieldInputModel, TextfieldMarkupModel
 
 
 @dataclass
-class RbfieldHtmlModel(GenericHtmlModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]):
+class RbfieldHtmlModel(
+    GenericHtmlModel[TextfieldInputModel, TextfieldMarkupModel, TextfieldStateModel]
+):
     def get_component_html_name(self) -> str:
-        return 'rbfield-runner'
+        return "rbfield-runner"
 
     def get_static_html(self) -> str:
         return render_static_rbfield(self)
 
 
 def render_static_rbfield(m: RbfieldHtmlModel) -> str:
-    return render_template_string("""
+    return render_template_string(
+        """
 <div>
 <h4>{{ header or '' }}</h4>
 <p class="stem">{{ stem or '' }}</p>
@@ -41,7 +48,7 @@ size="{{cols}}"></span></label>
 
 def rb_answer(args: TextfieldAnswerModel) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
-    result: PluginAnswerResp = {'web': web}
+    result: PluginAnswerResp = {"web": web}
     c = args.input.c
 
     nosave = args.input.nosave
@@ -49,7 +56,7 @@ def rb_answer(args: TextfieldAnswerModel) -> PluginAnswerResp:
     if not nosave:
         save = {"c": c}
         result["save"] = save
-        web['result'] = "saved"
+        web["result"] = "saved"
 
     return result
 
@@ -60,28 +67,29 @@ def rb_reqs() -> PluginReqs:
         "css": ["/field/css/field.css"],
         "multihtml": True,
         "multimd": True,
-        'editor_tabs': [
+        "editor_tabs": [
             {
-                'text': 'Fields',
-                'items': [
+                "text": "Fields",
+                "items": [
                     {
-                        'text': 'Check/Radio/Drop',
-                        'items': [
+                        "text": "Check/Radio/Drop",
+                        "items": [
                             {
-                                'data': '#- {defaultplugin="rbfield" }\n',
-                                'text': 'defaultplugin/rbfield',
-                                'expl': 'Attribuutit kappaleelle jossa inline pallukka-kenttä (rbfield)',
+                                "data": '#- {defaultplugin="rbfield" }\n',
+                                "text": "defaultplugin/rbfield",
+                                "expl": "Attribuutit kappaleelle jossa inline pallukka-kenttä (rbfield)",
                             },
                             {
-                                'data': 'rbfield',
-                                'text': 'teksti: rbfield',
-                                'expl': 'Pelkkä kentän tyyppi: rbfield',
+                                "data": "rbfield",
+                                "text": "teksti: rbfield",
+                                "expl": "Pelkkä kentän tyyppi: rbfield",
                             },
                             {
-                                'data': "{#rb1 #}",
-                                'text': 'Radiobutton (inline, autosave)',
-                                'expl': 'Luo yhden pallukkakentän',
-                            }]
+                                "data": "{#rb1 #}",
+                                "text": "Radiobutton (inline, autosave)",
+                                "expl": "Luo yhden pallukkakentän",
+                            },
+                        ],
                     },
                 ],
             },
@@ -91,7 +99,7 @@ def rb_reqs() -> PluginReqs:
 
 rbfield_route = create_blueprint(
     __name__,
-    'rb',
+    "rb",
     RbfieldHtmlModel,
     TextfieldAnswerModel,
     rb_answer,

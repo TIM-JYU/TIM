@@ -6,9 +6,18 @@ from typing import Generator, Optional, Union
 import attr
 from yaml import YAMLError
 
-from timApp.admin.search_in_documents import create_basic_search_argparser, search, SearchResult, \
-    SearchArgumentsBasic
-from timApp.admin.util import process_items, DryrunnableOnly, BasicArguments, get_url_for_match
+from timApp.admin.search_in_documents import (
+    create_basic_search_argparser,
+    search,
+    SearchResult,
+    SearchArgumentsBasic,
+)
+from timApp.admin.util import (
+    process_items,
+    DryrunnableOnly,
+    BasicArguments,
+    get_url_for_match,
+)
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.viewcontext import default_view_ctx
@@ -19,6 +28,7 @@ from timApp.timdb.exceptions import TimDbException
 @attr.s
 class ReplaceArguments(DryrunnableOnly, SearchArgumentsBasic):
     """Arguments for a replacement operation."""
+
     to: Optional[str] = attr.ib(kw_only=True, default=None)
     add_attr: Optional[str] = attr.ib(kw_only=True, default=None)
 
@@ -36,9 +46,8 @@ def min_replacement_length(x: str) -> str:
 
 @attr.s
 class ReplacementResult:
-    """Represents a single replacement in a :class:`DocParagraph`.
+    """Represents a single replacement in a :class:`DocParagraph`."""
 
-    """
     search_result: SearchResult = attr.ib(kw_only=True)
     replacement: str = attr.ib(kw_only=True)
     error: str = attr.ib(kw_only=True, default=None)
@@ -53,11 +62,13 @@ class ReplacementResult:
         return new_md
 
     def get_replacement(self) -> tuple[str, str]:
-        return self.search_result.match.group(0), self.search_result.match.expand(self.replacement)
+        return self.search_result.match.group(0), self.search_result.match.expand(
+            self.replacement
+        )
 
     def get_replacement_desc(self) -> str:
         f, t = self.get_replacement()
-        return f'{f} -> {t}'
+        return f"{f} -> {t}"
 
     def format_match(self, args: ReplaceArgumentsCLI) -> str:
         r = self.search_result
@@ -69,7 +80,7 @@ class ReplacementResult:
             doc_id=r.doc.id,
             par_id=r.par.get_id(),
             url=get_url_for_match(args, r.doc, r.par),
-            to=self.get_replacement()[1]
+            to=self.get_replacement()[1],
         )
 
 
@@ -80,7 +91,7 @@ class AttrModification:
     name: str
     value: str
     was_already: bool
-    mod_type: str = 'add'
+    mod_type: str = "add"
 
     @property
     def error(self) -> Optional[str]:
@@ -89,16 +100,16 @@ class AttrModification:
     def format_match(self, args: ReplaceArgumentsCLI) -> str:
         r = self.search_result
         url = get_url_for_match(args, r.doc, r.par)
-        if self.mod_type == 'add':
-            action = 'existing' if self.was_already else 'added'
+        if self.mod_type == "add":
+            action = "existing" if self.was_already else "added"
         else:
             raise NotImplementedError
         return f'{url}: {action} attribute {self.name}="{self.value}"'
 
 
 def perform_replace(
-        d: DocInfo,
-        args: ReplaceArguments,
+    d: DocInfo,
+    args: ReplaceArguments,
 ) -> Generator[Union[ReplacementResult, AttrModification], None, None]:
     """Performs a search-and-replace operation for the specified document, yielding ReplacementResults.
 
@@ -118,20 +129,24 @@ def perform_replace(
                 try:
                     yb = YamlBlock.from_markdown(r.par.get_expanded_markdown(mi))
                 except YAMLError:
-                    repl.error = f'YAML is invalid before replacement, so not doing anything'
+                    repl.error = (
+                        f"YAML is invalid before replacement, so not doing anything"
+                    )
                 except TimDbException as e:
-                    repl.error = f'Exception: {str(e)}'
+                    repl.error = f"Exception: {str(e)}"
                 if not repl.error:
                     try:
                         p_temp = r.par.clone()
                         p_temp.set_markdown(new_md)
-                        yb_new = YamlBlock.from_markdown(p_temp.get_expanded_markdown(mi))
+                        yb_new = YamlBlock.from_markdown(
+                            p_temp.get_expanded_markdown(mi)
+                        )
                     except YAMLError:
-                        repl.error = 'YAML would be invalid after replacement, so not doing anything'
+                        repl.error = "YAML would be invalid after replacement, so not doing anything"
             yield repl
         old_attrs = copy(r.par.get_attrs())
         if args.add_attr is not None:
-            attr_name, attr_value = args.add_attr.split('=')
+            attr_name, attr_value = args.add_attr.split("=")
             repl = AttrModification(
                 search_result=r,
                 par=r.par,
@@ -142,7 +157,7 @@ def perform_replace(
             yield repl
             r.par.set_attr(attr_name, attr_value)
         if not repl:
-            raise Exception('--to or --add-attr must be given')
+            raise Exception("--to or --add-attr must be given")
         if not args.dryrun and not repl.error:
             # The method get_new_markdown replaces all occurrences in a paragraph,
             # so some ReplacementResults are (in this sense) redundant.
@@ -162,14 +177,21 @@ def replace_and_print(d: DocInfo, args: ReplaceArgumentsCLI) -> int:
     for r in perform_replace(d, args):
         n = r.search_result.num_pars_found
         if r.error:
-            print(r.error + ':')
-        print(f'{r.format_match(args)}')
+            print(r.error + ":")
+        print(f"{r.format_match(args)}")
     return n
 
 
-if __name__ == '__main__':
-    parser = create_basic_search_argparser('Replaces strings in documents', is_readonly=False)
+if __name__ == "__main__":
+    parser = create_basic_search_argparser(
+        "Replaces strings in documents", is_readonly=False
+    )
     group_action = parser.add_mutually_exclusive_group(required=True)
-    group_action.add_argument('--to', help=r'The replacement string. Use \1, \2, ... for referencing regex groups.')
-    group_action.add_argument('--add-attr', help='An attribute to add to the matching paragraphs.')
+    group_action.add_argument(
+        "--to",
+        help=r"The replacement string. Use \1, \2, ... for referencing regex groups.",
+    )
+    group_action.add_argument(
+        "--add-attr", help="An attribute to add to the matching paragraphs."
+    )
     process_items(replace_and_print, parser)

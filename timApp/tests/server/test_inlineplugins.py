@@ -5,10 +5,10 @@ from timApp.user.user import User
 
 
 class InlinePluginTest(TimRouteTest):
-
     def test_inline_plugins(self):
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 #- {defaultplugin=pali id=Lm7y6R7n5XIb}
 *Hello* {#t1#}, {#tx:nonexistent#} and {#t2#} $x$
 
@@ -17,20 +17,23 @@ Hi {#t3#} $x$
 
 #- {defaultplugin=pali id=Se0s8FDLbhOp}
 {#t4 header: hi, footer: ho#}
-            """)
+            """
+        )
         r = self.get(d.url, as_tree=True)
-        e = r.cssselect('.par')[0]
+        e = r.cssselect(".par")[0]
         expected_json = self.create_plugin_json(
             d,
-            't1',
-            'Lm7y6R7n5XIb',
+            "t1",
+            "Lm7y6R7n5XIb",
         )
         expected_json2 = self.create_plugin_json(
             d,
-            't2',
-            'Lm7y6R7n5XIb',
+            "t2",
+            "Lm7y6R7n5XIb",
         )
-        self.assert_same_html(e, fr"""
+        self.assert_same_html(
+            e,
+            fr"""
 <div class="par" id="Lm7y6R7n5XIb" t="MHgyN2U5NDhhMA==" attrs='{{"defaultplugin": "pali"}}'>
 <div tabindex="0" class="parContent">
                 <em>Hello</em> <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1"><span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali">
@@ -42,22 +45,24 @@ Hi {#t3#} $x$
 <div class="editline" tabindex="0" title="Click to edit this paragraph"></div>
 <div class="readline" title="Click to mark this paragraph as read"></div>
 </div>
-    """)
-        a = self.post_answer_no_abdata(
-            plugin_type='pali', task_id=f'{d.id}.t2',
-            user_input={'userword': 'aaaaaa'},
+    """,
         )
-        aid = a['savedNew']
-        self.assertEqual({'savedNew': aid, 'web': {'result': 'saved'}}, a)
+        a = self.post_answer_no_abdata(
+            plugin_type="pali",
+            task_id=f"{d.id}.t2",
+            user_input={"userword": "aaaaaa"},
+        )
+        aid = a["savedNew"]
+        self.assertEqual({"savedNew": aid, "web": {"result": "saved"}}, a)
         self.assertIsInstance(aid, int)
 
         r = self.get(d.url, as_tree=True)
-        e = r.cssselect('.par')[0]
-        s = {'userword': 'aaaaaa'}
+        e = r.cssselect(".par")[0]
+        s = {"userword": "aaaaaa"}
         expected_json2 = self.create_plugin_json(
             d,
-            't2',
-            'Lm7y6R7n5XIb',
+            "t2",
+            "Lm7y6R7n5XIb",
             info={
                 "earlier_answers": 1,
                 "look_answer": False,
@@ -67,7 +72,9 @@ Hi {#t3#} $x$
             },
             state=s,
         )
-        self.assert_same_html(e, fr"""
+        self.assert_same_html(
+            e,
+            fr"""
 <div class="par" id="Lm7y6R7n5XIb" t="MHgyN2U5NDhhMA==" attrs='{{"defaultplugin": "pali"}}'>
 <div tabindex="0" class="parContent">
 <em>Hello</em>
@@ -83,13 +90,16 @@ Hi {#t3#} $x$
 <div class="editline" tabindex="0" title="Click to edit this paragraph"></div>
 <div class="readline" title="Click to mark this paragraph as read"></div>
 </div>
-            """)
+            """,
+        )
         expected_json = self.create_plugin_json(
             d,
-            't3',
-            'spOMcE20X2aX',
+            "t3",
+            "spOMcE20X2aX",
         )
-        self.assert_same_html(r.cssselect('.par')[1], f"""
+        self.assert_same_html(
+            r.cssselect(".par")[1],
+            f"""
 <div class="par" id="spOMcE20X2aX" t="LTB4MTk4ZmYxOTQ=" attrs='{{"defaultplugin": "pali", "math_type": "svg"}}'>
 <div tabindex="0" class="parContent">
                 Hi
@@ -103,16 +113,21 @@ Hi {#t3#} $x$
 <div class="editline" tabindex="0" title="Click to edit this paragraph"></div>
 <div class="readline" title="Click to mark this paragraph as read"></div>
 </div>
-            """)
+            """,
+        )
 
         expected_json = self.create_plugin_json(
             d,
-            't4',
-            'Se0s8FDLbhOp',
-            markup={"header": "hi",
-                    "footer": "ho", }
+            "t4",
+            "Se0s8FDLbhOp",
+            markup={
+                "header": "hi",
+                "footer": "ho",
+            },
         )
-        self.assert_same_html(r.cssselect('.par')[2], f"""
+        self.assert_same_html(
+            r.cssselect(".par")[2],
+            f"""
 <div class="par" id="Se0s8FDLbhOp" t="LTB4NGU3YzFkYWM=" attrs='{{"defaultplugin": "pali"}}'>
 <div tabindex="0" class="parContent">
 <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t4">
@@ -124,25 +139,30 @@ Hi {#t3#} $x$
 <div class="editline" tabindex="0" title="Click to edit this paragraph"></div>
 <div class="readline" title="Click to mark this paragraph as read"></div>
 </div>
-                    """)
+                    """,
+        )
 
         a = self.post_answer_no_abdata(
-            plugin_type='pali',
-            task_id=f'{d.id}.t5',
-            user_input={'userword': 'aaaaaa'},
+            plugin_type="pali",
+            task_id=f"{d.id}.t5",
+            user_input={"userword": "aaaaaa"},
             expect_status=400,
-            expect_content='Task not found in the document: t5',
+            expect_content="Task not found in the document: t5",
         )
 
     def test_inline_plugin_no_html_escape(self):
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 #- {defaultplugin=pali id=a3Xuyg1PF1l1}
 {#t5 initword: #}
-        """)
+        """
+        )
         r = self.get(d.url, as_tree=True)
         # Make sure Dumbo won't escape plugin's error HTML.
-        self.assert_same_html(r.cssselect('.parContent')[0], f"""
+        self.assert_same_html(
+            r.cssselect(".parContent")[0],
+            f"""
 <div tabindex="0" class="parContent">
     <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t5">
     <span id="{d.id}.t5.a3Xuyg1PF1l1" data-plugin="/pali">
@@ -157,69 +177,84 @@ Hi {#t3#} $x$
     </span>
     </tim-plugin-loader>
 </div>
-        """)
+        """,
+        )
 
     def test_inline_plugin_sanitize(self):
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 #- {defaultplugin=pali}
 <script>alert('hello')</script>
-        """)
+        """
+        )
         r = self.get(d.url, as_tree=True)
-        self.assertFalse(r.cssselect('.parContent script'))
+        self.assertFalse(r.cssselect(".parContent script"))
 
     def test_multiline_inlineplugin(self):
         """Multiline markup in inlineplugins works."""
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 #- {defaultplugin=pali id=SSYigUyqdb7p}
 {#t
 initword: hi
 #}
-        """)
+        """
+        )
         r = self.get(d.url, as_tree=True)
-        e = r.cssselect(f'.parContent > tim-plugin-loader[task-id="{d.id}.t"] > span > pali-runner')
+        e = r.cssselect(
+            f'.parContent > tim-plugin-loader[task-id="{d.id}.t"] > span > pali-runner'
+        )
         self.assertTrue(e)
         self.assert_plugin_json(
             e[0],
             self.create_plugin_json(
                 d,
-                't',
-                par_id='SSYigUyqdb7p',
-                markup={'initword': 'hi'},
+                "t",
+                par_id="SSYigUyqdb7p",
+                markup={"initword": "hi"},
             ),
         )
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 #- {defaultplugin=pali id=SSYigUyqdb7p}
 {#t
 initword: hi
 inputplaceholder: test
 #}
-            """)
+            """
+        )
         r = self.get(d.url, as_tree=True)
-        e = r.cssselect(f'.parContent > tim-plugin-loader[task-id="{d.id}.t"] > span > pali-runner')
+        e = r.cssselect(
+            f'.parContent > tim-plugin-loader[task-id="{d.id}.t"] > span > pali-runner'
+        )
         self.assertTrue(e)
         self.assert_plugin_json(
             e[0],
             self.create_plugin_json(
                 d,
-                't',
-                par_id='SSYigUyqdb7p',
+                "t",
+                par_id="SSYigUyqdb7p",
                 markup={
-                    'initword': 'hi',
-                    'inputplaceholder': 'test',
+                    "initword": "hi",
+                    "inputplaceholder": "test",
                 },
             ),
         )
 
     def test_inline_plugin_error_html_no_p(self):
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 #- {defaultplugin="pali" id=a3Xuyg1PF1l1}
 a {#x initword: #} b
-        """)
+        """
+        )
         r = self.get(d.url, as_tree=True)
-        self.assert_same_html(r.cssselect('.parContent')[0], f"""
+        self.assert_same_html(
+            r.cssselect(".parContent")[0],
+            f"""
 <div tabindex="0" class="parContent">
     a
     <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.x">
@@ -235,27 +270,34 @@ a {#x initword: #} b
     </span>
     </tim-plugin-loader>
     b
-</div>""")
+</div>""",
+        )
 
     def test_inline_plugin_ref(self):
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 #-  {defaultplugin=pali id=SSYigUyqdb7p}
 {#t}
-        """)
+        """
+        )
         d2 = self.create_doc()
-        d2.document.add_paragraph_obj(d.document.get_paragraphs()[0].create_reference(d2.document))
+        d2.document.add_paragraph_obj(
+            d.document.get_paragraphs()[0].create_reference(d2.document)
+        )
         self.get(d2.url)
 
     def test_inline_plugin_login(self):
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 #- {defaultplugin=pali}
 {#t#}
-""")
+"""
+        )
         u = d.url
         User.get_anon().grant_access(d, AccessType.view)
         db.session.commit()
         self.logout()
-        r = self.get(u, as_tree=True).cssselect('.parContent tim-login-menu')
+        r = self.get(u, as_tree=True).cssselect(".parContent tim-login-menu")
         self.assertTrue(r)

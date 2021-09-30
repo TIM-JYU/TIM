@@ -1,0 +1,7 @@
+[tool.black]
+extend-exclude = '''
+simcirtest|
+marshmallow_dataclass|
+celery_sqlalchemy_scheduler|
+vendor
+'''

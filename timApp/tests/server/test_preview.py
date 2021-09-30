@@ -38,36 +38,44 @@ class PreviewTest(TimRouteTest):
         t = self.create_translation(d)
         p = t.document.get_paragraphs()[0]
         md = f'#- {{r="tr" rp="{p.get_attr("rp")}"}}\n'
-        self.get(f'/getBlock/{t.id}/{p.get_id()}', expect_content={'text': md})
-        e = self.post_preview(t, text=md, json_key='texts', as_tree=True)
-        self.assert_content(e, ['The referenced document does not exist.'])
+        self.get(f"/getBlock/{t.id}/{p.get_id()}", expect_content={"text": md})
+        e = self.post_preview(t, text=md, json_key="texts", as_tree=True)
+        self.assert_content(e, ["The referenced document does not exist."])
 
     def test_help_par(self):
         self.login_test1()
         d = self.create_doc()
-        e = self.post_preview(d, text='test', par='HELP_PAR', json_key='texts', as_tree=True)
-        self.assert_content(e, ['test'])
+        e = self.post_preview(
+            d, text="test", par="HELP_PAR", json_key="texts", as_tree=True
+        )
+        self.assert_content(e, ["test"])
 
     def test_line_break(self):
         self.login_test1()
         d = self.create_doc()
-        e = self.post_preview(d, text='test\\\ntest2\\', json_key='texts', as_tree=True)
-        self.assert_content(e, ['test\ntest2'])
+        e = self.post_preview(d, text="test\\\ntest2\\", json_key="texts", as_tree=True)
+        self.assert_content(e, ["test\ntest2"])
 
     def test_attributes_at_end_of_code_block(self):
         self.login_test1()
         d = self.create_doc()
-        e = self.post_preview(d, text='```\n``` {}', json_key='texts', as_tree=True)
-        self.assertTrue(get_content(e)[0].startswith('Attributes at end of code block noticed in paragraph '))
+        e = self.post_preview(d, text="```\n``` {}", json_key="texts", as_tree=True)
+        self.assertTrue(
+            get_content(e)[0].startswith(
+                "Attributes at end of code block noticed in paragraph "
+            )
+        )
 
     def test_preamble_preview_first(self):
         """Make sure an exception won't occur when editing the first paragraph of a document with a preamble."""
         self.login_test1()
-        d = self.create_doc(initial_par='test')
+        d = self.create_doc(initial_par="test")
         p = self.create_preamble_for(d)
-        p.document.add_paragraph('test2')
+        p.document.add_paragraph("test2")
         first = d.document.get_paragraphs()[0]
-        self.post_preview(d, text='asd', par=first.get_id(), json_key='texts', as_tree=True)
+        self.post_preview(
+            d, text="asd", par=first.get_id(), json_key="texts", as_tree=True
+        )
 
     def test_spellcheck(self):
         self.login_test1()
@@ -77,21 +85,21 @@ class PreviewTest(TimRouteTest):
             [
                 """<p><tim-spell-error bind-sugg='["koira", "Korria", "koitta"]'>koirra</tim-spell-error></p>""",
             ],
-            'koirra',
+            "koirra",
         )
         self.check_spelling(
             d,
             [
                 """<p><tim-spell-error bind-sugg="[]">koirrra</tim-spell-error></p>""",
             ],
-            'koirrra',
+            "koirrra",
         )
         self.check_spelling(
             d,
             [
                 r"""<p>astia juusto <tim-spell-error bind-sugg='["leip\u00e4", "Leopa", "Leila", "leipoa"]'>leipa</tim-spell-error> <tim-spell-error bind-sugg='["sieni", "siteeni", "sieneni", "sireeni", "siseni"]'>sieeni</tim-spell-error> omena <tim-spell-error bind-sugg='["kasvi", "kiva", "k\u00e4vi", "kavio", "kahvi"]'>kavi</tim-spell-error> kissa</p>""",
             ],
-            'astia juusto leipa sieeni omena kavi kissa',
+            "astia juusto leipa sieeni omena kavi kissa",
         )
         self.check_spelling(
             d,
@@ -99,31 +107,33 @@ class PreviewTest(TimRouteTest):
                 """<p><tim-spell-error bind-sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error> <tim-spell-error bind-count="2" bind-sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error></p>""",
                 """<p><tim-spell-error bind-sugg='["juostu", "juusto", "juutu"]'>juustu</tim-spell-error></p>""",
             ],
-            'juustu juustu\n#-\njuustu',
+            "juustu juustu\n#-\njuustu",
         )
         self.check_spelling(
             d,
             ["""<p>Maitoa 0.5 litraa</p>"""],
-            'Maitoa 0.5 litraa',
+            "Maitoa 0.5 litraa",
         )
         self.check_spelling(
             d,
-            [''],
-            '#- {defaultplugin=xxx}',
+            [""],
+            "#- {defaultplugin=xxx}",
         )
         self.check_spelling(
             d,
             [],
-            '',
+            "",
         )
 
     def check_spelling(self, d, expected, markdown):
-        e: list[HtmlElement] = self.post_preview(d, text=markdown, json_key='texts', as_tree='fragments', spellcheck=True)
+        e: list[HtmlElement] = self.post_preview(
+            d, text=markdown, json_key="texts", as_tree="fragments", spellcheck=True
+        )
         self.assertEqual(len(e), len(expected))
         for i, ex in enumerate(expected):
-            children = e[i].cssselect('.parContent')[0].getchildren()
+            children = e[i].cssselect(".parContent")[0].getchildren()
             if not children:
-                self.assertEqual('', ex)
+                self.assertEqual("", ex)
                 continue
             self.assert_same_html(
                 children[0],

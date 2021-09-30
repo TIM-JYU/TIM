@@ -16,8 +16,8 @@ class ReadParagraphType(enum.Enum):
 
 
 class_map = {
-    ReadParagraphType.on_screen: 'screen',
-    ReadParagraphType.hover_par: 'hover',
-    ReadParagraphType.click_par: 'click',
-    ReadParagraphType.click_red: 'read'
+    ReadParagraphType.on_screen: "screen",
+    ReadParagraphType.hover_par: "hover",
+    ReadParagraphType.click_par: "click",
+    ReadParagraphType.click_red: "read",
 }

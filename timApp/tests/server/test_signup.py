@@ -2,7 +2,11 @@ import base64
 from dataclasses import dataclass
 from unittest import mock
 
-from timApp.auth.login import test_pws, create_or_update_user, set_single_user_to_session
+from timApp.auth.login import (
+    test_pws,
+    create_or_update_user,
+    set_single_user_to_session,
+)
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import get_home_organization_group, app
 from timApp.timdb.sqa import db
@@ -12,7 +16,7 @@ from timApp.user.user import User, UserOrigin, UserInfo
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import create_password_hash
 
-test_pw = 'somepwd123'
+test_pw = "somepwd123"
 
 samltestresp = """
 <?xml version="1.0" encoding="UTF-8"?>
@@ -60,50 +64,49 @@ MF+BrXA+3Q==</ds:X509Certificate></ds:X509Data></ds:KeyInfo><xenc:CipherData xml
 class SettingsMock:
     def get_sp_data(self):
         return {
-            'attributeConsumingService': {
-                'requestedAttributes': [
+            "attributeConsumingService": {
+                "requestedAttributes": [
                     {
                         "name": "urn:oid:2.5.4.3",
                         "isRequired": True,
-                        "friendlyName": "cn"
+                        "friendlyName": "cn",
                     },
                     {
                         "name": "urn:oid:2.16.840.1.113730.3.1.241",
                         "isRequired": True,
-                        "friendlyName": "displayName"
+                        "friendlyName": "displayName",
                     },
                     {
                         "name": "urn:oid:1.3.6.1.4.1.5923.1.1.1.6",
                         "isRequired": True,
-                        "friendlyName": "eduPersonPrincipalName"
+                        "friendlyName": "eduPersonPrincipalName",
                     },
                     {
                         "name": "urn:oid:2.5.4.42",
                         "isRequired": True,
-                        "friendlyName": "givenName"
+                        "friendlyName": "givenName",
                     },
                     {
                         "name": "urn:oid:0.9.2342.19200300.100.1.3",
                         "isRequired": True,
-                        "friendlyName": "mail"
+                        "friendlyName": "mail",
                     },
                     {
                         "name": "urn:oid:2.16.840.1.113730.3.1.39",
                         "isRequired": True,
-                        "friendlyName": "preferredLanguage"
+                        "friendlyName": "preferredLanguage",
                     },
                     {
                         "name": "urn:oid:2.5.4.4",
                         "isRequired": True,
-                        "friendlyName": "sn"
+                        "friendlyName": "sn",
                     },
                     {
                         "name": "urn:oid:1.3.6.1.4.1.25178.1.2.14",
                         "isRequired": False,
-                        "friendlyName": "schacPersonalUniqueCode"
+                        "friendlyName": "schacPersonalUniqueCode",
                     },
-                ]
-                ,
+                ],
             },
         }
 
@@ -127,20 +130,24 @@ class OneLoginMock:
 
     def get_attribute(self, name):
         values = {
-            'urn:oid:0.9.2342.19200300.100.1.3': [self.info.email],  # mail
-            'urn:oid:1.3.6.1.4.1.5923.1.1.1.6': [self.info.username],  # eduPersonPrincipalName
-            'urn:oid:2.16.840.1.113730.3.1.241': [self.info.full_name],  # displayName
-            'urn:oid:2.16.840.1.113730.3.1.39': ['fi'],  # preferredLanguage
-            'urn:oid:2.5.4.3': [self.info.full_name],  # cn
-            'urn:oid:2.5.4.4': [self.info.last_name],  # sn
-            'urn:oid:2.5.4.42': [self.info.given_name],  # givenName
+            "urn:oid:0.9.2342.19200300.100.1.3": [self.info.email],  # mail
+            "urn:oid:1.3.6.1.4.1.5923.1.1.1.6": [
+                self.info.username
+            ],  # eduPersonPrincipalName
+            "urn:oid:2.16.840.1.113730.3.1.241": [self.info.full_name],  # displayName
+            "urn:oid:2.16.840.1.113730.3.1.39": ["fi"],  # preferredLanguage
+            "urn:oid:2.5.4.3": [self.info.full_name],  # cn
+            "urn:oid:2.5.4.4": [self.info.last_name],  # sn
+            "urn:oid:2.5.4.42": [self.info.given_name],  # givenName
         }
         if not self.mock_missing_uniquecode:
-            values['urn:oid:1.3.6.1.4.1.25178.1.2.14'] = [uq.to_urn() for uq in self.info.unique_codes]
+            values["urn:oid:1.3.6.1.4.1.25178.1.2.14"] = [
+                uq.to_urn() for uq in self.info.unique_codes
+            ]
         return values.get(name)
 
 
-acs_url = '/saml/acs'
+acs_url = "/saml/acs"
 
 
 class TestSignUp(TimRouteTest):
@@ -149,224 +156,239 @@ class TestSignUp(TimRouteTest):
         self.logout()
 
     def test_block_bot_signup(self):
-        bot_email = 'bot@example.com'
+        bot_email = "bot@example.com"
         self.json_post(
-            '/emailSignup',
+            "/emailSignup",
             {
-                'email': bot_email,
-                'url': 'http://www.example.com',
-            })
-        self.get('/')  # refresh session
+                "email": bot_email,
+                "url": "http://www.example.com",
+            },
+        )
+        self.get("/")  # refresh session
         self.assertIsNone(NewUser.query.get(bot_email))
 
-        for allowed_email in ('test@jyu.fi', 'test@gmail.com'):
+        for allowed_email in ("test@jyu.fi", "test@gmail.com"):
             self.json_post(
-                '/emailSignup',
+                "/emailSignup",
                 {
-                    'email': allowed_email,
-                    'url': 'http://www.example.com',
-                })
-            self.get('/')  # refresh session
+                    "email": allowed_email,
+                    "url": "http://www.example.com",
+                },
+            )
+            self.get("/")  # refresh session
             self.assertIsNotNone(NewUser.query.get(allowed_email))
         NewUser.query.delete()
         db.session.commit()
 
     def test_signup_case_insensitive(self):
-        email = 'SomeOneCase@example.com'
-        self.json_post(
-            '/emailSignup',
-            {'email': email})
-        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('someonecase@example.com',)])
-        self.json_post(
-            '/checkTempPass',
-            {'email': email, 'token': test_pws[-1]},
-            expect_content={'status': 'ok'},
+        email = "SomeOneCase@example.com"
+        self.json_post("/emailSignup", {"email": email})
+        self.assertEqual(
+            NewUser.query.with_entities(NewUser.email).all(),
+            [("someonecase@example.com",)],
         )
         self.json_post(
-            '/emailSignupFinish',
-            {'realname': 'Testing Signup',
-             'email': email,
-             'token': test_pws[-1],
-             'password': test_pw,
-             'passconfirm': test_pw},
-            expect_contains='registered',
-            json_key='status')
+            "/checkTempPass",
+            {"email": email, "token": test_pws[-1]},
+            expect_content={"status": "ok"},
+        )
+        self.json_post(
+            "/emailSignupFinish",
+            {
+                "realname": "Testing Signup",
+                "email": email,
+                "token": test_pws[-1],
+                "password": test_pw,
+                "passconfirm": test_pw,
+            },
+            expect_contains="registered",
+            json_key="status",
+        )
         self.login(force=True, email=email, passw=test_pw)
 
     def test_signup_whitespace(self):
-        email = 'whitespace@example.com '
-        self.json_post(
-            '/emailSignup',
-            {'email': email})
-        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [('whitespace@example.com',)])
-        self.json_post(
-            '/checkTempPass',
-            {'email': email, 'token': test_pws[-1]},
-            expect_content={'status': 'ok'},
+        email = "whitespace@example.com "
+        self.json_post("/emailSignup", {"email": email})
+        self.assertEqual(
+            NewUser.query.with_entities(NewUser.email).all(),
+            [("whitespace@example.com",)],
         )
         self.json_post(
-            '/emailSignupFinish',
-            {'realname': 'Testing Signup',
-             'email': email,
-             'token': test_pws[-1],
-             'password': test_pw,
-             'passconfirm': test_pw},
-            expect_contains='registered',
-            json_key='status')
+            "/checkTempPass",
+            {"email": email, "token": test_pws[-1]},
+            expect_content={"status": "ok"},
+        )
+        self.json_post(
+            "/emailSignupFinish",
+            {
+                "realname": "Testing Signup",
+                "email": email,
+                "token": test_pws[-1],
+                "password": test_pw,
+                "passconfirm": test_pw,
+            },
+            expect_contains="registered",
+            json_key="status",
+        )
         self.login(force=True, email=email, passw=test_pw)
         self.login(force=True, email=email.strip(), passw=test_pw)
 
     def test_login_case_insensitive(self):
-        email = 'SomeOneCase2@example.com'
-        User.create_with_group(UserInfo(
-            username=email,
-            email=email,
-            full_name='Some One',
-            password='testing'
-        ))
+        email = "SomeOneCase2@example.com"
+        User.create_with_group(
+            UserInfo(
+                username=email, email=email, full_name="Some One", password="testing"
+            )
+        )
         db.session.commit()
-        self.login(email=email.lower(), passw='testing', force=True)
-        email = 'SomeOnecase2@example.com'
-        User.create_with_group(UserInfo(
-            username=email,
-            email=email,
-            full_name='Some One',
-            password='testing'
-        ))
+        self.login(email=email.lower(), passw="testing", force=True)
+        email = "SomeOnecase2@example.com"
+        User.create_with_group(
+            UserInfo(
+                username=email, email=email, full_name="Some One", password="testing"
+            )
+        )
         db.session.commit()
         self.login(
             email=email.lower(),
-            passw='testing',
+            passw="testing",
             force=True,
             expect_status=400,
-            expect_content='AmbiguousAccount',
+            expect_content="AmbiguousAccount",
         )
 
     def test_signup(self):
-        email = 'testingsignup@example.com'
-        self.json_post(
-            '/emailSignup',
-            {'email': email})
+        email = "testingsignup@example.com"
+        self.json_post("/emailSignup", {"email": email})
+        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [(email,)])
+        self.json_post("/emailSignup", {"email": email})
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [(email,)])
         self.json_post(
-            '/emailSignup',
-            {'email': email})
-        self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [(email,)])
-        self.json_post(
-            '/emailSignupFinish',
-            {'realname': 'Testing Signup',
-             'email': email,
-             'token': test_pws[-1],
-             'password': test_pw,
-             'passconfirm': test_pw},
-            expect_contains='registered',
-            json_key='status')
+            "/emailSignupFinish",
+            {
+                "realname": "Testing Signup",
+                "email": email,
+                "token": test_pws[-1],
+                "password": test_pw,
+                "passconfirm": test_pw,
+            },
+            expect_contains="registered",
+            json_key="status",
+        )
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [])
-        self.assertEqual('Testing Signup', self.current_user.real_name)
+        self.assertEqual("Testing Signup", self.current_user.real_name)
         self.assertEqual(UserOrigin.Email, self.current_user.origin)
 
         # TODO needs a better error message
         self.json_post(
-            '/emailSignupFinish',
-            {'realname': 'Testing Signup',
-             'token': test_pws[-1],
-             'email': email,
-             'password': test_pw,
-             'passconfirm': test_pw},
-            expect_content='WrongTempPassword',
+            "/emailSignupFinish",
+            {
+                "realname": "Testing Signup",
+                "token": test_pws[-1],
+                "email": email,
+                "password": test_pw,
+                "passconfirm": test_pw,
+            },
+            expect_content="WrongTempPassword",
             expect_status=400,
         )
 
         old_pw_hash = self.current_user.pass_
+        self.json_post("/emailSignup", {"email": email})
         self.json_post(
-            '/emailSignup',
-            {'email': email})
-        self.json_post(
-            '/emailSignupFinish',
-            {'realname': 'Testing Signup2',
-             'email': email,
-             'token': test_pws[-1],
-             'password': 'changedpass',
-             'passconfirm': 'changedpass'},
-            expect_contains='updated',
-            json_key='status')
+            "/emailSignupFinish",
+            {
+                "realname": "Testing Signup2",
+                "email": email,
+                "token": test_pws[-1],
+                "password": "changedpass",
+                "passconfirm": "changedpass",
+            },
+            expect_contains="updated",
+            json_key="status",
+        )
         # Name change not allowed.
-        self.assertEqual('Testing Signup', self.current_user.real_name)
+        self.assertEqual("Testing Signup", self.current_user.real_name)
         self.assertNotEqual(old_pw_hash, self.current_user.pass_)
 
     def test_password_mismatch(self):
-        email = 'testingsignup@example.com'
+        email = "testingsignup@example.com"
+        self.json_post("/emailSignup", {"email": email})
         self.json_post(
-            '/emailSignup',
-            {'email': email})
-        self.json_post(
-            '/emailSignupFinish',
-            {'realname': 'Testing Signup',
-             'email': email,
-             'token': test_pws[-1],
-             'password': test_pw,
-             'passconfirm': 'somepwd1232'},
-            expect_content='PasswordsNotMatch',
-            expect_status=400)
+            "/emailSignupFinish",
+            {
+                "realname": "Testing Signup",
+                "email": email,
+                "token": test_pws[-1],
+                "password": test_pw,
+                "passconfirm": "somepwd1232",
+            },
+            expect_content="PasswordsNotMatch",
+            expect_status=400,
+        )
         self.assertFalse(self.is_logged_in)
 
     def test_too_short_password(self):
-        email = 'testingsignup@example.com'
+        email = "testingsignup@example.com"
+        self.json_post("/emailSignup", {"email": email})
         self.json_post(
-            '/emailSignup',
-            {'email': email})
-        self.json_post(
-            '/emailSignupFinish',
-            {'realname': 'Testing Signup',
-             'email': email,
-             'token': test_pws[-1],
-             'password': 'test',
-             'passconfirm': 'test'},
-            expect_content='PasswordTooShort',
+            "/emailSignupFinish",
+            {
+                "realname": "Testing Signup",
+                "email": email,
+                "token": test_pws[-1],
+                "password": "test",
+                "passconfirm": "test",
+            },
+            expect_content="PasswordTooShort",
             expect_status=400,
         )
         self.assertFalse(self.is_logged_in)
 
     def test_temp_password_wrong(self):
-        email = 'testingsignup@example.com'
+        email = "testingsignup@example.com"
+        self.json_post("/emailSignup", {"email": email})
         self.json_post(
-            '/emailSignup',
-            {'email': email})
-        self.json_post(
-            '/emailSignupFinish',
-            {'realname': 'Testing Signup',
-             'email': email,
-             'token': 'asdasd',
-             'password': test_pw,
-             'passconfirm': test_pw},
-            expect_content='WrongTempPassword',
+            "/emailSignupFinish",
+            {
+                "realname": "Testing Signup",
+                "email": email,
+                "token": "asdasd",
+                "password": test_pw,
+                "passconfirm": test_pw,
+            },
+            expect_content="WrongTempPassword",
             expect_status=400,
         )
         self.assertFalse(self.is_logged_in)
 
     def test_invalid_email(self):
         old_len = len(test_pws)
-        self.json_post(
-            '/emailSignup',
-            {'email': 'invalid'})
+        self.json_post("/emailSignup", {"email": "invalid"})
         self.assertFalse(self.is_logged_in)
         self.assertEqual(old_len, len(test_pws))
 
     def test_korppi_signup(self):
         """Korppi signup succeeds."""
         self.create_or_update_test_user(
-            'johmadoenew',
-            'Doe John Matt',
-            'john.m.doenew@student.jyu.fi',
+            "johmadoenew",
+            "Doe John Matt",
+            "john.m.doenew@student.jyu.fi",
         )
-        self.assertEqual('Doe John Matt', self.current_user.real_name)
-        self.assertEqual('johmadoenew', self.current_user.name)
-        self.assertEqual('john.m.doenew@student.jyu.fi', self.current_user.email)
-        self.assertEqual({g.name for g in self.current_user.groups},
-                         {'johmadoenew', get_home_organization_group().name})
+        self.assertEqual("Doe John Matt", self.current_user.real_name)
+        self.assertEqual("johmadoenew", self.current_user.name)
+        self.assertEqual("john.m.doenew@student.jyu.fi", self.current_user.email)
+        self.assertEqual(
+            {g.name for g in self.current_user.groups},
+            {"johmadoenew", get_home_organization_group().name},
+        )
 
-    def create_or_update_test_user(self, username='johmadoe', real_name='Doe John Matt',
-                                   email='john.m.doe@student.jyu.fi'):
+    def create_or_update_test_user(
+        self,
+        username="johmadoe",
+        real_name="Doe John Matt",
+        email="john.m.doe@student.jyu.fi",
+    ):
         u = create_or_update_user(
             UserInfo(
                 email=email,
@@ -388,48 +410,50 @@ class TestSignUp(TimRouteTest):
 
         # real name changes
         self.create_or_update_test_user(
-            real_name='Doe John Matthew',
-            username='johmadoe',
-            email='john.m.doe@student.jyu.fi',
+            real_name="Doe John Matthew",
+            username="johmadoe",
+            email="john.m.doe@student.jyu.fi",
         )
 
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, curr_name)
         self.assertEqual(self.current_user.email, curr_email)
-        self.assertEqual(self.current_user.real_name, 'Doe John Matthew')
+        self.assertEqual(self.current_user.real_name, "Doe John Matthew")
         self.assertEqual(UserOrigin.Korppi, self.current_user.origin)
 
         # email changes
         self.create_or_update_test_user(
-            real_name='Doe John Matthew',
-            username='johmadoe',
-            email='john.doe@student.jyu.fi',
+            real_name="Doe John Matthew",
+            username="johmadoe",
+            email="john.doe@student.jyu.fi",
         )
 
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, curr_name)
-        self.assertEqual(self.current_user.email, 'john.doe@student.jyu.fi')
-        self.assertEqual(self.current_user.real_name, 'Doe John Matthew')
+        self.assertEqual(self.current_user.email, "john.doe@student.jyu.fi")
+        self.assertEqual(self.current_user.real_name, "Doe John Matthew")
 
         # username changes
         self.create_or_update_test_user(
-            real_name='Doe John Matthew',
-            username='johmadoz',
-            email='john.doe@student.jyu.fi',
+            real_name="Doe John Matthew",
+            username="johmadoz",
+            email="john.doe@student.jyu.fi",
         )
 
         self.assertEqual(self.current_user.id, curr_id)
-        self.assertEqual(self.current_user.name, 'johmadoz')
-        self.assertEqual(self.current_user.email, 'john.doe@student.jyu.fi')
-        self.assertEqual(self.current_user.real_name, 'Doe John Matthew')
-        self.assertEqual({g.name for g in self.current_user.groups},
-                         {'johmadoz', get_home_organization_group().name})
+        self.assertEqual(self.current_user.name, "johmadoz")
+        self.assertEqual(self.current_user.email, "john.doe@student.jyu.fi")
+        self.assertEqual(self.current_user.real_name, "Doe John Matthew")
+        self.assertEqual(
+            {g.name for g in self.current_user.groups},
+            {"johmadoz", get_home_organization_group().name},
+        )
 
         # If both username and email is different, there's no way to identify the user.
         self.create_or_update_test_user(
-            real_name='Doe John Matthew',
-            username='johmadox',
-            email='john.doex@student.jyu.fi',
+            real_name="Doe John Matthew",
+            username="johmadox",
+            email="john.doex@student.jyu.fi",
         )
         self.assertNotEqual(self.current_user.id, curr_id)
 
@@ -440,24 +464,26 @@ class TestSignUp(TimRouteTest):
         curr_name = self.current_user.name
         curr_real_name = self.current_user.real_name
         curr_email = self.current_user.email
-        self.json_post(
-            '/emailSignup',
-            {'email': curr_email})
+        self.json_post("/emailSignup", {"email": curr_email})
         pw = test_pw
         self.json_post(
-            '/emailSignupFinish',
-            {'realname': 'Johnny John',
-             'email': curr_email,
-             'token': test_pws[-1],
-             'password': pw,
-             'passconfirm': pw},
-            expect_contains='updated',
-            json_key='status')
+            "/emailSignupFinish",
+            {
+                "realname": "Johnny John",
+                "email": curr_email,
+                "token": test_pws[-1],
+                "password": pw,
+                "passconfirm": pw,
+            },
+            expect_contains="updated",
+            json_key="status",
+        )
         self.assertEqual(self.current_user.id, curr_id)
         self.assertEqual(self.current_user.name, curr_name)
         self.assertEqual(self.current_user.email, curr_email)
-        self.assertEqual(self.current_user.real_name,
-                         'Doe John Matt')  # changing name not allowed for organization users
+        self.assertEqual(
+            self.current_user.real_name, "Doe John Matt"
+        )  # changing name not allowed for organization users
         self.assertTrue(self.current_user.check_password(pw))
 
         self.logout()
@@ -478,78 +504,94 @@ class TestSignUp(TimRouteTest):
         curr_id = self.current_user.id
         curr_pw = self.current_user.pass_
         self.assertFalse(get_home_organization_group() in self.current_user.groups)
-        self.create_or_update_test_user('t3', 'Mr Test User 3', email=self.current_user.email)
+        self.create_or_update_test_user(
+            "t3", "Mr Test User 3", email=self.current_user.email
+        )
         self.assertEqual(self.current_user.id, curr_id)
-        self.assertEqual(self.current_user.name, 't3')
-        self.assertEqual(self.current_user.real_name, 'Mr Test User 3')
+        self.assertEqual(self.current_user.name, "t3")
+        self.assertEqual(self.current_user.real_name, "Mr Test User 3")
         self.assertEqual(self.current_user.pass_, curr_pw)
         self.assertTrue(get_home_organization_group() in self.current_user.groups)
 
     def test_email_login_without_pass(self):
-        self.create_or_update_test_user('someone', 'Some One', 'someone@example.com')
-        u = User.get_by_name('someone')
+        self.create_or_update_test_user("someone", "Some One", "someone@example.com")
+        u = User.get_by_name("someone")
         u.pass_ = None
         db.session.commit()
-        self.login(email='someone@example.com', passw='something', force=True, expect_status=403)
+        self.login(
+            email="someone@example.com",
+            passw="something",
+            force=True,
+            expect_status=403,
+        )
 
     def test_email_login_with_korppi_username(self):
-        self.create_or_update_test_user('someone2', 'Some One', 'someone2@example.com')
-        u = User.get_by_name('someone2')
-        u.pass_ = create_password_hash('somepass')
+        self.create_or_update_test_user("someone2", "Some One", "someone2@example.com")
+        u = User.get_by_name("someone2")
+        u.pass_ = create_password_hash("somepass")
         db.session.commit()
-        self.login(email='someone2', passw='somepass', force=True)
+        self.login(email="someone2", passw="somepass", force=True)
 
     def test_korppi_user_reset_pass_with_username(self):
         """A Korppi user can reset their password using their username."""
         self.create_or_update_test_user()
         curr_name = self.current_user.name
-        self.json_post(
-            '/emailSignup',
-            {'email': curr_name})
+        self.json_post("/emailSignup", {"email": curr_name})
         pw = test_pw
         self.json_post(
-            '/emailSignupFinish',
-            {'realname': 'Johnny John',
-             'email': curr_name,
-             'token': test_pws[-1],
-             'password': pw,
-             'passconfirm': pw},
-            expect_contains='updated',
-            json_key='status')
+            "/emailSignupFinish",
+            {
+                "realname": "Johnny John",
+                "email": curr_name,
+                "token": test_pws[-1],
+                "password": pw,
+                "passconfirm": pw,
+            },
+            expect_contains="updated",
+            json_key="status",
+        )
 
     def test_login_fail(self):
-        self.login(email='a@example.com', passw='somepass', force=True,
-                   expect_status=403,
-                   expect_content='EmailOrPasswordNotMatch',
-                   )
-        self.login(email='a@jyu.fi', passw='somepass', force=True,
-                   expect_status=403,
-                   expect_content='EmailOrPasswordNotMatchUseHaka',
-                   )
+        self.login(
+            email="a@example.com",
+            passw="somepass",
+            force=True,
+            expect_status=403,
+            expect_content="EmailOrPasswordNotMatch",
+        )
+        self.login(
+            email="a@jyu.fi",
+            passw="somepass",
+            force=True,
+            expect_status=403,
+            expect_content="EmailOrPasswordNotMatchUseHaka",
+        )
 
     def test_haka_invalid_settings(self):
         self.json_post(
             acs_url,
             {},
             expect_status=400,
-            expect_content='entityID not in session',
+            expect_content="entityID not in session",
         )
         self.get(
-            '/saml/sso',
-            query_string={'entityID': 'https://testidp.funet.fi/idp/shibboleth', 'return_to': '/'},
+            "/saml/sso",
+            query_string={
+                "entityID": "https://testidp.funet.fi/idp/shibboleth",
+                "return_to": "/",
+            },
             expect_status=302,
         )
         self.post(
             acs_url,
-            data={
-            },
+            data={},
             expect_status=400,
             expect_content="Error processing SAML response: SAML Response not found, Only supported HTTP_POST Binding",
         )
         self.post(
             acs_url,
             data={
-                'SAMLResponse': base64.encodebytes(b'x').decode(),
+                "SAMLResponse": base64.encodebytes(b"x").decode(),
             },
             expect_status=400,
             expect_content="Error processing SAML response: Start tag expected, '<' not found, line 1, column 1 (<string>, line 1)",
@@ -557,97 +599,131 @@ class TestSignUp(TimRouteTest):
         self.post(
             acs_url,
             data={
-                'SAMLResponse': base64.encodebytes(samltestresp.encode()).decode(),
+                "SAMLResponse": base64.encodebytes(samltestresp.encode()).decode(),
             },
             expect_status=400,
             expect_contains="Error processing SAML response: No private key available to decrypt the assertion, check settings",
         )
 
     def test_haka_login(self):
-        teppo_email = 'teppo@mailinator.com'
+        teppo_email = "teppo@mailinator.com"
         for i in range(0, 2):
-            puc = SchacPersonalUniqueCode.parse('urn:schac:personalUniqueCode:int:studentID:jyu.fi:12345X')
-            self.do_acs_mock(UserInfo(
-                email=teppo_email,
-                username='teppo@yliopisto.fi',
-                last_name='Testaaja',
-                given_name='Teppo',
-                full_name='Teppo Testaaja',
-                unique_codes=[puc],
-            ))
-            u = User.get_by_name('yliopisto.fi:teppo')
+            puc = SchacPersonalUniqueCode.parse(
+                "urn:schac:personalUniqueCode:int:studentID:jyu.fi:12345X"
+            )
+            self.do_acs_mock(
+                UserInfo(
+                    email=teppo_email,
+                    username="teppo@yliopisto.fi",
+                    last_name="Testaaja",
+                    given_name="Teppo",
+                    full_name="Teppo Testaaja",
+                    unique_codes=[puc],
+                )
+            )
+            u = User.get_by_name("yliopisto.fi:teppo")
             self.assertEqual(teppo_email, u.email)
-            self.assertEqual('Teppo', u.given_name)
-            self.assertEqual('Testaaja', u.last_name)
-            self.assertEqual('Testaaja Teppo', u.real_name)
+            self.assertEqual("Teppo", u.given_name)
+            self.assertEqual("Testaaja", u.last_name)
+            self.assertEqual("Testaaja Teppo", u.real_name)
             uq = next(iter(u.uniquecodes.values()))
-            self.assertEqual('12345X', uq.code)
-            self.assertEqual('studentID', uq.type)
-            self.assertEqual('jyu.fi', uq.organization.name)
-            self.assertIn(UserGroup.get_organization_group('yliopisto.fi'), u.groups)
+            self.assertEqual("12345X", uq.code)
+            self.assertEqual("studentID", uq.type)
+            self.assertEqual("jyu.fi", uq.organization.name)
+            self.assertIn(UserGroup.get_organization_group("yliopisto.fi"), u.groups)
             self.assertIn(UserGroup.get_haka_group(), u.groups)
-        self.do_acs_mock(UserInfo(
-            email=teppo_email,
-            username='matti@jyu.fi',
-            last_name='Meikäläinen',
-            given_name='Matti',
-            full_name='Matti Meikäläinen',
-        ))
-        u = User.get_by_name('matti')
+        self.do_acs_mock(
+            UserInfo(
+                email=teppo_email,
+                username="matti@jyu.fi",
+                last_name="Meikäläinen",
+                given_name="Matti",
+                full_name="Matti Meikäläinen",
+            )
+        )
+        u = User.get_by_name("matti")
         self.assertIsNotNone(u)
-        self.assertIn(UserGroup.get_organization_group('jyu.fi'), u.groups)
+        self.assertIn(UserGroup.get_organization_group("jyu.fi"), u.groups)
         self.assertIn(UserGroup.get_haka_group(), u.groups)
-        self.assertIsNone(User.get_by_name('jyu.fi:matti'))
+        self.assertIsNone(User.get_by_name("jyu.fi:matti"))
 
     def test_student_id_login_match(self):
-        self.do_acs_mock(UserInfo(
-            username='xxxx@jyu.fi',
-            full_name='X Test',
-            email='xxxx@example.com',
-            origin=UserOrigin.Haka,
-            unique_codes=[SchacPersonalUniqueCode(codetype='studentID', code='1234X', org='jyu.fi')],
-        ))
+        self.do_acs_mock(
+            UserInfo(
+                username="xxxx@jyu.fi",
+                full_name="X Test",
+                email="xxxx@example.com",
+                origin=UserOrigin.Haka,
+                unique_codes=[
+                    SchacPersonalUniqueCode(
+                        codetype="studentID", code="1234X", org="jyu.fi"
+                    )
+                ],
+            )
+        )
         # Make sure the user is identified by student id even when when username or email do not match.
-        self.do_acs_mock(UserInfo(
-            username='xxxx2@jyu.fi',
-            full_name='X Test',
-            email='xxxx2@example.com',
-            origin=UserOrigin.Haka,
-            unique_codes=[SchacPersonalUniqueCode(codetype='studentID', code='1234X', org='jyu.fi')],
-        ))
-        self.assertIsNone(User.get_by_name('xxxx'))
-        self.assertIsNotNone(User.get_by_name('xxxx2'))
+        self.do_acs_mock(
+            UserInfo(
+                username="xxxx2@jyu.fi",
+                full_name="X Test",
+                email="xxxx2@example.com",
+                origin=UserOrigin.Haka,
+                unique_codes=[
+                    SchacPersonalUniqueCode(
+                        codetype="studentID", code="1234X", org="jyu.fi"
+                    )
+                ],
+            )
+        )
+        self.assertIsNone(User.get_by_name("xxxx"))
+        self.assertIsNotNone(User.get_by_name("xxxx2"))
 
     def test_haka_login_email_conflict(self):
         self.create_or_update_test_user(
-            username='somep@example.com',
-            real_name='Someperson',
-            email='somep@example.com',
+            username="somep@example.com",
+            real_name="Someperson",
+            email="somep@example.com",
         )
-        self.create_or_update_test_user(username='sp', email='sp@jyu.fi', real_name='Person Söme')
-        self.do_acs_mock(UserInfo(
-            username='sp@jyu.fi',
-            email='somep@example.com',
-            origin=UserOrigin.Haka,
-        ))
+        self.create_or_update_test_user(
+            username="sp", email="sp@jyu.fi", real_name="Person Söme"
+        )
+        self.do_acs_mock(
+            UserInfo(
+                username="sp@jyu.fi",
+                email="somep@example.com",
+                origin=UserOrigin.Haka,
+            )
+        )
 
     def test_missing_uniquecode(self):
-        self.do_acs_mock(UserInfo(
-            username='xxxx@jyu.fi',
-            full_name='X Test',
-            email='xxxx@example.com',
-            origin=UserOrigin.Haka,
-            unique_codes=[SchacPersonalUniqueCode(codetype='studentID', code='1234X', org='jyu.fi')],
-        ), missing_uniquecode=True)
+        self.do_acs_mock(
+            UserInfo(
+                username="xxxx@jyu.fi",
+                full_name="X Test",
+                email="xxxx@example.com",
+                origin=UserOrigin.Haka,
+                unique_codes=[
+                    SchacPersonalUniqueCode(
+                        codetype="studentID", code="1234X", org="jyu.fi"
+                    )
+                ],
+            ),
+            missing_uniquecode=True,
+        )
 
     def do_acs_mock(self, info: UserInfo, missing_uniquecode=False):
         self.get(
-            '/saml/sso',
-            query_string={'entityID': 'https://testidp.funet.fi/idp/shibboleth', 'return_to': '/'},
+            "/saml/sso",
+            query_string={
+                "entityID": "https://testidp.funet.fi/idp/shibboleth",
+                "return_to": "/",
+            },
             expect_status=302,
         )
-        with mock.patch('timApp.auth.saml.OneLogin_Saml2_Auth') as m:
-            m.return_value = OneLoginMock(info=info, mock_missing_uniquecode=missing_uniquecode)
+        with mock.patch("timApp.auth.saml.OneLogin_Saml2_Auth") as m:
+            m.return_value = OneLoginMock(
+                info=info, mock_missing_uniquecode=missing_uniquecode
+            )
             self.post(
                 acs_url,
                 data={},
@@ -655,92 +731,106 @@ class TestSignUp(TimRouteTest):
             )
 
     def test_simple_login(self):
-        simple_email = 'simple@example.com'
+        simple_email = "simple@example.com"
         self.json_post(
-            '/simpleLogin/email', {
-                'email': simple_email
-            }, expect_content='Simple email login is not enabled.',
+            "/simpleLogin/email",
+            {"email": simple_email},
+            expect_content="Simple email login is not enabled.",
             expect_status=400,
         )
-        app.config['SIMPLE_EMAIL_LOGIN'] = True
+        app.config["SIMPLE_EMAIL_LOGIN"] = True
         self.json_post(
-            '/simpleLogin/email', {
-                'email': simple_email
-            }, expect_content={'status': 'ok'}
+            "/simpleLogin/email",
+            {"email": simple_email},
+            expect_content={"status": "ok"},
         )
         self.json_post(
-            '/simpleLogin/password', {
-                'email': simple_email,
-                'password': test_pws[-1],
-            }, expect_content={'data': {'can_change_name': True, 'name': None}, 'type': 'registration'}
+            "/simpleLogin/password",
+            {
+                "email": simple_email,
+                "password": test_pws[-1],
+            },
+            expect_content={
+                "data": {"can_change_name": True, "name": None},
+                "type": "registration",
+            },
         )
         self.json_post(
-            '/emailSignupFinish', {
-                'email': simple_email,
-                'password': test_pw,
-                'passconfirm': test_pw,
-                'token': test_pws[-1],
-                'realname': None,
-            }, expect_content={'status': 'registered'}
+            "/emailSignupFinish",
+            {
+                "email": simple_email,
+                "password": test_pw,
+                "passconfirm": test_pw,
+                "token": test_pws[-1],
+                "realname": None,
+            },
+            expect_content={"status": "registered"},
         )
 
-        app.config['EMAIL_REGISTRATION_ENABLED'] = False
+        app.config["EMAIL_REGISTRATION_ENABLED"] = False
         pwcount = len(test_pws)
         self.json_post(
-            '/simpleLogin/email', {
-                'email': simple_email
-            }, expect_content={'status': 'ok'}
+            "/simpleLogin/email",
+            {"email": simple_email},
+            expect_content={"status": "ok"},
         )
         self.assertEqual(pwcount, len(test_pws))
         self.json_post(
-            '/emailSignup', {
-                'email': simple_email
-            }, expect_content='Email registration is disabled.', expect_status=403,
+            "/emailSignup",
+            {"email": simple_email},
+            expect_content="Email registration is disabled.",
+            expect_status=403,
         )
         self.json_post(
-            '/emailSignup', {
-                'email': simple_email,
-                'reset_password': True,
-            }, expect_content={'status': 'ok'},
+            "/emailSignup",
+            {
+                "email": simple_email,
+                "reset_password": True,
+            },
+            expect_content={"status": "ok"},
         )
         self.assertEqual(pwcount + 1, len(test_pws))
         s_e = User.get_by_email(simple_email)
         s_e.pass_ = None
         db.session.commit()
         self.json_post(
-            '/simpleLogin/email', {
-                'email': simple_email
-            }, expect_content={'status': 'ok'}
+            "/simpleLogin/email",
+            {"email": simple_email},
+            expect_content={"status": "ok"},
         )
         self.assertEqual(pwcount + 2, len(test_pws))
         self.json_post(
-            '/simpleLogin/email', {
-                'email': 'simple2@example.com'
-            }, expect_content={'status': 'ok'}
+            "/simpleLogin/email",
+            {"email": "simple2@example.com"},
+            expect_content={"status": "ok"},
         )
         # No new mails because registration disabled.
         self.assertEqual(pwcount + 2, len(test_pws))
-        app.config['EMAIL_REGISTRATION_ENABLED'] = True
+        app.config["EMAIL_REGISTRATION_ENABLED"] = True
 
     def test_no_password_reset(self):
         self.login_test1()
-        with self.temp_config({
-            'PASSWORD_RESET_ENABLED': False,
-            'EMAIL_REGISTRATION_ENABLED': False,
-        }):
+        with self.temp_config(
+            {
+                "PASSWORD_RESET_ENABLED": False,
+                "EMAIL_REGISTRATION_ENABLED": False,
+            }
+        ):
             self.json_post(
-                '/emailSignup', {
-                    'email': 'test1@example.com',
-                    'reset_password': True,
+                "/emailSignup",
+                {
+                    "email": "test1@example.com",
+                    "reset_password": True,
                 },
                 expect_status=403,
-                expect_content='PasswordResetDisabled',
+                expect_content="PasswordResetDisabled",
             )
             self.json_post(
-                '/emailSignup', {
-                    'email': 'test1@example.com',
-                    'reset_password': False,
+                "/emailSignup",
+                {
+                    "email": "test1@example.com",
+                    "reset_password": False,
                 },
                 expect_status=403,
-                expect_content='Email registration is disabled.',
+                expect_content="Email registration is disabled.",
             )

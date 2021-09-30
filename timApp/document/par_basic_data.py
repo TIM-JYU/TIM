@@ -1,7 +1,7 @@
 import json
 from dataclasses import dataclass
 
-EMPTY_JSON = '{}'
+EMPTY_JSON = "{}"
 
 
 @dataclass

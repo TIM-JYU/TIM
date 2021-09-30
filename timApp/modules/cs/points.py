@@ -46,7 +46,9 @@ def check_number_rule(s, number_rule):
     except ValueError:
         return 0
     points = 0
-    if not isinstance(number_rule, list) or (len(number_rule) >= 1 and isinstance(number_rule[0], float)):
+    if not isinstance(number_rule, list) or (
+        len(number_rule) >= 1 and isinstance(number_rule[0], float)
+    ):
         number_rule = [number_rule]
 
     for rule in number_rule:
@@ -85,7 +87,7 @@ def return_points(points_rule, result):
         if tim_info == None:
             result["tim_info"] = {}
             tim_info = result.get("tim_info", None)
-        tim_info["points"] = max(min(points,max_points), min_points)
+        tim_info["points"] = max(min(points, max_points), min_points)
     if "points" in points_rule:
         points = points_rule["points"]
         result["save"]["points"] = points

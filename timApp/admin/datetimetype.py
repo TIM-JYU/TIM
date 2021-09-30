@@ -7,6 +7,7 @@ import dateutil.parser
 
 class DateTimeType(click.ParamType):
     """A better datetime type to use with Click."""
+
     name = "datetime"
 
     def convert(self, value: Any, param: Any, ctx: Any) -> datetime:

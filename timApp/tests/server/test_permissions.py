@@ -3,7 +3,9 @@ from datetime import timedelta
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
 from timApp.document.editing.documenteditresult import DocumentEditResult
-from timApp.document.translation.synchronize_translations import synchronize_translations
+from timApp.document.translation.synchronize_translations import (
+    synchronize_translations,
+)
 from timApp.item.item import Item
 from timApp.tests.server.test_default_rights import convert_to_old_format
 from timApp.tests.server.timroutetest import TimRouteTest
@@ -14,34 +16,37 @@ from timApp.util.utils import get_current_time
 
 
 class PermissionTest(TimRouteTest):
-
     def test_cannot_remove_ownership(self):
         self.login_test1()
         d = self.create_doc()
         self.assertTrue(self.current_user.has_ownership(d))
         self.json_put(
-            f'/permissions/add',
+            f"/permissions/add",
             {
-                'time': {
-                    'from': get_current_time() + timedelta(days=1),
-                    'type': 'range',
+                "time": {
+                    "from": get_current_time() + timedelta(days=1),
+                    "type": "range",
                 },
-                'id': d.id,
-                'type': AccessType.owner.value,
-                'groups': ['testuser1'],
-                'confirm': False,
+                "id": d.id,
+                "type": AccessType.owner.value,
+                "groups": ["testuser1"],
+                "confirm": False,
             },
-            expect_status=403, expect_content={'error': 'You cannot remove ownership from yourself.'})
+            expect_status=403,
+            expect_content={"error": "You cannot remove ownership from yourself."},
+        )
         db.session.remove()
         d = DocEntry.find_by_id(d.id)
         self.assertTrue(self.current_user.has_ownership(d))
-        self.json_put(f'/permissions/remove',
-                      {
-                          'id': d.id,
-                          'type': AccessType.owner.value,
-                          'group': self.get_test_user_1_group_id(),
-                      },
-                      expect_status=403)
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.owner.value,
+                "group": self.get_test_user_1_group_id(),
+            },
+            expect_status=403,
+        )
         db.session.remove()
         d = DocEntry.find_by_id(d.id)
         self.assertTrue(self.current_user.has_ownership(d))
@@ -54,51 +59,54 @@ class PermissionTest(TimRouteTest):
         db.session.commit()
         self.login_test2()
         self.json_put(
-            f'/permissions/add',
+            f"/permissions/add",
             {
-                'time': {
-                    'from': get_current_time(),
-                    'type': 'always',
+                "time": {
+                    "from": get_current_time(),
+                    "type": "always",
                 },
-                'id': docid,
-                'type': AccessType.owner.value,
-                'groups': ['testuser2'],
-                'confirm': False,
+                "id": docid,
+                "type": AccessType.owner.value,
+                "groups": ["testuser2"],
+                "confirm": False,
             },
-            expect_status=403)
+            expect_status=403,
+        )
 
     def test_cannot_change_owner_of_personal_folder(self):
         self.login_test1()
         f = self.current_user.get_personal_folder()
         self.json_put(
-            f'/permissions/add',
+            f"/permissions/add",
             {
-                'id': f.id,
-                'type': AccessType.owner.value,
-                'groups': ['testuser2'],
-                'time': {
-                    'type': 'always',
+                "id": f.id,
+                "type": AccessType.owner.value,
+                "groups": ["testuser2"],
+                "time": {
+                    "type": "always",
                 },
-                'confirm': False,
-            }, expect_status=403,
-            expect_content={'error': 'You cannot add owners to your personal folder.'},
+                "confirm": False,
+            },
+            expect_status=403,
+            expect_content={"error": "You cannot add owners to your personal folder."},
         )
 
     def test_trim_whitespace(self):
         self.login_test1()
         f = self.current_user.get_personal_folder()
         self.json_put(
-            f'/permissions/add',
+            f"/permissions/add",
             {
-                'time': {
-                    'from': get_current_time(),
-                    'type': 'always',
+                "time": {
+                    "from": get_current_time(),
+                    "type": "always",
                 },
-                'id': f.id,
-                'type': AccessType.view.value,
-                'groups': ['testuser2', 'testuser3'],
-                'confirm': False,
-            })
+                "id": f.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2", "testuser3"],
+                "confirm": False,
+            },
+        )
         f = self.current_user.get_personal_folder()
         self.assertTrue(self.test_user_2.has_view_access(f))
         self.assertTrue(self.test_user_3.has_view_access(f))
@@ -107,110 +115,143 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         f = self.create_doc()
         self.json_put(
-            f'/permissions/add',
+            f"/permissions/add",
             {
-                'time': {
-                    'from': get_current_time(),
-                    'type': 'always',
+                "time": {
+                    "from": get_current_time(),
+                    "type": "always",
                 },
-                'id': f.id,
-                'type': AccessType.view.value,
-                'groups': ['testuser2', 'testuserx'],
-                'confirm': False,
-            }, expect_content={'not_exist': ['testuserx']})
+                "id": f.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2", "testuserx"],
+                "confirm": False,
+            },
+            expect_content={"not_exist": ["testuserx"]},
+        )
         self.json_put(
-            f'/permissions/add',
+            f"/permissions/add",
             {
-                'time': {
-                    'from': get_current_time(),
-                    'type': 'always',
+                "time": {
+                    "from": get_current_time(),
+                    "type": "always",
                 },
-                'id': f.id,
-                'type': AccessType.view.value,
-                'groups': ['testuserx'],
-                'confirm': False,
-            }, expect_content={'not_exist': ['testuserx']})
+                "id": f.id,
+                "type": AccessType.view.value,
+                "groups": ["testuserx"],
+                "confirm": False,
+            },
+            expect_content={"not_exist": ["testuserx"]},
+        )
 
     def test_permissions_get(self):
         self.login_test1()
         for i in (self.current_user.get_personal_folder(), self.create_doc()):
             self.json_put(
-                f'/permissions/add',
+                f"/permissions/add",
                 {
-                    'time': {
-                        'from': get_current_time(),
-                        'type': 'always',
+                    "time": {
+                        "from": get_current_time(),
+                        "type": "always",
                     },
-                    'id': i.id,
-                    'type': AccessType.view.value,
-                    'groups': ['testuser2'],
-                    'confirm': False,
-                })
-            rights = self.get(f'/permissions/get/{i.id}')
+                    "id": i.id,
+                    "type": AccessType.view.value,
+                    "groups": ["testuser2"],
+                    "confirm": False,
+                },
+            )
+            rights = self.get(f"/permissions/get/{i.id}")
             i = Item.find_by_id(i.id)
-            self.assertEqual(rights['accesstypes'],
-                             [
-                                 {'id': 1, 'name': 'view'},
-                                 {'id': 2, 'name': 'edit'},
-                                 {'id': 3, 'name': 'teacher'},
-                                 {'id': 4, 'name': 'manage'},
-                                 {'id': 5, 'name': 'see answers'},
-                                 {'id': 6, 'name': 'owner'},
-                                 {'id': 7, 'name': 'copy'},
-                             ])
-            self.assertEqual(convert_to_old_format(rights['grouprights']),
-                             [{'access_name': 'owner',
-                               'access_type': 6,
-                               'accessible_from': i.block.accesses[
-                                   (self.get_test_user_1_group_id(), AccessType.owner.value)].accessible_from.isoformat(),
-                               'accessible_to': None,
-                               'duration': None,
-                               'duration_from': None,
-                               'duration_to': None,
-                               'fullname': 'Test user 1',
-                               'gid': self.get_test_user_1_group_id(),
-                               'name': 'testuser1'},
-                              {'access_name': 'view',
-                               'access_type': 1,
-                               'accessible_from': str(
-                                   i.block.accesses[(self.get_test_user_2_group_id(), AccessType.view.value)].accessible_from.isoformat()),
-                               'accessible_to': None,
-                               'duration': None,
-                               'duration_from': None,
-                               'duration_to': None,
-                               'fullname': 'Test user 2',
-                               'gid': self.get_test_user_2_group_id(),
-                               'name': 'testuser2'}, ])
+            self.assertEqual(
+                rights["accesstypes"],
+                [
+                    {"id": 1, "name": "view"},
+                    {"id": 2, "name": "edit"},
+                    {"id": 3, "name": "teacher"},
+                    {"id": 4, "name": "manage"},
+                    {"id": 5, "name": "see answers"},
+                    {"id": 6, "name": "owner"},
+                    {"id": 7, "name": "copy"},
+                ],
+            )
+            self.assertEqual(
+                convert_to_old_format(rights["grouprights"]),
+                [
+                    {
+                        "access_name": "owner",
+                        "access_type": 6,
+                        "accessible_from": i.block.accesses[
+                            (self.get_test_user_1_group_id(), AccessType.owner.value)
+                        ].accessible_from.isoformat(),
+                        "accessible_to": None,
+                        "duration": None,
+                        "duration_from": None,
+                        "duration_to": None,
+                        "fullname": "Test user 1",
+                        "gid": self.get_test_user_1_group_id(),
+                        "name": "testuser1",
+                    },
+                    {
+                        "access_name": "view",
+                        "access_type": 1,
+                        "accessible_from": str(
+                            i.block.accesses[
+                                (self.get_test_user_2_group_id(), AccessType.view.value)
+                            ].accessible_from.isoformat()
+                        ),
+                        "accessible_to": None,
+                        "duration": None,
+                        "duration_from": None,
+                        "duration_to": None,
+                        "fullname": "Test user 2",
+                        "gid": self.get_test_user_2_group_id(),
+                        "name": "testuser2",
+                    },
+                ],
+            )
 
     def test_logged_in_right(self):
         self.login_test1()
         d = self.create_doc()
         self.json_put(
-            f'/permissions/add',
+            f"/permissions/add",
             {
-                'time': {
-                    'from': get_current_time(),
-                    'type': 'always',
+                "time": {
+                    "from": get_current_time(),
+                    "type": "always",
                 },
-                'id': d.id,
-                'type': AccessType.view.value,
-                'groups': ['Logged-in users'],
-                'confirm': False,
-            })
+                "id": d.id,
+                "type": AccessType.view.value,
+                "groups": ["Logged-in users"],
+                "confirm": False,
+            },
+        )
         self.login_test2()
         self.get(d.url)
         self.login_test1()
-        self.json_put(f'/permissions/remove', {
-            'id': d.id,
-            'type': AccessType.view.value,
-            'group': UserGroup.get_logged_in_group().id,
-        })
+        self.json_put(
+            f"/permissions/remove",
+            {
+                "id": d.id,
+                "type": AccessType.view.value,
+                "group": UserGroup.get_logged_in_group().id,
+            },
+        )
         self.login_test2()
         self.get(d.url, expect_status=403)
 
     def test_recursive_permissions(self):
         self.login_test1()
-        paths = ['a', 'b', 'c', 'x/a', 'x/b', 'x/c', 'x/x/a', 'x/x/b', 'x/x/c', ]
+        paths = [
+            "a",
+            "b",
+            "c",
+            "x/a",
+            "x/b",
+            "x/c",
+            "x/x/a",
+            "x/x/b",
+            "x/x/c",
+        ]
         ds = []
         for p in paths:
             d = self.create_doc(self.get_personal_item_path(p))
@@ -224,14 +265,14 @@ class PermissionTest(TimRouteTest):
         self.json_put(
             f"/permissions/edit",
             {
-                'groups': ['testuser1'],
-                'type': AccessType.owner.value,
-                'action': 'remove',
-                'ids': all_ids,
-                'time': {
-                    'type': 'always',
+                "groups": ["testuser1"],
+                "type": AccessType.owner.value,
+                "action": "remove",
+                "ids": all_ids,
+                "time": {
+                    "type": "always",
                 },
-                'confirm': False,
+                "confirm": False,
             },
             expect_status=403,
         )
@@ -239,14 +280,14 @@ class PermissionTest(TimRouteTest):
         self.json_put(
             f"/permissions/edit",
             {
-                'groups': ['testuser2', 'testuser3'],
-                'type': AccessType.view.value,
-                'action': 'add',
-                'ids': all_ids,
-                'time': {
-                    'type': 'always',
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "ids": all_ids,
+                "time": {
+                    "type": "always",
                 },
-                'confirm': False,
+                "confirm": False,
             },
         )
         t1_f = self.test_user_1.get_personal_folder()
@@ -260,14 +301,14 @@ class PermissionTest(TimRouteTest):
         self.json_put(
             f"/permissions/edit",
             {
-                'groups': ['testuser2'],
-                'type': AccessType.view.value,
-                'action': 'remove',
-                'ids': all_ids,
-                'time': {
-                    'type': 'always',
+                "groups": ["testuser2"],
+                "type": AccessType.view.value,
+                "action": "remove",
+                "ids": all_ids,
+                "time": {
+                    "type": "always",
                 },
-                'confirm': False,
+                "confirm": False,
             },
         )
         t1_f = self.test_user_1.get_personal_folder()
@@ -282,14 +323,14 @@ class PermissionTest(TimRouteTest):
         self.json_put(
             f"/permissions/edit",
             {
-                'groups': ['testuser2', 'testuser3'],
-                'type': AccessType.view.value,
-                'action': 'remove',
-                'ids': all_ids,
-                'time': {
-                    'type': 'always',
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.view.value,
+                "action": "remove",
+                "ids": all_ids,
+                "time": {
+                    "type": "always",
                 },
-                'confirm': False,
+                "confirm": False,
             },
         )
         t1_f = self.test_user_1.get_personal_folder()
@@ -307,42 +348,47 @@ class PermissionTest(TimRouteTest):
         self.json_put(
             f"/permissions/edit",
             {
-                'groups': ['testuser1'],
-                'type': AccessType.view.value,
-                'action': 'add',
-                'ids': [x.id for x in self.test_user_2.get_personal_folder().get_all_documents(include_subdirs=True)],
-                'time': {
-                    'type': 'always',
+                "groups": ["testuser1"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "ids": [
+                    x.id
+                    for x in self.test_user_2.get_personal_folder().get_all_documents(
+                        include_subdirs=True
+                    )
+                ],
+                "time": {
+                    "type": "always",
                 },
-                'confirm': False,
+                "confirm": False,
             },
-            expect_status=403
+            expect_status=403,
         )
         self.json_put(
             f"/permissions/edit",
             {
-                'groups': ['testuser1'],
-                'type': 'asd',
-                'action': 'add',
-                'ids': all_ids,
-                'time': {
-                    'type': 'always',
+                "groups": ["testuser1"],
+                "type": "asd",
+                "action": "add",
+                "ids": all_ids,
+                "time": {
+                    "type": "always",
                 },
-                'confirm': False,
+                "confirm": False,
             },
             expect_status=422,
         )
         self.json_put(
             f"/permissions/edit",
             {
-                'groups': ['nonexistent'],
-                'type': AccessType.view.value,
-                'action': 'add',
-                'ids': all_ids,
-                'time': {
-                    'type': 'always',
+                "groups": ["nonexistent"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "ids": all_ids,
+                "time": {
+                    "type": "always",
                 },
-                'confirm': False,
+                "confirm": False,
             },
             expect_status=400,
         )
@@ -355,30 +401,30 @@ class PermissionTest(TimRouteTest):
         self.json_put(
             f"/permissions/edit",
             {
-                'groups': ['testuser2', 'testuser3'],
-                'type': AccessType.view.value,
-                'action': 'add',
-                'ids': all_ids,
-                'time': {
-                    'type': 'always',
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.view.value,
+                "action": "add",
+                "ids": all_ids,
+                "time": {
+                    "type": "always",
                 },
-                'confirm': False,
+                "confirm": False,
             },
-            expect_status=403
+            expect_status=403,
         )
         self.json_put(
             f"/permissions/edit",
             {
-                'groups': ['testuser2', 'testuser3'],
-                'type': AccessType.view.value,
-                'action': 'remove',
-                'ids': all_ids,
-                'time': {
-                    'type': 'always',
+                "groups": ["testuser2", "testuser3"],
+                "type": AccessType.view.value,
+                "action": "remove",
+                "ids": all_ids,
+                "time": {
+                    "type": "always",
                 },
-                'confirm': False,
+                "confirm": False,
             },
-            expect_status=403
+            expect_status=403,
         )
 
     def test_chaining(self):
@@ -392,24 +438,31 @@ class PermissionTest(TimRouteTest):
             block=d,
         )
         db.session.commit()
-        d.document.set_settings({
-            'auto_confirm': self.get_personal_item_path('nextdoc'),
-            'expire_next_doc_message': 'My custom message',
-        })
+        d.document.set_settings(
+            {
+                "auto_confirm": self.get_personal_item_path("nextdoc"),
+                "expire_next_doc_message": "My custom message",
+            }
+        )
         self.login_test2()
         r = self.get(d.url, expect_status=403)
-        self.assertIn('auto_confirm document does not exist', r)
+        self.assertIn("auto_confirm document does not exist", r)
         self.login_test1()
-        d2 = self.create_doc(path=self.get_personal_item_path('nextdoc'))
+        d2 = self.create_doc(path=self.get_personal_item_path("nextdoc"))
         self.login_test2()
         r = self.get(d.url, expect_status=403)
-        self.assertIn('Document is not authorized to auto-confirm rights', r)
-        d2.document.set_settings({
-            'allow_self_confirm_from': d.path,
-        })
+        self.assertIn("Document is not authorized to auto-confirm rights", r)
+        d2.document.set_settings(
+            {
+                "allow_self_confirm_from": d.path,
+            }
+        )
         r = self.get(d.url, expect_status=403)
-        self.assertIn('Cannot get access to target document: No access found for users/test-user-1/nextdoc', r)
-        self.assertNotIn('My custom message', r)
+        self.assertIn(
+            "Cannot get access to target document: No access found for users/test-user-1/nextdoc",
+            r,
+        )
+        self.assertNotIn("My custom message", r)
         self.test_user_2.grant_access(
             access_type=AccessType.view,
             block=d2,
@@ -418,16 +471,16 @@ class PermissionTest(TimRouteTest):
         )
         db.session.commit()
         r = self.get(d.url, expect_status=403)
-        self.assertIn('My custom message', r)
-        self.assertIn('Go to the next document', r)
+        self.assertIn("My custom message", r)
+        self.assertIn("Go to the next document", r)
 
         # Make sure refreshing the page does not change anything.
         r = self.get(d.url, expect_status=403)
-        self.assertIn('My custom message', r)
-        self.assertIn('Go to the next document', r)
+        self.assertIn("My custom message", r)
+        self.assertIn("Go to the next document", r)
 
         self.get(d2.url, expect_status=403)
-        self.get(d2.url, query_string={'unlock': True})
+        self.get(d2.url, query_string={"unlock": True})
 
         # test also range confirm
         self.test_user_2.grant_access(
@@ -441,8 +494,8 @@ class PermissionTest(TimRouteTest):
         self.get(d2.url, expect_status=403)
         # this does the autoconfirm
         r = self.get(d.url, expect_status=403)
-        self.assertIn('My custom message', r)
-        self.assertIn('Go to the next document', r)
+        self.assertIn("My custom message", r)
+        self.assertIn("Go to the next document", r)
         # and now there should be access
         self.get(d2.url)
 
@@ -456,14 +509,18 @@ class PermissionTest(TimRouteTest):
             block=d,
         )
         db.session.commit()
-        d.document.set_settings({
-            'auto_confirm': self.get_personal_item_path('nextdoc2'),
-            'expire_next_doc_message': 'My custom message',
-        })
-        d2 = self.create_doc(path=self.get_personal_item_path('nextdoc2'))
-        d2.document.set_settings({
-            'allow_self_confirm_from': d.path,
-        })
+        d.document.set_settings(
+            {
+                "auto_confirm": self.get_personal_item_path("nextdoc2"),
+                "expire_next_doc_message": "My custom message",
+            }
+        )
+        d2 = self.create_doc(path=self.get_personal_item_path("nextdoc2"))
+        d2.document.set_settings(
+            {
+                "allow_self_confirm_from": d.path,
+            }
+        )
         grant_access(
             group=UserGroup.get_logged_in_group(),
             block=d2,
@@ -480,38 +537,44 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         self.json_put(
-            f'/permissions/add',
+            f"/permissions/add",
             {
-                'time': {
-                    'from': None,
-                    'to': get_current_time() + timedelta(days=1),
-                    'type': 'range',
+                "time": {
+                    "from": None,
+                    "to": get_current_time() + timedelta(days=1),
+                    "type": "range",
                 },
-                'id': d.id,
-                'type': AccessType.view.value,
-                'groups': ['testuser2'],
-                'confirm': True,
-            }, expect_content={'not_exist': []})
+                "id": d.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": True,
+            },
+            expect_content={"not_exist": []},
+        )
         self.login_test2()
         self.get(d.url, expect_status=403)
         self.login_test1()
-        self.json_put('/permissions/confirm', {
-            'id': d.id,
-            'type': AccessType.view.value,
-            'group': self.get_test_user_2_group_id(),
-        })
+        self.json_put(
+            "/permissions/confirm",
+            {
+                "id": d.id,
+                "type": AccessType.view.value,
+                "group": self.get_test_user_2_group_id(),
+            },
+        )
         self.login_test2()
         self.get(d.url)
 
         self.login_test1()
         self.json_put(
-            '/permissions/confirm', {
-                'id': d.id,
-                'type': AccessType.view.value,
-                'group': self.get_test_user_2_group_id(),
+            "/permissions/confirm",
+            {
+                "id": d.id,
+                "type": AccessType.view.value,
+                "group": self.get_test_user_2_group_id(),
             },
             expect_status=400,
-            expect_content='view right for testuser2 does not require confirmation or it was already confirmed.',
+            expect_content="view right for testuser2 does not require confirmation or it was already confirmed.",
         )
 
     def test_cannot_auto_confirm_too_early(self):
@@ -526,13 +589,17 @@ class PermissionTest(TimRouteTest):
         )
         db.session.commit()
         d2 = self.create_doc()
-        d.document.set_settings({
-            'auto_confirm': d2.path,
-            'expire_next_doc_message': 'My custom message',
-        })
-        d2.document.set_settings({
-            'allow_self_confirm_from': d.path,
-        })
+        d.document.set_settings(
+            {
+                "auto_confirm": d2.path,
+                "expire_next_doc_message": "My custom message",
+            }
+        )
+        d2.document.set_settings(
+            {
+                "allow_self_confirm_from": d.path,
+            }
+        )
         self.login_test2()
         self.test_user_2.grant_access(
             access_type=AccessType.view,
@@ -542,8 +609,8 @@ class PermissionTest(TimRouteTest):
         )
         db.session.commit()
         r = self.get(d.url, expect_status=403)
-        self.assertNotIn('My custom message', r)
-        self.assertNotIn('Go to the next document', r)
+        self.assertNotIn("My custom message", r)
+        self.assertNotIn("Go to the next document", r)
 
         self.test_user_2.grant_access(
             access_type=AccessType.view,
@@ -553,8 +620,8 @@ class PermissionTest(TimRouteTest):
         )
         db.session.commit()
         r = self.get(d.url, expect_status=403)
-        self.assertNotIn('My custom message', r)
-        self.assertNotIn('Go to the next document', r)
+        self.assertNotIn("My custom message", r)
+        self.assertNotIn("Go to the next document", r)
 
         self.test_user_2.grant_access(
             access_type=AccessType.view,
@@ -564,8 +631,8 @@ class PermissionTest(TimRouteTest):
         )
         db.session.commit()
         r = self.get(d.url, expect_status=403)
-        self.assertNotIn('My custom message', r)
-        self.assertNotIn('Go to the next document', r)
+        self.assertNotIn("My custom message", r)
+        self.assertNotIn("Go to the next document", r)
 
     def test_auto_confirm_translation(self):
         self.login_test1()
@@ -580,18 +647,26 @@ class PermissionTest(TimRouteTest):
         d2 = self.create_doc()
         d2tr = self.create_translation(d2)
         trid = d2tr.id
-        d.document.set_settings({
-            'auto_confirm': d2.path,
-            'expire_next_doc_message': 'My custom message',
-        })
-        d2.document.set_settings({
-            'allow_self_confirm_from': d.path,
-        })
+        d.document.set_settings(
+            {
+                "auto_confirm": d2.path,
+                "expire_next_doc_message": "My custom message",
+            }
+        )
+        d2.document.set_settings(
+            {
+                "allow_self_confirm_from": d.path,
+            }
+        )
         d = DocEntry.find_by_id(d.id)
         d2 = DocEntry.find_by_id(d2.id)
         d2.document.clear_mem_cache()
-        synchronize_translations(d, DocumentEditResult(added=d.document.get_paragraphs()))
-        synchronize_translations(d2, DocumentEditResult(added=d2.document.get_paragraphs()))
+        synchronize_translations(
+            d, DocumentEditResult(added=d.document.get_paragraphs())
+        )
+        synchronize_translations(
+            d2, DocumentEditResult(added=d2.document.get_paragraphs())
+        )
         self.login_test2()
         d2tr = DocEntry.find_by_id(trid)
         self.test_user_2.grant_access(
@@ -605,8 +680,8 @@ class PermissionTest(TimRouteTest):
         self.get(d2tr.url, expect_status=403)
 
         r = self.get(tr.url, expect_status=403)
-        self.assertIn('My custom message', r)
-        self.assertIn('Go to the next document', r)
+        self.assertIn("My custom message", r)
+        self.assertIn("Go to the next document", r)
         self.get(d2tr.url)
 
     def test_self_expire(self):
@@ -620,7 +695,7 @@ class PermissionTest(TimRouteTest):
         )
         db.session.commit()
         self.login_test2()
-        self.json_post('/permissions/selfExpire', {'id': d.id})
+        self.json_post("/permissions/selfExpire", {"id": d.id})
 
         self.test_user_2.grant_access(
             access_type=AccessType.view,
@@ -628,25 +703,26 @@ class PermissionTest(TimRouteTest):
             block=d,
         )
         db.session.commit()
-        self.json_post('/permissions/selfExpire', {'id': d.id})
+        self.json_post("/permissions/selfExpire", {"id": d.id})
 
     def test_duration_right(self):
         self.login_test1()
         d = self.create_doc()
         self.json_put(
-            f'/permissions/add',
+            f"/permissions/add",
             {
-                'time': {
-                    'from': None,
-                    'to': None,
-                    'type': 'duration',
-                    'duration': 'PT4H',
+                "time": {
+                    "from": None,
+                    "to": None,
+                    "type": "duration",
+                    "duration": "PT4H",
                 },
-                'id': d.id,
-                'type': AccessType.view.value,
-                'groups': ['testuser2'],
-                'confirm': False,
-            })
+                "id": d.id,
+                "type": AccessType.view.value,
+                "groups": ["testuser2"],
+                "confirm": False,
+            },
+        )
 
     def test_mass_permission_remove_partially_redundant(self):
         """Rights are removed even if the selection contains redundant rows."""
@@ -658,14 +734,14 @@ class PermissionTest(TimRouteTest):
         self.json_put(
             f"/permissions/edit",
             {
-                'groups': ['testuser2'],
-                'type': AccessType.view.value,
-                'action': 'remove',
-                'ids': [d.id, d2.id],
-                'time': {
-                    'type': 'always',
+                "groups": ["testuser2"],
+                "type": AccessType.view.value,
+                "action": "remove",
+                "ids": [d.id, d2.id],
+                "time": {
+                    "type": "always",
                 },
-                'confirm': False,
+                "confirm": False,
             },
         )
         # The original bug was that db.session.commit() was not getting called when it should have,
@@ -678,17 +754,21 @@ class PermissionTest(TimRouteTest):
         self.login_test1()
         d = self.create_doc()
         self.login_test2()
-        self.get(d.url, expect_status=403, expect_contains="Sorry, you don't have permission to access this resource.")
-        d.document.set_settings({'access_denied_message': 'You cannot see this.'})
+        self.get(
+            d.url,
+            expect_status=403,
+            expect_contains="Sorry, you don't have permission to access this resource.",
+        )
+        d.document.set_settings({"access_denied_message": "You cannot see this."})
         self.get(d.url, expect_status=403, expect_contains="You cannot see this.")
 
     def test_inherit_rights_from_folder(self):
         self.login_test1()
         d = self.create_doc(
-            path=self.get_personal_item_path('x/test'),
-            initial_par='#- {plugin=textfield #t}'
+            path=self.get_personal_item_path("x/test"),
+            initial_par="#- {plugin=textfield #t}",
         )
-        uf = self.upload_file(d, b'test', 'test.txt')
+        uf = self.upload_file(d, b"test", "test.txt")
         tr = self.create_translation(d)
         f = d.parent
         self.test_user_2.grant_access(f, AccessType.view)
@@ -697,25 +777,27 @@ class PermissionTest(TimRouteTest):
         self.get(d.url, expect_status=403)
         self.get(tr.url, expect_status=403)
         self.get(f'/files/{uf["file"]}', expect_status=403)
-        with self.temp_config({'INHERIT_FOLDER_RIGHTS_DOCS': {d.path}}):
+        with self.temp_config({"INHERIT_FOLDER_RIGHTS_DOCS": {d.path}}):
             self.get(d.url)
             self.get(tr.url)
             self.get(f'/files/{uf["file"]}')
             self.mark_as_read(d, d.document.get_paragraphs()[0].get_id())
-            self.post_answer('textfield', f'{d.id}.t', user_input={'c': 'x'})
+            self.post_answer("textfield", f"{d.id}.t", user_input={"c": "x"})
 
     def test_no_fulltext_in_manage_with_view(self):
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 #- {plugin=csPlugin}
 -pointsRule: 
   expectCode: "secret answer"
-""")
+"""
+        )
         self.test_user_2.grant_access(d, AccessType.view)
         db.session.commit()
         self.login_test2()
-        r = self.get(d.get_url_for_view('manage'))
-        self.assertNotIn('secret answer', r)
+        r = self.get(d.get_url_for_view("manage"))
+        self.assertNotIn("secret answer", r)
 
     def test_permission_clear(self):
         self.login_test1()
@@ -726,11 +808,15 @@ class PermissionTest(TimRouteTest):
         db.session.refresh(d)
         self.assertTrue(self.test_user_2.has_edit_access(d))
         self.assertTrue(self.test_user_2.has_view_access(d))
-        self.json_put('/permissions/clear', {'paths': [d.path], 'type': AccessType.edit.value})
+        self.json_put(
+            "/permissions/clear", {"paths": [d.path], "type": AccessType.edit.value}
+        )
         d = DocEntry.find_by_id(d.id)
         self.assertFalse(self.test_user_2.has_edit_access(d))
         self.assertTrue(self.test_user_2.has_view_access(d))
-        self.json_put('/permissions/clear', {'paths': [d.path], 'type': AccessType.view.value})
+        self.json_put(
+            "/permissions/clear", {"paths": [d.path], "type": AccessType.view.value}
+        )
         d = DocEntry.find_by_id(d.id)
         self.assertFalse(self.test_user_2.has_edit_access(d))
         self.assertFalse(self.test_user_2.has_view_access(d))

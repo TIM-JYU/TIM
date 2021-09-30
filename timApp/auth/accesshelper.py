@@ -10,8 +10,12 @@ from sqlalchemy import inspect
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import BlockAccess
-from timApp.auth.sessioninfo import logged_in, get_other_users_as_list, \
-    get_current_user_group, get_current_user_object
+from timApp.auth.sessioninfo import (
+    logged_in,
+    get_other_users_as_list,
+    get_current_user_group,
+    get_current_user_object,
+)
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
@@ -22,7 +26,11 @@ from timApp.folder.folder import Folder
 from timApp.item.block import BlockType, Block
 from timApp.item.item import Item
 from timApp.notification.send_email import send_email
-from timApp.plugin.plugin import Plugin, find_plugin_from_document, maybe_get_plugin_from_par
+from timApp.plugin.plugin import (
+    Plugin,
+    find_plugin_from_document,
+    maybe_get_plugin_from_par,
+)
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId, TaskIdAccess
 from timApp.timdb.exceptions import TimDbException
@@ -38,28 +46,28 @@ from timApp.util.utils import get_current_time
 def get_doc_or_abort(doc_id: int, msg: Optional[str] = None) -> DocInfo:
     d = DocEntry.find_by_id(doc_id)
     if not d:
-        raise NotExist(msg or 'Document not found')
+        raise NotExist(msg or "Document not found")
     return d
 
 
 def get_item_or_abort(item_id: int):
     i = Item.find_by_id(item_id)
     if not i:
-        raise NotExist('Item not found')
+        raise NotExist("Item not found")
     return i
 
 
 def get_folder_or_abort(folder_id: int):
     f = Folder.get_by_id(folder_id)
     if not f:
-        raise NotExist('Folder not found')
+        raise NotExist("Folder not found")
     return f
 
 
-def verify_admin(require: bool=True, user: Optional[User]=None) -> bool:
+def verify_admin(require: bool = True, user: Optional[User] = None) -> bool:
     if not check_admin_access(user=user):
         if require:
-            raise AccessDenied('This action requires administrative rights.')
+            raise AccessDenied("This action requires administrative rights.")
         return False
     return True
 
@@ -68,23 +76,49 @@ def verify_admin_no_ret(require=True):
     verify_admin(require)
 
 
-def verify_edit_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
-    return verify_access(b, AccessType.edit, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
+def verify_edit_access(
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
+):
+    return verify_access(
+        b,
+        AccessType.edit,
+        require=require,
+        message=message,
+        check_duration=check_duration,
+        check_parents=check_parents,
+    )
 
 
-def verify_manage_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
-    return verify_access(b, AccessType.manage, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
+def verify_manage_access(
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
+):
+    return verify_access(
+        b,
+        AccessType.manage,
+        require=require,
+        message=message,
+        check_duration=check_duration,
+        check_parents=check_parents,
+    )
 
 
 def verify_access(
-        b: ItemOrBlock,
-        access_type: AccessType,
-        require: bool = True,
-        message: Optional[str] = None,
-        check_duration=False,
-        check_parents=False,
-        grace_period=timedelta(seconds=0),
-        user: Optional[User] = None,
+    b: ItemOrBlock,
+    access_type: AccessType,
+    require: bool = True,
+    message: Optional[str] = None,
+    check_duration=False,
+    check_parents=False,
+    grace_period=timedelta(seconds=0),
+    user: Optional[User] = None,
 ):
     u = user or get_current_user_object()
     has_access = u.has_access(b, access_type, grace_period)
@@ -105,10 +139,10 @@ def verify_access(
 
 
 def check_inherited_right(
-        u: User,
-        b: ItemOrBlock,
-        access_type: AccessType,
-        grace_period: timedelta,
+    u: User,
+    b: ItemOrBlock,
+    access_type: AccessType,
+    grace_period: timedelta,
 ) -> Optional[BlockAccess]:
     has_access = None
     is_docinfo = isinstance(b, DocInfo)
@@ -116,25 +150,83 @@ def check_inherited_right(
         doc = b if is_docinfo else DocEntry.find_by_id(b.id)
         if not doc:
             return None
-        if doc.path_without_lang in current_app.config['INHERIT_FOLDER_RIGHTS_DOCS']:
+        if doc.path_without_lang in current_app.config["INHERIT_FOLDER_RIGHTS_DOCS"]:
             has_access = u.has_access(b.parent, access_type, grace_period)
     return has_access
 
 
-def verify_view_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False, user=None):
-    return verify_access(b, AccessType.view, require=require, message=message, check_duration=check_duration, check_parents=check_parents, user=user)
+def verify_view_access(
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
+    user=None,
+):
+    return verify_access(
+        b,
+        AccessType.view,
+        require=require,
+        message=message,
+        check_duration=check_duration,
+        check_parents=check_parents,
+        user=user,
+    )
 
 
-def verify_teacher_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False, user=None):
-    return verify_access(b, AccessType.teacher, require=require, message=message, check_duration=check_duration, check_parents=check_parents, user=user)
+def verify_teacher_access(
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
+    user=None,
+):
+    return verify_access(
+        b,
+        AccessType.teacher,
+        require=require,
+        message=message,
+        check_duration=check_duration,
+        check_parents=check_parents,
+        user=user,
+    )
 
 
-def verify_copy_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
-    return verify_access(b, AccessType.copy, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
+def verify_copy_access(
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
+):
+    return verify_access(
+        b,
+        AccessType.copy,
+        require=require,
+        message=message,
+        check_duration=check_duration,
+        check_parents=check_parents,
+    )
 
 
-def verify_seeanswers_access(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False, user=None):
-    return verify_access(b, AccessType.see_answers, require=require, message=message, check_duration=check_duration, check_parents=check_parents, user=user)
+def verify_seeanswers_access(
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
+    user=None,
+):
+    return verify_access(
+        b,
+        AccessType.see_answers,
+        require=require,
+        message=message,
+        check_duration=check_duration,
+        check_parents=check_parents,
+        user=user,
+    )
 
 
 class ItemLockedException(Exception):
@@ -142,44 +234,57 @@ class ItemLockedException(Exception):
     access that has not yet begun or the access has expired."""
 
     def __init__(
-            self,
-            access: BlockAccess,
-            msg: Optional[str]=None,
-            next_doc: Optional[DocInfo]=None,
+        self,
+        access: BlockAccess,
+        msg: Optional[str] = None,
+        next_doc: Optional[DocInfo] = None,
     ):
         self.access = access
         self.msg = msg
         self.next_doc = next_doc
 
 
-def abort_if_not_access_and_required(access_obj: BlockAccess,
-                                     block: ItemOrBlock,
-                                     access_type: AccessType,
-                                     require=True,
-                                     message=None,
-                                     check_duration=False):
+def abort_if_not_access_and_required(
+    access_obj: BlockAccess,
+    block: ItemOrBlock,
+    access_type: AccessType,
+    require=True,
+    message=None,
+    check_duration=False,
+):
     if access_obj:
         return access_obj
     if check_duration:
-        ba = BlockAccess.query.filter_by(block_id=block.id,
-                                         type=access_type.value,
-                                         usergroup_id=get_current_user_group()).first()
+        ba = BlockAccess.query.filter_by(
+            block_id=block.id,
+            type=access_type.value,
+            usergroup_id=get_current_user_group(),
+        ).first()
         if ba is None:
-            ba_group: BlockAccess = BlockAccess.query.filter_by(block_id=block.id,
-                                                                type=access_type.value).filter(
-                BlockAccess.usergroup_id.in_(get_current_user_object().get_groups().with_entities(UserGroup.id))
-            ).first()
+            ba_group: BlockAccess = (
+                BlockAccess.query.filter_by(block_id=block.id, type=access_type.value)
+                .filter(
+                    BlockAccess.usergroup_id.in_(
+                        get_current_user_object()
+                        .get_groups()
+                        .with_entities(UserGroup.id)
+                    )
+                )
+                .first()
+            )
             if ba_group is not None:
-                ba = BlockAccess(block_id=ba_group.block_id,
-                                 type=ba_group.type,
-                                 usergroup_id=get_current_user_group(),
-                                 accessible_from=ba_group.accessible_from,
-                                 accessible_to=ba_group.accessible_to,
-                                 duration=ba_group.duration,
-                                 duration_from=ba_group.duration_from,
-                                 duration_to=ba_group.duration_to)
+                ba = BlockAccess(
+                    block_id=ba_group.block_id,
+                    type=ba_group.type,
+                    usergroup_id=get_current_user_group(),
+                    accessible_from=ba_group.accessible_from,
+                    accessible_to=ba_group.accessible_to,
+                    duration=ba_group.duration,
+                    duration_from=ba_group.duration_from,
+                    duration_to=ba_group.duration_to,
+                )
         if ba is not None:
-            unlock = get_option(request, 'unlock', False)
+            unlock = get_option(request, "unlock", False)
             if unlock and ba.unlockable:
                 ba.accessible_from = get_current_time()
                 ba.accessible_to = ba.accessible_from + ba.duration_now
@@ -190,12 +295,15 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
                     db.session.add(ba)
                 db.session.commit()  # TODO ensure nothing else gets committed than the above
                 if isinstance(block, Item):
-                    targets = current_app.config['DIST_RIGHTS_UNLOCK_TARGETS']
+                    targets = current_app.config["DIST_RIGHTS_UNLOCK_TARGETS"]
                     curr_targets = targets.get(block.path)
                     if curr_targets:
                         from timApp.tim_celery import send_unlock_op
-                        send_unlock_op.delay(get_current_user_object().email, curr_targets)
-                flash('Item was unlocked successfully.')
+
+                        send_unlock_op.delay(
+                            get_current_user_object().email, curr_targets
+                        )
+                flash("Item was unlocked successfully.")
                 if ba.accessible_from < ba.accessible_to:
                     return ba
                 else:
@@ -209,7 +317,9 @@ def abort_if_not_access_and_required(access_obj: BlockAccess,
                     msg, next_doc = None, None
                 raise ItemLockedException(ba, msg, next_doc)
     if require:
-        raise AccessDenied(message or "Sorry, you don't have permission to use this resource.")
+        raise AccessDenied(
+            message or "Sorry, you don't have permission to use this resource."
+        )
     return None
 
 
@@ -222,11 +332,11 @@ def maybe_auto_confirm(block: ItemOrBlock):
         if isinstance(ac, str):
             target = None
             if block.lang_id:
-                target = DocEntry.find_by_path(f'{ac}/{block.lang_id}')
+                target = DocEntry.find_by_path(f"{ac}/{block.lang_id}")
             if not target:
                 target = DocEntry.find_by_path(ac)
             if not target:
-                flash('auto_confirm document does not exist')
+                flash("auto_confirm document does not exist")
             else:
                 t_s = target.document.get_settings()
                 asc = t_s.allow_self_confirm_from()
@@ -242,20 +352,22 @@ def maybe_auto_confirm(block: ItemOrBlock):
                     try:
                         acc = get_single_view_access(target, allow_group=True)
                     except AccessDenied as e:
-                        flash('Cannot get access to target document: ' + str(e))
+                        flash("Cannot get access to target document: " + str(e))
                     else:
                         next_doc = target
                         msg = s.expire_next_doc_message()
                         acc.do_confirm()
                         db.session.commit()
                 else:
-                    flash('Document is not authorized to auto-confirm rights')
+                    flash("Document is not authorized to auto-confirm rights")
     return msg, next_doc
 
 
 def has_view_access(b: ItemOrBlock):
     u = get_current_user_object()
-    return check_inherited_right(u, b, AccessType.view, grace_period=timedelta(seconds=0)) or u.has_view_access(b)
+    return check_inherited_right(
+        u, b, AccessType.view, grace_period=timedelta(seconds=0)
+    ) or u.has_view_access(b)
 
 
 def has_edit_access(b: ItemOrBlock):
@@ -291,10 +403,12 @@ def check_admin_access(block_id=None, user=None) -> Union[BlockAccess, None]:
     if curr_user is None:
         curr_user = get_current_user_object()
     if curr_user.is_admin:
-        return BlockAccess(block_id=block_id,
-                           accessible_from=datetime.min.replace(tzinfo=timezone.utc),
-                           type=AccessType.owner.value,
-                           usergroup_id=curr_user.get_personal_group().id)
+        return BlockAccess(
+            block_id=block_id,
+            accessible_from=datetime.min.replace(tzinfo=timezone.utc),
+            type=AccessType.owner.value,
+            usergroup_id=curr_user.get_personal_group().id,
+        )
     return None
 
 
@@ -303,8 +417,21 @@ def verify_logged_in() -> None:
         raise AccessDenied("You have to be logged in to perform this action.")
 
 
-def verify_ownership(b: ItemOrBlock, require=True, message=None, check_duration=False, check_parents=False):
-    return verify_access(b, AccessType.owner, require=require, message=message, check_duration=check_duration, check_parents=check_parents)
+def verify_ownership(
+    b: ItemOrBlock,
+    require=True,
+    message=None,
+    check_duration=False,
+    check_parents=False,
+):
+    return verify_access(
+        b,
+        AccessType.owner,
+        require=require,
+        message=message,
+        check_duration=check_duration,
+        check_parents=check_parents,
+    )
 
 
 def verify_read_marking_right(b: ItemOrBlock):
@@ -317,19 +444,23 @@ def verify_comment_right(b: ItemOrBlock):
         raise AccessDenied()
 
 
-def get_plugin_from_request(doc: Document,
-                            task_id: TaskId,
-                            u: UserContext,
-                            view_ctx: ViewContext,
-                            answernr: Optional[int]=None) -> tuple[Document, Plugin]:
+def get_plugin_from_request(
+    doc: Document,
+    task_id: TaskId,
+    u: UserContext,
+    view_ctx: ViewContext,
+    answernr: Optional[int] = None,
+) -> tuple[Document, Plugin]:
     assert doc.doc_id == task_id.doc_id
     orig_info = view_ctx.origin
-    orig_doc_id, orig_par_id = (orig_info.doc_id, orig_info.par_id) if orig_info else (None, None)
+    orig_doc_id, orig_par_id = (
+        (orig_info.doc_id, orig_info.par_id) if orig_info else (None, None)
+    )
     plug = find_plugin_from_document(doc, task_id, u, view_ctx)
     par_id = plug.par.get_id()
     if orig_doc_id is None or orig_par_id is None:
         if not doc.has_paragraph(par_id):
-            raise RouteException('Plugin not found')
+            raise RouteException("Plugin not found")
         return doc, plug
     if orig_doc_id != doc.doc_id:
         orig_doc = Document(orig_doc_id)
@@ -339,9 +470,16 @@ def get_plugin_from_request(doc: Document,
     try:
         orig_par = orig_doc.get_paragraph(orig_par_id)
     except TimDbException:
-        raise PluginException(f'Plugin paragraph not found: {orig_par_id}')
+        raise PluginException(f"Plugin paragraph not found: {orig_par_id}")
     pars = dereference_pars([orig_par], context_doc=orig_doc, view_ctx=view_ctx)
-    ctx_doc = orig_doc if (not orig_doc.get_docinfo().is_original_translation and orig_par.is_translation()) else doc
+    ctx_doc = (
+        orig_doc
+        if (
+            not orig_doc.get_docinfo().is_original_translation
+            and orig_par.is_translation()
+        )
+        else doc
+    )
     for p in pars:
         if p.get_id() == par_id:
             if answernr is not None:
@@ -351,12 +489,16 @@ def get_plugin_from_request(doc: Document,
 
 
 def get_origin_from_request() -> Optional[OriginInfo]:
-    ref_from = ((request.get_json() or {}).get('ref_from') or {})
-    doc_id = ref_from.get('docId', get_option(request, 'ref_from_doc_id',
-                                              default=None, cast=int))
-    par_id = ref_from.get('par', get_option(request, 'ref_from_par_id',
-                                            default=None))
-    return OriginInfo(doc_id=doc_id, par_id=par_id) if doc_id is not None and par_id is not None else None
+    ref_from = (request.get_json() or {}).get("ref_from") or {}
+    doc_id = ref_from.get(
+        "docId", get_option(request, "ref_from_doc_id", default=None, cast=int)
+    )
+    par_id = ref_from.get("par", get_option(request, "ref_from_par_id", default=None))
+    return (
+        OriginInfo(doc_id=doc_id, par_id=par_id)
+        if doc_id is not None and par_id is not None
+        else None
+    )
 
 
 @dataclass
@@ -367,29 +509,41 @@ class TaskAccessVerification:
 
 
 def verify_task_access(
-        d: DocInfo,
-        task_id: TaskId,
-        access_type: AccessType,
-        required_task_access_level: TaskIdAccess,
-        context_user: UserContext,
-        view_ctx: ViewContext,
-        allow_grace_period: bool = False,
-        answernr: Optional[int] = None
+    d: DocInfo,
+    task_id: TaskId,
+    access_type: AccessType,
+    required_task_access_level: TaskIdAccess,
+    context_user: UserContext,
+    view_ctx: ViewContext,
+    allow_grace_period: bool = False,
+    answernr: Optional[int] = None,
 ) -> TaskAccessVerification:
     assert d.id == task_id.doc_id
-    doc, found_plugin = get_plugin_from_request(d.document, task_id, context_user, view_ctx, answernr)
-    access = verify_access(doc.get_docinfo(), access_type, require=False, user=context_user.logged_user)
+    doc, found_plugin = get_plugin_from_request(
+        d.document, task_id, context_user, view_ctx, answernr
+    )
+    access = verify_access(
+        doc.get_docinfo(), access_type, require=False, user=context_user.logged_user
+    )
     is_expired = False
     if not access:
         if not allow_grace_period:
-            raise AccessDenied(f'No access for task {d.id}.{task_id.task_name}')
-        access = verify_access(doc.get_docinfo(), access_type, grace_period=doc.get_settings().answer_grace_period())
+            raise AccessDenied(f"No access for task {d.id}.{task_id.task_name}")
+        access = verify_access(
+            doc.get_docinfo(),
+            access_type,
+            grace_period=doc.get_settings().answer_grace_period(),
+        )
         is_expired = True
 
-    if found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly and \
-            required_task_access_level == TaskIdAccess.ReadWrite and \
-            not context_user.logged_user.has_teacher_access(doc.get_docinfo()):
-        raise AccessDenied(f'This task/field {task_id.task_name} is readonly and thus only writable for teachers.')
+    if (
+        found_plugin.task_id.access_specifier == TaskIdAccess.ReadOnly
+        and required_task_access_level == TaskIdAccess.ReadWrite
+        and not context_user.logged_user.has_teacher_access(doc.get_docinfo())
+    ):
+        raise AccessDenied(
+            f"This task/field {task_id.task_name} is readonly and thus only writable for teachers."
+        )
     return TaskAccessVerification(
         plugin=found_plugin,
         access=access,
@@ -399,18 +553,18 @@ def verify_task_access(
 
 def grant_access_to_session_users(i: ItemOrBlock):
     for u in get_other_users_as_list():
-        grant_access(User.get_by_id(int(u['id'])).get_personal_group(),
-                     i,
-                     AccessType.manage)
+        grant_access(
+            User.get_by_id(int(u["id"])).get_personal_group(), i, AccessType.manage
+        )
 
 
 def reset_request_access_cache():
-    del_attr_if_exists(g, 'manageable')
-    del_attr_if_exists(g, 'viewable')
-    del_attr_if_exists(g, 'teachable')
-    del_attr_if_exists(g, 'see_answers')
-    del_attr_if_exists(g, 'owned')
-    del_attr_if_exists(g, 'editable')
+    del_attr_if_exists(g, "manageable")
+    del_attr_if_exists(g, "viewable")
+    del_attr_if_exists(g, "teachable")
+    del_attr_if_exists(g, "see_answers")
+    del_attr_if_exists(g, "owned")
+    del_attr_if_exists(g, "editable")
 
 
 def del_attr_if_exists(obj, attr_name: str):
@@ -435,7 +589,9 @@ class AccessDenied(Exception):
 
 def get_single_view_access(i: Item, allow_group: bool = False) -> BlockAccess:
     u = get_current_user_object()
-    accs: list[BlockAccess] = u.get_personal_group().accesses.filter_by(block_id=i.id).all()
+    accs: list[BlockAccess] = (
+        u.get_personal_group().accesses.filter_by(block_id=i.id).all()
+    )
     if not accs and allow_group:
         lig = UserGroup.get_logged_in_group()
         ugroups = {gid for gid, in u.groups_dyn.with_entities(UserGroup.id).all()}
@@ -456,24 +612,28 @@ def get_single_view_access(i: Item, allow_group: bool = False) -> BlockAccess:
         raise AccessDenied(f"Multiple accesses found for {i.path}.")
     acc = accs[0]
     if acc.access_type != AccessType.view:
-        raise AccessDenied(f"Access type is {acc.access_type.name} instead of view in {i.path}.")
+        raise AccessDenied(
+            f"Access type is {acc.access_type.name} instead of view in {i.path}."
+        )
     if acc.expired:
         raise AccessDenied(f"Access is already expired for {i.path}.")
     return acc
 
 
 def is_allowed_ip() -> bool:
-    ip_allowlist = current_app.config['IP_BLOCK_ALLOWLIST']
+    ip_allowlist = current_app.config["IP_BLOCK_ALLOWLIST"]
     if ip_allowlist is None:
         return True
-    return any(ipaddress.ip_address(request.remote_addr) in network for network in ip_allowlist)
+    return any(
+        ipaddress.ip_address(request.remote_addr) in network for network in ip_allowlist
+    )
 
 
 def is_blocked_ip() -> bool:
     ip = request.remote_addr
     fp = get_ipblocklist_path()
     try:
-        with fp.open('r') as f:
+        with fp.open("r") as f:
             ip_blocklist = f.read()
     except FileNotFoundError:
         return False
@@ -482,30 +642,32 @@ def is_blocked_ip() -> bool:
 
 
 def get_ipblocklist_path() -> Path:
-    return Path(current_app.config['FILES_PATH']) / 'ipblocklist'
+    return Path(current_app.config["FILES_PATH"]) / "ipblocklist"
 
 
-def verify_ip_ok(user: Optional[User], msg: str = 'IPNotAllowed'):
+def verify_ip_ok(user: Optional[User], msg: str = "IPNotAllowed"):
     if (not user or not user.is_admin) and not is_allowed_ip():
-        username = user.name if user else 'Anonymous'
+        username = user.name if user else "Anonymous"
         cfg = current_app.config
-        ip_block_log_only = cfg['IP_BLOCK_LOG_ONLY']
+        ip_block_log_only = cfg["IP_BLOCK_LOG_ONLY"]
         is_in_blocklist = is_blocked_ip()
         should_block = not ip_block_log_only or is_in_blocklist
         blocked_or_allowed = "blocked" if should_block else "allowed"
-        log_warning(f'IP {request.remote_addr} outside allowlist ({username}) - {blocked_or_allowed}')
-        msg_end = 'Request was blocked.' if should_block else 'Request was allowed.'
-        reply_tos = [cfg['ERROR_EMAIL']]
+        log_warning(
+            f"IP {request.remote_addr} outside allowlist ({username}) - {blocked_or_allowed}"
+        )
+        msg_end = "Request was blocked." if should_block else "Request was allowed."
+        reply_tos = [cfg["ERROR_EMAIL"]]
         if user:
             reply_tos.append(user.email)
         if not is_in_blocklist:
             send_email(
-                rcpt=cfg['ERROR_EMAIL'],
+                rcpt=cfg["ERROR_EMAIL"],
                 subject=f'{cfg["TIM_HOST"]}: '
-                        f'IP {request.remote_addr} outside allowlist ({username}) '
-                        f'- {blocked_or_allowed}',
-                mail_from=cfg['WUFF_EMAIL'],
-                reply_to=','.join(reply_tos),
+                f"IP {request.remote_addr} outside allowlist ({username}) "
+                f"- {blocked_or_allowed}",
+                mail_from=cfg["WUFF_EMAIL"],
+                reply_to=",".join(reply_tos),
                 msg=f"""
 IP {request.remote_addr} was outside allowlist.
 
@@ -514,6 +676,7 @@ URL: {request.url}
 User: {username}
 
 {msg_end}
-                """.strip())
+                """.strip(),
+            )
         if should_block:
             raise AccessDenied(msg)

@@ -19,8 +19,11 @@ def save_plugin(p: Plugin, max_attr_width: Optional[float] = None) -> None:
     docinfo.update_last_modified()
     notify_doc_watchers(
         docinfo,
-        p.to_paragraph(max_attr_width).get_markdown(), # TODO: for big tables this takes long time. So do it nside function if there is somebody to notify
-        NotificationType.ParModified, par=p.par,
+        p.to_paragraph(
+            max_attr_width
+        ).get_markdown(),  # TODO: for big tables this takes long time. So do it nside function if there is somebody to notify
+        NotificationType.ParModified,
+        par=p.par,
         old_version=old_ver,
     )
     db.session.commit()

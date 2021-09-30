@@ -30,7 +30,7 @@ class ItemBase:
     @property
     def block(self) -> Block:
         # Relationships are not loaded when constructing an object with __init__.
-        if not hasattr(self, '_block') or self._block is None:
+        if not hasattr(self, "_block") or self._block is None:
             self._block = Block.query.get(self.id)
         return self._block
 
@@ -75,17 +75,17 @@ class Item(ItemBase):
 
     @property
     def url(self):
-        return current_app.config['TIM_HOST'] + self.url_relative
+        return current_app.config["TIM_HOST"] + self.url_relative
 
     def get_url_for_view(self, name: str):
         return f'{current_app.config["TIM_HOST"]}/{name}/{self.path}'
 
     def get_relative_url_for_view(self, name: str):
-        return f'/{name}/{self.path}'
+        return f"/{name}/{self.path}"
 
     @property
     def url_relative(self):
-        return '/view/' + self.path
+        return "/view/" + self.path
 
     @property
     def location(self):
@@ -95,7 +95,7 @@ class Item(ItemBase):
     @property
     def title(self):
         if self.block is None:
-            return 'All documents'
+            return "All documents"
         if not self.block.description:
             return self.short_name
         return self.block.description
@@ -106,7 +106,7 @@ class Item(ItemBase):
 
     @property
     def short_name(self):
-        parts = self.path_without_lang.rsplit('/', 1)
+        parts = self.path_without_lang.rsplit("/", 1)
         return parts[len(parts) - 1]
 
     def parents_to_root(self, include_root=True, eager_load_groups=False):
@@ -114,6 +114,7 @@ class Item(ItemBase):
             return []
         path_tuples = self.parent_paths()
         from timApp.folder.folder import Folder
+
         if not path_tuples:
             return [Folder.get_root()]
 
@@ -121,17 +122,15 @@ class Item(ItemBase):
         #  currently eager by default is better to speed up search cache processing
         #  and it doesn't slow down other code much.
         crumbs_q = (
-            Folder.query
-                .filter(tuple_(Folder.location, Folder.name).in_(path_tuples))
-                .order_by(func.length(Folder.location).desc())
-                .options(defaultload(Folder._block).joinedload(Block.relevance))
+            Folder.query.filter(tuple_(Folder.location, Folder.name).in_(path_tuples))
+            .order_by(func.length(Folder.location).desc())
+            .options(defaultload(Folder._block).joinedload(Block.relevance))
         )
         if eager_load_groups:
-            crumbs_q = (
-                crumbs_q
-                    .options(defaultload(Folder._block)
-                             .joinedload(Block.accesses)
-                             .joinedload(BlockAccess.usergroup))
+            crumbs_q = crumbs_q.options(
+                defaultload(Folder._block)
+                .joinedload(Block.accesses)
+                .joinedload(BlockAccess.usergroup)
             )
         crumbs = crumbs_q.all()
         if include_root:
@@ -139,8 +138,8 @@ class Item(ItemBase):
         return crumbs
 
     def parent_paths(self) -> list[tuple[str, str]]:
-        path_parts = self.path_without_lang.split('/')
-        paths = list(p[1:] for p in accumulate('/' + part for part in path_parts[:-1]))
+        path_parts = self.path_without_lang.split("/")
+        paths = list(p[1:] for p in accumulate("/" + part for part in path_parts[:-1]))
         return [split_location(p) for p in paths]
 
     @cached_property
@@ -148,9 +147,12 @@ class Item(ItemBase):
         return self.parents_to_root(eager_load_groups=True)
 
     @property
-    def parent(self) -> Folder:  # TODO rename this to parent_folder to distinguish better from "parents" attribute
+    def parent(
+        self,
+    ) -> Folder:  # TODO rename this to parent_folder to distinguish better from "parents" attribute
         folder = self.location
         from timApp.folder.folder import Folder
+
         return Folder.find_by_path(folder) if folder else Folder.get_root()
 
     @property
@@ -160,30 +162,34 @@ class Item(ItemBase):
     def to_json(self, curr_user: User | None = None):
         if curr_user is None:
             from timApp.auth.sessioninfo import get_current_user_object
+
             curr_user = get_current_user_object()
-        return {'name': self.short_name,
-                'path': self.path,
-                'title': self.title,
-                'location': self.location,
-                'id': self.id,
-                'modified': date_to_relative(self.last_modified) if self.last_modified else None,
-                'owners': self.owners,
-                'rights': get_user_rights_for_item(self, curr_user),
-                'unpublished': self.block.is_unpublished() if self.block else False,
-                'public': self.public,
-                # We only add tags if they've already been loaded.
-                **include_if_loaded('tags', self.block),
-                **include_if_loaded('relevance', self.block),
-                }
+        return {
+            "name": self.short_name,
+            "path": self.path,
+            "title": self.title,
+            "location": self.location,
+            "id": self.id,
+            "modified": date_to_relative(self.last_modified)
+            if self.last_modified
+            else None,
+            "owners": self.owners,
+            "rights": get_user_rights_for_item(self, curr_user),
+            "unpublished": self.block.is_unpublished() if self.block else False,
+            "public": self.public,
+            # We only add tags if they've already been loaded.
+            **include_if_loaded("tags", self.block),
+            **include_if_loaded("relevance", self.block),
+        }
 
     def get_relative_path(self, path: str):
         """Gets the item path relative to the given path.
         The item must be under the path; otherwise TimDbException is thrown.
         """
-        path = path.strip('/')
-        if not self.path.startswith(path + '/'):
-            raise TimDbException('Cannot get relative path')
-        return self.path.replace(path + '/', '', 1)
+        path = path.strip("/")
+        if not self.path.startswith(path + "/"):
+            raise TimDbException("Cannot get relative path")
+        return self.path.replace(path + "/", "", 1)
 
     @staticmethod
     def find_by_id(item_id):
@@ -191,9 +197,11 @@ class Item(ItemBase):
         if b:
             if b.type_id == BlockType.Document.value:
                 from timApp.document.docentry import DocEntry
+
                 return DocEntry.find_by_id(item_id)
             elif b.type_id == BlockType.Folder.value:
                 from timApp.folder.folder import Folder
+
                 return Folder.get_by_id(item_id)
             else:
                 raise NotImplementedError

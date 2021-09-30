@@ -13,24 +13,30 @@ class Translation(db.Model, DocInfo):
     - A new translated document is created (via manage view).
 
     """
-    __tablename__ = 'translation'
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
-    src_docid = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
-    lang_id = db.Column(db.Text, nullable=False)
-    __table_args__ = (UniqueConstraint('src_docid', 'lang_id', name='translation_uc'),
-                      )
 
-    _block = db.relationship('Block', back_populates='translation', foreign_keys=[doc_id])
+    __tablename__ = "translation"
+    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
+    src_docid = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
+    lang_id = db.Column(db.Text, nullable=False)
+    __table_args__ = (UniqueConstraint("src_docid", "lang_id", name="translation_uc"),)
+
+    _block = db.relationship(
+        "Block", back_populates="translation", foreign_keys=[doc_id]
+    )
 
     docentry = db.relationship(
-        'DocEntry',
-        back_populates='trs',
+        "DocEntry",
+        back_populates="trs",
         primaryjoin="foreign(Translation.src_docid) == DocEntry.id",
     )
 
     @property
     def path(self):
-        return self.path_without_lang + '/' + self.lang_id if self.lang_id else self.path_without_lang
+        return (
+            self.path_without_lang + "/" + self.lang_id
+            if self.lang_id
+            else self.path_without_lang
+        )
 
     @property
     def id(self):
@@ -45,13 +51,15 @@ class Translation(db.Model, DocInfo):
         return self.docentry.public
 
     @property
-    def translations(self) -> list['Translation']:
+    def translations(self) -> list["Translation"]:
         return self.docentry.trs
 
     def to_json(self, **kwargs):
-        return {**super().to_json(**kwargs),
-                'src_docid': self.src_docid,
-                'lang_id': self.lang_id}
+        return {
+            **super().to_json(**kwargs),
+            "src_docid": self.src_docid,
+            "lang_id": self.lang_id,
+        }
 
 
 def add_tr_entry(doc_id: int, item: DocInfo, tr: Translation) -> Translation:

@@ -15,7 +15,11 @@ from sqlalchemy import func, true
 from sqlalchemy.orm import lazyload, joinedload
 
 from timApp.answer.answer import Answer
-from timApp.answer.answers import get_points_by_rule, basic_tally_fields, valid_answers_query
+from timApp.answer.answers import (
+    get_points_by_rule,
+    basic_tally_fields,
+    valid_answers_query,
+)
 from timApp.auth.accesshelper import get_doc_or_abort, AccessDenied
 from timApp.document.docinfo import DocInfo
 from timApp.document.usercontext import UserContext
@@ -29,21 +33,23 @@ from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.utils import widen_fields, get_alias, seq_to_str, fin_timezone
 
-ALL_ANSWERED_WILDCARD = '*'
+ALL_ANSWERED_WILDCARD = "*"
+
 
 def chunks(l: list, n: int):
     for i in range(0, len(l), n):
-        yield l[i:i + n]
+        yield l[i : i + n]
 
 
 tallyfield_re = re.compile(
-    r'tally:((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(\[ *(?P<ds>[^\[\],]*) *, *(?P<de>[^\[\],]*) *\])?'
+    r"tally:((?P<doc>\d+)\.)?(?P<field>[a-zA-Z0-9öäåÖÄÅ_-]+)(\[ *(?P<ds>[^\[\],]*) *, *(?P<de>[^\[\],]*) *\])?"
 )
 
 
 @attr.s(auto_attribs=True)
 class TallyField:
     """In Jsrunner, represents the "tally:" type of field."""
+
     field: str
     doc_id: Optional[int]
     datetime_start: Optional[datetime]
@@ -56,31 +62,33 @@ class TallyField:
 
     @property
     def grouping_key(self):
-        return f'{self.effective_doc_id}{self.datetime_start}{self.datetime_end}'
+        return f"{self.effective_doc_id}{self.datetime_start}{self.datetime_end}"
 
     @property
     def doc_and_field(self):
-        return f'{self.effective_doc_id}.{self.field}'
+        return f"{self.effective_doc_id}.{self.field}"
 
     @staticmethod
-    def try_parse(s: str, default_doc: DocInfo) -> Optional['TallyField']:
+    def try_parse(s: str, default_doc: DocInfo) -> Optional["TallyField"]:
         m = tallyfield_re.fullmatch(s)
         if not m:
             return None
         try:
-            gds = m.group('ds')
-            gde = m.group('de')
-            ds, de = (dateutil.parser.parse(gds) if gds else None,
-                      dateutil.parser.parse(gde) if gde else None)
+            gds = m.group("ds")
+            gde = m.group("de")
+            ds, de = (
+                dateutil.parser.parse(gds) if gds else None,
+                dateutil.parser.parse(gde) if gde else None,
+            )
         except (ValueError, OverflowError):
             return None
         if ds and ds.tzinfo is None:
             ds = fin_timezone.localize(ds)
         if de and de.tzinfo is None:
             de = fin_timezone.localize(de)
-        doc = m.group('doc')
+        doc = m.group("doc")
         return TallyField(
-            field=m.group('field'),
+            field=m.group("field"),
             datetime_start=ds,
             datetime_end=de,
             doc_id=int(doc) if doc else None,
@@ -90,9 +98,9 @@ class TallyField:
 
 @unique
 class MembershipFilter(Enum):
-    All = 'all'
-    Current = 'current'
-    Deleted = 'deleted'
+    All = "all"
+    Current = "current"
+    Deleted = "deleted"
 
 
 member_filter_relation_map = {
@@ -114,13 +122,13 @@ class UserFieldObj(TypedDict):
 @dataclass
 class RequestedGroups:
     groups: list[UserGroup]
-    include_all_answered:  bool = False
+    include_all_answered: bool = False
 
     @staticmethod
     def from_name_list(group_names: list[str]):
         return RequestedGroups(
             groups=UserGroup.query.filter(UserGroup.name.in_(group_names)).all(),
-            include_all_answered=ALL_ANSWERED_WILDCARD in group_names
+            include_all_answered=ALL_ANSWERED_WILDCARD in group_names,
         )
 
 
@@ -131,20 +139,24 @@ class GetFieldsAccess(Enum):
 
     @staticmethod
     def from_bool(b: bool):
-        return GetFieldsAccess.AllowMaybeNonTeacher if b else GetFieldsAccess.RequireTeacher
+        return (
+            GetFieldsAccess.AllowMaybeNonTeacher
+            if b
+            else GetFieldsAccess.RequireTeacher
+        )
 
 
 def get_fields_and_users(
-        u_fields: list[str],
-        requested_groups: RequestedGroups,
-        d: DocInfo,
-        current_user: User,
-        view_ctx: ViewContext,
-        autoalias: bool = False,
-        add_missing_fields: bool = False,
-        access_option: GetFieldsAccess = GetFieldsAccess.RequireTeacher,
-        member_filter_type: MembershipFilter = MembershipFilter.Current,
-        user_filter=None,
+    u_fields: list[str],
+    requested_groups: RequestedGroups,
+    d: DocInfo,
+    current_user: User,
+    view_ctx: ViewContext,
+    autoalias: bool = False,
+    add_missing_fields: bool = False,
+    access_option: GetFieldsAccess = GetFieldsAccess.RequireTeacher,
+    member_filter_type: MembershipFilter = MembershipFilter.Current,
+    user_filter=None,
 ) -> tuple[list[UserFieldObj], dict[str, str], list[str], Optional[list[UserGroup]]]:
     """
     Return fielddata, aliases, field_names
@@ -174,7 +186,9 @@ def get_fields_and_users(
                 continue  # TODO: study how to give just warning from missing access, extra return string?
         ugroups.append(group)
 
-    if not ugroups and not requested_groups.include_all_answered:  # if no access, give at least own group
+    if (
+        not ugroups and not requested_groups.include_all_answered
+    ):  # if no access, give at least own group
         ugroups.append(current_user.get_personal_group())
     groups = ugroups
 
@@ -203,9 +217,9 @@ def get_fields_and_users(
         if a:
             a = a.strip()
         if rest:
-            raise RouteException(f'Invalid alias: {field}')
-        if a == '':
-            raise RouteException(f'Alias cannot be empty: {field}')
+            raise RouteException(f"Invalid alias: {field}")
+        if a == "":
+            raise RouteException(f"Alias cannot be empty: {field}")
         try:
             task_id = TaskId.parse(
                 t,
@@ -217,8 +231,8 @@ def get_fields_and_users(
         except PluginException as e:
             tally_field = TallyField.try_parse(t, d)
             if not tally_field:
-                if t.startswith('tally:'):
-                    raise RouteException(f'Invalid tally field format: {t}')
+                if t.startswith("tally:"):
+                    raise RouteException(f"Invalid tally field format: {t}")
                 else:
                     raise RouteException(str(e))
             else:
@@ -238,20 +252,25 @@ def get_fields_and_users(
         if a:
             alias_map[alias_map_value] = a
             if a in jsrunner_alias_map:
-                raise RouteException(f'Duplicate alias {a} in fields attribute')
+                raise RouteException(f"Duplicate alias {a} in fields attribute")
             jsrunner_alias_map[a] = alias_map_value
 
         if did in doc_map:
             continue
-        dib = get_doc_or_abort(did, f'Document {did} not found')
+        dib = get_doc_or_abort(did, f"Document {did} not found")
         if not (current_user.has_teacher_access(dib) or allow_non_teacher):
-            raise AccessDenied(f'Missing teacher access for document {dib.id}')
-        elif dib.document.get_settings().get('need_view_for_answers', False) \
-                and not current_user.has_view_access(dib):
+            raise AccessDenied(f"Missing teacher access for document {dib.id}")
+        elif dib.document.get_settings().get(
+            "need_view_for_answers", False
+        ) and not current_user.has_view_access(dib):
             raise AccessDenied("Sorry, you don't have permission to use this resource.")
         doc_map[did] = dib
 
-    cpf = CachedPluginFinder(doc_map=doc_map, curr_user=UserContext.from_one_user(current_user), view_ctx=view_ctx)
+    cpf = CachedPluginFinder(
+        doc_map=doc_map,
+        curr_user=UserContext.from_one_user(current_user),
+        view_ctx=view_ctx,
+    )
     if add_missing_fields:
         for task in tasks_without_fields:
             plug = cpf.find(task)
@@ -278,7 +297,7 @@ def get_fields_and_users(
         join_relation,
         tally_fields,
         view_ctx,
-        UserContext.from_one_user(current_user)
+        UserContext.from_one_user(current_user),
     )
     sub = []
     # For some reason, with 7 or more fields, executing the following query is very slow in PostgreSQL 9.5.
@@ -293,10 +312,9 @@ def get_fields_and_users(
             # Ensure user filter gets applied even if group filter is skipped in include_all_answered
             q = q.filter(user_filter)
         sub += (
-                q
-                .group_by(Answer.task_id, User.id)
-                .with_entities(func.max(Answer.id), User.id)
-                .all()
+            q.group_by(Answer.task_id, User.id)
+            .with_entities(func.max(Answer.id), User.id)
+            .all()
         )
     aid_uid_map = defaultdict(list)
     user_ids = set()
@@ -324,9 +342,15 @@ def get_fields_and_users(
     for u in users:
         user_map[u.id] = u
     global_taskids = [t for t in task_ids if t.is_global]
-    global_answer_ids = valid_answers_query(global_taskids).group_by(Answer.task_id).with_entities(
-        func.max(Answer.id)).all()
-    answs = Answer.query.filter(Answer.id.in_(itertools.chain((aid for aid, _ in sub), global_answer_ids))).all()
+    global_answer_ids = (
+        valid_answers_query(global_taskids)
+        .group_by(Answer.task_id)
+        .with_entities(func.max(Answer.id))
+        .all()
+    )
+    answs = Answer.query.filter(
+        Answer.id.in_(itertools.chain((aid for aid, _ in sub), global_answer_ids))
+    ).all()
     answers_with_users: list[tuple[int, Optional[Answer]]] = []
     for a in answs:
         uids = aid_uid_map.get(a.id)
@@ -357,12 +381,14 @@ def get_fields_and_users(
             user_fieldstyles = {}
             user = users[user_index]
             assert user.id == uid
-            obj = {'user': user, 'fields': user_tasks, 'styles': user_fieldstyles}
+            obj = {"user": user, "fields": user_tasks, "styles": user_fieldstyles}
             res.append(obj)
             if member_filter_type != MembershipFilter.Current:
                 m_end = get_membership_end(user, group_id_set)
                 if m_end:
-                    obj['groupinfo'] = {'membership_end': time.mktime(m_end.timetuple())}
+                    obj["groupinfo"] = {
+                        "membership_end": time.mktime(m_end.timetuple())
+                    }
             last_user = uid
             if not a:
                 continue
@@ -373,7 +399,7 @@ def get_fields_and_users(
                 json_str = a.content
                 p = json.loads(json_str)
                 if isinstance(p, dict):
-                    style = p.get('styles')
+                    style = p.get("styles")
                 if task.field == "points":
                     value = a.points
                 elif task.field == "datetime":
@@ -396,24 +422,31 @@ def get_fields_and_users(
                             value = p.get(content_field)
                         else:
                             value = p
-            user_tasks[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = value
-            user_fieldstyles[alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)] = style
+            user_tasks[
+                alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)
+            ] = value
+            user_fieldstyles[
+                alias_map.get(task.extended_or_doc_task, task.extended_or_doc_task)
+            ] = style
     return (
         res,
         jsrunner_alias_map,
-        [alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task) for ts in task_ids],
+        [
+            alias_map.get(ts.extended_or_doc_task, ts.extended_or_doc_task)
+            for ts in task_ids
+        ],
         groups,
     )
 
 
 def get_tally_field_values(
-        d: DocInfo,
-        doc_map: dict[int, DocInfo],
-        group_filter,
-        join_relation,
-        tally_fields: list[tuple[TallyField, Optional[str]]],
-        view_ctx: ViewContext,
-        user_ctx: UserContext
+    d: DocInfo,
+    doc_map: dict[int, DocInfo],
+    group_filter,
+    join_relation,
+    tally_fields: list[tuple[TallyField, Optional[str]]],
+    view_ctx: ViewContext,
+    user_ctx: UserContext,
 ):
     tally_field_values: DefaultDict[int, list[tuple[float, str]]] = defaultdict(list)
     task_id_cache = {}
@@ -438,25 +471,33 @@ def get_tally_field_values(
             rule=psr,
             task_ids=tids,
             user_ids=User.query.join(UserGroup, join_relation)
-                .filter(group_filter)
-                .with_entities(User.id)
-                .subquery() if group_filter is not None else None,
+            .filter(group_filter)
+            .with_entities(User.id)
+            .subquery()
+            if group_filter is not None
+            else None,
             answer_filter=ans_filter,
         )
 
-        known_tally_fields = list(itertools.chain(basic_tally_fields, psr.get_groups(tids) if psr else []))
+        known_tally_fields = list(
+            itertools.chain(basic_tally_fields, psr.get_groups(tids) if psr else [])
+        )
         for field, _ in fs:
             if field.field not in known_tally_fields:
-                raise RouteException(f'Unknown tally field: {field.field}. '
-                           f'Valid tally fields are: {seq_to_str(known_tally_fields)}.')
+                raise RouteException(
+                    f"Unknown tally field: {field.field}. "
+                    f"Valid tally fields are: {seq_to_str(known_tally_fields)}."
+                )
         for r in pts:
-            u = r['user']
-            groups = r.get('groups', None)
+            u = r["user"]
+            groups = r.get("groups", None)
             for field, alias in fs:
                 # The value can be None if the user has not done any tasks with points, so we use another sentinel.
                 value = r.get(field.field, missing)
                 if value is missing:
-                    value = groups[field.field]  # The group should exist because the field was validated above.
-                    value = value['total_sum']
+                    value = groups[
+                        field.field
+                    ]  # The group should exist because the field was validated above.
+                    value = value["total_sum"]
                 tally_field_values[u.id].append((value, alias or field.doc_and_field))
     return tally_field_values

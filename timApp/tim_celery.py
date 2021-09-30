@@ -38,8 +38,11 @@ def make_celery(appl):
     :param appl: Flask app.
     :return: Celery.
     """
-    cel = Celery(appl.import_name, backend=appl.config['CELERY_RESULT_BACKEND'],
-                 broker=appl.config['CELERY_BROKER_URL'])
+    cel = Celery(
+        appl.import_name,
+        backend=appl.config["CELERY_RESULT_BACKEND"],
+        broker=appl.config["CELERY_BROKER_URL"],
+    )
     cel.conf.update(appl.config)
     TaskBase = cel.Task
 
@@ -58,7 +61,7 @@ def make_celery(appl):
 def on_after_setup_logger(**kwargs):
     global logger
     logger.setLevel(logging.INFO)
-    logging.getLogger('celery').setLevel(logging.INFO)
+    logging.getLogger("celery").setLevel(logging.INFO)
 
 
 celery = make_celery(app)
@@ -93,11 +96,15 @@ def do_run_user_function(user_id: int, task_id: str, plugin_input: dict[str, Any
     while next_runner:
         step += 1
         encountered_runners.add(next_runner)
-        logger.info(f'Plugin run: {u.name}, {next_runner}, step {step}')
-        result = post_answer_impl(next_runner, copy(plugin_input), {}, {}, u, (), [], None)
+        logger.info(f"Plugin run: {u.name}, {next_runner}, step {step}")
+        result = post_answer_impl(
+            next_runner, copy(plugin_input), {}, {}, u, (), [], None
+        )
 
         try:
-            wod: WithOutData = WithOutDataSchema.load(result.result.get('web'), unknown=EXCLUDE)
+            wod: WithOutData = WithOutDataSchema.load(
+                result.result.get("web"), unknown=EXCLUDE
+            )
         except ValidationError:
             pass
         else:
@@ -106,14 +113,14 @@ def do_run_user_function(user_id: int, task_id: str, plugin_input: dict[str, Any
         # The user-provided parameters go only to the first plugin. Others will get no parameters.
         plugin_input = {}
 
-        next_runner = result.plugin.values.get('nextRunner')
+        next_runner = result.plugin.values.get("nextRunner")
         if isinstance(next_runner, str):
-            next_runner = f'{result.plugin.task_id.doc_id}.{next_runner}'
+            next_runner = f"{result.plugin.task_id.doc_id}.{next_runner}"
             if next_runner in encountered_runners:
-                logger.warning(f'Cycle in runners: {encountered_runners}')
+                logger.warning(f"Cycle in runners: {encountered_runners}")
                 break
         elif next_runner is not None:
-            logger.warning(f'Invalid type for nextRunner: {next_runner}')
+            logger.warning(f"Invalid type for nextRunner: {next_runner}")
             break
 
 
@@ -123,36 +130,38 @@ def handle_exportdata(result: AnswerRouteResult, u: User, wod: WithOutData) -> N
         if not p.save:
             continue
         plug, d = Plugin.from_task_id(
-            f'{result.plugin.task_id.doc_id}.{p.plugin}',
+            f"{result.plugin.task_id.doc_id}.{p.plugin}",
             user_ctx=UserContext.from_one_user(u),
             view_ctx=default_view_ctx,
             cached_doc=d,
         )
 
         # csPlugin always returns status 200 for (almost?) any request, so we must handle it separately.
-        if plug.type != 'csPlugin':
+        if plug.type != "csPlugin":
             try:
                 res = call_plugin_generic(
                     plug.type,
-                    'post',
-                    'convertExportData',
+                    "post",
+                    "convertExportData",
                     json.dumps(p.data),
-                    headers={'Content-type': 'application/json'},
+                    headers={"Content-type": "application/json"},
                 )
             except PluginException as e:
-                logger.error(f'convertExportData call failed: {e}')
+                logger.error(f"convertExportData call failed: {e}")
                 continue
             if res.status_code != 200:
-                logger.error(f'convertExportData returned status {res.status_code}')
+                logger.error(f"convertExportData returned status {res.status_code}")
                 continue
             else:
                 converted = res.json()
         else:
-            subtype = plug.values.get('type')
-            if subtype == 'chartjs':
-                converted = {'c': p.data}
+            subtype = plug.values.get("type")
+            if subtype == "chartjs":
+                converted = {"c": p.data}
             else:
-                logger.error(f'convertExportData failed for csPlugin; unknown subtype: {subtype}')
+                logger.error(
+                    f"convertExportData failed for csPlugin; unknown subtype: {subtype}"
+                )
                 continue
 
         post_answer_impl(plug.task_id.doc_task, converted, {}, {}, u, (), [], None)
@@ -160,17 +169,15 @@ def handle_exportdata(result: AnswerRouteResult, u: User, wod: WithOutData) -> N
 
 @celery.task
 def send_unlock_op(
-        email: str,
-        target: list[str],
+    email: str,
+    target: list[str],
 ):
-    op = UnlockOp(type='unlock', email=email, timestamp=get_current_time())
+    op = UnlockOp(type="unlock", email=email, timestamp=get_current_time())
     return register_op_to_hosts(op, target, is_receiving_backup=False)
 
 
 @celery.task
-def send_answer_backup(
-        exported_answer: dict[str, Any]
-):
+def send_answer_backup(exported_answer: dict[str, Any]):
     return do_send_answer_backup(exported_answer)
 
 
@@ -180,8 +187,11 @@ def do_send_answer_backup(exported_answer: dict[str, Any]):
     futures: list[Future] = []
     for h in backup_hosts:
         f = session.post(
-            f'{h}/backup/answer',
-            json={'answer': exported_answer, 'token': app.config['BACKUP_ANSWER_SEND_SECRET']},
+            f"{h}/backup/answer",
+            json={
+                "answer": exported_answer,
+                "token": app.config["BACKUP_ANSWER_SEND_SECRET"],
+            },
         )
         futures.append(f)
     return collect_errors_from_hosts(futures, backup_hosts)
@@ -198,4 +208,5 @@ def cleanup_oauth2_tokens():
     which can cause tokens to accumulate.
     """
     from timApp.auth.oauth2.oauth2 import delete_expired_oauth2_tokens
+
     delete_expired_oauth2_tokens()

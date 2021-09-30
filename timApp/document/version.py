@@ -10,4 +10,4 @@ Version = tuple[int, int]
 
 
 def ver_to_str(v: Version):
-    return ','.join(str(x) for x in v)
+    return ",".join(str(x) for x in v)

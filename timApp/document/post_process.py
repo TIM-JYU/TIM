@@ -25,7 +25,11 @@ from timApp.markdown.markdownconverter import expand_macros
 from timApp.note.notes import get_notes, UserNoteAndUser
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginControl import pluginify
-from timApp.readmark.readings import get_common_readings, get_read_expiry_condition, has_anything_read
+from timApp.readmark.readings import (
+    get_common_readings,
+    get_read_expiry_condition,
+    has_anything_read,
+)
 from timApp.readmark.readmarkcollection import ReadMarkCollection
 from timApp.readmark.readparagraph import ReadParagraph
 from timApp.user.user import User, has_no_higher_right
@@ -46,21 +50,25 @@ class PostProcessResult:
 
 # TODO: post_process_pars is called twice in one save??? Or even 4 times, 2 after editor is closed??
 def post_process_pars(
-        doc: Document,
-        pars: list[DocParagraph],
-        user_ctx: UserContext,
-        view_ctx: ViewContext,
-        sanitize: bool = True,
-        do_lazy: bool = False,
-        load_plugin_states: bool = True,
-        filter_return: Optional[GlobalParId] = None,
+    doc: Document,
+    pars: list[DocParagraph],
+    user_ctx: UserContext,
+    view_ctx: ViewContext,
+    sanitize: bool = True,
+    do_lazy: bool = False,
+    load_plugin_states: bool = True,
+    filter_return: Optional[GlobalParId] = None,
 ) -> PostProcessResult:
     taketime("start pluginify")
 
     pars_deref = dereference_pars(pars, context_doc=doc, view_ctx=view_ctx)
     if filter_return:
-        pars_deref = [p for p in pars_deref if
-                      p.get_doc_id() == filter_return.doc_id and p.get_id() == filter_return.par_id]
+        pars_deref = [
+            p
+            for p in pars_deref
+            if p.get_doc_id() == filter_return.doc_id
+            and p.get_id() == filter_return.par_id
+        ]
     presult = pluginify(
         doc,
         pars_deref,
@@ -82,8 +90,14 @@ def post_process_pars(
 
     # Process user-specific macros.
     env = macroinfo.jinja_env
-    for p in final_pars:  # update only user specific, because others are done in a cache pahes
-        if not p.is_plugin() and not p.is_setting():  # TODO: Think if plugins still needs to expand macros?
+    for (
+        p
+    ) in (
+        final_pars
+    ):  # update only user specific, because others are done in a cache pahes
+        if (
+            not p.is_plugin() and not p.is_setting()
+        ):  # TODO: Think if plugins still needs to expand macros?
             # p.insert_rnds(0)
             no_macros = DocParagraph.is_no_macros(p.get_attrs(), doc_nomacros)
             if not no_macros:
@@ -129,21 +143,25 @@ def post_process_pars(
         for p in final_pars:
             if p.is_question():
                 d = p.prepare(view_ctx)
-                d.output = ' '
-                d.html_class = 'hidden'
+                d.output = " "
+                d.html_class = "hidden"
             if p.is_setting():
                 d = p.prepare(view_ctx)
-                d.output = ' '
+                d.output = " "
     else:
         ids = doc.get_par_ids()
         first_par = doc.get_paragraph(ids[0]) if ids else None
         last_par = doc.get_paragraph(ids[-1]) if ids else None
-        show_settings_yaml = last_par.is_setting() and first_par.is_setting() if last_par and last_par else True
+        show_settings_yaml = (
+            last_par.is_setting() and first_par.is_setting()
+            if last_par and last_par
+            else True
+        )
         if not show_settings_yaml:
             for p in final_pars:
                 if p.is_setting():
                     d = p.prepare(view_ctx)
-                    d.output = ' '
+                    d.output = " "
 
     for p in final_pars:
         d = p.prepare(view_ctx)
@@ -173,16 +191,18 @@ def post_process_pars(
             should_mark_all_read = True
             readings = []
         else:
-            readings = get_common_readings(usergroup_ids,
-                                           doc,
-                                           get_read_expiry_condition(settings.read_expiry()))
+            readings = get_common_readings(
+                usergroup_ids, doc, get_read_expiry_condition(settings.read_expiry())
+            )
         taketime("readings end")
         for r in readings:  # type: ReadParagraph
             key = (r.par_id, r.doc_id)
             pars = pars_dict.get(key)
             if pars:
                 for p in pars:
-                    if r.par_hash == p.data.hash or (p.target and r.par_hash == p.target.hash):
+                    if r.par_hash == p.data.hash or (
+                        p.target and r.par_hash == p.target.hash
+                    ):
                         p.status.add(r)
                     else:
                         p.status.add(r, modified=True)
@@ -192,7 +212,9 @@ def post_process_pars(
     # db.session.close()
     # taketime("notes picked")
 
-    should_hide_names = view_ctx.hide_names_requested or force_hide_names(curr_user, docinfo)
+    should_hide_names = view_ctx.hide_names_requested or force_hide_names(
+        curr_user, docinfo
+    )
     comment_docs = {docinfo.id: docinfo}
     teacher_access_cache = {}
     for n, u in notes:
@@ -206,13 +228,15 @@ def post_process_pars(
                 has_teacher = bool(curr_user.has_teacher_access(comment_docs[n.doc_id]))
                 teacher_access_cache[n.doc_id] = has_teacher
             editable = n.usergroup_id == group or has_teacher
-            private = n.access == 'justme'
+            private = n.access == "justme"
             for p in pars:
                 if p.notes is None:
                     p.notes = []
                 if should_hide_names and u.id != curr_user.id:
                     u.hide_name = True
-                p.notes.append(UserNoteAndUser(user=u, note=n, editable=editable, private=private))
+                p.notes.append(
+                    UserNoteAndUser(user=u, note=n, editable=editable, private=private)
+                )
     # taketime("notes mixed")
 
     return PostProcessResult(
@@ -234,12 +258,12 @@ class Area:
 
 # TODO: It would be better to return a tree-like structure of the document instead of a flat list.
 def process_areas(
-        settings: DocSettings,
-        pars: list[DocParagraph],
-        macros,
-        delimiter,
-        env: SandboxedEnvironment,
-        view_ctx: ViewContext,
+    settings: DocSettings,
+    pars: list[DocParagraph],
+    macros,
+    delimiter,
+    env: SandboxedEnvironment,
+    view_ctx: ViewContext,
 ) -> list[PreparedPar]:
     # If we're only dealing with a single paragraph (happens e.g. when posting a comment),
     # we don't want to include area start/end markers in the final output
@@ -257,22 +281,28 @@ def process_areas(
     encountered_areas: dict[str, Area] = {}
 
     new_pars: list[PreparedPar] = []
-    fix = 'Fix this to get rid of this warning.'
+    fix = "Fix this to get rid of this warning."
     for p in pars:
         html_par = p.prepare(view_ctx)
         cur_area = None
-        area_start = p.get_attr('area')
-        area_end = p.get_attr('area_end')
+        area_start = p.get_attr("area")
+        area_end = p.get_attr("area_end")
         if area_start is not None:
             cur_area = Area(area_start, p.get_attrs())
             current_areas.append(cur_area)
             if not p.ref_chain:
                 if area_start in encountered_areas:
-                    flash_if_not_preview(f'Area {area_start} appears more than once in this document. {fix}', view_ctx)
+                    flash_if_not_preview(
+                        f"Area {area_start} appears more than once in this document. {fix}",
+                        view_ctx,
+                    )
                 encountered_areas[area_start] = cur_area
         if area_end is not None:
             if area_start is not None:
-                flash_if_not_preview(f'The paragraph {p.get_id()} has both area and area_end. {fix}', view_ctx)
+                flash_if_not_preview(
+                    f"The paragraph {p.get_id()} has both area and area_end. {fix}",
+                    view_ctx,
+                )
             if current_areas:
                 # Insert a closing paragraph for the current area.
                 # We do this regardless of whether the area_end name matches because it's reasonable and we
@@ -283,57 +313,75 @@ def process_areas(
             try:
                 latest_area = current_areas.pop()
             except IndexError:
-                flash_if_not_preview(f'area_end found for "{area_end}" without corresponding start. {fix}', view_ctx)
+                flash_if_not_preview(
+                    f'area_end found for "{area_end}" without corresponding start. {fix}',
+                    view_ctx,
+                )
             else:
                 if latest_area.name != area_end:
-                    flash_if_not_preview(f'area_end found for "{area_end}" without corresponding start. {fix}', view_ctx)
+                    flash_if_not_preview(
+                        f'area_end found for "{area_end}" without corresponding start. {fix}',
+                        view_ctx,
+                    )
 
         if area_start is not None or area_end is not None:
             if area_start is not None:
                 # Insert an opening paragraph for new areas
 
                 if not is_single:
-                    collapse = cur_area.attrs.get('collapse')
+                    collapse = cur_area.attrs.get("collapse")
                     html_par.areainfo = AreaStart(
                         area_start,
-                        collapse not in ('false', '') if collapse is not None else None,
+                        collapse not in ("false", "") if collapse is not None else None,
                     )
                 new_pars.append(html_par)
 
                 vis = cur_area.visible
                 if vis is None:
-                    vis = cur_area.attrs.get('visible')
+                    vis = cur_area.attrs.get("visible")
                 if vis is None:
                     vis = True
                 elif isinstance(vis, str):
                     if vis.find(delimiter) >= 0:
-                        vis = expand_macros(vis, macros, settings, env=env, ignore_errors=True)
+                        vis = expand_macros(
+                            vis, macros, settings, env=env, ignore_errors=True
+                        )
                     vis = get_boolean(vis, True)
                 cur_area.visible = vis
                 if vis:
-                    st = cur_area.attrs.get('starttime')
-                    et = cur_area.attrs.get('endtime')
+                    st = cur_area.attrs.get("starttime")
+                    et = cur_area.attrs.get("endtime")
                     if st or et:
                         starttime = getdatetime(st, default_val=min_time)
                         endtime = getdatetime(et, default_val=max_time)
                         if not starttime <= now < endtime:
-                            alttext = cur_area.attrs.get('alttext')
+                            alttext = cur_area.attrs.get("alttext")
                             if alttext is None:
                                 alttext = "This area can only be viewed from <STARTTIME> to <ENDTIME>"
-                            alttext = alttext.replace('<STARTTIME>', str(starttime)).replace('<ENDTIME>', str(endtime))
+                            alttext = alttext.replace(
+                                "<STARTTIME>", str(starttime)
+                            ).replace("<ENDTIME>", str(endtime))
                             new_pars.append(
-                                DocParagraph.create(doc=Document(html_par.doc_id), par_id=html_par.id,
-                                                    md=alttext).prepare(view_ctx))
+                                DocParagraph.create(
+                                    doc=Document(html_par.doc_id),
+                                    par_id=html_par.id,
+                                    md=alttext,
+                                ).prepare(view_ctx)
+                            )
 
         else:
             # Just a normal paragraph
             access = True
-            vis = p.get_attr('visible')  # check if there is visible attribute in par itself
+            vis = p.get_attr(
+                "visible"
+            )  # check if there is visible attribute in par itself
             if vis is None:
                 pass
             else:
                 if str(vis).find(delimiter) >= 0:
-                    vis = expand_macros(vis, macros, settings, env=env, ignore_errors=True)
+                    vis = expand_macros(
+                        vis, macros, settings, env=env, ignore_errors=True
+                    )
                 vis = get_boolean(vis, True)
                 if not vis:  #  TODO: if in preview, put this always True
                     access = False  # TODO: this should be added as some kind of small par that is visible in edit-mode
@@ -344,9 +392,9 @@ def process_areas(
                     if not a.visible:
                         access = False
                         break
-                    if access: # is there time limitation in area where par is included
-                        st = a.attrs.get('starttime')
-                        et = a.attrs.get('endtime')
+                    if access:  # is there time limitation in area where par is included
+                        st = a.attrs.get("starttime")
+                        et = a.attrs.get("endtime")
                         if st or et:
                             starttime = getdatetime(st, default_val=min_time)
                             endtime = getdatetime(et, default_val=max_time)
@@ -357,23 +405,29 @@ def process_areas(
 
     # Complete unbalanced areas.
     if current_areas and not is_single:
-        flash_if_not_preview(f'{len(current_areas)} areas are missing area_end: {current_areas}', view_ctx)
+        flash_if_not_preview(
+            f"{len(current_areas)} areas are missing area_end: {current_areas}",
+            view_ctx,
+        )
         for _ in current_areas:
-            new_pars.append(PreparedPar(
-                data=ParBasicData(attrs={}, doc_id=-1, hash='', id='', md=''),
-                output='',
-                from_preamble=None,
-                target=None,
-                areainfo=AreaEnd(name=''),
-                html_class='',
-            ))
+            new_pars.append(
+                PreparedPar(
+                    data=ParBasicData(attrs={}, doc_id=-1, hash="", id="", md=""),
+                    output="",
+                    from_preamble=None,
+                    target=None,
+                    areainfo=AreaEnd(name=""),
+                    html_class="",
+                )
+            )
     return new_pars
 
 
 def should_auto_read(doc: Document, usergroup_ids: list[int], user: User) -> bool:
     return not has_anything_read(usergroup_ids, doc) and (
-            has_no_higher_right(
+        has_no_higher_right(
             doc.get_settings().exam_mode(),
             get_user_rights_for_item(doc.docinfo, get_current_user_object()),
-        ) or user.get_prefs().auto_mark_all_read
+        )
+        or user.get_prefs().auto_mark_all_read
     )

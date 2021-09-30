@@ -31,12 +31,16 @@ class EditRequest:
     def __post_init__(self):
         self.old_doc_version = self.doc.get_version()
         self.editor_pars = None
-        self.original_par = self.doc.get_paragraph(self.par) if not self.editing_area and self.par is not None and not self.is_adding else None
+        self.original_par = (
+            self.doc.get_paragraph(self.par)
+            if not self.editing_area and self.par is not None and not self.is_adding
+            else None
+        )
         self.context_par = self.get_context_par()
 
     @property
     def is_adding(self):
-        return self.par in ('HELP_PAR', ) or self.par is None
+        return self.par in ("HELP_PAR",) or self.par is None
 
     @property
     def editing_area(self) -> bool:
@@ -67,26 +71,42 @@ class EditRequest:
 
     def get_pars(self, skip_access_check: bool = False):
         if self.editor_pars is None:
-            self.editor_pars = get_pars_from_editor_text(self.doc, self.text, break_on_elements=self.editing_area,
-                                                         skip_access_check=skip_access_check)
+            self.editor_pars = get_pars_from_editor_text(
+                self.doc,
+                self.text,
+                break_on_elements=self.editing_area,
+                skip_access_check=skip_access_check,
+            )
             for c in self.forced_classes:
                 for p in self.editor_pars:
                     p.add_class(c)
         return self.editor_pars
 
     @staticmethod
-    def from_request(doc: Document, text: Optional[str] = None, preview: bool = False) -> 'EditRequest':
+    def from_request(
+        doc: Document, text: Optional[str] = None, preview: bool = False
+    ) -> "EditRequest":
         if text is None:
-            text, = verify_json_params('text')
-        (area_start, area_end, par,
-         par_next, forced_classes, tags,
-         view) = verify_json_params(
-            'area_start', 'area_end', 'par',
-            'par_next', 'forced_classes', 'tags',
-            'view',
+            (text,) = verify_json_params("text")
+        (
+            area_start,
+            area_end,
+            par,
+            par_next,
+            forced_classes,
+            tags,
+            view,
+        ) = verify_json_params(
+            "area_start",
+            "area_end",
+            "par",
+            "par_next",
+            "forced_classes",
+            "tags",
+            "view",
             require=False,
         )
-        mark_translated = tags.get('marktranslated') if tags else None
+        mark_translated = tags.get("marktranslated") if tags else None
         return EditRequest(
             doc=doc,
             text=text,
@@ -101,17 +121,22 @@ class EditRequest:
         )
 
 
-def get_pars_from_editor_text(doc: Document, text: str,
-                              break_on_elements: bool = False, skip_access_check: bool = False) -> list[DocParagraph]:
+def get_pars_from_editor_text(
+    doc: Document,
+    text: str,
+    break_on_elements: bool = False,
+    skip_access_check: bool = False,
+) -> list[DocParagraph]:
     blocks, validation_result = doc.text_to_paragraphs(text, break_on_elements)
     for p in blocks:
         if p.is_reference():
             try:
-                refdoc = int(p.get_attr('rd'))
+                refdoc = int(p.get_attr("rd"))
             except (ValueError, TypeError):
                 continue
             d = DocEntry.find_by_id(refdoc)
-            if not skip_access_check and d \
-                    and not has_view_access(d):
-                raise ValidationException(f"You don't have view access to document {refdoc}")
+            if not skip_access_check and d and not has_view_access(d):
+                raise ValidationException(
+                    f"You don't have view access to document {refdoc}"
+                )
     return blocks

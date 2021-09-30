@@ -46,7 +46,9 @@ class Listify(fields.List):
         return super()._deserialize(value, attr, data, **kwargs)
 
 
-ListifiedStr = NewType("Listify", list[str], field=Listify, cls_or_instance=fields.String())
+ListifiedStr = NewType(
+    "Listify", list[str], field=Listify, cls_or_instance=fields.String()
+)
 
 
 @dataclass
@@ -167,7 +169,9 @@ def copy_files_glob(glob: str, source: str, dest: str):
                     rm(destination)
                 copy2(str(m), str(destination))
             else:
-                raise FileExistsError(f"{str(m)} is of unknown type (not a file or directory)")
+                raise FileExistsError(
+                    f"{str(m)} is of unknown type (not a file or directory)"
+                )
             chown(destination, user="agent", group="agent")
             for f in m.relative_to(source).parents:
                 chown(dest / f, user="agent", group="agent")
@@ -182,7 +186,9 @@ def is_parent_of(parent: str, child: str):
     """Returns whether a child is a subpath of parent"""
     parent = os.path.normpath(parent)
     child = os.path.normpath(child)
-    return child.startswith(parent) or os.path.abspath(child).startswith(os.path.abspath(parent))
+    return child.startswith(parent) or os.path.abspath(child).startswith(
+        os.path.abspath(parent)
+    )
 
 
 def is_relative_subpath(path: str):

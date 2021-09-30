@@ -13,11 +13,11 @@ sent_mails_in_testing = []
 
 
 def send_email(
-        rcpt: str,
-        subject: str,
-        msg: str,
-        mail_from: str = app.config['MAIL_FROM'],
-        reply_to: str = app.config['NOREPLY_EMAIL'],
+    rcpt: str,
+    subject: str,
+    msg: str,
+    mail_from: str = app.config["MAIL_FROM"],
+    reply_to: str = app.config["NOREPLY_EMAIL"],
 ) -> Optional[Thread]:
     if is_testing():
         sent_mails_in_testing.append(locals())
@@ -25,39 +25,43 @@ def send_email(
 
     if is_localhost():
         # don't use log_* function because this is typically run in Celery
-        print(f'Skipping mail send on localhost, rcpt: {rcpt}, message: {msg}')
+        print(f"Skipping mail send on localhost, rcpt: {rcpt}, message: {msg}")
         return None
 
-    t = Thread(target=send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to))
+    t = Thread(
+        target=send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to)
+    )
     t.start()
     return t
 
 
 def send_email_impl(
-        flask_app: Flask,
-        rcpt: str,
-        subject: str,
-        msg: str,
-        mail_from: str = app.config['MAIL_FROM'],
-        reply_to: str = app.config['NOREPLY_EMAIL'],
+    flask_app: Flask,
+    rcpt: str,
+    subject: str,
+    msg: str,
+    mail_from: str = app.config["MAIL_FROM"],
+    reply_to: str = app.config["NOREPLY_EMAIL"],
 ) -> None:
     with flask_app.app_context():
-        mime_msg = MIMEText(msg + flask_app.config['MAIL_SIGNATURE'])
-        mime_msg['Subject'] = subject
-        mime_msg['From'] = mail_from
-        mime_msg['To'] = rcpt
+        mime_msg = MIMEText(msg + flask_app.config["MAIL_SIGNATURE"])
+        mime_msg["Subject"] = subject
+        mime_msg["From"] = mail_from
+        mime_msg["To"] = rcpt
 
         if reply_to:
-            mime_msg.add_header('Reply-To', reply_to)
+            mime_msg.add_header("Reply-To", reply_to)
 
-        s = smtplib.SMTP(flask_app.config['MAIL_HOST'])
+        s = smtplib.SMTP(flask_app.config["MAIL_HOST"])
         try:
             s.sendmail(mail_from, [rcpt], mime_msg.as_string())
-        except (smtplib.SMTPSenderRefused,
-                smtplib.SMTPRecipientsRefused,
-                smtplib.SMTPHeloError,
-                smtplib.SMTPDataError,
-                smtplib.SMTPNotSupportedError) as e:
+        except (
+            smtplib.SMTPSenderRefused,
+            smtplib.SMTPRecipientsRefused,
+            smtplib.SMTPHeloError,
+            smtplib.SMTPDataError,
+            smtplib.SMTPNotSupportedError,
+        ) as e:
             log_error(str(e))
         else:
             pass
@@ -66,70 +70,82 @@ def send_email_impl(
 
 
 def multi_send_email(
-        rcpt: str,
-        subject: str,
-        msg: str,
-        mail_from: str = app.config['MAIL_FROM'],
-        reply_to: str = app.config['NOREPLY_EMAIL'],
-        bcc: str = '',
-        reply_all: bool = False
+    rcpt: str,
+    subject: str,
+    msg: str,
+    mail_from: str = app.config["MAIL_FROM"],
+    reply_to: str = app.config["NOREPLY_EMAIL"],
+    bcc: str = "",
+    reply_all: bool = False,
 ) -> None:
     if is_testing():
         sent_mails_in_testing.append(locals())
         return
 
-    Thread(target=multi_send_email_impl, args=(app, rcpt, subject, msg, mail_from, reply_to, bcc, reply_all)).start()
+    Thread(
+        target=multi_send_email_impl,
+        args=(app, rcpt, subject, msg, mail_from, reply_to, bcc, reply_all),
+    ).start()
 
 
 def multi_send_email_impl(
-        flask_app: Flask,
-        rcpt: str,
-        subject: str,
-        msg: str,
-        mail_from: str = app.config['MAIL_FROM'],
-        reply_to: str = app.config['NOREPLY_EMAIL'],
-        bcc: str = '',
-        reply_all: bool = False
+    flask_app: Flask,
+    rcpt: str,
+    subject: str,
+    msg: str,
+    mail_from: str = app.config["MAIL_FROM"],
+    reply_to: str = app.config["NOREPLY_EMAIL"],
+    bcc: str = "",
+    reply_all: bool = False,
 ) -> None:
     with flask_app.app_context():
-        s = smtplib.SMTP(flask_app.config['MAIL_HOST']) if not is_localhost() else None
+        s = smtplib.SMTP(flask_app.config["MAIL_HOST"]) if not is_localhost() else None
         rcpts = rcpt.split(";")
-        mail_targets: list[Union[str, list[str]]] = list(rcpts) if not reply_all else [rcpts]
+        mail_targets: list[Union[str, list[str]]] = (
+            list(rcpts) if not reply_all else [rcpts]
+        )
         bccmail = bcc
-        extra = ''
+        extra = ""
         if bcc:
             if len(rcpts) > 3:
                 mail_targets.append(bcc)
-                bccmail = ''
+                bccmail = ""
                 extra = "\n\n" + "\n".join(rcpts)
         try:
             for rcp in mail_targets:
                 try:
                     # TODO: Mailmerge here possible templates.
-                    send_extra = ''
-                    send_to = [*rcp, bccmail] if isinstance(rcp, list) else [rcp, bccmail]
+                    send_extra = ""
+                    send_to = (
+                        [*rcp, bccmail] if isinstance(rcp, list) else [rcp, bccmail]
+                    )
                     send_to = [m for m in send_to if m]
                     if rcp == bcc:
                         send_extra = extra
-                    mime_msg = MIMEText(msg + send_extra)  # + flask_app.config['MAIL_SIGNATURE'])
-                    mime_msg['Subject'] = subject
-                    mime_msg['From'] = mail_from
-                    mime_msg['Bcc'] = bccmail
-                    mime_msg['To'] = ",".join(send_to)
+                    mime_msg = MIMEText(
+                        msg + send_extra
+                    )  # + flask_app.config['MAIL_SIGNATURE'])
+                    mime_msg["Subject"] = subject
+                    mime_msg["From"] = mail_from
+                    mime_msg["Bcc"] = bccmail
+                    mime_msg["To"] = ",".join(send_to)
                     if reply_to:
-                        mime_msg.add_header('Reply-To', reply_to)
+                        mime_msg.add_header("Reply-To", reply_to)
 
                     if not s:
                         # don't use log_* function because this is typically run in Celery
                         print(
-                            f'Dry run send mail, from: {mail_from}, send_to: {send_to},  message: {mime_msg.as_string()}')
+                            f"Dry run send mail, from: {mail_from}, send_to: {send_to},  message: {mime_msg.as_string()}"
+                        )
                     else:
                         s.sendmail(mail_from, send_to, mime_msg.as_string())
-                except (smtplib.SMTPSenderRefused,
-                        smtplib.SMTPRecipientsRefused,
-                        smtplib.SMTPHeloError,
-                        smtplib.SMTPDataError,
-                        smtplib.SMTPNotSupportedError) as e:
+                except (
+                    smtplib.SMTPSenderRefused,
+                    smtplib.SMTPRecipientsRefused,
+                    smtplib.SMTPHeloError,
+                    smtplib.SMTPDataError,
+                    smtplib.SMTPNotSupportedError,
+                ) as e:
                     log_error(str(e))
                 else:
                     pass

@@ -29,10 +29,10 @@ class DocScoreInfo:
 
 
 def get_score_infos(
-        folder: Folder,
-        doc_paths: list[str],
-        user_ctx: UserContext,
-        lang_id: Optional[str] = None,
+    folder: Folder,
+    doc_paths: list[str],
+    user_ctx: UserContext,
+    lang_id: Optional[str] = None,
 ) -> list[DocScoreInfo]:
     total_table = OrderedDict()
     u = user_ctx.logged_user
@@ -44,10 +44,13 @@ def get_score_infos(
     def doc_sorter(d: DocInfo) -> int:
         rel_path = folder.relative_path(d)
         return doc_paths.index(rel_path)
+
     docs.sort(key=doc_sorter)
 
     if lang_id:
-        docs = [next((t for t in d.translations if t.lang_id == lang_id), d) for d in docs]
+        docs = [
+            next((t for t in d.translations if t.lang_id == lang_id), d) for d in docs
+        ]
 
     for d in docs:
         d.document.insert_preamble_pars()
@@ -62,13 +65,19 @@ def get_score_infos(
             continue
 
         point_sum_rule = doc.get_settings().point_sum_rule()
-        count_method = point_sum_rule.point_count_method if point_sum_rule else PointCountMethod.latest
+        count_method = (
+            point_sum_rule.point_count_method
+            if point_sum_rule
+            else PointCountMethod.latest
+        )
 
         # cycle through all tasks in current document, resolving user's progress on each scored assignment
         point_dict: dict[str, TaskScoreInfo] = {}
         for task_id in task_ids:
             try:
-                plugin, _ = Plugin.from_task_id(task_id.doc_task, user_ctx, default_view_ctx)
+                plugin, _ = Plugin.from_task_id(
+                    task_id.doc_task, user_ctx, default_view_ctx
+                )
             except TaskNotFoundException:
                 continue
 
@@ -86,12 +95,23 @@ def get_score_infos(
 
             task = task_id.task_name
             if count_method == PointCountMethod.max:
-                user_points = max((a.points for a in u.get_answers_for_task(task_id.doc_task) if a.points is not None), default=0)
+                user_points = max(
+                    (
+                        a.points
+                        for a in u.get_answers_for_task(task_id.doc_task)
+                        if a.points is not None
+                    ),
+                    default=0,
+                )
             elif count_method == PointCountMethod.latest:
                 latest_answer = u.get_answers_for_task(task_id.doc_task).first()
-                user_points = latest_answer.points if latest_answer and latest_answer.points is not None else 0
+                user_points = (
+                    latest_answer.points
+                    if latest_answer and latest_answer.points is not None
+                    else 0
+                )
             else:
-                raise Exception(f'Unexpected count_method: {count_method}')
+                raise Exception(f"Unexpected count_method: {count_method}")
 
             # add current document to overall points list, using task_name as the key identifier
             # group tasks in the list by point_sum_rule groups
@@ -105,7 +125,7 @@ def get_score_infos(
                 if not included_groups:
                     included_groups = groups
                 # only include groupless if scoreboard_groups weren't specified or * is in there
-                elif '*' not in included_groups:
+                elif "*" not in included_groups:
                     include_groupless = False
 
             if groups:
@@ -117,7 +137,9 @@ def get_score_infos(
                         tps.maxPoints += max_points
                         tps.points += user_points
                     else:
-                        point_dict[grp] = TaskScoreInfo(grp, task, user_points, max_points)
+                        point_dict[grp] = TaskScoreInfo(
+                            grp, task, user_points, max_points
+                        )
             elif include_groupless:
                 point_dict[task] = TaskScoreInfo(task, task, user_points, max_points)
 
@@ -129,20 +151,24 @@ def get_score_infos(
         user_total = sum(t.points for t in tasks if t.points is not None)
         max_total = sum(t.maxPoints for t in tasks if t.maxPoints is not None)
 
-        total_table[folder.relative_path(d)] = DocScoreInfo(d, user_total, max_total, tasks)
+        total_table[folder.relative_path(d)] = DocScoreInfo(
+            d, user_total, max_total, tasks
+        )
 
     return list(total_table.values())
 
 
 def get_score_infos_if_enabled(
-        doc_info: DocInfo,
-        doc_settings: DocSettings,
-        user_ctx: UserContext,
+    doc_info: DocInfo,
+    doc_settings: DocSettings,
+    user_ctx: UserContext,
 ) -> Optional[list[DocScoreInfo]]:
     score_infos = None
     if user_ctx.logged_user.logged_in and doc_settings.show_scoreboard():
         scoreboard_docs = doc_settings.scoreboard_docs()
         if not scoreboard_docs:
             scoreboard_docs.append(doc_info.short_name)
-        score_infos = get_score_infos(doc_info.parent, scoreboard_docs, user_ctx, doc_info.lang_id)
+        score_infos = get_score_infos(
+            doc_info.parent, scoreboard_docs, user_ctx, doc_info.lang_id
+        )
     return score_infos

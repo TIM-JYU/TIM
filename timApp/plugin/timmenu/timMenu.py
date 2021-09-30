@@ -13,8 +13,12 @@ from timApp.item.partitioning import INCLUDE_IN_PARTS_CLASS_NAME
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.tim_app import csrf
 from tim_common.markupmodels import GenericMarkupModel
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    create_nontask_blueprint, PluginReqs, EditorTab
+from tim_common.pluginserver_flask import (
+    GenericHtmlModel,
+    create_nontask_blueprint,
+    PluginReqs,
+    EditorTab,
+)
 from tim_common.utils import Missing
 
 
@@ -27,6 +31,7 @@ class TimMenuIndentation:
     """
     A class for saving and comparing indentation levels user has used previously.
     """
+
     def __init__(self, level: int, spaces_min: int, spaces_max: int):
         self.spaces_min = spaces_min
         self.spaces_max = spaces_max
@@ -52,7 +57,10 @@ class TimMenuItem:
     Menu item with mandatory attributes (content, level, id, list of contained menu items and opening state)
     and optional styles.
     """
-    def __init__(self, text: str, level: int, items: list['TimMenuItem'], is_open: bool = False) -> None:
+
+    def __init__(
+        self, text: str, level: int, items: list["TimMenuItem"], is_open: bool = False
+    ) -> None:
         self.text = text
         self.level = level
         self.id = ""
@@ -83,7 +91,13 @@ class TimMenuItem:
         return str(self)
 
     def to_json(self) -> dict:
-        s = {"level": self.level, "id": self.id, "text": self.text, "open": self.open, "items": self.items}
+        s = {
+            "level": self.level,
+            "id": self.id,
+            "text": self.text,
+            "open": self.open,
+            "items": self.items,
+        }
         if self.width:
             s.update({"width": self.width})
         if self.height:
@@ -127,10 +141,10 @@ class TimMenuInputModel:
 
 
 def decide_menu_level(
-        index: int,
-        previous_level: int,
-        level_indentations: list[TimMenuIndentation],
-        max_level: int = 3,
+    index: int,
+    previous_level: int,
+    level_indentations: list[TimMenuIndentation],
+    max_level: int = 3,
 ) -> int:
     """
     Parse menu level from indentations by comparing to previously used, i.e. if user
@@ -152,7 +166,7 @@ def decide_menu_level(
     for ind in level_indentations:
         if ind.is_this_level(index):
             return ind.level
-    level = previous_level+1
+    level = previous_level + 1
     level = max_level if level > max_level else level
     # If current item level isn't in the indentation list, add it.
     missing_level = True
@@ -162,7 +176,12 @@ def decide_menu_level(
             break
     if missing_level:
         level_indentations.append(
-            TimMenuIndentation(level=level, spaces_min=level_indentations[-1].spaces_max+1, spaces_max=index))
+            TimMenuIndentation(
+                level=level,
+                spaces_min=level_indentations[-1].spaces_max + 1,
+                spaces_max=index,
+            )
+        )
     return level
 
 
@@ -195,7 +214,7 @@ def get_attribute(line: str, attr_name: str) -> Optional[str]:
     :return: Attribute value, or None, if the line doesn't contain it.
     """
     try:
-        return line[line.index(f"{attr_name}:") + len(attr_name) + 1:].strip()
+        return line[line.index(f"{attr_name}:") + len(attr_name) + 1 :].strip()
     except ValueError:
         return None
 
@@ -236,7 +255,7 @@ def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> list[TimMenu
             # Attribute lines get a placeholder in list.
             text_list.append("")
             continue
-        text_list.append(item[list_symbol_index+1:])
+        text_list.append(item[list_symbol_index + 1 :])
     html_text_list = call_dumbo(text_list)
 
     level_indentations = [TimMenuIndentation(level=0, spaces_min=0, spaces_max=0)]
@@ -255,7 +274,7 @@ def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> list[TimMenu
         level = decide_menu_level(list_symbol_index, previous_level, level_indentations)
         previous_level = level
         # Remove p-tags as unnecessary.
-        text_html = html_text_list[i].replace("<p>","").replace("</p>","").strip()
+        text_html = html_text_list[i].replace("<p>", "").replace("</p>", "").strip()
         current = TimMenuItem(text=text_html, level=level, items=[])
         current.generate_id()
         for parent in parents:
@@ -268,13 +287,14 @@ def parse_menu_string(menu_str: str, replace_tabs: bool = False) -> list[TimMenu
 
 
 @dataclass
-class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, TimMenuStateModel]):
-
+class TimMenuHtmlModel(
+    GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, TimMenuStateModel]
+):
     def get_static_html(self) -> str:
         return render_static_timmenu(self)
 
     def get_component_html_name(self) -> str:
-        return 'timmenu-runner'
+        return "timmenu-runner"
 
     def show_in_view_default(self) -> bool:
         return True
@@ -288,7 +308,7 @@ class TimMenuHtmlModel(GenericHtmlModel[TimMenuInputModel, TimMenuMarkupModel, T
 
     def get_browser_json(self) -> dict:
         r = super().get_browser_json()
-        r['menu'] = parse_menu_string(r['markup']['menu'], replace_tabs=True)
+        r["menu"] = parse_menu_string(r["markup"]["menu"], replace_tabs=True)
         return r
 
     def requires_login(self) -> bool:
@@ -311,7 +331,8 @@ def render_static_timmenu(m: TimMenuHtmlModel) -> str:
 def reqs() -> PluginReqs:
     # Note: selecting the whole line doesn't work with underscore in some devices, so
     # camel case is used for parts meant to be replaced by the user.
-    templates = ["""
+    templates = [
+        """
 ``` {plugin="timMenu" .hidden-print}
 openingSymbol: "▼"
 separator: "|"      
@@ -340,7 +361,8 @@ menu: |!!
  - [Title as direct link 2](title4Address)
 !!
 ```
-""","""
+""",
+        """
 ``` {plugin="timMenu" .hidden-print}
 menu: |!!
  - Menu title 1
@@ -348,7 +370,7 @@ menu: |!!
 !!
 ```
 """,
-f"""
+        f"""
 ``` {{plugin="timMenu" .hidden-print .{INCLUDE_IN_PARTS_CLASS_NAME}}}
 topMenu: true
 topMenuTriggerHeight: 200
@@ -375,7 +397,7 @@ menu: |!!
 !!
 ```
 """,
-"""
+        """
 ``` {plugin="timMenu" .hidden-print}
 openingSymbol: "▼"
 separator: "|"      
@@ -410,50 +432,51 @@ menu: |!!
     width: 7.5em
 !!
 ```
-"""]
+""",
+    ]
     editor_tabs: list[EditorTab] = [
-            {
-                'text': 'Insert',
-                'items': [
-                    {
-                        'text': 'Menus',
-                        'items': [
-                            {
-                                'data': templates[0].strip(),
-                                'text': 'timMenu',
-                                'expl': 'Add a dropdown menu bar with submenus',
-                            },
-                            {
-                                'data': templates[1].strip(),
-                                'text': 'timMenu (simple)',
-                                'expl': 'Add a minimal dropdown menu bar',
-                            },
-                            {
-                                'data': templates[2].strip(),
-                                'text': 'timMenu (sticky)',
-                                'expl': 'Add a dropdown menu bar that shows at the top when scrolling',
-                            },
-                            {
-                                'data': templates[3].strip(),
-                                'text': 'timMenu (set width)',
-                                'expl': 'Add a dropdown menu bar with custom menu widths',
-                            },
-                        ],
-                    },
-                ],
-            },
-        ]
+        {
+            "text": "Insert",
+            "items": [
+                {
+                    "text": "Menus",
+                    "items": [
+                        {
+                            "data": templates[0].strip(),
+                            "text": "timMenu",
+                            "expl": "Add a dropdown menu bar with submenus",
+                        },
+                        {
+                            "data": templates[1].strip(),
+                            "text": "timMenu (simple)",
+                            "expl": "Add a minimal dropdown menu bar",
+                        },
+                        {
+                            "data": templates[2].strip(),
+                            "text": "timMenu (sticky)",
+                            "expl": "Add a dropdown menu bar that shows at the top when scrolling",
+                        },
+                        {
+                            "data": templates[3].strip(),
+                            "text": "timMenu (set width)",
+                            "expl": "Add a dropdown menu bar with custom menu widths",
+                        },
+                    ],
+                },
+            ],
+        },
+    ]
     return {
         "js": ["timMenu"],
         "multihtml": True,
         "multimd": True,
-        'editor_tabs': editor_tabs,
+        "editor_tabs": editor_tabs,
     }
 
 
 timMenu_plugin = create_nontask_blueprint(
     __name__,
-    'timMenu',
+    "timMenu",
     TimMenuHtmlModel,
     reqs,
     csrf,

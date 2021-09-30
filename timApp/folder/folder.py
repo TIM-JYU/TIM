@@ -24,9 +24,10 @@ ROOT_FOLDER_ID = -1
 
 class Folder(db.Model, Item):
     """Represents a folder in the directory hierarchy."""
-    __tablename__ = 'folder'
 
-    id = db.Column(db.Integer, db.ForeignKey('block.id'), primary_key=True)
+    __tablename__ = "folder"
+
+    id = db.Column(db.Integer, db.ForeignKey("block.id"), primary_key=True)
     """Folder identifier."""
 
     name = db.Column(db.Text, nullable=False)
@@ -35,13 +36,13 @@ class Folder(db.Model, Item):
     location = db.Column(db.Text, nullable=False)
     """Folder location (first parts of the path)."""
 
-    __table_args__ = (db.UniqueConstraint('name', 'location', name='folder_uc'),)
+    __table_args__ = (db.UniqueConstraint("name", "location", name="folder_uc"),)
 
-    _block = db.relationship('Block', back_populates='folder', lazy='joined')
+    _block = db.relationship("Block", back_populates="folder", lazy="joined")
 
     @staticmethod
     def get_root() -> Folder:
-        return Folder(id=ROOT_FOLDER_ID, name='', location='')
+        return Folder(id=ROOT_FOLDER_ID, name="", location="")
 
     @staticmethod
     def get_by_id(fid) -> Folder | None:
@@ -53,7 +54,7 @@ class Folder(db.Model, Item):
 
     @staticmethod
     def find_by_path(path, fallback_to_id=False) -> Folder | None:
-        if path == '':
+        if path == "":
             return Folder.get_root()
         parent_loc, name = split_location(path)
         f = Folder.find_by_location(parent_loc, name)
@@ -90,9 +91,9 @@ class Folder(db.Model, Item):
 
     @staticmethod
     def get_all_in_path(
-            root_path: str = '',
-            filter_ids: Iterable[int] | None = None,
-            recurse=False,
+        root_path: str = "",
+        filter_ids: Iterable[int] | None = None,
+        recurse=False,
     ) -> list[Folder]:
         """Gets all the folders under a path.
 
@@ -105,7 +106,11 @@ class Folder(db.Model, Item):
         """
         f_filter = Folder.location == root_path
         if recurse:
-            f_filter = (f_filter | Folder.location.startswith(root_path + '/')) if root_path else true()
+            f_filter = (
+                (f_filter | Folder.location.startswith(root_path + "/"))
+                if root_path
+                else true()
+            )
         q = Folder.query.filter(f_filter)
         if filter_ids:
             q = q.filter(Folder.id.in_(filter_ids))
@@ -121,7 +126,7 @@ class Folder(db.Model, Item):
         Block.query.filter_by(type_id=BlockType.Folder.value, id=self.id).delete()
 
     def rename(self, new_name: str):
-        assert '/' not in new_name
+        assert "/" not in new_name
         old_path = self.path
         self.name = new_name
         self.rename_content(old_path, self.path)
@@ -139,12 +144,15 @@ class Folder(db.Model, Item):
 
     def rename_content(self, old_path: str, new_path: str):
         """Renames contents of the folder."""
-        docs_in_folder: list[DocEntry] = DocEntry.query.filter(DocEntry.name.like(old_path + '/%')).all()
+        docs_in_folder: list[DocEntry] = DocEntry.query.filter(
+            DocEntry.name.like(old_path + "/%")
+        ).all()
         for d in docs_in_folder:
             d.name = d.name.replace(old_path, new_path, 1)
 
         folders_in_folder = Folder.query.filter(
-            (Folder.location == old_path) | (Folder.location.like(old_path + '/%'))).all()
+            (Folder.location == old_path) | (Folder.location.like(old_path + "/%"))
+        ).all()
         for f in folders_in_folder:
             f.location = f.location.replace(old_path, new_path, 1)
 
@@ -153,7 +161,7 @@ class Folder(db.Model, Item):
         q = Folder.query.filter_by(location=self.path)
         if db.session.query(q.exists()).scalar():
             return False
-        q = DocEntry.query.filter(DocEntry.name.like(self.path + '/%'))
+        q = DocEntry.query.filter(DocEntry.name.like(self.path + "/%"))
         return not db.session.query(q.exists()).scalar()
 
     @property
@@ -191,35 +199,45 @@ class Folder(db.Model, Item):
     def get_full_path(self) -> str:
         return join_location(self.location, self.name)
 
-    def get_document(self, relative_path: str, create_if_not_exist=False, creator_group = None) -> None | (
-        DocEntry):
-        doc = DocEntry.query.filter_by(name=join_location(self.get_full_path(), relative_path)).first()
+    def get_document(
+        self, relative_path: str, create_if_not_exist=False, creator_group=None
+    ) -> None | (DocEntry):
+        doc = DocEntry.query.filter_by(
+            name=join_location(self.get_full_path(), relative_path)
+        ).first()
         if doc is not None:
             return doc
         if create_if_not_exist:
             rel_folder, short_name = split_location(relative_path)
-            Folder.create(join_location(self.get_full_path(), rel_folder), owner_groups=creator_group)
-            return DocEntry.create(join_location(self.get_full_path(), relative_path),
-                                   owner_group=creator_group,
-                                   title=short_name)
+            Folder.create(
+                join_location(self.get_full_path(), rel_folder),
+                owner_groups=creator_group,
+            )
+            return DocEntry.create(
+                join_location(self.get_full_path(), relative_path),
+                owner_group=creator_group,
+                title=short_name,
+            )
         else:
             return None
 
     def get_all_documents(
-            self,
-            relative_paths: list[str] = None,
-            include_subdirs: bool = False,
-            custom_filter: Any=None,
-            query_options: Any=None,
-            filter_user: User | None=None,
+        self,
+        relative_paths: list[str] = None,
+        include_subdirs: bool = False,
+        custom_filter: Any = None,
+        query_options: Any = None,
+        filter_user: User | None = None,
     ) -> list[DocInfo]:
         if relative_paths is not None:
             include_subdirs = True
-            paths = [join_location(self.get_full_path(), path) for path in relative_paths]
+            paths = [
+                join_location(self.get_full_path(), path) for path in relative_paths
+            ]
             if custom_filter is None:
-                custom_filter=DocEntry.name.in_(paths)
+                custom_filter = DocEntry.name.in_(paths)
             else:
-                custom_filter=and_(custom_filter, DocEntry.name.in_(paths))
+                custom_filter = and_(custom_filter, DocEntry.name.in_(paths))
         return get_documents(
             include_nonpublic=True,
             filter_folder=self.get_full_path(),
@@ -237,10 +255,10 @@ class Folder(db.Model, Item):
 
     @staticmethod
     def create(
-            path: str,
-            owner_groups: list[UserGroup] | UserGroup | None = None,
-            title=None,
-            creation_opts: FolderCreationOptions = FolderCreationOptions(),
+        path: str,
+        owner_groups: list[UserGroup] | UserGroup | None = None,
+        title=None,
+        creation_opts: FolderCreationOptions = FolderCreationOptions(),
     ) -> Folder:
         """Creates a new folder with the specified name. If the folder already exists, it is returned.
 
@@ -252,11 +270,13 @@ class Folder(db.Model, Item):
 
         """
 
-        path = path.strip('/')
+        path = path.strip("/")
 
         if DocEntry.find_by_path(path):
             db.session.rollback()
-            raise ItemAlreadyExistsException(f'A document already exists at path {path}')
+            raise ItemAlreadyExistsException(
+                f"A document already exists at path {path}"
+            )
 
         # Root folder is special case
         if not path:
@@ -272,13 +292,18 @@ class Folder(db.Model, Item):
 
         # Templates is a special folder, so it should have the same owner as its parent,
         # except if we're in users folder.
-        owner_groups = (p_f.owners
-                          if creation_opts.get_templates_rights_from_parent and
-                             rel_name == TEMPLATE_FOLDER_NAME and
-                             rel_path != 'users' else owner_groups)
+        owner_groups = (
+            p_f.owners
+            if creation_opts.get_templates_rights_from_parent
+            and rel_name == TEMPLATE_FOLDER_NAME
+            and rel_path != "users"
+            else owner_groups
+        )
         if owner_groups is None:
             owner_groups = []
-        owner_groups = owner_groups if isinstance(owner_groups, list) else [owner_groups]
+        owner_groups = (
+            owner_groups if isinstance(owner_groups, list) else [owner_groups]
+        )
         block = insert_block(
             BlockType.Folder,
             title or rel_name,
@@ -294,12 +319,10 @@ class Folder(db.Model, Item):
         return f
 
     def to_json(self):
-        return {**super().to_json(),
-                'isFolder': True
-                }
+        return {**super().to_json(), "isFolder": True}
 
 
 def path_includes(longer_path: str, shorter_path: str):
-    longer_path_stripped = longer_path.strip('/')
-    shorter_path_stripped = shorter_path.strip('/')
-    return (longer_path_stripped + '/').startswith(shorter_path_stripped + '/')
+    longer_path_stripped = longer_path.strip("/")
+    shorter_path_stripped = shorter_path.strip("/")
+    return (longer_path_stripped + "/").startswith(shorter_path_stripped + "/")

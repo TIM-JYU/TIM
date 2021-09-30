@@ -25,22 +25,40 @@ from timApp.document.yamlblock import YamlBlock
 from timApp.markdown.dumboclient import call_dumbo
 from timApp.plugin.containerLink import plugin_reqs, get_plugin
 from timApp.plugin.containerLink import render_plugin_multi, render_plugin, get_plugins
-from timApp.plugin.plugin import Plugin, PluginRenderOptions, load_markup_from_yaml, expand_macros_for_plugin, \
-    find_inline_plugins, InlinePlugin, finalize_inline_yaml, PluginWrap, WANT_FIELDS, find_task_ids, \
-    get_simple_hash_from_par_and_user
+from timApp.plugin.plugin import (
+    Plugin,
+    PluginRenderOptions,
+    load_markup_from_yaml,
+    expand_macros_for_plugin,
+    find_inline_plugins,
+    InlinePlugin,
+    finalize_inline_yaml,
+    PluginWrap,
+    WANT_FIELDS,
+    find_task_ids,
+    get_simple_hash_from_par_and_user,
+)
 from timApp.plugin.pluginOutputFormat import PluginOutputFormat
 from timApp.plugin.pluginexception import PluginException
 from timApp.plugin.taskid import TaskId
 from timApp.printing.printsettings import PrintFormat
-from timApp.util.get_fields import get_fields_and_users, RequestedGroups, GetFieldsAccess
+from timApp.util.get_fields import (
+    get_fields_and_users,
+    RequestedGroups,
+    GetFieldsAccess,
+)
 from timApp.util.rndutils import SeedClass
 from timApp.util.timtiming import taketime
 from timApp.util.utils import get_error_html, get_error_tex, Range
 from tim_common.html_sanitize import sanitize_html
 
 
-def get_error_plugin(plugin_name, message, response=None,
-                     plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML):
+def get_error_plugin(
+    plugin_name,
+    message,
+    response=None,
+    plugin_output_format: PluginOutputFormat = PluginOutputFormat.HTML,
+):
     """
 
     :param response:
@@ -48,9 +66,9 @@ def get_error_plugin(plugin_name, message, response=None,
     :type plugin_name: str
     """
     if plugin_output_format == PluginOutputFormat.MD:
-        return get_error_tex(f'Plugin {plugin_name} error:', message)
+        return get_error_tex(f"Plugin {plugin_name} error:", message)
 
-    return get_error_html(f'Plugin {plugin_name} error: {message}', response)
+    return get_error_html(f"Plugin {plugin_name} error: {message}", response)
 
 
 PluginOrError = Union[Plugin, str]  # str represent HTML markup of error
@@ -68,6 +86,7 @@ class PluginPlacement:
 
     In case of a block-level plugin, the range spans the entire block's expanded markdown.
     """
+
     plugins: dict[Range, Plugin] = attr.ib(kw_only=True)  # ordered
 
     errors: ErrorMap = attr.ib(kw_only=True)  # ordered
@@ -98,13 +117,17 @@ class PluginPlacement:
         self.plugins[r].set_output(out)
 
     def get_block_output(self):
-        """   TODO: this did not help very much
+        """TODO: this did not help very much
         if self.is_block_plugin:
             idx = next(iter(self.plugins))
             p = self.plugins[idx]
             return p.get_final_output().strip()
         """
-        sorted_ranges = sorted(chain(self.plugins.keys(), self.errors.keys()), key=lambda r: r[0], reverse=True)
+        sorted_ranges = sorted(
+            chain(self.plugins.keys(), self.errors.keys()),
+            key=lambda r: r[0],
+            reverse=True,
+        )
         out_md = self.expanded_md
         for sr in sorted_ranges:
             p = self.plugins.get(sr)
@@ -112,26 +135,28 @@ class PluginPlacement:
                 err, name = self.errors[sr]
                 h = get_error_plugin(name, err, plugin_output_format=self.output_format)
             else:
-                h = p.get_final_output().strip() # allow inlineplugins to come close each other
+                h = (
+                    p.get_final_output().strip()
+                )  # allow inlineplugins to come close each other
             start, end = sr
             out_md = out_md[:start] + h + out_md[end:]
         return out_md
 
     @staticmethod
     def from_par(
-            block: DocParagraph,
-            load_states: bool,
-            macroinfo: MacroInfo,
-            plugin_opts: PluginRenderOptions,
-            user_ctx: UserContext,
-            view_ctx: ViewContext,
-            settings: DocSettings,
-            answer_map: AnswerMap,
-            custom_answer: Optional[Answer],
-            output_format: PluginOutputFormat,
-    ) -> Optional['PluginPlacement']:
-        plugin_name = block.get_attr('plugin')
-        defaultplugin = block.get_attr('defaultplugin')
+        block: DocParagraph,
+        load_states: bool,
+        macroinfo: MacroInfo,
+        plugin_opts: PluginRenderOptions,
+        user_ctx: UserContext,
+        view_ctx: ViewContext,
+        settings: DocSettings,
+        answer_map: AnswerMap,
+        custom_answer: Optional[Answer],
+        output_format: PluginOutputFormat,
+    ) -> Optional["PluginPlacement"]:
+        plugin_name = block.get_attr("plugin")
+        defaultplugin = block.get_attr("defaultplugin")
         if not plugin_name and not defaultplugin:
             return None
         new_seed = False
@@ -149,7 +174,7 @@ class PluginPlacement:
             if block.is_new_task():
                 if block.answer_nr is not None and not block.ask_new:
                     rnd_seed = SeedClass(rnd_seed, block.answer_nr)
-                else: # try with length of answers
+                else:  # try with length of answers
                     task_id = block.get_attr("taskId")
                     doc_id = str(block.doc.doc_id)
                     if task_id:
@@ -163,7 +188,9 @@ class PluginPlacement:
 
         rnd_error = None
         try:
-            if block.insert_rnds(rnd_seed) and new_seed:  # do not change order!  inserts must be done
+            if (
+                block.insert_rnds(rnd_seed) and new_seed
+            ):  # do not change order!  inserts must be done
                 # TODO: RND_SEED save rnd_seed to user data
                 pass
         except ValueError as e:
@@ -181,39 +208,51 @@ class PluginPlacement:
             md = expand_macros_for_plugin(block, macros, macroinfo.jinja_env)
             p_range = 0, len(md)
             try:
-                vals = load_markup_from_yaml(md, settings.global_plugin_attrs(), block.get_attr('plugin'))
+                vals = load_markup_from_yaml(
+                    md, settings.global_plugin_attrs(), block.get_attr("plugin")
+                )
                 if ask_next:
                     block.ask_new = True
                     if vals.get("initNewAnswer", None) == "":
                         load_states = False
 
-                if plugin_name in WANT_FIELDS and 'fields' in vals and user_ctx:
+                if plugin_name in WANT_FIELDS and "fields" in vals and user_ctx:
                     data, aliases, field_names, _ = get_fields_and_users(
-                        vals['fields'],
+                        vals["fields"],
                         RequestedGroups([user_ctx.user.get_personal_group()]),
                         block.doc.docinfo,
                         user_ctx.logged_user,
                         view_ctx,
                         add_missing_fields=True,
-                        access_option=GetFieldsAccess.from_bool(True),  # TODO: the user selected from User list
+                        access_option=GetFieldsAccess.from_bool(
+                            True
+                        ),  # TODO: the user selected from User list
                     )
-                    df = data[0]['fields']
+                    df = data[0]["fields"]
                     da = []
                     labels = []
                     for fn in field_names:
-                        da.append(df.get(fn,0))
+                        da.append(df.get(fn, 0))
                         labels.append(fn)
-                    vals['fielddata'] =  {'data': data[0]['fields'],
-                                          'aliases': aliases,
-                                          'fieldnames' : field_names,
-                                          'graphdata': {'data': da, 'labels': labels}}
+                    vals["fielddata"] = {
+                        "data": data[0]["fields"],
+                        "aliases": aliases,
+                        "fieldnames": field_names,
+                        "graphdata": {"data": da, "labels": labels},
+                    }
 
             except PluginException as e:
                 errs[p_range] = str(e), plugin_name
             else:
-                taskid = block.get_attr('taskId')
+                taskid = block.get_attr("taskId")
                 try:
-                    tid = TaskId.parse(taskid, require_doc_id=False, allow_block_hint=False) if taskid else None
+                    tid = (
+                        TaskId.parse(
+                            taskid, require_doc_id=False, allow_block_hint=False
+                        )
+                        if taskid
+                        else None
+                    )
                 except PluginException as e:
                     errs[p_range] = str(e), plugin_name
                 else:
@@ -230,11 +269,15 @@ class PluginPlacement:
         else:
             md = None
             for task_id, p_yaml, p_range, md in find_inline_plugins(block, macroinfo):
-                plugin_type = ''
+                plugin_type = ""
                 try:
                     task_id = task_id.validate()
                     plugin_type = task_id.plugin_type or defaultplugin
-                    y = load_markup_from_yaml(finalize_inline_yaml(p_yaml), settings.global_plugin_attrs(), plugin_type)
+                    y = load_markup_from_yaml(
+                        finalize_inline_yaml(p_yaml),
+                        settings.global_plugin_attrs(),
+                        plugin_type,
+                    )
                 except PluginException as e:
                     errs[p_range] = str(e), plugin_type
                     continue
@@ -256,17 +299,22 @@ class PluginPlacement:
             # Can happen if inline plugin block has no plugins.
             md = block.get_expanded_markdown(macroinfo)
         for p in plugs.values():
-            if p.type == 'qst':
-                p.values['isTask'] = not block.is_question()
+            if p.type == "qst":
+                p.values["isTask"] = not block.is_question()
 
             if load_states:
-                if custom_answer is not None and custom_answer.task_id == p.task_id.doc_task:
+                if (
+                    custom_answer is not None
+                    and custom_answer.task_id == p.task_id.doc_task
+                ):
                     answer_and_cnt = custom_answer, custom_answer.get_answer_number()
                 elif p.task_id:
                     answer_and_cnt = answer_map.get(p.task_id.doc_task, None)
 
-            p.set_render_options(answer_and_cnt if load_states and answer_and_cnt is not None else None,
-                                 plugin_opts)
+            p.set_render_options(
+                answer_and_cnt if load_states and answer_and_cnt is not None else None,
+                plugin_opts,
+            )
         return PluginPlacement(
             block=block,
             errors=errs,
@@ -283,11 +331,13 @@ def check_task_access(errs: ErrorMap, p_range: Range, plugin_name: str, tid: Tas
         if b:
             has_access = verify_view_access(b, require=False)
             if not has_access:
-                errs[p_range] = ('Task id refers to another document, '
-                                 'but you do not have access to that document.'), plugin_name
+                errs[p_range] = (
+                    "Task id refers to another document, "
+                    "but you do not have access to that document."
+                ), plugin_name
                 return False
         else:
-            errs[p_range] = 'Task id refers to a non-existent document.', plugin_name
+            errs[p_range] = "Task id refers to a non-existent document.", plugin_name
             return False
     return True
 
@@ -296,25 +346,28 @@ KeyType = tuple[int, Range]
 
 
 def get_answers(user, task_ids, answer_map):
-    col = func.max(Answer.id).label('col')
-    cnt = func.count(Answer.id).label('cnt')
+    col = func.max(Answer.id).label("col")
+    cnt = func.count(Answer.id).label("cnt")
     if user is None:
-        sub = (valid_answers_query(task_ids)
-               .add_columns(col, cnt)
-               .with_entities(col, cnt)
-               .group_by(Answer.task_id).subquery()
-               )
+        sub = (
+            valid_answers_query(task_ids)
+            .add_columns(col, cnt)
+            .with_entities(col, cnt)
+            .group_by(Answer.task_id)
+            .subquery()
+        )
     else:
-        sub = (user
-               .answers
-               .filter(valid_taskid_filter(task_ids))
-               .add_columns(col, cnt)
-               .with_entities(col, cnt)
-               .group_by(Answer.task_id).subquery())
+        sub = (
+            user.answers.filter(valid_taskid_filter(task_ids))
+            .add_columns(col, cnt)
+            .with_entities(col, cnt)
+            .group_by(Answer.task_id)
+            .subquery()
+        )
     answers: list[tuple[Answer, int]] = (
         Answer.query.join(sub, Answer.id == sub.c.col)
-            .with_entities(Answer, sub.c.cnt)
-            .all()
+        .with_entities(Answer, sub.c.cnt)
+        .all()
     )
     for answer, cnt in answers:
         answer_map[answer.task_id] = answer, cnt
@@ -331,20 +384,22 @@ class PluginifyResult:
     has_errors: bool
 
 
-def pluginify(doc: Document,
-              pars: list[DocParagraph],
-              user_ctx: UserContext,
-              view_ctx: ViewContext,
-              custom_answer: Optional[Answer] = None,
-              task_id: Optional[TaskId] = None,
-              sanitize=True,
-              do_lazy=False,
-              load_states=True,
-              review=False,
-              pluginwrap=PluginWrap.Full,
-              output_format: PluginOutputFormat = PluginOutputFormat.HTML,
-              user_print: bool = False,
-              target_format: PrintFormat = PrintFormat.LATEX) -> PluginifyResult:
+def pluginify(
+    doc: Document,
+    pars: list[DocParagraph],
+    user_ctx: UserContext,
+    view_ctx: ViewContext,
+    custom_answer: Optional[Answer] = None,
+    task_id: Optional[TaskId] = None,
+    sanitize=True,
+    do_lazy=False,
+    load_states=True,
+    review=False,
+    pluginwrap=PluginWrap.Full,
+    output_format: PluginOutputFormat = PluginOutputFormat.HTML,
+    user_print: bool = False,
+    target_format: PrintFormat = PrintFormat.LATEX,
+) -> PluginifyResult:
     """
     "Pluginifies" the specified DocParagraphs by calling the corresponding plugin route for each plugin
     paragraph.
@@ -368,20 +423,20 @@ def pluginify(doc: Document,
     if not view_ctx.preview and has_edit_access(doc.get_docinfo()):
         for p in pars:
             if p.is_translation_out_of_date():
-                p.add_class('troutofdate')
+                p.add_class("troutofdate")
     if sanitize:
         for par in pars:
             par.sanitize_html()
 
     # init these for performance as they stay the same for all pars
-    md_out = (output_format == PluginOutputFormat.MD)
+    md_out = output_format == PluginOutputFormat.MD
     html_out = False if md_out else (output_format == PluginOutputFormat.HTML)
 
     html_pars = [par.prepare(view_ctx, use_md=md_out) for par in pars]
 
     if custom_answer is not None or task_id is not None:
         if len(pars) != 1:
-            raise PluginException('len(blocks) must be 1 if custom state is specified')
+            raise PluginException("len(blocks) must be 1 if custom state is specified")
     plugins: DefaultDict[str, dict[KeyType, Plugin]] = defaultdict(OrderedDict)
 
     answer_map: AnswerMap = {}
@@ -399,7 +454,9 @@ def pluginify(doc: Document,
 
     if load_states and custom_answer is None and user_ctx.user.logged_in:
         # TODO: could this return also the plugins, then there is no need for other iteration
-        task_ids, _, _ = find_task_ids(pars, view_ctx, user_ctx, check_access=user_ctx.is_different)
+        task_ids, _, _ = find_task_ids(
+            pars, view_ctx, user_ctx, check_access=user_ctx.is_different
+        )
         get_answers(user_ctx.user, task_ids, answer_map)
         # get_answers(User.get_by_id(user_ctx.user.id), task_ids, answer_map)
         # db.session.close()
@@ -410,7 +467,7 @@ def pluginify(doc: Document,
     custom_answer_plugin = None
     has_errors = False
     for idx, block in enumerate(pars):
-        is_gamified = block.get_attr('gamification')
+        is_gamified = block.get_attr("gamification")
         is_gamified = not not is_gamified
         settings = block.doc.get_settings()
         macroinfo = settings.get_macroinfo(view_ctx, user_ctx=user_ctx)
@@ -419,33 +476,56 @@ def pluginify(doc: Document,
             md = block.get_expanded_markdown(macroinfo=macroinfo)
             try:
                 gd = YamlBlock.from_markdown(md).values
-                runner = 'gamification-map'
-                html_pars[idx].output = f'<{runner} data={quoteattr(json.dumps(gd))}></{runner}>'
+                runner = "gamification-map"
+                html_pars[
+                    idx
+                ].output = f"<{runner} data={quoteattr(json.dumps(gd))}></{runner}>"
             except yaml.YAMLError as e:
                 has_errors = True
-                html_pars[idx].output = '<div class="error"><p>Gamification error:</p><pre>' + \
-                                                      str(e) + \
-                                                      '</pre><p>From block:</p><pre>' + \
-                                                      md + \
-                                                      '</pre></div>'
-        pplace = PluginPlacement.from_par(block=block, load_states=load_states, macroinfo=macroinfo,
-                                          plugin_opts=plugin_opts, user_ctx=user_ctx, view_ctx=view_ctx, settings=settings,
-                                          answer_map=answer_map, custom_answer=custom_answer,
-                                          output_format=output_format)
+                html_pars[idx].output = (
+                    '<div class="error"><p>Gamification error:</p><pre>'
+                    + str(e)
+                    + "</pre><p>From block:</p><pre>"
+                    + md
+                    + "</pre></div>"
+                )
+        pplace = PluginPlacement.from_par(
+            block=block,
+            load_states=load_states,
+            macroinfo=macroinfo,
+            plugin_opts=plugin_opts,
+            user_ctx=user_ctx,
+            view_ctx=view_ctx,
+            settings=settings,
+            answer_map=answer_map,
+            custom_answer=custom_answer,
+            output_format=output_format,
+        )
         if pplace:
             placements[idx] = pplace
             for r, p in pplace.plugins.items():
                 plugins[p.type][idx, r] = p
-                if (custom_answer and p.task_id.doc_task == custom_answer.task_id) or (task_id and p.task_id.doc_task == task_id):
+                if (custom_answer and p.task_id.doc_task == custom_answer.task_id) or (
+                    task_id and p.task_id.doc_task == task_id
+                ):
                     custom_answer_plugin = p
             if not pplace.is_block_plugin:
-                dumbo_opts[idx] = block.get_dumbo_options(base_opts=settings.get_dumbo_options())
+                dumbo_opts[idx] = block.get_dumbo_options(
+                    base_opts=settings.get_dumbo_options()
+                )
         else:
             if block.nocache and not is_gamified:  # get_nocache():
                 # if block.get_nocache():
                 texts = [block.get_expanded_markdown(macroinfo)]
-                htmls = call_dumbo(texts, options=block.get_dumbo_options(base_opts=settings.get_dumbo_options()))
-                html_pars[idx].output = sanitize_html(htmls[0])  # to collect all together before dumbo
+                htmls = call_dumbo(
+                    texts,
+                    options=block.get_dumbo_options(
+                        base_opts=settings.get_dumbo_options()
+                    ),
+                )
+                html_pars[idx].output = sanitize_html(
+                    htmls[0]
+                )  # to collect all together before dumbo
 
                 # taketime("answ", "markup", len(plugins))
 
@@ -461,8 +541,8 @@ def pluginify(doc: Document,
     taketime("glb/ucu", "GLO/currUser")
     for plugin_name, plugin_block_map in plugins.items():
         for _, plugin in plugin_block_map.items():
-            plugin.values.pop('postprogram', None)
-            plugin.values.pop('preprogram', None)
+            plugin.values.pop("postprogram", None)
+            plugin.values.pop("preprogram", None)
             if not plugin.task_id:
                 continue
             if plugin.task_id.is_global:
@@ -474,7 +554,7 @@ def pluginify(doc: Document,
     if glb_task_ids:
         get_answers(None, glb_task_ids, answer_map)
         for p in glb_plugins_to_change:
-            a = answer_map.get(p.task_id.doc_task,None)
+            a = answer_map.get(p.task_id.doc_task, None)
             if not a:
                 continue
             p.answer = a[0]
@@ -517,19 +597,21 @@ def pluginify(doc: Document,
         try:
             reqs = json.loads(resp)
             plugin.can_give_task = reqs.get("canGiveTask", False)
-            if plugin_name == 'mmcq' or plugin_name == 'mcq':
-                reqs['multihtml'] = True
-                reqs['multimd'] = True
+            if plugin_name == "mmcq" or plugin_name == "mcq":
+                reqs["multihtml"] = True
+                reqs["multimd"] = True
         except ValueError as e:
             has_errors = True
             for idx, r in plugin_block_map.keys():
-                placements[idx].set_error(r, f'Failed to parse JSON from plugin reqs route: {e}')
+                placements[idx].set_error(
+                    r, f"Failed to parse JSON from plugin reqs route: {e}"
+                )
             continue
         plugin_js_files, plugin_css_files = plugin_deps(reqs)
         for src in plugin_js_files:
             if src.startswith("http") or src.startswith("/"):  # absolute URL
                 js_paths.append(src)
-            elif src.endswith('.js'):  # relative JS URL
+            elif src.endswith(".js"):  # relative JS URL
                 js_paths.append(f"/{plugin_name}/{src}")
             else:  # module name
                 js_paths.append(src)
@@ -544,9 +626,9 @@ def pluginify(doc: Document,
         js_paths = list(OrderedDict.fromkeys(js_paths))
         css_paths = list(OrderedDict.fromkeys(css_paths))
 
-        default_auto_md = reqs.get('default_automd', False)
+        default_auto_md = reqs.get("default_automd", False)
 
-        if (html_out and reqs.get('multihtml')) or (md_out and reqs.get('multimd')):
+        if (html_out and reqs.get("multihtml")) or (md_out and reqs.get("multimd")):
             try:
                 # taketime("plg m", plugin_name)
                 response = render_plugin_multi(
@@ -554,7 +636,8 @@ def pluginify(doc: Document,
                     plugin_name,
                     list(plugin_block_map.values()),
                     plugin_output_format=output_format,
-                    default_auto_md=default_auto_md)
+                    default_auto_md=default_auto_md,
+                )
                 taketime("plg e", plugin_name)
             except PluginException as e:
                 has_errors = True
@@ -566,28 +649,39 @@ def pluginify(doc: Document,
             except ValueError as e:
                 has_errors = True
                 for idx, r in plugin_block_map.keys():
-                    placements[idx].set_error(r, f'Failed to parse plugin response from multihtml route: {e}')
+                    placements[idx].set_error(
+                        r, f"Failed to parse plugin response from multihtml route: {e}"
+                    )
                 continue
             if not isinstance(plugin_htmls, list):
                 for ((idx, r), plugin) in plugin_block_map.items():
                     plugin.plugin_lazy = plugin_lazy
-                    placements[idx].set_error(r, f'Multihtml response of {plugin_name} was not a list: {plugin_htmls}')
+                    placements[idx].set_error(
+                        r,
+                        f"Multihtml response of {plugin_name} was not a list: {plugin_htmls}",
+                    )
             else:
-                for ((idx, r), plugin), html in zip(plugin_block_map.items(), plugin_htmls):
+                for ((idx, r), plugin), html in zip(
+                    plugin_block_map.items(), plugin_htmls
+                ):
                     plugin.plugin_lazy = plugin_lazy
                     placements[idx].set_output(r, html)
         else:
             for (idx, r), plugin in plugin_block_map.items():
                 if md_out:
-                    err_msg_md = "Plugin does not support printing yet. " \
-                                 "Please refer to TIM help pages if you want to learn how you can manually " \
-                                 "define what to print here."
+                    err_msg_md = (
+                        "Plugin does not support printing yet. "
+                        "Please refer to TIM help pages if you want to learn how you can manually "
+                        "define what to print here."
+                    )
                     placements[idx].set_error(r, err_msg_md)
                 else:
                     try:
-                        html = render_plugin(docsettings=settings,
-                                             plugin=plugin,
-                                             output_format=output_format)
+                        html = render_plugin(
+                            docsettings=settings,
+                            plugin=plugin,
+                            output_format=output_format,
+                        )
                     except PluginException as e:
                         has_errors = True
                         placements[idx].set_error(r, str(e))
@@ -610,12 +704,15 @@ def pluginify(doc: Document,
         taketime("dumbo", "start 1")
         for k, v in dumbo_opts.items():
             # Need to wrap in div because otherwise dumbo might generate invalid HTML
-            htmls_to_dumbo.append({'content': '<div>' + html_pars[k].output + '</div>', **v.dict()})
+            htmls_to_dumbo.append(
+                {"content": "<div>" + html_pars[k].output + "</div>", **v.dict()}
+            )
             settings_to_dumbo.append(v)
         taketime("dumbo", "start 2")
-        for h, (idx, s) in zip(call_dumbo(htmls_to_dumbo,
-                                          options=doc.get_settings().get_dumbo_options()),
-                               dumbo_opts.items()):
+        for h, (idx, s) in zip(
+            call_dumbo(htmls_to_dumbo, options=doc.get_settings().get_dumbo_options()),
+            dumbo_opts.items(),
+        ):
             html_pars[idx].output = sanitize_html(h)
     taketime("phtml done")
 
@@ -655,9 +752,9 @@ def plugin_deps(p: dict) -> tuple[list[str], list[str]]:
     js_files = []
     css_files = []
     if "css" in p:
-        for cssF in p['css']:
+        for cssF in p["css"]:
             css_files.append(cssF)
     if "js" in p:
-        for jsF in p['js']:
+        for jsF in p["js"]:
             js_files.append(jsF)
     return js_files, css_files

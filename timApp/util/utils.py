@@ -22,8 +22,8 @@ from tim_common.html_sanitize import sanitize_html
 
 def datestr_to_relative(d: Union[str, datetime]) -> str:
     if isinstance(d, str):
-        d = datetime.strptime(d, '%Y-%m-%d %H:%M:%S')
-    return date_to_relative(d) if d else ''
+        d = datetime.strptime(d, "%Y-%m-%d %H:%M:%S")
+    return date_to_relative(d) if d else ""
 
 
 def date_to_relative(d: datetime) -> str:
@@ -37,23 +37,23 @@ def date_to_relative(d: datetime) -> str:
     diff = get_current_time() - d
     s = diff.seconds
     if diff.days > 7 or diff.days < 0:
-        return (datetime.now() - diff).strftime('%d %b %y')
+        return (datetime.now() - diff).strftime("%d %b %y")
     elif diff.days == 1:
-        return '1 day ago'
+        return "1 day ago"
     elif diff.days > 1:
-        return f'{diff.days} days ago'
+        return f"{diff.days} days ago"
     elif s <= 1:
-        return 'just now'
+        return "just now"
     elif s < 60:
-        return f'{s} seconds ago'
+        return f"{s} seconds ago"
     elif s < 120:
-        return '1 minute ago'
+        return "1 minute ago"
     elif s < 3600:
-        return f'{s // 60} minutes ago'
+        return f"{s // 60} minutes ago"
     elif s < 7200:
-        return '1 hour ago'
+        return "1 hour ago"
     else:
-        return f'{s // 3600} hours ago'
+        return f"{s // 3600} hours ago"
 
 
 def count_chars_from_beginning(md: str, char: str) -> int:
@@ -66,7 +66,9 @@ def count_chars_from_beginning(md: str, char: str) -> int:
     return num
 
 
-def get_error_html(message: Union[str, Exception], response: Optional[str] = None) -> str:
+def get_error_html(
+    message: Union[str, Exception], response: Optional[str] = None
+) -> str:
     """Wraps an error message in an HTML element with class 'error'.
 
     :param response: The plugin response string.
@@ -75,8 +77,13 @@ def get_error_html(message: Union[str, Exception], response: Optional[str] = Non
     """
 
     return sanitize_html(
-        '<span class="error">{}{}</span>'.format(str(message),
-                                                 f'<pre>---Full response string start---\n{response}\n---Full response string end---</pre>' if response is not None else ''))
+        '<span class="error">{}{}</span>'.format(
+            str(message),
+            f"<pre>---Full response string start---\n{response}\n---Full response string end---</pre>"
+            if response is not None
+            else "",
+        )
+    )
 
 
 def get_error_tex(title: str, message: Union[str, Exception]) -> str:
@@ -87,10 +94,12 @@ def get_error_tex(title: str, message: Union[str, Exception]) -> str:
     :return: The sanitized error message HTML.
     """
 
-    return f'\\timpluginerror{{ {title} }}{{ {str(message)} }}'
+    return f"\\timpluginerror{{ {title} }}{{ {str(message)} }}"
 
 
-def del_content(directory: Path, onerror: Optional[Callable[[Any, str, Any], Any]] = None) -> None:
+def del_content(
+    directory: Path, onerror: Optional[Callable[[Any, str, Any], Any]] = None
+) -> None:
     for f in os.listdir(directory):
         f_path = os.path.join(directory, f)
         try:
@@ -104,12 +113,12 @@ def del_content(directory: Path, onerror: Optional[Callable[[Any, str, Any], Any
 
 def split_location(path: str) -> tuple[str, str]:
     """Given a path 'a/b/c/d', returns a tuple ('a/b/c', 'd')."""
-    rs = path.rfind('/')
-    return ('', path) if rs < 0 else (path[:rs], path[rs + 1:])
+    rs = path.rfind("/")
+    return ("", path) if rs < 0 else (path[:rs], path[rs + 1 :])
 
 
 def join_location(location: str, name: str) -> str:
-    return name if location == '' else location + '/' + name
+    return name if location == "" else location + "/" + name
 
 
 def relative_location(location: str, base: str) -> str:
@@ -118,31 +127,33 @@ def relative_location(location: str, base: str) -> str:
 
 
 def get_sql_template(value_list: list) -> str:
-    return ','.join(['%s'] * len(value_list))
+    return ",".join(["%s"] * len(value_list))
 
 
 def pycharm_running() -> bool:
-    return os.environ.get('PYCHARM_HOSTED') == '1'
+    return os.environ.get("PYCHARM_HOSTED") == "1"
 
 
 def remove_path_special_chars(item_path: str) -> str:
-    return re.sub('[^a-zA-Z0-9/_-]', '', item_path.translate(str.maketrans(' äöåÄÖÅ', '-aoaAOA')))
+    return re.sub(
+        "[^a-zA-Z0-9/_-]", "", item_path.translate(str.maketrans(" äöåÄÖÅ", "-aoaAOA"))
+    )
 
 
 def title_to_id(s: str) -> str:
     """Converts a HTML heading to id attribute. Tries to be equivalent to what Pandoc does."""
     if s is None:
-        return 'section'
+        return "section"
     if not any(c.isalpha() for c in s):
-        return 'section'
-    s = re.sub(r'[^\w-]', ' ', s.lower())
-    s = '-'.join(s.split())
+        return "section"
+    s = re.sub(r"[^\w-]", " ", s.lower())
+    s = "-".join(s.split())
     return s
 
 
 def getdatetime(s: str, default_val: Optional[datetime] = None) -> Optional[datetime]:
     try:
-        dt = dateutil.parser.parse(s, dayfirst=not 'Z' in s)
+        dt = dateutil.parser.parse(s, dayfirst=not "Z" in s)
         return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
     except (ValueError, TypeError):
         return default_val
@@ -155,12 +166,12 @@ def trim_markdown(text: str) -> str:
     :return: The trimmed text.
 
     """
-    return text.rstrip().strip('\r\n')
+    return text.rstrip().strip("\r\n")
 
 
 def remove_prefix(text: str, prefix: str) -> str:
     if text.startswith(prefix):
-        return text[len(prefix):]
+        return text[len(prefix) :]
     return text
 
 
@@ -181,7 +192,7 @@ class cached_property:
     """
 
     def __init__(self, func: Callable):
-        self.__doc__ = getattr(func, '__doc__')
+        self.__doc__ = getattr(func, "__doc__")
         self.func = func
 
     def __get__(self, obj: Any, cls: Any) -> Any:
@@ -220,11 +231,11 @@ def get_boolean(s: Union[bool, int, str], default: bool) -> bool:
 
 
 def static_tim_doc(path: str) -> str:
-    return f'static/tim_docs/{path}'
+    return f"static/tim_docs/{path}"
 
 
 def decode_csplugin(text: HtmlElement) -> dict[str, Any]:
-    return json.loads(base64.b64decode(text.get('json')))['markup']
+    return json.loads(base64.b64decode(text.get("json")))["markup"]
 
 
 def get_current_time() -> datetime:
@@ -235,11 +246,11 @@ def seq_to_str(lst: Sequence[str]) -> str:
     if len(lst) == 1:
         return lst[0]
     else:
-        return f', '.join(lst[:-1]) + ' and ' + lst[-1]
+        return f", ".join(lst[:-1]) + " and " + lst[-1]
 
 
 def split_by_semicolon(p: str) -> list[str]:
-    return [s.strip() for s in p.split(';')]
+    return [s.strip() for s in p.split(";")]
 
 
 def get_error_message(e: Exception) -> str:
@@ -253,8 +264,12 @@ def get_error_message(e: Exception) -> str:
 
 Range = tuple[int, int]
 
-TASK_PROG = re.compile(r'([\w\.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)')  # see https://regex101.com/r/ZZuizF/4
-TASK_NAME_PROG = re.compile(r"(\d+.)?([\w\d]+)[.\[]?.*")  # see https://regex101.com/r/OjnTAn/4
+TASK_PROG = re.compile(
+    r"([\w\.]*)(:\w*)?\( *(\d*) *, *(\d*) *\)(.*)"
+)  # see https://regex101.com/r/ZZuizF/4
+TASK_NAME_PROG = re.compile(
+    r"(\d+.)?([\w\d]+)[.\[]?.*"
+)  # see https://regex101.com/r/OjnTAn/4
 
 
 def widen_fields(fields: Union[list[str], str]) -> list[str]:
@@ -317,30 +332,29 @@ def get_alias(name: str) -> str:
     return match.group(2)
 
 
-fin_timezone = pytz.timezone('Europe/Helsinki')
+fin_timezone = pytz.timezone("Europe/Helsinki")
 local_timezone = fin_timezone  # TODO: find real local timezone somewhere
-temp_folder_path = Path('/tmp')
-cache_folder_path = Path('/cache')
+temp_folder_path = Path("/tmp")
+cache_folder_path = Path("/cache")
 
 
 # TODO: Use an email validation library.
 def is_valid_email(email: str) -> bool:
-    parts = email.split('@')
+    parts = email.split("@")
     if len(parts) != 2:
         return False
     username, domain = parts
-    if username.startswith('.') or username.endswith('.') or '..' in username:
+    if username.startswith(".") or username.endswith(".") or ".." in username:
         return False
     return (
-            re.match(r'^[\w.+-]+$', username) is not None
-            and
-            re.match(r'^([\w-]+\.)+[\w-]{2,}$', domain) is not None
+        re.match(r"^[\w.+-]+$", username) is not None
+        and re.match(r"^([\w-]+\.)+[\w-]{2,}$", domain) is not None
     )
 
 
 def approximate_real_name(email: str) -> str:
-    nameparts = email.split('@')[0].split('.')
-    approx_name = f'{nameparts[-1].title()} {nameparts[0].title()}'
+    nameparts = email.split("@")[0].split(".")
+    approx_name = f"{nameparts[-1].title()} {nameparts[0].title()}"
     return approx_name
 
 
@@ -366,7 +380,7 @@ def append_to_bytearray(b: bytearray, v: Any) -> None:
     elif isinstance(v, bool):
         b.append(v)
     elif isinstance(v, int):
-        b.extend(v.to_bytes(4, 'little', signed=True))
+        b.extend(v.to_bytes(4, "little", signed=True))
     elif isinstance(v, float):
         b.extend(struct.pack("f", v))
     elif isinstance(v, tuple):
@@ -375,7 +389,7 @@ def append_to_bytearray(b: bytearray, v: Any) -> None:
     elif isinstance(v, Enum):
         append_to_bytearray(b, v.value)
     else:
-        raise Exception(f'Unhandled type: {type(v)}')
+        raise Exception(f"Unhandled type: {type(v)}")
 
 
 def read_json_lines(file_to_read: Path) -> list[dict]:
@@ -390,10 +404,12 @@ def wait_response_and_collect_error(f: Future, h: str, errors: list[str]) -> Non
     try:
         resp: requests.Response = f.result()
     except Exception as e:
-        errors.append(f'Connection to {h} failed: {e}')
+        errors.append(f"Connection to {h} failed: {e}")
     else:
         if resp.status_code != 200:
-            errors.append(f'{resp.request.url} returned status {resp.status_code} and text {resp.text}')
+            errors.append(
+                f"{resp.request.url} returned status {resp.status_code} and text {resp.text}"
+            )
 
 
 def collect_errors_from_hosts(futures: list[Future], hosts: list[str]) -> list[str]:

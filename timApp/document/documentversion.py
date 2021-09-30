@@ -9,9 +9,13 @@ from timApp.document.version import Version
 
 
 class DocumentVersion(Document):
-
-    def __init__(self, doc_id: int, doc_ver: Version,
-                 modifier_group_id: Optional[int] = 0, preload_option=PreloadOption.none):
+    def __init__(
+        self,
+        doc_id: int,
+        doc_ver: Version,
+        modifier_group_id: Optional[int] = 0,
+        preload_option=PreloadOption.none,
+    ):
         super().__init__(doc_id, modifier_group_id, preload_option)
         self.does_exist = None
         self.settings = None
@@ -27,10 +31,10 @@ class DocumentVersion(Document):
             with open(self.get_version_path(self.version)) as f:
                 while True:
                     line = f.readline()
-                    if line == '':
+                    if line == "":
                         self.indexlen = len(self.index)
                         return
-                    entry = line.rstrip('\n').split('/')
+                    entry = line.rstrip("\n").split("/")
                     if len(entry) > 1:
                         self.index[entry[0]] = entry[1]
 
@@ -80,33 +84,36 @@ class DocumentVersion(Document):
         raise Exception("Called DocumentVersion.add_paragraph_obj")
 
     def add_paragraph(
-            self,
-            text: str,
-            par_id: Optional[str] = None,
-            attrs: Optional[dict] = None
+        self, text: str, par_id: Optional[str] = None, attrs: Optional[dict] = None
     ) -> DocParagraph:
         raise Exception("Called DocumentVersion.add_paragraph")
 
-    def add_ref_paragraph(self, src_par: DocParagraph, text: Optional[str] = None) -> DocParagraph:
+    def add_ref_paragraph(
+        self, src_par: DocParagraph, text: Optional[str] = None
+    ) -> DocParagraph:
         raise Exception("Called DocumentVersion.add_ref_paragraph")
 
     def delete_paragraph(self, par_id: str):
         assert False, "Called DocumentVersion.delete_paragraph"
 
     def insert_paragraph(
-            self,
-            text: str,
-            insert_before_id: Optional[str] = None,
-            insert_after_id: Optional[str] = None,
-            attrs: Optional[dict] = None,
-            par_id: Optional[str] = None,
+        self,
+        text: str,
+        insert_before_id: Optional[str] = None,
+        insert_after_id: Optional[str] = None,
+        attrs: Optional[dict] = None,
+        par_id: Optional[str] = None,
     ) -> DocParagraph:
         raise Exception("Called DocumentVersion.delete_paragraph")
 
-    def modify_paragraph(self, par_id: str, new_text: str, new_attrs: Optional[dict] = None) -> DocParagraph:
+    def modify_paragraph(
+        self, par_id: str, new_text: str, new_attrs: Optional[dict] = None
+    ) -> DocParagraph:
         raise Exception("Called DocumentVersion.modify_paragraph")
 
-    def update_section(self, text: str, par_id_first: str, par_id_last: str) -> tuple[str, str]:
+    def update_section(
+        self, text: str, par_id_first: str, par_id_last: str
+    ) -> tuple[str, str]:
         raise Exception("Called DocumentVersion.update_section")
 
     def update(self, text: str, original: str, strict_validation=True):
@@ -116,10 +123,10 @@ class DocumentVersion(Document):
         raise Exception("Called DocumentVersion.modify_paragraph_obj")
 
     def insert_paragraph_obj(
-            self,
-            p: DocParagraph,
-            insert_before_id: Optional[str] = None,
-            insert_after_id: Optional[str] = None,
+        self,
+        p: DocParagraph,
+        insert_before_id: Optional[str] = None,
+        insert_after_id: Optional[str] = None,
     ) -> DocParagraph:
         raise Exception("Called DocumentVersion.insert_paragraph_obj")
 
@@ -129,7 +136,9 @@ class DocumentVersion(Document):
     @staticmethod
     def get_diff(d1, d2):
         differ = HtmlDiff()
-        return differ.make_file(d1.export_markdown().splitlines(),
-                                d2.export_markdown().splitlines(),
-                                context=True,
-                                numlines=5)
+        return differ.make_file(
+            d1.export_markdown().splitlines(),
+            d2.export_markdown().splitlines(),
+            context=True,
+            numlines=5,
+        )

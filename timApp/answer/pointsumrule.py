@@ -25,7 +25,6 @@ class PointCountMethod(enum.Enum):
 
 
 class Group:
-
     def __init__(self, name: str, data: Union[str, dict]) -> None:
         self.name = name
         if isinstance(data, str):
@@ -37,19 +36,19 @@ class Group:
             self.link: bool = False
             self.linktext: Optional[str] = None
         elif isinstance(data, dict):
-            match_re = data.get('match', name)
+            match_re = data.get("match", name)
             # match can be a single regex or a list of regexes
             if isinstance(match_re, str):
                 self.matchers = {match_re}
             elif isinstance(match_re, list):
                 self.matchers = set(match_re)
             else:
-                raise Exception('Unknown type for match.')
-            point_type = data.get('type', 'vt')
+                raise Exception("Unknown type for match.")
+            point_type = data.get("type", "vt")
             self.point_types = set()
-            if 'v' in point_type:
+            if "v" in point_type:
                 self.point_types.add(PointType.velp)
-            if 't' in point_type:
+            if "t" in point_type:
                 self.point_types.add(PointType.task)
             self.min_points = data.get("min_points", 0)
             self.max_points = data.get("max_points", 1e100)
@@ -59,7 +58,10 @@ class Group:
 
     def check_match(self, task_id: str) -> bool:
         try:
-            return any(re.fullmatch(regex, task_id.split('.')[1]) is not None for regex in self.matchers)
+            return any(
+                re.fullmatch(regex, task_id.split(".")[1]) is not None
+                for regex in self.matchers
+            )
         except re.error:
             return False
 
@@ -88,34 +90,33 @@ PointSumRuleSchema = class_schema(PointSumRuleModel)
 
 
 class PointSumRule:
-
     def __init__(self, data: dict) -> None:
         try:
-            self.groups = {k: Group(k, v) for k, v in data['groups'].items()}
+            self.groups = {k: Group(k, v) for k, v in data["groups"].items()}
         except (AttributeError, KeyError):
             self.groups = {}
 
         self.scoreboard_error = None
         try:
-            pr: PointSumRuleModel = PointSumRuleSchema().load(data, unknown='EXCLUDE')
+            pr: PointSumRuleModel = PointSumRuleSchema().load(data, unknown="EXCLUDE")
         except ValidationError as e:
             self.scoreboard_error = e
             pr = PointSumRuleModel()
         if pr.count.best is not None:
-            self.count_type, self.count_amount = 'best', pr.count.best
+            self.count_type, self.count_amount = "best", pr.count.best
         elif pr.count.worst is not None:
-            self.count_type, self.count_amount = 'worst', pr.count.worst
+            self.count_type, self.count_amount = "worst", pr.count.worst
 
         self.scoreboard = pr.scoreboard
         self.include_groupless = pr.include_groupless
         self.point_count_method = pr.point_count_method
-        self.total = data.get('total', None)
-        self.hide = data.get('hide', None)
-        self.sort = data.get('sort', True)
-        self.count_all = data.get('count_all', False)
-        self.breaklines = data.get('breaklines', False)
-        self.force = data.get('force', False)
-        self.linktext = data.get('linktext', 'link')
+        self.total = data.get("total", None)
+        self.hide = data.get("hide", None)
+        self.sort = data.get("sort", True)
+        self.count_all = data.get("count_all", False)
+        self.breaklines = data.get("breaklines", False)
+        self.force = data.get("force", False)
+        self.linktext = data.get("linktext", "link")
 
     def find_groups(self, task_id: str) -> Generator[str, None, None]:
         for g in self.groups.values():

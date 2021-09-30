@@ -13,7 +13,7 @@ from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.user.user import User
 from timApp.util.utils import dataclass_to_bytearray
 
-rclient = redis.Redis(host='redis')
+rclient = redis.Redis(host="redis")
 
 allowed_cache_routes = {
     ViewRoute.View,
@@ -32,11 +32,11 @@ class CacheResult:
 
 
 def check_doc_cache(
-        doc_info: DocInfo,
-        current_user: User,
-        view_ctx: ViewContext,
-        m: DocViewParams,
-        nocache: bool,
+    doc_info: DocInfo,
+    current_user: User,
+    view_ctx: ViewContext,
+    m: DocViewParams,
+    nocache: bool,
 ) -> CacheResult:
     cache_key = get_doc_cache_key(doc_info, current_user, view_ctx, m)
     not_cached = CacheResult(key=cache_key, doc=None)
@@ -62,38 +62,48 @@ def check_doc_cache(
             # If for whatever reason the cache is corrupted, just ignore it.
             return not_cached
         return CacheResult(
-            doc=DocRenderResult(head_html=head, content_html=content, allowed_to_cache=True, override_theme=override),
+            doc=DocRenderResult(
+                head_html=head,
+                content_html=content,
+                allowed_to_cache=True,
+                override_theme=override,
+            ),
             key=cache_key,
         )
     return not_cached
 
 
-def get_doc_cache_key(doc: DocInfo, user: User, view_ctx: ViewContext, m: DocViewParams) -> str:
+def get_doc_cache_key(
+    doc: DocInfo, user: User, view_ctx: ViewContext, m: DocViewParams
+) -> str:
     # We can't use builtin hash(...) here because the hash value changes between restarts.
     h = hashlib.shake_256()
     for part in doc.document.get_version():
-        h.update(part.to_bytes(4, 'little', signed=True))
+        h.update(part.to_bytes(4, "little", signed=True))
     h.update(dataclass_to_bytearray(m))
     h.update(dataclass_to_bytearray(view_ctx))
-    return f'timdoc-{doc.id}-{user.id}-{h.hexdigest(10)}'
+    return f"timdoc-{doc.id}-{user.id}-{h.hexdigest(10)}"
 
 
 def clear_doc_cache(doc: DocInfoOrDocument, user: Optional[User]) -> None:
-    prefix = f'timdoc-{doc.id}-'
+    prefix = f"timdoc-{doc.id}-"
     if user:
-        prefix += f'{user.id}-'
-    prefix += '*'
+        prefix += f"{user.id}-"
+    prefix += "*"
     for key in rclient.scan_iter(match=prefix):
         rclient.delete(key)
 
 
-def set_doc_cache(key: str, value: DocRenderResult, ex: int = DEFAULT_EXPIRE_SECS) -> None:
+def set_doc_cache(
+    key: str, value: DocRenderResult, ex: int = DEFAULT_EXPIRE_SECS
+) -> None:
     rclient.delete(key)
     rclient.rpush(
         key,
         value.head_html,
         value.content_html,
-        value.override_theme or '',  # Redis doesn't accept None value, so convert it to empty string.
+        value.override_theme
+        or "",  # Redis doesn't accept None value, so convert it to empty string.
     )
     refresh_doc_expire(key, ex)
 

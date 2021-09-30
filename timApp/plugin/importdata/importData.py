@@ -18,14 +18,22 @@ from timApp.user.personaluniquecode import PersonalUniqueCode, SchacPersonalUniq
 from timApp.user.user import User, UserInfo
 from timApp.util.utils import widen_fields
 from tim_common.markupmodels import GenericMarkupModel
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, create_blueprint, value_or_default, PluginAnswerResp, PluginReqs, EditorTab
+from tim_common.pluginserver_flask import (
+    GenericHtmlModel,
+    GenericAnswerModel,
+    create_blueprint,
+    value_or_default,
+    PluginAnswerResp,
+    PluginReqs,
+    EditorTab,
+)
 from tim_common.utils import Missing
 
 
 @dataclass
 class ImportDataStateModel:
     """Model for the information that is stored in TIM database for each answer."""
+
     url: Union[str, Missing, None] = missing
     separator: Union[str, Missing, None] = missing
     fields: Union[list[str], Missing] = missing
@@ -67,6 +75,7 @@ class ImportDataMarkupModel(GenericMarkupModel):
 @dataclass
 class ImportDataInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
+
     data: Optional[str] = None
     token: Optional[str] = None
     createMissingUsers: Union[bool, Missing] = missing
@@ -76,9 +85,11 @@ class ImportDataInputModel:
 
 
 @dataclass
-class ImportDataHtmlModel(GenericHtmlModel[ImportDataInputModel, ImportDataMarkupModel, ImportDataStateModel]):
+class ImportDataHtmlModel(
+    GenericHtmlModel[ImportDataInputModel, ImportDataMarkupModel, ImportDataStateModel]
+):
     def get_component_html_name(self) -> str:
-        return 'importdata-runner'
+        return "importdata-runner"
 
     def show_in_view_default(self) -> bool:
         return False
@@ -86,7 +97,7 @@ class ImportDataHtmlModel(GenericHtmlModel[ImportDataInputModel, ImportDataMarku
     def get_static_html(self) -> str:
         s = self.markup.beforeOpen
         if not isinstance(s, str):
-            s = 'Open import'
+            s = "Open import"
         return render_static_import_data(self, s)
 
     def get_md(self) -> str:
@@ -94,7 +105,11 @@ class ImportDataHtmlModel(GenericHtmlModel[ImportDataInputModel, ImportDataMarku
 
 
 @dataclass
-class ImportDataAnswerModel(GenericAnswerModel[ImportDataInputModel, ImportDataMarkupModel, ImportDataStateModel]):
+class ImportDataAnswerModel(
+    GenericAnswerModel[
+        ImportDataInputModel, ImportDataMarkupModel, ImportDataStateModel
+    ]
+):
     pass
 
 
@@ -116,9 +131,9 @@ class LineErrorKind(Enum):
 
     def __str__(self) -> str:
         if self == LineErrorKind.TooFewParts:
-            return 'too few parts'
+            return "too few parts"
         else:
-            return 'odd number of field-value pairs'
+            return "odd number of field-value pairs"
 
 
 @dataclass
@@ -127,30 +142,40 @@ class FieldLineError:
     kind: LineErrorKind
 
     def __str__(self) -> str:
-        return f'{self.line}: {self.kind}'
+        return f"{self.line}: {self.kind}"
 
 
 @dataclass
 class FieldValues:
-    values: DefaultDict[str, dict[str, str]] = field(default_factory=lambda: defaultdict(dict))
+    values: DefaultDict[str, dict[str, str]] = field(
+        default_factory=lambda: defaultdict(dict)
+    )
     error_lines: list[FieldLineError] = field(default_factory=list)
 
     def add_val(self, user_ident: str, field_name: str, value: str) -> None:
         self.values[user_ident][field_name] = value
 
-    def to_tim_format(self, separator: str = ';') -> list[str]:
-        return [f'{u}{separator}{separator.join(f"{n}{separator}{v}" for n, v in vals.items())}' for u, vals in
-                self.values.items()]
+    def to_tim_format(self, separator: str = ";") -> list[str]:
+        return [
+            f'{u}{separator}{separator.join(f"{n}{separator}{v}" for n, v in vals.items())}'
+            for u, vals in self.values.items()
+        ]
 
     @staticmethod
-    def from_tim_format(data: list[str], separator: str = ';') -> 'FieldValues':
+    def from_tim_format(data: list[str], separator: str = ";") -> "FieldValues":
         v = FieldValues()
         for d in data:
             parts = d.split(separator)
             if len(parts) < 3:
-                v.error_lines.append(FieldLineError(line=d, kind=LineErrorKind.TooFewParts))
+                v.error_lines.append(
+                    FieldLineError(line=d, kind=LineErrorKind.TooFewParts)
+                )
             elif len(parts) % 2 == 0:
-                v.error_lines.append(FieldLineError(line=d, kind=LineErrorKind.OddNumberOfFieldValuePairs))
+                v.error_lines.append(
+                    FieldLineError(
+                        line=d, kind=LineErrorKind.OddNumberOfFieldValuePairs
+                    )
+                )
             else:
                 for name, value in zip(parts[1::2], parts[2::2]):
                     v.add_val(parts[0], name, value)
@@ -161,7 +186,9 @@ class FieldValues:
             yield str(e)
 
 
-def conv_data_csv(data: list[str], field_names: list[str], separator: str) -> FieldValues:
+def conv_data_csv(
+    data: list[str], field_names: list[str], separator: str
+) -> FieldValues:
     """
     Convert csv format "akankka;1,2,3" to TIM format ["akankka;d1;1", "akankka;d2;2" ...]
     using field names.  If there are too few fields on data, only those
@@ -186,7 +213,9 @@ def conv_data_csv(data: list[str], field_names: list[str], separator: str) -> Fi
     return res
 
 
-def conv_data_field_names(data: list[str], field_names: list[str], separator: str) -> FieldValues:
+def conv_data_field_names(
+    data: list[str], field_names: list[str], separator: str
+) -> FieldValues:
     """
     Converts field names on TIM format akankka;demo;2 so that demo is changed if
     found from field_names.
@@ -205,7 +234,7 @@ def conv_data_field_names(data: list[str], field_names: list[str], separator: st
         fto = ffrom
         if len(pcs) >= 2:
             fto = pcs[1].strip()
-        if ffrom == '*':
+        if ffrom == "*":
             use_all = True
         else:
             fconv[ffrom] = fto
@@ -226,7 +255,9 @@ def conv_data_field_names(data: list[str], field_names: list[str], separator: st
     return res
 
 
-def convert_data(data: list[str], field_names: list[str], separator: str) -> FieldValues:
+def convert_data(
+    data: list[str], field_names: list[str], separator: str
+) -> FieldValues:
     """
     If there is field_names, then convert data either by changing names (field_names has =)
     or csv data
@@ -263,25 +294,27 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
     aalto_data = None
     if sdata is None:
         if isinstance(args.markup.aplus, Missing):
-            return args.make_answer_error('input data missing')
+            return args.make_answer_error("input data missing")
         if not args.input.token:
-            return args.make_answer_error('token missing')
-        headers = {'Authorization': f'Token {args.input.token}'}
+            return args.make_answer_error("token missing")
+        headers = {"Authorization": f"Token {args.input.token}"}
         try:
             r = requests.get(
-                f'https://plus.cs.aalto.fi/api/v2/courses/{args.markup.aplus.course}/aggregatedata/',
-                params={'format': 'json'},
+                f"https://plus.cs.aalto.fi/api/v2/courses/{args.markup.aplus.course}/aggregatedata/",
+                params={"format": "json"},
                 headers=headers,
             )
             if r.status_code != 200:
-                return args.make_answer_error(f'unexpected status from A+: {r.status_code}')
+                return args.make_answer_error(
+                    f"unexpected status from A+: {r.status_code}"
+                )
             aalto_data = r.json()
         except requests.exceptions.ConnectionError:
-            return args.make_answer_error('error connecting to A+')
+            return args.make_answer_error("error connecting to A+")
         except requests.exceptions.Timeout:
-            return args.make_answer_error('timeout connecting to A+')
+            return args.make_answer_error("timeout connecting to A+")
     elif args.markup.aplus:
-        return args.make_answer_error('cannot send data from browser if aplus is given')
+        return args.make_answer_error("cannot send data from browser if aplus is given")
     output = ""
     defaultseparator = value_or_default(args.markup.separator, ";")
     separator = value_or_default(args.input.separator, defaultseparator)
@@ -296,67 +329,73 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
             try:
                 processed_data, output = jsrunner_run(params)
             except JsRunnerError as e:
-                return args.make_answer_error('Error in JavaScript: ' + e.args[0])
+                return args.make_answer_error("Error in JavaScript: " + e.args[0])
             vals = FieldValues.from_tim_format(processed_data)
     elif aalto_data:
-        field_name_re = re.compile(r'(?P<num>\d+) (?P<type>Total|Ratio|Count)')
+        field_name_re = re.compile(r"(?P<num>\d+) (?P<type>Total|Ratio|Count)")
         fvals: DefaultDict[str, dict[str, str]] = defaultdict(dict)
         for d in aalto_data:
             user_vals = {}
             for k, v in d.items():
                 m = field_name_re.match(k)
                 if m and v != 0:
-                    user_vals[m.group('type').lower() + m.group('num')] = str(v)
-            fvals[d['StudentID']] = user_vals
+                    user_vals[m.group("type").lower() + m.group("num")] = str(v)
+            fvals[d["StudentID"]] = user_vals
         vals = FieldValues(values=fvals)
     else:
-        return args.make_answer_error('sdata and aalto_data were both None, which should not happen')
+        return args.make_answer_error(
+            "sdata and aalto_data were both None, which should not happen"
+        )
     did = int(args.taskID.split(".")[0])
     if isinstance(args.markup.docid, int):
         did = args.markup.docid
     rows = []
     id_prop = value_or_default(
         args.markup.joinProperty,
-        'studentID(aalto.fi)' if args.markup.aplus else 'username',
+        "studentID(aalto.fi)" if args.markup.aplus else "username",
     )
     idents = [r for r in vals.values.keys()]
 
-    m = re.fullmatch(r'studentID\((?P<org>[a-z.]+)\)', id_prop)
+    m = re.fullmatch(r"studentID\((?P<org>[a-z.]+)\)", id_prop)
     users: dict[str, User]
     org = None
     if m:
-        org = m.group('org')
-        q = (User.query.join(PersonalUniqueCode)
-             .filter(PersonalUniqueCode.code.in_(idents))
-             .join(HakaOrganization)
-             .filter_by(name=org)
-             .with_entities(PersonalUniqueCode.code, User))
+        org = m.group("org")
+        q = (
+            User.query.join(PersonalUniqueCode)
+            .filter(PersonalUniqueCode.code.in_(idents))
+            .join(HakaOrganization)
+            .filter_by(name=org)
+            .with_entities(PersonalUniqueCode.code, User)
+        )
         users = {c: u for c, u in q.all()}
-    elif id_prop == 'username':
+    elif id_prop == "username":
         q = User.query.filter(User.name.in_(idents))
         users = {u.name: u for u in q.all()}
-    elif id_prop == 'id':
+    elif id_prop == "id":
         try:
             q = User.query.filter(User.id.in_([int(i) for i in idents]))
         except ValueError as e:
-            return args.make_answer_error(f'User ids must be ints ({e})')
+            return args.make_answer_error(f"User ids must be ints ({e})")
         users = {str(u.id): u for u in q.all()}
-    elif id_prop == 'email':
+    elif id_prop == "email":
         q = User.query.filter(User.email.in_(idents))
         users = {u.email: u for u in q.all()}
     else:
-        return args.make_answer_error(f'Invalid joinProperty: {args.markup.joinProperty}')
+        return args.make_answer_error(
+            f"Invalid joinProperty: {args.markup.joinProperty}"
+        )
 
     missing_users = {}
     for uident, vs in vals.values.items():
         u = users.get(uident)
         flds = {}
         for k, v in vs.items():
-            if '.' not in k:
-                k = f'{did}.{k}'
+            if "." not in k:
+                k = f"{did}.{k}"
             flds[k] = v
         if u:
-            ur = {'user': u.id, 'fields': flds}
+            ur = {"user": u.id, "fields": flds}
             rows.append(ur)
         else:
             missing_users[uident] = flds
@@ -366,16 +405,22 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
     if wrong_count:
         if output:
             output += "\n\n"
-        output += "Wrong lines: " + str(wrong_count) + "\n\n" + '\n'.join(wrongs)
+        output += "Wrong lines: " + str(wrong_count) + "\n\n" + "\n".join(wrongs)
 
     mu = []
     if org:
         if aalto_data:
-            student_id_email_map = {row['StudentID']: row['Email'] for row in aalto_data}
+            student_id_email_map = {
+                row["StudentID"]: row["Email"] for row in aalto_data
+            }
             mu = [
                 MissingUser(
                     user=UserInfo(
-                        unique_codes=[SchacPersonalUniqueCode(code=sid, codetype='studentID', org=org)],
+                        unique_codes=[
+                            SchacPersonalUniqueCode(
+                                code=sid, codetype="studentID", org=org
+                            )
+                        ],
                         email=student_id_email_map[sid],
                     ),
                     fields=fields,
@@ -386,14 +431,18 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
             mu = [
                 MissingUser(
                     user=UserInfo(
-                        unique_codes=[SchacPersonalUniqueCode(code=sid, codetype='studentID', org=org)],
-                        username=f'imported_studentid_{sid}',
+                        unique_codes=[
+                            SchacPersonalUniqueCode(
+                                code=sid, codetype="studentID", org=org
+                            )
+                        ],
+                        username=f"imported_studentid_{sid}",
                     ),
                     fields=fields,
                 )
                 for sid, fields in missing_users.items()
             ]
-    elif id_prop == 'username':
+    elif id_prop == "username":
         mu = [
             MissingUser(
                 user=UserInfo(
@@ -403,7 +452,7 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
             )
             for sid, fields in missing_users.items()
         ]
-    elif id_prop == 'email':
+    elif id_prop == "email":
         mu = [
             MissingUser(
                 user=UserInfo(
@@ -414,58 +463,64 @@ def answer(args: ImportDataAnswerModel) -> PluginAnswerResp:
             for sid, fields in missing_users.items()
         ]
     elif missing_users:
-        return args.make_answer_error('missingUsers not implemented when joinProperty is "id"')
+        return args.make_answer_error(
+            'missingUsers not implemented when joinProperty is "id"'
+        )
     if isinstance(args.input.createMissingUsers, bool):
         create_missing = args.input.createMissingUsers
     else:
         create_missing = args.markup.aplus is not missing
     jsonresp: ImportDataAnswerResp = {
-        'ignoreMissing': args.markup.ignoreMissing,
-        'allowMissing': args.markup.allowMissing,
-        'savedata': rows,
-        'createMissingUsers': create_missing,
-        'missingUsers': mu,
-        'web': {
-            'result': f"{output}",
+        "ignoreMissing": args.markup.ignoreMissing,
+        "allowMissing": args.markup.allowMissing,
+        "savedata": rows,
+        "createMissingUsers": create_missing,
+        "missingUsers": mu,
+        "web": {
+            "result": f"{output}",
         },
     }
 
     save: dict[str, Any] = {}
 
-    if args.input.url != args.markup.url or \
-            (args.state and args.state.url and args.state.url != args.input.url):
-        save['url'] = args.input.url
+    if args.input.url != args.markup.url or (
+        args.state and args.state.url and args.state.url != args.input.url
+    ):
+        save["url"] = args.input.url
 
-    if separator != defaultseparator or \
-            (args.state and args.state.separator and args.state.separator != separator):
-        save['separator'] = separator
+    if separator != defaultseparator or (
+        args.state and args.state.separator and args.state.separator != separator
+    ):
+        save["separator"] = separator
     if not field_names:
         field_names = []
     if not args.markup.fields:
         args.markup.fields = []
     if field_names != args.markup.fields:
-        save['fields'] = field_names
+        save["fields"] = field_names
     if save:
         jsonresp["save"] = save
     return jsonresp
 
 
 def reqs() -> PluginReqs:
-    templates = ["""
+    templates = [
+        """
 ``` {#ImportData plugin="importData"}
 buttonText: Import
-```"""]
+```"""
+    ]
     editor_tabs: list[EditorTab] = [
         {
-            'text': 'Fields',
-            'items': [
+            "text": "Fields",
+            "items": [
                 {
-                    'text': 'Save/Import',
-                    'items': [
+                    "text": "Save/Import",
+                    "items": [
                         {
-                            'data': templates[0].strip(),
-                            'text': 'Import data',
-                            'expl': 'Import data from text',
+                            "data": templates[0].strip(),
+                            "text": "Import data",
+                            "expl": "Import data from text",
                         },
                     ],
                 },
@@ -476,13 +531,13 @@ buttonText: Import
         "js": ["importData"],
         "multihtml": True,
         "multimd": True,
-        'editor_tabs': editor_tabs,
+        "editor_tabs": editor_tabs,
     }
 
 
 importData_plugin = create_blueprint(
     __name__,
-    'importData',
+    "importData",
     ImportDataHtmlModel,
     ImportDataAnswerModel,
     answer,

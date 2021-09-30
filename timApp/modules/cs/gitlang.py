@@ -55,15 +55,16 @@ def create_repo(lib, credentials, repo_settings):
 
 class GitReg(Language):
     """For creating a git user at an external service"""
+
     ttype = "gitreg"
 
-    def __init__(self, query, code = None):
+    def __init__(self, query, code=None):
         super().__init__(query, code)
         self.sourcefiles = []
 
         self.lib, self.options = get_lib_and_options(query)
 
-        userid =  query.jso.get("user_id", None) != "Anonymous" if query.jso else None
+        userid = query.jso.get("user_id", None) != "Anonymous" if query.jso else None
         if userid is None:
             userid = get_json_param(query.jso, "info", "user_id", "Anonymous")
         self.is_logged_in = userid != "Anonymous"
@@ -92,7 +93,9 @@ class GitReg(Language):
                         elif on_error == "none":
                             self.credentials[field] = None
                         else:
-                            raise Exception(f"Invalid {field} ({self.credentials[field]}) in credentials")
+                            raise Exception(
+                                f"Invalid {field} ({self.credentials[field]}) in credentials"
+                            )
 
     def run(self, result, sourcelines, points_rule):
         result["nosave"] = True
@@ -141,8 +144,10 @@ class GitReg(Language):
     def runner_name(self):
         return "cs-git-reg-runner"
 
+
 class GitCheck(Modifier):
     """For checking git availability and initializing repo"""
+
     ttype = "gitcheck"
 
     def __init__(self, query):
@@ -161,13 +166,19 @@ class GitCheck(Modifier):
             raise ValueError("No files markup present with git modifier")
 
         self.files = listify(self.files)
-        files = [file for file in self.files if file.get("source", "editor").startswith("git:")]
+        files = [
+            file
+            for file in self.files
+            if file.get("source", "editor").startswith("git:")
+        ]
 
         if len(files) == 0:
             raise ValueError("No git files in files markup with git modifier")
 
         self.lib, self.options = get_lib_and_options(query)
-        credentials = {field: data["value"] for field, data in self.options.fields.items()}
+        credentials = {
+            field: data["value"] for field, data in self.options.fields.items()
+        }
 
         response = self.lib.get_user(credentials)
         if not response.ok:
@@ -191,10 +202,20 @@ class GitCheck(Modifier):
 
         if self.remove in ["remove", "removeall"]:
             if self.remove == "remove":
-                matcher = re.compile(rf'git:([^;@]*@)?{re.escape(self.lib.remote.host)}')
-                files = [file for file in self.files if matcher.match(file.get("source", "editor")) is None]
+                matcher = re.compile(
+                    rf"git:([^;@]*@)?{re.escape(self.lib.remote.host)}"
+                )
+                files = [
+                    file
+                    for file in self.files
+                    if matcher.match(file.get("source", "editor")) is None
+                ]
             else:
-                files = [file for file in self.files if not file.get("source", "editor").startswith("git:")]
+                files = [
+                    file
+                    for file in self.files
+                    if not file.get("source", "editor").startswith("git:")
+                ]
 
             self.query.set_param(files, "markup", "files")
             self.query.set_param(True, "gitcheckDone")

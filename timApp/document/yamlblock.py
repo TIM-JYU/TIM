@@ -13,25 +13,29 @@ from timApp.util.utils import count_chars_from_beginning
 
 class BlockEndMissingError(YAMLError):
     def __init__(self, end_str: str) -> None:
-        super().__init__(f'Missing multiline terminator: {end_str}')
+        super().__init__(f"Missing multiline terminator: {end_str}")
         self.end_str = end_str
 
 
 class DuplicateKeyMergeHintError(YAMLError):
     def __init__(self, key: str):
-        super().__init__(f'Using merge hints in a key ("{key}") having same name in different levels is not currently supported')
+        super().__init__(
+            f'Using merge hints in a key ("{key}") having same name in different levels is not currently supported'
+        )
 
 
 class InvalidIndentError(YAMLError):
     def __init__(self, line: str):
-        super().__init__(f'The line "{shorten(line, width=30, placeholder="...")}" '
-                         f'must be indented at least as much as the first line.')
+        super().__init__(
+            f'The line "{shorten(line, width=30, placeholder="...")}" '
+            f"must be indented at least as much as the first line."
+        )
 
 
 class MergeStyle(Enum):
-    Replace = 'r'
-    Append = 'a'
-    ReplaceIfNotExist = 'r?'
+    Replace = "r"
+    Append = "a"
+    ReplaceIfNotExist = "r?"
 
 
 YamlMergeInfo = dict[str, MergeStyle]
@@ -40,7 +44,9 @@ yaml_loader = CSafeLoader
 
 
 class YamlBlock:
-    def __init__(self, values: dict = None, merge_hints: Optional[YamlMergeInfo] = None):
+    def __init__(
+        self, values: dict = None, merge_hints: Optional[YamlMergeInfo] = None
+    ):
         self.values = values if values is not None else {}
         self.merge_hints = merge_hints
 
@@ -52,7 +58,7 @@ class YamlBlock:
         return NotImplemented
 
     def __repr__(self):
-        return f'{self.__class__.__name__}({self.__dict__})'
+        return f"{self.__class__.__name__}({self.__dict__})"
 
     def __setitem__(self, key: str, value):
         self.values.__setitem__(key, value)
@@ -69,7 +75,7 @@ class YamlBlock:
         values, hints = parse_yaml(md)
         return YamlBlock(values=values, merge_hints=hints)
 
-    def merge_with(self, other: 'YamlBlock'):
+    def merge_with(self, other: "YamlBlock"):
         new_vals = deepcopy(self.values)
         merge(new_vals, other.values, other.merge_hints)
         return YamlBlock(values=new_vals, merge_hints=other.merge_hints)
@@ -78,24 +84,29 @@ class YamlBlock:
         return yaml.dump(self.values, default_flow_style=False)
 
 
-missing_space_after_colon = re.compile("^[ \t]*[^ :[\\]()'\"]*:[^ /=:]")  # kissa:istuu mutta ei http://koti tai a:=5
+missing_space_after_colon = re.compile(
+    "^[ \t]*[^ :[\\]()'\"]*:[^ /=:]"
+)  # kissa:istuu mutta ei http://koti tai a:=5
 multiline_unindented_string = re.compile(
-    r"""^( *)([^ :"']+): *(\|[+-]?)([0-9]*) *([^ 0-9+-]+[^ ]*)( (a|r|r\?))? *$""")  # program: ||| or  program: |!!!
+    r"""^( *)([^ :"']+): *(\|[+-]?)([0-9]*) *([^ 0-9+-]+[^ ]*)( (a|r|r\?))? *$"""
+)  # program: ||| or  program: |!!!
 normal_multiline_indented_string = re.compile(
-    """^( *)([^ :"']+): *([|>][+-]?)([0-9]*) *$""")  # program: | or  program: |+2
+    """^( *)([^ :"']+): *([|>][+-]?)([0-9]*) *$"""
+)  # program: | or  program: |+2
 multiline_unindented_obj_string = re.compile(
-    """^( *)([^ :"']+): *@ *([^ 0-9+-]+[^ ]*)$""")  # object: @|| or  object: @!!!
+    """^( *)([^ :"']+): *@ *([^ 0-9+-]+[^ ]*)$"""
+)  # object: @|| or  object: @!!!
 
 
 def strip_code_block(md: str) -> str:
     code_block_marker = get_code_block_str(md)
     if len(code_block_marker) < 3:
         return md
-    return md.split('\n', 1)[1].rstrip(f'\n{code_block_marker}')
+    return md.split("\n", 1)[1].rstrip(f"\n{code_block_marker}")
 
 
 def get_code_block_str(md: str) -> str:
-    code_block_marker = '`' * count_chars_from_beginning(md, '`')
+    code_block_marker = "`" * count_chars_from_beginning(md, "`")
     return code_block_marker
 
 
@@ -109,11 +120,11 @@ def compare_same(s1: str, s2: str, n: int) -> bool:
     if not n:
         n = 0
     i = s1.find(s2)
-    if i < 0 or i > n: #  No match or too far
+    if i < 0 or i > n:  #  No match or too far
         return False
-    if i + len(s2) != len(s1): #  The end part is not exactly same
+    if i + len(s2) != len(s1):  #  The end part is not exactly same
         return False
-    return count_chars_from_beginning(s1, ' ') <= n
+    return count_chars_from_beginning(s1, " ") <= n
 
 
 def correct_obj(text: str) -> str:
@@ -176,12 +187,12 @@ def correct_obj(text: str) -> str:
     """
     # don't use splitlines here - it loses the possible last trailing newline character, and we don't want that.
     while True:  # repeat until n == 0
-        lines = text.split('\n')
-        n = 0 # count how many unindented object block found and how many handled
+        lines = text.split("\n")
+        n = 0  # count how many unindented object block found and how many handled
         s = ""
         multiline = False
         multiline_string = False
-        end_str = ''
+        end_str = ""
         indent = None
         multiline_first_indent = None
         original_indent_len = 0
@@ -190,15 +201,17 @@ def correct_obj(text: str) -> str:
         for line in lines:
             line = line.rstrip()
             r2 = multiline_unindented_string.match(line)
-            if r2 and not multiline: # we have multiline string and we do nothing until it ends
+            if (
+                r2 and not multiline
+            ):  # we have multiline string and we do nothing until it ends
                 end_str = r2.group(5)
                 indent = r2.group(1)
                 max_allowed_spaces = original_indent_len = len(indent)
-                indent = "" # no changes while in multilinestring
+                indent = ""  # no changes while in multilinestring
                 multiline_string = multiline = True
                 multiline_first_indent = None
                 s = s + lf + line
-                lf = '\n'
+                lf = "\n"
                 continue
             else:
                 r = multiline_unindented_obj_string.match(line)
@@ -210,9 +223,9 @@ def correct_obj(text: str) -> str:
                     max_allowed_spaces = original_indent_len = len(indent)
                     multiline = True
                     multiline_first_indent = None
-                    line, _ = line.split('@', 1)
+                    line, _ = line.split("@", 1)
                     s = s + lf + line.rstrip()
-                    lf = '\n'
+                    lf = "\n"
                     continue
             if multiline:
                 if compare_same(line, end_str, max_allowed_spaces):
@@ -224,17 +237,23 @@ def correct_obj(text: str) -> str:
                         n -= 1
                     continue
                 if multiline_first_indent is None:
-                    multiline_first_indent = count_chars_from_beginning(line, ' ')
-                    needed_indent_length = max(original_indent_len - multiline_first_indent + 1, 0)
-                    if not multiline_string: # we do not touch multiline strings in this function
-                        indent = ' ' * needed_indent_length
+                    multiline_first_indent = count_chars_from_beginning(line, " ")
+                    needed_indent_length = max(
+                        original_indent_len - multiline_first_indent + 1, 0
+                    )
+                    if (
+                        not multiline_string
+                    ):  # we do not touch multiline strings in this function
+                        indent = " " * needed_indent_length
                     max_allowed_spaces = original_indent_len + multiline_first_indent
                 else:
-                    if line and multiline_first_indent > count_chars_from_beginning(line, ' '):
+                    if line and multiline_first_indent > count_chars_from_beginning(
+                        line, " "
+                    ):
                         raise InvalidIndentError(line)
                 line = indent + line
             s = s + lf + line
-            lf = '\n'
+            lf = "\n"
         if multiline:
             raise BlockEndMissingError(end_str)
         if n == 0:
@@ -253,12 +272,14 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
     :return: Text that is proper yaml.
     """
     # don't use splitlines here - it loses the possible last trailing newline character, and we don't want that.
-    if text.find(':@') >= 0:  # we suppose that using this is so rare that it is cheaper to avoid
-        text = correct_obj(text) # this call as much as possible
-    lines = text.split('\n')
+    if (
+        text.find(":@") >= 0
+    ):  # we suppose that using this is so rare that it is cheaper to avoid
+        text = correct_obj(text)  # this call as much as possible
+    lines = text.split("\n")
     s = ""
     multiline = False
-    end_str = ''
+    end_str = ""
     indent = None
     merge_hints = {}
     encountered_keys = set()
@@ -272,22 +293,22 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
         if end_match:  # to protect : space insertion while in normal | or >
             if not end_match.match(line):
                 s = s + lf + line
-                lf = '\n'
+                lf = "\n"
                 continue
             end_match = None
         if missing_space_after_colon.match(line) and not multiline:
-            line = line.replace(':', ': ', 1)
+            line = line.replace(":", ": ", 1)
         r = normal_multiline_indented_string.match(line)
         if r and not multiline:
             indent = r.group(1)
             spacereg = ""
             spaces = len(indent)
             if spaces != 0:
-                spacereg = ' {0,' + str(spaces)+ '}'
+                spacereg = " {0," + str(spaces) + "}"
             em = "^" + spacereg + "[^ ]+.*$"
-            end_match =  re.compile(em)
+            end_match = re.compile(em)
             s = s + lf + line
-            lf = '\n'
+            lf = "\n"
             continue
         r = multiline_unindented_string.match(line)
         if r and not multiline:
@@ -299,19 +320,19 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
                 fls = int(r.group(4))
                 multiline_first_indent = 0
                 needed_indent_length = max(original_indent_len - fls + 1, 0)
-                indent = ' ' * needed_indent_length
+                indent = " " * needed_indent_length
             original_indent_len = len(indent)
             max_allowed_spaces = original_indent_len + fls
             multiline = True
-            line, _ = line.split('|', 1)
+            line, _ = line.split("|", 1)
             key = r.group(2)
             hint = r.group(7)
-            if hint in ('a', 'r', 'r?'):
+            if hint in ("a", "r", "r?"):
                 if key in encountered_keys:
                     raise DuplicateKeyMergeHintError(key)
                 merge_hints[key] = MergeStyle(hint)
             s = s + lf + line + r.group(3) + r.group(4)
-            lf = '\n'
+            lf = "\n"
             encountered_keys.add(key)
             continue
         if multiline:
@@ -319,22 +340,26 @@ def correct_yaml(text: str) -> tuple[str, YamlMergeInfo]:
                 multiline = False
                 continue
             if multiline_first_indent is None:
-                multiline_first_indent = count_chars_from_beginning(line, ' ')
-                needed_indent_length = max(original_indent_len - multiline_first_indent + 1, 0)
-                indent = ' ' * needed_indent_length
+                multiline_first_indent = count_chars_from_beginning(line, " ")
+                needed_indent_length = max(
+                    original_indent_len - multiline_first_indent + 1, 0
+                )
+                indent = " " * needed_indent_length
                 max_allowed_spaces = original_indent_len + multiline_first_indent
             else:
-                if line and multiline_first_indent > count_chars_from_beginning(line, ' '):
+                if line and multiline_first_indent > count_chars_from_beginning(
+                    line, " "
+                ):
                     raise InvalidIndentError(line)
             line = indent + line
         else:
-            key = line.split(':', 1)[0].strip()
+            key = line.split(":", 1)[0].strip()
             if key:
                 if key in encountered_keys and key in merge_hints:
                     raise DuplicateKeyMergeHintError(key)
                 encountered_keys.add(key)
         s = s + lf + line
-        lf = '\n'
+        lf = "\n"
     if multiline:
         raise BlockEndMissingError(end_str)
     return s, merge_hints
@@ -361,7 +386,7 @@ def verify_anchor_depth(text: str, max_depth=3) -> None:
             if p.anchor not in depths:
                 depth = max([*context_depths[p.anchor].values(), 0]) + 1
                 if depth > max_depth:
-                    raise YAMLError('Markup includes too deep anchor references')
+                    raise YAMLError("Markup includes too deep anchor references")
                 depths[p.anchor] = depth
             continue
         if isinstance(p, NodeEvent) and p.anchor is not None:
@@ -381,7 +406,7 @@ def parse_yaml(text: str) -> tuple[dict, YamlMergeInfo]:
 
     values = yaml.load(text, yaml_loader)
     if isinstance(values, str):
-        raise YAMLError('Markup must not be a mere string.')
+        raise YAMLError("Markup must not be a mere string.")
     # empty YAML is equal to null, so we avoid that by returning {} in that case
     return (values or {}), hints
 
@@ -397,10 +422,12 @@ def merge(a: dict, b: dict, merge_info: Optional[YamlMergeInfo] = None):
     return __merge_helper(a, b, 0, merge_info=merge_info)
 
 
-default_append_keys = {'css', 'themes'}
+default_append_keys = {"css", "themes"}
 
 
-def __merge_helper(a: dict, b: dict, depth: int = 0, merge_info: Optional[YamlMergeInfo] = None):
+def __merge_helper(
+    a: dict, b: dict, depth: int = 0, merge_info: Optional[YamlMergeInfo] = None
+):
     for key in b:
         if key in a:
             if isinstance(a[key], dict) and isinstance(b[key], dict):
@@ -410,7 +437,11 @@ def __merge_helper(a: dict, b: dict, depth: int = 0, merge_info: Optional[YamlMe
             elif type(a[key]) != type(b[key]):
                 a[key] = b[key]
             else:
-                m = MergeStyle.Append if key in default_append_keys else MergeStyle.Replace
+                m = (
+                    MergeStyle.Append
+                    if key in default_append_keys
+                    else MergeStyle.Replace
+                )
                 if merge_info:
                     m = merge_info.get(key, m)
                 if m == MergeStyle.Replace:

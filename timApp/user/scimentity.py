@@ -32,8 +32,8 @@ class SCIMEntity:
 
     @property
     def scim_location(self):
-        host = current_app.config['TIM_HOST']
-        return f'{host}/scim/{self.scim_resource_type}s/{self.scim_id}'
+        host = current_app.config["TIM_HOST"]
+        return f"{host}/scim/{self.scim_resource_type}s/{self.scim_id}"
 
     @property
     def scim_extra_data(self):
@@ -41,22 +41,24 @@ class SCIMEntity:
 
     def get_scim_data(self) -> dict:
         return {
-            'schemas': [f"urn:ietf:params:scim:schemas:core:2.0:{self.scim_resource_type}"],
-            'id': self.scim_id,
-            'externalId': self.scim_id,
-            'meta': get_meta(self),
-            'displayName': self.scim_display_name,
+            "schemas": [
+                f"urn:ietf:params:scim:schemas:core:2.0:{self.scim_resource_type}"
+            ],
+            "id": self.scim_id,
+            "externalId": self.scim_id,
+            "meta": get_meta(self),
+            "displayName": self.scim_display_name,
             **self.scim_extra_data,
         }
 
 
 def get_meta(g: SCIMEntity):
     scim_type = g.scim_resource_type
-    host = current_app.config['TIM_HOST']
+    host = current_app.config["TIM_HOST"]
     return {
-        'created': g.scim_created or DEFAULT_TIMESTAMP,
-        'lastModified': g.scim_modified or DEFAULT_TIMESTAMP,
-        'location': f'{host}/scim/{scim_type}s/{g.scim_id}',
-        'resourceType': scim_type,
+        "created": g.scim_created or DEFAULT_TIMESTAMP,
+        "lastModified": g.scim_modified or DEFAULT_TIMESTAMP,
+        "location": f"{host}/scim/{scim_type}s/{g.scim_id}",
+        "resourceType": scim_type,
         # 'version': '',
     }

@@ -8,8 +8,11 @@ from flask import render_template_string
 from marshmallow.utils import missing
 
 from tim_common.markupmodels import GenericMarkupModel
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    create_nontask_blueprint, PluginReqs
+from tim_common.pluginserver_flask import (
+    GenericHtmlModel,
+    create_nontask_blueprint,
+    PluginReqs,
+)
 from tim_common.utils import Missing
 
 
@@ -36,7 +39,9 @@ class MultisaveMarkupModel(GenericMarkupModel):
     # Sisu export-related fields; TODO: Should be a separate plugin.
     destCourse: Union[str, Missing] = missing
     group: Union[str, list[str], Missing] = missing  # for destCourse
-    includeUsers: Union[str, Missing] = missing  # TODO: Should be MembershipFilter, but cannot import
+    includeUsers: Union[
+        str, Missing
+    ] = missing  # TODO: Should be MembershipFilter, but cannot import
     testOnly: Union[bool, Missing] = missing
 
 
@@ -46,17 +51,19 @@ class MultisaveInputModel:
 
 
 @dataclass
-class MultisaveHtmlModel(GenericHtmlModel[MultisaveInputModel, MultisaveMarkupModel, MultisaveStateModel]):
-
+class MultisaveHtmlModel(
+    GenericHtmlModel[MultisaveInputModel, MultisaveMarkupModel, MultisaveStateModel]
+):
     def get_component_html_name(self) -> str:
-        return 'tim-multisave'
+        return "tim-multisave"
 
     def get_static_html(self) -> str:
         return render_static_multisave(self)
 
 
 def render_static_multisave(m: MultisaveHtmlModel) -> str:
-    return render_template_string("""
+    return render_template_string(
+        """
 <div>
 <button class="timButton">
 {{ buttonText or button or "Save" }}
@@ -67,52 +74,57 @@ def render_static_multisave(m: MultisaveHtmlModel) -> str:
 
 
 def reqs() -> PluginReqs:
-    templates = ["""
+    templates = [
+        """
 ``` {plugin="multisave"}
-```""", """
+```""",
+        """
 ``` {plugin="multisave"}
 areas:
 - 
-```""", """
+```""",
+        """
 ``` {plugin="multisave"}
 fields:
 - 
-```""", """
+```""",
+        """
 ``` {plugin="multisave"}
 buttonText: "Lähetä arvioinnit Sisuun"
 destCourse: jy-CUR-xxxx  # tähän kurssin Sisu-id
 showInView: false
-```"""]
+```""",
+    ]
     return {
         "js": ["/field/js/build/multisave.js"],
         "multihtml": True,
         "css": ["/field/css/field.css"],
-        'editor_tabs': [
+        "editor_tabs": [
             {
-                'text': 'Fields',
-                'items': [
+                "text": "Fields",
+                "items": [
                     {
-                        'text': 'Save/Import',
-                        'items': [
+                        "text": "Save/Import",
+                        "items": [
                             {
-                                'data': templates[0].strip(),
-                                'text': 'Multisave for entire document',
-                                'expl': 'Multisave for entire document',
+                                "data": templates[0].strip(),
+                                "text": "Multisave for entire document",
+                                "expl": "Multisave for entire document",
                             },
                             {
-                                'data': templates[1].strip(),
-                                'text': 'Multisave for areas',
-                                'expl': 'Multisave for areas',
+                                "data": templates[1].strip(),
+                                "text": "Multisave for areas",
+                                "expl": "Multisave for areas",
                             },
                             {
-                                'data': templates[2].strip(),
-                                'text': 'Multisave for specific IDs',
-                                'expl': 'Multisave for specific IDs',
+                                "data": templates[2].strip(),
+                                "text": "Multisave for specific IDs",
+                                "expl": "Multisave for specific IDs",
                             },
                             {
-                                'data': templates[3].strip(),
-                                'text': 'Send to Sisu button',
-                                'expl': 'Button for sending results to Sisu',
+                                "data": templates[3].strip(),
+                                "text": "Send to Sisu button",
+                                "expl": "Button for sending results to Sisu",
                             },
                         ],
                     },
@@ -124,7 +136,7 @@ showInView: false
 
 multisave_route = create_nontask_blueprint(
     __name__,
-    'ms',
+    "ms",
     MultisaveHtmlModel,
     reqs,
 )

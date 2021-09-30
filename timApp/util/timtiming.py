@@ -25,8 +25,18 @@ def taketime(s1: str = "", s2: str = "", n: int = 0, zero: bool = False) -> None
         timing_last_z = t22
         timing_last_t_z = t22t
 
-    print("%-20s %-15s %6d - %7.4f %7.4f %7.4f %7.4f" % (
-    s1, s2, n, (t22 - timing_last), (t22t - timing_last_t), (t22 - timing_last_z), (t22t - timing_last_t_z)))
+    print(
+        "%-20s %-15s %6d - %7.4f %7.4f %7.4f %7.4f"
+        % (
+            s1,
+            s2,
+            n,
+            (t22 - timing_last),
+            (t22t - timing_last_t),
+            (t22 - timing_last_z),
+            (t22t - timing_last_t_z),
+        )
+    )
     timing_last = t22
     timing_last_t = t22t
 
@@ -53,8 +63,8 @@ def with_timing(*print_args: str) -> Callable:
                 k: args[n] if n < len(args) else kwargs[k]
                 for n, k in enumerate(sig_params.keys())
             }
-            args_str = ', '.join(f'{name}={all_params[name]}' for name in print_args)
-            print(f'{f.__name__}: {time_after - time_before:.4g} {args_str}')
+            args_str = ", ".join(f"{name}={all_params[name]}" for name in print_args)
+            print(f"{f.__name__}: {time_after - time_before:.4g} {args_str}")
             return result
 
         return wrapper
