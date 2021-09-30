@@ -23,7 +23,7 @@ from lxml.html import HtmlElement
 from tim_common.html_sanitize import sanitize_html
 
 
-def get_exception_code(ex: Exception, tb: Optional[TracebackType] = None):
+def get_exception_code(ex: Exception, tb: Optional[TracebackType] = None) -> str:
     """
     Creates a unique code for the exception and the optional traceback.
     The code can be used for short identification of errors.
@@ -36,8 +36,7 @@ def get_exception_code(ex: Exception, tb: Optional[TracebackType] = None):
     result = f"{t.__module__}.{t.__qualname__}"
     if tb:
         h = hashlib.shake_128()
-        for f, _ in traceback.walk_tb(tb):
-            f: FrameType
+        for f, _ in traceback.walk_tb(tb):  # type: FrameType, Any
             h.update(f.f_code.co_name.encode())
         result += f"_{h.hexdigest(2)}"
     return result
