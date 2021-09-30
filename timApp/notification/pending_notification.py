@@ -9,11 +9,11 @@ GroupingKey = tuple[int, str]
 
 
 class PendingNotification(db.Model):
-    __tablename__ = 'pendingnotification'
+    __tablename__ = "pendingnotification"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), nullable=False)
-    doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), nullable=False)
+    doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
     discriminant = db.Column(db.Text, nullable=False)
     par_id = db.Column(db.Text, nullable=True)
     text = db.Column(db.Text, nullable=True)
@@ -21,8 +21,8 @@ class PendingNotification(db.Model):
     processed = db.Column(db.DateTime(timezone=True), nullable=True, index=True)
     kind = db.Column(db.Enum(NotificationType), nullable=False)
 
-    user: User = db.relationship('User', lazy='joined')
-    block = db.relationship('Block')
+    user: User = db.relationship("User", lazy="joined")
+    block = db.relationship("Block")
 
     @property
     def grouping_key(self) -> GroupingKey:
@@ -32,9 +32,7 @@ class PendingNotification(db.Model):
     def notify_type(self) -> NotificationType:
         return self.kind
 
-    __mapper_args__ = {
-        'polymorphic_on': discriminant
-    }
+    __mapper_args__ = {"polymorphic_on": discriminant}
 
 
 class DocumentNotification(PendingNotification):
@@ -44,20 +42,20 @@ class DocumentNotification(PendingNotification):
 
     @property
     def version_before(self) -> Version:
-        z = tuple(int(x) for x in self.version_change.split('/')[0].split(','))
+        z = tuple(int(x) for x in self.version_change.split("/")[0].split(","))
         return z[0], z[1]
 
     @property
     def version_after(self) -> Version:
-        z = tuple(int(x) for x in self.version_change.split('/')[1].split(','))
+        z = tuple(int(x) for x in self.version_change.split("/")[1].split(","))
         return z[0], z[1]
 
     @property
     def grouping_key(self) -> GroupingKey:
-        return self.doc_id, 'd'
+        return self.doc_id, "d"
 
     __mapper_args__ = {
-        'polymorphic_identity': 'd',
+        "polymorphic_identity": "d",
     }
 
 
@@ -66,13 +64,16 @@ class CommentNotification(PendingNotification):
 
     @property
     def grouping_key(self) -> GroupingKey:
-        return self.doc_id, 'c'
+        return self.doc_id, "c"
 
     __mapper_args__ = {
-        'polymorphic_identity': 'c',
+        "polymorphic_identity": "c",
     }
 
 
 def get_pending_notifications() -> list[PendingNotification]:
-    return PendingNotification.query.filter(PendingNotification.processed == None).order_by(
-        PendingNotification.created.asc()).all()
+    return (
+        PendingNotification.query.filter(PendingNotification.processed == None)
+        .order_by(PendingNotification.created.asc())
+        .all()
+    )

@@ -21,7 +21,6 @@ CACHE_DIR = "/tmp/cache/"
 
 
 class QueryClass:
-
     def __init__(self):
         self.get_query = {}
         self.query = {}
@@ -76,13 +75,13 @@ def check_key(query: QueryClass, key: str):
     q_jso = query.jso
     if not q_jso:
         return key
-    q_input = q_jso.get('input')
+    q_input = q_jso.get("input")
     if q_input:
         if key in q_input:
             return key
         if key2 in q_input:
             return key2
-    m = q_jso.get('markup')
+    m = q_jso.get("markup")
     if not m:
         return key
     if key in m:
@@ -93,7 +92,7 @@ def check_key(query: QueryClass, key: str):
 
 
 def normalize_bool(value):
-    if value in ('false', 'False'):
+    if value in ("false", "False"):
         return False
     return value
 
@@ -117,24 +116,24 @@ def get_param(query: QueryClass, key, default):
     q_val = query.query.get(key)
     if q_val:
         dvalue = normalize_bool(q_val[0])
-        if dvalue == 'undefined':
+        if dvalue == "undefined":
             dvalue = default
 
     gq_val = query.get_query.get(key)
     if not gq_val:
         if query.jso is None:
             return dvalue
-        q_input = query.jso.get('input')
+        q_input = query.jso.get("input")
         if q_input:
-            value = q_input.get(key, 'undefined')
-            if value != 'undefined':
+            value = q_input.get(key, "undefined")
+            if value != "undefined":
                 return value
-        m = query.jso.get('markup')
+        m = query.jso.get("markup")
         if not m:
             return dvalue
         return m.get(key, dvalue)
     value = gq_val[0]
-    if value == 'undefined':
+    if value == "undefined":
         return dvalue
     return normalize_bool(value)
 
@@ -173,7 +172,7 @@ def get_param_del(query: QueryClass, key: str, default: Any):
         return default
     value = query.query[key][0]
     del query.query[key]
-    if value == 'undefined':
+    if value == "undefined":
         return default
     query.deleted[key] = value
     return value
@@ -192,14 +191,20 @@ def check(matcher, line: str):
     return match
 
 
-def get_json_eparam(jso: dict[str, Any], key1: str, key2: str, default: Any, escape_html_special_chars: bool = True):
+def get_json_eparam(
+    jso: dict[str, Any],
+    key1: str,
+    key2: str,
+    default: Any,
+    escape_html_special_chars: bool = True,
+):
     # escaped param
     result = get_json_param(jso, key1, key2, default)
     if result is None:
         return None
     if not isinstance(result, str):
         # print("Ei ollut string: ", result, jso)
-        result = '' + str(result)
+        result = "" + str(result)
     if escape_html_special_chars:
         return html.escape(result)
     return html.unescape(result)
@@ -228,10 +233,10 @@ def get_json_param(jso: dict[str, Any], key1: str, key2: str, default: Any):
 def get_scan_value(s: str):
     direction = 1
     if s:
-        if s[0] == '-':
+        if s[0] == "-":
             direction = -1
             s = s[1:]
-        if s[0] == '+':
+        if s[0] == "+":
             s = s[1:]
     match = do_matcher(s.replace("\\\\", "\\"))
     return direction, match
@@ -284,13 +289,13 @@ def get_url_lines(url: str):
         # print("from cache: ", url)
         return cache[url]
 
-    diskcache = CACHE_DIR + url.replace('/', '_').replace(':', '_')
+    diskcache = CACHE_DIR + url.replace("/", "_").replace(":", "_")
 
     print("not in cache: ", url)
     # if False and os.path.isfile(diskcache):
     if os.path.isfile(diskcache):
         try:
-            result = open(diskcache, encoding='iso8859_15').read()
+            result = open(diskcache, encoding="iso8859_15").read()
             result = result.split("\n")
             print("from DISK cache: ", diskcache)
             cache[url] = result
@@ -316,10 +321,10 @@ def get_url_lines(url: str):
     for i in range(0, n):
         line = lines[i]
         try:
-            line = line.decode('utf-8-sig')
+            line = line.decode("utf-8-sig")
         except:
             try:
-                line = line.decode(encoding='iso8859_15')
+                line = line.decode(encoding="iso8859_15")
             except:
                 line = str(line)
         lines[i] = line.replace("\n", "").replace("\r", "")
@@ -331,7 +336,7 @@ def get_url_lines(url: str):
         if not os.path.isdir(CACHE_DIR):
             os.mkdir(CACHE_DIR)
 
-        open(diskcache, "w", encoding='iso8859_15').write("\n".join(lines))
+        open(diskcache, "w", encoding="iso8859_15").write("\n".join(lines))
     except Exception as e:
         print(str(e))
         print("XXXXXXXXXXXXXXXXXXXXXXXX Could no write cache: \n", diskcache)
@@ -341,7 +346,7 @@ def get_url_lines(url: str):
 
 def check_url_scheme(url: str):
     scheme = urlparse(url).scheme
-    if scheme not in ('http', 'https'):
+    if scheme not in ("http", "https"):
         raise Exception(f"URL scheme must be http or https, got '{scheme}'")
 
 
@@ -349,7 +354,7 @@ def check_url_scheme(url: str):
 def get_url_lines_as_string(url: str):
     global cache
     cachename = "lines_" + url
-    diskcache = CACHE_DIR + cachename.replace('/', '_').replace(':', '_')
+    diskcache = CACHE_DIR + cachename.replace("/", "_").replace(":", "_")
     # print("========= CACHE KEYS ==========\n", get_chache_keys())
     # print(cachename + "\n")
     # print(cache) # chache does not work in forkingMix
@@ -385,10 +390,10 @@ def get_url_lines_as_string(url: str):
     for i in range(0, n):
         line = lines[i]
         try:
-            line = line.decode('utf-8-sig')
+            line = line.decode("utf-8-sig")
         except:
             try:
-                line = line.decode(encoding='iso8859_15')
+                line = line.decode(encoding="iso8859_15")
             except:
                 line = str(line)
         result += line.replace("\r", "")
@@ -406,12 +411,12 @@ def get_url_lines_as_string(url: str):
 
 
 def replace_random(query: QueryClass, s):
-    if not hasattr(query, 'randomcheck'):
+    if not hasattr(query, "randomcheck"):
         return s
     result = s
     # noinspection PyBroadException
     try:
-        result = result.replace('RANDOMCHECK', query.randomcheck)
+        result = result.replace("RANDOMCHECK", query.randomcheck)
     except:
         pass
     return result
@@ -426,15 +431,20 @@ def do_escape(s: str):
 
 
 class FileParams:
-
     def __init__(self, query: QueryClass, nr: str, url: str):  # , **defs):
         self.url = get_param(query, "file" + nr, "")  # defs.get('file',""))
-        self.start = do_matcher(get_param(query, "start" + nr, "").replace("\\\\", "\\"))
-        self.start_scan_dir, self.start_scan = get_scan_value(get_param(query, "startscan" + nr, ""))
+        self.start = do_matcher(
+            get_param(query, "start" + nr, "").replace("\\\\", "\\")
+        )
+        self.start_scan_dir, self.start_scan = get_scan_value(
+            get_param(query, "startscan" + nr, "")
+        )
         self.startcnt = int(get_param(query, "startcnt" + nr, "1"))
         self.startn = int(get_param(query, "startn" + nr, "0"))
         self.end = do_matcher(get_param(query, "end" + nr, "").replace("\\\\", "\\"))
-        self.end_scan_dir, self.end_scan = get_scan_value(get_param(query, "endscan" + nr, ""))
+        self.end_scan_dir, self.end_scan = get_scan_value(
+            get_param(query, "endscan" + nr, "")
+        )
         self.endcnt = int(get_param(query, "endcnt" + nr, "1"))
         self.endn = int(get_param(query, "endn" + nr, "0"))
         self.linefmt = get_param(query, "linefmt" + nr, "")
@@ -455,10 +465,13 @@ class FileParams:
 
         for i in range(1, 10):
             rep = do_matcher(
-                get_param(query, "replace" + rep_nr + str(i), ""))  # replace.1.1 tyyliin replace1 on siis replace.0.1
+                get_param(query, "replace" + rep_nr + str(i), "")
+            )  # replace.1.1 tyyliin replace1 on siis replace.0.1
             if not rep:
                 break
-            byc = replace_random(query, get_param(query, "byCode" + rep_nr + str(i), ""))
+            byc = replace_random(
+                query, get_param(query, "byCode" + rep_nr + str(i), "")
+            )
             self.reps.append({"by": rep, "bc": byc})
 
         usercode = get_json_param(query.jso, "input" + nr, "usercode", None)
@@ -521,7 +534,9 @@ class FileParams:
         replace_by = self.by
         if replace_by:
             rep = replace_by.split("\n")
-            if len(rep) > 0 and rep[0].strip() == "//":  # remove empty comment on first line (due YAML limatations)
+            if (
+                len(rep) > 0 and rep[0].strip() == "//"
+            ):  # remove empty comment on first line (due YAML limatations)
                 del rep[0]
                 replace_by = "\n".join(rep)
 
@@ -587,7 +602,7 @@ number_of_multi_html_reqs = 0
 
 
 def multi_post_params(self) -> list[QueryClass]:
-    content_length = int(self.headers['Content-Length'])
+    content_length = int(self.headers["Content-Length"])
     f = self.rfile.read(content_length)
     u = f.decode("UTF8")
     jsos = json.loads(u)
@@ -601,7 +616,7 @@ def get_query_from_json(jso) -> QueryClass:
     result = QueryClass()
     result.jso = jso
     for field, value in result.jso.items():
-        if field not in ('state', 'input'):
+        if field not in ("state", "input"):
             result.query[field] = [value]
     return result
 
@@ -613,12 +628,12 @@ def post_params(self: http.server.BaseHTTPRequestHandler) -> QueryClass:
     # print dir(self.request)
     # print(self.path)
     # print(self.headers)
-    content_length = int(self.headers['Content-Length'])
+    content_length = int(self.headers["Content-Length"])
     content_type = "application/json"
-    if 'Content-Type' in self.headers:
-        content_type = self.headers['Content-Type']
-    if 'content-cype' in self.headers:
-        content_type = self.headers['content-type']
+    if "Content-Type" in self.headers:
+        content_type = self.headers["Content-Type"]
+    if "content-cype" in self.headers:
+        content_type = self.headers["content-type"]
 
     f = self.rfile.read(content_length)
     # print(f)
@@ -637,7 +652,7 @@ def post_params(self: http.server.BaseHTTPRequestHandler) -> QueryClass:
         return result
     if content_type.find("json") < 0:  # ei JSON
         # print("POSTPARAMS============")
-        q = parse_qs(urlparse('k/?' + u).query, keep_blank_values=True)
+        q = parse_qs(urlparse("k/?" + u).query, keep_blank_values=True)
         for field in list(q.keys()):
             # print("FIELD=", field)
             result.query[field] = [q[field][0]]
@@ -665,7 +680,7 @@ def file_to_string(name: str):
 def query_params_to_angular(query: dict[str, Any]):
     result = ""
     for field in query.keys():
-        result = result + field + "=\"" + query[field][0] + "\";\n"
+        result = result + field + '="' + query[field][0] + '";\n'
     # print "QUERY" + str(query)
     return result
 
@@ -675,7 +690,7 @@ def query_params_to_attribute(query, leave_away):
     # print("leave_away " + leave_away)
     for field in query.keys():
         if not (leave_away and field == leave_away):
-            result = result + field.lower() + "=\'" + query[field][0] + "\'\n"
+            result = result + field.lower() + "='" + query[field][0] + "'\n"
     # print "QUERY" + str(query)
     return result + ""
 
@@ -684,7 +699,9 @@ def default_value_transform(x):
     return x[0]
 
 
-def query_params_to_map(query: dict[str, Any], transform=None, deny: dict[str, Any] = None):
+def query_params_to_map(
+    query: dict[str, Any], transform=None, deny: dict[str, Any] = None
+):
     if transform is None:
         transform = default_value_transform
     result = {}
@@ -710,11 +727,13 @@ def string_to_string_replace_url(line: str, what_to_replace: str, query: QueryCl
     params = urllib.parse.urlencode(qmap)
     line = line.replace(what_to_replace, params)
     height = get_param(query, "height", "100%")
-    line = line.replace('##HEIGHT##', str(height))
+    line = line.replace("##HEIGHT##", str(height))
     return line
 
 
-def string_to_string_replace_attribute(line: str, what_to_replace: str, query: QueryClass):
+def string_to_string_replace_attribute(
+    line: str, what_to_replace: str, query: QueryClass
+):
     leave_away = None
     if "##USERCODE##" in line:
         leave_away = "byCode"
@@ -730,16 +749,28 @@ def string_to_string_replace_attribute(line: str, what_to_replace: str, query: Q
 
 def clean(s):
     s = str(s)
-    s = s.replace('"', '')  # kannattaako, tällä poistetaan katkaisun mahdollisuus?
+    s = s.replace('"', "")  # kannattaako, tällä poistetaan katkaisun mahdollisuus?
     return s
     # return bleach.clean(s)
 
 
-attrs = {
-    '*': ['id', 'class'],
-    'a': ['href']
-}
-tags = ['a', 'p', 'em', 'strong', 'tt', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'b', 'code']
+attrs = {"*": ["id", "class"], "a": ["href"]}
+tags = [
+    "a",
+    "p",
+    "em",
+    "strong",
+    "tt",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "i",
+    "b",
+    "code",
+]
 
 
 def get_heading(query: QueryClass, key: str, def_elem: str):
@@ -792,7 +823,7 @@ def get_surrounding_headers2(query: QueryClass):
     result = get_heading(query, "header", "h4")
     stem = allow_minimal(get_param(query, "stem", None))
     if stem:
-        result += '<p class="stem" >' + stem + '</p>'
+        result += '<p class="stem" >' + stem + "</p>"
     return result, get_heading(query, "footer", 'p class="plgfooter"')
 
 
@@ -809,7 +840,7 @@ def get_tiny_surrounding_headers(query: QueryClass, inside):
     stem = tim_sanitize(get_param(query, "stem", None))
     if stem:
         result += '<span class="stem" >' + stem + "</span>"
-    result += '<span class="csTinyText" >' + inside + '</span>\n'
+    result += '<span class="csTinyText" >' + inside + "</span>\n"
     return result
 
 
@@ -817,8 +848,8 @@ def get_surrounding_headers(query: QueryClass, inside):
     result = get_heading(query, "header", "h4")
     stem = tim_sanitize(get_param(query, "stem", None))
     if stem:
-        result += '<p class="stem" >' + stem + '</p>\n'
-    result += inside + '\n'
+        result += '<p class="stem" >' + stem + "</p>\n"
+    result += inside + "\n"
     result += get_heading(query, "footer", 'p class="plgfooter"')
     return result
 
@@ -828,7 +859,7 @@ def get_surrounding_md_headers(query: QueryClass, inside, extra):
     stem = tim_sanitize(get_param(query, "stem", None))
     if stem:
         result += "\n\n" + stem
-    result += '\n``````\n' + inside + '\n``````\n'
+    result += "\n``````\n" + inside + "\n``````\n"
     result += extra
     result += get_md_heading(query, "footer", "plgfooter")
     return result
@@ -842,10 +873,12 @@ def get_clean_param(query: QueryClass, key, default):
 
 def do_headers(self, content_type):
     self.send_response(200)
-    self.send_header('Access-Control-Allow-Origin', '*')
-    self.send_header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS')
-    self.send_header("Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type")
-    self.send_header('Content-type', content_type)
+    self.send_header("Access-Control-Allow-Origin", "*")
+    self.send_header("Access-Control-Allow-Methods", "GET, PUT, POST, OPTIONS")
+    self.send_header(
+        "Access-Control-Allow-Headers", "version, X-Requested-With, Content-Type"
+    )
+    self.send_header("Content-type", content_type)
     self.end_headers()
 
 
@@ -886,7 +919,7 @@ def getint(s):
     i = 0
     s = s.strip(" ")
     while i < len(s):
-        if "0123456789".find(s[i:i + 1]) < 0:
+        if "0123456789".find(s[i : i + 1]) < 0:
             if i == 0:
                 return 0
             return int(s[0:i])
@@ -896,7 +929,7 @@ def getint(s):
 
 # see: https://docs.python.org/3/library/hashlib.html
 def hash_user_dir(user_id):
-    dk = hashlib.pbkdf2_hmac('sha256', str.encode(user_id), b"tim", 100)
+    dk = hashlib.pbkdf2_hmac("sha256", str.encode(user_id), b"tim", 100)
     return bytes.decode(binascii.hexlify(dk))
 
 
@@ -946,7 +979,7 @@ def get_all_templates(dirname: str) -> dict:
     except Exception as e:
         print(e)
         return {}
-    return {'templates': templates, 'text': texts}
+    return {"templates": templates, "text": texts}
 
 
 def get_template(dirname: str, idx: str, filename: str) -> str:
@@ -1028,7 +1061,9 @@ def add_lazy(plugin_html: str) -> str:
     return LAZYSTART + plugin_html + LAZYEND
 
 
-def make_lazy(plugin_html: str, query: QueryClass, htmlfunc: Callable[[QueryClass], str]) -> str:
+def make_lazy(
+    plugin_html: str, query: QueryClass, htmlfunc: Callable[[QueryClass], str]
+) -> str:
     """Makes plugin string to lazy.
 
     :param plugin_html: ready html for the plugin
@@ -1044,7 +1079,9 @@ def make_lazy(plugin_html: str, query: QueryClass, htmlfunc: Callable[[QueryClas
     return lazy_plugin_html
 
 
-def replace_template_params(query: QueryClass, template: str, cond_itemname: str, itemnames=None) -> str:
+def replace_template_params(
+    query: QueryClass, template: str, cond_itemname: str, itemnames=None
+) -> str:
     """Replaces all occurances of itemnames and cond_item_name in template by their value in query if  cond_itemname
     exists in query.
 
@@ -1074,7 +1111,9 @@ def replace_template_params(query: QueryClass, template: str, cond_itemname: str
     return result
 
 
-def replace_template_param(query: QueryClass, template: str, cond_itemname: str, default="") -> str:
+def replace_template_param(
+    query: QueryClass, template: str, cond_itemname: str, default=""
+) -> str:
     """Replaces all occurances of itemnames and cond_item_name in template by their value in query if  cond_itemname
     exists in query.
 
@@ -1125,11 +1164,11 @@ def remove_before(what: str, s: str):
     i = s.find(what)
     if i < 0:
         return s
-    s = s[i + 1:]
+    s = s[i + 1 :]
     i = s.find("\n")
     if i < 0:
         return ""
-    return s[i + 1:]
+    return s[i + 1 :]
 
 
 def tquote(s: str):

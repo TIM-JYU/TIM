@@ -4,6 +4,7 @@ from flask_testing import LiveServerTestCase
 class TimLiveServer(LiveServerTestCase):
     def create_app(self):
         from timApp.tim_app import app
+
         return app
 
     def setUp(self):

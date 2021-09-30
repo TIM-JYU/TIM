@@ -1,12 +1,17 @@
 from unittest import TestCase
 from datetime import date, datetime
 
-from timApp.markdown.markdownconverter \
-    import week_to_date, week_to_text, month_to_week, fmt_date, preinc, postinc
+from timApp.markdown.markdownconverter import (
+    week_to_date,
+    week_to_text,
+    month_to_week,
+    fmt_date,
+    preinc,
+    postinc,
+)
 
 
 class TestWeekToDate(TestCase):
-
     def test_w2date_normal(self):
         r = str(week_to_date(2, 1, 2020))
         e = "2020-01-06"
@@ -24,7 +29,6 @@ class TestWeekToDate(TestCase):
 
         e = str(date.fromisocalendar(t.year, w, 1))
         self.assertEqual(e, r, "Not same in default case")
-
 
     def test_w2date_format(self):
         r = str(week_to_date(2, 1, 2020, ""))
@@ -62,7 +66,7 @@ class TestInc(TestCase):
 
     def test_pre_inc2(self):
         t = [3]
-        r = preinc(t,2)
+        r = preinc(t, 2)
         self.assertEqual(5, r, "Not same in r inc 2 case")
         self.assertEqual(5, t[0], "Not same t in inc 2 case")
 
@@ -74,7 +78,7 @@ class TestInc(TestCase):
 
     def test_post_inc2(self):
         t = [3]
-        r = postinc(t,2)
+        r = postinc(t, 2)
         self.assertEqual(3, r, "Not same in r inc 2 case")
         self.assertEqual(5, t[0], "Not same t in inc 2 case")
 

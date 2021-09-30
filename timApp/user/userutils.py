@@ -12,8 +12,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import BlockType, Block
 from timApp.item.item import ItemBase
 from timApp.timdb.exceptions import TimDbException
-from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, \
-    ANONYMOUS_USERNAME
+from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, ANONYMOUS_USERNAME
 from timApp.user.usergroup import UserGroup
 from timApp.util.utils import get_current_time
 
@@ -23,18 +22,20 @@ ANON_GROUP_ID = None
 LOGGED_GROUP_ID = None
 ADMIN_GROUP_ID = None
 KORPPI_GROUP_ID = None
-DOC_DEFAULT_RIGHT_NAME = 'DefaultDocumentRights'
-FOLDER_DEFAULT_RIGHT_NAME = 'DefaultFolderRights'
+DOC_DEFAULT_RIGHT_NAME = "DefaultDocumentRights"
+FOLDER_DEFAULT_RIGHT_NAME = "DefaultFolderRights"
 
 access_type_map: dict[str, int] = {}
 
-default_right_paths = {BlockType.Document: f'{TEMPLATE_FOLDER_NAME}/{DOC_DEFAULT_RIGHT_NAME}',
-                       BlockType.Folder: f'{TEMPLATE_FOLDER_NAME}/{FOLDER_DEFAULT_RIGHT_NAME}'}
+default_right_paths = {
+    BlockType.Document: f"{TEMPLATE_FOLDER_NAME}/{DOC_DEFAULT_RIGHT_NAME}",
+    BlockType.Folder: f"{TEMPLATE_FOLDER_NAME}/{FOLDER_DEFAULT_RIGHT_NAME}",
+}
 
 
 class NoSuchUserException(TimDbException):
     def __init__(self, user_id: int) -> None:
-        super().__init__(f'No such user: {user_id}')
+        super().__init__(f"No such user: {user_id}")
         self.user_id = user_id
 
 
@@ -68,15 +69,17 @@ def get_access_type_id(access_type: str) -> int:
     return access_type_map[access_type]
 
 
-def grant_access(group: UserGroup,
-                 block: Union[ItemBase, Block],
-                 access_type: AccessType,
-                 accessible_from: Optional[datetime] = None,
-                 accessible_to: Optional[datetime] = None,
-                 duration_from: Optional[datetime] = None,
-                 duration_to: Optional[datetime] = None,
-                 duration: Optional[timedelta] = None,
-                 require_confirm: Optional[bool] = None) -> BlockAccess:
+def grant_access(
+    group: UserGroup,
+    block: Union[ItemBase, Block],
+    access_type: AccessType,
+    accessible_from: Optional[datetime] = None,
+    accessible_to: Optional[datetime] = None,
+    duration_from: Optional[datetime] = None,
+    duration_to: Optional[datetime] = None,
+    duration: Optional[timedelta] = None,
+    require_confirm: Optional[bool] = None,
+) -> BlockAccess:
     """Grants access to a group for a block.
 
     :param require_confirm: Whether this access needs to be later confirmed by someone with manage access.
@@ -124,6 +127,7 @@ def grant_access(group: UserGroup,
 
 def get_usergroup_by_name(name: str) -> Optional[int]:
     from timApp.user.usergroup import UserGroup
+
     ug = UserGroup.get_by_name(name)
     if ug:
         return ug.id
@@ -138,6 +142,7 @@ def get_user_id_by_name(name: str) -> Optional[int]:
 
     """
     from timApp.user.user import User
+
     u = User.get_by_name(name)
     if u:
         return u.id
@@ -145,8 +150,8 @@ def get_user_id_by_name(name: str) -> Optional[int]:
 
 
 def get_or_create_default_right_document(
-        folder: Folder,
-        object_type: BlockType,
+    folder: Folder,
+    object_type: BlockType,
 ) -> DocInfo:
     d = get_default_right_document(folder, object_type, create_if_not_exist=True)
     assert d is not None
@@ -154,41 +159,47 @@ def get_or_create_default_right_document(
 
 
 def get_default_right_document(
-        folder: Folder,
-        object_type: BlockType,
-        create_if_not_exist: bool = False,
+    folder: Folder,
+    object_type: BlockType,
+    create_if_not_exist: bool = False,
 ) -> Optional[DocInfo]:
     right_doc_path = default_right_paths.get(object_type)
     if right_doc_path is None:
-        raise TimDbException(f'Unsupported object type: {object_type}')
+        raise TimDbException(f"Unsupported object type: {object_type}")
 
     # we don't want to have an owner in the default rights by default
-    doc = folder.get_document(right_doc_path,
-                              create_if_not_exist=create_if_not_exist,
-                              creator_group=None)
+    doc = folder.get_document(
+        right_doc_path, create_if_not_exist=create_if_not_exist, creator_group=None
+    )
     return doc
 
 
-def grant_default_access(groups: list[UserGroup],
-                         folder: Folder,
-                         access_type: AccessType,
-                         object_type: BlockType,
-                         accessible_from: Optional[datetime] = None,
-                         accessible_to: Optional[datetime] = None,
-                         duration_from: Optional[datetime] = None,
-                         duration_to: Optional[datetime] = None,
-                         duration: Optional[timedelta] = None) -> list[BlockAccess]:
+def grant_default_access(
+    groups: list[UserGroup],
+    folder: Folder,
+    access_type: AccessType,
+    object_type: BlockType,
+    accessible_from: Optional[datetime] = None,
+    accessible_to: Optional[datetime] = None,
+    duration_from: Optional[datetime] = None,
+    duration_to: Optional[datetime] = None,
+    duration: Optional[timedelta] = None,
+) -> list[BlockAccess]:
     doc = get_or_create_default_right_document(folder, object_type)
     accesses = []
     for group in groups:
-        accesses.append(grant_access(group,
-                                     doc,
-                                     access_type,
-                                     accessible_from=accessible_from,
-                                     accessible_to=accessible_to,
-                                     duration_from=duration_from,
-                                     duration_to=duration_to,
-                                     duration=duration))
+        accesses.append(
+            grant_access(
+                group,
+                doc,
+                access_type,
+                accessible_from=accessible_from,
+                accessible_to=accessible_to,
+                duration_from=duration_from,
+                duration_to=duration_to,
+                duration=duration,
+            )
+        )
     return accesses
 
 

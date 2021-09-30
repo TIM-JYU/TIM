@@ -21,13 +21,13 @@ if TYPE_CHECKING:
 
 @dataclass
 class MacroInfo:
-    """Represents information required for expanding macros in a DocParagraph.
-    """
+    """Represents information required for expanding macros in a DocParagraph."""
+
     view_ctx: ViewContext
     doc: Document | None = None
     macro_map: dict[str, object] = field(default_factory=dict)
     """The mapping of macro keys to their values."""
-    macro_delimiter: str = '%%'
+    macro_delimiter: str = "%%"
     """The delimiter used for macros in the markdown."""
     user_ctx: UserContext | None = None
     preserve_user_macros: bool = False
@@ -36,26 +36,38 @@ class MacroInfo:
 
     def __post_init__(self) -> None:
         from timApp.tim_app import app
+
         doc = self.doc
-        self.macro_map['host'] = app.config["TIM_HOST"]
+        self.macro_map["host"] = app.config["TIM_HOST"]
         if doc is not None:
             docinfo = doc.get_docinfo()
-            self.macro_map.update({
-                'docid': doc.doc_id,
-                'docpath': docinfo.path,
-                'doctitle': docinfo.title,
-                'docname': docinfo.short_name
-            })
+            self.macro_map.update(
+                {
+                    "docid": doc.doc_id,
+                    "docpath": docinfo.path,
+                    "doctitle": docinfo.title,
+                    "docname": docinfo.short_name,
+                }
+            )
             urlmacros = doc.get_settings().urlmacros()
             if urlmacros:
                 self.macro_map.update(
-                    get_url_macros(self.macro_map, urlmacros, {key: val for (key, val) in self.view_ctx.urlmacros}))
+                    get_url_macros(
+                        self.macro_map,
+                        urlmacros,
+                        {key: val for (key, val) in self.view_ctx.urlmacros},
+                    )
+                )
             extramacros = self.view_ctx.extra_macros
             if extramacros:
                 self.macro_map.update(extramacros)
             rndmacros = doc.get_settings().rndmacros()
             if rndmacros:
-                self.macro_map.update(get_rnd_macros(rndmacros, self.user_ctx.user if self.user_ctx else None))
+                self.macro_map.update(
+                    get_rnd_macros(
+                        rndmacros, self.user_ctx.user if self.user_ctx else None
+                    )
+                )
 
     def get_macros(self) -> dict[str, object]:
         user = self.user_ctx
@@ -78,15 +90,19 @@ class MacroInfo:
         """Gets the macros and defines user-specific variables in such a way that the macro replacement for user
         variables does effectively nothing."""
         macros = deepcopy(self.macro_map)
-        macros.update({
-            'username': f'{self.macro_delimiter}username{self.macro_delimiter}',
-            'realname': f'{self.macro_delimiter}realname{self.macro_delimiter}',
-            'useremail': f'{self.macro_delimiter}useremail{self.macro_delimiter}',
-            'loggedUsername': f'{self.macro_delimiter}loggedUsername{self.macro_delimiter}',
-        })
+        macros.update(
+            {
+                "username": f"{self.macro_delimiter}username{self.macro_delimiter}",
+                "realname": f"{self.macro_delimiter}realname{self.macro_delimiter}",
+                "useremail": f"{self.macro_delimiter}useremail{self.macro_delimiter}",
+                "loggedUsername": f"{self.macro_delimiter}loggedUsername{self.macro_delimiter}",
+            }
+        )
         return macros
 
-    def get_macros_with_user_specific(self, user: UserContext | None = None) -> dict[str, object]:
+    def get_macros_with_user_specific(
+        self, user: UserContext | None = None
+    ) -> dict[str, object]:
         if not user:
             return self.macro_map
         macros = deepcopy(self.macro_map)
@@ -97,19 +113,21 @@ class MacroInfo:
 def get_user_specific_macros(user_ctx: UserContext) -> dict[str, str | None]:
     user = user_ctx.user
     return {
-        'username': escape(user.name),
-        'realname': escape(user.real_name) if user.real_name else None,
-        'useremail': escape(user.email) if user.email else None,
-        'loggedUsername': escape(user_ctx.logged_user.name),
+        "username": escape(user.name),
+        "realname": escape(user.real_name) if user.real_name else None,
+        "useremail": escape(user.email) if user.email else None,
+        "loggedUsername": escape(user_ctx.logged_user.name),
     }
 
 
-def get_rnd_macros(rndmacros_setting: dict[str, str], user: User | None) -> dict[str, str]:
+def get_rnd_macros(
+    rndmacros_setting: dict[str, str], user: User | None
+) -> dict[str, str]:
     rnd_seed = user.name if user else None
     state = None
     ret = {}
     rndm = rndmacros_setting
-    if 'rndnames' not in rndm:
+    if "rndnames" not in rndm:
         rndnames = []
         for rnd_name in rndm:
             if rnd_name not in ["seed"]:  # todo put other non rnd names here
@@ -126,9 +144,9 @@ urlmacros_tester = re.compile(r"[^0-9A-Za-zÅÄÖåäöÜü.,_ \-/@]+")
 
 
 def get_url_macros(
-        docmacros: dict[str, Any],
-        urlmacros: Mapping[str, int | float | str],
-        urlargs: dict[str, str],
+    docmacros: dict[str, Any],
+    urlmacros: Mapping[str, int | float | str],
+    urlargs: dict[str, str],
 ) -> dict[str, str]:
     ret = {}
     for um in urlmacros:

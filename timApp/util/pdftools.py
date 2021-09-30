@@ -220,15 +220,21 @@ class StampFormatInvalidError(PdfError):
 
 
 class Attachment:
-    def __init__(self, url: str, macro: str = "unknown", error: str = "", selected: bool = True):
+    def __init__(
+        self, url: str, macro: str = "unknown", error: str = "", selected: bool = True
+    ):
         self.url = url
         self.macro = macro
         self.selected = selected
         self.error = error
 
-
     def to_json(self):
-        return {'url': self.url, 'macro': self.macro, 'error': self.error, 'selected': self.selected}
+        return {
+            "url": self.url,
+            "macro": self.macro,
+            "error": self.error,
+            "selected": self.selected,
+        }
 
 
 class AttachmentStampData:
@@ -236,11 +242,14 @@ class AttachmentStampData:
     Contains data to create stamp for one attachment.
     """
 
-    def __init__(self, file_path: Path = Path(""),
-                 date: str = "",
-                 attachment: str = "",
-                 issue: Union[str, int] = "",
-                 text: str = ""):
+    def __init__(
+        self,
+        file_path: Path = Path(""),
+        date: str = "",
+        attachment: str = "",
+        issue: Union[str, int] = "",
+        text: str = "",
+    ):
         """
         Attachment data, for example: '/files/123/liite-1.pdf', '12.3.2018', 'B', '2'.
         :param file_path: Attachment file path.
@@ -252,13 +261,15 @@ class AttachmentStampData:
 
         self.file = file_path
         self.date = date
-        self.issue = str(issue).replace('"', '').replace("'", "").strip()
-        self.attachment = attachment.replace('"', '').replace("'", "").strip()
+        self.issue = str(issue).replace('"', "").replace("'", "").strip()
+        self.attachment = attachment.replace('"', "").replace("'", "").strip()
         self.text = text
 
     def __str__(self):
-        return f"{{file:'{self.file.absolute().as_posix()}', date:'{self.date}', issue:'{self.issue}', " \
+        return (
+            f"{{file:'{self.file.absolute().as_posix()}', date:'{self.date}', issue:'{self.issue}', "
             f"attachment:'{self.attachment}', text:'{self.text}'}}"
+        )
 
     def validate(self):
         """
@@ -276,9 +287,11 @@ class AttachmentStampData:
                 raise StampDataMissingAttributeError("attachment", str(self))
             if not self.issue:
                 raise StampDataMissingAttributeError("issue", str(self))
-            if len(self.date) > stamp_param_max_length or \
-                    len(self.issue) > stamp_param_max_length or \
-                    len(self.attachment) > stamp_param_max_length:
+            if (
+                len(self.date) > stamp_param_max_length
+                or len(self.issue) > stamp_param_max_length
+                or len(self.attachment) > stamp_param_max_length
+            ):
                 raise StampDataInvalidError("too long parameter", str(self))
         check_pdf_validity(self.file)
 
@@ -287,21 +300,25 @@ class AttachmentStampData:
 # Functions:
 
 tex_escapes = {
-    '&': r'\&',
-    '%': r'\%',
-    '$': r'\$',
-    '#': r'\#',
-    '_': r'\_',
-    '{': r'\{',
-    '}': r'\}',
-    '~': r'\textasciitilde{}',
-    '^': r'\^{}',
-    '\\': r'\textbackslash{}',
-    '<': r'\textless{}',
-    '>': r'\textgreater{}',
+    "&": r"\&",
+    "%": r"\%",
+    "$": r"\$",
+    "#": r"\#",
+    "_": r"\_",
+    "{": r"\{",
+    "}": r"\}",
+    "~": r"\textasciitilde{}",
+    "^": r"\^{}",
+    "\\": r"\textbackslash{}",
+    "<": r"\textless{}",
+    ">": r"\textgreater{}",
 }
 tex_escape_re = re_compile(
-    '|'.join(re_escape(key) for key in sorted(tex_escapes.keys(), key=lambda item: - len(item))))
+    "|".join(
+        re_escape(key)
+        for key in sorted(tex_escapes.keys(), key=lambda item: -len(item))
+    )
+)
 
 
 def escape_tex(text: str):
@@ -321,7 +338,7 @@ def test_pdf(pdf_path: Path, timeout_seconds: int = pdfmerge_timeout) -> str:
     :param timeout_seconds: Timeout after which error is raised.
     :return: Return error message (empty string if no error).
     """
-    if pdf_path.suffix != '.pdf':
+    if pdf_path.suffix != ".pdf":
         return "Error: Attachment is not a PDF file"
     if not pdf_path.exists():
         return "Error: file not found; try reuploading it"
@@ -329,7 +346,7 @@ def test_pdf(pdf_path: Path, timeout_seconds: int = pdfmerge_timeout) -> str:
     args = ["pdftk", pdf_path, "cat", "output", test_output_path.absolute().as_posix()]
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     out, err = p.communicate(timeout=timeout_seconds)
-    return parse_error(err.decode(encoding='utf-8'))
+    return parse_error(err.decode(encoding="utf-8"))
 
 
 def parse_error(message: str) -> str:
@@ -342,10 +359,15 @@ def parse_error(message: str) -> str:
         return ""
     if "OWNER PASSWORD REQUIRED" in message:
         return "Error: Unable to merge a password protected file; please remove the password requirement (including empty password)"
-    elif "Error: Unable to find file" in message or "java.io.FileNotFoundEception" in message:
+    elif (
+        "Error: Unable to find file" in message
+        or "java.io.FileNotFoundEception" in message
+    ):
         return "Error: file not found; merging tool couldn't find the attachment, try reuploading it"
     elif "java.lang.ClassCastException" in message:
-        return "Error: file contains errors; try recreating the file with a different tool"
+        return (
+            "Error: file contains errors; try recreating the file with a different tool"
+        )
     elif "Server returned HTTP response code: 403 for URL" in message:
         "Error: file URL forbidden; merging tool couldn't find the attachment link, try reuploading it"
     else:
@@ -369,7 +391,9 @@ def merge_pdfs(pdf_file_list: list[UploadedFile], output_path: Path):
         check_pdf_validity(pdf.filesystem_path)
         pdf_path_args += [pdf.filesystem_path]
 
-    args = ["pdftk"] + pdf_path_args + ["cat", "output", output_path.absolute().as_posix()]
+    args = (
+        ["pdftk"] + pdf_path_args + ["cat", "output", output_path.absolute().as_posix()]
+    )
     call_popen(args, pdfmerge_timeout)
 
 
@@ -380,7 +404,7 @@ def parse_tim_url(par_file: str) -> Optional[Path]:
     :param par_file: Link from the macro.
     :return: TIM upload file path if the link was within TIM, otherwise pass on unchanged.
     """
-    domain = current_app.config['TIM_HOST']
+    domain = current_app.config["TIM_HOST"]
     if par_file.startswith("/files/"):
         path = get_files_path() / ("blocks" + par_file)
         return path
@@ -399,8 +423,10 @@ def get_attachments_from_pars(paragraphs: list[DocParagraph]) -> list[Attachment
     """
     pdf_list = []
     for par in paragraphs:
-        if par.is_plugin() and par.get_attr('plugin') == 'showPdf':
-            par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(par, default_view_ctx)
+        if par.is_plugin() and par.get_attr("plugin") == "showPdf":
+            par_plugin = timApp.plugin.plugin.Plugin.from_paragraph(
+                par, default_view_ctx
+            )
             par_data = par_plugin.values
             par_file = par_data["file"]
             file_path = parse_tim_url(par_file)
@@ -408,7 +434,7 @@ def get_attachments_from_pars(paragraphs: list[DocParagraph]) -> list[Attachment
                 error_message = test_pdf(file_path)
                 par_file = file_path.as_posix()
             else:
-                error_message = 'Error: Invalid PDF URL'
+                error_message = "Error: Invalid PDF URL"
             selected = not error_message
             par_str = str(par)
             # Find macro name and unselect "unknown"- (bugged) and "perusliite"-attachments.
@@ -420,7 +446,11 @@ def get_attachments_from_pars(paragraphs: list[DocParagraph]) -> list[Attachment
                 selected = False
             # File check and GUI link require different paths.
             link = par_file.replace("tim_files/blocks/", "")
-            pdf_list.append(Attachment(link, error=error_message, macro=macro_name, selected=selected))
+            pdf_list.append(
+                Attachment(
+                    link, error=error_message, macro=macro_name, selected=selected
+                )
+            )
     return pdf_list
 
 
@@ -452,7 +482,8 @@ def get_stamp_text(item: AttachmentStampData, text_format: str) -> str:
             file=Path(escape_tex(item.file.absolute().as_posix())).name,
             date=escape_tex(item.date),
             attachment=escape_tex(item.attachment),
-            issue=escape_tex(item.issue))
+            issue=escape_tex(item.issue),
+        )
 
     # If stamp data has only a free-form text, use that.
     # TODO: Untested, because the stamping initiated from TIM doesn't use 'text'.
@@ -462,7 +493,7 @@ def get_stamp_text(item: AttachmentStampData, text_format: str) -> str:
         # If object doesn't have 'text'-attribute either;
         # normally this part is obsolete, since checks have been done before.
         except (AttributeError, ValueError, SyntaxError):
-            raise StampDataMissingAttributeError('text', "")
+            raise StampDataMissingAttributeError("text", "")
 
     # If input data wasn't right kind of object.
     except TypeError:
@@ -473,11 +504,12 @@ def get_stamp_text(item: AttachmentStampData, text_format: str) -> str:
 
 
 def create_stamp(
-        model_path: Path,
-        work_dir: Path,
-        stamp_name: str,
-        text: str,
-        remove_pdflatex_files: bool = False) -> Path:
+    model_path: Path,
+    work_dir: Path,
+    stamp_name: str,
+    text: str,
+    remove_pdflatex_files: bool = False,
+) -> Path:
     """
     Creates a stamp pdf file with given text into temp folder.
     :param model_path: Model stamp tex file's complete path; contains
@@ -491,29 +523,29 @@ def create_stamp(
     """
     stamp = work_dir / f"{stamp_name}.tex"
     try:
-        with model_path.open("r", encoding='utf-8') as model_file:
-            with stamp.open("w+", encoding='utf-8') as stamp_temp_file:
-                    for line in model_file:
-                        if "%TEXT_HERE" in line:
-                            stamp_temp_file.write(line.replace("%TEXT_HERE", text))
-                        else:
-                            stamp_temp_file.write(line)
+        with model_path.open("r", encoding="utf-8") as model_file:
+            with stamp.open("w+", encoding="utf-8") as stamp_temp_file:
+                for line in model_file:
+                    if "%TEXT_HERE" in line:
+                        stamp_temp_file.write(line.replace("%TEXT_HERE", text))
+                    else:
+                        stamp_temp_file.write(line)
             args = ["pdflatex", stamp_name]
-    except UnicodeDecodeError: # If stamp_model file is broken.
+    except UnicodeDecodeError:  # If stamp_model file is broken.
         raise ModelStampInvalidError(model_path)
     except FileNotFoundError:
         raise ModelStampMissingError()
 
     # Directs pdflatex text flood to the log-file pdflatex will create anyway.
     pdflatex_log = work_dir / f"{stamp_name}.log"
-    with pdflatex_log.open("a", encoding='utf-8') as pdflatex_output:
+    with pdflatex_log.open("a", encoding="utf-8") as pdflatex_output:
         try:
             # Pdflatex can't write files outside of the work dir so uses cwd.
             rc = subprocess_run(
                 args,
                 stdout=pdflatex_output,
                 cwd=work_dir.absolute().as_posix(),
-                timeout=default_subprocess_timeout
+                timeout=default_subprocess_timeout,
             ).returncode
             if rc != 0:
                 raise SubprocessError(" ".join(args))
@@ -523,16 +555,13 @@ def create_stamp(
     # Optional; deletes the files pdflatex created, except the stamp-pdf file,
     # which is obviously needed for stamping.
     if remove_pdflatex_files:
-        remove_temp_files(
-            work_dir,
-            stamp_name,
-            ["aux", "log", "out", "tex"])
+        remove_temp_files(work_dir, stamp_name, ["aux", "log", "out", "tex"])
     return work_dir / f"{stamp_name}.pdf"
 
 
 def stamp_pdf(
-        pdf_path: Path, stamp_path: Path, output_path: Path,
-        remove_stamp: bool = False) -> Path:
+    pdf_path: Path, stamp_path: Path, output_path: Path, remove_stamp: bool = False
+) -> Path:
     """
     Creates a new stamped pdf file (with stamp overlay on each page).
     :param pdf_path: Path of the pdf to stamp.
@@ -545,9 +574,14 @@ def stamp_pdf(
         raise AttachmentNotFoundError(pdf_path.absolute().as_posix())
     if not stamp_path.exists():
         raise StampFileNotFoundError(stamp_path)
-    args = ["pdftk", pdf_path.absolute().as_posix(),
-            "stamp", stamp_path.absolute().as_posix(),
-            "output", output_path.absolute().as_posix()]
+    args = [
+        "pdftk",
+        pdf_path.absolute().as_posix(),
+        "stamp",
+        stamp_path.absolute().as_posix(),
+        "output",
+        output_path.absolute().as_posix(),
+    ]
     call_popen(args)
 
     # Optionally clean up the stamp-pdf after use.
@@ -569,13 +603,12 @@ def call_popen(args: list[str], timeout_seconds=default_subprocess_timeout) -> N
         out, err = p.communicate(timeout=timeout_seconds)
         rc = p.returncode
         if rc != 0:
-            raise SubprocessError(err.decode(encoding='utf-8'))
+            raise SubprocessError(err.decode(encoding="utf-8"))
     except FileNotFoundError:
         raise SubprocessError(" ".join(args))
 
 
-def remove_temp_files(
-        dir_path: Path, temp_file_name: str, ext_list: list[str]) -> None:
+def remove_temp_files(dir_path: Path, temp_file_name: str, ext_list: list[str]) -> None:
     """
     Deletes temp files created for the stamping process.
     :param dir_path: Temp-file folder path.
@@ -612,16 +645,17 @@ def create_tex_file(content: str, folder: Path = temp_folder_path) -> Path:
     :param folder: Folder where new file will be added.
     :return: Path-object for the new file.
     """
-    path = folder / f'{uuid.uuid4()}.tex'
-    with path.open("w", encoding='utf-8') as file:
+    path = folder / f"{uuid.uuid4()}.tex"
+    with path.open("w", encoding="utf-8") as file:
         file.write(content)
     return path
 
 
 def stamp_pdfs(
-        stamp_data: list[AttachmentStampData],
-        stamp_model_path: Path = stamp_model_default_path,
-        stamp_text_format: str = default_stamp_format) -> list[Path]:
+    stamp_data: list[AttachmentStampData],
+    stamp_model_path: Path = stamp_model_default_path,
+    stamp_text_format: str = default_stamp_format,
+) -> list[Path]:
     """
     Creates new stamps and stamps the corresponding pdfs based on
     the data in a list of AttachmentStampData objects.
@@ -648,15 +682,14 @@ def stamp_pdfs(
         item_stamped_name = item_basename + "_stamped.pdf"
         item_stamped_path = dir_path / item_stamped_name
 
-        create_stamp(stamp_model_path,
-                     dir_path,
-                     item_stamp_name_no_ext,
-                     get_stamp_text(item, stamp_text_format),
-                     remove_pdflatex_files=True)
-        stamp_pdf(item.file,
-                  item_stamp_path,
-                  item_stamped_path,
-                  remove_stamp=True)
+        create_stamp(
+            stamp_model_path,
+            dir_path,
+            item_stamp_name_no_ext,
+            get_stamp_text(item, stamp_text_format),
+            remove_pdflatex_files=True,
+        )
+        stamp_pdf(item.file, item_stamp_path, item_stamped_path, remove_stamp=True)
 
         stamped_pdfs.append(item_stamped_path)
 
@@ -666,16 +699,16 @@ def stamp_pdfs(
 def is_pdf_producer_ghostscript(f: UploadedFile):
     r = subprocess.run(
         [
-            'pdftk',
+            "pdftk",
             f.filesystem_path,
-            'dump_data_utf8',
+            "dump_data_utf8",
         ],
         capture_output=True,
     )
     stdout = r.stdout.decode()
 
     # If the producer is Ghostscript, InfoValue contains also Ghostscript version, but let's not hardcode it here.
-    result = '\nInfoBegin\nInfoKey: Producer\nInfoValue: GPL Ghostscript ' in stdout
+    result = "\nInfoBegin\nInfoKey: Producer\nInfoValue: GPL Ghostscript " in stdout
     return result
 
 
@@ -695,55 +728,58 @@ class CompressionError(Exception):
 
 def compress_pdf(f: UploadedFile):
     p = f.filesystem_path
-    orig = p.rename(p.with_name(p.stem + '_original.pdf'))
+    orig = p.rename(p.with_name(p.stem + "_original.pdf"))
     stdout = run_ghostscript(orig, p)
 
     # It seems Ghostscript can silently fail by leaving the output file empty,
     # and without printing anything to stdout or stderr,
     # so we need to check for the file size here.
-    if '**** Error:' in stdout or f.size == 0:
-        log_warning(f'GS errored when converting {p}; trying with pdftops')
+    if "**** Error:" in stdout or f.size == 0:
+        log_warning(f"GS errored when converting {p}; trying with pdftops")
         pdftopsresult = subprocess.run(
             [
-                'pdftops',
+                "pdftops",
                 orig,
             ],
             capture_output=True,
         )
-        psfile = orig.with_suffix('.ps')
+        psfile = orig.with_suffix(".ps")
         pdftops_stderr = pdftopsresult.stderr.decode()
         if pdftops_stderr and not psfile.exists():
             orig.rename(p)
             raise CompressionError()
         stdout = run_ghostscript(psfile, p)
         if stdout:
-            log_warning(f'GS output from PS conversion: {stdout}')
+            log_warning(f"GS output from PS conversion: {stdout}")
         psfile.unlink()
 
     orig.unlink()
 
 
 def run_ghostscript(inputfile: Path, outputfile: Path) -> str:
-    result = subprocess.run([
-        'gs',
-        '-q',
-        '-dNOPAUSE',
-        '-dBATCH',
-        '-dSAFER',
-        '-dSimulateOverprint=true',
-        '-sDEVICE=pdfwrite',
-        '-dPDFSETTINGS=/ebook',
-        '-dEmbedAllFonts=true',
-        '-dSubsetFonts=true',
-        '-dAutoRotatePages=/None',
-        '-dColorImageDownsampleType=/Bicubic',
-        '-dColorImageResolution=150',
-        '-dGrayImageDownsampleType=/Bicubic',
-        '-dGrayImageResolution=150',
-        '-dMonoImageDownsampleType=/Bicubic',
-        '-dMonoImageResolution=150',
-        f'-sOutputFile={outputfile}',
-        inputfile,
-    ], capture_output=True)
+    result = subprocess.run(
+        [
+            "gs",
+            "-q",
+            "-dNOPAUSE",
+            "-dBATCH",
+            "-dSAFER",
+            "-dSimulateOverprint=true",
+            "-sDEVICE=pdfwrite",
+            "-dPDFSETTINGS=/ebook",
+            "-dEmbedAllFonts=true",
+            "-dSubsetFonts=true",
+            "-dAutoRotatePages=/None",
+            "-dColorImageDownsampleType=/Bicubic",
+            "-dColorImageResolution=150",
+            "-dGrayImageDownsampleType=/Bicubic",
+            "-dGrayImageResolution=150",
+            "-dMonoImageDownsampleType=/Bicubic",
+            "-dMonoImageResolution=150",
+            f"-sOutputFile={outputfile}",
+            inputfile,
+        ],
+        capture_output=True,
+    )
     stdout = result.stdout.decode()
     return stdout

@@ -38,10 +38,7 @@ resizing_col_threshold = 2
 
 # TODO: Add more.
 # HTML font families and their closest corresponding LaTeX-codes:
-fonts = {'monospace': 'pcr',
-         'sans-serif': 'cmss',
-         'times': 'ptm',
-         'calibri': 'cmss'}
+fonts = {"monospace": "pcr", "sans-serif": "cmss", "times": "ptm", "calibri": "cmss"}
 
 
 class TimTableException(Exception):
@@ -68,11 +65,17 @@ class CellBorders:
     Contains the attributes of a cell's borders.
     """
 
-    def __init__(self, left=False, right=False, top=False, bottom=False,
-                 color_bottom=(default_transparent_color, False),
-                 color_top=(default_transparent_color, False),
-                 color_left=(default_transparent_color, False),
-                 color_right=(default_transparent_color, False)):
+    def __init__(
+        self,
+        left=False,
+        right=False,
+        top=False,
+        bottom=False,
+        color_bottom=(default_transparent_color, False),
+        color_top=(default_transparent_color, False),
+        color_left=(default_transparent_color, False),
+        color_right=(default_transparent_color, False),
+    ):
         """
         :param left: Whether the left-side cell border exists.
         :param right: Right border existence.
@@ -119,14 +122,25 @@ class Cell:
     """
 
     def __init__(
-            self, index: int = -1, content: str = "",
-            colspan: int = default_colspan, rowspan: int = default_rowspan,
-            text_color: Union[None, str] = default_text_color, text_color_html: Union[None, bool] = False,
-            bg_color: Union[None, str] = default_transparent_color, bg_color_html: Union[None, bool] = False,
-            h_align=default_text_h_align, font_size: float=default_font_size,
-            cell_width=default_width, cell_height=default_height,
-            line_space=0, pbox="10cm", font_family=default_font_family,
-            borders: CellBorders = CellBorders(), font_weight=None):
+        self,
+        index: int = -1,
+        content: str = "",
+        colspan: int = default_colspan,
+        rowspan: int = default_rowspan,
+        text_color: Union[None, str] = default_text_color,
+        text_color_html: Union[None, bool] = False,
+        bg_color: Union[None, str] = default_transparent_color,
+        bg_color_html: Union[None, bool] = False,
+        h_align=default_text_h_align,
+        font_size: float = default_font_size,
+        cell_width=default_width,
+        cell_height=default_height,
+        line_space=0,
+        pbox="10cm",
+        font_family=default_font_family,
+        borders: CellBorders = CellBorders(),
+        font_weight=None,
+    ):
         """
 
         :param index: Cell index in a row.
@@ -174,12 +188,16 @@ class Cell:
         if self.borders.left:
             l_b_color, l_b_html = self.borders.color_left
             if not l_b_color == default_transparent_color:
-                v_border_and_align += fr"!{{\color{format_color(l_b_color, l_b_html)}\vrule}}"
+                v_border_and_align += (
+                    fr"!{{\color{format_color(l_b_color, l_b_html)}\vrule}}"
+                )
         v_border_and_align += self.h_align
         if self.borders.right:
             r_b_color, r_b_html = self.borders.color_right
             if not r_b_color == default_transparent_color:
-                v_border_and_align += fr"!{{\color{format_color(r_b_color, r_b_html)}\vrule}}"
+                v_border_and_align += (
+                    fr"!{{\color{format_color(r_b_color, r_b_html)}\vrule}}"
+                )
 
         # HTML-colors have an extra tag
         cell_color = format_color(self.bg_color, self.bg_color_html)
@@ -195,7 +213,9 @@ class Cell:
             minipage_width = self.cell_width
             if "*" in str(minipage_width):
                 minipage_width = default_minipage_width
-            content = fr"\begin{{minipage}}{{{minipage_width}}}{content}\end{{minipage}}"
+            content = (
+                fr"\begin{{minipage}}{{{minipage_width}}}{content}\end{{minipage}}"
+            )
 
         # Font weight may be bold, bolder, lighter or number from 100 to 900.
         if self.font_weight:
@@ -217,12 +237,14 @@ class Cell:
         if self.font_family != default_font_family:
             font_family_line = fr"\fontfamily{{{self.font_family}}}\selectfont{{"
             font_family_line_postfix = f"}}"
-        return fr"\multicolumn{{{self.colspan}}}{{{v_border_and_align}}}{{" \
-               fr"\multirow{{{self.rowspan}}}{{{cell_width}}}{{" \
-               f"{cell_color}" \
-               fr"\fontsize{{{self.font_size}}}{{{self.line_space}}}" \
-               fr"\selectfont{{\textcolor{{{self.text_color}}}{{{{{font_family_line}" \
-               fr"{content}}}}}}}}}}}{font_family_line_postfix}"
+        return (
+            fr"\multicolumn{{{self.colspan}}}{{{v_border_and_align}}}{{"
+            fr"\multirow{{{self.rowspan}}}{{{cell_width}}}{{"
+            f"{cell_color}"
+            fr"\fontsize{{{self.font_size}}}{{{self.line_space}}}"
+            fr"\selectfont{{\textcolor{{{self.text_color}}}{{{{{font_family_line}"
+            fr"{content}}}}}}}}}}}{font_family_line_postfix}"
+        )
 
     def __repr__(self) -> str:
         return custom_repr(self)
@@ -260,7 +282,9 @@ class Row:
     LaTeX-table row.
     """
 
-    def __init__(self, index: int, cells: list[Cell], height: Union[float, None] = None) -> None:
+    def __init__(
+        self, index: int, cells: list[Cell], height: Union[float, None] = None
+    ) -> None:
         """
         :param index: Row index.
         :param cells: A list of the cells this row contains.
@@ -444,8 +468,12 @@ class HorizontalBorder:
             else:
                 # If border color of above cell is default or there's no row above,
                 # use color from below cell.
-                if not color_above and color_below or \
-                        color_above[0] == default_transparent_color and color_below:
+                if (
+                    not color_above
+                    and color_below
+                    or color_above[0] == default_transparent_color
+                    and color_below
+                ):
                     color, html_color = color_below
                 # Otherwise default to top color.
                 else:
@@ -455,7 +483,10 @@ class HorizontalBorder:
                     output += colspan * "~"
                 # Multicolumn cell counts as one cell but require multiple borderlines.
                 else:
-                    output += colspan * fr">{{\arrayrulecolor{format_color(color, html_color)}}}-"
+                    output += (
+                        colspan
+                        * fr">{{\arrayrulecolor{format_color(color, html_color)}}}-"
+                    )
             colspan_counter_lower = colspan_counter_lower + i_upper_colspan - 1
             colspan_counter_upper = colspan_counter_upper + i_lower_colspan - 1
         return output
@@ -553,8 +584,13 @@ class Table:
     Table with rows, cells in rows, and horizontal borders between rows.
     """
 
-    def __init__(self, rows: list[Row], width=default_table_width,
-                 height=default_table_height, fit_to_page_width: bool = False) -> None:
+    def __init__(
+        self,
+        rows: list[Row],
+        width=default_table_width,
+        height=default_table_height,
+        fit_to_page_width: bool = False,
+    ) -> None:
         """
         :param rows: List of the rows of the table.
         :param width: Table width.
@@ -580,21 +616,27 @@ class Table:
         # so here it tells only the highest amount of cols in the table.
         # Always uses max amount because this doesn't cause problems and avoids errors caused by having too few.
         columns = "c" * default_max_col_count
-        prefix = f"\\begin{{table}}{default_table_float}\n" \
-                 "\\centering\n" \
-                 f"\\begin{{tabular}}{{{columns}}}"
+        prefix = (
+            f"\\begin{{table}}{default_table_float}\n"
+            "\\centering\n"
+            f"\\begin{{tabular}}{{{columns}}}"
+        )
         postfix = "\\end{tabular}\n\\end{table}"
         resize = self.fit_to_page_width
         if resize:
-            prefix = f"\\begin{{table}}{default_table_float}\n" \
-                     f"\\resizebox{{{self.width}}}{{{self.height}}}{{%\n" \
-                     f"\\begin{{tabular}}{{{columns}}}"
+            prefix = (
+                f"\\begin{{table}}{default_table_float}\n"
+                f"\\resizebox{{{self.width}}}{{{self.height}}}{{%\n"
+                f"\\begin{{tabular}}{{{columns}}}"
+            )
             postfix = "\\end{tabular}%\n}\n\\end{table}"
         output = ""
         for i in range(0, len(self.rows)):
-            output += "\n" + fr"\hhline{{{str(self.hborders[i])}}}" \
-                             "\n" + f"{str(self.rows[i])}" \
-                                    "\n" + fr"\tabularnewline[{self.rows[i].get_row_height()}pt]"
+            output += (
+                "\n" + fr"\hhline{{{str(self.hborders[i])}}}"
+                "\n" + f"{str(self.rows[i])}"
+                "\n" + fr"\tabularnewline[{self.rows[i].get_row_height()}pt]"
+            )
 
         output += "\n" + fr"\hhline{{{str(self.hborders[-1])}}}"
         return f"{prefix}\n{output}\n{postfix}"
@@ -620,15 +662,10 @@ class Table:
         self.hborders.append(HorizontalBorder(row_above=None, row_below=self.rows[0]))
         for i in range(0, len(self.rows) - 1):
             self.hborders.append(
-                HorizontalBorder(
-                    row_above=self.rows[i], row_below=self.rows[i + 1]
-                )
+                HorizontalBorder(row_above=self.rows[i], row_below=self.rows[i + 1])
             )
         self.hborders.append(
-            HorizontalBorder(
-                row_above=self.rows[len(self.rows) - 1],
-                row_below=None
-            )
+            HorizontalBorder(row_above=self.rows[len(self.rows) - 1], row_below=None)
         )
 
     def __repr__(self) -> str:
@@ -640,8 +677,10 @@ class Table:
         :return: None.
         """
         # If table has only few cells and little content, don't resize.
-        if self.get_largest_content_len() <= wrap_cell_threshold and \
-                self.get_largest_col_count() <= resizing_col_threshold:
+        if (
+            self.get_largest_content_len() <= wrap_cell_threshold
+            and self.get_largest_col_count() <= resizing_col_threshold
+        ):
             return
 
         # TODO: A word which isn't broken by spaces and is considerably longer than title
@@ -747,7 +786,7 @@ def get_column_color_list(key, table_data):
     """
     l = []
     try:
-        columns_data = table_data['columns']
+        columns_data = table_data["columns"]
     except:
         # Add empty entries as a quick fix for index out of bounds error.
         return [(None, None)] * default_max_col_count
@@ -769,9 +808,9 @@ def get_column_width_list(table_data):
     l = []
     try:
         try:
-            columns_data = table_data['columnstex']
+            columns_data = table_data["columnstex"]
         except:
-            columns_data = table_data['columns']
+            columns_data = table_data["columns"]
     except:
         return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
@@ -795,7 +834,7 @@ def get_column_style_list(table_data, key):
     """
     l = []
     try:
-        columns_data = table_data['columns']
+        columns_data = table_data["columns"]
     except:
         return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
@@ -820,7 +859,7 @@ def get_column_format_list(table_data, f: Callable[[dict, Any], Any]):
     """
     l = []
     try:
-        columns_data = table_data['columns']
+        columns_data = table_data["columns"]
     except:
         return [None] * default_max_col_count
     for i in range(0, len(columns_data)):
@@ -852,13 +891,15 @@ def get_content(cell_data) -> str:
     :return: Cell content.
     """
     try:
-        return str(cell_data['cell']).strip()
+        return str(cell_data["cell"]).strip()
     # Cells that use simplified format (without 'cell').
     except TypeError:
         return str(cell_data)
 
 
-def get_color(item, key: str, default_color=None, default_color_html=None) -> (str, bool):
+def get_color(
+    item, key: str, default_color=None, default_color_html=None
+) -> (str, bool):
     """
     Parses color-data into LaTeX-format.
     :param item:
@@ -908,8 +949,8 @@ def convert_datablock_index(datablock_index) -> tuple[int, int]:
     :param datablock_index: Index in format "A1".
     :return: Integer tuple (cell_index, row_index).
     """
-    letters = re.sub(r'[0-9]+', '', datablock_index)
-    numbers = re.sub(r'[A-Z]+', '', datablock_index)
+    letters = re.sub(r"[0-9]+", "", datablock_index)
+    numbers = re.sub(r"[A-Z]+", "", datablock_index)
     cell = (ord(letters[0]) - ord("A")) + (ord("Z") - ord("A") + 1) * (len(letters) - 1)
     row = int(numbers) - 1
     return cell, row
@@ -937,24 +978,24 @@ def add_missing_elements(table_json, datablock):
         if cell_count > max_cell_count:
             max_cell_count = cell_count
 
-    empty_cell = {'cell': ''}
+    empty_cell = {"cell": ""}
 
     # TODO: If table has only datablocks, crashes here.
     try:
-        table_row_count = len(table_json['rows'])
+        table_row_count = len(table_json["rows"])
     except:
         table_row_count = 0
-        table_json['rows'] = []
+        table_json["rows"] = []
     # Add missing rows.
     for i in range(0, max_row_count - table_row_count):
-        table_json['rows'].append({'row': [empty_cell]})
+        table_json["rows"].append({"row": [empty_cell]})
 
     # Add missing cells to existing rows.
-    for i in range(0, len(table_json['rows'])):
-        row_json = table_json['rows'][i]
-        row_cell_count = len(row_json['row'])
+    for i in range(0, len(table_json["rows"])):
+        row_json = table_json["rows"][i]
+        row_cell_count = len(row_json["row"])
         for j in range(row_cell_count, max_cell_count):
-            row_json['row'].append(empty_cell)
+            row_json["row"].append(empty_cell)
     return table_json
 
 
@@ -967,11 +1008,11 @@ def get_span(item, default=None) -> (int, int):
     :return: Colspan and rowspan in a tuple.
     """
     try:
-        colspan = item['colspan']
+        colspan = item["colspan"]
     except:
         colspan = default
     try:
-        rowspan = item['rowspan']
+        rowspan = item["rowspan"]
     except:
         rowspan = default
     return colspan, rowspan
@@ -987,14 +1028,16 @@ def get_size(item, key: str, default=None) -> Union[str, None]:
     """
     try:
         size = parse_size_attribute(item[key])
-        if size == 'auto':
+        if size == "auto":
             return None
         return size
     except:
         return default
 
 
-def get_font_family(item, default: Union[str, None] = default_font_family) -> Union[str, None]:
+def get_font_family(
+    item, default: Union[str, None] = default_font_family
+) -> Union[str, None]:
     """
     :param item: Cell or row data.
     :param default: Font family to use in case none set.
@@ -1002,7 +1045,7 @@ def get_font_family(item, default: Union[str, None] = default_font_family) -> Un
     """
     try:
         # Corresponding HTML and LaTeX codes need to be mapped in the 'fonts'.
-        ff = item['fontFamily'].lower()
+        ff = item["fontFamily"].lower()
         font = fonts[ff]
     except:
         font = default
@@ -1019,7 +1062,7 @@ def get_text_horizontal_align(item, default):
     try:
         # Options are center, right and left, which happen to be the same in LaTeX,
         # except only first letters are used.
-        a = str(item['textAlign']).strip()[:1]
+        a = str(item["textAlign"]).strip()[:1]
     except:
         a = default
     return a
@@ -1032,7 +1075,7 @@ def get_font_size(item, default_size):
     :param default_size: Size to be used if no set font size.
     :return: Font size or default font size.
     """
-    return get_size(item, 'fontSize', default_size)
+    return get_size(item, "fontSize", default_size)
 
 
 def get_key_value(item, key, default=None):
@@ -1057,7 +1100,7 @@ def parse_hex_color(color, default_color=None) -> Union[str, None]:
     :param default_color: Color returned in case valid hex can't be parsed.
     :return: A hex color code of six characters.
     """
-    color = re.sub('[^a-fA-F0-9]+', '', color)
+    color = re.sub("[^a-fA-F0-9]+", "", color)
     if len(color) != 6:
         color = default_color
     return color
@@ -1073,7 +1116,7 @@ def get_border_color(border_data) -> tuple[str, bool]:
     color = default_text_color
     color_html = False
     if arg_count == 2:
-        color = border_data[border_data.rfind(" "):].strip()
+        color = border_data[border_data.rfind(" ") :].strip()
         # Hex codes don't work in TimTable.
         # if "#" in color:
         #     color_html = True
@@ -1089,7 +1132,7 @@ def get_borders(item, default_borders=CellBorders()) -> CellBorders:
     :return: CellBorders object for the item.
     """
     try:
-        border_data = item['border']
+        border_data = item["border"]
         if border_data:
             borders = CellBorders()
             borders.set_all_borders(get_border_color(border_data))
@@ -1097,7 +1140,7 @@ def get_borders(item, default_borders=CellBorders()) -> CellBorders:
     except:
         borders = copy.copy(default_borders)
         try:
-            border_data = item['borderLeft']
+            border_data = item["borderLeft"]
             if border_data:
                 borders.left = True
                 (color, color_html) = get_border_color(border_data)
@@ -1105,7 +1148,7 @@ def get_borders(item, default_borders=CellBorders()) -> CellBorders:
         except:
             pass
         try:
-            border_data = item['borderRight']
+            border_data = item["borderRight"]
             if border_data:
                 borders.right = True
                 (color, color_html) = get_border_color(border_data)
@@ -1113,7 +1156,7 @@ def get_borders(item, default_borders=CellBorders()) -> CellBorders:
         except:
             pass
         try:
-            border_data = item['borderTop']
+            border_data = item["borderTop"]
             if border_data:
                 borders.top = True
                 (color, color_html) = get_border_color(border_data)
@@ -1121,7 +1164,7 @@ def get_borders(item, default_borders=CellBorders()) -> CellBorders:
         except:
             pass
         try:
-            border_data = item['borderBottom']
+            border_data = item["borderBottom"]
             if border_data:
                 borders.bottom = True
                 (color, color_html) = get_border_color(border_data)
@@ -1149,7 +1192,7 @@ def get_datablock(table_json):
     :return: Datablock or None.
     """
     try:
-        datablock = table_json['tabledatablock']['cells']
+        datablock = table_json["tabledatablock"]["cells"]
     except KeyError:
         datablock = None
     return datablock
@@ -1175,20 +1218,24 @@ def parse_size_attribute(attribute: str) -> str:
     :return: Parsed string.
     """
     # All units are converted to pt.
-    conv_to_pt = {'mm': 2.83464566929,
-                  'cm': 28.3464566929,
-                  'in': 72,
-                  'px': 1.33333333333,
-                  'pt': 1,
-                  'pc': 12,
-                  'ex': 4.30554,
-                  'em': 10.00002}
+    conv_to_pt = {
+        "mm": 2.83464566929,
+        "cm": 28.3464566929,
+        "in": 72,
+        "px": 1.33333333333,
+        "pt": 1,
+        "pc": 12,
+        "ex": 4.30554,
+        "em": 10.00002,
+    }
     if not attribute:
         return "0"
     for key, value in conv_to_pt.items():
         if key in attribute:
             try:
-                return str(round(float(str(attribute).replace(key, '').strip())*value, 2))
+                return str(
+                    round(float(str(attribute).replace(key, "").strip()) * value, 2)
+                )
             except Exception as e:
                 # TODO: Tell user about conversion errors.
                 pass
@@ -1203,11 +1250,11 @@ def get_table_size(table_data):
     :return: Table width and height as a tuple.
     """
     try:
-        width = parse_size_attribute(table_data['width'])
+        width = parse_size_attribute(table_data["width"])
     except KeyError:
         width = default_table_width
     try:
-        height = parse_size_attribute(table_data['height'])
+        height = parse_size_attribute(table_data["height"])
     except KeyError:
         height = default_table_height
     return width, height
@@ -1227,7 +1274,7 @@ def get_table_resize(table_data, table_width_estimation, col_count) -> bool:
     resize = False
     # If forced.
     try:
-        resize = table_data['texFitToPage']
+        resize = table_data["texFitToPage"]
     # Otherwise check automatically.
     except:
         # If table size is estimation and col count is low, don't resize
@@ -1302,7 +1349,9 @@ def is_close(a, b, rel_tol=1e-09, abs_tol=0.0) -> bool:
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
-def decide_colspan_rowspan(cell_colspan, cell_rowspan, datablock_colspan, datablock_rowspan):
+def decide_colspan_rowspan(
+    cell_colspan, cell_rowspan, datablock_colspan, datablock_rowspan
+):
     colspan = cell_colspan
     rowspan = cell_rowspan
     if datablock_colspan:
@@ -1344,16 +1393,12 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     # Table settings will be used as defaults, if set.
     # Each level's format is saved in a variable, which will be empty, if
     # that level doesn't have any formattings.
-    (table_bg_color, table_bg_color_html) = \
-        get_color(table_json,
-                  "backgroundColor",
-                  default_transparent_color,
-                  False)
-    (table_text_color, table_text_color_html) = \
-        get_color(table_json,
-                  "color",
-                  default_text_color,
-                  False)
+    (table_bg_color, table_bg_color_html) = get_color(
+        table_json, "backgroundColor", default_transparent_color, False
+    )
+    (table_text_color, table_text_color_html) = get_color(
+        table_json, "color", default_text_color, False
+    )
     table_font_family = get_font_family(table_json, default_font_family)
     table_borders = get_borders(table_json, CellBorders())
     table_font_size = get_font_size(table_json, default_font_size)
@@ -1370,20 +1415,28 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     column_text_color_list = get_column_color_list("color", table_json)
     column_width_list = get_column_width_list(table_json)
     column_font_size_list = get_column_style_list(table_json, "fontSize")
-    column_h_align_list = get_column_format_list(table_json, f=get_text_horizontal_align)
+    column_h_align_list = get_column_format_list(
+        table_json, f=get_text_horizontal_align
+    )
     column_font_family_list = get_column_format_list(table_json, f=get_font_family)
 
     # Get default (applied to all of same type) attributes:
-    table_default_row_data = table_json.get('defrows')
-    table_default_col_data = table_json.get('defcols')
-    table_default_cell_data = table_json.get('defcells')
+    table_default_row_data = table_json.get("defrows")
+    table_default_col_data = table_json.get("defcols")
+    table_default_cell_data = table_json.get("defcells")
 
-    table_default_row_height = get_size(table_default_row_data, key="height", default=None)
-    table_default_col_height = get_size(table_default_col_data, key="width", default=None)
-    table_default_cell_bgcolor = get_color(table_default_cell_data, key="backgroundColor")
+    table_default_row_height = get_size(
+        table_default_row_data, key="height", default=None
+    )
+    table_default_col_height = get_size(
+        table_default_col_data, key="width", default=None
+    )
+    table_default_cell_bgcolor = get_color(
+        table_default_cell_data, key="backgroundColor"
+    )
     table_default_cell_textcolor = get_color(table_default_cell_data, key="color")
 
-    table_json_rows = table_json.get('rows')
+    table_json_rows = table_json.get("rows")
     if not table_json_rows:
         return
     for i in range(0, len(table_json_rows)):
@@ -1403,7 +1456,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
         row_borders = get_borders(row_data, table_borders)
 
         skip_index = 0
-        for j in range(0, len(table_json_rows[i]['row'])):
+        for j in range(0, len(table_json_rows[i]["row"])):
             # Skips following cells based on previous cell's colspan.
             if skip_index > 0:
                 skip_index -= 1
@@ -1412,13 +1465,15 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             if table_row.get_cell(j):
                 continue
 
-            cell_data = table_json_rows[i]['row'][j]
+            cell_data = table_json_rows[i]["row"][j]
 
             content = get_content(cell_data)
 
             # Get cell attributes:
-            (cell_bg_color, cell_bg_color_html) = get_color(cell_data, 'backgroundColor')
-            (cell_text_color, cell_text_color_html) = get_color(cell_data, 'color')
+            (cell_bg_color, cell_bg_color_html) = get_color(
+                cell_data, "backgroundColor"
+            )
+            (cell_text_color, cell_text_color_html) = get_color(cell_data, "color")
             cell_height = get_size(cell_data, key="height")
             cell_width = get_size(cell_data, key="width")
             cell_h_align = get_text_horizontal_align(cell_data, None)
@@ -1438,68 +1493,98 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
             else:
                 content = get_content(datablock_cell_data)
 
-            (datablock_bg_color, datablock_bg_color_html) = get_color(datablock_cell_data, 'backgroundColor')
-            (datablock_text_color, datablock_text_color_html) = get_color(datablock_cell_data, 'color')
+            (datablock_bg_color, datablock_bg_color_html) = get_color(
+                datablock_cell_data, "backgroundColor"
+            )
+            (datablock_text_color, datablock_text_color_html) = get_color(
+                datablock_cell_data, "color"
+            )
             datablock_cell_height = get_size(datablock_cell_data, key="height")
             datablock_cell_width = get_size(datablock_cell_data, key="width")
             datablock_font_family = get_font_family(datablock_cell_data, None)
             datablock_font_size = get_font_size(datablock_cell_data, None)
             datablock_h_align = get_text_horizontal_align(datablock_cell_data, None)
-            datablock_font_weight = get_key_value(datablock_cell_data, "fontWeight", None)
+            datablock_font_weight = get_key_value(
+                datablock_cell_data, "fontWeight", None
+            )
             datablock_colspan, datablock_rowspan = get_span(datablock_cell_data)
 
             # Decide which styles to use (from table, column, row, cell or datablock)
-            (bg_color, bg_color_html) = decide_format_tuple([
-                (table_bg_color, table_bg_color_html),
-                table_default_cell_bgcolor,
-                column_bg_color_list[j],
-                (row_bg_color, row_bg_color_html),
-                (cell_bg_color, cell_bg_color_html),
-                (datablock_bg_color, datablock_bg_color_html),
-            ])
-            (text_color, text_color_html) = decide_format_tuple([
-                (table_text_color, table_text_color_html),
-                table_default_cell_textcolor,
-                column_text_color_list[j],
-                (row_text_color, row_text_color_html),
-                (cell_text_color, cell_text_color_html),
-                (datablock_text_color, datablock_text_color_html),
-            ])
-            height = decide_format_size([
-                table_default_row_height,
-                row_height,
-                cell_height,
-                datablock_cell_height])
-            width = decide_format_size([
-                table_default_col_height,
-                column_width_list[j],
-                row_width,
-                cell_width,
-                datablock_cell_width])
-            h_align = decide_format([
-                table_h_align,
-                column_h_align_list[j],
-                row_h_align,
-                cell_h_align,
-                datablock_h_align])
-            font_family = decide_format([
-                table_font_family,
-                column_font_family_list[j],
-                row_font_family,
-                cell_font_family,
-                datablock_font_family])
-            font_size = decide_format([
-                table_font_size,
-                column_font_size_list[j],
-                row_font_size,
-                cell_font_size,
-                datablock_font_size])
-            font_weight = decide_format([
-                table_font_weight,
-                row_font_weight,
-                cell_font_weight,
-                datablock_font_weight])
-            colspan, rowspan = decide_colspan_rowspan(cell_colspan, cell_rowspan, datablock_colspan, datablock_rowspan)
+            (bg_color, bg_color_html) = decide_format_tuple(
+                [
+                    (table_bg_color, table_bg_color_html),
+                    table_default_cell_bgcolor,
+                    column_bg_color_list[j],
+                    (row_bg_color, row_bg_color_html),
+                    (cell_bg_color, cell_bg_color_html),
+                    (datablock_bg_color, datablock_bg_color_html),
+                ]
+            )
+            (text_color, text_color_html) = decide_format_tuple(
+                [
+                    (table_text_color, table_text_color_html),
+                    table_default_cell_textcolor,
+                    column_text_color_list[j],
+                    (row_text_color, row_text_color_html),
+                    (cell_text_color, cell_text_color_html),
+                    (datablock_text_color, datablock_text_color_html),
+                ]
+            )
+            height = decide_format_size(
+                [
+                    table_default_row_height,
+                    row_height,
+                    cell_height,
+                    datablock_cell_height,
+                ]
+            )
+            width = decide_format_size(
+                [
+                    table_default_col_height,
+                    column_width_list[j],
+                    row_width,
+                    cell_width,
+                    datablock_cell_width,
+                ]
+            )
+            h_align = decide_format(
+                [
+                    table_h_align,
+                    column_h_align_list[j],
+                    row_h_align,
+                    cell_h_align,
+                    datablock_h_align,
+                ]
+            )
+            font_family = decide_format(
+                [
+                    table_font_family,
+                    column_font_family_list[j],
+                    row_font_family,
+                    cell_font_family,
+                    datablock_font_family,
+                ]
+            )
+            font_size = decide_format(
+                [
+                    table_font_size,
+                    column_font_size_list[j],
+                    row_font_size,
+                    cell_font_size,
+                    datablock_font_size,
+                ]
+            )
+            font_weight = decide_format(
+                [
+                    table_font_weight,
+                    row_font_weight,
+                    cell_font_weight,
+                    datablock_font_weight,
+                ]
+            )
+            colspan, rowspan = decide_colspan_rowspan(
+                cell_colspan, cell_rowspan, datablock_colspan, datablock_rowspan
+            )
 
             c = Cell(
                 content=content,
@@ -1515,7 +1600,7 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
                 cell_width=width,
                 cell_height=height,
                 borders=borders,
-                font_weight=font_weight
+                font_weight=font_weight,
             )
 
             # TODO: Cells that are replaced in html by rowspan or colspan are left in some cases and
@@ -1551,7 +1636,9 @@ def convert_table(table_json, draw_html_borders: bool = False) -> Table:
     if get_key_value(table_json, "texAutoSize", True):
         table.auto_size_cells()
     # Whether table should be fit to page.
-    table.fit_to_page_width = get_table_resize(table_json, estimate_table_width(table), table.get_largest_col_count())
+    table.fit_to_page_width = get_table_resize(
+        table_json, estimate_table_width(table), table.get_largest_col_count()
+    )
     # Create horizontal border objects.
     table.create_hborders()
 

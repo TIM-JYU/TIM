@@ -11,13 +11,13 @@ class ValidationIssue:
 
     def __str__(self):
         if self.par_id is not None:
-            return f'{self.issue_name} noticed in paragraph {self.par_id}'
+            return f"{self.issue_name} noticed in paragraph {self.par_id}"
         else:
-            return f'{self.issue_name} noticed in a paragraph'
+            return f"{self.issue_name} noticed in a paragraph"
 
     @property
     def issue_name(self):
-        return 'Issue'
+        return "Issue"
 
 
 class AreaIssue(ValidationIssue):
@@ -27,7 +27,7 @@ class AreaIssue(ValidationIssue):
 
     @property
     def issue_name(self):
-        return 'Area issue'
+        return "Area issue"
 
 
 class DuplicateTaskId(ValidationIssue):
@@ -37,31 +37,31 @@ class DuplicateTaskId(ValidationIssue):
 
     @property
     def issue_name(self):
-        return 'Duplicate task id'
+        return "Duplicate task id"
 
 
 class AreaEndWithoutStart(AreaIssue):
     @property
     def issue_name(self):
-        return 'Area end without start'
+        return "Area end without start"
 
 
 class DuplicateAreaEnd(AreaIssue):
     @property
     def issue_name(self):
-        return 'Duplicate area end'
+        return "Duplicate area end"
 
 
 class AreaWithoutEnd(AreaIssue):
     @property
     def issue_name(self):
-        return 'Area without end'
+        return "Area without end"
 
 
 class MultipleAreasWithSameName(AreaIssue):
     @property
     def issue_name(self):
-        return 'Multiple areas with same name'
+        return "Multiple areas with same name"
 
 
 class OverlappingClassedArea(AreaIssue):
@@ -71,31 +71,31 @@ class OverlappingClassedArea(AreaIssue):
 
     @property
     def issue_name(self):
-        return 'Overlapping classed area'
+        return "Overlapping classed area"
 
 
 class ZeroLengthArea(AreaIssue):
     @property
     def issue_name(self):
-        return 'Zero-length area'
+        return "Zero-length area"
 
 
 class AttributesAtEndOfCodeBlock(ValidationIssue):
     @property
     def issue_name(self):
-        return 'Attributes at end of code block'
+        return "Attributes at end of code block"
 
 
 class InvalidParagraphId(ValidationIssue):
     @property
     def issue_name(self):
-        return 'Invalid paragraph id'
+        return "Invalid paragraph id"
 
 
 class DuplicateParagraphId(ValidationIssue):
     @property
     def issue_name(self):
-        return 'Duplicate paragraph id'
+        return "Duplicate paragraph id"
 
 
 class ValidationResult:
@@ -112,11 +112,13 @@ class ValidationResult:
         return any(isinstance(i, j) for j in issues for i in self.issues)
 
     def __str__(self):
-        return '\n'.join(str(i) for i in self.issues)
+        return "\n".join(str(i) for i in self.issues)
 
     @property
     def has_critical_issues(self):
-        return self.has_any_issue(DuplicateParagraphId, AttributesAtEndOfCodeBlock, InvalidParagraphId)
+        return self.has_any_issue(
+            DuplicateParagraphId, AttributesAtEndOfCodeBlock, InvalidParagraphId
+        )
 
     def raise_if_has_critical_issues(self):
         if self.has_critical_issues:

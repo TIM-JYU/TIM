@@ -19,7 +19,18 @@ import json
 from dataclasses import dataclass, field
 from enum import Enum
 from json import JSONEncoder
-from typing import Optional, Union, TypeVar, Generic, Dict, Type, Any, List, Callable, TypedDict
+from typing import (
+    Optional,
+    Union,
+    TypeVar,
+    Generic,
+    Dict,
+    Type,
+    Any,
+    List,
+    Callable,
+    TypedDict,
+)
 
 from flask import Blueprint, request, Response, current_app
 from flask import render_template_string, jsonify, Flask
@@ -35,7 +46,7 @@ from tim_common.utils import Missing
 
 class PluginJsonEncoder(json.JSONEncoder):
     def default(self, o: Any) -> Optional[Any]:
-        tojson = getattr(o, 'to_json', None)
+        tojson = getattr(o, "to_json", None)
         if tojson:
             return tojson()
         return None
@@ -84,29 +95,30 @@ class PluginReqs(TypedDict, total=False):
 @dataclass
 class InfoModel:
     """Model for the information that is given by TIM in an answer request."""
+
     earlier_answers: int
     look_answer: bool
     max_answers: Optional[int]
     user_id: str
-    valid: bool # could be False e.g. if answering deadline has passed
-
+    valid: bool  # could be False e.g. if answering deadline has passed
 
     @property
     def primary_user(self) -> str:
-        users = self.user_id.split(';')
+        users = self.user_id.split(";")
         return users[0]
 
 
 InfoSchema = class_schema(InfoModel)
 
-PluginMarkup = TypeVar('PluginMarkup', bound=GenericMarkupModel)
-PluginState = TypeVar('PluginState')
-PluginInput = TypeVar('PluginInput')
+PluginMarkup = TypeVar("PluginMarkup", bound=GenericMarkupModel)
+PluginState = TypeVar("PluginState")
+PluginInput = TypeVar("PluginInput")
 
 
 @dataclass
 class GenericRouteModel(Generic[PluginInput, PluginMarkup, PluginState]):
     """Base class for answer and HTML route models. Contains the fields that the routes have in common."""
+
     info: Optional[InfoModel]
     markup: PluginMarkup
     state: Optional[PluginState]
@@ -116,17 +128,18 @@ class GenericRouteModel(Generic[PluginInput, PluginMarkup, PluginState]):
 @dataclass
 class GenericAnswerModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]):
     """Generic base class for answer route models."""
+
     input: PluginInput
     info: InfoModel
 
     def make_answer_error(self, msg: str) -> PluginAnswerResp:
-        return {'web': {'error': msg}}
+        return {"web": {"error": msg}}
 
 
 class Laziness(Enum):
     No = False
     Yes = True
-    Never = 'NEVERLAZY'
+    Never = "NEVERLAZY"
 
     def to_json(self) -> Union[str, bool]:
         return self.value
@@ -138,9 +151,10 @@ class Laziness(Enum):
 @dataclass
 class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]):
     """Generic base class for HTML route models."""
+
     anonymous: bool
     current_user_id: str
-    doLazy: Laziness = field(metadata={'by_value': True})
+    doLazy: Laziness = field(metadata={"by_value": True})
     preview: bool
     review: bool
     targetFormat: str
@@ -158,12 +172,12 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
 
     def get_browser_json(self) -> dict:
         r = dict(list_not_missing_fields(self))
-        r['markup'] = self.markup.get_visible_data()
+        r["markup"] = self.markup.get_visible_data()
         return r
 
     def get_maybe_empty_static_html(self) -> str:
         """Renders a static version of the plugin.
-           When plugin is not shown in view mode, return empty string
+        When plugin is not shown in view mode, return empty string
         """
         if self.viewmode and not self.show_in_view():
             return render_template_string("")
@@ -174,11 +188,11 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
 
         This is meant to be a static lightweight lookalike version of the plugin.
         """
-        raise NotImplementedError('Must be implemented by a derived class.')
+        raise NotImplementedError("Must be implemented by a derived class.")
 
     def get_review(self) -> str:
         # TODO: This should be in field classes, not here.
-        c = getattr(self.state, 'c', None)
+        c = getattr(self.state, "c", None)
         if c:
             return f"<pre>{json.dumps(c)}</pre>"
 
@@ -188,7 +202,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         """Renders the plugin as HTML."""
         component = self.get_component_html_name()
         if self.viewmode and not self.show_in_view():
-            return ''
+            return ""
 
         if self.review:
             return self.get_review()
@@ -196,7 +210,9 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         return current_app.jinja_env.from_string(
             """<{{component}} json="{{data}}"></{{component}}>""",
         ).render(
-            data=make_base64(self.get_browser_json(), json_encoder=self.get_json_encoder()),
+            data=make_base64(
+                self.get_browser_json(), json_encoder=self.get_json_encoder()
+            ),
             component=component,
         )
 
@@ -205,7 +221,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
 
     def get_real_md(self) -> str:
         if self.viewmode and not self.show_in_view():
-            return ''
+            return ""
 
         return self.get_md()
 
@@ -214,7 +230,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
 
     def get_component_html_name(self) -> str:
         """Gets the name of the Angular component as it should be in HTML."""
-        raise NotImplementedError('Must be implemented by a derived class.')
+        raise NotImplementedError("Must be implemented by a derived class.")
 
     def show_in_view_default(self) -> bool:
         """
@@ -261,10 +277,13 @@ The following fields have invalid values:
 </ul>
 </div>
         """.strip(),
-        errors=msgs.get('markup', msgs.get('input', e.messages)))
+        errors=msgs.get("markup", msgs.get("input", e.messages)),
+    )
 
 
-def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]) -> str:
+def render_plugin_with_login_request(
+    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
+) -> str:
     """Renders a static version of the plugin as HTML along with a request to log in."""
     return render_template_string(
         """
@@ -272,13 +291,16 @@ def render_plugin_with_login_request(m: GenericHtmlModel[PluginInput, PluginMark
 <p class="pluginError">
     Please <tim-login-menu></tim-login-menu> to interact with this component.
 </p>
-{{ static_html|safe }}""", static_html=m.get_maybe_empty_static_html(),
+{{ static_html|safe }}""",
+        static_html=m.get_maybe_empty_static_html(),
     )
 
 
 def make_base64(d: dict, json_encoder: Optional[type[JSONEncoder]] = None) -> str:
     """Converts the given dict to a base64-encoded JSON string."""
-    return base64.b64encode(json.dumps(d, sort_keys=True, cls=json_encoder).encode()).decode()
+    return base64.b64encode(
+        json.dumps(d, sort_keys=True, cls=json_encoder).encode()
+    ).decode()
 
 
 def is_lazy(q: GenericHtmlModel) -> bool:
@@ -294,7 +316,9 @@ def is_lazy(q: GenericHtmlModel) -> bool:
     return False
 
 
-def render_plugin_lazy(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]) -> str:
+def render_plugin_lazy(
+    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
+) -> str:
     """Renders lazy HTML for a plugin.
 
     The lazy HTML displays the static version of the plugin and has the real HTML in an attribute
@@ -315,7 +339,9 @@ def render_plugin_lazy(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginStat
     )
 
 
-def render_plugin_html(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]) -> str:
+def render_plugin_html(
+    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
+) -> str:
     """Renders HTML for a plugin.
 
     :param m: The plugin HTML schema.
@@ -346,7 +372,9 @@ def render_multihtml(args: list[dict], schema: Schema) -> Response:
     return jsonify(results)
 
 
-def render_plugin_md(m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]) -> str:
+def render_plugin_md(
+    m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
+) -> str:
     """Renders HTML for a plugin.
 
     :param m: The plugin HTML schema.
@@ -385,16 +413,24 @@ def create_app(name: str) -> Flask:
 
 
 def register_html_routes(
-        app: Union[Flask, Blueprint],
-        html_schema: type[Schema],
-        reqs_handler: Callable[[], PluginReqs],
-        csrf: Optional[CSRFProtect] = None,
+    app: Union[Flask, Blueprint],
+    html_schema: type[Schema],
+    reqs_handler: Callable[[], PluginReqs],
+    csrf: Optional[CSRFProtect] = None,
 ) -> None:
     @app.errorhandler(422)
     def handle_invalid_request(error: Any) -> Response:
-        return jsonify({'web': {'error': render_validationerror(ValidationError(message=error.data['messages']))}})
+        return jsonify(
+            {
+                "web": {
+                    "error": render_validationerror(
+                        ValidationError(message=error.data["messages"])
+                    )
+                }
+            }
+        )
 
-    @app.post('/multihtml')
+    @app.post("/multihtml")
     def multihtml() -> Response:
         args = request.get_json()
         if not isinstance(args, list):
@@ -402,7 +438,7 @@ def register_html_routes(
         ret = render_multihtml(args, html_schema())
         return ret
 
-    @app.post('/multimd')
+    @app.post("/multimd")
     def multimd() -> Response:
         args = request.get_json()
         if not isinstance(args, list):
@@ -410,7 +446,7 @@ def register_html_routes(
         ret = render_multimd(args, html_schema())
         return ret
 
-    @app.get('/reqs')
+    @app.get("/reqs")
     def reqs() -> Response:
         return jsonify(reqs_handler())
 
@@ -425,10 +461,10 @@ def register_html_routes(
         # print(request.get_json(silent=True))
 
 
-HtmlModel = TypeVar('HtmlModel', bound=GenericHtmlModel)
-AnswerModel = TypeVar('AnswerModel', bound=GenericAnswerModel)
+HtmlModel = TypeVar("HtmlModel", bound=GenericHtmlModel)
+AnswerModel = TypeVar("AnswerModel", bound=GenericAnswerModel)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def value_or_default(val: Union[T, None, Missing], default: T) -> T:
@@ -438,13 +474,13 @@ def value_or_default(val: Union[T, None, Missing], default: T) -> T:
 
 
 def create_blueprint(
-        name: str,
-        plugin_name: str,
-        html_model: type[HtmlModel],
-        answer_model: type[AnswerModel],
-        answer_handler: Callable[[AnswerModel], PluginAnswerResp],
-        reqs_handler: Callable[[], PluginReqs],
-        csrf: Optional[CSRFProtect] = None,
+    name: str,
+    plugin_name: str,
+    html_model: type[HtmlModel],
+    answer_model: type[AnswerModel],
+    answer_handler: Callable[[AnswerModel], PluginAnswerResp],
+    reqs_handler: Callable[[], PluginReqs],
+    csrf: Optional[CSRFProtect] = None,
 ) -> Blueprint:
     bp = create_nontask_blueprint(name, plugin_name, html_model, reqs_handler, csrf)
     register_answer_route(bp, answer_model, answer_handler, csrf)
@@ -452,27 +488,25 @@ def create_blueprint(
 
 
 def create_nontask_blueprint(
-        name: str,
-        plugin_name: str,
-        html_model: type[HtmlModel],
-        reqs_handler: Callable[[], PluginReqs],
-        csrf: Optional[CSRFProtect] = None,
+    name: str,
+    plugin_name: str,
+    html_model: type[HtmlModel],
+    reqs_handler: Callable[[], PluginReqs],
+    csrf: Optional[CSRFProtect] = None,
 ) -> Blueprint:
-    bp = Blueprint(plugin_name,
-                   name,
-                   url_prefix=f'/{plugin_name}')
+    bp = Blueprint(plugin_name, name, url_prefix=f"/{plugin_name}")
     register_html_routes(bp, class_schema(html_model), reqs_handler, csrf)
 
     return bp
 
 
 def register_answer_route(
-        app: Union[Flask, Blueprint],
-        answer_model: type[AnswerModel],
-        answer_handler: Callable[[AnswerModel], PluginAnswerResp],
-        csrf: Optional[CSRFProtect] = None,
+    app: Union[Flask, Blueprint],
+    answer_model: type[AnswerModel],
+    answer_handler: Callable[[AnswerModel], PluginAnswerResp],
+    csrf: Optional[CSRFProtect] = None,
 ) -> None:
-    @app.put('/answer')
+    @app.put("/answer")
     @use_args(class_schema(answer_model)(), locations=("json",))
     def ans(m: AnswerModel) -> Response:
         return jsonify(answer_handler(m))
@@ -484,11 +518,11 @@ def register_answer_route(
 
 
 def register_plugin_app(
-        name: str,
-        html_model: type[HtmlModel],
-        answer_model: type[AnswerModel],
-        answer_handler: Callable[[AnswerModel], PluginAnswerResp],
-        reqs_handler: Callable[[], PluginReqs],
+    name: str,
+    html_model: type[HtmlModel],
+    answer_model: type[AnswerModel],
+    answer_handler: Callable[[AnswerModel], PluginAnswerResp],
+    reqs_handler: Callable[[], PluginReqs],
 ) -> Flask:
     app = create_app(name)
     register_html_routes(app, class_schema(html_model), reqs_handler)
@@ -497,9 +531,9 @@ def register_plugin_app(
 
 
 def launch_if_main(name: str, app: Flask) -> None:
-    if name == '__main__':
+    if name == "__main__":
         app.run(
-            host='0.0.0.0',
+            host="0.0.0.0",
             port=5000,
             debug=False,  # for live reloading, this can be turned on
         )

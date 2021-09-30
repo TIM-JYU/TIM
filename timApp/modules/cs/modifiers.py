@@ -116,7 +116,6 @@ class TruthTable(Modifier):
 class Console(Modifier):
     ttype = "console"
 
+
 class Vis(Modifier):
     ttype = "vis"
-
-

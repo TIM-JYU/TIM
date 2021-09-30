@@ -10,8 +10,8 @@ Create Date: 2018-06-21 09:52:22.512960
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
 
-revision = '010b7b2d8521'
-down_revision = 'abcc9a7a0d91'
+revision = "010b7b2d8521"
+down_revision = "abcc9a7a0d91"
 
 from alembic import op
 import sqlalchemy as sa

@@ -9,9 +9,9 @@ from timApp.util.utils import pycharm_running
 
 DEBUG = True
 PROFILE = False
-TIM_NAME = 'tim-test'
+TIM_NAME = "tim-test"
 DB_URI = f"postgresql://postgres:postgresql@postgresql-test:5432/{TIM_NAME}"
-FILES_PATH = '/tmp/doctest_files'
+FILES_PATH = "/tmp/doctest_files"
 LOG_DIR = "/tmp/tim_logs"
 LOG_FILE = "timLog.log"
 LOG_LEVEL = logging.ERROR
@@ -30,8 +30,9 @@ SQLALCHEMY_MAX_OVERFLOW = 100
 LAST_EDITED_BOOKMARK_LIMIT = 3
 TRAP_HTTP_EXCEPTIONS = True
 PROPAGATE_EXCEPTIONS = True
-SELENIUM_BROWSER_URL = os.environ.get('SELENIUM_BROWSER_URL', 'http://caddy:' +
-                                      ('81' if pycharm_running() else '82'))
+SELENIUM_BROWSER_URL = os.environ.get(
+    "SELENIUM_BROWSER_URL", "http://caddy:" + ("81" if pycharm_running() else "82")
+)
 LIVESERVER_PORT = 5001
 QST_PLUGIN_PORT = LIVESERVER_PORT
 PERMANENT_SESSION_LIFETIME = timedelta(weeks=9999)
@@ -46,18 +47,20 @@ CELERYBEAT_SCHEDULE: dict[str, Schedule] = {
     # don't schedule anything while testing
 }
 WTF_CSRF_METHODS: list[str] = []
-SCIM_USERNAME = 't'
-SCIM_PASSWORD = 'pass'
+SCIM_USERNAME = "t"
+SCIM_PASSWORD = "pass"
 SISU_CERT_PATH: Optional[str] = None
-HOME_ORGANIZATION = 'jyu.fi'
+HOME_ORGANIZATION = "jyu.fi"
 
-SAML_PATH = '/service/timApp/auth/saml/test'
+SAML_PATH = "/service/timApp/auth/saml/test"
 
-SESSION_COOKIE_SECURE = False  # Test running does not have HTTPS, so secure cookie can't be used.
+SESSION_COOKIE_SECURE = (
+    False  # Test running does not have HTTPS, so secure cookie can't be used.
+)
 
 MINIMUM_SCHEDULED_FUNCTION_INTERVAL = 1
 
-INTERNAL_PLUGIN_DOMAIN = 'localhost'
+INTERNAL_PLUGIN_DOMAIN = "localhost"
 
 MESSAGE_LISTS_ENABLED = True
 MAILMAN_URL = "http://mailman-test:8001/3.1"
@@ -72,11 +75,9 @@ OAUTH2_CLIENTS = [
         "client_id": "tim_test",
         "client_secret": "test",
         "client_name": "TIM Test",
-        "redirect_urls": [
-            "http://tim/ping"
-        ],
+        "redirect_urls": ["http://tim/ping"],
         "allowed_scopes": ["profile"],
         "response_types": ["code", "token"],
-        "grant_types": ["authorization_code"]
+        "grant_types": ["authorization_code"],
     }
 ]

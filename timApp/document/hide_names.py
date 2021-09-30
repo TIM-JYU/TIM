@@ -19,7 +19,9 @@ def hide_names_in_teacher(d: DocInfo, context_user: Optional[User] = None) -> bo
     return is_hide_names() or force_hide
 
 
-def force_hide_names(current_user: User, d: DocInfo, context_user: Optional[User] = None) -> bool:
+def force_hide_names(
+    current_user: User, d: DocInfo, context_user: Optional[User] = None
+) -> bool:
     force_hide = False
     if context_user and context_user.id == current_user.id:
         pass
@@ -29,4 +31,4 @@ def force_hide_names(current_user: User, d: DocInfo, context_user: Optional[User
 
 
 def is_hide_names() -> bool:
-    return session.get('hide_names', False)
+    return session.get("hide_names", False)

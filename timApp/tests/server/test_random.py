@@ -7,10 +7,12 @@ from timApp.tests.server.timroutetest import TimRouteTest, get_content
 class RandomTest(TimRouteTest):
     def test_rnd_s(self):
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 #- {rnd="s10"}
 %%rnd%%
-""")
+"""
+        )
         nums = self.get_number_list(d)
         self.assertIsInstance(nums, list)
         self.assertEqual(sorted(nums), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
@@ -27,7 +29,8 @@ class RandomTest(TimRouteTest):
 #- {nocache=true}
 %%first%%
         """,
-            settings={'rndmacros': {'first': 's3*[1,8]'}})
+            settings={"rndmacros": {"first": "s3*[1,8]"}},
+        )
         nums = self.get_number_list(d, 1)
         self.assertEqual(3, len(nums))
         self.assertEqual(3, len(set(nums)))

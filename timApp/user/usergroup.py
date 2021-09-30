@@ -9,13 +9,23 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from timApp.auth.auth_models import BlockAccess
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
-from timApp.messaging.timMessage.internalmessage_models import InternalMessageDisplay, InternalMessageReadReceipt
+from timApp.messaging.timMessage.internalmessage_models import (
+    InternalMessageDisplay,
+    InternalMessageReadReceipt,
+)
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
 from timApp.timdb.sqa import db, TimeStampMixin, include_if_exists, is_attribute_loaded
 from timApp.user.scimentity import SCIMEntity
-from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LOGGED_IN_GROUPNAME, \
-    ADMIN_GROUPNAME, GROUPADMIN_GROUPNAME, TEACHERS_GROUPNAME, SPECIAL_GROUPS, FUNCTIONSCHEDULER_GROUPNAME
+from timApp.user.special_group_names import (
+    ANONYMOUS_GROUPNAME,
+    LOGGED_IN_GROUPNAME,
+    ADMIN_GROUPNAME,
+    GROUPADMIN_GROUPNAME,
+    TEACHERS_GROUPNAME,
+    SPECIAL_GROUPS,
+    FUNCTIONSCHEDULER_GROUPNAME,
+)
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember, membership_current
 
@@ -23,16 +33,16 @@ if TYPE_CHECKING:
     from timApp.item.block import Block
 
 # Prefix is no longer needed because scimusergroup determines the Sisu (SCIM) groups.
-SISU_GROUP_PREFIX = ''
+SISU_GROUP_PREFIX = ""
 
 
 def tim_group_to_scim(tim_group: str) -> str:
     if not tim_group.startswith(SISU_GROUP_PREFIX):
         raise Exception(f"Group {tim_group} is not a Sisu group")
-    return tim_group[len(SISU_GROUP_PREFIX):]
+    return tim_group[len(SISU_GROUP_PREFIX) :]
 
 
-ORG_GROUP_SUFFIX = ' users'
+ORG_GROUP_SUFFIX = " users"
 
 
 class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
@@ -47,7 +57,8 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     In database, the User 'Anonymous user' belongs to 'Anonymous users' group. Other than that,
     the two groups are empty from the database's point of view.
     """
-    __tablename__ = 'usergroup'
+
+    __tablename__ = "usergroup"
     id = db.Column(db.Integer, primary_key=True)
     """Usergroup identifier."""
 
@@ -67,7 +78,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         return self.display_name
 
     users = db.relationship(
-        'User',
+        "User",
         UserGroupMember.__table__,
         primaryjoin=(id == UserGroupMember.usergroup_id) & membership_current,
         secondaryjoin="UserGroupMember.user_id == User.id",
@@ -76,12 +87,12 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     memberships = db.relationship(
         UserGroupMember,
         back_populates="group",
-        lazy='dynamic',
+        lazy="dynamic",
     )
     memberships_sel = db.relationship(
         UserGroupMember,
         back_populates="group",
-        cascade='all, delete-orphan',
+        cascade="all, delete-orphan",
     )
     current_memberships = db.relationship(
         UserGroupMember,
@@ -90,40 +101,47 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
         back_populates="group",
     )
     accesses = db.relationship(
-        'BlockAccess',
-        back_populates='usergroup',
-        lazy='dynamic',
+        "BlockAccess",
+        back_populates="usergroup",
+        lazy="dynamic",
     )
     accesses_alt: dict[tuple[int, int], BlockAccess] = db.relationship(
-        'BlockAccess',
-        collection_class=attribute_mapped_collection('group_collection_key'),
-        cascade='all, delete-orphan',
+        "BlockAccess",
+        collection_class=attribute_mapped_collection("group_collection_key"),
+        cascade="all, delete-orphan",
     )
-    readparagraphs = db.relationship('ReadParagraph', back_populates='usergroup', lazy='dynamic')
-    readparagraphs_alt = db.relationship('ReadParagraph')
-    notes = db.relationship('UserNote', back_populates='usergroup', lazy='dynamic')
-    notes_alt = db.relationship('UserNote')
+    readparagraphs = db.relationship(
+        "ReadParagraph", back_populates="usergroup", lazy="dynamic"
+    )
+    readparagraphs_alt = db.relationship("ReadParagraph")
+    notes = db.relationship("UserNote", back_populates="usergroup", lazy="dynamic")
+    notes_alt = db.relationship("UserNote")
 
     admin_doc: Block = db.relationship(
-        'Block',
+        "Block",
         secondary=UserGroupDoc.__table__,
-        lazy='select',
+        lazy="select",
         uselist=False,
     )
 
     # For groups created from SCIM API
-    external_id: ScimUserGroup = db.relationship('ScimUserGroup', lazy='select', uselist=False)
+    external_id: ScimUserGroup = db.relationship(
+        "ScimUserGroup", lazy="select", uselist=False
+    )
 
-    messagelist_membership: list[MessageListTimMember] = db.relationship("MessageListTimMember",
-                                                                         back_populates="user_group")
+    messagelist_membership: list[MessageListTimMember] = db.relationship(
+        "MessageListTimMember", back_populates="user_group"
+    )
 
-    internalmessage_display: InternalMessageDisplay | None = db.relationship('InternalMessageDisplay',
-                                                                                back_populates='usergroup')
-    internalmessage_readreceipt: InternalMessageReadReceipt | None = db.relationship('InternalMessageReadReceipt',
-                                                                                        back_populates='recipient')
+    internalmessage_display: InternalMessageDisplay | None = db.relationship(
+        "InternalMessageDisplay", back_populates="usergroup"
+    )
+    internalmessage_readreceipt: InternalMessageReadReceipt | None = db.relationship(
+        "InternalMessageReadReceipt", back_populates="recipient"
+    )
 
     def __repr__(self):
-        return f'<UserGroup(id={self.id}, name={self.name})>'
+        return f"<UserGroup(id={self.id}, name={self.name})>"
 
     @property
     def scim_created(self):
@@ -139,7 +157,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def scim_resource_type(self):
-        return 'Group'
+        return "Group"
 
     def is_anonymous(self) -> bool:
         return self.name == ANONYMOUS_GROUPNAME
@@ -150,16 +168,21 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
     def load_personal_user(self):
         """If this is a personal usergroup, loads the user object to personal_user attribute."""
         from timApp.user.user import User
+
         self.personal_user = User.get_by_name(self.name)
 
     def to_json(self):
         r = {
-            'id': self.id,
-            'name': self.name,
-            **include_if_exists('personal_user', self),
+            "id": self.id,
+            "name": self.name,
+            **include_if_exists("personal_user", self),
         }
-        if is_attribute_loaded('admin_doc', self) and self.admin_doc and self.admin_doc.docentries:
-            r['admin_doc_path'] = self.admin_doc.docentries[0].path
+        if (
+            is_attribute_loaded("admin_doc", self)
+            and self.admin_doc
+            and self.admin_doc.docentries
+        ):
+            r["admin_doc_path"] = self.admin_doc.docentries[0].path
         return r
 
     @property
@@ -177,7 +200,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def is_sisu_student_group(self):
-        return self.is_sisu and self.external_id.external_id.endswith('-students')
+        return self.is_sisu and self.external_id.external_id.endswith("-students")
 
     @staticmethod
     def create(name: str) -> UserGroup:
@@ -220,12 +243,14 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_haka_group() -> UserGroup:
-        haka_group_name = 'Haka users'
+        haka_group_name = "Haka users"
         return UserGroup.get_or_create_group(haka_group_name)
 
     @staticmethod
     def get_organizations() -> list[UserGroup]:
-        return UserGroup.query.filter(UserGroup.name.endswith(' users') & UserGroup.name.notin_(SPECIAL_GROUPS)).all()
+        return UserGroup.query.filter(
+            UserGroup.name.endswith(" users") & UserGroup.name.notin_(SPECIAL_GROUPS)
+        ).all()
 
     @staticmethod
     def get_teachers_group() -> UserGroup:
@@ -233,7 +258,7 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     @staticmethod
     def get_user_creator_group() -> UserGroup:
-        user_creator_group_name = 'User creators'
+        user_creator_group_name = "User creators"
         return UserGroup.get_or_create_group(user_creator_group_name)
 
     @staticmethod
@@ -265,37 +290,36 @@ def get_anonymous_group_id() -> int:
 
 def get_usergroup_eager_query():
     from timApp.item.block import Block
-    return (
-        UserGroup.query
-            .options(joinedload(UserGroup.admin_doc)
-                     .joinedload(Block.docentries))
-            .options(joinedload(UserGroup.current_memberships))
-    )
+
+    return UserGroup.query.options(
+        joinedload(UserGroup.admin_doc).joinedload(Block.docentries)
+    ).options(joinedload(UserGroup.current_memberships))
 
 
 def get_sisu_groups_by_filter(f) -> list[UserGroup]:
     gs: list[UserGroup] = (
-        get_usergroup_eager_query()
-            .join(ScimUserGroup)
-            .filter(f)
-            .all()
+        get_usergroup_eager_query().join(ScimUserGroup).filter(f).all()
     )
     return gs
 
 
 # When a SCIM group is deleted, the group name gets this prefix.
-DELETED_GROUP_PREFIX = 'deleted:'
+DELETED_GROUP_PREFIX = "deleted:"
 
 
 @attr.s(auto_attribs=True)
 class UserGroupWithSisuInfo:
     """Wrapper for UserGroup that reports the sisugroup path in to_json."""
+
     ug: UserGroup
 
     def to_json(self):
         return {
             **self.ug.to_json(),
-            'admin_doc': self.ug.admin_doc.docentries[0] if self.ug.admin_doc else None,
-            'sisugroup_path': parse_sisu_group_display_name(
-                self.ug.display_name).sisugroups_doc_path if self.ug.display_name else None
+            "admin_doc": self.ug.admin_doc.docentries[0] if self.ug.admin_doc else None,
+            "sisugroup_path": parse_sisu_group_display_name(
+                self.ug.display_name
+            ).sisugroups_doc_path
+            if self.ug.display_name
+            else None,
         }

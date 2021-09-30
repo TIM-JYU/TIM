@@ -12,7 +12,8 @@ from tim_common.utils import Missing
 @dataclass
 class PointsRule:
     class Meta:
-        unknown = 'EXCLUDE'  # Plugins may have custom rules - TIM can ignore them.
+        unknown = "EXCLUDE"  # Plugins may have custom rules - TIM can ignore them.
+
     maxPoints: Union[str, int, float, None, Missing] = missing
     allowUserMin: Union[int, float, None, Missing] = missing
     allowUserMax: Union[int, float, None, Missing] = missing
@@ -21,12 +22,18 @@ class PointsRule:
 
 
 class PluginDateTimeField(marshmallow.fields.Field):
-
-    def _serialize(self, value: Any, attr: str, obj: Any, **kwargs: dict[str, Any]) -> Any:
+    def _serialize(
+        self, value: Any, attr: str, obj: Any, **kwargs: dict[str, Any]
+    ) -> Any:
         raise NotImplementedError
 
-    def _deserialize(self, value: Any, attr: Optional[str],
-                     data: Optional[Mapping[str, Any]], **kwargs: dict[str, Any]) -> datetime:
+    def _deserialize(
+        self,
+        value: Any,
+        attr: Optional[str],
+        data: Optional[Mapping[str, Any]],
+        **kwargs: dict[str, Any],
+    ) -> datetime:
         d = None
         if isinstance(value, datetime):
             d = value
@@ -34,15 +41,15 @@ class PluginDateTimeField(marshmallow.fields.Field):
             try:
                 d = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
             except ValueError:
-                raise self.make_error('validator_failed')
+                raise self.make_error("validator_failed")
         if d:
             if d.tzinfo is None:
                 d = d.replace(tzinfo=timezone.utc)
             return d
-        raise self.make_error('validator_failed')
+        raise self.make_error("validator_failed")
 
 
-PluginDateTime = NewType('PluginDateTime', datetime)
+PluginDateTime = NewType("PluginDateTime", datetime)
 PluginDateTime._marshmallow_field = PluginDateTimeField  # type: ignore
 
 
@@ -51,16 +58,19 @@ class HiddenFieldsMixin:
     def process_minus(self, data: Any, **_: dict[str, Any]) -> Any:
         if isinstance(data, dict):
             data = copy(data)  # Don't modify the original.
-            hidden_keys = {k[1:] for k in data.keys() if isinstance(k, str) and k.startswith('-')}
+            hidden_keys = {
+                k[1:] for k in data.keys() if isinstance(k, str) and k.startswith("-")
+            }
             for k in hidden_keys:
-                data[k] = data.pop(f'-{k}')
-            data['hidden_keys'] = hidden_keys
+                data[k] = data.pop(f"-{k}")
+            data["hidden_keys"] = hidden_keys
         return data
 
 
 @dataclass
 class KnownMarkupFields(HiddenFieldsMixin):
     """Represents the plugin markup fields that are known and used by TIM."""
+
     anonymous: Union[bool, None, Missing] = missing
     answerLimit: Union[int, None, Missing] = missing
     automd: Union[bool, None, Missing] = missing
@@ -73,8 +83,12 @@ class KnownMarkupFields(HiddenFieldsMixin):
     hideBrowser: Union[bool, Missing, None] = missing
     initNewAnswer: Union[str, None, Missing] = missing
     lazy: Union[bool, Missing] = missing
-    maxHeight: Union[str, None, Missing] = field(metadata={'data_key': 'max-height'}, default=missing)
-    minHeight: Union[str, None, Missing] = field(metadata={'data_key': 'min-height'}, default=missing)
+    maxHeight: Union[str, None, Missing] = field(
+        metadata={"data_key": "max-height"}, default=missing
+    )
+    minHeight: Union[str, None, Missing] = field(
+        metadata={"data_key": "min-height"}, default=missing
+    )
     pointsRule: Union[PointsRule, None, Missing] = missing
     pointsText: Union[str, None, Missing] = missing
     postprogram: Union[str, Missing] = missing
@@ -97,12 +111,12 @@ class KnownMarkupFields(HiddenFieldsMixin):
     def tries_text(self) -> str:
         if isinstance(self.triesText, str):
             return self.triesText
-        return 'Tries left:'
+        return "Tries left:"
 
     def points_text(self) -> str:
         if isinstance(self.pointsText, str):
             return self.pointsText
-        return 'Points:'
+        return "Points:"
 
 
 def asdict_skip_missing(obj: Any) -> dict[str, Any]:
@@ -156,4 +170,8 @@ class GenericMarkupModel(KnownMarkupFields):
 
     def get_visible_data(self) -> dict:
         assert isinstance(self.hidden_keys, list)
-        return {k: v for k, v in list_not_missing_fields(self) if k not in self.hidden_keys and k != 'hidden_keys'}
+        return {
+            k: v
+            for k, v in list_not_missing_fields(self)
+            if k not in self.hidden_keys and k != "hidden_keys"
+        }

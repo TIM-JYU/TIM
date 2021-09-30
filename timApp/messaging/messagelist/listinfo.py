@@ -6,19 +6,22 @@ from typing import Optional
 
 class Channel(Enum):
     """The message channels TIM uses and provides for message lists."""
-    TIM_MESSAGE = 'tim_message'
-    EMAIL_LIST = 'email_list'
+
+    TIM_MESSAGE = "tim_message"
+    EMAIL_LIST = "email_list"
 
 
 @dataclass
 class Distribution:
     """A class to wrap information about the message channels used by a message list or TIM users."""
+
     tim_message: bool
     email_list: bool
 
 
 class ArchiveType(Enum):
     """Different supported archive types."""
+
     # If you change this, make sure the mapping for Mailman's archive policies is also updated at
     # mailman_archive_policy_correlate. TIM's and Mailman's archive policies aren't a one-to-one match.
 
@@ -38,6 +41,7 @@ class ArchiveType(Enum):
 class ReplyToListChanges(Enum):
     """Options for email list's own address to be added to the Reply-To header for emails that are sent through the
     list. See reply_to_munging for mapping to Mailman's options."""
+
     # Don't meddle with the Reply-To header.
     NOCHANGES = "no_munging"
     # Change the Reply-To header so that the message/email list is preferred(/forced) to be included in the replies.
@@ -47,13 +51,16 @@ class ReplyToListChanges(Enum):
 @dataclass
 class ListInfo:
     """All options regarding message lists."""
+
     name: str
     """The name of the message list. A mandatory value when list options are considered."""
 
-    archive: ArchiveType = field(metadata={'by_value': True})
+    archive: ArchiveType = field(metadata={"by_value": True})
     """The type of archive policy this list uses."""
 
-    default_reply_type: Optional[ReplyToListChanges] = field(metadata={'by_value': True}, default=None)
+    default_reply_type: Optional[ReplyToListChanges] = field(
+        metadata={"by_value": True}, default=None
+    )
     """The default reply type of the list."""
 
     notify_owners_on_list_change: Optional[bool] = None
@@ -108,6 +115,7 @@ class ListInfo:
 @dataclass
 class MemberInfo:
     """Wrapper for information about a member on a message list."""
+
     name: str
     username: str
     sendRight: bool
@@ -119,6 +127,7 @@ class MemberInfo:
 @dataclass
 class GroupAndMembers:
     """Helper class for querying user group and its members."""
+
     groupName: str
     members: list[MemberInfo]
 
@@ -134,5 +143,5 @@ mailman_archive_policy_correlate: dict[ArchiveType, str] = {
     # Unlisted archive type doesn't exist in Mailman, but closest is setting policy as private and provide necessary
     # archive links from TIM.
     ArchiveType.UNLISTED: "private",
-    ArchiveType.PUBLIC: "public"
+    ArchiveType.PUBLIC: "public",
 }

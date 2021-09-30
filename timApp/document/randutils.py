@@ -5,7 +5,7 @@ import string
 
 alphanum = string.digits + string.ascii_lowercase + string.ascii_uppercase
 n_alphanum = len(alphanum)
-empty_hash = mmh3.hash('{}')
+empty_hash = mmh3.hash("{}")
 
 
 def hashfunc(text, attrs=None):
@@ -34,32 +34,32 @@ def idchecksum(randid):
 
 
 def random_id():
-    randid = ''.join(random.choice(alphanum) for _ in range(11))
+    randid = "".join(random.choice(alphanum) for _ in range(11))
     return randid + idchecksum(randid)
 
 
-def random_word(min_len = 2, max_len = 12):
+def random_word(min_len=2, max_len=12):
     n = random.randint(min_len, max_len)
-    return ''.join(random.choice(string.ascii_lowercase) for _ in range(n))
+    return "".join(random.choice(string.ascii_lowercase) for _ in range(n))
 
 
 def random_sentence():
     n = random.randint(2, 5)
-    s = ' '.join(random_word() for _ in range(n))
+    s = " ".join(random_word() for _ in range(n))
     return s.capitalize()
 
 
 def random_sentences():
     n = random.randint(1, 3)
-    return ', '.join(random_sentence() for _ in range(n))
+    return ", ".join(random_sentence() for _ in range(n))
 
 
 def random_paragraph():
     n = random.randint(3, 6)
-    return '. '.join(random_sentences() for _ in range(n)) + '.'
+    return ". ".join(random_sentences() for _ in range(n)) + "."
 
 
 def random_jsonpar(par_id):
     content = random_paragraph()
     chash = hashfunc(content, [])
-    return [{'id': par_id, 't': chash, 'md': content, 'html': content}]
+    return [{"id": par_id, "t": chash, "md": content, "html": content}]

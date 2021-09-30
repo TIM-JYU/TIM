@@ -11,24 +11,39 @@ from webargs.flaskparser import use_args
 
 from timApp.admin.user_cli import do_merge_users, do_soft_delete
 from timApp.messaging.messagelist.emaillist import update_mailing_list_address
-from timApp.messaging.messagelist.messagelist_utils import sync_message_list_on_add, sync_message_list_on_expire
-from timApp.sisu.parse_display_name import parse_sisu_group_display_name, SisuDisplayName
+from timApp.messaging.messagelist.messagelist_utils import (
+    sync_message_list_on_add,
+    sync_message_list_on_expire,
+)
+from timApp.sisu.parse_display_name import (
+    parse_sisu_group_display_name,
+    SisuDisplayName,
+)
 from timApp.sisu.scimusergroup import ScimUserGroup, external_id_re
 from timApp.sisu.sisu import refresh_sisu_grouplist_doc, send_course_group_mail
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
 from timApp.user.scimentity import get_meta
-from timApp.user.user import User, UserOrigin, last_name_to_first, SCIM_USER_NAME, UserInfo
-from timApp.user.usergroup import UserGroup, tim_group_to_scim, SISU_GROUP_PREFIX, DELETED_GROUP_PREFIX
+from timApp.user.user import (
+    User,
+    UserOrigin,
+    last_name_to_first,
+    SCIM_USER_NAME,
+    UserInfo,
+)
+from timApp.user.usergroup import (
+    UserGroup,
+    tim_group_to_scim,
+    SISU_GROUP_PREFIX,
+    DELETED_GROUP_PREFIX,
+)
 from timApp.user.usergroupmember import UserGroupMember, membership_current
 from timApp.util.flask.requesthelper import load_data_from_req, JSONException
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_warning, log_info
 from tim_common.marshmallow_dataclass import class_schema
 
-scim = Blueprint('scim',
-                 __name__,
-                 url_prefix='/scim')
+scim = Blueprint("scim", __name__, url_prefix="/scim")
 
 UNPROCESSABLE_ENTITY = 422
 
@@ -41,15 +56,15 @@ class SCIMNameModel:
 
     def derive_full_name(self, last_name_first: bool) -> str:
         if last_name_first:
-            full = f'{self.familyName} {self.givenName}'
+            full = f"{self.familyName} {self.givenName}"
             if self.middleName:
-                full += f' {self.middleName}'
+                full += f" {self.middleName}"
             return full
         else:
             if self.middleName:
-                return f'{self.givenName} {self.middleName} {self.familyName}'
+                return f"{self.givenName} {self.middleName} {self.familyName}"
             else:
-                return f'{self.givenName} {self.familyName}'
+                return f"{self.givenName} {self.familyName}"
 
 
 @dataclass(frozen=True)
@@ -59,7 +74,7 @@ class SCIMMemberModel:
     display: str
     email: str
     workEmail: Optional[str] = None
-    ref: Optional[str] = field(metadata={'data_key': '$ref'}, default=None)
+    ref: Optional[str] = field(metadata={"data_key": "$ref"}, default=None)
     type: Optional[str] = None
 
     @cached_property
@@ -117,7 +132,9 @@ def handle_error(error: Any) -> Response:
     return handle_error_msg_code(error.code, error.description)
 
 
-def handle_error_msg_code(code: int, msg: str, headers: Optional[dict[str, str]] = None) -> Response:
+def handle_error_msg_code(
+    code: int, msg: str, headers: Optional[dict[str, str]] = None
+) -> Response:
     return json_response(
         scim_error_json(code, msg),
         status_code=code,
@@ -139,20 +156,22 @@ def scim_error_json(code: int, msg: str) -> dict:
 @scim.before_request
 def check_auth() -> None:
     ip = request.remote_addr
-    if ip != current_app.config.get('SCIM_ALLOWED_IP'):
-        raise SCIMException(403, f'IP not allowed: {ip}')
-    expected_username = current_app.config.get('SCIM_USERNAME')
-    expected_password = current_app.config.get('SCIM_PASSWORD')
+    if ip != current_app.config.get("SCIM_ALLOWED_IP"):
+        raise SCIMException(403, f"IP not allowed: {ip}")
+    expected_username = current_app.config.get("SCIM_USERNAME")
+    expected_password = current_app.config.get("SCIM_PASSWORD")
     if not expected_username or not expected_password:
-        raise SCIMException(403, 'SCIM username or password not configured.')
-    headers = {'WWW-Authenticate': 'Basic realm="Authentication required"'}
+        raise SCIMException(403, "SCIM username or password not configured.")
+    headers = {"WWW-Authenticate": 'Basic realm="Authentication required"'}
     auth = request.authorization
     if not auth:
-        raise SCIMException(401, 'This action requires authentication.', headers=headers)
+        raise SCIMException(
+            401, "This action requires authentication.", headers=headers
+        )
     if auth.username == expected_username and auth.password == expected_password:
         pass
     else:
-        raise SCIMException(401, 'Incorrect username or password.', headers=headers)
+        raise SCIMException(401, "Incorrect username or password.", headers=headers)
 
 
 @dataclass
@@ -167,61 +186,69 @@ def get_scim_id(ug: UserGroup) -> str:
     return tim_group_to_scim(ug.name)
 
 
-filter_re = re.compile('externalId sw (.+)')
+filter_re = re.compile("externalId sw (.+)")
 
 
 def scim_group_to_tim(sisu_group: str) -> str:
-    return f'{SISU_GROUP_PREFIX}{sisu_group}'
+    return f"{SISU_GROUP_PREFIX}{sisu_group}"
 
 
-@scim.get('/Groups')
+@scim.get("/Groups")
 @use_args(GetGroupsModelSchema())
 def get_groups(args: GetGroupsModel) -> Response:
     m = filter_re.fullmatch(args.filter)
     if not m:
-        raise SCIMException(422, 'Unsupported filter')
-    groups = ScimUserGroup.query.filter(ScimUserGroup.external_id.startswith(scim_group_to_tim(m.group(1)))).join(
-        UserGroup).with_entities(UserGroup).all()
+        raise SCIMException(422, "Unsupported filter")
+    groups = (
+        ScimUserGroup.query.filter(
+            ScimUserGroup.external_id.startswith(scim_group_to_tim(m.group(1)))
+        )
+        .join(UserGroup)
+        .with_entities(UserGroup)
+        .all()
+    )
 
     def gen_groups() -> Generator[dict, None, None]:
         for g in groups:  # type: UserGroup
             yield {
-                'id': g.scim_id,
-                'externalId': g.scim_id,
-                'meta': get_meta(g),
+                "id": g.scim_id,
+                "externalId": g.scim_id,
+                "meta": get_meta(g),
             }
 
-    return json_response({
-        'schemas': ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
-        'totalResults': len(groups),
-        'Resources': list(gen_groups()),
-    })
+    return json_response(
+        {
+            "schemas": ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+            "totalResults": len(groups),
+            "Resources": list(gen_groups()),
+        }
+    )
 
 
 def derive_scim_group_name(s: SCIMGroupModel) -> str:
     x = parse_sisu_group_display_name_or_error(s)
     if x.period:
-        return f'{x.coursecode.lower()}-{x.year[2:]}{x.period.lower()}-{x.desc_slug}'
+        return f"{x.coursecode.lower()}-{x.year[2:]}{x.period.lower()}-{x.desc_slug}"
     else:
-        return f'{x.coursecode.lower()}-{x.year[2:]}{x.month}{x.day}-{x.desc_slug}'
+        return f"{x.coursecode.lower()}-{x.year[2:]}{x.month}{x.day}-{x.desc_slug}"
 
 
 @csrf.exempt
-@scim.post('/Groups')
+@scim.post("/Groups")
 @use_args(SCIMGroupModelSchema(), locations=("json",))
 def post_group(args: SCIMGroupModel) -> Response:
-    log_info(f'/Groups externalId: {args.externalId}')
+    log_info(f"/Groups externalId: {args.externalId}")
     gname = scim_group_to_tim(args.externalId)
     ug = try_get_group_by_scim(args.externalId)
     if ug:
-        msg = f'Group already exists: {gname}'
+        msg = f"Group already exists: {gname}"
         log_warning(msg)
         log_warning(str(args))
         raise SCIMException(409, msg)
-    deleted_group = UserGroup.get_by_name(f'{DELETED_GROUP_PREFIX}{args.externalId}')
+    deleted_group = UserGroup.get_by_name(f"{DELETED_GROUP_PREFIX}{args.externalId}")
     derived_name = derive_scim_group_name(args)
     if deleted_group:
-        log_info(f'Restoring deleted group: {derived_name}')
+        log_info(f"Restoring deleted group: {derived_name}")
         ug = deleted_group
         ug.name = disambiguate_name(derived_name)
     else:
@@ -236,22 +263,22 @@ def post_group(args: SCIMGroupModel) -> Response:
 def disambiguate_name(derived_name: str) -> str:
     if UserGroup.get_by_name(derived_name):
         disambiguator = 1
-        while UserGroup.get_by_name(f'{derived_name}-{disambiguator}'):
+        while UserGroup.get_by_name(f"{derived_name}-{disambiguator}"):
             disambiguator += 1
-        derived_name = f'{derived_name}-{disambiguator}'
+        derived_name = f"{derived_name}-{disambiguator}"
         # raise SCIMException(409, f'The group name "{derived_name}" '
         #                          f'derived from display name "{args.displayName}" already exists.')
     return derived_name
 
 
-@scim.get('/Groups/<group_id>')
+@scim.get("/Groups/<group_id>")
 def get_group(group_id: str) -> Response:
     ug = get_group_by_scim(group_id)
     return json_response(group_scim(ug))
 
 
 @csrf.exempt
-@scim.put('/Groups/<group_id>')
+@scim.put("/Groups/<group_id>")
 def put_group(group_id: str) -> Response:
     try:
         ug = get_group_by_scim(group_id)
@@ -268,29 +295,29 @@ def put_group(group_id: str) -> Response:
 
 
 @csrf.exempt
-@scim.delete('/Groups/<group_id>')
+@scim.delete("/Groups/<group_id>")
 def delete_group(group_id: str) -> Response:
     ug = get_group_by_scim(group_id)
-    ug.name = f'{DELETED_GROUP_PREFIX}{ug.external_id.external_id}'
+    ug.name = f"{DELETED_GROUP_PREFIX}{ug.external_id.external_id}"
     db.session.delete(ug.external_id)
     db.session.commit()
     return Response(status=204)
 
 
-@scim.get('/Users/<user_id>')
+@scim.get("/Users/<user_id>")
 def get_user(user_id: str) -> Response:
     u = User.get_by_name(user_id)
     if not u:
-        raise SCIMException(404, 'User not found.')
+        raise SCIMException(404, "User not found.")
     return json_response(u.get_scim_data())
 
 
 @csrf.exempt
-@scim.put('/Users/<user_id>')
+@scim.put("/Users/<user_id>")
 def put_user(user_id: str) -> Response:
     u = User.get_by_name(user_id)
     if not u:
-        raise SCIMException(404, 'User not found.')
+        raise SCIMException(404, "User not found.")
     try:
         um: SCIMUserModel = load_data_from_req(SCIMUserModelSchema)
     except JSONException as e:
@@ -309,17 +336,21 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     external_id = args.externalId
     if not ug.external_id:
         if not external_id_re.fullmatch(external_id):
-            raise SCIMException(422,
-                                f'Unexpected externalId format: "{external_id}" (displayName: "{args.displayName}")')
+            raise SCIMException(
+                422,
+                f'Unexpected externalId format: "{external_id}" (displayName: "{args.displayName}")',
+            )
         ug.external_id = ScimUserGroup(external_id=external_id)
     else:
         if ug.external_id.external_id != args.externalId:
-            raise SCIMException(422, 'externalId unexpectedly changed')
+            raise SCIMException(422, "externalId unexpectedly changed")
     current_usernames = {u.value for u in args.members}
     removed_user_names = {u.name for u in ug.users} - current_usernames
-    expired_memberships: list[UserGroupMember] = list(get_scim_memberships(ug)
-                                                      .filter(User.name.in_(removed_user_names))
-                                                      .with_entities(UserGroupMember))
+    expired_memberships: list[UserGroupMember] = list(
+        get_scim_memberships(ug)
+        .filter(User.name.in_(removed_user_names))
+        .with_entities(UserGroupMember)
+    )
     for ms in expired_memberships:
         ms.set_expired(sync_mailing_lists=False)
     p = parse_sisu_group_display_name_or_error(args)
@@ -327,30 +358,36 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
     emails = [m.primary_email for m in args.members if m.primary_email is not None]
     unique_emails = set(emails)
     if len(emails) != len(unique_emails):
-        raise SCIMException(422, f'The users do not have distinct emails.')
+        raise SCIMException(422, f"The users do not have distinct emails.")
 
     unique_usernames = {m.value for m in args.members}
     if len(args.members) != len(unique_usernames):
-        raise SCIMException(422, f'The users do not have distinct usernames.')
+        raise SCIMException(422, f"The users do not have distinct usernames.")
 
     added_users = set()
     scimuser = User.get_scimuser()
-    existing_accounts: list[User] = User.query.filter(User.name.in_(current_usernames) | User.email.in_(emails)).all()
+    existing_accounts: list[User] = User.query.filter(
+        User.name.in_(current_usernames) | User.email.in_(emails)
+    ).all()
     existing_accounts_dict: dict[str, User] = {u.name: u for u in existing_accounts}
-    existing_accounts_by_email_dict: dict[str, User] = {u.email: u for u in existing_accounts}
+    existing_accounts_by_email_dict: dict[str, User] = {
+        u.email: u for u in existing_accounts
+    }
     email_updates = []
     with db.session.no_autoflush:
         for u in args.members:
             expected_name = u.name.derive_full_name(last_name_first=True)
-            consistent = (u.display.endswith(' ' + u.name.familyName)
-                          # There are some edge cases that prevent this condition from working, so it has been disabled.
-                          # and set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1])
-                          )
+            consistent = (
+                u.display.endswith(" " + u.name.familyName)
+                # There are some edge cases that prevent this condition from working, so it has been disabled.
+                # and set(expected_name.split(' ')[1:]) == set(u.display.split(' ')[:-1])
+            )
             if not consistent:
                 raise SCIMException(
                     422,
                     f"The display attribute '{u.display}' is inconsistent with the name attributes: "
-                    f"given='{u.name.givenName}', middle='{u.name.middleName}', family='{u.name.familyName}'.")
+                    f"given='{u.name.givenName}', middle='{u.name.middleName}', family='{u.name.familyName}'.",
+                )
             name_to_use = expected_name
             user = existing_accounts_dict.get(u.value)
             if user:
@@ -360,47 +397,55 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         if not user_email.is_email_user:
                             raise SCIMException(
                                 422,
-                                f'Users {user.name} and {user_email.name} were not automatically merged because neither was an email user.',
+                                f"Users {user.name} and {user_email.name} were not automatically merged because neither was an email user.",
                             )
-                        log_warning(f'Merging users {user.name} and {user_email.name}')
+                        log_warning(f"Merging users {user.name} and {user_email.name}")
                         # Unlike in manual merging, we always merge the users because emails are automatically
                         # verified by Sisu
                         do_merge_users(user, user_email, force=True)
                         do_soft_delete(user_email)
                         db.session.flush()
                 email_updates.append((user.email, u.primary_email))
-                user.update_info(UserInfo(
-                    username=u.value,
-                    full_name=name_to_use,
-                    email=u.primary_email,
-                    last_name=u.name.familyName,
-                    given_name=u.name.givenName, ),
-                    sync_mailing_lists=False
+                user.update_info(
+                    UserInfo(
+                        username=u.value,
+                        full_name=name_to_use,
+                        email=u.primary_email,
+                        last_name=u.name.familyName,
+                        given_name=u.name.givenName,
+                    ),
+                    sync_mailing_lists=False,
                 )
             else:
                 user = existing_accounts_by_email_dict.get(u.primary_email)
                 if user:
                     if not user.is_email_user:
-                        raise SCIMException(422,
-                                            f'Key (email)=({user.email}) already exists. Conflicting username is: {u.value}')
+                        raise SCIMException(
+                            422,
+                            f"Key (email)=({user.email}) already exists. Conflicting username is: {u.value}",
+                        )
                     email_updates.append((user.email, u.primary_email))
-                    user.update_info(UserInfo(
-                        username=u.value,
-                        full_name=name_to_use,
-                        email=u.primary_email,
-                        last_name=u.name.familyName,
-                        given_name=u.name.givenName),
-                        sync_mailing_lists=False
+                    user.update_info(
+                        UserInfo(
+                            username=u.value,
+                            full_name=name_to_use,
+                            email=u.primary_email,
+                            last_name=u.name.familyName,
+                            given_name=u.name.givenName,
+                        ),
+                        sync_mailing_lists=False,
                     )
                 else:
-                    user, _ = User.create_with_group(UserInfo(
-                        username=u.value,
-                        full_name=name_to_use,
-                        email=u.primary_email,
-                        origin=UserOrigin.Sisu,
-                        last_name=u.name.familyName,
-                        given_name=u.name.givenName,
-                    ))
+                    user, _ = User.create_with_group(
+                        UserInfo(
+                            username=u.value,
+                            full_name=name_to_use,
+                            email=u.primary_email,
+                            origin=UserOrigin.Sisu,
+                            last_name=u.name.familyName,
+                            given_name=u.name.givenName,
+                        )
+                    )
             added = user.add_to_group(ug, added_by=scimuser, sync_mailing_lists=False)
             if added:
                 added_users.add(user)
@@ -423,8 +468,9 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
         sync_message_list_on_expire(expired_membership.user, expired_membership.group)
 
     # Possibly just checking is_responsible_teacher could be enough.
-    if (ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup) \
-            or ug.external_id.is_administrative_person:
+    if (
+        ug.external_id.is_responsible_teacher and not ug.external_id.is_studysubgroup
+    ) or ug.external_id.is_administrative_person:
         tg = UserGroup.get_teachers_group()
         for u in added_users:
             if tg not in u.groups:
@@ -437,7 +483,8 @@ def parse_sisu_group_display_name_or_error(args: SCIMGroupModel) -> SisuDisplayN
     if not p:
         raise SCIMException(
             422,
-            f'Unexpected displayName format: "{args.displayName}" (externalId: "{args.externalId}")')
+            f'Unexpected displayName format: "{args.displayName}" (externalId: "{args.externalId}")',
+        )
     return p
 
 
@@ -445,7 +492,7 @@ def raise_conflict_error(args: SCIMGroupModel, e: IntegrityError) -> None:
     msg = e.orig.diag.message_detail
     m = email_error_re.fullmatch(msg)
     if m:
-        em = m.group('email')
+        em = m.group("email")
         member = None
         for x in args.members:
             if x.primary_email == em:
@@ -468,11 +515,11 @@ user_adder = aliased(User)
 
 
 def get_scim_memberships(ug: UserGroup) -> Any:
-    return (ug.memberships
-            .join(user_adder, UserGroupMember.adder)
-            .join(User, UserGroupMember.user)
-            .filter(membership_current & (user_adder.name == SCIM_USER_NAME))
-            )
+    return (
+        ug.memberships.join(user_adder, UserGroupMember.adder)
+        .join(User, UserGroupMember.user)
+        .filter(membership_current & (user_adder.name == SCIM_USER_NAME))
+    )
 
 
 def group_scim(ug: UserGroup) -> dict:
@@ -480,28 +527,32 @@ def group_scim(ug: UserGroup) -> dict:
         db.session.expire(ug)
         for u in get_scim_memberships(ug).with_entities(User):
             yield {
-                'value': u.scim_id,
-                '$ref': u.scim_location,
-                'display': u.scim_display_name,
+                "value": u.scim_id,
+                "$ref": u.scim_location,
+                "display": u.scim_display_name,
             }
 
     return {
         **ug.get_scim_data(),
-        'members': list(members()),
+        "members": list(members()),
     }
 
 
 def try_get_group_by_scim(group_id: str) -> Optional[UserGroup]:
     try:
-        ug = ScimUserGroup.query.filter_by(external_id=scim_group_to_tim(group_id)).join(UserGroup).with_entities(
-            UserGroup).first()
+        ug = (
+            ScimUserGroup.query.filter_by(external_id=scim_group_to_tim(group_id))
+            .join(UserGroup)
+            .with_entities(UserGroup)
+            .first()
+        )
     except ValueError:
-        raise SCIMException(404, f'Group {group_id} not found')
+        raise SCIMException(404, f"Group {group_id} not found")
     return ug
 
 
 def get_group_by_scim(group_id: str) -> UserGroup:
     ug = try_get_group_by_scim(group_id)
     if not ug:
-        raise SCIMException(404, f'Group {group_id} not found')
+        raise SCIMException(404, f"Group {group_id} not found")
     return ug

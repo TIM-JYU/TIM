@@ -25,29 +25,28 @@ from pandocfilters import toJSONFilter, RawInline, Image, Link, Str
 from timApp.defaultconfig import FILES_PATH
 from timApp.document.randutils import hashfunc
 
-APP_ROOT = '/service/timApp'
+APP_ROOT = "/service/timApp"
 
-IMAGE_ROOT = os.path.join(APP_ROOT, FILES_PATH, 'blocks')
+IMAGE_ROOT = os.path.join(APP_ROOT, FILES_PATH, "blocks")
 
 # protocol + hostname
-CURRENT_HOST_MACHINE = os.environ.get('TIM_HOST', None)
+CURRENT_HOST_MACHINE = os.environ.get("TIM_HOST", None)
 
 ALLOWED_EXTERNAL_HOSTS = []
 
-PRINTING_WHITELIST_FILE = os.path.join(APP_ROOT, '.printing_whitelist.config')
+PRINTING_WHITELIST_FILE = os.path.join(APP_ROOT, ".printing_whitelist.config")
 
 urlmaps = [
-    {'url': '/csstatic/', 'dir': '/service/timApp/modules/cs/static/'},
-    {'url': '/csgenerated/', 'dir': '/service/timApp/modules/cs/generated/'},
-    {'url': '/static/', 'dir': '/service/timApp/static/'},
-    {'url': '/images/', 'dir': '/tim_files/blocks/images/'},
-    {'url': '/files/', 'dir': '/tim_files/blocks/files/'}
+    {"url": "/csstatic/", "dir": "/service/timApp/modules/cs/static/"},
+    {"url": "/csgenerated/", "dir": "/service/timApp/modules/cs/generated/"},
+    {"url": "/static/", "dir": "/service/timApp/static/"},
+    {"url": "/images/", "dir": "/tim_files/blocks/images/"},
+    {"url": "/files/", "dir": "/tim_files/blocks/files/"},
 ]
 
 
-
 def init_whitelist():
-    """ Init whitelist for trusted image source domains. """
+    """Init whitelist for trusted image source domains."""
 
     # s = ""  # just a test for env variables
     # for a in os.environ:
@@ -61,7 +60,7 @@ def init_whitelist():
             pass
 
         try:
-            open(PRINTING_WHITELIST_FILE, 'a').close()
+            open(PRINTING_WHITELIST_FILE, "a").close()
         except OSError:
             pass
 
@@ -74,9 +73,10 @@ def init_whitelist():
 
     return [x.strip() for x in content]
 
+
 # Get the os temp directoryls
 TEMP_DIR_PATH = tempfile.gettempdir()
-DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, 'tim-img-dls')
+DOWNLOADED_IMAGES_ROOT = os.path.join(TEMP_DIR_PATH, "tim-img-dls")
 
 texdocid = None
 
@@ -84,8 +84,8 @@ texdocid = None
 def convert_svg_to_pdf(image_path):
     path = os.path.dirname(image_path)
     # TODO: muista tarkistaa että jos pdf jo on, niin ei tehdä uudelleen!!!
-    temp = image_path.replace('.svg', '.tmp.html')
-    pdf = image_path.replace('.svg', '.pdf')
+    temp = image_path.replace(".svg", ".tmp.html")
+    pdf = image_path.replace(".svg", ".pdf")
     if os.path.isfile(pdf):
         pdftime = os.path.getmtime(pdf)
         svgtime = os.path.getmtime(image_path)
@@ -121,13 +121,14 @@ window.onload = init;
     # string.format does not work because {} is needed for js
     html = html.replace("SVGIMAGE", image_path)
     open(temp, "w").writelines(html)
-    cmd = ["/opt/google/chrome/chrome",
-           "--no-sandbox",
-           "--headless",
-           "--disable-gpu",
-           f"--print-to-pdf={pdf}",
-           temp
-           ]
+    cmd = [
+        "/opt/google/chrome/chrome",
+        "--no-sandbox",
+        "--headless",
+        "--disable-gpu",
+        f"--print-to-pdf={pdf}",
+        temp,
+    ]
     # cmd = "./svg2pdf.sh {} {}".format(image_path, pdf)
     output = check_output(cmd, stderr=STDOUT, cwd=path)
     os.remove(temp)
@@ -137,10 +138,9 @@ window.onload = init;
 def handle_images(key, value, fmt, meta):
     # open("Output.txt", "a").write("Meta:" + str(meta) + "\n")
 
-    if key == 'Image' and fmt == 'latex':
+    if key == "Image" and fmt == "latex":
         (attrs, alt_text_inlines, target) = value
         (url, title) = target
-
 
         # For debugging:
         # return Image(attrs, alt_text_inlines, ["notarealhost.juupahuu.com/image.png", ""])
@@ -149,31 +149,31 @@ def handle_images(key, value, fmt, meta):
 
         parsed_url = urlparse(url)
         parsed_cur = urlparse(CURRENT_HOST_MACHINE + "/kukku")
-        curhost = parsed_cur.hostname or ''
+        curhost = parsed_cur.hostname or ""
 
-        scheme = parsed_url.scheme or ''
-        host = parsed_url.hostname or ''
-        path = parsed_url.path or ''
+        scheme = parsed_url.scheme or ""
+        host = parsed_url.hostname or ""
+        path = parsed_url.path or ""
 
-        image_path = ''
+        image_path = ""
 
         for urlmap in urlmaps:
-            urlbeg = urlmap.get('url')
+            urlbeg = urlmap.get("url")
             if path.startswith(urlbeg):
-                image_path = path.replace(urlbeg, urlmap.get('dir'))
+                image_path = path.replace(urlbeg, urlmap.get("dir"))
                 break
 
         # open("Output.txt", "a").write("image_path: " + image_path + " host: " + host + "CHM: " + curhost + "\n")
-        if host != '' and host != curhost:
-            image_path = ''
+        if host != "" and host != curhost:
+            image_path = ""
 
-        if image_path != '' and os.path.exists(image_path):
-            image_path = image_path.replace('\\', '/')
-            if (image_path.endswith(".svg")):
+        if image_path != "" and os.path.exists(image_path):
+            image_path = image_path.replace("\\", "/")
+            if image_path.endswith(".svg"):
                 image_path = convert_svg_to_pdf(image_path)
             return Image(attrs, alt_text_inlines, [image_path, title])
 
-        '''
+        """
         # The first slash needs to be removed from the path in order for the joins to work properly
         if path.startswith('/'):
             path = path[1:]
@@ -194,7 +194,7 @@ def handle_images(key, value, fmt, meta):
 
         # handle external urls
         else:
-        '''
+        """
 
         # Download images from allowed external urls to be attached to the document.
         allow = False
@@ -208,16 +208,18 @@ def handle_images(key, value, fmt, meta):
             # open("Output.txt", "a").write("Check texdocid \n")
             global texdocid  # check if we already have path for doc id
             if not texdocid:
-                m = meta.get('texdocid', None)  # if we do not have, get the path from meta data
+                m = meta.get(
+                    "texdocid", None
+                )  # if we do not have, get the path from meta data
                 # open("Output.txt", "a").write("m:" + str(m) + "\n")
                 if m:
-                    texdocid = str(m.get('c', 'xx'))
+                    texdocid = str(m.get("c", "xx"))
                 # open("Output.txt", "a").write("texdocid:" + texdocid + "\n")
 
             images_root = os.path.join(DOWNLOADED_IMAGES_ROOT, texdocid)
             # create folder for image dls, if it does not exist already
-            if not os.path.exists(images_root ):
-                os.makedirs(images_root )
+            if not os.path.exists(images_root):
+                os.makedirs(images_root)
 
             # download img to the folder and give the file a unique name (hash the url)
             img_uid = hashfunc(url)
@@ -231,8 +233,10 @@ def handle_images(key, value, fmt, meta):
                     urllib.request.urlretrieve(url, img_dl_path)
                     # urllib.URLopener().retrieve(url, img_dl_path)
 
-                img_dl_path = img_dl_path.replace('\\', '/') # Ensure UNIX form for pandoc
-                if (img_dl_path.endswith(".svg")):
+                img_dl_path = img_dl_path.replace(
+                    "\\", "/"
+                )  # Ensure UNIX form for pandoc
+                if img_dl_path.endswith(".svg"):
                     img_dl_path = convert_svg_to_pdf(img_dl_path)
                 return Image(attrs, alt_text_inlines, [img_dl_path, title])
 
@@ -245,13 +249,13 @@ def handle_images(key, value, fmt, meta):
             # For other external images, transform the element to appear as a link
             # to the image resource in the LaTeX-output.
             return [
-                RawInline('latex', r"\externalimagelink{"),
+                RawInline("latex", r"\externalimagelink{"),
                 Link(attrs, [Str(url)], [url, title]),
-                RawInline('latex', "}")
+                RawInline("latex", "}"),
             ]
 
         # Makes sure the paths are in the UNIX form, as that is what LaTeX uses for paths even on Windows
-        image_path = image_path.replace('\\', '/')
+        image_path = image_path.replace("\\", "/")
 
         return Image(attrs, alt_text_inlines, [image_path, title])
 

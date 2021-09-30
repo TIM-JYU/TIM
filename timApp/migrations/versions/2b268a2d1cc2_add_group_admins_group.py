@@ -10,8 +10,8 @@ Create Date: 2019-01-22 11:02:21.455137
 from timApp.user.special_group_names import GROUPADMIN_GROUPNAME
 from timApp.user.usergroup import UserGroup
 
-revision = '2b268a2d1cc2'
-down_revision = '2236e3460ce2'
+revision = "2b268a2d1cc2"
+down_revision = "2236e3460ce2"
 
 
 def upgrade():

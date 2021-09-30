@@ -11,12 +11,13 @@ if TYPE_CHECKING:
     from timApp.note.notes import UserNoteAndUser
     from timApp.readmark.readmarkcollection import ReadMarkCollection
 
-NEEDS_ANGULAR_ATTRS = ('plugin', 'defaultplugin', 'gamification')
+NEEDS_ANGULAR_ATTRS = ("plugin", "defaultplugin", "gamification")
 
 
 @dataclass
 class PreparedPar:
     """Represents a "prepared" paragraph that is ready to be rendered (e.g. to HTML)."""
+
     data: ParBasicData
     target: ParBasicData | None
     output: str
@@ -57,7 +58,7 @@ class PreparedPar:
 
     @property
     def is_setting(self) -> bool:
-        return self.data.attrs.get('settings') is not None
+        return self.data.attrs.get("settings") is not None
 
     @property
     def needs_angular(self) -> bool:
@@ -66,4 +67,4 @@ class PreparedPar:
 
     @property
     def class_str(self) -> str:
-        return ' '.join(self.attrs.get('classes', []))
+        return " ".join(self.attrs.get("classes", []))

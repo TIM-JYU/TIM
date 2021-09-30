@@ -29,7 +29,11 @@ from timApp.auth.accesshelper import verify_edit_access, verify_logged_in
 from timApp.auth.login import login_page
 from timApp.auth.oauth2.oauth2 import init_oauth
 from timApp.auth.saml import saml
-from timApp.auth.sessioninfo import get_current_user_object, get_other_users_as_list, logged_in
+from timApp.auth.sessioninfo import (
+    get_current_user_object,
+    get_other_users_as_list,
+    logged_in,
+)
 from timApp.backup.backup_routes import backup
 from timApp.bookmark.bookmarks import Bookmarks
 from timApp.bookmark.routes import bookmarks, add_to_course_bookmark
@@ -54,7 +58,10 @@ from timApp.item.tag import Tag, GROUP_TAG_PREFIX
 from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.lecture.routes import lecture_routes
 from timApp.messaging.messagelist.emaillist import check_mailman_connection
-from timApp.messaging.messagelist.mailman_events import mailman_events, has_valid_event_auth
+from timApp.messaging.messagelist.mailman_events import (
+    mailman_events,
+    has_valid_event_auth,
+)
 from timApp.messaging.messagelist.routes import messagelist
 from timApp.messaging.timMessage.routes import timMessage
 from timApp.modules.fields.cbcountfield import cbcountfield_route
@@ -80,7 +87,12 @@ from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.cache import cache
-from timApp.util.flask.requesthelper import get_request_message, use_model, RouteException, NotExist
+from timApp.util.flask.requesthelper import (
+    get_request_message,
+    use_model,
+    RouteException,
+    NotExist,
+)
 from timApp.util.flask.responsehelper import json_response, ok_response, add_csp_header
 from timApp.util.flask.search import search_routes
 from timApp.util.logger import log_info, log_debug
@@ -125,7 +137,6 @@ blueprints = [
     view_page,
     scheduling,
     mailman_events,
-
     # plugins
     importData_plugin,
     qst_plugin,
@@ -139,7 +150,7 @@ blueprints = [
     timMessage,
 ]
 
-if app.config['BOOKMARKS_ENABLED']:
+if app.config["BOOKMARKS_ENABLED"]:
     app.register_blueprint(bookmarks)
 
 for bp in blueprints:
@@ -183,15 +194,17 @@ def inject_angular_scripts() -> dict:
         # but it does not work for TIM because the HTML is dynamically generated and modifying base href would break
         # other links. So we modify the script by hand.
         # TODO: Cache the modified result.
-        return get_angularscripts(f'static/scripts/build/{locale}/index.html', locale=locale)
+        return get_angularscripts(
+            f"static/scripts/build/{locale}/index.html", locale=locale
+        )
     except FileNotFoundError:
         try:
-            return get_angularscripts(f'static/scripts/build/index.html')
+            return get_angularscripts(f"static/scripts/build/index.html")
         except FileNotFoundError:
             raise Exception(
-                'TypeScript files have not been built (compiled JavaScript files are missing).\n'
+                "TypeScript files have not been built (compiled JavaScript files are missing).\n"
                 'If this is a local development TIM instance, start the "bdw" NPM script (in timApp/package.json) '
-                'from your IDE.\n'
+                "from your IDE.\n"
                 'If this is not a local TIM instance, run "./js" from TIM root.'
             )
 
@@ -199,14 +212,16 @@ def inject_angular_scripts() -> dict:
 def get_angularscripts(index_file: str, locale: Optional[str] = None):
     with open(index_file) as f:
         html_data = f.read()
-        bs = BeautifulSoup(html_data, 'lxml')
-        scripts: list[bs4.element.Tag] = [e for e in bs.find_all('script')]
-        n = BeautifulSoup("", 'lxml')
-        style = bs.find('link')
+        bs = BeautifulSoup(html_data, "lxml")
+        scripts: list[bs4.element.Tag] = [e for e in bs.find_all("script")]
+        n = BeautifulSoup("", "lxml")
+        style = bs.find("link")
         for s in scripts:
             n.append(s)
             if locale:
-                s['src'] += f'?l={locale}'  # The parameter is only needed for cache busting (for Chrome).
+                s[
+                    "src"
+                ] += f"?l={locale}"  # The parameter is only needed for cache busting (for Chrome).
 
         # Only production config has extractCss enabled, so this will be None for a non-prod build.
         # TODO: this is possibly always True after upgrading to Angular 11.
@@ -216,14 +231,14 @@ def get_angularscripts(index_file: str, locale: Optional[str] = None):
 
 
 KNOWN_LANGUAGES = [
-    'fi',
-    'en-US',
+    "fi",
+    "en-US",
 ]
 
 
 def get_locale():
-    header_lang = request.accept_languages.best_match(KNOWN_LANGUAGES, default='en-US')
-    lng = request.cookies.get('lang')
+    header_lang = request.accept_languages.best_match(KNOWN_LANGUAGES, default="en-US")
+    lng = request.cookies.get("lang")
     if not lng:
         if not logged_in():
             return header_lang
@@ -236,35 +251,35 @@ def get_locale():
 
 @app.context_processor
 def inject_user() -> dict:
-    """"Injects user-related info to all templates."""
+    """ "Injects user-related info to all templates."""
     r = dict(
         current_user=get_current_user_object(),
         lecture_info=get_current_lecture_info(),
         other_users=get_other_users_as_list(),
         locale=get_locale(),
     )
-    if logged_in() and app.config['BOOKMARKS_ENABLED']:
-        r['bookmarks'] = get_current_user_object().bookmarks.as_dict()
+    if logged_in() and app.config["BOOKMARKS_ENABLED"]:
+        r["bookmarks"] = get_current_user_object().bookmarks.as_dict()
     return r
 
 
-@app.get('/js/<path:path>')
+@app.get("/js/<path:path>")
 def get_js_file(path: str):
     locale = get_locale()
     for f in [
-        f'static/scripts/build/{locale}/{path}',
-        f'static/scripts/build/{path}',
+        f"static/scripts/build/{locale}/{path}",
+        f"static/scripts/build/{path}",
     ]:
         try:
             return send_file(f)
         except FileNotFoundError:
             pass
-    raise NotExist('File not found')
+    raise NotExist("File not found")
 
 
-@app.get('/empty')
+@app.get("/empty")
 def empty_response_route():
-    return Response('', mimetype='text/plain')
+    return Response("", mimetype="text/plain")
 
 
 @app.get("/ping")
@@ -285,22 +300,22 @@ class GetProxyModel:
 def getproxy(m: GetProxyModel):
     parsed = urlparse(m.url)
     if not parsed.scheme:
-        raise RouteException('Unknown URL scheme')
-    if parsed.scheme not in ('http', 'https'):
-        raise RouteException(f'URL scheme not allowed: {parsed.scheme}')
-    if parsed.netloc not in app.config['PROXY_WHITELIST']:
-        raise RouteException(f'URL domain not whitelisted: {parsed.netloc}')
-    if parsed.netloc not in app.config['PROXY_WHITELIST_NO_LOGIN']:
+        raise RouteException("Unknown URL scheme")
+    if parsed.scheme not in ("http", "https"):
+        raise RouteException(f"URL scheme not allowed: {parsed.scheme}")
+    if parsed.netloc not in app.config["PROXY_WHITELIST"]:
+        raise RouteException(f"URL domain not whitelisted: {parsed.netloc}")
+    if parsed.netloc not in app.config["PROXY_WHITELIST_NO_LOGIN"]:
         verify_logged_in()
     headers = {}
     if m.auth_token:
-        headers['Authorization'] = f'Token {m.auth_token}'
+        headers["Authorization"] = f"Token {m.auth_token}"
     try:
         r = requests.get(m.url, headers=headers)
     except (MissingSchema, InvalidURL):
-        raise RouteException('Invalid URL')
+        raise RouteException("Invalid URL")
     if m.raw:
-        mimetype = r.headers['Content-Type']
+        mimetype = r.headers["Content-Type"]
         if m.mimetype:
             mimetype = m.mimetype
         resp = Response(
@@ -308,20 +323,20 @@ def getproxy(m: GetProxyModel):
             status=r.status_code,
             mimetype=mimetype,
         )
-        add_csp_header(resp, 'sandbox allow-scripts')
+        add_csp_header(resp, "sandbox allow-scripts")
         return resp
 
-    return json_response({'data': r.text, 'status_code': r.status_code})
+    return json_response({"data": r.text, "status_code": r.status_code})
 
 
 @app.get("/time")
 def get_time():
-    return json_response({'time': get_current_time()}, date_conversion=True)
+    return json_response({"time": get_current_time()}, date_conversion=True)
 
 
 @app.get("/getTemplates")
 def get_templates():
-    current_path = request.args.get('item_path', '')
+    current_path = request.args.get("item_path", "")
     d = DocEntry.find_by_path(current_path)
     if not d:
         raise NotExist()
@@ -334,8 +349,13 @@ def update_user_course_bookmarks():
     u = get_current_user_object()
     for gr in u.groups:  # type: UserGroup
         if gr.is_sisu_student_group:
-            docs = DocEntry.query.join(Block).join(Tag).filter(Tag.name == GROUP_TAG_PREFIX + gr.name).with_entities(
-                DocEntry).all()
+            docs = (
+                DocEntry.query.join(Block)
+                .join(Tag)
+                .filter(Tag.name == GROUP_TAG_PREFIX + gr.name)
+                .with_entities(DocEntry)
+                .all()
+            )
             if not docs:
                 continue
             if len(docs) > 1:
@@ -356,26 +376,31 @@ def start_page():
     update_user_course_bookmarks()
     db.session.commit()
     return render_template(
-        'start.jinja2',
+        "start.jinja2",
     )
 
 
 def install_sql_hook():
     prev_exec_time = get_current_time()
 
-    @event.listens_for(db.engine, 'before_execute')
+    @event.listens_for(db.engine, "before_execute")
     def receive_before_execute(conn, clauseelement, multiparams, params):
         nonlocal prev_exec_time
         curr = get_current_time()
-        print(f'--------------------------------------TIMING: {curr} ({curr - prev_exec_time})')
+        print(
+            f"--------------------------------------TIMING: {curr} ({curr - prev_exec_time})"
+        )
         prev_exec_time = curr
         for r in traceback.format_stack():
-            if r.startswith('  File "/service/') and not receive_before_execute.__name__ in r:
-                print(r, end='')
+            if (
+                r.startswith('  File "/service/')
+                and not receive_before_execute.__name__ in r
+            ):
+                print(r, end="")
         print(clauseelement)
 
 
-if app.config['DEBUG_SQL']:
+if app.config["DEBUG_SQL"]:
     install_sql_hook()
 
 
@@ -383,18 +408,20 @@ if app.config['DEBUG_SQL']:
 def preprocess_request():
     session.permanent = True
     g.request_start_time = time.monotonic()
-    if request.method == 'GET':
+    if request.method == "GET":
         p = request.path
-        if '//' in p or (p.endswith('/') and p != '/'):
-            fixed_url = p.rstrip('/').replace('//', '/') + '?' + request.query_string.decode()
+        if "//" in p or (p.endswith("/") and p != "/"):
+            fixed_url = (
+                p.rstrip("/").replace("//", "/") + "?" + request.query_string.decode()
+            )
             return redirect(fixed_url)
 
 
 def should_log_request():
     p = request.path
-    if p.startswith('/static/'):
-        raise Exception('static files should be served by Caddy, not Flask')
-    if p == '/favicon.ico':
+    if p.startswith("/static/"):
+        raise Exception("static files should be served by Caddy, not Flask")
+    if p == "/favicon.ico":
         return False
     return True
 
@@ -404,14 +431,14 @@ def log_request(response):
     if should_log_request():
         status_code = response.status_code
         log_info(get_request_message(status_code))
-        if request.method in ('PUT', 'POST', 'DELETE'):
+        if request.method in ("PUT", "POST", "DELETE"):
             log_debug(request.get_json(silent=True))
     return response
 
 
 @app.after_request
 def close_db(response):
-    if hasattr(g, 'timdb'):
+    if hasattr(g, "timdb"):
         g.timdb.close()
     return response
 
@@ -419,20 +446,20 @@ def close_db(response):
 @app.after_request
 def del_g(response):
     """For some reason, the g object is not cleared when running browser test, so we do it here."""
-    if app.config['TESTING']:
-        if hasattr(g, 'user'):
+    if app.config["TESTING"]:
+        if hasattr(g, "user"):
             del g.user
-        if hasattr(g, 'viewable'):
+        if hasattr(g, "viewable"):
             del g.viewable
-        if hasattr(g, 'editable'):
+        if hasattr(g, "editable"):
             del g.editable
-        if hasattr(g, 'teachable'):
+        if hasattr(g, "teachable"):
             del g.teachable
-        if hasattr(g, 'manageable'):
+        if hasattr(g, "manageable"):
             del g.manageable
-        if hasattr(g, 'see_answers'):
+        if hasattr(g, "see_answers"):
             del g.see_answers
-        if hasattr(g, 'owned'):
+        if hasattr(g, "owned"):
             del g.owned
     return response
 
@@ -441,57 +468,57 @@ def del_g(response):
 def after_request(resp: Response):
     token = generate_csrf()
     resp.set_cookie(
-        'XSRF-TOKEN',
+        "XSRF-TOKEN",
         token,
-        samesite=app.config['SESSION_COOKIE_SAMESITE'],
-        secure=app.config['SESSION_COOKIE_SECURE'],
+        samesite=app.config["SESSION_COOKIE_SAMESITE"],
+        secure=app.config["SESSION_COOKIE_SECURE"],
     )
-    if not request.cookies.get('lang'):
-        resp.set_cookie('lang', get_locale())
+    if not request.cookies.get("lang"):
+        resp.set_cookie("lang", get_locale())
     return resp
 
 
 @app.teardown_appcontext
 def close_db_appcontext(_e):
-    if not app.config['TESTING'] and hasattr(g, 'timdb'):
+    if not app.config["TESTING"] and hasattr(g, "timdb"):
         g.timdb.close()
 
 
 def init_app():
-    if app.config['PROFILE']:
+    if app.config["PROFILE"]:
         app.wsgi_app = ProfilerMiddleware(
             app.wsgi_app,
-            sort_by=('cumtime',),
+            sort_by=("cumtime",),
             restrictions=[100],
-            profile_dir='/service/timApp/static/profiling',
+            profile_dir="/service/timApp/static/profiling",
         )
 
     for var in [
-        'DB_URI',
-        'DEBUG',
-        'MAIL_HOST',
-        'PG_MAX_CONNECTIONS',
-        'PLUGIN_CONNECT_TIMEOUT',
-        'PROFILE',
-        'SQLALCHEMY_MAX_OVERFLOW',
-        'SQLALCHEMY_POOL_SIZE',
+        "DB_URI",
+        "DEBUG",
+        "MAIL_HOST",
+        "PG_MAX_CONNECTIONS",
+        "PLUGIN_CONNECT_TIMEOUT",
+        "PROFILE",
+        "SQLALCHEMY_MAX_OVERFLOW",
+        "SQLALCHEMY_POOL_SIZE",
     ]:
         log_info(f'{var}: {app.config.get(var, "(undefined)")}')
-    if not app.config['DEBUG']:
-        if app.config['SECRET_KEY'] == SECRET_KEY:
-            raise Exception('SECRET_KEY must not be the same as default SECRET_KEY when DEBUG=False')
+    if not app.config["DEBUG"]:
+        if app.config["SECRET_KEY"] == SECRET_KEY:
+            raise Exception(
+                "SECRET_KEY must not be the same as default SECRET_KEY when DEBUG=False"
+            )
 
-    if app.config['MESSAGE_LISTS_ENABLED']:
-        log_info(f'Mailman client credentials configured: {check_mailman_connection()}')
-        log_info(f'Mailman events REST auth configured: {has_valid_event_auth()}')
+    if app.config["MESSAGE_LISTS_ENABLED"]:
+        log_info(f"Mailman client credentials configured: {check_mailman_connection()}")
+        log_info(f"Mailman events REST auth configured: {has_valid_event_auth()}")
 
     return app
 
 
 def start_app() -> None:
     init_app()
-    app.run(host='0.0.0.0',
-            port=5000,
-            use_evalex=False,
-            use_reloader=False,
-            threaded=True)
+    app.run(
+        host="0.0.0.0", port=5000, use_evalex=False, use_reloader=False, threaded=True
+    )

@@ -28,12 +28,14 @@ class MinimalVisibilitySettings:
     hide_sidemenu: bool = False
 
 
-def get_minimal_visibility_settings(item: Optional['Document']):
+def get_minimal_visibility_settings(item: Optional["Document"]):
     if not item:
         return MinimalVisibilitySettings()
     settings = item.get_settings()
-    return MinimalVisibilitySettings(exam_mode=settings.exam_mode() is not None,
-                                     hide_sidemenu=settings.hide_sidemenu() is not None)
+    return MinimalVisibilitySettings(
+        exam_mode=settings.exam_mode() is not None,
+        hide_sidemenu=settings.hide_sidemenu() is not None,
+    )
 
 
 UrlMacroMap = dict[str, Union[int, float, str]]
@@ -60,61 +62,63 @@ class DocSettingTypes:
     disable_answer: str
 
 
-doc_setting_field_map: dict[str, Field] = {f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)}
+doc_setting_field_map: dict[str, Field] = {
+    f.name: field_for_schema(f.type) for f in fields(DocSettingTypes)
+}
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class DocSettings:
-    global_plugin_attrs_key = 'global_plugin_attrs'
-    css_key = 'css'
-    globalmacros_key = 'globalmacros'
-    doctexmacros_key = 'doctexmacros'
-    macro_delimiter_key = 'macro_delimiter'
-    source_document_key = 'source_document'
-    auto_number_headings_key = 'auto_number_headings'
-    auto_number_start_key = 'auto_number_start'
-    heading_format_key = 'heading_format'
-    show_task_summary_key = 'show_task_summary'
-    no_question_auto_numbering_key = 'no_question_auto_numbering'
-    slide_background_url_key = 'slide_background_url'
-    slide_background_color_key = 'slide_background_color'
-    bookmark_key = 'bookmarks'
-    lazy_key = 'lazy'
-    hide_links_key = 'hide_links'
-    pars_only_key = 'pars_only'
-    hide_top_buttons_key = 'hide_top_buttons'
-    point_sum_rule_key = 'point_sum_rule'
-    max_points_key = 'max_points'
-    nomacros_key = 'nomacros'
-    texplain_key = 'texplain'
-    textplain_key = 'textplain'
-    live_updates_key = 'live_updates'
-    plugin_md_key = 'plugin_md'
-    print_settings_key = 'print_settings'
-    preamble_key = 'preamble'
-    show_authors_key = 'show_authors'
-    read_expiry_key = 'read_expiry'
-    add_par_button_text_key = 'add_par_button_text'
-    mathtype_key = 'math_type'
-    math_preamble_key = 'math_preamble'
-    input_format_key = 'input_format'
-    memo_minutes_key = 'memo_minutes'
-    comments_key = 'comments'
-    course_group_key = 'course_group'
-    charmacros_key = 'charmacros'
-    postcharmacros_key = 'postcharmacros'
-    rndmacros_key = 'rndmacros'
-    sisu_require_manual_enroll_key = 'sisu_require_manual_enroll'
-    course_allow_manual_enroll_key = 'course_allow_manual_enroll'
+    global_plugin_attrs_key = "global_plugin_attrs"
+    css_key = "css"
+    globalmacros_key = "globalmacros"
+    doctexmacros_key = "doctexmacros"
+    macro_delimiter_key = "macro_delimiter"
+    source_document_key = "source_document"
+    auto_number_headings_key = "auto_number_headings"
+    auto_number_start_key = "auto_number_start"
+    heading_format_key = "heading_format"
+    show_task_summary_key = "show_task_summary"
+    no_question_auto_numbering_key = "no_question_auto_numbering"
+    slide_background_url_key = "slide_background_url"
+    slide_background_color_key = "slide_background_color"
+    bookmark_key = "bookmarks"
+    lazy_key = "lazy"
+    hide_links_key = "hide_links"
+    pars_only_key = "pars_only"
+    hide_top_buttons_key = "hide_top_buttons"
+    point_sum_rule_key = "point_sum_rule"
+    max_points_key = "max_points"
+    nomacros_key = "nomacros"
+    texplain_key = "texplain"
+    textplain_key = "textplain"
+    live_updates_key = "live_updates"
+    plugin_md_key = "plugin_md"
+    print_settings_key = "print_settings"
+    preamble_key = "preamble"
+    show_authors_key = "show_authors"
+    read_expiry_key = "read_expiry"
+    add_par_button_text_key = "add_par_button_text"
+    mathtype_key = "math_type"
+    math_preamble_key = "math_preamble"
+    input_format_key = "input_format"
+    memo_minutes_key = "memo_minutes"
+    comments_key = "comments"
+    course_group_key = "course_group"
+    charmacros_key = "charmacros"
+    postcharmacros_key = "postcharmacros"
+    rndmacros_key = "rndmacros"
+    sisu_require_manual_enroll_key = "sisu_require_manual_enroll"
+    course_allow_manual_enroll_key = "course_allow_manual_enroll"
     show_velps_key = "show_velps"
     group_key = "group"
-    allow_self_confirm_from_key = 'allow_self_confirm_from'
-    auto_confirm_key = 'auto_confirm'
-    expire_next_doc_message_key = 'expire_next_doc_message'
-    exam_mode_key = 'exam_mode'
-    answer_grace_period_key = 'answer_grace_period'
+    allow_self_confirm_from_key = "allow_self_confirm_from"
+    auto_confirm_key = "auto_confirm"
+    expire_next_doc_message_key = "expire_next_doc_message"
+    exam_mode_key = "exam_mode"
+    answer_grace_period_key = "answer_grace_period"
 
     @classmethod
     def from_paragraph(cls, par: DocParagraph):
@@ -125,11 +129,11 @@ class DocSettings:
 
         """
         if not par.is_setting():
-            raise TimDbException(f'Not a settings paragraph: {par.get_id()}')
+            raise TimDbException(f"Not a settings paragraph: {par.get_id()}")
         try:
             yaml_vals = DocSettings.parse_values(par)
         except yaml.YAMLError as e:
-            raise TimDbException(f'Invalid YAML: {e}')
+            raise TimDbException(f"Invalid YAML: {e}")
         else:
             return DocSettings(par.doc, settings_dict=yaml_vals)
 
@@ -143,13 +147,13 @@ class DocSettings:
         except ValidationError:
             return default
 
-    def __init__(self, doc: 'Document', settings_dict: Optional[YamlBlock] = None):
+    def __init__(self, doc: "Document", settings_dict: Optional[YamlBlock] = None):
         self.doc = doc
         self.__dict = settings_dict if settings_dict else YamlBlock()
         self.macroinfo_cache = {}
 
     def to_paragraph(self) -> DocParagraph:
-        text = '```\n' + self.__dict.to_markdown() + '\n```'
+        text = "```\n" + self.__dict.to_markdown() + "\n```"
         return DocParagraph.create(self.doc, md=text, attrs={"settings": ""})
 
     def get_dict(self) -> YamlBlock:
@@ -161,38 +165,45 @@ class DocSettings:
     def css(self):
         return self.__dict.get(self.css_key)
 
-    def get_macroinfo(self, view_ctx: ViewContext, user_ctx: Optional[UserContext] = None) -> MacroInfo:
-        cache_key = (view_ctx, (user_ctx.user.id, user_ctx.logged_user.id) if user_ctx else None)
+    def get_macroinfo(
+        self, view_ctx: ViewContext, user_ctx: Optional[UserContext] = None
+    ) -> MacroInfo:
+        cache_key = (
+            view_ctx,
+            (user_ctx.user.id, user_ctx.logged_user.id) if user_ctx else None,
+        )
         cached = self.macroinfo_cache.get(cache_key)
         if cached:
             return cached
         mi = MacroInfo(
             view_ctx,
             self.doc,
-            macro_map=self.get_setting_or_default('macros', {}),
+            macro_map=self.get_setting_or_default("macros", {}),
             macro_delimiter=self.get_macro_delimiter(),
             user_ctx=user_ctx,
         )
         self.macroinfo_cache[cache_key] = mi
         return mi
 
-    def get_texmacroinfo(self, view_ctx: ViewContext, user_ctx: Optional[UserContext] = None) -> MacroInfo:
+    def get_texmacroinfo(
+        self, view_ctx: ViewContext, user_ctx: Optional[UserContext] = None
+    ) -> MacroInfo:
         return MacroInfo(
             view_ctx,
             self.doc,
-            macro_map=self.get_setting_or_default('texmacros', {}),
+            macro_map=self.get_setting_or_default("texmacros", {}),
             macro_delimiter=self.get_macro_delimiter(),
             user_ctx=user_ctx,
         )
 
     def get_macro_delimiter(self) -> str:
-        return self.__dict.get(self.macro_delimiter_key, '%%')
+        return self.__dict.get(self.macro_delimiter_key, "%%")
 
     def get_globalmacros(self) -> dict[str, str]:
         return self.__dict.get(self.globalmacros_key, {})
 
     def get_doctexmacros(self) -> str:
-        return self.__dict.get(self.doctexmacros_key, '')
+        return self.__dict.get(self.doctexmacros_key, "")
 
     def auto_number_questions(self) -> bool:
         return self.__dict.get(self.no_question_auto_numbering_key, False)
@@ -238,7 +249,7 @@ class DocSettings:
     def group(self) -> Optional[str]:
         res = self.__dict.get(self.group_key, None)
         if res is not None and not isinstance(res, str):
-            raise ValueError(f'group must be str, not {type(res)}')
+            raise ValueError(f"group must be str, not {type(res)}")
         return res
 
     def auto_number_start(self) -> int:
@@ -246,48 +257,52 @@ class DocSettings:
 
     def heading_format(self) -> dict:
         level = self.auto_number_headings()
-        defaults = {1: '{h1}. {text}',
-                    2: '{h1}.{h2} {text}',
-                    3: '{h1}.{h2}.{h3} {text}',
-                    4: '{h1}.{h2}.{h3}.{h4} {text}',
-                    5: '{h1}.{h2}.{h3}.{h4}.{h5} {text}',
-                    6: '{h1}.{h2}.{h3}.{h4}.{h5}.{h6} {text}'}
+        defaults = {
+            1: "{h1}. {text}",
+            2: "{h1}.{h2} {text}",
+            3: "{h1}.{h2}.{h3} {text}",
+            4: "{h1}.{h2}.{h3}.{h4} {text}",
+            5: "{h1}.{h2}.{h3}.{h4}.{h5} {text}",
+            6: "{h1}.{h2}.{h3}.{h4}.{h5}.{h6} {text}",
+        }
         if level == 2:
             defaults = {
-                1: '{text}',
-                2: '{h2}. {text}',
-                3: '{h2}.{h3} {text}',
-                4: '{h2}.{h3}.{h4} {text}',
-                5: '{h2}.{h3}.{h4}.{h5} {text}',
-                6: '{h2}.{h3}.{h4}.{h5}.{h6} {text}'
+                1: "{text}",
+                2: "{h2}. {text}",
+                3: "{h2}.{h3} {text}",
+                4: "{h2}.{h3}.{h4} {text}",
+                5: "{h2}.{h3}.{h4}.{h5} {text}",
+                6: "{h2}.{h3}.{h4}.{h5}.{h6} {text}",
             }
         if level == 3:
             defaults = {
-                1: '{text}',
-                2: '{text}',
-                3: '{h3}. {text}',
-                4: '{h3}.{h4} {text}',
-                5: '{h3}.{h4}.{h5} {text}',
-                6: '{h3}.{h4}.{h5}.{h6} {text}'
+                1: "{text}",
+                2: "{text}",
+                3: "{h3}. {text}",
+                4: "{h3}.{h4} {text}",
+                5: "{h3}.{h4}.{h5} {text}",
+                6: "{h3}.{h4}.{h5}.{h6} {text}",
             }
         if level == 4:
             defaults = {
-                1: '{text}',
-                2: '{text}',
-                3: '{text}',
-                4: '{h4}. {text}',
-                5: '{h4}.{h5} {text}',
-                6: '{h4}.{h5}.{h6} {text}'
+                1: "{text}",
+                2: "{text}",
+                3: "{text}",
+                4: "{h4}. {text}",
+                5: "{h4}.{h5} {text}",
+                6: "{h4}.{h5}.{h6} {text}",
             }
         hformat = self.__dict.get(self.heading_format_key)
         if hformat is None:
             return defaults
-        return {1: hformat.get(1, defaults[1]),
-                2: hformat.get(2, defaults[2]),
-                3: hformat.get(3, defaults[3]),
-                4: hformat.get(4, defaults[4]),
-                5: hformat.get(5, defaults[5]),
-                6: hformat.get(6, defaults[6])}
+        return {
+            1: hformat.get(1, defaults[1]),
+            2: hformat.get(2, defaults[2]),
+            3: hformat.get(3, defaults[3]),
+            4: hformat.get(4, defaults[4]),
+            5: hformat.get(5, defaults[5]),
+            6: hformat.get(6, defaults[6]),
+        }
 
     def show_task_summary(self, default=False) -> bool:
         return self.__dict.get(self.show_task_summary_key, default)
@@ -336,7 +351,7 @@ class DocSettings:
     def preamble(self, default=DEFAULT_PREAMBLE_DOC):
         return self.__dict.get(self.preamble_key, default)
 
-    def get(self, key: str, default: Any=None) -> Any:
+    def get(self, key: str, default: Any = None) -> Any:
         return self.__dict.get(key, default)
 
     def is_texplain(self):
@@ -356,10 +371,10 @@ class DocSettings:
             return default
         return timedelta(minutes=r)
 
-    def add_par_button_text(self, default='Add paragraph') -> str:
+    def add_par_button_text(self, default="Add paragraph") -> str:
         return self.__dict.get(self.add_par_button_text_key, default)
 
-    def mathtype(self, default='mathjax') -> MathType:
+    def mathtype(self, default="mathjax") -> MathType:
         return MathType.from_string(self.__dict.get(self.mathtype_key, default))
 
     def get_hash(self):
@@ -367,13 +382,17 @@ class DocSettings:
         macros = macroinfo.get_macros()
         charmacros = self.get_charmacros() or ""
         macro_delim = macroinfo.get_macro_delimiter()
-        return hashfunc(f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}")
+        return hashfunc(
+            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}"
+        )
 
     def math_preamble(self):
-        return self.__dict.get(self.math_preamble_key, '')
+        return self.__dict.get(self.math_preamble_key, "")
 
     def input_format(self):
-        return InputFormat.from_string(self.__dict.get(self.input_format_key, 'markdown'))
+        return InputFormat.from_string(
+            self.__dict.get(self.input_format_key, "markdown")
+        )
 
     def get_dumbo_options(self) -> DumboOptions:
         return DumboOptions(
@@ -383,7 +402,7 @@ class DocSettings:
         )
 
     def memo_minutes(self) -> bool:
-        return self.__dict.get(self.memo_minutes_key, '')
+        return self.__dict.get(self.memo_minutes_key, "")
 
     def comments(self) -> str:
         return self.__dict.get(self.comments_key)
@@ -410,47 +429,47 @@ class DocSettings:
         return timedelta(minutes=r)
 
     def themes(self) -> list[str]:
-        return self.get_setting_or_default('themes', [])
+        return self.get_setting_or_default("themes", [])
 
     def override_user_themes(self) -> bool:
-        return self.get_setting_or_default('override_user_themes', False)
+        return self.get_setting_or_default("override_user_themes", False)
 
     def hide_sidemenu(self) -> Optional[str]:
-        return self.get_setting_or_default('hide_sidemenu', None)
+        return self.get_setting_or_default("hide_sidemenu", None)
 
     def answer_submit_time_tolerance(self) -> timedelta:
-        r = self.get_setting_or_default('answer_submit_time_tolerance', 1000)
+        r = self.get_setting_or_default("answer_submit_time_tolerance", 1000)
         return timedelta(milliseconds=r if r >= 0 else 0)
 
     def scoreboard_docs(self) -> list[str]:
-        return self.get_setting_or_default('scoreboard_docs', [])
+        return self.get_setting_or_default("scoreboard_docs", [])
 
     def show_scoreboard(self) -> bool:
-        return self.get_setting_or_default('show_scoreboard', False)
+        return self.get_setting_or_default("show_scoreboard", False)
 
     def hide_browser(self) -> bool:
-        return self.get_setting_or_default('hideBrowser', False)
+        return self.get_setting_or_default("hideBrowser", False)
 
     def urlmacros(self) -> UrlMacroMap:
-        return self.get_setting_or_default('urlmacros', {})
+        return self.get_setting_or_default("urlmacros", {})
 
     def rndmacros(self) -> dict[str, str]:
-        return self.get_setting_or_default('rndmacros', {})
+        return self.get_setting_or_default("rndmacros", {})
 
     def is_cached(self):
-        return self.get_setting_or_default('cache', False)
+        return self.get_setting_or_default("cache", False)
 
     def peer_review(self) -> bool:
-        return self.get_setting_or_default('peer_review', False)
+        return self.get_setting_or_default("peer_review", False)
 
     def peer_review_count(self) -> int:
-        return self.get_setting_or_default('peer_review_count', 1)
+        return self.get_setting_or_default("peer_review_count", 1)
 
     def access_denied_message(self) -> Optional[str]:
-        return self.get_setting_or_default('access_denied_message', None)
+        return self.get_setting_or_default("access_denied_message", None)
 
     def disable_answer(self) -> Optional[str]:
-        return self.get_setting_or_default('disable_answer', None)
+        return self.get_setting_or_default("disable_answer", None)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
@@ -458,7 +477,9 @@ def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     return result
 
 
-def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> tuple[YamlBlock, bool]:
+def __resolve_final_settings_impl(
+    pars: Iterable[DocParagraph],
+) -> tuple[YamlBlock, bool]:
     result = YamlBlock()
     had_settings = False
     for curr in pars:
@@ -483,12 +504,13 @@ def __resolve_final_settings_impl(pars: Iterable[DocParagraph]) -> tuple[YamlBlo
 
             try:
                 from timApp.document.document import Document
+
                 # We temporarily pretend that this isn't a translated paragraph
                 # so that we always get the original markdown.
-                tr_attr = curr.get_attr('r')
-                curr.set_attr('r', None)
+                tr_attr = curr.get_attr("r")
+                curr.set_attr("r", None)
                 refs = curr.get_referenced_pars()
-                curr.set_attr('r', tr_attr)
+                curr.set_attr("r", tr_attr)
             except InvalidReferenceException:
                 break
             ref_settings, ref_had_settings = __resolve_final_settings_impl(refs)

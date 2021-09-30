@@ -13,12 +13,26 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 
 from timApp.timdb.sqa import db
-from timApp.velp.velp_models import Velp, VelpVersion, VelpLabel, VelpLabelContent, VelpContent, LabelInVelp, \
-    VelpInGroup, VelpGroupsInDocument, VelpGroup
+from timApp.velp.velp_models import (
+    Velp,
+    VelpVersion,
+    VelpLabel,
+    VelpLabelContent,
+    VelpContent,
+    LabelInVelp,
+    VelpInGroup,
+    VelpGroupsInDocument,
+    VelpGroup,
+)
 
 
-def _create_velp(creator_id: int, default_points: Optional[float], valid_until: Optional[str] = None, visible_to: Optional[int] = None,
-                 color: Optional[str] = None) -> Velp:
+def _create_velp(
+    creator_id: int,
+    default_points: Optional[float],
+    valid_until: Optional[str] = None,
+    visible_to: Optional[int] = None,
+    color: Optional[str] = None,
+) -> Velp:
     """Creates a new entry to the velp table.
 
     :param creator_id: User ID of creator.
@@ -30,11 +44,13 @@ def _create_velp(creator_id: int, default_points: Optional[float], valid_until: 
     """
     if not visible_to:
         visible_to = 4
-    v = Velp(creator_id=creator_id,
-             default_points=default_points,
-             color=color,
-             valid_until=valid_until,
-             visible_to=visible_to)
+    v = Velp(
+        creator_id=creator_id,
+        default_points=default_points,
+        color=color,
+        valid_until=valid_until,
+        visible_to=visible_to,
+    )
     db.session.add(v)
     return v
 
@@ -63,7 +79,9 @@ def add_velp_label_translation(label: VelpLabel, language_id: str, content: str)
     db.session.add(vlc)
 
 
-def create_velp_content(version: VelpVersion, language_id: str, content: str, default_comment: str):
+def create_velp_content(
+    version: VelpVersion, language_id: str, content: str, default_comment: str
+):
     """Method to create content (text) for velp.
 
     :param version: The VelpVersion
@@ -72,13 +90,25 @@ def create_velp_content(version: VelpVersion, language_id: str, content: str, de
     :param default_comment: Default comment for velp
 
     """
-    vc = VelpContent(velp_version=version, language_id=language_id, content=content, default_comment=default_comment)
+    vc = VelpContent(
+        velp_version=version,
+        language_id=language_id,
+        content=content,
+        default_comment=default_comment,
+    )
     db.session.add(vc)
 
 
-def create_new_velp(creator_id: int, content: str, default_points: Optional[float] = None,
-                    default_comment: Optional[str] = None, valid_until: Optional[str] = None, language_id: str = "FI",
-                    visible_to: Optional[int] = None, color: Optional[int] = None) -> tuple[Velp, VelpVersion]:
+def create_new_velp(
+    creator_id: int,
+    content: str,
+    default_points: Optional[float] = None,
+    default_comment: Optional[str] = None,
+    valid_until: Optional[str] = None,
+    language_id: str = "FI",
+    visible_to: Optional[int] = None,
+    color: Optional[int] = None,
+) -> tuple[Velp, VelpVersion]:
     """Creates a new velp with all information.
 
     Creates a new velp with all necessary information in one function using three others.
@@ -147,7 +177,9 @@ def update_velp_labels(velp_id: int, labels: Iterable[int]):
     add_labels_to_velp(velp_id, labels)
 
 
-def get_latest_velp_version(velp_id: int, language_id: str = "FI") -> Optional[VelpContent]:
+def get_latest_velp_version(
+    velp_id: int, language_id: str = "FI"
+) -> Optional[VelpContent]:
     """Method to fetch the latest version for velp in specific language.
 
     :param velp_id: ID of velp we're checking
@@ -155,16 +187,19 @@ def get_latest_velp_version(velp_id: int, language_id: str = "FI") -> Optional[V
     :return: Dictionary containing ID and content of velp version.
 
     """
-    return (VelpContent.query
-            .filter_by(language_id=language_id)
-            .join(VelpVersion)
-            .filter_by(velp_id=velp_id)
-            .order_by(VelpVersion.id.desc())
-            .with_entities(VelpContent)
-            .first())
+    return (
+        VelpContent.query.filter_by(language_id=language_id)
+        .join(VelpVersion)
+        .filter_by(velp_id=velp_id)
+        .order_by(VelpVersion.id.desc())
+        .with_entities(VelpContent)
+        .first()
+    )
 
 
-def get_velp_content_for_document(doc_id: int, user_id: int, language_id: str = 'FI') -> list[Velp]:
+def get_velp_content_for_document(
+    doc_id: int, user_id: int, language_id: str = "FI"
+) -> list[Velp]:
     """Gets velps for document.
 
     Uses VelpGroupsInDocument table data to determine which velp groups and via those which velps are usable
@@ -175,28 +210,42 @@ def get_velp_content_for_document(doc_id: int, user_id: int, language_id: str = 
     :param language_id: ID of language used
     """
 
-    sq = (VelpVersion.query
-          .group_by(VelpVersion.velp_id)
-          .with_entities(VelpVersion.velp_id, func.max(VelpVersion.id).label('ver'))
-          .subquery())
+    sq = (
+        VelpVersion.query.group_by(VelpVersion.velp_id)
+        .with_entities(VelpVersion.velp_id, func.max(VelpVersion.id).label("ver"))
+        .subquery()
+    )
     vq = (
-        Velp.query
-            .join(sq, sq.c.velp_id == Velp.id)
-            .join(VelpContent, sq.c.ver == VelpContent.version_id)
-            .filter(VelpContent.language_id == language_id)
-            .filter((Velp.valid_until == None) | (Velp.valid_until >= func.current_timestamp()))
-            .join(VelpInGroup)
-            .join(VelpGroupsInDocument, VelpInGroup.velp_group_id == VelpGroupsInDocument.velp_group_id)
-            .join(VelpGroup)
-            .filter((VelpGroupsInDocument.user_id == user_id) & (VelpGroupsInDocument.doc_id == doc_id))
-            .with_entities(Velp)
-            .options(joinedload(Velp.groups, innerjoin=True).raiseload(VelpGroup.block))
-            .options(joinedload(Velp.velp_versions, innerjoin=True).joinedload(VelpVersion.content, innerjoin=True))
+        Velp.query.join(sq, sq.c.velp_id == Velp.id)
+        .join(VelpContent, sq.c.ver == VelpContent.version_id)
+        .filter(VelpContent.language_id == language_id)
+        .filter(
+            (Velp.valid_until == None) | (Velp.valid_until >= func.current_timestamp())
+        )
+        .join(VelpInGroup)
+        .join(
+            VelpGroupsInDocument,
+            VelpInGroup.velp_group_id == VelpGroupsInDocument.velp_group_id,
+        )
+        .join(VelpGroup)
+        .filter(
+            (VelpGroupsInDocument.user_id == user_id)
+            & (VelpGroupsInDocument.doc_id == doc_id)
+        )
+        .with_entities(Velp)
+        .options(joinedload(Velp.groups, innerjoin=True).raiseload(VelpGroup.block))
+        .options(
+            joinedload(Velp.velp_versions, innerjoin=True).joinedload(
+                VelpVersion.content, innerjoin=True
+            )
+        )
     )
     return vq.all()
 
 
-def get_velp_label_content_for_document(doc_id: int, user_id: int, language_id: str = 'FI') -> dict:
+def get_velp_label_content_for_document(
+    doc_id: int, user_id: int, language_id: str = "FI"
+) -> dict:
     """Gets velp label content for document.
 
     Uses VelpGroupsInDocument table data to determine which velp groups and via those which velp labels are usable
@@ -209,15 +258,19 @@ def get_velp_label_content_for_document(doc_id: int, user_id: int, language_id: 
 
     """
     vlcs = (
-        VelpLabelContent.query
-            .filter_by(language_id=language_id)
-            .join(LabelInVelp, VelpLabelContent.velplabel_id == LabelInVelp.label_id)
-            .join(Velp)
-            .filter((Velp.valid_until >= func.current_timestamp()) | (Velp.valid_until == None))
-            .join(VelpInGroup)
-            .join(VelpGroupsInDocument, VelpInGroup.velp_group_id == VelpGroupsInDocument.velp_group_id)
-            .filter_by(doc_id=doc_id, user_id=user_id)
-            .with_entities(VelpLabelContent)
-            .all()
+        VelpLabelContent.query.filter_by(language_id=language_id)
+        .join(LabelInVelp, VelpLabelContent.velplabel_id == LabelInVelp.label_id)
+        .join(Velp)
+        .filter(
+            (Velp.valid_until >= func.current_timestamp()) | (Velp.valid_until == None)
+        )
+        .join(VelpInGroup)
+        .join(
+            VelpGroupsInDocument,
+            VelpInGroup.velp_group_id == VelpGroupsInDocument.velp_group_id,
+        )
+        .filter_by(doc_id=doc_id, user_id=user_id)
+        .with_entities(VelpLabelContent)
+        .all()
     )
     return vlcs

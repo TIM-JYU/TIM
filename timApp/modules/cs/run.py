@@ -11,8 +11,9 @@ from subprocess import PIPE, Popen
 
 from tim_common.fileParams import remove, mkdirs, tquote, get_param
 
-CS3_TAG = 'dotnet'
-CS3_TARGET = os.environ.get('CSPLUGIN_TARGET', '')
+CS3_TAG = "dotnet"
+CS3_TARGET = os.environ.get("CSPLUGIN_TARGET", "")
+
 
 def wait_file(f1):
     """Wait until the file is ready or 10 tries has been done.
@@ -37,7 +38,17 @@ def generate_filename():
     return str(uuid.uuid4())
 
 
-def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8"):
+def run(
+    args,
+    cwd=None,
+    shell=False,
+    kill_tree=True,
+    timeout=-1,
+    env=None,
+    stdin=None,
+    uargs=None,
+    code="utf-8",
+):
     """Alkuperäinen ajaminen, jossa ajo suoritetaan tavallisen prosessina.
 
     :param args: run arguments for the command
@@ -57,11 +68,13 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
         args.extend(shlex.split(uargs))
     if stdin:
         s_in = PIPE
-    p = Popen(args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env, stdin=s_in)  # , timeout=timeout)
+    p = Popen(
+        args, shell=shell, cwd=cwd, stdout=PIPE, stderr=PIPE, env=env, stdin=s_in
+    )  # , timeout=timeout)
     try:
         if stdin:
             # print(stdin)
-            file = codecs.open(stdin, 'r', "utf-8")
+            file = codecs.open(stdin, "r", "utf-8")
             lines = file.read()
             # print("Input ======")
             # print(lines)
@@ -73,9 +86,9 @@ def run(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin
         else:
             stdout, stderr = p.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
-        return -9, '', ''
+        return -9, "", ""
     except OSError as e:
-        return -2, '', ('IO Error ' + str(e))
+        return -2, "", ("IO Error " + str(e))
     return p.returncode, stdout.decode(), stderr.decode()
 
 
@@ -91,7 +104,10 @@ def get_user_mappings(root_dir, mounts):
     user_mappings = []
     # TODO: add mapping command to this list
     know_user_mappings = {
-        "ohj1Content": ["-v", f"{root_dir.as_posix()}/timApp/static/ohj1/Content:/home/agent/Content:ro"],
+        "ohj1Content": [
+            "-v",
+            f"{root_dir.as_posix()}/timApp/static/ohj1/Content:/home/agent/Content:ro",
+        ],
     }
     for mnt_name in mounts:
         mapping = know_user_mappings.get(mnt_name)
@@ -112,17 +128,31 @@ class RunCleaner:
     def __exit__(self, type, value, traceback):
         if self.p.returncode is None:
             self.p.kill()
-            subprocess.run(["docker", "kill",  self.container])
+            subprocess.run(["docker", "kill", self.container])
 
         for file in self.files:
             remove(file)
 
 
 # noinspection PyBroadException
-def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdin=None, uargs=None, code="utf-8",
-         extra="", ulimit=None, no_x11=False, savestate="",
-         dockercontainer=f"timimages/cs3{CS3_TARGET}:{CS3_TAG}", compile_commandline = "",
-         mounts = []):
+def run2(
+    args,
+    cwd=None,
+    shell=False,
+    kill_tree=True,
+    timeout=-1,
+    env=None,
+    stdin=None,
+    uargs=None,
+    code="utf-8",
+    extra="",
+    ulimit=None,
+    no_x11=False,
+    savestate="",
+    dockercontainer=f"timimages/cs3{CS3_TARGET}:{CS3_TAG}",
+    compile_commandline="",
+    mounts=[],
+):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
     run inside docker.
 
@@ -162,23 +192,62 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     # print("cwd=", cwd)
     cmdf = cwd + "/" + urndname + ".sh"  # varsinaisen ajoskriptin nimi
     compf = cwd + "/run/compile.sh"
-    cmnds = ' '.join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
+    cmnds = " ".join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
     cmnds = cmnds.replace("'|'", "|")
-    source = ''
-    if savestate and cmnds.endswith('.sh'): # source works only for shell scripts
-        source = 'source '
+    source = ""
+    if savestate and cmnds.endswith(".sh"):  # source works only for shell scripts
+        source = "source "
     # tehdään komentojono jossa suuntaukset
     compile_cmnds = None
     if compile_commandline:
-        cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n{ " + extra + source + cmnds + \
-                "; } 1>>" + "~/" + stdoutf + " 2>>" + "~/" + stderrf + s_in + "\n"
-        compile_cmnds = "#!/usr/bin/env bash\n(" + compile_commandline + \
-                ") 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + "\n"
-        codecs.open(compf, "w", "utf-8").write(compile_cmnds)  # kirjoitetaan kääntämisskripti
+        cmnds = (
+            "#!/usr/bin/env bash\n"
+            + ulimit
+            + "\n{ "
+            + extra
+            + source
+            + cmnds
+            + "; } 1>>"
+            + "~/"
+            + stdoutf
+            + " 2>>"
+            + "~/"
+            + stderrf
+            + s_in
+            + "\n"
+        )
+        compile_cmnds = (
+            "#!/usr/bin/env bash\n("
+            + compile_commandline
+            + ") 1>"
+            + "~/"
+            + stdoutf
+            + " 2>"
+            + "~/"
+            + stderrf
+            + "\n"
+        )
+        codecs.open(compf, "w", "utf-8").write(
+            compile_cmnds
+        )  # kirjoitetaan kääntämisskripti
         os.chmod(compf, 0o777)
     else:
-        cmnds = "#!/usr/bin/env bash\n" + ulimit + "\n{ " + extra + source + cmnds + \
-                "; } 1>" + "~/" + stdoutf + " 2>" + "~/" + stderrf + s_in + "\n"
+        cmnds = (
+            "#!/usr/bin/env bash\n"
+            + ulimit
+            + "\n{ "
+            + extra
+            + source
+            + cmnds
+            + "; } 1>"
+            + "~/"
+            + stdoutf
+            + " 2>"
+            + "~/"
+            + stderrf
+            + s_in
+            + "\n"
+        )
         try:
             os.remove(compf)
         except:
@@ -195,41 +264,75 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
     # print("============")
     codecs.open(cmdf, "w", "utf-8").write(cmnds)  # kirjoitetaan komentotiedosto
     mkdirs("/tmp/run")  # varmistetaan run-hakemisto
-    udir = cwd.replace("/tmp/", "")  # koska mountattu eri tavalla, poistetaan tmp alusta
+    udir = cwd.replace(
+        "/tmp/", ""
+    )  # koska mountattu eri tavalla, poistetaan tmp alusta
     # print(udir,"\nWait for run")
-    compose_proj = os.environ['COMPOSE_PROJECT_NAME']
+    compose_proj = os.environ["COMPOSE_PROJECT_NAME"]
 
     # Convert possible Windows path to Linux style, e.g. C:/Users/... -> /C/Users/...
-    root_dir = PureWindowsPath(os.environ['TIM_ROOT'])
+    root_dir = PureWindowsPath(os.environ["TIM_ROOT"])
     if root_dir.drive:
         drive_letter = root_dir.drive[0]
-        root_dir = PurePath('/') / drive_letter / root_dir.relative_to(root_dir.anchor)
+        root_dir = PurePath("/") / drive_letter / root_dir.relative_to(root_dir.anchor)
 
-    path_mappings = [["-v", f"{root_dir.as_posix()}/timApp/modules/cs/{p}:/cs/{p}:ro"] for p in
-                     ["rcmd.sh", "cpp", "java", "dotnet", "doxygen", "mathcheck", "fs", "data", "simcir", "MIRToolbox"]]
+    path_mappings = [
+        ["-v", f"{root_dir.as_posix()}/timApp/modules/cs/{p}:/cs/{p}:ro"]
+        for p in [
+            "rcmd.sh",
+            "cpp",
+            "java",
+            "dotnet",
+            "doxygen",
+            "mathcheck",
+            "fs",
+            "data",
+            "simcir",
+            "MIRToolbox",
+        ]
+    ]
 
     user_mappings = get_user_mappings(root_dir, mounts)
 
-    dargs = ["docker", "run", "--name", tmpname, "--rm=true",
-             *itertools.chain.from_iterable(path_mappings),
-             *itertools.chain.from_iterable(user_mappings),
-             "-v", f"/tmp/{compose_proj}_uhome/{udir}/:/home/agent/",
-             "-w", "/home/agent", dockercontainer, "/cs/rcmd.sh", urndname + ".sh", str(no_x11), str(savestate)]
+    dargs = [
+        "docker",
+        "run",
+        "--name",
+        tmpname,
+        "--rm=true",
+        *itertools.chain.from_iterable(path_mappings),
+        *itertools.chain.from_iterable(user_mappings),
+        "-v",
+        f"/tmp/{compose_proj}_uhome/{udir}/:/home/agent/",
+        "-w",
+        "/home/agent",
+        dockercontainer,
+        "/cs/rcmd.sh",
+        urndname + ".sh",
+        str(no_x11),
+        str(savestate),
+    ]
     # dargs = ["docker", "exec", "kana",
     #         "/cs/rcmd.sh", urndname + ".sh", str(no_x11), str(savestate)]
     # print(" ".join(dargs))
-    p = Popen(dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env)  # , timeout=timeout)
+    p = Popen(
+        dargs, shell=shell, cwd="/cs", stdout=PIPE, stderr=PIPE, env=env
+    )  # , timeout=timeout)
     errcode = 0
     errtxt = ""
 
-    with RunCleaner(p, tmpname, [cwd + "/" + stdoutf, cwd + "/" + stderrf, cwd + "/pwd.txt"]):
+    with RunCleaner(
+        p, tmpname, [cwd + "/" + stdoutf, cwd + "/" + stderrf, cwd + "/pwd.txt"]
+    ):
         try:
             stdout, stderr = p.communicate(timeout=timeout)
             # print("stdout: ", stdout[:100])
             # print("stderr: ", stderr)
             # print("Run2 done!")
             try:
-                pwddir = codecs.open(cwd + '/pwd.txt', 'r', "utf-8").read()  # .encode("utf-8")
+                pwddir = codecs.open(
+                    cwd + "/pwd.txt", "r", "utf-8"
+                ).read()  # .encode("utf-8")
             except:
                 pwddir = ""
             # print("pwddir=", pwddir)
@@ -243,33 +346,45 @@ def run2(args, cwd=None, shell=False, kill_tree=True, timeout=-1, env=None, stdi
                     err = "Timeout. Too long loop?"
                 # errcode = -3
                 # errtxt = "Run error: " + str(err) + "\n"
-                return -3, '', ("Run error: " + str(err)), pwddir
+                return -3, "", ("Run error: " + str(err)), pwddir
             try:
                 try:
-                    stdout = codecs.open(cwd + "/" + stdoutf, 'r', code).read()  # luetaan stdin ja err
+                    stdout = codecs.open(
+                        cwd + "/" + stdoutf, "r", code
+                    ).read()  # luetaan stdin ja err
                 except UnicodeDecodeError:
-                    stdout = codecs.open(cwd + "/" + stdoutf, 'r', "iso-8859-15").read()  # luetaan stdin ja err
+                    stdout = codecs.open(
+                        cwd + "/" + stdoutf, "r", "iso-8859-15"
+                    ).read()  # luetaan stdin ja err
             except:
                 stdout = ""
 
             try:
                 try:
-                    stderr = err + codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read()
+                    stderr = err + codecs.open(cwd + "/" + stderrf, "r", "utf-8").read()
                 except UnicodeDecodeError:
                     try:
-                        stderr = err + codecs.open(cwd + "/" + stderrf, 'r', "utf-8").read()
+                        stderr = (
+                            err + codecs.open(cwd + "/" + stderrf, "r", "utf-8").read()
+                        )
                     except UnicodeDecodeError:
-                        stderr = err + codecs.open(cwd + "/" + stderrf, 'r', "iso-8859-15").read()
+                        stderr = (
+                            err
+                            + codecs.open(
+                                cwd + "/" + stderrf, "r", "iso-8859-15"
+                            ).read()
+                        )
             except:
                 stderr = err
 
             # print(stdout)
             # print("stderr", stderr)
         except subprocess.TimeoutExpired:
-            return -9, '', '', pwddir
+            return -9, "", "", pwddir
         except OSError as e:
-            return -2, '', ("IO Error" + str(e)), pwddir
+            return -2, "", ("IO Error" + str(e)), pwddir
     return errcode, stdout, errtxt + stderr, pwddir
+
 
 def run2_subdir(args, dir=None, cwd=None, *kargs, **kwargs):
     """run2 but inside subdirectory cwd with dir as root.

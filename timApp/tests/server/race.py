@@ -9,10 +9,12 @@ class RaceTest(TimRouteTest):
         self.login_test1()
         d1 = self.create_doc()
         d2 = self.create_doc()
+
         def mark_read():
             for i in range(0, 100):
-                self.json_post(f'/bookmarks/markLastRead/{d1.id}')
-                self.json_post(f'/bookmarks/markLastRead/{d2.id}')
+                self.json_post(f"/bookmarks/markLastRead/{d1.id}")
+                self.json_post(f"/bookmarks/markLastRead/{d2.id}")
+
         t1 = Thread(target=mark_read)
         t2 = Thread(target=mark_read)
         t1.start()

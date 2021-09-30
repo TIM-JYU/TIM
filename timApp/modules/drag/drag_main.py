@@ -8,8 +8,15 @@ from flask import render_template_string
 from marshmallow.utils import missing
 
 from tim_common.markupmodels import GenericMarkupModel
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, register_plugin_app, launch_if_main, PluginAnswerResp, PluginAnswerWeb, PluginReqs
+from tim_common.pluginserver_flask import (
+    GenericHtmlModel,
+    GenericAnswerModel,
+    register_plugin_app,
+    launch_if_main,
+    PluginAnswerResp,
+    PluginAnswerWeb,
+    PluginReqs,
+)
 from tim_common.utils import Missing
 
 
@@ -50,14 +57,16 @@ class DragInputModel:
 @dataclass
 class DragHtmlModel(GenericHtmlModel[DragInputModel, DragMarkupModel, DragStateModel]):
     def get_component_html_name(self) -> str:
-        return 'drag-runner'
+        return "drag-runner"
 
     def get_static_html(self) -> str:
         return render_static_drag(self)
 
 
 @dataclass
-class DragAnswerModel(GenericAnswerModel[DragInputModel, DragMarkupModel, DragStateModel]):
+class DragAnswerModel(
+    GenericAnswerModel[DragInputModel, DragMarkupModel, DragStateModel]
+):
     pass
 
 
@@ -86,54 +95,57 @@ def render_static_drag(m: DragHtmlModel) -> str:
 
 def answer(args: DragAnswerModel) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
-    result: PluginAnswerResp = {'web': web}
+    result: PluginAnswerResp = {"web": web}
     words = args.input.words
 
     nosave = args.input.nosave
     if not nosave:
         save = {"c": words}
         result["save"] = save
-        web['result'] = "saved"
+        web["result"] = "saved"
 
     return result
 
 
 def reqs() -> PluginReqs:
-    templates = ["""
+    templates = [
+        """
 #- {defaultplugin="drag"}
 {#drag1 #}
 """,
-"""
+        """
 #- {defaultplugin="drag"}
 {#drag2 words: [weather, is, lovely, almost, always] #}
-""","""
+""",
+        """
 #- {defaultplugin="drag"}
 {#dragtrash trash: true #}
-"""]
+""",
+    ]
     return {
         "js": ["js/build/drag.js"],
         "multihtml": True,
-        'editor_tabs': [
+        "editor_tabs": [
             {
-                'text': 'Fields',
-                'items': [
+                "text": "Fields",
+                "items": [
                     {
-                        'text': 'Drag',
-                        'items': [
+                        "text": "Drag",
+                        "items": [
                             {
-                                'data': templates[0].strip(),
-                                'text': 'Drag container without words',
-                                'expl': 'Add drag container without words'
+                                "data": templates[0].strip(),
+                                "text": "Drag container without words",
+                                "expl": "Add drag container without words",
                             },
                             {
-                                'data': templates[1].strip(),
-                                'text': 'Drag container with words',
-                                'expl': 'Add drag container with words'
+                                "data": templates[1].strip(),
+                                "text": "Drag container with words",
+                                "expl": "Add drag container with words",
                             },
                             {
-                                'data': templates[2].strip(),
-                                'text': 'Drag Trashcontainer',
-                                'expl': 'Add drag trashcontainer for deleting non-copyable words'
+                                "data": templates[2].strip(),
+                                "text": "Drag Trashcontainer",
+                                "expl": "Add drag trashcontainer for deleting non-copyable words",
                             },
                         ],
                     },

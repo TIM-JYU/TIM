@@ -48,7 +48,8 @@ from tim_common.fileParams import get_param
 
 
 class ExtCheck(Language):
-    ttype="extcheck"
+    ttype = "extcheck"
+
     def __init__(self, query, sourcecode):
         super().__init__(query, sourcecode)
 
@@ -64,7 +65,9 @@ class ExtCheck(Language):
 
             commands = get_param(self.query, "commands", None)
             if not commands:
-                raise Exception("commandKey is used (command is None/not specified) but no commands are specified")
+                raise Exception(
+                    "commandKey is used (command is None/not specified) but no commands are specified"
+                )
 
             if command_key in commands:
                 self.command = commands[command_key]
@@ -73,9 +76,16 @@ class ExtCheck(Language):
 
     def run(self, result, sourcelines, points_rule):
         if isinstance(self.command, list):
-            self.command = [c.replace("points_rule", json.dumps(points_rule)).replace("timeout", str(self.timeout)) for c in self.command]
+            self.command = [
+                c.replace("points_rule", json.dumps(points_rule)).replace(
+                    "timeout", str(self.timeout)
+                )
+                for c in self.command
+            ]
         else:
-            self.command = self.command.replace("points_rule", json.dumps(points_rule)).replace("timeout", str(self.timeout))
+            self.command = self.command.replace(
+                "points_rule", json.dumps(points_rule)
+            ).replace("timeout", str(self.timeout))
 
         code, out, err, pwddir = self.runself(self.command)
         if code == -9:
@@ -107,7 +117,9 @@ class ExtCheck(Language):
 
         if self.result.max_points:
             if max_points is not None:
-                self.result.points = self.result.points*max_points/self.result.max_points
+                self.result.points = (
+                    self.result.points * max_points / self.result.max_points
+                )
             else:
                 print("ExtCheck: maxPoints cannot be converted to float.")
                 raise TypeError("ExtCheck: maxPoints cannot be converted to float.")
@@ -119,9 +131,11 @@ class ExtCheck(Language):
         if penalties and self.result.penalties:
             for key, value in penalties.items():
                 if self.result.penalize(key):
-                    self.result.points = self.result.points*(1.0 - value)
+                    self.result.points = self.result.points * (1.0 - value)
                     if isinstance(self.result.penalties[key], str):
-                        self.penalties.append(f"{self.result.penalties[key]} Penalty -{value*100}%.")
+                        self.penalties.append(
+                            f"{self.result.penalties[key]} Penalty -{value*100}%."
+                        )
                     else:
                         self.penalties.append(f"{key} penalty: -{value*100}%.")
 
@@ -154,7 +168,10 @@ class ExtCheck(Language):
                 data = json.load(f)
 
             tmp = data.get(attr, [])
-            tmp = [f if f.startswith('http') or f.startswith('/') else str(path / dir / f) for f in tmp]
+            tmp = [
+                f if f.startswith("http") or f.startswith("/") else str(path / dir / f)
+                for f in tmp
+            ]
 
             files.extend(tmp)
 

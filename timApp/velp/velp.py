@@ -14,9 +14,19 @@ from typing import Optional
 from flask import Blueprint
 from flask import request
 
-from timApp.auth.accesshelper import verify_logged_in, has_edit_access, has_manage_access, \
-    get_doc_or_abort, verify_edit_access, AccessDenied
-from timApp.auth.sessioninfo import get_current_user_object, get_current_user_id, get_current_user_group_object
+from timApp.auth.accesshelper import (
+    verify_logged_in,
+    has_edit_access,
+    has_manage_access,
+    get_doc_or_abort,
+    verify_edit_access,
+    AccessDenied,
+)
+from timApp.auth.sessioninfo import (
+    get_current_user_object,
+    get_current_user_id,
+    get_current_user_group_object,
+)
 from timApp.document.docentry import DocEntry, get_documents_in_folder, get_documents
 from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
@@ -25,22 +35,52 @@ from timApp.user.user import User
 from timApp.user.users import get_rights_holders
 from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import RouteException
-from timApp.util.flask.responsehelper import json_response, no_cache_json_response, ok_response
+from timApp.util.flask.responsehelper import (
+    json_response,
+    no_cache_json_response,
+    ok_response,
+)
 from timApp.util.logger import log_warning
 from timApp.util.utils import split_location
-from timApp.velp.velp_folders import check_velp_group_folder_path, check_personal_velp_folder
-from timApp.velp.velp_models import Velp, VelpGroup, VelpGroupSelection, VelpLabel, VelpLabelContent
-from timApp.velp.velpgroups import create_default_velp_group, create_velp_group, get_groups_from_document_table, \
-    make_document_a_velp_group, add_groups_to_document, change_selection, change_all_target_area_default_selections, \
-    change_all_target_area_selections, change_default_selection, add_groups_to_selection_table, \
-    get_default_selections_for_velp_groups, get_personal_selections_for_velp_groups
-from timApp.velp.velps import create_velp_version, create_new_velp, \
-    create_velp_content, update_velp, update_velp_labels, add_labels_to_velp, get_latest_velp_version, \
-    get_velp_content_for_document, get_velp_label_content_for_document, add_velp_label_translation
+from timApp.velp.velp_folders import (
+    check_velp_group_folder_path,
+    check_personal_velp_folder,
+)
+from timApp.velp.velp_models import (
+    Velp,
+    VelpGroup,
+    VelpGroupSelection,
+    VelpLabel,
+    VelpLabelContent,
+)
+from timApp.velp.velpgroups import (
+    create_default_velp_group,
+    create_velp_group,
+    get_groups_from_document_table,
+    make_document_a_velp_group,
+    add_groups_to_document,
+    change_selection,
+    change_all_target_area_default_selections,
+    change_all_target_area_selections,
+    change_default_selection,
+    add_groups_to_selection_table,
+    get_default_selections_for_velp_groups,
+    get_personal_selections_for_velp_groups,
+)
+from timApp.velp.velps import (
+    create_velp_version,
+    create_new_velp,
+    create_velp_content,
+    update_velp,
+    update_velp_labels,
+    add_labels_to_velp,
+    get_latest_velp_version,
+    get_velp_content_for_document,
+    get_velp_label_content_for_document,
+    add_velp_label_translation,
+)
 
-velps = Blueprint('velps',
-                  __name__,
-                  url_prefix='')
+velps = Blueprint("velps", __name__, url_prefix="")
 
 
 # TODO: Add document handling for all velp group related stuff
@@ -71,7 +111,8 @@ def get_default_velp_group(doc_id: int):
                 "id": -1,
                 "name": "No access to default group",
                 "edit_access": edit_access,
-            })
+            }
+        )
 
     # Check if document's path contains velp groups folder and if it does, make document its own default velp group.
     # This default document declaration isn't saved to database (else eventually all velp groups might be defaults).
@@ -84,40 +125,51 @@ def get_default_velp_group(doc_id: int):
                     "id": -1,
                     "name": "No access to default group",
                     "edit_access": edit_access,
-                })
+                }
+            )
         vg = make_document_a_velp_group(doc_name, doc_id)
         add_groups_to_document([vg], doc, user)
-        add_groups_to_selection_table(vg, doc_id, user.id, target_id='0', target_type=0)
+        add_groups_to_selection_table(vg, doc_id, user.id, target_id="0", target_type=0)
         db.session.commit()
         log_warning("Document is a velp group, made default velp group to point itself")
-        return no_cache_json_response({
-            "id": doc_id,
-            "name": doc_name,
-            "edit_access": edit_access,
-        })
+        return no_cache_json_response(
+            {
+                "id": doc_id,
+                "name": doc_name,
+                "edit_access": edit_access,
+            }
+        )
 
     if doc_path != "":
-        found_velp_groups = get_documents_in_folder(doc_path + "/velp-groups/" + doc_name)
+        found_velp_groups = get_documents_in_folder(
+            doc_path + "/velp-groups/" + doc_name
+        )
     else:  # Documents in root folder don't like / after empty path
         found_velp_groups = get_documents_in_folder("velp-groups/" + doc_name)
     velp_groups = []
     for v in found_velp_groups:
         # if has_view_access(user_id, timdb.documents.get_document_id(v['name'])):
         velp_groups.append(v.id)
-    def_velp_groups: list[VelpGroup] = VelpGroup.query.filter(VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True).all()
+    def_velp_groups: list[VelpGroup] = VelpGroup.query.filter(
+        VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True
+    ).all()
     if def_velp_groups:
         default_group = def_velp_groups[0]
-        return no_cache_json_response({
-            "id": default_group.id,
-            "name": default_group.name,
-            "edit_access": bool(has_edit_access(default_group.block)),
-        })
+        return no_cache_json_response(
+            {
+                "id": default_group.id,
+                "name": default_group.name,
+                "edit_access": bool(has_edit_access(default_group.block)),
+            }
+        )
 
-    return no_cache_json_response({
-        "id": -1,
-        "name": doc_name + "_default",
-        "edit_access": edit_access,
-    })
+    return no_cache_json_response(
+        {
+            "id": -1,
+            "name": doc_name + "_default",
+            "edit_access": edit_access,
+        }
+    )
 
 
 @velps.get("/get_default_personal_velp_group")
@@ -134,7 +186,9 @@ def get_default_personal_velp_group():
     velp_groups = []
     for v in found_velp_groups:
         velp_groups.append(v.id)
-    default_group = VelpGroup.query.filter(VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True).first()
+    default_group = VelpGroup.query.filter(
+        VelpGroup.id.in_(velp_groups) & VelpGroup.default_group == True
+    ).first()
     if default_group is not None:
         return no_cache_json_response(default_group)
     group_name = "Personal-default"
@@ -151,16 +205,16 @@ def get_default_personal_velp_group():
         created_new = True
 
     created_velp_group = dict()
-    created_velp_group['id'] = group.id
-    created_velp_group['target_type'] = 0
-    created_velp_group['target_id'] = "0"
-    created_velp_group['name'] = group_name
-    created_velp_group['location'] = new_group_path
-    created_velp_group['show'] = True
-    created_velp_group['default'] = False
-    created_velp_group['edit_access'] = True
-    created_velp_group['default_group'] = True
-    created_velp_group['created_new_group'] = created_new
+    created_velp_group["id"] = group.id
+    created_velp_group["target_type"] = 0
+    created_velp_group["target_id"] = "0"
+    created_velp_group["name"] = group_name
+    created_velp_group["location"] = new_group_path
+    created_velp_group["show"] = True
+    created_velp_group["default"] = False
+    created_velp_group["edit_access"] = True
+    created_velp_group["default_group"] = True
+    created_velp_group["created_new_group"] = created_new
     db.session.commit()
 
     return no_cache_json_response(created_velp_group)
@@ -195,10 +249,12 @@ def get_velp_groups(doc_id: int):
 
     all_velp_groups = get_groups_from_document_table(doc_id, user.id)
     db.session.commit()
-    return no_cache_json_response([{
-        **vg.to_json(),
-        'edit_access': bool(has_edit_access(vg.block))
-    } for vg in all_velp_groups])
+    return no_cache_json_response(
+        [
+            {**vg.to_json(), "edit_access": bool(has_edit_access(vg.block))}
+            for vg in all_velp_groups
+        ]
+    )
 
 
 @velps.get("/<int:doc_id>/get_velp_group_personal_selections")
@@ -229,7 +285,7 @@ def get_velp_group_default_selections(doc_id: int) -> dict:
 
 
 @velps.get("/<int:doc_id>/get_velp_labels")
-def get_velp_labels(doc_id: int) -> 'str':
+def get_velp_labels(doc_id: int) -> "str":
     """Gets all velp labels for document user has access to by using VelpGroupSelection table.
 
     :param doc_id: ID of document
@@ -264,21 +320,21 @@ def add_velp() -> int:
     """
     json_data = request.get_json()
     try:
-        velp_content = json_data['content']
-        velp_group_ids = json_data['velp_groups']
+        velp_content = json_data["content"]
+        velp_group_ids = json_data["velp_groups"]
     except KeyError as e:
         raise RouteException("Missing data: " + e.args[0])
     if not velp_content:
         raise RouteException("Empty content string.")
 
     # Optional stuff
-    default_points = json_data.get('points')
-    default_comment = json_data.get('default_comment')
-    language_id = json_data.get('language_id')
-    valid_until = json_data.get('valid_until')
-    velp_labels = json_data.get('labels')
-    visible_to = json_data.get('visible_to')
-    color = json_data.get('color')
+    default_points = json_data.get("points")
+    default_comment = json_data.get("default_comment")
+    language_id = json_data.get("language_id")
+    valid_until = json_data.get("valid_until")
+    velp_labels = json_data.get("labels")
+    visible_to = json_data.get("visible_to")
+    color = json_data.get("color")
 
     default_points = float(default_points) if default_points is not None else None
 
@@ -287,7 +343,9 @@ def add_velp() -> int:
 
     # Check where user has edit rights and only add new velp to those
     velp_groups: list[VelpGroup] = [
-        vg for vg in VelpGroup.query.filter(VelpGroup.id.in_(velp_group_ids)).all() if has_edit_access(vg.block)
+        vg
+        for vg in VelpGroup.query.filter(VelpGroup.id.in_(velp_group_ids)).all()
+        if has_edit_access(vg.block)
     ]
 
     if not velp_groups:
@@ -332,26 +390,26 @@ def update_velp_route(doc_id: int):
 
     try:
         json_data = request.get_json()
-        velp_id = json_data.get('id')
-        new_content = json_data.get('content')
-        language_id = json_data.get('language_id')
-        velp_group_ids = json_data['velp_groups']
+        velp_id = json_data.get("id")
+        new_content = json_data.get("content")
+        language_id = json_data.get("language_id")
+        velp_group_ids = json_data["velp_groups"]
     except KeyError as e:
         raise RouteException("Missing data " + e.args[0])
     if not new_content:
         raise RouteException("Empty content string.")
 
-    default_points = json_data.get('points')
-    default_comment = json_data.get('default_comment')
-    color = json_data.get('color')
-    new_labels = set(json_data.get('labels') or [])
-    visible_to = json_data.get('visible_to')
+    default_points = json_data.get("points")
+    default_comment = json_data.get("default_comment")
+    color = json_data.get("color")
+    new_labels = set(json_data.get("labels") or [])
+    visible_to = json_data.get("visible_to")
     verify_logged_in()
     user_id = get_current_user_id()
     edit_access = False
     velp: Velp = Velp.query.get(velp_id)
     if not velp:
-        raise RouteException('Velp not found')
+        raise RouteException("Velp not found")
     all_velp_groups = velp.groups
 
     # Check that user has edit access to velp via any velp group in database
@@ -363,11 +421,17 @@ def update_velp_route(doc_id: int):
         raise AccessDenied("No edit access to velp via any velp group.")
 
     # Add all velp group ids user has edit access to in a document to a remove list
-    groups_to_remove = [vg for vg in get_groups_from_document_table(doc_id, user_id) if has_edit_access(vg.block)]
+    groups_to_remove = [
+        vg
+        for vg in get_groups_from_document_table(doc_id, user_id)
+        if has_edit_access(vg.block)
+    ]
 
     # Check that user has edit access to velp groups in given velp group list and add them to an add list
     groups_to_add: list[VelpGroup] = [
-        vg for vg in VelpGroup.query.filter(VelpGroup.id.in_(velp_group_ids)).all() if has_edit_access(vg.block)
+        vg
+        for vg in VelpGroup.query.filter(VelpGroup.id.in_(velp_group_ids)).all()
+        if has_edit_access(vg.block)
     ]
 
     # Add and remove velp from velp groups
@@ -411,17 +475,17 @@ def add_label() -> int:
     """
     json_data = request.get_json()
     try:
-        content = json_data['content']
+        content = json_data["content"]
     except KeyError as e:
         raise RouteException("Missing data: " + e.args[0])
-    language_id = json_data.get('language_id')
+    language_id = json_data.get("language_id")
     language_id = "FI" if language_id is None else language_id
 
     label = VelpLabel(creator=get_current_user_object())
     db.session.add(label)
     add_velp_label_translation(label, language_id, content)
     db.session.commit()
-    return json_response({'id': label.id})
+    return json_response({"id": label.id})
 
 
 @velps.post("/update_velp_label")
@@ -435,11 +499,11 @@ def update_velp_label_route():
     """
     json_data = request.get_json()
     try:
-        content = json_data['content']
-        velp_label_id = json_data['id']
+        content = json_data["content"]
+        velp_label_id = json_data["id"]
     except KeyError as e:
         raise RouteException("Missing data: " + e.args[0])
-    language_id = json_data.get('language_id')
+    language_id = json_data.get("language_id")
     language_id = "FI" if language_id is None else language_id
 
     vlc: Optional[VelpLabelContent] = VelpLabelContent.query.filter_by(
@@ -447,10 +511,10 @@ def update_velp_label_route():
         velplabel_id=velp_label_id,
     ).first()
     if not vlc:
-        raise RouteException('Velp label not found')
+        raise RouteException("Velp label not found")
     u = get_current_user_object()
     if not u.is_admin and vlc.velplabel.creator != u:
-        raise AccessDenied('Only label creator can modify the label.')
+        raise AccessDenied("Only label creator can modify the label.")
     vlc.content = content
     db.session.commit()
     return ok_response()
@@ -471,10 +535,10 @@ def change_selection_route(doc_id: int):
 
     json_data = request.get_json()
     try:
-        velp_group_id = json_data['id']
-        target_type = json_data['target_type']
-        target_id = json_data['target_id']
-        selection_type = json_data['selection_type']
+        velp_group_id = json_data["id"]
+        target_type = json_data["target_type"]
+        target_id = json_data["target_id"]
+        selection_type = json_data["selection_type"]
     except KeyError as e:
         raise RouteException("Missing data: " + e.args[0])
     verify_logged_in()
@@ -482,16 +546,20 @@ def change_selection_route(doc_id: int):
     d = get_doc_or_abort(doc_id)
     if selection_type == "show":
         try:
-            selection = json_data['show']
+            selection = json_data["show"]
         except KeyError as e:
             raise RouteException("Missing data: " + e.args[0])
-        change_selection(doc_id, velp_group_id, target_type, target_id, user_id, selection)
+        change_selection(
+            doc_id, velp_group_id, target_type, target_id, user_id, selection
+        )
     elif selection_type == "default" and has_manage_access(d):
         try:
-            selection = json_data['default']
+            selection = json_data["default"]
         except KeyError as e:
             raise RouteException("Missing data: " + e.args[0])
-        change_default_selection(doc_id, velp_group_id, target_type, target_id, selection)
+        change_default_selection(
+            doc_id, velp_group_id, target_type, target_id, selection
+        )
 
     db.session.commit()
     return ok_response()
@@ -512,19 +580,23 @@ def change_all_selections(doc_id: int):
 
     json_data = request.get_json()
     try:
-        selection = json_data['selection']
-        target_type = json_data['target_type']
-        target_id = json_data['target_id']
-        selection_type = json_data['selection_type']
+        selection = json_data["selection"]
+        target_type = json_data["target_type"]
+        target_id = json_data["target_id"]
+        selection_type = json_data["selection_type"]
     except KeyError as e:
         raise RouteException("Missing data: " + e.args[0])
     verify_logged_in()
     user_id = get_current_user_id()
     d = get_doc_or_abort(doc_id)
     if selection_type == "show":
-        change_all_target_area_selections(doc_id, target_type, target_id, user_id, selection)
+        change_all_target_area_selections(
+            doc_id, target_type, target_id, user_id, selection
+        )
     elif selection_type == "default" and has_manage_access(d):
-        change_all_target_area_default_selections(doc_id, target_type, target_id, user_id, selection)
+        change_all_target_area_default_selections(
+            doc_id, target_type, target_id, user_id, selection
+        )
 
     db.session.commit()
     return ok_response()
@@ -542,13 +614,15 @@ def reset_target_area_selections_to_defaults(doc_id: int):
 
     json_data = request.get_json()
     try:
-        target_id = json_data['target_id']
+        target_id = json_data["target_id"]
     except KeyError as e:
         raise RouteException("Missing data: " + e.args[0])
 
     user_id = get_current_user_id()
 
-    VelpGroupSelection.query.filter_by(doc_id=doc_id, user_id=user_id, target_id=target_id).delete()
+    VelpGroupSelection.query.filter_by(
+        doc_id=doc_id, user_id=user_id, target_id=target_id
+    ).delete()
     db.session.commit()
     return ok_response()
 
@@ -582,8 +656,8 @@ def create_velp_group_route(doc_id: int) -> dict:
 
     json_data = request.get_json()
     try:
-        velp_group_name = json_data.get('name')
-        target_type = json_data.get('target_type')
+        velp_group_name = json_data.get("name")
+        target_type = json_data.get("target_type")
     except KeyError as e:
         raise RouteException("Missing data: " + e.args[0])
 
@@ -606,13 +680,15 @@ def create_velp_group_route(doc_id: int) -> dict:
         if group_exists is None:
             velp_group = create_velp_group(velp_group_name, user_group, new_group_path)
         else:
-            raise RouteException("Velp group with same name and location exists already.")
+            raise RouteException(
+                "Velp group with same name and location exists already."
+            )
 
     else:
         if target_type == 2:
             target = Folder.find_by_path(doc_path)
             if not target:
-                raise RouteException(f'Folder not found: {doc_path}')
+                raise RouteException(f"Folder not found: {doc_path}")
             doc_name = ""
         elif target_type == 1:
             target = doc
@@ -626,32 +702,42 @@ def create_velp_group_route(doc_id: int) -> dict:
         velps_folder_path = check_velp_group_folder_path(doc_path, user_group, doc_name)
 
         new_group_path = velps_folder_path + "/" + velp_group_name
-        group_exists = DocEntry.find_by_path(new_group_path)  # Check name so no duplicates are made
+        group_exists = DocEntry.find_by_path(
+            new_group_path
+        )  # Check name so no duplicates are made
         if group_exists is None:
             original_owner = target.owners[0]
-            velp_group = create_velp_group(velp_group_name, original_owner, new_group_path)
+            velp_group = create_velp_group(
+                velp_group_name, original_owner, new_group_path
+            )
             rights = get_rights_holders(target.id)
             # Copy all rights but view
             for right in rights:
-                if not right.atype.name == 'view':
-                    grant_access(right.usergroup, velp_group.block, right.atype.to_enum())
+                if not right.atype.name == "view":
+                    grant_access(
+                        right.usergroup, velp_group.block, right.atype.to_enum()
+                    )
         else:
-            raise RouteException("Velp group with same name and location exists already.")
+            raise RouteException(
+                "Velp group with same name and location exists already."
+            )
 
     created_velp_group = dict()
-    created_velp_group['id'] = velp_group.id
-    created_velp_group['target_type'] = 0
-    created_velp_group['target_id'] = "0"
-    created_velp_group['name'] = velp_group_name
-    created_velp_group['location'] = new_group_path
-    created_velp_group['selected'] = True
-    created_velp_group['show'] = True
-    created_velp_group['edit_access'] = True
-    created_velp_group['default_group'] = False
+    created_velp_group["id"] = velp_group.id
+    created_velp_group["target_type"] = 0
+    created_velp_group["target_id"] = "0"
+    created_velp_group["name"] = velp_group_name
+    created_velp_group["location"] = new_group_path
+    created_velp_group["selected"] = True
+    created_velp_group["show"] = True
+    created_velp_group["edit_access"] = True
+    created_velp_group["default_group"] = False
 
     add_groups_to_document([velp_group], doc, user)
     # TODO Do we want to make just created velp group selected in document immediately?
-    add_groups_to_selection_table(velp_group, doc_id, user.id, target_id='0', target_type=0)
+    add_groups_to_selection_table(
+        velp_group, doc_id, user.id, target_id="0", target_type=0
+    )
     db.session.commit()
     return json_response(created_velp_group)
 
@@ -678,16 +764,20 @@ def create_default_velp_group_route(doc_id: int):
     velp_group_name = doc_name + "_default"
 
     new_group_path = velps_folder_path + "/" + velp_group_name
-    group_exists = DocEntry.find_by_path(new_group_path)  # Check name so no duplicates are made
+    group_exists = DocEntry.find_by_path(
+        new_group_path
+    )  # Check name so no duplicates are made
     if group_exists is None:
-        velp_group = create_default_velp_group(velp_group_name, user_group, new_group_path)
+        velp_group = create_default_velp_group(
+            velp_group_name, user_group, new_group_path
+        )
         created_new_group = True
         rights = get_rights_holders(doc_id)
         # Copy all rights but view
         for right in rights:
             # TODO once someone implements a grant_access that takes access ids instead of strings, change to that
             # function.
-            if not right.atype.name == 'view':
+            if not right.atype.name == "view":
                 grant_access(right.usergroup, velp_group, right.atype.to_enum())
 
     else:
@@ -699,17 +789,17 @@ def create_default_velp_group_route(doc_id: int):
         created_new_group = False
 
     created_velp_group = dict()
-    created_velp_group['id'] = velp_group.id
-    created_velp_group['target_type'] = 0
-    created_velp_group['target_id'] = "0"
-    created_velp_group['name'] = velp_group_name
-    created_velp_group['location'] = new_group_path
-    created_velp_group['selected'] = True
-    created_velp_group['show'] = True
-    created_velp_group['default'] = False
-    created_velp_group['edit_access'] = True
-    created_velp_group['default_group'] = True
-    created_velp_group['created_new_group'] = created_new_group
+    created_velp_group["id"] = velp_group.id
+    created_velp_group["target_type"] = 0
+    created_velp_group["target_id"] = "0"
+    created_velp_group["name"] = velp_group_name
+    created_velp_group["location"] = new_group_path
+    created_velp_group["selected"] = True
+    created_velp_group["show"] = True
+    created_velp_group["default"] = False
+    created_velp_group["edit_access"] = True
+    created_velp_group["default_group"] = True
+    created_velp_group["created_new_group"] = created_new_group
 
     add_groups_to_document([velp_group], doc, get_current_user_object())
 
@@ -751,12 +841,16 @@ def get_velp_groups_from_tree(doc: DocInfo):
         velp_groups += get_folder_velp_groups(full_path, user)
 
     # Document's own velp group
-    velp_groups += get_folder_velp_groups(current_path + "/" + velp_group_folder + "/" + doc_name, user)
+    velp_groups += get_folder_velp_groups(
+        current_path + "/" + velp_group_folder + "/" + doc_name, user
+    )
 
     # Velp group folder when going towards root in tree
     while True:
-        velp_groups += get_folder_velp_groups(current_path + "/" + velp_group_folder, user)
-        if current_path == '':
+        velp_groups += get_folder_velp_groups(
+            current_path + "/" + velp_group_folder, user
+        )
+        if current_path == "":
             break
         current_path, _ = split_location(current_path)
 
@@ -782,7 +876,9 @@ def get_velp_groups_from_tree(doc: DocInfo):
 
 
 def get_folder_velp_groups(folder, u: User) -> list[DocEntry]:
-    return get_documents(include_nonpublic=False,
-                         filter_folder=folder,
-                         search_recursively=False,
-                         filter_user=u)
+    return get_documents(
+        include_nonpublic=False,
+        filter_folder=folder,
+        search_recursively=False,
+        filter_user=u,
+    )

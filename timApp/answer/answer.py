@@ -13,24 +13,28 @@ class AnswerSaver(db.Model):
     """Holds information about who has saved an answer. For example, in teacher view, "Save teacher's fix"
     would store the teacher in this table.
     """
-    __tablename__ = 'answersaver'
-    answer_id = db.Column(db.Integer, db.ForeignKey('answer.id'), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'), primary_key=True)
+
+    __tablename__ = "answersaver"
+    answer_id = db.Column(db.Integer, db.ForeignKey("answer.id"), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
 
 
 class Answer(db.Model):
     """An answer to a task."""
-    __tablename__ = 'answer'
+
+    __tablename__ = "answer"
     id = db.Column(db.Integer, primary_key=True)
     """Answer identifier."""
 
     task_id = db.Column(db.Text, nullable=False, index=True)
     """Task id to which this answer was posted. In the form "doc_id.name", for example "2.task1"."""
 
-    origin_doc_id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=True)
+    origin_doc_id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=True)
     """The document in which the answer was saved"""
 
-    plugin_type_id = db.Column(db.Integer, db.ForeignKey('plugintype.id'), nullable=True)
+    plugin_type_id = db.Column(
+        db.Integer, db.ForeignKey("plugintype.id"), nullable=True
+    )
     """Plugin type the answer was saved on"""
 
     content = db.Column(db.Text, nullable=False)
@@ -39,23 +43,33 @@ class Answer(db.Model):
     points = db.Column(db.Float)
     """Points."""
 
-    answered_on = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())
+    answered_on = db.Column(
+        db.DateTime(timezone=True), nullable=False, default=func.now()
+    )
     """Answer timestamp."""
 
     valid = db.Column(db.Boolean, nullable=False)
     """Whether this answer is valid."""
 
-    last_points_modifier = db.Column(db.Integer, db.ForeignKey('usergroup.id'))
+    last_points_modifier = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
     """The UserGroup who modified the points last. Null if the points have been given by the task automatically."""
 
-    plugin_type: Optional[PluginType] = db.relationship('PluginType', lazy='select')
-    uploads = db.relationship('AnswerUpload', back_populates='answer', lazy='dynamic')
-    users = db.relationship('User', secondary=UserAnswer.__table__,
-                            back_populates='answers', lazy='dynamic')
-    users_all = db.relationship('User', secondary=UserAnswer.__table__,
-                                back_populates='answers_alt', order_by='User.real_name', lazy='select')
-    annotations = db.relationship('Annotation', back_populates='answer')
-    saver = db.relationship('User', lazy='select', secondary=AnswerSaver.__table__, uselist=False)
+    plugin_type: Optional[PluginType] = db.relationship("PluginType", lazy="select")
+    uploads = db.relationship("AnswerUpload", back_populates="answer", lazy="dynamic")
+    users = db.relationship(
+        "User", secondary=UserAnswer.__table__, back_populates="answers", lazy="dynamic"
+    )
+    users_all = db.relationship(
+        "User",
+        secondary=UserAnswer.__table__,
+        back_populates="answers_alt",
+        order_by="User.real_name",
+        lazy="select",
+    )
+    annotations = db.relationship("Annotation", back_populates="answer")
+    saver = db.relationship(
+        "User", lazy="select", secondary=AnswerSaver.__table__, uselist=False
+    )
 
     @property
     def content_as_json(self):
@@ -73,16 +87,16 @@ class Answer(db.Model):
 
     def to_json(self):
         return {
-            'id': self.id,
-            'task_id': self.task_id,
-            'content': self.content,
-            'points': self.points,
-            'answered_on': self.answered_on,
-            'valid': self.valid,
-            'last_points_modifier': self.last_points_modifier,
-            'origin_doc_id': self.origin_doc_id,
-            **include_if_loaded('plugin_type', self, 'plugin'),
-            **include_if_loaded('users_all', self, 'users'),
+            "id": self.id,
+            "task_id": self.task_id,
+            "content": self.content,
+            "points": self.points,
+            "answered_on": self.answered_on,
+            "valid": self.valid,
+            "last_points_modifier": self.last_points_modifier,
+            "origin_doc_id": self.origin_doc_id,
+            **include_if_loaded("plugin_type", self, "plugin"),
+            **include_if_loaded("users_all", self, "users"),
         }
 
     @property

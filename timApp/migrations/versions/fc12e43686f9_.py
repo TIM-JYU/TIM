@@ -7,25 +7,33 @@ Create Date: 2016-12-21 13:55:28.930245
 """
 
 # revision identifiers, used by Alembic.
-revision = 'fc12e43686f9'
-down_revision = 'cdeeff4028b9'
+revision = "fc12e43686f9"
+down_revision = "cdeeff4028b9"
 
 from alembic import op
 
 
 def upgrade():
-    op.execute("""UPDATE block SET description = regexp_replace(name, '^.*/', '')
+    op.execute(
+        """UPDATE block SET description = regexp_replace(name, '^.*/', '')
                   FROM docentry
-                  WHERE block.id = docentry.id""")
-    op.execute("""UPDATE block SET description = name
+                  WHERE block.id = docentry.id"""
+    )
+    op.execute(
+        """UPDATE block SET description = name
                   FROM folder
-                  WHERE block.id = folder.id""")
+                  WHERE block.id = folder.id"""
+    )
 
-    op.execute("""UPDATE docentry
-                  SET name     = regexp_replace(translate(name, 'åäöÅÄÖ ', 'aaoAAO-'), '[^a-zA-Z0-9/_-]', '', 'g')""")
-    op.execute("""UPDATE folder
+    op.execute(
+        """UPDATE docentry
+                  SET name     = regexp_replace(translate(name, 'åäöÅÄÖ ', 'aaoAAO-'), '[^a-zA-Z0-9/_-]', '', 'g')"""
+    )
+    op.execute(
+        """UPDATE folder
                   SET name     = regexp_replace(translate(name, 'åäöÅÄÖ ', 'aaoAAO-'), '[^a-zA-Z0-9/_-]', '', 'g'),
-                      location = regexp_replace(translate(location, 'åäöÅÄÖ ', 'aaoAAO-'), '[^a-zA-Z0-9/_-]', '', 'g')""")
+                      location = regexp_replace(translate(location, 'åäöÅÄÖ ', 'aaoAAO-'), '[^a-zA-Z0-9/_-]', '', 'g')"""
+    )
 
 
 def downgrade():

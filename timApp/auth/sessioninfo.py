@@ -13,22 +13,30 @@ def get_current_user():
 
 
 def get_current_user_object() -> User:
-    if not hasattr(g, 'user'):
+    if not hasattr(g, "user"):
         curr_id = get_current_user_id()
-        u = user_query_with_joined_groups().options(joinedload(User.lectures)).get(curr_id)
+        u = (
+            user_query_with_joined_groups()
+            .options(joinedload(User.lectures))
+            .get(curr_id)
+        )
         if u is None:
             if curr_id != 0:
                 curr_id = 0
-                session['user_id'] = curr_id
-                session['user_name'] = 'Anonymous'
+                session["user_id"] = curr_id
+                session["user_name"] = "Anonymous"
                 u = User.get_by_id(curr_id)
         if not u:
-            raise Exception(dedent(f"""
+            raise Exception(
+                dedent(
+                    f"""
             Database has no users; you need to re-initialize it:
             ./dc stop -t 0 tim celery postgresql
             docker volume rm {current_app.config['TIM_NAME']}_data11
             delete tim_files folder
-            ./up.sh""").strip())
+            ./up.sh"""
+                ).strip()
+            )
         g.user = u
     return g.user
 
@@ -39,11 +47,11 @@ def user_context_with_logged_in(u: Optional[User]) -> UserContext:
 
 
 def get_other_users() -> dict[str, dict[str, str]]:
-    return session.get('other_users', {})
+    return session.get("other_users", {})
 
 
 def get_other_users_as_list() -> list[dict[str, str]]:
-    return list(session.get('other_users', {}).values())
+    return list(session.get("other_users", {}).values())
 
 
 def get_session_users():
@@ -59,29 +67,31 @@ def get_other_session_users_objs() -> list[User]:
 
 
 def get_users_objs(lis) -> list[User]:
-    return User.query.filter(User.id.in_([u['id'] for u in lis])).all()
+    return User.query.filter(User.id.in_([u["id"] for u in lis])).all()
 
 
 def get_session_users_ids() -> list[int]:
-    return [u['id'] for u in get_session_users()]
+    return [u["id"] for u in get_session_users()]
 
 
 def get_session_usergroup_ids():
-    return [User.get_by_id(u['id']).get_personal_group().id for u in get_session_users()]
+    return [
+        User.get_by_id(u["id"]).get_personal_group().id for u in get_session_users()
+    ]
 
 
 def get_current_user_id() -> int:
-    uid = session.get('user_id')
+    uid = session.get("user_id")
     return uid if uid is not None else 0
 
 
 def get_current_user_name() -> str:
     if not logged_in():
-        return 'Anonymous'
-    name = session.get('user_name')
+        return "Anonymous"
+    name = session.get("user_name")
     if not name:
         u = get_current_user_object()
-        session['user_name'] = u.name
+        session["user_name"] = u.name
         name = u.name
     return name
 
@@ -99,4 +109,4 @@ def logged_in() -> bool:
 
 
 def save_last_page():
-    session['last_doc'] = request.full_path
+    session["last_doc"] = request.full_path

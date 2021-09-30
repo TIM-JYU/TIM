@@ -29,20 +29,33 @@ class UserTest(TimDbTest):
 
     def test_create_user(self):
         anon_group = UserGroup.get_anonymous_group()
-        name, real_name, email, password = ['test', 'John Doe', 'john@example.com', '0123456789abcdef']
-        user, g = User.create_with_group(UserInfo(username=name, full_name=real_name, email=email, password=password))
-        g2 = UserGroup.create('dummy')
+        name, real_name, email, password = [
+            "test",
+            "John Doe",
+            "john@example.com",
+            "0123456789abcdef",
+        ]
+        user, g = User.create_with_group(
+            UserInfo(username=name, full_name=real_name, email=email, password=password)
+        )
+        g2 = UserGroup.create("dummy")
 
-        test_block = insert_block(block_type=BlockType.Document, description='test', owner_groups=[g2])
-        test_block_2 = insert_block(block_type=BlockType.Document, description='test', owner_groups=[g])
+        test_block = insert_block(
+            block_type=BlockType.Document, description="test", owner_groups=[g2]
+        )
+        test_block_2 = insert_block(
+            block_type=BlockType.Document, description="test", owner_groups=[g]
+        )
         db.session.commit()
 
         self.assertEqual(user.name, name)
         self.assertEqual(user.real_name, real_name)
         self.assertEqual(user.email, email)
-        g3 = UserGroup.create('dummy2')
+        g3 = UserGroup.create("dummy2")
         gid3 = g3
-        self.assertNotEqual(gid3, anon_group)  # Should not be equal to anonymous usergroup id
+        self.assertNotEqual(
+            gid3, anon_group
+        )  # Should not be equal to anonymous usergroup id
 
         # Testing view access
         self.assertFalse(user.has_view_access(test_block))
@@ -168,7 +181,7 @@ class UserTest(TimDbTest):
 
         user.groups.append(UserGroup.get_admin_group())
         db.session.commit()
-        del user.__dict__['is_admin']
+        del user.__dict__["is_admin"]
         for b in (test_block, test_block_2):
             self.assertTrue(user.has_manage_access(b))
             self.assertTrue(user.has_edit_access(b))
@@ -177,38 +190,44 @@ class UserTest(TimDbTest):
             self.assertTrue(user.has_seeanswers_access(b))
 
     def test_timed_permissions(self):
-        b = insert_block(BlockType.Document, 'testing', [self.test_user_2.get_personal_group()])
+        b = insert_block(
+            BlockType.Document, "testing", [self.test_user_2.get_personal_group()]
+        )
         user = User.query.get(TEST_USER_1_ID)
         self.assertFalse(user.has_view_access(b))
         v = AccessType.view
 
         pg1 = self.test_user_1.get_personal_group()
-        self.grant(pg1, b, v,
-                   accessible_from=get_current_time() + timedelta(days=1))
+        self.grant(pg1, b, v, accessible_from=get_current_time() + timedelta(days=1))
         self.assertFalse(user.has_view_access(b))
         self.remove(pg1, b, v)
 
-        self.grant(pg1, b, v,
-                   accessible_from=get_current_time() - timedelta(days=1))
+        self.grant(pg1, b, v, accessible_from=get_current_time() - timedelta(days=1))
         self.assertTrue(user.has_view_access(b))
         self.remove(pg1, b, v)
 
-        self.grant(pg1, b, v,
-                   accessible_from=get_current_time() - timedelta(days=1),
-                   accessible_to=get_current_time() - timedelta(seconds=1))
+        self.grant(
+            pg1,
+            b,
+            v,
+            accessible_from=get_current_time() - timedelta(days=1),
+            accessible_to=get_current_time() - timedelta(seconds=1),
+        )
         self.assertFalse(user.has_view_access(b))
         self.remove(pg1, b, v)
 
-        self.grant(pg1, b, v,
-                   duration=timedelta(days=1))
+        self.grant(pg1, b, v, duration=timedelta(days=1))
         self.assertFalse(user.has_view_access(b))
         self.remove(pg1, b, v)
 
     def test_last_name_switch(self):
-        for (fn1, fn2) in [(lambda x: x, last_name_to_first), (last_name_to_last, lambda x: x)]:
-            self.assertEqual(fn1('Doe John'), fn2('John Doe'))
-            self.assertEqual(fn1('Doe John Matt'), fn2('John Matt Doe'))
-            self.assertEqual(fn1('Doe John Matt Henry'), fn2('John Matt Henry Doe'))
-            self.assertEqual(fn1('Someone'), fn2('Someone'))
-            self.assertEqual(fn1(''), fn2(''))
+        for (fn1, fn2) in [
+            (lambda x: x, last_name_to_first),
+            (last_name_to_last, lambda x: x),
+        ]:
+            self.assertEqual(fn1("Doe John"), fn2("John Doe"))
+            self.assertEqual(fn1("Doe John Matt"), fn2("John Matt Doe"))
+            self.assertEqual(fn1("Doe John Matt Henry"), fn2("John Matt Henry Doe"))
+            self.assertEqual(fn1("Someone"), fn2("Someone"))
+            self.assertEqual(fn1(""), fn2(""))
             self.assertEqual(fn1(None), fn2(None))

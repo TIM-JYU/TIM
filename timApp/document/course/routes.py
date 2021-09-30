@@ -11,9 +11,7 @@ from timApp.document.docentry import DocEntry, get_documents
 from timApp.item.block import Block
 from timApp.util.flask.responsehelper import json_response
 
-course_blueprint = Blueprint('course',
-                             __name__,
-                             url_prefix='/courses')
+course_blueprint = Blueprint("course", __name__, url_prefix="/courses")
 
 
 @course_blueprint.get("/settings")
@@ -35,20 +33,22 @@ def get_documents_from_bookmark_folder(foldername: str) -> Response:
     :param foldername:
     :return:
     """
-    if not current_app.config['BOOKMARKS_ENABLED']:
+    if not current_app.config["BOOKMARKS_ENABLED"]:
         return json_response([])
     folder = None
     paths = []
     bookmark_folders = get_current_user_object().bookmarks
     for bookmark_folder in bookmark_folders.as_dict():
-        if bookmark_folder['name'] == foldername:
+        if bookmark_folder["name"] == foldername:
             folder = bookmark_folder
     if folder:
-        for bookmark in folder['items']:
-            paths.append(bookmark['link'].replace("/view/", "", 1))
+        for bookmark in folder["items"]:
+            paths.append(bookmark["link"].replace("/view/", "", 1))
     else:
         return json_response([])
-    docs = get_documents(filter_user=get_current_user_object(),
-                         custom_filter=DocEntry.name.in_(paths),
-                         query_options=joinedload(DocEntry._block).joinedload(Block.tags))
+    docs = get_documents(
+        filter_user=get_current_user_object(),
+        custom_filter=DocEntry.name.in_(paths),
+        query_options=joinedload(DocEntry._block).joinedload(Block.tags),
+    )
     return json_response(docs)

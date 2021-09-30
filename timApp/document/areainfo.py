@@ -13,11 +13,11 @@ class AreaStart(AreaBoundary):
 
     @property
     def area_class_str(self) -> str:
-        return 'area collapsed' if self.is_collapsed else 'area'
+        return "area collapsed" if self.is_collapsed else "area"
 
     @property
     def collapse_state(self) -> str:
-        return 'areaexpand' if self.is_collapsed else 'areacollapse'
+        return "areaexpand" if self.is_collapsed else "areacollapse"
 
 
 @dataclass

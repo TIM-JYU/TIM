@@ -32,71 +32,98 @@ svg_html = f"""
 
 
 class MathTest(TimRouteTest):
-
     def test_svg_math(self):
         self.login_test1()
         d = self.create_doc(initial_par="$a+b$")
-        d.document.set_settings({'math_type': 'svg'})
-        self.assert_same_html(self.get(d.url, as_tree=True).cssselect('.parContent')[1], f"""
+        d.document.set_settings({"math_type": "svg"})
+        self.assert_same_html(
+            self.get(d.url, as_tree=True).cssselect(".parContent")[1],
+            f"""
 <div ng-non-bindable tabindex="0" class="parContent">
     <p>{a_plus_b_svg}
     </p>
 </div>
-""")
+""",
+        )
         return d
 
     def test_mathjax_math(self):
         self.login_test1()
         d = self.create_doc(initial_par="$a+b$")
-        d.document.set_settings({'math_type': 'mathjax'})
-        self.assert_same_html(self.get(d.url, as_tree=True).cssselect('.parContent')[1], mathjax_html)
-        d.document.set_settings({'math_type': 'xxx'})
-        self.assert_same_html(self.get(d.url, as_tree=True).cssselect('.parContent')[1], mathjax_html)
-        d.document.set_settings({'math_type': None})
-        self.assert_same_html(self.get(d.url, as_tree=True).cssselect('.parContent')[1], mathjax_html)
+        d.document.set_settings({"math_type": "mathjax"})
+        self.assert_same_html(
+            self.get(d.url, as_tree=True).cssselect(".parContent")[1], mathjax_html
+        )
+        d.document.set_settings({"math_type": "xxx"})
+        self.assert_same_html(
+            self.get(d.url, as_tree=True).cssselect(".parContent")[1], mathjax_html
+        )
+        d.document.set_settings({"math_type": None})
+        self.assert_same_html(
+            self.get(d.url, as_tree=True).cssselect(".parContent")[1], mathjax_html
+        )
 
     def test_mathtype_change(self):
         d = self.test_svg_math()
-        d.document.set_settings({'math_type': 'mathjax'})
-        self.assert_same_html(self.get(d.url, as_tree=True).cssselect('.parContent')[1], mathjax_html)
+        d.document.set_settings({"math_type": "mathjax"})
+        self.assert_same_html(
+            self.get(d.url, as_tree=True).cssselect(".parContent")[1], mathjax_html
+        )
 
     def test_math_preamble(self):
         self.login_test1()
-        d = self.create_doc(initial_par=rf"""
-$${diamond_tex}$$""")
-        d.document.set_settings({'math_type': 'svg', 'math_preamble': r"""
+        d = self.create_doc(
+            initial_par=rf"""
+$${diamond_tex}$$"""
+        )
+        d.document.set_settings(
+            {
+                "math_type": "svg",
+                "math_preamble": r"""
 \usetikzlibrary{shapes}
-        """})
-        self.assert_same_html(self.get(d.url, as_tree=True).cssselect('.parContent > p > span')[0], diamond_svg)
+        """,
+            }
+        )
+        self.assert_same_html(
+            self.get(d.url, as_tree=True).cssselect(".parContent > p > span")[0],
+            diamond_svg,
+        )
 
     def test_math_preamble_single_par(self):
         self.login_test1()
-        d = self.create_doc(initial_par=r"""
+        d = self.create_doc(
+            initial_par=r"""
 #- {math_type=svg math_preamble="\\usetikzlibrary{shapes}"}
-""" f"""{diamond_tex}""")
+"""
+            f"""{diamond_tex}"""
+        )
         t = self.get(d.url, as_tree=True)
-        self.assert_same_html(t.cssselect('.parContent > span')[0], diamond_svg)
+        self.assert_same_html(t.cssselect(".parContent > span")[0], diamond_svg)
 
     def test_math_plugin(self):
         self.login_test1()
-        d = self.create_doc(initial_par=r"""
+        d = self.create_doc(
+            initial_par=r"""
 #- {math_type=svg plugin=csPlugin}
 stem: 'md: $a+b$'
 
 #- {plugin=csPlugin}
 stem: 'md: $a+b$'
-""")
+"""
+        )
         t = self.get(d.url, as_tree=True)
-        plugins = t.cssselect('cs-runner')
+        plugins = t.cssselect("cs-runner")
         for plugin, e in zip(plugins, [a_plus_b_svg, a_plus_b_mathjax]):
-            stem = decode_csplugin(plugin)['stem']
+            stem = decode_csplugin(plugin)["stem"]
             self.assert_same_html(html.fromstring(stem), e)
 
     def test_mixed_settings(self):
         self.login_test1()
-        d = self.create_doc(initial_par=r"""
+        d = self.create_doc(
+            initial_par=r"""
 #- {math_preamble="\\newcommand{\\nothing}{}"}
-$a+b$""")
-        d.document.set_settings({'math_type': 'svg'})
+$a+b$"""
+        )
+        d.document.set_settings({"math_type": "svg"})
         t = self.get(d.url, as_tree=True)
-        self.assert_same_html(t.cssselect('.parContent')[1], svg_html)
+        self.assert_same_html(t.cssselect(".parContent")[1], svg_html)

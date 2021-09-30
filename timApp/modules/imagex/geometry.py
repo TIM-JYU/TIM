@@ -1,6 +1,6 @@
 import math
 
-__author__ = 'iltapeur'
+__author__ = "iltapeur"
 """
 This includes methods for calculating stuff related to rectangles and ellipses,
 such as whether or not a point is inside a rectangle or and ellipse.
@@ -53,11 +53,19 @@ class Rectangle:
     # Check if point is inside this rectangle
     def is_inside(self, point):
         # Rotate point
-        rotatedx = self.cosa * (point[0] - self.center[0]) - self.sina * (point[1] - self.center[1])
-        rotatedy = self.cosa * (point[1] - self.center[1]) + self.sina * (point[0] - self.center[0])
+        rotatedx = self.cosa * (point[0] - self.center[0]) - self.sina * (
+            point[1] - self.center[1]
+        )
+        rotatedy = self.cosa * (point[1] - self.center[1]) + self.sina * (
+            point[0] - self.center[0]
+        )
         # Do the check on whether the point is inside the rectangle
-        if (rotatedx + self.center[0] >= self.cornertopleft[0] and rotatedx + self.center[0] <= self.cornertopright[0]
-                and rotatedy + self.center[1] >= self.cornertopleft[1] and rotatedy + self.center[1] <= self.cornerbottomright[1]):
+        if (
+            rotatedx + self.center[0] >= self.cornertopleft[0]
+            and rotatedx + self.center[0] <= self.cornertopright[0]
+            and rotatedy + self.center[1] >= self.cornertopleft[1]
+            and rotatedy + self.center[1] <= self.cornerbottomright[1]
+        ):
             return True
         return False
 
@@ -77,9 +85,16 @@ class Ellipse:
 
     # Check if point is inside this ellipse.
     def is_inside(self, point):
-        rotatedx = self.cosa * (point[0] - self.center[0]) - self.sina * (point[1] - self.center[1])
-        rotatedy = self.cosa * (point[1] - self.center[1]) + self.sina * (point[0] - self.center[0])
+        rotatedx = self.cosa * (point[0] - self.center[0]) - self.sina * (
+            point[1] - self.center[1]
+        )
+        rotatedy = self.cosa * (point[1] - self.center[1]) + self.sina * (
+            point[0] - self.center[0]
+        )
 
-        if ((math.pow(rotatedx, 2) / math.pow(self.size[0] / 2, 2)) + (math.pow(rotatedy, 2) / math.pow(self.size[1] / 2, 2))) <= 1.0:
+        if (
+            (math.pow(rotatedx, 2) / math.pow(self.size[0] / 2, 2))
+            + (math.pow(rotatedy, 2) / math.pow(self.size[1] / 2, 2))
+        ) <= 1.0:
             return True
         return False

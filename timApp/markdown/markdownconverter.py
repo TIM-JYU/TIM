@@ -23,7 +23,11 @@ if TYPE_CHECKING:
 
 
 def has_macros(text: str, env: SandboxedEnvironment):
-    return env.variable_start_string in text or env.comment_start_string in text or env.block_start_string in text
+    return (
+        env.variable_start_string in text
+        or env.comment_start_string in text
+        or env.block_start_string in text
+    )
 
 
 # ------------------------ Jinja filters -------------------------------------------------------------------
@@ -34,7 +38,8 @@ def has_macros(text: str, env: SandboxedEnvironment):
 #  1. make a class or function
 #  2. and map it in create_environment
 
-def genfields(flds, attrs='', stemfield='stem'):
+
+def genfields(flds, attrs="", stemfield="stem"):
     """
     Generates fields from namelist like ['se1', 'd1', 'd2=demo2']
     See usescases from: /tim/timApp/tests/server/test_genfields.py
@@ -44,7 +49,7 @@ def genfields(flds, attrs='', stemfield='stem'):
     :return: TIM-format of fields
     """
     flds = widen_fields(flds)
-    res = ''
+    res = ""
     if attrs:
         attrs = ", " + attrs
     for fld in flds:
@@ -60,7 +65,7 @@ def genfields(flds, attrs='', stemfield='stem'):
     return res
 
 
-def gfrange(s, i1, i2, attrs='', stemfield='stem'):
+def gfrange(s, i1, i2, attrs="", stemfield="stem"):
     flds = s.split(";", 1)
     s = flds[0]
     srest = ""
@@ -93,7 +98,7 @@ def gfrange(s, i1, i2, attrs='', stemfield='stem'):
     if i1 > i2:
         step = -1
     s = srange(s, i1, i2, step)
-    return genfields(s+srest, attrs, stemfield)
+    return genfields(s + srest, attrs, stemfield)
 
 
 def srange(s, i1, i2, step=1, *argv):
@@ -106,19 +111,19 @@ def srange(s, i1, i2, step=1, *argv):
     :param argv pair of value to add and mul index
     :return: like "d1 d2 d3 "  by call sfrom('d{0} ', 1, 3)
     """
-    result = ''
+    result = ""
     cor = 1  # correct python range vs normal people range
     if step < 0:
         cor = -1
     if step == 0:
         step = 1
-    for i in range(i1, i2+cor, step):
+    for i in range(i1, i2 + cor, step):
         ext = []
         for j in range(0, len(argv), 2):
             add = argv[j]
             mul = 1
             if j + 1 < len(argv):
-                mul = argv[j+1]
+                mul = argv[j + 1]
             ext.append(mul * i + add)
         result += s.format(i, *ext)
     return result
@@ -180,8 +185,6 @@ def week_to_date(week_nr, daynr=1, year=None, fmt=None):
     return fmt_date(d, fmt)
 
 
-
-
 def month_to_week(month, daynr=1, year=None):
     """
     get week number for month
@@ -232,7 +235,9 @@ def fmt_date(d, fmt=""):
     return d.strftime(fmt)
 
 
-def week_to_text(week_nr, year=None, fmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", first_day=1):
+def week_to_text(
+    week_nr, year=None, fmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", first_day=1
+):
     """
     Convert week to clendar header format
     see: timApp/tests/unit/test_datefilters.py
@@ -267,7 +272,7 @@ def week_to_text(week_nr, year=None, fmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", fi
         beg = end + 1
         daynr += 1
         if daynr > 7:
-            if first_empty: # starts with separator, we need the last
+            if first_empty:  # starts with separator, we need the last
                 end = days.find("|", beg)
                 if end < 0:
                     end = 10000
@@ -291,11 +296,11 @@ def preinc(v, delta=1):
 
 
 def expand_macros(
-        text: str,
-        macros,
-        settings: DocSettings | None,
-        env: SandboxedEnvironment,
-        ignore_errors: bool = False,
+    text: str,
+    macros,
+    settings: DocSettings | None,
+    env: SandboxedEnvironment,
+    ignore_errors: bool = False,
 ):
     # return text  # comment out when want to take time if this slows things
     charmacros = settings.get_charmacros() if settings else None
@@ -308,12 +313,12 @@ def expand_macros(
         globalmacros = settings.get_globalmacros() if settings else None
         if globalmacros:
             for gmacro in globalmacros:
-                macrotext = "%%"+gmacro+"%%"
+                macrotext = "%%" + gmacro + "%%"
                 pos = text.find(macrotext)
                 if pos >= 0:
                     gm = str(globalmacros.get(gmacro, ""))
                     text = text.replace(macrotext, gm)
-            gm = str(globalmacros.get("ADDFOREVERY", ''))
+            gm = str(globalmacros.get("ADDFOREVERY", ""))
             if gm:
                 text = gm + "\n" + text
         startstr = env.comment_start_string + "LOCAL"
@@ -322,23 +327,23 @@ def expand_macros(
             endstr = env.comment_end_string
             end = text.find(endstr, beg)
             if end >= 0:
-                local_macros_yaml = text[beg+len(startstr):end]
+                local_macros_yaml = text[beg + len(startstr) : end]
                 local_macros = YamlBlock.from_markdown(local_macros_yaml).values
                 macros = {**macros, **local_macros}
         conv = env.from_string(text).render(macros)
         return conv
     except TemplateSyntaxError as e:
         if not ignore_errors:
-            return get_error_html(f'Syntax error in template: {e}')
+            return get_error_html(f"Syntax error in template: {e}")
         return text
     except Exception as e:
         if not ignore_errors:
-            return get_error_html(f'Syntax error in template: {e}')
+            return get_error_html(f"Syntax error in template: {e}")
         return text
 
 
 def belongs_placeholder(s):
-    return get_error_html('The belongs filter requires nocache=true attribute.')
+    return get_error_html("The belongs filter requires nocache=true attribute.")
 
 
 def fmt(x, f: str):
@@ -346,48 +351,48 @@ def fmt(x, f: str):
 
 
 tim_filters = {
-    'Pz': Pz,
-    'gfields': genfields,
-    'gfrange': gfrange,
-    'srange': srange,
-    'now' : now,
-    'w2date': week_to_date,
-    'm2w': month_to_week,
-    'w2text': week_to_text,
-    'fmtdate': fmt_date,
-    'preinc': preinc,
-    'postinc': postinc,
-    'belongs': belongs_placeholder,
-    'fmt': fmt,
+    "Pz": Pz,
+    "gfields": genfields,
+    "gfrange": gfrange,
+    "srange": srange,
+    "now": now,
+    "w2date": week_to_date,
+    "m2w": month_to_week,
+    "w2text": week_to_text,
+    "fmtdate": fmt_date,
+    "preinc": preinc,
+    "postinc": postinc,
+    "belongs": belongs_placeholder,
+    "fmt": fmt,
 }
 
 
 def create_environment(
-        macro_delimiter: str,
-        user_ctx: UserContext | None,
-        view_ctx: ViewContext,
+    macro_delimiter: str,
+    user_ctx: UserContext | None,
+    view_ctx: ViewContext,
 ) -> SandboxedEnvironment:
     env = SandboxedEnvironment(
         variable_start_string=macro_delimiter,
         variable_end_string=macro_delimiter,
-        comment_start_string='{!!!',
-        comment_end_string='!!!}',
-        block_start_string='{%',
-        block_end_string='%}',
+        comment_start_string="{!!!",
+        comment_end_string="!!!}",
+        block_start_string="{%",
+        block_end_string="%}",
         lstrip_blocks=True,
         trim_blocks=True,
     )
     env.filters.update(tim_filters)
-    env.filters['isview'] = view_ctx.isview
+    env.filters["isview"] = view_ctx.isview
 
     if user_ctx:
-        env.filters['belongs'] = Belongs(user_ctx).belongs_to_group
+        env.filters["belongs"] = Belongs(user_ctx).belongs_to_group
     return env
 
 
-def md_to_html(text: str,
-               sanitize: bool = True,
-               macros: dict[str, object] | None = None) -> str:
+def md_to_html(
+    text: str, sanitize: bool = True, macros: dict[str, object] | None = None
+) -> str:
     """Converts the specified markdown text to HTML.
 
     :param macros: The macros to use.
@@ -401,7 +406,7 @@ def md_to_html(text: str,
         text,
         macros,
         settings=None,
-        env=create_environment('%%', user_ctx=None, view_ctx=default_view_ctx),
+        env=create_environment("%%", user_ctx=None, view_ctx=default_view_ctx),
     )
 
     raw = call_dumbo([text])
@@ -413,10 +418,10 @@ def md_to_html(text: str,
 
 
 def par_list_to_html_list(
-        pars: list[DocParagraph],
-        settings: DocSettings,
-        view_ctx: ViewContext,
-        auto_macros: Iterable[dict] | None = None,
+    pars: list[DocParagraph],
+    settings: DocSettings,
+    view_ctx: ViewContext,
+    auto_macros: Iterable[dict] | None = None,
 ):
     """Converts the specified list of DocParagraphs to an HTML list.
 
@@ -434,18 +439,23 @@ def par_list_to_html_list(
     # to global cache. We will replace them later (in post_process_pars).
     macroinfo.preserve_user_macros = True
     dumbo_opts = settings.get_dumbo_options()
-    texts = [p.get_expanded_markdown(macroinfo) if not p.has_dumbo_options() else {
-        'content': p.get_expanded_markdown(macroinfo),
-        **p.get_dumbo_options(base_opts=dumbo_opts).dict(),
-    } for p in pars]
+    texts = [
+        p.get_expanded_markdown(macroinfo)
+        if not p.has_dumbo_options()
+        else {
+            "content": p.get_expanded_markdown(macroinfo),
+            **p.get_dumbo_options(base_opts=dumbo_opts).dict(),
+        }
+        for p in pars
+    ]
 
     texplain = settings.is_texplain()
     textplain = settings.is_textplain()
     if texplain or textplain:  # add pre-markers to tex paragrpahs
         for i in range(0, len(texts)):
             text = texts[i]
-            if text.find('```') != 0 and text.find('#') != 0:
-                texts[i] = '```\n' + text + "\n```"
+            if text.find("```") != 0 and text.find("#") != 0:
+                texts[i] = "```\n" + text + "\n```"
     raw = call_dumbo(texts, options=dumbo_opts)
 
     # Edit html after dumbo
@@ -454,11 +464,15 @@ def par_list_to_html_list(
     if auto_macros:
         processed = []
         for pre_html, m, attrs in zip(raw, auto_macros, (p.get_attrs() for p in pars)):
-            if 'nonumber' in attrs.get('classes', {}):
+            if "nonumber" in attrs.get("classes", {}):
                 final_html = pre_html
             else:
-                final_html = insert_heading_numbers(pre_html, m, settings.auto_number_headings(),
-                                                    settings.heading_format())
+                final_html = insert_heading_numbers(
+                    pre_html,
+                    m,
+                    settings.auto_number_headings(),
+                    settings.heading_format(),
+                )
             processed.append(final_html)
         raw = processed
 
@@ -487,7 +501,9 @@ def make_slide_fragments(html_text: str) -> str:
     fragments = html_text.split("&lt;§")
     # If no fragment areas were found we look for fragment pieces
     if len(fragments) < 2:
-        new_html = check_and_edit_html_if_surrounded_with(html_text, "§§", change_classes_to_fragment)
+        new_html = check_and_edit_html_if_surrounded_with(
+            html_text, "§§", change_classes_to_fragment
+        )
         return new_html
     else:
         index = 1
@@ -499,21 +515,25 @@ def make_slide_fragments(html_text: str) -> str:
             if index_of_area_end == -1:
                 # Look for normal fragments
                 fragments[index] = check_and_edit_html_if_surrounded_with(
-                    fragments[index], "§§", change_classes_to_fragment)
+                    fragments[index], "§§", change_classes_to_fragment
+                )
             else:
                 # Make a new fragment area if start and end found
                 fragments[index] = '</p><div class="fragment"><p>' + fragments[index]
                 fragments[index] = fragments[index].replace("§&gt;", "</p></div><p>", 1)
                 # Look for inner fragments
                 fragments[index] = check_and_edit_html_if_surrounded_with(
-                    fragments[index], "§§", change_classes_to_fragment)
+                    fragments[index], "§§", change_classes_to_fragment
+                )
             index += 1
         new_html = "".join(fragments)
         return new_html
 
 
 # Checks if html element's content is surrounded with given string and edits it accordingly
-def check_and_edit_html_if_surrounded_with(html_content: str, string_delimeter: str, editing_function) -> str:
+def check_and_edit_html_if_surrounded_with(
+    html_content: str, string_delimeter: str, editing_function
+) -> str:
     # List of strings after splitting html from
     html_list = html_content.split(string_delimeter)
     if len(html_list) < 2:
@@ -546,7 +566,9 @@ def change_classes_to_fragment(html_list: list) -> str:
     return new_html
 
 
-def change_class(text_containing_html_tag: str, text_content: str, new_class: str) -> list:
+def change_class(
+    text_containing_html_tag: str, text_content: str, new_class: str
+) -> list:
     """Find the last html tag in the list and change that element's class to new_class or add the new class to element's
     classes or surround the new content with span element with the new class."""
     try:
@@ -562,23 +584,39 @@ def change_class(text_containing_html_tag: str, text_content: str, new_class: st
             if "class=" in html_tag:
                 # Add the new class to html element classes
                 index_of_class = html_tag.rfind("class=")
-                text_containing_html_tag = text_containing_html_tag[:(
-                    index_of_tag_start + index_of_class + 7)] + new_class + " " + text_containing_html_tag[(
-                        index_of_tag_start + index_of_class + 7):]
+                text_containing_html_tag = (
+                    text_containing_html_tag[
+                        : (index_of_tag_start + index_of_class + 7)
+                    ]
+                    + new_class
+                    + " "
+                    + text_containing_html_tag[
+                        (index_of_tag_start + index_of_class + 7) :
+                    ]
+                )
             else:
                 # If there isn't class in html tag we add that and the new class
-                text_containing_html_tag = text_containing_html_tag[
-                    :index_of_tag_end] + ' class="' + new_class + '"' + text_containing_html_tag[
-                    index_of_tag_end:]
+                text_containing_html_tag = (
+                    text_containing_html_tag[:index_of_tag_end]
+                    + ' class="'
+                    + new_class
+                    + '"'
+                    + text_containing_html_tag[index_of_tag_end:]
+                )
         else:
-            text_content = '<span class="' + new_class + '">' + text_content + '</span>'
+            text_content = '<span class="' + new_class + '">' + text_content + "</span>"
     # If there is an error we do nothing but return the original text
     except ValueError:
         pass
     return [text_containing_html_tag, text_content]
 
 
-def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bool = True, heading_format: str = ''):
+def insert_heading_numbers(
+    html_str: str,
+    heading_info,
+    auto_number_headings: bool = True,
+    heading_format: str = "",
+):
     """Applies the given heading_format to the HTML if it is a heading, based on the given heading_info. Additionally
     corrects the id attribute of the heading in case it has been used earlier.
 
@@ -591,8 +629,8 @@ def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bo
 
     """
     tree = html.fragment_fromstring(presanitize_html_body(html_str), create_parent=True)
-    counts = heading_info['h']
-    used = heading_info['headings']
+    counts = heading_info["h"]
+    used = heading_info["headings"]
     for e in tree.iterchildren():
         is_heading = e.tag in HEADING_TAGS
         if not is_heading:
@@ -601,11 +639,11 @@ def insert_heading_numbers(html_str: str, heading_info, auto_number_headings: bo
         hcount = used.get(curr_id, 0)
         if hcount > 0:
             try:
-                e.attrib['id'] += '-' + str(hcount)
+                e.attrib["id"] += "-" + str(hcount)
             except KeyError:
-                e.set('id', f'{curr_id}-{hcount}')
+                e.set("id", f"{curr_id}-{hcount}")
         if auto_number_headings:
-            e.text = format_heading(e.text or '', int(e.tag[1]), counts, heading_format)
+            e.text = format_heading(e.text or "", int(e.tag[1]), counts, heading_format)
     final_html = etree.tostring(tree)
     return final_html
 
@@ -617,15 +655,15 @@ def format_heading(text, level, counts, heading_format):
     for i in range(6, 0, -1):
         if counts[i] != 0:
             break
-    values = {'text': text}
+    values = {"text": text}
     # noinspection PyUnboundLocalVariable
     for i in range(1, i + 1):
-        values['h' + str(i)] = counts[i]
+        values["h" + str(i)] = counts[i]
     try:
         formatted = heading_format[level].format(**values)
     except (KeyError, ValueError, IndexError):
-        formatted = '[ERROR] ' + text
+        formatted = "[ERROR] " + text
     return formatted
 
 
-HEADING_TAGS = {'h1', 'h2', 'h3', 'h4', 'h5', 'h6'}
+HEADING_TAGS = {"h1", "h2", "h3", "h4", "h5", "h6"}

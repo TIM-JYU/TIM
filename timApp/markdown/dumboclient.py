@@ -14,9 +14,9 @@ class DumboHTMLException(Exception):
 
 
 class MathType(Enum):
-    SVG = 'svg'
-    MathJax = 'mathjax'
-    PNG = 'png'
+    SVG = "svg"
+    MathJax = "mathjax"
+    PNG = "png"
 
     @staticmethod
     def from_string(s: str):
@@ -27,13 +27,13 @@ class MathType(Enum):
 
 
 class InputFormat(Enum):
-    CommonMark = 'commonmark'
-    GitHubMarkdown = 'gfm'
-    Markdown = 'markdown'
-    MarkdownStrict = 'markdown_strict'
-    MediaWiki = 'mediawiki'
-    RST = 'rst'
-    LaTeX = 'latex'
+    CommonMark = "commonmark"
+    GitHubMarkdown = "gfm"
+    Markdown = "markdown"
+    MarkdownStrict = "markdown_strict"
+    MediaWiki = "mediawiki"
+    RST = "rst"
+    LaTeX = "latex"
 
     @staticmethod
     def from_string(s: str):
@@ -52,45 +52,59 @@ class DumboOptions(NamedTuple):
     def default():
         return DumboOptions(
             math_type=MathType.MathJax,
-            math_preamble='',
+            math_preamble="",
             input_format=InputFormat.Markdown,
         )
 
     def dict(self):
         return {
-            'mathOption': self.math_type.value,
-            'mathPreamble': self.math_preamble,
-            'inputFormat': self.input_format.value,
+            "mathOption": self.math_type.value,
+            "mathPreamble": self.math_preamble,
+            "inputFormat": self.input_format.value,
         }
 
 
-DUMBO_URL = 'http://dumbo:5000'
+DUMBO_URL = "http://dumbo:5000"
 
-KEYS_PATHS = {'/mdkeys', '/latexkeys'}
-
-
-@overload
-def call_dumbo(data: list[str], path='',
-               options: DumboOptions = DumboOptions.default(),
-               data_opts: Optional[list[DumboOptions]]=None) -> list[str]: ...
+KEYS_PATHS = {"/mdkeys", "/latexkeys"}
 
 
 @overload
-def call_dumbo(data: dict, path='',
-               options: DumboOptions = DumboOptions.default(),
-               data_opts: Optional[list[DumboOptions]]=None) -> dict: ...
+def call_dumbo(
+    data: list[str],
+    path="",
+    options: DumboOptions = DumboOptions.default(),
+    data_opts: Optional[list[DumboOptions]] = None,
+) -> list[str]:
+    ...
 
 
 @overload
-def call_dumbo(data: list[dict], path='',
-               options: DumboOptions = DumboOptions.default(),
-               data_opts: Optional[list[DumboOptions]]=None) -> list[dict]: ...
+def call_dumbo(
+    data: dict,
+    path="",
+    options: DumboOptions = DumboOptions.default(),
+    data_opts: Optional[list[DumboOptions]] = None,
+) -> dict:
+    ...
 
 
-def call_dumbo(data: Union[list[str], dict, list[dict]], path='',
-               options: DumboOptions = DumboOptions.default(),
-               data_opts: Optional[list[DumboOptions]]=None) -> Union[
-    list[str], dict, list[dict]]:
+@overload
+def call_dumbo(
+    data: list[dict],
+    path="",
+    options: DumboOptions = DumboOptions.default(),
+    data_opts: Optional[list[DumboOptions]] = None,
+) -> list[dict]:
+    ...
+
+
+def call_dumbo(
+    data: Union[list[str], dict, list[dict]],
+    path="",
+    options: DumboOptions = DumboOptions.default(),
+    data_opts: Optional[list[DumboOptions]] = None,
+) -> Union[list[str], dict, list[dict]]:
     """Calls Dumbo for converting the given markdown to HTML.
 
     :param options: Options for Dumbo.
@@ -108,18 +122,25 @@ def call_dumbo(data: Union[list[str], dict, list[dict]], path='',
     try:
         if path in KEYS_PATHS:
             if is_dict:
-                data_to_send = {'content': [{'content': data}], **opts}
+                data_to_send = {"content": [{"content": data}], **opts}
             else:
                 if data_opts:
-                    data_to_send = {'content': [{'content': d, **o.dict()} for d, o in zip(data, data_opts)], **opts}
+                    data_to_send = {
+                        "content": [
+                            {"content": d, **o.dict()} for d, o in zip(data, data_opts)
+                        ],
+                        **opts,
+                    }
                 else:
-                    data_to_send = {'content': [{'content': d} for d in data], **opts}
+                    data_to_send = {"content": [{"content": d} for d in data], **opts}
         else:
-            data_to_send = {'content': data, **opts}
-        r = requests.post(url=DUMBO_URL + path, data=json.dumps(data_to_send, cls=TimJsonEncoder))
-        r.encoding = 'utf-8'
+            data_to_send = {"content": data, **opts}
+        r = requests.post(
+            url=DUMBO_URL + path, data=json.dumps(data_to_send, cls=TimJsonEncoder)
+        )
+        r.encoding = "utf-8"
     except requests.ConnectionError:
-        raise Exception('Failed to connect to Dumbo')
+        raise Exception("Failed to connect to Dumbo")
     if r.status_code != 200:
         raise DumboHTMLException()
     returned = r.json()

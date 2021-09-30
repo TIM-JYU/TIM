@@ -16,7 +16,9 @@ def task_ids_to_strlist(ids: list[TaskId]) -> list[str]:
     return [t.doc_task for t in ids]
 
 
-def period_handling(task_ids: list[TaskId], doc_ids: set[int], period: str) -> tuple[datetime, datetime]:
+def period_handling(
+    task_ids: list[TaskId], doc_ids: set[int], period: str
+) -> tuple[datetime, datetime]:
     """
     Returns start and end of an period for answer results.
     :param task_ids: Task ids containing the answers.
@@ -34,9 +36,9 @@ def period_handling(task_ids: list[TaskId], doc_ids: set[int], period: str) -> t
             since_last_key = None
 
         # Period from which to take results.
-    if period == 'whenever':
+    if period == "whenever":
         pass
-    elif period == 'sincelast':
+    elif period == "sincelast":
         u = get_current_user_object()
         prefs = u.get_prefs()
         last_answer_fetch = prefs.last_answer_fetch
@@ -49,15 +51,15 @@ def period_handling(task_ids: list[TaskId], doc_ids: set[int], period: str) -> t
         prefs.last_answer_fetch = last_answer_fetch
         u.set_prefs(prefs)
         db.session.commit()
-    elif period == 'day':
+    elif period == "day":
         period_from = period_to - timedelta(days=1)
-    elif period == 'week':
+    elif period == "week":
         period_from = period_to - timedelta(weeks=1)
-    elif period == 'month':
+    elif period == "month":
         period_from = period_to - dateutil.relativedelta.relativedelta(months=1)
-    elif period == 'other':
-        period_from_str = get_option(request, 'periodFrom', period_from.isoformat())
-        period_to_str = get_option(request, 'periodTo', period_to.isoformat())
+    elif period == "other":
+        period_from_str = get_option(request, "periodFrom", period_from.isoformat())
+        period_to_str = get_option(request, "periodTo", period_to.isoformat())
         try:
             period_from = dateutil.parser.parse(period_from_str)
         except (ValueError, OverflowError):

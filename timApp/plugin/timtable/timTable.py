@@ -19,40 +19,43 @@ from timApp.plugin.timtable.row_owner_info import RowOwnerInfo
 from timApp.plugin.timtable.timTableLatex import convert_table
 from timApp.tim_app import csrf
 from timApp.timdb.sqa import db
-from timApp.util.flask.requesthelper import verify_json_params, get_option, RouteException, NotExist
+from timApp.util.flask.requesthelper import (
+    verify_json_params,
+    get_option,
+    RouteException,
+    NotExist,
+)
 from timApp.util.flask.responsehelper import json_response
 
-timTable_plugin = Blueprint('timTable_plugin',
-                            __name__,
-                            url_prefix='/timTable/')
+timTable_plugin = Blueprint("timTable_plugin", __name__, url_prefix="/timTable/")
 
 # Reserved words in the TimTable format and other needed constants
-TABLE = 'table'
-AUTOMD = 'automd'
-ROWS = 'rows'
-ROW = 'row'
-COLUMNS = 'columns'
-COLUMN = 'column'
-CELL = 'cell'
-TYPE = 'type'
-TEXT = 'text'
-FORMULA = 'formula'
-NUMBER = 'number'
-DATABLOCK = 'tabledatablock'
-USERDATA = 'userdata'
-CELLS = 'cells'
-COL = 'col'
-RELATIVE = 'relative'
-UNIQUE_ROW_COUNT = 'uniqueRowCount'
-GLOBAL_APPEND_MODE = 'globalAppendMode'
+TABLE = "table"
+AUTOMD = "automd"
+ROWS = "rows"
+ROW = "row"
+COLUMNS = "columns"
+COLUMN = "column"
+CELL = "cell"
+TYPE = "type"
+TEXT = "text"
+FORMULA = "formula"
+NUMBER = "number"
+DATABLOCK = "tabledatablock"
+USERDATA = "userdata"
+CELLS = "cells"
+COL = "col"
+RELATIVE = "relative"
+UNIQUE_ROW_COUNT = "uniqueRowCount"
+GLOBAL_APPEND_MODE = "globalAppendMode"
 DATA_INPUT = "dataInput"
-BACKGROUND_COLOR = 'backgroundColor'
-MD = 'md:'
-ID = 'id'
+BACKGROUND_COLOR = "backgroundColor"
+MD = "md:"
+ID = "id"
 ASCII_OF_A = 65
 ASCII_CHAR_COUNT = 26
-MARKUP = 'markup'
-DUMBO_PARAMS = '/mdkeys'
+MARKUP = "markup"
+DUMBO_PARAMS = "/mdkeys"
 
 
 # class to enable direct calls from TIM container
@@ -160,7 +163,7 @@ def row_key(s):
     parts = CELL_FINDER.search(s)
     if not parts:
         return s
-    return f'{parts[2]:0>4}{parts[1]:>3}'
+    return f"{parts[2]:0>4}{parts[1]:>3}"
 
 
 def matrix_to_cells(matrix):
@@ -187,17 +190,21 @@ def tim_table_get_html(jso, review):
     values = jso[MARKUP]
     state = jso.get("state", {})
     userdata = None
-    values['isPreview'] = jso.get('preview', False)
+    values["isPreview"] = jso.get("preview", False)
     if state is not None:
         userdata = state.get(USERDATA, None)
         headers = state.get("headers", None)
         if not userdata:  # if no userdata use matrix to init data
-            userdata = matrix_to_cells(state.get('matrix', None))
+            userdata = matrix_to_cells(state.get("matrix", None))
         values[USERDATA] = userdata
         if headers and values.get("saveUserDataHeader", False):
-            values['headers'] = headers
+            values["headers"] = headers
         for key in state:
-            if key in ['matrix', 'userdata', 'headers']:  # do not reuse hard coded values
+            if key in [
+                "matrix",
+                "userdata",
+                "headers",
+            ]:  # do not reuse hard coded values
                 continue
             values[key] = state[key]
     if jso.get("review", False):
@@ -217,13 +224,13 @@ def tim_table_get_html(jso, review):
         else:
             for key in ucells:
                 udata += key + ": " + json.dumps(ucells[key]) + "\n"
-        s = f'<pre>{udata}</pre>'
+        s = f"<pre>{udata}</pre>"
         return s
     # Not review
     attrs = json.dumps(values)
     # attrs = attrs.replace('"cell": "None"', '"cell": ""')
-    runner = 'tim-table'
-    s = f'<{runner} bind-data={quoteattr(attrs)}></{runner}>'
+    runner = "tim-table"
+    s = f"<{runner} bind-data={quoteattr(attrs)}></{runner}>"
     return s
 
 
@@ -251,30 +258,32 @@ def tim_table_get_cell_data():
     """
     multi = []
     args = request.args
-    doc_id = get_option(request, 'docId', None, cast=int)
+    doc_id = get_option(request, "docId", None, cast=int)
     if not doc_id:
         raise RouteException()
     doc = DocEntry.find_by_id(doc_id)
     if not doc:
         raise NotExist()
     verify_edit_access(doc)
-    par = doc.document.get_paragraph(args['parId'])
+    par = doc.document.get_paragraph(args["parId"])
     plug = Plugin.from_paragraph(par, default_view_ctx)
     yaml = plug.values
     cell_cnt = None
     if is_datablock(yaml):
-        cell_cnt = find_cell_from_datablock(yaml[TABLE][DATABLOCK][CELLS], int(args[ROW]), int(args[COL]))
+        cell_cnt = find_cell_from_datablock(
+            yaml[TABLE][DATABLOCK][CELLS], int(args[ROW]), int(args[COL])
+        )
     if cell_cnt is not None:
         if isinstance(cell_cnt, dict):
-            multi.append(cell_cnt.get(CELL, ''))
+            multi.append(cell_cnt.get(CELL, ""))
         else:
             multi.append(cell_cnt)
     else:
         try:
             rows = yaml[TABLE][ROWS]
-            cell_content = find_cell(rows, int(args['row']), int(args['col']))
+            cell_content = find_cell(rows, int(args["row"]), int(args["col"]))
         except:
-            cell_content = ''
+            cell_content = ""
         multi.append(cell_content)
     return json_response(multi)
 
@@ -285,7 +294,7 @@ def tim_table_add_row():
     Adds a row into the table.
     :return: The entire table's data after the row has been added.
     """
-    doc_id, par_id, row_id = verify_json_params('docId', 'parId', 'rowId')
+    doc_id, par_id, row_id = verify_json_params("docId", "parId", "rowId")
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     add_row(plug, row_id)
     return json_response(prepare_for_and_call_dumbo(plug))
@@ -297,14 +306,17 @@ def tim_table_add_user_specific_row():
     Adds an user-specific row into the table.
     :return: The entire table's data after the row has been added.
     """
-    doc_id, par_id = verify_json_params('docId', 'parId')
+    doc_id, par_id = verify_json_params("docId", "parId")
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     unique_id = add_row(plug, -1)
     # todo database stuff
     user = get_current_user_object()
-    owner_info = RowOwnerInfo(doc_id=doc_id, par_id=par_id,
-                              unique_row_id=unique_id,
-                              usergroup_id=user.get_personal_group().id)
+    owner_info = RowOwnerInfo(
+        doc_id=doc_id,
+        par_id=par_id,
+        unique_row_id=unique_id,
+        usergroup_id=user.get_personal_group().id,
+    )
     db.session.add(owner_info)
     # db.session.flush()
     db.session.commit()
@@ -319,19 +331,19 @@ def tim_table_answer():
 
 def tim_table_answer_jso(jsondata):
     tim_info = {}
-    answers = jsondata['input']['answers']
-    spoints = jsondata['markup'].get('points')
-    markup = jsondata['markup']
+    answers = jsondata["input"]["answers"]
+    spoints = jsondata["markup"].get("points")
+    markup = jsondata["markup"]
     savedText = "Saved"  # markup.get('savedText', "Saved")  # Todo make this work
     result = ""
 
     save = answers
-    web = {'result': savedText, 'markup': markup, 'show_result': result, 'state': save}
-    return json_response({'save': save, 'web': web, "tim_info": tim_info})
+    web = {"result": savedText, "markup": markup, "show_result": result, "state": save}
+    return json_response({"save": save, "web": web, "tim_info": tim_info})
 
 
 def make_empty_row():
-    return {'row': [{'cell': ''}]}
+    return {"row": [{"cell": ""}]}
 
 
 def add_row(plug: Plugin, row_id: int):
@@ -372,7 +384,7 @@ def add_row(plug: Plugin, row_id: int):
 
     rows.insert(row_id, copy_row)
     # rows.append({'row': copy.deepcopy(rows[-1]['row'])})
-    row = rows[row_id]['row']
+    row = rows[row_id]["row"]
     unique_id = None
     if is_in_global_append_mode(plug):
         unique_id = pop_unique_row_id(plug)
@@ -380,9 +392,9 @@ def add_row(plug: Plugin, row_id: int):
     if row:
         for i in range(len(row)):
             if is_primitive(row[i]):
-                row[i] = {CELL: ''}
+                row[i] = {CELL: ""}
             else:
-                row[i][CELL] = ''
+                row[i][CELL] = ""
     if row_id < len(rows) - 1:
         datablock_entries = construct_datablock_entry_list_from_yaml(plug)
         for entry in datablock_entries:
@@ -417,7 +429,7 @@ def tim_table_add_datablock_row():
     Doesn't affect the table's regular YAML.
     :return: The entire table's data after the row has been added.
     """
-    doc_id, par_id, row_id = verify_json_params('docId', 'parId', 'rowId')
+    doc_id, par_id, row_id = verify_json_params("docId", "parId", "rowId")
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
 
     if not is_datablock(plug.values):
@@ -429,7 +441,7 @@ def tim_table_add_datablock_row():
     try:
         rows = plug.values[TABLE][ROWS]
     except KeyError:
-        rows = [{'row': []}]
+        rows = [{"row": []}]
         # plug.values[TABLE][ROWS] = rows
     if not rows:
         raise RouteException()
@@ -437,11 +449,13 @@ def tim_table_add_datablock_row():
     max_row = len(rows)
     max_col = 0
     for i in range(0, len(row)):
-        new_datablock_entries.append(RelativeDataBlockValue(len(rows), i, ''))
+        new_datablock_entries.append(RelativeDataBlockValue(len(rows), i, ""))
 
     for entry in datablock_entries:
         if entry.row == row_id - 1:
-            new_datablock_entries.append(RelativeDataBlockValue(row_id, entry.column, ''))
+            new_datablock_entries.append(
+                RelativeDataBlockValue(row_id, entry.column, "")
+            )
         elif entry.row >= row_id:
             entry.row += 1
         if entry.row > max_row:
@@ -452,7 +466,7 @@ def tim_table_add_datablock_row():
         new_datablock_entries.append(entry)
 
     if max_row < row_id:
-        new_datablock_entries.append(RelativeDataBlockValue(row_id, max_col, ''))
+        new_datablock_entries.append(RelativeDataBlockValue(row_id, max_col, ""))
 
     apply_datablock_from_entry_list(plug, new_datablock_entries)
     save_plugin(plug)
@@ -466,7 +480,7 @@ def fill_row(r, r_len):
     if len(r) > 0:
         model_cell = r[-1]
     else:
-        model_cell = {'cell': ''}
+        model_cell = {"cell": ""}
     while len(r) < r_len:
         r.append(model_cell)
 
@@ -478,7 +492,9 @@ def tim_table_add_column():
     In other words, adds a column into the table.
     :return: The entire table's data after the column has been added.
     """
-    doc_id, par_id, col_id, row_len = verify_json_params('docId', 'parId', 'colId', 'rowLen')
+    doc_id, par_id, col_id, row_len = verify_json_params(
+        "docId", "parId", "colId", "rowLen"
+    )
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     try:
         rows = None
@@ -509,7 +525,7 @@ def tim_table_add_column():
             else:
                 # Copy the last cell's other properties for the new cell, but leave the text empty
                 new_cell = copy.deepcopy(last_cell)
-                new_cell[CELL] = ''
+                new_cell[CELL] = ""
                 current_row.append(new_cell)
     else:
         # Insert a new column into the table instead of adding it to the end
@@ -527,7 +543,7 @@ def tim_table_add_column():
                 current_row.insert(col_id, {CELL: ""})
             else:
                 new_cell = copy.deepcopy(previous_cell)
-                new_cell[CELL] = ''
+                new_cell[CELL] = ""
                 current_row.insert(col_id, {CELL: ""})
 
         datablock_entries = construct_datablock_entry_list_from_yaml(plug)
@@ -547,7 +563,9 @@ def tim_table_add_datablock_column():
     Doesn't affect the table's regular YAML.
     :return: The entire table's data after the column has been added.
     """
-    doc_id, par_id, col_id, row_len = verify_json_params('docId', 'parId', 'colId', 'rowLen')
+    doc_id, par_id, col_id, row_len = verify_json_params(
+        "docId", "parId", "colId", "rowLen"
+    )
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
 
     if not is_in_datainput_mode(plug):
@@ -562,7 +580,7 @@ def tim_table_add_datablock_column():
         # Add a column to the end of each row, regardless of their length
         # for row_index, column_count in column_counts.items():
         #    datablock_entries.append(RelativeDataBlockValue(row_index, column_count, ''))
-        datablock_entries.append(RelativeDataBlockValue(max_row, col_id, ''))
+        datablock_entries.append(RelativeDataBlockValue(max_row, col_id, ""))
     else:
         # Insert a new column into the table instead of adding it to the end
         for entry in datablock_entries:
@@ -570,14 +588,16 @@ def tim_table_add_datablock_column():
                 entry.column += 1
         for row_index, column_count in column_counts.items():
             if column_count >= col_id:
-                datablock_entries.append(RelativeDataBlockValue(row_index, col_id, ''))
+                datablock_entries.append(RelativeDataBlockValue(row_index, col_id, ""))
 
     apply_datablock_from_entry_list(plug, datablock_entries)
     save_plugin(plug)
     return json_response(prepare_for_and_call_dumbo(plug))
 
 
-def get_column_counts(plug: Plugin, row_len: int) -> tuple[dict[int, int], list[RelativeDataBlockValue]]:
+def get_column_counts(
+    plug: Plugin, row_len: int
+) -> tuple[dict[int, int], list[RelativeDataBlockValue]]:
     """
     Returns the number of columns for each row.
     Takes both the regular table structure and the datablock into account.
@@ -604,7 +624,10 @@ def get_column_counts(plug: Plugin, row_len: int) -> tuple[dict[int, int], list[
         for entry in datablock_entries:
             if entry.row >= max_row:
                 max_row = entry.row
-            if not entry.row in column_counts or column_counts[entry.row] <= entry.column:
+            if (
+                not entry.row in column_counts
+                or column_counts[entry.row] <= entry.column
+            ):
                 column_counts[entry.row] = entry.column + 1
 
     if max_row < 0:
@@ -618,7 +641,9 @@ def tim_table_remove_row():
     Removes a row from the table.
     :return: The entire table's data after the row has been removed.
     """
-    doc_id, par_id, row_id, datablock_only = verify_json_params('docId', 'parId', 'rowId', 'datablockOnly')
+    doc_id, par_id, row_id, datablock_only = verify_json_params(
+        "docId", "parId", "rowId", "datablockOnly"
+    )
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     if not datablock_only:
         try:
@@ -653,7 +678,9 @@ def tim_table_remove_column():
     Removes a column from the table.
     :return: The entire table's data after the column has been removed.
     """
-    doc_id, par_id, col_id, datablock_only = verify_json_params('docId', 'parId', 'colId', 'datablockOnly')
+    doc_id, par_id, col_id, datablock_only = verify_json_params(
+        "docId", "parId", "colId", "datablockOnly"
+    )
     d, plug = get_plugin_from_paragraph(doc_id, par_id)
     if not datablock_only:
         try:
@@ -697,7 +724,7 @@ def tim_table_set_cell():
     Sets a cell's attributes or content.
     :return: The entire table's data after the cell's things has been set.
     """
-    doc_id, par_id, cells_to_save = verify_json_params('docId', 'parId', 'cellsToSave')
+    doc_id, par_id, cells_to_save = verify_json_params("docId", "parId", "cellsToSave")
     return json_response(set_cell_style_attribute(doc_id, par_id, cells_to_save))
 
 
@@ -706,7 +733,7 @@ def clear_attributes(cell):
     for key in cell:
         keys.append(key)
     for key in keys:
-        if key != 'cell':
+        if key != "cell":
             del cell[key]
 
 
@@ -740,17 +767,24 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
             if not existing_datablock_entry:
                 if attribute != "CLEAR":
                     try:
-                        cell_content = find_cell(plug.values[TABLE][ROWS], row_id, col_id)
+                        cell_content = find_cell(
+                            plug.values[TABLE][ROWS], row_id, col_id
+                        )
                     except KeyError:
-                        cell_content = ''
-                    new_entry = RelativeDataBlockValue(row_id, col_id, {attribute: value, CELL: cell_content})
+                        cell_content = ""
+                    new_entry = RelativeDataBlockValue(
+                        row_id, col_id, {attribute: value, CELL: cell_content}
+                    )
                     datablock_entries.append(new_entry)
                 else:
                     pass
             else:
                 if isinstance(existing_datablock_entry.data, str):
                     if attribute != "CLEAR":
-                        existing_datablock_entry.data = {CELL: existing_datablock_entry.data, attribute: value}
+                        existing_datablock_entry.data = {
+                            CELL: existing_datablock_entry.data,
+                            attribute: value,
+                        }
                     else:
                         pass
                 else:
@@ -793,7 +827,7 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
                     continue
                 # raise RouteException()
                 for ic in range(len(row_data), col_id + 1):
-                    row_data.append('')
+                    row_data.append("")
 
             cell = row_data[col_id]
             if is_primitive(cell):
@@ -817,7 +851,9 @@ def set_cell_style_attribute(doc_id, par_id, cells_to_save):
         multi = []
         tim_table_add_multi_cell_value(cell_data_to_save, d, plug, multi, False)
     save_plugin(plug)
-    return prepare_for_and_call_dumbo(plug)  # Do we need this because the table is already ok???
+    return prepare_for_and_call_dumbo(
+        plug
+    )  # Do we need this because the table is already ok???
 
 
 def set_value_to_table(plug, row_id, col_id, value):
@@ -855,7 +891,7 @@ def set_value_to_table(plug, row_id, col_id, value):
         rows[row_id] = {ROW: row_data}
     if len(row_data) <= col_id:
         for ic in range(len(row_data), col_id + 1):
-            row_data.append('')
+            row_data.append("")
     cell = row_data[col_id]
     if is_primitive(cell):
         row_data[col_id] = value
@@ -912,7 +948,7 @@ def tim_table_save_multi_cell_list():
     Saves cell content
     :return: The cell content as html
     """
-    cells_to_save, docid, parid = verify_json_params('cellsToSave', 'docId', 'parId')
+    cells_to_save, docid, parid = verify_json_params("cellsToSave", "docId", "parId")
     return tim_table_save_multi_cell_value(cells_to_save, docid, parid)
 
 
@@ -922,7 +958,9 @@ def tim_table_save_cell_list():
     Saves cell content
     :return: The cell content as html
     """
-    cell_content, docid, parid, row, col = verify_json_params('cellContent', 'docId', 'parId', 'row', 'col')
+    cell_content, docid, parid, row, col = verify_json_params(
+        "cellContent", "docId", "parId", "row", "col"
+    )
     return tim_table_save_cell_value(cell_content, docid, parid, row, col)
 
 
@@ -956,9 +994,14 @@ def tim_table_add_multi_cell_value(cells_to_save, d, plug, multi, must_call_dumb
             cc = MD + cc
         settings = d.document.get_settings()
         if must_call_dumbo:
-            html = call_dumbo([cc], DUMBO_PARAMS,
-                              options=plug.par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
-            multi.append({'cellHtml': html[0], 'row': row, 'col': col})
+            html = call_dumbo(
+                [cc],
+                DUMBO_PARAMS,
+                options=plug.par.get_dumbo_options(
+                    base_opts=settings.get_dumbo_options()
+                ),
+            )
+            multi.append({"cellHtml": html[0], "row": row, "col": col})
 
 
 def tim_table_save_multi_cell_value(cells_to_save, docid, parid, must_call_dumbo=True):
@@ -993,13 +1036,22 @@ def tim_table_save_cell_value(cell_content, docid, parid, row, col):
     if plug.is_automd_enabled(True) and not cc.startswith(MD):
         cc = MD + cc
     settings = d.document.get_settings()
-    html = call_dumbo([cc], DUMBO_PARAMS, options=plug.par.get_dumbo_options(base_opts=settings.get_dumbo_options()))
+    html = call_dumbo(
+        [cc],
+        DUMBO_PARAMS,
+        options=plug.par.get_dumbo_options(base_opts=settings.get_dumbo_options()),
+    )
     save_plugin(plug)
     multi.append(html[0])
     return json_response(multi)
 
 
-def save_cell(datablock: dict[str, Any], row: int, col: int, cell_content: Union[str, dict[str, Any]]):
+def save_cell(
+    datablock: dict[str, Any],
+    row: int,
+    col: int,
+    cell_content: Union[str, dict[str, Any]],
+):
     """
     Updates datablock with the content and the coordinate of a cell.
     :param datablock:
@@ -1031,14 +1083,18 @@ def find_cell(rows: list, row: int, col: int) -> str:
     :return: Cell from specified index
     """
     if row >= len(rows):
-        return ''
+        return ""
     right_row = rows[row].get(ROW, [])
     if col >= len(right_row):
-        return ''
+        return ""
     right_cell = right_row[col]
-    if isinstance(right_cell, str) or isinstance(right_cell, int) or isinstance(right_cell, float):
+    if (
+        isinstance(right_cell, str)
+        or isinstance(right_cell, int)
+        or isinstance(right_cell, float)
+    ):
         return right_cell
-    return right_cell.get(CELL, '')
+    return right_cell.get(CELL, "")
 
 
 def cell_coordinate(row: int, col: int) -> str:
@@ -1096,12 +1152,12 @@ def datablock_key_to_indexes(datablock_key: str) -> tuple[int, int]:
         else:
             break
 
-    rowstring = datablock_key[len(columnstring):]
+    rowstring = datablock_key[len(columnstring) :]
     row_index = int(rowstring)
 
     chr_index = len(columnstring) - 1
     column_index = 0
-    for c in columnstring.encode('ascii'):
+    for c in columnstring.encode("ascii"):
         # ascii encoding returns a list of bytes, so we can use c directly
         addition = ((ASCII_CHAR_COUNT ** chr_index) * (c - ASCII_OF_A)) + 1
         column_index += addition
@@ -1148,11 +1204,15 @@ def prepare_for_and_call_dumbo(plug: Plugin):
     par = plug.par
     if par:
         doc: Document = par.doc
-        dumbo_opts = par.get_dumbo_options(base_opts=doc.get_settings().get_dumbo_options())
+        dumbo_opts = par.get_dumbo_options(
+            base_opts=doc.get_settings().get_dumbo_options()
+        )
     else:
         dumbo_opts = DumboOptions.default()
     if plug.is_automd_enabled(default=True):
-        return call_dumbo(prepare_for_dumbo(plug.values), DUMBO_PARAMS, options=dumbo_opts)
+        return call_dumbo(
+            prepare_for_dumbo(plug.values), DUMBO_PARAMS, options=dumbo_opts
+        )
 
     return call_dumbo(plug.values, DUMBO_PARAMS, options=dumbo_opts)
 
@@ -1187,12 +1247,12 @@ def prepare_for_dumbo(values):
             if isinstance(cell, str):
                 if cell.startswith(MD):
                     continue
-                if cell == '':
+                if cell == "":
                     continue
                 rowdata[i] = MD + cell
             else:
-                s = str(cell.get(CELL, ''))
-                if s == '':
+                s = str(cell.get(CELL, ""))
+                if s == "":
                     continue
                 cell[CELL] = MD + s
 
@@ -1217,14 +1277,21 @@ def prepare_for_dumbo(values):
 
 
 def is_of_unconvertible_type(value):
-    return isinstance(value, int) or isinstance(value, bool) or isinstance(value, float) or not value
+    return (
+        isinstance(value, int)
+        or isinstance(value, bool)
+        or isinstance(value, float)
+        or not value
+    )
 
 
 def is_primitive(value):
     return is_of_unconvertible_type(value) or isinstance(value, str)
 
 
-def construct_datablock_entry_list_from_yaml(plug: Plugin) -> list[RelativeDataBlockValue]:
+def construct_datablock_entry_list_from_yaml(
+    plug: Plugin,
+) -> list[RelativeDataBlockValue]:
     """
     Parses a relative datablock and returns its data as a list of
     RelativeDataBlockValue instances.
@@ -1246,7 +1313,9 @@ def construct_datablock_entry_list_from_yaml(plug: Plugin) -> list[RelativeDataB
     return final_list
 
 
-def create_datablock_from_entry_list(relative_data_block_values: list) -> dict[str, Any]:
+def create_datablock_from_entry_list(
+    relative_data_block_values: list,
+) -> dict[str, Any]:
     """
     Creates the datablock from a list of RelativeDataBlockValues.
     :param relative_data_block_values: The list of RelativeDataBlockValues.
@@ -1266,4 +1335,6 @@ def create_datablock_from_entry_list(relative_data_block_values: list) -> dict[s
 
 
 def apply_datablock_from_entry_list(plug: Plugin, relative_data_block_values: list):
-    plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(relative_data_block_values)
+    plug.values[TABLE][DATABLOCK] = create_datablock_from_entry_list(
+        relative_data_block_values
+    )

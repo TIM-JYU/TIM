@@ -19,10 +19,30 @@ import requests
 from file_util import File, default_filename
 from modifiers import Modifier
 from points import give_points
-from run import generate_filename, CS3_TARGET, CS3_TAG, get_imgsource, run2_subdir, copy_file, wait_file, run
+from run import (
+    generate_filename,
+    CS3_TARGET,
+    CS3_TAG,
+    get_imgsource,
+    run2_subdir,
+    copy_file,
+    wait_file,
+    run,
+)
 from tim_common.cs_sanitizer import cs_min_sanitize
-from tim_common.fileParams import QueryClass, get_param, get_json_param, hash_user_dir, remove, find_cs_class, \
-    remove_before, find_java_package, mkdirs, getint, get_value
+from tim_common.fileParams import (
+    QueryClass,
+    get_param,
+    get_json_param,
+    hash_user_dir,
+    remove,
+    find_cs_class,
+    remove_before,
+    find_java_package,
+    mkdirs,
+    getint,
+    get_value,
+)
 
 """
 Adding new language to csPlugin:
@@ -45,7 +65,7 @@ Adding new language to csPlugin:
 cmdline_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 filename_whitelist = "A-Za-z\\-/\\.åöäÅÖÄ 0-9_"
 
-JAVAFX_VERSION = '16'
+JAVAFX_VERSION = "16"
 
 
 def sanitize_filename(s):
@@ -87,11 +107,11 @@ class Language:
         self.markup = {}
         self.stdin = None
         self.query = query
-        self.user_id = '--'
+        self.user_id = "--"
         self.nofilesave = False  # if no need to save files
         if query.jso:
-            self.user_id = df(query.jso.get('info'), {}).get('user_id', '--')
-            self.markup = query.jso.get('markup', {})
+            self.user_id = df(query.jso.get("info"), {}).get("user_id", "--")
+            self.markup = query.jso.get("markup", {})
         self.rndname = generate_filename()
         self.delete_tmp = True
         self.opt = get_param(query, "opt", "")
@@ -102,12 +122,18 @@ class Language:
         self.userargs = get_json_param(query.jso, "input", "userargs", None)
         if not self.userargs:
             self.userargs = get_json_param(query.jso, "markup", "userargs", None)
-        self.dockercontainer = get_json_param(query.jso, "markup", "dockercontainer",
-                                              f"timimages/cs3{CS3_TARGET}:{CS3_TAG}")
+        self.dockercontainer = get_json_param(
+            query.jso,
+            "markup",
+            "dockercontainer",
+            f"timimages/cs3{CS3_TARGET}:{CS3_TAG}",
+        )
         self.ulimit = get_param(query, "ulimit", None)
         self.savestate = get_param(query, "savestate", "")
         self.opt = get_param(query, "opt", "")
-        self.is_optional_image = get_json_param(query.jso, "markup", "optional_image", False)
+        self.is_optional_image = get_json_param(
+            query.jso, "markup", "optional_image", False
+        )
         self.hide_compile_out = False
         self.run_points_given = False  # Put this on if give run or test points
         self.readpoints_default = None  # what is default string for readpoints
@@ -115,7 +141,7 @@ class Language:
         self.just_compile = False
         self.imgname = get_param(query, "imgname", None)
         self.imgsource = get_imgsource(query)
-        self.imgext = '.png'
+        self.imgext = ".png"
         if self.imgsource:
             n, e = splitext(self.imgsource)
             if e:
@@ -146,7 +172,9 @@ class Language:
                 self.basename = self.userpath + "/ERRORPATH"
             if self.rootpath is not None:
                 _, self.rootpath = self.rootpath.split("/", 1)
-                self.rootpath = self.mustpath + "/" + (self.rootpath if self.rootpath else "")
+                self.rootpath = (
+                    self.mustpath + "/" + (self.rootpath if self.rootpath else "")
+                )
             self.delete_tmp = False
             # print(self.task_id, self.doc_id, self.fullpath)
         else:
@@ -169,7 +197,9 @@ class Language:
         self.check_extensions(extensions)
 
         for i in range(len(self.filenames)):
-            self.sourcefiles[i].path = f"/tmp/{self.basename}/{self.filenames[i]}{self.sourcefiles[i].filedext}"
+            self.sourcefiles[
+                i
+            ].path = f"/tmp/{self.basename}/{self.filenames[i]}{self.sourcefiles[i].filedext}"
 
         self.ifilename = get_param(query, "inputfilename", "/input.txt")
         self.exename = f"/tmp/{self.basename}/{self.filename}.exe"
@@ -210,7 +240,11 @@ class Language:
         self.sourcefiles[0].fileext = val
 
     def extensions(self):
-        return None, "", ""  # list of the extensions or None for all, default fileext, default filedext
+        return (
+            None,
+            "",
+            "",
+        )  # list of the extensions or None for all, default fileext, default filedext
 
     def check_extensions(self, extensions):
         if extensions is not None:
@@ -219,7 +253,7 @@ class Language:
                     if self.filenames[i].endswith(ex):
                         self.sourcefiles[i].fileext = ex.replace(".", "")
                         self.sourcefiles[i].filedext = ex
-                        self.filenames[i] = self.filenames[i][:-len(ex)]
+                        self.filenames[i] = self.filenames[i][: -len(ex)]
                         break
 
     def get_cmdline(self):
@@ -234,8 +268,8 @@ class Language:
             # print("Write input file: " + inputfilename)
             if not userinput:
                 userinput = ""
-            if self.inputfilename.find('input.txt') >= 0:
-                stdin_default = 'input.txt'
+            if self.inputfilename.find("input.txt") >= 0:
+                stdin_default = "input.txt"
             codecs.open(self.inputfilename, "w", "utf-8").write(userinput)
         self.stdin = get_param(self.query, "stdin", stdin_default)
 
@@ -309,9 +343,24 @@ class Language:
         """
         return usercode
 
-    def runself(self, args, cwd=None, shell=None, kill_tree=None, timeout=None, env=None, stdin=None, uargs=None,
-                code=None, extra=None, ulimit=None, no_x11=None, savestate=None, dockercontainer=None,
-                no_uargs=False):
+    def runself(
+        self,
+        args,
+        cwd=None,
+        shell=None,
+        kill_tree=None,
+        timeout=None,
+        env=None,
+        stdin=None,
+        uargs=None,
+        code=None,
+        extra=None,
+        ulimit=None,
+        no_x11=None,
+        savestate=None,
+        dockercontainer=None,
+        no_uargs=False,
+    ):
         if self.imgname:  # this should only come from cache run
             self.imgdest = self.imgname + self.imgext
         uargs = df(uargs, self.userargs)
@@ -320,26 +369,27 @@ class Language:
         if self.just_compile:
             args = []
 
-        mounts = self.query.jso.get('markup', {}).get('mounts', [])
+        mounts = self.query.jso.get("markup", {}).get("mounts", [])
 
-        code, out, err, pwddir = run2_subdir(args,
-                                             dir=self.rootpath,
-                                             cwd=df(cwd, self.prgpath),
-                                             shell=df(shell, False),
-                                             kill_tree=df(kill_tree, True),
-                                             timeout=df(timeout, self.timeout),
-                                             env=df(env, dict(os.environ)),
-                                             stdin=df(stdin, self.stdin),
-                                             uargs=uargs,
-                                             code=df(code, "utf-8"),
-                                             extra=df(extra, ""),
-                                             ulimit=df(ulimit, self.ulimit),
-                                             no_x11=df(no_x11, self.no_x11),
-                                             savestate=df(savestate, self.savestate),
-                                             dockercontainer=df(dockercontainer, self.dockercontainer),
-                                             compile_commandline=self.compile_commandline,
-                                             mounts=mounts
-                                             )
+        code, out, err, pwddir = run2_subdir(
+            args,
+            dir=self.rootpath,
+            cwd=df(cwd, self.prgpath),
+            shell=df(shell, False),
+            kill_tree=df(kill_tree, True),
+            timeout=df(timeout, self.timeout),
+            env=df(env, dict(os.environ)),
+            stdin=df(stdin, self.stdin),
+            uargs=uargs,
+            code=df(code, "utf-8"),
+            extra=df(extra, ""),
+            ulimit=df(ulimit, self.ulimit),
+            no_x11=df(no_x11, self.no_x11),
+            savestate=df(savestate, self.savestate),
+            dockercontainer=df(dockercontainer, self.dockercontainer),
+            compile_commandline=self.compile_commandline,
+            mounts=mounts,
+        )
         if self.just_compile and not err:
             return code, "", "Compiled " + self.filename, pwddir
         return code, out, err, pwddir
@@ -353,7 +403,7 @@ class Language:
         if self.imgsource and self.imgdest:
             _, imgext = splitext(self.imgsource)
             if not imgext:
-                imgext = '.png'
+                imgext = ".png"
             destname, destext = splitext(self.imgdest)
             destname = destname + imgext
             ims = self.imgsource
@@ -361,7 +411,7 @@ class Language:
                 ims = self.filepath + "/" + ims
             image_ok, e = copy_file(ims, destname, True, self.is_optional_image)
             if e:
-                err = (str(err) + "\n" + str(e) + "\n" + str(out))
+                err = str(err) + "\n" + str(e) + "\n" + str(out)
             # print(self.is_optional_image, image_ok)
             remove(self.imgsource)
             if image_ok:
@@ -375,7 +425,7 @@ class Language:
         return out, err
 
     def get_default_before_open(self):
-        return ''
+        return ""
 
     def web_data(self):
         return None
@@ -465,8 +515,8 @@ class CS(Language):
     def before_save(self, s):
         mockconsole = get_param(self.query, "mockconsole", True)
         if mockconsole:
-            s = s.replace('System.Console.ReadLine', 'TIMconsole.ReadLine')
-            s = s.replace('Console.ReadLine', 'TIMconsole.ReadLine')
+            s = s.replace("System.Console.ReadLine", "TIMconsole.ReadLine")
+            s = s.replace("Console.ReadLine", "TIMconsole.ReadLine")
         return s
 
     def get_cmdline(self):
@@ -474,11 +524,14 @@ class CS(Language):
         if self.just_compile:
             options = "-target:library"
         cmdline = "{} -nologo -out:{} {} {} /cs/dotnet/shims/TIMconsole.cs".format(
-            self.compiler, self.exename, options, self.get_sourcefiles())
+            self.compiler, self.exename, options, self.get_sourcefiles()
+        )
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["dotnet", "exec", *CS.runtime_config(), self.pure_exename])
+        code, out, err, pwddir = self.runself(
+            ["dotnet", "exec", *CS.runtime_config(), self.pure_exename]
+        )
         if err.find("Unhandled Exception:") >= 0:
             if err.find("StackOverflowException") >= 0:
                 err = err[0:300]
@@ -497,7 +550,9 @@ class GoLang(Language):
         return [".go"], ".go", ".exe"
 
     def get_cmdline(self):
-        return f"{self.compiler} build {self.opt} -o {self.exename} {self.sourcefilename}"
+        return (
+            f"{self.compiler} build {self.opt} -o {self.exename} {self.sourcefilename}"
+        )
 
     def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
@@ -519,7 +574,10 @@ class Jypeli(CS, Modifier):
     @functools.cache
     def get_build_refs():
         with open("/cs/dotnet/configs/jypeli.build.deps", encoding="utf-8") as f:
-            dep_paths = [os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip()) for dep_line in f.readlines()]
+            dep_paths = [
+                os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip())
+                for dep_line in f.readlines()
+            ]
             return " ".join([f"-r:{p}" for p in dep_paths])
 
     @staticmethod
@@ -538,7 +596,9 @@ class Jypeli(CS, Modifier):
             if not classname:
                 classname = find_cs_class(sourcecode)
                 mainfile = "/tmp/{}/{}.cs".format(self.basename, "MainProgram")
-                codecs.open(mainfile, "w", "utf-8").write(f"using var game = new {classname}();game.Run();")
+                codecs.open(mainfile, "w", "utf-8").write(
+                    f"using var game = new {classname}();game.Run();"
+                )
 
         cmdline = f"{self.compiler} -nologo -out:{self.exename} {Jypeli.get_build_refs()} {options} {self.get_sourcefiles(mainfile)}"
         return cmdline
@@ -554,50 +614,71 @@ class Jypeli(CS, Modifier):
             frames_to_run = str(save_video.get("frames", "60"))
             skip_frames = str(save_video.get("skip_frames", "0"))
             video_params = [
-                "--saveToStdout", "true",
-                "|", "ffmpeg",
+                "--saveToStdout",
+                "true",
+                "|",
+                "ffmpeg",
                 "-y",
-                "-f", "image2pipe",
-                "-vcodec", "bmp",
-                "-framerate", str(save_video.get("fps", "30")),
-                "-probesize", "16M",
+                "-f",
+                "image2pipe",
+                "-vcodec",
+                "bmp",
+                "-framerate",
+                str(save_video.get("fps", "30")),
+                "-probesize",
+                "16M",
                 "-i",
                 "-",
-                "-loglevel", "quiet",
-                "-vf", "vflip",
-                "-vcodec", "libx264",
-                "-pix_fmt", "yuv420p",
+                "-loglevel",
+                "quiet",
+                "-vf",
+                "vflip",
+                "-vcodec",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
                 "Output/out.mp4",
             ]
         else:
             self.videosource = ""
 
-        code, out, err, pwddir = self.runself(["dotnet",
-                                               "exec",
-                                               *CS.runtime_config(),
-                                               *Jypeli.get_run_args(),
-                                               self.pure_exename,
-                                               "--headless", "true",
-                                               "--save", "true",
-                                               "--framesToRun", frames_to_run,
-                                               "--skipFrames", skip_frames,
-                                               *video_params,
-                                               ],
-                                              ulimit=df(self.ulimit, "ulimit -f 80000"))
+        code, out, err, pwddir = self.runself(
+            [
+                "dotnet",
+                "exec",
+                *CS.runtime_config(),
+                *Jypeli.get_run_args(),
+                self.pure_exename,
+                "--headless",
+                "true",
+                "--save",
+                "true",
+                "--framesToRun",
+                frames_to_run,
+                "--skipFrames",
+                skip_frames,
+                *video_params,
+            ],
+            ulimit=df(self.ulimit, "ulimit -f 80000"),
+        )
         if err.find("Compile") >= 0:
             return code, out, err, pwddir
 
-        if (self.videosource):
+        if self.videosource:
             wait_file(self.videosource)
             run(["mv", self.videosource, self.videodest])
             self.imgdest = ""
         else:
             wait_file(self.imgsource)
-            run(["convert", "-flip", self.imgsource, self.imgdest], cwd=self.prgpath, timeout=20)
+            run(
+                ["convert", "-flip", self.imgsource, self.imgdest],
+                cwd=self.prgpath,
+                timeout=20,
+            )
             remove(self.imgsource)
             self.videodest = ""
         # print("*** Screenshot: https://tim.jyu.fi/csgenerated/%s\n" % self.pure_imgdest)
-        out = re.sub('Number of joysticks:.*\n.*', "", out)
+        out = re.sub("Number of joysticks:.*\n.*", "", out)
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
         else:
@@ -612,7 +693,9 @@ class Jypeli(CS, Modifier):
         return code, out, err, pwddir
 
 
-class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers but they are used as such
+class CSComtest(
+    CS, Modifier
+):  # TODO: comtests probably shouldn't be modifiers but they are used as such
     ttype = "comtest"
 
     def __init__(self, query, sourcecode=""):
@@ -624,29 +707,39 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
     @functools.cache
     def get_build_refs():
         with open("/cs/dotnet/configs/nunit_test.build.deps", encoding="utf-8") as f:
-            dep_paths = [os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip()) for dep_line in f.readlines()]
+            dep_paths = [
+                os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip())
+                for dep_line in f.readlines()
+            ]
             return " ".join([f"-r:{p}" for p in dep_paths])
 
     def get_cmdline(self):
         testcs = f"/tmp/{self.basename}/{self.filename}Test.cs"
-        cmdline = (f"java -jar /cs/java/cs/ComTest.jar nunit {self.sourcefilename} && "
-                   f"{self.compiler} -nologo -out:{self.testdll} -target:library {CSComtest.get_build_refs()} "
-                   f"{Jypeli.get_build_refs()} {self.sourcefilename} {testcs} /cs/dotnet/shims/TIMconsole.cs")
+        cmdline = (
+            f"java -jar /cs/java/cs/ComTest.jar nunit {self.sourcefilename} && "
+            f"{self.compiler} -nologo -out:{self.testdll} -target:library {CSComtest.get_build_refs()} "
+            f"{Jypeli.get_build_refs()} {self.sourcefilename} {testcs} /cs/dotnet/shims/TIMconsole.cs"
+        )
         return cmdline
 
     def run(self, result, sourcelines, points_rule):
         eri = -1
-        code, out, err, pwddir = self.runself([
-            "dotnet", "exec",
-            *CS.runtime_config(),
-            "--additional-deps",
-            "/cs/dotnet/configs/jypeli.deps.json:/cs/dotnet/configs/nunit_test.deps.json",
-            "--roll-forward", "LatestMajor",  # Force to use latest available .NET
-            "/dotnet_tools/nunit.console.dll",
-            "--noheader",
-            "--nocolor",
-            "--noresult",  # TODO: Maybe parse resulting XML file to provide better error messages
-            self.testdll])
+        code, out, err, pwddir = self.runself(
+            [
+                "dotnet",
+                "exec",
+                *CS.runtime_config(),
+                "--additional-deps",
+                "/cs/dotnet/configs/jypeli.deps.json:/cs/dotnet/configs/nunit_test.deps.json",
+                "--roll-forward",
+                "LatestMajor",  # Force to use latest available .NET
+                "/dotnet_tools/nunit.console.dll",
+                "--noheader",
+                "--nocolor",
+                "--noresult",  # TODO: Maybe parse resulting XML file to provide better error messages
+                self.testdll,
+            ]
+        )
         # print(code, out, err)
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
@@ -656,7 +749,7 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
         out = re.sub(r"Run Settings(.|\n)*Test Count:", "Test Count:", out, flags=re.M)
         out = re.sub(r"\s*Start time(.|\s)*Duration:.*$", "", out, flags=re.M)
         out = re.sub(r"Failed Tests(.|\n)*", "", out, flags=re.M)
-        out = out.strip(' \t\n\r')
+        out = out.strip(" \t\n\r")
         if eri < 0:
             eri = out.find("Failed : ")
         if eri < 0:
@@ -681,8 +774,8 @@ class CSComtest(CS, Modifier):  # TODO: comtests probably shouldn't be modifiers
             # copy failed comtest lines from source
             # In out there is text like: "in method Keskiarvo, line 24"
             while lni >= 0:  # and not nocode:
-                lns = out[lni + 7:]
-                lns = lns[0:lns.find("\n")]
+                lns = out[lni + 7 :]
+                lns = lns[0 : lns.find("\n")]
                 lnro = int(lns)
                 web["comtestError"] += lf + str(lnro) + " " + lines[lnro - 1]
                 lni = out.find(", line ", lni + 1)
@@ -706,7 +799,7 @@ class Shell(Language):
     # noinspection PyBroadException
     def run(self, result, sourcelines, points_rule):
         try:
-            os.system('chmod +x ' + self.exename)
+            os.system("chmod +x " + self.exename)
         except OSError:
             print("Ei oikeuksia: " + self.exename)
         extra = ""  # ""cd $PWD\nsource "
@@ -748,15 +841,25 @@ class Java(Language):
         self.sourcefilename = self.javaname
 
     def get_cmdline(self):
-        return f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib" + \
-               f" --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath}" + \
-               f" {self.javaname}"
+        return (
+            f"javac --module-path /javafx-sdk-{JAVAFX_VERSION}/lib"
+            + f" --add-modules=ALL-MODULE-PATH -Xlint:all -cp {self.classpath}"
+            + f" {self.javaname}"
+        )
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["java", "--module-path", f"/javafx-sdk-{JAVAFX_VERSION}/lib",
-                                               "--add-modules=ALL-MODULE-PATH", "-cp",
-                                               self.classpath, self.javaclassname],
-                                              ulimit=df(self.ulimit, "ulimit -f 10000"))
+        code, out, err, pwddir = self.runself(
+            [
+                "java",
+                "--module-path",
+                f"/javafx-sdk-{JAVAFX_VERSION}/lib",
+                "--add-modules=ALL-MODULE-PATH",
+                "-cp",
+                self.classpath,
+                self.javaclassname,
+            ],
+            ulimit=df(self.ulimit, "ulimit -f 10000"),
+        )
         return code, out, err, pwddir
 
 
@@ -775,8 +878,9 @@ class Kotlin(Java):
         return f"kotlinc  {self.filename} -include-runtime -d {self.jarname}"
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["java", "-jar", self.jarname],
-                                              ulimit=df(self.ulimit, "ulimit -f 10000"))
+        code, out, err, pwddir = self.runself(
+            ["java", "-jar", self.jarname], ulimit=df(self.ulimit, "ulimit -f 10000")
+        )
         return code, out, err, pwddir
 
 
@@ -790,16 +894,21 @@ def check_comtest(self, ttype, code, out, err, result, points_rule):
         eri = 0
     # print(javaclassname+"\n")
     if ttype == "junit":
-        out = re.sub("[\t ]*at " + self.javaclassname, "ERROR: " + self.javaclassname, out,
-                     flags=re.M)  # prevent remove by next "at"-word
+        out = re.sub(
+            "[\t ]*at " + self.javaclassname,
+            "ERROR: " + self.javaclassname,
+            out,
+            flags=re.M,
+        )  # prevent remove by next "at"-word
     out = re.sub("\\s+at .*\n", "\n", out, flags=re.M)
     out = re.sub("\n+", "\n", out, flags=re.M)
     out = re.sub("Errors and Failures.*\n", "", out, flags=re.M)
     out = re.sub(self.prgpath + "/", "", out, flags=re.M)
-    out = out.strip(' \t\n\r')
+    out = out.strip(" \t\n\r")
     if ttype == "junit":
-        out = re.sub("java:", "java line: ", out,
-                     flags=re.M)  # To get line: also in JUnit case where error is in format java:39
+        out = re.sub(
+            "java:", "java line: ", out, flags=re.M
+        )  # To get line: also in JUnit case where error is in format java:39
     if eri < 0:
         eri = out.find("FAILURES")  # jcomtest
     if eri < 0:
@@ -819,7 +928,7 @@ def check_comtest(self, ttype, code, out, err, result, points_rule):
         cterr = ""
         sep = ""
         while lni >= 0:
-            lns = out[lni + 7:]
+            lns = out[lni + 7 :]
             lnro = getint(lns)
             lines = codecs.open(self.sourcefilename, "r", "utf-8").readlines()
             # print("Line nr: "+str(lnro))
@@ -851,7 +960,9 @@ class JComtest(Java, Modifier):
         return f"java comtest.ComTest {self.sourcefilename} && javac {self.sourcefilename} {self.testcs}"
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.testdll], no_uargs=True)
+        code, out, err, pwddir = self.runself(
+            ["java", "org.junit.runner.JUnitCore", self.testdll], no_uargs=True
+        )
         out, err = check_comtest(self, "jcomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
 
@@ -866,7 +977,9 @@ class JUnit(Java, Modifier):
         return "javac %s" % self.javaname
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["java", "org.junit.runner.JUnitCore", self.javaclassname])
+        code, out, err, pwddir = self.runself(
+            ["java", "org.junit.runner.JUnitCore", self.javaclassname]
+        )
         out, err = check_comtest(self, "junit", code, out, err, result, points_rule)
         return code, out, err, pwddir
 
@@ -888,9 +1001,16 @@ class Graphics(Java, Modifier):
         if rect:
             a.extend(["--rect", rect])
         # print(a)
-        runcmd = ["java", "--module-path", f"/javafx-sdk-{JAVAFX_VERSION}/lib",
-                  "--add-modules=ALL-MODULE-PATH", "sample.Runner",
-                  self.javaclassname, "--captureName", "run/capture.png"]
+        runcmd = [
+            "java",
+            "--module-path",
+            f"/javafx-sdk-{JAVAFX_VERSION}/lib",
+            "--add-modules=ALL-MODULE-PATH",
+            "sample.Runner",
+            self.javaclassname,
+            "--captureName",
+            "run/capture.png",
+        ]
         runcmd.extend(a)
         code, out, err, pwddir = self.runself(runcmd, cwd=self.prgpath)
         out, err = self.copy_image(result, code, out, err, points_rule)
@@ -911,7 +1031,9 @@ class Scala(Language):
         return "scalac %s" % self.sourcefilename
 
     def run(self, result, sourcelines, points_rule):
-        return self.runself(["scala", self.classname], ulimit=df(self.ulimit, "ulimit -f 10000"))
+        return self.runself(
+            ["scala", self.classname], ulimit=df(self.ulimit, "ulimit -f 10000")
+        )
 
 
 class CC(Language):
@@ -926,14 +1048,19 @@ class CC(Language):
         return [".h", ".c", ".cc"], ".c", ".exe"
 
     def get_cmdline(self):
-        return self.compiler + f" -Wall {self.opt} {self.sources()} -o {self.exename} -lm"
+        return (
+            self.compiler + f" -Wall {self.opt} {self.sources()} -o {self.exename} -lm"
+        )
 
     def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
 
     def sources(self):
         return " ".join(
-            file.path for file in self.sourcefiles if any(file.path.endswith(ext) for ext in self.source_extensions))
+            file.path
+            for file in self.sourcefiles
+            if any(file.path.endswith(ext) for ext in self.source_extensions)
+        )
 
     @staticmethod
     def supports_multifiles():
@@ -963,7 +1090,9 @@ class CComtest(Language):
         self.hide_compile_out = True
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", self.testcs])
+        code, out, err, pwddir = self.runself(
+            ["java", "-jar", "/cs/java/comtestcpp.jar", "-nq", self.testcs]
+        )
         out, err = check_comtest(self, "ccomtest", code, out, err, result, points_rule)
         return code, out, err, pwddir
 
@@ -978,12 +1107,15 @@ class Fortran(Language):
             self.fileext = extension[1:]
             self.sourcefilename = f"/tmp/{self.basename}/{self.filename}"
         else:
-            self.fileext = 'f'
+            self.fileext = "f"
             self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.f"
         self.compiler = "gfortran"
 
     def get_cmdline(self):
-        return self.compiler + f" -Wall {self.opt} {self.sourcefilename} -o {self.exename} -lm"
+        return (
+            self.compiler
+            + f" -Wall {self.opt} {self.sourcefilename} -o {self.exename} -lm"
+        )
 
     def run(self, result, sourcelines, points_rule):
         return self.runself([self.pure_exename])
@@ -1003,8 +1135,12 @@ class PY3(Language):
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["python3", self.pure_exename])
         if err:
-            err = re.sub("/usr/lib/python3/dist-packages/matplotlib/font_manager(.*\n)*.*This may take a moment.'\\)",
-                         "", err, flags=re.M)
+            err = re.sub(
+                "/usr/lib/python3/dist-packages/matplotlib/font_manager(.*\n)*.*This may take a moment.'\\)",
+                "",
+                err,
+                flags=re.M,
+            )
             err = err.strip()
             if err:
                 return code, out, err, pwddir
@@ -1035,8 +1171,10 @@ class Swift(Language):
         self.imgsource = get_imgsource(query)
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["swift", self.pure_exename],
-                                              ulimit=df(self.ulimit, "ulimit -f 80000 -t 10 -s 600"))
+        code, out, err, pwddir = self.runself(
+            ["swift", self.pure_exename],
+            ulimit=df(self.ulimit, "ulimit -f 80000 -t 10 -s 600"),
+        )
         out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
 
@@ -1074,7 +1212,9 @@ class CLisp(Language):
         # p = re.compile("WARNING:\n"
         #               "Couldn't re-execute SBCL with proper personality flags (/proc isn't mounted? setuid?)\n"
         #               "Trying to continue anyway.")
-        err = re.sub("WARNING:.*\n.*\nTrying to continue anyway.\n", "", err, flags=re.M)
+        err = re.sub(
+            "WARNING:.*\n.*\nTrying to continue anyway.\n", "", err, flags=re.M
+        )
         return code, out, err, pwddir
 
 
@@ -1089,7 +1229,9 @@ class Quorum(Language):
         self.pure_exename = f"./{self.filename:s}.jar"
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["/cs/java/quorum/runquorum", self.filename])
+        code, out, err, pwddir = self.runself(
+            ["/cs/java/quorum/runquorum", self.filename]
+        )
         out = re.sub("Quorum 7.0\nBuild Successful\n", "", out, flags=re.M)
         return code, out, err, pwddir
 
@@ -1117,12 +1259,13 @@ class XML(Text):
     ttype = "xml"
 
     def run(self, result, sourcelines, points_rule):
-        convert = self.query.jso.get('markup', {}).get('convert', None)
+        convert = self.query.jso.get("markup", {}).get("convert", None)
         if not convert:
             return super().run(result, sourcelines, points_rule)
 
         # language_class = languages.get(convert.lower(), Language)
         from ttype import TType
+
         language = TType(convert, self.query, sourcelines).get_language()
         return language.convert(sourcelines)
 
@@ -1144,7 +1287,9 @@ class NodeJS(Language):
         self.is_jjs = "jjs" in self.markup.get("type", "")
         if self.is_jjs:
             shim_print = "var print = console.log;var println = print;"
-            self.before_code = shim_print if not self.before_code else shim_print + self.before_code
+            self.before_code = (
+                shim_print if not self.before_code else shim_print + self.before_code
+            )
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["node", self.pure_exename])
@@ -1250,7 +1395,13 @@ class Alloy(Language):
         self.imgdest = "/csgenerated/%s.png" % self.rndname
 
     def run(self, result, sourcelines, points_rule):
-        runcmd = ["java", "-cp", "/cs/java/alloy-dev.jar:/cs/java", "RunAll", self.pure_exename]
+        runcmd = [
+            "java",
+            "-cp",
+            "/cs/java/alloy-dev.jar:/cs/java",
+            "RunAll",
+            self.pure_exename,
+        ]
         code, out, err, pwddir = self.runself(runcmd)
         out, err = self.copy_image(result, code, out, err, points_rule)
         return code, out, err, pwddir
@@ -1270,7 +1421,9 @@ class Run(Language):
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself([])
         uargs = self.userargs
-        cmd = shlex.split(get_param(self.query, "cmd", "ls -la") + " " + self.pure_exename)
+        cmd = shlex.split(
+            get_param(self.query, "cmd", "ls -la") + " " + self.pure_exename
+        )
         extra = get_param(self.query, "cmds", "").format(self.pure_exename, uargs)
         if extra != "":
             cmd = []
@@ -1438,7 +1591,7 @@ class Jsav(Language):
         super().__init__(query, sourcecode)
         self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.txt"
         self.fileext = "txt"
-        self.readpoints_default = 'Score: (.*)'
+        self.readpoints_default = "Score: (.*)"
         self.delete_tmp = False
 
         self.model = False
@@ -1461,18 +1614,14 @@ class Jsav(Language):
         return "cs-jsav-runner"
 
     def deny_attributes(self):
-        return {"srchtml": "",
-                "jsavhtml": "",
-                "jsavjs": "",
-                "jsavcss": ""
-                }
+        return {"srchtml": "", "jsavhtml": "", "jsavjs": "", "jsavcss": ""}
 
     def modify_usercode(self, s):
         if not s.startswith("{"):
             return s
         s = s.replace("&quot;", '"')
         js = json.loads(s)
-        res = ''
+        res = ""
         for key in js:
             res += js[key] + "\n"
         return res
@@ -1487,13 +1636,15 @@ class Jsav(Language):
             self.model = True
 
         if self.model:
-            data['model'] = "y"
+            data["model"] = "y"
             result["tim_info"]["noupdate"] = True
             result["tim_info"]["valid"] = False
-            result["tim_info"]["validMsg"] = "Et voi enää saada pisteitä kun katsoit vastauksen"
+            result["tim_info"][
+                "validMsg"
+            ] = "Et voi enää saada pisteitä kun katsoit vastauksen"
 
-        if 'type' in data:
-            del data['type']
+        if "type" in data:
+            del data["type"]
 
         result["save"] = data
         return 0, "JSAV saved", "", ""
@@ -1502,20 +1653,20 @@ class Jsav(Language):
         """
         :return: the finalized HTML code for the JSAV plugin's iframe
         """
-        ma = self.query.jso['markup']
+        ma = self.query.jso["markup"]
         jsavhtml = JSAV_HTML
-        srchtml = get_by_id(ma, 'srchtml', JSAV_DEFAULT_SRC_HTML)
-        srchtml = html_change(srchtml, "//JSAVHTML", ma, "jsavhtml", '{}', "", jsavhtml)
-        srchtml = html_change(srchtml, "//JSAVJAVASCRIPT", ma, "jsavjs", '{}', "")
-        srchtml = html_change(srchtml, "//JSAVCSS", ma, "jsavcss", '{}', "")
+        srchtml = get_by_id(ma, "srchtml", JSAV_DEFAULT_SRC_HTML)
+        srchtml = html_change(srchtml, "//JSAVHTML", ma, "jsavhtml", "{}", "", jsavhtml)
+        srchtml = html_change(srchtml, "//JSAVJAVASCRIPT", ma, "jsavjs", "{}", "")
+        srchtml = html_change(srchtml, "//JSAVCSS", ma, "jsavcss", "{}", "")
         return srchtml
 
     def convert(self, sourcelines):
         url = "http://stack-api-server/api/xmltoyaml.php"
-        data = {'xml': sourcelines}
+        data = {"xml": sourcelines}
         r = requests.post(url=url, data=json.dumps(data))
         r = r.json()
-        return 0, r.get('yaml'), "", ""
+        return 0, r.get("yaml"), "", ""
 
 
 class R(Language):
@@ -1538,8 +1689,10 @@ class R(Language):
         self.imgdest = f"/csgenerated/{self.rndname}.{self.image_ext}"
 
     def run(self, result, sourcelines, points_rule):
-        code, out, err, pwddir = self.runself(["Rscript", "--save", "--restore", self.pure_exename],
-                                              ulimit=df(self.ulimit, "ulimit -f 80000"))
+        code, out, err, pwddir = self.runself(
+            ["Rscript", "--save", "--restore", self.pure_exename],
+            ulimit=df(self.ulimit, "ulimit -f 80000"),
+        )
         err = re.sub("^Loading required package: .*\n", "", err, flags=re.M)
         err = re.sub("^This is vegan .*\n", "", err, flags=re.M)
         out, err = self.copy_image(result, code, out, err, points_rule)
@@ -1568,7 +1721,8 @@ class FS(Language):
         return err.replace(
             "F# Compiler for F# 4.0 (Open Source Edition)\n"
             "Freely distributed under the Apache 2.0 Open Source License\n",
-            "")
+            "",
+        )
 
 
 class Mathcheck(Language):
@@ -1582,21 +1736,32 @@ class Mathcheck(Language):
         super().__init__(query, sourcecode)
         self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.txt"
         self.fileext = "txt"
-        self.readpoints_default = '<!--!points! (.*) -->'
+        self.readpoints_default = "<!--!points! (.*) -->"
 
     def run(self, result, sourcelines, points_rule):
         self.stdin = "%s.txt" % self.filename
-        cmdline = "/cs/mathcheck/mathcheck_subhtml.out <%s" % sanitize_filename(self.sourcefilename)
+        cmdline = "/cs/mathcheck/mathcheck_subhtml.out <%s" % sanitize_filename(
+            self.sourcefilename
+        )
         # print("mathcheck: ", self.stdin)
         # code, out, err, pwddir = self.runself(["/cs/mathcheck/mathcheck_subhtml.out"])
         self.prgpath = sanitize_filename(self.prgpath)
         # cmdline = sanitize_cmdline(cmdline)
-        out = check_output(["cd " + self.prgpath + " && " + cmdline], stderr=subprocess.STDOUT,
-                           shell=True).decode("utf-8")
-        correct_text = get_param(self.query, 'correctText', None)
+        out = check_output(
+            ["cd " + self.prgpath + " && " + cmdline],
+            stderr=subprocess.STDOUT,
+            shell=True,
+        ).decode("utf-8")
+        correct_text = get_param(self.query, "correctText", None)
         if correct_text:
-            out = out.replace("No errors found. MathCheck is convinced that there are no errors.", correct_text)
-            out = out.replace("No errors found. Please notice that the check was not complete.", correct_text)
+            out = out.replace(
+                "No errors found. MathCheck is convinced that there are no errors.",
+                correct_text,
+            )
+            out = out.replace(
+                "No errors found. Please notice that the check was not complete.",
+                correct_text,
+            )
         return 0, out, "", ""
 
 
@@ -1644,24 +1809,31 @@ class Maxima(Language):
 
     def run(self, result, sourcelines, points_rule):
         def maxima_option(name):
-            res = get_value(self.query.jso, False, 'markup', "-maxima", name) or \
-                  name in sourcelines
+            res = (
+                get_value(self.query.jso, False, "markup", "-maxima", name)
+                or name in sourcelines
+            )
             return res
 
         timplot = maxima_option("timplot")
         if timplot:
             sourcelines = MAXIMA_T_PLOT + sourcelines
 
-        r = requests.post("http://maxima:8080/maxima", data={
-            "input": sourcelines.strip(),
-            "timeout": 10000,
-        })
+        r = requests.post(
+            "http://maxima:8080/maxima",
+            data={
+                "input": sourcelines.strip(),
+                "timeout": 10000,
+            },
+        )
 
         htmldata = ""
         result["web"]["md"] = ""
         out = ""
         if r.text.startswith("PK"):  # TODO: is there a better wy to check zip?
-            all_image_attributes = cs_min_sanitize(get_param(self.query, "imageAttributes", ""))
+            all_image_attributes = cs_min_sanitize(
+                get_param(self.query, "imageAttributes", "")
+            )
 
             with ZipFile(BytesIO(r.content)) as zipObj:
                 for fn in zipObj.filelist:
@@ -1674,13 +1846,22 @@ class Maxima(Language):
                             sdata = data[:100].decode()  # take svg viewBox
                             match = re.search(r'viewBox="0 0 ([0-9]+) ([0-9]+)', sdata)
                             if match:
-                                image_attributes = ' style="width: ' + match.group(1) + 'px;"'
+                                image_attributes = (
+                                    ' style="width: ' + match.group(1) + 'px;"'
+                                )
                         pngenc = b64encode(data)
                         # _,imgext = splitext(fn.filename)
                         # imgext = imgext[1:]
-                        imgext = 'svg+xml'  # pure svg is not enough
-                        htmldata += '<img src="data:image/' + imgext + ';base64, ' + \
-                                    pngenc.decode() + '" ' + image_attributes + '/>'
+                        imgext = "svg+xml"  # pure svg is not enough
+                        htmldata += (
+                            '<img src="data:image/'
+                            + imgext
+                            + ";base64, "
+                            + pngenc.decode()
+                            + '" '
+                            + image_attributes
+                            + "/>"
+                        )
                 result["web"]["md"] = htmldata
         else:
             out = r.text.strip()
@@ -1689,15 +1870,15 @@ class Maxima(Language):
         showtex = maxima_option("showtex")
 
         # s = out.replace("\n", " ")
-        p = re.compile(r'\$\$.*?\$\$', flags=re.DOTALL)
+        p = re.compile(r"\$\$.*?\$\$", flags=re.DOTALL)
         tex = "\n".join(p.findall(out))
         if tex:
             result["web"]["md"] = tex + result["web"]["md"]
             if not showtex:
-                out = re.sub(r'\$\$.*?\$\$', '', out, flags=re.DOTALL)
+                out = re.sub(r"\$\$.*?\$\$", "", out, flags=re.DOTALL)
         if not showinput:
-            out = re.sub(r'^\(%i[^)]*\) *\n', '', out, flags=re.M)
-            out = re.sub(r'^\(%i[^)]*\)$', '', out, flags=re.M)
+            out = re.sub(r"^\(%i[^)]*\) *\n", "", out, flags=re.M)
+            out = re.sub(r"^\(%i[^)]*\)$", "", out, flags=re.M)
 
         return 0, out, "", ""
 
@@ -1760,15 +1941,23 @@ class Octave(Language):
 
     def run(self, result, sourcelines, points_rule):
         # print("octave: ", self.exename)
-        extra = get_param(self.query, "extra", "").format(self.pure_exename, self.userargs)
-        self.dockercontainer = get_json_param(self.query.jso, "markup", "dockercontainer",
-                                              f"timimages/cs3{CS3_TARGET}:{CS3_TAG}")
-        code, out, err, pwddir = self.runself(["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],
-                                              timeout=20,
-                                              ulimit=df(self.ulimit, "ulimit -t 30 -f 80000"), no_x11=True,
-                                              dockercontainer=self.dockercontainer,
-                                              extra=extra
-                                              )
+        extra = get_param(self.query, "extra", "").format(
+            self.pure_exename, self.userargs
+        )
+        self.dockercontainer = get_json_param(
+            self.query.jso,
+            "markup",
+            "dockercontainer",
+            f"timimages/cs3{CS3_TARGET}:{CS3_TAG}",
+        )
+        code, out, err, pwddir = self.runself(
+            ["octave", "--no-window-system", "--no-gui", "-qf", self.pure_exename],
+            timeout=20,
+            ulimit=df(self.ulimit, "ulimit -t 30 -f 80000"),
+            no_x11=True,
+            dockercontainer=self.dockercontainer,
+            extra=extra,
+        )
         if err:
             err = err[0:2000]
 
@@ -1777,7 +1966,9 @@ class Octave(Language):
             lout = []
             i = 0
             while i < len(lin):
-                if any(re.match(skipmsg, lin[i]) for skipmsg in octave_warnings_to_skip):
+                if any(
+                    re.match(skipmsg, lin[i]) for skipmsg in octave_warnings_to_skip
+                ):
                     i += 1
                 elif re.match("warning: ft_", lin[i]):
                     i += 1
@@ -1794,9 +1985,14 @@ class Octave(Language):
         out, err = self.copy_image(result, code, out, err, points_rule)
         if self.wavsource and self.wavdest:
             remove(self.wavdest)
-            wav_ok, e = copy_file(self.filepath + "/" + self.wavsource, self.wavdest, True, self.is_optional_image)
+            wav_ok, e = copy_file(
+                self.filepath + "/" + self.wavsource,
+                self.wavdest,
+                True,
+                self.is_optional_image,
+            )
             if e:
-                err = (str(err) + "\n" + str(e) + "\n" + str(out))
+                err = str(err) + "\n" + str(e) + "\n" + str(out)
             # print("WAV: ", self.is_optional_image, wav_ok, self.wavname, self.wavsource, self.wavdest)
             remove(self.wavsource)
             web = result["web"]

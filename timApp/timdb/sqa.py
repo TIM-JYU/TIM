@@ -16,7 +16,13 @@ db = SQLAlchemy()
 
 class TimeStampMixin:
     created = db.Column(db.DateTime(timezone=True), nullable=True, default=func.now())
-    modified = db.Column(db.DateTime(timezone=True), nullable=True, default=func.now(), onupdate=func.now())
+    modified = db.Column(
+        db.DateTime(timezone=True),
+        nullable=True,
+        default=func.now(),
+        onupdate=func.now(),
+    )
+
 
 # UserGroupMember = db.Table('usergroupmember',
 #                            db.Column('usergroup_id', db.Integer, db.ForeignKey('usergroup.id'), primary_key=True),
@@ -33,7 +39,11 @@ def get_tim_main_engine():
 
 
 def include_if_loaded(attr_name: str, obj, key_name=None):
-    return {(key_name or attr_name): getattr(obj, attr_name)} if is_attribute_loaded(attr_name, obj) else {}
+    return (
+        {(key_name or attr_name): getattr(obj, attr_name)}
+        if is_attribute_loaded(attr_name, obj)
+        else {}
+    )
 
 
 def is_attribute_loaded(attr_name, obj):

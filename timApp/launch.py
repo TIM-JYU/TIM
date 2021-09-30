@@ -17,21 +17,32 @@ def quit_fast(_sig: signal.Signals, _frame: FrameType) -> None:
     sys.exit(0)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # quit faster when running in PyCharm
     if pycharm_running():
         signal.signal(signal.SIGINT, quit_fast)
     initialize_database()
     try:
-        os.remove(app.config['GLOBAL_NOTIFICATION_FILE'])
+        os.remove(app.config["GLOBAL_NOTIFICATION_FILE"])
     except FileNotFoundError:
         pass
     if len(sys.argv) <= 1:
-        log_info('Starting without gunicorn.')
+        log_info("Starting without gunicorn.")
         timApp.tim.start_app()
-    elif sys.argv[1] == '--with-gunicorn':
-        log_info(f'Starting with gunicorn. CPUs available: {multiprocessing.cpu_count()}')
-        p = subprocess.Popen(["gunicorn", "-p", gunicorn_pid_path, "--config", "gunicornconf.py", "tim:init_app()"])
+    elif sys.argv[1] == "--with-gunicorn":
+        log_info(
+            f"Starting with gunicorn. CPUs available: {multiprocessing.cpu_count()}"
+        )
+        p = subprocess.Popen(
+            [
+                "gunicorn",
+                "-p",
+                gunicorn_pid_path,
+                "--config",
+                "gunicornconf.py",
+                "tim:init_app()",
+            ]
+        )
         p.wait()
     else:
-        raise Exception('Unknown command line argument: ' + sys.argv[1])
+        raise Exception("Unknown command line argument: " + sys.argv[1])

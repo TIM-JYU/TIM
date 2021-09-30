@@ -4,8 +4,17 @@ from shutil import copy2, chown
 
 from marshmallow import EXCLUDE
 
-from file_util import FileSpecification, File, rm, is_relative_subpath, copy_files_regex, \
-    copy_files_glob, default_filename, listify, is_parent_of
+from file_util import (
+    FileSpecification,
+    File,
+    rm,
+    is_relative_subpath,
+    copy_files_regex,
+    copy_files_glob,
+    default_filename,
+    listify,
+    is_parent_of,
+)
 from git.gitlib import get_lib
 from git.util import Settings as GitSettings, RemoteInfo
 from languages import Language
@@ -14,19 +23,26 @@ from tim_common.fileParams import get_json_param, get_param, mkdirs
 
 def classinstancemethod(func):
     """Decorator for getting cls and self"""
+
     def wrapper(obj, *kargs, **kwargs):
         return func(type(obj), obj, *kargs, **kwargs)
+
     return wrapper
 
 
 """the class method create makes an encapsulated version of the class where
 the class variables are bound to that version. The class method init is used to
 initialize these variables"""
+
+
 class FileSource:
     """Base class for file sources"""
+
     id = "_source"
 
-    def __init__(self, specification: FileSpecification, source_path: str, language: Language):
+    def __init__(
+        self, specification: FileSpecification, source_path: str, language: Language
+    ):
         self.specification = specification
         self.language = language
         self.source_path = source_path
@@ -56,7 +72,11 @@ class FileSource:
 
     @staticmethod
     def source_classes(query, files):
-        bases = [base for base in FileSource.__subclasses__() if base not in [ExternalFileSource]] + ExternalFileSource.__subclasses__()
+        bases = [
+            base
+            for base in FileSource.__subclasses__()
+            if base not in [ExternalFileSource]
+        ] + ExternalFileSource.__subclasses__()
         return {cls.id: cls.create(query, files) for cls in bases}
 
     @classmethod
@@ -66,6 +86,7 @@ class FileSource:
 
 class ExternalFileSource(FileSource):
     """Base class for file sources"""
+
     id = "_esource"
 
     def load_external(self) -> list[File]:
@@ -97,7 +118,9 @@ class EditorSource(FileSource):
     def init(cls, query, files) -> None:
         cls.files = [file for file in files if file.source == "editor"]
         cls.paths = None
-        cls.must_paths = [file.path for file in cls.files if not file.canClose and not file.canRename]
+        cls.must_paths = [
+            file.path for file in cls.files if not file.canClose and not file.canRename
+        ]
 
         allowed_paths = get_json_param(query.jso, "markup", "allowedPaths", None)
         if allowed_paths != "*":
@@ -130,7 +153,10 @@ class UploadByCodeSource(FileSource):
     def matches(self, file: File) -> bool:
         if file.source != "uploadByCode":
             return False
-        return file.path == self.specification.path or (self.specification.paths is not None and file.path in self.specification.paths)
+        return file.path == self.specification.path or (
+            self.specification.paths is not None
+            and file.path in self.specification.paths
+        )
 
     @classinstancemethod
     def load(cls, self, file: File) -> list[File]:
@@ -144,7 +170,9 @@ class UploadByCodeSource(FileSource):
     def init(cls, query, files) -> None:
         cls.files = [file for file in files if file.source == "uploadByCode"]
         cls.paths = None
-        cls.must_paths = [file.path for file in cls.files if not file.canClose and not file.canRename]
+        cls.must_paths = [
+            file.path for file in cls.files if not file.canClose and not file.canRename
+        ]
 
         allowed_paths = get_json_param(query.jso, "markup", "allowedPaths", None)
         if allowed_paths != "*":
@@ -167,17 +195,22 @@ class UploadSource(FileSource):
         super().__init__(specification, source_path, language)
 
     def matches(self, file: File) -> bool:
-        return file.source.startswith("upload") and (file.path == self.specification.path or file.path in self.specification.paths)
+        return file.source.startswith("upload") and (
+            file.path == self.specification.path
+            or file.path in self.specification.paths
+        )
 
     @classinstancemethod
     def load(cls, self, file: File) -> list[File]:
-        path = Path(file.source[len("upload:"):])
+        path = Path(file.source[len("upload:") :])
 
         if not path.is_file():
             raise ValueError("Upload source file not found")
 
         if cls.verified is None or str(path) not in cls.verified:
-            raise PermissionError(f"File {file.path} didn't go through access verification")
+            raise PermissionError(
+                f"File {file.path} didn't go through access verification"
+            )
 
         try:
             file.bcontent = path.read_bytes()
@@ -213,7 +246,9 @@ class UploadSource(FileSource):
 class MasterSource(FileSource):
     id = "master"
 
-    def __init__(self, specification: FileSpecification, source_path: str, language: Language):
+    def __init__(
+        self, specification: FileSpecification, source_path: str, language: Language
+    ):
         self.is_root = False
         if source_path.startswith("root:"):
             self.is_root = True
@@ -245,9 +280,15 @@ class MasterSource(FileSource):
     @classinstancemethod
     def copy(cls, self, destination_path: str) -> None:
         if self.is_root and self.language.rootpath is None:
-            raise ValueError("Cannot copy from master task: cannot determine task path (root path not specified)")
+            raise ValueError(
+                "Cannot copy from master task: cannot determine task path (root path not specified)"
+            )
 
-        source_path = cls.master_path / ("" if self.is_root else Path(self.language.prgpath).relative_to(self.language.rootpath))
+        source_path = cls.master_path / (
+            ""
+            if self.is_root
+            else Path(self.language.prgpath).relative_to(self.language.rootpath)
+        )
 
         if not source_path.exists():
             raise ValueError("Master source path not found")
@@ -258,7 +299,9 @@ class MasterSource(FileSource):
             count = copy_files_glob(self.source_path, source_path, destination_path)
 
         if count == 0:
-            raise ValueError(f"Configuration error: No files were found for {self.specification.source}.")
+            raise ValueError(
+                f"Configuration error: No files were found for {self.specification.source}."
+            )
 
     @classmethod
     def init(cls, query, files) -> None:
@@ -320,7 +363,9 @@ class GitSource(ExternalFileSource):
                     raise ValueError(f"File {f.path} is too large (max {max_size})")
                 total += f.size()
             if max_total_size is not None and total > max_total_size:
-                raise ValueError(f"Files in {self.specification.path} are too large (max total {max_total_size})")
+                raise ValueError(
+                    f"Files in {self.specification.path} are too large (max total {max_total_size})"
+                )
 
         return files
 
@@ -328,14 +373,19 @@ class GitSource(ExternalFileSource):
     def copy(cls, self, destination_path: str) -> None:
         count = self.lib.copy_files(self.sub_path, destination_path, self.glob)
         if count == 0:
-            raise ValueError(f"Configuration error: No files were found for {self.specification.source}.")
+            raise ValueError(
+                f"Configuration error: No files were found for {self.specification.source}."
+            )
 
     @classmethod
     def init(cls, query, files) -> None:
-        cls.git_settings = GitSettings.load(get_json_param(query.jso, "markup", "gitDefaults", {}))
+        cls.git_settings = GitSettings.load(
+            get_json_param(query.jso, "markup", "gitDefaults", {})
+        )
+
 
 class FileHandler:
-    def __init__(self, query, save = None):
+    def __init__(self, query, save=None):
         self.query = query
         if save is not None:
             self.save = save
@@ -347,7 +397,9 @@ class FileHandler:
         if self.master_path is not None:
             self.master_path = (Path("/cs/masters") / self.master_path).resolve()
             if Path("/cs/masters") not in self.master_path.parents:
-                raise ValueError("Root path points outside of allowed directories (masterPath must be a relative subpath)")
+                raise ValueError(
+                    "Root path points outside of allowed directories (masterPath must be a relative subpath)"
+                )
 
         uploaded_files = get_json_param(query.jso, "input", "uploadedFiles", None)
         if uploaded_files:
@@ -381,10 +433,10 @@ class FileHandler:
     def parse_destination(self, path: str, prgpath: str, rootpath: str) -> str:
         is_root = False
         if path.startswith("root:"):
-            path = path[len("root:"):]
+            path = path[len("root:") :]
             is_root = True
         elif path.startswith("task:"):
-            path = path[len("task:"):]
+            path = path[len("task:") :]
 
         if is_root and rootpath is None:
             raise ValueError("Cannot copy to root: root path not specified")
@@ -405,12 +457,16 @@ class FileHandler:
         tmp = [file for file, _ in mapping]
         for file in files:
             if file not in tmp:
-                raise PermissionError(f"File {file.path} was not recognized as a submittable file")
+                raise PermissionError(
+                    f"File {file.path} was not recognized as a submittable file"
+                )
 
         return [f for file, source in mapping for f in source.load(file)]
 
     def get_external_files(self):
-        external_files = [file for source in self.external_sources for file in source.load_external()]
+        external_files = [
+            file for source in self.external_sources for file in source.load_external()
+        ]
         return File.dump(external_files, many=True, exclude=["bcontent"])
 
     def get_files(self, s: str):
@@ -432,7 +488,7 @@ class FileHandler:
 
         submitted_files = self.load_files(submitted_files)
 
-        file_mappings = {} # mapping of paths to matching files
+        file_mappings = {}  # mapping of paths to matching files
         for file in submitted_files:
             tmp = file_mappings.setdefault(file.path, [])
             tmp.append(file)
@@ -455,14 +511,22 @@ class FileHandler:
         """Copies/writes files instead of reading them to a string. Must only be
         used with trusted sources (i.e. students may not edit them)."""
         source, source_path = self.parse_source(file.source)
-        destination_path = self.parse_destination(file.path, language.prgpath, language.rootpath)
+        destination_path = self.parse_destination(
+            file.path, language.prgpath, language.rootpath
+        )
 
-        basepath = language.rootpath if language.rootpath is not None else language.prgpath
+        basepath = (
+            language.rootpath if language.rootpath is not None else language.prgpath
+        )
         if not is_parent_of(basepath, destination_path):
-            raise PermissionError(f"{destination_path} directs outside the working directory")
+            raise PermissionError(
+                f"{destination_path} directs outside the working directory"
+            )
 
         try:
-            self.source_classes[source](file, source_path, language).copy(destination_path)
+            self.source_classes[source](file, source_path, language).copy(
+                destination_path
+            )
         except KeyError:
             raise ValueError(f"Source {source} (from {file.source}) not recognized")
 
@@ -473,24 +537,34 @@ class FileHandler:
         elif file.bcontent is not None:
             path.write_bytes(file.bcontent)
         else:
-            raise ValueError(f"Couldn't save file {path.name} because its content is None")
+            raise ValueError(
+                f"Couldn't save file {path.name} because its content is None"
+            )
 
         chown(path, user="agent", group="agent")
 
     def save_files(self, submitted_files, language):
-        basepath = language.rootpath if language.rootpath is not None else language.prgpath
+        basepath = (
+            language.rootpath if language.rootpath is not None else language.prgpath
+        )
 
         delete_files = get_json_param(self.query.jso, "markup", "deleteFiles", [])
         for path in delete_files:
-            ppath = Path(self.parse_destination(path, language.prgpath, language.rootpath))
+            ppath = Path(
+                self.parse_destination(path, language.prgpath, language.rootpath)
+            )
             if not is_parent_of(basepath, ppath):
-                raise PermissionError(f"{path} (from deleteFiles) directs outside the working directory")
+                raise PermissionError(
+                    f"{path} (from deleteFiles) directs outside the working directory"
+                )
             if ppath.exists():
                 rm(ppath)
 
         for file in submitted_files:
             if not is_parent_of(basepath, file.path):
-                raise PermissionError(f"{file.path} directs outside the working directory")
+                raise PermissionError(
+                    f"{file.path} directs outside the working directory"
+                )
 
             path = Path(file.path)
             mkdirs(path.parent)

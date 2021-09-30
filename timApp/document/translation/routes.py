@@ -3,8 +3,13 @@ import re
 from flask import request, Blueprint
 from sqlalchemy.exc import IntegrityError
 
-from timApp.auth.accesshelper import get_doc_or_abort, verify_view_access, verify_manage_access, has_manage_access, \
-    AccessDenied
+from timApp.auth.accesshelper import (
+    get_doc_or_abort,
+    verify_view_access,
+    verify_manage_access,
+    has_manage_access,
+    AccessDenied,
+)
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import create_document_and_block, DocEntry
 from timApp.document.documents import add_reference_pars
@@ -17,25 +22,23 @@ from timApp.util.flask.responsehelper import json_response, ok_response
 
 
 def valid_language_id(lang_id):
-    return re.match(r'^\w+$', lang_id) is not None
+    return re.match(r"^\w+$", lang_id) is not None
 
 
-tr_bp = Blueprint('translation',
-                  __name__,
-                  url_prefix='')
+tr_bp = Blueprint("translation", __name__, url_prefix="")
 
 
 @tr_bp.post("/translate/<int:tr_doc_id>/<language>")
 def create_translation_route(tr_doc_id, language):
-    title = request.get_json().get('doc_title', None)
+    title = request.get_json().get("doc_title", None)
 
     doc = get_doc_or_abort(tr_doc_id)
 
     verify_view_access(doc)
     if not valid_language_id(language):
-        raise NotExist('Invalid language identifier')
+        raise NotExist("Invalid language identifier")
     if doc.has_translation(language):
-        raise ItemAlreadyExistsException('Translation for this language already exists')
+        raise ItemAlreadyExistsException("Translation for this language already exists")
     verify_manage_access(doc.src_doc)
 
     src_doc = doc.src_doc.document
@@ -44,13 +47,13 @@ def create_translation_route(tr_doc_id, language):
     tr = Translation(doc_id=cite_doc.doc_id, src_docid=src_doc.doc_id, lang_id=language)
     tr.title = title
 
-    add_reference_pars(cite_doc, src_doc, 'tr')
+    add_reference_pars(cite_doc, src_doc, "tr")
     if isinstance(doc, DocEntry):
         de = doc
     elif isinstance(doc, Translation):
         de = doc.docentry
     else:
-        assert False, 'doc has unexpected type'
+        assert False, "doc has unexpected type"
     de.trs.append(tr)
     copy_default_rights(tr, BlockType.Document)
     db.session.commit()
@@ -59,18 +62,20 @@ def create_translation_route(tr_doc_id, language):
 
 @tr_bp.post("/translation/<int:doc_id>")
 def update_translation(doc_id):
-    (lang_id, doc_title) = verify_json_params('new_langid', 'new_title', require=True)
+    (lang_id, doc_title) = verify_json_params("new_langid", "new_title", require=True)
     if not valid_language_id(lang_id):
-        raise AccessDenied('Invalid language identifier')
+        raise AccessDenied("Invalid language identifier")
     doc = get_doc_or_abort(doc_id)
     if not has_manage_access(doc) and not has_manage_access(doc):
-        raise AccessDenied("You need manage access of either this or the translated document")
+        raise AccessDenied(
+            "You need manage access of either this or the translated document"
+        )
     doc.lang_id = lang_id
     doc.title = doc_title
     try:
         db.session.commit()
     except IntegrityError:
-        raise ItemAlreadyExistsException('This language already exists.')
+        raise ItemAlreadyExistsException("This language already exists.")
     return ok_response()
 
 

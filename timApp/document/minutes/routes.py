@@ -9,7 +9,11 @@ from urllib.parse import urlencode
 
 from flask import Blueprint, send_file, Response
 
-from timApp.auth.accesshelper import verify_manage_access, verify_edit_access, get_doc_or_abort
+from timApp.auth.accesshelper import (
+    verify_manage_access,
+    verify_edit_access,
+    get_doc_or_abort,
+)
 from timApp.document.create_item import create_or_copy_item, create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -18,17 +22,24 @@ from timApp.document.viewcontext import default_view_ctx
 from timApp.item.block import BlockType
 from timApp.timdb.sqa import db
 from timApp.upload.uploadedfile import UploadedFile
-from timApp.util.flask.requesthelper import verify_json_params, use_model, RouteException, NotExist
+from timApp.util.flask.requesthelper import (
+    verify_json_params,
+    use_model,
+    RouteException,
+    NotExist,
+)
 from timApp.util.flask.responsehelper import safe_redirect, json_response
-from timApp.util.pdftools import merged_file_folder, merge_pdfs, get_attachments_from_pars
+from timApp.util.pdftools import (
+    merged_file_folder,
+    merge_pdfs,
+    get_attachments_from_pars,
+)
 from timApp.util.utils import get_error_message
 
-minutes_blueprint = Blueprint('minutes',
-                              __name__,
-                              url_prefix='/minutes')
+minutes_blueprint = Blueprint("minutes", __name__, url_prefix="/minutes")
 
 
-@minutes_blueprint.get('/createMinuteExtracts/<path:doc>')
+@minutes_blueprint.get("/createMinuteExtracts/<path:doc>")
 def create_minute_extracts(doc: str) -> Response:
     """
     A route for creating extracts of faculty council minutes.
@@ -45,10 +56,14 @@ def create_minute_extracts(doc: str) -> Response:
     macros = d.document.get_settings().get_macroinfo(default_view_ctx).get_macros()
     minute_number = macros.get("knro")
     if not minute_number:
-        raise RouteException("Error creating extracts: the document is not a minute document (no 'knro' macro found)")
+        raise RouteException(
+            "Error creating extracts: the document is not a minute document (no 'knro' macro found)"
+        )
 
     if not isinstance(minute_number, int):
-        raise RouteException("Error creating extracts: the value of the 'knro' macro is not a valid integer")
+        raise RouteException(
+            "Error creating extracts: the value of the 'knro' macro is not a valid integer"
+        )
 
     paragraphs = d.document.get_paragraphs()
 
@@ -85,17 +100,25 @@ def create_minute_extracts(doc: str) -> Response:
 
             try:
                 new_extract_index: Union[int, str] = ast.literal_eval(
-                    markdown[macro_position + len(markdown_to_find):comma_position])
+                    markdown[macro_position + len(markdown_to_find) : comma_position]
+                )
             except ValueError:
-                raise RouteException(f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
+                raise RouteException(
+                    f"Failed to parse extract index from macro, from paragraph: \n{markdown}"
+                )
 
             if current_extract_index is not None:
                 # if we were in another extract's paragraph before, save the previous extract's paragraphs into the dict
                 # don't allow duplicate extract numbers
                 if current_extract_index in extract_dict:
-                    raise RouteException(f"Error creating extracts: the same extract entry ({current_extract_index}) " +
-                                         "cannot exist multiple times in the document.")
-                extract_dict[current_extract_index] = (current_extract_title, current_paragraphs)
+                    raise RouteException(
+                        f"Error creating extracts: the same extract entry ({current_extract_index}) "
+                        + "cannot exist multiple times in the document."
+                    )
+                extract_dict[current_extract_index] = (
+                    current_extract_title,
+                    current_paragraphs,
+                )
                 current_extract_title = ""
                 current_paragraphs = []
 
@@ -111,19 +134,28 @@ def create_minute_extracts(doc: str) -> Response:
                 title_search_string = "# "
                 number_sign_position = markdown.find(title_search_string)
                 if number_sign_position > -1:
-                    current_extract_title = markdown[number_sign_position + len(title_search_string):]
+                    current_extract_title = markdown[
+                        number_sign_position + len(title_search_string) :
+                    ]
                     # if there's other content in the same paragraph than just the title, cut the other content out
                     linebreak_position = current_extract_title.find("\n")
                     if linebreak_position > -1:
-                        current_extract_title = current_extract_title[:linebreak_position]
+                        current_extract_title = current_extract_title[
+                            :linebreak_position
+                        ]
 
     # after the loop has ended, check if we're still within an extract
     # if so, add the last extract to the dict
     if current_extract_index is not None:
         if current_extract_index in extract_dict:
-            raise RouteException(f"Error creating extracts: the same extract entry ({current_extract_index}) cannot " +
-                                 "exist multiple times in the document.")
-        extract_dict[current_extract_index] = (current_extract_title, current_paragraphs)
+            raise RouteException(
+                f"Error creating extracts: the same extract entry ({current_extract_index}) cannot "
+                + "exist multiple times in the document."
+            )
+        extract_dict[current_extract_index] = (
+            current_extract_title,
+            current_paragraphs,
+        )
 
     if not extract_dict:
         raise RouteException("The document has no extract macros!")
@@ -131,9 +163,13 @@ def create_minute_extracts(doc: str) -> Response:
     base_path = f"{d.location}/otteet/kokous{minute_number}/"
 
     # create the composite document that has links to all the extract documents
-    composite_docentry = create_or_get_and_wipe_document(f"{base_path}kokous{minute_number}", f"kokous{minute_number}")
-    composite_docentry.document.add_paragraph("## Pöytäkirjan asiakohtien otteet",
-                                              attrs=dict([("area", f"kokous{minute_number}")]))
+    composite_docentry = create_or_get_and_wipe_document(
+        f"{base_path}kokous{minute_number}", f"kokous{minute_number}"
+    )
+    composite_docentry.document.add_paragraph(
+        "## Pöytäkirjan asiakohtien otteet",
+        attrs=dict([("area", f"kokous{minute_number}")]),
+    )
 
     composite_paragraph = composite_docentry.document.add_paragraph("")
 
@@ -141,27 +177,37 @@ def create_minute_extracts(doc: str) -> Response:
     for extract_number, (extract_title, paragraphs) in extract_dict.items():
         if isinstance(extract_number, str):
             extract_number = extract_number.strip()
-        docentry = create_or_get_and_wipe_document(f"{base_path}lista{extract_number}", f"Lista {extract_number}")
+        docentry = create_or_get_and_wipe_document(
+            f"{base_path}lista{extract_number}", f"Lista {extract_number}"
+        )
 
         #  Next must be add_text to avoid first coming as text and then changing to different paragraph
         #  and #- must be on the column 1!
-        docentry.document.add_text(fr"""
+        docentry.document.add_text(
+            fr"""
 PÖYTÄKIRJANOTE - Lista {extract_number} -  {extract_title}      
 \        
 #- {{rd="{d.id}" ra="ETUSIVU"}}
-           """)
+           """
+        )
         for par in paragraphs:
-            docentry.document.add_paragraph_obj(par.create_reference(docentry.document, add_rd=True))
+            docentry.document.add_paragraph_obj(
+                par.create_reference(docentry.document, add_rd=True)
+            )
         docentry.document.add_paragraph("%%ALLEKIRJOITUKSET%%")
         docentry.update_last_modified()
 
         # add into the composite document a link leading to the new extract document
-        composite_paragraph.set_markdown(f"{composite_paragraph.get_markdown()}\n" +
-                                         f"- [Lista {extract_number}](lista{extract_number}), " +
-                                         f"([PDF](/print/{docentry.path_without_lang})) - {extract_title}")
+        composite_paragraph.set_markdown(
+            f"{composite_paragraph.get_markdown()}\n"
+            + f"- [Lista {extract_number}](lista{extract_number}), "
+            + f"([PDF](/print/{docentry.path_without_lang})) - {extract_title}"
+        )
 
     composite_paragraph.save()
-    composite_docentry.document.add_paragraph("", attrs=dict([("area_end", f"kokous{minute_number}")]))
+    composite_docentry.document.add_paragraph(
+        "", attrs=dict([("area_end", f"kokous{minute_number}")])
+    )
     composite_docentry.update_last_modified()
     db.session.commit()
     return safe_redirect(f"/view/{composite_docentry.path_without_lang}")
@@ -174,7 +220,9 @@ def create_minutes_route() -> Response:
     :return: A web response for the new document.
     """
 
-    item_path, item_title, copy_id = verify_json_params('item_path', 'item_title', 'copy')
+    item_path, item_title, copy_id = verify_json_params(
+        "item_path", "item_title", "copy"
+    )
 
     d = DocEntry.find_by_id(copy_id)
     if not d:
@@ -196,7 +244,7 @@ def create_minutes_route() -> Response:
 
 
 def create_or_get_and_wipe_document(path: str, title: str) -> DocInfo:
-    """ Creates a document to the given path and returns the DocEntry.
+    """Creates a document to the given path and returns the DocEntry.
     If a document already exists in the given path, the already existing document is wiped clean and then its DocEntry
     is returned.
     :param path: The path to the document.
@@ -215,7 +263,7 @@ def create_or_get_and_wipe_document(path: str, title: str) -> DocInfo:
     return d
 
 
-@minutes_blueprint.get('/checkAttachments/<path:doc>')
+@minutes_blueprint.get("/checkAttachments/<path:doc>")
 def get_attachment_list(doc: str) -> Response:
     """
     Gets the list of all attachments in the document, their macro-types, possible errors,
@@ -244,7 +292,7 @@ class MergeAttachmentsModel:
     doc_id: int
 
 
-@minutes_blueprint.post('/mergeAttachments')
+@minutes_blueprint.post("/mergeAttachments")
 @use_model(MergeAttachmentsModel)
 def merge_selected_attachments(args: MergeAttachmentsModel) -> Response:
     """
@@ -278,11 +326,14 @@ def merge_selected_attachments(args: MergeAttachmentsModel) -> Response:
     except Exception as err:
         raise RouteException(get_error_message(err))
     else:
-        params = urlencode({'doc_id': doc_id, 'urls': pdf_urls}, doseq=True)
-        return json_response({'success': True, 'url': f"/minutes/openMergedAttachment?{params}"}, status_code=201)
+        params = urlencode({"doc_id": doc_id, "urls": pdf_urls}, doseq=True)
+        return json_response(
+            {"success": True, "url": f"/minutes/openMergedAttachment?{params}"},
+            status_code=201,
+        )
 
 
-@minutes_blueprint.get('/openMergedAttachment')
+@minutes_blueprint.get("/openMergedAttachment")
 @use_model(MergeAttachmentsModel)
 def open_merged_file(args: MergeAttachmentsModel) -> Response:
     """
@@ -291,7 +342,7 @@ def open_merged_file(args: MergeAttachmentsModel) -> Response:
     :return: Opens the file in the browser.
     """
     if not args.urls:
-        raise NotExist('File not found')
+        raise NotExist("File not found")
     pdf_urls = args.urls
     doc_id = args.doc_id
     d = get_doc_or_abort(doc_id)
@@ -301,6 +352,6 @@ def open_merged_file(args: MergeAttachmentsModel) -> Response:
     f = merged_file_folder / str(doc_id) / Path(merged_file_name)
     if not f.exists():
         # TODO: Create the file here, if user has edit-access.
-        raise NotExist('File not found! ')
+        raise NotExist("File not found! ")
     verify_edit_access(d)
     return send_file(f.absolute().as_posix(), mimetype="application/pdf")

@@ -195,8 +195,9 @@ Eval:
 </ul>
 """
 
+
 class Geogebra(Language):
-    ttype="geogebra"
+    ttype = "geogebra"
     global GEOGEBRA_DEFAULT_SRC_HTML
     global GEOGEBRA_PARAMETERS_INIT
     global GEOGEBRA_TOOL_HTML
@@ -218,7 +219,7 @@ class Geogebra(Language):
         super().__init__(query, sourcecode)
         self.sourcefilename = f"/tmp/{self.basename}/{self.filename}.txt"
         self.fileext = "txt"
-        self.readpoints_default = 'Score: (.*)'
+        self.readpoints_default = "Score: (.*)"
         self.delete_tmp = False
 
     def modify_usercode(self, s):
@@ -226,7 +227,7 @@ class Geogebra(Language):
             return s
         s = s.replace("&quot;", '"')
         js = json.loads(s)
-        res = ''
+        res = ""
         for key in js:
             res += js[key] + "\n"
         return res
@@ -237,43 +238,54 @@ class Geogebra(Language):
 
     def save(self, result):
         data = dict(self.query.jso["input"])
-        if 'type' in data:
-            del data['type']
+        if "type" in data:
+            del data["type"]
         result["save"] = data
         return 0, "GeoGebra saved", "", ""
 
     def deny_attributes(self):
-        return {"srchtml":"",
-                "filename": "",
-                "prehtml": "",
-                "posthtml": "",
-                "data":"",
-                "javascript": "",
-                "commands": "",
-                "objxml": ""
+        return {
+            "srchtml": "",
+            "filename": "",
+            "prehtml": "",
+            "posthtml": "",
+            "data": "",
+            "javascript": "",
+            "commands": "",
+            "objxml": "",
         }
 
     def state_copy(self):
         return ["message"]
 
     def iframehtml(self, result, sourcelines, points_rule):
-        ma = self.query.jso['markup']
+        ma = self.query.jso["markup"]
         jsformat = "{}"
         jsdef = None
         postdef = None
-        if get_by_id(ma, 'tool', False):
+        if get_by_id(ma, "tool", False):
             jsformat = GEOGEBRA_PARAMETERS_INIT
             jsdef = ""
             postdef = GEOGEBRA_TOOL_HTML
 
-        srchtml = get_by_id(ma, 'srchtml', GEOGEBRA_DEFAULT_SRC_HTML)
-        srchtml = html_change(srchtml, "//GEOMATERIALID", ma, "material_id", 'material_id: "{}",', None)
-        srchtml = html_change(srchtml, "//GEOFILENAME", ma, "filename", 'filename: "{}",', None)
-        srchtml = html_change(srchtml, "//GEOWIDTH", ma, "width", 'width: {},', "", "800", -10)
-        srchtml = html_change(srchtml, "//GEOHEIGHT", ma, "height", 'height: {},', "", "450", -20)  # prevent scrollbar
-        srchtml = html_change(srchtml, "//GEOJAVASCRIPT", ma, "javascript", jsformat, None, jsdef)
-        srchtml = html_change(srchtml, "GEOPREHTML", ma, "prehtml", '{}', "")
-        srchtml = html_change(srchtml, "GEOPOSTHTML", ma, "posthtml", '{}', "", postdef)
+        srchtml = get_by_id(ma, "srchtml", GEOGEBRA_DEFAULT_SRC_HTML)
+        srchtml = html_change(
+            srchtml, "//GEOMATERIALID", ma, "material_id", 'material_id: "{}",', None
+        )
+        srchtml = html_change(
+            srchtml, "//GEOFILENAME", ma, "filename", 'filename: "{}",', None
+        )
+        srchtml = html_change(
+            srchtml, "//GEOWIDTH", ma, "width", "width: {},", "", "800", -10
+        )
+        srchtml = html_change(
+            srchtml, "//GEOHEIGHT", ma, "height", "height: {},", "", "450", -20
+        )  # prevent scrollbar
+        srchtml = html_change(
+            srchtml, "//GEOJAVASCRIPT", ma, "javascript", jsformat, None, jsdef
+        )
+        srchtml = html_change(srchtml, "GEOPREHTML", ma, "prehtml", "{}", "")
+        srchtml = html_change(srchtml, "GEOPOSTHTML", ma, "posthtml", "{}", "", postdef)
 
         data = get_by_id(ma, "data", "")
         state = self.query.jso.get("state", {})
@@ -283,14 +295,14 @@ class Geogebra(Language):
         if udata:
             data = udata
         if data:
-            if data[0] == '<': # is XML?
+            if data[0] == "<":  # is XML?
                 if not udata:  # send XML in data part
                     state["data"] = data
-                data = ''
+                data = ""
             else:
-                state["data"] = ''
-        if data: # send ggb in parameters ggbBase64
-            srchtml = srchtml.replace('//GGBBASE64', f'ggbBase64: "{data.strip()}",')
+                state["data"] = ""
+        if data:  # send ggb in parameters ggbBase64
+            srchtml = srchtml.replace("//GGBBASE64", f'ggbBase64: "{data.strip()}",')
 
         commands = get_by_id(ma, "commands", None)
         if commands:
@@ -299,7 +311,8 @@ class Geogebra(Language):
         if objxml:
             state["objxml"] = objxml
         geostate = b64encode(json.dumps(state).encode("UTF-8")).decode().strip()
-        srchtml = srchtml.replace('GEOSTATE', f"'{geostate}'")
-        srchtml = srchtml.replace('GEOVERSION', ma.get('version', GEOGEBRA_DEFAULT_VERSION))
+        srchtml = srchtml.replace("GEOSTATE", f"'{geostate}'")
+        srchtml = srchtml.replace(
+            "GEOVERSION", ma.get("version", GEOGEBRA_DEFAULT_VERSION)
+        )
         return srchtml
-

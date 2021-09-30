@@ -8,7 +8,9 @@ from timApp.user.preferences import Preferences
 
 
 def get_theme_style_name(html: HtmlElement):
-    s: list[HtmlElement] = html.cssselect("link[rel='stylesheet'][href^='/static/generated/']")
+    s: list[HtmlElement] = html.cssselect(
+        "link[rel='stylesheet'][href^='/static/generated/']"
+    )
     href: str = s[0].attrib["href"]
     url: ParseResult = urlparse(href)
     return basename(url.path)
@@ -17,22 +19,18 @@ def get_theme_style_name(html: HtmlElement):
 class DocThemesTest(TimRouteTest):
     def test_theme_overrides(self):
         self.login_test1()
-        self.current_user.set_prefs(Preferences(css_files={
-            'lighttheme': True
-        }))
+        self.current_user.set_prefs(Preferences(css_files={"lighttheme": True}))
 
         d = self.create_doc()
 
-        d.document.set_settings({
-            "themes": ["hide_focus"],
-            "override_user_themes": True
-        })
+        d.document.set_settings(
+            {"themes": ["hide_focus"], "override_user_themes": True}
+        )
         t = self.get(d.url, as_tree=True)
         self.assertEqual("hide_focus.css", get_theme_style_name(t))
 
-        d.document.set_settings({
-            "themes": ["hide_focus"],
-            "override_user_themes": False
-        })
+        d.document.set_settings(
+            {"themes": ["hide_focus"], "override_user_themes": False}
+        )
         t = self.get(d.url, as_tree=True)
         self.assertEqual("hide_focus-lighttheme.css", get_theme_style_name(t))

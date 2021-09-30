@@ -26,10 +26,10 @@ class SimpleUserAgent(UserAgent):
         os_list = []
         os_ver_list = []
 
-        for t in ['flavor', 'dist', 'os']:
+        for t in ["flavor", "dist", "os"]:
             if t in res:
-                os_list.append(res[t]['name'])  # type: ignore
-                os_ver_list.append(res[t].get('version'))  # type: ignore
+                os_list.append(res[t]["name"])  # type: ignore
+                os_ver_list.append(res[t].get("version"))  # type: ignore
 
         os = "_".join(os_list).lower() if os_list else None
         os_ver = next((v for v in os_ver_list if v), None)
@@ -38,9 +38,9 @@ class SimpleUserAgent(UserAgent):
 
         self.platform = os
 
-        if 'browser' in res:
-            self.browser = res['browser'].get('name')
-            self.version = res['browser'].get('version')
+        if "browser" in res:
+            self.browser = res["browser"].get("name")
+            self.version = res["browser"].get("version")
 
         if self.browser:
             self.browser = self.browser.lower()

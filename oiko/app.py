@@ -4,7 +4,7 @@ from voikko.libvoikko import Voikko, Token
 app = Flask(__name__)
 
 
-@app.post('/api/v1/proofread')
+@app.post("/api/v1/proofread")
 def proofread():
     phrases = request.get_json()
     # The Voikko object is NOT thread-safe; we cannot initialize it in module level.
@@ -20,11 +20,15 @@ def proofread():
             return [is_correct, []]
 
     spelling = {
-        token.tokenText: get_spelling_info(token.tokenText) for t in tokenized for token in t if
-        token.tokenType == Token.WORD
+        token.tokenText: get_spelling_info(token.tokenText)
+        for t in tokenized
+        for token in t
+        if token.tokenType == Token.WORD
     }
 
-    return jsonify({
-        'spelling': spelling,
-        'tokenlists': [[[x.tokenText, x.tokenType] for x in t] for t in tokenized],
-    })
+    return jsonify(
+        {
+            "spelling": spelling,
+            "tokenlists": [[[x.tokenText, x.tokenType] for x in t] for t in tokenized],
+        }
+    )

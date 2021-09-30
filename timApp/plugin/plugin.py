@@ -34,8 +34,8 @@ from timApp.util.utils import try_load_json, get_current_time, Range
 from tim_common.markupmodels import PointsRule, KnownMarkupFields
 from tim_common.marshmallow_dataclass import class_schema
 
-date_format = '%Y-%m-%d %H:%M:%S'
-AUTOMD = 'automd'
+date_format = "%Y-%m-%d %H:%M:%S"
+AUTOMD = "automd"
 
 LAZYSTART = "<!--lazy "
 LAZYEND = " lazy-->"
@@ -44,11 +44,15 @@ NEVERLAZY = "NEVERLAZY"
 
 JINJAENV = Environment(loader=BaseLoader)
 
-PLG_RTEMPLATE = JINJAENV.from_string("""
+PLG_RTEMPLATE = JINJAENV.from_string(
+    """
 <tim-plugin-loader type="{{abtype}}"
 answer-id="{{aid or ''}}"
 class="{{plgclass}}"
-task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""".replace("\n", " "))
+task-id="{{doc_task_id or ''}}">{{cont|safe}}</tim-plugin-loader>""".replace(
+        "\n", " "
+    )
+)
 
 
 def render_template_string2(source, **context):
@@ -81,39 +85,37 @@ def render_template_string3(rtemplate, **context):
 # because TIM does not know the structure of plugin state.
 
 CONTENT_FIELD_TYPE_MAP = {
-    'numericfield': float,
+    "numericfield": float,
 }
 
 NEVERLAZY_PLUGINS = {
-    'textfield',
-    'multisave',
-    'numericfield',
-    'jsrunner',
-    'tableForm',
-    'timMenu',
-    'cbcountfield',
-    'cbfield',
-    'rbfield',
-    'dropdown',
-    'userSelect',
+    "textfield",
+    "multisave",
+    "numericfield",
+    "jsrunner",
+    "tableForm",
+    "timMenu",
+    "cbcountfield",
+    "cbfield",
+    "rbfield",
+    "dropdown",
+    "userSelect",
 }
 
 NO_ANSWERBROWSER_PLUGINS = {
-    'multisave',
-    'jsrunner',
-    'tableForm',
-    'importData',
-    'userSelect',
+    "multisave",
+    "jsrunner",
+    "tableForm",
+    "importData",
+    "userSelect",
 }
 
 ALLOW_STYLES_PLUGINS = {
-    'textfield',
-    'numericfield',
+    "textfield",
+    "numericfield",
 }
 
-WANT_FIELDS = {
-    'csPlugin'
-}
+WANT_FIELDS = {"csPlugin"}
 
 
 class PluginWrap(Enum):
@@ -151,8 +153,8 @@ def get_value(values, key, default=None):
         return default
     if key in values:
         return values.get(key, default)
-    if '-' + key in values:
-        return values.get('-' + key, default)
+    if "-" + key in values:
+        return values.get("-" + key, default)
     return default
 
 
@@ -177,16 +179,19 @@ KnownMarkupFieldsSchema = class_schema(KnownMarkupFields)()
 
 
 class Plugin:
-    deadline_key = 'deadline'
-    starttime_key = 'starttime'
-    points_rule_key = 'pointsRule'
-    answer_limit_key = 'answerLimit'
-    limit_defaults = {'mmcq': 1, 'mmcq2': 1, 'mcq': 1, 'mcq2': 1}
+    deadline_key = "deadline"
+    starttime_key = "starttime"
+    points_rule_key = "pointsRule"
+    answer_limit_key = "answerLimit"
+    limit_defaults = {"mmcq": 1, "mmcq2": 1, "mcq": 1, "mcq2": 1}
 
-    def __init__(self, task_id: Optional[TaskId],
-                 values: dict,
-                 plugin_type: str,
-                 par: DocParagraph):
+    def __init__(
+        self,
+        task_id: Optional[TaskId],
+        values: dict,
+        plugin_type: str,
+        par: DocParagraph,
+    ):
         self.answer: Optional[Answer] = None
         self.answer_count = None
         self.options: Optional[PluginRenderOptions] = None
@@ -196,17 +201,17 @@ class Plugin:
             # TODO check if par can be None here
             self.task_id.update_doc_id_from_block(par)
             self.task_id.maybe_set_hint(par.get_id())
-            if par.get_attr('readonly') == 'view' and not self.task_id.access_specifier:
+            if par.get_attr("readonly") == "view" and not self.task_id.access_specifier:
                 self.task_id.access_specifier = TaskIdAccess.ReadOnly
         assert isinstance(values, dict)
         self.values = values
         try:
             self.known: KnownMarkupFields = KnownMarkupFieldsSchema.load(
                 {k: v for k, v in values.items()},
-                unknown='EXCLUDE',
+                unknown="EXCLUDE",
             )
         except ValidationError as e:
-            raise PluginException(f'Invalid markup: {e}') from e
+            raise PluginException(f"Invalid markup: {e}") from e
         self.type = plugin_type
         self.ptype = PluginTypeLazy(plugin_type)
         self.par = par
@@ -217,33 +222,37 @@ class Plugin:
     #  Currently at least csPlugin cannot handle taskID being None.
     @property
     def fake_task_id(self):
-        return f'{self.par.doc.doc_id}..{self.par.get_id()}'
+        return f"{self.par.doc.doc_id}..{self.par.get_id()}"
 
     @staticmethod
-    def from_global_par(global_par_id: GlobalParId,
-                        user_ctx: UserContext,
-                        view_ctx: ViewContext, ) -> tuple['Plugin', DocInfo]:
+    def from_global_par(
+        global_par_id: GlobalParId,
+        user_ctx: UserContext,
+        view_ctx: ViewContext,
+    ) -> tuple["Plugin", DocInfo]:
         doc = DocEntry.find_by_id(global_par_id.doc_id)
         if not doc:
-            raise PluginException(f'Document not found: {global_par_id.doc_id}')
+            raise PluginException(f"Document not found: {global_par_id.doc_id}")
         # Check for par here to prevent potential TimDbException
         if not doc.document.has_paragraph(global_par_id.par_id):
-            raise PluginException(doc.document.get_par_not_found_msg(global_par_id.par_id))
+            raise PluginException(
+                doc.document.get_par_not_found_msg(global_par_id.par_id)
+            )
         par = doc.document.get_paragraph(global_par_id.par_id)
         return Plugin.from_paragraph(par, view_ctx, user_ctx), doc
 
     @staticmethod
     def from_task_id(
-            task_id: str,
-            user_ctx: UserContext,
-            view_ctx: ViewContext,
-            cached_doc: Optional[DocInfo] = None,
-    ) -> tuple['Plugin', DocInfo]:
+        task_id: str,
+        user_ctx: UserContext,
+        view_ctx: ViewContext,
+        cached_doc: Optional[DocInfo] = None,
+    ) -> tuple["Plugin", DocInfo]:
         tid = TaskId.parse(task_id)
         if not cached_doc:
             d = DocEntry.find_by_id(tid.doc_id)
             if not d:
-                raise PluginException(f'Document not found: {tid.doc_id}')
+                raise PluginException(f"Document not found: {tid.doc_id}")
         else:
             d = cached_doc
             assert d.id == tid.doc_id
@@ -252,13 +261,17 @@ class Plugin:
         return find_plugin_from_document(doc, tid, user_ctx, view_ctx), d
 
     @staticmethod
-    def from_paragraph(par: DocParagraph, view_ctx: ViewContext, user: Optional[UserContext] = None):
+    def from_paragraph(
+        par: DocParagraph, view_ctx: ViewContext, user: Optional[UserContext] = None
+    ):
         doc = par.doc
         if not par.is_plugin():
-            raise PluginException(f'The paragraph {par.get_id()} is not a plugin.')
-        task_id_name = par.get_attr('taskId')
-        plugin_name = par.get_attr('plugin')
-        rnd_seed = get_simple_hash_from_par_and_user(par, user)  # TODO: RND_SEED get users rnd_seed for this plugin
+            raise PluginException(f"The paragraph {par.get_id()} is not a plugin.")
+        task_id_name = par.get_attr("taskId")
+        plugin_name = par.get_attr("plugin")
+        rnd_seed = get_simple_hash_from_par_and_user(
+            par, user
+        )  # TODO: RND_SEED get users rnd_seed for this plugin
         if par.answer_nr is not None:
             rnd_seed = SeedClass(rnd_seed, par.answer_nr)
         par.insert_rnds(rnd_seed)
@@ -268,7 +281,9 @@ class Plugin:
             macroinfo=doc.get_settings().get_macroinfo(view_ctx, user),
         )
         p = Plugin(
-            TaskId.parse(task_id_name, require_doc_id=False, allow_block_hint=False) if task_id_name else None,
+            TaskId.parse(task_id_name, require_doc_id=False, allow_block_hint=False)
+            if task_id_name
+            else None,
             plugin_data,
             plugin_name,
             par=par,
@@ -324,27 +339,41 @@ class Plugin:
         try:
             points = float(points)
         except (ValueError, TypeError):
-            raise PluginException('Invalid points format.')
+            raise PluginException("Invalid points format.")
         points_min = self.user_min_points()
         points_max = self.user_max_points()
         if points_min is None or points_max is None:
-            raise PluginException('You cannot give yourself custom points in this task.')
+            raise PluginException(
+                "You cannot give yourself custom points in this task."
+            )
         elif not (points_min <= points <= points_max):
-            raise PluginException(f'Points must be in range [{points_min},{points_max}]')
+            raise PluginException(
+                f"Points must be in range [{points_min},{points_max}]"
+            )
         return points
 
     def to_paragraph(self, max_attr_width: Optional[float] = None) -> DocParagraph:
         yaml.Dumper.ignore_aliases = lambda *args: True
-        text = '```\n' + yaml.dump(self.values, allow_unicode=True, default_flow_style=False,
-                                   width=max_attr_width) + '\n```'
+        text = (
+            "```\n"
+            + yaml.dump(
+                self.values,
+                allow_unicode=True,
+                default_flow_style=False,
+                width=max_attr_width,
+            )
+            + "\n```"
+        )
         attrs = {}
         if self.par:
             attrs = self.par.attrs
         if self.task_id:
-            attrs['task_id'] = self.task_id.task_name
-        attrs['plugin'] = self.type
+            attrs["task_id"] = self.task_id.task_name
+        attrs["plugin"] = self.type
 
-        return DocParagraph.create(self.par.doc, par_id=self.par.get_id(), md=text, attrs=attrs)
+        return DocParagraph.create(
+            self.par.doc, par_id=self.par.get_id(), md=text, attrs=attrs
+        )
 
     def set_value(self, key: str, value):
         self.values[key] = value
@@ -353,21 +382,29 @@ class Plugin:
     def save(self, max_attr_width: Optional[float] = None) -> None:
         self.to_paragraph(max_attr_width).save()
 
-    def get_info(self, users: Iterable[User], old_answers: int, look_answer: bool = False, valid: bool = True):
-        user_ids = ';'.join([u.name for u in users])
+    def get_info(
+        self,
+        users: Iterable[User],
+        old_answers: int,
+        look_answer: bool = False,
+        valid: bool = True,
+    ):
+        user_ids = ";".join([u.name for u in users])
         return {
             # number of earlier answers
             # TODO: this is None when browsing answers with answer browser; should determine the number of answers
             # posted before the current one
-            'earlier_answers': old_answers,
-            'max_answers': self.answer_limit(),
-            'user_id': user_ids,
+            "earlier_answers": old_answers,
+            "max_answers": self.answer_limit(),
+            "user_id": user_ids,
             # indicates whether we are just looking at an answer, not actually posting a new one
-            'look_answer': look_answer,
-            'valid': valid
+            "look_answer": look_answer,
+            "valid": valid,
         }
 
-    def set_render_options(self, answer: Optional[tuple[Answer, int]], options: PluginRenderOptions):
+    def set_render_options(
+        self, answer: Optional[tuple[Answer, int]], options: PluginRenderOptions
+    ):
         if answer:
             self.answer, self.answer_count = answer
         self.options = options
@@ -378,48 +415,61 @@ class Plugin:
         user = userctx.user
         if self.answer is not None:
             if self.task_id.is_points_ref:
-                p = f'{self.answer.points:g}' if self.answer.points is not None else ''
+                p = f"{self.answer.points:g}" if self.answer.points is not None else ""
                 state = {self.ptype.get_content_field_name(): p}
             else:
                 state = try_load_json(self.answer.content)
             # if isinstance(state, dict) and options.user is not None:
             if user.logged_in:
-                info = self.get_info([user], old_answers=self.answer_count, valid=self.answer.valid)
+                info = self.get_info(
+                    [user], old_answers=self.answer_count, valid=self.answer.valid
+                )
             else:
                 info = None
         else:
             state = None
             info = None
-        if self.is_new_task() and (self.par.ask_new or (self.par.answer_nr is not None)):
+        if self.is_new_task() and (
+            self.par.ask_new or (self.par.answer_nr is not None)
+        ):
             if not info:
                 info = {}
             info["askNew"] = self.par.ask_new
         access = {}
-        if self.task_id and self.task_id.access_specifier == TaskIdAccess.ReadOnly and \
-                not options.user_ctx.logged_user.has_teacher_access(self.par.doc.get_docinfo()):
-            access = {'access': self.task_id.access_specifier.value}
-        return {"markup": self.values,
-                **access,
-                "state": state,
-                "taskID": self.task_id.doc_task if self.task_id else self.fake_task_id,
-                "taskIDExt": self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id,
-                "doLazy": (options.do_lazy and self.type not in NEVERLAZY_PLUGINS) if isinstance(options.do_lazy,
-                                                                                                 bool) else options.do_lazy,
-                "userPrint": options.user_print,
-                # added preview here so that whether or not the window is in preview can be
-                # checked in python so that decisions on what data is sent can be made.
-                "preview": options.preview,
-                "viewmode": options.viewmode,
-                "anonymous": not user.logged_in,
-                "info": info,
-                "user_id": user.name if user.logged_in else 'Anonymous',
-                "targetFormat": options.target_format.value,
-                "review": options.review,
-                'current_user_id': options.user_ctx.logged_user.name,
-                }
+        if (
+            self.task_id
+            and self.task_id.access_specifier == TaskIdAccess.ReadOnly
+            and not options.user_ctx.logged_user.has_teacher_access(
+                self.par.doc.get_docinfo()
+            )
+        ):
+            access = {"access": self.task_id.access_specifier.value}
+        return {
+            "markup": self.values,
+            **access,
+            "state": state,
+            "taskID": self.task_id.doc_task if self.task_id else self.fake_task_id,
+            "taskIDExt": self.task_id.extended_or_doc_task
+            if self.task_id
+            else self.fake_task_id,
+            "doLazy": (options.do_lazy and self.type not in NEVERLAZY_PLUGINS)
+            if isinstance(options.do_lazy, bool)
+            else options.do_lazy,
+            "userPrint": options.user_print,
+            # added preview here so that whether or not the window is in preview can be
+            # checked in python so that decisions on what data is sent can be made.
+            "preview": options.preview,
+            "viewmode": options.viewmode,
+            "anonymous": not user.logged_in,
+            "info": info,
+            "user_id": user.name if user.logged_in else "Anonymous",
+            "targetFormat": options.target_format.value,
+            "review": options.review,
+            "current_user_id": options.user_ctx.logged_user.name,
+        }
 
     def get_content_field_name(self):
-        return CONTENT_FIELD_NAME_MAP.get(self.type, 'c')
+        return CONTENT_FIELD_NAME_MAP.get(self.type, "c")
 
     def allow_styles_field(self):
         return self.type in ALLOW_STYLES_PLUGINS
@@ -434,22 +484,30 @@ class Plugin:
         """
         answer_limit = self.answer_limit()
         if answer_limit is not None and (answer_limit <= old_answers):
-            return False, 'You have exceeded the answering limit.'
-        if self.starttime(default=datetime(1970, 1, 1, tzinfo=timezone.utc)) > get_current_time():
-            return False, 'You cannot submit answers yet.'
-        if self.deadline(default=datetime.max.replace(tzinfo=timezone.utc)) < get_current_time():
-            return False, 'The deadline for submitting answers has passed.'
-        if tim_info.get('notValid', None):
-            return False, tim_info.get('validMsg', 'Answer is not valid')
-        valid = tim_info.get('valid', True)
-        valid_msg = tim_info.get('validMsg', "ok")
+            return False, "You have exceeded the answering limit."
+        if (
+            self.starttime(default=datetime(1970, 1, 1, tzinfo=timezone.utc))
+            > get_current_time()
+        ):
+            return False, "You cannot submit answers yet."
+        if (
+            self.deadline(default=datetime.max.replace(tzinfo=timezone.utc))
+            < get_current_time()
+        ):
+            return False, "The deadline for submitting answers has passed."
+        if tim_info.get("notValid", None):
+            return False, tim_info.get("validMsg", "Answer is not valid")
+        valid = tim_info.get("valid", True)
+        valid_msg = tim_info.get("validMsg", "ok")
         return valid, valid_msg
 
     def is_cached(self) -> bool:
         cached = self.known.cache
         if cached is not missing:
             return bool(cached)  # Cast potential None to False
-        return self.type == 'graphviz' and self.values.get('gvData') is not None  # Graphviz is cached by default
+        return (
+            self.type == "graphviz" and self.values.get("gvData") is not None
+        )  # Graphviz is cached by default
 
     def is_lazy(self) -> bool:
         if self.type in NEVERLAZY_PLUGINS:
@@ -489,21 +547,21 @@ class Plugin:
             return None
         # Some plugins don't have answers but they may still need to be loaded lazily.
         # We sometimes want answerbrowser for graphviz too, so we don't exclude it here.
-        if self.type.startswith('show') or self.type in NO_ANSWERBROWSER_PLUGINS:
-            return 'lazyonly' if self.is_lazy() else None
-        return 'full'
+        if self.type.startswith("show") or self.type in NO_ANSWERBROWSER_PLUGINS:
+            return "lazyonly" if self.is_lazy() else None
+        return "full"
 
     def get_container_class(self):
-        return f'plugin{self.type}'
+        return f"plugin{self.type}"
 
     def get_wrapper_tag(self):
-        return 'div'
+        return "div"
 
     def get_final_output(self):
         out = self.output
         if self.is_lazy() and out.find(LAZYSTART) < 0:
-            header = self.known.header or self.known.headerText or ''
-            stem = self.known.stem or 'Open plugin'
+            header = self.known.header or self.known.headerText or ""
+            stem = self.known.stem or "Open plugin"
             # Plugins are possibly not visible in lazy form at all if both header and stem are empty,
             # so we add a placeholder in that case. This is the case for at least mcq and mmcq.
             if not header.strip() and not stem.strip():
@@ -511,28 +569,35 @@ class Plugin:
             out = f'{LAZYSTART}{out}{LAZYEND}<span style="font-weight:bold">{header}</span><div><p>{stem}</p></div>'
 
         # Create min and max height for div
-        style = ''
+        style = ""
         mh = self.known.minHeight
         if mh:
-            style = f'min-height:{html.escape(str(mh))};'
+            style = f"min-height:{html.escape(str(mh))};"
         mh = self.known.maxHeight
         if mh:
-            style += f'max-height:{html.escape(str(mh))};overflow-y:auto;'
+            style += f"max-height:{html.escape(str(mh))};overflow-y:auto;"
         if style:
             style = f'style="{style}"'
 
-        html_task_id = self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id
+        html_task_id = (
+            self.task_id.extended_or_doc_task if self.task_id else self.fake_task_id
+        )
         doc_task_id = self.task_id.doc_task_with_field if self.task_id else None
         tag = self.get_wrapper_tag()
         if self.options.wraptype != PluginWrap.Nothing:
             abtype = self.get_answerbrowser_type()
             cont = f"""<{tag} id='{html_task_id}' data-plugin='/{self.type}' {style}>{out}</{tag}>""".strip()
             if abtype and self.options.wraptype == PluginWrap.Full and False:
-                return f"""
+                return (
+                    f"""
 <tim-plugin-loader type="{abtype}" answer-id="{self.answer.id if self.answer else None or ''}"
                    class="{self.get_container_class()}"
-                   task-id="{doc_task_id or ''}">""".replace("\n", "") + \
-                       cont + "</tim-plugin-loader>"  # 0.001 sec
+                   task-id="{doc_task_id or ''}">""".replace(
+                        "\n", ""
+                    )
+                    + cont
+                    + "</tim-plugin-loader>"
+                )  # 0.001 sec
             if abtype and self.options.wraptype == PluginWrap.Full:  # and False
                 ret = render_template_string3(  # TODO: 0.05 sec
                     PLG_RTEMPLATE,
@@ -568,10 +633,12 @@ class Plugin:
         return out
 
 
-def parse_plugin_values_macros(par: DocParagraph,
-                               global_attrs: dict[str, str],
-                               macros: dict[str, object],
-                               env: SandboxedEnvironment) -> dict:
+def parse_plugin_values_macros(
+    par: DocParagraph,
+    global_attrs: dict[str, str],
+    macros: dict[str, object],
+    env: SandboxedEnvironment,
+) -> dict:
     """
     Parses the markup values for a plugin paragraph, taking document attributes and macros into account.
 
@@ -582,7 +649,7 @@ def parse_plugin_values_macros(par: DocParagraph,
     :return: The parsed markup values.
     """
     yaml_str = expand_macros_for_plugin(par, macros, env)
-    return load_markup_from_yaml(yaml_str, global_attrs, par.get_attr('plugin'))
+    return load_markup_from_yaml(yaml_str, global_attrs, par.get_attr("plugin"))
 
 
 def expand_macros_for_plugin(par: DocParagraph, macros, env: SandboxedEnvironment):
@@ -601,16 +668,18 @@ def expand_macros_for_plugin(par: DocParagraph, macros, env: SandboxedEnvironmen
     return yaml_str
 
 
-def load_markup_from_yaml(yaml_str: str, global_attrs: dict[str, str], plugin_type: str):
+def load_markup_from_yaml(
+    yaml_str: str, global_attrs: dict[str, str], plugin_type: str
+):
     try:
         values = YamlBlock.from_markdown(yaml_str).values
     except Exception:
         raise PluginException("YAML is malformed: " + yaml_str)
     if global_attrs:
         if isinstance(global_attrs, str):
-            raise PluginException('global_plugin_attrs should be a dict, not str')
+            raise PluginException("global_plugin_attrs should be a dict, not str")
         global_attrs = deepcopy(global_attrs)
-        final_values = global_attrs.get('all')
+        final_values = global_attrs.get("all")
         if not isinstance(final_values, dict):
             final_values = {}
         plugin_type_globals = global_attrs.get(plugin_type)
@@ -623,18 +692,23 @@ def load_markup_from_yaml(yaml_str: str, global_attrs: dict[str, str], plugin_ty
 
 
 def parse_plugin_values(
-        par: DocParagraph,
-        global_attrs: dict[str, str],
-        macroinfo: MacroInfo,
+    par: DocParagraph,
+    global_attrs: dict[str, str],
+    macroinfo: MacroInfo,
 ) -> dict:
-    return parse_plugin_values_macros(par, global_attrs, macroinfo.get_macros(), macroinfo.jinja_env)
+    return parse_plugin_values_macros(
+        par, global_attrs, macroinfo.get_macros(), macroinfo.jinja_env
+    )
 
 
-TASK_MATCH_PROG = re.compile(r'{#([\.\w:]*)([\s\S]*?)?#}')  # see https://regex101.com/r/XmnIZv/33
+TASK_MATCH_PROG = re.compile(
+    r"{#([\.\w:]*)([\s\S]*?)?#}"
+)  # see https://regex101.com/r/XmnIZv/33
 
 
-def find_inline_plugins_from_str(md) -> Generator[
-    tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
+def find_inline_plugins_from_str(
+    md,
+) -> Generator[tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
     # TODO make task id optional
     matches: Iterable[Match] = TASK_MATCH_PROG.finditer(md)
     for m in matches:
@@ -645,41 +719,51 @@ def find_inline_plugins_from_str(md) -> Generator[
         yield task_id, p_yaml, p_range, md
 
 
-def find_inline_plugins(block: DocParagraph, macroinfo: MacroInfo) -> Generator[
-    tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
+def find_inline_plugins(
+    block: DocParagraph, macroinfo: MacroInfo
+) -> Generator[tuple[UnvalidatedTaskId, Optional[str], Range, str], None, None]:
     md = block.get_expanded_markdown(macroinfo=macroinfo)
     return find_inline_plugins_from_str(md)
 
 
 def maybe_get_plugin_from_par(
-        p: DocParagraph,
-        task_id: TaskId,
-        u: UserContext,
-        view_ctx: ViewContext,
-        match_exact_document: bool = False,
+    p: DocParagraph,
+    task_id: TaskId,
+    u: UserContext,
+    view_ctx: ViewContext,
+    match_exact_document: bool = False,
 ) -> Optional[Plugin]:
-    t_attr = p.get_attr('taskId')
-    if t_attr and p.get_attr('plugin'):
+    t_attr = p.get_attr("taskId")
+    if t_attr and p.get_attr("plugin"):
         try:
             p_tid = TaskId.parse(t_attr, allow_block_hint=False, require_doc_id=False)
         except PluginException:
             return None
-        doc_id_match = not match_exact_document or match_exact_document and p.doc.doc_id == task_id.doc_id
-        if ((p_tid.task_name == task_id.task_name and doc_id_match) or
-                (task_id.doc_id and p_tid.doc_id and p_tid.doc_task == task_id.doc_task)):
+        doc_id_match = (
+            not match_exact_document
+            or match_exact_document
+            and p.doc.doc_id == task_id.doc_id
+        )
+        if (p_tid.task_name == task_id.task_name and doc_id_match) or (
+            task_id.doc_id and p_tid.doc_id and p_tid.doc_task == task_id.doc_task
+        ):
             return Plugin.from_paragraph(p, view_ctx, user=u)
-    def_plug = p.get_attr('defaultplugin')
+    def_plug = p.get_attr("defaultplugin")
     if def_plug:
         settings = p.doc.get_settings()
         for p_task_id, p_yaml, p_range, md in find_inline_plugins(
-                block=p,
-                macroinfo=settings.get_macroinfo(view_ctx, user_ctx=u),
+            block=p,
+            macroinfo=settings.get_macroinfo(view_ctx, user_ctx=u),
         ):
             p_task_id = p_task_id.validate()
             if p_task_id.task_name != task_id.task_name:
                 continue
             plugin_type = p_task_id.plugin_type or def_plug
-            y = load_markup_from_yaml(finalize_inline_yaml(p_yaml), settings.global_plugin_attrs(), plugin_type)
+            y = load_markup_from_yaml(
+                finalize_inline_yaml(p_yaml),
+                settings.global_plugin_attrs(),
+                plugin_type,
+            )
             return InlinePlugin(
                 task_id=p_task_id,
                 values=y,
@@ -692,6 +776,7 @@ def maybe_get_plugin_from_par(
 
 class TaskNotFoundException(PluginException):
     """The exception that is thrown when a task cannot be found."""
+
     pass
 
 
@@ -707,7 +792,12 @@ class CachedPluginFinder:
         if cached is not missing:
             return cached
         try:
-            p = find_plugin_from_document(self.doc_map[task_id.doc_id].document, task_id, self.curr_user, self.view_ctx)
+            p = find_plugin_from_document(
+                self.doc_map[task_id.doc_id].document,
+                task_id,
+                self.curr_user,
+                self.view_ctx,
+            )
         except TaskNotFoundException:
             self.cache[task_id.doc_task] = None
             return None
@@ -716,7 +806,9 @@ class CachedPluginFinder:
             return p
 
 
-def find_plugin_from_document(d: Document, task_id: TaskId, u: UserContext, view_ctx: ViewContext) -> Plugin:
+def find_plugin_from_document(
+    d: Document, task_id: TaskId, u: UserContext, view_ctx: ViewContext
+) -> Plugin:
     used_hint = False
     with d.__iter__() as it:
         for p in it:
@@ -737,44 +829,44 @@ def find_plugin_from_document(d: Document, task_id: TaskId, u: UserContext, view
             if plug:
                 return plug
 
-    err_msg = f'Task not found in the document: {task_id.task_name}'
+    err_msg = f"Task not found in the document: {task_id.task_name}"
     if used_hint:
-        err_msg += ' (potentially because of wrong block id hint)'
+        err_msg += " (potentially because of wrong block id hint)"
     raise TaskNotFoundException(err_msg)
 
 
 class InlinePlugin(Plugin):
     def __init__(
-            self,
-            task_id: Optional[TaskId],
-            values: dict,
-            plugin_type: str,
-            p_range: Range,
-            par: Optional[DocParagraph] = None,
+        self,
+        task_id: Optional[TaskId],
+        values: dict,
+        plugin_type: str,
+        p_range: Range,
+        par: Optional[DocParagraph] = None,
     ):
         super().__init__(task_id, values, plugin_type, par)
         self.range = p_range
 
     def get_container_class(self):
-        return f'{super().get_container_class()} inlineplugin'
+        return f"{super().get_container_class()} inlineplugin"
 
     def get_wrapper_tag(self):
-        return 'span'
+        return "span"
 
 
 def finalize_inline_yaml(p_yaml: Optional[str]):
     if not p_yaml:
-        return ''
-    if '\n' not in p_yaml:
-        return f'{{{p_yaml}}}'
+        return ""
+    if "\n" not in p_yaml:
+        return f"{{{p_yaml}}}"
     return p_yaml
 
 
 def find_task_ids(
-        blocks: list[DocParagraph],
-        view_ctx: ViewContext,
-        user_ctx: UserContext,
-        check_access=True,
+    blocks: list[DocParagraph],
+    view_ctx: ViewContext,
+    user_ctx: UserContext,
+    check_access=True,
 ) -> tuple[list[TaskId], int, list[TaskId]]:
     """Finds all task plugins from the given list of paragraphs and returns their ids.
     :param user_ctx:
@@ -794,20 +886,24 @@ def find_task_ids(
                 return True
 
     for block in blocks:
-        task_id = block.get_attr('taskId')
-        plugin = block.get_attr('plugin')
+        task_id = block.get_attr("taskId")
+        plugin = block.get_attr("plugin")
         if plugin:
             plugin_count += 1
             if task_id:
                 try:
-                    tid = TaskId.parse(task_id, require_doc_id=False, allow_block_hint=False)
+                    tid = TaskId.parse(
+                        task_id, require_doc_id=False, allow_block_hint=False
+                    )
                 except PluginException:
                     continue
                 if handle_taskid(tid):
                     continue
                 task_ids.append(tid)
-        elif block.get_attr('defaultplugin'):
-            for task_id, _, _, _ in find_inline_plugins(block, block.doc.get_settings().get_macroinfo(view_ctx)):
+        elif block.get_attr("defaultplugin"):
+            for task_id, _, _, _ in find_inline_plugins(
+                block, block.doc.get_settings().get_macroinfo(view_ctx)
+            ):
                 try:
                     task_id = task_id.validate()
                 except PluginException:
@@ -819,7 +915,9 @@ def find_task_ids(
     return task_ids, plugin_count, access_missing
 
 
-def get_simple_hash_from_par_and_user(block: DocParagraph, uc: Optional[UserContext]) -> int:
+def get_simple_hash_from_par_and_user(
+    block: DocParagraph, uc: Optional[UserContext]
+) -> int:
     """
     Get simple int hash from TIM's document block and user.
     :param block: TIM's document block
@@ -829,5 +927,5 @@ def get_simple_hash_from_par_and_user(block: DocParagraph, uc: Optional[UserCont
     h = str(block.get_id()) + str(block.get_doc_id())
     if uc:
         h += uc.user.name
-    rnd_seed = myhash(h) & 0xffffffff
+    rnd_seed = myhash(h) & 0xFFFFFFFF
     return rnd_seed

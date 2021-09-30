@@ -8,8 +8,16 @@ import logging
 import os
 import socketserver
 
-from tim_common.fileParams import get_template, file_to_string, do_headers, multi_post_params, get_param, QueryClass, get_params, \
-    post_params
+from tim_common.fileParams import (
+    get_template,
+    file_to_string,
+    do_headers,
+    multi_post_params,
+    get_param,
+    QueryClass,
+    get_params,
+    post_params,
+)
 
 PORT = 5000
 PROGDIR = "."
@@ -40,18 +48,18 @@ class TimServer(http.server.BaseHTTPRequestHandler):
 
         """
         # print("do_GET ==================================================")
-        if self.path.find('/reqs') >= 0:
+        if self.path.find("/reqs") >= 0:
             return self.do_reqs()
-        if self.path.find('/favicon.ico') >= 0:
+        if self.path.find("/favicon.ico") >= 0:
             return self.send_response(404)
-        if self.path.find('/template') >= 0:
+        if self.path.find("/template") >= 0:
             return self.send_text(self.do_template(get_params(self)), "text/plain")
         fname = self.path.split("?")[0]
-        if fname.find('.css') >= 0:
+        if fname.find(".css") >= 0:
             return self.send_text_file(fname, "css", "text/css")
-        if fname.find('.js') >= 0:
+        if fname.find(".js") >= 0:
             return self.send_text_file(fname, "js", "application/javascript")
-        if fname.find('.html') >= 0:
+        if fname.find(".html") >= 0:
             return self.send_text_file(fname, "html", "text/html")
         return self.do_all(get_params(self))
 
@@ -62,7 +70,7 @@ class TimServer(http.server.BaseHTTPRequestHandler):
 
         """
         # print("do_POST =================================================")
-        if self.path.find('/multihtml') < 0:
+        if self.path.find("/multihtml") < 0:
             return self.do_all(post_params(self))
 
         print("do_POST MULTIHTML ==========================================")
@@ -168,7 +176,7 @@ class TimServer(http.server.BaseHTTPRequestHandler):
         """
         tempfile = get_param(query, "file", "")
         tidx = get_param(query, "idx", "0")
-        return get_template('templates', tidx, tempfile)
+        return get_template("templates", tidx, tempfile)
 
     def do_all(self, query: QueryClass):
         """Do all other routes.
@@ -178,15 +186,15 @@ class TimServer(http.server.BaseHTTPRequestHandler):
 
         """
 
-        if self.path.find('/html') >= 0:
-            do_headers(self, 'text/html; charset=utf-8')
+        if self.path.find("/html") >= 0:
+            do_headers(self, "text/html; charset=utf-8")
             s = self.get_html(query)
             return self.wout(s)
 
-        if self.path.find('/answer') >= 0:
+        if self.path.find("/answer") >= 0:
             return self.do_answer(query)
 
-        do_headers(self, 'text/plain')
+        do_headers(self, "text/plain")
         return self.wout("Unknown query: " + self.path)
 
     def do_answer(self, query: QueryClass):
@@ -235,9 +243,9 @@ def start_server(http_server):
     # Logging to file is disabled for now because Docker redirects stdin to an internal JSON file automatically
     # and setting ownership to volumes via Docker is not possible.
     # logging.basicConfig(filename='/var/log/' + logname + '.log', level=logging.INFO, format='%(asctime)s %(message)s')
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 
-    server = ThreadedHTTPServer(('', PORT), http_server)
-    print('Starting server, use <Ctrl-C> to stop')
-    logging.info('Starting server')
+    server = ThreadedHTTPServer(("", PORT), http_server)
+    print("Starting server, use <Ctrl-C> to stop")
+    logging.info("Starting server")
     server.serve_forever()

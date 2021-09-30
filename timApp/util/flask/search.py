@@ -24,21 +24,24 @@ from timApp.item.block import Block
 from timApp.item.routes import get_document_relevance
 from timApp.item.tag import Tag
 from timApp.timdb.dbaccess import get_files_path
-from timApp.util.flask.requesthelper import get_option, use_model, RouteException, NotExist
+from timApp.util.flask.requesthelper import (
+    get_option,
+    use_model,
+    RouteException,
+    NotExist,
+)
 from timApp.util.flask.responsehelper import json_response
 from timApp.util.logger import log_error
 from timApp.util.utils import get_error_message, cache_folder_path
 
-search_routes = Blueprint('search',
-                          __name__,
-                          url_prefix='/search')
+search_routes = Blueprint("search", __name__, url_prefix="/search")
 
 WHITE_LIST = ["c#"]  # Ignore query length limitations
 MIN_QUERY_LENGTH = 3  # For word and title search. Tags have no limitations.
 MIN_WHOLE_WORDS_QUERY_LENGTH = 1  # For whole word search.
 PREVIEW_LENGTH = 40  # Before and after the search word separately.
 PREVIEW_MAX_LENGTH = 160
-SEARCH_CACHE_FOLDER = cache_folder_path / 'searchcache'
+SEARCH_CACHE_FOLDER = cache_folder_path / "searchcache"
 PROCESSED_CONTENT_FILE_PATH = SEARCH_CACHE_FOLDER / "content_all_processed.log"
 PROCESSED_TITLE_FILE_PATH = SEARCH_CACHE_FOLDER / "titles_all_processed.log"
 RAW_CONTENT_FILE_PATH = SEARCH_CACHE_FOLDER / "all.log"
@@ -50,7 +53,7 @@ class GetFoldersModel:
     folder: str
 
 
-@search_routes.get('getFolders')
+@search_routes.get("getFolders")
 @use_model(GetFoldersModel)
 def get_subfolders(m: GetFoldersModel):
     """
@@ -58,9 +61,9 @@ def get_subfolders(m: GetFoldersModel):
     :return: Response containing a list of subfolder paths.
     """
     root_path = m.folder
-    if root_path == '':
+    if root_path == "":
         return json_response([])
-    folders = Folder.query.filter(Folder.location.like(root_path + '%')).limit(50)
+    folders = Folder.query.filter(Folder.location.like(root_path + "%")).limit(50)
     folders_viewable = [root_path]
     for folder in folders:
         if has_view_access(folder):
@@ -74,17 +77,24 @@ def get_common_search_params(req) -> tuple[str, str, bool, bool, bool, bool]:
     :param req: Request.
     :return: A tuple with six values.
     """
-    query = req.args.get('query', '')
-    case_sensitive = get_option(req, 'caseSensitive', default=False, cast=bool)
-    folder = req.args.get('folder', '')
-    regex = get_option(req, 'regex', default=False, cast=bool)
-    search_owned_docs = get_option(req, 'searchOwned', default=False, cast=bool)
-    search_whole_words = get_option(req, 'searchWholeWords', default=False, cast=bool)
+    query = req.args.get("query", "")
+    case_sensitive = get_option(req, "caseSensitive", default=False, cast=bool)
+    folder = req.args.get("folder", "")
+    regex = get_option(req, "regex", default=False, cast=bool)
+    search_owned_docs = get_option(req, "searchOwned", default=False, cast=bool)
+    search_whole_words = get_option(req, "searchWholeWords", default=False, cast=bool)
     return query, folder, regex, case_sensitive, search_whole_words, search_owned_docs
 
 
-def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str = "",
-                     title: bool = False, path: bool = False) -> None:
+def log_search_error(
+    error: str,
+    query: str,
+    doc: str,
+    tag: str = "",
+    par: str = "",
+    title: bool = False,
+    path: bool = False,
+) -> None:
     """
     Forms an error report and sends it to timLog.
     :param error: The error's message
@@ -114,8 +124,13 @@ def log_search_error(error: str, query: str, doc: str, tag: str = "", par: str =
     log_error(common_part + tag_part + par_part + title_part + path_part)
 
 
-def preview_result(md: str, query, m: Match[str], snippet_length: int = PREVIEW_LENGTH,
-                   max_length: int = PREVIEW_MAX_LENGTH) -> str:
+def preview_result(
+    md: str,
+    query,
+    m: Match[str],
+    snippet_length: int = PREVIEW_LENGTH,
+    max_length: int = PREVIEW_MAX_LENGTH,
+) -> str:
     """
     Forms preview of the match paragraph.
     :param md: Paragraph markdown to preview.
@@ -161,7 +176,11 @@ class WordResult:
         """
         :return: A dictionary containing object data, suitable for JSON-conversion.
         """
-        return {'match_word': self.match_word, 'match_start': self.match_start, 'match_end': self.match_end}
+        return {
+            "match_word": self.match_word,
+            "match_start": self.match_start,
+            "match_end": self.match_end,
+        }
 
 
 class ParResult:
@@ -169,7 +188,9 @@ class ParResult:
     Paragraph search results.
     """
 
-    def __init__(self, par_id: str = "", preview: str = "", word_results=None, alt_num_results=0):
+    def __init__(
+        self, par_id: str = "", preview: str = "", word_results=None, alt_num_results=0
+    ):
         """
         Paragraph result object constructor.
         :param par_id: Paragrapg id.
@@ -205,9 +226,12 @@ class ParResult:
         results_dicts = []
         for r in self.word_results:
             results_dicts.append(r)
-        return {'par_id': self.par_id,
-                'preview': self.preview,
-                'results': results_dicts, 'num_results': self.get_match_count()}
+        return {
+            "par_id": self.par_id,
+            "preview": self.preview,
+            "results": results_dicts,
+            "num_results": self.get_match_count(),
+        }
 
     def get_match_count(self) -> int:
         """
@@ -256,7 +280,7 @@ class TitleResult:
         results = []
         for r in self.word_results:
             results.append(r)
-        return {'results': results, 'num_results': self.get_match_count()}
+        return {"results": results, "num_results": self.get_match_count()}
 
     def get_match_count(self) -> int:
         """
@@ -273,7 +297,9 @@ class DocResult:
     Contains one document's title and word search information.
     """
 
-    def __init__(self, doc_info: DocInfo, par_results=None, title_results=None, incomplete=False):
+    def __init__(
+        self, doc_info: DocInfo, par_results=None, title_results=None, incomplete=False
+    ):
         if par_results is None:
             par_results = []
         if title_results is None:
@@ -316,9 +342,13 @@ class DocResult:
         for r in self.title_results:
             title_result_dicts.append(r)
         return {
-            'doc': self.doc_info, 'incomplete': self.incomplete,
-            'title_results': title_result_dicts, 'num_title_results': self.get_title_match_count(),
-            'par_results': par_result_dicts, 'num_par_results': self.get_par_match_count()}
+            "doc": self.doc_info,
+            "incomplete": self.incomplete,
+            "title_results": title_result_dicts,
+            "num_title_results": self.get_title_match_count(),
+            "par_results": par_result_dicts,
+            "num_par_results": self.get_par_match_count(),
+        }
 
     def get_par_match_count(self) -> int:
         """
@@ -339,7 +369,12 @@ class DocResult:
         return count
 
 
-def result_response(results, title_result_count: int = 0, word_result_count: int = 0, incomplete_search_reason=""):
+def result_response(
+    results,
+    title_result_count: int = 0,
+    word_result_count: int = 0,
+    incomplete_search_reason="",
+):
     """
     Formats result data for JSON-response.
     :param results: List of result dictionaries.
@@ -349,11 +384,11 @@ def result_response(results, title_result_count: int = 0, word_result_count: int
     :return: Dictionary containing search results.
     """
     return {
-        'title_result_count': title_result_count,
-        'word_result_count': word_result_count,
-        'errors': [],
-        'incomplete_search_reason': incomplete_search_reason,
-        'results': results,
+        "title_result_count": title_result_count,
+        "word_result_count": word_result_count,
+        "errors": [],
+        "incomplete_search_reason": incomplete_search_reason,
+        "results": results,
     }
 
 
@@ -366,15 +401,21 @@ def validate_query(query: str, search_whole_words: bool) -> None:
     """
     if len(query.strip()) < MIN_QUERY_LENGTH and not search_whole_words:
         if query.strip().lower() not in WHITE_LIST:
-            raise RouteException(f'Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped.')
+            raise RouteException(
+                f"Search text must be at least {MIN_QUERY_LENGTH} character(s) long with whitespace stripped."
+            )
     if len(query.strip()) < MIN_WHOLE_WORDS_QUERY_LENGTH and search_whole_words:
-        raise RouteException(f'Whole word search text must be at least {MIN_WHOLE_WORDS_QUERY_LENGTH} character(s) '
-                   f'long with whitespace stripped.')
+        raise RouteException(
+            f"Whole word search text must be at least {MIN_WHOLE_WORDS_QUERY_LENGTH} character(s) "
+            f"long with whitespace stripped."
+        )
 
 
 # Query options for loading DocEntry relevance eagerly; it should speed up search cache processing because
 # we know we'll need relevance.
-docentry_eager_relevance_opt = (defaultload(DocEntry._block).joinedload(Block.relevance),)
+docentry_eager_relevance_opt = (
+    defaultload(DocEntry._block).joinedload(Block.relevance),
+)
 
 
 def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
@@ -383,18 +424,24 @@ def add_doc_info_title_line(doc_id: int) -> Union[str, None]:
     :param doc_id: Document id.
     :return: String with doc data.
     """
-    doc_info = DocEntry.find_by_id(doc_id, docentry_load_opts=docentry_eager_relevance_opt)
+    doc_info = DocEntry.find_by_id(
+        doc_id, docentry_load_opts=docentry_eager_relevance_opt
+    )
     if not doc_info:
         return None
     doc_relevance = get_document_relevance(doc_info)
-    return json.dumps({'doc_id': doc_id,
-                       'd_r': doc_relevance,
-                       'doc_title': doc_info.title},
-                      ensure_ascii=False) + '\n'
+    return (
+        json.dumps(
+            {"doc_id": doc_id, "d_r": doc_relevance, "doc_title": doc_info.title},
+            ensure_ascii=False,
+        )
+        + "\n"
+    )
 
 
-def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool = True, add_title: bool = False) \
-        -> Union[str, None]:
+def add_doc_info_content_line(
+    doc_id: int, par_data, remove_deleted_pars: bool = True, add_title: bool = False
+) -> Union[str, None]:
     """
     Forms a JSON-compatible string with doc_id and list of paragraph data with id and md attributes.
     :param doc_id: Document id.
@@ -405,7 +452,9 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
     """
     if not par_data:
         return None
-    doc_info = DocEntry.find_by_id(doc_id, docentry_load_opts=docentry_eager_relevance_opt)
+    doc_info = DocEntry.find_by_id(
+        doc_id, docentry_load_opts=docentry_eager_relevance_opt
+    )
     if not doc_info:
         return None
     par_json_list = []
@@ -414,27 +463,37 @@ def add_doc_info_content_line(doc_id: int, par_data, remove_deleted_pars: bool =
 
     for par in par_data:
         par_dict = json.loads(f"{{{par}}}")
-        par_id = par_dict['id']
+        par_id = par_dict["id"]
         if remove_deleted_pars:
             # If par can't be found (deleted), don't add it.
             if not doc_info.document.has_paragraph(par_id):
                 continue
         # Cherry pick attributes, because others are unnecessary for the search.
-        par_md = par_dict['md'].replace("\r", " ").replace("\n", " ")
-        par_attrs = par_dict['attrs']
-        par_json_list.append({'id': par_id, 'attrs': par_attrs, 'md': par_md})
+        par_md = par_dict["md"].replace("\r", " ").replace("\n", " ")
+        par_attrs = par_dict["attrs"]
+        par_json_list.append({"id": par_id, "attrs": par_attrs, "md": par_md})
     if add_title:
         doc_title = doc_info.title
-        return json.dumps({'doc_id': doc_id,
-                           'd_r': doc_relevance,
-                           'doc_title': doc_title,
-                           'pars': par_json_list}
-                          , ensure_ascii=False) + '\n'
+        return (
+            json.dumps(
+                {
+                    "doc_id": doc_id,
+                    "d_r": doc_relevance,
+                    "doc_title": doc_title,
+                    "pars": par_json_list,
+                },
+                ensure_ascii=False,
+            )
+            + "\n"
+        )
     else:
-        return json.dumps({'doc_id': doc_id,
-                           'd_r': doc_relevance,
-                           'pars': par_json_list},
-                          ensure_ascii=False) + '\n'
+        return (
+            json.dumps(
+                {"doc_id": doc_id, "d_r": doc_relevance, "pars": par_json_list},
+                ensure_ascii=False,
+            )
+            + "\n"
+        )
 
 
 def get_doc_par_id(line: str) -> Union[tuple[int, str, str], None]:
@@ -462,25 +521,36 @@ def create_search_files(remove_deleted_pars=True):
     :return: Status code and a message confirming success of file creation.
     """
 
-    temp_content_file_name = SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_CONTENT_FILE_PATH.name}"
-    temp_title_file_name = SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_TITLE_FILE_PATH.name}"
+    temp_content_file_name = (
+        SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_CONTENT_FILE_PATH.name}"
+    )
+    temp_title_file_name = (
+        SEARCH_CACHE_FOLDER / f"temp_{PROCESSED_TITLE_FILE_PATH.name}"
+    )
     f: Path = RAW_CONTENT_FILE_PATH.parent
     f.mkdir(exist_ok=True)
 
     try:
-        subprocess.Popen(f'grep -R "" --include="current" . > {RAW_CONTENT_FILE_PATH} 2>&1',
-                         cwd=(get_files_path() / 'pars'),
-                         shell=True).communicate()
+        subprocess.Popen(
+            f'grep -R "" --include="current" . > {RAW_CONTENT_FILE_PATH} 2>&1',
+            cwd=(get_files_path() / "pars"),
+            shell=True,
+        ).communicate()
     except Exception as e:
-        return 400, f"Failed to create preliminary file {RAW_CONTENT_FILE_PATH}: {get_error_message(e)}"
+        return (
+            400,
+            f"Failed to create preliminary file {RAW_CONTENT_FILE_PATH}: {get_error_message(e)}",
+        )
     try:
-        raw_file = RAW_CONTENT_FILE_PATH.open("r", encoding='utf-8')
+        raw_file = RAW_CONTENT_FILE_PATH.open("r", encoding="utf-8")
     except FileNotFoundError:
         return 400, f"Failed to open preliminary file {RAW_CONTENT_FILE_PATH}"
     try:
-        with raw_file, \
-             temp_content_file_name.open("w+", encoding='utf-8') as temp_content_file, \
-                temp_title_file_name.open("w+", encoding='utf-8') as temp_title_file:
+        with raw_file, temp_content_file_name.open(
+            "w+", encoding="utf-8"
+        ) as temp_content_file, temp_title_file_name.open(
+            "w+", encoding="utf-8"
+        ) as temp_title_file:
 
             current_doc, current_pars = -1, []
 
@@ -496,8 +566,9 @@ def create_search_files(remove_deleted_pars=True):
                         current_pars.append(par)
                     # Otherwise save the previous one and empty par data.
                     else:
-                        new_content_line = add_doc_info_content_line(current_doc, current_pars,
-                                                                     remove_deleted_pars)
+                        new_content_line = add_doc_info_content_line(
+                            current_doc, current_pars, remove_deleted_pars
+                        )
                         new_title_line = add_doc_info_title_line(current_doc)
                         if new_content_line:
                             temp_content_file.write(new_content_line)
@@ -507,11 +578,15 @@ def create_search_files(remove_deleted_pars=True):
                         current_pars.clear()
                         current_pars.append(par)
                 except Exception as e:
-                    print(f"'{get_error_message(e)}' while writing search file line '{line}''")
+                    print(
+                        f"'{get_error_message(e)}' while writing search file line '{line}''"
+                    )
 
             # Write the last line separately, because loop leaves it unsaved.
             if current_doc and current_pars:
-                new_content_line = add_doc_info_content_line(current_doc, current_pars, remove_deleted_pars)
+                new_content_line = add_doc_info_content_line(
+                    current_doc, current_pars, remove_deleted_pars
+                )
                 new_title_line = add_doc_info_title_line(current_doc)
                 if new_content_line:
                     temp_content_file.write(new_content_line)
@@ -526,10 +601,16 @@ def create_search_files(remove_deleted_pars=True):
         temp_content_file_name.rename(PROCESSED_CONTENT_FILE_PATH)
         temp_title_file_name.rename(PROCESSED_TITLE_FILE_PATH)
 
-        return 200, f"Combined and processed paragraph files created to " \
-                    f"{PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH}"
+        return (
+            200,
+            f"Combined and processed paragraph files created to "
+            f"{PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH}",
+        )
     except:
-        return 400, f"Creating files to {PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH} failed!"
+        return (
+            400,
+            f"Creating files to {PROCESSED_CONTENT_FILE_PATH} and {PROCESSED_TITLE_FILE_PATH} failed!",
+        )
 
 
 @search_routes.get("createContentFile")
@@ -543,7 +624,9 @@ def create_search_files_route():
     verify_admin()
 
     # 'removeDeletedPars' checks paragraph existence before adding at the cost of taking more time.
-    status, msg = create_search_files(get_option(request, 'removeDeletedPars', default=True, cast=bool))
+    status, msg = create_search_files(
+        get_option(request, "removeDeletedPars", default=True, cast=bool)
+    )
     return json_response(status_code=status, jsondata=msg)
 
 
@@ -553,7 +636,14 @@ def title_search():
     Performs search on document titles.
     :return: Title search results.
     """
-    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
+    (
+        query,
+        folder,
+        regex,
+        case_sensitive,
+        search_whole_words,
+        search_owned_docs,
+    ) = get_common_search_params(request)
 
     results = []
     title_result_count = 0
@@ -561,9 +651,12 @@ def title_search():
     validate_query(query, search_whole_words)
 
     if search_owned_docs:
-        custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
-                                        filter_by(type=AccessType.owner.value)
-                                        .with_entities(BlockAccess.block_id))
+        custom_filter = DocEntry.id.in_(
+            get_current_user_object()
+            .get_personal_group()
+            .accesses.filter_by(type=AccessType.owner.value)
+            .with_entities(BlockAccess.block_id)
+        )
     else:
         custom_filter = None
     docs = get_documents(
@@ -571,7 +664,8 @@ def title_search():
         filter_folder=folder,
         query_options=lazyload(DocEntry._block),
         custom_filter=custom_filter,
-        search_recursively=True)
+        search_recursively=True,
+    )
 
     if not docs:
         if not folder:
@@ -606,36 +700,53 @@ def title_search():
     return json_response(result_response(results, title_result_count))
 
 
-@search_routes.get('/tags')
+@search_routes.get("/tags")
 def tag_search():
     """
     A route for document tag search.
     :return: Tag search results response.
     """
-    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
-    relevance_threshold = get_option(request, 'relevanceThreshold', default=1, cast=int)
+    (
+        query,
+        folder,
+        regex,
+        case_sensitive,
+        search_whole_words,
+        search_owned_docs,
+    ) = get_common_search_params(request)
+    relevance_threshold = get_option(request, "relevanceThreshold", default=1, cast=int)
     results = []
 
     # PostgreSQL doesn't support regex directly, so as workaround get all tags below the search folder
     # from the database and then apply regex search on them.
     any_tag = "%%"
     if search_owned_docs:
-        custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
-                                        filter_by(type=AccessType.owner.value)
-                                        .with_entities(BlockAccess.block_id)) & \
-                        DocEntry.id.in_(Tag.query.
-                                        filter(Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) |
-                                                                          (Tag.expires == None))).
-                                        with_entities(Tag.block_id))
+        custom_filter = DocEntry.id.in_(
+            get_current_user_object()
+            .get_personal_group()
+            .accesses.filter_by(type=AccessType.owner.value)
+            .with_entities(BlockAccess.block_id)
+        ) & DocEntry.id.in_(
+            Tag.query.filter(
+                Tag.name.ilike(any_tag)
+                & ((Tag.expires > datetime.now()) | (Tag.expires == None))
+            ).with_entities(Tag.block_id)
+        )
     else:
-        custom_filter = DocEntry.id.in_(Tag.query.
-                                        filter(Tag.name.ilike(any_tag) & ((Tag.expires > datetime.now()) |
-                                                                          (Tag.expires == None))).
-                                        with_entities(Tag.block_id))
+        custom_filter = DocEntry.id.in_(
+            Tag.query.filter(
+                Tag.name.ilike(any_tag)
+                & ((Tag.expires > datetime.now()) | (Tag.expires == None))
+            ).with_entities(Tag.block_id)
+        )
     query_options = joinedload(DocEntry._block).joinedload(Block.tags)
-    docs = get_documents(filter_user=get_current_user_object(), filter_folder=folder,
-                         search_recursively=True, custom_filter=custom_filter,
-                         query_options=query_options)
+    docs = get_documents(
+        filter_user=get_current_user_object(),
+        filter_folder=folder,
+        search_recursively=True,
+        custom_filter=custom_filter,
+        query_options=query_options,
+    )
 
     tag_result_count = 0
     error_list = []
@@ -663,31 +774,38 @@ def tag_search():
                         m_tags.append(tag)
 
                 if m_num > 0:
-                    results.append({'doc': d, 'matching_tags': m_tags, 'num_results': m_num})
+                    results.append(
+                        {"doc": d, "matching_tags": m_tags, "num_results": m_num}
+                    )
             except Exception as e:
                 error = get_error_message(e)
-                error_list.append({
-                    'error': error,
-                    'doc_path': current_doc,
-                    'tag_name': current_tag
-                })
+                error_list.append(
+                    {"error": error, "doc_path": current_doc, "tag_name": current_tag}
+                )
                 log_search_error(error, query, current_doc, tag=current_tag)
     except Exception as e:
         raise RouteException(get_error_message(e))
     else:
         try:
-            return json_response({'results': results,
-                                  'incomplete_search_reason': "",
-                                  'tag_result_count': tag_result_count,
-                                  'errors': error_list
-                                  })
+            return json_response(
+                {
+                    "results": results,
+                    "incomplete_search_reason": "",
+                    "tag_result_count": tag_result_count,
+                    "errors": error_list,
+                }
+            )
         except MemoryError:
             raise RouteException("MemoryError: results too large")
         except Exception as e:
-            raise RouteException(f"Error encountered while formatting JSON-response: {e}")
+            raise RouteException(
+                f"Error encountered while formatting JSON-response: {e}"
+            )
 
 
-def compile_regex(query: str, regex: bool, case_sensitive: bool, search_whole_words: bool):
+def compile_regex(
+    query: str, regex: bool, case_sensitive: bool, search_whole_words: bool
+):
     """
     Set flags and compile regular expression. Abort if invalid or empty regex.
     :param query: Search word.
@@ -723,31 +841,47 @@ def path_search():
     TitleResult objects and content & title search interface.
     :return: Path results.
     """
-    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
+    (
+        query,
+        folder,
+        regex,
+        case_sensitive,
+        search_whole_words,
+        search_owned_docs,
+    ) = get_common_search_params(request)
     validate_query(query, search_whole_words)
     term_regex = compile_regex(query, regex, case_sensitive, search_whole_words)
-    relevance_threshold = get_option(request, 'relevanceThreshold', default=1, cast=int)
+    relevance_threshold = get_option(request, "relevanceThreshold", default=1, cast=int)
 
     db_term = f"%{query}%"
     custom_filter = None
     if regex:
         if search_owned_docs:
-            custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
-                                            filter_by(type=AccessType.owner.value)
-                                            .with_entities(BlockAccess.block_id))
+            custom_filter = DocEntry.id.in_(
+                get_current_user_object()
+                .get_personal_group()
+                .accesses.filter_by(type=AccessType.owner.value)
+                .with_entities(BlockAccess.block_id)
+            )
     else:
         if case_sensitive:
             if search_owned_docs:
-                custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
-                                                filter_by(type=AccessType.owner.value)
-                                                .with_entities(BlockAccess.block_id)) & DocEntry.name.like(db_term)
+                custom_filter = DocEntry.id.in_(
+                    get_current_user_object()
+                    .get_personal_group()
+                    .accesses.filter_by(type=AccessType.owner.value)
+                    .with_entities(BlockAccess.block_id)
+                ) & DocEntry.name.like(db_term)
             else:
                 custom_filter = DocEntry.name.like(db_term)
         else:
             if search_owned_docs:
-                custom_filter = DocEntry.id.in_(get_current_user_object().get_personal_group().accesses.
-                                                filter_by(type=AccessType.owner.value)
-                                                .with_entities(BlockAccess.block_id)) & DocEntry.name.ilike(db_term)
+                custom_filter = DocEntry.id.in_(
+                    get_current_user_object()
+                    .get_personal_group()
+                    .accesses.filter_by(type=AccessType.owner.value)
+                    .with_entities(BlockAccess.block_id)
+                ) & DocEntry.name.ilike(db_term)
             else:
                 custom_filter = DocEntry.name.ilike(db_term)
 
@@ -756,7 +890,8 @@ def path_search():
         filter_folder=folder,
         query_options=lazyload(DocEntry._block),
         custom_filter=custom_filter,
-        search_recursively=True)
+        search_recursively=True,
+    )
     path_results = []
     path_result_count = 0
     for d in docs:
@@ -777,12 +912,16 @@ def path_search():
         except Exception as e:
             log_search_error(get_error_message(e), query, current_doc, par="")
 
-    return json_response({'title_result_count': path_result_count,
-                          'word_result_count': 0,
-                          'errors': [],
-                          'incomplete_search_reason': "",
-                          'title_results': path_results,
-                          'content_results': []})
+    return json_response(
+        {
+            "title_result_count": path_result_count,
+            "word_result_count": 0,
+            "errors": [],
+            "incomplete_search_reason": "",
+            "title_results": path_results,
+            "content_results": [],
+        }
+    )
 
 
 def is_excluded(relevance: int, relevance_threshold: int) -> bool:
@@ -817,21 +956,32 @@ def search():
     # If the file containing all TIM content doesn't exists, give warning immediately.
     content_search_file_path = PROCESSED_CONTENT_FILE_PATH
     title_search_file_path = PROCESSED_TITLE_FILE_PATH
-    (query, folder, regex, case_sensitive, search_whole_words, search_owned_docs) = get_common_search_params(request)
-    max_results = get_option(request, 'maxResults', default=1000000, cast=int)
-    max_doc_results = get_option(request, 'maxDocResults', default=10000, cast=int)
-    ignore_plugins = get_option(request, 'ignorePlugins', default=False, cast=bool)
-    search_titles = get_option(request, 'searchTitles', default=True, cast=bool)
-    search_content = get_option(request, 'searchContent', default=True, cast=bool)
-    search_attrs = get_option(request, 'searchAttrs', default=False, cast=bool)
-    relevance_threshold = get_option(request, 'relevanceThreshold', default=1, cast=int)
-    ignore_relevance = get_option(request, 'ignoreRelevance', default=False, cast=bool)
-    timeout = get_option(request, 'timeout', default=120, cast=int)
+    (
+        query,
+        folder,
+        regex,
+        case_sensitive,
+        search_whole_words,
+        search_owned_docs,
+    ) = get_common_search_params(request)
+    max_results = get_option(request, "maxResults", default=1000000, cast=int)
+    max_doc_results = get_option(request, "maxDocResults", default=10000, cast=int)
+    ignore_plugins = get_option(request, "ignorePlugins", default=False, cast=bool)
+    search_titles = get_option(request, "searchTitles", default=True, cast=bool)
+    search_content = get_option(request, "searchContent", default=True, cast=bool)
+    search_attrs = get_option(request, "searchAttrs", default=False, cast=bool)
+    relevance_threshold = get_option(request, "relevanceThreshold", default=1, cast=int)
+    ignore_relevance = get_option(request, "ignoreRelevance", default=False, cast=bool)
+    timeout = get_option(request, "timeout", default=120, cast=int)
 
     if search_content and not content_search_file_path.exists():
-        raise NotExist(f"Combined content file '{content_search_file_path}' not found, unable to perform content search!")
+        raise NotExist(
+            f"Combined content file '{content_search_file_path}' not found, unable to perform content search!"
+        )
     if search_titles and not title_search_file_path.exists():
-        raise NotExist(f"Combined title file '{title_search_file_path}' not found, unable to perform title search!")
+        raise NotExist(
+            f"Combined title file '{title_search_file_path}' not found, unable to perform title search!"
+        )
 
     start_time = time.time()
 
@@ -864,44 +1014,55 @@ def search():
 
     if search_content:
         try:
-            s = subprocess.Popen(cmd + [content_search_file_path],
-                                 stdout=subprocess.PIPE)
-            content_output_str = s.communicate()[0].decode('utf-8').strip()
+            s = subprocess.Popen(
+                cmd + [content_search_file_path], stdout=subprocess.PIPE
+            )
+            content_output_str = s.communicate()[0].decode("utf-8").strip()
             content_output = content_output_str.splitlines()
         except Exception as e:
             raise RouteException(get_error_message(e))
 
     if search_titles:
         try:
-            s = subprocess.Popen(cmd + [title_search_file_path],
-                                 stdout=subprocess.PIPE)
-            title_output_str = s.communicate()[0].decode('utf-8').strip()
+            s = subprocess.Popen(cmd + [title_search_file_path], stdout=subprocess.PIPE)
+            title_output_str = s.communicate()[0].decode("utf-8").strip()
             title_output = title_output_str.splitlines()
         except Exception as e:
             raise RouteException(get_error_message(e))
 
     if not content_output and not title_output:
-        return json_response({'title_result_count': title_result_count,
-                              'word_result_count': word_result_count,
-                              'errors': [],
-                              'incomplete_search_reason': incomplete_search_reason,
-                              'title_results': title_results,
-                              'content_results': content_results})
+        return json_response(
+            {
+                "title_result_count": title_result_count,
+                "word_result_count": word_result_count,
+                "errors": [],
+                "incomplete_search_reason": incomplete_search_reason,
+                "title_results": title_results,
+                "content_results": content_results,
+            }
+        )
 
     for line in title_output:
         try:
             if is_timeouted(start_time, timeout):
-                incomplete_search_reason = f"title search exceeded the timeout ({timeout} seconds)"
+                incomplete_search_reason = (
+                    f"title search exceeded the timeout ({timeout} seconds)"
+                )
                 raise TimeoutError("title search timeout")
 
             # Any line shorter than this is broken.
             if line and len(line) > 10:
                 # TODO: Combine with repeating parts from content loop.
                 line_info = json.loads(line)
-                doc_id = line_info['doc_id']
+                doc_id = line_info["doc_id"]
                 # TODO: Handle aliases and translated documents.
-                doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
-                    options(joinedload(DocEntry._block).joinedload(Block.relevance)).first()
+                doc_info = (
+                    DocEntry.query.filter(
+                        (DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))
+                    )
+                    .options(joinedload(DocEntry._block).joinedload(Block.relevance))
+                    .first()
+                )
                 if not doc_info:
                     continue
                 # If not allowed to view, continue to the next one.
@@ -914,7 +1075,7 @@ def search():
                 # If relevance is ignored or not found from search file, skip check.
                 if not ignore_relevance:
                     try:
-                        relevance = line_info['d_r']
+                        relevance = line_info["d_r"]
                     except KeyError:
                         pass
                     else:
@@ -923,30 +1084,38 @@ def search():
                             continue
                 doc_result = DocResult(doc_info)
 
-                doc_title = line_info['doc_title']
+                doc_title = line_info["doc_title"]
                 title_matches = list(term_regex.finditer(doc_title))
                 if title_matches:
                     title_match_count = len(title_matches)
-                    doc_result.add_title_result(TitleResult(alt_num_results=title_match_count))
+                    doc_result.add_title_result(
+                        TitleResult(alt_num_results=title_match_count)
+                    )
                     title_result_count += title_match_count
 
                 if doc_result.has_results():
                     title_results.append(doc_result)
         except TimeoutError as e:
             log_search_error(get_error_message(e), query, current_doc, title=True)
-            return json_response({'title_result_count': title_result_count,
-                                  'word_result_count': word_result_count,
-                                  'errors': [],
-                                  'incomplete_search_reason': incomplete_search_reason,
-                                  'title_results': title_results,
-                                  'content_results': content_results})
+            return json_response(
+                {
+                    "title_result_count": title_result_count,
+                    "word_result_count": word_result_count,
+                    "errors": [],
+                    "incomplete_search_reason": incomplete_search_reason,
+                    "title_results": title_results,
+                    "content_results": content_results,
+                }
+            )
         except Exception as e:
             log_search_error(get_error_message(e), query, current_doc, title=True)
 
     for line in content_output:
         try:
             if is_timeouted(start_time, timeout):
-                incomplete_search_reason = f"content search exceeded the timeout ({timeout} seconds)"
+                incomplete_search_reason = (
+                    f"content search exceeded the timeout ({timeout} seconds)"
+                )
                 raise TimeoutError("content search timeout")
 
             # Any line shorter than this is broken.
@@ -954,11 +1123,16 @@ def search():
 
                 # The file is supposed to contain doc_id and pars in a list for each document.
                 line_info = json.loads(line)
-                doc_id = line_info['doc_id']
+                doc_id = line_info["doc_id"]
 
                 # TODO: Handle aliases.
-                doc_info = DocEntry.query.filter((DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))). \
-                    options(joinedload(DocEntry._block).joinedload(Block.relevance)).first()
+                doc_info = (
+                    DocEntry.query.filter(
+                        (DocEntry.id == doc_id) & (DocEntry.name.like(folder + "%"))
+                    )
+                    .options(joinedload(DocEntry._block).joinedload(Block.relevance))
+                    .first()
+                )
                 if not doc_info:
                     continue
                 # If not allowed to view, continue to the next one.
@@ -973,25 +1147,25 @@ def search():
                 # If relevance is ignored or not found from search file, skip check.
                 if not ignore_relevance:
                     try:
-                        relevance = line_info['d_r']
+                        relevance = line_info["d_r"]
                     except KeyError:
                         # TODO: Add message to user about skipped relevances.
                         pass
                     else:
                         if is_excluded(relevance, relevance_threshold):
                             continue
-                pars = line_info['pars']
+                pars = line_info["pars"]
                 doc_result = DocResult(doc_info)
                 edit_access = has_edit_access(doc_info)
                 # is_owner = user.has_ownership(doc_info, allow_admin=True)
 
                 for i, par in enumerate(pars):
-                    par_id = par['id']
-                    md = par['md']
+                    par_id = par["id"]
+                    md = par["md"]
 
                     # If par has visibility condition and user can't see markdown (lower than edit), skip it.
                     try:
-                        visibility = par['attrs']['visible']
+                        visibility = par["attrs"]["visible"]
                         if visibility and not edit_access:
                             continue
                     except KeyError:
@@ -1000,22 +1174,22 @@ def search():
                     # Tries to get plugin and settings key values from dict;
                     # if par isn't either, gives KeyError and does nothing.
                     try:
-                        plugin = par['attrs']['plugin']
+                        plugin = par["attrs"]["plugin"]
                         # If ignore_plugins or no edit access, leave out plugin and setting results.
                         if ignore_plugins or not edit_access:
                             continue
                     except KeyError:
                         pass
                     try:
-                        settings = par['attrs']['settings']
+                        settings = par["attrs"]["settings"]
                         if ignore_plugins or not edit_access:
                             continue
                     except KeyError:
                         pass
                     if search_attrs and edit_access and not ignore_plugins:
                         try:
-                            rd = str(par['attrs'])
-                            md = rd.replace("'",'"') + " " + md
+                            rd = str(par["attrs"])
+                            md = rd.replace("'", '"') + " " + md
                         except KeyError:
                             pass
 
@@ -1039,9 +1213,14 @@ def search():
 
                     # End paragraph match search if limit has been reached, but
                     # don't break and mark as incomplete if this was the last paragraph.
-                    if doc_result.get_par_match_count() > max_doc_results and i != len(pars) - 1:
-                        incomplete_search_reason = f"one or more document has over the maximum " \
-                                                   f"of {max_doc_results} results"
+                    if (
+                        doc_result.get_par_match_count() > max_doc_results
+                        and i != len(pars) - 1
+                    ):
+                        incomplete_search_reason = (
+                            f"one or more document has over the maximum "
+                            f"of {max_doc_results} results"
+                        )
                         doc_result.incomplete = True
                         break
 
@@ -1052,22 +1231,32 @@ def search():
 
                 # End search if the limit is reached.
                 if word_result_count > max_results:
-                    incomplete_search_reason = f"more than maximum of {max_results} results"
+                    incomplete_search_reason = (
+                        f"more than maximum of {max_results} results"
+                    )
                     break
         except TimeoutError as e:
             log_search_error(get_error_message(e), query, current_doc, title=True)
-            return json_response({'title_result_count': title_result_count,
-                                  'word_result_count': word_result_count,
-                                  'errors': [],
-                                  'incomplete_search_reason': incomplete_search_reason,
-                                  'title_results': title_results,
-                                  'content_results': content_results})
+            return json_response(
+                {
+                    "title_result_count": title_result_count,
+                    "word_result_count": word_result_count,
+                    "errors": [],
+                    "incomplete_search_reason": incomplete_search_reason,
+                    "title_results": title_results,
+                    "content_results": content_results,
+                }
+            )
         except Exception as e:
             log_search_error(get_error_message(e), query, current_doc, par=current_par)
 
-    return json_response({'title_result_count': title_result_count,
-                          'word_result_count': word_result_count,
-                          'errors': [],
-                          'incomplete_search_reason': incomplete_search_reason,
-                          'title_results': title_results,
-                          'content_results': content_results})
+    return json_response(
+        {
+            "title_result_count": title_result_count,
+            "word_result_count": word_result_count,
+            "errors": [],
+            "incomplete_search_reason": incomplete_search_reason,
+            "title_results": title_results,
+            "content_results": content_results,
+        }
+    )

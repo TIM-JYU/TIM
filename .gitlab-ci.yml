@@ -4,6 +4,10 @@ image: timimages/ci
 #  DOCKER_HOST: tcp://docker:2376
 #  DOCKER_TLS_CERTDIR: "/certs"
 
+stages:
+  - lint
+  - test
+
 .setup: &setup
   - docker info
   - docker-compose --version
@@ -70,21 +74,49 @@ code_navigation:
       lsif: timApp/dump.lsif
   allow_failure: true  # https://gitlab.com/gitlab-org/gitlab/-/issues/224101
 
-lint:
-  stage: test
-  image: node:lts
+ts_lint:
+  stage: lint
+  image: node:lts-slim
   script:
   - cd timApp
   - npm install --unsafe-perm
-  - npm run checkformat
   - npm run lint
-  - cd modules/jsrunner/server
+
+stats:
+  stage: test
+  image: node:lts-slim
+  script:
+  - cd timApp
   - npm install --unsafe-perm
-  - npm run lint
-  - cd ../../..
   - npm install -g webpack-bundle-analyzer
   - npm run statshtml
   artifacts:
     name: webpack_stats
     paths:
     - timApp/report.html
+
+jsrunner_lint:
+  stage: lint
+  image: node:lts  # cannot use lts-slim here; some part of this requires Python
+  script:
+  - cd timApp
+  - npm install --unsafe-perm
+  - cd modules/jsrunner/server
+  - npm install --unsafe-perm
+  - npm run lint
+
+ts_format:
+  stage: lint
+  image: node:lts-slim
+  script:
+  - cd timApp
+  - rm package-lock.json
+  - npm install --no-package-lock --no-save prettier@2.1.1
+  - npm run checkformat
+
+py_format:
+  stage: lint
+  image: python:3.9-slim
+  script:
+  - pip install black==21.9b0
+  - black --check .

@@ -4,12 +4,11 @@ from timApp.tests.browser.browsertest import BrowserTest
 
 
 class TimTableTest(BrowserTest):
-
     def find_and_save_timtable(self, name: str):
         while True:
-            t = self.find_element_avoid_staleness('tim-table')
+            t = self.find_element_avoid_staleness("tim-table")
             try:
-                self.assert_same_screenshot(t, f'timtable/{name}', attempts=5)
+                self.assert_same_screenshot(t, f"timtable/{name}", attempts=5)
                 break
             except StaleElementReferenceException:
                 continue
@@ -21,7 +20,8 @@ class TimTableTest(BrowserTest):
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -31,7 +31,8 @@ table:
       - "Testi3"
 
 ```
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableSimple")
 
@@ -42,7 +43,8 @@ table:
         self.login_browser_quick_test1()
         self.login_test1()
         # TODO: borderRight on first column doesn't work?
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   columns:
@@ -82,7 +84,8 @@ table:
 
 ```
 
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllColumnStyles")
 
@@ -93,7 +96,8 @@ table:
         self.login_browser_quick_test1()
         self.login_test1()
         # TODO: borderRight on first row doesn't work?
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -133,7 +137,8 @@ table:
 
 ```
 
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllRowStyles")
 
@@ -143,7 +148,8 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -184,7 +190,8 @@ table:
       - cell: "16"
 
 ```
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllCellStyles")
 
@@ -195,7 +202,8 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -234,7 +242,8 @@ table:
   borderLeft: 5px solid green
 ```
         
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableTableStyles")
 
@@ -244,7 +253,8 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   columns:
@@ -319,23 +329,25 @@ table:
   borderLeft: 5px solid green
 ```
 
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableAllStyles")
 
     def test_extra_properties(self):
         """
-           Test case 1.8. Extra properties.
-           Right way to function: Added extra properties
-           senatus: "populusque romanus"
-           Julius: Caesar
-           Lucius: Vorenus
-           Marcus: Aurelius
-           have no effect. Screenshot should look just like timTableAllStyles.
-           """
+        Test case 1.8. Extra properties.
+        Right way to function: Added extra properties
+        senatus: "populusque romanus"
+        Julius: Caesar
+        Lucius: Vorenus
+        Marcus: Aurelius
+        have no effect. Screenshot should look just like timTableAllStyles.
+        """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   columns:
@@ -413,7 +425,8 @@ table:
   Marcus: Aurelius
 ```
 
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableExtraStyles")
 
@@ -423,7 +436,8 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -453,7 +467,8 @@ table:
       - cell: "astra."
 ```
 
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableColspan")
 
@@ -463,7 +478,8 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -493,7 +509,8 @@ table:
       - cell: "astra."
 ```
 
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableRowspan")
 
@@ -503,7 +520,8 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -534,7 +552,8 @@ table:
         rowspan: 2
 ```
 
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableRowspanOverRows")
 
@@ -545,7 +564,8 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -573,7 +593,8 @@ table:
       - cell: "ad"
       - cell: "astra."
 ```
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableColspanOverColumns")
 
@@ -583,7 +604,8 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -615,7 +637,8 @@ table:
       - cell: "astra."
 ```
 
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableRowspanColspan")
 
@@ -625,7 +648,8 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   columns:
@@ -662,7 +686,8 @@ table:
       - cell: "astra."
 ```
 
-                    """)
+                    """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableColumnSpan")
 
@@ -672,7 +697,8 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par=r"""
+        d = self.create_doc(
+            initial_par=r"""
 ``` {plugin="timTable"}
     table:
       columns:
@@ -748,7 +774,8 @@ table:
 
 ```
 
-            """)
+            """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableManyThings")
 
@@ -758,7 +785,8 @@ table:
         """
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 ``` {plugin="timTable"}
 table:
   rows:
@@ -788,14 +816,16 @@ table:
     type: relative
       
 ```
-                        """)
+                        """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableTabledatablock")
 
     def test_svg_math(self):
         self.login_browser_quick_test1()
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 #- {settings=""}
 math_type: svg
 
@@ -805,6 +835,7 @@ table:
     - row:
       - cell: '$x$'
 ```
-                                """)
+                                """
+        )
         self.goto_document(d)
         self.find_and_save_timtable("timTableSvgMath")

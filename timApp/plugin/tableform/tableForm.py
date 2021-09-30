@@ -20,7 +20,11 @@ from timApp.document.viewcontext import ViewRoute, ViewContext
 from timApp.item.block import Block
 from timApp.item.tag import Tag, TagType, GROUP_TAG_PREFIX
 from timApp.plugin.jsrunner import jsrunner_run, JsRunnerParams, JsRunnerError
-from timApp.plugin.plugin import find_plugin_from_document, TaskNotFoundException, Plugin
+from timApp.plugin.plugin import (
+    find_plugin_from_document,
+    TaskNotFoundException,
+    Plugin,
+)
 from timApp.plugin.tableform.comparatorFilter import RegexOrComparator
 from timApp.plugin.taskid import TaskId
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
@@ -28,20 +32,40 @@ from timApp.sisu.sisu import get_potential_groups
 from timApp.tim_app import csrf
 from timApp.user.user import User, get_membership_end
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import RouteException, use_model, view_ctx_with_urlmacros, NotExist
+from timApp.util.flask.requesthelper import (
+    RouteException,
+    use_model,
+    view_ctx_with_urlmacros,
+    NotExist,
+)
 from timApp.util.flask.responsehelper import csv_string, json_response, text_response
-from timApp.util.get_fields import get_fields_and_users, MembershipFilter, UserFields, RequestedGroups, GetFieldsAccess
+from timApp.util.get_fields import (
+    get_fields_and_users,
+    MembershipFilter,
+    UserFields,
+    RequestedGroups,
+    GetFieldsAccess,
+)
 from timApp.util.utils import fin_timezone
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, create_blueprint, value_or_default, PluginAnswerResp, PluginAnswerWeb, PluginReqs, EditorTab
+from tim_common.pluginserver_flask import (
+    GenericHtmlModel,
+    GenericAnswerModel,
+    create_blueprint,
+    value_or_default,
+    PluginAnswerResp,
+    PluginAnswerWeb,
+    PluginReqs,
+    EditorTab,
+)
 from tim_common.utils import Missing
 
 
 @dataclass
 class TableFormStateModel:
     """Model for the information that is stored in TIM database for each answer."""
+
     # TODO: Save user given table layouts like in timTable
 
 
@@ -89,7 +113,9 @@ class TableFormMarkupModel(GenericMarkupModel):
     hiddenRows: Union[list[int], Missing, None] = missing
     hide: Union[dict[Any, Any], Missing, None] = missing
     hideButtonText: Union[str, Missing, None] = missing
-    includeUsers: MembershipFilter = field(default=MembershipFilter.Current, metadata={'by_value': True})
+    includeUsers: MembershipFilter = field(
+        default=MembershipFilter.Current, metadata={"by_value": True}
+    )
     lockedFields: Union[list[str], Missing] = missing
     maxCols: Union[str, Missing, None] = missing
     maxRows: Union[str, Missing, None] = missing
@@ -125,6 +151,7 @@ TableFormMarkupSchema = class_schema(TableFormMarkupModel)
 @dataclass
 class TableFormInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
+
     replyRows: dict[int, Any]
     nosave: Union[bool, Missing] = missing
 
@@ -136,17 +163,25 @@ def get_sisu_group_desc_for_table(g: UserGroup) -> str:
         return p.desc
     # We want the most important groups to be at the top of the table.
     # The '(' at the beginning changes the sort order.
-    return f'({p.desc})'
+    return f"({p.desc})"
 
 
-def get_sisugroups(user: User, sisu_id: Optional[str]) -> 'TableFormObj':
+def get_sisugroups(user: User, sisu_id: Optional[str]) -> "TableFormObj":
     gs = get_potential_groups(user, sisu_id)
-    docs_with_course_tag = Tag.query.filter_by(type=TagType.CourseCode).with_entities(Tag.block_id).subquery()
-    tags = (Tag.query
-            .filter(Tag.name.in_([GROUP_TAG_PREFIX + g.name for g in gs]) & Tag.block_id.in_(docs_with_course_tag))
-            .options(joinedload(Tag.block).joinedload(Block.docentries))
-            .all())
-    tag_map = {t.name[len(GROUP_TAG_PREFIX):]: t for t in tags}
+    docs_with_course_tag = (
+        Tag.query.filter_by(type=TagType.CourseCode)
+        .with_entities(Tag.block_id)
+        .subquery()
+    )
+    tags = (
+        Tag.query.filter(
+            Tag.name.in_([GROUP_TAG_PREFIX + g.name for g in gs])
+            & Tag.block_id.in_(docs_with_course_tag)
+        )
+        .options(joinedload(Tag.block).joinedload(Block.docentries))
+        .all()
+    )
+    tag_map = {t.name[len(GROUP_TAG_PREFIX) :]: t for t in tags}
 
     def get_course_page(ug: UserGroup) -> Optional[str]:
         t: Optional[Tag] = tag_map.get(ug.name)
@@ -158,39 +193,45 @@ def get_sisugroups(user: User, sisu_id: Optional[str]) -> 'TableFormObj':
     return TableFormObj(
         rows={
             g.external_id.external_id: {
-                'TIM-nimi': g.name,
-                'URL': f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>' if g.admin_doc else None,
-                'Jäseniä': len(g.current_memberships),
-                'Kurssisivu': get_course_page(g),
-            } for g in gs
+                "TIM-nimi": g.name,
+                "URL": f'<a href="{g.admin_doc.docentries[0].url_relative}">URL</a>'
+                if g.admin_doc
+                else None,
+                "Jäseniä": len(g.current_memberships),
+                "Kurssisivu": get_course_page(g),
+            }
+            for g in gs
         },
         users={
             g.external_id.external_id: TableFormUserInfo(
-                real_name=get_sisu_group_desc_for_table(g) if sisu_id else g.display_name,
+                real_name=get_sisu_group_desc_for_table(g)
+                if sisu_id
+                else g.display_name,
                 # The rows are not supposed to match any real user when handling sisu groups,
                 # so we try to use an id value that does not match anyone.
                 id=-100000,
-                email='',
-            ) for g in gs
+                email="",
+            )
+            for g in gs
         },
-        fields=['Jäseniä', 'TIM-nimi', 'URL', 'Kurssisivu'],
+        fields=["Jäseniä", "TIM-nimi", "URL", "Kurssisivu"],
         aliases={
-            'TIM-nimi': 'TIM-nimi',
-            'URL': 'URL',
-            'Jäseniä': 'Jäseniä',
-            'Kurssisivu': 'Kurssisivu',
+            "TIM-nimi": "TIM-nimi",
+            "URL": "URL",
+            "Jäseniä": "Jäseniä",
+            "Kurssisivu": "Kurssisivu",
         },
-        styles={
-            g.external_id.external_id: {} for g in gs
-        },
+        styles={g.external_id.external_id: {} for g in gs},
         membershipmap={},
     )
 
 
 @dataclass
-class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupModel, TableFormStateModel]):
+class TableFormHtmlModel(
+    GenericHtmlModel[TableFormInputModel, TableFormMarkupModel, TableFormStateModel]
+):
     def get_component_html_name(self) -> str:
-        return 'tableform-runner'
+        return "tableform-runner"
 
     def show_in_view_default(self) -> bool:
         return False
@@ -216,7 +257,10 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
                     value_or_default(self.markup.groups, []),
                     d,
                     user,
-                    ViewContext(ViewRoute.View if self.viewmode else ViewRoute.Teacher, self.preview),
+                    ViewContext(
+                        ViewRoute.View if self.viewmode else ViewRoute.Teacher,
+                        self.preview,
+                    ),
                     value_or_default(self.markup.removeDocIds, True),
                     value_or_default(self.markup.showInView, False),
                     group_filter_type=self.markup.includeUsers,
@@ -226,7 +270,9 @@ class TableFormHtmlModel(GenericHtmlModel[TableFormInputModel, TableFormMarkupMo
 
 
 @dataclass
-class TableFormAnswerModel(GenericAnswerModel[TableFormInputModel, TableFormMarkupModel, TableFormStateModel]):
+class TableFormAnswerModel(
+    GenericAnswerModel[TableFormInputModel, TableFormMarkupModel, TableFormStateModel]
+):
     pass
 
 
@@ -271,15 +317,16 @@ def answer(args: TableFormAnswerModel) -> PluginAnswerResp:
     rows = args.input.replyRows
     save_rows = []
     for uid, r in rows.items():
-        save_rows.append({'user': uid, 'fields': r})
+        save_rows.append({"user": uid, "fields": r})
     web: PluginAnswerWeb = {}
-    result: TableformAnswerResp = {'web': web, 'savedata': save_rows}
-    web['result'] = "saved"
+    result: TableformAnswerResp = {"web": web, "savedata": save_rows}
+    web["result"] = "saved"
     return result
 
 
 def reqs() -> PluginReqs:
-    templates = ["""
+    templates = [
+        """
 ``` {#tableForm_table plugin="tableForm"}    
 # showInView: true # Add attribute  to show the plugin in normal view
 groups: 
@@ -319,18 +366,19 @@ showToolbar: true # toolbar for editing the table
 #  virtual:
 #    enabled: true  # toggles virtual mode on or off; default true
 #  fixedColumns: 1 # how many not scrolling columns in left
-```"""]
+```"""
+    ]
     editor_tabs: list[EditorTab] = [
         {
-            'text': 'Fields',
-            'items': [
+            "text": "Fields",
+            "items": [
                 {
-                    'text': 'Tables',
-                    'items': [
+                    "text": "Tables",
+                    "items": [
                         {
-                            'data': templates[0].strip(),
-                            'text': 'Table and report',
-                            'expl': 'Form a table for editing forms, that can be converted to report',
+                            "data": templates[0].strip(),
+                            "text": "Table and report",
+                            "expl": "Form a table for editing forms, that can be converted to report",
                         },
                     ],
                 },
@@ -340,13 +388,13 @@ showToolbar: true # toolbar for editing the table
     return {
         "js": ["tableForm"],
         "multihtml": True,
-        'editor_tabs': editor_tabs,
+        "editor_tabs": editor_tabs,
     }
 
 
 tableForm_plugin = create_blueprint(
     __name__,
-    'tableForm',
+    "tableForm",
     TableFormHtmlModel,
     TableFormAnswerModel,
     answer,
@@ -355,13 +403,15 @@ tableForm_plugin = create_blueprint(
 )
 
 
-def check_field_filtering(r_filter: Optional[RegexOrComparator], target: Union[str, float, None]) -> bool:
+def check_field_filtering(
+    r_filter: Optional[RegexOrComparator], target: Union[str, float, None]
+) -> bool:
     if r_filter is None:
         return True
     return r_filter.is_match(target)
 
 
-@tableForm_plugin.get('/generateCSV')
+@tableForm_plugin.get("/generateCSV")
 @use_args(GenerateCSVSchema())
 def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
     """
@@ -370,10 +420,31 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
     :return: CSV containing headerrow and rows for users and values
     """
     curr_user = get_current_user_object()
-    docid, groups, separator, show_real_names, show_user_names, show_emails, remove_doc_ids, fields, user_filter, \
-    filter_fields, filter_values = args.docId, args.groups, args.separator, args.realnames, \
-                                   args.usernames, args.emails, args.removeDocIds, args.fields, args.userFilter, \
-                                   args.filterFields, args.filterValues
+    (
+        docid,
+        groups,
+        separator,
+        show_real_names,
+        show_user_names,
+        show_emails,
+        remove_doc_ids,
+        fields,
+        user_filter,
+        filter_fields,
+        filter_values,
+    ) = (
+        args.docId,
+        args.groups,
+        args.separator,
+        args.realnames,
+        args.usernames,
+        args.emails,
+        args.removeDocIds,
+        args.fields,
+        args.userFilter,
+        args.filterFields,
+        args.filterValues,
+    )
     if len(separator) > 1:
         # TODO: Add support >1 char strings like in Korppi
         return "Only 1-character string separators supported for now"
@@ -399,7 +470,7 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
         data[0].append("Username")
     if show_emails:
         data[0].append("email")
-    tmp: Sequence[Union[str, float, None]] = r['fields']
+    tmp: Sequence[Union[str, float, None]] = r["fields"]
     data[0] = data[0] + list(tmp)
     if len(filter_fields) != len(filter_values):
         raise RouteException("Filter targets and filter values do not match")
@@ -414,13 +485,13 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
     except IndexError:
         raise RouteException("Too many filters")
 
-    for rowkey, row in sorted(r['rows'].items()):
+    for rowkey, row in sorted(r["rows"].items()):
         row_data: list[Union[str, float, None]] = []
-        u = r['users'].get(rowkey)
+        u = r["users"].get(rowkey)
         if show_real_names:
             if u is None:
                 continue
-            val = u.get('real_name')
+            val = u.get("real_name")
             row_data.append(val)
             if not check_field_filtering(regs.get("realname"), val):
                 continue
@@ -432,12 +503,12 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
         if show_emails:
             if u is None:
                 continue
-            val = u.get('email')
+            val = u.get("email")
             row_data.append(val)
             if not check_field_filtering(regs.get("email"), val):
                 continue
         filter_this_row = False
-        for i, _field in enumerate(r['fields']):
+        for i, _field in enumerate(r["fields"]):
             v = row.get(_field)
             row_data.append(v)
             if not check_field_filtering(regs.get(_field), v):
@@ -447,14 +518,14 @@ def gen_csv(args: GenerateCSVModel) -> Union[Response, str]:
             continue
         data.append(row_data)
 
-    csv = csv_string(data, 'excel', separator)
-    output = ''
+    csv = csv_string(data, "excel", separator)
+    output = ""
     if isinstance(args.reportFilter, str) and args.reportFilter:
         params = JsRunnerParams(code=args.reportFilter, data=csv)
         try:
             csv, output = jsrunner_run(params)
         except JsRunnerError as e:
-            raise RouteException('Error in JavaScript: ' + str(e)) from e
+            raise RouteException("Error in JavaScript: " + str(e)) from e
     return text_response(output + csv)
 
 
@@ -472,7 +543,7 @@ class FetchTableDataModel:
     taskid: str
 
 
-@tableForm_plugin.get('/fetchTableData')
+@tableForm_plugin.get("/fetchTableData")
 @use_model(FetchTableDataModel)
 def fetch_rows(m: FetchTableDataModel) -> Response:
     curr_user = get_current_user_object()
@@ -482,9 +553,11 @@ def fetch_rows(m: FetchTableDataModel) -> Response:
     doc.document.insert_preamble_pars()
     view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
     try:
-        plug = find_plugin_from_document(doc.document, tid, UserContext.from_one_user(curr_user), view_ctx)
+        plug = find_plugin_from_document(
+            doc.document, tid, UserContext.from_one_user(curr_user), view_ctx
+        )
     except TaskNotFoundException:
-        raise NotExist(f'Table not found: {tid}')
+        raise NotExist(f"Table not found: {tid}")
     markup = load_tableform_markup(plug)
     include_users = markup.includeUsers
     fields = markup.fields
@@ -518,7 +591,7 @@ class FetchTableDataModelPreview(FetchTableDataModel):
     removeDocIds: bool = True
 
 
-@tableForm_plugin.get('/fetchTableDataPreview')
+@tableForm_plugin.get("/fetchTableDataPreview")
 @use_model(FetchTableDataModelPreview)
 def fetch_rows_preview(m: FetchTableDataModelPreview) -> Response:
     curr_user = get_current_user_object()
@@ -529,7 +602,7 @@ def fetch_rows_preview(m: FetchTableDataModelPreview) -> Response:
     # With this route we can't be certain about showInView so we just check for edit access
     # whoever can open the plugin in preview should have that right
     if not curr_user.has_edit_access(doc):
-        raise AccessDenied(f'Missing edit access for document {doc.id}')
+        raise AccessDenied(f"Missing edit access for document {doc.id}")
     view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
     r = tableform_get_fields(
         m.fields,
@@ -550,7 +623,7 @@ class UpdateFieldsModel:
     fields: list[str]
 
 
-@tableForm_plugin.get('/updateFields')
+@tableForm_plugin.get("/updateFields")
 @use_model(UpdateFieldsModel)
 def update_fields(m: UpdateFieldsModel) -> Response:
     r: dict[str, Any] = {}
@@ -562,9 +635,11 @@ def update_fields(m: UpdateFieldsModel) -> Response:
     curr_user = get_current_user_object()
     view_ctx = view_ctx_with_urlmacros(ViewRoute.Unknown)
     try:
-        plug = find_plugin_from_document(doc.document, tid, UserContext.from_one_user(curr_user), view_ctx)
+        plug = find_plugin_from_document(
+            doc.document, tid, UserContext.from_one_user(curr_user), view_ctx
+        )
     except TaskNotFoundException:
-        raise NotExist(f'Table not found: {tid}')
+        raise NotExist(f"Table not found: {tid}")
     markup = load_tableform_markup(plug)
     groupnames = markup.groups
     if not isinstance(groupnames, list):
@@ -577,20 +652,22 @@ def update_fields(m: UpdateFieldsModel) -> Response:
         view_ctx,
         value_or_default(markup.removeDocIds, True),
         add_missing_fields=True,
-        access_option=GetFieldsAccess.from_bool(value_or_default(markup.showInView, False)),
+        access_option=GetFieldsAccess.from_bool(
+            value_or_default(markup.showInView, False)
+        ),
     )
     rows = {}
     styles = {}
     for f in fielddata:
-        username = f['user'].name
-        rows[username] = dict(f['fields'])
+        username = f["user"].name
+        rows[username] = dict(f["fields"])
         for key, content in rows[username].items():
             if type(content) is dict:
                 rows[username][key] = json.dumps(content)
-        styles[username] = dict(f['styles'])
-    r['rows'] = rows
-    r['styles'] = styles
-    r['fields'] = field_names
+        styles[username] = dict(f["styles"])
+    r["rows"] = rows
+    r["styles"] = styles
+    r["fields"] = field_names
     return json_response(r)
 
 
@@ -610,53 +687,54 @@ class TableFormObj(TypedDict):
 
 
 def tableform_get_fields(
-        flds: list[str],
-        groupnames: list[str],
-        doc: DocInfo,
-        curr_user: User,
-        view_ctx: ViewContext,
-        remove_doc_ids: bool,
-        allow_non_teacher: bool,
-        group_filter_type: MembershipFilter = MembershipFilter.Current,
-        user_filter: Optional[list[str]] = None,
+    flds: list[str],
+    groupnames: list[str],
+    doc: DocInfo,
+    curr_user: User,
+    view_ctx: ViewContext,
+    remove_doc_ids: bool,
+    allow_non_teacher: bool,
+    group_filter_type: MembershipFilter = MembershipFilter.Current,
+    user_filter: Optional[list[str]] = None,
 ) -> TableFormObj:
-    fielddata, aliases, field_names, groups = \
-        get_fields_and_users(
-            flds,
-            RequestedGroups.from_name_list(groupnames),
-            doc,
-            curr_user,
-            view_ctx,
-            remove_doc_ids,
-            add_missing_fields=True,
-            access_option=GetFieldsAccess.from_bool(allow_non_teacher),
-            member_filter_type=group_filter_type,
-            user_filter=User.name.in_(user_filter) if user_filter else None,
-        )
+    fielddata, aliases, field_names, groups = get_fields_and_users(
+        flds,
+        RequestedGroups.from_name_list(groupnames),
+        doc,
+        curr_user,
+        view_ctx,
+        remove_doc_ids,
+        add_missing_fields=True,
+        access_option=GetFieldsAccess.from_bool(allow_non_teacher),
+        member_filter_type=group_filter_type,
+        user_filter=User.name.in_(user_filter) if user_filter else None,
+    )
     rows = {}
     users: dict[str, TableFormUserInfo] = {}
     styles = {}
     group_ids = {g.id for g in groups} if groups else None
     membershipmap = {}
     for f in fielddata:
-        u: User = f['user']
+        u: User = f["user"]
         username = u.name
-        rows[username] = dict(f['fields'])
+        rows[username] = dict(f["fields"])
         for key, content in rows[username].items():
             if type(content) is dict:
                 rows[username][key] = json.dumps(content)
-        rn = f['user'].real_name
-        email = f['user'].email
+        rn = f["user"].real_name
+        email = f["user"].email
         users[username] = TableFormUserInfo(
             id=u.id,
-            real_name=rn if rn is not None else '',
-            email=email if email is not None else ''
+            real_name=rn if rn is not None else "",
+            email=email if email is not None else "",
         )
-        styles[username] = dict(f['styles'])
+        styles[username] = dict(f["styles"])
         if group_ids and group_filter_type != MembershipFilter.Current:
             membership_end = get_membership_end(u, group_ids)
             if membership_end:
-                membership_end = membership_end.astimezone(fin_timezone).strftime('%Y-%m-%d %H:%M')
+                membership_end = membership_end.astimezone(fin_timezone).strftime(
+                    "%Y-%m-%d %H:%M"
+                )
             membershipmap[username] = membership_end
     r = TableFormObj(
         rows=rows,

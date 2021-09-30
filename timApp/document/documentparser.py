@@ -4,9 +4,19 @@ from typing import Optional
 from timApp.document.attributeparser import AttributeParser
 from timApp.document.documentparseroptions import DocumentParserOptions
 from timApp.document.randutils import hashfunc, random_id, is_valid_id
-from timApp.document.validationresult import ValidationResult, AttributesAtEndOfCodeBlock, DuplicateParagraphId, \
-    InvalidParagraphId, DuplicateTaskId, MultipleAreasWithSameName, ZeroLengthArea, OverlappingClassedArea, \
-    AreaEndWithoutStart, DuplicateAreaEnd, AreaWithoutEnd
+from timApp.document.validationresult import (
+    ValidationResult,
+    AttributesAtEndOfCodeBlock,
+    DuplicateParagraphId,
+    InvalidParagraphId,
+    DuplicateTaskId,
+    MultipleAreasWithSameName,
+    ZeroLengthArea,
+    OverlappingClassedArea,
+    AreaEndWithoutStart,
+    DuplicateAreaEnd,
+    AreaWithoutEnd,
+)
 from timApp.util.utils import count_chars_from_beginning
 
 
@@ -49,7 +59,7 @@ class DocumentParser:
 
     """
 
-    def __init__(self, doc_text='', options: Optional[DocumentParserOptions]=None):
+    def __init__(self, doc_text="", options: Optional[DocumentParserOptions] = None):
         """
 
         :type doc_text: str
@@ -58,18 +68,22 @@ class DocumentParser:
         self._blocks = None
         self._break_on_empty_line = False
         self._last_setting: Optional[DocumentParserOptions] = None
-        self.options: DocumentParserOptions = options if options is not None else DocumentParserOptions()
+        self.options: DocumentParserOptions = (
+            options if options is not None else DocumentParserOptions()
+        )
 
     def get_blocks(self):
         self._parse_document()
         return self._blocks
 
-    def add_missing_attributes(self, hash_func=hashfunc, id_func=random_id, force_new_ids=False):
+    def add_missing_attributes(
+        self, hash_func=hashfunc, id_func=random_id, force_new_ids=False
+    ):
         self._parse_document()
         for r in self._blocks:
-            r['t'] = hash_func(r['md'], r['attrs'])
-            if force_new_ids or not r.get('id'):
-                r['id'] = id_func()
+            r["t"] = hash_func(r["md"], r["attrs"])
+            if force_new_ids or not r.get("id"):
+                r["id"] = id_func()
         return self
 
     def validate_structure(self) -> ValidationResult:
@@ -81,45 +95,47 @@ class DocumentParser:
         found_area_ends = set()
         result = ValidationResult()
         for r in self._blocks:
-            if r['type'] == 'code':
-                md = r['md']
+            if r["type"] == "code":
+                md = r["md"]
                 try:
-                    last_line = md[md.rindex('\n') + 1:]
-                    num_ticks = count_chars_from_beginning(md, '`')
-                    if last_line.startswith('`' * num_ticks):
+                    last_line = md[md.rindex("\n") + 1 :]
+                    num_ticks = count_chars_from_beginning(md, "`")
+                    if last_line.startswith("`" * num_ticks):
                         attrs, start_index = AttributeParser(last_line).get_attributes()
                         if start_index is not None:
-                            result.add_issue(AttributesAtEndOfCodeBlock(r.get('id')))
+                            result.add_issue(AttributesAtEndOfCodeBlock(r.get("id")))
                 except ValueError:
                     pass
-            curr_id = r.get('id')
+            curr_id = r.get("id")
             if curr_id is not None:
                 if curr_id in found_ids:
                     result.add_issue(DuplicateParagraphId(curr_id))
                 found_ids.add(curr_id)
                 if not is_valid_id(curr_id):
                     result.add_issue(InvalidParagraphId(curr_id))
-            attrs = r.get('attrs', {})
-            task_id = attrs.get('taskId')
+            attrs = r.get("attrs", {})
+            task_id = attrs.get("taskId")
             if task_id:
                 if task_id in found_tasks:
                     result.add_issue(DuplicateTaskId(curr_id, task_id))
                 found_tasks.add(task_id)
-            area = attrs.get('area')
+            area = attrs.get("area")
             if area:
                 if area in found_areas:
                     result.add_issue(MultipleAreasWithSameName(curr_id, area))
-                has_classes = len(attrs.get('classes', [])) > 0
+                has_classes = len(attrs.get("classes", [])) > 0
                 if has_classes:
                     classed_areas.append(area)
                 found_areas.add(area)
-            area_end = attrs.get('area_end')
+            area_end = attrs.get("area_end")
             if area_end:
                 if area_end == area:
                     result.add_issue(ZeroLengthArea(curr_id, area))
                 if area_end in classed_areas:
                     if area_end != classed_areas[-1]:
-                        result.add_issue(OverlappingClassedArea(curr_id, classed_areas[-1], area_end))
+                        result.add_issue(
+                            OverlappingClassedArea(curr_id, classed_areas[-1], area_end)
+                        )
                     classed_areas.pop()
                 if area_end not in found_areas:
                     result.add_issue(AreaEndWithoutStart(curr_id, area))
@@ -128,7 +144,9 @@ class DocumentParser:
                 found_area_ends.add(area_end)
         unended_areas = found_areas - found_area_ends
         for a in unended_areas:
-            result.add_issue(AreaWithoutEnd(None, a))  # TODO get the par id of the start
+            result.add_issue(
+                AreaWithoutEnd(None, a)
+            )  # TODO get the par id of the start
         return result
 
     def _parse_document(self):
@@ -140,9 +158,11 @@ class DocumentParser:
         self._last_setting = options
         lines = self._doc_text.splitlines()
         doc = DocReader(lines)
-        funcs = [self.try_parse_code_block,
-                 self.try_parse_header_block,
-                 self.parse_normal_block]
+        funcs = [
+            self.try_parse_code_block,
+            self.try_parse_header_block,
+            self.parse_normal_block,
+        ]
         while True:
             self.eat_whitespace(doc)
             if not doc.has_more_lines():
@@ -150,17 +170,31 @@ class DocumentParser:
             for func in funcs:
                 result = func(doc)
                 if result:
-                    result['md'] = result['md'].rstrip().strip('\r\n')
-                    if ((result['type'] == 'code' and not options.break_on_code_block)
-                        or (result['type'] == 'header' and not options.break_on_header)
-                        or (result['type'] == 'autonormal' and not options.break_on_normal)) \
-                            and not result.get('attrs') and len(self._blocks) > 0 \
-                            and not self._blocks[-1].get('attrs', {}).get('plugin') \
-                            and self._blocks[-1]['type'] != 'atom':
-                        self._blocks[-1]['md'] += '\n\n' + result['md']
+                    result["md"] = result["md"].rstrip().strip("\r\n")
+                    if (
+                        (
+                            (
+                                result["type"] == "code"
+                                and not options.break_on_code_block
+                            )
+                            or (
+                                result["type"] == "header"
+                                and not options.break_on_header
+                            )
+                            or (
+                                result["type"] == "autonormal"
+                                and not options.break_on_normal
+                            )
+                        )
+                        and not result.get("attrs")
+                        and len(self._blocks) > 0
+                        and not self._blocks[-1].get("attrs", {}).get("plugin")
+                        and self._blocks[-1]["type"] != "atom"
+                    ):
+                        self._blocks[-1]["md"] += "\n\n" + result["md"]
                     else:
-                        if not result.get('attrs'):
-                            result['attrs'] = {}
+                        if not result.get("attrs"):
+                            result["attrs"] = {}
                         self._blocks.append(result)
                     break
 
@@ -169,24 +203,24 @@ class DocumentParser:
 
         :type doc: DocReader
         """
-        if doc.peek_line().startswith('```'):
-            code_start_char = '`'
-        elif doc.peek_line().startswith('~~~'):
-            code_start_char = '~'
+        if doc.peek_line().startswith("```"):
+            code_start_char = "`"
+        elif doc.peek_line().startswith("~~~"):
+            code_start_char = "~"
         else:
             return False, None
-        match = re.match('^' + code_start_char + '+', doc.peek_line()).group(0)
+        match = re.match("^" + code_start_char + "+", doc.peek_line()).group(0)
         return True, match
 
     def is_beginning_of_header_block(self, doc):
-        return doc.peek_line().startswith('#')
+        return doc.peek_line().startswith("#")
 
     def is_empty_line(self, doc):
         """
 
         :type doc: DocReader
         """
-        return doc.peek_line().isspace() or doc.peek_line() == ''
+        return doc.peek_line().isspace() or doc.peek_line() == ""
 
     def try_parse_code_block(self, doc):
         """
@@ -200,9 +234,9 @@ class DocumentParser:
         start_line = doc.get_line_and_advance()
         block_lines = []
         tokens, start = AttributeParser(start_line).get_attributes()
-        is_atom = tokens.get('atom', False)
+        is_atom = tokens.get("atom", False)
         if is_atom:
-            tokens.pop('atom')
+            tokens.pop("atom")
         else:
             first_line = start_line[:start].strip()
             block_lines.append(first_line)
@@ -234,13 +268,20 @@ class DocumentParser:
             # ```
             #
             single_mark = code_block_marker[0]
-            last_line_code_chars = count_chars_from_beginning(block_lines[-1], single_mark)
-            if (last_line_code_chars > 0 or len(line) == 0) and len(line.strip()) == last_line_code_chars:
-                block_lines[-1] = single_mark * (len(code_block_marker) - last_line_code_chars) + block_lines[-1]
+            last_line_code_chars = count_chars_from_beginning(
+                block_lines[-1], single_mark
+            )
+            if (last_line_code_chars > 0 or len(line) == 0) and len(
+                line.strip()
+            ) == last_line_code_chars:
+                block_lines[-1] = (
+                    single_mark * (len(code_block_marker) - last_line_code_chars)
+                    + block_lines[-1]
+                )
             else:
                 block_lines.append(code_block_marker)
 
-        result = {'md': '\n'.join(block_lines), 'type': 'atom' if is_atom else 'code'}
+        result = {"md": "\n".join(block_lines), "type": "atom" if is_atom else "code"}
         self.extract_attrs(result, tokens)
         return result
 
@@ -257,12 +298,12 @@ class DocumentParser:
         header_line = doc.get_line_and_advance()
         block_lines = []
         tokens, start = AttributeParser(header_line).get_attributes()
-        block_type = 'normal'
-        if not header_line.startswith('#-'):
-            block_type = 'header'
+        block_type = "normal"
+        if not header_line.startswith("#-"):
+            block_type = "header"
             block_lines.append(header_line[:start].strip())
-        block_lines.append(self.parse_normal_block(doc)['md'])
-        result = {'md': '\n'.join(block_lines), 'type': block_type}
+        block_lines.append(self.parse_normal_block(doc)["md"])
+        result = {"md": "\n".join(block_lines), "type": block_type}
         self.extract_attrs(result, tokens)
         return result
 
@@ -273,19 +314,21 @@ class DocumentParser:
         """
         block_lines = []
         while doc.has_more_lines():
-            if self.is_beginning_of_header_block(doc) \
-                    or self.is_beginning_of_code_block(doc)[0] \
-                    or (self._break_on_empty_line and self.is_empty_line(doc)):
+            if (
+                self.is_beginning_of_header_block(doc)
+                or self.is_beginning_of_code_block(doc)[0]
+                or (self._break_on_empty_line and self.is_empty_line(doc))
+            ):
                 break
             block_lines.append(doc.get_line_and_advance())
-        return {'md': '\n'.join(block_lines), 'type': 'autonormal'}
+        return {"md": "\n".join(block_lines), "type": "autonormal"}
 
     def extract_attrs(self, result, tokens):
-        for builtin in ('id', 't'):
+        for builtin in ("id", "t"):
             if builtin in tokens:
                 result[builtin] = tokens.pop(builtin)
         if len(tokens) > 0:
-            result['attrs'] = tokens
+            result["attrs"] = tokens
 
     def eat_whitespace(self, doc):
         """

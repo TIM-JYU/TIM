@@ -1,5 +1,6 @@
 from unittest import TestCase
-from timApp.document.yamlblock import correct_yaml,compare_same
+from timApp.document.yamlblock import correct_yaml, compare_same
+
 
 class TestCorrect_yaml(TestCase):
     def test_comparesame(self):
@@ -33,7 +34,7 @@ third: |+1
 """
         a1, h = correct_yaml(s1)
         self.assertEqual(e1, a1, "Not same in normal case")
-        self.assertEqual(h['second'].value, 'a', "Hint wrong")
+        self.assertEqual(h["second"].value, "a", "Hint wrong")
 
     ##############################################################
 
@@ -117,7 +118,6 @@ third: |
 """
         a1, h = correct_yaml(s1)
         self.assertEqual(e1, a1, "Not same in object case")
-
 
     ##############################################################
     def test_correct_yaml5(self):

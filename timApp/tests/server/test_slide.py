@@ -2,10 +2,10 @@ from timApp.tests.server.timroutetest import TimRouteTest
 
 
 class SlideTest(TimRouteTest):
-
     def test_slide_html(self):
         self.login_test1()
-        d = self.create_doc(initial_par="""
+        d = self.create_doc(
+            initial_par="""
 # First
 
 First text
@@ -29,14 +29,15 @@ Separate fragment
 Outside fragment
 #-
 New paragraph
-        """)
+        """
+        )
         self.check_slide_content(d)
-        d.document.set_settings({'test': 'test'})
+        d.document.set_settings({"test": "test"})
         self.check_slide_content(d)
 
     def check_slide_content(self, d):
-        t = self.get(f'/show_slide/{d.id}', as_tree=True)
-        slidesection = t.cssselect('.reveal')
+        t = self.get(f"/show_slide/{d.id}", as_tree=True)
+        slidesection = t.cssselect(".reveal")
         self.assertEqual(1, len(slidesection))
         pars = [p for p in d.document.get_paragraphs() if not p.is_setting()]
         # TODO get rid of the empty <p></p> tags
