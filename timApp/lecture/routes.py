@@ -12,6 +12,7 @@ from flask import current_app
 from flask import request
 from flask import session
 from sqlalchemy import func
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import joinedload
 
 from timApp.auth.accesshelper import verify_ownership, get_doc_or_abort, has_ownership
@@ -23,6 +24,7 @@ from timApp.auth.sessioninfo import (
 )
 from timApp.document.docentry import DocEntry
 from timApp.document.randutils import hashfunc
+from timApp.errorhandlers import suppress_wuff
 from timApp.lecture.askedjson import get_asked_json_by_hash, AskedJson
 from timApp.lecture.askedquestion import (
     AskedQuestion,
@@ -174,6 +176,11 @@ def lecture_before_request():
 EXTRA_FIELD_NAME = "extra"
 
 
+@suppress_wuff(
+    OperationalError,
+    "https://gitlab.com/tim-jyu/tim/-/issues/1975",
+    r"LockNotAvailable.*canceling statement due to lock timeout",
+)
 def do_get_updates(m: GetUpdatesModel):
     """Gets updates from some lecture.
 
