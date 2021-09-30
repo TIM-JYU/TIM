@@ -41,11 +41,12 @@ from timApp.user.user import User
 from timApp.util.utils import cache_folder_path
 from tim_common.html_sanitize import sanitize_html
 
-DEFAULT_PRINTING_FOLDER = cache_folder_path / 'printed_documents'
+DEFAULT_PRINTING_FOLDER = cache_folder_path / "printed_documents"
 TEMPLATES_FOLDER = Path(TEMPLATE_FOLDER_NAME) / PRINT_FOLDER_NAME
 TEX_MACROS_KEY = "texmacros"
 
 REGSLIDESEP = re.compile("^-{3,}$")  # slide separator
+
 
 class PrintingError(Exception):
     pass
@@ -98,17 +99,27 @@ def get_tex_settings_and_macros(d: Document, user_ctx: UserContext):
         default_view_ctx,
     )
     pdoc_macros.update(settings.get_texmacroinfo(default_view_ctx).get_macros())
-    return settings, pdoc_plugin_attrs, pdoc_macro_env, pdoc_macros, pdoc_macro_delimiter
+    return (
+        settings,
+        pdoc_plugin_attrs,
+        pdoc_macro_env,
+        pdoc_macros,
+        pdoc_macro_delimiter,
+    )
+
 
 def get_tex_macros(d: Document):
     settings = d.get_settings()
     # texmacros = settings.get_texmacroinfo(default_view_ctx).get_macros()
-    texmacros = settings.get_setting_or_default('texmacros', {})
+    texmacros = settings.get_setting_or_default("texmacros", {})
 
     return texmacros
 
+
 class DocumentPrinter:
-    def __init__(self, doc_entry: DocInfo, template_to_use: Optional[DocInfo], urlroot: str):
+    def __init__(
+        self, doc_entry: DocInfo, template_to_use: Optional[DocInfo], urlroot: str
+    ):
         self._doc_entry = doc_entry
         self._template_to_use = template_to_use
         self._content = None
@@ -124,7 +135,12 @@ class DocumentPrinter:
             return self._template_to_use.id
         return None
 
-    def get_content(self, user_ctx: UserContext, plugins_user_print: bool = False, target_format: PrintFormat = PrintFormat.PLAIN) -> str:
+    def get_content(
+        self,
+        user_ctx: UserContext,
+        plugins_user_print: bool = False,
+        target_format: PrintFormat = PrintFormat.PLAIN,
+    ) -> str:
         """
         Gets the content of the DocEntry assigned for this DocumentPrinter object.
         Fetches the markdown for the documents paragraphs, checks whether the
@@ -141,7 +157,9 @@ class DocumentPrinter:
         if self._content is not None:
             return self._content
 
-        settings, _, _, pdoc_macros, _ = get_tex_settings_and_macros(self._doc_entry.document, user_ctx)
+        settings, _, _, pdoc_macros, _ = get_tex_settings_and_macros(
+            self._doc_entry.document, user_ctx
+        )
 
         self._macros = pdoc_macros
 
@@ -149,19 +167,31 @@ class DocumentPrinter:
         # that have a defined 'texprint' block in their yaml, with the 'texprint'-blocks content
         pars = self._doc_entry.document.get_paragraphs(include_preamble=True)
         self._doc_entry.document.preload_option = PreloadOption.all
-        pars = dereference_pars(pars, context_doc=self._doc_entry.document, view_ctx=default_view_ctx)
+        pars = dereference_pars(
+            pars, context_doc=self._doc_entry.document, view_ctx=default_view_ctx
+        )
         pars_to_print = []
         self.texplain = settings.is_texplain()
         self.textplain = settings.is_textplain()
 
-        self.texfiles = settings.get_texmacroinfo(default_view_ctx). \
-            get_macros().get('texfiles')
+        self.texfiles = (
+            settings.get_texmacroinfo(default_view_ctx).get_macros().get("texfiles")
+        )
         if self.texfiles and self.texfiles is str:
             self.texfiles = [self.texfiles]
 
         texmacros = get_tex_macros(self._doc_entry.document)
 
-        par_infos: list[tuple[DocParagraph, DocSettings, dict, SandboxedEnvironment, dict[str, object], str]] = []
+        par_infos: list[
+            tuple[
+                DocParagraph,
+                DocSettings,
+                dict,
+                SandboxedEnvironment,
+                dict[str, object],
+                str,
+            ]
+        ] = []
         for par in pars:
 
             # do not print document settings pars
@@ -171,12 +201,11 @@ class DocumentPrinter:
             p_info = par, *get_tex_settings_and_macros(par.doc, user_ctx)
             _, _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = p_info
 
-
             if self.texplain or self.textplain:
                 if par.get_markdown().find("#") == 0:
                     continue
 
-            if par.has_class('hidden-print'):
+            if par.has_class("hidden-print"):
                 continue
 
             ppar = par
@@ -184,27 +213,35 @@ class DocumentPrinter:
             # of their yaml as the md content of the replacement par
             if par.is_plugin():
                 try:
-                    plugin_yaml = parse_plugin_values_macros(par=par,
-                                                             global_attrs=pdoc_plugin_attrs,
-                                                             macros=pdoc_macros,
-                                                             env=env)
+                    plugin_yaml = parse_plugin_values_macros(
+                        par=par,
+                        global_attrs=pdoc_plugin_attrs,
+                        macros=pdoc_macros,
+                        env=env,
+                    )
                 except PluginException:
                     plugin_yaml = {}
-                plugin_yaml_beforeprint = get_value(plugin_yaml, 'texbeforeprint')
+                plugin_yaml_beforeprint = get_value(plugin_yaml, "texbeforeprint")
                 if plugin_yaml_beforeprint is not None:
-                    bppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_beforeprint)
+                    bppar = DocParagraph.create(
+                        doc=self._doc_entry.document, md=plugin_yaml_beforeprint
+                    )
                     par_infos.append(p_info)
                     pars_to_print.append(bppar)
 
-                plugin_yaml_print = get_value(plugin_yaml, 'texprint')
+                plugin_yaml_print = get_value(plugin_yaml, "texprint")
                 if plugin_yaml_print is not None:
-                    ppar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_print)
+                    ppar = DocParagraph.create(
+                        doc=self._doc_entry.document, md=plugin_yaml_print
+                    )
                 par_infos.append(p_info)
                 pars_to_print.append(ppar)
 
-                plugin_yaml_afterprint = get_value(plugin_yaml, 'texafterprint')
+                plugin_yaml_afterprint = get_value(plugin_yaml, "texafterprint")
                 if plugin_yaml_afterprint is not None:
-                    appar = DocParagraph.create(doc=self._doc_entry.document, md=plugin_yaml_afterprint)
+                    appar = DocParagraph.create(
+                        doc=self._doc_entry.document, md=plugin_yaml_afterprint
+                    )
                     par_infos.append(p_info)
                     pars_to_print.append(appar)
 
@@ -221,16 +258,29 @@ class DocumentPrinter:
             view_ctx = copy_of_default_view_ctx(texmacros)
 
         # render markdown for plugins
-        presult = pluginify(doc=self._doc_entry.document, pars=pars_to_print, user_ctx=user_ctx, view_ctx=view_ctx,
-                            pluginwrap=PluginWrap.Nothing, output_format=PluginOutputFormat.MD,
-                            user_print=plugins_user_print, target_format=tformat)
+        presult = pluginify(
+            doc=self._doc_entry.document,
+            pars=pars_to_print,
+            user_ctx=user_ctx,
+            view_ctx=view_ctx,
+            pluginwrap=PluginWrap.Nothing,
+            output_format=PluginOutputFormat.MD,
+            user_print=plugins_user_print,
+            target_format=tformat,
+        )
         pars_to_print = presult.pars
 
         export_pars = []
 
         # Get the markdown for each par dict
-        for p, (_, settings, pdoc_plugin_attrs, pdoc_macro_env, pdoc_macros, pdoc_macro_delimiter) in zip(pars_to_print,
-                                                                                                          par_infos):
+        for p, (
+            _,
+            settings,
+            pdoc_plugin_attrs,
+            pdoc_macro_env,
+            pdoc_macros,
+            pdoc_macro_delimiter,
+        ) in zip(pars_to_print, par_infos):
             md = p.prepare(view_ctx, use_md=True).output
             if not p.is_plugin() and not p.is_question():
                 if not p.get_nomacros() and not self.texplain and not self.textplain:
@@ -247,7 +297,7 @@ class DocumentPrinter:
                     beginraw = ""
                     nonumber = ""
                     for cls in classes:
-                        if cls == 'visible-print':
+                        if cls == "visible-print":
                             continue
                         if cls == "nonumber":
                             nonumber = "{.unnumbered}"
@@ -256,7 +306,7 @@ class DocumentPrinter:
                                 beginraw += '<div class="' + cls + '">'
                                 endraw += "</div>"
                             elif target_format == "plain":
-                                beginraw = ''
+                                beginraw = ""
                             else:
                                 beginraw += "RAWTEX" + cls + "\n\n"
                                 endraw += "\n\nENDRAWTEX"
@@ -265,12 +315,15 @@ class DocumentPrinter:
                     md = beginraw + md + endraw
 
                 if self.texplain or self.textplain:
-                    if md.startswith('```'):
+                    if md.startswith("```"):
                         md = md[3:-3]
-                if not pdoc_macros.get('texautonumber') and settings.auto_number_headings():
+                if (
+                    not pdoc_macros.get("texautonumber")
+                    and settings.auto_number_headings()
+                ):
                     md = add_heading_numbers(md, p, settings.heading_format())
 
-                '''
+                """
                 if pd['md'].startswith('#'):
                     pd['md'] += ' {{ {} }}'.format(
                         ' '.join(['.{}'.format(class_name) for class_name in pd['attrs'].get('classes', [])]))
@@ -279,23 +332,29 @@ class DocumentPrinter:
                                          macro_delimiter=pdoc_macro_delimiter,
                                          env=pdoc_macro_env,
                                          ignore_errors=True)
-                '''
+                """
             if md.find("§") >= 0:  # check if slide fragments
                 md = md.replace("<§", "").replace("§>", "").replace("§§", "")
-            if md.find("---") >= 0: # check if slide separator
+            if md.find("---") >= 0:  # check if slide separator
                 if REGSLIDESEP.match(md):
                     continue
             export_pars.append(md)
 
         if self.texplain or self.textplain:
-            content = '\n'.join(export_pars)
+            content = "\n".join(export_pars)
         else:
-            content = settings.get_doctexmacros() + '\n' + '\n\n'.join(export_pars)
+            content = settings.get_doctexmacros() + "\n" + "\n\n".join(export_pars)
 
         self._content = content
         return content
 
-    def write_to_format(self, user_ctx: UserContext, target_format: PrintFormat, path: Path, plugins_user_print: bool = False):
+    def write_to_format(
+        self,
+        user_ctx: UserContext,
+        target_format: PrintFormat,
+        path: Path,
+        plugins_user_print: bool = False,
+    ):
         """
         Converts the document to latex and returns the converted document as a bytearray
         :param user_ctx: The user context.
@@ -305,30 +364,39 @@ class DocumentPrinter:
         :return: Converted document as bytearray
         """
 
-        with tempfile.NamedTemporaryFile(suffix='.latex', delete=True) as template_file:
+        with tempfile.NamedTemporaryFile(suffix=".latex", delete=True) as template_file:
 
             if self._template_to_use:
-                template_content = DocumentPrinter.parse_template_content(doc_to_print=self._doc_entry,
-                                                                          template_doc=self._template_to_use)
+                template_content = DocumentPrinter.parse_template_content(
+                    doc_to_print=self._doc_entry, template_doc=self._template_to_use
+                )
             else:
-                template_content = '$body$\n'
+                template_content = "$body$\n"
 
             if template_content is None:
                 raise PrintingError(
-                    f"The content in the template document {self._template_to_use.path} is not valid.")
+                    f"The content in the template document {self._template_to_use.path} is not valid."
+                )
 
-            top_level = 'section'
-            if re.search("^\\\\documentclass\\[[^\n]*(book|report)\\}", template_content, flags=re.S):
-                top_level = 'chapter'
+            top_level = "section"
+            if re.search(
+                "^\\\\documentclass\\[[^\n]*(book|report)\\}",
+                template_content,
+                flags=re.S,
+            ):
+                top_level = "chapter"
 
-            src = self.get_content(user_ctx, plugins_user_print=plugins_user_print, target_format=target_format)
+            src = self.get_content(
+                user_ctx,
+                plugins_user_print=plugins_user_print,
+                target_format=target_format,
+            )
             # see: https://regex101.com/r/latest
             # src = re.sub(r'\{width=[^ }]* +([^}]*scale=[^%]*%[^}]*\})',                         r'{\1', src)
 
-
-            templbyte = bytearray(template_content, encoding='utf-8')
+            templbyte = bytearray(template_content, encoding="utf-8")
             # template_file.write(templbyte) # for some reason does not write small files
-            with open(template_file.name, 'wb') as f:
+            with open(template_file.name, "wb") as f:
                 f.write(templbyte)
 
             print_dir = os.path.dirname(os.path.realpath(__file__))
@@ -338,26 +406,34 @@ class DocumentPrinter:
                 # os.path.join(print_dir, "pandoc_headernumberingfilter.py")  # handled already when making md
             ]
 
-            ftop = self._macros.get('texforcetoplevel', None)
+            ftop = self._macros.get("texforcetoplevel", None)
             if ftop:
                 top_level = ftop
 
-            from_format = 'markdown'
+            from_format = "markdown"
             if self.texplain:
-                from_format = 'latex'
+                from_format = "latex"
             if self.textplain:
-                from_format = 'latex'
+                from_format = "latex"
 
             texfiles = None
             if self.texfiles:
                 texfiles = []
                 for texfile in self.texfiles:
-                    if texfile.startswith('http'):
+                    if texfile.startswith("http"):
                         texfiles.append(texfile)
                     else:
-                        if texfile.find('/') < 0:  # add path if missing
-                            texfile = self._doc_entry.document.docinfo.location + '/' + texfile
-                        texfiles.append(self.urlroot + texfile + '?file_type=latex&template_doc_id=0')
+                        if texfile.find("/") < 0:  # add path if missing
+                            texfile = (
+                                self._doc_entry.document.docinfo.location
+                                + "/"
+                                + texfile
+                            )
+                        texfiles.append(
+                            self.urlroot
+                            + texfile
+                            + "?file_type=latex&template_doc_id=0"
+                        )
 
             # TODO: add also variables from texpandocvariables document setting, but this may lead to security hole?
             try:
@@ -366,24 +442,27 @@ class DocumentPrinter:
                     from_format=from_format,
                     to=target_format.value,
                     outputfile=path.absolute().as_posix(),  # output_file.name,
-                    extra_args=['--template=' + template_file.name,
-                                '--variable=TTrue:1',
-                                '--variable=T1:1',
-                                '--top-level-division=' + top_level,
-                                '--atx-headers',
-                                '--metadata=pagetitle:""',
-                                # '--verbose',  # this gives non UTF8 results sometimes
-                                '-Mtexdocid=' + str(self._doc_entry.id),
-                                ],
+                    extra_args=[
+                        "--template=" + template_file.name,
+                        "--variable=TTrue:1",
+                        "--variable=T1:1",
+                        "--top-level-division=" + top_level,
+                        "--atx-headers",
+                        '--metadata=pagetitle:""',
+                        # '--verbose',  # this gives non UTF8 results sometimes
+                        "-Mtexdocid=" + str(self._doc_entry.id),
+                    ],
                     filters=filters,
                     texfiles=texfiles,
                 )
             except LaTeXError as ex:
                 raise LaTeXError(ex.value)
             except Exception as ex:
-                raise PrintingError(f'<pre>{sanitize_html(str(ex))}</pre>')
+                raise PrintingError(f"<pre>{sanitize_html(str(ex))}</pre>")
 
-    def get_print_path(self, file_type: PrintFormat, plugins_user_print: bool = False) -> Path:
+    def get_print_path(
+        self, file_type: PrintFormat, plugins_user_print: bool = False
+    ) -> Path:
         """
         Formulates the printing path for the given document
 
@@ -394,10 +473,12 @@ class DocumentPrinter:
 
         print_hash = self.hash_doc_print(plugins_user_print=plugins_user_print)
 
-        path = (DEFAULT_PRINTING_FOLDER /
-                str(self._doc_entry.id) /
-                str(self.get_template_id()) /
-                str(print_hash + "." + file_type.value))
+        path = (
+            DEFAULT_PRINTING_FOLDER
+            / str(self._doc_entry.id)
+            / str(self.get_template_id())
+            / str(print_hash + "." + file_type.value)
+        )
 
         return path
 
@@ -406,9 +487,13 @@ class DocumentPrinter:
         templates = []
 
         if doc_entry is None or current_user is None:
-            raise PrintingError("You need to supply both the DocEntry and User to fetch the printing templates.")
+            raise PrintingError(
+                "You need to supply both the DocEntry and User to fetch the printing templates."
+            )
 
-        path = os.path.join(current_user.get_personal_folder().get_full_path(), TEMPLATES_FOLDER)
+        path = os.path.join(
+            current_user.get_personal_folder().get_full_path(), TEMPLATES_FOLDER
+        )
 
         templates_folder = Folder.find_by_path(path)
 
@@ -416,7 +501,9 @@ class DocumentPrinter:
             docs = templates_folder.get_all_documents()
             if docs is not None:
                 for d in docs:
-                    if has_view_access(d) and not re.search(f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name):
+                    if has_view_access(d) and not re.search(
+                        f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name
+                    ):
                         templates.append(d)
 
         return templates
@@ -426,13 +513,14 @@ class DocumentPrinter:
         templates = []
 
         if doc_entry is None or current_user is None:
-            raise PrintingError("You need to supply both the DocEntry and User to fetch the printing templates.")
+            raise PrintingError(
+                "You need to supply both the DocEntry and User to fetch the printing templates."
+            )
 
         current_folder = doc_entry.parent
         while current_folder is not None:
 
-            path = os.path.join(current_folder.get_full_path(),
-                                TEMPLATES_FOLDER)
+            path = os.path.join(current_folder.get_full_path(), TEMPLATES_FOLDER)
 
             templates_folder = Folder.find_by_path(path)
 
@@ -443,7 +531,9 @@ class DocumentPrinter:
                     continue
 
                 for d in docs:
-                    if has_view_access(d) and not re.search(f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name):
+                    if has_view_access(d) and not re.search(
+                        f"/{PRINT_FOLDER_NAME}/.*{TEMPLATE_FOLDER_NAME}/", d.name
+                    ):
                         templates.append(d)
 
             current_folder = current_folder.parent
@@ -455,8 +545,12 @@ class DocumentPrinter:
         settings = doc_entry.document.get_settings()
         tex_template = settings.get("texTemplate", "")
         try:
-            user_templates = DocumentPrinter.get_user_templates(doc_entry=doc_entry, current_user=current_user)
-            all_templates = DocumentPrinter.get_all_templates(doc_entry=doc_entry, current_user=current_user)
+            user_templates = DocumentPrinter.get_user_templates(
+                doc_entry=doc_entry, current_user=current_user
+            )
+            all_templates = DocumentPrinter.get_all_templates(
+                doc_entry=doc_entry, current_user=current_user
+            )
             if tex_template:
                 all_templates.append(DocEntry.find_by_path(tex_template))
         except PrintingError as err:
@@ -483,7 +577,9 @@ class DocumentPrinter:
     def parse_template_content(template_doc: DocInfo, doc_to_print: DocEntry) -> str:
         pars = template_doc.document.get_paragraphs()
 
-        pars = dereference_pars(pars, context_doc=template_doc.document, view_ctx=default_view_ctx)
+        pars = dereference_pars(
+            pars, context_doc=template_doc.document, view_ctx=default_view_ctx
+        )
 
         # attach macros from target document to template
         template_settings = template_doc.document.get_settings()
@@ -498,8 +594,10 @@ class DocumentPrinter:
         macroinfo = MacroInfo(default_view_ctx, macro_map=macros)
         # go through doc pars to get all the template pars
         for par in pars:
-            if par.get_attr('printing_template') is not None:
-                exp_md = par.get_expanded_markdown(macroinfo=macroinfo, ignore_errors=True)
+            if par.get_attr("printing_template") is not None:
+                exp_md = par.get_expanded_markdown(
+                    macroinfo=macroinfo, ignore_errors=True
+                )
                 out_pars.append(strip_code_block(exp_md.strip()))
 
         return "\n\n".join(out_pars)
@@ -518,27 +616,34 @@ class DocumentPrinter:
         return doc_v_fst + doc_v_snd / 10
 
     def hash_doc_print(self, plugins_user_print: bool = False) -> str:
-        thash = ''
+        thash = ""
         if self._template_to_use:
             thash = self._template_to_use.last_modified
-        content = str(self._doc_entry.id) + " " + str(self._doc_entry.last_modified) + \
-                  str(self.get_template_id()) + " " + str(thash)
+        content = (
+            str(self._doc_entry.id)
+            + " "
+            + str(self._doc_entry.last_modified)
+            + str(self.get_template_id())
+            + " "
+            + str(thash)
+        )
         if plugins_user_print:
             content += str(plugins_user_print) + str(get_current_user_object().id)
 
         return hashfunc(content)
 
-    def get_printed_document_path_from_db(self, file_type: PrintFormat, plugins_user_print: bool = False) -> \
-            Optional[str]:
+    def get_printed_document_path_from_db(
+        self, file_type: PrintFormat, plugins_user_print: bool = False
+    ) -> Optional[str]:
         existing_print: Optional[PrintedDoc] = (
-            PrintedDoc.query
-                .filter_by(
+            PrintedDoc.query.filter_by(
                 doc_id=self._doc_entry.id,
                 template_doc_id=self.get_template_id(),
                 file_type=file_type.value,
-                version=self.hash_doc_print(plugins_user_print=plugins_user_print))
-                .order_by(PrintedDoc.id.desc())
-                .first()
+                version=self.hash_doc_print(plugins_user_print=plugins_user_print),
+            )
+            .order_by(PrintedDoc.id.desc())
+            .first()
         )
         if existing_print is None or not os.path.exists(existing_print.path_to_file):
             return None
@@ -559,8 +664,18 @@ def number_lines(s: str, start: int = 1):
 # ------------------------ copied from pypandoc / Juho Vepsäläinen ---------------------------------
 # Use own version because the original breaks if there are non-ASCII chars in error messages
 
-def tim_convert_text(source, to, from_format, extra_args=(), encoding='utf-8',
-                     outputfile=None, filters=None, removethis=None, texfiles=None):
+
+def tim_convert_text(
+    source,
+    to,
+    from_format,
+    extra_args=(),
+    encoding="utf-8",
+    outputfile=None,
+    filters=None,
+    removethis=None,
+    texfiles=None,
+):
     """Converts given `source` from `format` to `to`.
     :param str source: Unicode string or bytes (see encoding)
     :param str to: format into which the input should be converted; can be one of
@@ -582,40 +697,64 @@ def tim_convert_text(source, to, from_format, extra_args=(), encoding='utf-8',
             path.
     """
     source = _as_unicode(source, encoding)
-    return tim_convert_input(source, from_format, 'string', to, extra_args=extra_args,
-                             outputfile=outputfile, filters=filters, removethis=removethis, texfiles=texfiles)
+    return tim_convert_input(
+        source,
+        from_format,
+        "string",
+        to,
+        extra_args=extra_args,
+        outputfile=outputfile,
+        filters=filters,
+        removethis=removethis,
+        texfiles=texfiles,
+    )
 
 
-def tim_convert_input(source, from_format, input_type, to, extra_args=(), outputfile=None,
-                      filters=None, removethis=None, texfiles=None):
-    pandoc_path = '/usr/bin/pandoc'
-    stdout = ''
+def tim_convert_input(
+    source,
+    from_format,
+    input_type,
+    to,
+    extra_args=(),
+    outputfile=None,
+    filters=None,
+    removethis=None,
+    texfiles=None,
+):
+    pandoc_path = "/usr/bin/pandoc"
+    stdout = ""
 
     from_format, to = _validate_formats(from_format, to, outputfile)
-    is_pdf = outputfile and outputfile.find('.pdf') >= 0
+    is_pdf = outputfile and outputfile.find(".pdf") >= 0
     latex_file = outputfile
 
     # To get access to pandoc-citeproc when we use a included copy of pandoc,
     # we need to add the pypandoc/files dir to the PATH
     new_env = os.environ.copy()
     files_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "files")
-    new_env["PATH"] = new_env.get("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin") + os.pathsep + files_path
-    string_input = input_type == 'string'
-    new_env['TIM_HOST'] = current_app.config['TIM_HOST']
+    new_env["PATH"] = (
+        new_env.get(
+            "PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        )
+        + os.pathsep
+        + files_path
+    )
+    string_input = input_type == "string"
+    new_env["TIM_HOST"] = current_app.config["TIM_HOST"]
 
     if is_pdf:
-        latex_file = outputfile.replace('.pdf', '.latex')
+        latex_file = outputfile.replace(".pdf", ".latex")
 
     for texfile in texfiles or []:
         get_file(latex_file, texfile, new_env)
 
-    if from_format == 'latex':
-        with open(latex_file, "w", encoding='utf-8') as f:
+    if from_format == "latex":
+        with open(latex_file, "w", encoding="utf-8") as f:
             f.write(source)
     else:
 
         input_file = [source] if not string_input else []
-        args = [pandoc_path, '--from=' + from_format, '--to=' + to]
+        args = [pandoc_path, "--from=" + from_format, "--to=" + to]
 
         args += input_file
 
@@ -628,10 +767,10 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
         if filters is not None:
             if isinstance(filters, string_types):
                 filters = filters.split()
-            f = ['--filter=' + x for x in filters]
+            f = ["--filter=" + x for x in filters]
             args.extend(f)
         try:  # Hack because images in mmcqs is not found
-            Path('/images').symlink_to(get_files_path() / 'blocks/images')
+            Path("/images").symlink_to(get_files_path() / "blocks/images")
         except:
             pass
         p = subprocess.Popen(
@@ -639,7 +778,8 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
             stdin=subprocess.PIPE if string_input else None,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            env=new_env)
+            env=new_env,
+        )
 
         # something else than 'None' indicates that the process already terminated
         if not (p.returncode is None):
@@ -648,7 +788,7 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
             )
 
         try:
-            bsource = cast_bytes(source, encoding='utf-8')
+            bsource = cast_bytes(source, encoding="utf-8")
         except (UnicodeDecodeError, UnicodeEncodeError):
             # assume that it is already a utf-8 encoded string
             bsource = source
@@ -657,17 +797,21 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
         except OSError:
             # this is happening only on Py2.6 when pandoc dies before reading all
             # the input. We treat that the same as when we exit with an error...
-            raise RuntimeError('Pandoc died with exitcode "%s" during conversion.' % p.returncode)
+            raise RuntimeError(
+                'Pandoc died with exitcode "%s" during conversion.' % p.returncode
+            )
 
         stdout = _decode_result(stdout)
         stderr = _decode_result(stderr)
         if stdout or stderr:
-            raise RuntimeError('Pandoc died with exitcode "%s" during conversion. \nSource=\n%s' %
-                               (stdout + stderr, number_lines(source)))
+            raise RuntimeError(
+                'Pandoc died with exitcode "%s" during conversion. \nSource=\n%s'
+                % (stdout + stderr, number_lines(source))
+            )
 
-        with open(latex_file, encoding='utf-8') as r:
+        with open(latex_file, encoding="utf-8") as r:
             lines = r.readlines()
-        with open(latex_file, "w", encoding='utf-8') as f:
+        with open(latex_file, "w", encoding="utf-8") as f:
             for line in lines:
                 if removethis:
                     if line.find(removethis) >= 0:
@@ -676,7 +820,7 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
                 f.write(line)
 
     if is_pdf:
-        p, stdout = run_latex(outputfile, latex_file, new_env, '')
+        p, stdout = run_latex(outputfile, latex_file, new_env, "")
 
     # if there is an outputfile, then stdout is likely empty!
     return stdout
@@ -684,31 +828,39 @@ def tim_convert_input(source, from_format, input_type, to, extra_args=(), output
 
 def _decode_result(s):
     try:
-        s = s.decode('utf-8')
+        s = s.decode("utf-8")
     except UnicodeDecodeError:
         # this shouldn't happen: pandoc more or less garantees that the output is utf-8!
         # raise RuntimeError('Pandoc output was not utf-8.')
         # noinspection PyBroadException
         try:
-            s = s.decode('iso-8859-15')
+            s = s.decode("iso-8859-15")
         except Exception:
             pass
-    s = s.replace('\\n', '\n')
+    s = s.replace("\\n", "\n")
     return s
 
 
 def run_latex(outputfile, latex_file, new_env, string_input):
     try:
         filedir = os.path.dirname(outputfile)
-        args = ['latexmk', '-g', '-f', '-pdfxe', f'-output-directory={filedir}',  # '-file-line-error',
-                '-interaction=nonstopmode', latex_file]
+        args = [
+            "latexmk",
+            "-g",
+            "-f",
+            "-pdfxe",
+            f"-output-directory={filedir}",  # '-file-line-error',
+            "-interaction=nonstopmode",
+            latex_file,
+        ]
         p = subprocess.Popen(
             args,
             stdin=subprocess.PIPE if string_input else None,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=filedir,
-            env=new_env)
+            env=new_env,
+        )
 
         # something else than 'None' indicates that the process already terminated
         if not (p.returncode is None):
@@ -722,23 +874,23 @@ def run_latex(outputfile, latex_file, new_env, string_input):
         # check if latex returned successfully
         if p.returncode != 0:
             # Find errors:
-            i = stdout.find('\n!')  # find possible error line from normal output
+            i = stdout.find("\n!")  # find possible error line from normal output
             # i = stdout.find('\n'+ latex_file + ':') # find possible error line in file:line:error format
-            line = ''
+            line = ""
             if i >= 0:
                 stdout = stdout[i:]
                 stdout = re.sub("\n\\(/usr/.*[^\n]", "", stdout)
-                stdout = stdout.replace(latex_file, '')
-                i = stdout.find('/var/lib')
+                stdout = stdout.replace(latex_file, "")
+                i = stdout.find("/var/lib")
                 if i >= 0:
-                    stdout = stdout[:i - 3]
-                i = stdout.find('\nl.')
+                    stdout = stdout[: i - 3]
+                i = stdout.find("\nl.")
                 if i >= 0:
-                    i2 = stdout.find(' ', i)
+                    i2 = stdout.find(" ", i)
                     if i2 >= 0:
-                        line = stdout[i + 3:i2]
+                        line = stdout[i + 3 : i2]
             raise LaTeXError(
-                {'line': line, 'latex': latex_file, 'pdf': outputfile, 'error': stdout}
+                {"line": line, "latex": latex_file, "pdf": outputfile, "error": stdout}
                 # 'LINE: %s\nLATEX:%s\nPDF:%s\nLaTeX died with exitcode "%s" during conversion: \n%s\n%s' %
                 # (line, latex_file, outputfile, p.returncode, stdout, stderr)
             )
@@ -751,21 +903,20 @@ def run_latex(outputfile, latex_file, new_env, string_input):
 
 def get_file(latex_file, fileurl, new_env):
     filedir = os.path.dirname(latex_file)
-    end = fileurl.find('?')
+    end = fileurl.find("?")
     if end < 0:
         end = len(fileurl)
-    filename = fileurl[fileurl.rfind("/") + 1:end]
-    dot = filename.rfind('.')  # change last - to . if there is no dot at the end
-    minus = filename.rfind('-')
+    filename = fileurl[fileurl.rfind("/") + 1 : end]
+    dot = filename.rfind(".")  # change last - to . if there is no dot at the end
+    minus = filename.rfind("-")
     if dot < minus:
-        filename = filename[:minus] + '.' + filename[minus + 1:] # TODO: Remove this when all texfiles are changed and renamed
-    args = ['wget', fileurl, '-O', filename]
+        filename = (
+            filename[:minus] + "." + filename[minus + 1 :]
+        )  # TODO: Remove this when all texfiles are changed and renamed
+    args = ["wget", fileurl, "-O", filename]
     p = subprocess.Popen(
-        args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        cwd=filedir,
-        env=new_env)
+        args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=filedir, env=new_env
+    )
 
     code = p.returncode
     if code is not None:

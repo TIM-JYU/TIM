@@ -10,7 +10,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import UnmappedInstanceError, FlushError
 
-from timApp.auth.accesshelper import verify_view_access, verify_manage_access, check_admin_access
+from timApp.auth.accesshelper import (
+    verify_view_access,
+    verify_manage_access,
+    check_admin_access,
+)
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry, get_documents
 from timApp.document.docinfo import DocInfo
@@ -20,15 +24,18 @@ from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
 from timApp.user.special_group_names import TEACHERS_GROUPNAME
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import verify_json_params, get_option, RouteException, NotExist
+from timApp.util.flask.requesthelper import (
+    verify_json_params,
+    get_option,
+    RouteException,
+    NotExist,
+)
 from timApp.util.flask.responsehelper import ok_response, json_response
 
-tags_blueprint = Blueprint('tags',
-                           __name__,
-                           url_prefix='/tags')
+tags_blueprint = Blueprint("tags", __name__, url_prefix="/tags")
 
 
-@tags_blueprint.post('/add/<path:doc>')
+@tags_blueprint.post("/add/<path:doc>")
 def add_tag(doc):
     """
     Adds a tag-document entry into the database.
@@ -54,7 +61,7 @@ def commit_and_ok():
 
 
 def add_tags_from_request(d: DocInfo):
-    tag_dict_list, = verify_json_params('tags')
+    (tag_dict_list,) = verify_json_params("tags")
     tags = []
     for tag_dict in tag_dict_list:
         tag_type = TagType(int(tag_dict["type"]))
@@ -77,7 +84,9 @@ def check_tag_access(tag: Tag, check_group=True):
     if tag.type != TagType.Regular:
         ug = UserGroup.get_by_name(TEACHERS_GROUPNAME)
         if ug not in get_current_user_object().groups and not check_admin_access():
-            raise RouteException(f"Managing this tag requires admin or {TEACHERS_GROUPNAME} rights.")
+            raise RouteException(
+                f"Managing this tag requires admin or {TEACHERS_GROUPNAME} rights."
+            )
     groupname = tag.get_group_name()
     if groupname and check_group:
         ug = UserGroup.get_by_name(groupname)
@@ -86,22 +95,25 @@ def check_tag_access(tag: Tag, check_group=True):
         verify_group_view_access(ug)
 
 
-@tags_blueprint.post('/setCourseTags/<path:doc>')
+@tags_blueprint.post("/setCourseTags/<path:doc>")
 def set_group_tags(doc):
     d = DocEntry.find_by_path(doc)
     if not d:
         raise NotExist()
     verify_manage_access(d)
     tags: list[Tag] = d.block.tags
-    tags_to_remove = [t for t in tags
-                      if t.get_group_name() or t.type in (TagType.CourseCode, TagType.Subject)]
+    tags_to_remove = [
+        t
+        for t in tags
+        if t.get_group_name() or t.type in (TagType.CourseCode, TagType.Subject)
+    ]
     for t in tags_to_remove:
         check_tag_access(t, check_group=False)
         db.session.delete(t)
 
     add_tags_from_request(d)
 
-    new_groups, = verify_json_params('groups')
+    (new_groups,) = verify_json_params("groups")
     for g in new_groups:
         t = Tag(name=GROUP_TAG_PREFIX + g, type=TagType.Regular)
         check_tag_access(t)
@@ -109,7 +121,7 @@ def set_group_tags(doc):
     return commit_and_ok()
 
 
-@tags_blueprint.post('/edit/<path:doc>')
+@tags_blueprint.post("/edit/<path:doc>")
 def edit_tag(doc):
     """
     Replaces a tag-document entry in the database with new one.
@@ -121,8 +133,8 @@ def edit_tag(doc):
         raise NotExist()
     verify_manage_access(d)
 
-    new_tag_dict, = verify_json_params('newTag')
-    old_tag_dict, = verify_json_params('oldTag')
+    (new_tag_dict,) = verify_json_params("newTag")
+    (old_tag_dict,) = verify_json_params("oldTag")
 
     new_tag_type = TagType(int(new_tag_dict["type"]))
     old_tag_type = TagType(int(old_tag_dict["type"]))
@@ -135,7 +147,9 @@ def edit_tag(doc):
     new_tag_name = new_tag_name.split(",", 1)[0]
 
     new_tag = Tag(name=new_tag_name, expires=new_tag_expire, type=new_tag_type)
-    old_tag = Tag.query.filter_by(block_id=d.id, name=old_tag_name, type=old_tag_type).first()
+    old_tag = Tag.query.filter_by(
+        block_id=d.id, name=old_tag_name, type=old_tag_type
+    ).first()
 
     if not old_tag:
         raise RouteException("Tag to edit not found.")
@@ -150,7 +164,7 @@ def edit_tag(doc):
     return ok_response()
 
 
-@tags_blueprint.post('/remove/<path:doc>')
+@tags_blueprint.post("/remove/<path:doc>")
 def remove_tag(doc):
     """
     Removes a tag-document entry from the database.
@@ -162,7 +176,7 @@ def remove_tag(doc):
         raise NotExist()
     verify_manage_access(d)
 
-    tag_dict, = verify_json_params('tagObject')
+    (tag_dict,) = verify_json_params("tagObject")
 
     tag_type = TagType(int(tag_dict["type"]))
     tag_name = tag_dict["name"]
@@ -179,7 +193,7 @@ def remove_tag(doc):
     return ok_response()
 
 
-@tags_blueprint.get('/getTags/<path:doc>')
+@tags_blueprint.get("/getTags/<path:doc>")
 def get_tags(doc):
     """
     Gets the list of a document's tags.
@@ -194,7 +208,7 @@ def get_tags(doc):
     return json_response(tags, date_conversion=True)
 
 
-@tags_blueprint.get('/getAllTags')
+@tags_blueprint.get("/getAllTags")
 def get_all_tags():
     """
     Gets the list of all unique tags used in any document, regardless
@@ -209,7 +223,7 @@ def get_all_tags():
     return json_response(sorted(list(tags_unique)), date_conversion=True)
 
 
-@tags_blueprint.get('/getDocs')
+@tags_blueprint.get("/getDocs")
 def get_tagged_documents():
     """
     Gets a list of documents that have a certain tag.
@@ -219,36 +233,50 @@ def get_tagged_documents():
     - Get all other tags in the document as well or don't fetch them.
     :returns Response containing list of documents with the searched tag.
     """
-    tag_name = request.args.get('name', '')
-    exact_search = get_option(request, 'exact_search', default=False, cast=bool)
-    list_doc_tags = get_option(request, 'list_doc_tags', default=False, cast=bool)
-    case_sensitive = get_option(request, 'case_sensitive', default=False, cast=bool)
+    tag_name = request.args.get("name", "")
+    exact_search = get_option(request, "exact_search", default=False, cast=bool)
+    list_doc_tags = get_option(request, "list_doc_tags", default=False, cast=bool)
+    case_sensitive = get_option(request, "case_sensitive", default=False, cast=bool)
 
     if exact_search:
         if case_sensitive:
-            custom_filter = DocEntry.id.in_(Tag.query.filter_by(name=tag_name).with_entities(Tag.block_id))
+            custom_filter = DocEntry.id.in_(
+                Tag.query.filter_by(name=tag_name).with_entities(Tag.block_id)
+            )
         else:
             custom_filter = DocEntry.id.in_(
-                Tag.query.filter(func.lower(Tag.name) == func.lower(tag_name)).with_entities(Tag.block_id))
+                Tag.query.filter(
+                    func.lower(Tag.name) == func.lower(tag_name)
+                ).with_entities(Tag.block_id)
+            )
 
     else:
         tag_name = f"%{tag_name}%"
         if case_sensitive:
-            custom_filter = DocEntry.id.in_(Tag.query.filter(Tag.name.like(tag_name) &
-                                                             ((Tag.expires > datetime.now()) | (Tag.expires == None))).
-                                            with_entities(Tag.block_id))
+            custom_filter = DocEntry.id.in_(
+                Tag.query.filter(
+                    Tag.name.like(tag_name)
+                    & ((Tag.expires > datetime.now()) | (Tag.expires == None))
+                ).with_entities(Tag.block_id)
+            )
         else:
-            custom_filter = DocEntry.id.in_(Tag.query.filter(Tag.name.ilike(tag_name) &
-                                                             ((Tag.expires > datetime.now()) | (Tag.expires == None))).
-                                            with_entities(Tag.block_id))
+            custom_filter = DocEntry.id.in_(
+                Tag.query.filter(
+                    Tag.name.ilike(tag_name)
+                    & ((Tag.expires > datetime.now()) | (Tag.expires == None))
+                ).with_entities(Tag.block_id)
+            )
 
     if list_doc_tags:
         query_options = joinedload(DocEntry._block).joinedload(Block.tags)
     else:
         query_options = None
 
-    docs = get_documents(filter_user=get_current_user_object(), custom_filter=custom_filter,
-                         query_options=query_options)
+    docs = get_documents(
+        filter_user=get_current_user_object(),
+        custom_filter=custom_filter,
+        query_options=query_options,
+    )
     return json_response(docs, date_conversion=True)
 
 
@@ -259,9 +287,11 @@ def get_tagged_document_by_id(doc_id):
     :param doc_id: Searched document id.
     :return: A DocEntry with tags.
     """
-    docs = get_documents(filter_user=get_current_user_object(),
-                         custom_filter=DocEntry.id.in_([doc_id]),
-                         query_options=joinedload(DocEntry._block).joinedload(Block.tags))
+    docs = get_documents(
+        filter_user=get_current_user_object(),
+        custom_filter=DocEntry.id.in_([doc_id]),
+        query_options=joinedload(DocEntry._block).joinedload(Block.tags),
+    )
     if not docs:
         raise NotExist("Document not found or not accessible!")
     return json_response(docs[0], date_conversion=True)

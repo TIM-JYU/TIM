@@ -7,9 +7,9 @@ from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 slide_bp = TypedBlueprint(
-    'slide',
+    "slide",
     __name__,
-    url_prefix='',
+    url_prefix="",
 )
 
 
@@ -22,14 +22,17 @@ def getslidestatus(doc_id: int):
 
 @slide_bp.post("/setslidestatus")
 def setslidestatus(
-        doc_id: int,
-        indexf: int,
-        indexh: int,
-        indexv: int,
+    doc_id: int,
+    indexf: int,
+    indexh: int,
+    indexv: int,
 ):
     d = get_doc_or_abort(doc_id)
     verify_manage_access(d)
-    s = SlideStatus(doc_id=doc_id, status=json.dumps(dict(indexf=indexf, indexh=indexh, indexv=indexv)))
+    s = SlideStatus(
+        doc_id=doc_id,
+        status=json.dumps(dict(indexf=indexf, indexh=indexh, indexv=indexv)),
+    )
     db.session.merge(s)
     db.session.commit()
     return ok_response()

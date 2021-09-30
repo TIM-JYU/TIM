@@ -20,10 +20,12 @@ def jsrunner_run(params: JsRunnerParams) -> tuple[Any, str]:
     """
     Run JavaScript code in jsrunner.
     """
-    runurl = get_plugin('jsrunner').host + 'runScript/'
-    r = requests.request('post', runurl, json={'code': params.code, 'data': params.data})
+    runurl = get_plugin("jsrunner").host + "runScript/"
+    r = requests.request(
+        "post", runurl, json={"code": params.code, "data": params.data}
+    )
     result = r.json()
-    error = result.get('error')
+    error = result.get("error")
     if error:
         raise JsRunnerError(error)
     data = result.get("result", [])

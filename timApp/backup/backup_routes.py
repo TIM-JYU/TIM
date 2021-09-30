@@ -6,13 +6,13 @@ from timApp.tim_app import csrf
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 backup = TypedBlueprint(
-    'backup',
+    "backup",
     __name__,
-    url_prefix='/backup/',
+    url_prefix="/backup/",
 )
 
 
-@backup.post('answer')
+@backup.post("answer")
 @csrf.exempt
 def receive_answer_backup(answer: ExportedAnswer, token: str) -> Response:
     return save_answer_backup(answer, token)

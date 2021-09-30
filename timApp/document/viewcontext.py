@@ -6,15 +6,15 @@ from typing import Any, Optional, Tuple
 
 
 class ViewRoute(Enum):
-    Answers = 'answers'
-    Lecture = 'lecture'
-    ShowSlide = 'show_slide'
-    Slide = 'slide'
-    Teacher = 'teacher'
-    Velp = 'velp'
-    View = 'view'
-    Review = 'review'
-    Unknown = 'unknown'
+    Answers = "answers"
+    Lecture = "lecture"
+    ShowSlide = "show_slide"
+    Slide = "slide"
+    Teacher = "teacher"
+    Velp = "velp"
+    View = "view"
+    Review = "review"
+    Unknown = "unknown"
 
     @property
     def teacher_or_see_answers(self) -> bool:

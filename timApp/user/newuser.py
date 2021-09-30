@@ -6,11 +6,12 @@ from timApp.user.userutils import check_password_hash
 
 class NewUser(db.Model):
     """A user that is going to register to TIM via email and has not yet completed the registration process."""
-    __tablename__ = 'newuser'
+
+    __tablename__ = "newuser"
     email = db.Column(db.Text, primary_key=True)
     """Email address."""
 
-    pass_ = db.Column('pass', db.Text, nullable=False)
+    pass_ = db.Column("pass", db.Text, nullable=False)
     """Password hash for the temporary password."""
 
     created = db.Column(db.DateTime(timezone=True), nullable=False, default=func.now())

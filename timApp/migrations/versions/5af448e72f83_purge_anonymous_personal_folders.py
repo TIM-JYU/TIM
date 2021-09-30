@@ -6,8 +6,8 @@ Create Date: 2017-01-23 16:41:42.994476
 
 """
 
-revision = '5af448e72f83'
-down_revision = 'fc12e43686f9'
+revision = "5af448e72f83"
+down_revision = "fc12e43686f9"
 
 from alembic import op
 

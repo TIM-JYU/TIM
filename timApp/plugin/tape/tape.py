@@ -8,9 +8,7 @@ from flask import request
 from timApp.tim_app import csrf
 from timApp.util.flask.responsehelper import json_response
 
-tape_plugin = Blueprint('tape_plugin',
-                            __name__,
-                            url_prefix='/tape/')
+tape_plugin = Blueprint("tape_plugin", __name__, url_prefix="/tape/")
 
 
 @tape_plugin.get("reqs")
@@ -49,9 +47,8 @@ def tape_get_html(jso: dict[Any, Any]) -> str:
     :param review:
     :return:
     """
-    values = jso['markup']
+    values = jso["markup"]
     attrs = json.dumps(values)
-    runner = 'tim-tape'
-    s = f'<{runner} data={quoteattr(attrs)}></{runner}>'
+    runner = "tim-tape"
+    s = f"<{runner} data={quoteattr(attrs)}></{runner}>"
     return s
-

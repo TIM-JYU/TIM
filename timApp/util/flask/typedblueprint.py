@@ -13,23 +13,23 @@ class TypedBlueprint(Blueprint):
     """Adds support for declaring route parameters directly in the route function signature."""
 
     def get(self, rule: str, **kwargs: Any) -> Callable:
-        return self.route(rule, **(kwargs | {'methods': ['get']}))
+        return self.route(rule, **(kwargs | {"methods": ["get"]}))
 
     def post(self, rule: str, **kwargs: Any) -> Callable:
-        return self.route(rule, **(kwargs | {'methods': ['post']}))
+        return self.route(rule, **(kwargs | {"methods": ["post"]}))
 
     def put(self, rule: str, **kwargs: Any) -> Callable:
-        return self.route(rule, **(kwargs | {'methods': ['put']}))
+        return self.route(rule, **(kwargs | {"methods": ["put"]}))
 
     def patch(self, rule: str, **kwargs: Any) -> Callable:
-        return self.route(rule, **(kwargs | {'methods': ['patch']}))
+        return self.route(rule, **(kwargs | {"methods": ["patch"]}))
 
     def delete(self, rule: str, **kwargs: Any) -> Callable:
-        return self.route(rule, **(kwargs | {'methods': ['delete']}))
+        return self.route(rule, **(kwargs | {"methods": ["delete"]}))
 
     def route(self, rule: str, **options: Any) -> Callable:
         def decorator(f: Callable) -> Callable:
-            wrapped = use_typed_params(sum(1 for c in rule if c == '<'))(f)
+            wrapped = use_typed_params(sum(1 for c in rule if c == "<"))(f)
             return super(TypedBlueprint, self).route(rule, **options)(wrapped)
 
         return decorator
@@ -43,15 +43,21 @@ def use_typed_params(num_path_params: int = 0) -> Callable:
             params.popitem(last=False)
         if not params:
             return func
-        class_attrs = {k: v.default for k, v in params.items() if v.default is not Signature.empty}
-        anns = {
-            k: v.annotation for k, v in params.items() if v.annotation is not Signature.empty
+        class_attrs = {
+            k: v.default for k, v in params.items() if v.default is not Signature.empty
         }
-        class_attrs['__annotations__'] = anns
+        anns = {
+            k: v.annotation
+            for k, v in params.items()
+            if v.annotation is not Signature.empty
+        }
+        class_attrs["__annotations__"] = anns
         missing_annotations = set(params.keys()) - set(anns.keys())
         if missing_annotations:
-            raise Exception(f'Some parameter type annotations are missing from {func.__name__}: {missing_annotations}')
-        new_dataclass: Any = dataclass(type(f'{func.__name__}_params', (), class_attrs))
+            raise Exception(
+                f"Some parameter type annotations are missing from {func.__name__}: {missing_annotations}"
+            )
+        new_dataclass: Any = dataclass(type(f"{func.__name__}_params", (), class_attrs))
 
         @use_model(new_dataclass)
         def extract_params(inst: Any) -> Any:
@@ -60,7 +66,11 @@ def use_typed_params(num_path_params: int = 0) -> Callable:
         @wraps(func)
         def extract_and_call(*args: Any, **kwargs: Any) -> Any:
             extracted = extract_params()  # type: ignore[call-arg]
-            return func(*args, **kwargs, **{f.name: getattr(extracted, f.name) for f in fields(extracted)})
+            return func(
+                *args,
+                **kwargs,
+                **{f.name: getattr(extracted, f.name) for f in fields(extracted)},
+            )
 
         return extract_and_call
 

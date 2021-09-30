@@ -21,14 +21,36 @@ from timApp.document.docinfo import DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.validation import ItemValidationRule
-from timApp.messaging.messagelist.emaillist import get_email_list_by_name, set_notify_owner_on_list_change, \
-    set_email_list_unsubscription_policy, set_email_list_subject_prefix, set_email_list_only_text, \
-    set_email_list_allow_nonmember, set_email_list_allow_attachments, set_email_list_default_reply_type, \
-    add_email, get_email_list_member, remove_email_list_membership, set_email_list_member_send_status, \
-    set_email_list_member_delivery_status, set_email_list_description, set_email_list_info, log_mailman
-from timApp.messaging.messagelist.listinfo import ArchiveType, ListInfo, ReplyToListChanges
-from timApp.messaging.messagelist.messagelist_models import MessageListModel, Channel, MessageListTimMember, \
-    MessageListExternalMember, MessageListMember
+from timApp.messaging.messagelist.emaillist import (
+    get_email_list_by_name,
+    set_notify_owner_on_list_change,
+    set_email_list_unsubscription_policy,
+    set_email_list_subject_prefix,
+    set_email_list_only_text,
+    set_email_list_allow_nonmember,
+    set_email_list_allow_attachments,
+    set_email_list_default_reply_type,
+    add_email,
+    get_email_list_member,
+    remove_email_list_membership,
+    set_email_list_member_send_status,
+    set_email_list_member_delivery_status,
+    set_email_list_description,
+    set_email_list_info,
+    log_mailman,
+)
+from timApp.messaging.messagelist.listinfo import (
+    ArchiveType,
+    ListInfo,
+    ReplyToListChanges,
+)
+from timApp.messaging.messagelist.messagelist_models import (
+    MessageListModel,
+    Channel,
+    MessageListTimMember,
+    MessageListExternalMember,
+    MessageListMember,
+)
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
@@ -145,6 +167,7 @@ def verify_name_rules(name_candidate: str) -> None:
 @dataclass
 class EmailAndDisplayName:
     """Wrapper for parsed email messages containing sender/receiver email and display name."""
+
     email: str
     name: str
 
@@ -158,9 +181,12 @@ class EmailAndDisplayName:
 @dataclass
 class BaseMessage:
     """A unified datastructure for messages TIM handles."""
+
     # Meta information about where this message belongs to and where its from. Mandatory values for all messages.
     message_list_name: str
-    message_channel: Channel = field(metadata={'by_value': True})  # Where the message came from.
+    message_channel: Channel = field(
+        metadata={"by_value": True}
+    )  # Where the message came from.
 
     # Header information. Mandatory values for all messages.
     sender: EmailAndDisplayName
@@ -185,8 +211,12 @@ MESSAGE_LIST_DOC_PREFIX = "messagelists"
 MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives"
 
 
-def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: str, message_list: MessageListModel,
-                                       message: BaseMessage) -> DocEntry:
+def create_archive_doc_with_permission(
+    archive_subject: str,
+    archive_doc_path: str,
+    message_list: MessageListModel,
+    message: BaseMessage,
+) -> DocEntry:
     """Create archive document with permissions matching the message list's archive policy.
 
     :param archive_subject: The subject of the archive document.
@@ -220,7 +250,9 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
     # Otherwise it's secret => no one but list owners and sender can see
 
     # List owner will always be at least one of the message owners
-    archive_doc = DocEntry.create(title=archive_subject, path=archive_doc_path, owner_group=message_owners[0])
+    archive_doc = DocEntry.create(
+        title=archive_subject, path=archive_doc_path, owner_group=message_owners[0]
+    )
 
     # Add the rest of the message owners.
     if len(message_owners) > 1:
@@ -234,8 +266,10 @@ def create_archive_doc_with_permission(archive_subject: str, archive_doc_path: s
 
 # Based on https://mathiasbynens.be/demo/url-regex with minor edits
 # This is one of the simplest patterns and it matches all cases correctly except for some special cases
-url_pattern = r'(https?|ftp)://[^\s/$.?#].[^\s]*'
-md_url_pattern = re.compile(rf"(\[([^]]*)\]\(({url_pattern})\))|({url_pattern})", re.IGNORECASE)
+url_pattern = r"(https?|ftp)://[^\s/$.?#].[^\s]*"
+md_url_pattern = re.compile(
+    rf"(\[([^]]*)\]\(({url_pattern})\))|({url_pattern})", re.IGNORECASE
+)
 
 
 def message_body_to_md(body: str) -> str:
@@ -289,7 +323,7 @@ def message_body_to_md(body: str) -> str:
         for _ in range(quote_level):
             index = next((ci for ci, c in enumerate(s) if c == ">"), None)
             if index is not None:
-                s = s[index + 1:]
+                s = s[index + 1 :]
         return s
 
     for i, line in enumerate(body_lines):
@@ -362,7 +396,9 @@ def check_archives_folder_exists(message_list: MessageListModel) -> Optional[Fol
     archive_folder = Folder.find_by_path(archive_folder_path)
     if archive_folder is None:
         owners = get_message_list_owners(message_list)
-        archive_folder = Folder.create(archive_folder_path, owner_groups=owners, title=f"{message_list.name}")
+        archive_folder = Folder.create(
+            archive_folder_path, owner_groups=owners, title=f"{message_list.name}"
+        )
     return archive_folder
 
 
@@ -384,32 +420,46 @@ def archive_message(message_list: MessageListModel, message: BaseMessage) -> Non
 
     message_doc_subject = message.subject
     if message_list.subject_prefix:
-        message_doc_subject = message_doc_subject.removeprefix(message_list.subject_prefix)
+        message_doc_subject = message_doc_subject.removeprefix(
+            message_list.subject_prefix
+        )
 
     message_doc_name = message_doc_subject.replace("/", "-")
-    archive_doc_path = remove_path_special_chars(f"{archive_folder.path}/{message_doc_name}-"
-                                                 f"{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}")
+    archive_doc_path = remove_path_special_chars(
+        f"{archive_folder.path}/{message_doc_name}-"
+        f"{get_current_time().strftime('%Y-%m-%d %H:%M:%S')}"
+    )
 
-    archive_doc = create_archive_doc_with_permission(message.subject, archive_doc_path, message_list, message)
-    archive_doc.document.add_setting("macros", {
-        "message": {
-            "sender": message.sender.to_json(),
-            "recipients": [r.to_json() for r in message.recipients],
-            "date": message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
-        }
-    })
+    archive_doc = create_archive_doc_with_permission(
+        message.subject, archive_doc_path, message_list, message
+    )
+    archive_doc.document.add_setting(
+        "macros",
+        {
+            "message": {
+                "sender": message.sender.to_json(),
+                "recipients": [r.to_json() for r in message.recipients],
+                "date": message.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+            }
+        },
+    )
 
     # Set header information for archived message.
-    archive_doc.document.add_paragraph("<tim-archive-header message='%%message|tojson%%'></tim-archive-header>",
-                                       attrs={"allowangular": "true"})
+    archive_doc.document.add_paragraph(
+        "<tim-archive-header message='%%message|tojson%%'></tim-archive-header>",
+        attrs={"allowangular": "true"},
+    )
 
     # Set message body for archived message.
     # TODO: Check message list's only_text flag.
-    archive_doc.document.add_paragraph(message_body_to_md(message.message_body),
-                                       attrs={"taskId": "message-body"})
+    archive_doc.document.add_paragraph(
+        message_body_to_md(message.message_body), attrs={"taskId": "message-body"}
+    )
 
-    archive_doc.document.add_paragraph("<tim-archive-footer message='%%message|tojson%%'></tim-archive-footer>",
-                                       attrs={"allowangular": "true"})
+    archive_doc.document.add_paragraph(
+        "<tim-archive-footer message='%%message|tojson%%'></tim-archive-footer>",
+        attrs={"allowangular": "true"},
+    )
 
     db.session.commit()
 
@@ -443,12 +493,10 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMes
         message_list_name=msg_list.name,
         domain=msg_list.email_list_domain,
         message_channel=Channel.EMAIL_LIST,
-
         # Header information
         sender=sender,
         recipients=visible_recipients,
         subject=original["subject"],
-
         # Message body
         message_body=original["body"],
     )
@@ -470,11 +518,14 @@ def parse_mailman_message(original: dict, msg_list: MessageListModel) -> BaseMes
                 # date was in so that it can be fixed.
                 log_warning(
                     f"Function parse_mailman_message has encountered a Date header format it cannot handle. The "
-                    f"date is of format {original['date']}. Please handle this at earliest convenience.")
+                    f"date is of format {original['date']}. Please handle this at earliest convenience."
+                )
     return message
 
 
-def parse_mailman_message_address(original: dict, header: str) -> Optional[list[EmailAndDisplayName]]:
+def parse_mailman_message_address(
+    original: dict, header: str
+) -> Optional[list[EmailAndDisplayName]]:
     """Parse (potentially existing) fields 'from' 'to', 'cc', or 'bcc' from a dict representing Mailman's email message.
     The fields are in lists, with individual list indicies being lists themselves of the form
         ['Display Name', 'email@domain.fi']
@@ -492,8 +543,9 @@ def parse_mailman_message_address(original: dict, header: str) -> Optional[list[
 
     if header in original:
         for email_name_pair in original[header]:
-            new_email_name_pair = EmailAndDisplayName(email=email_name_pair[1],
-                                                      name=email_name_pair[0])
+            new_email_name_pair = EmailAndDisplayName(
+                email=email_name_pair[1], name=email_name_pair[0]
+            )
             email_name_pairs.append(new_email_name_pair)
 
     return email_name_pairs
@@ -509,7 +561,9 @@ def get_message_list_owners(mlist: MessageListModel) -> list[UserGroup]:
     return manage_doc_block.owners
 
 
-def create_management_doc(msg_list_model: MessageListModel, list_options: ListInfo) -> DocInfo:
+def create_management_doc(
+    msg_list_model: MessageListModel, list_options: ListInfo
+) -> DocInfo:
     """Create management doc for a new message list.
 
     :param msg_list_model: The message list the management document is created for.
@@ -517,15 +571,17 @@ def create_management_doc(msg_list_model: MessageListModel, list_options: ListIn
     :return: Newly created management document.
     """
 
-    doc = create_document(f'/{MESSAGE_LIST_DOC_PREFIX}/{remove_path_special_chars(list_options.name)}',
-                          list_options.name,
-                          validation_rule=ItemValidationRule(check_write_perm=False),
-                          parent_owner=UserGroup.get_admin_group())
+    doc = create_document(
+        f"/{MESSAGE_LIST_DOC_PREFIX}/{remove_path_special_chars(list_options.name)}",
+        list_options.name,
+        validation_rule=ItemValidationRule(check_write_perm=False),
+        parent_owner=UserGroup.get_admin_group(),
+    )
 
     apply_template(doc)
-    s = doc.document.get_settings().get_dict().get('macros', {})
-    s['messagelist'] = list_options.name
-    doc.document.add_setting('macros', s)
+    s = doc.document.get_settings().get_dict().get("macros", {})
+    s["messagelist"] = list_options.name
+    doc.document.add_setting("macros", s)
 
     # Set the management doc for the message list.
     msg_list_model.manage_doc_id = doc.id
@@ -548,8 +604,9 @@ def new_list(list_options: ListInfo) -> tuple[DocInfo, MessageListModel]:
     return doc_info, msg_list
 
 
-def set_message_list_notify_owner_on_change(message_list: MessageListModel,
-                                            notify_owners_on_list_change_flag: Optional[bool]) -> None:
+def set_message_list_notify_owner_on_change(
+    message_list: MessageListModel, notify_owners_on_list_change_flag: Optional[bool]
+) -> None:
     """Set the notify list owner on list change flag for a list, and update necessary channels with this information.
 
     If the message list has an email list as a message channel, this will set the equilavent flag on the email list.
@@ -558,20 +615,25 @@ def set_message_list_notify_owner_on_change(message_list: MessageListModel,
     :param notify_owners_on_list_change_flag: An optional boolean flag. If True, then changes on the message list sends
     notifications to list owners. If False, notifications won't be sent. If None, nothing is set.
     """
-    if notify_owners_on_list_change_flag is None \
-            or message_list.notify_owner_on_change == notify_owners_on_list_change_flag:
+    if (
+        notify_owners_on_list_change_flag is None
+        or message_list.notify_owner_on_change == notify_owners_on_list_change_flag
+    ):
         return
 
     message_list.notify_owner_on_change = notify_owners_on_list_change_flag
 
     if message_list.email_list_domain:
         # Email lists have their own flag for notifying list owners for list changes.
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
         set_notify_owner_on_list_change(email_list, message_list.notify_owner_on_change)
 
 
-def set_message_list_member_can_unsubscribe(message_list: MessageListModel,
-                                            can_unsubscribe_flag: Optional[bool]) -> None:
+def set_message_list_member_can_unsubscribe(
+    message_list: MessageListModel, can_unsubscribe_flag: Optional[bool]
+) -> None:
     """Set the list member's free unsubscription flag, and propagate that setting to channels that have own handling
     of unsubscription.
 
@@ -581,17 +643,24 @@ def set_message_list_member_can_unsubscribe(message_list: MessageListModel,
     :param can_unsubscribe_flag: An optional boolean flag. For True, the member can unsubscribe on their own. For False,
      then the member can't unsubscribe from the list on their own. If None, then the current value is kept.
     """
-    if can_unsubscribe_flag is None or message_list.can_unsubscribe == can_unsubscribe_flag:
+    if (
+        can_unsubscribe_flag is None
+        or message_list.can_unsubscribe == can_unsubscribe_flag
+    ):
         return
     message_list.can_unsubscribe = can_unsubscribe_flag
 
     if message_list.email_list_domain:
         # Email list's have their own settings for unsubscription.
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
         set_email_list_unsubscription_policy(email_list, can_unsubscribe_flag)
 
 
-def set_message_list_subject_prefix(message_list: MessageListModel, subject_prefix: Optional[str]) -> None:
+def set_message_list_subject_prefix(
+    message_list: MessageListModel, subject_prefix: Optional[str]
+) -> None:
     """Set the message list's subject prefix.
 
     If the message list has an email list as a message list, then set the subject prefix there also.
@@ -612,11 +681,15 @@ def set_message_list_subject_prefix(message_list: MessageListModel, subject_pref
     message_list.subject_prefix = subject_prefix
 
     if message_list.email_list_domain:
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
         set_email_list_subject_prefix(email_list, subject_prefix)
 
 
-def set_message_list_tim_users_can_join(message_list: MessageListModel, can_join_flag: Optional[bool]) -> None:
+def set_message_list_tim_users_can_join(
+    message_list: MessageListModel, can_join_flag: Optional[bool]
+) -> None:
     """Set the flag controlling if TIM users can directly join this list.
 
     Because the behaviour that is controlled by the can_join_flag applies to TIM users, there is no message channel
@@ -632,33 +705,43 @@ def set_message_list_tim_users_can_join(message_list: MessageListModel, can_join
     message_list.tim_user_can_join = can_join_flag
 
 
-def set_message_list_default_send_right(message_list: MessageListModel,
-                                        default_send_right_flag: Optional[bool]) -> None:
+def set_message_list_default_send_right(
+    message_list: MessageListModel, default_send_right_flag: Optional[bool]
+) -> None:
     """Set the default message list new member send right flag.
 
     :param message_list: The message list where the flag is set.
     :param default_send_right_flag: An optional boolean flag. For True, new members on the list get default send right.
     For False, new members don't get a send right. For None, the current value is kept.
     """
-    if default_send_right_flag is None or message_list.default_send_right == default_send_right_flag:
+    if (
+        default_send_right_flag is None
+        or message_list.default_send_right == default_send_right_flag
+    ):
         return
     message_list.default_send_right = default_send_right_flag
 
 
-def set_message_list_default_delivery_right(message_list: MessageListModel,
-                                            default_delivery_right_flag: Optional[bool]) -> None:
+def set_message_list_default_delivery_right(
+    message_list: MessageListModel, default_delivery_right_flag: Optional[bool]
+) -> None:
     """Set the message list new member default delivery right.
 
     :param message_list: The message list where the flag is set.
     :param default_delivery_right_flag: An optional boolean flag. For True, new members on the list get default delivery
     right. For False, new members don't automatically get a delivery right. For None, the current value is kept.
     """
-    if default_delivery_right_flag is None or message_list.default_delivery_right == default_delivery_right_flag:
+    if (
+        default_delivery_right_flag is None
+        or message_list.default_delivery_right == default_delivery_right_flag
+    ):
         return
     message_list.default_delivery_right = default_delivery_right_flag
 
 
-def set_message_list_only_text(message_list: MessageListModel, only_text: Optional[bool]) -> None:
+def set_message_list_only_text(
+    message_list: MessageListModel, only_text: Optional[bool]
+) -> None:
     """Set the flag controlling if message list is to accept text-only messages.
 
     :param message_list: The message list where the flag is to be set.
@@ -670,12 +753,15 @@ def set_message_list_only_text(message_list: MessageListModel, only_text: Option
     message_list.only_text = only_text
 
     if message_list.email_list_domain:
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
         set_email_list_only_text(email_list, only_text)
 
 
-def set_message_list_non_member_message_pass(message_list: MessageListModel,
-                                             non_member_message_pass_flag: Optional[bool]) -> None:
+def set_message_list_non_member_message_pass(
+    message_list: MessageListModel, non_member_message_pass_flag: Optional[bool]
+) -> None:
     """Set message list's non member message pass flag.
 
     :param message_list: The message list where the flag is set.
@@ -683,32 +769,45 @@ def set_message_list_non_member_message_pass(message_list: MessageListModel,
     to this list. If False, messages form sources outside the list will be hold for moderation. For None, the current
     value is kept.
     """
-    if non_member_message_pass_flag is None or message_list.non_member_message_pass == non_member_message_pass_flag:
+    if (
+        non_member_message_pass_flag is None
+        or message_list.non_member_message_pass == non_member_message_pass_flag
+    ):
         return
     message_list.non_member_message_pass = non_member_message_pass_flag
     if message_list.email_list_domain:
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
         set_email_list_allow_nonmember(email_list, non_member_message_pass_flag)
 
 
-def set_message_list_allow_attachments(message_list: MessageListModel, allow_attachments_flag: Optional[bool]) -> None:
+def set_message_list_allow_attachments(
+    message_list: MessageListModel, allow_attachments_flag: Optional[bool]
+) -> None:
     """Set the flag controlling if a message list accepts messages with attachments.
 
     :param message_list: The message list where the flag is to be set.
     :param allow_attachments_flag: An optional boolean flag. For True, the list will allow a pre-determined set of
     attachments. For False, no attachments are allowed. For None, the current value is kept.
     """
-    if allow_attachments_flag is None or message_list.allow_attachments == allow_attachments_flag:
+    if (
+        allow_attachments_flag is None
+        or message_list.allow_attachments == allow_attachments_flag
+    ):
         return
 
     message_list.allow_attachments = allow_attachments_flag
     if message_list.email_list_domain:
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
         set_email_list_allow_attachments(email_list, allow_attachments_flag)
 
 
-def set_message_list_default_reply_type(message_list: MessageListModel,
-                                        default_reply_type: Optional[ReplyToListChanges]) -> None:
+def set_message_list_default_reply_type(
+    message_list: MessageListModel, default_reply_type: Optional[ReplyToListChanges]
+) -> None:
     """Set a value controlling how replies to a message list are steered.
 
     The reply type is analogous to email lists' operation of "Reply-To munging". Reply-To munging is a process where
@@ -721,17 +820,27 @@ def set_message_list_default_reply_type(message_list: MessageListModel,
     how to respond to messages sent from the list. For value ADDLIST the replies will be primarily steered towards
     the message list. For None, the current value is kept.
     """
-    if default_reply_type is None or message_list.default_reply_type == default_reply_type:
+    if (
+        default_reply_type is None
+        or message_list.default_reply_type == default_reply_type
+    ):
         return
 
     message_list.default_reply_type = default_reply_type
     if message_list.email_list_domain:
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
         set_email_list_default_reply_type(email_list, default_reply_type)
 
 
-def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
-                               send_right: bool, delivery_right: bool, em_list: Optional[MailingList]) -> None:
+def add_new_message_list_group(
+    msg_list: MessageListModel,
+    ug: UserGroup,
+    send_right: bool,
+    delivery_right: bool,
+    em_list: Optional[MailingList],
+) -> None:
     """Add new (user) group to a message list.
 
     For groups, checks that the adder has at least manage rights to group's admin doc.
@@ -759,23 +868,40 @@ def add_new_message_list_group(msg_list: MessageListModel, ug: UserGroup,
     if member and not member.membership_ended:
         return
     # Add the user group as a member to the message list.
-    new_group_member = MessageListTimMember(message_list_id=msg_list.id, group_id=ug.id,
-                                            delivery_right=delivery_right, send_right=send_right,
-                                            membership_verified=get_current_time())
+    new_group_member = MessageListTimMember(
+        message_list_id=msg_list.id,
+        group_id=ug.id,
+        delivery_right=delivery_right,
+        send_right=send_right,
+        membership_verified=get_current_time(),
+    )
     db.session.add(new_group_member)
 
     # Add group's individual members to message channels.
     if em_list is not None:
         for user in ug.users:
             # TODO: Search for a set of emails and a primary email here when users' additional emails are implemented.
-            user_email = user.email  # In the future, we can search for a set of emails and a primary email here.
-            add_email(em_list, user_email, email_owner_pre_confirmation=True, real_name=user.real_name,
-                      send_right=send_right, delivery_right=delivery_right)
+            user_email = (
+                user.email
+            )  # In the future, we can search for a set of emails and a primary email here.
+            add_email(
+                em_list,
+                user_email,
+                email_owner_pre_confirmation=True,
+                real_name=user.real_name,
+                send_right=send_right,
+                delivery_right=delivery_right,
+            )
 
 
-def add_message_list_external_email_member(msg_list: MessageListModel, external_email: str,
-                                           send_right: bool, delivery_right: bool, em_list: MailingList,
-                                           display_name: Optional[str]) -> None:
+def add_message_list_external_email_member(
+    msg_list: MessageListModel,
+    external_email: str,
+    send_right: bool,
+    delivery_right: bool,
+    em_list: MailingList,
+    display_name: Optional[str],
+) -> None:
     """Add external member to a message list. External members at this moment only support external members to email
      lists.
 
@@ -791,12 +917,22 @@ def add_message_list_external_email_member(msg_list: MessageListModel, external_
     if msg_list.find_member(username=None, email=external_email):
         return
 
-    new_member = MessageListExternalMember(email_address=external_email, display_name=display_name,
-                                           delivery_right=delivery_right, send_right=send_right,
-                                           message_list_id=msg_list.id)
+    new_member = MessageListExternalMember(
+        email_address=external_email,
+        display_name=display_name,
+        delivery_right=delivery_right,
+        send_right=send_right,
+        message_list_id=msg_list.id,
+    )
     db.session.add(new_member)
-    add_email(em_list, external_email, email_owner_pre_confirmation=True, real_name=display_name,
-              send_right=send_right, delivery_right=delivery_right)
+    add_email(
+        em_list,
+        external_email,
+        email_owner_pre_confirmation=True,
+        real_name=display_name,
+        send_right=send_right,
+        delivery_right=delivery_right,
+    )
 
 
 def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
@@ -816,9 +952,17 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
         group_message_list: MessageListModel = group_tim_member.message_list
         # Propagate the adding on message list's message channels.
         if group_message_list.email_list_domain:
-            email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
-            add_email(email_list, user.email, True, user.real_name,
-                      group_tim_member.member.send_right, group_tim_member.member.delivery_right)
+            email_list = get_email_list_by_name(
+                group_message_list.name, group_message_list.email_list_domain
+            )
+            add_email(
+                email_list,
+                user.email,
+                True,
+                user.real_name,
+                group_tim_member.member.send_right,
+                group_tim_member.member.delivery_right,
+            )
 
 
 def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
@@ -838,13 +982,18 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
         group_message_list: MessageListModel = group_tim_member.message_list
         # Propagate the deletion on message list's message channels.
         if group_message_list.email_list_domain:
-            email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
+            email_list = get_email_list_by_name(
+                group_message_list.name, group_message_list.email_list_domain
+            )
             email_list_member = get_email_list_member(email_list, user.email)
             remove_email_list_membership(email_list_member)
 
 
-def set_message_list_member_removed_status(member: MessageListMember,
-                                           removed: Optional[datetime], email_list: Optional[MailingList]) -> None:
+def set_message_list_member_removed_status(
+    member: MessageListMember,
+    removed: Optional[datetime],
+    email_list: Optional[MailingList],
+) -> None:
     """Set the message list member's membership removed status.
 
     :param member: The member who's membership status is being set.
@@ -853,7 +1002,9 @@ def set_message_list_member_removed_status(member: MessageListMember,
     :param email_list: An email list belonging to the message list. If None, the message list does not have an email
     list.
     """
-    if (member.membership_ended is None and removed is None) or (member.membership_ended and removed):
+    if (member.membership_ended is None and removed is None) or (
+        member.membership_ended and removed
+    ):
         return
 
     member.remove(removed)
@@ -869,7 +1020,9 @@ def set_message_list_member_removed_status(member: MessageListMember,
                 else:
                     # Re-set the member's send and delivery rights on the email list.
                     set_email_list_member_send_status(mlist_member, member.send_right)
-                    set_email_list_member_delivery_status(mlist_member, member.delivery_right)
+                    set_email_list_member_delivery_status(
+                        mlist_member, member.delivery_right
+                    )
         elif member.is_personal_user():
             # Make changes to member's status on the email list.
             mlist_member = get_email_list_member(email_list, member.get_email())
@@ -879,11 +1032,17 @@ def set_message_list_member_removed_status(member: MessageListMember,
             else:
                 # Re-set the member's send and delivery rights on the email list.
                 set_email_list_member_send_status(mlist_member, member.send_right)
-                set_email_list_member_delivery_status(mlist_member, member.delivery_right)
+                set_email_list_member_delivery_status(
+                    mlist_member, member.delivery_right
+                )
 
 
-def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bool,
-                             email_list: Optional[MailingList] = None) -> None:
+def set_member_send_delivery(
+    member: MessageListMember,
+    send: bool,
+    delivery: bool,
+    email_list: Optional[MailingList] = None,
+) -> None:
     """Set message list member's send and delivery rights.
 
     :param member: Member who's rights are being set.
@@ -906,7 +1065,9 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
                 ug_members = ug.users  # ug.current_memberships
                 for ug_member in ug_members:
                     # user = ug_member.personal_user
-                    email_list_member = get_email_list_member(email_list, ug_member.email)
+                    email_list_member = get_email_list_member(
+                        email_list, ug_member.email
+                    )
                     set_email_list_member_send_status(email_list_member, send)
 
     # Delivery right.
@@ -923,11 +1084,15 @@ def set_member_send_delivery(member: MessageListMember, send: bool, delivery: bo
                 ug_members = ug.users  # ug.current_memberships
                 for ug_member in ug_members:
                     # user = ug_member.personal_user
-                    email_list_member = get_email_list_member(email_list, ug_member.email)
+                    email_list_member = get_email_list_member(
+                        email_list, ug_member.email
+                    )
                     set_email_list_member_delivery_status(email_list_member, delivery)
 
 
-def set_message_list_description(message_list: MessageListModel, description: Optional[str]) -> None:
+def set_message_list_description(
+    message_list: MessageListModel, description: Optional[str]
+) -> None:
     """Set a (short) description to a message list and its associated message channels.
 
     :param message_list: The message list where the description is set.
@@ -937,7 +1102,9 @@ def set_message_list_description(message_list: MessageListModel, description: Op
         return
     message_list.description = description
     if message_list.email_list_domain:
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
         set_email_list_description(email_list, description)
 
 
@@ -951,7 +1118,9 @@ def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -
         return
     message_list.info = info
     if message_list.email_list_domain:
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
         set_email_list_info(email_list, info)
 
 
@@ -961,12 +1130,20 @@ class UserGroupDiff:
     remove_user_ids: list[int]
 
 
-def sync_usergroup_messagelist_members(diffs: dict[int, UserGroupDiff], permanent_delete: bool = False) -> None:
-    user_ids = set(itertools.chain.from_iterable([*u.add_user_ids, *u.remove_user_ids] for u in diffs.values()))
+def sync_usergroup_messagelist_members(
+    diffs: dict[int, UserGroupDiff], permanent_delete: bool = False
+) -> None:
+    user_ids = set(
+        itertools.chain.from_iterable(
+            [*u.add_user_ids, *u.remove_user_ids] for u in diffs.values()
+        )
+    )
     if not user_ids:
         return
 
-    user_query = User.query.filter(User.id.in_(user_ids)).options(load_only(User.id, User.email, User.real_name))
+    user_query = User.query.filter(User.id.in_(user_ids)).options(
+        load_only(User.id, User.email, User.real_name)
+    )
     users = {user.id: user for user in user_query}
     try:
         for ug_id, diff in diffs.items():
@@ -974,15 +1151,26 @@ def sync_usergroup_messagelist_members(diffs: dict[int, UserGroupDiff], permanen
             for group_tim_member in ug_memberships:
                 group_message_list: MessageListModel = group_tim_member.message_list
                 if group_message_list.email_list_domain:
-                    email_list = get_email_list_by_name(group_message_list.name, group_message_list.email_list_domain)
+                    email_list = get_email_list_by_name(
+                        group_message_list.name, group_message_list.email_list_domain
+                    )
 
                     for add_id in diff.add_user_ids:
                         user = users[add_id]
-                        add_email(email_list, user.email, True, user.real_name,
-                                  group_tim_member.member.send_right, group_tim_member.member.delivery_right)
+                        add_email(
+                            email_list,
+                            user.email,
+                            True,
+                            user.real_name,
+                            group_tim_member.member.send_right,
+                            group_tim_member.member.delivery_right,
+                        )
 
                     for remove_id in diff.remove_user_ids:
                         user = users[remove_id]
-                        remove_email_list_membership(get_email_list_member(email_list, user.email), permanent_delete)
+                        remove_email_list_membership(
+                            get_email_list_member(email_list, user.email),
+                            permanent_delete,
+                        )
     except HTTPError as e:
         log_mailman(e, "Failed to sync usergroups")

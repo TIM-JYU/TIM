@@ -13,7 +13,9 @@ from timApp.document.prepared_par import PreparedPar
 from timApp.document.viewcontext import default_view_ctx
 from timApp.util.utils import Range
 
-INCLUDE_IN_PARTS_CLASS_NAME = "includeInParts"  # Preamble pars with this class get inserted to each doc part.
+INCLUDE_IN_PARTS_CLASS_NAME = (
+    "includeInParts"  # Preamble pars with this class get inserted to each doc part.
+)
 
 
 def int_or_none(s: str):
@@ -37,13 +39,9 @@ class IndexedViewRange:
         return self.b == 0 and self.e == self.par_count
 
     def to_json(self, name: Optional[str] = None):
-        r = {
-            'b': self.b,
-            'e': self.e,
-            'is_full': self.is_full
-        }
+        r = {"b": self.b, "e": self.e, "is_full": self.is_full}
         if name:
-            r['name'] = name
+            r["name"] = name
         return r
 
     @property
@@ -98,7 +96,9 @@ class RequestedViewRange:
         return self.e
 
 
-def partition_texts(texts: list[PreparedPar], view_range: IndexedViewRange, preamble_count):
+def partition_texts(
+    texts: list[PreparedPar], view_range: IndexedViewRange, preamble_count
+):
     """
     Partition document with preambles taken into account.
     :param texts: List of processed paragraphs.
@@ -138,7 +138,7 @@ def load_index(file_path: Path) -> Optional[dict]:
     :return: Parsed contents or None.
     """
     try:
-        with file_path.open("r", encoding='utf-8') as file:
+        with file_path.open("r", encoding="utf-8") as file:
             return json.load(file)
     except (FileNotFoundError, ValueError, OSError, TypeError):
         return None
@@ -151,7 +151,7 @@ def save_index(index, file_path: Path):
     :param file_path: File path.
     """
     file_path.parent.mkdir(parents=True, exist_ok=True)
-    with file_path.open("w", encoding='utf-8') as f:
+    with file_path.open("w", encoding="utf-8") as f:
         json.dump(index, f)
 
 
@@ -165,7 +165,9 @@ def get_index_with_header_id(doc_info: DocInfo, header_id: str) -> Optional[int]
     pars = doc_info.document.get_dereferenced_paragraphs(default_view_ctx)
     for i, par in enumerate(pars):
         if par:
-            par_elements = html.fragment_fromstring(par.get_html(default_view_ctx), create_parent=True)
+            par_elements = html.fragment_fromstring(
+                par.get_html(default_view_ctx), create_parent=True
+            )
             for element in par_elements.iterdescendants():
                 html_id = element.attrib.get("id")
                 if html_id and header_id == html_id:
@@ -205,15 +207,15 @@ def get_document_areas(doc: DocInfo) -> list[Range]:
     """
     pars = doc.document.get_paragraphs()
     areas = []
-    area = {'index': None, 'name': None}
+    area = {"index": None, "name": None}
     for i, par in enumerate(pars):
-        area_begin = par.get_attr('area')
-        area_end = par.get_attr('area_end')
-        if area['name'] is None and area_begin is not None:
-            area = {'index': i, 'name': area_begin}
-        if area_end is not None and area_end == area['name']:
-            areas.append((area['index'], i))
-            area = {'index': None, 'name': None}
+        area_begin = par.get_attr("area")
+        area_end = par.get_attr("area_end")
+        if area["name"] is None and area_begin is not None:
+            area = {"index": i, "name": area_begin}
+        if area_end is not None and area_end == area["name"]:
+            areas.append((area["index"], i))
+            area = {"index": None, "name": None}
     return areas
 
 
@@ -241,12 +243,12 @@ def adjust_to_areas(areas: list[Range], b: int, e: int) -> Range:
 
 
 def decide_view_range(
-        doc_info: DocInfo,
-        preferred_set_size: int,
-        index: int = 0,
-        forwards: bool = True,
-        areas: Optional[list[Range]] = None,
-        min_set_size_modifier: float = 0.5,
+    doc_info: DocInfo,
+    preferred_set_size: int,
+    index: int = 0,
+    forwards: bool = True,
+    areas: Optional[list[Range]] = None,
+    min_set_size_modifier: float = 0.5,
 ) -> IndexedViewRange:
     """
     Decide begin and end indices of paragraph set based on preferred size.

@@ -31,7 +31,7 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
 
     users = []
     for user in points:
-        users.append(user['user'])
+        users.append(user["user"])
 
     settings = doc.document.get_settings()
     review_count = settings.peer_review_count()
@@ -45,10 +45,14 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
     pairing: DefaultDict[int, list[int]] = defaultdict(list)
 
     if len(users) < 2:
-        raise PeerReviewException(f'Not enough users to form pairs ({len(users)} but at least 2 users needed)')
+        raise PeerReviewException(
+            f"Not enough users to form pairs ({len(users)} but at least 2 users needed)"
+        )
 
     if review_count <= 0:
-        raise PeerReviewException(f'peer_review_count setting is too low ({review_count})')
+        raise PeerReviewException(
+            f"peer_review_count setting is too low ({review_count})"
+        )
 
     # Decreases review count if it exceeds available user count
     if review_count >= len(users):
@@ -88,18 +92,22 @@ def generate_review_groups(doc: DocInfo, tasks: list[Plugin]) -> None:
         for reviewer, reviewables in pairing.items():
             for a in filtered_answers:
                 if a.users_all[0].id in reviewables:
-                    save_review(a, t, doc, reviewer, start_time_reviews, end_time_reviews, False)
+                    save_review(
+                        a, t, doc, reviewer, start_time_reviews, end_time_reviews, False
+                    )
 
     db.session.commit()
 
 
-def save_review(answer: Answer,
-                task_id: TaskId,
-                doc: DocInfo,
-                reviewer_id: int,
-                start_time: datetime,
-                end_time: datetime,
-                reviewed: bool = False) -> PeerReview:
+def save_review(
+    answer: Answer,
+    task_id: TaskId,
+    doc: DocInfo,
+    reviewer_id: int,
+    start_time: datetime,
+    end_time: datetime,
+    reviewed: bool = False,
+) -> PeerReview:
     """Saves a review to the database.
 
     :param answer: Answer object for answer id and reviewed user.
@@ -119,7 +127,7 @@ def save_review(answer: Answer,
         reviewable_id=answer.users_all[0].id,
         start_time=start_time,
         end_time=end_time,
-        reviewed=reviewed
+        reviewed=reviewed,
     )
 
     db.session.add(review)
@@ -135,7 +143,12 @@ def get_reviews_for_user_query(d: DocInfo, user: User) -> Query:
     return PeerReview.query.filter_by(block_id=d.id, reviewer_id=user.id)
 
 
-def has_review_access(doc: DocInfo, reviewer_user: User, task_id: Optional[TaskId], reviewable_user: Optional[User]) -> bool:
+def has_review_access(
+    doc: DocInfo,
+    reviewer_user: User,
+    task_id: Optional[TaskId],
+    reviewable_user: Optional[User],
+) -> bool:
     if not is_peerreview_enabled(doc):
         return False
     q = PeerReview.query.filter_by(

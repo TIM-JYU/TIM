@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 
 from timApp.util.utils import cached_property
 
-THEME_DIR = Path('static/stylesheets/themes')
+THEME_DIR = Path("static/stylesheets/themes")
 
 
 @dataclass(eq=True, frozen=True)
@@ -22,19 +22,19 @@ class Theme:
 
     @cached_property
     def description(self) -> str:
-        with self.get_path().open('r', encoding='utf-8') as f:
+        with self.get_path().open("r", encoding="utf-8") as f:
             comment = f.readline()
-            if comment.startswith('@charset'):
+            if comment.startswith("@charset"):
                 comment = f.readline()
-        m = re.match(r'/\* ([^*]+) \*/', comment)
+        m = re.match(r"/\* ([^*]+) \*/", comment)
         if m is not None:
             return m.groups()[0]
         else:
-            return 'No description.'
+            return "No description."
 
 
 def get_theme_path(filename: str) -> Path:
-    return THEME_DIR / f'{secure_filename(filename)}.scss'  # type: ignore[no-untyped-call]
+    return THEME_DIR / f"{secure_filename(filename)}.scss"  # type: ignore[no-untyped-call]
 
 
 def theme_exists(filename: str) -> bool:
@@ -42,4 +42,6 @@ def theme_exists(filename: str) -> bool:
 
 
 def get_available_themes() -> list[Theme]:
-    return [Theme(file[:-5]) for file in os.listdir(THEME_DIR) if file.endswith('.scss')]
+    return [
+        Theme(file[:-5]) for file in os.listdir(THEME_DIR) if file.endswith(".scss")
+    ]

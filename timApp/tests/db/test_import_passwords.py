@@ -16,16 +16,22 @@ test3@example.com;;
         """.strip()
         with self.suppress_stdout():
             do_import_passwords(StringIO(names), False)
-        self.assertEqual('$2b$04$B0mE/VeD5Uzucfa2juzY5.8aObzCqQSDVK//bxdiQ5Ayv59PwWsVq', self.test_user_1.pass_)
-        self.assertEqual('$2b$04$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu', self.test_user_2.pass_)
+        self.assertEqual(
+            "$2b$04$B0mE/VeD5Uzucfa2juzY5.8aObzCqQSDVK//bxdiQ5Ayv59PwWsVq",
+            self.test_user_1.pass_,
+        )
+        self.assertEqual(
+            "$2b$04$zXpqPI7SNOWkbmYKb6QK9ePEUe.0pxZRctLybWNE1nxw0/WMiYlPu",
+            self.test_user_2.pass_,
+        )
         self.assertIsNone(self.test_user_3.pass_)
 
-        wrong_password = 'test1@example.com;a;$2b$04$B0mE/VeD5Uzucfa2juzY5.8aObzCqQSDVK//bxdiQ5Ayv59PwWsVq'
+        wrong_password = "test1@example.com;a;$2b$04$B0mE/VeD5Uzucfa2juzY5.8aObzCqQSDVK//bxdiQ5Ayv59PwWsVq"
         with self.assertRaises(click.UsageError):
             with self.suppress_stdout():
                 do_import_passwords(StringIO(wrong_password), True)
 
-        missing_hash = 'test1@example.com;a;'
+        missing_hash = "test1@example.com;a;"
         with self.assertRaises(click.UsageError):
             with self.suppress_stdout():
                 do_import_passwords(StringIO(missing_hash), True)

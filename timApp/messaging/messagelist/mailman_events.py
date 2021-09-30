@@ -7,7 +7,10 @@ from typing import Optional
 from flask import request, Response, Blueprint
 
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
-from timApp.messaging.messagelist.messagelist_utils import parse_mailman_message, archive_message
+from timApp.messaging.messagelist.messagelist_utils import (
+    parse_mailman_message,
+    archive_message,
+)
 from timApp.tim_app import app, csrf
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.flask.responsehelper import ok_response
@@ -26,8 +29,13 @@ def has_valid_event_auth() -> bool:
 
 def check_auth() -> bool:
     auth = request.authorization
-    return auth is not None and has_valid_event_auth() \
-           and auth.type == "basic" and auth.username == AUTH_USER and auth.password == AUTH_KEY
+    return (
+        auth is not None
+        and has_valid_event_auth()
+        and auth.type == "basic"
+        and auth.username == AUTH_USER
+        and auth.password == AUTH_KEY
+    )
 
 
 @dataclass
@@ -40,7 +48,9 @@ class MailmanMessageList:
 @dataclass
 class MailmanMemberAddress:
     email: str
-    name: Optional[str]  # Names associated with an (member) email addresses are optional in Mailman.
+    name: Optional[
+        str
+    ]  # Names associated with an (member) email addresses are optional in Mailman.
 
 
 @dataclass
@@ -71,7 +81,7 @@ NewMessageEventSchema = class_schema(NewMessageEvent)
 EVENTS = {
     "user_subscribed": SubscriptionEventSchema(),
     "user_unsubscribed": SubscriptionEventSchema(),
-    "new_message": NewMessageEventSchema()
+    "new_message": NewMessageEventSchema(),
 }
 
 
@@ -80,7 +90,9 @@ EVENTS = {
 def handle_event() -> Response:
     """Handle events sent by Mailman."""
     if not check_auth():
-        return Response(status=401, headers={"WWW-Authenticate": "Basic realm=\"Needs auth\""})
+        return Response(
+            status=401, headers={"WWW-Authenticate": 'Basic realm="Needs auth"'}
+        )
 
     if not request.is_json:
         raise RouteException("Body must be JSON")
@@ -124,8 +136,10 @@ def handle_new_message(event: NewMessageEvent) -> None:
         # If we are here, something is now funky. Message list doesn't have a email list (domain) configured,
         # but messages are directed at it. Not sure what do exactly do here, honestly, except log the event for
         # further investigation.
-        log_warning(f"Message list '{message_list.name}' with id '{message_list.id}' doesn't have a domain "
-                    f"configured properly. Domain '{event.mlist.host}' was expected.")
+        log_warning(
+            f"Message list '{message_list.name}' with id '{message_list.id}' doesn't have a domain "
+            f"configured properly. Domain '{event.mlist.host}' was expected."
+        )
         raise RouteException("List not configured properly.")
     parsed_message = parse_mailman_message(event.message, message_list)
     archive_message(message_list, parsed_message)

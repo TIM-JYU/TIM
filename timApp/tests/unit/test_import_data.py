@@ -128,5 +128,5 @@ class TestImportData(TestCase):
         fields = ["demoA = d1", "demoB=d2"]
         e1 = ["aknakka,d1,3", "vesal,d2,4"]
 
-        r1 = conv_data_field_names(data, fields, ",").to_tim_format(',')
+        r1 = conv_data_field_names(data, fields, ",").to_tim_format(",")
         self.assertEqual(e1, r1, "Not same in change name case")

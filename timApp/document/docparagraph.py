@@ -22,7 +22,11 @@ from timApp.document.prepared_par import PreparedPar
 from timApp.document.randutils import random_id, hashfunc
 from timApp.document.viewcontext import ViewContext, default_view_ctx
 from timApp.markdown.dumboclient import DumboOptions, MathType, InputFormat
-from timApp.markdown.markdownconverter import par_list_to_html_list, expand_macros, format_heading
+from timApp.markdown.markdownconverter import (
+    par_list_to_html_list,
+    expand_macros,
+    format_heading,
+)
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.timtypes import DocumentType
 from timApp.util.rndutils import get_rands_as_dict, SeedType
@@ -32,7 +36,7 @@ from tim_common.html_sanitize import sanitize_html, strip_div
 if TYPE_CHECKING:
     from timApp.document.document import Document
 
-SKIPPED_ATTRS = {'r', 'rd', 'rp', 'ra', 'rt', 'settings'}
+SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "settings"}
 
 
 se = SandboxedEnvironment(autoescape=True)
@@ -40,35 +44,34 @@ se = SandboxedEnvironment(autoescape=True)
 
 # TODO: Make this a dataclass as soon as __slots__ is supported for dataclasses (coming in Python 3.10 maybe).
 class DocParagraph:
-    """Represents a paragraph that is associated with a :class:`Document`. See :doc:`docparagraph` for more info.
-    """
-    __slots__ = {
-        '__is_ref',
-        '__is_setting',
-        '__rands',
-        '__rnd_seed',
-        'answer_nr',
-        'ask_new',
-        'attrs',
-        'doc',
-        'prepared_par',
-        'html',
-        'html_sanitized',
-        'nomacros',
-        'original',
-        'preamble_doc',
-        'prev_deref',
-        'ref_chain',
-        'ref_doc',
-        'ref_pars',
-        'was_invalid',
+    """Represents a paragraph that is associated with a :class:`Document`. See :doc:`docparagraph` for more info."""
 
+    __slots__ = {
+        "__is_ref",
+        "__is_setting",
+        "__rands",
+        "__rnd_seed",
+        "answer_nr",
+        "ask_new",
+        "attrs",
+        "doc",
+        "prepared_par",
+        "html",
+        "html_sanitized",
+        "nomacros",
+        "original",
+        "preamble_doc",
+        "prev_deref",
+        "ref_chain",
+        "ref_doc",
+        "ref_pars",
+        "was_invalid",
         # persistent attributes (stored on disk):
-        'attrs',
-        'hash',  # stored as 't'
-        'html_cache',  # stored as 'h'
-        'id',
-        'md',
+        "attrs",
+        "hash",  # stored as 't'
+        "html_cache",  # stored as 'h'
+        "id",
+        "md",
     }
 
     def __init__(self, doc: Document):
@@ -87,13 +90,13 @@ class DocParagraph:
         # Cache for referenced paragraphs. Keys {True, False} correspond to the values of set_html parameter in
         # get_referenced_pars.
         self.ref_pars = {}
-        self.__rands = None   # random number macros for this pg
+        self.__rands = None  # random number macros for this pg
         self.__rnd_seed = 0
         self.attrs: dict[str, str] | None = None
         self.nomacros = None
         self.ref_chain = None
         self.answer_nr: int | None = None  # needed if variable tasks, None = not task at all or not variable task
-        self.ask_new: bool | None = None # to send for plugins to force new question
+        self.ask_new: bool | None = None  # to send for plugins to force new question
         self.html_cache = None
 
     def __eq__(self, other):
@@ -109,16 +112,18 @@ class DocParagraph:
     @staticmethod
     def help_par():
         """Returns a dummy paragraph with id 'HELP_PAR' that is used as a placeholder for an empty document."""
-        return DocParagraph.create(doc=None, par_id='HELP_PAR')
+        return DocParagraph.create(doc=None, par_id="HELP_PAR")
 
     @classmethod
-    def create(cls,
-               doc,
-               par_id: str | None = None,
-               md: str = '',
-               par_hash: str | None = None,
-               html: str | None = None,
-               attrs: dict | None = None) -> DocParagraph:
+    def create(
+        cls,
+        doc,
+        par_id: str | None = None,
+        md: str = "",
+        par_hash: str | None = None,
+        html: str | None = None,
+        attrs: dict | None = None,
+    ) -> DocParagraph:
         """Creates a DocParagraph from the given parameters.
 
         :param doc: The Document object to which this paragraph is connected.
@@ -141,9 +146,11 @@ class DocParagraph:
 
     @property
     def nocache(self):
-        return self.attrs.get('nocache', False)
+        return self.attrs.get("nocache", False)
 
-    def create_reference(self, doc, r: str | None = None, add_rd: bool = True) -> DocParagraph:
+    def create_reference(
+        self, doc, r: str | None = None, add_rd: bool = True
+    ) -> DocParagraph:
         """Creates a reference paragraph to this paragraph.
 
         :param doc: The Document object in which the reference paragraph will reside.
@@ -152,10 +159,14 @@ class DocParagraph:
         :return: The created DocParagraph.
 
         """
-        return create_reference(doc, doc_id=self.get_doc_id(), par_id=self.get_id(), r=r, add_rd=add_rd)
+        return create_reference(
+            doc, doc_id=self.get_doc_id(), par_id=self.get_id(), r=r, add_rd=add_rd
+        )
 
     @staticmethod
-    def create_area_reference(doc, area_name: str, r: str | None = None, rd: int | None = None) -> DocParagraph:
+    def create_area_reference(
+        doc, area_name: str, r: str | None = None, rd: int | None = None
+    ) -> DocParagraph:
         """Creates an area reference paragraph.
 
         :param area_name: The name of the area.
@@ -166,10 +177,10 @@ class DocParagraph:
 
         """
         par = DocParagraph.create(doc)
-        par.set_attr('r', r)
-        par.set_attr('rd', doc.doc_id if rd is None else rd)
-        par.set_attr('ra', area_name)
-        par.set_attr('rp', None)
+        par.set_attr("r", r)
+        par.set_attr("rd", doc.doc_id if rd is None else rd)
+        par.set_attr("ra", area_name)
+        par.set_attr("rp", None)
 
         par._cache_props()
         return par
@@ -184,19 +195,19 @@ class DocParagraph:
 
         """
         par = DocParagraph(doc)
-        par.id = d['id']
-        par.md = d['md']
-        par.attrs = d.get('attrs', {})
-        par.html_cache = d.get('h')
+        par.id = d["id"]
+        par.md = d["md"]
+        par.attrs = d.get("attrs", {})
+        par.html_cache = d.get("h")
         par._cache_props()
         par._compute_hash()
         return par
 
     def no_macros(self):
-        nm = self.attrs.get('nomacros', None)
+        nm = self.attrs.get("nomacros", None)
         if nm is not None:
             nm = nm.lower()
-            return nm != 'false'
+            return nm != "false"
         return self.doc.get_settings().nomacros(False)
 
     def is_new_task(self):
@@ -204,10 +215,10 @@ class DocParagraph:
 
     @staticmethod
     def is_no_macros(settings, doc_macros):
-        nm = settings.get('nomacros')
+        nm = settings.get("nomacros")
         if nm is not None:
             nm = nm.lower()
-            return nm != 'false'
+            return nm != "false"
         return doc_macros
 
     @classmethod
@@ -220,7 +231,7 @@ class DocParagraph:
 
         """
         try:
-            t = os.readlink(cls._get_path(doc, par_id, 'current'))
+            t = os.readlink(cls._get_path(doc, par_id, "current"))
             return cls.get(doc, par_id, t)
         except FileNotFoundError:
             doc._raise_not_found(par_id)
@@ -252,10 +263,11 @@ class DocParagraph:
 
         """
         from timApp.timdb.dbaccess import get_files_path
+
         froot = get_files_path()
         # For performance, we use string concatenation. The "/" operator of Path is slower
         # and it shows in perf profiles.
-        return f'{froot}/pars/{doc.doc_id}/{par_id}/{t}'
+        return f"{froot}/pars/{doc.doc_id}/{par_id}/{t}"
 
     @classmethod
     def _get_base_path(cls, doc, par_id: str) -> str:
@@ -267,8 +279,9 @@ class DocParagraph:
 
         """
         from timApp.timdb.dbaccess import get_files_path
+
         froot = get_files_path()
-        return (froot / 'pars' / str(doc.doc_id) / par_id).as_posix()
+        return (froot / "pars" / str(doc.doc_id) / par_id).as_posix()
 
     def dict(self, include_html_cache: bool = False) -> dict:
         """Returns the persistent data as a dict."""
@@ -279,7 +292,7 @@ class DocParagraph:
             t=self.hash,
         )
         if include_html_cache and self.html_cache:
-            d['h'] = self.html_cache
+            d["h"] = self.html_cache
         return d
 
     def get_basic_data(self):
@@ -313,19 +326,19 @@ class DocParagraph:
                 output = get_error_html(e)
 
         preamble = self.from_preamble()
-        class_str = 'par'
-        if not self.get_attr('area'):
+        class_str = "par"
+        if not self.get_attr("area"):
             if classes := self.get_classes():
                 for c in classes:
-                    class_str += ' ' + c
+                    class_str += " " + c
         if self.is_question():
-            class_str += ' questionPar'
+            class_str += " questionPar"
         else:
-            plugintype = self.get_attr('plugin')
+            plugintype = self.get_attr("plugin")
             if plugintype:
-                class_str += f' {plugintype}'
+                class_str += f" {plugintype}"
         if preamble:
-            class_str += ' preamble'
+            class_str += " preamble"
 
         fd = PreparedPar(
             data=basic_data,
@@ -341,7 +354,7 @@ class DocParagraph:
         """Caches some boolean properties about this paragraph in internal attributes."""
 
         self.__is_ref = self.is_par_reference() or self.is_area_reference()
-        self.__is_setting = 'settings' in self.attrs
+        self.__is_setting = "settings" in self.attrs
 
     def get_doc_id(self) -> int:
         """Returns the Document id to which this paragraph is attached."""
@@ -363,8 +376,9 @@ class DocParagraph:
         return self.get_hash() == par.get_hash() and self.attrs == par.attrs
 
     def is_same_as_html(self, par: DocParagraph, view_ctx: ViewContext):
-        return self.is_same_as(par) and self.get_html(view_ctx, no_persist=True) == par.get_html(view_ctx,
-                                                                                                 no_persist=True)
+        return self.is_same_as(par) and self.get_html(
+            view_ctx, no_persist=True
+        ) == par.get_html(view_ctx, no_persist=True)
 
     def get_hash(self) -> str:
         """Returns the hash of this paragraph."""
@@ -374,11 +388,13 @@ class DocParagraph:
         """Returns the markdown of this paragraph."""
         return self.md
 
-    def insert_rnds(self, rnd_seed: SeedType | None) ->bool:
-        """ Inserts Jinja rnd variable as a list of random numbers based to attribute rnd and rnd_seed
-            return True if attribute rnd found and OK, else False
+    def insert_rnds(self, rnd_seed: SeedType | None) -> bool:
+        """Inserts Jinja rnd variable as a list of random numbers based to attribute rnd and rnd_seed
+        return True if attribute rnd found and OK, else False
         """
-        self.__rands, self.__rnd_seed, state = get_rands_as_dict(self.attrs, rnd_seed, None)
+        self.__rands, self.__rnd_seed, state = get_rands_as_dict(
+            self.attrs, rnd_seed, None
+        )
         if self.__rands is None:
             return False
         return True
@@ -393,9 +409,9 @@ class DocParagraph:
         return self.nomacros
 
     def get_expanded_markdown(
-            self,
-            macroinfo: MacroInfo,
-            ignore_errors: bool = False,
+        self,
+        macroinfo: MacroInfo,
+        ignore_errors: bool = False,
     ) -> str:
         """Returns the macro-processed markdown for this paragraph.
 
@@ -412,7 +428,9 @@ class DocParagraph:
         macros = macroinfo.get_macros()
 
         try:
-            if self.insert_rnds(md + macros.get("username", "")):  # TODO: RND_SEED: check what seed should be used, is this used to plugins?
+            if self.insert_rnds(
+                md + macros.get("username", "")
+            ):  # TODO: RND_SEED: check what seed should be used, is this used to plugins?
                 macros = {**macros, **self.__rands}
         except Exception as err:
             # raise Exception('Error in rnd: ' + str(err)) from err
@@ -432,10 +450,10 @@ class DocParagraph:
 
         """
         md = self.md
-        if len(md) < 3 or md[0] != '#' or md[1] == '-':
+        if len(md) < 3 or md[0] != "#" or md[1] == "-":
             return None
 
-        attr_index = md.find('{')
+        attr_index = md.find("{")
         return md[2:attr_index].strip() if attr_index > 0 else md[2:].strip()
 
     def get_exported_markdown(self, skip_tr=False, export_ids=False) -> str:
@@ -453,12 +471,14 @@ class DocParagraph:
                     d = self.dict()
                     md = par.md
                     if md:
-                        d['md'] = md
+                        d["md"] = md
                     data.append(d)
-                return DocumentWriter(data, export_hashes=False, export_ids=export_ids).get_text()
-        return DocumentWriter([self.dict()],
-                              export_hashes=False,
-                              export_ids=export_ids).get_text(DocumentParserOptions.single_paragraph())
+                return DocumentWriter(
+                    data, export_hashes=False, export_ids=export_ids
+                ).get_text()
+        return DocumentWriter(
+            [self.dict()], export_hashes=False, export_ids=export_ids
+        ).get_text(DocumentParserOptions.single_paragraph())
 
     def __get_setting_html(self) -> str:
         """Returns the HTML for the settings paragraph."""
@@ -468,21 +488,28 @@ class DocParagraph:
             DocSettings.from_paragraph(self)
         except TimDbException as e:
             return f'<div class="pluginError">Invalid settings: {e}</div>'
-        return se.from_string('<pre>{{yml}}</pre>').render(yml=self.md)
+        return se.from_string("<pre>{{yml}}</pre>").render(yml=self.md)
 
     def get_html(self, view_ctx: ViewContext, no_persist: bool = True) -> str:
-        """Returns the html for the paragraph.
-        """
+        """Returns the html for the paragraph."""
         if self.html is not None:
             return self.html
         if self.is_plugin() or self.has_plugins():
-            return self._set_html('')
+            return self._set_html("")
         if self.is_setting():
             return self._set_html(self.__get_setting_html())
 
-        context_par = self.doc.get_previous_par(self, get_last_if_no_prev=False) if no_persist else None
+        context_par = (
+            self.doc.get_previous_par(self, get_last_if_no_prev=False)
+            if no_persist
+            else None
+        )
 
-        preload_pars = self.doc.get_paragraphs() if self.doc.preload_option == PreloadOption.all else [self]
+        preload_pars = (
+            self.doc.get_paragraphs()
+            if self.doc.preload_option == PreloadOption.all
+            else [self]
+        )
         DocParagraph.preload_htmls(
             preload_pars,
             self.doc.get_settings(),
@@ -494,19 +521,19 @@ class DocParagraph:
         # This DocParagraph instance is not necessarily the same as what self.doc contains. In that case, we copy the
         # HTML from the doc's equivalent paragraph.
         if self.html is None:
-            self.html = self.doc.par_map[self.get_id()]['c'].html
+            self.html = self.doc.par_map[self.get_id()]["c"].html
             assert self.html is not None
         return self.html
 
     @classmethod
     def preload_htmls(
-            cls,
-            pars: list[DocParagraph],
-            settings,
-            view_ctx: ViewContext,
-            clear_cache: bool = False,
-            context_par: DocParagraph | None = None,
-            persist: bool | None = True,
+        cls,
+        pars: list[DocParagraph],
+        settings,
+        view_ctx: ViewContext,
+        clear_cache: bool = False,
+        context_par: DocParagraph | None = None,
+        persist: bool | None = True,
     ):
         """Loads the HTML for each paragraph in the given list.
 
@@ -523,8 +550,8 @@ class DocParagraph:
             return []
 
         doc_id = pars[0].doc.doc_id
-        macro_cache_file = f'/tmp/tim_auto_macros_{doc_id}'
-        heading_cache_file = f'/tmp/heading_cache_{doc_id}'
+        macro_cache_file = f"/tmp/tim_auto_macros_{doc_id}"
+        heading_cache_file = f"/tmp/heading_cache_{doc_id}"
 
         first_pars = []
         if context_par is not None:
@@ -534,8 +561,9 @@ class DocParagraph:
         if not persist:
             cache = {}
             heading_cache = {}
-            with shelve.open(macro_cache_file) as c, \
-                    shelve.open(heading_cache_file) as hc:
+            with shelve.open(macro_cache_file) as c, shelve.open(
+                heading_cache_file
+            ) as hc:
 
                 # Basically we want the cache objects to be non-persistent, so we convert them to normal dicts
                 # Find out better way if possible...
@@ -547,26 +575,32 @@ class DocParagraph:
                     value = hc.get(par.get_id())
                     if value is not None:
                         heading_cache[par.get_id()] = value
-            unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
+            unloaded_pars = cls.get_unloaded_pars(
+                pars, settings, cache, heading_cache, clear_cache
+            )
         else:
             with filelock.FileLock(f"/tmp/cache_lock_{doc_id}"):
                 if clear_cache:
                     try:
-                        os.remove(macro_cache_file + '.db')
+                        os.remove(macro_cache_file + ".db")
                     except FileNotFoundError:
                         pass
                     try:
-                        os.remove(heading_cache_file + '.db')
+                        os.remove(heading_cache_file + ".db")
                     except FileNotFoundError:
                         pass
-                with shelve.open(macro_cache_file) as cache, \
-                        shelve.open(heading_cache_file) as heading_cache:
-                    unloaded_pars = cls.get_unloaded_pars(pars, settings, cache, heading_cache, clear_cache)
+                with shelve.open(macro_cache_file) as cache, shelve.open(
+                    heading_cache_file
+                ) as heading_cache:
+                    unloaded_pars = cls.get_unloaded_pars(
+                        pars, settings, cache, heading_cache, clear_cache
+                    )
                     for k, v in heading_cache.items():
                         heading_cache[k] = v
 
         changed_pars = []
         if len(unloaded_pars) > 0:
+
             def deref_tr_par(p):
                 """Required for getting the original par's attributes, so that for example "nonumber" class
                 doesn't have to be repeated in translations.
@@ -579,18 +613,20 @@ class DocParagraph:
                     p.was_invalid = True
                     p._set_html(get_error_html(e))
                     return p
+
             htmls = par_list_to_html_list(
                 [deref_tr_par(par) for par, _, _, _, _ in unloaded_pars],
                 settings=settings,
                 view_ctx=view_ctx,
-                auto_macros=({'h': auto_macros['h'], 'headings': hs}
-                             for _, _, auto_macros, hs, _ in
-                             unloaded_pars),
+                auto_macros=(
+                    {"h": auto_macros["h"], "headings": hs}
+                    for _, _, auto_macros, hs, _ in unloaded_pars
+                ),
             )
             for (par, auto_macro_hash, _, _, old_html), h in zip(unloaded_pars, htmls):
                 # h is not sanitized but old_html is, but HTML stays unchanged after sanitization most of the time
                 # so they are comparable after stripping div. We want to avoid calling sanitize_html unnecessarily.
-                if getattr(par, 'was_invalid', False):
+                if getattr(par, "was_invalid", False):
                     continue
                 if isinstance(h, bytes):
                     h = h.decode()
@@ -606,7 +642,9 @@ class DocParagraph:
         return changed_pars
 
     @classmethod
-    def get_unloaded_pars(cls, pars, settings, auto_macro_cache, heading_cache, clear_cache=False):
+    def get_unloaded_pars(
+        cls, pars, settings, auto_macro_cache, heading_cache, clear_cache=False
+    ):
         """Finds out which of the given paragraphs need to be preloaded again.
 
         :param pars: The list of paragraphs to be processed.
@@ -635,11 +673,13 @@ class DocParagraph:
             cached = par.html_cache
             try:
                 auto_number_start = settings.auto_number_start()
-                auto_macros = par.get_auto_macro_values(macros, env, auto_macro_cache, heading_cache,
-                                                        auto_number_start)
+                auto_macros = par.get_auto_macro_values(
+                    macros, env, auto_macro_cache, heading_cache, auto_number_start
+                )
             except RecursionError:
                 raise TimDbException(
-                    'Infinite recursion detected in get_auto_macro_values; the document may be broken.')
+                    "Infinite recursion detected in get_auto_macro_values; the document may be broken."
+                )
             auto_macro_hash = hashfunc(settings_hash + str(auto_macros))
 
             par_headings = heading_cache.get(par.get_id())
@@ -691,15 +731,15 @@ class DocParagraph:
                 if curr_classes is None:
                     curr_classes = []
                 curr_classes.append(class_name)
-                self.set_attr('classes', curr_classes)
+                self.set_attr("classes", curr_classes)
 
     def get_auto_macro_values(
-            self,
-            macros,
-            env: SandboxedEnvironment,
-            auto_macro_cache,
-            heading_cache,
-            auto_number_start,
+        self,
+        macros,
+        env: SandboxedEnvironment,
+        auto_macro_cache,
+        heading_cache,
+        auto_number_start,
     ):
         """Returns the auto macros values for the current paragraph. Auto macros include things like current
         heading/table/figure numbers.
@@ -723,11 +763,14 @@ class DocParagraph:
         prev_par: DocParagraph = self.doc.get_previous_par(self)
         if prev_par is None:
             autonumber_start = auto_number_start
-            prev_par_auto_values = {'h': {1: autonumber_start, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}}
+            prev_par_auto_values = {
+                "h": {1: autonumber_start, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0}
+            }
             heading_cache[self.get_id()] = []
         else:
-            prev_par_auto_values = prev_par.get_auto_macro_values(macros, env, auto_macro_cache, heading_cache,
-                                                                  auto_number_start)
+            prev_par_auto_values = prev_par.get_auto_macro_values(
+                macros, env, auto_macro_cache, heading_cache, auto_number_start
+            )
 
         # If the paragraph is a translation but it has not been translated (empty markdown), we use the md from the original.
         deref = None
@@ -737,7 +780,12 @@ class DocParagraph:
             except InvalidReferenceException:
                 # In case of an invalid reference, just skip this one.
                 deref = None
-        if prev_par is None or prev_par.is_dynamic() or prev_par.has_class('nonumber') or (deref and deref.has_class('nonumber')):
+        if (
+            prev_par is None
+            or prev_par.is_dynamic()
+            or prev_par.has_class("nonumber")
+            or (deref and deref.has_class("nonumber"))
+        ):
             auto_macro_cache[key] = prev_par_auto_values
             heading_cache[self.get_id()] = []
             return prev_par_auto_values
@@ -747,20 +795,24 @@ class DocParagraph:
             md_expanded = deref.md
         if not prev_par.get_nomacros():
             # TODO: RND_SEED should we fill the rands also?
-            md_expanded = expand_macros(md_expanded, macros, self.doc.get_settings(), env)
-        blocks = DocumentParser(md_expanded, options=DocumentParserOptions.break_on_empty_lines()).get_blocks()
-        deltas = copy(prev_par_auto_values['h'])
+            md_expanded = expand_macros(
+                md_expanded, macros, self.doc.get_settings(), env
+            )
+        blocks = DocumentParser(
+            md_expanded, options=DocumentParserOptions.break_on_empty_lines()
+        ).get_blocks()
+        deltas = copy(prev_par_auto_values["h"])
         title_ids = []
         for e in blocks:
-            level = count_chars_from_beginning(e['md'], '#')
+            level = count_chars_from_beginning(e["md"], "#")
             if 0 < level < 7:
-                title = e['md'][level:].strip()
+                title = e["md"][level:].strip()
                 title_ids.append(title_to_id(title))
                 deltas[level] += 1
                 for i in range(level + 1, 7):
                     deltas[i] = 0
         heading_cache[self.get_id()] = title_ids
-        result = {'h': deltas}
+        result = {"h": deltas}
         auto_macro_cache[key] = result
         return result
 
@@ -828,13 +880,15 @@ class DocParagraph:
 
     def is_task(self):
         """Returns whether the paragraph is a task."""
-        return self.get_attr('taskId') is not None and self.get_attr('plugin') is not None
+        return (
+            self.get_attr("taskId") is not None and self.get_attr("plugin") is not None
+        )
 
     def get_attrs(self) -> dict:
         return self.attrs
 
     def get_classes(self) -> list[str] | None:
-        return self.get_attr('classes')
+        return self.get_attr("classes")
 
     def get_base_path(self) -> str:
         """Returns the filesystem path for the versions of this paragraph."""
@@ -853,12 +907,12 @@ class DocParagraph:
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
 
-        with open(file_name, 'w') as f:
+        with open(file_name, "w") as f:
             f.write(json.dumps(self.dict(include_html_cache=True)))
 
     def set_latest(self):
         """Updates the 'current' symlink to point to this paragraph version."""
-        linkpath = self._get_path(self.doc, self.get_id(), 'current')
+        linkpath = self._get_path(self.doc, self.get_id(), "current")
         if linkpath == self.get_hash():
             return
         if os.path.islink(linkpath) or os.path.isfile(linkpath):
@@ -885,7 +939,7 @@ class DocParagraph:
         """Clears the HTML cache of this paragraph."""
         self.html_cache = None
 
-    def save(self, add: bool=False) -> None:
+    def save(self, add: bool = False) -> None:
         """Performs a save operation for this paragraph.
 
         This updates the document version and paragraph list appropriately.
@@ -912,17 +966,19 @@ class DocParagraph:
 
     def is_par_reference(self) -> bool:
         """Returns whether this paragraph is a reference to a single paragraph."""
-        return self.get_attr('rp') is not None
+        return self.get_attr("rp") is not None
 
     def is_area_reference(self) -> bool:
         """Returns whether this paragraph is a reference to an area."""
-        return self.get_attr('ra') is not None
+        return self.get_attr("ra") is not None
 
     def is_translation(self) -> bool:
         """Returns whether this paragraph is a translated paragraph."""
-        return self.get_attr('r') == 'tr' and self.get_attr('rp') is not None
+        return self.get_attr("r") == "tr" and self.get_attr("rp") is not None
 
-    def get_referenced_pars(self, view_ctx: ViewContext | None = None) -> list[DocParagraph]:
+    def get_referenced_pars(
+        self, view_ctx: ViewContext | None = None
+    ) -> list[DocParagraph]:
         cached = self.ref_pars.get(view_ctx)
         if cached is not None:
             return cached
@@ -930,7 +986,9 @@ class DocParagraph:
         self.ref_pars[view_ctx] = pars
         return pars
 
-    def get_referenced_pars_impl(self, visited_pars: list[tuple[int, str]] | None = None) -> list[DocParagraph]:
+    def get_referenced_pars_impl(
+        self, visited_pars: list[tuple[int, str]] | None = None
+    ) -> list[DocParagraph]:
         """Returns the paragraphs that are referenced by this paragraph.
 
         The references are resolved recursively, i.e. if the referenced paragraphs are references themselves, they
@@ -946,35 +1004,46 @@ class DocParagraph:
         if par_doc_id in visited_pars:
             visited_pars.append(par_doc_id)
             raise InvalidReferenceException(
-                f'Infinite referencing loop detected: {" -> ".join((f"{d}:{p}" for d, p in visited_pars))}')
+                f'Infinite referencing loop detected: {" -> ".join((f"{d}:{p}" for d, p in visited_pars))}'
+            )
         visited_pars.append(par_doc_id)
 
         ref_docid = None
         ref_doc = None
 
         attrs = self.attrs
-        if 'rd' in attrs:
+        if "rd" in attrs:
             try:
-                ref_docid = int(attrs['rd'])
+                ref_docid = int(attrs["rd"])
             except ValueError:
-                raise InvalidReferenceException(f'Invalid reference document id: "{attrs["rd"]}"')
+                raise InvalidReferenceException(
+                    f'Invalid reference document id: "{attrs["rd"]}"'
+                )
         else:
-            ref_doc = self.doc.get_source_document() if not self.from_preamble() else self.from_preamble().document.get_source_document()
+            ref_doc = (
+                self.doc.get_source_document()
+                if not self.from_preamble()
+                else self.from_preamble().document.get_source_document()
+            )
 
         if ref_doc is None:
             if ref_docid is None:
-                raise InvalidReferenceException('Source document for reference not specified.')
+                raise InvalidReferenceException(
+                    "Source document for reference not specified."
+                )
             ref_doc = self.doc.get_ref_doc(ref_docid)
 
         if not ref_doc.exists():
-            raise InvalidReferenceException('The referenced document does not exist.')
+            raise InvalidReferenceException("The referenced document does not exist.")
 
         if self.is_par_reference():
             try:
-                par = ref_doc.get_paragraph(attrs['rp'])
+                par = ref_doc.get_paragraph(attrs["rp"])
                 par.prev_deref = self
             except TimDbException:
-                raise InvalidReferenceException('The referenced paragraph does not exist.')
+                raise InvalidReferenceException(
+                    "The referenced paragraph does not exist."
+                )
 
             if par.is_reference():
                 ref_pars = par.get_referenced_pars_impl(visited_pars=visited_pars)
@@ -982,13 +1051,17 @@ class DocParagraph:
                 ref_pars = [par]
         elif self.is_area_reference():
             if self.is_translation():
-                raise InvalidReferenceException("A translated paragraph cannot be an area reference.")
-            section_pars = ref_doc.get_named_section(attrs['ra'])
+                raise InvalidReferenceException(
+                    "A translated paragraph cannot be an area reference."
+                )
+            section_pars = ref_doc.get_named_section(attrs["ra"])
             ref_pars = []
             for p in section_pars:
                 p.prev_deref = self
                 if p.is_reference():
-                    ref_pars.extend(p.get_referenced_pars_impl(visited_pars=visited_pars))
+                    ref_pars.extend(
+                        p.get_referenced_pars_impl(visited_pars=visited_pars)
+                    )
                 else:
                     ref_pars.append(p)
         else:
@@ -1005,19 +1078,21 @@ class DocParagraph:
         * a setting.
 
         """
-        return self.is_plugin() \
-            or self.has_plugins() \
-            or (self.__is_ref and not self.is_translation()) \
+        return (
+            self.is_plugin()
+            or self.has_plugins()
+            or (self.__is_ref and not self.is_translation())
             or self.__is_setting
+        )
 
     def is_plugin(self) -> bool:
         """Returns whether this paragraph is a plugin."""
 
-        return bool(self.get_attr('plugin'))
+        return bool(self.get_attr("plugin"))
 
     def has_plugins(self) -> bool:
         """Returns whether this paragraph has inline plugins."""
-        return bool(self.get_attr('defaultplugin'))
+        return bool(self.get_attr("defaultplugin"))
 
     def is_yaml(self) -> bool:
         """Returns whether this paragraph is YAML markup."""
@@ -1025,7 +1100,7 @@ class DocParagraph:
 
     def is_question(self) -> bool:
         """Returns whether this paragraph is a question paragraph."""
-        return self.is_plugin() and bool(self.get_attr('question'))
+        return self.is_plugin() and bool(self.get_attr("question"))
 
     def is_setting(self) -> bool:
         """Returns whether this paragraph is a settings paragraph."""
@@ -1033,7 +1108,7 @@ class DocParagraph:
 
     def from_preamble(self) -> DocInfo | None:
         """Returns the preamble document for this paragraph if the paragraph has been copied from a preamble."""
-        return getattr(self, 'preamble_doc', None)
+        return getattr(self, "preamble_doc", None)
 
     def set_id(self, par_id: str):
         """Sets the id for this paragraph.
@@ -1044,19 +1119,30 @@ class DocParagraph:
         self.id = par_id
 
     def is_citation(self):
-        return self.get_attr('r') == 'c'
+        return self.get_attr("r") == "c"
 
     def is_area(self):
-        return self.get_attr('area') is not None or self.get_attr('area_end') is not None
+        return (
+            self.get_attr("area") is not None or self.get_attr("area_end") is not None
+        )
 
     def has_dumbo_options(self):
-        return bool(self.get_attr('math_type') or self.get_attr('math_preamble') or self.get_attr('input_format'))
+        return bool(
+            self.get_attr("math_type")
+            or self.get_attr("math_preamble")
+            or self.get_attr("input_format")
+        )
 
-    def get_dumbo_options(self, base_opts: DumboOptions=DumboOptions.default()) -> DumboOptions:
+    def get_dumbo_options(
+        self, base_opts: DumboOptions = DumboOptions.default()
+    ) -> DumboOptions:
         return DumboOptions(
-            math_type=MathType.from_string(self.get_attr('math_type') or base_opts.math_type),
-            math_preamble=self.get_attr('math_preamble') or base_opts.math_preamble,
-            input_format=InputFormat.from_string(self.get_attr('input_format')) or base_opts.input_format,
+            math_type=MathType.from_string(
+                self.get_attr("math_type") or base_opts.math_type
+            ),
+            math_preamble=self.get_attr("math_preamble") or base_opts.math_preamble,
+            input_format=InputFormat.from_string(self.get_attr("input_format"))
+            or base_opts.input_format,
         )
 
     def is_translation_out_of_date(self):
@@ -1065,23 +1151,29 @@ class DocParagraph:
         last_ref = self.ref_chain.prev_deref
         reached_par = self.ref_chain
         return (
-                last_ref.is_translation()
-                and not reached_par.is_setting()
-                and reached_par.get_hash() != last_ref.get_attr('rt')
+            last_ref.is_translation()
+            and not reached_par.is_setting()
+            and reached_par.get_hash() != last_ref.get_attr("rt")
         )
 
 
 def is_real_id(par_id: str | None):
     """Returns whether the given paragraph id corresponds to some real paragraph
     instead of being None or a placeholder value ('HELP_PAR').
-    
+
     :param par_id: The paragraph id.
     :return: True if the given paragraph id corresponds to some real paragraph, False otherwise.
     """
-    return par_id is not None and par_id != 'HELP_PAR'
+    return par_id is not None and par_id != "HELP_PAR"
 
 
-def create_reference(doc: DocumentType, doc_id: int, par_id: str, r: str | None = None, add_rd: bool = True) -> DocParagraph:
+def create_reference(
+    doc: DocumentType,
+    doc_id: int,
+    par_id: str,
+    r: str | None = None,
+    add_rd: bool = True,
+) -> DocParagraph:
     """Creates a reference paragraph to a paragraph.
 
     :param par_id: Id of the original paragraph.
@@ -1094,16 +1186,18 @@ def create_reference(doc: DocumentType, doc_id: int, par_id: str, r: str | None 
     """
     par = DocParagraph.create(doc)
 
-    par.set_attr('r', r)
-    par.set_attr('rd', doc_id if add_rd else None)
-    par.set_attr('rp', par_id)
-    par.set_attr('ra', None)
+    par.set_attr("r", r)
+    par.set_attr("rd", doc_id if add_rd else None)
+    par.set_attr("rp", par_id)
+    par.set_attr("ra", None)
 
     par._cache_props()
     return par
 
 
-def create_final_par(reached_par: DocParagraph, view_ctx: ViewContext | None) -> DocParagraph:
+def create_final_par(
+    reached_par: DocParagraph, view_ctx: ViewContext | None
+) -> DocParagraph:
     """Creates the finalized dereferenced paragraph based on a chain of references."""
     last_ref = reached_par.prev_deref
     if last_ref.is_translation() and last_ref.get_markdown():
@@ -1119,7 +1213,9 @@ def create_final_par(reached_par: DocParagraph, view_ctx: ViewContext | None) ->
         if not first_ref.prev_deref:
             break
         first_ref = first_ref.prev_deref
-        is_any_norm_reference = is_any_norm_reference or (first_ref.is_reference() and not first_ref.is_translation())
+        is_any_norm_reference = is_any_norm_reference or (
+            first_ref.is_reference() and not first_ref.is_translation()
+        )
 
     new_attrs = {}
     for r in reversed(ref_list):
@@ -1135,7 +1231,7 @@ def create_final_par(reached_par: DocParagraph, view_ctx: ViewContext | None) ->
             else:
                 new_attrs[k] = v
     if all(p.is_setting() for p in ref_list):
-        new_attrs['settings'] = ''
+        new_attrs["settings"] = ""
 
     final_par = DocParagraph.create(
         attrs=new_attrs,
@@ -1164,11 +1260,14 @@ def create_final_par(reached_par: DocParagraph, view_ctx: ViewContext | None) ->
     final_par.ref_chain = reached_par
 
     if view_ctx:
-        html = last_ref.get_html(view_ctx, no_persist=False) if last_ref.is_translation(
-        ) else reached_par.get_html(view_ctx, no_persist=False)
+        html = (
+            last_ref.get_html(view_ctx, no_persist=False)
+            if last_ref.is_translation()
+            else reached_par.get_html(view_ctx, no_persist=False)
+        )
 
         # if html is empty, use the source
-        if html == '':
+        if html == "":
             html = reached_par.get_html(view_ctx, no_persist=False)
         final_par._set_html(html)
     return final_par
@@ -1176,27 +1275,31 @@ def create_final_par(reached_par: DocParagraph, view_ctx: ViewContext | None) ->
 
 def add_heading_numbers(s: str, ctx: DocParagraph, heading_format):
     d = ctx.doc
-    macro_cache_file = f'/tmp/tim_auto_macros_{ctx.doc.doc_id}'
+    macro_cache_file = f"/tmp/tim_auto_macros_{ctx.doc.doc_id}"
     ps = commonmark.Parser()
     parsed = ps.parse(s)
     with shelve.open(macro_cache_file) as cache:
-        vals = cache.get(str((ctx.get_id(), d.get_version())), {}).get('h')
+        vals = cache.get(str((ctx.get_id(), d.get_version())), {}).get("h")
     if not vals:
         return s
     lines = s.splitlines(keepends=False)
     curr: Node = parsed.first_child
     while curr:
-        if curr.t == 'heading':
+        if curr.t == "heading":
             level = curr.level
             line_idx = curr.sourcepos[0][0] - 1
             heading_line = lines[line_idx]
-            heading_start = '#' * level
+            heading_start = "#" * level
 
             # Pandoc's table syntax can conflict with CommonMark heading syntax, so we need an extra check.
             # This could be more accurate, but it's enough for now.
-            if heading_line.startswith(heading_start + ' '):
-                line = heading_line[level + 1:]
-                if not line.endswith('{.unnumbered}'):
-                    lines[line_idx] = heading_start + ' ' + format_heading(line, level, vals, heading_format)
+            if heading_line.startswith(heading_start + " "):
+                line = heading_line[level + 1 :]
+                if not line.endswith("{.unnumbered}"):
+                    lines[line_idx] = (
+                        heading_start
+                        + " "
+                        + format_heading(line, level, vals, heading_format)
+                    )
         curr = curr.nxt
-    return '\n'.join(lines)
+    return "\n".join(lines)

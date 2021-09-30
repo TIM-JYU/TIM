@@ -10,9 +10,20 @@ from flask import redirect
 from flask import request
 from isodate import Duration
 
-from timApp.auth.accesshelper import verify_manage_access, verify_ownership, verify_view_access, has_ownership, \
-    verify_edit_access, get_doc_or_abort, get_item_or_abort, get_folder_or_abort, verify_copy_access, AccessDenied, \
-    get_single_view_access, has_edit_access
+from timApp.auth.accesshelper import (
+    verify_manage_access,
+    verify_ownership,
+    verify_view_access,
+    has_ownership,
+    verify_edit_access,
+    get_doc_or_abort,
+    get_item_or_abort,
+    get_folder_or_abort,
+    verify_copy_access,
+    AccessDenied,
+    get_single_view_access,
+    has_edit_access,
+)
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel, BlockAccess
 from timApp.auth.sessioninfo import get_current_user_group_object
@@ -25,27 +36,56 @@ from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType, Block
 from timApp.item.copy_rights import copy_rights
 from timApp.item.item import Item
-from timApp.item.validation import validate_item, validate_item_and_create_intermediate_folders, has_special_chars
+from timApp.item.validation import (
+    validate_item,
+    validate_item_and_create_intermediate_folders,
+    has_special_chars,
+)
 from timApp.timdb.sqa import db
 from timApp.user.user import User, ItemOrBlock
 from timApp.user.usergroup import UserGroup
-from timApp.user.users import remove_default_access, get_default_rights_holders, get_rights_holders, remove_access
+from timApp.user.users import (
+    remove_default_access,
+    get_default_rights_holders,
+    get_rights_holders,
+    remove_access,
+)
 from timApp.user.userutils import grant_access, grant_default_access
-from timApp.util.flask.requesthelper import verify_json_params, get_option, use_model, RouteException, NotExist
-from timApp.util.flask.responsehelper import json_response, ok_response, get_grid_modules
+from timApp.util.flask.requesthelper import (
+    verify_json_params,
+    get_option,
+    use_model,
+    RouteException,
+    NotExist,
+)
+from timApp.util.flask.responsehelper import (
+    json_response,
+    ok_response,
+    get_grid_modules,
+)
 from timApp.util.logger import log_info
-from timApp.util.utils import remove_path_special_chars, split_location, join_location, get_current_time, \
-    cached_property, seq_to_str
+from timApp.util.utils import (
+    remove_path_special_chars,
+    split_location,
+    join_location,
+    get_current_time,
+    cached_property,
+    seq_to_str,
+)
 
-manage_page = Blueprint('manage_page',
-                        __name__,
-                        url_prefix='')  # TODO: Better URL prefix.
+manage_page = Blueprint(
+    "manage_page", __name__, url_prefix=""
+)  # TODO: Better URL prefix.
 
 
 @manage_page.get("/manage/<path:path>")
 def manage(path):
     if has_special_chars(path):
-        return redirect(remove_path_special_chars(request.path) + '?' + request.query_string.decode('utf8'))
+        return redirect(
+            remove_path_special_chars(request.path)
+            + "?"
+            + request.query_string.decode("utf8")
+        )
     item = DocEntry.find_by_path(path, fallback_to_id=True)
     if item is None:
         item = Folder.find_by_path(path, fallback_to_id=True)
@@ -57,14 +97,14 @@ def manage(path):
     is_folder = isinstance(item, Folder)
     if not is_folder and has_edit_access(item):
         item.serialize_content = True
-        item.changelog_length = get_option(request, 'history', 100)
+        item.changelog_length = get_option(request, "history", 100)
 
     return render_template(
-        'manage.jinja2',
-        route='manage',
+        "manage.jinja2",
+        route="manage",
         translations=item.translations if not is_folder else None,
         item=item,
-        js=['angular-ui-grid'],
+        js=["angular-ui-grid"],
         jsMods=get_grid_modules(),
         orgs=UserGroup.get_organizations(),
         access_types=AccessTypeModel.query.all(),
@@ -75,7 +115,7 @@ def manage(path):
 def get_changelog(doc_id, length):
     doc = get_doc_or_abort(doc_id)
     verify_manage_access(doc)
-    return json_response({'versions': doc.get_changelog_with_names(length)})
+    return json_response({"versions": doc.get_changelog_with_names(length)})
 
 
 class TimeType(Enum):
@@ -89,7 +129,7 @@ class TimeOpt:
     type: TimeType
     duration: Optional[Duration] = None
     to: Optional[datetime] = None
-    ffrom: Optional[datetime] = field(metadata={'data_key': 'from'}, default=None)
+    ffrom: Optional[datetime] = field(metadata={"data_key": "from"}, default=None)
     durationTo: Optional[datetime] = None
     durationFrom: Optional[datetime] = None
 
@@ -127,17 +167,17 @@ class TimeOpt:
         try:
             return self.duration.totimedelta(start=datetime.min)
         except (OverflowError, ValueError):
-            raise RouteException('Duration is too long.')
+            raise RouteException("Duration is too long.")
 
 
 class EditOption(Enum):
-    Add = 'add'
-    Remove = 'remove'
+    Add = "add"
+    Remove = "remove"
 
 
 @dataclass
 class PermissionEditModel:
-    type: AccessType = field(metadata={'by_value': True})
+    type: AccessType = field(metadata={"by_value": True})
     time: TimeOpt
     groups: list[str]
     confirm: Optional[bool]
@@ -173,7 +213,7 @@ class DefaultPermissionModel(PermissionSingleEditModel):
 @dataclass
 class PermissionRemoveModel:
     id: int
-    type: AccessType = field(metadata={'by_value': True})
+    type: AccessType = field(metadata={"by_value": True})
     group: int
 
 
@@ -185,7 +225,7 @@ class DefaultPermissionRemoveModel(PermissionRemoveModel):
 @dataclass
 class PermissionMassEditModel(PermissionEditModel):
     ids: list[int]
-    action: EditOption = field(metadata={'by_value': True})
+    action: EditOption = field(metadata={"by_value": True})
 
 
 @manage_page.put("/permissions/add")
@@ -197,18 +237,18 @@ def add_permission(m: PermissionSingleEditModel):
     if accs:
         a = accs[0]
         check_ownership_loss(is_owner, i)
-        log_right(f'added {a.info_str} for {seq_to_str(m.groups)} in {i.path}')
+        log_right(f"added {a.info_str} for {seq_to_str(m.groups)} in {i.path}")
         db.session.commit()
     return permission_response(m)
 
 
 def permission_response(m: PermissionEditModel):
-    return json_response({'not_exist': m.nonexistent_groups})
+    return json_response({"not_exist": m.nonexistent_groups})
 
 
 def log_right(s: str):
     u = get_current_user_object()
-    log_info(f'RIGHTS: {u.name} {s}')
+    log_info(f"RIGHTS: {u.name} {s}")
 
 
 def get_group_and_doc(doc_id: int, username: str) -> tuple[UserGroup, DocInfo]:
@@ -216,7 +256,7 @@ def get_group_and_doc(doc_id: int, username: str) -> tuple[UserGroup, DocInfo]:
     verify_permission_edit_access(i, AccessType.view)
     g = UserGroup.get_by_name(username)
     if not g:
-        raise RouteException('User not found')
+        raise RouteException("User not found")
     return g, i
 
 
@@ -229,9 +269,9 @@ def expire_permission_url(doc_id: int, username: str):
         usergroup_id=g.id,
     ).first()
     if not ba:
-        raise RouteException('Right not found.')
+        raise RouteException("Right not found.")
     if ba.expired:
-        raise RouteException('Right is already expired.')
+        raise RouteException("Right is already expired.")
     ba.accessible_to = get_current_time()
     if ba.duration:
         ba.duration = None
@@ -263,14 +303,14 @@ def do_confirm_permission(m: PermissionRemoveModel, i: DocInfo):
         usergroup_id=m.group,
     ).first()
     if not ba:
-        raise RouteException('Right not found.')
+        raise RouteException("Right not found.")
     if not ba.require_confirm:
         raise RouteException(
-            f'{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed.'
+            f"{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed."
         )
     ba.do_confirm()
     ug: UserGroup = UserGroup.query.get(m.group)
-    log_right(f'confirmed {ba.info_str} for {ug.name} in {i.path}')
+    log_right(f"confirmed {ba.info_str} for {ug.name} in {i.path}")
     db.session.commit()
     return ok_response()
 
@@ -281,10 +321,15 @@ def edit_permissions(m: PermissionMassEditModel):
     groups = m.group_objects
     nonexistent = set(m.groups) - {g.name for g in groups}
     if nonexistent:
-        raise RouteException(f'Non-existent groups: {nonexistent}')
-    items = Block.query \
-        .filter(Block.id.in_(m.ids) & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])) \
-        .order_by(Block.id).all()
+        raise RouteException(f"Non-existent groups: {nonexistent}")
+    items = (
+        Block.query.filter(
+            Block.id.in_(m.ids)
+            & Block.type_id.in_([BlockType.Document.value, BlockType.Folder.value])
+        )
+        .order_by(Block.id)
+        .all()
+    )
     a = None
     owned_items_before = set()
     for i in items:
@@ -306,23 +351,23 @@ def edit_permissions(m: PermissionMassEditModel):
             if u.has_ownership(i):
                 owned_items_after.add(i)
         if owned_items_before != owned_items_after:
-            raise AccessDenied('You cannot remove ownership from yourself.')
+            raise AccessDenied("You cannot remove ownership from yourself.")
     if a:
-        action = 'added' if m.action == EditOption.Add else 'removed'
+        action = "added" if m.action == EditOption.Add else "removed"
         log_right(
-            f'{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}'
+            f"{action} {a.info_str} for {seq_to_str(m.groups)} in blocks: {seq_to_str(list(str(x) for x in m.ids))}"
         )
         db.session.commit()
     return permission_response(m)
 
 
 def add_perm(
-        p: PermissionEditModel,
-        item: Item,
+    p: PermissionEditModel,
+    item: Item,
 ) -> list[BlockAccess]:
     if get_current_user_object().get_personal_folder().id == item.id:
         if p.type == AccessType.owner:
-            raise AccessDenied('You cannot add owners to your personal folder.')
+            raise AccessDenied("You cannot add owners to your personal folder.")
     opt = p.time.effective_opt
     accs = []
     for group in p.group_objects:
@@ -348,11 +393,11 @@ def remove_permission(m: PermissionRemoveModel):
     had_ownership = verify_permission_edit_access(i, m.type)
     ug: UserGroup = UserGroup.query.get(m.group)
     if not ug:
-        raise RouteException('User group not found')
+        raise RouteException("User group not found")
     a = remove_perm(ug, i.block, m.type)
     check_ownership_loss(had_ownership, i)
 
-    log_right(f'removed {a.info_str} for {ug.name} in {i.path}')
+    log_right(f"removed {a.info_str} for {ug.name} in {i.path}")
     db.session.commit()
     return ok_response()
 
@@ -360,7 +405,7 @@ def remove_permission(m: PermissionRemoveModel):
 @dataclass
 class PermissionClearModel:
     paths: list[str]
-    type: AccessType = field(metadata={'by_value': True})
+    type: AccessType = field(metadata={"by_value": True})
 
 
 @manage_page.put("/permissions/clear")
@@ -371,11 +416,12 @@ def clear_permissions(m: PermissionClearModel):
         if not i:
             i = Folder.find_by_path(p)
         if not i:
-            raise RouteException(f'Item not found: {p}')
+            raise RouteException(f"Item not found: {p}")
         verify_ownership(i)
         i.block.accesses = {
-            (ugid, permtype): v for (ugid, permtype), v in i.block.accesses.items() if
-            permtype != m.type.value
+            (ugid, permtype): v
+            for (ugid, permtype), v in i.block.accesses.items()
+            if permtype != m.type.value
         }
     db.session.commit()
     return ok_response()
@@ -395,7 +441,7 @@ def self_expire_permission(m: SelfExpireModel):
         return ok_response()
     acc = get_single_view_access(i)
     acc.accessible_to = get_current_time()
-    log_right(f'self-expired view access in {i.path}')
+    log_right(f"self-expired view access in {i.path}")
     db.session.commit()
     return ok_response()
 
@@ -408,7 +454,7 @@ def check_ownership_loss(had_ownership, item):
     db.session.flush()
     db.session.refresh(item)
     if had_ownership and not has_ownership(item):
-        raise AccessDenied('You cannot remove ownership from yourself.')
+        raise AccessDenied("You cannot remove ownership from yourself.")
 
 
 @manage_page.get("/alias/<int:doc_id>")
@@ -422,11 +468,13 @@ def get_doc_names(doc_id):
 def add_alias(doc_id, new_alias):
     d = get_doc_or_abort(doc_id)
     verify_manage_access(d)
-    is_public, = verify_json_params('public', require=False, default=True)
+    (is_public,) = verify_json_params("public", require=False, default=True)
 
-    new_alias = new_alias.strip('/')
+    new_alias = new_alias.strip("/")
 
-    validate_item_and_create_intermediate_folders(new_alias, BlockType.Document, get_current_user_group_object())
+    validate_item_and_create_intermediate_folders(
+        new_alias, BlockType.Document, get_current_user_group_object()
+    )
     d.add_alias(new_alias, is_public)
     db.session.commit()
     return ok_response()
@@ -434,38 +482,44 @@ def add_alias(doc_id, new_alias):
 
 @manage_page.post("/alias/<path:alias>")
 def change_alias(alias):
-    alias = alias.strip('/')
-    new_alias, = verify_json_params('new_name')
-    new_alias = new_alias.strip('/')
-    is_public, = verify_json_params('public', require=False, default=True)
+    alias = alias.strip("/")
+    (new_alias,) = verify_json_params("new_name")
+    new_alias = new_alias.strip("/")
+    (is_public,) = verify_json_params("public", require=False, default=True)
 
     doc = DocEntry.find_by_path(alias, try_translation=False)
     if doc is None:
-        raise NotExist('The document does not exist!')
+        raise NotExist("The document does not exist!")
 
     verify_manage_access(doc)
 
     if alias != new_alias:
         src_f = Folder.find_first_existing(alias)
         if not get_current_user_object().can_write_to_folder(src_f):
-            raise AccessDenied("You don't have permission to write to the source folder.")
-        validate_item_and_create_intermediate_folders(new_alias, BlockType.Document, get_current_user_group_object())
+            raise AccessDenied(
+                "You don't have permission to write to the source folder."
+            )
+        validate_item_and_create_intermediate_folders(
+            new_alias, BlockType.Document, get_current_user_group_object()
+        )
 
     doc.name = new_alias
     doc.public = is_public
     if all(not a.public for a in doc.aliases):
-        raise RouteException('This is the only visible name for this document, so you cannot make it invisible.')
+        raise RouteException(
+            "This is the only visible name for this document, so you cannot make it invisible."
+        )
     db.session.commit()
     return ok_response()
 
 
 @manage_page.delete("/alias/<path:alias>")
 def remove_alias(alias):
-    alias = alias.strip('/')
+    alias = alias.strip("/")
 
     doc = DocEntry.find_by_path(alias, try_translation=False)
     if doc is None:
-        raise NotExist('The document does not exist!')
+        raise NotExist("The document does not exist!")
 
     verify_manage_access(doc)
 
@@ -483,11 +537,11 @@ def remove_alias(alias):
 
 @manage_page.put("/rename/<int:item_id>")
 def rename_folder(item_id):
-    new_name = request.get_json()['new_name'].strip('/')
+    new_name = request.get_json()["new_name"].strip("/")
 
     d = DocEntry.find_by_id(item_id)
     if d:
-        raise AccessDenied('Rename route is no longer supported for documents.')
+        raise AccessDenied("Rename route is no longer supported for documents.")
 
     f = get_folder_or_abort(item_id)
     verify_manage_access(f)
@@ -506,7 +560,7 @@ def rename_folder(item_id):
 
     f.rename_path(new_name)
     db.session.commit()
-    return json_response({'new_name': new_name})
+    return json_response({"new_name": new_name})
 
 
 @manage_page.get("/permissions/get/<int:item_id>")
@@ -514,11 +568,14 @@ def get_permissions(item_id):
     i = get_item_or_abort(item_id)
     verify_manage_access(i)
     grouprights = get_rights_holders(item_id)
-    return json_response({
-        'grouprights': grouprights,
-        'accesstypes': AccessTypeModel.query.all(),
-        'orgs': UserGroup.get_organizations(),
-    }, date_conversion=True)
+    return json_response(
+        {
+            "grouprights": grouprights,
+            "accesstypes": AccessTypeModel.query.all(),
+            "orgs": UserGroup.get_organizations(),
+        },
+        date_conversion=True,
+    )
 
 
 @manage_page.get("/defaultPermissions/<object_type>/get/<int:folder_id>")
@@ -526,7 +583,7 @@ def get_default_document_permissions(folder_id, object_type):
     f = get_folder_or_abort(folder_id)
     verify_manage_access(f)
     grouprights = get_default_rights_holders(f, BlockType.from_str(object_type))
-    return json_response({'grouprights': grouprights}, date_conversion=True)
+    return json_response({"grouprights": grouprights}, date_conversion=True)
 
 
 @manage_page.put("/defaultPermissions/add")
@@ -557,7 +614,7 @@ def remove_default_doc_permission(m: DefaultPermissionRemoveModel):
     verify_permission_edit_access(f, m.type)
     ug = UserGroup.query.get(m.group)
     if not ug:
-        raise NotExist('Usergroup not found')
+        raise NotExist("Usergroup not found")
     remove_default_access(ug, f, m.type, BlockType.from_str(m.item_type.name))
     db.session.commit()
     return ok_response()
@@ -589,13 +646,17 @@ def del_document(doc_id):
     return ok_response()
 
 
-TRASH_FOLDER_PATH = f'roskis'
+TRASH_FOLDER_PATH = f"roskis"
 
 
 def get_trash_folder() -> Folder:
     f = Folder.find_by_path(TRASH_FOLDER_PATH)
     if not f:
-        f = Folder.create(TRASH_FOLDER_PATH, owner_groups=UserGroup.get_admin_group(), title='Roskakori')
+        f = Folder.create(
+            TRASH_FOLDER_PATH,
+            owner_groups=UserGroup.get_admin_group(),
+            title="Roskakori",
+        )
     return f
 
 
@@ -603,11 +664,11 @@ def get_trash_folder() -> Folder:
 def delete_folder(folder_id):
     f = get_folder_or_abort(folder_id)
     verify_ownership(f)
-    if f.location == 'users':
-        raise AccessDenied('Personal folders cannot be deleted.')
+    if f.location == "users":
+        raise AccessDenied("Personal folders cannot be deleted.")
     trash = get_trash_folder()
     if f.location == trash.path:
-        raise RouteException('Folder is already deleted.')
+        raise RouteException("Folder is already deleted.")
     trash_path = find_free_name(trash, f)
     f.rename_path(trash_path)
     db.session.commit()
@@ -618,7 +679,7 @@ def delete_folder(folder_id):
 def change_title(item_id):
     item = get_item_or_abort(item_id)
     verify_edit_access(item)
-    new_title, = verify_json_params('new_title')
+    (new_title,) = verify_json_params("new_title")
     item.title = new_title
     db.session.commit()
     return ok_response()
@@ -626,11 +687,11 @@ def change_title(item_id):
 
 def get_copy_folder_params(folder_id):
     f = get_folder_or_abort(folder_id)
-    verify_copy_access(f, message=f'Missing copy access to folder {f.path}')
-    dest, exclude = verify_json_params('destination', 'exclude')
+    verify_copy_access(f, message=f"Missing copy access to folder {f.path}")
+    dest, exclude = verify_json_params("destination", "exclude")
     compiled = get_pattern(exclude)
     if path_includes(dest, f.path):
-        raise AccessDenied('Cannot copy folder inside of itself.')
+        raise AccessDenied("Cannot copy folder inside of itself.")
     return f, dest, compiled
 
 
@@ -641,7 +702,9 @@ def copy_folder_endpoint(folder_id):
     nf = Folder.find_by_path(dest)
     if not nf:
         validate_item_and_create_intermediate_folders(dest, BlockType.Folder, o)
-        nf = Folder.create(dest, o, creation_opts=FolderCreationOptions(apply_default_rights=True))
+        nf = Folder.create(
+            dest, o, creation_opts=FolderCreationOptions(apply_default_rights=True)
+        )
     u = get_current_user_object()
     copy_folder(f, nf, u, compiled)
     db.session.commit()
@@ -650,11 +713,11 @@ def copy_folder_endpoint(folder_id):
 
 def get_pattern(exclude: str):
     if not exclude:
-        exclude = 'a^'
+        exclude = "a^"
     try:
         return re.compile(exclude)
     except:
-        raise RouteException(f'Wrong pattern format: {exclude}')
+        raise RouteException(f"Wrong pattern format: {exclude}")
 
 
 @manage_page.post("/copy/<int:folder_id>/preview")
@@ -662,14 +725,18 @@ def copy_folder_preview(folder_id):
     f, dest, compiled = get_copy_folder_params(folder_id)
     preview_list = []
     for i in enum_items(f, compiled):
-        preview_list.append({
-            'to': join_location(dest, i.get_relative_path(f.path)),
-            'from': i.path,
-        })
-    return json_response({
-        'preview': preview_list,
-        'dest_exists': Folder.find_by_path(dest) is not None,
-    })
+        preview_list.append(
+            {
+                "to": join_location(dest, i.get_relative_path(f.path)),
+                "from": i.path,
+            }
+        )
+    return json_response(
+        {
+            "preview": preview_list,
+            "dest_exists": Folder.find_by_path(dest) is not None,
+        }
+    )
 
 
 def enum_items(folder: Folder, exclude_re) -> Generator[Item, None, None]:
@@ -685,18 +752,18 @@ def enum_items(folder: Folder, exclude_re) -> Generator[Item, None, None]:
 def copy_folder(f_from: Folder, f_to: Folder, user_who_copies: User, exclude_re):
     db.session.flush()
     if not user_who_copies.can_write_to_folder(f_to):
-        raise AccessDenied(f'Missing edit access to folder {f_to.path}')
+        raise AccessDenied(f"Missing edit access to folder {f_to.path}")
     if not user_who_copies.has_copy_access(f_from):
-        raise AccessDenied(f'Missing copy access to folder {f_from.path}')
+        raise AccessDenied(f"Missing copy access to folder {f_from.path}")
     folder_opts = FolderCreationOptions(get_templates_rights_from_parent=False)
     for d in f_from.get_all_documents(include_subdirs=False):
         if exclude_re.search(d.path):
             continue
         if not user_who_copies.has_copy_access(d):
-            raise AccessDenied(f'Missing copy access to document {d.path}')
+            raise AccessDenied(f"Missing copy access to document {d.path}")
         nd_path = join_location(f_to.path, d.short_name)
         if DocEntry.find_by_path(nd_path):
-            raise AccessDenied(f'Document already exists at path {nd_path}')
+            raise AccessDenied(f"Document already exists at path {nd_path}")
         nd = DocEntry.create(
             nd_path,
             title=d.title,

@@ -3,26 +3,50 @@ from typing import Optional, Any
 from flask import Response
 from sqlalchemy.orm import load_only
 
-from timApp.auth.accesshelper import verify_logged_in, has_manage_access, get_doc_or_abort, verify_manage_access, \
-    verify_view_access
+from timApp.auth.accesshelper import (
+    verify_logged_in,
+    has_manage_access,
+    get_doc_or_abort,
+    verify_manage_access,
+    verify_view_access,
+)
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document, DocInfo
 from timApp.folder.folder import Folder
 from timApp.item.manage import get_trash_folder
-from timApp.messaging.messagelist.emaillist import create_new_email_list, \
-    delete_email_list, verify_emaillist_name_requirements, get_domain_names, verify_mailman_connection
+from timApp.messaging.messagelist.emaillist import (
+    create_new_email_list,
+    delete_email_list,
+    verify_emaillist_name_requirements,
+    get_domain_names,
+    verify_mailman_connection,
+)
 from timApp.messaging.messagelist.emaillist import get_email_list_by_name
 from timApp.messaging.messagelist.listinfo import ListInfo, MemberInfo, GroupAndMembers
 from timApp.messaging.messagelist.messagelist_models import MessageListModel
-from timApp.messaging.messagelist.messagelist_utils import verify_messagelist_name_requirements, new_list, \
-    set_message_list_notify_owner_on_change, \
-    set_message_list_member_can_unsubscribe, set_message_list_subject_prefix, set_message_list_tim_users_can_join, \
-    set_message_list_default_send_right, set_message_list_default_delivery_right, set_message_list_only_text, \
-    set_message_list_non_member_message_pass, set_message_list_allow_attachments, set_message_list_default_reply_type, \
-    add_new_message_list_group, add_message_list_external_email_member, \
-    set_message_list_member_removed_status, set_member_send_delivery, set_message_list_description, \
-    set_message_list_info, check_name_rules, verify_can_create_lists
+from timApp.messaging.messagelist.messagelist_utils import (
+    verify_messagelist_name_requirements,
+    new_list,
+    set_message_list_notify_owner_on_change,
+    set_message_list_member_can_unsubscribe,
+    set_message_list_subject_prefix,
+    set_message_list_tim_users_can_join,
+    set_message_list_default_send_right,
+    set_message_list_default_delivery_right,
+    set_message_list_only_text,
+    set_message_list_non_member_message_pass,
+    set_message_list_allow_attachments,
+    set_message_list_default_reply_type,
+    add_new_message_list_group,
+    add_message_list_external_email_member,
+    set_message_list_member_removed_status,
+    set_member_send_delivery,
+    set_message_list_description,
+    set_message_list_info,
+    check_name_rules,
+    verify_can_create_lists,
+)
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
@@ -31,23 +55,20 @@ from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_error
 from timApp.util.utils import is_valid_email, get_current_time
 
-messagelist = TypedBlueprint('messagelist', __name__, url_prefix='/messagelist')
+messagelist = TypedBlueprint("messagelist", __name__, url_prefix="/messagelist")
 
 
-@messagelist.route('/checkname', methods=['POST'])
+@messagelist.route("/checkname", methods=["POST"])
 def check_name(name: str) -> Response:
     verify_logged_in()
     verify_can_create_lists()
 
     rule_fails = check_name_rules(name)
     exists = MessageListModel.name_exists(name)
-    return json_response({
-        'rule_fails': list(rule_fails),
-        'exists': exists
-    })
+    return json_response({"rule_fails": list(rule_fails), "exists": exists})
 
 
-@messagelist.post('/createlist')
+@messagelist.post("/createlist")
 def create_list(options: ListInfo) -> Response:
     """Handles creating a new message list.
 
@@ -121,13 +142,19 @@ def delete_list(listname: str, permanent: bool) -> Response:
     verify_logged_in()
     message_list = MessageListModel.from_name(listname)
     if not has_manage_access(message_list.block):
-        raise RouteException("You need at least a manage access to the list in order to do this action.")
+        raise RouteException(
+            "You need at least a manage access to the list in order to do this action."
+        )
 
     # The amount of docentries a message list's block relationship refers to should be one. If not, something is
     # terribly wrong.
     if len(message_list.block.docentries) > 1:
-        log_error(f"Message list '{listname}' has multiple docentries to its block relationship.")
-        raise RouteException("Can't perform deletion at this time. The problem has been logged for admins.")
+        log_error(
+            f"Message list '{listname}' has multiple docentries to its block relationship."
+        )
+        raise RouteException(
+            "Can't perform deletion at this time. The problem has been logged for admins."
+        )
 
     # Perform deletion.
     if permanent:
@@ -141,7 +168,9 @@ def delete_list(listname: str, permanent: bool) -> Response:
     if message_list.email_list_domain:
         # A message list has a domain, so we are also looking to delete an email list.
         verify_mailman_connection()
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
         delete_email_list(email_list, permanent_deletion=permanent)
 
     db.session.commit()
@@ -175,7 +204,9 @@ def save_list_options(options: ListInfo) -> Response:
     verify_logged_in()
     message_list = MessageListModel.from_name(options.name)
     if not has_manage_access(message_list.block):
-        raise RouteException("You need at least a manange access to the list in order to do this action.")
+        raise RouteException(
+            "You need at least a manange access to the list in order to do this action."
+        )
 
     if message_list.archive_policy != options.archive:
         # TODO: If message list changes its archive policy, the members on the list need to be notified. Insert
@@ -184,15 +215,23 @@ def save_list_options(options: ListInfo) -> Response:
 
     set_message_list_description(message_list, options.list_description)
     set_message_list_info(message_list, options.list_info)
-    set_message_list_notify_owner_on_change(message_list, options.notify_owners_on_list_change)
-    set_message_list_member_can_unsubscribe(message_list, options.members_can_unsubscribe)
+    set_message_list_notify_owner_on_change(
+        message_list, options.notify_owners_on_list_change
+    )
+    set_message_list_member_can_unsubscribe(
+        message_list, options.members_can_unsubscribe
+    )
     set_message_list_subject_prefix(message_list, options.list_subject_prefix)
     set_message_list_only_text(message_list, options.only_text)
     set_message_list_allow_attachments(message_list, options.allow_attachments)
     set_message_list_tim_users_can_join(message_list, options.tim_users_can_join)
-    set_message_list_non_member_message_pass(message_list, options.non_member_message_pass)
+    set_message_list_non_member_message_pass(
+        message_list, options.non_member_message_pass
+    )
     set_message_list_default_send_right(message_list, options.default_send_right)
-    set_message_list_default_delivery_right(message_list, options.default_delivery_right)
+    set_message_list_default_delivery_right(
+        message_list, options.default_delivery_right
+    )
     set_message_list_default_reply_type(message_list, options.default_reply_type)
 
     db.session.commit()
@@ -211,22 +250,30 @@ def save_members(listname: str, members: list[MemberInfo]) -> Response:
     verify_logged_in()
     message_list = MessageListModel.from_name(listname)
     if not has_manage_access(message_list.block):
-        raise RouteException("You need at least a manage access to the list to do this action.")
+        raise RouteException(
+            "You need at least a manage access to the list to do this action."
+        )
 
     email_list = None
     if message_list.email_list_domain:
         # If there is a domain configured for a list and the Mailman connection is not configured, we can't continue
         # at this time.
         verify_mailman_connection()
-        email_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        email_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
 
     for member in members:
         db_member = message_list.find_member(member.username, member.email)
         # This if mostly guards against type errors, but what if we legitimely can't find them? They are given from
         # the db in the first place. Is there a reasonable way to communicate this state?
         if db_member:
-            set_member_send_delivery(db_member, member.sendRight, member.deliveryRight, email_list=email_list)
-            set_message_list_member_removed_status(db_member, member.removed, email_list=email_list)
+            set_member_send_delivery(
+                db_member, member.sendRight, member.deliveryRight, email_list=email_list
+            )
+            set_message_list_member_removed_status(
+                db_member, member.removed, email_list=email_list
+            )
     db.session.commit()
     return ok_response()
 
@@ -245,7 +292,7 @@ def parse_external_member(external_member_candidate: str) -> Optional[list[str]]
     return None.
     """
     # Split the name candidate to a list for processing.
-    words = external_member_candidate.strip().split(' ')
+    words = external_member_candidate.strip().split(" ")
 
     # Check if the first word is the email.
     if is_valid_email(words[0]):
@@ -267,7 +314,9 @@ def parse_external_member(external_member_candidate: str) -> Optional[list[str]]
 
 
 @messagelist.post("/addmember")
-def add_member(member_candidates: list[str], msg_list: str, send_right: bool, delivery_right: bool) -> Response:
+def add_member(
+    member_candidates: list[str], msg_list: str, send_right: bool, delivery_right: bool
+) -> Response:
     """Add new members to a message list.
 
     :param member_candidates: Names of member candidates.
@@ -280,7 +329,9 @@ def add_member(member_candidates: list[str], msg_list: str, send_right: bool, de
     verify_logged_in()
     message_list = MessageListModel.from_name(msg_list)
     if not has_manage_access(message_list.block):
-        raise RouteException("You need at least a manage access to the list to do this action.")
+        raise RouteException(
+            "You need at least a manage access to the list to do this action."
+        )
 
     # TODO: Implement checking whether or not users are just added to a list (like they are now) or they are invited
     #  to a list (requires link generation and other things).
@@ -288,14 +339,18 @@ def add_member(member_candidates: list[str], msg_list: str, send_right: bool, de
     em_list = None
     if message_list.email_list_domain is not None:
         verify_mailman_connection()
-        em_list = get_email_list_by_name(message_list.name, message_list.email_list_domain)
+        em_list = get_email_list_by_name(
+            message_list.name, message_list.email_list_domain
+        )
 
     for member_candidate in member_candidates:
         # For user groups and individual users.
         ug = UserGroup.get_by_name(member_candidate.strip())
         if ug is not None:
             # The name belongs to a user group.
-            add_new_message_list_group(message_list, ug, send_right, delivery_right, em_list)
+            add_new_message_list_group(
+                message_list, ug, send_right, delivery_right, em_list
+            )
 
         # For external members.
         # If member candidate is not a user, or a user group, then we assume an external member. Add external members.
@@ -308,9 +363,15 @@ def add_member(member_candidates: list[str], msg_list: str, send_right: bool, de
                 # Construct an optional display name by joining all the other words given on the line that are not
                 # the email address. Remove possible white space between the email address and the first part of a
                 # display name. Other white space within the name is left as is.
-                dname = ' '.join(external_member[1:]).lstrip()
-            add_message_list_external_email_member(message_list, external_member[0],
-                                                   send_right, delivery_right, em_list, display_name=dname)
+                dname = " ".join(external_member[1:]).lstrip()
+            add_message_list_external_email_member(
+                message_list,
+                external_member[0],
+                send_right,
+                delivery_right,
+                em_list,
+                display_name=dname,
+            )
     db.session.commit()
     return ok_response()
 
@@ -341,7 +402,9 @@ def get_group_members(list_name: str) -> Response:
     verify_logged_in()
     message_list = MessageListModel.from_name(list_name)
     if not has_manage_access(message_list.block):
-        raise RouteException("Only an owner of this list can see the members of this group.")
+        raise RouteException(
+            "Only an owner of this list can see the members of this group."
+        )
 
     # Get group.
     groups = [member for member in message_list.members if member.is_group()]
@@ -352,10 +415,17 @@ def get_group_members(list_name: str) -> Response:
         user_group: UserGroup = group.user_group
         # Create a MemberInfo object for every current user in the group. As these are current members of the user
         # group, removed is None.
-        group_members = [MemberInfo(name=user.real_name, username=user.name,
-                                    sendRight=group.send_right, deliveryRight=group.delivery_right,
-                                    removed=None, email=user.email)
-                         for user in user_group.users]
+        group_members = [
+            MemberInfo(
+                name=user.real_name,
+                username=user.name,
+                sendRight=group.send_right,
+                deliveryRight=group.delivery_right,
+                removed=None,
+                email=user.email,
+            )
+            for user in user_group.users
+        ]
         gm = GroupAndMembers(groupName=user_group.name, members=group_members)
         groups_and_members.append(gm)
     return json_response(groups_and_members)
@@ -383,12 +453,13 @@ def get_sibling_archive_messages(message_doc_id: int) -> Response:
             next_doc = doc
 
     def to_json(d: Optional[DocInfo]) -> Optional[dict[str, Any]]:
-        return {
-            "title": d.title,
-            "path": d.path,
-        } if d else None
+        return (
+            {
+                "title": d.title,
+                "path": d.path,
+            }
+            if d
+            else None
+        )
 
-    return json_response({
-        "next": to_json(next_doc),
-        "prev": to_json(prev_doc)
-    })
+    return json_response({"next": to_json(next_doc), "prev": to_json(prev_doc)})

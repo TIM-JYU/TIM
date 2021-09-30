@@ -10,15 +10,18 @@ class AngularComponent(Loadable):
     template: str = ""
     component: str = "class {}"
 
+
 @dataclass
 class AngularModule(Loadable):
     components: dict[str, AngularComponent] = field(default_factory=dict)
     entry: str = ""
 
+
 @dataclass
 class DivContent(Loadable):
     classes: str = ""
     content: str = ""
+
 
 @dataclass
 class OutputContainer(Loadable):
@@ -26,7 +29,8 @@ class OutputContainer(Loadable):
     text: Optional[DivContent] = None
     angular: Optional[AngularModule] = None
     html: Optional[DivContent] = None
-    hide: bool = False # whether to hide by default
+    hide: bool = False  # whether to hide by default
+
 
 @dataclass
 class RunResult(Loadable):

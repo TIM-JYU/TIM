@@ -4,10 +4,12 @@ from timApp.document.docparagraph import DocParagraph
 
 
 class DocumentEditResult:
-    def __init__(self,
-                 added: Optional[list[DocParagraph]]=None,
-                 deleted: Optional[list[DocParagraph]]=None,
-                 changed: Optional[list[DocParagraph]]=None):
+    def __init__(
+        self,
+        added: Optional[list[DocParagraph]] = None,
+        deleted: Optional[list[DocParagraph]] = None,
+        changed: Optional[list[DocParagraph]] = None,
+    ):
         self.added: list[DocParagraph] = added or []
         self.deleted: list[DocParagraph] = deleted or []
         self.changed: list[DocParagraph] = changed or []

@@ -14,7 +14,9 @@ class TestFindInlinePlugins(TestCase):
             self.assertEqual("yhtpisteet2", p_task_id.s, "Not same task_id")
             self.assertEqual(
                 " autosave: true,\ninputstem: Pisteet yhteensä, verticalkeys: true, header: '*kana*', stem: '[Puh]{.red}'",
-                p_yaml, "Not same yaml")
+                p_yaml,
+                "Not same yaml",
+            )
             self.assertEqual("(7, 125)", str(p_range), "Not same range")
 
     def test_find_inline_plugins2(self):
@@ -47,7 +49,9 @@ class TestFindInlinePlugins(TestCase):
         r1 = find_inline_plugins_from_str(s1)
         for p_task_id, p_yaml, p_range, md in r1:
             self.assertEqual("test:dropdown", p_task_id.s, "Not same task_id")
-            self.assertEqual(" words: [option 1, option 2, option 3]", p_yaml, "Not same yaml")
+            self.assertEqual(
+                " words: [option 1, option 2, option 3]", p_yaml, "Not same yaml"
+            )
             self.assertEqual("(0, 55)", str(p_range), "Not same range")
 
     def test_find_inline_plugins5(self):

@@ -12,28 +12,32 @@ def fix_imagex_freehanddata(doc: DocInfo, args: DryrunnableArguments) -> int:
     :param args: The arguments.
     """
     errors = 0
-    answers: list[Answer] = Answer.query.filter(Answer.task_id.startswith(f'{doc.id}.')).all()
+    answers: list[Answer] = Answer.query.filter(
+        Answer.task_id.startswith(f"{doc.id}.")
+    ).all()
     for a in answers:
         data = a.content_as_json
-        freehanddata = data.get('freeHandData')
+        freehanddata = data.get("freeHandData")
         if not freehanddata:
             continue
-        print(f'Processing imagex answer: {a.id} {a.task_id} {a.answered_on}')
+        print(f"Processing imagex answer: {a.id} {a.task_id} {a.answered_on}")
         valid_data = []
         answer_has_errors = False
         for f in freehanddata:
-            lines = f['lines']
+            lines = f["lines"]
             if len(lines) == 1 and lines[0][0] is None:
                 answer_has_errors = True
                 errors += 1
-                print(f'Invalid lines in answer {a.id}')
+                print(f"Invalid lines in answer {a.id}")
             else:
                 valid_data.append(f)
         if answer_has_errors:
-            data['freeHandData'] = valid_data
+            data["freeHandData"] = valid_data
             a.content = json.dumps(data)
     return errors
 
 
-if __name__ == '__main__':
-    process_items(fix_imagex_freehanddata, create_argparser('Fixes invalid imagex freehanddata'))
+if __name__ == "__main__":
+    process_items(
+        fix_imagex_freehanddata, create_argparser("Fixes invalid imagex freehanddata")
+    )

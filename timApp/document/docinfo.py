@@ -7,7 +7,11 @@ from sqlalchemy.orm import joinedload
 
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
-from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PREAMBLE_FOLDER_NAME, DEFAULT_PREAMBLE_DOC
+from timApp.document.specialnames import (
+    TEMPLATE_FOLDER_NAME,
+    PREAMBLE_FOLDER_NAME,
+    DEFAULT_PREAMBLE_DOC,
+)
 from timApp.item.item import Item
 from timApp.notification.notification import Notification
 from timApp.timdb.sqa import db
@@ -48,25 +52,28 @@ class DocInfo(Item):
         if self.is_original_translation:
             return self
         from timApp.document.docentry import DocEntry
+
         return DocEntry.find_by_id(self.src_docid)
 
     @property
     def aliases(self):
         from timApp.document.docentry import DocEntry
+
         return DocEntry.find_all_by_id(self.src_docid)
 
     @property
     def document(self) -> Document:
         """Returns the corresponding Document object."""
-        if getattr(self, '_doc', None) is None:
+        if getattr(self, "_doc", None) is None:
             self._doc = Document(self.id)
             self._doc.docinfo = self
         return self._doc
 
     @property
     def document_as_current_user(self) -> Document:
-        if getattr(self, '_doc', None) is None:
+        if getattr(self, "_doc", None) is None:
             from timApp.auth.sessioninfo import get_current_user_group
+
             self._doc = Document(self.id, modifier_group_id=get_current_user_group())
             self._doc.docinfo = self
         return self._doc
@@ -91,9 +98,15 @@ class DocInfo(Item):
         """Gets the list of preamble documents for this document.
         The first document in the list is nearest root.
         """
-        if getattr(self, '_preamble_docs', None) is None:
-            preamble_setting = self.document.get_own_settings().get('preamble', DEFAULT_PREAMBLE_DOC)
-            self._preamble_docs = self._get_preamble_docs_impl(preamble_setting) if isinstance(preamble_setting, str) else []
+        if getattr(self, "_preamble_docs", None) is None:
+            preamble_setting = self.document.get_own_settings().get(
+                "preamble", DEFAULT_PREAMBLE_DOC
+            )
+            self._preamble_docs = (
+                self._get_preamble_docs_impl(preamble_setting)
+                if isinstance(preamble_setting, str)
+                else []
+            )
         return self._preamble_docs
 
     def get_preamble_pars_with_class(self, class_names: list[str]):
@@ -108,12 +121,13 @@ class DocInfo(Item):
         return get_non_settings_pars_from_docs(self.get_preamble_docs())
 
     def _get_preamble_docs_impl(self, preamble_setting: str) -> list[DocInfo]:
-        preamble_names = preamble_setting.split(',')
-        path_parts = self.path_without_lang.split('/')
+        preamble_names = preamble_setting.split(",")
+        path_parts = self.path_without_lang.split("/")
         paths = list(
-            f'{p}{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}' for
-            p in
-            accumulate(part + '/' for part in path_parts[:-1]) for preamble_name in preamble_names)
+            f"{p}{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/{preamble_name.strip()}"
+            for p in accumulate(part + "/" for part in path_parts[:-1])
+            for preamble_name in preamble_names
+        )
         if not paths:
             return []
 
@@ -125,10 +139,17 @@ class DocInfo(Item):
 
         from timApp.document.docentry import DocEntry
         from timApp.document.translation.translation import Translation
-        result = db.session.query(DocEntry, Translation).filter(
-            DocEntry.name.in_(paths)).outerjoin(Translation,
-                                                (Translation.src_docid == DocEntry.id) & (
-                                                    Translation.lang_id == self.lang_id)).all()  # type: List[Tuple[DocEntry, Optional[Translation]]]
+
+        result = (
+            db.session.query(DocEntry, Translation)
+            .filter(DocEntry.name.in_(paths))
+            .outerjoin(
+                Translation,
+                (Translation.src_docid == DocEntry.id)
+                & (Translation.lang_id == self.lang_id),
+            )
+            .all()
+        )  # type: List[Tuple[DocEntry, Optional[Translation]]]
         result.sort(key=lambda x: path_index_map[x[0].path])
         preamble_docs = []
         for de, tr in result:
@@ -139,7 +160,7 @@ class DocInfo(Item):
 
     def get_changelog_with_names(self, length=None):
         if not length:
-            length = getattr(self, 'changelog_length', 100)
+            length = getattr(self, "changelog_length", 100)
         return self.document.get_changelog(length)
 
     def get_notifications(self, condition) -> list[Notification]:
@@ -148,9 +169,10 @@ class DocInfo(Item):
             items.update(a.parents_to_root())
         items.add(self)
         from timApp.user.user import User
-        q = (Notification.query
-             .options(joinedload(Notification.user).joinedload(User.groups))
-             .filter(Notification.doc_id.in_([f.id for f in items])))
+
+        q = Notification.query.options(
+            joinedload(Notification.user).joinedload(User.groups)
+        ).filter(Notification.doc_id.in_([f.id for f in items]))
         q = q.filter(condition)
         return q.all()
 
@@ -162,25 +184,37 @@ class DocInfo(Item):
 
     def add_alias(self, new_name, is_public):
         from timApp.document.docentry import DocEntry
+
         d = DocEntry(id=self.src_docid, name=new_name, public=is_public)
         db.session.add(d)
 
     def to_json(self, **kwargs):
-        return {**super().to_json(**kwargs),
-                'isFolder': False,
-                **({'versions': self.get_changelog_with_names(),
-                    'fulltext': self.document.export_markdown()} if getattr(self, 'serialize_content', False) else {})
+        return {
+            **super().to_json(**kwargs),
+            "isFolder": False,
+            **(
+                {
+                    "versions": self.get_changelog_with_names(),
+                    "fulltext": self.document.export_markdown(),
                 }
+                if getattr(self, "serialize_content", False)
+                else {}
+            ),
+        }
 
 
-def get_non_settings_pars_from_docs(docs: Iterable[DocInfo]) -> Generator[DocParagraph, None, None]:
+def get_non_settings_pars_from_docs(
+    docs: Iterable[DocInfo],
+) -> Generator[DocParagraph, None, None]:
     for d in docs:
         for p in d.document:
             if not p.is_setting() or p.is_area():
                 yield p
 
 
-def get_pars_with_class_from_docs(docs: Iterable[DocInfo], class_names: list[str]) -> Generator[DocParagraph, None, None]:
+def get_pars_with_class_from_docs(
+    docs: Iterable[DocInfo], class_names: list[str]
+) -> Generator[DocParagraph, None, None]:
     """
     Loads all non-settings pars that have the given class.
     :param docs: Document.
@@ -191,7 +225,7 @@ def get_pars_with_class_from_docs(docs: Iterable[DocInfo], class_names: list[str
         classes = p.get_attr("classes")
         if classes:
             for class_name in class_names:
-               if class_name in classes:
+                if class_name in classes:
                     yield p
 
 
@@ -207,12 +241,15 @@ def move_document(d: DocInfo, destination):
 def find_free_name(destination, item: Item):
     from timApp.document.docentry import DocEntry
     from timApp.folder.folder import Folder
+
     short_name = item.short_name
     attempt = 0
     while True:
-        trash_path = f'{destination.path}/{short_name}'
-        if not Folder.find_by_path(trash_path) and not DocEntry.find_by_path(trash_path):
+        trash_path = f"{destination.path}/{short_name}"
+        if not Folder.find_by_path(trash_path) and not DocEntry.find_by_path(
+            trash_path
+        ):
             break
         attempt += 1
-        short_name = f'{item.short_name}_{attempt}'
+        short_name = f"{item.short_name}_{attempt}"
     return trash_path

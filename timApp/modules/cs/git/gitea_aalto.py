@@ -28,15 +28,17 @@ class GiteaAaltoLib(GiteaLib):
             "must_change_password": defaults["must_change_password"],
             "send_notify": defaults["send_notify"],
             "source_id": 0,
-            "secret_id": sanitize_name(defaults["secret_id"])
+            "secret_id": sanitize_name(defaults["secret_id"]),
         }
-        response = self.post('admin/users', data)
+        response = self.post("admin/users", data)
         user = response.data
 
         if response.status == 201:
             return LibResponse(True)
         else:
-            print(f'Git account creation failed:\nCode: {response.status}\nReason: {response.reason}\nData: {user}')
+            print(
+                f"Git account creation failed:\nCode: {response.status}\nReason: {response.reason}\nData: {user}"
+            )
             return LibResponse(False, "Unknown error")
 
     def missing_field(self, fields, dict):
@@ -52,17 +54,19 @@ class GiteaAaltoLib(GiteaLib):
         data = {
             "secret_id": sanitize_name(credentials["secret_id"]),
         }
-        response = self.post('admin/users/check', data)
+        response = self.post("admin/users/check", data)
         if response.reason != None:
             raise Exception("Failed to connect to git: " + response["reason"])
         secret_id = response.data.get("secret_id", "")
         if secret_id not in ["ok", "taken"]:
-            raise Exception("Internal Error: 0. Please refresh page. If this message persists, please contact course staff.")
+            raise Exception(
+                "Internal Error: 0. Please refresh page. If this message persists, please contact course staff."
+            )
         return LibResponse(secret_id == "taken", "")
 
     def check_credentials(self, credentials):
         data = credentials
-        response = self.post('admin/users/check', data)
+        response = self.post("admin/users/check", data)
         if response.reason != None:
             raise Exception("Failed to connect to git: " + response["reason"])
 
@@ -85,11 +89,13 @@ class GiteaAaltoLib(GiteaLib):
         if "secret_id" in user:
             if user["secret_id"] != "ok":
                 print("check_credentials returned non-ok on secret_id when registering")
-                raise Exception("Interal Error: 1. Please refresh page. If this message persists, please contact course staff.")
+                raise Exception(
+                    "Interal Error: 1. Please refresh page. If this message persists, please contact course staff."
+                )
 
         if "password" in user and user["password"] != "ok":
-                err = err + "Password not acceptable\n"
+            err = err + "Password not acceptable\n"
         elif "password" in credentials and len(credentials["password"]) < 8:
-                err = err + "Password must be at least 8 characters long\n"
+            err = err + "Password must be at least 8 characters long\n"
 
         return LibResponse(len(err) == 0, err, user)

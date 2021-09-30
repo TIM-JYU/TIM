@@ -9,14 +9,22 @@ from marshmallow import validates, ValidationError
 from marshmallow.utils import missing
 
 from tim_common.markupmodels import GenericMarkupModel
-from tim_common.pluginserver_flask import GenericHtmlModel, \
-    GenericAnswerModel, register_plugin_app, launch_if_main, PluginAnswerResp, PluginAnswerWeb, PluginReqs
+from tim_common.pluginserver_flask import (
+    GenericHtmlModel,
+    GenericAnswerModel,
+    register_plugin_app,
+    launch_if_main,
+    PluginAnswerResp,
+    PluginAnswerWeb,
+    PluginReqs,
+)
 from tim_common.utils import Missing
 
 
 @dataclass
 class FeedbackStateModel:
     """Model for the information that is stored in TIM database for each answer."""
+
     user_answer: str
     correct: bool
     feedback: str
@@ -37,15 +45,16 @@ class FeedbackMarkupModel(GenericMarkupModel):
     showAnswers: Union[bool, Missing] = missing
     shuffle: Union[bool, Missing] = missing
 
-    @validates('points_array')
+    @validates("points_array")
     def validate_points_array(self, value: list[float]) -> None:
         if len(value) != 2:
-            raise ValidationError('Must be of size 1 x 2.')
+            raise ValidationError("Must be of size 1 x 2.")
 
 
 @dataclass
 class FeedbackInputModel:
     """Model for the information that is sent from browser (plugin AngularJS component)."""
+
     user_answer: str
     correct: bool
     feedback: str
@@ -54,16 +63,20 @@ class FeedbackInputModel:
 
 
 @dataclass
-class FeedbackHtmlModel(GenericHtmlModel[FeedbackInputModel, FeedbackMarkupModel, FeedbackStateModel]):
+class FeedbackHtmlModel(
+    GenericHtmlModel[FeedbackInputModel, FeedbackMarkupModel, FeedbackStateModel]
+):
     def get_component_html_name(self) -> str:
-        return 'feedback-runner'
+        return "feedback-runner"
 
     def get_static_html(self) -> str:
         return render_static_feedback(self)
 
 
 @dataclass
-class FeedbackAnswerModel(GenericAnswerModel[FeedbackInputModel, FeedbackMarkupModel, FeedbackStateModel]):
+class FeedbackAnswerModel(
+    GenericAnswerModel[FeedbackInputModel, FeedbackMarkupModel, FeedbackStateModel]
+):
     pass
 
 
@@ -88,7 +101,7 @@ def render_static_feedback(m: FeedbackHtmlModel) -> str:
 
 def answer(args: FeedbackAnswerModel) -> PluginAnswerResp:
     web: PluginAnswerWeb = {}
-    result: PluginAnswerResp = {'web': web}
+    result: PluginAnswerResp = {"web": web}
     correct_answer = args.input.correct_answer
     feedback = args.input.feedback
     correct = args.input.correct
@@ -101,16 +114,22 @@ def answer(args: FeedbackAnswerModel) -> PluginAnswerResp:
     # Plugin can ask not to save the word.
     nosave = args.input.nosave
     if not nosave:
-        save = {"correct_answer": correct_answer, "correct": correct, "feedback": feedback, "user_answer": user_answer}
+        save = {
+            "correct_answer": correct_answer,
+            "correct": correct,
+            "feedback": feedback,
+            "user_answer": user_answer,
+        }
         result["save"] = save
         result["tim_info"] = {"points": points}
-        web['result'] = "saved"
+        web["result"] = "saved"
 
     return result
 
 
 def reqs() -> PluginReqs:
-    templates = ["""#- {area="dropdowntask1" .task}
+    templates = [
+        """#- {area="dropdowntask1" .task}
 
 ## Instruction header {.instruction defaultplugin="dropdown"}
 
@@ -239,7 +258,8 @@ questionItems:
 
 ```
 
-#- {area_end="dropdowntask1"}""", """#- {area="draganddroptask1" .task}
+#- {area_end="dropdowntask1"}""",
+        """#- {area="draganddroptask1" .task}
 
 ## Instruction header {.instruction defaultplugin="drag"}
 
@@ -379,7 +399,8 @@ questionItems:
 
 ```
 
-#- {area_end="draganddroptask1"}""", """## Instruction header {.instruction defaultplugin="dropdown"}
+#- {area_end="draganddroptask1"}""",
+        """## Instruction header {.instruction defaultplugin="dropdown"}
 
 Here you can write general instructions for the test. Pictures can also be inserted. The
 "Instruction header" can also be changed, but do not change the `.instructions` in the
@@ -389,7 +410,8 @@ The next is a practice question. It can be edited or deleted.
 
 I {#practice words: ["will think", "won't think", "might think"]#} before answering.
 
-""", """## Instruction header {.instruction defaultplugin="drag"}
+""",
+        """## Instruction header {.instruction defaultplugin="drag"}
 
 Here you can write general instructions for the test. Pictures can also be inserted. The
 "Instruction header" can also be changed, but do not change the `.instructions` in the
@@ -401,7 +423,8 @@ Drag from here: {#practicedrag1 words: ["I", "before", "will think", "answering"
 
 To here: {#practicedrop2#}.
 
-""", """## Item header {defaultplugin="dropdown"}
+""",
+        """## Item header {defaultplugin="dropdown"}
 ::: {.info}
 Anything inside this `.info` section starting with `::: {.info}` and ending with `:::` 
 will not be  a part of the actual question/answer. Here you can place extra instructions 
@@ -413,7 +436,8 @@ should be edited in both the question item and feedback plugins.
 
 What {#dropdown1 autosave: false, shuffle: true#} on the stove?
 
-""", """## Item header {defaultplugin="drag"}
+""",
+        """## Item header {defaultplugin="drag"}
 ::: {.info}
 Anything inside this `.info` section starting with `::: {.info}` and ending with `:::` 
 will not be  a part of the actual question/answer. Here you can place extra instructions 
@@ -427,7 +451,8 @@ should be edited in both the question item and feedback plugins.
 
 You know where I'll be found {#drop1#}.
 
-""", """``` {#fb1 plugin="feedback"}
+""",
+        """``` {#fb1 plugin="feedback"}
 # Quick reference for feedback options:
 #  correctsInRow: number of correct answers in a row to advance to next task.
 #  nextTask: the address of next task in the TIM file system.
@@ -509,7 +534,8 @@ questionItems:
     - match: []
       levels: *defaultmatch
 
-```""", """``` {#fb1 plugin="feedback"}
+```""",
+        """``` {#fb1 plugin="feedback"}
 # Quick reference for feedback options:
 #  correctsInRow: number of correct answers in a row to advance to next task.
 #  nextTask: the address of next task in the TIM file system.
@@ -592,57 +618,58 @@ questionItems:
     - match: []
       levels: *defaultmatch
 
-```"""]
+```""",
+    ]
     return {
         "js": ["js/build/feedback.js"],
         "multihtml": True,
         "css": ["css/feedback.css"],
-        'editor_tabs': [
+        "editor_tabs": [
             {
-                'text': 'Fields',
-                'items': [
+                "text": "Fields",
+                "items": [
                     {
-                        'text': 'Feedback',
-                        'items': [
+                        "text": "Feedback",
+                        "items": [
                             {
-                                'data': templates[0].strip(),
-                                'text': 'Task with dropdown questions',
-                                'expl': 'Add a whole task with instructions, dropdown items and feedback',
+                                "data": templates[0].strip(),
+                                "text": "Task with dropdown questions",
+                                "expl": "Add a whole task with instructions, dropdown items and feedback",
                             },
                             {
-                                'data': templates[1].strip(),
-                                'text': 'Task with drag & drop questions',
-                                'expl': 'Add a whole task with instructions, drag & drop items and feedback',
+                                "data": templates[1].strip(),
+                                "text": "Task with drag & drop questions",
+                                "expl": "Add a whole task with instructions, drag & drop items and feedback",
                             },
                             {
-                                'data': templates[2].strip(),
-                                'text': 'Instruction block for dropdown task',
-                                'expl': 'Add an instruction block with a dropdown question item',
+                                "data": templates[2].strip(),
+                                "text": "Instruction block for dropdown task",
+                                "expl": "Add an instruction block with a dropdown question item",
                             },
                             {
-                                'data': templates[3].strip(),
-                                'text': 'Instruction block for drag & drop task',
-                                'expl': 'Add an instruction block with a drag & drop question item',
+                                "data": templates[3].strip(),
+                                "text": "Instruction block for drag & drop task",
+                                "expl": "Add an instruction block with a drag & drop question item",
                             },
                             {
-                                'data': templates[4].strip(),
-                                'text': 'Question item block with dropdown ',
-                                'expl': 'Add a question item block with a dropdown question',
+                                "data": templates[4].strip(),
+                                "text": "Question item block with dropdown ",
+                                "expl": "Add a question item block with a dropdown question",
                             },
                             {
-                                'data': templates[5].strip(),
-                                'text': 'Question item block with drag & drop',
-                                'expl': 'Add a question item block with a drag & drop question',
+                                "data": templates[5].strip(),
+                                "text": "Question item block with drag & drop",
+                                "expl": "Add a question item block with a drag & drop question",
                             },
                             {
-                                'data': templates[6].strip(),
-                                'text': 'Feedback block for dropdown',
-                                'expl': 'Add a feedback block for dropdown task',
+                                "data": templates[6].strip(),
+                                "text": "Feedback block for dropdown",
+                                "expl": "Add a feedback block for dropdown task",
                             },
                             {
-                                'data': templates[7].strip(),
-                                'text': 'Feedback block for drag & drop ',
-                                'expl': 'Add a feedback block for drag & drop task',
+                                "data": templates[7].strip(),
+                                "text": "Feedback block for drag & drop ",
+                                "expl": "Add a feedback block for drag & drop task",
                             },
                         ],
                     },

@@ -26,7 +26,7 @@ class Settings(Loadable):
     branch: Optional[str] = field(default="master")
     library: Optional[str] = field(default=None)
     apiProtocol: str = field(default="https")
-    cache: int = field(default=86400) # time in seconds; default 24 hours
+    cache: int = field(default=86400)  # time in seconds; default 24 hours
     librarySpecific: Optional[mAny] = field(default=None)
 
 
@@ -60,7 +60,6 @@ class RemoteInfo:
 
     @staticmethod
     def parse_url(url: str, settings: Settings = None):
-
         def inner(url: str):
             user = None
             protocol = None
@@ -76,7 +75,7 @@ class RemoteInfo:
                 prefix = "ssh://"
 
             if protocol is not None:
-                url = url[len(prefix):]
+                url = url[len(prefix) :]
                 parts = url.split("/", maxsplit=1)
             else:
                 protocol = "ssh"
@@ -95,15 +94,20 @@ class RemoteInfo:
         if settings.url is not None:
             setting_vars = inner(settings.url)
         else:
-            setting_vars = [None]*4
+            setting_vars = [None] * 4
 
         if settings.user:
             setting_vars[3] = settings.user
 
-        protocol, host, repo, user = (main if main is not None else setting for main, setting in zip(main_vars, setting_vars))
+        protocol, host, repo, user = (
+            main if main is not None else setting
+            for main, setting in zip(main_vars, setting_vars)
+        )
 
         if host is None:
-            raise ValueError(f"Git host couldn't be determined from {url} or {settings.urlPrefix}")
+            raise ValueError(
+                f"Git host couldn't be determined from {url} or {settings.urlPrefix}"
+            )
 
         out = RemoteInfo(host, repo, protocol)
         out.user = user
@@ -112,4 +116,4 @@ class RemoteInfo:
 
 def generate_password():
     alphabet = string.ascii_letters + string.digits
-    return ''.join(secrets.choice(alphabet) for i in range(20))
+    return "".join(secrets.choice(alphabet) for i in range(20))

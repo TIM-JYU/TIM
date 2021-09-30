@@ -16,6 +16,7 @@ from git.util import Settings, RemoteInfo, NotInAGitRepo
 git_libs = {}
 git_lib_urls = {}
 
+
 @dataclass
 class APIResponse:
     status: int
@@ -47,18 +48,25 @@ class GitLib:
         self.domain = info.host
         self.api_path = settings.apiProtocol + "://" + self.domain + "/"
         self.remote = info
-        self.remote.path = self.sanitize_repo_path(info.path) if info.path is not None else ""
+        self.remote.path = (
+            self.sanitize_repo_path(info.path) if info.path is not None else ""
+        )
 
     def get_headers(self):
         raise NotImplementedError("get_headers not implemented")
 
-    def call_api(self, path, data = None, method = None):
-        request = Request(self.api_path + path, json.dumps(data).encode('utf-8'), self.get_headers(), method=method)
+    def call_api(self, path, data=None, method=None):
+        request = Request(
+            self.api_path + path,
+            json.dumps(data).encode("utf-8"),
+            self.get_headers(),
+            method=method,
+        )
         try:
             response = urlopen(request)
         except urllib.error.HTTPError as e:
             try:
-                data = e.file.read().decode('utf-8')
+                data = e.file.read().decode("utf-8")
             except:
                 data = None
             return APIResponse(e.code, data, e.reason)
@@ -66,41 +74,47 @@ class GitLib:
             return APIResponse(e.reason.errno, None, e.reason.strerror)
 
         try:
-            data=json.loads(response.read().decode('utf-8'))
+            data = json.loads(response.read().decode("utf-8"))
         except:
-            data=None
+            data = None
 
         return APIResponse(response.status, data, None)
 
-    def post(self, path, data = None):
-        return self.call_api(path, data, method = 'POST')
-    def get(self, path, data = None):
-        return self.call_api(path, data, method = 'GET')
-    def delete(self, path, data = None):
-        return self.call_api(path, data, method = 'DELETE')
-    def put(self, path, data = None):
-        return self.call_api(path, data, method = 'PUT')
-    def patch(self, path, data = None):
-        return self.call_api(path, data, method = 'PATCH')
+    def post(self, path, data=None):
+        return self.call_api(path, data, method="POST")
+
+    def get(self, path, data=None):
+        return self.call_api(path, data, method="GET")
+
+    def delete(self, path, data=None):
+        return self.call_api(path, data, method="DELETE")
+
+    def put(self, path, data=None):
+        return self.call_api(path, data, method="PUT")
+
+    def patch(self, path, data=None):
+        return self.call_api(path, data, method="PATCH")
 
     @property
     def cache_path(self) -> str:
         return f"/tmp/git_files/{self.remote.host.lower()}/{self.remote.path}/{self.remote.branch}"
 
-    def check_cache(self, force_update = False):
+    def check_cache(self, force_update=False):
         """Updates cache if needed"""
         path = self.cache_path
         cached: CacheItem = GitLib._cache.setdefault(path, CacheItem())
         with cached.lock:
             if not (Path(path) / ".git").exists():
                 self.clone(path)
-            elif force_update or datetime.now() - cached.time > timedelta(seconds=self.settings.cache):
+            elif force_update or datetime.now() - cached.time > timedelta(
+                seconds=self.settings.cache
+            ):
                 self.checkout()
             else:
                 return
             GitLib._cache[path].time = datetime.now()
 
-    def get_files(self, sub_path: str, glob: str = "", force_update = False):
+    def get_files(self, sub_path: str, glob: str = "", force_update=False):
         self.check_cache(force_update)
 
         cpath = self.cache_path
@@ -146,14 +160,22 @@ class GitLib:
         return copy_files_glob(glob, str(basepath), destination)
 
     def sanitize_repo_path(self, repo: str):
-        repo = re.sub(r'[^A-Za-z0-9\.-_]', "-", repo)
-        repo = re.sub(r'-+', "-", repo)
-        return repo[:-1] if repo.endswith('-') else repo
+        repo = re.sub(r"[^A-Za-z0-9\.-_]", "-", repo)
+        repo = re.sub(r"-+", "-", repo)
+        return repo[:-1] if repo.endswith("-") else repo
 
     def clone(self, path: Union[str, Path]):
-        clone(path, self.remote.host, self.remote.path, self.remote.protocol, self.remote.user, self.remote.name, self.remote.branch)
+        clone(
+            path,
+            self.remote.host,
+            self.remote.path,
+            self.remote.protocol,
+            self.remote.user,
+            self.remote.name,
+            self.remote.branch,
+        )
 
-    def checkout(self, sub_path = ".", path: str = None, do_fetch=True, force=True):
+    def checkout(self, sub_path=".", path: str = None, do_fetch=True, force=True):
         if path is None:
             path = self.cache_path
         checkout(path, sub_path, do_fetch, self.remote.name, self.remote.branch, force)
@@ -205,7 +227,11 @@ def get_repo_root(opath: Path) -> str:
             break
         path = path.parent
 
-    response = subprocess.run(["git", "-C", str(path), "rev-parse", "--absolute-git-dir", "2>", "/dev/null"], stdout=subprocess.PIPE, encoding='utf-8')
+    response = subprocess.run(
+        ["git", "-C", str(path), "rev-parse", "--absolute-git-dir", "2>", "/dev/null"],
+        stdout=subprocess.PIPE,
+        encoding="utf-8",
+    )
     if response.returncode != 0 or len(response.stdout) == 0:
         raise NotInAGitRepo(str(opath))
 
@@ -228,32 +254,50 @@ def get_remote_and_branch(path: str) -> (str, str):
     if not is_in_git_repo(Path(path)):
         raise NotInAGitRepo(path)
 
-    response = subprocess.run(["git", "-C", path, "status", "-sb"], capture_output=True, encoding='utf-8')
+    response = subprocess.run(
+        ["git", "-C", path, "status", "-sb"], capture_output=True, encoding="utf-8"
+    )
     if response.returncode != 0 or len(response.stdout) == 0:
-        raise Exception(f"Git status: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
+        raise Exception(
+            f"Git status: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}"
+        )
 
     tmp: str = response.stdout.strip()
     tmp = tmp.split("\n", 1)[0]
     tmp = tmp.split(" ", 2)[1]
     _, remote = tmp.split("...")
     remote, remote_branch = remote.split("/", 1)
-    return remote, remote_branch # TODO: test
+    return remote, remote_branch  # TODO: test
 
 
 def get_remote_info(path: str) -> RemoteInfo:
     remote, remote_branch = get_remote_and_branch(path)
 
-    response = subprocess.run(["git", "-C", path, "config", "--get", f"remote.{remote}.url"], capture_output=True, encoding='utf-8')
+    response = subprocess.run(
+        ["git", "-C", path, "config", "--get", f"remote.{remote}.url"],
+        capture_output=True,
+        encoding="utf-8",
+    )
     if response.returncode != 0 or len(response.stdout) == 0:
-        raise Exception(f"Git config: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
+        raise Exception(
+            f"Git config: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}"
+        )
 
     remote = RemoteInfo.parse_url(response.stdout.strip())
     remote.name = remote
     remote.branch = remote_branch
-    return remote # TODO: test
+    return remote  # TODO: test
 
 
-def clone(path: Union[str, Path], host: str, repo: str, protocol: str = "ssh", user: str = None, remote = "origin", branch = "master"):
+def clone(
+    path: Union[str, Path],
+    host: str,
+    repo: str,
+    protocol: str = "ssh",
+    user: str = None,
+    remote="origin",
+    branch="master",
+):
     if isinstance(path, str):
         path = Path(path)
     if path.exists() and not path.is_dir():
@@ -269,28 +313,63 @@ def clone(path: Union[str, Path], host: str, repo: str, protocol: str = "ssh", u
         prefix = f"{user}@"
 
     # using ssh:// allows specifying a different port
-    response = subprocess.run(["git", "clone", f"{protocol}://{prefix}{host}/{repo}", "-o", remote, "-b", branch, str(path)], capture_output=True, encoding='utf-8')
+    response = subprocess.run(
+        [
+            "git",
+            "clone",
+            f"{protocol}://{prefix}{host}/{repo}",
+            "-o",
+            remote,
+            "-b",
+            branch,
+            str(path),
+        ],
+        capture_output=True,
+        encoding="utf-8",
+    )
     if response.returncode != 0:
-        raise Exception(f"Git clone: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
+        raise Exception(
+            f"Git clone: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}"
+        )
 
 
-def checkout(path: str, sub_path = ".", do_fetch=True, remote="origin", branch="master", force=True):
-    checkout_branch = f"{remote}/{branch}" if remote is not None and len(remote) > 0 else branch
+def checkout(
+    path: str, sub_path=".", do_fetch=True, remote="origin", branch="master", force=True
+):
+    checkout_branch = (
+        f"{remote}/{branch}" if remote is not None and len(remote) > 0 else branch
+    )
     options = []
     if force:
         options.append("-f")
     if do_fetch:
-        response = subprocess.run(["git", "-C", path, "fetch"], capture_output=True, encoding='utf-8')
+        response = subprocess.run(
+            ["git", "-C", path, "fetch"], capture_output=True, encoding="utf-8"
+        )
         if response.returncode != 0:
-            raise Exception(f"Git fetch: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
+            raise Exception(
+                f"Git fetch: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}"
+            )
 
-    response = subprocess.run(["git", "-C", path, "rm", "-rf", sub_path], capture_output=True, encoding='utf-8')
+    response = subprocess.run(
+        ["git", "-C", path, "rm", "-rf", sub_path],
+        capture_output=True,
+        encoding="utf-8",
+    )
     if response.returncode != 0:
-        raise Exception(f"Git rm: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
+        raise Exception(
+            f"Git rm: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}"
+        )
 
-    response = subprocess.run(["git", "-C", path, "checkout", *options, checkout_branch, "--", sub_path], capture_output=True, encoding='utf-8')
+    response = subprocess.run(
+        ["git", "-C", path, "checkout", *options, checkout_branch, "--", sub_path],
+        capture_output=True,
+        encoding="utf-8",
+    )
     if response.returncode != 0:
-        raise Exception(f"Git checkout: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}")
+        raise Exception(
+            f"Git checkout: returncode: {response.returncode}, stdout: {response.stdout}, stderr: {response.stderr}"
+        )
 
 
 def pull_or_clone(path: str, rinfo: RemoteInfo):
@@ -300,23 +379,35 @@ def pull_or_clone(path: str, rinfo: RemoteInfo):
         lpath = None
 
     if lpath is None or os.path.abspath(path) != lpath:
-        clone(path, rinfo.host, rinfo.path, rinfo.protocol, rinfo.user, rinfo.name, rinfo.branch)
+        clone(
+            path,
+            rinfo.host,
+            rinfo.path,
+            rinfo.protocol,
+            rinfo.user,
+            rinfo.name,
+            rinfo.branch,
+        )
     else:
         checkout(path, remote=rinfo.name, branch=rinfo.branch)
 
 
 def populate():
     global git_libs, git_lib_urls
-    classes =  [GitLib] + GitLib.all_subclasses()
+    classes = [GitLib] + GitLib.all_subclasses()
 
     def add_id(cls, id):
         if id in git_libs:
-            raise Exception(f"GitLib {cls.__name__} has a duplicate id ({id}) with {git_libs[id].__name__}")
+            raise Exception(
+                f"GitLib {cls.__name__} has a duplicate id ({id}) with {git_libs[id].__name__}"
+            )
         git_libs[id] = cls
 
     def add_url(cls, url):
         if url in git_lib_urls:
-            raise Exception(f"GitLib {cls.__name__} has a duplicate url ({url}) with {git_lib_urls[url].__name__}")
+            raise Exception(
+                f"GitLib {cls.__name__} has a duplicate url ({url}) with {git_lib_urls[url].__name__}"
+            )
         git_lib_urls[url] = cls
 
     for cls in classes:
@@ -326,7 +417,11 @@ def populate():
         else:
             id = None
 
-        if not hasattr(cls, "url") or cls.url is None or (isinstance(cls.url, list) and len(cls.url) == 0):
+        if (
+            not hasattr(cls, "url")
+            or cls.url is None
+            or (isinstance(cls.url, list) and len(cls.url) == 0)
+        ):
             url = None
         else:
             url = cls.url
@@ -338,5 +433,6 @@ def populate():
 
         if not id and not url:
             raise Exception(f"GitLib {cls.__name__} hasn't defined id or url")
+
 
 populate()

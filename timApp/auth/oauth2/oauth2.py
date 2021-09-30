@@ -2,8 +2,10 @@ import time
 from typing import Optional
 
 from authlib.integrations.flask_oauth2 import AuthorizationServer, ResourceProtector
-from authlib.integrations.sqla_oauth2 import create_save_token_func, \
-    create_bearer_token_validator
+from authlib.integrations.sqla_oauth2 import (
+    create_save_token_func,
+    create_bearer_token_validator,
+)
 from authlib.oauth2 import OAuth2Request
 from authlib.oauth2.rfc6749 import grants
 from flask import Flask
@@ -18,8 +20,8 @@ ALLOWED_CLIENTS: dict[str, OAuth2Client] = {}
 
 class RefreshTokenGrant(grants.RefreshTokenGrant):
     TOKEN_ENDPOINT_AUTH_METHODS = [
-        'client_secret_basic',
-        'client_secret_post',
+        "client_secret_basic",
+        "client_secret_post",
     ]
     INCLUDE_NEW_REFRESH_TOKEN = True
 
@@ -40,12 +42,14 @@ class RefreshTokenGrant(grants.RefreshTokenGrant):
 
 class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
     TOKEN_ENDPOINT_AUTH_METHODS = [
-        'client_secret_basic',
-        'client_secret_post',
+        "client_secret_basic",
+        "client_secret_post",
         # TODO: Do we need 'none'?
     ]
 
-    def save_authorization_code(self, code: str, request: OAuth2Request) -> OAuth2AuthorizationCode:
+    def save_authorization_code(
+        self, code: str, request: OAuth2Request
+    ) -> OAuth2AuthorizationCode:
         auth_code = OAuth2AuthorizationCode(
             code=code,
             client_id=request.client.client_id,
@@ -57,13 +61,19 @@ class AuthorizationCodeGrant(grants.AuthorizationCodeGrant):
         db.session.commit()
         return auth_code
 
-    def query_authorization_code(self, code: str, client: OAuth2Client) -> Optional[OAuth2AuthorizationCode]:
-        auth_code = OAuth2AuthorizationCode.query.filter_by(code=code, client_id=client.client_id).first()
+    def query_authorization_code(
+        self, code: str, client: OAuth2Client
+    ) -> Optional[OAuth2AuthorizationCode]:
+        auth_code = OAuth2AuthorizationCode.query.filter_by(
+            code=code, client_id=client.client_id
+        ).first()
         if auth_code and not auth_code.is_expired():
             return auth_code
         return None
 
-    def delete_authorization_code(self, authorization_code: OAuth2AuthorizationCode) -> None:
+    def delete_authorization_code(
+        self, authorization_code: OAuth2AuthorizationCode
+    ) -> None:
         db.session.delete(authorization_code)
         db.session.commit()
 
@@ -87,16 +97,16 @@ require_oauth = ResourceProtector()
 def delete_expired_oauth2_tokens() -> None:
     now_time = int(time.time())
     OAuth2Token.query.filter(
-        (OAuth2Token.expires_in + OAuth2Token.issued_at < now_time) |
-        (OAuth2Token.access_token_revoked_at < now_time) |
-        (OAuth2Token.refresh_token_revoked_at < now_time)) \
-        .delete()
+        (OAuth2Token.expires_in + OAuth2Token.issued_at < now_time)
+        | (OAuth2Token.access_token_revoked_at < now_time)
+        | (OAuth2Token.refresh_token_revoked_at < now_time)
+    ).delete()
     db.session.commit()
 
 
 def init_oauth(app: Flask) -> None:
     global ALLOWED_CLIENTS
-    clients = app.config.get('OAUTH2_CLIENTS', [])
+    clients = app.config.get("OAUTH2_CLIENTS", [])
     schema = class_schema(OAuth2Client)()
     clients_obj: list[OAuth2Client] = [schema.load(c) for c in clients]
     ALLOWED_CLIENTS = {c.client_id: c for c in clients_obj}
@@ -108,6 +118,7 @@ def init_oauth(app: Flask) -> None:
     # TODO: Do we need to support revocation?
 
     from timApp.auth.oauth2.routes import oauth
+
     app.register_blueprint(oauth)
 
     bearer_cls = create_bearer_token_validator(db.session, OAuth2Token)

@@ -11,10 +11,13 @@ class BrokenDbTest(TimRouteTest):
         db.session.expire_all()
 
         with self.assertRaises(Exception) as e:
-            self.get('/')
-        self.assertEqual("""
+            self.get("/")
+        self.assertEqual(
+            """
 Database has no users; you need to re-initialize it:
 ./dc stop -t 0 tim celery postgresql
 docker volume rm tim-test_data11
 delete tim_files folder
-./up.sh""".strip(), str(e.exception))
+./up.sh""".strip(),
+            str(e.exception),
+        )

@@ -7,15 +7,15 @@ Create Date: 2018-08-09 12:01:29.424143
 """
 
 # revision identifiers, used by Alembic.
-revision = '8aee6b154c6b'
-down_revision = 'b90f139826dc'
+revision = "8aee6b154c6b"
+down_revision = "b90f139826dc"
 
 from alembic import op
 
 
 def upgrade():
-    op.create_index('docentry_id_idx', 'docentry', ['id'], unique=False)
+    op.create_index("docentry_id_idx", "docentry", ["id"], unique=False)
 
 
 def downgrade():
-    op.drop_index('docentry_id_idx', table_name='docentry')
+    op.drop_index("docentry_id_idx", table_name="docentry")

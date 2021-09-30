@@ -9,9 +9,22 @@ from geometry import is_inside
 
 # ImagexServer is inherited from this. Contains methods like do_GET, do_PUT, etc generic server stuff.
 from tim_common.tim_server import TimServer, start_server
+
 # Library for checking if a point is inside a shape.
-from tim_common.fileParams import encode_json_data, make_lazy, NOLAZY, replace_template_params, is_review, get_all_templates, \
-    do_headers, QueryClass, get_param, get_json_param, query_params_to_map, get_query_from_json
+from tim_common.fileParams import (
+    encode_json_data,
+    make_lazy,
+    NOLAZY,
+    replace_template_params,
+    is_review,
+    get_all_templates,
+    do_headers,
+    QueryClass,
+    get_param,
+    get_json_param,
+    query_params_to_map,
+    get_query_from_json,
+)
 
 PORT = 5000
 PROGDIR = "."
@@ -27,7 +40,7 @@ def get_lazy_imagex_html(query: QueryClass) -> str:
     s = '<div class="csRunDiv no-popup-menu">'
     s += replace_template_params(query, "<h4>{{header}}</h4>", "header")
     s += replace_template_params(query, '<p class="stem">{{stem}}</p>', "stem")
-    s += '</div>'
+    s += "</div>"
     return s
 
 
@@ -50,15 +63,22 @@ class ImagexServer(TimServer):
         if is_review(query):
             usercode = "image"
             s = ""
-            result = NOLAZY + '<div class="review" ng-non-bindable><pre>' + usercode + '</pre>' + s + '</div>'
+            result = (
+                NOLAZY
+                + '<div class="review" ng-non-bindable><pre>'
+                + usercode
+                + "</pre>"
+                + s
+                + "</div>"
+            )
             print("REVIEW: ", result)
             return result
 
         # Check if this is in preview. If it is, set targets as visible.
         if preview and hiddentargets:
             jso2 = query_params_to_map(query.query)
-            jso2['state'] = query.jso['state']
-            jso2['markup']['targets'] = hiddentargets
+            jso2["state"] = query.jso["state"]
+            jso2["markup"]["targets"] = hiddentargets
             query = get_query_from_json(jso2)
 
         # do the next if Anonymoys is not allowed to use plugins
@@ -68,13 +88,18 @@ class ImagexServer(TimServer):
             jump = get_param(query, "taskID", "")
             # print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX jump: ", jump)
             if allow_anonymous != "true":
-                return NOLAZY + '<p class="pluginError"><a href="/login?anchor=' + jump +\
-                       '">Please login to interact with this component</a></p><pre class="csRunDiv">' + \
-                       get_param(query, "byCode", "") + '</pre>' # imageX does not have byCode???
+                return (
+                    NOLAZY
+                    + '<p class="pluginError"><a href="/login?anchor='
+                    + jump
+                    + '">Please login to interact with this component</a></p><pre class="csRunDiv">'
+                    + get_param(query, "byCode", "")
+                    + "</pre>"
+                )  # imageX does not have byCode???
 
         jso = query_params_to_map(query.query)
-        jso['state'] = query.jso['state']
-        runner = 'imagex-runner'
+        jso["state"] = query.jso["state"]
+        runner = "imagex-runner"
         attrs = json.dumps(jso)
         s = f'<{runner} json="{encode_json_data(attrs)}"></{runner}>'
         s = make_lazy(s, query, get_lazy_imagex_html)
@@ -86,14 +111,15 @@ class ImagexServer(TimServer):
         :return: reqs result as json
         """
         # Get templates for plugin
-        templs = get_all_templates('templates')
+        templs = get_all_templates("templates")
         # print("--templates--" + str(templs))
         ret = {
             "js": ["tim/plugin/imagex"],
             "css": [
                 "css/imagex.css",
             ],
-            "multihtml": True}
+            "multihtml": True,
+        }
         # Add templates to reqs.
         ret.update(templs)
         return ret
@@ -184,33 +210,40 @@ class ImagexServer(TimServer):
         if targets != None:
             for target in targets:
                 # Find object name from user input.
-                target['points'] = get_value_def(target, "points", {})
-                target['type'] = get_value_def(target, "type", "rectangle")
-                target['a'] = get_value_def(target, "a", 0)
-                target['size'] = get_value_def(target, "size", [10])
-                target['position'] = get_value_def(target, "position", [0, 0])
-                target['max'] = get_value_def(target, "max", 100000)
-                target['snapOffset'] = get_value_def(target, "snapOffset", [0, 0])
-                target['n'] = 0
+                target["points"] = get_value_def(target, "points", {})
+                target["type"] = get_value_def(target, "type", "rectangle")
+                target["a"] = get_value_def(target, "a", 0)
+                target["size"] = get_value_def(target, "size", [10])
+                target["position"] = get_value_def(target, "position", [0, 0])
+                target["max"] = get_value_def(target, "max", 100000)
+                target["snapOffset"] = get_value_def(target, "snapOffset", [0, 0])
+                target["n"] = 0
                 tnr += 1
                 print(target)
                 if tries < max_tries:
-                    for selectkey in target['points'].keys():
+                    for selectkey in target["points"].keys():
                         for drag in drags:
-                            if drag['id'] == selectkey:
+                            if drag["id"] == selectkey:
                                 # Check if needed values exist for target. If they dont, read them from defaults
                                 # or first target. # TODO: NOT FROM FIRST!!!
                                 # Check if image is inside target, award points.
-                                if target["n"] < target["max"] and \
-                                        is_inside(target['type'], target['size'], -target['a'], target['position'], drag["position"]):
+                                if target["n"] < target["max"] and is_inside(
+                                    target["type"],
+                                    target["size"],
+                                    -target["a"],
+                                    target["position"],
+                                    drag["position"],
+                                ):
                                     target["n"] += 1
                                     drag["td"] = "trg" + str(tnr)
                                     if "id" in target:
                                         drag["tid"] = target["id"]
-                                    pts = (target['points'][selectkey])
+                                    pts = target["points"][selectkey]
                                     drag["points"] = pts
                                     points += pts
-                                    gottenpointsobj[selectkey] = target['points'][selectkey]
+                                    gottenpointsobj[selectkey] = target["points"][
+                                        selectkey
+                                    ]
                                     gottenpoints.update(gottenpointsobj)
                                     gottenpointsobj = {}
 
@@ -229,22 +262,28 @@ class ImagexServer(TimServer):
             self.wout(sresult)
             return
 
-        if finalanswer and finalanswerquery and (tries >= max_tries or max_tries == max_infinity):
+        if (
+            finalanswer
+            and finalanswerquery
+            and (tries >= max_tries or max_tries == max_infinity)
+        ):
             print("--final answer--")
             obj = {}
             answertable = []
             for target in targets:
-                for k in target['points'].keys():
-                    if target['points'][k] > 0:
-                        obj['id'] = k
-                        obj['position'] = [target['position'][0] + target['snapOffset']
-                                           [0], target['position'][1] + target['snapOffset'][1]]
+                for k in target["points"].keys():
+                    if target["points"][k] > 0:
+                        obj["id"] = k
+                        obj["position"] = [
+                            target["position"][0] + target["snapOffset"][0],
+                            target["position"][1] + target["snapOffset"][1],
+                        ]
                         # Empty dict between loops.
                 answertable.append(obj)
                 obj = {}
 
-            answer['rightanswers'] = answertable
-            answer['studentanswers'] = gottenpoints
+            answer["rightanswers"] = answertable
+            answer["studentanswers"] = gottenpoints
             # print(answer)
         tries = tries + 1
         free_hand_data = get_json_param(query.jso, "input", "freeHandData", None)
@@ -252,7 +291,7 @@ class ImagexServer(TimServer):
         # Save user input and points to markup
         save = {"userAnswer": {"drags": drags}}
         if free_hand_data:
-            save['freeHandData'] = free_hand_data
+            save["freeHandData"] = free_hand_data
         result["save"] = save
         out = "saved"
         result["tim_info"] = {"points": points}
@@ -268,5 +307,5 @@ class ImagexServer(TimServer):
         self.wout(sresult)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     start_server(ImagexServer)

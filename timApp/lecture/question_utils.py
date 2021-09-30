@@ -4,11 +4,13 @@ from typing import Optional, TypeVar, Union
 from tim_common.utils import Missing
 
 
-def qst_rand_array(max_count: int,
-                   randoms: int,
-                   seed_word: str,
-                   random_seed: int = 0,
-                   locks: Optional[Union[int, list[int]]] = None) -> list[int]:
+def qst_rand_array(
+    max_count: int,
+    randoms: int,
+    seed_word: str,
+    random_seed: int = 0,
+    locks: Optional[Union[int, list[int]]] = None,
+) -> list[int]:
     """
     get array of count integers between 1 and max_count (incl.) using word and extra number as seed
     :param max_count: highest possible number (incl.) and max return list length
@@ -51,7 +53,7 @@ def qst_rand_array(max_count: int,
             seed_array.append(int(char, 36))
         except ValueError:
             pass
-    seed = int(''.join(map(str, seed_array)))
+    seed = int("".join(map(str, seed_array)))
     random.seed(seed + random_seed)
     random.shuffle(orig)
     for i in range(1, total + 1):
@@ -66,7 +68,7 @@ def qst_rand_array(max_count: int,
     return ret
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def qst_set_array_order(arr: list[T], order_array: list[int]) -> list[T]:
@@ -101,15 +103,15 @@ def qst_pick_expls(orig_expls: dict[str, T], order_array: list[int]) -> dict[str
 
 def create_points_table(points: str) -> list[dict[str, float]]:
     points_table = []
-    if points and points != '':
+    if points and points != "":
         points = str(points)
-        points_split = points.split('|')
+        points_split = points.split("|")
         for row in points_split:
-            row_points = row.split(';')
+            row_points = row.split(";")
             row_points_dict = {}
             for col in row_points:
-                if col != '':
-                    col_points = col.split(':', 2)
+                if col != "":
+                    col_points = col.split(":", 2)
                     if len(col_points) == 1:
                         row_points_dict[col_points[0]] = 1.0
                     else:
@@ -121,14 +123,16 @@ def create_points_table(points: str) -> list[dict[str, float]]:
     return points_table
 
 
-def calculate_points_from_json_answer(single_answers: list[list[str]],
-                                      points_table: Optional[list[dict[str, float]]],
-                                      default_points: Union[float, None, Missing] = 0) -> float:
+def calculate_points_from_json_answer(
+    single_answers: list[list[str]],
+    points_table: Optional[list[dict[str, float]]],
+    default_points: Union[float, None, Missing] = 0,
+) -> float:
     points = 0.0
     if not isinstance(default_points, float) and not isinstance(default_points, int):
         default_points = 0
     if points_table is None:
-        points_table = [{}]*len(single_answers)
+        points_table = [{}] * len(single_answers)
     for (oneAnswer, point_row) in zip(single_answers, points_table):
         for oneLine in oneAnswer:
             if oneLine in point_row:
@@ -138,21 +142,23 @@ def calculate_points_from_json_answer(single_answers: list[list[str]],
     return points
 
 
-def qst_filter_markup_points(points: str, question_type: str, rand_arr: list[int]) -> str:
+def qst_filter_markup_points(
+    points: str, question_type: str, rand_arr: list[int]
+) -> str:
     """
     filter markup's points field based on pre-generated array
     """
     # TODO: Use constants
-    if question_type == 'true-false' or question_type == 'matrix':
+    if question_type == "true-false" or question_type == "matrix":
         # point format 1:1;2:-0.5|1:-0.5;2:1 where | splits rows input, ; column input
-        arr = points.split('|')
+        arr = points.split("|")
         arr = qst_set_array_order(arr, rand_arr)
-        ret = '|'.join(arr)
+        ret = "|".join(arr)
     else:
         # point format 1:1;2:-0.5;3:-0.5 where ; splits row input
         tab = create_points_table(points)[0]
         tab = qst_pick_expls(tab, rand_arr)
-        ret = ';'.join(str(key) + ':' + str(val) for [key, val] in tab.items())
+        ret = ";".join(str(key) + ":" + str(val) for [key, val] in tab.items())
     return ret
 
 
@@ -162,15 +168,17 @@ def qst_handle_randomization(jso: dict) -> None:
     Update answer options, explanations and points accordingly
     :param jso: request json to modify
     """
-    markup = jso['markup']
+    markup = jso["markup"]
     rand_arr = None
-    prev_state = jso.get('state', None)
+    prev_state = jso.get("state", None)
     if prev_state and isinstance(prev_state, dict):
-        rand_arr = prev_state.get('order')
-        jso['state'] = prev_state.get('c')
-    rows = markup.get('rows', [])
-    if not prev_state and rand_arr is None:  # no previous answer, check markup for new order
-        rcount = markup.get('randomizedRows', 0)
+        rand_arr = prev_state.get("order")
+        jso["state"] = prev_state.get("c")
+    rows = markup.get("rows", [])
+    if (
+        not prev_state and rand_arr is None
+    ):  # no previous answer, check markup for new order
+        rcount = markup.get("randomizedRows", 0)
         # TODO: try to convert string
         if not isinstance(rcount, int):
             rcount = 0
@@ -178,11 +186,11 @@ def qst_handle_randomization(jso: dict) -> None:
             rcount = 0
         if rcount > 0:
             # markup['rows'] = qst_randomize_rows(rows,rcount,jso['user_id'])
-            random_seed = markup.get('randomSeed', 0)
+            random_seed = markup.get("randomSeed", 0)
             # TODO: use random seed generation within qst_rand_array if seed was string
             if not isinstance(random_seed, int):
                 random_seed = 0
-            locks = markup.get('doNotMove', [])
+            locks = markup.get("doNotMove", [])
             # TODO: MarkupModel should handle these checks?
             if locks is None:
                 locks = []
@@ -194,13 +202,15 @@ def qst_handle_randomization(jso: dict) -> None:
                     break
             if random_seed is None:
                 random_seed = 0
-            seed_string = str(jso.get('user_id', "")) + str(jso.get('taskID', ""))
-            rand_arr = qst_rand_array(len(rows), rcount, seed_string, random_seed, locks)
+            seed_string = str(jso.get("user_id", "")) + str(jso.get("taskID", ""))
+            rand_arr = qst_rand_array(
+                len(rows), rcount, seed_string, random_seed, locks
+            )
     if rand_arr is not None:  # specific order found in prev.ans or markup
-        markup['rows'] = qst_set_array_order(rows, rand_arr)
-        markup['expl'] = qst_pick_expls(markup['expl'], rand_arr)
-        points = markup.get('points')
+        markup["rows"] = qst_set_array_order(rows, rand_arr)
+        markup["expl"] = qst_pick_expls(markup["expl"], rand_arr)
+        points = markup.get("points")
         if points:
-            question_type = markup.get('questionType')
+            question_type = markup.get("questionType")
             points = qst_filter_markup_points(points, question_type, rand_arr)
-            markup['points'] = points
+            markup["points"] = points

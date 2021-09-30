@@ -10,25 +10,25 @@ from pandocfilters import toJSONFilter, Span, RawInline
 
 def classes_to_latex_cmds(key, value, fmt, meta):
     # open("Output.txt", "a").write("Key:"+key + " fmt:" + fmt + " value:" + str(value) + "\n")
-    if key == 'Str' and fmt == 'latex':
+    if key == "Str" and fmt == "latex":
         if value.startswith("RAWTEX"):
             cls = value[6:]
-            return RawInline("latex","\\" + cls + "{")
+            return RawInline("latex", "\\" + cls + "{")
             # return RawInline("tex", "\\begin(red)")
         if value == "ENDRAWTEX":
-            return RawInline("latex","}")
+            return RawInline("latex", "}")
             # return RawInline("tex", "\\end(red)")
 
-    if key == 'Str' and fmt == 'html':
+    if key == "Str" and fmt == "html":
         if value.startswith("RAWTEX"):
             cls = value[6:]
-            return RawInline("html",'<div class="' + cls + '">')
+            return RawInline("html", '<div class="' + cls + '">')
             # return RawInline("tex", "\\begin(red)")
         if value == "ENDRAWTEX":
-            return RawInline("html","</div>")
+            return RawInline("html", "</div>")
             # return RawInline("tex", "\\end(red)")
 
-    if key == 'Span' and fmt == 'latex':
+    if key == "Span" and fmt == "latex":
         ([ident, classes, kvs], contents) = value
 
         # debugging
@@ -36,9 +36,9 @@ def classes_to_latex_cmds(key, value, fmt, meta):
 
         classes_to_wrap = []
         for c in classes:
-            if c == 'hidden-print':
+            if c == "hidden-print":
                 return []
-            if c == 'visible-print':
+            if c == "visible-print":
                 continue
             if c not in ["csl-no-emph", "csl-no-strong", "csl-no-smallcaps"]:
                 classes_to_wrap.append(c)
@@ -70,7 +70,7 @@ def wrap_with_latex_cmds(content, classes_to_wrap):
 
 
 def latex(content):
-    return RawInline('latex', content)
+    return RawInline("latex", content)
 
 
 if __name__ == "__main__":

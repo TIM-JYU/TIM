@@ -5,12 +5,13 @@ from flask import Flask
 app = Flask(__name__)
 
 
-@app.get('/svn/')
+@app.get("/svn/")
 def hello():
-    provider = str(os.environ.get('PROVIDER', 'world'))
-    return 'Hello ' + provider + '!'
+    provider = str(os.environ.get("PROVIDER", "world"))
+    return "Hello " + provider + "!"
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Bind to PORT if defined, otherwise default to 5000.
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

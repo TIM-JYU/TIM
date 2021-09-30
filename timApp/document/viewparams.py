@@ -7,6 +7,7 @@ from tim_common.marshmallow_dataclass import class_schema
 @dataclass(frozen=True)
 class ViewParams:
     """View route parameters that don't affect document rendering."""
+
     direct_link_timer: int = 15
     goto: Optional[str] = None
     login: bool = False

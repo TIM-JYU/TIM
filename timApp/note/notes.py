@@ -11,19 +11,19 @@ from timApp.user.usergroup import UserGroup
 
 
 def tagstostr(tags: list[str]) -> str:
-    tagstr = ''
-    if 'difficult' in tags:
-        tagstr += 'd'
-    if 'unclear' in tags:
-        tagstr += 'u'
+    tagstr = ""
+    if "difficult" in tags:
+        tagstr += "d"
+    if "unclear" in tags:
+        tagstr += "u"
     return tagstr
 
 
 def strtotags(tagstr: str) -> list[str]:
     tags = []
-    if 'd' in tagstr:
+    if "d" in tagstr:
         tags.append("difficult")
-    if 'u' in tagstr:
+    if "u" in tagstr:
         tags.append("unclear")
     return tags
 
@@ -42,7 +42,9 @@ def process_notes(result: list[tuple[UserNote, User]]) -> list[tuple[UserNote, U
     return result
 
 
-def get_notes(usergroup_id: int, doc: Document, include_public=True) -> list[tuple[UserNote, User]]:
+def get_notes(
+    usergroup_id: int, doc: Document, include_public=True
+) -> list[tuple[UserNote, User]]:
     """Gets all notes for a document a particular user has access to.
 
     :param usergroup_id: The usergroup id.
@@ -53,16 +55,16 @@ def get_notes(usergroup_id: int, doc: Document, include_public=True) -> list[tup
     ids.add(doc.doc_id)
     f = UserGroup.id == usergroup_id
     if include_public:
-        f = f | (UserNote.access == 'everyone')
-    q = (UserNote.query
-         .filter(UserNote.doc_id.in_(ids))
-         .join(UserGroup)
-         .join(User, User.name == UserGroup.name)
-         .options(lazyload('*'))
-         .filter(f)
-         .order_by(UserNote.id)
-         .with_entities(UserNote, User)
-         )
+        f = f | (UserNote.access == "everyone")
+    q = (
+        UserNote.query.filter(UserNote.doc_id.in_(ids))
+        .join(UserGroup)
+        .join(User, User.name == UserGroup.name)
+        .options(lazyload("*"))
+        .filter(f)
+        .order_by(UserNote.id)
+        .with_entities(UserNote, User)
+    )
     return process_notes(q.all())
 
 
@@ -71,9 +73,13 @@ def move_notes(src_par: DocParagraph, dest_par: DocParagraph):
     :param src_par: Source paragraph
     :param dest_par: Destination paragraph
     """
-    if str(src_par.doc.doc_id) == str(dest_par.doc.doc_id) and str(src_par.get_id()) == str(dest_par.get_id()):
+    if str(src_par.doc.doc_id) == str(dest_par.doc.doc_id) and str(
+        src_par.get_id()
+    ) == str(dest_par.get_id()):
         return
 
-    for u in UserNote.query.filter_by(doc_id=src_par.doc.doc_id, par_id=src_par.get_id()):
+    for u in UserNote.query.filter_by(
+        doc_id=src_par.doc.doc_id, par_id=src_par.get_id()
+    ):
         u.doc_id = dest_par.doc.doc_id
         u.par_id = dest_par.get_id()

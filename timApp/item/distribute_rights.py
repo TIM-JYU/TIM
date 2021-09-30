@@ -25,49 +25,58 @@ from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import grant_access
 from timApp.util.flask.requesthelper import RouteException
-from timApp.util.flask.responsehelper import ok_response, to_json_str, json_response, safe_redirect
+from timApp.util.flask.responsehelper import (
+    ok_response,
+    to_json_str,
+    json_response,
+    safe_redirect,
+)
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_warning
 from timApp.util.secret import check_secret, get_secret_or_abort
-from timApp.util.utils import read_json_lines, collect_errors_from_hosts, get_current_time
+from timApp.util.utils import (
+    read_json_lines,
+    collect_errors_from_hosts,
+    get_current_time,
+)
 from tim_common.marshmallow_dataclass import field_for_schema, class_schema
 from tim_common.utils import DurationSchema
 from tim_common.vendor.requests_futures import FuturesSession
 
-dist_bp = TypedBlueprint('dist_rights', __name__, url_prefix='/distRights')
+dist_bp = TypedBlueprint("dist_rights", __name__, url_prefix="/distRights")
 
 
 @dataclass
 class ConfirmOp:
-    type: Literal['confirm']
+    type: Literal["confirm"]
     email: str
     timestamp: datetime
 
 
 @dataclass
 class ConfirmGroupOp:
-    type: Literal['confirmgroup']
+    type: Literal["confirmgroup"]
     group: str
     timestamp: datetime
 
 
 @dataclass
 class QuitOp:
-    type: Literal['quit']
+    type: Literal["quit"]
     email: str
     timestamp: datetime
 
 
 @dataclass
 class UnlockOp:
-    type: Literal['unlock']
+    type: Literal["unlock"]
     email: str
     timestamp: datetime
 
 
 @dataclass
 class ChangeTimeOp:
-    type: Literal['changetime']
+    type: Literal["changetime"]
     email: str
     secs: int
     timestamp: datetime
@@ -75,7 +84,7 @@ class ChangeTimeOp:
 
 @dataclass
 class ChangeTimeGroupOp:
-    type: Literal['changetimegroup']
+    type: Literal["changetimegroup"]
     group: str
     secs: int
     timestamp: datetime
@@ -83,21 +92,21 @@ class ChangeTimeGroupOp:
 
 @dataclass
 class UndoConfirmOp:
-    type: Literal['undoconfirm']
+    type: Literal["undoconfirm"]
     email: str
     timestamp: datetime
 
 
 @dataclass
 class UndoQuitOp:
-    type: Literal['undoquit']
+    type: Literal["undoquit"]
     email: str
     timestamp: datetime
 
 
 @dataclass
 class ChangeStartTimeGroupOp:
-    type: Literal['changestarttimegroup']
+    type: Literal["changestarttimegroup"]
     group: str
     starttime: datetime
     timestamp: datetime
@@ -148,14 +157,16 @@ class RightLogEntry:
     right: Right
 
 
-T = TypeVar('T', bound=RightOp)
+T = TypeVar("T", bound=RightOp)
 
 
 @dataclass
 class RightLog:
     initial_right: Right
     group_cache: dict[str, list[Email]] = field(default_factory=dict)
-    op_history: DefaultDict[Email, list[RightLogEntry]] = field(default_factory=lambda: defaultdict(list))
+    op_history: DefaultDict[Email, list[RightLogEntry]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
 
     def add_op(self, r: RightOp) -> None:
         if isinstance(r, ChangeTimeGroupOp):
@@ -178,7 +189,10 @@ class RightLog:
         elif isinstance(r, UnlockOp):
             if curr_right.duration:
                 curr_right.accessible_from = r.timestamp
-                curr_right.accessible_to = curr_right.accessible_from + get_duration_now(curr_right, r.timestamp)
+                curr_right.accessible_to = (
+                    curr_right.accessible_from
+                    + get_duration_now(curr_right, r.timestamp)
+                )
             else:
                 # TODO: This shouldn't happen in practice because non-duration rights cannot be unlocked.
                 #  Perhaps log a warning etc.
@@ -197,19 +211,21 @@ class RightLog:
         elif isinstance(r, UndoQuitOp):
             if isinstance(curr_hist[-1].op, QuitOp):
                 try:
-                    last_active = curr_hist[-2].right  # -1 is the QuitOp, so one before that
+                    last_active = curr_hist[
+                        -2
+                    ].right  # -1 is the QuitOp, so one before that
                 except IndexError:
                     last_active = self.initial_right
                 curr_right.accessible_to = last_active.accessible_to
         else:
-            raise Exception('unknown op')
+            raise Exception("unknown op")
         curr_hist.append(RightLogEntry(r, curr_right))
 
     def process_group_rights(
-            self,
-            emails: list[Email],
-            fn: Callable[[Right, T], None],
-            r: T,
+        self,
+        emails: list[Email],
+        fn: Callable[[Right, T], None],
+        r: T,
     ) -> None:
         op_history = self.op_history
         for e in emails:
@@ -223,15 +239,17 @@ class RightLog:
     def get_group_emails(self, r: GroupOp) -> list[Email]:
         emails = self.group_cache.get(r.group)
         if not emails:
-            emails = [e for e, in (
-                UserGroup.query
-                    .join(User, UserGroup.users)
+            emails = [
+                e
+                for e, in (
+                    UserGroup.query.join(User, UserGroup.users)
                     .filter(UserGroup.name == r.group)
                     .with_entities(User.email)
-            )]
+                )
+            ]
         if not emails:
             if not UserGroup.get_by_name(r.group):
-                raise Exception(f'Usergroup {r.group} not found')
+                raise Exception(f"Usergroup {r.group} not found")
         self.group_cache[r.group] = [e for e in emails]
         return emails
 
@@ -269,7 +287,9 @@ def change_starttime(right: Right, op: ChangeStartTimeGroupOp) -> None:
         # Keep the difference (duration_to - duration_from) constant.
         unlock_period = dur_to - right.duration_from if dur_to else None
         right.duration_from = op.starttime
-        right.duration_to = right.duration_from + unlock_period if unlock_period else None
+        right.duration_to = (
+            right.duration_from + unlock_period if unlock_period else None
+        )
 
 
 def confirm_group(right: Right, op: ConfirmGroupOp) -> None:
@@ -277,9 +297,9 @@ def confirm_group(right: Right, op: ConfirmGroupOp) -> None:
 
 
 def get_current_rights(target: str) -> tuple[RightLog, Path]:
-    fp = Path(app.config['FILES_PATH'])
-    initial_rights, lines = read_rights(fp / f'{target}.rights.initial', 1)
-    rights_log_path = fp / f'{target}.rights.log'
+    fp = Path(app.config["FILES_PATH"])
+    initial_rights, lines = read_rights(fp / f"{target}.rights.initial", 1)
+    rights_log_path = fp / f"{target}.rights.log"
     try:
         logged_rights, _ = read_rights(rights_log_path, 0)
     except FileNotFoundError:
@@ -296,17 +316,25 @@ def read_rights(path: Path, index: int) -> tuple[list[RightOp], list[dict]]:
     return [RightOpSchema.deserialize(line) for line in lines[index:]], lines
 
 
-def do_register_right(op: RightOp, target: str) -> tuple[Optional[RightLog], Optional[str]]:
+def do_register_right(
+    op: RightOp, target: str
+) -> tuple[Optional[RightLog], Optional[str]]:
     rights, right_log_path = get_current_rights(target)
     if not isinstance(op, GroupOps):
         latest_op = rights.latest_op(op.email)
-        if latest_op and isinstance(latest_op.op, QuitOp) and not isinstance(op, UndoQuitOp):
-            return None, f'{target}: Cannot register a non-UndoQuitOp after QuitOp'
-        if isinstance(op, UndoQuitOp) and (not latest_op or not isinstance(latest_op.op, QuitOp)):
-            return None, f'{target}: There is no QuitOp to undo'
+        if (
+            latest_op
+            and isinstance(latest_op.op, QuitOp)
+            and not isinstance(op, UndoQuitOp)
+        ):
+            return None, f"{target}: Cannot register a non-UndoQuitOp after QuitOp"
+        if isinstance(op, UndoQuitOp) and (
+            not latest_op or not isinstance(latest_op.op, QuitOp)
+        ):
+            return None, f"{target}: There is no QuitOp to undo"
     rights.add_op(op)
-    with right_log_path.open('a') as f:
-        f.write(to_json_str(op) + '\n')
+    with right_log_path.open("a") as f:
+        f.write(to_json_str(op) + "\n")
     return rights, None
 
 
@@ -314,19 +342,21 @@ def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> list[str]:
     emails = rights.group_cache[op.group] if isinstance(op, GroupOps) else [op.email]
     session = FuturesSession()
     futures = []
-    host_config = app.config['DIST_RIGHTS_HOSTS'][target]
-    dist_rights_send_secret = get_secret_or_abort('DIST_RIGHTS_SEND_SECRET')
-    hosts = host_config['hosts']
-    rights_to_send = [{'email': e, 'right': rights.get_right(e)} for e in emails]
+    host_config = app.config["DIST_RIGHTS_HOSTS"][target]
+    dist_rights_send_secret = get_secret_or_abort("DIST_RIGHTS_SEND_SECRET")
+    hosts = host_config["hosts"]
+    rights_to_send = [{"email": e, "right": rights.get_right(e)} for e in emails]
     for m in hosts:
         r = session.put(
-            f'{m}/distRights/receive',
-            data=to_json_str({
-                'rights': rights_to_send,
-                'secret': dist_rights_send_secret,
-                'item_path': host_config['item'],
-            }),
-            headers={'Content-Type': 'application/json'},
+            f"{m}/distRights/receive",
+            data=to_json_str(
+                {
+                    "rights": rights_to_send,
+                    "secret": dist_rights_send_secret,
+                    "item_path": host_config["item"],
+                }
+            ),
+            headers={"Content-Type": "application/json"},
             timeout=10,
         )
         futures.append(r)
@@ -334,43 +364,48 @@ def do_dist_rights(op: RightOp, rights: RightLog, target: str) -> list[str]:
 
 
 def register_right_impl(
-        op: RightOp,
-        target: Union[str, list[str]],
-        backup: bool = True,
-        distribute: bool = True,
+    op: RightOp,
+    target: Union[str, list[str]],
+    backup: bool = True,
+    distribute: bool = True,
 ) -> list[str]:
     targets = [target] if isinstance(target, str) else target
     errors = []
     for tgt in targets:
         target_s = secure_filename(tgt)
         if not target_s:
-            raise RouteException(f'invalid target: {tgt}')
-        with filelock.FileLock(f'/tmp/log_right_{target_s}'):
+            raise RouteException(f"invalid target: {tgt}")
+        with filelock.FileLock(f"/tmp/log_right_{target_s}"):
             rights, err = do_register_right(op, target_s)
             if err:
                 errors.append(err)
         if distribute and rights:
-            with filelock.FileLock(f'/tmp/dist_right_{target_s}'):
+            with filelock.FileLock(f"/tmp/dist_right_{target_s}"):
                 errors.extend(do_dist_rights(op, rights, target_s))
     if backup:
         backup_errors = register_op_to_hosts(op, target, is_receiving_backup=True)
         if backup_errors:
-            log_warning(f'Right backup failed for some hosts: {backup_errors}')
+            log_warning(f"Right backup failed for some hosts: {backup_errors}")
     return errors
 
 
-@dist_bp.post('/register')
+@dist_bp.post("/register")
 @csrf.exempt
 def register_right(
-        op: RightOp,
-        target: Union[str, list[str]],
-        secret: str,
-        is_receiving_backup: bool = False,
+    op: RightOp,
+    target: Union[str, list[str]],
+    secret: str,
+    is_receiving_backup: bool = False,
 ) -> Response:
-    check_secret(secret, 'DIST_RIGHTS_REGISTER_SECRET')
-    is_active_distributor = app.config['DIST_RIGHTS_IS_DISTRIBUTOR']
-    errors = register_right_impl(op, target, backup=False, distribute=not is_receiving_backup and is_active_distributor)
-    return json_response({'host_errors': errors})
+    check_secret(secret, "DIST_RIGHTS_REGISTER_SECRET")
+    is_active_distributor = app.config["DIST_RIGHTS_IS_DISTRIBUTOR"]
+    errors = register_right_impl(
+        op,
+        target,
+        backup=False,
+        distribute=not is_receiving_backup and is_active_distributor,
+    )
+    return json_response({"host_errors": errors})
 
 
 @dataclass
@@ -379,20 +414,19 @@ class RightEntry:
     right: Right
 
 
-@dist_bp.put('/receive')
+@dist_bp.put("/receive")
 @csrf.exempt
 def receive_right(
-        rights: list[RightEntry],
-        item_path: str,
-        secret: str,
+    rights: list[RightEntry],
+    item_path: str,
+    secret: str,
 ) -> Response:
-    check_secret(secret, 'DIST_RIGHTS_RECEIVE_SECRET')
+    check_secret(secret, "DIST_RIGHTS_RECEIVE_SECRET")
     uges = (
-        UserGroup.query
-            .join(User, UserGroup.name == User.name)
-            .filter(User.email.in_(re.email for re in rights))
-            .with_entities(UserGroup, User.email)
-            .all()
+        UserGroup.query.join(User, UserGroup.name == User.name)
+        .filter(User.email.in_(re.email for re in rights))
+        .with_entities(UserGroup, User.email)
+        .all()
     )
     group_map = {}
     for ug, email in uges:
@@ -401,7 +435,7 @@ def receive_right(
     if not item:
         item = DocEntry.find_by_path(item_path)
     if not item:
-        raise RouteException(f'Item not found: {item_path}')
+        raise RouteException(f"Item not found: {item_path}")
     for r in rights:
         ug = group_map[r.email]
         right = r.right
@@ -411,7 +445,9 @@ def receive_right(
             AccessType.view,
             # In TIM, a right is considered active whenever accessible_from is set, so if the right still requires
             # confirmation, we must set accessible_from to be null.
-            accessible_from=right.accessible_from if not right.require_confirm else None,
+            accessible_from=right.accessible_from
+            if not right.require_confirm
+            else None,
             accessible_to=right.accessible_to,
             duration=right.duration,
             duration_from=right.duration_from,
@@ -422,76 +458,81 @@ def receive_right(
     return ok_response()
 
 
-@dist_bp.get('/changeStartTime')
+@dist_bp.get("/changeStartTime")
 def change_starttime_route(
-        group: str,
-        target: str,  # comma-separated; TODO: List[str] doesn't work for GET requests
-        minutes: int,
-        redir: str,
+    group: str,
+    target: str,  # comma-separated; TODO: List[str] doesn't work for GET requests
+    minutes: int,
+    redir: str,
 ) -> Response:
-    targets = target.split(',')
+    targets = target.split(",")
     u = get_current_user_object()
-    conf_name = 'DIST_RIGHTS_START_TIME_GROUP'
+    conf_name = "DIST_RIGHTS_START_TIME_GROUP"
     start_time_group = app.config[conf_name]
     if not start_time_group:
-        raise RouteException(f'{conf_name} not configured.')
+        raise RouteException(f"{conf_name} not configured.")
     ug = UserGroup.get_by_name(start_time_group)
     if u not in ug.users and not u.is_admin:
-        raise AccessDenied('You are not in the group that can change the start time.')
+        raise AccessDenied("You are not in the group that can change the start time.")
     curr_time = get_current_time()
     op = ChangeStartTimeGroupOp(
-        type='changestarttimegroup',
+        type="changestarttimegroup",
         timestamp=curr_time,
         group=group,
-        starttime=curr_time + timedelta(minutes=minutes)
+        starttime=curr_time + timedelta(minutes=minutes),
     )
     errors = register_right_impl(op, targets)
     if errors:
         flash(str(errors))
     parsed = urlparse(redir)
     if parsed.scheme or parsed.netloc:
-        raise RouteException('redir must be relative')
+        raise RouteException("redir must be relative")
     return safe_redirect(request.host_url + redir)
 
 
-def register_op_to_hosts(op: RightOp, target: Union[str, list[str]], is_receiving_backup: bool) -> list[str]:
-    curr_host = app.config['TIM_HOST']
-    register_hosts = [h for h in app.config['DIST_RIGHTS_REGISTER_HOSTS'] if h != curr_host]
+def register_op_to_hosts(
+    op: RightOp, target: Union[str, list[str]], is_receiving_backup: bool
+) -> list[str]:
+    curr_host = app.config["TIM_HOST"]
+    register_hosts = [
+        h for h in app.config["DIST_RIGHTS_REGISTER_HOSTS"] if h != curr_host
+    ]
     session = FuturesSession()
     futures: list[Future] = []
     for h in register_hosts:
         f = session.post(
-            f'{h}/distRights/register',
-            to_json_str({
-                'op': op,
-                'target': target,
-                'secret': app.config['DIST_RIGHTS_REGISTER_SEND_SECRET'],
-                'is_receiving_backup': is_receiving_backup,
-            }),
-            headers={'Content-type': 'application/json'},
+            f"{h}/distRights/register",
+            to_json_str(
+                {
+                    "op": op,
+                    "target": target,
+                    "secret": app.config["DIST_RIGHTS_REGISTER_SEND_SECRET"],
+                    "is_receiving_backup": is_receiving_backup,
+                }
+            ),
+            headers={"Content-type": "application/json"},
             timeout=10,
         )
         futures.append(f)
     return collect_errors_from_hosts(futures, register_hosts)
 
 
-@dist_bp.get('/current')
+@dist_bp.get("/current")
 def get_current_rights_route(
-        groups: str,  # comma-separated; TODO: List[str] doesn't work for GET requests
-        target: str,
+    groups: str,  # comma-separated; TODO: List[str] doesn't work for GET requests
+    target: str,
 ) -> Response:
     verify_admin()
     try:
         rights, _ = get_current_rights(target)
     except FileNotFoundError:
-        raise RouteException(f'Unknown target: {target}')
-    groups_list = groups.split(',')
+        raise RouteException(f"Unknown target: {target}")
+    groups_list = groups.split(",")
     emails = (
-        User.query
-            .join(UserGroup, User.groups)
-            .filter(UserGroup.name.in_(groups_list))
-            .with_entities(User.email)
-            .order_by(User.email)
-            .all()
+        User.query.join(UserGroup, User.groups)
+        .filter(UserGroup.name.in_(groups_list))
+        .with_entities(User.email)
+        .order_by(User.email)
+        .all()
     )
-    return json_response([{'email': e, 'right': rights.get_right(e)} for e, in emails])
+    return json_response([{"email": e, "right": rights.get_right(e)} for e, in emails])

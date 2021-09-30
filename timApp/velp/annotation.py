@@ -14,8 +14,14 @@ from flask import Blueprint, Response
 
 from timApp.answer.answer import Answer
 from timApp.answer.routes import verify_answer_access
-from timApp.auth.accesshelper import verify_logged_in, has_teacher_access, \
-    get_doc_or_abort, verify_view_access, AccessDenied, verify_teacher_access
+from timApp.auth.accesshelper import (
+    verify_logged_in,
+    has_teacher_access,
+    get_doc_or_abort,
+    verify_view_access,
+    AccessDenied,
+    verify_teacher_access,
+)
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docinfo import DocInfo
 from timApp.document.viewcontext import default_view_ctx
@@ -23,17 +29,23 @@ from timApp.peerreview.peerreview_utils import has_review_access
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, use_model
-from timApp.util.flask.responsehelper import json_response, ok_response, no_cache_json_response, to_json_str
+from timApp.util.flask.responsehelper import (
+    json_response,
+    ok_response,
+    no_cache_json_response,
+    to_json_str,
+)
 from timApp.util.utils import get_current_time
 from timApp.velp.annotation_model import Annotation, AnnotationPosition
-from timApp.velp.annotations import AnnotationVisibility, get_annotations_with_comments_in_document, \
-    set_annotation_query_opts
+from timApp.velp.annotations import (
+    AnnotationVisibility,
+    get_annotations_with_comments_in_document,
+    set_annotation_query_opts,
+)
 from timApp.velp.velp_models import AnnotationComment
 from timApp.velp.velps import get_latest_velp_version
 
-annotations = Blueprint('annotations',
-                        __name__,
-                        url_prefix='')
+annotations = Blueprint("annotations", __name__, url_prefix="")
 
 
 @dataclass
@@ -41,7 +53,7 @@ class AddAnnotationModel:
     velp_id: int
     doc_id: int
     coord: AnnotationPosition
-    visible_to: AnnotationVisibility = field(metadata={'by_value': True})
+    visible_to: AnnotationVisibility = field(metadata={"by_value": True})
     points: Optional[float]
     color: Optional[str] = None
     icon_id: Optional[int] = None
@@ -52,8 +64,7 @@ class AddAnnotationModel:
 @annotations.post("/add_annotation")
 @use_model(AddAnnotationModel)
 def add_annotation(m: AddAnnotationModel) -> Response:
-    """Adds a new annotation.
-    """
+    """Adds a new annotation."""
     d = get_doc_or_abort(m.doc_id)
     verify_view_access(d)
     color = m.color
@@ -75,7 +86,9 @@ def add_annotation(m: AddAnnotationModel) -> Response:
         except AccessDenied:
             a: Answer = Answer.query.get(m.answer_id)
             if a.has_many_collaborators:
-                raise RouteException('Reviewing answers with multiple collaborators not supported yet')
+                raise RouteException(
+                    "Reviewing answers with multiple collaborators not supported yet"
+                )
             if not has_review_access(d, annotator, a.parsed_task_id, a.users_all[0]):
                 raise AccessDenied()
         else:
@@ -90,7 +103,7 @@ def add_annotation(m: AddAnnotationModel) -> Response:
         document_id=m.doc_id,
         color=color,
         answer_id=m.answer_id,
-        draw_data=m.draw_data
+        draw_data=m.draw_data,
     )
     db.session.add(ann)
     ann.set_position_info(m.coord)
@@ -110,28 +123,35 @@ class AnnotationIdModel:
 
 @dataclass
 class UpdateAnnotationModel(AnnotationIdModel):
-    visible_to: AnnotationVisibility = field(metadata={'by_value': True})
+    visible_to: AnnotationVisibility = field(metadata={"by_value": True})
     points: Optional[float] = None
     color: Optional[str] = None
     coord: Optional[AnnotationPosition] = None
     draw_data: Optional[list[dict]] = None
 
 
-def check_visibility_and_maybe_get_doc(user: User, ann: Annotation) -> tuple[bool, Optional[DocInfo]]:
+def check_visibility_and_maybe_get_doc(
+    user: User, ann: Annotation
+) -> tuple[bool, Optional[DocInfo]]:
     d = None
     if user.id == ann.annotator_id:
         return True, d
     if ann.visible_to == AnnotationVisibility.everyone.value:
         return True, d
     d = get_doc_or_abort(ann.document_id)
-    if ann.visible_to == AnnotationVisibility.teacher.value and user.has_teacher_access(d):
+    if (
+        ann.visible_to == AnnotationVisibility.teacher.value
+        and user.has_teacher_access(d)
+    ):
         return True, d
     if ann.visible_to == AnnotationVisibility.owner.value and user.has_ownership(d):
         return True, d
     return False, d
 
 
-def check_annotation_edit_access_and_maybe_get_doc(user: User, ann: Annotation) -> tuple[bool, Optional[DocInfo]]:
+def check_annotation_edit_access_and_maybe_get_doc(
+    user: User, ann: Annotation
+) -> tuple[bool, Optional[DocInfo]]:
     vis, d = check_visibility_and_maybe_get_doc(user, ann)
     if not vis:
         return False, d
@@ -146,8 +166,7 @@ def check_annotation_edit_access_and_maybe_get_doc(user: User, ann: Annotation) 
 @annotations.post("/update_annotation")
 @use_model(UpdateAnnotationModel)
 def update_annotation(m: UpdateAnnotationModel) -> Response:
-    """Updates the information of an annotation.
-    """
+    """Updates the information of an annotation."""
     verify_logged_in()
     user = get_current_user_object()
 
@@ -182,8 +201,7 @@ def update_annotation(m: UpdateAnnotationModel) -> Response:
 
 
 def is_color_hex_string(s: str) -> bool:
-    """Checks if string is valid HTML color hex string.
-    """
+    """Checks if string is valid HTML color hex string."""
     exp = r"#[a-fA-F0-9]{6}"
     check = re.match(exp, s)
     if check is not None:
@@ -194,15 +212,16 @@ def is_color_hex_string(s: str) -> bool:
 @annotations.post("/invalidate_annotation")
 @use_model(AnnotationIdModel)
 def invalidate_annotation(m: AnnotationIdModel) -> Response:
-    """Invalidates an annotation by setting its valid_until to current moment.
-    """
+    """Invalidates an annotation by setting its valid_until to current moment."""
 
     verify_logged_in()
     annotation = get_annotation_or_abort(m.id)
     user = get_current_user_object()
     can_edit, _ = check_annotation_edit_access_and_maybe_get_doc(user, annotation)
     if not can_edit:
-        raise AccessDenied("Sorry, you don't have permission to delete this annotation.")
+        raise AccessDenied(
+            "Sorry, you don't have permission to delete this annotation."
+        )
     annotation.valid_until = get_current_time()
     db.session.commit()
     return ok_response()
@@ -216,23 +235,24 @@ class AddAnnotationCommentModel(AnnotationIdModel):
 def get_annotation_or_abort(ann_id: int) -> Annotation:
     ann = set_annotation_query_opts(Annotation.query).get(ann_id)
     if not ann:
-        raise RouteException(f'Annotation with id {ann_id} not found')
+        raise RouteException(f"Annotation with id {ann_id} not found")
     return ann
 
 
 @annotations.post("/add_annotation_comment")
 @use_model(AddAnnotationCommentModel)
 def add_comment_route(m: AddAnnotationCommentModel) -> Response:
-    """Adds a new comment to the annotation.
-    """
+    """Adds a new comment to the annotation."""
     verify_logged_in()
     commenter = get_current_user_object()
     a = get_annotation_or_abort(m.id)
     vis, _ = check_visibility_and_maybe_get_doc(commenter, a)
     if not vis:
-        raise AccessDenied("Sorry, you don't have permission to add comments to this annotation.")
+        raise AccessDenied(
+            "Sorry, you don't have permission to add comments to this annotation."
+        )
     if not m.content:
-        raise RouteException('Comment must not be empty')
+        raise RouteException("Comment must not be empty")
     a.comments.append(AnnotationComment(content=m.content, commenter_id=commenter.id))
     # TODO: Send email to annotator if commenter is not the annotator.
     db.session.commit()

@@ -4,8 +4,13 @@ from typing import NamedTuple, Generator, Match, Optional
 
 import attr
 
-from timApp.admin.util import enum_pars, create_argparser, process_items, get_url_for_match, \
-    BasicArguments
+from timApp.admin.util import (
+    enum_pars,
+    create_argparser,
+    process_items,
+    get_url_for_match,
+    BasicArguments,
+)
 from timApp.document.docinfo import DocInfo
 from timApp.document.docparagraph import DocParagraph
 
@@ -14,13 +19,13 @@ from timApp.document.docparagraph import DocParagraph
 class SearchArgumentsBasic:
     """Arguments for a search operation."""
 
-    term: str = attr.ib(kw_only=True, default='')
+    term: str = attr.ib(kw_only=True, default="")
     """The search term."""
 
     regex: bool = attr.ib(kw_only=True, default=False)
     """If true, interpret term as a regular expression."""
 
-    format: str = attr.ib(kw_only=True, default='{0}')
+    format: str = attr.ib(kw_only=True, default="{0}")
     """Format string to print matches."""
 
     onlyfirst: Optional[int] = attr.ib(kw_only=True, default=None)
@@ -38,6 +43,7 @@ class SearchArgumentsBase(BasicArguments, SearchArgumentsBasic):
 @attr.s
 class SearchArgumentsCLI(SearchArgumentsBase):
     """Command-line arguments for a search operation."""
+
     docsonly: bool = attr.ib(kw_only=True)
     exported: bool = attr.ib(kw_only=True)
 
@@ -75,7 +81,9 @@ class SearchResult(NamedTuple):
         )
 
 
-def matches_attr_filter(p: DocParagraph, key: Optional[str], value: Optional[str]) -> bool:
+def matches_attr_filter(
+    p: DocParagraph, key: Optional[str], value: Optional[str]
+) -> bool:
     if key is None:
         return True
     a = p.get_attr(key)
@@ -85,7 +93,9 @@ def matches_attr_filter(p: DocParagraph, key: Optional[str], value: Optional[str
         return False
 
 
-def search(d: DocInfo, args: SearchArgumentsBasic, use_exported: bool) -> Generator[SearchResult, None, None]:
+def search(
+    d: DocInfo, args: SearchArgumentsBasic, use_exported: bool
+) -> Generator[SearchResult, None, None]:
     """Performs a search operation for the specified document, yielding SearchResults.
 
     :param args: The search arguments.
@@ -98,7 +108,7 @@ def search(d: DocInfo, args: SearchArgumentsBasic, use_exported: bool) -> Genera
     filter_attr_key = None
     filter_attr_value = None
     if args.filter_attr:
-        parts = args.filter_attr.split('=')
+        parts = args.filter_attr.split("=")
         filter_attr_key = parts[0]
         if len(parts) > 1:
             filter_attr_value = parts[1]
@@ -136,39 +146,62 @@ def search_and_print(d: DocInfo, args: SearchArgumentsCLI) -> int:
         if args.format:
             print(result.format_match(args))
             continue
-        print(f"""
+        print(
+            f"""
 {header}
 {'-' * len(header)}
 {result.match.string}
-""".strip() + "\n")
+""".strip()
+            + "\n"
+        )
     return found
 
 
-def create_basic_search_argparser(desc: str, is_readonly: bool=True, require_term: bool=True) -> ArgumentParser:
+def create_basic_search_argparser(
+    desc: str, is_readonly: bool = True, require_term: bool = True
+) -> ArgumentParser:
     parser = create_argparser(desc, readonly=is_readonly)
-    parser.add_argument('--term', required=require_term, help='search term')
-    parser.add_argument('--only-first', help='search only first x paragraphs in each document', dest='onlyfirst',
-                        type=int)
-    to_param = '' if is_readonly else ', to'
-    format_default = '{url}: {0}' if is_readonly else '{url}: {0} -> {to}'
-    parser.add_argument('--format',
-                        help='format string to print regular expression matches, '
-                             'e.g. "{doc_id}#{par_id}: {0}". Available variables: '
-                             f'indices 0 through number of subgroups in the regex, doc_id, par_id, url{to_param}.',
-                        default=format_default)
-    parser.add_argument('--regex', help='interpret search term as a regular expression', action='store_true')
-    parser.add_argument('--filter_attr', help='filter paragraphs by attribute[=value]')
+    parser.add_argument("--term", required=require_term, help="search term")
+    parser.add_argument(
+        "--only-first",
+        help="search only first x paragraphs in each document",
+        dest="onlyfirst",
+        type=int,
+    )
+    to_param = "" if is_readonly else ", to"
+    format_default = "{url}: {0}" if is_readonly else "{url}: {0} -> {to}"
+    parser.add_argument(
+        "--format",
+        help="format string to print regular expression matches, "
+        'e.g. "{doc_id}#{par_id}: {0}". Available variables: '
+        f"indices 0 through number of subgroups in the regex, doc_id, par_id, url{to_param}.",
+        default=format_default,
+    )
+    parser.add_argument(
+        "--regex",
+        help="interpret search term as a regular expression",
+        action="store_true",
+    )
+    parser.add_argument("--filter_attr", help="filter paragraphs by attribute[=value]")
     return parser
 
 
 def main() -> None:
-    parser = create_basic_search_argparser('Searches in documents')
+    parser = create_basic_search_argparser("Searches in documents")
 
-    parser.add_argument('--exported', help='use the exported form of markdown when searching', action='store_true')
-    parser.add_argument('--docs-only', help='print found documents only, not individual paragraphs', dest='docsonly',
-                        action='store_true')
+    parser.add_argument(
+        "--exported",
+        help="use the exported form of markdown when searching",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--docs-only",
+        help="print found documents only, not individual paragraphs",
+        dest="docsonly",
+        action="store_true",
+    )
     process_items(search_and_print, parser)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

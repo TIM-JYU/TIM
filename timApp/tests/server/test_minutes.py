@@ -1,7 +1,11 @@
 from timApp.admin.replace_in_documents import perform_replace, ReplaceArguments
 from timApp.auth.accesstype import AccessType
 from timApp.document.docentry import DocEntry
-from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME, PREAMBLE_FOLDER_NAME
+from timApp.document.specialnames import (
+    TEMPLATE_FOLDER_NAME,
+    PRINT_FOLDER_NAME,
+    PREAMBLE_FOLDER_NAME,
+)
 from timApp.tests.browser.browsertest import BrowserTest
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
@@ -11,19 +15,22 @@ from timApp.util.utils import decode_csplugin, static_tim_doc
 
 # TODO: Logging in as different user does not work in BrowserTest classes
 class MinutesCreation(TimRouteTest):
-
     def test_minutes_creation(self):
         # Tests creation of minutes based on a meeting invitation document
         self.login_test1()
         knro = 3
         d = self.create_doc(settings={"macros": {"knro": knro}})
-        j = self.upload_file(d, b'GIF87a', 'test.jpg')
-        image_path = j['image']
+        j = self.upload_file(d, b"GIF87a", "test.jpg")
+        image_path = j["image"]
         minutes_document_path = f"{d.location}/pk/pk{knro}"
-        self.json_post("/minutes/createMinutes",
-                       json_data={"item_path": minutes_document_path,
-                                  "item_title": f"pk{knro}",
-                                  "copy": d.id})
+        self.json_post(
+            "/minutes/createMinutes",
+            json_data={
+                "item_path": minutes_document_path,
+                "item_title": f"pk{knro}",
+                "copy": d.id,
+            },
+        )
 
         d2 = DocEntry.find_by_path(minutes_document_path)
         chg = d2.document.get_changelog()
@@ -34,7 +41,7 @@ class MinutesCreation(TimRouteTest):
         self.test_user_2.grant_access(d2, AccessType.view)
         db.session.commit()
         self.login_test2()
-        self.get(f'/images/{image_path}', expect_status=403)
+        self.get(f"/images/{image_path}", expect_status=403)
 
 
 # BrowserTest is required because test needs in-process plugin (timTable) and
@@ -43,53 +50,74 @@ class MinutesHandling(BrowserTest):
     def test_minute_extracts(self):
         # Tests creation of extracts from a full minutes document
         self.login_test1()
-        ug1 = UserGroup.create('ittdk18')
-        ug2 = UserGroup.create('ittdk1')
+        ug1 = UserGroup.create("ittdk18")
+        ug2 = UserGroup.create("ittdk1")
         u = self.current_user
         u.groups.append(ug1)
         u.groups.append(ug2)
         db.session.commit()
         knro = 9
-        d_kokous = self.create_doc(path=self.get_personal_item_path('tdk/2018/kokous9'),
-                                   from_file=static_tim_doc('tdk/memo.md'))
-        d_lait = self.create_doc(path=self.get_personal_item_path('tdk/lait/lait'),
-                                 from_file=static_tim_doc('tdk/lait.md'))
+        d_kokous = self.create_doc(
+            path=self.get_personal_item_path("tdk/2018/kokous9"),
+            from_file=static_tim_doc("tdk/memo.md"),
+        )
+        d_lait = self.create_doc(
+            path=self.get_personal_item_path("tdk/lait/lait"),
+            from_file=static_tim_doc("tdk/lait.md"),
+        )
         d_preamble = self.create_doc(
-            path=self.get_personal_item_path(f'tdk/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/preamble'),
-            from_file=static_tim_doc('tdk/preamble.md'))
+            path=self.get_personal_item_path(
+                f"tdk/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/preamble"
+            ),
+            from_file=static_tim_doc("tdk/preamble.md"),
+        )
         d_preamble_year = self.create_doc(
-            path=self.get_personal_item_path(f'tdk/2018/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/preamble'),
-            from_file=static_tim_doc('tdk/preamble_year.md'))
+            path=self.get_personal_item_path(
+                f"tdk/2018/{TEMPLATE_FOLDER_NAME}/{PREAMBLE_FOLDER_NAME}/preamble"
+            ),
+            from_file=static_tim_doc("tdk/preamble_year.md"),
+        )
         for d in (d_preamble, d_preamble_year):
-            perform_replace(d, ReplaceArguments(term='LAIT_ID_HERE',
-                                                to=f'{d_lait.id}'))
+            perform_replace(d, ReplaceArguments(term="LAIT_ID_HERE", to=f"{d_lait.id}"))
         for p in d_kokous.document.get_paragraphs():
-            if p.get_attr('rd') == 'LAIT_ID_HERE':
-                p.set_attr('rd', d_lait.id)
+            if p.get_attr("rd") == "LAIT_ID_HERE":
+                p.set_attr("rd", d_lait.id)
                 p.save()
 
-        self.get(f"/minutes/createMinuteExtracts/{d_kokous.path_without_lang}", expect_status=302,
-                 expect_content=f'view/{d_kokous.location}/otteet/kokous{knro}/kokous{knro}')
-        ote_index = DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/kokous{knro}")
+        self.get(
+            f"/minutes/createMinuteExtracts/{d_kokous.path_without_lang}",
+            expect_status=302,
+            expect_content=f"view/{d_kokous.location}/otteet/kokous{knro}/kokous{knro}",
+        )
+        ote_index = DocEntry.find_by_path(
+            f"{d_kokous.location}/otteet/kokous{knro}/kokous{knro}"
+        )
         t = self.get(ote_index.url, as_tree=True)
         self.assert_content(
             t,
-            ['Kokoukset | Seuraava esityslista | pdf | Ohjeet | Keskustelu | Ylläpito',
-             'Pöytäkirjan asiakohtien otteet',
-             'Lista 1, (PDF) - Ilmoitusasiat\n'
-             'Lista 2, (PDF) - Jaska Jokusen väitöskirjan arvostelu',
-             ''])
+            [
+                "Kokoukset | Seuraava esityslista | pdf | Ohjeet | Keskustelu | Ylläpito",
+                "Pöytäkirjan asiakohtien otteet",
+                "Lista 1, (PDF) - Ilmoitusasiat\n"
+                "Lista 2, (PDF) - Jaska Jokusen väitöskirjan arvostelu",
+                "",
+            ],
+        )
         ote_index.document.clear_mem_cache()
-        self.assertEqual("""## Pöytäkirjan asiakohtien otteet {area="kokous9"}
+        self.assertEqual(
+            """## Pöytäkirjan asiakohtien otteet {area="kokous9"}
 
 
 - [Lista 1](lista1), ([PDF](/print/users/test-user-1/tdk/2018/otteet/kokous9/lista1)) - Ilmoitusasiat
 - [Lista 2](lista2), ([PDF](/print/users/test-user-1/tdk/2018/otteet/kokous9/lista2)) - Jaska Jokusen väitöskirjan arvostelu
 
 #- {area_end="kokous9"}
-""", ote_index.document.export_markdown(export_ids=False))
+""",
+            ote_index.document.export_markdown(export_ids=False),
+        )
         ote1 = DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/lista1")
-        self.assertEqual(r"""PÖYTÄKIRJANOTE - Lista 1 -  Ilmoitusasiat      
+        self.assertEqual(
+            r"""PÖYTÄKIRJANOTE - Lista 1 -  Ilmoitusasiat      
 \
 
 #- {rd="5" ra="ETUSIVU"}
@@ -107,115 +135,133 @@ class MinutesHandling(BrowserTest):
 #- {rd="5" rp="PJxELAyKhZuu"}
 
 %%ALLEKIRJOITUKSET%%
-""", ote1.document.export_markdown(export_ids=False))
+""",
+            ote1.document.export_markdown(export_ids=False),
+        )
         ote_html = self.get(ote1.url, as_tree=True)
         self.assert_content(
             ote_html,
-            ['Kokoukset | Seuraava esityslista | pdf | Ohjeet | Keskustelu | Ylläpito',
-             'PÖYTÄKIRJANOTE - Lista 1 - Ilmoitusasiat',
-             '',
-             'JYVÄSKYLÄN YLIOPISTO\n'
-             'KOKOUSKUTSU\n'
-             '\n'
-             '\n'
-             '\n'
-             '\n'
-             'Informaatioteknologian tiedekunta\n'
-             '\n'
-             '\n'
-             '\n'
-             '\n'
-             '\n'
-             'TIEDEKUNTANEUVOSTON KOKOUS 9/2018\n'
-             'Aika 11.9.2018 klo 9:00\n'
-             'Paikka Jossakin Agoralla',
-             '',
-             '',
-             '',
-             '!================!Page Break!================!\n'
-             '\n'
-             '\n'
-             '\n'
-             '\n'
-             '\n'
-             '\n'
-             '\n'
-             'JYVÄSKYLÄN YLIOPISTO\n'
-             '9/2018\n'
-             '\n'
-             '\n'
-             '\n'
-             '\n'
-             'Informaatioteknologian tiedekunta\n'
-             '11.9.2018\n'
-             '\n'
-             '\n'
-             'Tiedekuntaneuvosto\n'
-             'Lista 1\n'
-             '\n'
-             '\n'
-             '\n'
-             '\n'
-             'Asian valmistelija: Yliopistonopettaja Olli Ollinen, puh. 0400123456, '
-             'olli.ollinen@example.com',
-             '1. Ilmoitusasiat\n'
-             '1.1 Dekaanin ja varadekaanin päätökset\n'
-             '1.1.1 Tutkinnot vuonna 2018 (liite A/ lista 1)',
-             '',
-             'Kandidaatin tutkinnot: Toteutunut yhteensä xxx (tavoite 2018: yyy)\n'
-             'Kauppatieteiden kandidaatin tutkinto: Toteutunut xx\n'
-             '1.1.2 Arvostellut pro gradu –tutkielmat (liite B/ lista 1)',
-             '',
-             'Esitys\nTodetaan ilmoitusasiat.',
-             ''])
-        plugins = ote_html.cssselect('tim-video')
+            [
+                "Kokoukset | Seuraava esityslista | pdf | Ohjeet | Keskustelu | Ylläpito",
+                "PÖYTÄKIRJANOTE - Lista 1 - Ilmoitusasiat",
+                "",
+                "JYVÄSKYLÄN YLIOPISTO\n"
+                "KOKOUSKUTSU\n"
+                "\n"
+                "\n"
+                "\n"
+                "\n"
+                "Informaatioteknologian tiedekunta\n"
+                "\n"
+                "\n"
+                "\n"
+                "\n"
+                "\n"
+                "TIEDEKUNTANEUVOSTON KOKOUS 9/2018\n"
+                "Aika 11.9.2018 klo 9:00\n"
+                "Paikka Jossakin Agoralla",
+                "",
+                "",
+                "",
+                "!================!Page Break!================!\n"
+                "\n"
+                "\n"
+                "\n"
+                "\n"
+                "\n"
+                "\n"
+                "\n"
+                "JYVÄSKYLÄN YLIOPISTO\n"
+                "9/2018\n"
+                "\n"
+                "\n"
+                "\n"
+                "\n"
+                "Informaatioteknologian tiedekunta\n"
+                "11.9.2018\n"
+                "\n"
+                "\n"
+                "Tiedekuntaneuvosto\n"
+                "Lista 1\n"
+                "\n"
+                "\n"
+                "\n"
+                "\n"
+                "Asian valmistelija: Yliopistonopettaja Olli Ollinen, puh. 0400123456, "
+                "olli.ollinen@example.com",
+                "1. Ilmoitusasiat\n"
+                "1.1 Dekaanin ja varadekaanin päätökset\n"
+                "1.1.1 Tutkinnot vuonna 2018 (liite A/ lista 1)",
+                "",
+                "Kandidaatin tutkinnot: Toteutunut yhteensä xxx (tavoite 2018: yyy)\n"
+                "Kauppatieteiden kandidaatin tutkinto: Toteutunut xx\n"
+                "1.1.2 Arvostellut pro gradu –tutkielmat (liite B/ lista 1)",
+                "",
+                "Esitys\nTodetaan ilmoitusasiat.",
+                "",
+            ],
+        )
+        plugins = ote_html.cssselect("tim-video")
         self.assertEqual(
-            {'doclink': 'https://tim.jyu.fi/files/xxx/tutkinnot.pdf',
-             'doctext': ')',
-             'file': 'https://tim.jyu.fi/files/xxx/tutkinnot.pdf',
-             'height': 600,
-             'hidetext': 'Piilota liite',
-             'iframe': True,
-             'open': False,
-             'stamped-file': None,
-             'stem': 'Tutkinnot vuonna 2018',
-             'texprint': '- Tutkinnot vuonna 2018 ([LIITE A / lista '
-                         '1](https://tim.jyu.fi/files/xxx/tutkinnot.pdf))',
-             'text': 'Kokous 11.9.2018 \\newline LIITE A / lista 1',
-             'type': 'list',
-             'videoicon': False,
-             'videoname': '(LIITE A / lista 1,',
-             'width': 800,
-             'xdocicon': False}, decode_csplugin(plugins[0]))
+            {
+                "doclink": "https://tim.jyu.fi/files/xxx/tutkinnot.pdf",
+                "doctext": ")",
+                "file": "https://tim.jyu.fi/files/xxx/tutkinnot.pdf",
+                "height": 600,
+                "hidetext": "Piilota liite",
+                "iframe": True,
+                "open": False,
+                "stamped-file": None,
+                "stem": "Tutkinnot vuonna 2018",
+                "texprint": "- Tutkinnot vuonna 2018 ([LIITE A / lista "
+                "1](https://tim.jyu.fi/files/xxx/tutkinnot.pdf))",
+                "text": "Kokous 11.9.2018 \\newline LIITE A / lista 1",
+                "type": "list",
+                "videoicon": False,
+                "videoname": "(LIITE A / lista 1,",
+                "width": 800,
+                "xdocicon": False,
+            },
+            decode_csplugin(plugins[0]),
+        )
 
         self.assertEqual(
-            {'doclink': 'https://tim.jyu.fi/files/yyy/gradut.pdf',
-             'doctext': ')',
-             'file': 'https://tim.jyu.fi/files/yyy/gradut.pdf',
-             'height': 600,
-             'hidetext': 'Piilota liite',
-             'iframe': True,
-             'open': False,
-             'stamped-file': None,
-             'stem': 'Arvostellut pro gradu –tutkielmat',
-             'texprint': '- Arvostellut pro gradu –tutkielmat ([LIITE B / lista '
-                         '1](https://tim.jyu.fi/files/yyy/gradut.pdf))',
-             'text': 'Kokous 11.9.2018 \\newline LIITE B / lista 1',
-             'type': 'list',
-             'videoicon': False,
-             'videoname': '(LIITE B / lista 1,',
-             'width': 800,
-             'xdocicon': False}, decode_csplugin(plugins[1]))
+            {
+                "doclink": "https://tim.jyu.fi/files/yyy/gradut.pdf",
+                "doctext": ")",
+                "file": "https://tim.jyu.fi/files/yyy/gradut.pdf",
+                "height": 600,
+                "hidetext": "Piilota liite",
+                "iframe": True,
+                "open": False,
+                "stamped-file": None,
+                "stem": "Arvostellut pro gradu –tutkielmat",
+                "texprint": "- Arvostellut pro gradu –tutkielmat ([LIITE B / lista "
+                "1](https://tim.jyu.fi/files/yyy/gradut.pdf))",
+                "text": "Kokous 11.9.2018 \\newline LIITE B / lista 1",
+                "type": "list",
+                "videoicon": False,
+                "videoname": "(LIITE B / lista 1,",
+                "width": 800,
+                "xdocicon": False,
+            },
+            decode_csplugin(plugins[1]),
+        )
 
-        DocEntry.create(f'{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/runko', initial_par="""
+        DocEntry.create(
+            f"{TEMPLATE_FOLDER_NAME}/{PRINT_FOLDER_NAME}/runko",
+            initial_par="""
 ``` {.latex printing_template=""}
 $body$
-```""")
+```""",
+        )
         db.session.commit()
         ote1.document.clear_mem_cache()
-        ote1_tex = self.get_no_warn(f'/print/{ote1.path}',
-                                    query_string={'file_type': 'latex'})
-        self.assertEqual(r"""
+        ote1_tex = self.get_no_warn(
+            f"/print/{ote1.path}", query_string={"file_type": "latex"}
+        )
+        self.assertEqual(
+            r"""
 PÖYTÄKIRJANOTE - Lista 1 - Ilmoitusasiat\\
 ~\\
 
@@ -351,11 +397,15 @@ Kauppatieteiden kandidaatin tutkinto: Toteutunut xx
 
 Todetaan ilmoitusasiat.
 
-        """.strip(), ote1_tex)
+        """.strip(),
+            ote1_tex,
+        )
         ote2 = DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/lista2")
-        ote2_tex = self.get_no_warn(f'/print/{ote2.path}',
-                                    query_string={'file_type': 'latex'})
-        self.assertEqual(r"""
+        ote2_tex = self.get_no_warn(
+            f"/print/{ote2.path}", query_string={"file_type": "latex"}
+        )
+        self.assertEqual(
+            r"""
 PÖYTÄKIRJANOTE - Lista 2 - Jaska Jokusen väitöskirjan arvostelu\\
 ~\\
 
@@ -497,5 +547,9 @@ Arvostelu, tekstikappale 3.
 
 Tiedekuntaneuvosto arvostelee Jaska Jokusen väitöskirjan.
 
-        """.strip(), ote2_tex)
-        self.assertIsNone(DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/lista3"))
+        """.strip(),
+            ote2_tex,
+        )
+        self.assertIsNone(
+            DocEntry.find_by_path(f"{d_kokous.location}/otteet/kokous{knro}/lista3")
+        )

@@ -26,33 +26,34 @@ class DocEntry(db.Model, DocInfo):
 
     Most of the time you should use DocInfo class instead of this.
     """
-    __tablename__ = 'docentry'
+
+    __tablename__ = "docentry"
     name = db.Column(db.Text, primary_key=True)
     """Full path of the document.
     
     TODO: Improve the name.
     """
 
-    id = db.Column(db.Integer, db.ForeignKey('block.id'), nullable=False)
+    id = db.Column(db.Integer, db.ForeignKey("block.id"), nullable=False)
     """Document identifier."""
 
     public = db.Column(db.Boolean, nullable=False, default=True)
     """Whether the document is visible in directory listing."""
 
-    _block = db.relationship('Block', back_populates='docentries', lazy='joined')
+    _block = db.relationship("Block", back_populates="docentries", lazy="joined")
 
     trs: list[Translation] = db.relationship(
-        'Translation',
+        "Translation",
         primaryjoin=id == foreign(Translation.src_docid),
-        back_populates='docentry',
+        back_populates="docentry",
         # When a DocEntry object is deleted, we don't want to touch the translation objects at all.
         # Otherwise SQLAlchemy would try to null the src_docid column of the corresponding Translation object.
         # TODO: This feels slightly hacky. This relationship attribute might be better in Block class, although that
         #  doesn't sound ideal either.
-        passive_deletes='all',
+        passive_deletes="all",
     )
 
-    __table_args__ = (db.Index('docentry_id_idx', 'id'),)
+    __table_args__ = (db.Index("docentry_id_idx", "id"),)
 
     @property
     def tr(self) -> Translation | None:
@@ -76,13 +77,15 @@ class DocEntry(db.Model, DocInfo):
         if tr:
             tr.lang_id = value
         else:
-            self.trs.append(Translation(src_docid=self.id, lang_id=value, doc_id=self.id))
+            self.trs.append(
+                Translation(src_docid=self.id, lang_id=value, doc_id=self.id)
+            )
 
     @property
     def translations(self) -> list[Translation]:
         trs = self.trs
         if not self.tr:
-            self.trs.append(Translation(src_docid=self.id, doc_id=self.id, lang_id=''))
+            self.trs.append(Translation(src_docid=self.id, doc_id=self.id, lang_id=""))
         return trs
 
     @staticmethod
@@ -94,7 +97,7 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry.query.filter_by(id=doc_id).all()
 
     @staticmethod
-    def find_by_id(doc_id: int, docentry_load_opts: Any=None) -> DocInfo | None:
+    def find_by_id(doc_id: int, docentry_load_opts: Any = None) -> DocInfo | None:
         """Finds a DocInfo by id.
 
         TODO: This method doesn't really belong in DocEntry class.
@@ -109,10 +112,10 @@ class DocEntry(db.Model, DocInfo):
 
     @staticmethod
     def find_by_path(
-            path: str,
-            fallback_to_id: bool = False,
-            try_translation: bool = True,
-            docentry_load_opts: Any = None
+        path: str,
+        fallback_to_id: bool = False,
+        try_translation: bool = True,
+        docentry_load_opts: Any = None,
     ) -> DocInfo | None:
         """Finds a DocInfo by path, falling back to id if specified.
 
@@ -126,15 +129,23 @@ class DocEntry(db.Model, DocInfo):
         # try translation
         if try_translation:
             base_doc_path, lang = split_location(path)
-            entry = DocEntry.find_by_path(base_doc_path, try_translation=False, docentry_load_opts=docentry_load_opts)
+            entry = DocEntry.find_by_path(
+                base_doc_path,
+                try_translation=False,
+                docentry_load_opts=docentry_load_opts,
+            )
             if entry is not None:
-                tr = Translation.query.filter_by(src_docid=entry.id, lang_id=lang).first()
+                tr = Translation.query.filter_by(
+                    src_docid=entry.id, lang_id=lang
+                ).first()
                 if tr is not None:
                     tr.docentry = entry
                     return tr
         if fallback_to_id:
             try:
-                return DocEntry.find_by_id(int(path), docentry_load_opts=docentry_load_opts)
+                return DocEntry.find_by_id(
+                    int(path), docentry_load_opts=docentry_load_opts
+                )
             except ValueError:
                 return None
         return d
@@ -144,13 +155,15 @@ class DocEntry(db.Model, DocInfo):
         return DocEntry(id=-1, name=title)
 
     @staticmethod
-    def create(path: str,
-               owner_group: UserGroup | None = None,
-               title: str | None = None,
-               from_file: str | None=None,
-               initial_par: str | None=None,
-               settings: dict | None=None,
-               folder_opts: FolderCreationOptions=FolderCreationOptions()) -> DocEntry:
+    def create(
+        path: str,
+        owner_group: UserGroup | None = None,
+        title: str | None = None,
+        from_file: str | None = None,
+        initial_par: str | None = None,
+        settings: dict | None = None,
+        folder_opts: FolderCreationOptions = FolderCreationOptions(),
+    ) -> DocEntry:
         """Creates a new document with the specified properties.
 
         :param from_file: If provided, loads the document content from a file.
@@ -167,6 +180,7 @@ class DocEntry(db.Model, DocInfo):
 
         location, _ = split_location(path)
         from timApp.folder.folder import Folder
+
         Folder.create(location, owner_groups=owner_group, creation_opts=folder_opts)
 
         document = create_document_and_block(owner_group, title or path)
@@ -176,11 +190,13 @@ class DocEntry(db.Model, DocInfo):
         if path is not None:
             if Folder.find_by_path(path):
                 db.session.rollback()
-                raise ItemAlreadyExistsException(f'A folder already exists at path {path}')
+                raise ItemAlreadyExistsException(
+                    f"A folder already exists at path {path}"
+                )
             db.session.add(docentry)
 
         if from_file is not None:
-            with open(from_file, encoding='utf-8') as f:
+            with open(from_file, encoding="utf-8") as f:
                 document.add_text(f.read())
         elif initial_par is not None:
             document.add_text(initial_par)
@@ -190,22 +206,33 @@ class DocEntry(db.Model, DocInfo):
         return docentry
 
 
-def create_document_and_block(owner_group: UserGroup | None, desc: str | None = None) -> Document:
-    block = insert_block(BlockType.Document, desc, [owner_group] if owner_group else None)
+def create_document_and_block(
+    owner_group: UserGroup | None, desc: str | None = None
+) -> Document:
+    block = insert_block(
+        BlockType.Document, desc, [owner_group] if owner_group else None
+    )
     # Must flush because we need to know the document id in order to create the document in the filesystem.
     db.session.flush()
     document_id = block.id
-    document = Document(document_id, modifier_group_id=owner_group.id if owner_group else UserGroup.get_admin_group().id)
+    document = Document(
+        document_id,
+        modifier_group_id=owner_group.id
+        if owner_group
+        else UserGroup.get_admin_group().id,
+    )
     document.create()
     return document
 
 
-def get_documents(include_nonpublic: bool = False,
-                  filter_folder: str | None = None,
-                  search_recursively: bool = True,
-                  filter_user: User | None = None,
-                  custom_filter: Any=None,
-                  query_options: Any=None) -> list[DocEntry]:
+def get_documents(
+    include_nonpublic: bool = False,
+    filter_folder: str | None = None,
+    search_recursively: bool = True,
+    filter_user: User | None = None,
+    custom_filter: Any = None,
+    query_options: Any = None,
+) -> list[DocEntry]:
     """Gets all the documents in the database matching the given criteria.
 
     :param filter_user: If specified, returns only the documents that the user has view access to.
@@ -222,12 +249,12 @@ def get_documents(include_nonpublic: bool = False,
     if not include_nonpublic:
         q = q.filter_by(public=True)
     if filter_folder is not None:
-        filter_folder = filter_folder.strip('/') + '/'
-        if filter_folder == '/':
-            filter_folder = ''
-        q = q.filter(DocEntry.name.like(filter_folder + '%'))
+        filter_folder = filter_folder.strip("/") + "/"
+        if filter_folder == "/":
+            filter_folder = ""
+        q = q.filter(DocEntry.name.like(filter_folder + "%"))
         if not search_recursively:
-            q = q.filter(DocEntry.name.notlike(filter_folder + '%/%'))
+            q = q.filter(DocEntry.name.notlike(filter_folder + "%/%"))
     if custom_filter is not None:
         q = q.filter(custom_filter)
     if query_options is not None:
@@ -238,8 +265,9 @@ def get_documents(include_nonpublic: bool = False,
     return [r for r in result if filter_user.has_view_access(r)]
 
 
-def get_documents_in_folder(folder_pathname: str,
-                            include_nonpublic: bool = False) -> list[DocEntry]:
+def get_documents_in_folder(
+    folder_pathname: str, include_nonpublic: bool = False
+) -> list[DocEntry]:
     """Gets all the documents in a folder.
 
     :param folder_pathname: path to be searched for documents without ending '/'
@@ -247,6 +275,8 @@ def get_documents_in_folder(folder_pathname: str,
     :returns: A list of DocEntry objects.
 
     """
-    return get_documents(include_nonpublic=include_nonpublic,
-                         filter_folder=folder_pathname,
-                         search_recursively=False)
+    return get_documents(
+        include_nonpublic=include_nonpublic,
+        filter_folder=folder_pathname,
+        search_recursively=False,
+    )

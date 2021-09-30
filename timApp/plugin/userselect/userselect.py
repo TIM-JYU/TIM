@@ -13,15 +13,33 @@ from timApp.document.docinfo import DocInfo
 from timApp.document.editing.globalparid import GlobalParId
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewRoute, ViewContext
-from timApp.item.distribute_rights import RightOp, ConfirmOp, QuitOp, UnlockOp, ChangeTimeOp, register_right_impl, \
-    UndoConfirmOp, UndoQuitOp
-from timApp.item.manage import TimeOpt, verify_permission_edit_access, PermissionEditModel, add_perm, \
-    log_right, remove_perm
+from timApp.item.distribute_rights import (
+    RightOp,
+    ConfirmOp,
+    QuitOp,
+    UnlockOp,
+    ChangeTimeOp,
+    register_right_impl,
+    UndoConfirmOp,
+    UndoQuitOp,
+)
+from timApp.item.manage import (
+    TimeOpt,
+    verify_permission_edit_access,
+    PermissionEditModel,
+    add_perm,
+    log_right,
+    remove_perm,
+)
 from timApp.plugin.plugin import Plugin
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
-from timApp.util.flask.requesthelper import NotExist, RouteException, view_ctx_with_urlmacros
+from timApp.util.flask.requesthelper import (
+    NotExist,
+    RouteException,
+    view_ctx_with_urlmacros,
+)
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.get_fields import get_fields_and_users, RequestedGroups
@@ -29,7 +47,11 @@ from timApp.util.logger import log_warning
 from timApp.util.utils import get_current_time
 from tim_common.markupmodels import GenericMarkupModel
 from tim_common.marshmallow_dataclass import class_schema
-from tim_common.pluginserver_flask import GenericHtmlModel, PluginReqs, register_html_routes
+from tim_common.pluginserver_flask import (
+    GenericHtmlModel,
+    PluginReqs,
+    register_html_routes,
+)
 from tim_common.utils import DurationSchema
 
 user_select_plugin = TypedBlueprint("userSelect", __name__, url_prefix="/userSelect")
@@ -76,13 +98,19 @@ class DistributeRightAction:
 
 
 RIGHT_TO_OP: dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
-    "confirm": lambda r, usr: ConfirmOp(type="confirm", email=usr, timestamp=r.timestamp_or_now),
+    "confirm": lambda r, usr: ConfirmOp(
+        type="confirm", email=usr, timestamp=r.timestamp_or_now
+    ),
     "quit": lambda r, usr: QuitOp(type="quit", email=usr, timestamp=r.timestamp_or_now),
-    "unlock": lambda r, usr: UnlockOp(type="unlock", email=usr, timestamp=r.timestamp_or_now),
-    "changetime": lambda r, usr: ChangeTimeOp(type="changetime",
-                                              email=usr,
-                                              secs=int(r.minutes * 60),
-                                              timestamp=r.timestamp_or_now)
+    "unlock": lambda r, usr: UnlockOp(
+        type="unlock", email=usr, timestamp=r.timestamp_or_now
+    ),
+    "changetime": lambda r, usr: ChangeTimeOp(
+        type="changetime",
+        email=usr,
+        secs=int(r.minutes * 60),
+        timestamp=r.timestamp_or_now,
+    ),
 }
 
 
@@ -132,7 +160,9 @@ class UserSelectMarkupModel(GenericMarkupModel):
     sortBy: list[str] = field(default_factory=list)
 
 
-UserSelectMarkupModelSchema = class_schema(UserSelectMarkupModel, base_schema=DurationSchema)
+UserSelectMarkupModelSchema = class_schema(
+    UserSelectMarkupModel, base_schema=DurationSchema
+)
 
 
 @dataclass
@@ -141,9 +171,11 @@ class UserSelectStateModel:
 
 
 @dataclass
-class UserSelectHtmlModel(GenericHtmlModel[UserSelectInputModel, UserSelectMarkupModel, UserSelectStateModel]):
+class UserSelectHtmlModel(
+    GenericHtmlModel[UserSelectInputModel, UserSelectMarkupModel, UserSelectStateModel]
+):
     def get_component_html_name(self) -> str:
-        return 'user-selector'
+        return "user-selector"
 
     def get_static_html(self) -> str:
         return render_template_string(
@@ -154,14 +186,12 @@ class UserSelectHtmlModel(GenericHtmlModel[UserSelectInputModel, UserSelectMarku
 
 
 def reqs_handler() -> PluginReqs:
-    return {
-        "js": ["userSelect"],
-        "multihtml": True
-    }
+    return {"js": ["userSelect"], "multihtml": True}
 
 
-def get_plugin_markup(task_id: Optional[str], par: Optional[GlobalParId]) \
-        -> tuple[UserSelectMarkupModel, DocInfo, User, ViewContext]:
+def get_plugin_markup(
+    task_id: Optional[str], par: Optional[GlobalParId]
+) -> tuple[UserSelectMarkupModel, DocInfo, User, ViewContext]:
     verify_logged_in()
     user = get_current_user_object()
     user_ctx = UserContext.from_one_user(user)
@@ -177,26 +207,27 @@ def get_plugin_markup(task_id: Optional[str], par: Optional[GlobalParId]) \
     return model, doc, user, view_ctx
 
 
-@user_select_plugin.get('/fetchUsers')
-def fetch_users(task_id: Optional[str] = None, doc_id: Optional[int] = None, par_id: Optional[str] = None) -> Response:
-    model, doc, user, view_ctx = get_plugin_markup(task_id, GlobalParId(doc_id, par_id) if doc_id and par_id else None)
-    field_data, _, field_names, _ = get_fields_and_users(
-        model.fields,
-        RequestedGroups.from_name_list(model.groups),
-        doc,
-        user,
-        view_ctx
+@user_select_plugin.get("/fetchUsers")
+def fetch_users(
+    task_id: Optional[str] = None,
+    doc_id: Optional[int] = None,
+    par_id: Optional[str] = None,
+) -> Response:
+    model, doc, user, view_ctx = get_plugin_markup(
+        task_id, GlobalParId(doc_id, par_id) if doc_id and par_id else None
     )
-    return json_response({
-        "users": [
-            {
-                "user": field_obj["user"],
-                "fields": field_obj["fields"]
-            }
-            for field_obj in field_data
-        ],
-        "fieldNames": field_names
-    })
+    field_data, _, field_names, _ = get_fields_and_users(
+        model.fields, RequestedGroups.from_name_list(model.groups), doc, user, view_ctx
+    )
+    return json_response(
+        {
+            "users": [
+                {"user": field_obj["user"], "fields": field_obj["fields"]}
+                for field_obj in field_data
+            ],
+            "fieldNames": field_names,
+        }
+    )
 
 
 def match_query(query_words: list[str], keywords: list[str]) -> bool:
@@ -209,52 +240,61 @@ def match_query(query_words: list[str], keywords: list[str]) -> bool:
     return True
 
 
-@user_select_plugin.post('/search')
-def search_users(search_strings: list[str], task_id: Optional[str] = None,
-                 par: Optional[GlobalParId] = None) -> Response:
+@user_select_plugin.post("/search")
+def search_users(
+    search_strings: list[str],
+    task_id: Optional[str] = None,
+    par: Optional[GlobalParId] = None,
+) -> Response:
     model, doc, user, view_ctx = get_plugin_markup(task_id, par)
     verify_view_access(doc)
     field_data, _, field_names, _ = get_fields_and_users(
-        model.fields,
-        RequestedGroups.from_name_list(model.groups),
-        doc,
-        user,
-        view_ctx
+        model.fields, RequestedGroups.from_name_list(model.groups), doc, user, view_ctx
     )
 
     # If query contains spaces, split into sub-queries that all must match
     # In each subquery, match by longest word first to ensure best match
-    search_query_words = [sorted(s.lower().split(), key=lambda s: len(s), reverse=True) for s in search_strings]
+    search_query_words = [
+        sorted(s.lower().split(), key=lambda s: len(s), reverse=True)
+        for s in search_strings
+    ]
     matched_field_data = []
     for field_obj in field_data:
         fields = field_obj["fields"]
         usr = field_obj["user"]
-        values_to_check: list[Optional[Union[str, float, None]]] = [usr.name, usr.real_name, usr.email,
-                                                                    *fields.values()]
+        values_to_check: list[Optional[Union[str, float, None]]] = [
+            usr.name,
+            usr.real_name,
+            usr.email,
+            *fields.values(),
+        ]
 
         for field_val in values_to_check:
             if not field_val:
                 continue
-            val = (field_val if isinstance(field_val, str) else str(field_val)).lower().split()
+            val = (
+                (field_val if isinstance(field_val, str) else str(field_val))
+                .lower()
+                .split()
+            )
             if next((qws for qws in search_query_words if match_query(qws, val)), None):
                 matched_field_data.append(field_obj)
                 break
 
     match_count = len(matched_field_data)
     if match_count > model.maxMatches:
-        matched_field_data = matched_field_data[0:model.maxMatches]
+        matched_field_data = matched_field_data[0 : model.maxMatches]
 
-    return json_response({
-        "matches": [
-            {
-                "user": field_obj["user"],
-                "fields": field_obj["fields"]
-            }
-            for field_obj in matched_field_data
-        ],
-        "allMatchCount": match_count,
-        "fieldNames": field_names
-    })
+    return json_response(
+        {
+            "matches": [
+                {"user": field_obj["user"], "fields": field_obj["fields"]}
+                for field_obj in matched_field_data
+            ],
+            "allMatchCount": match_count,
+            "fieldNames": field_names,
+        }
+    )
 
 
 def has_distribution_moderation_access(doc: DocInfo) -> bool:
@@ -262,8 +302,9 @@ def has_distribution_moderation_access(doc: DocInfo) -> bool:
     return doc.path in allowed_docs
 
 
-def get_plugin_info(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) \
-        -> tuple[UserSelectMarkupModel, User, UserGroup, User]:
+def get_plugin_info(
+    username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None
+) -> tuple[UserSelectMarkupModel, User, UserGroup, User]:
     model, doc, _, _ = get_plugin_markup(task_id, par)
     # Ensure user actually has access to document with the plugin
     verify_view_access(doc)
@@ -286,27 +327,41 @@ def get_plugin_info(username: str, task_id: Optional[str] = None, par: Optional[
 
 
 @user_select_plugin.post("/undo")
-def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
+def undo(
+    username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None
+) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
     # No permissions to undo
     if not model.actions:
         return ok_response()
 
     # TODO: Implement undoing for local permissions
-    undoable_dists = [dist for dist in model.actions.distributeRight if dist.operation in ("confirm", "quit")]
+    undoable_dists = [
+        dist
+        for dist in model.actions.distributeRight
+        if dist.operation in ("confirm", "quit")
+    ]
     errors = []
     for distribute in undoable_dists:
         if distribute.operation == "confirm":
-            undo_op: Union[UndoConfirmOp, UndoQuitOp, ChangeTimeOp] = UndoConfirmOp(type="undoconfirm",
-                                                                                    email=user_acc.email,
-                                                                                    timestamp=distribute.timestamp_or_now)
+            undo_op: Union[UndoConfirmOp, UndoQuitOp, ChangeTimeOp] = UndoConfirmOp(
+                type="undoconfirm",
+                email=user_acc.email,
+                timestamp=distribute.timestamp_or_now,
+            )
         elif distribute.operation == "quit":
-            undo_op = UndoQuitOp(type="undoquit", email=user_acc.email, timestamp=distribute.timestamp_or_now)
+            undo_op = UndoQuitOp(
+                type="undoquit",
+                email=user_acc.email,
+                timestamp=distribute.timestamp_or_now,
+            )
         elif distribute.operation == "changetime":
-            undo_op = ChangeTimeOp(type="changetime",
-                                   email=user_acc.email,
-                                   timestamp=distribute.timestamp_or_now,
-                                   secs=-int(distribute.minutes * 60))
+            undo_op = ChangeTimeOp(
+                type="changetime",
+                email=user_acc.email,
+                timestamp=distribute.timestamp_or_now,
+                secs=-int(distribute.minutes * 60),
+            )
         else:
             continue
 
@@ -314,43 +369,47 @@ def undo(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId
 
     # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
     if errors:
-        return json_response({
-            "distributionErrors": errors
-        })
+        return json_response({"distributionErrors": errors})
 
-    fields_to_save = {
-        set_val.taskId: "" for set_val in model.actions.setValue
-    }
+    fields_to_save = {set_val.taskId: "" for set_val in model.actions.setValue}
     if fields_to_save:
         # Reuse existing helper for answer route to save field values quickly
         save_fields(
-            FieldSaveRequest(savedata=[FieldSaveUserEntry(user=user_acc.id, fields=fields_to_save)]),
+            FieldSaveRequest(
+                savedata=[FieldSaveUserEntry(user=user_acc.id, fields=fields_to_save)]
+            ),
             cur_user,
-            allow_non_teacher=False)
+            allow_non_teacher=False,
+        )
 
         # For now there is only need to commit on field save
         db.session.commit()
 
-    return json_response({
-        "distributionErrors": errors
-    })
+    return json_response({"distributionErrors": errors})
 
 
 @user_select_plugin.post("/apply")
-def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None) -> Response:
+def apply(
+    username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None
+) -> Response:
     model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
     # No permissions to apply, simply return
     if not model.actions:
         return ok_response()
 
-    permission_actions: list[PermissionActionBase] = [*model.actions.addPermission, *model.actions.removePermission]
+    permission_actions: list[PermissionActionBase] = [
+        *model.actions.addPermission,
+        *model.actions.removePermission,
+    ]
     doc_entries = {}
 
     # Verify first that all documents can be accessed and permissions edited + cache doc entries
     for perm in permission_actions:
         if perm.doc_path in doc_entries:
             continue
-        doc_entry = DocEntry.find_by_path(perm.doc_path, fallback_to_id=True, try_translation=False)
+        doc_entry = DocEntry.find_by_path(
+            perm.doc_path, fallback_to_id=True, try_translation=False
+        )
         if not doc_entry:
             raise NotExist(f"Can't find document {perm.doc_path}")
         verify_permission_edit_access(doc_entry, perm.type)
@@ -361,15 +420,21 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
     for add in model.actions.addPermission:
         doc_entry = doc_entries[add.doc_path]
         # Don't throw if we try to remove a permission from ourselves, just ignore it
-        accs = add_perm(PermissionEditModel(add.type, add.time, [username], add.confirm), doc_entry)
+        accs = add_perm(
+            PermissionEditModel(add.type, add.time, [username], add.confirm), doc_entry
+        )
         if accs:
-            update_messages.append(f'added {accs[0].info_str} for {username} in {doc_entry.path}')
+            update_messages.append(
+                f"added {accs[0].info_str} for {username} in {doc_entry.path}"
+            )
 
     for remove in model.actions.removePermission:
         doc_entry = doc_entries[remove.doc_path]
         a = remove_perm(user_group, doc_entry.block, remove.type)
         if a:
-            update_messages.append(f'removed {a.info_str} for {user_group.name} in {doc_entry.path}')
+            update_messages.append(
+                f"removed {a.info_str} for {user_group.name} in {doc_entry.path}"
+            )
 
     fields_to_save = {
         set_val.taskId: set_val.value for set_val in model.actions.setValue
@@ -377,9 +442,12 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
     if fields_to_save:
         # Reuse existing helper for answer route to save field values quickly
         save_fields(
-            FieldSaveRequest(savedata=[FieldSaveUserEntry(user=user_acc.id, fields=fields_to_save)]),
+            FieldSaveRequest(
+                savedata=[FieldSaveUserEntry(user=user_acc.id, fields=fields_to_save)]
+            ),
             cur_user,
-            allow_non_teacher=False)
+            allow_non_teacher=False,
+        )
 
     errors = []
     for distribute in model.actions.distributeRight:
@@ -391,7 +459,9 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
             # Ignore failing to undo twice. It is an error but it's not strictly an issue for UserSelect
             # However, do this only for QuitOp to prevent other issues like trying to confirm users who has already quit
             # TODO: Don't depend on string matching to filter out the error
-            apply_errors = [e for e in apply_errors if "Cannot register a non-UndoQuitOp" not in e]
+            apply_errors = [
+                e for e in apply_errors if "Cannot register a non-UndoQuitOp" not in e
+            ]
 
         errors.extend(apply_errors)
 
@@ -401,7 +471,9 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
         log_right(msg)
 
     for error in errors:
-        log_warning(f"RIGHT_DIST: problem distributing rights for user {user_acc.email}: {error}")
+        log_warning(
+            f"RIGHT_DIST: problem distributing rights for user {user_acc.email}: {error}"
+        )
 
     # Better throw an error here. This should prompt the user to at least try again
     # Unlike with undoing, it's better to get the user to reapply the rights or properly fix them
@@ -415,5 +487,5 @@ def apply(username: str, task_id: Optional[str] = None, par: Optional[GlobalParI
 register_html_routes(
     user_select_plugin,
     class_schema(UserSelectHtmlModel, base_schema=DurationSchema),
-    reqs_handler
+    reqs_handler,
 )

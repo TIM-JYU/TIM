@@ -4,13 +4,20 @@ from typing import Optional, Any
 
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound  # type: ignore
 
-from timApp.messaging.messagelist.listinfo import ArchiveType, Channel, ReplyToListChanges, ListInfo, Distribution
+from timApp.messaging.messagelist.listinfo import (
+    ArchiveType,
+    Channel,
+    ReplyToListChanges,
+    ListInfo,
+    Distribution,
+)
 from timApp.timdb.sqa import db
 from timApp.util.utils import get_current_time
 
 
 class MemberJoinMethod(Enum):
     """How a user was added to a message list."""
+
     DIRECT_ADD = 1
     """The owner of the list has just added this member. The member wasn't asked. This is the only join method that 
     makes sense for groups. """
@@ -81,34 +88,41 @@ class MessageListModel(db.Model):
     """Flag if attachments are allowed on the list. The list of allowed attachment file extensions are stored at 
     listoptions.py """
 
-    block = db.relationship("Block", back_populates="managed_messagelist", lazy="select")
+    block = db.relationship(
+        "Block", back_populates="managed_messagelist", lazy="select"
+    )
     """Relationship to the document that is used to manage this message list."""
 
-    members = db.relationship("MessageListMember", back_populates="message_list", lazy="select")
+    members = db.relationship(
+        "MessageListMember", back_populates="message_list", lazy="select"
+    )
     """All the members of the list."""
 
-    distribution = db.relationship("MessageListDistribution", back_populates="message_list", lazy="select")
+    distribution = db.relationship(
+        "MessageListDistribution", back_populates="message_list", lazy="select"
+    )
     """The message channels the list uses."""
 
     @staticmethod
-    def from_manage_doc_id(doc_id: int) -> 'MessageListModel':
+    def from_manage_doc_id(doc_id: int) -> "MessageListModel":
         return MessageListModel.query.filter_by(manage_doc_id=doc_id).one()
 
     @staticmethod
-    def from_name(name: str) -> 'MessageListModel':
+    def from_name(name: str) -> "MessageListModel":
         """Gets a message list from name or throws a NotExist error if no unique list exists.
 
         :param name: The name of the list.
         :return: MessageListModel object, if a MessageListModel with attribute name is found.
         """
         from timApp.util.flask.requesthelper import NotExist
+
         m = MessageListModel.get_by_name(name)
         if not m:
             raise NotExist(f"No message list named {name}")
         return m
 
     @staticmethod
-    def get_by_name(name_candidate: str) -> Optional['MessageListModel']:
+    def get_by_name(name_candidate: str) -> Optional["MessageListModel"]:
         """Get a message list by its name, if a list with said name exists.
 
         :param name_candidate: The name of the message list.
@@ -122,13 +136,18 @@ class MessageListModel(db.Model):
 
         :param name_candidate: The name we are checking if it already is already in use by another list.
         """
-        return db.session.query(MessageListModel.name).filter_by(name=name_candidate).first() is not None
+        return (
+            db.session.query(MessageListModel.name)
+            .filter_by(name=name_candidate)
+            .first()
+            is not None
+        )
 
     @property
     def archive_policy(self) -> ArchiveType:
         return self.archive
 
-    def get_individual_members(self) -> list['MessageListMember']:
+    def get_individual_members(self) -> list["MessageListMember"]:
         """Get all the members that are not groups.
 
         :return: A list of message list's members, who are individual TIM users (MessageListTimMember objects) or
@@ -140,7 +159,7 @@ class MessageListModel(db.Model):
                 individuals.append(member)
         return individuals
 
-    def get_tim_members(self) -> list['MessageListTimMember']:
+    def get_tim_members(self) -> list["MessageListTimMember"]:
         """Get all members that have belong to a user group, i.e. TIM users and user groups.
 
         :return: A list of MessageListTimMember objects.
@@ -151,7 +170,9 @@ class MessageListModel(db.Model):
                 tim_members.append(member.tim_member)
         return tim_members
 
-    def find_member(self, username: Optional[str], email: Optional[str]) -> Optional['MessageListMember']:
+    def find_member(
+        self, username: Optional[str], email: Optional[str]
+    ) -> Optional["MessageListMember"]:
         """Get member of this list. Member can be searched with username and/or email. At least one has to be given. If
         both are given, username is preferred and is used in a search first.
 
@@ -175,10 +196,13 @@ class MessageListModel(db.Model):
     def email_address(self) -> Optional[str]:
         """Full email address of the messagelist, if the list has been assigned an active address.
         Otherwise None."""
-        return f"{self.name}@{self.email_list_domain}" if self.email_list_domain else None
+        return (
+            f"{self.name}@{self.email_list_domain}" if self.email_list_domain else None
+        )
 
     def to_info(self) -> ListInfo:
         from timApp.messaging.messagelist.emaillist import get_list_ui_link
+
         return ListInfo(
             name=self.name,
             notify_owners_on_list_change=self.notify_owner_on_change,
@@ -197,9 +221,8 @@ class MessageListModel(db.Model):
             list_description=self.description,
             allow_attachments=self.allow_attachments,
             distribution=Distribution(email_list=True, tim_message=True),
-            removed=self.removed
+            removed=self.removed,
         )
-
 
 
 class MessageListMember(db.Model):
@@ -234,12 +257,26 @@ class MessageListMember(db.Model):
     member_type = db.Column(db.Text)
     """Discriminator for polymorhphic members."""
 
-    message_list = db.relationship("MessageListModel", back_populates="members", lazy="select", uselist=False)
-    tim_member = db.relationship("MessageListTimMember", back_populates="member", lazy="select",
-                                 uselist=False, post_update=True)
-    external_member = db.relationship("MessageListExternalMember", back_populates="member", lazy="select",
-                                      uselist=False, post_update=True)
-    distribution = db.relationship("MessageListDistribution", back_populates="member", lazy="select")
+    message_list = db.relationship(
+        "MessageListModel", back_populates="members", lazy="select", uselist=False
+    )
+    tim_member = db.relationship(
+        "MessageListTimMember",
+        back_populates="member",
+        lazy="select",
+        uselist=False,
+        post_update=True,
+    )
+    external_member = db.relationship(
+        "MessageListExternalMember",
+        back_populates="member",
+        lazy="select",
+        uselist=False,
+        post_update=True,
+    )
+    distribution = db.relationship(
+        "MessageListDistribution", back_populates="member", lazy="select"
+    )
 
     __mapper_args__ = {"polymorphic_identity": "member", "polymorphic_on": member_type}
 
@@ -251,7 +288,7 @@ class MessageListMember(db.Model):
 
     def is_tim_member(self) -> bool:
         """If this member is a 'TIM member', i.e. a user group. This can be either a personal user group or a
-        group. """
+        group."""
         if self.tim_member:
             return True
         return False
@@ -264,6 +301,7 @@ class MessageListMember(db.Model):
             # External members don't have a group_id attribute.
             return self.is_external_member()
         from timApp.user.usergroup import UserGroup
+
         ug = UserGroup.query.filter_by(id=gid).one()
         return ug.is_personal_group
 
@@ -280,7 +318,7 @@ class MessageListMember(db.Model):
         return self.membership_ended is None and self.is_verified()
 
     def is_verified(self) -> bool:
-        """If the member is verified to be on the list. """
+        """If the member is verified to be on the list."""
         return self.membership_verified is not None
 
     def remove(self, end_time: Optional[datetime] = get_current_time()) -> None:
@@ -309,11 +347,21 @@ class MessageListTimMember(MessageListMember):
     group_id = db.Column(db.Integer, db.ForeignKey("usergroup.id"))
     """A UserGroup id for a member."""
 
-    member = db.relationship("MessageListMember", back_populates="tim_member", lazy="select",
-                             uselist=False, post_update=True)
+    member = db.relationship(
+        "MessageListMember",
+        back_populates="tim_member",
+        lazy="select",
+        uselist=False,
+        post_update=True,
+    )
 
-    user_group = db.relationship("UserGroup", back_populates="messagelist_membership", lazy="select", uselist=False,
-                                 post_update=True)
+    user_group = db.relationship(
+        "UserGroup",
+        back_populates="messagelist_membership",
+        lazy="select",
+        uselist=False,
+        post_update=True,
+    )
 
     __mapper_args__ = {"polymorphic_identity": "tim_member"}
 
@@ -324,7 +372,7 @@ class MessageListTimMember(MessageListMember):
             "email": self.get_email() if self.get_email() is not None else "",
             "sendRight": self.member.send_right,
             "deliveryRight": self.member.delivery_right,
-            "removed": self.membership_ended
+            "removed": self.membership_ended,
         }
 
     def get_username(self) -> str:
@@ -364,7 +412,12 @@ class MessageListExternalMember(MessageListMember):
     display_name = db.Column(db.Text)
     """Display name for external user, which in most cases should be the external member's address' owner's name."""
 
-    member = db.relationship("MessageListMember", back_populates="external_member", lazy="select", uselist=False)
+    member = db.relationship(
+        "MessageListMember",
+        back_populates="external_member",
+        lazy="select",
+        uselist=False,
+    )
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
 
@@ -375,7 +428,7 @@ class MessageListExternalMember(MessageListMember):
             "email": self.email_address,
             "sendRight": self.member.send_right,
             "deliveryRight": self.member.delivery_right,
-            "removed": self.membership_ended
+            "removed": self.membership_ended,
         }
 
     def get_name(self) -> str:
@@ -413,8 +466,12 @@ class MessageListDistribution(db.Model):
     channel = db.Column(db.Enum(Channel))
     """Which message channels are used by a message list or a user."""
 
-    member = db.relationship("MessageListMember", back_populates="distribution", lazy="select", uselist=False)
-    message_list = db.relationship("MessageListModel", back_populates="distribution", lazy="select", uselist=False)
+    member = db.relationship(
+        "MessageListMember", back_populates="distribution", lazy="select", uselist=False
+    )
+    message_list = db.relationship(
+        "MessageListModel", back_populates="distribution", lazy="select", uselist=False
+    )
 
 
 class UserEmails(db.Model):
@@ -437,12 +494,14 @@ class UserEmails(db.Model):
 
 class VerificationType(Enum):
     """Type of verification, used to direct the proper verification action afterwards."""
+
     LIST_JOIN = 1
     EMAIL_OWNERSHIP = 2
 
 
 class Verification(db.Model):
     """For various pending verifications, such as message list joining and email ownership verification."""
+
     __tablename__ = "verifications"
 
     id = db.Column(db.Integer, primary_key=True)

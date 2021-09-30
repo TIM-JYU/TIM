@@ -2,14 +2,17 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
 
-from authlib.integrations.sqla_oauth2 import OAuth2TokenMixin, OAuth2AuthorizationCodeMixin
+from authlib.integrations.sqla_oauth2 import (
+    OAuth2TokenMixin,
+    OAuth2AuthorizationCodeMixin,
+)
 from authlib.oauth2.rfc6749 import ClientMixin, scope_to_list, list_to_scope
 
 from timApp.timdb.sqa import db
 
 
 class Scope(Enum):
-    profile = 'profile'
+    profile = "profile"
 
 
 @dataclass
@@ -17,13 +20,14 @@ class OAuth2Client(ClientMixin):
     """
     An application that is allowed to authenticate as a TIM user and use OAUTH-protected REST API.
     """
+
     client_id: str
     """Unique identifier for the client."""
 
     client_name: Optional[str] = None
     """User-friendly client name"""
 
-    client_secret: str = ''
+    client_secret: str = ""
     """Client secret that is used to allow OAUTH2 authentication."""
 
     redirect_urls: list[str] = field(default_factory=list)
@@ -32,7 +36,7 @@ class OAuth2Client(ClientMixin):
     allowed_scopes: list[Scope] = field(default_factory=list)
     """Resource scopes that the client can ask for. Scopes are used to limit what REST API can be used."""
 
-    token_endpoint_auth_method = 'client_secret_post'
+    token_endpoint_auth_method = "client_secret_post"
     """How the client authenticates itself with TIM. Allowed values:
         *  "none": The client is a public client as defined in OAuth 2.0,
             and does not have a client secret.
@@ -74,7 +78,7 @@ class OAuth2Client(ClientMixin):
 
     def get_allowed_scope(self, scope: str) -> Optional[str]:
         if not scope:
-            return ''
+            return ""
         allowed = {s.name for s in self.allowed_scopes}
         scopes = scope_to_list(scope)
         return list_to_scope([s for s in scopes if s in allowed])
@@ -86,7 +90,7 @@ class OAuth2Client(ClientMixin):
         return self.client_secret == client_secret
 
     def check_endpoint_auth_method(self, method: str, endpoint: str) -> bool:
-        if endpoint == 'token':
+        if endpoint == "token":
             return self.token_endpoint_auth_method == method
         return True
 
@@ -98,14 +102,14 @@ class OAuth2Client(ClientMixin):
 
 
 class OAuth2Token(db.Model, OAuth2TokenMixin):
-    __tablename__ = 'oauth2_token'
+    __tablename__ = "oauth2_token"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'))
-    user = db.relationship('User')
+    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"))
+    user = db.relationship("User")
 
 
 class OAuth2AuthorizationCode(db.Model, OAuth2AuthorizationCodeMixin):
-    __tablename__ = 'oauth2_auth_code'
+    __tablename__ = "oauth2_auth_code"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('useraccount.id'))
-    user = db.relationship('User')
+    user_id = db.Column(db.Integer, db.ForeignKey("useraccount.id"))
+    user = db.relationship("User")

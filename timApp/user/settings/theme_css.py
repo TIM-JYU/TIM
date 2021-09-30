@@ -4,7 +4,7 @@ from flask import current_app
 
 from timApp.user.settings.theme import Theme
 
-static_folder = Path('static')
+static_folder = Path("static")
 
 
 class ThemeNotFoundException(Exception):
@@ -17,7 +17,7 @@ def get_default_scss_gen_dir() -> Path:
     :return: Default path for generated SCSS files
 
     """
-    return static_folder / current_app.config['SASS_GEN_PATH']
+    return static_folder / current_app.config["SASS_GEN_PATH"]
 
 
 def generate_theme(themes: list[Theme], gen_dir: Path) -> str:
@@ -73,22 +73,26 @@ def generate_theme_scss(themes: list[Theme], gen_dir: Path) -> None:
         if not t.exists():
             raise ThemeNotFoundException(t.filename)
     combined = get_combined_css_filename(themes)
-    file_path = gen_dir / f'{combined}.scss'
+    file_path = gen_dir / f"{combined}.scss"
     # TODO: Maybe version the styles somehow so that combined SCSS can be regenerated smartly
     if file_path.exists():
         return
     gen_dir.mkdir(exist_ok=True)
-    with file_path.open(encoding='utf-8', mode='w') as f:
+    with file_path.open(encoding="utf-8", mode="w") as f:
         f.write('@charset "UTF-8";\n')
-        f.write('@import "stylesheets/varUtils";\n') # import utils with export-variables mixin
+        f.write(
+            '@import "stylesheets/varUtils";\n'
+        )  # import utils with export-variables mixin
         f.write('@import "stylesheets/variables";\n')
         for t in themes:
-            f.write(f'@mixin {t.filename} {{}}\n')
+            f.write(f"@mixin {t.filename} {{}}\n")
             f.write(f'@import "stylesheets/themes/{t.filename}";\n')
-        f.write("@include export-variables;\n") # export variables to CSS
-        f.write('@import "stylesheets/all.scss";\n')  # "all" conflicts with a jQuery CSS file, so we must add the .scss extension
+        f.write("@include export-variables;\n")  # export variables to CSS
+        f.write(
+            '@import "stylesheets/all.scss";\n'
+        )  # "all" conflicts with a jQuery CSS file, so we must add the .scss extension
         for t in themes:
-            f.write(f'@include {t.filename};\n')
+            f.write(f"@include {t.filename};\n")
 
 
 def get_combined_css_filename(themes: list[Theme]) -> str:
@@ -98,4 +102,4 @@ def get_combined_css_filename(themes: list[Theme]) -> str:
     :return: The combined file name based on the themes. If the list is empty, 'default' is returned.
 
     """
-    return '-'.join(t.filename for t in themes) or 'default'
+    return "-".join(t.filename for t in themes) or "default"

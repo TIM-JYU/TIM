@@ -8,8 +8,10 @@ import re
 from git.gitlib import GitLib, LibResponse
 from git.util import RemoteInfo, Settings, generate_password, RepoSettings
 
+
 def sanitize_name(name):
     return name if len(name) > 255 else name[:255]
+
 
 class GiteaLib(GitLib):
     id = "gitea"
@@ -19,7 +21,10 @@ class GiteaLib(GitLib):
         self.api_path = self.api_path + "api/v1/"
 
     def get_headers(self):
-        if self.settings.librarySpecific is None or "apiToken" not in self.settings.librarySpecific:
+        if (
+            self.settings.librarySpecific is None
+            or "apiToken" not in self.settings.librarySpecific
+        ):
             raise PermissionError("apiToken not specified for GiteaLib")
 
         token = os.environ.get(self.settings.librarySpecific["apiToken"], None)
@@ -27,8 +32,8 @@ class GiteaLib(GitLib):
             raise PermissionError("apiToken not found in environment variables")
 
         return {
-            'Authorization': f'token {token}',
-            'Content-Type': 'application/json',
+            "Authorization": f"token {token}",
+            "Content-Type": "application/json",
         }
 
     def create_user(self, options):
@@ -49,13 +54,15 @@ class GiteaLib(GitLib):
             "send_notify": defaults["send_notify"],
             "source_id": 0,
         }
-        response = self.post('admin/users', data)
+        response = self.post("admin/users", data)
         user = response.data
 
         if response.status == 201:
             return LibResponse(True)
         else:
-            print(f'Git account creation failed:\nCode: {response.status}\nReason: {response.reason}\nData: {user}')
+            print(
+                f"Git account creation failed:\nCode: {response.status}\nReason: {response.reason}\nData: {user}"
+            )
             return LibResponse(False, "Unknown error")
 
     def get_user(self, credentials):
@@ -63,7 +70,7 @@ class GiteaLib(GitLib):
         return LibResponse(response.status == 200, response.reason, response.data)
 
     def delete_user(self, username):
-        return self.delete(f'admin/users/{username}')
+        return self.delete(f"admin/users/{username}")
 
     def create_repository(self, repo_settings: RepoSettings):
         libsettings = repo_settings.librarySpecific
@@ -77,20 +84,22 @@ class GiteaLib(GitLib):
             "readme": libsettings.get("readme", None),
         }
         if repo_settings.owner is None:
-            response = self.post('user/repos/', data)
+            response = self.post("user/repos/", data)
         else:
-            response = self.post(f'admin/users/{repo_settings.owner}/repos', data)
+            response = self.post(f"admin/users/{repo_settings.owner}/repos", data)
         return LibResponse(response.status == 201)
 
     def delete_repository(self, name, owner):
-        return self.delete(f'repos/{owner}/{self.sanitize_repo_path(name)}')
+        return self.delete(f"repos/{owner}/{self.sanitize_repo_path(name)}")
 
     def get_repository(self, name, owner):
-        response = self.get(f'repos/{owner}/{self.sanitize_repo_path(name)}')
+        response = self.get(f"repos/{owner}/{self.sanitize_repo_path(name)}")
         return response
 
     def repository_exists(self, repo_settings):
-        response = self.get_repository(self.sanitize_repo_path(repo_settings.name), repo_settings.owner)
+        response = self.get_repository(
+            self.sanitize_repo_path(repo_settings.name), repo_settings.owner
+        )
         if response.status == 200:
             return True
         elif response.status != 404:
@@ -101,12 +110,12 @@ class GiteaLib(GitLib):
         resp = self.get(f"orgs/{organization}/teams")
         if resp.status != 200:
             raise Exception("Failed to get team id")
-        id = [r['id'] for r in resp.data if r['name'] == team]
+        id = [r["id"] for r in resp.data if r["name"] == team]
         if len(id) == 0:
             return None
         return id[0]
 
-    def add_to_team(self, username, team, organization = None):
+    def add_to_team(self, username, team, organization=None):
         if organization is not None:
             team = self.get_team_id(organization, team)
 
@@ -119,12 +128,14 @@ class GiteaLib(GitLib):
             self.add_to_team(username, team["team"], team["organization"])
 
     def get_token_user(self):
-        response = self.get('user')
+        response = self.get("user")
         if response.status != 200:
             raise Exception(f"Failed to fetch current user: {response.status}")
-        return response.data['login']
+        return response.data["login"]
 
-    def add_collaborators(self, repo, owner=None, teams=None, users=None, default_permission='read'):
+    def add_collaborators(
+        self, repo, owner=None, teams=None, users=None, default_permission="read"
+    ):
         if owner is None:
             owner = self.get_token_user()
 
@@ -138,31 +149,41 @@ class GiteaLib(GitLib):
             teams = []
         elif not isinstance(teams, list):
             teams = [teams]
-        users = [u if isinstance(u, dict) else {"name":u, "permission":default_permission} for u in users]
-        teams = [t if isinstance(t, dict) else {"name":t, "permission":default_permission} for t in teams]
+        users = [
+            u if isinstance(u, dict) else {"name": u, "permission": default_permission}
+            for u in users
+        ]
+        teams = [
+            t if isinstance(t, dict) else {"name": t, "permission": default_permission}
+            for t in teams
+        ]
 
         errors = []
-        data = {'permission':default_permission}
+        data = {"permission": default_permission}
         for user in users:
             data["permission"] = user.get("permission", default_permission)
             resp = self.put(f'repos/{owner}/{repo}/collaborators/{user["name"]}', data)
             if resp.status != 204:
-                errors.append({'type': 'user', 'id': user, 'error': resp.reason})
+                errors.append({"type": "user", "id": user, "error": resp.reason})
 
         for team in teams:
             if isinstance(team["name"], str) and not team["name"].isdigit():
                 tmp = self.get_team_id(owner, team["name"])
                 if isinstance(tmp, dict):
-                    errors.append({'type': 'team', 'id':team["name"], 'error':tmp})
+                    errors.append({"type": "team", "id": team["name"], "error": tmp})
                     continue
                 if tmp is None:
-                    errors.append({'type': 'team', 'id':team["name"], 'error':'not found'})
+                    errors.append(
+                        {"type": "team", "id": team["name"], "error": "not found"}
+                    )
                     continue
                 team["name"] = tmp
 
             resp = self.put(f'teams/{team["name"]}/repos/{owner}/{repo}')
             if resp.status != 204:
-                errors.append({'type': 'team', 'id': team["name"], 'error': resp.reason})
+                errors.append(
+                    {"type": "team", "id": team["name"], "error": resp.reason}
+                )
 
         return errors
 
@@ -172,8 +193,14 @@ class GiteaLib(GitLib):
             if isinstance(settings.oldOwner, dict):
                 return LibResponse(False, str(settings.oldOwner))
 
-        data = {'organization': settings.owner, 'name': self.sanitize_repo_path(settings.name)}
-        repo_resp = self.post(f'repos/{settings.oldOwner}/{self.sanitize_repo_path(settings.oldName)}/forks', data)
+        data = {
+            "organization": settings.owner,
+            "name": self.sanitize_repo_path(settings.name),
+        }
+        repo_resp = self.post(
+            f"repos/{settings.oldOwner}/{self.sanitize_repo_path(settings.oldName)}/forks",
+            data,
+        )
         print(repo_resp)
         return LibResponse(repo_resp.status == 202)
 
@@ -183,14 +210,26 @@ class GiteaLib(GitLib):
 
         urepos = repo_settings.librarySpecific.get("userRepos", None)
         if urepos is not None:
-            default_permission = repo_settings.librarySpecific.get("userPermission", "read")
+            default_permission = repo_settings.librarySpecific.get(
+                "userPermission", "read"
+            )
             for repo in urepos:
                 if not isinstance(repo, dict):
-                    repo = {"name":repo}
+                    repo = {"name": repo}
                 permission = repo.get("permission", default_permission)
-                errors = self.add_collaborators(repo["name"], repo.get("owner", None), [], [credentials["username"]], permission)
+                errors = self.add_collaborators(
+                    repo["name"],
+                    repo.get("owner", None),
+                    [],
+                    [credentials["username"]],
+                    permission,
+                )
                 if len(errors) != 0:
-                    return LibResponse(False, "Failed to add collaborators: " + ", ".join(str(err) for err in errors))
+                    return LibResponse(
+                        False,
+                        "Failed to add collaborators: "
+                        + ", ".join(str(err) for err in errors),
+                    )
 
         uteams = repo_settings.librarySpecific.get("userTeams", None)
         if uteams is not None:
@@ -199,9 +238,21 @@ class GiteaLib(GitLib):
         rusers = repo_settings.librarySpecific.get("repoUsers", None)
         rteams = repo_settings.librarySpecific.get("repoTeams", None)
         if rusers is not None and rteams is not None:
-            default_permission = repo_settings.librarySpecific.get("defaultPermission", "read")
-            errors = self.add_collaborators(repo_settings.name, repo_settings.owner, rteams, rusers, default_permission)
+            default_permission = repo_settings.librarySpecific.get(
+                "defaultPermission", "read"
+            )
+            errors = self.add_collaborators(
+                repo_settings.name,
+                repo_settings.owner,
+                rteams,
+                rusers,
+                default_permission,
+            )
             if len(errors) != 0:
-                return LibResponse(False, "Failed to add collaborators: " + ", ".join(str(error) for error in errors))
+                return LibResponse(
+                    False,
+                    "Failed to add collaborators: "
+                    + ", ".join(str(error) for error in errors),
+                )
 
         return LibResponse(True)

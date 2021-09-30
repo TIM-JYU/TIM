@@ -11,8 +11,25 @@ num = 0
 # Always 0 for now.
 worker_pid = 0
 
-DB_PART_NAMES = {'notes', 'readings', 'users', 'images', 'uploads', 'files', 'documents', 'answers', 'questions',
-                 'messages', 'lectures', 'folders', 'lecture_answers', 'velps', 'velp_groups', 'annotations', 'session'}
+DB_PART_NAMES = {
+    "notes",
+    "readings",
+    "users",
+    "images",
+    "uploads",
+    "files",
+    "documents",
+    "answers",
+    "questions",
+    "messages",
+    "lectures",
+    "folders",
+    "lecture_answers",
+    "velps",
+    "velp_groups",
+    "annotations",
+    "session",
+}
 
 
 class TimDb:
@@ -20,11 +37,15 @@ class TimDb:
 
     Handles saving and retrieving information from TIM database.
     """
+
     instances = 0
 
-    def __init__(self, files_root_path: Path,
-                 current_user_name: str = 'Anonymous',
-                 route_path: str = ''):
+    def __init__(
+        self,
+        files_root_path: Path,
+        current_user_name: str = "Anonymous",
+        route_path: str = "",
+    ):
         """Initializes TimDB with the specified files root path, SQLAlchemy session and user name.
 
         created.
@@ -37,10 +58,10 @@ class TimDb:
         self.route_path = route_path
         self.current_user_name = current_user_name
 
-        self.blocks_path = self.files_root_path / 'blocks'
+        self.blocks_path = self.files_root_path / "blocks"
         for path in [self.blocks_path]:
             if not path.exists():
-                log_info(f'Creating directory: {path}')
+                log_info(f"Creating directory: {path}")
                 path.mkdir(parents=True, exist_ok=False)
         self.reset_attrs()
 
@@ -63,10 +84,13 @@ class TimDb:
         num += 1
         self.num = num
         self.time = time.time()
-        log_debug(f"GetDb      {worker_pid:2d} {self.num:6d} {'':2s} {'':3s} {'':7s} {self.route_path:s}")
+        log_debug(
+            f"GetDb      {worker_pid:2d} {self.num:6d} {'':2s} {'':3s} {'':7s} {self.route_path:s}"
+        )
         # log_info('TimDb-dstr {:2d} {:6d} {:2d} {:3d} {:7.5f} {:s}'.format(worker_pid,self.num, TimDb.instances, bes, time.time() - self.time, self.route_path))
         waiting = False
         from timApp.tim_app import app
+
         while True:
             try:
                 self.engine = db.get_engine(app)
@@ -89,7 +113,7 @@ class TimDb:
     def get_pg_connections(self):
         """Returns the number of clients currently connected to PostgreSQL."""
         cursor = self.db.cursor()
-        cursor.execute('SELECT sum(numbackends) FROM pg_stat_database')
+        cursor.execute("SELECT sum(numbackends) FROM pg_stat_database")
         num_connections = cursor.fetchone()[0]
         return num_connections
 
@@ -101,15 +125,16 @@ class TimDb:
 
     def close(self) -> None:
         """Closes the database connection."""
-        if hasattr(self, 'db') and self.db is not None:
+        if hasattr(self, "db") and self.db is not None:
             bes = -1
             TimDb.instances -= 1
             try:
                 # bes = self.get_pg_connections()
                 self.db.close()
             except Exception as err:
-                log_error('close error: ' + str(self.num) + ' ' + str(err))
+                log_error("close error: " + str(self.num) + " " + str(err))
 
             log_debug(
-                f'TimDb-dstr {worker_pid:2d} {self.num:6d} {TimDb.instances:2d} {bes:3d} {time.time() - self.time:7.5f} {self.route_path:s}')
+                f"TimDb-dstr {worker_pid:2d} {self.num:6d} {TimDb.instances:2d} {bes:3d} {time.time() - self.time:7.5f} {self.route_path:s}"
+            )
             self.reset_attrs()
