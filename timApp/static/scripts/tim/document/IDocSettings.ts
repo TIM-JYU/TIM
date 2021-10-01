@@ -41,4 +41,5 @@ export interface IDocSettings {
     exam_mode?: string;
     cache?: boolean;
     peer_review?: boolean;
+    max_uncollapsed_toc_items?: number;
 }
