@@ -19,6 +19,7 @@ export interface ISettings {
     use_document_word_list: boolean;
     word_list: string;
     auto_mark_all_read: boolean;
+    max_uncollapsed_toc_items: number | null;
 }
 
 export async function setConsent(http: HttpClient, c: ConsentType) {
@@ -157,18 +158,48 @@ export class SaveButtonComponent {
             </bootstrap-panel>
 
             <bootstrap-panel title="Menus">
-                <div class="checkbox"><label>
-                    <input type="checkbox" name="disable_menu_hover" [(ngModel)]="settings.disable_menu_hover"
-                           [disabled]="saving"> Disable opening menus with mouse hover
-                </label></div>
-                <div class="checkbox"><label>
-                    <input type="checkbox" name="remember_last_sidebar_menu_tab" [(ngModel)]="settings.remember_last_sidebar_menu_tab"
-                           [disabled]="saving"> Side bar menu: remember the last selected tab
-                </label></div>
-                <div class="checkbox"><label>
-                    <input type="checkbox" name="remember_last_sidebar_menu_state" [(ngModel)]="settings.remember_last_sidebar_menu_state"
-                           [disabled]="saving"> Side bar menu: remember the last open state
-                </label></div>
+                <form>
+                    <fieldset class="form-view" [disabled]="saving">
+                        <label for="max-toc-size" class="input-group-label">Collapse document index with more
+                            than</label>
+                        <div class="form-item">
+                            <div class="input-group">
+                                <input type="number" name="max_uncollapsed_toc_items" min="0" class="form-control"
+                                       id="max-toc-size" placeholder="40 (default)"
+                                       [(ngModel)]="settings.max_uncollapsed_toc_items">
+                                <span class="input-group-addon">items</span>
+                            </div>
+                            <button class="timButton" (click)="settings.max_uncollapsed_toc_items = null">Clear</button>
+                        </div>
+
+                        <span>Opening settings</span>
+                        <div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="disable_menu_hover"
+                                           [(ngModel)]="settings.disable_menu_hover"
+                                           [disabled]="saving"> Disable opening menus with mouse hover
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="remember_last_sidebar_menu_tab"
+                                           [(ngModel)]="settings.remember_last_sidebar_menu_tab"
+                                           [disabled]="saving"> Side bar menu: remember the last selected tab
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="remember_last_sidebar_menu_state"
+                                           [(ngModel)]="settings.remember_last_sidebar_menu_state"
+                                           [disabled]="saving"> Side bar menu: remember the last open state
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </form>
+
+
                 <tim-save-button [saved]="submit"></tim-save-button>
             </bootstrap-panel>
 
@@ -209,19 +240,20 @@ export class SaveButtonComponent {
             </bootstrap-panel>
         </div>
     `,
+    styleUrls: ["settings.component.scss"],
 })
 export class SettingsComponent implements DoCheck {
     saving = false;
-    private style: HTMLStyleElement;
     settings: ISettings;
     cssFiles: Array<ICssFile>;
     notifications: INotification[];
-    private consent: ConsentType | undefined;
     storageClear = false;
-    private allNotificationsFetched = false;
     user: IFullUser;
     deletingAccount = false;
     deleteConfirmName = "";
+    private style: HTMLStyleElement;
+    private consent: ConsentType | undefined;
+    private allNotificationsFetched = false;
 
     constructor(private http: HttpClient) {
         this.user = settingsglobals().current_user;

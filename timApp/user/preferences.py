@@ -25,6 +25,7 @@ class Preferences:
     css_combined: str = attr.ib(init=False)
     auto_mark_all_read: bool = False
     bookmarks: Optional[list[dict[str, list[dict[str, str]]]]] = None
+    max_uncollapsed_toc_items: Optional[int] = None
 
     @staticmethod
     def from_json(j: dict) -> "Preferences":
