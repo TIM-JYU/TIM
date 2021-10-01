@@ -35,9 +35,16 @@ class AnnotationVisibility(Enum):
 
 
 def get_annotations_with_comments_in_document(
-    user: User, d: DocInfo
+    user: User, d: DocInfo, only_own: bool = False
 ) -> list[Annotation]:
-    """Gets all annotations with comments the user can see / has access to."""
+    """
+    Gets all annotations with comments the user can see / has access to.
+
+    :param user: The user who gets the answers.
+    :param d: The document the answers are searched from.
+    :param only_own: If True, only annotations for this user are searched even if the user has access to more answers.
+    :return: List of annotations.
+    """
     language_id = "FI"
     vis_filter = Annotation.visible_to == AnnotationVisibility.everyone.value
     if user.has_teacher_access(d):
@@ -49,7 +56,7 @@ def get_annotations_with_comments_in_document(
             Annotation.visible_to == AnnotationVisibility.owner.value
         )
     answer_filter = true()
-    if not user.has_seeanswers_access(d):
+    if not user.has_seeanswers_access(d) or only_own:
         answer_filter = (User.id == user.id) | (User.id == None)
         if is_peerreview_enabled(d):
             answer_filter |= User.id.in_(
