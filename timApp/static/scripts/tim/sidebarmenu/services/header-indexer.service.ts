@@ -1,5 +1,12 @@
 import {Injectable} from "@angular/core";
-import {isDocumentGlobals, someglobals} from "tim/util/globals";
+import {
+    documentglobals,
+    genericglobals,
+    isDocumentGlobals,
+    someglobals,
+} from "tim/util/globals";
+import {ISettings} from "tim/user/settings.component";
+import {IDocSettings} from "tim/document/IDocSettings";
 
 export interface IHeader {
     id: string;
@@ -20,8 +27,16 @@ export type HeaderIndexItem = [IHeader, IHeader[]];
 })
 export class HeaderIndexerService {
     private headerItems?: IHeaderDisplayIndexItem[];
+    private settings: ISettings = genericglobals().userPrefs;
+    private docSettings: IDocSettings = documentglobals().docSettings;
+    private maxTocItemsUncollapse: number;
 
-    constructor() {}
+    constructor() {
+        this.maxTocItemsUncollapse =
+            this.settings.max_uncollapsed_toc_items ??
+            this.docSettings?.max_uncollapsed_toc_items ??
+            40;
+    }
 
     get headers(): IHeaderDisplayIndexItem[] {
         if (!this.headerItems) {
@@ -47,7 +62,7 @@ export class HeaderIndexerService {
 
         let closedState = true;
         const headerCount = this.getHeaderCount(index);
-        if (index.length == 1 || headerCount < 40) {
+        if (index.length == 1 || headerCount < this.maxTocItemsUncollapse) {
             closedState = false;
         }
 

@@ -1,0 +1,46 @@
+@import "node_modules/bootstrap-sass/assets/stylesheets/bootstrap/variables";
+
+.form-view {
+  display: grid;
+  grid-template-columns: max-content auto;
+  gap: 1em 5em;
+  align-items: baseline;
+
+  label {
+    font-weight: normal;
+  }
+
+  label.input-group-label {
+    align-self: end;
+  }
+
+  & > span {
+    cursor: default;
+  }
+
+  input.form-control {
+    background-color: white;
+    cursor: text;
+  }
+
+  .form-item {
+    display: flex;
+
+    .input-group {
+      flex-grow: 1;
+    }
+
+    & > *:not(:last-child) {
+      margin-right: 0.5em;
+    }
+  }
+
+  @media (max-width: $screen-xs-max) {
+    grid-template-columns: auto;
+    gap: 0.5em;
+
+    & > *:nth-child(2n) {
+      margin-bottom: 1em;
+    }
+  }
+}
