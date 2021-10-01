@@ -91,7 +91,8 @@ class SettingsTest(TimRouteTest):
                     '"", "email_exclude": "", "language": null, '
                     '"last_answer_fetch": {}, "auto_mark_all_read": false, '
                     '"bookmarks": [{"Last edited": [{"document 2": '
-                    '"/view/users/test-user-1/doc1"}]}], "css_combined": '
+                    '"/view/users/test-user-1/doc1"}]}], '
+                    '"max_uncollapsed_toc_items": null, "css_combined": '
                     '"default"}',
                     "real_name": "Test user 1",
                 },
@@ -167,6 +168,7 @@ type: python
                 "custom_css": "",
                 "disable_menu_hover": False,
                 "remember_last_sidebar_menu_tab": False,
+                "max_uncollapsed_toc_items": None,
                 "remember_last_sidebar_menu_state": False,
                 "auto_mark_all_read": False,
                 "bookmarks": None,
@@ -199,6 +201,7 @@ type: python
                 "use_document_word_list": True,
                 "word_list": "cat\ndog",
                 "language": None,
+                "max_uncollapsed_toc_items": None,
                 "custom_css": "somecss",
                 "disable_menu_hover": True,
                 "remember_last_sidebar_menu_state": True,
@@ -238,6 +241,7 @@ type: python
                 "remember_last_sidebar_menu_state": False,
                 "remember_last_sidebar_menu_tab": True,
                 "auto_mark_all_read": False,
+                "max_uncollapsed_toc_items": None,
                 "bookmarks": None,
             },
         )
