@@ -1,11 +1,13 @@
 import codecs
 import functools
+import hashlib
 import json
 import os
 import re
 import shlex
 import shutil
 import subprocess
+import time
 from base64 import b64encode
 from io import BytesIO
 from os.path import splitext
@@ -95,7 +97,7 @@ def is_compile_error(out, err):
 
 
 def file_hash(s):
-    h = hashlib.new('ripemd160')
+    h = hashlib.new("ripemd160")
     h.update(s.encode())
     return h.hexdigest()
 
@@ -581,7 +583,7 @@ class Jypeli(CS, Modifier):
         self.imgdest = "/csgenerated/%s.png" % self.genname
         self.videosource = "/tmp/%s/Output/out.mp4" % self.basename
         self.videodest = "/csgenerated/%s.mp4" % self.rndname
-        self.pure_exename = u"{0:s}.exe".format(self.filename)
+        self.pure_exename = "{0:s}.exe".format(self.filename)
 
     @staticmethod
     @functools.cache
@@ -677,18 +679,25 @@ class Jypeli(CS, Modifier):
             code, out, err, pwddir = 0, "", "", ""
             result["nosave"] = True
         else:
-            code, out, err, pwddir = self.runself(["dotnet",
-                                                   "exec",
-                                                   *CS.runtime_config(),
-                                                   *Jypeli.get_run_args(),
-                                                   self.pure_exename,
-                                                   "--headless", "true",
-                                                   "--save", "true",
-                                                   "--framesToRun", frames_to_run,
-                                                   "--skipFrames", skip_frames,
-                                                   *video_params,
-                                                   ],
-                                                  ulimit=df(self.ulimit, "ulimit -f 80000"))
+            code, out, err, pwddir = self.runself(
+                [
+                    "dotnet",
+                    "exec",
+                    *CS.runtime_config(),
+                    *Jypeli.get_run_args(),
+                    self.pure_exename,
+                    "--headless",
+                    "true",
+                    "--save",
+                    "true",
+                    "--framesToRun",
+                    frames_to_run,
+                    "--skipFrames",
+                    skip_frames,
+                    *video_params,
+                ],
+                ulimit=df(self.ulimit, "ulimit -f 80000"),
+            )
             if err.find("Compile") >= 0:
                 return code, out, err, pwddir
 
@@ -699,7 +708,11 @@ class Jypeli(CS, Modifier):
             else:
                 wait_file(self.imgsource)
                 remove(self.imgdest)
-                run(["convert", "-flip", self.imgsource, self.imgdest], cwd=self.prgpath, timeout=20)
+                run(
+                    ["convert", "-flip", self.imgsource, self.imgdest],
+                    cwd=self.prgpath,
+                    timeout=20,
+                )
                 remove(self.imgsource)
                 self.videodest = ""
                 self.imgdest += f"?{time.time_ns()}"

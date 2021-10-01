@@ -450,9 +450,9 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
 
         img = ret["web"].get("image", None)
         if img:
-            qidx = img.find('?')
-            if qidx >= 0: # remove timestamp with ?
-                img = img[0: qidx]
+            qidx = img.find("?")
+            if qidx >= 0:  # remove timestamp with ?
+                img = img[0:qidx]
             with open(img, "rb") as fh:
                 pngdata = fh.read()
             pngenc = b64encode(pngdata)
@@ -472,9 +472,14 @@ def get_html(self: "TIMServer", ttype: TType, query: QueryClass):
             except:
                 pass
 
-        video = ret['web'].get('video', None)
+        video = ret["web"].get("video", None)
         if video:
-            htmldata += video_start + video + '" ' + 'type="video/mp4" controls="" style = "width: 100%;"></video>'
+            htmldata += (
+                video_start
+                + video
+                + '" '
+                + 'type="video/mp4" controls="" style = "width: 100%;"></video>'
+            )
         htmldata += get_cache_footer(query)
 
         if cache_clear:
