@@ -88,25 +88,27 @@ function tryCreateRange(
  * A class for handling annotations.
  */
 export class ReviewController {
-    private selectedArea?: Range;
     public selectedElement?: ParContext;
+    public item: IItem;
+    public zIndex: number;
+    public velpMode: boolean;
+    public teacherMode: boolean;
+    public velps?: IVelpUI[];
+    private selectedArea?: Range;
     private selectionIsDrawing = false; // whether the review area is for drawn annotations or not
     private selectedCanvas?: DrawCanvasComponent; // drawn annotation area
     private drawMinDimensions = 10; // minimum width/height for drawn velp. If less then add extra padding
-    public item: IItem;
     private annotations: Annotation[];
-    public zIndex: number;
     private scope: IScope;
     private velpBadge?: HTMLInputElement;
     private velpBadgePar?: ParContext;
     private velpSelection?: VelpSelectionController; // initialized through onInit
-    public velpMode: boolean;
-    public velps?: IVelpUI[];
     private lastOpenedAnnotation = 0;
 
     constructor(public vctrl: ViewCtrl) {
         this.scope = vctrl.scope;
         this.velpMode = documentglobals().velpMode;
+        this.teacherMode = documentglobals().teacherMode;
         this.item = documentglobals().curr_item;
         this.annotations = [];
         this.zIndex = 3;
@@ -137,7 +139,12 @@ export class ReviewController {
     async loadDocumentAnnotations() {
         const response = await to(
             $http.get<Record<string, unknown>[]>(
-                `/${this.item.id}/get_annotations`
+                `/${this.item.id}/get_annotations`,
+                {
+                    params: {
+                        only_own: !this.teacherMode,
+                    },
+                }
             )
         );
         if (!response.ok) {
@@ -1037,29 +1044,6 @@ export class ReviewController {
         }
     }
 
-    private async addAnnotation(
-        newAnnotation: NewAnnotation,
-        coord: IAnnotationInterval,
-        velp: IVelp
-    ) {
-        const json = await to(
-            $http.post<Record<string, unknown>>("/add_annotation", {
-                answer_id: newAnnotation.answer_id,
-                coord: coord,
-                doc_id: this.vctrl.item.id,
-                points: velp.points,
-                velp_id: newAnnotation.velp.id,
-                visible_to: velp.visible_to,
-            })
-        );
-        if (!json.ok) {
-            throw Error(json.result.data.error);
-        }
-        const ann = deserialize(json.result.data, Annotation);
-        this.annotations.push(ann);
-        return ann;
-    }
-
     getAnswerBrowserFromPluginLoader(first: Element) {
         const taskId = first.getAttribute("task-id");
         if (!taskId) {
@@ -1547,5 +1531,28 @@ export class ReviewController {
                 a.toggleAnnotationShow();
             }
         }
+    }
+
+    private async addAnnotation(
+        newAnnotation: NewAnnotation,
+        coord: IAnnotationInterval,
+        velp: IVelp
+    ) {
+        const json = await to(
+            $http.post<Record<string, unknown>>("/add_annotation", {
+                answer_id: newAnnotation.answer_id,
+                coord: coord,
+                doc_id: this.vctrl.item.id,
+                points: velp.points,
+                velp_id: newAnnotation.velp.id,
+                visible_to: velp.visible_to,
+            })
+        );
+        if (!json.ok) {
+            throw Error(json.result.data.error);
+        }
+        const ann = deserialize(json.result.data, Annotation);
+        this.annotations.push(ann);
+        return ann;
     }
 }
