@@ -582,7 +582,7 @@ class Jypeli(CS, Modifier):
         self.imgsource = "/tmp/%s/Output/0.bmp" % self.basename
         self.imgdest = "/csgenerated/%s.png" % self.genname
         self.videosource = "/tmp/%s/Output/out.mp4" % self.basename
-        self.videodest = "/csgenerated/%s.mp4" % self.rndname
+        self.videodest = "/csgenerated/%s.mp4" % self.genname
         self.pure_exename = "{0:s}.exe".format(self.filename)
 
     @staticmethod
@@ -676,7 +676,8 @@ class Jypeli(CS, Modifier):
 
         save_hash = file_hash(str(sourcelines) + extra_key)
         if (save_hash == old_hash or self.hash_by_code) and os.path.isfile(saved_file):
-            code, out, err, pwddir = 0, "", "", ""
+            out = state.get("save_out", "")
+            code, out, err, pwddir = 0, out, "", ""
             result["nosave"] = True
         else:
             code, out, err, pwddir = self.runself(
@@ -703,7 +704,8 @@ class Jypeli(CS, Modifier):
 
             if self.videosource:
                 wait_file(self.videosource)
-                run(["mv", "-f", self.videosource, self.videodest])
+                run(["mv", "-f", self.videosource, self.videodest], timeout=2000)
+                self.videodest += f"?{save_hash}"
                 self.imgdest = ""
             else:
                 wait_file(self.imgsource)
@@ -715,12 +717,26 @@ class Jypeli(CS, Modifier):
                 )
                 remove(self.imgsource)
                 self.videodest = ""
-                self.imgdest += f"?{time.time_ns()}"
+                self.imgdest += f"?{save_hash}"
         result["save"]["save_hash"] = save_hash
+
+        err = re.sub("^ALSA.*\n", "", err, flags=re.M)
+        err = re.sub("^W: \\[pulse.*\n", "", err, flags=re.M)
+        err = re.sub("^AL lib:.*\n", "", err, flags=re.M)
+        out = re.sub(
+            "^Could not open AL device - OpenAL Error: OutOfMemory.*\n",
+            "",
+            out,
+            flags=re.M,
+        )
+
         out = re.sub("Number of joysticks:.*\n.*", "", out)
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
         else:
+            if out:
+                result["save"]["save_out"] = out
+
             web = result["web"]
             web["image"] = self.imgdest
             web["video"] = self.videodest
