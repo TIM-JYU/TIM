@@ -449,8 +449,10 @@ export class AnswerBrowserController
     }
 
     registerNewAnswer(args: IAnswerSaveEvent) {
-        if (args.savedNew) {
-            this.loadedAnswer.id = args.savedNew;
+        if (args.savedNew || this.saveTeacher) {
+            if (args.savedNew) {
+                this.loadedAnswer.id = args.savedNew;
+            }
             this.review = false;
             this.oldreview = false;
             if (this.answers.length == 0 && this.viewctrl.teacherMode) {
@@ -1184,6 +1186,7 @@ export class AnswerBrowserController
                 (this.hasUserChanged() ||
                     data.length !== this.answers.length)) ||
             this.forceBrowser() ||
+            this.saveTeacher ||
             newSelectedId
         ) {
             this.answers = data;
@@ -1197,6 +1200,9 @@ export class AnswerBrowserController
                     this.filteredAnswers.length > 0
                         ? this.filteredAnswers[0]
                         : undefined;
+                if (this.saveTeacher) {
+                    this.updatePoints();
+                }
             }
             if (!this.selectedAnswer && !this.forceBrowser()) {
                 this.dimPlugin();

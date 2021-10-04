@@ -15,15 +15,16 @@ CS3_TAG = "dotnet"
 CS3_TARGET = os.environ.get("CSPLUGIN_TARGET", "")
 
 
-def wait_file(f1):
-    """Wait until the file is ready or 10 tries has been done.
+def wait_file(f1, tries=10):
+    """Wait until the file is ready or enough tries has been done.
 
     :param f1: filename to wait
+    :param tries: number of tries
     :return: sthe file status if it became ready, otherwise False
 
     """
     count = 0
-    while count < 10:
+    while count < tries:
         count += 1
         if os.path.isfile(f1):
             s1 = os.stat(f1)

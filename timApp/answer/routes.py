@@ -1075,7 +1075,10 @@ def post_answer_impl(
             if not is_valid:
                 result["error"] = explanation
         elif save_teacher:
-            points = answer_browser_data.get("points", points)
+            # Getting points from teacher ignores points automatically computed by the task
+            # For now we accept task points since most of the time that's what a teacher might want
+            # TODO: Accept teacher's points or task points depending on context (e.g. button)
+            # points = answer_browser_data.get("points", points)
             points = points_to_float(points)
             a = save_answer(
                 users,
