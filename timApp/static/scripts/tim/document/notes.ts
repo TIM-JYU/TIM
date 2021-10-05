@@ -8,6 +8,8 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 import * as t from "io-ts";
 import {ParContext} from "tim/document/structure/parContext";
 import {fromParents} from "tim/document/structure/create";
+import type {IGroup} from "tim/user/IUser";
+import {Users} from "tim/user/userService";
 import {IPluginInfoResponse} from "../editor/parCompiler";
 import {PareditorController} from "../editor/pareditor";
 import {IModalInstance} from "../ui/dialog";
@@ -42,7 +44,11 @@ export interface INote {
     access: "everyone" | "justme";
     html: string;
     tags: string[];
+    usergroup: IGroup;
 }
+
+const NOTES_AUTHOR_SELF = "Just me";
+const NOTES_AUTHOR_SELF_TITLE = "No one can answer to this note!";
 
 export class NotesHandler {
     private hideVars: IVisibilityVars = getVisibilityVars();
@@ -90,6 +96,8 @@ export class NotesHandler {
         let url: string;
         let data;
         let initialText = "";
+        let justMeLabel = NOTES_AUTHOR_SELF;
+        let justMeTitle = NOTES_AUTHOR_SELF_TITLE;
         if (!options.noteData) {
             caption = "Add comment";
             url = "/postNote";
@@ -109,6 +117,11 @@ export class NotesHandler {
             if (r.ok) {
                 const notedata = r.result.data;
                 initialText = notedata.text;
+                const curUser = Users.getCurrent();
+                if (curUser.name != notedata.extraData.usergroup.name) {
+                    justMeLabel = `Just ${notedata.extraData.usergroup.name}`;
+                    justMeTitle = `Only ${notedata.extraData.usergroup.name} will see the note!`;
+                }
                 data = {
                     id: options.noteData.id,
                     access: notedata.extraData.access,
@@ -159,9 +172,9 @@ export class NotesHandler {
                                 title: "User name is visible only for teachers",
                             },
                             {
-                                desc: "Just me",
+                                desc: justMeLabel,
                                 value: "justme",
-                                title: "No one can answer to this note!",
+                                title: justMeTitle,
                             },
                         ],
                     },
