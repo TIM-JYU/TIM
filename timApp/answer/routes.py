@@ -526,7 +526,8 @@ InputAnswer = Union[AnswerData, list[Any], int, float, str]
 
 
 # noinspection PyShadowingBuiltins
-def post_answer_route_impl(
+@answers.put("/<plugintype>/<task_id_ext>/answer")
+def post_answer(
     plugintype: str,
     task_id_ext: str,
     input: InputAnswer,
@@ -556,29 +557,6 @@ def post_answer_route_impl(
             get_origin_from_request(),
         ).result
     )
-
-
-@answers.put("/<plugintype>/<task_id_ext>/answer")
-def post_answer(
-    plugintype: str,
-    task_id_ext: str,
-    input: InputAnswer,
-    abData: dict[str, Any] = field(default_factory=dict),
-    options: dict[str, Any] = field(default_factory=dict),
-):
-    return post_answer_route_impl(plugintype, task_id_ext, input, abData, options)
-
-
-# TODO: Remove once verified that all users' clientside code was updated
-@answers.put("/<plugintype>/<task_id_ext>/answer/")
-def post_answer_alt(
-    plugintype: str,
-    task_id_ext: str,
-    input: InputAnswer,
-    abData: dict[str, Any] = field(default_factory=dict),
-    options: dict[str, Any] = field(default_factory=dict),
-):
-    return post_answer_route_impl(plugintype, task_id_ext, input, abData, options)
 
 
 @dataclass
