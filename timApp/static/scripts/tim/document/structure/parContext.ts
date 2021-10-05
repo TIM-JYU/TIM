@@ -97,6 +97,10 @@ export class ParContext {
         return this.par.htmlElement.querySelector(".readline");
     }
 
+    getReadSectionMark() {
+        return this.par.htmlElement.querySelector(".readsection");
+    }
+
     getContent() {
         return this.par.htmlElement.querySelector(".parContent")!;
     }
