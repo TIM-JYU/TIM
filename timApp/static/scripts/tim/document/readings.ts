@@ -247,7 +247,7 @@ export async function initReadings(item: IItem) {
             return;
         }
         markParsRead(pars, item);
-        // Go through pars since areas get their own special section markers (if present)
+        // Go through pars since areas can get their own section markers
         pars.forEach((p) => p.getReadSectionMark()?.remove());
     });
 
