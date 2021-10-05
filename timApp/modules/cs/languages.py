@@ -624,9 +624,12 @@ class Jypeli(CS, Modifier):
         if state is None:
             state = {}
         old_hash = state.get("save_hash", "")
+        time_tag = ""
+        is_forced_run = False
         force_run = self.markup.get("force_run", "RandomGen")
         if force_run and re.search(force_run, sourcelines, re.MULTILINE):
             old_hash = ""
+            is_forced_run = True
         save_video = self.markup.get("save_video", False)
         if save_video is None:  # allow `save_video: ` syntax
             save_video = {}
@@ -702,10 +705,14 @@ class Jypeli(CS, Modifier):
             if err.find("Compile") >= 0:
                 return code, out, err, pwddir
 
+            time_tag = save_hash
+            if is_forced_run:
+                time_tag = f"{time.time_ns()}"
+
             if self.videosource:
                 wait_file(self.videosource)
                 run(["mv", "-f", self.videosource, self.videodest], timeout=2000)
-                self.videodest += f"?{save_hash}"
+                self.videodest += f"?{time_tag}"
                 self.imgdest = ""
             else:
                 wait_file(self.imgsource)
@@ -717,7 +724,7 @@ class Jypeli(CS, Modifier):
                 )
                 remove(self.imgsource)
                 self.videodest = ""
-                self.imgdest += f"?{save_hash}"
+                self.imgdest += f"?{time_tag}"
         result["save"]["save_hash"] = save_hash
 
         err = re.sub("^ALSA.*\n", "", err, flags=re.M)
