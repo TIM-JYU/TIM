@@ -7,6 +7,7 @@ import {DerefOption} from "tim/document/structure/derefOption";
 import {maybeDeref} from "tim/document/structure/maybeDeref";
 import {enumDocParts, PreambleIteration} from "tim/document/structure/parsing";
 import {ReadonlyWeakMap} from "tim/util/types/readonlyWeakMap";
+import {NotRemovableHTMLElement} from "tim/document/structure/notRemovableElement";
 import {documentglobals} from "../util/globals";
 
 type ParMapValue = [
@@ -16,16 +17,31 @@ type ParMapValue = [
 ];
 
 export class TimDocument {
-    getSections() {
-        return this.sections;
-    }
-
     private sections = new WeakMap<Element, ParContext[]>();
+    private sectionsByLastAreas = new WeakMap<Area, ParContext[]>();
     private sectionList: ParContext[][] = [];
     private parMap = new WeakMap<Element, ParMapValue>();
     private uncollapsibleAreaMap = new WeakMap<Element, Area>();
 
     constructor(private root: HTMLElement) {}
+
+    getSections() {
+        return this.sections;
+    }
+
+    getSectionFor(par: Paragraph): ParContext[] | undefined {
+        const pars = this.sections.get(par.htmlElement);
+        if (pars) {
+            return pars;
+        }
+        if (par.parent) {
+            const parent = maybeDeref(par.parent);
+            if (parent instanceof Area) {
+                return this.sectionsByLastAreas.get(parent);
+            }
+        }
+        return undefined;
+    }
 
     /**
      * Rebuilds the sections and refreshes the section read marks.
@@ -75,19 +91,27 @@ export class TimDocument {
                 .not(".read").length;
             const unreadCount = readlines.not(".read-modified").not(".read")
                 .length;
+
             if (modifiedCount + unreadCount > 0) {
-                const div = document.createElement("div");
-                div.className = "readsection";
-                div.title = `Mark preceding section as read (${sectionPars.length} paragraphs - ${unreadCount} unread, ${modifiedCount} modified)`;
-                const i1 = document.createElement("i");
-                i1.className = "glyphicon glyphicon-align-left";
-                const i2 = document.createElement("i");
-                i2.className = "glyphicon glyphicon-ok";
-                div.appendChild(i1);
-                div.appendChild(i2);
-                sectionPars[sectionPars.length - 1].par.htmlElement.appendChild(
-                    div
-                );
+                const info = {
+                    all: sectionPars.length,
+                    unread: unreadCount,
+                    modified: modifiedCount,
+                };
+                const lastPar = sectionPars[sectionPars.length - 1].par;
+                this.addSectionReadMark(lastPar.htmlElement, info);
+                if (lastPar.parent) {
+                    const parent = maybeDeref(lastPar.parent);
+                    // Collapsible area => section mark was applied to area and paragraph
+                    // Add an additional mark to the collapse control
+                    if (parent instanceof Area && parent.collapse) {
+                        console.log(parent.collapse);
+                        this.addSectionReadMark(
+                            parent.collapse.titlepar.par.htmlElement,
+                            info
+                        );
+                    }
+                }
             }
         }
     }
@@ -99,15 +123,20 @@ export class TimDocument {
         this.sections = new WeakMap();
         this.sectionList = [];
         this.parMap = new WeakMap();
+        this.sectionsByLastAreas = new WeakMap();
         this.uncollapsibleAreaMap = new WeakMap();
         const allpars = enumDocParts(PreambleIteration.Include, this.root);
         let currentSection: ParContext[] = [];
         let prev: Element | undefined;
+        let prevArea: Area | undefined;
 
         const addSection = () => {
             if (prev && currentSection.length > 0) {
                 this.sections.set(prev, currentSection);
                 this.sectionList.push(currentSection);
+                if (prevArea) {
+                    this.sectionsByLastAreas.set(prevArea, currentSection);
+                }
             }
         };
 
@@ -122,9 +151,12 @@ export class TimDocument {
 
                 prev2 = prev1;
                 prev1 = x;
+                let isInArea = false;
                 if (x.parent) {
                     const parent = maybeDeref(x.parent);
                     if (parent instanceof Area) {
+                        prevArea = parent;
+                        isInArea = true;
                         if (!parent.collapse) {
                             this.uncollapsibleAreaMap.set(
                                 parent.getAreaContainer(),
@@ -143,6 +175,9 @@ export class TimDocument {
                     addSection();
                     currentSection = [];
                 }
+                if (!isInArea) {
+                    prevArea = undefined;
+                }
                 if (x.isSetting()) {
                     continue;
                 }
@@ -154,6 +189,22 @@ export class TimDocument {
             }
         }
         addSection();
+    }
+
+    private addSectionReadMark(
+        target: NotRemovableHTMLElement,
+        parCount: {all: number; unread: number; modified: number}
+    ) {
+        const div = document.createElement("div");
+        div.className = "readsection";
+        div.title = `Mark preceding section as read (${parCount.all} paragraphs - ${parCount.unread} unread, ${parCount.modified} modified)`;
+        const i1 = document.createElement("i");
+        i1.className = "glyphicon glyphicon-align-left";
+        const i2 = document.createElement("i");
+        i2.className = "glyphicon glyphicon-ok";
+        div.appendChild(i1);
+        div.appendChild(i2);
+        target.appendChild(div);
     }
 
     public readExpiry() {

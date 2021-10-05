@@ -242,12 +242,13 @@ export async function initReadings(item: IItem) {
     onClick(".readsection", function readSectionHandler($readsection, e) {
         const doc = getActiveDocument();
         const par = fromParents($readsection);
-        const pars = doc.getSections().get(par.par.htmlElement);
+        const pars = doc.getSectionFor(par.par);
         if (!pars) {
             return;
         }
         markParsRead(pars, item);
-        $readsection.remove();
+        // Go through pars since areas get their own special section markers (if present)
+        pars.forEach((p) => p.getReadSectionMark()?.remove());
     });
 
     onMouseOverOut("#pars .par:not('.preamble')", function mouseOverHandler(
