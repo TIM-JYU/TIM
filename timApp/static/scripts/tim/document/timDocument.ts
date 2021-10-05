@@ -103,7 +103,7 @@ export class TimDocument {
                 if (lastPar.parent) {
                     const parent = maybeDeref(lastPar.parent);
                     // Collapsible area => section mark was applied to area and paragraph
-                    // Add an additional mark to the collapse control
+                    // Add an additional mark to area start (visible only when area is collapsed)
                     if (parent instanceof Area && parent.collapse) {
                         console.log(parent.collapse);
                         this.addSectionReadMark(
