@@ -82,13 +82,18 @@ convertBlock reader rOpts target ms txt = do
   makeHtml  pdc  = fmap renderHtml (PDC.writeHtml5 htmlOpts pdc)
   makeLatex pdc =  LT.fromStrict <$> PDC.writeLaTeX latexOpts pdc
 
-readerOpts :: PDC_Opt.ReaderOptions
-readerOpts =
+readerOpts :: TIMIFace a -> PDC.Extensions -> PDC_Opt.ReaderOptions
+readerOpts timInput exts =
   PDC.def
   { PDC.readerExtensions
-     = PDC_Opt.enableExtension PDC_Opt.Ext_tex_math_dollars
-         PDC.pandocExtensions
+     =  PDC_Opt.enableExtension PDC_Opt.Ext_tex_math_dollars
+        . smartPunctExt
+        $ exts
   }
+  where
+    smartPunctExt = if defSmartPunct ?: smartPunct timInput then id else PDC_Opt.disableExtension PDC_Opt.Ext_smart
+
+
 
 latexOpts :: PDC_Opt.WriterOptions
 latexOpts = PDC.def
@@ -175,7 +180,7 @@ transformMD rtc target   = conversion (plainConvert rtc target)
 
 keysConvert :: DumboRTC -> OutputFormat -> TIMIFace a -> ConversionElement Value -> IO Value
 keysConvert rtc target timInput
- = (\(pass,obj) -> transformM (jsonEditing target pass) obj) . convertElement rtc (mathOption timInput) (mathPreamble timInput)
+ = (\(pass,obj) -> transformM (jsonEditing timInput target pass) obj) . convertElement rtc (mathOption timInput) (mathPreamble timInput)
 
 plainConvert :: DumboRTC -> OutputFormat -> TIMIFace el -> ConversionElement Text -> IO LT.Text
 plainConvert rtc target timInput cel
@@ -183,21 +188,21 @@ plainConvert rtc target timInput cel
     let converted = convertElement rtc (mathOption timInput) (mathPreamble timInput) cel
     result <- PDC.runIO (PDC.getReader (getInputFormat timInput cel))
     (currentReader, extss) <- PDC.handleError result
-    let opts = readerOpts{PDC.readerExtensions = extss <> PDC.readerExtensions readerOpts }
+    let opts = readerOpts timInput extss
     uncurry (convertBlock currentReader opts target) converted
 
-modifyJSON :: OutputFormat -> (PDC.Block -> IO PDC.Block) -> Text -> IO Value
-modifyJSON target pass str = String . stripP . LT.toStrict <$> convertBlock defaultReader readerOpts target pass str
+modifyJSON :: TIMIFace a -> OutputFormat -> (PDC.Block -> IO PDC.Block) -> Text -> IO Value
+modifyJSON timInput target pass str = String . stripP . LT.toStrict <$> convertBlock defaultReader (readerOpts timInput PDC_Opt.pandocExtensions) target pass str
 
-jsonEditing :: OutputFormat -> (PDC.Block -> IO PDC.Block) -> Value -> IO Value
-jsonEditing target pass (String str)
+jsonEditing :: TIMIFace a -> OutputFormat -> (PDC.Block -> IO PDC.Block) -> Value -> IO Value
+jsonEditing timInput target pass (String str)
   | "md:" `T.isPrefixOf` str
     -- ^ Convert field from markdown to target
-  = modifyJSON target pass (T.drop 3 str)
+  = modifyJSON timInput target pass (T.drop 3 str)
   | "am:" `T.isPrefixOf` str
-  = modifyJSON target (pass <=< walkM convertAsciiMath) (T.drop 3 str)
+  = modifyJSON timInput target (pass <=< walkM convertAsciiMath) (T.drop 3 str)
     -- ^ Convert field from md to target, but assume that math is asciiMath
-jsonEditing _ _ x = pure x
+jsonEditing _ _ _ x = pure x
 
 convertAsciiMath (PDC.Math a s) =
   pure $ either (const (PDC.Math a s)) (PDC.Math a) (fmap T.pack $ AsciiMath.compile $ T.unpack s)
@@ -244,6 +249,9 @@ defPreamble = ""
 defInputFormat :: T.Text
 defInputFormat = "markdown"
 
+defSmartPunct :: Bool
+defSmartPunct = True
+
 instance FromJSON MathOption where
     parseJSON (String txt) = case txt of
                               "svg"     -> pure SVG
@@ -263,7 +271,8 @@ instance FromJSON el => FromJSON (ConversionElement el) where
 data TIMIFace el = TIF {content      :: el
                        ,inputFormat  :: Maybe T.Text
                        ,mathOption   :: Maybe MathOption
-                       ,mathPreamble :: Maybe T.Text}
+                       ,mathPreamble :: Maybe T.Text
+                       ,smartPunct   :: Maybe Bool}
                        deriving (Eq,Show,Functor,Foldable,Traversable)
 
 instance FromJSON el => FromJSON (TIMIFace el) where
@@ -272,6 +281,7 @@ instance FromJSON el => FromJSON (TIMIFace el) where
       inputFormat <- optional (v .: "inputFormat")
       mathOpt     <- optional (v .: "mathOption")
       mathPre     <- optional (v .: "mathPreamble")
-      return (TIF content inputFormat mathOpt mathPre)
+      smartPunct  <- optional (v .: "smartPunct")
+      return (TIF content inputFormat mathOpt mathPre smartPunct)
 
     parseJSON invalid    = typeMismatch "TIMIFace" invalid
