@@ -263,7 +263,7 @@ $body$
         self.assertEqual(
             r"""
 PÖYTÄKIRJANOTE - Lista 1 - Ilmoitusasiat\\
-~\\
+\strut \\
 
 \begin{tabular}{p{10cm} l}
 JYVÄSKYLÄN YLIOPISTO              & KOKOUSKUTSU \\
@@ -407,7 +407,7 @@ Todetaan ilmoitusasiat.
         self.assertEqual(
             r"""
 PÖYTÄKIRJANOTE - Lista 2 - Jaska Jokusen väitöskirjan arvostelu\\
-~\\
+\strut \\
 
 \begin{tabular}{p{10cm} l}
 JYVÄSKYLÄN YLIOPISTO              & KOKOUSKUTSU \\
