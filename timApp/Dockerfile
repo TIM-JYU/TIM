@@ -75,16 +75,17 @@ wget \
 && ${APT_CLEANUP}"
 
 # Update dvisvgm so that it supports converting PDFs to SVGs
+ENV DVISVGM_VERSION="2.12"
 RUN bash -c "${APT_INSTALL} gcc g++ libgs-dev libkpathsea-dev pkg-config libfreetype6-dev make && ${APT_CLEANUP}"
-RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/2.10/dvisvgm-2.10.tar.gz" -qO $FILE && \
+RUN FILE=`mktemp`; wget "https://github.com/mgieseki/dvisvgm/releases/download/${DVISVGM_VERSION}/dvisvgm-${DVISVGM_VERSION}.tar.gz" -qO $FILE && \
  tar -xf $FILE && \
- cd dvisvgm-2.10 && \
+ cd dvisvgm-$DVISVGM_VERSION && \
  ./configure --enable-bundled-libs && \
  make -j4 && \
  make install && \
  cd / && \
  ${APT_CLEANUP} && \
- rm -rf /dvisvgm-2.10
+ rm -rf /dvisvgm-$DVISVGM_VERSION
 
 # Install Python, pip and other necessary packages
 
@@ -189,7 +190,7 @@ types-requests \
 && ${APT_CLEANUP}"
 
 # Install Pandoc
-RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.10.1/pandoc-2.10.1-1-amd64.deb" -qO $FILE && \
+RUN FILE=`mktemp`; wget "https://github.com/jgm/pandoc/releases/download/2.14.2/pandoc-2.14.2-1-amd64.deb" -qO $FILE && \
  dpkg -i $FILE && rm $FILE && bash -c "${APT_CLEANUP}"
 
 # Set name and email for git.
