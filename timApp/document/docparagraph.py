@@ -12,7 +12,6 @@ import filelock
 from commonmark.node import Node
 from jinja2.sandbox import SandboxedEnvironment
 
-from timApp.document.docinfo import DocInfo
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
 from timApp.document.documentwriter import DocumentWriter
@@ -37,6 +36,7 @@ from tim_common.utils import parse_bool
 
 if TYPE_CHECKING:
     from timApp.document.document import Document
+    from timApp.document.docinfo import DocInfo
 
 SKIPPED_ATTRS = {"r", "rd", "rp", "ra", "rt", "settings"}
 

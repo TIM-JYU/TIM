@@ -11,7 +11,7 @@ Missing = _Missing
 _BoolField = Boolean()
 
 
-def parse_bool(value: Any, default: bool = False):
+def parse_bool(value: Any, default: bool = False) -> bool:
     try:
         return _BoolField.deserialize(value)
     except ValidationError:
