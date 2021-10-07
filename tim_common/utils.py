@@ -2,9 +2,20 @@ from typing import Any, Optional, Mapping, Dict
 
 import marshmallow
 from isodate import Duration, duration_isoformat, parse_duration
+from marshmallow import ValidationError
+from marshmallow.fields import Boolean
 from marshmallow.utils import _Missing
 
 Missing = _Missing
+
+_BoolField = Boolean()
+
+
+def parse_bool(value: Any, default: bool = False) -> bool:
+    try:
+        return _BoolField.deserialize(value)
+    except ValidationError:
+        return default
 
 
 class DurationField(marshmallow.fields.Field):
