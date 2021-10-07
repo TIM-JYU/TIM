@@ -26,4 +26,4 @@ extra-deps:
 flags:
    regex-posix:
       _regex-posix-clib: true
-resolver: lts-16.15
+resolver: lts-18.13
