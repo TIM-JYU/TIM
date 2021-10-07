@@ -253,7 +253,7 @@ defInputFormat :: T.Text
 defInputFormat = "markdown"
 
 defSmartPunct :: Bool
-defSmartPunct = True
+defSmartPunct = False
 
 instance FromJSON MathOption where
     parseJSON (String txt) = case txt of

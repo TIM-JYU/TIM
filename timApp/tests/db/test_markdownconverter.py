@@ -50,22 +50,24 @@ class MarkdownConverterTest(TimDbTest):
             )
             self.assertEqual(expected.strip(), bs[0], reason)
 
-        check_html(SMART_PUNCT_HTML, main_par, "Default case: smart punct enabled")
-
-        d.document.set_settings({"smart_punct": "false"})
-        check_html(NO_SMART_PUNCT_HTML, main_par, "Doc smart_punct: false")
+        check_html(NO_SMART_PUNCT_HTML, main_par, "Default case: smart punct disabled")
 
         d.document.set_settings({"smart_punct": "true"})
         check_html(SMART_PUNCT_HTML, main_par, "Doc smart_punct: true")
 
-        second_par = DocParagraph.create(d.document, md=SMART_PUNCT_MD)
-        check_html(SMART_PUNCT_HTML, second_par, "Doc smart_punct: true; second par")
+        d.document.set_settings({"smart_punct": "false"})
+        check_html(NO_SMART_PUNCT_HTML, main_par, "Doc smart_punct: false")
 
-        second_par.set_attr("smart_punct", "false")
+        second_par = DocParagraph.create(d.document, md=SMART_PUNCT_MD)
         check_html(
-            NO_SMART_PUNCT_HTML,
+            NO_SMART_PUNCT_HTML, second_par, "Doc smart_punct: false; second par"
+        )
+
+        second_par.set_attr("smart_punct", "true")
+        check_html(
+            SMART_PUNCT_HTML,
             second_par,
-            "Doc smart_punct: true; second par with smart_punct: false",
+            "Doc smart_punct: false; second par with smart_punct: true",
         )
 
     def test_markdown(self):
@@ -163,7 +165,7 @@ input_format: rst
     def test_unsafe_not_allowed(self):
         self.assertEqual(
             """
-<p><span class="error">Syntax error in template: access to attribute &#8216;<strong>class</strong>&#8217; of &#8216;str&#8217; object is unsafe.</span></p>
+<p><span class="error">Syntax error in template: access to attribute '<strong>class</strong>' of 'str' object is unsafe.</span></p>
         """.strip(),
             md_to_html("""%%''.__class__.__mro__%%""", macros={}),
         )

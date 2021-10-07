@@ -55,7 +55,7 @@ class DumboOptions(NamedTuple):
             math_type=MathType.MathJax,
             math_preamble="",
             input_format=InputFormat.Markdown,
-            smart_punct=True,
+            smart_punct=False,
         )
 
     def dict(self):

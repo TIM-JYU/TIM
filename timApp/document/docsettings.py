@@ -474,7 +474,7 @@ class DocSettings:
         return self.get_setting_or_default("disable_answer", None)
 
     def smart_punct(self) -> Optional[bool]:
-        return self.get_setting_or_default("smart_punct", True)
+        return self.get_setting_or_default("smart_punct", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
