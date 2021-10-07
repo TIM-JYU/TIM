@@ -8,9 +8,65 @@ from timApp.markdown.markdownconverter import md_to_html, par_list_to_html_list
 from timApp.tests.db.timdbtest import TimDbTest
 
 
+SMART_PUNCT_MD = """
+"Test"
+
+Test1 -- test1
+
+Test2 --- test2
+
+Ellipses...
+"""
+
+SMART_PUNCT_HTML = """
+<p>“Test”</p>
+<p>Test1 – test1</p>
+<p>Test2 — test2</p>
+<p>Ellipses…</p>
+"""
+
+NO_SMART_PUNCT_HTML = """
+<p>"Test"</p>
+<p>Test1 -- test1</p>
+<p>Test2 --- test2</p>
+<p>Ellipses...</p>
+"""
+
+
 class MarkdownConverterTest(TimDbTest):
     def check_conversion(self, html, md, macros=None):
         self.assertEqual(html, md_to_html(md, sanitize=True, macros=macros))
+
+    def test_smart_punct(self):
+        d = self.create_doc()
+
+        main_par = DocParagraph.create(d.document, md=SMART_PUNCT_MD)
+
+        def check_html(expected: str, par: DocParagraph, reason: str):
+            bs = par_list_to_html_list(
+                [par],
+                settings=d.document.get_settings(),
+                view_ctx=default_view_ctx,
+            )
+            self.assertEqual(expected.strip(), bs[0], reason)
+
+        check_html(SMART_PUNCT_HTML, main_par, "Default case: smart punct enabled")
+
+        d.document.set_settings({"smart_punct": "false"})
+        check_html(NO_SMART_PUNCT_HTML, main_par, "Doc smart_punct: false")
+
+        d.document.set_settings({"smart_punct": "true"})
+        check_html(SMART_PUNCT_HTML, main_par, "Doc smart_punct: true")
+
+        second_par = DocParagraph.create(d.document, md=SMART_PUNCT_MD)
+        check_html(SMART_PUNCT_HTML, second_par, "Doc smart_punct: true; second par")
+
+        second_par.set_attr("smart_punct", "false")
+        check_html(
+            NO_SMART_PUNCT_HTML,
+            second_par,
+            "Doc smart_punct: true; second par with smart_punct: false",
+        )
 
     def test_markdown(self):
         cases = [
