@@ -60,6 +60,7 @@ class DocSettingTypes:
     peer_review_count: int
     access_denied_message: str
     disable_answer: str
+    smart_punct: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -383,7 +384,7 @@ class DocSettings:
         charmacros = self.get_charmacros() or ""
         macro_delim = macroinfo.get_macro_delimiter()
         return hashfunc(
-            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}"
+            f"{macros}{macro_delim}{charmacros}{self.auto_number_headings()}{self.heading_format()}{self.mathtype()}{self.get_globalmacros()}{self.preamble()}{self.input_format()}{self.smart_punct()}"
         )
 
     def math_preamble(self):
@@ -399,6 +400,7 @@ class DocSettings:
             math_type=self.mathtype(),
             math_preamble=self.math_preamble(),
             input_format=self.input_format(),
+            smart_punct=self.smart_punct(),
         )
 
     def memo_minutes(self) -> bool:
@@ -470,6 +472,9 @@ class DocSettings:
 
     def disable_answer(self) -> Optional[str]:
         return self.get_setting_or_default("disable_answer", None)
+
+    def smart_punct(self) -> Optional[bool]:
+        return self.get_setting_or_default("smart_punct", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

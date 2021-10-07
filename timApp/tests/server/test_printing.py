@@ -192,7 +192,7 @@ not header x
 \begin{longtable}[]{@{}ll@{}}
 \toprule
 \endhead
-not header & x\tabularnewline
+not header & x \\
 \bottomrule
 \end{longtable}
         """.strip(),
@@ -222,7 +222,7 @@ not header & x\tabularnewline
 \begin{longtable}[]{@{}ll@{}}
 \toprule
 \endhead
-not header & x\tabularnewline
+not header & x \\
 \bottomrule
 \end{longtable}
         """

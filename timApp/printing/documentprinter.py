@@ -447,7 +447,7 @@ class DocumentPrinter:
                         "--variable=TTrue:1",
                         "--variable=T1:1",
                         "--top-level-division=" + top_level,
-                        "--atx-headers",
+                        "--markdown-headings=atx",
                         '--metadata=pagetitle:""',
                         # '--verbose',  # this gives non UTF8 results sometimes
                         "-Mtexdocid=" + str(self._doc_entry.id),

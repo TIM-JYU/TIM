@@ -1,6 +1,6 @@
 ARG TIM_IMAGE_TAG
 
-FROM fpco/stack-build:lts-16.15 AS build
+FROM fpco/stack-build:lts-18.13 AS build
 LABEL maintainer="ville.tirronen@jyu.fi"
 
 ENV APT_INSTALL="DEBIAN_FRONTEND=noninteractive apt-get -qq update && DEBIAN_FRONTEND=noninteractive apt-get -q install --no-install-recommends -y" \

@@ -47,6 +47,7 @@ class DumboOptions(NamedTuple):
     math_type: MathType
     math_preamble: str
     input_format: InputFormat
+    smart_punct: bool
 
     @staticmethod
     def default():
@@ -54,6 +55,7 @@ class DumboOptions(NamedTuple):
             math_type=MathType.MathJax,
             math_preamble="",
             input_format=InputFormat.Markdown,
+            smart_punct=False,
         )
 
     def dict(self):
@@ -61,6 +63,7 @@ class DumboOptions(NamedTuple):
             "mathOption": self.math_type.value,
             "mathPreamble": self.math_preamble,
             "inputFormat": self.input_format.value,
+            "smartPunct": self.smart_punct,
         }
 
 
