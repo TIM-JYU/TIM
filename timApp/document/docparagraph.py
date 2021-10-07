@@ -12,6 +12,7 @@ import filelock
 from commonmark.node import Node
 from jinja2.sandbox import SandboxedEnvironment
 
+from timApp.document.docinfo import DocInfo
 from timApp.document.documentparser import DocumentParser
 from timApp.document.documentparseroptions import DocumentParserOptions
 from timApp.document.documentwriter import DocumentWriter
@@ -32,6 +33,7 @@ from timApp.timtypes import DocumentType
 from timApp.util.rndutils import get_rands_as_dict, SeedType
 from timApp.util.utils import count_chars_from_beginning, get_error_html, title_to_id
 from tim_common.html_sanitize import sanitize_html, strip_div
+from tim_common.utils import parse_bool
 
 if TYPE_CHECKING:
     from timApp.document.document import Document
@@ -1131,6 +1133,7 @@ class DocParagraph:
             self.get_attr("math_type")
             or self.get_attr("math_preamble")
             or self.get_attr("input_format")
+            or self.get_attr("smart_punct")
         )
 
     def get_dumbo_options(
@@ -1143,6 +1146,7 @@ class DocParagraph:
             math_preamble=self.get_attr("math_preamble") or base_opts.math_preamble,
             input_format=InputFormat.from_string(self.get_attr("input_format"))
             or base_opts.input_format,
+            smart_punct=parse_bool(self.get_attr("smart_punct"), base_opts.smart_punct),
         )
 
     def is_translation_out_of_date(self):

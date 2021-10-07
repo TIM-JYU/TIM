@@ -82,8 +82,8 @@ convertBlock reader rOpts target ms txt = do
   makeHtml  pdc  = fmap renderHtml (PDC.writeHtml5 htmlOpts pdc)
   makeLatex pdc =  LT.fromStrict <$> PDC.writeLaTeX latexOpts pdc
 
-readerOpts :: TIMIFace a -> PDC.Extensions -> PDC_Opt.ReaderOptions
-readerOpts timInput exts =
+readerOpts :: TIMIFace a -> ConversionElement Text -> PDC.Extensions -> PDC_Opt.ReaderOptions
+readerOpts timInput ce exts =
   PDC.def
   { PDC.readerExtensions
      =  PDC_Opt.enableExtension PDC_Opt.Ext_tex_math_dollars
@@ -91,8 +91,11 @@ readerOpts timInput exts =
         $ exts
   }
   where
-    smartPunctExt = if defSmartPunct ?: smartPunct timInput then id else PDC_Opt.disableExtension PDC_Opt.Ext_smart
-
+    curSmartPunct = case ce of
+        CEBare _ -> defSmartPunct ?: smartPunct timInput
+        CEWrapped obj -> defSmartPunct ?: smartPunct obj
+    -- Smart punct is enabled by default in readers that properly support it.
+    smartPunctExt = if curSmartPunct then id else PDC_Opt.disableExtension PDC_Opt.Ext_smart
 
 
 latexOpts :: PDC_Opt.WriterOptions
@@ -188,11 +191,11 @@ plainConvert rtc target timInput cel
     let converted = convertElement rtc (mathOption timInput) (mathPreamble timInput) cel
     result <- PDC.runIO (PDC.getReader (getInputFormat timInput cel))
     (currentReader, extss) <- PDC.handleError result
-    let opts = readerOpts timInput extss
+    let opts = readerOpts timInput cel extss
     uncurry (convertBlock currentReader opts target) converted
 
 modifyJSON :: TIMIFace a -> OutputFormat -> (PDC.Block -> IO PDC.Block) -> Text -> IO Value
-modifyJSON timInput target pass str = String . stripP . LT.toStrict <$> convertBlock defaultReader (readerOpts timInput PDC_Opt.pandocExtensions) target pass str
+modifyJSON timInput target pass str = String . stripP . LT.toStrict <$> convertBlock defaultReader (readerOpts timInput (CEBare str) PDC_Opt.pandocExtensions) target pass str
 
 jsonEditing :: TIMIFace a -> OutputFormat -> (PDC.Block -> IO PDC.Block) -> Value -> IO Value
 jsonEditing timInput target pass (String str)
