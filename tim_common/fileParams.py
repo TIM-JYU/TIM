@@ -793,7 +793,8 @@ def get_md_heading(query: QueryClass, key: str, def_elem: str):
     # print("h=",h)
     if not h:
         return ""
-    h = tim_sanitize(str(h))
+    # h = tim_sanitize(str(h)) # TODO: how to sanitaze for md?
+    h = str(h)
     if not def_elem:
         return h
     return "\\" + def_elem + "{" + h + "}\n"
