@@ -366,7 +366,7 @@ export class ViewCtrl implements IController {
         this.reviewCtrl = new ReviewController(this);
 
         const runners = getURLParameter("run_jsrunners")
-            ?.split(";")
+            ?.split(",")
             ?.map((s) => s.trim());
         this.jsRunnersToRun = new Set(runners ?? []);
 
@@ -695,7 +695,10 @@ export class ViewCtrl implements IController {
     public addJsRunner(runner: IJsRunner, taskId: DocIdDotName, name: string) {
         const taskIdStr = taskId.toString();
         this.jsRunners.set(taskIdStr, runner);
-        if (this.jsRunnersToRun.delete(taskIdStr) || this.jsRunnersToRun.delete(name)) {
+        if (
+            this.jsRunnersToRun.delete(taskIdStr) ||
+            this.jsRunnersToRun.delete(name)
+        ) {
             runner.runScript();
         }
     }
