@@ -86,6 +86,13 @@ timApp.component("timCopyFolder", {
     template: `
 <form name="copyForm">
     <p>You can copy all documents and folders in this folder to another folder.</p>
+    <p>This will also copy</p>
+    <ul>
+        <li>Document and printing templates</li>
+        <li>Documents' edit history</li>
+        <li>Current rights</li>
+        <li>Expired rights (this may affect document and folder access for some users)</li>
+    </ul>
     <div class="form-group" tim-error-state>
         <label for="destination" class="control-label">Destination:</label>
         <input name="copyPath" class="form-control" tim-location id="destination" type="text" autocomplete="off"

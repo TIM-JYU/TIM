@@ -13,6 +13,10 @@ import {ITaggedItem, TagType} from "./IItem";
             <tim-alert severity="warning" *ngIf="tagsWithExpirations">
                 The source document has tags with expiration dates which may need to be updated manually.
             </tim-alert>
+            <div *ngIf="params?.copy">
+                <p>Only document contents will be copied. No history or rights will be preserved.</p>
+                <p>If you need to have the same document to appear in multiple folders, define multiple short names instead.</p>
+            </div>
             <div class="form-group" timErrorState>
                 <label>
                     Title:
@@ -63,7 +67,7 @@ export class CreateItemComponent implements OnInit {
     @Input() itemName?: string;
     alerts: Array<{type: AlertSeverity; msg: string}> = [];
     @Input() itemType!: string;
-    @Input() private params?: {template?: string; copy?: number};
+    @Input() params?: {template?: string; copy?: number};
     @Input() force = false;
     creating = false;
     @Input() private template?: string;
