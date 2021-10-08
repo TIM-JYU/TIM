@@ -41,9 +41,7 @@ program: |!!
         self.should_not_exist("js-runner pre")
 
         # Run JSRunner via URL argument
-        self.goto_document(
-            d, view="teacher", query={"run_jsrunners": f"{d.id}.jsarvos"}
-        )
+        self.goto_document(d, view="teacher", query={"run_jsrunners": "jsarvos"})
 
         jsrunner_output = self.find_element_avoid_staleness("js-runner pre")
         self.assertEqual(jsrunner_output.text, "Read: 1")

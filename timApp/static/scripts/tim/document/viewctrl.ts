@@ -692,12 +692,10 @@ export class ViewCtrl implements IController {
         this.inputChangeListeners.add(controller);
     }
 
-    public addJsRunner(runner: IJsRunner, taskId: DocIdDotName) {
+    public addJsRunner(runner: IJsRunner, taskId: DocIdDotName, name: string) {
         const taskIdStr = taskId.toString();
         this.jsRunners.set(taskIdStr, runner);
-        if (this.jsRunnersToRun.has(taskIdStr)) {
-            this.jsRunnersToRun.delete(taskIdStr);
-            console.log(`Running ${taskIdStr}`);
+        if (this.jsRunnersToRun.delete(taskIdStr) || this.jsRunnersToRun.delete(name)) {
             runner.runScript();
         }
     }

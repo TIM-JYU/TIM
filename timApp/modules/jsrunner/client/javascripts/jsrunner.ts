@@ -93,7 +93,7 @@ class JsrunnerController
         }
         const tid = this.getTaskId();
         if (tid) {
-            this.vctrl.addJsRunner(this, tid.docTask());
+            this.vctrl.addJsRunner(this, tid.docTask(), tid.name);
         }
     }
 
