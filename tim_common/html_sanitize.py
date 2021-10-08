@@ -1,6 +1,10 @@
+import re
+from typing import Any
+
 import lxml
 import lxml.etree
-from lxml.html import fromstring, tostring
+from lxml.etree import ParserError
+from lxml.html import tostring, fragment_fromstring, document_fromstring
 from lxml.html.clean import Cleaner
 
 TIM_SAFE_TAGS = [
@@ -266,6 +270,27 @@ c_with_styles = Cleaner(
 def sanitize_html(html_string: str, allow_styles: bool = False) -> str:
     cleaner = c_with_styles if allow_styles else c_no_style
     return sanitize_with_cleaner(html_string, cleaner)
+
+
+# Taken from LXML
+looks_like_full_html = re.compile(r"^\s*<(?:html|!doctype)", re.I).match
+
+
+def fromstring(html_string: str) -> Any:
+    """
+    Parses string into an LXML document or element.
+    Unlike LXML's fromstring, calls document_fromstring or fragment_fromstring, based on whether the string looks
+    like a full document, or just a fragment.
+
+    :param html_string: String to parse
+    :return: An LXML document
+    """
+    if looks_like_full_html(html_string):
+        return document_fromstring(html_string)
+    try:
+        return fragment_fromstring(html_string)
+    except ParserError:
+        return fragment_fromstring(html_string, create_parent="div")
 
 
 def sanitize_with_cleaner(html_string: str, cleaner: Cleaner) -> str:

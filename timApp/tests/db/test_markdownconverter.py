@@ -6,7 +6,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.viewcontext import default_view_ctx
 from timApp.markdown.markdownconverter import md_to_html, par_list_to_html_list
 from timApp.tests.db.timdbtest import TimDbTest
-
+from tim_common.cs_sanitizer import tim_sanitize
 
 SMART_PUNCT_MD = """
 "Test"
@@ -190,3 +190,12 @@ input_format: rst
                 path="/mdkeys",
             ),
         )
+
+    def test_markdown_sanitize_neutral(self):
+        test_strs = [
+            "Image 1",
+            "[Image 1](/images/1041/image.png)",
+            "[Image 1](/images/1041/image.png){width=300, height=200}",
+        ]
+        for t in test_strs:
+            self.assertEqual(tim_sanitize(t), t)
