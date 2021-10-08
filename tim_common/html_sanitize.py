@@ -1,6 +1,10 @@
+import re
+from typing import Any
+
 import lxml
 import lxml.etree
-from lxml.html import fromstring, tostring
+from lxml.etree import ParserError
+from lxml.html import tostring, fragment_fromstring, document_fromstring
 from lxml.html.clean import Cleaner
 
 TIM_SAFE_TAGS = [
@@ -268,12 +272,36 @@ def sanitize_html(html_string: str, allow_styles: bool = False) -> str:
     return sanitize_with_cleaner(html_string, cleaner)
 
 
+# Taken from LXML
+looks_like_full_html = re.compile(r"^\s*<(?:html|!doctype)", re.I).match
+
+
+def fromstring(html_string: str) -> tuple[Any, bool]:
+    """
+    Parses string into an LXML document or element.
+    Unlike LXML's fromstring, calls document_fromstring or fragment_fromstring, based on whether the string looks
+    like a full document, or just a fragment.
+
+    :param html_string: String to parse
+    :return: A tuple of LXML document/element and a boolean telling whether
+            the parsed text was inserted into a parenting DIV
+    """
+    if looks_like_full_html(html_string):
+        return document_fromstring(html_string), False
+    try:
+        return fragment_fromstring(html_string), False
+    except ParserError:
+        return fragment_fromstring(html_string, create_parent="div"), True
+
+
 def sanitize_with_cleaner(html_string: str, cleaner: Cleaner) -> str:
     try:
-        doc = fromstring(html_string)
+        doc, parented = fromstring(html_string)
         cleaner(doc)
         cleaned = tostring(doc, encoding="ascii").decode("ascii")
-        return strip_div(cleaned)
+        if parented:
+            cleaned = strip_div(cleaned)
+        return cleaned
     except lxml.etree.ParserError:  # Thrown if the HTML string is empty
         return ""
     except lxml.etree.XMLSyntaxError:  # Not yet sure why thrown
