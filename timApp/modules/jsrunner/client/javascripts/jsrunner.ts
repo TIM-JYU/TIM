@@ -93,12 +93,8 @@ class JsrunnerController
         }
         const tid = this.getTaskId();
         if (tid) {
-            this.vctrl.addJsRunner(this, tid.docTask());
+            this.vctrl.addJsRunner(this, tid.docTask(), tid.name);
         }
-    }
-
-    checkFields() {
-        this.doCheckFields(false);
     }
 
     addError(msg: string) {
@@ -242,6 +238,10 @@ class JsrunnerController
         return this.visible == 1;
     }
 
+    runScript() {
+        this.doCheckFields(false);
+    }
+
     runScriptWithUsers(userNames: string[]) {
         this.doCheckFields(false, userNames);
     }
@@ -267,7 +267,7 @@ jsrunnerApp.component("jsRunner", {
     </div>
     <button ng-if="::$ctrl.hasAllAttributes()" class="timButton"
             ng-disabled="$ctrl.isRunning || $ctrl.readonly"
-            ng-click="$ctrl.checkFields()">
+            ng-click="$ctrl.runScript()">
         {{::$ctrl.buttonText()}}
     </button>
     <tim-loading ng-if="$ctrl.isRunning"></tim-loading>

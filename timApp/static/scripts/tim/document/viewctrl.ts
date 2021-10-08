@@ -14,6 +14,7 @@ import {initReadings} from "tim/document/readings";
 import {setViewCtrl} from "tim/document/viewctrlinstance";
 import {timLogTime} from "tim/util/timTiming";
 import {
+    getURLParameter,
     isPageDirty,
     markAsUsed,
     markPageNotDirty,
@@ -102,6 +103,7 @@ export interface ISetAnswerResult {
 }
 
 export interface IJsRunner {
+    runScript: () => void;
     runScriptWithUsers: (userNames: string[]) => void;
 }
 
@@ -218,6 +220,8 @@ export class ViewCtrl implements IController {
     public parmenuHandler: ParmenuHandler;
     public popupmenu?: PopupMenuDialogComponent;
     public viewRangeInfo: ViewRangeInfo;
+
+    private jsRunnersToRun: Set<string>;
 
     // For search box.
     private displaySearch = false;
@@ -360,6 +364,12 @@ export class ViewCtrl implements IController {
         this.defaultAction =
             this.defaultActionStorage.get() ?? "Show options window";
         this.reviewCtrl = new ReviewController(this);
+
+        const runners = getURLParameter("run_jsrunners")
+            ?.split(",")
+            ?.map((s) => s.trim());
+        this.jsRunnersToRun = new Set(runners ?? []);
+
         timLogTime("ViewCtrl end", "view");
     }
 
@@ -682,8 +692,15 @@ export class ViewCtrl implements IController {
         this.inputChangeListeners.add(controller);
     }
 
-    public addJsRunner(runner: IJsRunner, taskId: DocIdDotName) {
-        this.jsRunners.set(taskId.toString(), runner);
+    public addJsRunner(runner: IJsRunner, taskId: DocIdDotName, name: string) {
+        const taskIdStr = taskId.toString();
+        this.jsRunners.set(taskIdStr, runner);
+        if (
+            this.jsRunnersToRun.delete(taskIdStr) ||
+            this.jsRunnersToRun.delete(name)
+        ) {
+            runner.runScript();
+        }
     }
 
     public getJsRunner(taskId: string) {
