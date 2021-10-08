@@ -1368,6 +1368,7 @@ class SetStyle extends Command {
         let tos = this.to.split(",");
         for (const nto of tos) {
             // let varTo = variables.findVar(nto);
+            if (!nto) continue;
             let [,varTo] = this.findVarForAssign(variables,nto, true)
             if (!varTo) errors += `Muuttujaa ${nto} ei löydy! `
             else varTo.style = this.style;
