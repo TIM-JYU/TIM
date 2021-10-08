@@ -119,7 +119,7 @@ export class NotesHandler {
                 initialText = notedata.text;
                 const curUser = Users.getCurrent();
                 if (curUser.name != notedata.extraData.usergroup.name) {
-                    justMeLabel = `Just ${notedata.extraData.usergroup.name}`;
+                    justMeLabel = `Just to user ${notedata.extraData.usergroup.name}`;
                     justMeTitle = `Only ${notedata.extraData.usergroup.name} will see the note!`;
                 }
                 data = {
