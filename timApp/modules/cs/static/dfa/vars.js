@@ -1673,7 +1673,7 @@ class SetNamedGraphAttributes extends Command {
         this.name = name;
         this.global = global;
         this.graphAttributes = graphAttributes;
-        // this.noAnimate = true;
+        this.noAnimate = true;
     }
 
     run(variables) {
@@ -3882,10 +3882,15 @@ class VisualSVGVariableRelations {
                 startFromCode = false;
                 runNext = true;
             }
-            if (startFromNoAnimate && cmd instanceof CodeCommand) {
-                startFromCode = true;
-                runNext = true;
-                startFromNoAnimate = false;
+            if (startFromNoAnimate) {
+                if (cmd instanceof CodeCommand) {
+                    startFromCode = true;
+                    runNext = true;
+                    startFromNoAnimate = false;
+                } else if (!cmd.noAnimate) {
+                    runNext = true;
+                    startFromNoAnimate = false;
+                }
             }
         } while (cmd.noAnimate || runNext);
         return true;
