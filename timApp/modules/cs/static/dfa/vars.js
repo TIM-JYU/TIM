@@ -667,7 +667,7 @@ class CreateRefecenceVariable extends CreateVariable {
 class CreateNullVariable extends CreateVariable {
     // Creates a reference variable
     // see: https://regex101.com/r/8rghQV/latest
-    // syntax: Ref luvut
+    // syntax: null luvut
     static isMy(s) {
         let re = /^null ?(.*)$/;
         let r = re.exec(s);
@@ -1391,6 +1391,7 @@ class SetStyleAll extends Command {
         super();
         this.error = "";
         this.style = style;
+        this.noAnimate = true;
     }
 
     run(variables) {
@@ -1745,6 +1746,7 @@ class CodeCommand extends Command {
         super();
         this.code = code;
         this.line = code;
+        // this.noAnimate = true;
     }
 
     run(variables) {
@@ -1766,6 +1768,26 @@ class UnknownCommand extends Command {
 
     run(variables) {
         return `${this.line} - ei tunneta tai ei hyväksytä`;
+    }
+}
+
+class Pass extends Command {
+    // Command that just steps over.
+    // Mostly used as a last command to return from flash styles
+    static isMy(s) {
+        let re = /^[Pp](ass|ASS) *(.*)$/gm;
+        let r = re.exec(s);
+        if (!r) return undefined;
+        return [new Pass()];
+    }
+
+    constructor(line) {
+        super();
+        this.line = line;
+    }
+
+    run(variables) {
+        return "";
     }
 }
 
@@ -1793,6 +1815,7 @@ const knownCommands = [
     SetStyle,
     SetStyleAll,
     AddSVG,
+    Pass,
     UnknownCommand,
 ];
 
@@ -2005,19 +2028,20 @@ class PhaseVariables {
 
     addClearStyle(v) {
         if (!this.clearStyleVariables) this.clearStyleVariables = [];
-        if (v) this.clearStyleVariables.push(v);
+        if (v) this.clearStyleVariables.push({obj: v, oldStyle: v.style});
     }
 
     addFlashStyle(v1, v2) {
         if (!this.styleAll) return;
-        if (v1) { v1.style = this.styleAll; this.addClearStyle(v1); }
-        if (v2) { v2.style = this.styleAll; this.addClearStyle(v2); }
+        if (v1) { this.addClearStyle(v1); v1.style = this.styleAll; }
+        if (v2) { this.addClearStyle(v2); v2.style = this.styleAll;  }
     }
 
     clearLastStyleVariables() {
         if (!this.clearStyleVariables) return;
         for (const v of this.clearStyleVariables)
-            v.style = undefined;
+            v.obj.style = v.oldStyle; // undefined;
+        this.clearStyleVariables = [];
     }
 
     addClass(name, defList) {
@@ -3841,12 +3865,29 @@ class VisualSVGVariableRelations {
 
     move(dir) {
         let cmd;
+        cmd = this.variableRelations.commands[this.step];
+        let startFromCode = cmd instanceof CodeCommand;
+        let startFromNoAnimate = cmd.noAnimate;
+        // If start from code, then run one extra step
+        // If start from noAnimate, then after CodeCommand
+        // run still one step.
+        let runNext = false;
         do {
+            runNext = false;
             this.step += dir;
             if (this.step <=  0) return false;
             if (this.step >=  this.maxStep()) return false;
             cmd = this.variableRelations.commands[this.step];
-        } while (cmd.noAnimate);
+            if (!cmd.noAnimate && startFromCode) {
+                startFromCode = false;
+                runNext = true;
+            }
+            if (startFromNoAnimate && cmd instanceof CodeCommand) {
+                startFromCode = true;
+                runNext = true;
+                startFromNoAnimate = false;
+            }
+        } while (cmd.noAnimate || runNext);
         return true;
     }
 
