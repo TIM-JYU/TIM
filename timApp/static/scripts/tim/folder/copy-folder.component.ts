@@ -6,18 +6,35 @@ import {to2} from "../util/utils";
 
 type PreviewList = {from: string; to: string}[];
 
+interface CopyOptions {
+    copy_active_rights: boolean;
+    copy_expired_rights: boolean;
+    stop_on_errors: boolean;
+}
+
+const DEFAULT_COPY_OPTIONS: CopyOptions = {
+    copy_active_rights: true,
+    copy_expired_rights: true,
+    stop_on_errors: true,
+};
+
 @Component({
     selector: "tim-copy-folder",
     template: `
         <form>
             <p>You can copy all documents and folders in this folder to another folder.</p>
-            <p>This will also copy</p>
-            <ul>
-                <li>Document and printing templates</li>
-                <li>Documents' edit history</li>
-                <li>Current rights</li>
-                <li>Expired rights (this may affect document and folder access for some users)</li>
-            </ul>
+            <p>Copy options</p>
+            <div class="cb-group">
+                <div class="checkbox">
+                    <label><input type="checkbox" name="copy-active-rights" [(ngModel)]="copyOptions.copy_active_rights"> Copy active access rights</label>
+                </div>
+                <div class="checkbox">
+                    <label><input type="checkbox" name="copy-expired-rights" [(ngModel)]="copyOptions.copy_expired_rights"> Copy expired access rights</label>
+                </div>
+                <div class="checkbox">
+                    <label><input type="checkbox" name="stop-errors" [(ngModel)]="copyOptions.stop_on_errors"> Stop copying on errors</label>
+                </div>
+            </div>
             <div class="form-group" timErrorState>
                 <label for="destination" class="control-label">Destination:</label>
                 <input name="copyPath" class="form-control" timLocation id="destination" type="text" autocomplete="off"
@@ -51,13 +68,20 @@ type PreviewList = {from: string; to: string}[];
                      previewLength > 0 &&
                      copyingFolder == 'notcopying'">Copy
             </button>
-            <span *ngIf="copyingFolder == 'copying'">Copying...</span>
+            <span *ngIf="copyingFolder == 'copying'"><tim-loading></tim-loading> Copying, this might take a while...</span>
             <span *ngIf="copyingFolder == 'finished'">
                 Folder {{ item.name }} copied to
                 <a href="/manage/{{ newFolder?.path }}" [innerText]="newFolder?.path"></a>.
             </span>
+            <div *ngIf="copyErrors">
+                <p>The following errors occurred while copying:</p>
+                <ul>
+                    <li *ngFor="let e of copyErrors">{{e}}</li>
+                </ul>
+            </div>
         </form>
     `,
+    styleUrls: ["copy-folder.component.scss"],
 })
 export class CopyFolderComponent implements OnInit {
     copyingFolder: "notcopying" | "copying" | "finished";
@@ -67,6 +91,8 @@ export class CopyFolderComponent implements OnInit {
     copyFolderPath!: string;
     copyFolderExclude: string;
     newFolder?: IFolder;
+    copyOptions: CopyOptions = {...DEFAULT_COPY_OPTIONS};
+    copyErrors?: string[];
 
     constructor(private http: HttpClient) {
         this.copyingFolder = "notcopying";
@@ -106,25 +132,38 @@ export class CopyFolderComponent implements OnInit {
         this.copyingFolder = "copying";
         const r = await to2(
             this.http
-                .post<IFolder>(`/copy/${this.item.id}`, {
-                    destination: path,
-                    exclude: exclude,
-                })
+                .post<{new_folder?: IFolder; errors: string[]}>(
+                    `/copy/${this.item.id}`,
+                    {
+                        destination: path,
+                        exclude: exclude,
+                        copy_options: this.copyOptions,
+                    }
+                )
                 .toPromise()
         );
-        if (r.ok) {
+        if (r.ok && r.result.errors.length == 0) {
             this.copyingFolder = "finished";
             this.copyPreviewList = undefined;
             this.destExists = undefined;
-            this.newFolder = r.result;
+            this.newFolder = r.result.new_folder;
         } else {
             this.copyingFolder = "notcopying";
-            await showMessageDialog(r.result.error.error);
+            if (!r.ok) {
+                await showMessageDialog(r.result.error.error);
+            } else {
+                if (!this.copyOptions.stop_on_errors) {
+                    this.copyingFolder = "finished";
+                    this.newFolder = r.result.new_folder;
+                }
+                this.copyErrors = r.result.errors;
+            }
         }
     }
 
     copyParamChanged() {
         this.copyPreviewList = undefined;
         this.destExists = undefined;
+        this.copyErrors = undefined;
     }
 }

@@ -13,6 +13,7 @@ from timApp.auth.sessioninfo import (
 from timApp.document.docentry import DocEntry, get_documents, create_document_and_block
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import apply_citation
+from timApp.document.exceptions import ValidationException
 from timApp.document.specialnames import (
     FORCED_TEMPLATE_NAME,
     TEMPLATE_FOLDER_NAME,
@@ -138,12 +139,18 @@ def copy_document_and_enum_translations(
                 Tag(name=tag.name, type=tag.type, expires=tag.expires)
             )
 
-    target.document.update(
-        source.document.export_markdown(),
-        target.document.export_markdown(),
-        strict_validation=False,
-        regenerate_ids=is_preamble,
-    )
+    try:
+        target.document.update(
+            source.document.export_markdown(),
+            target.document.export_markdown(),
+            strict_validation=False,
+            regenerate_ids=is_preamble,
+        )
+    except ValidationException as e:
+        raise ValidationException(
+            f"Could not copy {source.path} because it contains an error: {e}"
+        )
+
     for tr in source.translations:  # type: Translation
         doc_id = target.id
         new_tr = None

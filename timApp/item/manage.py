@@ -32,6 +32,7 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.create_item import copy_document_and_enum_translations
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document, find_free_name, DocInfo
+from timApp.document.exceptions import ValidationException
 from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder, path_includes
 from timApp.item.block import BlockType, Block
@@ -688,7 +689,6 @@ def get_copy_folder_params(folder_id: int, dest: str, exclude: str):
 
 @dataclass
 class CopyOptions:
-    copy_edit_history: bool = True
     copy_active_rights: bool = True
     copy_expired_rights: bool = True
     stop_on_errors: bool = True
@@ -707,9 +707,12 @@ def copy_folder_endpoint(
             dest, o, creation_opts=FolderCreationOptions(apply_default_rights=True)
         )
     u = get_current_user_object()
-    copy_folder(f, nf, u, compiled)
-    db.session.commit()
-    return json_response(nf)
+    errors = copy_folder(f, nf, u, compiled, copy_options)
+    if errors and copy_options.stop_on_errors:
+        db.session.rollback()
+    else:
+        db.session.commit()
+    return json_response({"new_folder": nf, "errors": [str(e) for e in errors]})
 
 
 def get_pattern(exclude: str) -> Pattern[str]:
@@ -751,43 +754,80 @@ def enum_items(folder: Folder, exclude_re: Pattern) -> Generator[Item, None, Non
 
 
 def copy_folder(
-    f_from: Folder, f_to: Folder, user_who_copies: User, exclude_re: Pattern
-) -> None:
-    db.session.flush()
-    if not user_who_copies.can_write_to_folder(f_to):
-        raise AccessDenied(f"Missing edit access to folder {f_to.path}")
-    if not user_who_copies.has_copy_access(f_from):
-        raise AccessDenied(f"Missing copy access to folder {f_from.path}")
-    folder_opts = FolderCreationOptions(get_templates_rights_from_parent=False)
-    for d in f_from.get_all_documents(include_subdirs=False):
-        if exclude_re.search(d.path):
-            continue
-        if not user_who_copies.has_copy_access(d):
-            raise AccessDenied(f"Missing copy access to document {d.path}")
-        nd_path = join_location(f_to.path, d.short_name)
-        if DocEntry.find_by_path(nd_path):
-            raise AccessDenied(f"Document already exists at path {nd_path}")
-        nd = DocEntry.create(
-            nd_path,
-            title=d.title,
-            folder_opts=folder_opts,
-        )
-        copy_rights(d, nd, new_owner=user_who_copies)
-        nd.document.modifier_group_id = user_who_copies.get_personal_group().id
-        for tr, new_tr in copy_document_and_enum_translations(d, nd, copy_uploads=True):
-            copy_rights(tr, new_tr, new_owner=user_who_copies)
-    for f in f_from.get_all_folders():
-        if exclude_re.search(f.path):
-            continue
-        nf_path = join_location(f_to.path, f.short_name)
-        nf = Folder.find_by_path(nf_path)
-        if nf:
-            pass
-        else:
-            nf = Folder.create(
-                nf_path,
-                title=f.title,
-                creation_opts=folder_opts,
+    from_folder: Folder,
+    to_folder: Folder,
+    user_who_copies: User,
+    exclude_re: Pattern,
+    options: CopyOptions,
+) -> list[ValidationException]:
+    errors = []
+    process_queue: list[tuple[Folder, Folder]] = [(from_folder, to_folder)]
+
+    while process_queue:
+        f_from, f_to = process_queue.pop()
+        db.session.flush()
+        if not user_who_copies.can_write_to_folder(f_to):
+            raise AccessDenied(f"Missing edit access to folder {f_to.path}")
+        if not user_who_copies.has_copy_access(f_from):
+            raise AccessDenied(f"Missing copy access to folder {f_from.path}")
+        folder_opts = FolderCreationOptions(get_templates_rights_from_parent=False)
+        for d in f_from.get_all_documents(include_subdirs=False):
+            if exclude_re.search(d.path):
+                continue
+            if not user_who_copies.has_copy_access(d):
+                raise AccessDenied(f"Missing copy access to document {d.path}")
+            nd_path = join_location(f_to.path, d.short_name)
+            if DocEntry.find_by_path(nd_path):
+                raise AccessDenied(f"Document already exists at path {nd_path}")
+            nd = DocEntry.create(
+                nd_path,
+                title=d.title,
+                folder_opts=folder_opts,
             )
-            copy_rights(f, nf, new_owner=user_who_copies)
-        copy_folder(f, nf, user_who_copies, exclude_re)
+            copy_rights(
+                d,
+                nd,
+                new_owner=user_who_copies,
+                copy_active=options.copy_active_rights,
+                copy_expired=options.copy_expired_rights,
+            )
+            nd.document.modifier_group_id = user_who_copies.get_personal_group().id
+            try:
+                for tr, new_tr in copy_document_and_enum_translations(
+                    d, nd, copy_uploads=True
+                ):
+                    copy_rights(
+                        tr,
+                        new_tr,
+                        new_owner=user_who_copies,
+                        copy_active=options.copy_active_rights,
+                        copy_expired=options.copy_expired_rights,
+                    )
+            except ValidationException as e:
+                errors.append(e)
+                if options.stop_on_errors:
+                    return errors
+
+        for f in f_from.get_all_folders():
+            if exclude_re.search(f.path):
+                continue
+            nf_path = join_location(f_to.path, f.short_name)
+            nf = Folder.find_by_path(nf_path)
+            if nf:
+                pass
+            else:
+                nf = Folder.create(
+                    nf_path,
+                    title=f.title,
+                    creation_opts=folder_opts,
+                )
+                copy_rights(
+                    f,
+                    nf,
+                    new_owner=user_who_copies,
+                    copy_active=options.copy_active_rights,
+                    copy_expired=options.copy_expired_rights,
+                )
+            process_queue.append((f, nf))
+
+    return errors
