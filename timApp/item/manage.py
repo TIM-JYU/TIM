@@ -696,7 +696,10 @@ class CopyOptions:
 
 @manage_page.post("/copy/<int:folder_id>")
 def copy_folder_endpoint(
-    folder_id: int, destination: str, exclude: str, copy_options: CopyOptions
+    folder_id: int,
+    destination: str,
+    exclude: str,
+    copy_options: CopyOptions = field(default_factory=CopyOptions),
 ) -> Response:
     f, dest, compiled = get_copy_folder_params(folder_id, destination, exclude)
     o = get_current_user_group_object()
