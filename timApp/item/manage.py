@@ -678,7 +678,7 @@ def change_title(item_id: int, new_title: str) -> Response:
     return ok_response()
 
 
-def get_copy_folder_params(folder_id: int, dest: str, exclude: str):
+def get_copy_folder_params(folder_id: int, dest: str, exclude: Optional[str]):
     f = get_folder_or_abort(folder_id)
     verify_copy_access(f, message=f"Missing copy access to folder {f.path}")
     compiled = get_pattern(exclude)
@@ -698,7 +698,7 @@ class CopyOptions:
 def copy_folder_endpoint(
     folder_id: int,
     destination: str,
-    exclude: str,
+    exclude: Optional[str],
     copy_options: CopyOptions = field(default_factory=CopyOptions),
 ) -> Response:
     f, dest, compiled = get_copy_folder_params(folder_id, destination, exclude)
@@ -718,7 +718,7 @@ def copy_folder_endpoint(
     return json_response({"new_folder": nf, "errors": [str(e) for e in errors]})
 
 
-def get_pattern(exclude: str) -> Pattern[str]:
+def get_pattern(exclude: Optional[str]) -> Pattern[str]:
     if not exclude:
         exclude = "a^"
     try:
@@ -728,7 +728,9 @@ def get_pattern(exclude: str) -> Pattern[str]:
 
 
 @manage_page.post("/copy/<int:folder_id>/preview")
-def copy_folder_preview(folder_id: int, destination: str, exclude: str) -> Response:
+def copy_folder_preview(
+    folder_id: int, destination: str, exclude: Optional[str]
+) -> Response:
     f, dest, compiled = get_copy_folder_params(folder_id, destination, exclude)
     preview_list = []
     for i in enum_items(f, compiled):
