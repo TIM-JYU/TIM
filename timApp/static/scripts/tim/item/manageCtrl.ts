@@ -10,7 +10,6 @@ import * as tem from "tim/ui/formErrorMessage";
 import {JsonValue} from "tim/util/jsonvalue";
 import {IChangelogEntry} from "tim/document/editing/IChangelogEntry";
 import {IManageResponse} from "../document/editing/edittypes";
-import * as copyFolder from "../folder/copyFolder";
 import {IGroup} from "../user/IUser";
 import {Users} from "../user/userService";
 import {manageglobals} from "../util/globals";
@@ -26,7 +25,7 @@ import {
     getItemTypeName,
 } from "./IItem";
 
-markAsUsed(copyFolder, snv, tem);
+markAsUsed(snv, tem);
 
 export interface IAlias {
     name: string;

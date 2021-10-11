@@ -127,7 +127,7 @@ def get_pars_from_editor_text(
     break_on_elements: bool = False,
     skip_access_check: bool = False,
 ) -> list[DocParagraph]:
-    blocks, validation_result = doc.text_to_paragraphs(text, break_on_elements)
+    blocks, _ = doc.text_to_paragraphs(text, break_on_elements)
     for p in blocks:
         if p.is_reference():
             try:
