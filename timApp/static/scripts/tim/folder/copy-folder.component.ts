@@ -14,7 +14,7 @@ interface CopyOptions {
 
 const DEFAULT_COPY_OPTIONS: CopyOptions = {
     copy_active_rights: true,
-    copy_expired_rights: true,
+    copy_expired_rights: false,
     stop_on_errors: true,
 };
 

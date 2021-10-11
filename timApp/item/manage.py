@@ -690,7 +690,7 @@ def get_copy_folder_params(folder_id: int, dest: str, exclude: str):
 @dataclass
 class CopyOptions:
     copy_active_rights: bool = True
-    copy_expired_rights: bool = True
+    copy_expired_rights: bool = False
     stop_on_errors: bool = True
 
 
