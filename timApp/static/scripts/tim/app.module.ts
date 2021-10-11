@@ -36,11 +36,13 @@ import {ConsentChoiceComponent} from "tim/ui/consent-choice.component";
 import {ViewRangeNavigationComponent} from "tim/document/view-range-navigation.component";
 import {HelpParContent} from "tim/document/editing/help-par-content.component";
 import {TimepickerActions} from "ngx-bootstrap/timepicker";
+import {CopyFolderComponent} from "tim/folder/copy-folder.component";
 
 @NgModule({
     declarations: [
         CreateItemComponent,
         ErrorStateDirective,
+        CopyFolderComponent,
         HeaderComponent,
         LocationDirective,
         ShortNameDirective,
