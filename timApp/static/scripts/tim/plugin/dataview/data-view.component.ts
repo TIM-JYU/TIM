@@ -1798,6 +1798,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         if (contents !== undefined) {
             cell.innerHTML = contents;
+            if (this.isVirtual) {
+                cell.title = contents;
+            }
         }
         return cell;
     }
