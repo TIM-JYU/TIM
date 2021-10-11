@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from sqlalchemy import event
 
 from timApp.auth.accesstype import AccessType
@@ -9,6 +11,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.userutils import grant_access, get_or_create_default_right_document
+from timApp.util.utils import get_current_time
 
 
 class FolderTest(TimRouteTest):
@@ -507,6 +510,78 @@ class FolderCopyTest(TimRouteTest):
                 (AccessType.owner, self.test_user_1.get_personal_group()),
             },
             {(a.access_type, a.usergroup) for a in d.block.accesses.values()},
+        )
+
+    def test_copy_permission_options(self):
+        self.login_test1()
+        d = self.create_doc(self.get_personal_item_path("perm_opt/a"))
+        f = d.parent
+        self.test_user_2.grant_access(d, AccessType.view)
+        self.test_user_3.grant_access(
+            d, AccessType.view, accessible_to=get_current_time() - timedelta(seconds=1)
+        )
+        db.session.commit()
+
+        self.json_post(
+            f"/copy/{f.id}",
+            {
+                "destination": self.get_personal_item_path("perm_opt_dest1"),
+                "exclude": "",
+                "copy_options": {
+                    "copy_active_rights": True,
+                    "copy_expired_rights": False,
+                },
+            },
+        )
+        d = DocEntry.find_by_path(self.get_personal_item_path("perm_opt_dest1/a"))
+        self.assertEqual(
+            {
+                (AccessType.view, self.test_user_2.get_personal_group()),
+                (AccessType.owner, self.test_user_1.get_personal_group()),
+            },
+            {(a.access_type, a.usergroup) for a in d.block.accesses.values()},
+            "Only active rights should be copied",
+        )
+
+        self.json_post(
+            f"/copy/{f.id}",
+            {
+                "destination": self.get_personal_item_path("perm_opt_dest2"),
+                "exclude": "",
+                "copy_options": {
+                    "copy_active_rights": False,
+                    "copy_expired_rights": True,
+                },
+            },
+        )
+        d = DocEntry.find_by_path(self.get_personal_item_path("perm_opt_dest2/a"))
+        self.assertEqual(
+            {
+                (AccessType.view, self.test_user_3.get_personal_group()),
+                (AccessType.owner, self.test_user_1.get_personal_group()),
+            },
+            {(a.access_type, a.usergroup) for a in d.block.accesses.values()},
+            "Only owner and expired right should be copied",
+        )
+
+        self.json_post(
+            f"/copy/{f.id}",
+            {
+                "destination": self.get_personal_item_path("perm_opt_dest3"),
+                "exclude": "",
+                "copy_options": {
+                    "copy_active_rights": False,
+                    "copy_expired_rights": False,
+                },
+            },
+        )
+        d = DocEntry.find_by_path(self.get_personal_item_path("perm_opt_dest3/a"))
+        self.assertEqual(
+            {
+                (AccessType.owner, self.test_user_1.get_personal_group()),
+            },
+            {(a.access_type, a.usergroup) for a in d.block.accesses.values()},
+            "Only owner should have the right to the copied items",
         )
 
     def test_copy_regression(self):

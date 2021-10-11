@@ -5,10 +5,16 @@ from timApp.user.user import User
 from timApp.util.utils import get_current_time
 
 
-def copy_rights(source: Item, dest: Item, new_owner: User):
+def copy_rights(
+    source: Item, dest: Item, new_owner: User, copy_active=True, copy_expired=True
+) -> None:
     for key, a in source.block.accesses.items():
         # We don't want to copy owner or copy rights.
         if a.access_type in (AccessType.owner, AccessType.copy):
+            continue
+        if not copy_expired and (a.expired or a.duration_expired):
+            continue
+        if not copy_active and (not a.expired and not a.duration_expired):
             continue
         b = BlockAccess(
             block_id=dest.block.id,
