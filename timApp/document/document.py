@@ -859,7 +859,7 @@ class Document:
         # If the original document has validation errors, it probably means the document export routine has a bug.
         dp_orig = DocumentParser(original)
         dp_orig.add_missing_attributes()
-        vr = dp.validate_structure()
+        vr = dp_orig.validate_structure()
         try:
             vr.raise_if_has_critical_issues()
         except ValidationException as e:
