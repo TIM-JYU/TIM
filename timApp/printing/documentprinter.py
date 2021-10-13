@@ -21,6 +21,7 @@ from timApp.document.docparagraph import DocParagraph, add_heading_numbers
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import dereference_pars, Document
 from timApp.document.macroinfo import MacroInfo
+from timApp.document.post_process import process_areas
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import hashfunc
 from timApp.document.specialnames import TEMPLATE_FOLDER_NAME, PRINT_FOLDER_NAME
@@ -157,9 +158,13 @@ class DocumentPrinter:
         if self._content is not None:
             return self._content
 
-        settings, _, _, pdoc_macros, _ = get_tex_settings_and_macros(
-            self._doc_entry.document, user_ctx
-        )
+        (
+            settings,
+            _,
+            pdoc_macro_env,
+            pdoc_macros,
+            pdoc_macro_delimiter,
+        ) = get_tex_settings_and_macros(self._doc_entry.document, user_ctx)
 
         self._macros = pdoc_macros
 
@@ -182,6 +187,26 @@ class DocumentPrinter:
 
         texmacros = get_tex_macros(self._doc_entry.document)
 
+        view_ctx = default_view_ctx
+        if texmacros:
+            view_ctx = copy_of_default_view_ctx(texmacros)
+
+        # Process areas to determine what is visible to the user who is printing
+        # TODO: We don't need to process all the areas, just need to find the IDs of the visible items
+        processed_par_ids = set(
+            p.target_data.id
+            for p in process_areas(
+                settings,
+                pars,
+                pdoc_macros,
+                pdoc_macro_delimiter,
+                pdoc_macro_env,
+                view_ctx,
+                use_md=True,
+                cache=False,
+            )
+        )
+
         par_infos: list[
             tuple[
                 DocParagraph,
@@ -196,6 +221,9 @@ class DocumentPrinter:
 
             # do not print document settings pars
             if par.is_setting():
+                continue
+
+            if par.id not in processed_par_ids:
                 continue
 
             p_info = par, *get_tex_settings_and_macros(par.doc, user_ctx)
@@ -252,10 +280,6 @@ class DocumentPrinter:
         tformat = target_format
         if target_format in (PrintFormat.PDF, PrintFormat.JSON):
             tformat = PrintFormat.LATEX
-
-        view_ctx = default_view_ctx
-        if texmacros:
-            view_ctx = copy_of_default_view_ctx(texmacros)
 
         # render markdown for plugins
         presult = pluginify(

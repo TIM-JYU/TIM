@@ -264,6 +264,8 @@ def process_areas(
     delimiter,
     env: SandboxedEnvironment,
     view_ctx: ViewContext,
+    use_md: bool = False,
+    cache: bool = True,
 ) -> list[PreparedPar]:
     # If we're only dealing with a single paragraph (happens e.g. when posting a comment),
     # we don't want to include area start/end markers in the final output
@@ -283,7 +285,7 @@ def process_areas(
     new_pars: list[PreparedPar] = []
     fix = "Fix this to get rid of this warning."
     for p in pars:
-        html_par = p.prepare(view_ctx)
+        html_par = p.prepare(view_ctx, use_md, cache)
         cur_area = None
         area_start = p.get_attr("area")
         area_end = p.get_attr("area_end")
@@ -366,7 +368,7 @@ def process_areas(
                                     doc=Document(html_par.doc_id),
                                     par_id=html_par.id,
                                     md=alttext,
-                                ).prepare(view_ctx)
+                                ).prepare(view_ctx, use_md, cache)
                             )
 
         else:

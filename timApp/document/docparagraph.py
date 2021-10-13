@@ -306,7 +306,9 @@ class DocParagraph:
             md=self.md,
         )
 
-    def prepare(self, view_ctx: ViewContext, use_md: bool = False) -> PreparedPar:
+    def prepare(
+        self, view_ctx: ViewContext, use_md: bool = False, cache: bool = True
+    ) -> PreparedPar:
         """Returns the corresponding PreparedPar."""
         if self.prepared_par:
             return self.prepared_par
@@ -349,7 +351,8 @@ class DocParagraph:
             html_class=class_str,
             from_preamble=preamble.path if preamble else None,
         )
-        self.prepared_par = fd
+        if cache:
+            self.prepared_par = fd
         return fd
 
     def _cache_props(self):
