@@ -4,10 +4,17 @@
 {{ super() }}
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+{# Disable paragraph size scaling; too small for its own style file #}
+<style>
+:root {
+    --paragraph-preferred-width: initial;
+}
+</style>
 <script>
     var background_url = {{ (slide_background_url or None)|tojson }};
     var background_color = {{ (slide_background_color or None)|tojson }};
     var themes = {{ (doc_settings.slide_themes() or [])|tojson }};
     var slide_size = {{ doc_settings.slide_size()|tojson }};
 </script>
+
 {% endblock %}
