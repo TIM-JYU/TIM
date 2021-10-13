@@ -85,7 +85,16 @@
                 "input": "./node_modules/bootstrap-sass/assets/fonts/bootstrap",
                 "output": "/bootstrap-fonts/"
               },
-              "node_modules/reveal.js/dist/reveal.css"
+              {
+                "glob": "*.css",
+                "input": "./node_modules/reveal.js/dist/",
+                "output": "/reveal/"
+              },
+              {
+                "glob": "**/*",
+                "input": "./node_modules/reveal.js/dist/theme",
+                "output": "/reveal/theme/"
+              }
             ],
             "styles": [
               "node_modules/angular-ui-grid/ui-grid.min.css",

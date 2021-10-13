@@ -106,9 +106,9 @@ a .glyphicon {
 .paragraphs {
     @include center-block();
     @media (min-width: $screen-md-min) {
-        min-width: $paragraph-preferred-width;
+        min-width: var(--paragraph-preferred-width);
     }
-    max-width: $paragraph-preferred-width;
+    max-width: var(--paragraph-preferred-width);
     @media (max-width: $screen-md-max) and (min-width: $screen-md-min) {
         margin-left: 2em;
     }

@@ -1,20 +1,43 @@
+{# Idea:
+   We put every slide into two <section> elements so that each slide actually has at least one subslide.
+   This allows to have multiple subslides by simply wrapping each subslide into its own <section>
+
+   Slide breaking is done with a few indicators:
+   * Blocks with horizontal line indicators (---) => changes whole slide
+   * Headings (#, ##, ###) => if previous block wasn't a horizontal line indicator, changes the whole slide
+   * slide_break block attribute => if 'sub', changes the block to a subslide until the next slide break occurs
+#}
+
 <section>
-    {# Because of Jinja2 scoping rules, we need to use a single-element array #}
-    {% set prev_is_empty = [True] %}
-    {% set sectionchange = '</section><section>'|safe %}
+    <section>
+    {# We use namespaces to properly handle the scoping rules #}
+    {% set ns = namespace(prev_is_empty=True, cur_is_sub=False) %}
+    {% macro sectionchange(sub) %}
+        {% if ns.cur_is_sub %}
+            {# Current is a subslide => close last subslide and open new one #}
+            </section><section>
+        {% else %}
+            {# Current one is main slide
+               => close subslide and main slide and open new slide and its first subslide #}
+            </section></section><section><section>
+        {% endif %}
+    {% endmacro %}
     {% for t in text %}
+        {% set ns.cur_is_sub = t.attrs['slide_break'] == 'sub' %}
         {% if 'settings' in t.attrs %}
             {# do nothing #}
-        {% elif t.md.startswith('---') and t.md.endswith('---') %}
-            {% if not prev_is_empty[0] %}
-                {{ sectionchange }}
-                {% set _ = prev_is_empty.append(prev_is_empty.pop() or True) %}
+        {% elif (t.md.startswith('---') and t.md.endswith('---')) %}
+            {% if not ns.prev_is_empty %}
+                {{ sectionchange() }}
+                {% set ns.prev_is_empty = True %}
             {% endif %}
         {% else %}
-            {% if (t.output.startswith("<h1") or
+            {% if 'slide_break' in t.attrs and not ns.prev_is_empty %}
+                {{ sectionchange() }}
+            {% elif (t.output.startswith("<h1") or
                    t.output.startswith("<h2") or
-                   t.output.startswith("<h3")) and not prev_is_empty[0] %}
-                {{ sectionchange }}
+                   t.output.startswith("<h3")) and not ns.prev_is_empty %}
+                {{ sectionchange() }}
             {% endif %}
             <div class="{{ t.html_class }}"
                  id="{{ t.id }}"
@@ -22,7 +45,10 @@
                  attrs="{{ t.attrs_str }}">
                 {{ t.output|safe }}
             </div>
-            {% set _ = prev_is_empty.append(prev_is_empty.pop() and False) %}
+            {% set ns.prev_is_empty = False %}
         {% endif %}
     {% endfor %}
+{% if ns.cur_is_sub %}
+    </section>
+{% endif %}
 </section>

@@ -61,6 +61,7 @@ class DocSettingTypes:
     access_denied_message: str
     disable_answer: str
     smart_punct: bool
+    slide_themes: list[str]
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -473,8 +474,11 @@ class DocSettings:
     def disable_answer(self) -> Optional[str]:
         return self.get_setting_or_default("disable_answer", None)
 
-    def smart_punct(self) -> Optional[bool]:
+    def smart_punct(self) -> bool:
         return self.get_setting_or_default("smart_punct", False)
+
+    def slide_themes(self) -> list[str]:
+        return self.get_setting_or_default("slide_themes", ["jyu"])
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

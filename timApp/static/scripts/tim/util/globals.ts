@@ -139,6 +139,7 @@ export interface ILectureInfoGlobals extends IDocumentGlobals {
 export interface ISlideGlobals extends IDocumentGlobals {
     background_url: string;
     background_color: string;
+    themes: string[];
 }
 
 export interface IManageGlobals extends IGenericGlobals {

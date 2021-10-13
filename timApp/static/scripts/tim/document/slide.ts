@@ -1,11 +1,14 @@
 import $ from "jquery";
 import {getURLParameter, injectStyle, IOkResponse, to} from "tim/util/utils";
+import {environment} from "tim/environments/environment";
 import {IDocument, IItem} from "../item/IItem";
 import {documentglobals, slideglobals} from "../util/globals";
 import {$http, $log, $timeout} from "../util/ngimport";
 
 const pollInterval = 500;
 let receiving = true;
+
+const REVEAL_BASE = environment.production ? "en-US/reveal" : "reveal";
 
 interface ISlideStatus {
     indexh?: number;
@@ -135,14 +138,18 @@ export async function initSlideView(d: IDocument) {
     const bgColor = w.background_color;
     const hasManage = d.rights.manage;
 
-    // TODO: Only one of these two will load successfully,
-    //  but we don't know if we're running locally or in production, so we try both.
-    injectStyle("/static/scripts/build/node_modules/reveal.js/dist/reveal.css"); // local
-    injectStyle(
-        "/static/scripts/build/en-US/node_modules/reveal.js/dist/reveal.css"
-    ); // production
+    injectStyle(`/static/scripts/build/${REVEAL_BASE}/reveal.css`); // base style
 
-    injectStyle("/static/scripts/tim/document/jyu.css");
+    for (const theme of w.themes) {
+        if (theme == "jyu") {
+            injectStyle("/static/scripts/tim/document/jyu.css");
+        } else {
+            injectStyle(
+                `/static/scripts/build/${REVEAL_BASE}/theme/${theme}.css`
+            );
+        }
+    }
+
     const rv = (await import("reveal.js")).default;
     if (getURLParameter("controls") == null && hasManage) {
         refresh(rv);

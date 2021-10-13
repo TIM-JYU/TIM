@@ -567,9 +567,12 @@ export class AceParEditor extends BaseParEditor {
     }
 
     @focusAfter
-    ruleClicked() {
+    ruleClicked(sub: boolean) {
         this.editor.navigateLineEnd();
-        this.snippetManager.insertSnippet(this.editor, "\n#-\n---\n#-\n");
+        const slideSep = sub
+            ? '\n#-{slide_break="sub"}\n---\n#-\n'
+            : "\n#-\n---\n#-\n";
+        this.snippetManager.insertSnippet(this.editor, slideSep);
     }
 
     /*

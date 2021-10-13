@@ -589,8 +589,15 @@ ${backTicks}
                         items: [
                             {
                                 name: "Slide break",
-                                title: "Break text to start a new slide",
-                                func: () => this.editor!.ruleClicked(),
+                                title:
+                                    "Break text to start a new slide. In browser, slides scroll horizontally.",
+                                func: () => this.editor!.ruleClicked(false),
+                            },
+                            {
+                                name: "Subslide break",
+                                title:
+                                    "Break text to start a subslide within the same slide group. In browser, subslides scroll vertically.",
+                                func: () => this.editor!.ruleClicked(true),
                             },
                             {
                                 name: "Slide fragment",
