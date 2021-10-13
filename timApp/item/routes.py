@@ -744,11 +744,13 @@ def render_doc_view(
     # Custom backgrounds for slides
     slide_background_url = None
     slide_background_color = None
+    slide_themes = []
 
     is_slide = view_ctx.route == ViewRoute.ShowSlide
     if is_slide:
         slide_background_url = doc_settings.get_slide_background_url()
         slide_background_color = doc_settings.get_slide_background_color()
+        slide_themes = doc_settings.slide_themes()
         do_lazy = False
     else:
         do_lazy = (
@@ -917,6 +919,7 @@ def render_doc_view(
         live_updates=doc_settings.live_updates(),
         slide_background_url=slide_background_url,
         slide_background_color=slide_background_color,
+        slide_themes=slide_themes,
         score_infos=score_infos,
         # TODO: Unify "task summary" and "scoreboard" features somehow.
         task_info={
