@@ -2,7 +2,7 @@ import $ from "jquery";
 import {getURLParameter, injectStyle, IOkResponse, to} from "tim/util/utils";
 import {environment} from "tim/environments/environment";
 import {IDocument, IItem} from "../item/IItem";
-import {documentglobals, slideglobals} from "../util/globals";
+import {documentglobals, ISlideGlobals, slideglobals} from "../util/globals";
 import {$http, $log, $timeout} from "../util/ngimport";
 
 const pollInterval = 500;
@@ -89,13 +89,16 @@ async function updateSlideStatus(h: number, v: number, f: number) {
     receiving = true;
 }
 
-async function initReveal(rv: IFixedReveal) {
+async function initReveal(rv: IFixedReveal, s: ISlideGlobals) {
     // Full list of configuration options available here:
     // https://github.com/hakimel/reveal.js#configuration
 
     const zoom = (await import("reveal.js/plugin/zoom/zoom.esm")).default;
     const notes = (await import("reveal.js/plugin/notes/notes.esm")).default;
+    const [width, height] = s.slide_size;
     await rv.initialize({
+        width: width,
+        height: height,
         fragments: true,
         controls: true,
         progress: true,
@@ -160,7 +163,7 @@ export async function initSlideView(d: IDocument) {
         }
     };
 
-    await initReveal(rv);
+    await initReveal(rv, w);
     const ctrls = document.querySelector("aside.controls");
     if (!ctrls) {
         console.error("aside.controls not found");

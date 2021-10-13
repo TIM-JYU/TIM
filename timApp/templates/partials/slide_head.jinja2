@@ -7,6 +7,7 @@
 <script>
     var background_url = {{ (slide_background_url or None)|tojson }};
     var background_color = {{ (slide_background_color or None)|tojson }};
-    var themes = {{ (slide_themes or [])|tojson }};
+    var themes = {{ (doc_settings.slide_themes() or [])|tojson }};
+    var slide_size = {{ doc_settings.slide_size()|tojson }};
 </script>
 {% endblock %}

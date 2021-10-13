@@ -62,6 +62,7 @@ class DocSettingTypes:
     disable_answer: str
     smart_punct: bool
     slide_themes: list[str]
+    slide_size: tuple[int, int]
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -479,6 +480,9 @@ class DocSettings:
 
     def slide_themes(self) -> list[str]:
         return self.get_setting_or_default("slide_themes", ["jyu"])
+
+    def slide_size(self) -> tuple[int, int]:
+        return self.get_setting_or_default("slide_size", (960, 700))
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

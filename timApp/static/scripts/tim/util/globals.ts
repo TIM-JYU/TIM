@@ -140,6 +140,7 @@ export interface ISlideGlobals extends IDocumentGlobals {
     background_url: string;
     background_color: string;
     themes: string[];
+    slide_size: [number, number];
 }
 
 export interface IManageGlobals extends IGenericGlobals {
