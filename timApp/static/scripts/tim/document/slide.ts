@@ -1,11 +1,14 @@
 import $ from "jquery";
 import {getURLParameter, injectStyle, IOkResponse, to} from "tim/util/utils";
+import {environment} from "tim/environments/environment";
 import {IDocument, IItem} from "../item/IItem";
 import {documentglobals, slideglobals} from "../util/globals";
 import {$http, $log, $timeout} from "../util/ngimport";
 
 const pollInterval = 500;
 let receiving = true;
+
+const REVEAL_BASE = environment.production ? "en-US/reveal" : "reveal";
 
 interface ISlideStatus {
     indexh?: number;
@@ -135,13 +138,15 @@ export async function initSlideView(d: IDocument) {
     const bgColor = w.background_color;
     const hasManage = d.rights.manage;
 
-    injectStyle("/static/scripts/build/reveal/reveal.css"); // base style
+    injectStyle(`/static/scripts/build/${REVEAL_BASE}/reveal.css`); // base style
 
     for (const theme of w.themes) {
         if (theme == "jyu") {
             injectStyle("/static/scripts/tim/document/jyu.css");
         } else {
-            injectStyle(`/static/scripts/build/reveal/theme/${theme}.css`);
+            injectStyle(
+                `/static/scripts/build/${REVEAL_BASE}/theme/${theme}.css`
+            );
         }
     }
 
