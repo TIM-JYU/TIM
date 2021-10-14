@@ -32,12 +32,11 @@
 //  BusOut
 
 import simcir from "./simcir";
+import $ from 'jquery';
 
 !function($s) {
 
   'use strict';
-
-  var $ = $s.$;
 
   // unit size
   var unit = $s.unit;
@@ -268,7 +267,7 @@ import simcir from "./simcir";
         var size = device.getSize();
         var g = $s.graphics(device.$ui);
         g.attr['class'] = 'simcir-basicset-symbol';
-        draw(g, 
+        draw(g,
           (size.width - unit) / 2,
           (size.height - unit) / 2,
           unit, unit);
@@ -486,7 +485,7 @@ import simcir from "./simcir";
       6: 'acdefg',
       7: 'abc',
       8: 'abcdefg',
-      9: 'abcdfg', 
+      9: 'abcdfg',
       a: 'abcefg',
       b: 'cdefg',
       c: 'adef',
@@ -521,7 +520,7 @@ import simcir from "./simcir";
 
         var $seg = createSegUI(device, seg);
         device.$ui.append($seg);
-  
+
         var update = function() {
           var value = 0;
           for (var i = 0; i < 4; i += 1) {
@@ -582,7 +581,7 @@ import simcir from "./simcir";
       device.createUI = function() {
         super_createUI();
         var size = device.getSize();
-        
+
         var $knob = $s.createSVGElement('g').
           attr('class', 'simcir-basicset-knob').
           append($s.createSVGElement('rect').
@@ -595,13 +594,13 @@ import simcir from "./simcir";
         g.lineTo(r, 0);
         g.closePath();
         device.$ui.append($knob);
-  
+
         var _angle = _MIN_ANGLE;
         var setAngle = function(angle) {
           _angle = Math.max(_MIN_ANGLE, Math.min(angle, _MAX_ANGLE) );
           update();
         };
-  
+
         var dragPoint = null;
         var knob_mouseDownHandler = function(event) {
           event.preventDefault();
@@ -611,7 +610,7 @@ import simcir from "./simcir";
           $(document).on('mouseup', knob_mouseUpHandler);
         };
         var knob_mouseMoveHandler = function(event) {
-          var off = $knob.parent('svg').offset();
+          var off = $knob.parents('svg').offset();
           var pos = $s.offset($knob);
           var cx = off.left + pos.x;
           var cy = off.top + pos.y;
