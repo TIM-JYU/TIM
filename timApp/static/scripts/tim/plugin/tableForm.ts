@@ -495,7 +495,7 @@ export class TableFormComponent
                         if (tt.isPreview() || !this.showTable) {
                             return;
                         }
-                        this.runJsRunner(rs);
+                        void this.runJsRunner(rs);
                         rs.running = 0;
                     }, rs.interval * 1000);
                 }
@@ -1476,7 +1476,7 @@ export class TableFormComponent
         }
     }
 
-    runJsRunner(runner: RunScriptType) {
+    async runJsRunner(runner: RunScriptType) {
         const timTable = this.getTimTable();
         if (timTable == null) {
             return;
@@ -1488,11 +1488,11 @@ export class TableFormComponent
                 selUsers,
                 userNameColIndex
             );
-            this.viewctrl.runJsRunner(runnerName, users);
+            await this.viewctrl.runJsRunner(runnerName, users);
         }
         if (runner.update) {
             if (!timTable.isSomeCellBeingEdited()) {
-                this.forceUpdateTable();
+                await this.forceUpdateTable();
             }
         }
     }

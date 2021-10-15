@@ -93,7 +93,7 @@ class JsrunnerController
         }
         const tid = this.getTaskId();
         if (tid) {
-            this.vctrl.addJsRunner(this, tid.docTask(), tid.name);
+            void this.vctrl.addJsRunner(this, tid.docTask(), tid.name);
         }
     }
 
@@ -155,7 +155,9 @@ class JsrunnerController
                 this.scriptErrors = data.web.errors;
                 this.output = data.web.output;
                 if (this.attrsall.markup.updateFields) {
-                    this.vctrl.updateFields(this.attrsall.markup.updateFields);
+                    await this.vctrl.updateFields(
+                        this.attrsall.markup.updateFields
+                    );
                     if (this.attrs.autoUpdateTables) {
                         this.vctrl.updateAllTables(
                             this.attrsall.markup.updateFields
@@ -164,7 +166,7 @@ class JsrunnerController
                 }
 
                 if (this.attrs.nextRunner) {
-                    this.vctrl.runJsRunner(this.attrs.nextRunner, []);
+                    await this.vctrl.runJsRunner(this.attrs.nextRunner, []);
                 }
 
                 // temp code:
@@ -238,12 +240,12 @@ class JsrunnerController
         return this.visible == 1;
     }
 
-    runScript() {
-        this.doCheckFields(false);
+    async runScript() {
+        await this.doCheckFields(false);
     }
 
-    runScriptWithUsers(userNames: string[]) {
-        this.doCheckFields(false, userNames);
+    async runScriptWithUsers(userNames: string[]) {
+        await this.doCheckFields(false, userNames);
     }
 }
 

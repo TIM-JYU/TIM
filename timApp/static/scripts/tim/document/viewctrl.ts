@@ -103,8 +103,8 @@ export interface ISetAnswerResult {
 }
 
 export interface IJsRunner {
-    runScript: () => void;
-    runScriptWithUsers: (userNames: string[]) => void;
+    runScript: () => Promise<void>;
+    runScriptWithUsers: (userNames: string[]) => Promise<void>;
 }
 
 export interface IUserChanged {
@@ -692,14 +692,18 @@ export class ViewCtrl implements IController {
         this.inputChangeListeners.add(controller);
     }
 
-    public addJsRunner(runner: IJsRunner, taskId: DocIdDotName, name: string) {
+    public async addJsRunner(
+        runner: IJsRunner,
+        taskId: DocIdDotName,
+        name: string
+    ) {
         const taskIdStr = taskId.toString();
         this.jsRunners.set(taskIdStr, runner);
         if (
             this.jsRunnersToRun.delete(taskIdStr) ||
             this.jsRunnersToRun.delete(name)
         ) {
-            runner.runScript();
+            await runner.runScript();
         }
     }
 
@@ -1102,10 +1106,10 @@ export class ViewCtrl implements IController {
      * @param runner taskid of the runner
      * @param userNames list of user names to use in jsrunner
      */
-    public runJsRunner(runner: string, userNames: string[]) {
+    public async runJsRunner(runner: string, userNames: string[]) {
         const jsRunner = this.getJsRunner(runner);
         if (jsRunner) {
-            jsRunner.runScriptWithUsers(userNames);
+            await jsRunner.runScriptWithUsers(userNames);
         }
     }
 
