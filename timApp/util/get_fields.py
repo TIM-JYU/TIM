@@ -10,6 +10,7 @@ from typing import Optional, DefaultDict, TypedDict, Any, Union
 
 import attr
 import dateutil.parser
+from isodate import datetime_isoformat
 from marshmallow import missing
 from sqlalchemy import func, true
 from sqlalchemy.orm import lazyload, joinedload
@@ -404,6 +405,8 @@ def get_fields_and_users(
                     value = a.points
                 elif task.field == "datetime":
                     value = time.mktime(a.answered_on.timetuple())
+                elif task.field == "isodatetime":
+                    value = datetime_isoformat(a.answered_on)
                 elif task.field == "ALL":
                     value = p
                 else:
