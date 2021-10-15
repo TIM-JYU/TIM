@@ -1331,10 +1331,10 @@ var simcir = {};
       var $srcNode = $target.closest('.simcir-node');
       var off = $workspace.offset();
       var pos = offset($srcNode);
-      var friendType = ".simcir-node-type-in"
+      var friendType = ".simcir-node-type-in";
       if ($srcNode.attr('simcir-node-type') == 'in') {
         disconnect($srcNode);
-        friendType = ".simcir-node-type-out"
+        friendType = ".simcir-node-type-out";
       }
       dragMoveHandler = function(event) {
         checkTouch(event);
@@ -1359,6 +1359,7 @@ var simcir = {};
 
 
     var findClosest = function(event, cond, maxdist) {
+        var r = 4;
         var a = $(cond);
         var best = null;
         var x0 = event.pageX;
@@ -1370,13 +1371,13 @@ var simcir = {};
            // if ( cir.context != circle) continue;
            if (!cir) continue;
            var off = cir.getBoundingClientRect();
-           var dx = (off.left + window.scrollX) + 4 - x0; // suppose circle with radius of 4
-           var dy = (off.top + window.scrollY) + 4 - y0;
+           var dx = (off.left + window.scrollX) + r - x0; // suppose circle with radius of 4
+           var dy = (off.top + window.scrollY) + r - y0;
            var curdist = dx*dx + dy*dy;
            if ( curdist < mindist ) {
-              if ( curdist > 4*4 ) { // if inside circle, always accept
-                 if ( cur.attr('simcir-node-type') == 'in' && dx < 0 ) continue; // in from left
-                 if ( cur.attr('simcir-node-type') == 'out' && dx > 0 ) continue; // out from right
+              if ( curdist > r*r ) { // if inside circle, always accept
+                 if ( cur.attr('simcir-node-type') == 'in' && dx < -2*r ) continue; // in from left
+                 if ( cur.attr('simcir-node-type') == 'out' && dx > 2*r ) continue; // out from right
               }
               best = cur;
               mindist = curdist;
