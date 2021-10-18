@@ -196,7 +196,7 @@ RUN python3.9 -m pip install sympy opencv-contrib-python-headless && bash -c "${
 
 # http://www.scipy.org/install.html
 RUN bash -c "${APT_INSTALL} epstool transfig && ${APT_CLEANUP}"
-RUN python3.9 -m pip install numpy scipy matplotlib pandas statsmodels control && bash -c "${APT_CLEANUP}"
+RUN python3.9 -m pip install numpy scipy matplotlib pandas statsmodels control scikit-learn && bash -c "${APT_CLEANUP}"
 
 # R packages
 RUN bash -c "${APT_INSTALL} gcc g++ liblapack-dev liblapack3 libopenblas-base libopenblas-dev gfortran && ${APT_CLEANUP}"
