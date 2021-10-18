@@ -873,10 +873,13 @@ class DocParagraph:
         return self.attrs.get("classes", None)
 
     @classes.setter
-    def classes(self, classes: list[str]) -> None:
+    def classes(self, classes: list[str] | None) -> None:
         # TODO: Class list should not be an attribute but its own list
-        # noinspection PyTypeChecker
-        self.attrs["classes"] = classes
+        if classes is None:
+            self.attrs.pop("classes", None)
+        else:
+            # noinspection PyTypeChecker
+            self.attrs["classes"] = classes
 
     def set_attr(self, attr_name: str, attr_val: str | None):
         """Sets the value of the specified attribute.
