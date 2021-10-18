@@ -1,7 +1,7 @@
 import {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {HeaderIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
 import {IDocScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
-import {IDocSettings} from "../document/IDocSettings";
+import {IDocSettings, ISlideDocSettings} from "../document/IDocSettings";
 import {EditMode} from "../document/popup-menu-dialog.component";
 import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
 import {
@@ -141,6 +141,7 @@ export interface ISlideGlobals extends IDocumentGlobals {
     background_color: string;
     themes: string[];
     slide_size: [number, number];
+    docSettings: ISlideDocSettings;
 }
 
 export interface IManageGlobals extends IGenericGlobals {

@@ -110,6 +110,7 @@ async function initReveal(rv: IFixedReveal, s: ISlideGlobals) {
         transition: getURLParameter("transition") ?? "linear", // default/cube/page/concave/zoom/linear/fade/none
         plugins: [zoom, notes],
         maxScale: 1, // csplugins become too wide in fullscreen view without this
+        ...(s.docSettings.slide_revealjs_options ?? {}),
     });
 }
 

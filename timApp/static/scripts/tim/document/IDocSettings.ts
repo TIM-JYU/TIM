@@ -43,3 +43,7 @@ export interface IDocSettings {
     peer_review?: boolean;
     max_uncollapsed_toc_items?: number;
 }
+
+export interface ISlideDocSettings extends IDocSettings {
+    slide_revealjs_options?: Record<string, string>;
+}
