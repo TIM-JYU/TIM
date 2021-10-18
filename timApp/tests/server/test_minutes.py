@@ -81,7 +81,7 @@ class MinutesHandling(BrowserTest):
             perform_replace(d, ReplaceArguments(term="LAIT_ID_HERE", to=f"{d_lait.id}"))
         for p in d_kokous.document.get_paragraphs():
             if p.get_attr("rd") == "LAIT_ID_HERE":
-                p.set_attr("rd", d_lait.id)
+                p.set_attr("rd", str(d_lait.id))
                 p.save()
 
         self.get(

@@ -464,7 +464,7 @@ def par_list_to_html_list(
     if auto_macros:
         processed = []
         for pre_html, m, attrs in zip(raw, auto_macros, (p.get_attrs() for p in pars)):
-            if "nonumber" in attrs.get("classes", {}):
+            if "nonumber" in attrs.get("classes", []):
                 final_html = pre_html
             else:
                 final_html = insert_heading_numbers(
