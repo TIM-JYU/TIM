@@ -315,7 +315,7 @@ class DocumentPrinter:
                         env=pdoc_macro_env,
                         ignore_errors=False,
                     )
-                classes = p.get_classes()
+                classes = p.classes
                 if classes:
                     endraw = ""
                     beginraw = ""

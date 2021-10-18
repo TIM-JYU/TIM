@@ -119,7 +119,7 @@ class DocParagraph:
     @classmethod
     def create(
         cls,
-        doc,
+        doc: Document | None,
         par_id: str | None = None,
         md: str = "",
         par_hash: str | None = None,
@@ -167,20 +167,20 @@ class DocParagraph:
 
     @staticmethod
     def create_area_reference(
-        doc, area_name: str, r: str | None = None, rd: int | None = None
+        doc: Document, area_name: str, r: str | None = None, rd: int | None = None
     ) -> DocParagraph:
         """Creates an area reference paragraph.
 
         :param area_name: The name of the area.
         :param doc: The Document object in which the reference paragraph will reside.
         :param r: The kind of the reference.
-        :param add_rd: If True, sets the rd attribute for the reference paragraph.
+        :param rd: ID of the referenced document.
         :return: The created DocParagraph.
-
         """
         par = DocParagraph.create(doc)
         par.set_attr("r", r)
-        par.set_attr("rd", doc.doc_id if rd is None else rd)
+        doc_id = doc.doc_id if rd is None else rd
+        par.set_attr("rd", str(doc_id) if doc_id is not None else None)
         par.set_attr("ra", area_name)
         par.set_attr("rp", None)
 
@@ -332,7 +332,7 @@ class DocParagraph:
         preamble = self.from_preamble()
         class_str = "par"
         if not self.get_attr("area"):
-            if classes := self.get_classes():
+            if classes := self.classes:
                 for c in classes:
                     class_str += " " + c
         if self.is_question():
@@ -724,7 +724,7 @@ class DocParagraph:
 
     def has_class(self, class_name):
         """Returns whether this paragraph has the specified class."""
-        if classes := self.get_classes():
+        if classes := self.classes:
             return class_name in classes
         return False
 
@@ -732,11 +732,11 @@ class DocParagraph:
         """Adds the specified class to this paragraph."""
         for class_name in classes:
             if not self.has_class(class_name):
-                curr_classes = self.get_classes()
+                curr_classes = self.classes
                 if curr_classes is None:
                     curr_classes = []
                 curr_classes.append(class_name)
-                self.set_attr("classes", curr_classes)
+                self.classes = curr_classes
 
     def get_auto_macro_values(
         self,
@@ -846,7 +846,7 @@ class DocParagraph:
         self.html_sanitized = sanitized
         return self.html
 
-    def get_attr(self, attr_name: str, default_value=None):
+    def get_attr(self, attr_name: str, default_value: str | None = None) -> str | None:
         """Returns the value of the specified attribute.
 
         :param attr_name: The name of the attribute to get.
@@ -868,7 +868,20 @@ class DocParagraph:
     def _compute_hash(self) -> None:
         self.hash = hashfunc(self.md, self.attrs)
 
-    def set_attr(self, attr_name: str, attr_val: Any):
+    @property
+    def classes(self) -> list[str] | None:
+        return self.attrs.get("classes", None)
+
+    @classes.setter
+    def classes(self, classes: list[str] | None) -> None:
+        # TODO: Class list should not be an attribute but its own list
+        if classes is None:
+            self.attrs.pop("classes", None)
+        else:
+            # noinspection PyTypeChecker
+            self.attrs["classes"] = classes
+
+    def set_attr(self, attr_name: str, attr_val: str | None):
         """Sets the value of the specified attribute.
 
         :param attr_name: The name of the attribute to set.
@@ -891,9 +904,6 @@ class DocParagraph:
 
     def get_attrs(self) -> dict:
         return self.attrs
-
-    def get_classes(self) -> list[str] | None:
-        return self.get_attr("classes")
 
     def get_base_path(self) -> str:
         """Returns the filesystem path for the versions of this paragraph."""
@@ -1194,7 +1204,7 @@ def create_reference(
     par = DocParagraph.create(doc)
 
     par.set_attr("r", r)
-    par.set_attr("rd", doc_id if add_rd else None)
+    par.set_attr("rd", str(doc_id) if add_rd else None)
     par.set_attr("rp", par_id)
     par.set_attr("ra", None)
 
