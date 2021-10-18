@@ -67,4 +67,5 @@ class PreparedPar:
 
     @property
     def class_str(self) -> str:
+        # TODO: Do this in a more type-safe way (attrs is a string dict)
         return " ".join(self.attrs.get("classes", []))

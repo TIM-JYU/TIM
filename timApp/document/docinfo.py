@@ -222,7 +222,7 @@ def get_pars_with_class_from_docs(
     :return: Pars that have any of the filtering class names.
     """
     for p in get_non_settings_pars_from_docs(docs):
-        classes = p.get_attr("classes")
+        classes = p.classes
         if classes:
             for class_name in class_names:
                 if class_name in classes:
