@@ -57,7 +57,7 @@ group: {ug_students.name}
         with self.temp_config(
             {
                 "SISU_ASSESSMENTS_URL": None,
-                "SISU_ASSESSMENTS_BLOCKED_MESSAGE": "Assessments blocked message!",
+                "SISU_ASSESSMENTS_DISABLED_MESSAGE": "Assessments blocked message!",
             }
         ):
             self.do_test_scim_block(d)

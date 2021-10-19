@@ -383,7 +383,7 @@ class PostGradesModel:
 
 def verify_sisu_assessments() -> None:
     if not app.config["SISU_ASSESSMENTS_URL"]:
-        raise SisuError(app.config["SISU_ASSESSMENTS_BLOCKED_MESSAGE"])
+        raise SisuError(app.config["SISU_ASSESSMENTS_DISABLED_MESSAGE"])
 
 
 @sisu.post("/sendGrades")
