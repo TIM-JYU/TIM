@@ -1,11 +1,13 @@
 import math
 import os
 from base64 import b64decode
+from contextlib import contextmanager
 from io import BytesIO
 from pprint import pprint
-from typing import Union, Optional
+from typing import Union, Optional, Any
 from urllib.parse import urlencode
 
+import requests
 from selenium import webdriver
 from selenium.common.exceptions import (
     NoSuchElementException,
@@ -74,6 +76,19 @@ class BrowserTest(TimLiveServer, TimRouteTest):
             ec.text_to_be_present_in_element((By.XPATH, self.login_dropdown_path), name)
         )
         self.client.__enter__()
+
+    @contextmanager
+    def temp_config(self, settings: dict[str, Any]):
+        old_settings = {k: self.app.config[k] for k in settings.keys()}
+        for k, v in settings.items():
+            self.app.config[k] = v
+        requests.post(f"{self.get_browser_url()}/config", json=settings)
+        try:
+            yield
+        finally:
+            for k, v in old_settings.items():
+                self.app.config[k] = v
+            requests.post(f"{self.get_browser_url()}/config", json=old_settings)
 
     def login_browser_quick_test1(self):
         """Logs testuser 1 in quickly by directly adding the session cookie to the browser."""
