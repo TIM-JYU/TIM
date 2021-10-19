@@ -66,14 +66,12 @@ group: {ug_students.name}
         self.login_browser_quick_test1()
         self.goto_document(test_doc)
         self.wait_until_present("#HELP_PAR")
-        self.save_screenshot("test")
 
         self.drv.find_element(
             By.CSS_SELECTOR, "div:nth-child(1) > .timButton:nth-child(1)"
         ).click()
 
         self.wait_until_present("#modal-body")
-        self.save_screenshot("test")
         dialog_el = self.drv.find_element(
             By.CSS_SELECTOR, "tim-dialog-frame div.modal-dialog"
         )
