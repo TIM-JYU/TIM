@@ -138,7 +138,7 @@ PROXY_WHITELIST = [
 # Whitelist of /getproxy domains that don't require login.
 PROXY_WHITELIST_NO_LOGIN = {}
 
-SISU_ASSESSMENTS_BLOCKED_MESSAGE = "Assessments have been disabled at the moment"
+SISU_ASSESSMENTS_BLOCKED_MESSAGE = "Assessments are disabled at the moment"
 SISU_ASSESSMENTS_URL = "https://s2s.apitest.jyu.fi/assessments/"
 SISU_CERT_PATH = "/service/certs/sisu.pem"
 
