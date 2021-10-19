@@ -255,7 +255,7 @@ class BrowserTest(TimLiveServer, TimRouteTest):
                     ref = Image(filename=f"tests/browser/expected_screenshots/{f}.png")
                 except BaseError:
                     print(f"Expected screenshot not found, saving image to {f}.png")
-                    im.save(filename=f"{self.screenshot_dir}/{f}.png")
+                    self.save_im(im, f)
                     im.close()
                     return
                 im.fuzz = 300  # 250 is too low
