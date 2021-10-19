@@ -381,9 +381,16 @@ class PostGradesModel:
     groups: Optional[list[str]] = None
 
 
+def verify_sisu_assessments() -> None:
+    if not app.config["SISU_ASSESSMENTS_URL"]:
+        raise SisuError(app.config["SISU_ASSESSMENTS_BLOCKED_MESSAGE"])
+
+
 @sisu.post("/sendGrades")
 @use_model(PostGradesModel)
 def post_grades_route(m: PostGradesModel) -> Response:
+    verify_sisu_assessments()
+
     result = json_response(
         send_grades_to_sisu(
             m.destCourse,
@@ -528,7 +535,8 @@ def mock_assessments(sisuid: str) -> Response:
 
 
 def call_sisu_assessments(sisu_id: str, json: dict[str, Any]) -> requests.Response:
-    url = f'{app.config["SISU_ASSESSMENTS_URL"]}{sisu_id}'
+    verify_sisu_assessments()
+    url = f"{app.config['SISU_ASSESSMENTS_URL']}{sisu_id}"
     return requests.post(
         url,
         json=json,
