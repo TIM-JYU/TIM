@@ -400,6 +400,15 @@ def install_sql_hook():
         print(clauseelement)
 
 
+if app.config["TESTING"]:
+
+    @app.post("/config")
+    def set_config() -> Response:
+        for k, v in request.get_json().items():
+            app.config[k] = v
+        return ok_response()
+
+
 if app.config["DEBUG_SQL"]:
     install_sql_hook()
 
