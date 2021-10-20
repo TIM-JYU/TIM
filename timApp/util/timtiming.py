@@ -59,10 +59,15 @@ def with_timing(*print_args: str) -> Callable:
             time_before = time.time()
             result = f(*args, **kwargs)
             time_after = time.time()
-            all_params = {
-                k: args[n] if n < len(args) else kwargs[k]
-                for n, k in enumerate(sig_params.keys())
-            }
+
+            def resolve_arg(n: int, k: str) -> Any:
+                if n < len(args):
+                    return args[n]
+                if k in kwargs:
+                    return kwargs[k]
+                return sig_params[k].default
+
+            all_params = {k: resolve_arg(n, k) for n, k in enumerate(sig_params.keys())}
             args_str = ", ".join(f"{name}={all_params[name]}" for name in print_args)
             print(f"{f.__name__}: {time_after - time_before:.4g} {args_str}")
             return result
