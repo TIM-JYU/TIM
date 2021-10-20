@@ -16,6 +16,7 @@ If validation fails, the plugin returns an error with status code 422.
 """
 import base64
 import json
+from abc import ABC
 from dataclasses import dataclass, field
 from enum import Enum
 from json import JSONEncoder
@@ -159,7 +160,6 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     user_id: str
     userPrint: bool
     viewmode: bool
-    ctx: Union[dict, Missing] = missing
     access: Union[str, Missing] = missing
 
     def requires_login(self) -> bool:
@@ -246,6 +246,20 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
         if isinstance(self.markup.showInView, bool):
             return self.markup.showInView
         return self.show_in_view_default()
+
+
+PluginContext = TypeVar("PluginContext")
+
+
+@dataclass
+class GenericHtmlModelWithContext(
+    Generic[PluginInput, PluginMarkup, PluginState, PluginContext],
+    GenericHtmlModel[PluginInput, PluginMarkup, PluginState],
+    ABC,
+):
+    ctx: Optional[PluginContext] = field(
+        init=False, default=None, metadata={"missing": True}
+    )
 
 
 def render_validationerror(e: ValidationError) -> str:
@@ -452,7 +466,7 @@ def register_html_routes(
         :param args: Unvalidated HTML arguments.
         :return: List of HTMLs.
         """
-        results = []
+        results: list[Optional[str]] = []
         result_data = []
         for a in args:
             try:

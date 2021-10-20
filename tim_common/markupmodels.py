@@ -1,7 +1,7 @@
 from copy import copy
 from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timezone
-from typing import Union, List, Dict, Any, Optional, Mapping, NewType
+from typing import Union, Any, Optional, Mapping, NewType
 
 import marshmallow
 from marshmallow import missing, pre_load
@@ -124,6 +124,8 @@ def asdict_skip_missing(obj: Any) -> dict[str, Any]:
     for f in fields(obj):
         v = getattr(obj, f.name)
         if v is missing:
+            continue
+        if f.metadata.get("missing", False):
             continue
         value = asdict_skip_missing(v) if is_dataclass(v) else v
         result.append((f.name, value))

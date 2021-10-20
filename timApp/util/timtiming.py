@@ -60,7 +60,7 @@ def with_timing(*print_args: str) -> Callable:
             result = f(*args, **kwargs)
             time_after = time.time()
 
-            def resolve_arg(n: int, k: str):
+            def resolve_arg(n: int, k: str) -> Any:
                 if n < len(args):
                     return args[n]
                 if k in kwargs:

@@ -2,7 +2,7 @@
 TIM plugin: a checkbox field
 """
 from dataclasses import dataclass, asdict
-from typing import Union, TypedDict
+from typing import Union
 
 from flask import render_template_string
 from marshmallow.utils import missing
@@ -22,12 +22,12 @@ from timApp.util.get_fields import (
 )
 from tim_common.common_schemas import TextfieldStateModel
 from tim_common.pluginserver_flask import (
-    GenericHtmlModel,
     create_blueprint,
     GenericAnswerModel,
     PluginAnswerWeb,
     PluginAnswerResp,
     PluginReqs,
+    GenericHtmlModelWithContext,
 )
 from tim_common.utils import Missing
 
@@ -46,13 +46,19 @@ class TextfieldInputModel:
     nosave: Union[bool, Missing] = missing
 
 
-class CbcountfieldContext(TypedDict):
+@dataclass
+class CbcountfieldContext:
     checked_count: int
 
 
 @dataclass
 class CbcountfieldHtmlModel(
-    GenericHtmlModel[TextfieldInputModel, CbcountfieldMarkupModel, TextfieldStateModel]
+    GenericHtmlModelWithContext[
+        TextfieldInputModel,
+        CbcountfieldMarkupModel,
+        TextfieldStateModel,
+        CbcountfieldContext,
+    ]
 ):
     def get_component_html_name(self) -> str:
         return "cbcountfield-runner"
@@ -62,9 +68,8 @@ class CbcountfieldHtmlModel(
 
     def get_browser_json(self) -> dict:
         r = super().get_browser_json()
-        ctx: CbcountfieldContext = self.ctx
-        if ctx:
-            count = ctx["checked_count"]
+        if self.ctx:
+            count = self.ctx.checked_count
         else:
             count, _ = get_checked_count(self.markup, self.taskID, self.current_user_id)
         r["count"] = count
