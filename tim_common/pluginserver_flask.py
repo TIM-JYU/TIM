@@ -24,10 +24,7 @@ from typing import (
     Union,
     TypeVar,
     Generic,
-    Dict,
-    Type,
     Any,
-    List,
     Callable,
     TypedDict,
 )
@@ -162,6 +159,7 @@ class GenericHtmlModel(GenericRouteModel[PluginInput, PluginMarkup, PluginState]
     user_id: str
     userPrint: bool
     viewmode: bool
+    ctx: Union[dict, Missing] = missing
     access: Union[str, Missing] = missing
 
     def requires_login(self) -> bool:
@@ -354,24 +352,6 @@ def render_plugin_html(
     return m.get_real_html()
 
 
-def render_multihtml(args: list[dict], schema: Schema) -> Response:
-    """Renders HTMLs according to the given Schema.
-
-    :param schema: The marshmallow schema to use for validating the plugin data.
-    :param args: Unvalidated HTML arguments.
-    :return: List of HTMLs.
-    """
-    results = []
-    for a in args:
-        try:
-            p = schema.load(a)
-        except ValidationError as e:
-            results.append(render_validationerror(e))
-        else:
-            results.append(render_plugin_html(p))
-    return jsonify(results)
-
-
 def render_plugin_md(
     m: GenericHtmlModel[PluginInput, PluginMarkup, PluginState]
 ) -> str:
@@ -412,11 +392,16 @@ def create_app(name: str) -> Flask:
     return Flask(name, static_folder=".", static_url_path="")
 
 
+HtmlModel = TypeVar("HtmlModel", bound=GenericHtmlModel)
+AnswerModel = TypeVar("AnswerModel", bound=GenericAnswerModel)
+
+
 def register_html_routes(
     app: Union[Flask, Blueprint],
     html_schema: type[Schema],
     reqs_handler: Callable[[], PluginReqs],
     csrf: Optional[CSRFProtect] = None,
+    multihtml_preprocessor: Optional[Callable[[list[HtmlModel]], None]] = None,
 ) -> None:
     @app.errorhandler(422)
     def handle_invalid_request(error: Any) -> Response:
@@ -460,9 +445,37 @@ def register_html_routes(
         # pprint(request.get_json(silent=True))
         # print(request.get_json(silent=True))
 
+    def render_multihtml(args: list[dict], schema: Schema) -> Response:
+        """Renders HTMLs according to the given Schema.
 
-HtmlModel = TypeVar("HtmlModel", bound=GenericHtmlModel)
-AnswerModel = TypeVar("AnswerModel", bound=GenericAnswerModel)
+        :param schema: The marshmallow schema to use for validating the plugin data.
+        :param args: Unvalidated HTML arguments.
+        :return: List of HTMLs.
+        """
+        results = []
+        result_data = []
+        for a in args:
+            try:
+                p = schema.load(a)
+            except ValidationError as e:
+                results.append(render_validationerror(e))
+            else:
+                result_data.append(p)
+                # Leave empty space for the preprocessed data
+                results.append(None)
+
+        if multihtml_preprocessor:
+            multihtml_preprocessor(result_data)
+
+        # Fill in Nones with preprocessed multihtml
+        j = 0
+        for i, d in enumerate(results):
+            if d is None:
+                results[i] = render_plugin_html(result_data[j])
+                j += 1
+
+        return jsonify(results)
+
 
 T = TypeVar("T")
 
@@ -481,8 +494,11 @@ def create_blueprint(
     answer_handler: Callable[[AnswerModel], PluginAnswerResp],
     reqs_handler: Callable[[], PluginReqs],
     csrf: Optional[CSRFProtect] = None,
+    multihtml_preprocessor: Optional[Callable[[list[HtmlModel]], None]] = None,
 ) -> Blueprint:
-    bp = create_nontask_blueprint(name, plugin_name, html_model, reqs_handler, csrf)
+    bp = create_nontask_blueprint(
+        name, plugin_name, html_model, reqs_handler, csrf, multihtml_preprocessor
+    )
     register_answer_route(bp, answer_model, answer_handler, csrf)
     return bp
 
@@ -493,9 +509,12 @@ def create_nontask_blueprint(
     html_model: type[HtmlModel],
     reqs_handler: Callable[[], PluginReqs],
     csrf: Optional[CSRFProtect] = None,
+    multihtml_preprocessor: Optional[Callable[[list[HtmlModel]], None]] = None,
 ) -> Blueprint:
     bp = Blueprint(plugin_name, name, url_prefix=f"/{plugin_name}")
-    register_html_routes(bp, class_schema(html_model), reqs_handler, csrf)
+    register_html_routes(
+        bp, class_schema(html_model), reqs_handler, csrf, multihtml_preprocessor
+    )
 
     return bp
 
