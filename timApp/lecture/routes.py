@@ -15,7 +15,12 @@ from sqlalchemy import func
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import joinedload
 
-from timApp.auth.accesshelper import verify_ownership, get_doc_or_abort, has_ownership
+from timApp.auth.accesshelper import (
+    verify_ownership,
+    get_doc_or_abort,
+    has_ownership,
+    verify_edit_access,
+)
 from timApp.auth.login import log_in_as_anonymous
 from timApp.auth.sessioninfo import (
     get_current_user_id,
@@ -1027,7 +1032,7 @@ def get_question_by_par_id():
     par_id = request.args.get("par_id")
     edit = request.args.get("edit", False)
     d = get_doc_or_abort(doc_id)
-    verify_ownership(d)
+    verify_edit_access(d)
     question = get_question_data_from_document(d, par_id, edit)
     return json_response(question)
 
