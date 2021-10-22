@@ -231,7 +231,7 @@ def get_all_answers(
     q = q.with_entities(minmax, counts)
     sub = q.subquery()
     q = Answer.query.join(sub, Answer.id == sub.c.minmax).join(User, Answer.users)
-    q = q.join(PluginType).options(contains_eager(Answer.plugin_type))
+    q = q.outerjoin(PluginType).options(contains_eager(Answer.plugin_type))
     if sort == "username":
         q = q.order_by(User.name, Answer.task_id, Answer.answered_on)
     else:
