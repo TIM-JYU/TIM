@@ -1482,15 +1482,17 @@ export class TableFormComponent
             return;
         }
         const runnerName = runner.script;
+        let jsRunner;
         if (this.viewctrl && runnerName) {
             const selUsers = timTable.getCheckedRows(0, true);
             const users = TableFormComponent.makeUserArray(
                 selUsers,
                 userNameColIndex
             );
-            await this.viewctrl.runJsRunner(runnerName, users);
+            jsRunner = await this.viewctrl.runJsRunner(runnerName, users);
         }
-        if (runner.update) {
+        // JSRunner is able to update all tables automatically
+        if (runner.update && !jsRunner?.willAutoRefreshTables()) {
             if (!timTable.isSomeCellBeingEdited()) {
                 await this.forceUpdateTable();
             }

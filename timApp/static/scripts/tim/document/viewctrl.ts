@@ -105,6 +105,7 @@ export interface ISetAnswerResult {
 export interface IJsRunner {
     runScript: () => Promise<void>;
     runScriptWithUsers: (userNames: string[]) => Promise<void>;
+    willAutoRefreshTables: () => boolean;
 }
 
 export interface IUserChanged {
@@ -1094,9 +1095,9 @@ export class ViewCtrl implements IController {
                 }
             }
             if (fields && fields.length > 0) {
-                table.updateFields(fields);
+                void table.updateFields(fields);
             } else {
-                table.updateTable();
+                void table.updateTable();
             }
         }
     }
@@ -1105,12 +1106,14 @@ export class ViewCtrl implements IController {
      * Run jsrunner in document for selected users
      * @param runner taskid of the runner
      * @param userNames list of user names to use in jsrunner
+     * @return JSRunner that was run
      */
     public async runJsRunner(runner: string, userNames: string[]) {
         const jsRunner = this.getJsRunner(runner);
         if (jsRunner) {
             await jsRunner.runScriptWithUsers(userNames);
         }
+        return jsRunner;
     }
 
     async beginUpdate() {

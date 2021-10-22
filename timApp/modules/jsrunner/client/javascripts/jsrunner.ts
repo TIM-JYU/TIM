@@ -97,6 +97,12 @@ class JsrunnerController
         }
     }
 
+    willAutoRefreshTables() {
+        return (
+            this.attrs.updateFields !== undefined && this.attrs.autoUpdateTables
+        );
+    }
+
     addError(msg: string) {
         if (!this.error) {
             this.error = {msg: ""};
