@@ -236,7 +236,8 @@ export async function initSlideView(d: IDocument) {
 }
 
 function fitCurrentSlide() {
-    const slide = $("section.present").first();
+    // Pick last to always pick the child
+    const slide = $("section.present").last();
     const show = $("div.slides").first();
     const innerH = slide.innerHeight()!;
     const baseH = show.height()!;
