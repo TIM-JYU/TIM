@@ -16,6 +16,9 @@ def task_ids_to_strlist(ids: list[TaskId]) -> list[str]:
     return [t.doc_task for t in ids]
 
 
+GLOBAL_SINCE_LAST_KEY = "*"
+
+
 def period_handling(
     task_ids: list[TaskId], doc_ids: set[int], period: str
 ) -> tuple[datetime, datetime]:
@@ -29,11 +32,11 @@ def period_handling(
     period_from = datetime.min.replace(tzinfo=timezone.utc)
     period_to = get_current_time()
 
-    since_last_key = task_ids[0].doc_task if task_ids else None
+    since_last_key = task_ids[0].doc_task if task_ids else GLOBAL_SINCE_LAST_KEY
     if len(task_ids) > 1:
         since_last_key = str(next(d for d in doc_ids))
         if len(doc_ids) > 1:
-            since_last_key = None
+            since_last_key = GLOBAL_SINCE_LAST_KEY
 
         # Period from which to take results.
     if period == "whenever":
