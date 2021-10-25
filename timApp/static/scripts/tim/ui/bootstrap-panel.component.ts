@@ -39,3 +39,25 @@ export class BootstrapPanelComponent {
         this.closed.emit();
     }
 }
+
+@Component({
+    selector: "bootstrap-form-panel",
+    template: `
+        <bootstrap-panel [severity]="severity" [show]="show" [showClose]="showClose" [title]="title" [titleTemplate]="titleTemplate" (closed)="closed.emit($event)">
+            <form>
+                <fieldset [disabled]="disabled">
+                    <ng-content></ng-content>
+                </fieldset>
+            </form>
+        </bootstrap-panel>
+    `,
+})
+export class BootstrapFormPanelComponent {
+    @Input() disabled: boolean = false;
+    @Input() severity?: AlertSeverity;
+    @Output() closed = new EventEmitter<void>();
+    @Input() show?: boolean;
+    @Input() showClose?: boolean;
+    @Input() title?: string;
+    @Input() titleTemplate?: TemplateRef<unknown>;
+}

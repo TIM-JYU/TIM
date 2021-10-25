@@ -21,10 +21,18 @@ export interface IUserListEntry {
     user: IUser;
 }
 
+export enum ContactOrigin {
+    Custom = 1,
+    Sisu = 2,
+    Haka = 3,
+}
+
 export interface IUserContact {
     channel: Channel;
     contact: string;
     verified: boolean;
+    origin: ContactOrigin;
+    primary: boolean;
 }
 
 export interface IFullUser extends IUser {

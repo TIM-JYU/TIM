@@ -9,6 +9,7 @@ from flask import current_app
 from sqlalchemy import func
 from sqlalchemy.orm import Query, joinedload, defaultload
 from sqlalchemy.orm.collections import attribute_mapped_collection
+from sqlalchemy.orm.strategy_options import loader_option
 
 from timApp.answer.answer import Answer
 from timApp.answer.answer_models import UserAnswer
@@ -22,6 +23,7 @@ from timApp.folder.folder import Folder
 from timApp.item.block import Block
 from timApp.item.item import ItemBase
 from timApp.lecture.lectureusers import LectureUsers
+from timApp.messaging.messagelist.listinfo import Channel
 from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessageReadReceipt,
 )
@@ -40,6 +42,7 @@ from timApp.user.special_group_names import (
     LOGGED_IN_GROUPNAME,
     SPECIAL_USERNAMES,
 )
+from timApp.user.usercontact import UserContact, PrimaryContact, ContactOrigin
 from timApp.user.usergroup import (
     UserGroup,
     get_logged_in_group_id,
@@ -166,6 +169,15 @@ class UserOrigin(Enum):
     Google = 8
     Twitter = 9
 
+    def to_contact_origin(self):
+        if self == UserOrigin.Email:
+            return ContactOrigin.Custom
+        elif self == UserOrigin.Korppi or self == UserOrigin.Haka:
+            return ContactOrigin.Haka
+        elif self == UserOrigin.Sisu:
+            return ContactOrigin.Sisu
+        return ContactOrigin.Custom
+
 
 @dataclass
 class UserInfo:
@@ -255,6 +267,15 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     internalmessage_readreceipt: Optional[InternalMessageReadReceipt] = db.relationship(
         "InternalMessageReadReceipt", back_populates="user"
+    )
+
+    primary_email_contact = db.relationship(
+        UserContact,
+        primaryjoin=(id == UserContact.user_id)
+        & (UserContact.primary == PrimaryContact.true)
+        & (UserContact.channel == Channel.EMAIL),
+        lazy="select",
+        uselist=False,
     )
 
     @property
@@ -415,7 +436,17 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             pass_=p_hash,
             origin=info.origin,
         )
+        primary_email = UserContact(
+            user=user,
+            contact=info.email,
+            contact_origin=info.origin.to_contact_origin()
+            if info.origin
+            else ContactOrigin.Custom,
+            primary=PrimaryContact.true,
+            channel=Channel.EMAIL,
+        )
         db.session.add(user)
+        db.session.add(primary_email)
         user.set_unique_codes(info.unique_codes)
         group = UserGroup.create(info.username)
         user.groups.append(group)
@@ -612,6 +643,28 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if sync_mailing_lists:
             sync_message_list_on_add(self, ug)
         return new_add
+
+    def get_contact(
+        self,
+        channel: Channel,
+        contact: str,
+        options: Optional[list[loader_option]] = None,
+    ) -> Optional[UserContact]:
+        """Find user's contact by channel and contact contents.
+
+        :param channel: Contact channel.
+        :param contact: Contact contents.
+        :param options: Additional DB load options.
+        :return: UserContact if found, otherwise None.
+        """
+        q = UserContact.query.filter(
+            (UserContact.user == self)
+            & (UserContact.channel == channel)
+            & (UserContact.contact == contact)
+        )
+        if options:
+            q = q.options(*options)
+        return q.first()
 
     @staticmethod
     def get_scimuser() -> "User":

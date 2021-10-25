@@ -129,3 +129,11 @@
     margin-right: 0.5em;
   }
 }
+
+div.small {
+  margin-top: 0.5em;
+
+  & > p:last-child {
+    margin-bottom: 0;
+  }
+}

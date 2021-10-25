@@ -7,6 +7,7 @@ import {DialogModule} from "../ui/angulardialog/dialog.module";
 import {to2} from "../util/utils";
 import {Channel} from "../messaging/listOptionTypes";
 import {TimUtilityModule} from "../ui/tim-utility.module";
+import {ContactOrigin, IUserContact} from "./IUser";
 
 /**
  * User can add additional contact information to be stored in TIM.
@@ -60,7 +61,7 @@ import {TimUtilityModule} from "../ui/tim-utility.module";
     `,
 })
 export class AddContactDialogComponent extends AngularDialogComponent<
-    unknown,
+    {onAdd: (contact: IUserContact) => void},
     void
 > {
     dialogName: string = "Add new contact information";
@@ -99,6 +100,13 @@ export class AddContactDialogComponent extends AngularDialogComponent<
         if (result.ok) {
             this.verificationSent = result.result.requireVerification;
             this.saved = true;
+            this.data.onAdd({
+                channel: this.chosenChannel!,
+                contact: this.contactInfo!,
+                verified: false,
+                origin: ContactOrigin.Custom,
+                primary: false,
+            });
         } else {
             this.addError = result.result.error.error;
         }

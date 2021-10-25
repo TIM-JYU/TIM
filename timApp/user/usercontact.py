@@ -1,5 +1,30 @@
+from enum import Enum
+from typing import Optional, TYPE_CHECKING
+
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.timdb.sqa import db
+
+import timApp.user.user as user
+
+
+class ContactOrigin(Enum):
+    """Indicates what system added the contact to the user.
+
+    The system is also responsible for managing the contact.
+    """
+
+    Custom = 1
+    Sisu = 2
+    Haka = 3
+
+
+class PrimaryContact(Enum):
+    """Whether the contact is primary.
+
+    Enum should have only one value which is used to enforce the unique constraint.
+    """
+
+    true = True
 
 
 class UserContact(db.Model):
@@ -10,8 +35,20 @@ class UserContact(db.Model):
     __table_args__ = (
         # A user should not have the same contact for the channel
         # Different users are fine though
+        db.UniqueConstraint("user_id", "contact", "channel", name="user_contact_uc"),
+        # The same user cannot have multiple primary contacts for the same channel
         db.UniqueConstraint(
-            "user_id", "contact", "channel", name="unique_user_contact_constraint"
+            "user_id",
+            "channel",
+            "primary",
+            name="user_primary_contact_uc",
+        ),
+        # Multiple users cannot have the same contact as primary
+        db.UniqueConstraint(
+            "channel",
+            "contact",
+            "primary",
+            name="all_users_primary_contact_uc",
         ),
     )
 
@@ -26,19 +63,31 @@ class UserContact(db.Model):
     channel = db.Column(db.Enum(Channel), nullable=False)
     """Channel the contact information points to."""
 
-    verified = db.Column(db.Boolean, nullable=False)
-    """The user has to verify they are in the possession of the contact information.
+    verified = db.Column(db.Boolean, nullable=False, default=False)
+    """Whether this contact info is verified by the user.
     
-    For a value of False, this means that a user has made a claim for a contact info, but has not yet verified it's 
-    ownership. """
+    If False, the user has made a claim for a contact info, but has not yet verified it's ownership."""
+
+    primary = db.Column(db.Enum(PrimaryContact))
+    """Whether the contact is primary for the user"""
+
+    contact_origin: ContactOrigin = db.Column(db.Enum(ContactOrigin), nullable=False)
+    """How the contact was added."""
 
     user = db.relationship("User", back_populates="contacts", lazy="select")
-    """User that the contact is associated with.
-    """
+    """User that the contact is associated with."""
+
+    _verifications = db.relationship(
+        "ContactAddVerification",
+        back_populates="contact",
+        cascade="all, delete-orphan",
+    )
 
     def to_json(self) -> dict:
         return {
             "contact": self.contact,
             "channel": self.channel,
             "verified": self.verified,
+            "origin": self.contact_origin,
+            "primary": self.primary == PrimaryContact.true,
         }

@@ -1,6 +1,6 @@
 """Routes for settings view."""
 from dataclasses import field
-from typing import Any, Optional
+from typing import Any
 
 from flask import render_template, session, flash, Response
 from flask import request
@@ -22,7 +22,7 @@ from timApp.user.consentchange import ConsentChange
 from timApp.user.preferences import Preferences
 from timApp.user.settings.theme import get_available_themes
 from timApp.user.user import User, Consent, get_owned_objects_query
-from timApp.user.usercontact import UserContact
+from timApp.user.usercontact import UserContact, ContactOrigin, PrimaryContact
 from timApp.user.verification.verification import (
     ContactAddVerification,
     request_verification,
@@ -34,6 +34,8 @@ from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import is_valid_email
 
 settings_page = TypedBlueprint("settings_page", __name__, url_prefix="/settings")
+contacts = TypedBlueprint("contacts", __name__, url_prefix="/contacts")
+settings_page.register_blueprint(contacts)
 
 
 @settings_page.before_request
@@ -198,11 +200,11 @@ def delete_account() -> Response:
     return ok_response()
 
 
-@settings_page.post("/contacts/add")
-def add_contact_info(
+@contacts.post("/add")
+def add_contact(
     contact_info: str, contact_info_type: Channel = field(metadata={"by_value": True})
 ) -> Response:
-    """Add a new contact information for a TIM user.
+    """Add a new contact information for current user.
 
     :param contact_info_type: The channel user wishes to add a new contact information.
     :param contact_info: The contact information.
@@ -211,14 +213,10 @@ def add_contact_info(
     verify_logged_in()
     user = get_current_user_object()
     # Check for duplicate contact information.
-    existing_contact_info: Optional[UserContact] = (
-        UserContact.query.filter(
-            (UserContact.user == user)
-            & (UserContact.channel == contact_info_type)
-            & (UserContact.contact == contact_info)
-        )
-        .options(load_only(UserContact.id, UserContact.verified))
-        .first()
+    existing_contact_info = user.get_contact(
+        contact_info_type,
+        contact_info,
+        [load_only(UserContact.id, UserContact.verified)],
     )
 
     if existing_contact_info:
@@ -238,10 +236,78 @@ def add_contact_info(
             raise RouteException("Email format is invalid")
 
         uc = UserContact(
-            user=user, contact=contact_info, channel=Channel.EMAIL, verified=False
+            user=user,
+            contact=contact_info,
+            channel=Channel.EMAIL,
+            verified=False,
+            contact_origin=ContactOrigin.Custom,
         )
         db.session.add(uc)
         request_verification(ContactAddVerification(user=user, contact=uc))
 
     db.session.commit()
     return json_response({"requireVerification": require_verification})
+
+
+@contacts.post("/remove")
+def remove_contact(
+    contact_info: str, contact_info_type: Channel = field(metadata={"by_value": True})
+) -> Response:
+    """Remove a contact information from current user.
+
+    :param contact_info_type: The channel user wishes to add a new contact information.
+    :param contact_info: The contact information.
+    :return: OK response.
+    """
+    verify_logged_in()
+    user = get_current_user_object()
+
+    if contact_info_type == Channel.EMAIL and user.email == contact_info:
+        raise RouteException("Cannot remove primary email")
+
+    existing_contact_info = user.get_contact(
+        contact_info_type,
+        contact_info,
+        [load_only(UserContact.id)],
+    )
+
+    if not existing_contact_info:
+        raise RouteException("The contact does not exist for the user")
+
+    db.session.delete(existing_contact_info)
+    db.session.commit()
+    return ok_response()
+
+
+@contacts.post("/primary")
+def set_primary(
+    contact: str, channel: Channel = field(metadata={"by_value": True})
+) -> Response:
+    """Set the primary contact.
+
+    :param contact: Primary contact value.
+    :param channel: Primary contact channel.
+    :return: OK response.
+    """
+    verify_logged_in()
+    user = get_current_user_object()
+
+    existing_contact_info = user.get_contact(
+        channel,
+        contact,
+        [load_only(UserContact.id, UserContact.contact, UserContact.primary)],
+    )
+
+    if not existing_contact_info:
+        raise RouteException("The contact does not exist for the user")
+
+    if existing_contact_info.primary:
+        return ok_response()
+
+    user.primary_email_contact.primary = None
+    db.session.flush()
+    existing_contact_info.primary = PrimaryContact.true
+    user.email = existing_contact_info.contact
+    db.session.commit()
+
+    return ok_response()
