@@ -25,7 +25,9 @@
 /timApp/auth/saml/prod/new/
 /timApp/messages.xlf
 # Outdated folder
-/timApp/modules/cs/jypeli/
+/timApp/modules/cs/jypeli/*
+# Temporarily restore
+!/timApp/modules/cs/jypeli/cs_test_tester.py
 /timApp/modules/cs/data/
 /timApp/modules/cs/generated
 /timApp/modules/cs/java/cs/ComTest.jar
