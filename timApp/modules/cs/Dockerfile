@@ -273,7 +273,7 @@ RUN R -e 'install.packages(c("mvtnorm", "fICA", "JADE", "clue", "Rcpp", "RcppArm
 RUN bash -c "${APT_INSTALL} bsdmainutils iputils-ping && ${APT_CLEANUP}"
 
 # Kotlin
-ENV         KOTLIN_VERSION=1.5.21 \
+ENV         KOTLIN_VERSION=1.5.31 \
             KOTLIN_HOME=/usr/local/kotlin
 
 RUN         cd  /tmp && \
