@@ -15,6 +15,7 @@ import {
     fromParents,
     tryCreateParContextOrHelp,
 } from "tim/document/structure/create";
+import {HelpPar} from "tim/document/structure/helpPar";
 import {IItem} from "../item/IItem";
 import {Users} from "../user/userService";
 import {$http, $log, $timeout} from "../util/ngimport";
@@ -126,11 +127,16 @@ let readPromise: IPromise<unknown> | null = null;
 let readingParId: string | undefined;
 
 function queueParagraphForReading() {
+    // Filter out yet unprocessed paragraphs because section builder might not yet been run
+    const isRead = (
+        e: HelpPar | ParContext | undefined
+    ): e is HelpPar | ParContext =>
+        e !== undefined && !e.isHelp && isAlreadyRead(e, ReadingType.OnScreen);
     const visiblePars = $(".par:not('.preamble')")
         .filter((i, e) => isInViewport(e))
         .toArray()
-        .map((e) => createParContextOrHelp(e))
-        .filter((e) => !e.isHelp && isAlreadyRead(e, ReadingType.OnScreen));
+        .map((e) => tryCreateParContextOrHelp(e))
+        .filter(isRead);
     if (visiblePars.length === 0) {
         return;
     }
