@@ -24,7 +24,7 @@ import {
     settingsglobals,
 } from "../util/globals";
 import {IOkResponse, timeout, to2} from "../util/utils";
-import {IFullUser, IUserContact} from "./IUser";
+import {ContactOrigin, IFullUser, IUserContact} from "./IUser";
 
 @Component({
     selector: "settings-button-panel",
@@ -55,6 +55,25 @@ export class UserSettingsComponent {}
 
 const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
     [Channel.EMAIL]: $localize`Emails`,
+};
+
+interface ContactOriginInfo {
+    bgColor: string;
+    textColor: string;
+    name: string;
+}
+
+const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
+    [ContactOrigin.Haka]: {
+        bgColor: "#9A0052",
+        textColor: "#FFFFFF",
+        name: "HAKA",
+    },
+    [ContactOrigin.Sisu]: {
+        bgColor: "#3D3D3D",
+        textColor: "#FFFFFF",
+        name: "SISU",
+    },
 };
 
 @Component({
@@ -93,12 +112,14 @@ const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
             <bootstrap-form-panel [disabled]="saving" title="Editor">
                 <div class="checkbox">
                     <label>
-                        <input type="checkbox" name="use_document_word_list" [(ngModel)]="settings.use_document_word_list">
+                        <input type="checkbox" name="use_document_word_list"
+                               [(ngModel)]="settings.use_document_word_list">
                         Use words from the document in ACE editor autocomplete
                     </label>
                 </div>
                 <label>ACE editor additional word list for autocomplete (1 word per line)
-                    <textarea rows="15" class="form-control" name="word_list" [(ngModel)]="settings.word_list"></textarea>
+                    <textarea rows="15" class="form-control" name="word_list"
+                              [(ngModel)]="settings.word_list"></textarea>
                 </label>
                 <settings-button-panel [saved]="submit"></settings-button-panel>
             </bootstrap-form-panel>
@@ -216,6 +237,10 @@ const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
                             <p>
                                 Primary email is used to send you notifications and message list messages.
                             </p>
+                            <p *ngIf="contactOrigins[primaryEmail.origin]; let originInfo">
+                                This email is managed by <strong [style.color]="originInfo.bgColor">{{originInfo.name}}</strong>.
+                                The address will be automatically updated by the system.
+                            </p>
                         </div>
                     </div>
                     <ng-container *ngFor="let entry of userContactEntries">
@@ -223,9 +248,15 @@ const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
                         <div class="contact-collection">
                             <div class="contact-info" *ngFor="let contact of entry[1]">
                                 <input type="text" class="form-control" [value]="contact.contact" disabled>
-                                <span *ngIf="contact.primary"
+                                <span title="You will receive any TIM mail to this address." *ngIf="contact.primary"
                                       class="primary-badge">Primary</span>
-                                <span *ngIf="contact.verified" class="verified-badge">Verified</span>
+                                <span *ngIf="contactOrigins[contact.origin]; let originInfo"
+                                      title="This email is managed by {{originInfo.name}}. You cannot delete managed contacts yourself."
+                                      [style.backgroundColor]="originInfo.bgColor"
+                                      [style.color]="originInfo.textColor">{{originInfo.name}}</span>
+                                <span title="This email is verified to be owned by you."
+                                      *ngIf="contact.verified"
+                                      class="verified-badge">Verified</span>
                                 <button *ngIf="!contact.verified" class="btn btn-default"
                                         (click)="resendVerification(contact)"
                                         [disabled]="verificationSentSet.has(contact)">
@@ -238,7 +269,7 @@ const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
                                     </ng-template>
                                 </button>
                                 <button class="btn btn-danger" type="button"
-                                        [disabled]="contact.primary"
+                                        [disabled]="contact.primary || contactOrigins[contact.origin]"
                                         (click)="deleteContact(contact)">
                                     <i class="glyphicon glyphicon-trash"></i>
                                 </button>
@@ -290,6 +321,7 @@ export class SettingsComponent implements DoCheck {
     primaryEmail!: IUserContact;
     channelNames = EDITABLE_CONTACT_CHANNELS;
     verificationSentSet = new Set<IUserContact>();
+    contactOrigins = CONTACT_ORIGINS;
     private readonly style: HTMLStyleElement;
     private readonly consent: ConsentType | undefined;
     private allNotificationsFetched = false;
