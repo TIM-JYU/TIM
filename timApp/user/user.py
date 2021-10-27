@@ -436,17 +436,18 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             pass_=p_hash,
             origin=info.origin,
         )
-        primary_email = UserContact(
-            user=user,
-            contact=info.email,
-            contact_origin=info.origin.to_contact_origin()
-            if info.origin
-            else ContactOrigin.Custom,
-            primary=PrimaryContact.true,
-            channel=Channel.EMAIL,
-        )
+        if info.email:
+            primary_email = UserContact(
+                user=user,
+                contact=info.email,
+                contact_origin=info.origin.to_contact_origin()
+                if info.origin
+                else ContactOrigin.Custom,
+                primary=PrimaryContact.true,
+                channel=Channel.EMAIL,
+            )
+            db.session.add(primary_email)
         db.session.add(user)
-        db.session.add(primary_email)
         user.set_unique_codes(info.unique_codes)
         group = UserGroup.create(info.username)
         user.groups.append(group)
