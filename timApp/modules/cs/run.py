@@ -283,7 +283,6 @@ def run2(
             "rcmd.sh",
             "cpp",
             "java",
-            "jypeli",
             "dotnet",
             "doxygen",
             "mathcheck",

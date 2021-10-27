@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-# import yaml
-# from yaml import CLoader, YAMLError
+# NUnit test validator for csplugin tasks
 import json
+import os
 import re
 import sys
-from subprocess import Popen, PIPE
-from subprocess import call
+from subprocess import Popen, PIPE, call, DEVNULL
 
 
 def replace_all(lines, s1, s2):
@@ -80,6 +79,11 @@ def count_points(lines, test):
         for tst in t.get("bycalls", []):
             name = tst.get("name", "XXXX")
             result = tst.get("result", "XXXX")
+            # NUnit 3 uses "Passed" instead of "Success" and "Failed" instead of "Failure"
+            if result == "Success":
+                result = "Passed"
+            elif result == "Failure":
+                result = "Failed"
             expl = tst.get("expl", "???")
             pts = tst.get("pts", 1)
             line = [s for s in lines if s.find(name) >= 0]
@@ -92,7 +96,7 @@ def count_points(lines, test):
                     i = line.find('"')
                     if i >= 0:
                         line = line[:i]
-                        if line == result:
+                        if line == result or line:
                             p += pts
                         else:
                             pts = tst.get("wrong", 0)
@@ -120,6 +124,18 @@ def scale_points(pts, points):
     return p
 
 
+GLOBAL_NUGET_PACKAGES_PATH = "/cs/dotnet/nuget_cache"
+
+
+def get_build_refs(ref_type):
+    with open(f"/cs/dotnet/configs/{ref_type}.build.deps", encoding="utf-8") as f:
+        dep_paths = [
+            os.path.join(GLOBAL_NUGET_PACKAGES_PATH, dep_line.strip())
+            for dep_line in f.readlines()
+        ]
+        return [f"-r:{p}" for p in dep_paths]
+
+
 def main():
     filename = sys.argv[1]
     filename2 = sys.argv[2]
@@ -142,34 +158,50 @@ def main():
     replace_tests(lines, instructions.get("test", None))
 
     # print("".join(lines))
+    # print(insert)
 
     f = open(filename3, "w")
     f.writelines(lines)
     if insert:
         f.write(insert)
     f.close()
-    # ret = call("echo Hello World", shell=True)
     ret = call(
-        "csc /nologo /out:"
-        + filename3
-        + ".dll /target:library /r:System.Numerics.dll "
-        + "/reference:/usr/lib/mono/gac/nunit.framework/2.6.4.0__96d09a1eb7f44a77/nunit.framework.dll "
-        + filename3,
-        shell=True,
+        [
+            "/cs/dotnet/csc",
+            "-nologo",
+            f"-out:{filename3}.dll",
+            "-target:library",
+            *get_build_refs("nunit_test"),
+            *get_build_refs("jypeli"),
+            filename3,
+        ]
     )
     # print(ret)
-    # ret = call("nunit-console -nologo -nodots " + filename3 + ".dll", shell=True)
     if ret != 0:
         print("Testikoodi ei käänny")
         return
 
-    ## ret = call("nunit-console -nologo -xmlConsole " + filename3 + ".dll", shell=True)
-    args = ["nunit-console", "-nologo", "-xmlConsole", filename3 + ".dll"]
-    # args = ["nunit-console", filename3 + ".dll"]
-    p = Popen(args, shell=False, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = p.communicate(timeout=20)
+    args = [
+        "dotnet",
+        "exec",
+        "--runtimeconfig",
+        "/cs/dotnet/runtimeconfig.json",
+        "--additional-deps",
+        "/cs/dotnet/configs/jypeli.deps.json:/cs/dotnet/configs/nunit_test.deps.json",
+        "--roll-forward",
+        "LatestMajor",  # Force to use latest available .NET
+        "/dotnet_tools/nunit.console.dll",
+        "--noheader",
+        "--nocolor",
+        f"{filename3}.dll",
+    ]
+    ret = call(args, stdout=DEVNULL, stderr=DEVNULL, timeout=20)
 
-    xml = stdout.decode().split("\n")
+    # https://docs.nunit.org/articles/nunit/running-tests/Console-Runner.html
+    if ret < 0:
+        print("Testikoodia ei voi ajaa")
+
+    xml = open("TestResult.xml", "r").readlines()
     # print("\n".join(xml))
 
     points = count_points(xml, instructions.get("test", None))
