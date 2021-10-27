@@ -194,6 +194,7 @@ export interface ISettingsGlobals extends IGenericGlobals {
 export enum VerificationType {
     LIST_JOIN = "list",
     CONTACT_OWNERSHIP = "contact",
+    SET_PRIMARY_CONTACT = "set_primary_contact",
 }
 
 export interface IVerificationGlobals extends IGenericGlobals {

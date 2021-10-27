@@ -82,7 +82,11 @@ from timApp.user.usercontact import UserContact
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupdoc import UserGroupDoc
 from timApp.user.usergroupmember import UserGroupMember
-from timApp.user.verification.verification import Verification, ContactAddVerification
+from timApp.user.verification.verification import (
+    Verification,
+    ContactAddVerification,
+    SetPrimaryContactVerification,
+)
 from timApp.util.flask.filters import (
     map_format,
     timdate,
@@ -127,6 +131,7 @@ all_models = (
     CommentNotification,
     ConsentChange,
     ContactAddVerification,
+    SetPrimaryContactVerification,
     DocEntry,
     DocumentNotification,
     Folder,

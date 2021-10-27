@@ -27,6 +27,7 @@ from timApp.user.verification.verification import (
     ContactAddVerification,
     request_verification,
     resend_verification,
+    SetPrimaryContactVerification,
 )
 from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
@@ -224,7 +225,9 @@ def add_contact(
         if existing_contact_info.verified:
             raise RouteException("The contact is already added")
         resend_verification(
-            ContactAddVerification.query.filter_by(contact=existing_contact_info).one()
+            ContactAddVerification.query.filter_by(
+                contact=existing_contact_info, reacted_at=None
+            ).one()
         )
         return json_response({"requireVerification": False})
 
@@ -292,22 +295,37 @@ def set_primary(
     verify_logged_in()
     user = get_current_user_object()
 
-    existing_contact_info = user.get_contact(
+    existing_contact = user.get_contact(
         channel,
         contact,
         [load_only(UserContact.id, UserContact.contact, UserContact.primary)],
     )
 
-    if not existing_contact_info:
+    if not existing_contact:
         raise RouteException("The contact does not exist for the user")
 
-    if existing_contact_info.primary:
-        return ok_response()
+    if existing_contact.primary:
+        json_response({"verify": False})
 
-    user.primary_email_contact.primary = None
-    db.session.flush()
-    existing_contact_info.primary = PrimaryContact.true
-    user.email = existing_contact_info.contact
+    existing_verification = SetPrimaryContactVerification.query.filter_by(
+        contact=existing_contact,
+        reacted_at=None,
+    ).first()
+    if existing_verification:
+        resend_verification(existing_verification)
+        return json_response({"verify": True})
+
+    current_primary = user.primary_email_contact
+    need_verify = False
+
+    if not current_primary:
+        existing_contact.primary = PrimaryContact.true
+        user.email = existing_contact.contact
+    else:
+        request_verification(
+            SetPrimaryContactVerification(user=user, contact=existing_contact)
+        )
+        need_verify = True
+
     db.session.commit()
-
-    return ok_response()
+    return json_response({"verify": need_verify})

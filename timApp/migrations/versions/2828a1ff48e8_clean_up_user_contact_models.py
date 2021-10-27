@@ -16,7 +16,9 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 channel_enum = sa.Enum("TIM_MESSAGE", "EMAIL_LIST", name="channel")
-verification_type = sa.Enum("LIST_JOIN", "CONTACT_OWNERSHIP", name="verificationtype")
+verification_type = sa.Enum(
+    "LIST_JOIN", "CONTACT_OWNERSHIP", "SET_PRIMARY_CONTACT", name="verificationtype"
+)
 contact_origin = sa.Enum("Custom", "Sisu", "Haka", name="contactorigin")
 primary_contact = sa.Enum("true", name="primarycontact")
 user_to_contact_origin = {
@@ -93,6 +95,9 @@ def upgrade():
         # and leave the existing one in, to ensure that downgrades can be done safely.
         op.execute(
             """ALTER TYPE verificationtype ADD VALUE IF NOT EXISTS 'CONTACT_OWNERSHIP'"""
+        )
+        op.execute(
+            """ALTER TYPE verificationtype ADD VALUE IF NOT EXISTS 'SET_PRIMARY_CONTACT'"""
         )
 
     # Copy users' emails to primary contacts

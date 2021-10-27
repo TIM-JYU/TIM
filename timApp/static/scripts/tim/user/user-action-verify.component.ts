@@ -49,7 +49,7 @@ abstract class InfoComponentBase<A> implements OnInit {
     }
 }
 
-const ConstactOwnershipMarkup = t.type({
+const ContactInfoMarkup = t.type({
     channel: t.string,
     contact: t.string,
 });
@@ -74,12 +74,34 @@ const TYPE_NAMES: Record<ContactChannels, string> = {
     `,
 })
 export class ContactOwnershipInfoComponent
-    extends InfoComponentBase<t.TypeOf<typeof ConstactOwnershipMarkup>>
+    extends InfoComponentBase<t.TypeOf<typeof ContactInfoMarkup>>
     implements OnInit {
     contactType!: string;
 
     get infoType() {
-        return ConstactOwnershipMarkup;
+        return ContactInfoMarkup;
+    }
+
+    ngOnInit() {
+        super.ngOnInit();
+
+        this.contactType = TYPE_NAMES[this.info.channel as ContactChannels];
+    }
+}
+
+@Component({
+    selector: "set-primary-contact-info",
+    template: `
+        <p i18n><strong><code>{{info.contact}}</code></strong> will be made your primary {{contactType.toLowerCase()}}.</p>
+    `,
+})
+export class SetPrimaryContactInfoComponent
+    extends InfoComponentBase<t.TypeOf<typeof ContactInfoMarkup>>
+    implements OnInit {
+    contactType!: string;
+
+    get infoType() {
+        return ContactInfoMarkup;
     }
 
     ngOnInit() {
@@ -92,6 +114,7 @@ export class ContactOwnershipInfoComponent
 const INFO_MAP: Record<VerificationType, Type<unknown> | undefined> = {
     [VerificationType.LIST_JOIN]: undefined,
     [VerificationType.CONTACT_OWNERSHIP]: ContactOwnershipInfoComponent,
+    [VerificationType.SET_PRIMARY_CONTACT]: SetPrimaryContactInfoComponent,
 };
 
 @Component({
@@ -186,7 +209,11 @@ export class UserActionVerifyComponent implements AfterViewInit {
 }
 
 @NgModule({
-    declarations: [UserActionVerifyComponent, ContactOwnershipInfoComponent],
+    declarations: [
+        UserActionVerifyComponent,
+        ContactOwnershipInfoComponent,
+        SetPrimaryContactInfoComponent,
+    ],
     exports: [UserActionVerifyComponent],
     imports: [BrowserModule, TimUtilityModule, HttpClientModule],
 })

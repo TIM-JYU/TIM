@@ -16,6 +16,7 @@ import {createDowngradedModule, doDowngrade} from "tim/downgrade";
 import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
+import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {ConsentType} from "../ui/consent";
 import {
     ICssFile,
@@ -234,6 +235,9 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                             </ng-container>
                         </select>
                         <div class="small">
+                            <strong class="text-success" *ngIf="primaryChangeVerificationSent">
+                                A verification email was sent to the current primary email.
+                            </strong>
                             <p>
                                 Primary email is used to send you notifications and message list messages.
                             </p>
@@ -322,6 +326,7 @@ export class SettingsComponent implements DoCheck {
     channelNames = EDITABLE_CONTACT_CHANNELS;
     verificationSentSet = new Set<IUserContact>();
     contactOrigins = CONTACT_ORIGINS;
+    primaryChangeVerificationSent = false;
     private readonly style: HTMLStyleElement;
     private readonly consent: ConsentType | undefined;
     private allNotificationsFetched = false;
@@ -404,6 +409,7 @@ export class SettingsComponent implements DoCheck {
     };
 
     saveUserAccountInfo = async () => {
+        this.primaryChangeVerificationSent = false;
         if (this.user.email == this.primaryEmail.contact) {
             return;
         }
@@ -411,7 +417,7 @@ export class SettingsComponent implements DoCheck {
         this.saving = true;
         const r = await to2(
             this.http
-                .post("/settings/contacts/primary", {
+                .post<{verify: boolean}>("/settings/contacts/primary", {
                     contact: this.primaryEmail.contact,
                     channel: this.primaryEmail.channel,
                 })
@@ -419,8 +425,13 @@ export class SettingsComponent implements DoCheck {
         );
         this.saving = false;
 
-        if (r.ok) {
+        if (r.ok && r.result.verify) {
             this.user.email = this.primaryEmail.contact;
+            this.primaryChangeVerificationSent = true;
+        } else if (!r.ok) {
+            await showMessageDialog(
+                `Failed to change the primary email: ${r.result.error.error}`
+            );
         }
     };
 
@@ -581,7 +592,13 @@ export class SettingsComponent implements DoCheck {
         SettingsButtonPanelComponent,
     ],
     exports: [SettingsComponent],
-    imports: [BrowserModule, TimUtilityModule, HttpClientModule, FormsModule],
+    imports: [
+        BrowserModule,
+        TimUtilityModule,
+        HttpClientModule,
+        FormsModule,
+        TooltipModule.forRoot(),
+    ],
 })
 export class SettingsModule implements DoBootstrap {
     ngDoBootstrap(appRef: ApplicationRef): void {}

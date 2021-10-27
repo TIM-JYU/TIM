@@ -1,10 +1,7 @@
 from enum import Enum
-from typing import Optional, TYPE_CHECKING
 
 from timApp.messaging.messagelist.listinfo import Channel
 from timApp.timdb.sqa import db
-
-import timApp.user.user as user
 
 
 class ContactOrigin(Enum):

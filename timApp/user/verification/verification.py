@@ -7,7 +7,8 @@ from flask import render_template_string, url_for
 
 from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
-from timApp.user.usercontact import UserContact
+from timApp.user.user import User
+from timApp.user.usercontact import UserContact, PrimaryContact
 from timApp.util.utils import get_current_time
 
 VERIFICATION_TOKEN_LEN = 32
@@ -20,6 +21,8 @@ class VerificationType(Enum):
     """Add user to the message list."""
     CONTACT_OWNERSHIP = "contact"
     """Add a new contact to the user."""
+    SET_PRIMARY_CONTACT = "set_primary_contact"
+    """Set a primary contact."""
 
     @staticmethod
     @cache
@@ -36,6 +39,7 @@ class VerificationType(Enum):
 VERIFICATION_TEMPLATES = {
     VerificationType.CONTACT_OWNERSHIP: "settings/verify-templates/contact",
     VerificationType.LIST_JOIN: None,
+    VerificationType.SET_PRIMARY_CONTACT: None,
 }
 
 
@@ -60,7 +64,7 @@ class Verification(db.Model):
     reacted_at = db.Column(db.DateTime(timezone=True))
     """When the user reacted to verification request."""
 
-    user = db.relationship("User", lazy="select")
+    user: User = db.relationship("User", lazy="select")
     """User that can react to verification request."""
 
     def approve(self) -> None:
@@ -81,12 +85,13 @@ class ContactAddVerification(Verification):
     contact: Optional[UserContact] = db.relationship(
         "UserContact", lazy="select", uselist=False
     )
-    """Relationship to UserContact, to allow connecting without db flushing first."""
+    """Contact to verify."""
 
     def deny(self) -> None:
+        if not self.contact:
+            return
         db.session.delete(self.contact)
-        if self.contact:
-            self.contact = None
+        self.contact = None
 
     def approve(self) -> None:
         if self.contact:
@@ -102,6 +107,26 @@ class ContactAddVerification(Verification):
         }
 
     __mapper_args__ = {"polymorphic_identity": VerificationType.CONTACT_OWNERSHIP}
+
+
+class SetPrimaryContactVerification(ContactAddVerification):
+    def deny(self) -> None:
+        self.contact = None
+
+    def approve(self) -> None:
+        if not self.contact:
+            return
+        current_primary = UserContact.query.filter_by(
+            user_id=self.user_id,
+            channel=self.contact.channel,
+            primary=PrimaryContact.true,
+        ).first()
+        if current_primary:
+            current_primary.primary = None
+        self.contact.primary = PrimaryContact.true
+        User.query.filter_by(id=self.user_id).update({User.email: self.contact.contact})
+
+    __mapper_args__ = {"polymorphic_identity": VerificationType.SET_PRIMARY_CONTACT}
 
 
 def send_verification_impl(
