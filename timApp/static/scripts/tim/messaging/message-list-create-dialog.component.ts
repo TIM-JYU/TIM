@@ -36,7 +36,7 @@ type AnnotatedNameRequirements = Exclude<
 
 const NAME_RULES: Record<AnnotatedNameRequirements, string> = {
     [NameRequirements.NAME_LENGTH_BOUNDED]: $localize`Length: 5-36 characters`,
-    [NameRequirements.NO_FORBIDDEN_CHARS]: $localize`Allowed characters: letters A-z, numbers 0-9, dots, dash, underscore`,
+    [NameRequirements.NO_FORBIDDEN_CHARS]: $localize`Allowed characters: letters a-z, numbers 0-9, dots, dash, underscore`,
     [NameRequirements.MIN_ONE_DIGIT]: $localize`Has at least one digit`,
     [NameRequirements.START_WITH_LOWERCASE]: $localize`Begins with small letter`,
     [NameRequirements.NO_SEQUENTIAL_DOTS]: $localize`Must not have subsequent dots`,

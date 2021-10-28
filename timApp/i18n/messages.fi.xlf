@@ -1422,9 +1422,9 @@
           <context context-type="linenumber">38</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="2457232459769045276" datatype="html">
-        <source>Allowed characters: letters A-z, numbers 0-9, dots, dash, underscore</source>
-        <target state="translated">Sallitut merkit: kirjaimet A-z, numerot 0-9, pisteet, väliviivat, alaviivat</target>
+      <trans-unit id="4286454403065223342" datatype="html">
+        <source>Allowed characters: letters a-z, numbers 0-9, dots, dash, underscore</source>
+        <target state="translated">Sallitut merkit: kirjaimet a-z, numerot 0-9, pisteet, väliviivat, alaviivat</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/message-list-create-dialog.component.ts</context>
           <context context-type="linenumber">39</context>
