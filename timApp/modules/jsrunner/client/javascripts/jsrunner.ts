@@ -166,7 +166,8 @@ class JsrunnerController
                     );
                     if (this.attrs.autoUpdateTables) {
                         this.vctrl.updateAllTables(
-                            this.attrsall.markup.updateFields
+                            this.attrsall.markup.updateFields,
+                            this.getTaskId()
                         );
                     }
                 }

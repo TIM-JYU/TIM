@@ -343,6 +343,14 @@ export class TableFormComponent
     recipientList = "";
     loading = false;
 
+    get refreshScripts(): string[] {
+        return (
+            this.runScripts
+                ?.filter((s) => s.update && s.script)
+                ?.map((s) => s.script!) ?? []
+        );
+    }
+
     currentDocumentID() {
         return documentglobals().curr_item.id;
     }

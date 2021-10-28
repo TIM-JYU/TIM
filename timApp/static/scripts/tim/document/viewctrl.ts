@@ -1084,9 +1084,16 @@ export class ViewCtrl implements IController {
         //  currently it is assumed that caller used same groups as tableForm
         for (const table of this.tableForms.values()) {
             const taskId = table.getTaskId();
+            let updateAll = false;
             if (taskId) {
-                if (callerTaskId && callerTaskId == taskId) {
-                    continue;
+                if (callerTaskId) {
+                    if (callerTaskId == taskId) {
+                        continue;
+                    }
+                    const callerTaskIdStr = callerTaskId.docTaskField();
+                    updateAll = table.refreshScripts
+                        .map((s) => this.normalizeTaskId(s))
+                        .some((s) => s == callerTaskIdStr);
                 }
                 const tid = taskId.docTask();
                 const comptab = this.getTimComponentByName(tid.toString());
@@ -1094,7 +1101,7 @@ export class ViewCtrl implements IController {
                     continue;
                 }
             }
-            if (fields && fields.length > 0) {
+            if (fields && fields.length > 0 && !updateAll) {
                 void table.updateFields(fields);
             } else {
                 void table.updateTable();
