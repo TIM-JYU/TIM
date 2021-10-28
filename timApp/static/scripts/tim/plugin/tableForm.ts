@@ -656,6 +656,20 @@ export class TableFormComponent
         }
     }
 
+    async tryUpdateTable() {
+        const timTable = this.getTimTable();
+        if (timTable == null) {
+            return;
+        }
+        if (!timTable.isSomeCellBeingEdited()) {
+            // Can safely do a proper update with resetting filters
+            await this.forceUpdateTable();
+        } else {
+            // Only simple update to not break editor
+            await this.updateTable();
+        }
+    }
+
     /**
      * Clears tableForm rows and fetches new data to be put into rows
      * Basically just a reset

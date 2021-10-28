@@ -1075,7 +1075,7 @@ export class ViewCtrl implements IController {
         if (fields) {
             tableForm.updateFields(fields);
         } else {
-            tableForm.updateTable();
+            tableForm.tryUpdateTable();
         }
     }
 
@@ -1104,7 +1104,7 @@ export class ViewCtrl implements IController {
             if (fields && fields.length > 0 && !updateAll) {
                 void table.updateFields(fields);
             } else {
-                void table.updateTable();
+                void table.tryUpdateTable();
             }
         }
     }
