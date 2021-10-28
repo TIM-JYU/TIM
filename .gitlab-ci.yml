@@ -97,7 +97,7 @@ stats:
 
 jsrunner_lint:
   stage: lint
-  image: node:lts  # cannot use lts-slim here; some part of this requires Python
+  image: node:14  # cannot use lts-slim here; some part of this requires Python; use Node 14 because of old lockfile
   script:
   - cd timApp
   - npm install --unsafe-perm
@@ -107,7 +107,7 @@ jsrunner_lint:
 
 ts_format:
   stage: lint
-  image: node:lts-slim
+  image: node:14-slim # Use old Node temporarily because of old package versions
   script:
   - cd timApp
   - rm package-lock.json
