@@ -134,7 +134,10 @@ class MinutesHandling(BrowserTest):
 
 #- {rd="5" rp="PJxELAyKhZuu"}
 
-%%ALLEKIRJOITUKSET%%
+
+%%ALLEKIRJOITUKSET_ALKU%%
+
+%%olli_allekirjoitus%%
 """,
             ote1.document.export_markdown(export_ids=False),
         )
@@ -198,7 +201,7 @@ class MinutesHandling(BrowserTest):
                 "1.1.2 Arvostellut pro gradu –tutkielmat (liite B/ lista 1)",
                 "",
                 "Esitys\nTodetaan ilmoitusasiat.",
-                "",
+                "Olli Ollinen\nYliopistonopettaja",
             ],
         )
         plugins = ote_html.cssselect("tim-video")
@@ -397,6 +400,8 @@ Kauppatieteiden kandidaatin tutkinto: Toteutunut xx
 
 Todetaan ilmoitusasiat.
 
+Olli Ollinen\\
+Yliopistonopettaja
         """.strip(),
             ote1_tex,
         )
@@ -547,6 +552,16 @@ Arvostelu, tekstikappale 3.
 
 Tiedekuntaneuvosto arvostelee Jaska Jokusen väitöskirjan.
 
+Seppo Sepponen\\
+Opintopäällikkö
+
+\bigskip
+
+\hfill\break
+\hfill\break
+\hfill\break
+Olli Ollinen\\
+Yliopistonopettaja
         """.strip(),
             ote2_tex,
         )

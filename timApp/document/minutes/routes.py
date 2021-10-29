@@ -71,6 +71,7 @@ def create_minute_extracts(doc: str) -> Response:
     current_paragraphs = []
     current_extract_index = None
     current_extract_title = ""
+    current_extract_authors = []
 
     # we build a dict of the extracts first before creating any new files
     # for each extract, we need its list index / extract index, related paragraphs, and its title
@@ -80,6 +81,7 @@ def create_minute_extracts(doc: str) -> Response:
     # the rest of the document after the last occurence of the macro belong to the last extract
 
     markdown_to_find = "%%lista("
+    end_markdown = ")%%"
 
     for par in paragraphs:
 
@@ -92,20 +94,26 @@ def create_minute_extracts(doc: str) -> Response:
         if macro_position > -1:
             # if the extract macro exists in the current paragraph, figure out the extract index from the markdown
             # if we can't parse the extract index, just ignore the paragraph
-            comma_position = markdown.find(",", macro_position + len(markdown_to_find))
-            if comma_position == -1:
+            end_position = markdown.find(
+                end_markdown, macro_position + len(markdown_to_find)
+            )
+            if end_position == -1:
+                # Invalid par, just skip it
                 continue
-                # sometimes there's intentionally a macro without the extract index
-                # raise RouteException(f"Failed to parse extract index from macro, from paragraph: \n{markdown}")
+
+            args_str = markdown[macro_position + len(markdown_to_find) : end_position]
+            args = args_str.split(",")
+            if not args_str or not args:
+                continue
 
             try:
-                new_extract_index: Union[int, str] = ast.literal_eval(
-                    markdown[macro_position + len(markdown_to_find) : comma_position]
-                )
+                new_extract_index: Union[int, str] = ast.literal_eval(args[0])
             except ValueError:
                 raise RouteException(
                     f"Failed to parse extract index from macro, from paragraph: \n{markdown}"
                 )
+
+            new_extract_authors = [name.strip() for name in args[1:]]
 
             if current_extract_index is not None:
                 # if we were in another extract's paragraph before, save the previous extract's paragraphs into the dict
@@ -118,11 +126,13 @@ def create_minute_extracts(doc: str) -> Response:
                 extract_dict[current_extract_index] = (
                     current_extract_title,
                     current_paragraphs,
+                    current_extract_authors,
                 )
                 current_extract_title = ""
                 current_paragraphs = []
 
             current_extract_index = new_extract_index
+            current_extract_authors = new_extract_authors
 
         if current_extract_index is not None:
             # if the macro doesn't exist in the current paragraph but it existed in some previous paragraph,
@@ -155,6 +165,7 @@ def create_minute_extracts(doc: str) -> Response:
         extract_dict[current_extract_index] = (
             current_extract_title,
             current_paragraphs,
+            current_extract_authors,
         )
 
     if not extract_dict:
@@ -174,7 +185,7 @@ def create_minute_extracts(doc: str) -> Response:
     composite_paragraph = composite_docentry.document.add_paragraph("")
 
     # loop through the extracts and create new documents for them
-    for extract_number, (extract_title, paragraphs) in extract_dict.items():
+    for extract_number, (extract_title, paragraphs, authors) in extract_dict.items():
         if isinstance(extract_number, str):
             extract_number = extract_number.strip()
         docentry = create_or_get_and_wipe_document(
@@ -194,7 +205,17 @@ PÖYTÄKIRJANOTE - Lista {extract_number} -  {extract_title}
             docentry.document.add_paragraph_obj(
                 par.create_reference(docentry.document, add_rd=True)
             )
-        docentry.document.add_paragraph("%%ALLEKIRJOITUKSET%%")
+        signature_separator = "\n\\bigskip\n" + "\\\n" * 3
+        signature_names = signature_separator.join(
+            [f"%%{author}_allekirjoitus%%" for author in authors]
+        )
+        docentry.document.add_paragraph(
+            fr"""
+%%ALLEKIRJOITUKSET_ALKU%%
+
+{signature_names}
+"""
+        )
         docentry.update_last_modified()
 
         # add into the composite document a link leading to the new extract document

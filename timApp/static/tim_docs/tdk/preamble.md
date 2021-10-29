@@ -3,10 +3,34 @@ lazy: false
 macros:
    stampformat: Kokous {date} \newline LIITE {attachment} lista {issue}
    olli: 'Yliopistonopettaja Olli Ollinen, puh. 0400123456, [olli.ollinen@example.com](mailto:olli.ollinen@example.com)'
+   olli_allekirjoitus: |!!
+   Olli Ollinen\
+   Yliopistonopettaja
+   !!
+   
    seppo: 'Opintopäällikkö Seppo Sepponen puh. 0500123456, [seponasiat@example.com](mailto:seponasiat@example.com)'
+   seppo_allekirjoitus: |!!
+   Seppo Sepponen\
+   Opintopäällikkö
+   !!
+   
    olli2: 'Yliopistonopettaja Olli Ollinen2, puh. 0400123456, [olli.ollinen2@example.com](mailto:olli.ollinen2@example.com)'
+   olli2_allekirjoitus: |!!
+   Olli Ollinen2\
+   Yliopistonopettaja
+   !!
+   
    seppo2: 'Opintopäällikkö Seppo Sepponen2 puh. 0500123456, [seponasiat2@example.com](mailto:seponasiat2@example.com)'
+   seppo2_allekirjoitus: |!!
+   Seppo Sepponen2\
+   Opintopäällikkö
+   !!
+   
    seppo3: 'Opintopäällikkö Seppo Sepponen3 puh. 0500123456, [seponasiat3@example.com](mailto:seponasiat3@example.com)'
+   seppo3_allekirjoitus: |!!
+   Seppo Sepponen3\
+   Opintopäällikkö
+   !!
 editor_templates:
     templates:
        TDK:
