@@ -135,9 +135,9 @@ class MinutesHandling(BrowserTest):
 #- {rd="5" rp="PJxELAyKhZuu"}
 
 
-%%ALLEKIRJOITUKSET_ALKU%%
+%%OTE_ALLEKIRJOITUKSET()%%
 
-%%olli_allekirjoitus%%
+%%allekirjoitus(olli)%%
 """,
             ote1.document.export_markdown(export_ids=False),
         )
@@ -201,7 +201,7 @@ class MinutesHandling(BrowserTest):
                 "1.1.2 Arvostellut pro gradu –tutkielmat (liite B/ lista 1)",
                 "",
                 "Esitys\nTodetaan ilmoitusasiat.",
-                "Olli Ollinen\nYliopistonopettaja",
+                "Pöytäkirjanotteen vakuudeksi:\n\n\n\nOlli Ollinen\nYliopistonopettaja",
             ],
         )
         plugins = ote_html.cssselect("tim-video")
@@ -400,8 +400,19 @@ Kauppatieteiden kandidaatin tutkinto: Toteutunut xx
 
 Todetaan ilmoitusasiat.
 
+\bigskip
+
+\hfill\break
+\hfill\break
+\hfill\break
+\hfill\break
+Pöytäkirjanotteen vakuudeksi:
+
+\hfill\break
+\hfill\break
+\hfill\break
 Olli Ollinen\\
-Yliopistonopettaja
+Yliopistonopettaja\\
         """.strip(),
             ote1_tex,
         )
@@ -505,7 +516,7 @@ JYVÄSKYLÄN YLIOPISTO              & Asialista 9/2018 \\
 Informaatioteknologian tiedekunta & 11.9.2018         \\
 Tiedekuntaneuvosto                & Lista 2\end{tabular}
 
-{\valmistelija{Asian valmistelijat: Opintopäällikkö Seppo Sepponen puh.
+{\valmistelija{Asian valmistelijat: Opintopäällikkö Seppo Sepponen, puh.
 0500123456,
 \href{mailto:seponasiat@example.com}{\nolinkurl{seponasiat@example.com}},
 Yliopistonopettaja Olli Ollinen, puh. 0400123456,
@@ -552,16 +563,25 @@ Arvostelu, tekstikappale 3.
 
 Tiedekuntaneuvosto arvostelee Jaska Jokusen väitöskirjan.
 
-Seppo Sepponen\\
-Opintopäällikkö
-
 \bigskip
 
 \hfill\break
 \hfill\break
 \hfill\break
+\hfill\break
+Pöytäkirjanotteen vakuudeksi:
+
+\hfill\break
+\hfill\break
+\hfill\break
+Seppo Sepponen\\
+Opintopäällikkö\\
+
+\hfill\break
+\hfill\break
+\hfill\break
 Olli Ollinen\\
-Yliopistonopettaja
+Yliopistonopettaja\\
         """.strip(),
             ote2_tex,
         )

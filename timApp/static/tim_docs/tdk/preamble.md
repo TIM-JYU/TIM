@@ -2,35 +2,31 @@
 lazy: false
 macros:
    stampformat: Kokous {date} \newline LIITE {attachment} lista {issue}
-   olli: 'Yliopistonopettaja Olli Ollinen, puh. 0400123456, [olli.ollinen@example.com](mailto:olli.ollinen@example.com)'
-   olli_allekirjoitus: |!!
-   Olli Ollinen\
-   Yliopistonopettaja
-   !!
-   
-   seppo: 'Opintopäällikkö Seppo Sepponen puh. 0500123456, [seponasiat@example.com](mailto:seponasiat@example.com)'
-   seppo_allekirjoitus: |!!
-   Seppo Sepponen\
-   Opintopäällikkö
-   !!
-   
-   olli2: 'Yliopistonopettaja Olli Ollinen2, puh. 0400123456, [olli.ollinen2@example.com](mailto:olli.ollinen2@example.com)'
-   olli2_allekirjoitus: |!!
-   Olli Ollinen2\
-   Yliopistonopettaja
-   !!
-   
-   seppo2: 'Opintopäällikkö Seppo Sepponen2 puh. 0500123456, [seponasiat2@example.com](mailto:seponasiat2@example.com)'
-   seppo2_allekirjoitus: |!!
-   Seppo Sepponen2\
-   Opintopäällikkö
-   !!
-   
-   seppo3: 'Opintopäällikkö Seppo Sepponen3 puh. 0500123456, [seponasiat3@example.com](mailto:seponasiat3@example.com)'
-   seppo3_allekirjoitus: |!!
-   Seppo Sepponen3\
-   Opintopäällikkö
-   !!
+   olli:
+     nimi: Olli Ollinen
+     tehtava: Yliopistonopettaja
+     puh: "0400123456"
+     sposti: olli.ollinen@example.com
+   seppo:
+     nimi: Seppo Sepponen
+     tehtava: Opintopäällikkö
+     puh: "0500123456"
+     sposti: seponasiat@example.com
+   olli2:
+     nimi: Olli Ollinen2
+     tehtava: Yliopistonopettaja
+     puh: "0400123456"
+     sposti: olli.ollinen2@example.com 
+   seppo2:
+     nimi: Seppo Sepponen2
+     tehtava: Opintopäällikkö
+     puh: "0500123456"
+     sposti: seponasiat2@example.com
+   seppo3:
+     nimi: Seppo Sepponen2
+     tehtava: Opintopäällikkö
+     puh: "0500123456"
+     sposti: seponasiat3@example.com
 editor_templates:
     templates:
        TDK:
@@ -215,6 +211,22 @@ Paikka %%dates[knro][2]%%
 
 !!
     ADDFOREVERY:|!!
+{% macro OTE_ALLEKIRJOITUKSET() -%}
+\bigskip
+\
+\
+\
+\
+Pöytäkirjanotteen vakuudeksi:
+{% endmacro %}
+{% macro allekirjoitus(e) -%}
+\
+\
+\
+%%e.nimi%%\
+%%e.tehtava%%\
+{% endmacro %}
+{% macro esittelija_kuvaus(e)%}%%e.tehtava%% %%e.nimi%%, puh. %%e.puh%%, [%%e.sposti%%](mailto:%%e.sposti%%){% endmacro %}
 {% macro lista(n,esittelija, esittelija2) -%}
 
 {% if tex %}
@@ -224,8 +236,8 @@ JYVÄSKYLÄN YLIOPISTO              & Asialista %%knro%%/%%year%% \\
 Informaatioteknologian tiedekunta & %%dates[knro][0]%%         \\
 Tiedekuntaneuvosto                & {% if n %}Lista %%n%%{% endif %}         
 \end{tabular}
-{% if esittelija2 %}[Asian valmistelijat: %%esittelija%%, %%esittelija2%%]{.valmistelija}
-{% elif esittelija %}[Asian valmistelija: %%esittelija%%]{.valmistelija}{% endif %}
+{% if esittelija2 %}[Asian valmistelijat: %%esittelija_kuvaus(esittelija)%%, %%esittelija_kuvaus(esittelija2)%%]{.valmistelija}
+{% elif esittelija %}[Asian valmistelija: %%esittelija_kuvaus(esittelija)%%]{.valmistelija}{% endif %}
 {% else %}
 <div id="CSSpagebreak"><p>!================!Page Break!================!</p></div>
 -----
@@ -237,8 +249,8 @@ JYVÄSKYLÄN YLIOPISTO           | %%knro%%/%%year%%
 Informaatioteknologian tiedekunta |%%dates[knro][0]%% 
 Tiedekuntaneuvosto                |{% if n %}Lista %%n%%{% endif %}
 
-{% if esittelija2 %}<p>Asian valmistelijat: %%esittelija%%, %%esittelija2%%</p>
-{% elif esittelija %}<p>Asian valmistelija: %%esittelija%%</p>{% endif %}
+{% if esittelija2 %}<p>Asian valmistelijat: %%esittelija_kuvaus(esittelija)%%, %%esittelija_kuvaus(esittelija2)%%</p>
+{% elif esittelija %}<p>Asian valmistelija: %%esittelija_kuvaus(esittelija)%%</p>{% endif %}
 </div>
 {% endif %}
 {%- endmacro %}

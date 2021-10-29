@@ -206,12 +206,12 @@ PÖYTÄKIRJANOTE - Lista {extract_number} -  {extract_title}
                 par.create_reference(docentry.document, add_rd=True)
             )
         signature_separator = "\n\\bigskip\n" + "\\\n" * 3
-        signature_names = signature_separator.join(
-            [f"%%{author}_allekirjoitus%%" for author in authors]
+        signature_names = "\n".join(
+            [f"%%allekirjoitus({author})%%" for author in authors]
         )
         docentry.document.add_paragraph(
             fr"""
-%%ALLEKIRJOITUKSET_ALKU%%
+%%OTE_ALLEKIRJOITUKSET()%%
 
 {signature_names}
 """
