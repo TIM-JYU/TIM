@@ -166,6 +166,10 @@ export async function updateAnnotationServer(
                                 class="smallButton"
                                 (click)="clearColor()"
                                 title="Reset color to original value">R</button>
+                        <button 
+                                class="smallButton"
+                                (click)="whiteColor()"
+                                title="Reset color to white">W</button>
                     </span>
                                 </div>
                             </div>
@@ -370,6 +374,10 @@ export class AnnotationComponent
 
     clearColor() {
         this.values.color = "";
+    }
+
+    whiteColor() {
+        this.values.color = "#FFF";
     }
 
     isVelpCustomColor() {
