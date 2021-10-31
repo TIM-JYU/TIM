@@ -377,7 +377,7 @@ export class AnnotationComponent
     }
 
     whiteColor() {
-        this.values.color = "#FFF";
+        this.values.color = "#ffffff";
     }
 
     isVelpCustomColor() {
