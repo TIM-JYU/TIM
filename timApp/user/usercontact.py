@@ -15,6 +15,9 @@ class ContactOrigin(Enum):
     Haka = 3
 
 
+NO_AUTO_VERIFY_ORIGINS = {ContactOrigin.Custom}
+
+
 class PrimaryContact(Enum):
     """Whether the contact is primary.
 

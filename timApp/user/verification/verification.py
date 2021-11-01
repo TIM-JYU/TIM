@@ -4,6 +4,7 @@ from functools import cache
 from typing import Optional
 
 from flask import render_template_string, url_for
+from sqlalchemy.orm import load_only
 
 from timApp.document.docentry import DocEntry
 from timApp.timdb.sqa import db
@@ -114,6 +115,8 @@ class SetPrimaryContactVerification(ContactAddVerification):
         self.contact = None
 
     def approve(self) -> None:
+        from timApp.messaging.messagelist.emaillist import update_mailing_list_address
+
         if not self.contact:
             return
         current_primary = UserContact.query.filter_by(
@@ -121,10 +124,21 @@ class SetPrimaryContactVerification(ContactAddVerification):
             channel=self.contact.channel,
             primary=PrimaryContact.true,
         ).first()
-        if current_primary:
-            current_primary.primary = None
-        self.contact.primary = PrimaryContact.true
-        User.query.filter_by(id=self.user_id).update({User.email: self.contact.contact})
+        with db.session.no_autoflush:
+            if current_primary:
+                current_primary.primary = None
+                db.session.flush()
+            self.contact.primary = PrimaryContact.true
+
+            # We update email directly since we already resolved the contact in previous steps
+            u = (
+                User.query.filter_by(id=self.user_id)
+                .options(load_only(User.email, User.id))
+                .one()
+            )
+            old_email = u._email
+            u._email = self.contact.contact
+        update_mailing_list_address(old_email, self.contact.contact)
 
     __mapper_args__ = {"polymorphic_identity": VerificationType.SET_PRIMARY_CONTACT}
 

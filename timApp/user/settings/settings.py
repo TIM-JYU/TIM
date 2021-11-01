@@ -5,6 +5,7 @@ from typing import Any
 from flask import render_template, session, flash, Response
 from flask import request
 from jinja2 import TemplateNotFound
+from sqlalchemy import func
 from sqlalchemy.orm import load_only
 
 from timApp.admin.user_cli import do_soft_delete
@@ -268,16 +269,41 @@ def remove_contact(
     if contact_info_type == Channel.EMAIL and user.email == contact_info:
         raise RouteException("Cannot remove primary email")
 
-    existing_contact_info = user.get_contact(
+    contact = user.get_contact(
         contact_info_type,
         contact_info,
-        [load_only(UserContact.id)],
+        [load_only(UserContact.id, UserContact.channel)],
     )
 
-    if not existing_contact_info:
+    if not contact:
         raise RouteException("The contact does not exist for the user")
 
-    db.session.delete(existing_contact_info)
+    if contact.primary:
+        raise RouteException(
+            "Cannot remove a primary contact. Set a new primary contact before removing this one."
+        )
+
+    if contact.contact_origin != ContactOrigin.Custom:
+        raise RouteException("Cannot remove managed contacts")
+
+    verified_emails_count = (
+        db.session.query(func.count(UserContact.id))
+        .filter_by(
+            user_id=user.id,
+            channel=Channel.EMAIL,
+            verified=True,
+            contact_origin=ContactOrigin.Custom,
+        )
+        .scalar()
+    )
+
+    if contact.verified and verified_emails_count == 1:
+        raise RouteException(
+            "Removing the email will leave the user with no verified user-added emails. "
+            "Add at least one verified email before removing this one."
+        )
+
+    db.session.delete(contact)
     db.session.commit()
     return ok_response()
 
@@ -319,8 +345,7 @@ def set_primary(
     need_verify = False
 
     if not current_primary:
-        existing_contact.primary = PrimaryContact.true
-        user.email = existing_contact.contact
+        user.update_email(existing_contact.contact)
     else:
         request_verification(
             SetPrimaryContactVerification(user=user, contact=existing_contact)

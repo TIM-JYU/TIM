@@ -31,6 +31,7 @@ from timApp.user.user import (
     SCIM_USER_NAME,
     UserInfo,
 )
+from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import (
     UserGroup,
     tim_group_to_scim,
@@ -80,6 +81,10 @@ class SCIMMemberModel:
     @cached_property
     def primary_email(self) -> str:
         return self.workEmail or self.email
+
+    @cached_property
+    def emails(self) -> list[str]:
+        return [s for s in (self.workEmail, self.email) if s]
 
 
 @dataclass(frozen=True)
@@ -324,7 +329,10 @@ def put_user(user_id: str) -> Response:
         raise SCIMException(422, e.description)
     u.real_name = last_name_to_first(um.displayName)
     if um.emails:
-        u.email = um.emails[0].value
+        emails = [
+            e.value for e in sorted(um.emails, key=lambda em: 0 if em.primary else 1)
+        ]
+        u.set_emails(emails, ContactOrigin.Sisu)
     db.session.commit()
     return json_response(u.get_scim_data())
 
@@ -405,17 +413,18 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         do_merge_users(user, user_email, force=True)
                         do_soft_delete(user_email)
                         db.session.flush()
-                email_updates.append((user.email, u.primary_email))
                 user.update_info(
                     UserInfo(
                         username=u.value,
                         full_name=name_to_use,
-                        email=u.primary_email,
                         last_name=u.name.familyName,
                         given_name=u.name.givenName,
                     ),
                     sync_mailing_lists=False,
                 )
+                prev_email = user.email
+                user.set_emails(u.emails, ContactOrigin.Sisu, update_primary=True)
+                email_updates.append((prev_email, u.email))
             else:
                 user = existing_accounts_by_email_dict.get(u.primary_email)
                 if user:
@@ -429,12 +438,14 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         UserInfo(
                             username=u.value,
                             full_name=name_to_use,
-                            email=u.primary_email,
                             last_name=u.name.familyName,
                             given_name=u.name.givenName,
                         ),
                         sync_mailing_lists=False,
                     )
+                    prev_email = user.email
+                    user.set_emails(u.emails, ContactOrigin.Sisu, update_primary=True)
+                    email_updates.append((prev_email, u.email))
                 else:
                     user, _ = User.create_with_group(
                         UserInfo(

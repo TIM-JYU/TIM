@@ -273,7 +273,7 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                                     </ng-template>
                                 </button>
                                 <button class="btn btn-danger" type="button"
-                                        [disabled]="contact.primary || contactOrigins[contact.origin]"
+                                        [disabled]="canRemoveContact(contact)"
                                         (click)="deleteContact(contact)">
                                     <i class="glyphicon glyphicon-trash"></i>
                                 </button>
@@ -322,6 +322,7 @@ export class SettingsComponent implements DoCheck {
     contacts: IUserContact[];
     userContacts = new Map<Channel, IUserContact[]>();
     userEmailContacts: IUserContact[] = [];
+    canRemoveCustomContacts = true;
     primaryEmail!: IUserContact;
     channelNames = EDITABLE_CONTACT_CHANNELS;
     verificationSentSet = new Set<IUserContact>();
@@ -350,6 +351,15 @@ export class SettingsComponent implements DoCheck {
 
     get userContactEntries() {
         return [...this.userContacts.entries()];
+    }
+
+    canRemoveContact(contact: IUserContact): boolean {
+        if (contact.origin == ContactOrigin.Custom) {
+            return !this.canRemoveCustomContacts && contact.verified;
+        }
+        return (
+            contact.primary || this.contactOrigins[contact.origin] !== undefined
+        );
     }
 
     ngDoCheck() {
@@ -553,6 +563,10 @@ export class SettingsComponent implements DoCheck {
         );
         if (channel == Channel.EMAIL) {
             this.userEmailContacts = newContacts;
+            this.canRemoveCustomContacts =
+                newContacts.filter(
+                    (c) => c.origin == ContactOrigin.Custom && c.verified
+                ).length > 1;
         }
         this.userContacts.set(channel, newContacts);
     }

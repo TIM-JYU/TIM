@@ -23,6 +23,7 @@ from timApp.tim_app import app, csrf
 from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
 from timApp.user.user import UserInfo, UserOrigin
+from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import use_model, RouteException
@@ -396,6 +397,8 @@ def acs():
         ),
         group_to_add=org_group,
     )
+    # Remove any old inactive Haka emails
+    user.set_emails([user.email], ContactOrigin.Haka)
     haka = UserGroup.get_haka_group()
     if haka not in user.groups:
         user.groups.append(haka)
