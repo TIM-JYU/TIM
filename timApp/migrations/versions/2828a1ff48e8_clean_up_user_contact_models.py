@@ -1,4 +1,4 @@
-"""Clean up user contact models
+"""Clean up user contact models, add verification table
 
 Revision ID: 2828a1ff48e8
 Revises: 8770c4966dc5

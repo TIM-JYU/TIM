@@ -7,6 +7,7 @@ from typing import Optional, Union
 
 from flask import current_app
 from sqlalchemy import func
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Query, joinedload, defaultload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.strategy_options import loader_option
@@ -244,7 +245,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
     real_name = db.Column(db.Text)
     """Real (full) name. This may be in the form "Lastname Firstname" or "Firstname Lastname"."""
 
-    email = db.Column(db.Text, unique=True)
+    _email = db.Column("email", db.Text, unique=True)
     """Email address."""
 
     prefs = db.Column(db.Text)
@@ -277,6 +278,17 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         lazy="select",
         uselist=False,
     )
+
+    @hybrid_property
+    def email(self):
+        return self._email
+
+    @email.setter
+    def email(self, value: str):
+        prev_email = self._email
+        self._email = value
+        if prev_email != value:
+            self.primary_email_contact.contact = value
 
     @property
     def scim_display_name(self):
