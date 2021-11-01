@@ -4,6 +4,7 @@ import {Users} from "../user/userService";
 import {folderglobals} from "../util/globals";
 
 const MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX = "archives/";
+const TIM_MESSAGES_FOLDER_PREFIX = "messages/tim-messages";
 
 @Component({
     selector: "tim-index",
@@ -88,7 +89,10 @@ export class DirectoryListComponent {
         this.canCreate = Users.isLoggedIn();
 
         // TODO: Allow to sort all columns instead
-        if (this.item.path.startsWith(MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX)) {
+        if (
+            this.item.path.startsWith(MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX) ||
+            this.item.path.startsWith(TIM_MESSAGES_FOLDER_PREFIX)
+        ) {
             this.itemList = this.itemList.sort((a, b) => b.id - a.id);
         }
     }
