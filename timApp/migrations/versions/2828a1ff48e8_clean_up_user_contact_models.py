@@ -59,6 +59,7 @@ def upgrade():
         "user_primary_contact_uc",
         "usercontact",
         ["user_id", "channel", "primary"],
+        initially="DEFERRED",
     )
     op.create_unique_constraint(
         "all_users_primary_contact_uc",

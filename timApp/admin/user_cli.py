@@ -180,13 +180,13 @@ def do_merge_users(u_prim: User, u_sec: User, force=False) -> MergeResult:
     cur_contacts = {(uc.channel, uc.contact): uc for uc in u_prim.contacts}
     for c in u_sec.contacts:
         if (c.channel, c.contact) not in cur_contacts:
-            UserContact(
-                user=u_prim,
-                contact=c.contact,
-                contact_origin=c.contact_origin,
-                channel=c.channel,
-                primary=False,
-                verified=c.verified,
+            u_prim.contacts.append(
+                UserContact(
+                    contact=c.contact,
+                    contact_origin=c.contact_origin,
+                    channel=c.channel,
+                    verified=c.verified,
+                )
             )
         # Don't delete primary mail since it is still managed by the main email integration
         if not c.primary:

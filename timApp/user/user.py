@@ -811,9 +811,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         new_emails = set(emails)
         current_emails = {uc.contact for uc in current_email_contacts}
 
-        to_add = new_emails - current_emails if add else {}
-        to_remove = current_emails - new_emails if remove else {}
-        not_removed = {} if remove else current_emails - new_emails
+        to_add = new_emails - current_emails if add else set()
+        to_remove = current_emails - new_emails if remove else set()
+        not_removed = set() if remove else current_emails - new_emails
         new_email_contacts: dict[str, UserContact] = {
             email: current_email_dict[email]
             for email in ((new_emails & current_emails) | not_removed)
@@ -863,18 +863,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 new_email_contacts[email] = uc
 
         for email in to_remove:
-            uc = current_email_dict[email]
-            if uc.primary:
-                uc.primary = None
-            db.session.delete(uc)
+            db.session.delete(current_email_dict[email])
 
         if change_primary_email:
             # Ensure no email is primary
-            current_primary = next(
-                (uc for uc in new_email_contacts.values() if uc.primary), None
-            )
-            if current_primary:
-                current_primary.primary = None
+            self.primary_email_contact.primary = None
 
             if emails:
                 new_primary = new_email_contacts[emails[0]]

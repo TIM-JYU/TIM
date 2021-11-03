@@ -42,6 +42,7 @@ class UserContact(db.Model):
             "channel",
             "primary",
             name="user_primary_contact_uc",
+            initially="DEFERRED",  # Allow for easy swapping of primary email within the same transaction
         ),
         # Multiple users cannot have the same contact as primary
         db.UniqueConstraint(

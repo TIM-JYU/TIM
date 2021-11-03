@@ -27,18 +27,45 @@ class SearchTest(TimRouteTest):
                     "id": TEST_USER_1_ID,
                     "name": "testuser1",
                     "real_name": "Test user 1",
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test1@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": False,
+                        }
+                    ],
                 },
                 {
                     "email": "test2@example.com",
                     "id": TEST_USER_2_ID,
                     "name": "testuser2",
                     "real_name": "Test user 2",
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test2@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": False,
+                        }
+                    ],
                 },
                 {
                     "email": "test3@example.com",
                     "id": TEST_USER_3_ID,
                     "name": "testuser3",
                     "real_name": "Test user 3",
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test3@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": False,
+                        }
+                    ],
                 },
             ],
         )
