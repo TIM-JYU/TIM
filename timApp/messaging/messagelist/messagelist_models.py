@@ -335,6 +335,29 @@ class MessageListMember(db.Model):
         """
         raise NotImplementedError
 
+    def user_info_json(self) -> dict[str, Any]:
+        raise NotImplementedError
+
+    def to_json(self) -> dict[str, Any]:
+        from timApp.document.hide_names import is_hide_names
+
+        if is_hide_names():
+            is_group = self.is_group()
+            user_info = {
+                "name": f"Member {self.id} ({ 'Group' if is_group else 'User' })",
+                "username": f"member{self.id}",
+                "email": "" if is_group else "member@noreply",
+            }
+        else:
+            user_info = self.user_info_json()
+
+        return {
+            **user_info,
+            "sendRight": self.member.send_right,
+            "deliveryRight": self.member.delivery_right,
+            "removed": self.membership_ended,
+        }
+
 
 class MessageListTimMember(MessageListMember):
     """A member of message list who is also a TIM user(group). This can be one person in their own personal user
@@ -365,14 +388,11 @@ class MessageListTimMember(MessageListMember):
 
     __mapper_args__ = {"polymorphic_identity": "tim_member"}
 
-    def to_json(self) -> dict[str, Any]:
+    def user_info_json(self) -> dict[str, Any]:
         return {
             "name": self.get_name(),
             "username": self.get_username(),
-            "email": self.get_email() if self.get_email() is not None else "",
-            "sendRight": self.member.send_right,
-            "deliveryRight": self.member.delivery_right,
-            "removed": self.membership_ended,
+            "email": self.get_email(),
         }
 
     def get_username(self) -> str:
@@ -387,7 +407,7 @@ class MessageListTimMember(MessageListMember):
             return ""
         ug = self.user_group
         user = ug.personal_user
-        return user.email
+        return user.email or ""
 
     def get_name(self) -> str:
         """Get TIM user's name. For group, this is an empty string. For a user, this is their full name."""
@@ -421,14 +441,11 @@ class MessageListExternalMember(MessageListMember):
 
     __mapper_args__ = {"polymorphic_identity": "external_member"}
 
-    def to_json(self) -> dict[str, Any]:
+    def user_info_json(self) -> dict[str, Any]:
         return {
             "name": self.get_name(),
             "username": self.get_username(),
             "email": self.email_address,
-            "sendRight": self.member.send_right,
-            "deliveryRight": self.member.delivery_right,
-            "removed": self.membership_ended,
         }
 
     def get_name(self) -> str:

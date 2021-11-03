@@ -398,6 +398,9 @@ def get_group_members(list_name: str) -> Response:
     :param list_name: Message list.
     :return: All members of groups associated in a message list as a list of GroupAndMembers objects.
     """
+    from timApp.document.hide_names import is_hide_names
+
+    hide_names = is_hide_names()
     # Check rights.
     verify_logged_in()
     message_list = MessageListModel.from_name(list_name)
@@ -417,12 +420,12 @@ def get_group_members(list_name: str) -> Response:
         # group, removed is None.
         group_members = [
             MemberInfo(
-                name=user.real_name,
-                username=user.name,
+                name=user.real_name if not hide_names else f"User {user.id}",
+                username=user.name if not hide_names else f"user{user.id}",
+                email=user.email if not hide_names else "user@noreply",
                 sendRight=group.send_right,
                 deliveryRight=group.delivery_right,
                 removed=None,
-                email=user.email,
             )
             for user in user_group.users
         ]

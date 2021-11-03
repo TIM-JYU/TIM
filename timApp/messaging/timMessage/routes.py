@@ -15,6 +15,7 @@ from timApp.document.create_item import create_document
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.documents import import_document_from_file
+from timApp.document.hide_names import is_hide_names
 from timApp.document.translation.translation import Translation
 from timApp.document.viewcontext import default_view_ctx
 from timApp.folder.createopts import FolderCreationOptions
@@ -448,11 +449,11 @@ def get_read_receipts(
         )
         .join(InternalMessage)
         .filter(InternalMessage.doc_id == doc.id)
-    )
+    ).all()
 
-    data = [["id", "email", "name", "read_on"]]
+    data = [["id", "email", "user_name", "real_name", "read_on"]]
 
-    for u in all_recipients:
+    for i, u in enumerate(all_recipients):
         read_time = ""
         if u.id in read_user_map:
             if not include_read:
@@ -460,7 +461,10 @@ def get_read_receipts(
             read_time = datetime_isoformat(read_user_map[u.id])
         elif not include_unread:
             continue
-        data.append([u.id, u.email, u.real_name, read_time])
+        if not is_hide_names():
+            data.append([u.id, u.email, u.name, u.real_name, read_time])
+        else:
+            data.append([i, f"user_{i}@noreply", f"user{i}", f"User {i}", read_time])
 
     return text_response(csv_string(data, "excel", separator))
 
