@@ -535,9 +535,14 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return []
 
     @property
-    def email_name_part(self):
-        parts = self.email.split("@")
-        return parts[0]
+    def verified_email_name_parts(self) -> list[str]:
+        email_parts = [
+            uc.contact.split("@")
+            for uc in UserContact.query.filter_by(
+                user=self, channel=Channel.EMAIL, verified=True
+            )
+        ]
+        return [parts[0].lower() for parts in email_parts]
 
     @property
     def is_special(self):
