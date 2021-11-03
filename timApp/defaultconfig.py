@@ -114,6 +114,10 @@ CELERYBEAT_SCHEDULE = {
         "task": "timApp.tim_celery.cleanup_oauth2_tokens",
         "schedule": crontab(hour="*/24", minute="0"),
     },
+    "cleanup-verifications": {
+        "task": "timApp.tim_celery.cleanup_verifications",
+        "schedule": crontab(minute="*/10"),
+    },
 }
 # This makes the log format a little less verbose by omitting the Celery task id (which is an UUID).
 CELERYD_TASK_LOG_FORMAT = (
@@ -334,3 +338,10 @@ QUICKLOGIN_ALLOWED_MODEL_ANSWER_GROUPS = {
     "ohj1",
     TEACHERS_GROUPNAME,
 }
+
+# How long unreacted verifications should be persisted for in seconds
+# Default: 1 hour
+VERIFICATION_UNREACTED_CLEANUP_INTERVAL = 10 * 60
+# How long reacted verifications should be persisted for in seconds
+# Default: 30 days
+VERIFICATION_REACTED_CLEANUP_INTERVAL = 30 * 24 * 60 * 60

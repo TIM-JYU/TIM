@@ -869,6 +869,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             db.session.delete(uc)
 
         if change_primary_email:
+            # Ensure no email is primary
+            current_primary = next(
+                (uc for uc in new_email_contacts.values() if uc.primary), None
+            )
+            if current_primary:
+                current_primary.primary = None
+
             if emails:
                 new_primary = new_email_contacts[emails[0]]
             elif new_email_contacts:

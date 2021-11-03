@@ -6,6 +6,7 @@ import json
 import logging
 from concurrent.futures import Future
 from copy import copy
+from datetime import timedelta
 from logging import Logger
 from typing import Any
 
@@ -24,7 +25,9 @@ from timApp.plugin.exportdata import WithOutData, WithOutDataSchema
 from timApp.plugin.plugin import Plugin
 from timApp.plugin.pluginexception import PluginException
 from timApp.tim_app import app
+from timApp.timdb.sqa import db
 from timApp.user.user import User
+from timApp.user.verification.verification import Verification
 from timApp.util.flask.search import create_search_files
 from timApp.util.utils import get_current_time, collect_errors_from_hosts
 from tim_common.vendor.requests_futures import FuturesSession
@@ -195,6 +198,31 @@ def do_send_answer_backup(exported_answer: dict[str, Any]):
         )
         futures.append(f)
     return collect_errors_from_hosts(futures, backup_hosts)
+
+
+@celery.task(ignore_result=True)
+def cleanup_verifications():
+    """
+    Remove old verifications to save on space.
+    Verification expiration is defined by two variables:
+
+    VERIFICATION_UNREACTED_CLEANUP_INTERVAL - cleanup interval for unverified verifications.
+    VERIFICATION_REACTED_CLEANUP_INTERVAL - cleanup internval for reacted verifications.
+    """
+    max_unreacted_interval = app.config["VERIFICATION_UNREACTED_CLEANUP_INTERVAL"]
+    max_reacted_interval = app.config["VERIFICATION_REACTED_CLEANUP_INTERVAL"]
+    now = get_current_time()
+    end_time_unreacted = now - timedelta(seconds=max_unreacted_interval)
+    end_time_reacted = now - timedelta(seconds=max_reacted_interval)
+    Verification.query.filter(
+        (Verification.requested_at < end_time_unreacted)
+        & (Verification.reacted_at == None)
+    ).delete()
+    Verification.query.filter(
+        (Verification.requested_at < end_time_reacted)
+        & (Verification.reacted_at != None)
+    ).delete()
+    db.session.commit()
 
 
 @celery.task(ignore_result=True)
