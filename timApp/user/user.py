@@ -3,18 +3,11 @@ import re
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Optional, Union, TYPE_CHECKING
+from typing import Optional, Union
 
 from flask import current_app
 from sqlalchemy import func
-
-# Workaround for hybrid properties not working with typing
-# See https://github.com/python/mypy/issues/4430#issuecomment-781272415
-if TYPE_CHECKING:
-    hybrid_property = property
-else:
-    from sqlalchemy.ext.hybrid import hybrid_property
-
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Query, joinedload, defaultload
 from sqlalchemy.orm.collections import attribute_mapped_collection
 from sqlalchemy.orm.strategy_options import loader_option
@@ -291,12 +284,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         uselist=False,
     )
 
-    @hybrid_property
-    def email(self) -> str:
+    def _get_email(self) -> str:
         return self._email
 
-    @email.setter
-    def email(self, value: str) -> None:
+    def _set_email(self, value: str) -> None:
         prev_email = self._email
         self._email = value
         if prev_email != value:
@@ -317,6 +308,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 )
                 db.session.add(new_primary)
             new_primary.primary = PrimaryContact.true
+
+    # Decorators don't work with mypy yet
+    # See https://github.com/dropbox/sqlalchemy-stubs/issues/98
+    email = hybrid_property(_get_email, _set_email)
 
     def update_email(self, new_email: str, notify_message_lists: bool = False):
         from timApp.messaging.messagelist.emaillist import update_mailing_list_address
@@ -351,7 +346,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return {"emails": [{"value": self.email}] if self.email else []}
 
     consents = db.relationship("ConsentChange", back_populates="user", lazy="select")
-    contacts = db.relationship("UserContact", back_populates="user", lazy="select")
+    contacts: list[UserContact] = db.relationship(
+        "UserContact", back_populates="user", lazy="select"
+    )
     notifications = db.relationship(
         "Notification", back_populates="user", lazy="dynamic"
     )
@@ -480,7 +477,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             real_name=info.full_name,
             last_name=info.last_name,
             given_name=info.given_name,
-            email=info.email,
+            _email=info.email,
             pass_=p_hash,
             origin=info.origin,
         )
@@ -1095,7 +1092,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         return info_dict
 
-    def to_json(self, full: bool = False) -> dict:
+    def to_json(self, full: bool = False, contacts: bool = False) -> dict:
         external_ids: dict[int, str] = (
             {
                 s.group_id: s.external_id
@@ -1106,9 +1103,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             if full
             else []
         )
-        return (
-            {
-                **self.basic_info_dict,
+
+        result = self.basic_info_dict
+
+        if full:
+            result |= {
                 "group": self.get_personal_group(),
                 "groups": [
                     {**g.to_json(), "external_id": external_ids.get(g.id, None)}
@@ -1118,9 +1117,11 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 "consent": self.consent,
                 "last_name": self.last_name,
             }
-            if full
-            else self.basic_info_dict
-        )
+
+        if contacts:
+            result |= {"contacts": self.contacts}
+
+        return result
 
     @cached_property
     def bookmarks(self):
