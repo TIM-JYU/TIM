@@ -464,7 +464,9 @@ def get_read_receipts(
         if not is_hide_names():
             data.append([u.id, u.email, u.name, u.real_name, read_time])
         else:
-            data.append([i, f"user_{i}@noreply", f"user{i}", f"User {i}", read_time])
+            data.append(
+                [str(i), f"user_{i}@noreply", f"user{i}", f"User {i}", read_time]
+            )
 
     return text_response(csv_string(data, "excel", separator))
 
