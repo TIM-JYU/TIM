@@ -33,7 +33,7 @@ class SearchTest(TimRouteTest):
                             "contact": "test1@example.com",
                             "origin": 1,
                             "primary": True,
-                            "verified": False,
+                            "verified": True,
                         }
                     ],
                 },
@@ -48,7 +48,7 @@ class SearchTest(TimRouteTest):
                             "contact": "test2@example.com",
                             "origin": 1,
                             "primary": True,
-                            "verified": False,
+                            "verified": True,
                         }
                     ],
                 },
@@ -63,7 +63,7 @@ class SearchTest(TimRouteTest):
                             "contact": "test3@example.com",
                             "origin": 1,
                             "primary": True,
-                            "verified": False,
+                            "verified": True,
                         }
                     ],
                 },
