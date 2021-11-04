@@ -483,7 +483,6 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         )
         if info.email:
             primary_email = UserContact(
-                user=user,
                 contact=info.email,
                 contact_origin=info.origin.to_contact_origin()
                 if info.origin
@@ -491,7 +490,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 primary=PrimaryContact.true,
                 channel=Channel.EMAIL,
             )
-            db.session.add(primary_email)
+            user.contacts.append(primary_email)
+            # Mark the email also primary for possible checks within the same session
+            user.primary_email_contact = primary_email
         db.session.add(user)
         user.set_unique_codes(info.unique_codes)
         group = UserGroup.create(info.username)
@@ -784,7 +785,6 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         If the user's primary email is removed,
         it is changed to the next verified email of the same origin.
 
-
         :param emails: List of emails to set to the given origin.
         :param origin: Emails' origin
         :param force_verify: If True, emails all emails are marked as verified.
@@ -799,11 +799,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         """
 
         # Get emails for the current origin
-        current_email_contacts: list[UserContact] = UserContact.query.filter(
-            (UserContact.user_id == self.id)
-            & (UserContact.channel == Channel.EMAIL)
-            & (UserContact.contact_origin == origin)
-        ).all()
+        # We use self.contacts for now because the only contacts we save are email contacts and because it allows
+        # to call this method multiple times within the same transaction
+        current_email_contacts = [
+            uc
+            for uc in self.contacts
+            if uc.channel == Channel.EMAIL and uc.contact_origin == origin
+        ]
         current_email_dict: dict[str, UserContact] = {
             uc.contact: uc for uc in current_email_contacts
         }
@@ -827,13 +829,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         if to_add:
             verified = force_verify or origin not in NO_AUTO_VERIFY_ORIGINS
             # Resolve all emails to add that don't belong to the current origin
-            q = UserContact.query.filter(
-                (UserContact.user_id == self.id)
-                & (UserContact.channel == Channel.EMAIL)
-                & (UserContact.contact_origin != origin)
-                & (UserContact.contact.in_(to_add))
-            )
-            added_email_contacts: list[UserContact] = q.all()
+            added_email_contacts = [
+                uc
+                for uc in self.contacts
+                if uc.channel == Channel.EMAIL
+                and uc.contact_origin != origin
+                and uc.contact in to_add
+            ]
             added_email_contacts_set = set(uc.contact for uc in added_email_contacts)
             other_origin_email_contacts: dict[str, UserContact] = {
                 uc.contact: uc for uc in added_email_contacts
@@ -853,17 +855,18 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                     uc.contact_origin = origin
                 else:
                     uc = UserContact(
-                        user=self,
                         channel=Channel.EMAIL,
                         verified=verified,
                         contact_origin=origin,
                         contact=email,
                     )
-                    db.session.add(uc)
+                    self.contacts.append(uc)
                 new_email_contacts[email] = uc
 
         for email in to_remove:
-            db.session.delete(current_email_dict[email])
+            uc = current_email_dict[email]
+            db.session.delete(uc)
+            self.contacts.remove(uc)
 
         if change_primary_email:
             # Ensure no email is primary
@@ -874,10 +877,9 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             elif new_email_contacts:
                 new_primary = next(uc for uc in new_email_contacts.values())
             else:
-                new_primary = UserContact.query.filter(
-                    (UserContact.user_id == self.id)
-                    & (UserContact.channel == Channel.EMAIL)
-                ).first()
+                new_primary = next(
+                    (uc for uc in self.contacts if uc.channel == Channel.EMAIL), None
+                )
 
                 if not new_primary:
                     # Special case: this update operation ends up deleting all emails of the user
@@ -889,7 +891,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                         verified=True,
                         contact=next(current_email_contacts).contact,
                     )
-                    db.session.add(new_primary)
+                    self.contacts.append(new_primary)
 
             new_primary.primary = PrimaryContact.true
             self._email = new_primary.contact
