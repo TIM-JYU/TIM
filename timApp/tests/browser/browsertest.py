@@ -82,13 +82,18 @@ class BrowserTest(TimLiveServer, TimRouteTest):
         old_settings = {k: self.app.config[k] for k in settings.keys()}
         for k, v in settings.items():
             self.app.config[k] = v
-        requests.post(f"{self.get_browser_url()}/config", json=settings)
+        requests.post(f"{self.get_browser_url()}/testing/config", json=settings)
         try:
             yield
         finally:
             for k, v in old_settings.items():
                 self.app.config[k] = v
-            requests.post(f"{self.get_browser_url()}/config", json=old_settings)
+            requests.post(f"{self.get_browser_url()}/testing/config", json=old_settings)
+
+    @property
+    def sent_emails(self):
+        res = requests.get(f"{self.get_browser_url()}/testing/sentEmails")
+        return res.json()
 
     def login_browser_quick_test1(self):
         """Logs testuser 1 in quickly by directly adding the session cookie to the browser."""

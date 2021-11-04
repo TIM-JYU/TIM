@@ -60,8 +60,6 @@ from timApp.item.tag import Tag, GROUP_TAG_PREFIX
 from timApp.lecture.lectureutils import get_current_lecture_info
 from timApp.lecture.routes import lecture_routes
 from timApp.messaging.messagelist.emaillist import check_mailman_connection
-from timApp.messaging.messagelist.mailman_events import has_valid_event_auth
-from timApp.messaging.messagelist.mailman_events import mailman_events
 from timApp.messaging.messagelist.mailman_events import (
     mailman_events,
     has_valid_event_auth,
@@ -101,6 +99,7 @@ from timApp.util.flask.requesthelper import (
 from timApp.util.flask.responsehelper import json_response, ok_response, add_csp_header
 from timApp.util.flask.search import search_routes
 from timApp.util.logger import log_info, log_debug
+from timApp.util.testing import register_testing_routes
 from timApp.util.utils import get_current_time
 from timApp.velp.annotation import annotations
 from timApp.velp.velp import velps
@@ -417,12 +416,7 @@ def install_sql_hook():
 
 
 if app.config["TESTING"]:
-
-    @app.post("/config")
-    def set_config() -> Response:
-        for k, v in request.get_json().items():
-            app.config[k] = v
-        return ok_response()
+    register_testing_routes(app)
 
 
 if app.config["DEBUG_SQL"]:

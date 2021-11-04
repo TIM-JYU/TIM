@@ -487,6 +487,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 contact_origin=info.origin.to_contact_origin()
                 if info.origin
                 else ContactOrigin.Custom,
+                verified=True,
                 primary=PrimaryContact.true,
                 channel=Channel.EMAIL,
             )

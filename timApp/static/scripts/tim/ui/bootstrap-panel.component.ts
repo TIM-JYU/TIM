@@ -51,6 +51,7 @@ export class BootstrapPanelComponent {
             </form>
         </bootstrap-panel>
     `,
+    styles: [` :host { display: block; } `],
 })
 export class BootstrapFormPanelComponent {
     @Input() disabled: boolean = false;
