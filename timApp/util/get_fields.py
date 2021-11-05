@@ -170,7 +170,7 @@ def get_fields_and_users(
     :param current_user: current users, check his rights to fields
     :param autoalias: if true, give automatically from d1 same as would be from d1 = d1
     :param add_missing_fields: return estimated field even if it wasn't given previously
-    :param access_option: can be used also for non techers if othre rights matches
+    :param access_option: option specifying who is allowed to access fields (non-teachers, teachers)
     :return: fielddata, aliases, field_names
     """
     allow_non_teacher = False
