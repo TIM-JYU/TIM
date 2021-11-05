@@ -398,6 +398,7 @@ export class ViewCtrl implements IController {
         this.noBeginPageBreak();
         if (!this.isSlideOrShowSlideView()) {
             this.document.rebuildSections();
+            this.processAreaVisibility();
         }
         // from https://stackoverflow.com/a/7317311
         window.addEventListener("beforeunload", (e) => {
@@ -422,6 +423,42 @@ export class ViewCtrl implements IController {
         window.addEventListener("scroll", (e) => {
             saveCurrentScreenPar();
         });
+    }
+
+    public processAreaVisibility(newVisibility?: Record<string, boolean>) {
+        const d = new TimStorage(
+            "areaVisibility",
+            t.record(t.string, t.record(t.string, t.boolean))
+        );
+        const currentVisibilities = d.get() ?? {};
+        // io-ts doesn't automatically convert number keys to strings so we use docId as string directly
+        const docId = `${this.docId}`;
+        let currentDoc = currentVisibilities[docId] ?? {};
+
+        if (newVisibility) {
+            currentDoc = {...currentDoc, ...newVisibility};
+        }
+
+        let hasAreas = false;
+        for (const [areaName, vis] of Object.entries(currentDoc)) {
+            hasAreas = true;
+            const area = document.querySelector(
+                `div.area.area_${areaName} > .areaContent`
+            );
+            if (!area || !(area instanceof HTMLElement)) {
+                continue;
+            }
+            area.style.setProperty(
+                "display",
+                vis ? "block" : "none",
+                "important"
+            );
+        }
+
+        if (hasAreas) {
+            currentVisibilities[docId] = currentDoc;
+        }
+        d.set(currentVisibilities);
     }
 
     public findUserByName(userName: string) {
@@ -541,6 +578,7 @@ export class ViewCtrl implements IController {
             }
             $timeout(() => {
                 this.document!.rebuildSections();
+                this.processAreaVisibility();
             }, 1000);
             if (this.liveUpdates != origLiveUpdates) {
                 // if value hase changes, stop and start new poll
@@ -1173,6 +1211,7 @@ export class ViewCtrl implements IController {
         this.document!.rebuildSections();
         this.pendingUpdates.clear();
         this.questionHandler.processQuestions();
+        this.processAreaVisibility();
     }
 
     setHeaderLinks() {

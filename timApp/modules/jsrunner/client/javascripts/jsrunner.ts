@@ -9,6 +9,7 @@ import {copyToClipboard, markAsUsed, to} from "tim/util/utils";
 import {
     AnswerReturnBrowser,
     ErrorList,
+    ExportData,
     IError,
     IncludeUsersOption,
     JsrunnerAll,
@@ -181,34 +182,34 @@ class JsrunnerController
                 if (!tempd.outdata) {
                     return;
                 }
-                const exportdata = tempd.outdata.exportdata;
-                if (!exportdata) {
-                    return;
-                }
-                for (const edata of exportdata) {
-                    const pname = edata.plugin;
-                    if (!pname) {
-                        continue;
-                    }
-                    const plugin = this.vctrl.getTimComponentByName(pname);
-                    if (!plugin) {
-                        this.addError(
-                            `Plugin ${pname} not found. Check plugin names.`
-                        );
-                        continue;
-                    }
-                    const save = edata.save == true;
-                    if (plugin.setData) {
-                        plugin.setData(edata.data, save);
-                    } else {
-                        this.addError(
-                            `Plugin ${pname} does not have setData method.`
-                        );
-                    }
-                }
+                this.processExportData(tempd.outdata.exportdata);
+                this.vctrl.processAreaVisibility(tempd.outdata.areaVisibility);
             }
         } else {
             this.error = {msg: r.result.data.error || "Unknown error occurred"};
+        }
+    }
+
+    private processExportData(exportData?: ExportData) {
+        if (!exportData) {
+            return;
+        }
+        for (const edata of exportData) {
+            const pname = edata.plugin;
+            if (!pname) {
+                continue;
+            }
+            const plugin = this.vctrl.getTimComponentByName(pname);
+            if (!plugin) {
+                this.addError(`Plugin ${pname} not found. Check plugin names.`);
+                continue;
+            }
+            const save = edata.save == true;
+            if (plugin.setData) {
+                plugin.setData(edata.data, save);
+            } else {
+                this.addError(`Plugin ${pname} does not have setData method.`);
+            }
         }
     }
 

@@ -67,6 +67,7 @@ export interface IError {
 }
 
 export type ErrorList = Array<{errors: IError[]; user: string}>;
+export type ExportData = Array<{plugin: string; save?: boolean; data: unknown}>;
 
 interface AnswerReturnSuccess {
     web: {
@@ -74,7 +75,8 @@ interface AnswerReturnSuccess {
         errors: ErrorList;
         fatalError?: undefined;
         outdata?: {
-            exportdata?: Array<{plugin: string; save?: boolean; data: unknown}>;
+            exportdata?: ExportData;
+            areaVisibility?: Record<string, boolean>;
         };
     };
     savedata: IToolsResult[];
