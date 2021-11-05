@@ -1013,6 +1013,22 @@ def post_answer_impl(
                     "error": "",
                     "web": web,
                 }
+                _, postprogram_fields = get_name_and_val(
+                    "postprogram_fields", "postprogramFields"
+                )
+                if postprogram_fields and isinstance(postprogram_fields, list):
+                    # TODO: Add support for multiple users in the same session
+                    field_data, field_aliases, _, _ = get_fields_and_users(
+                        postprogram_fields,
+                        RequestedGroups(groups=[curr_user.get_personal_group()]),
+                        d,
+                        curr_user,
+                        default_view_ctx,
+                        GetFieldsAccess.from_bool(True),
+                    )
+                    # We only obtain current user's fields
+                    user_fields = field_data[0]["fields"]
+                    data["fields"] = {"values": user_fields, "names": field_aliases}
                 try:
                     params = JsRunnerParams(code=postprogram, data=data)
                     data, output = jsrunner_run(params)
