@@ -57,7 +57,7 @@ class SearchResult(NamedTuple):
     par: DocParagraph
     """The paragraph where the match occurred."""
 
-    match: Match[str]
+    match_pattern: Match[str]
     """The match object."""
 
     num_results: int
@@ -128,7 +128,7 @@ def search(
                     num_results=results_found,
                     num_pars=pars_processed,
                     num_pars_found=pars_found,
-                    match=m,
+                    match_pattern=m,
                 )
         if args.onlyfirst and pars_processed >= args.onlyfirst:
             break
