@@ -11,7 +11,7 @@
 <section>
     <section>
     {# We use namespaces to properly handle the scoping rules #}
-    {% set ns = namespace(prev_is_empty=True, cur_is_sub=False) %}
+    {% set ns = namespace(prev_is_empty=True, cur_is_sub=False, area_depth=0) %}
     {% macro sectionchange(sub) %}
         {% if ns.cur_is_sub %}
             {# Current is a subslide => close last subslide and open new one #}
@@ -27,20 +27,21 @@
         {% if 'settings' in t.attrs %}
             {# do nothing #}
         {% elif (t.md.startswith('---') and t.md.endswith('---')) %}
-            {% if not ns.prev_is_empty %}
+            {% if not ns.prev_is_empty and ns.area_depth == 0 %}
                 {{ sectionchange() }}
                 {% set ns.prev_is_empty = True %}
             {% endif %}
         {% else %}
-            {% if 'slide_break' in t.attrs and not ns.prev_is_empty %}
+            {% if 'slide_break' in t.attrs and not ns.prev_is_empty and ns.area_depth == 0 %}
                 {{ sectionchange() }}
             {% elif (t.output.startswith("<h1") or
                    t.output.startswith("<h2") or
-                   t.output.startswith("<h3")) and not ns.prev_is_empty %}
+                   t.output.startswith("<h3")) and not ns.prev_is_empty and ns.area_depth == 0 %}
                 {{ sectionchange() }}
             {% endif %}
 
             {% if 'area' in t.attrs %}
+                {% set ns.area_depth = ns.area_depth + 1 %}
                 <div class="{{ t.areainfo.area_class_str }} area_{{ t.attrs['area'] }}">
                 <div class="areaContent {{ t.class_str }}" data-area="{{area_name}}">
             {% endif %}
@@ -51,6 +52,7 @@
                 {{ t.output|safe }}
             </div>
             {% if 'area_end' in t.attrs %}
+                {% set ns.area_depth = ns.area_depth - 1 %}
                 </div>
                 </div>
             {% endif %}
