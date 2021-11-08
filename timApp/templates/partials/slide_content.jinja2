@@ -19,7 +19,7 @@
         {% else %}
             {# Current one is main slide
                => close subslide and main slide and open new slide and its first subslide #}
-            </section></section><section><section>
+            </section></section><section><div>
         {% endif %}
     {% endmacro %}
     {% for t in text %}
@@ -39,12 +39,19 @@
                    t.output.startswith("<h3")) and not ns.prev_is_empty %}
                 {{ sectionchange() }}
             {% endif %}
+
+            {% if 'area' in t.attrs %}
+                <div class="{{ t.areainfo.area_class_str }} area_{{ t.attrs['area'] }}">
+            {% endif %}
             <div class="{{ t.html_class }}"
                  id="{{ t.id }}"
                  t="{{ t.hash }}"
                  attrs="{{ t.attrs_str }}">
                 {{ t.output|safe }}
             </div>
+            {% if 'area_end' in t.attrs %}
+                </div>
+            {% endif %}
             {% set ns.prev_is_empty = False %}
         {% endif %}
     {% endfor %}
