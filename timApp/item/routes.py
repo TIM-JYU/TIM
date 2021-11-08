@@ -46,7 +46,13 @@ from timApp.document.hide_names import is_hide_names, force_hide_names
 from timApp.document.post_process import post_process_pars
 from timApp.document.preloadoption import PreloadOption
 from timApp.document.usercontext import UserContext
-from timApp.document.viewcontext import default_view_ctx, ViewRoute, ViewContext
+from timApp.document.viewcontext import (
+    default_view_ctx,
+    ViewRoute,
+    ViewContext,
+    viewmode_templates,
+    DEFAULT_VIEWMODE_TEMPLATE,
+)
 from timApp.document.viewparams import ViewParams, ViewParamsSchema
 from timApp.folder.folder import Folder
 from timApp.folder.folder_view import try_return_folder
@@ -219,7 +225,7 @@ def review_view(doc_name):
 
 @view_page.get("/slide/<path:doc_path>")
 def slide_view(doc_path):
-    return view(doc_path, ViewRoute.Slide)
+    return view(doc_path, ViewRoute.Slide, render_doc=False)
 
 
 @view_page.get("/par_info/<int:doc_id>/<par_id>")
@@ -447,7 +453,7 @@ def goto_view(item_path, model: ViewParams) -> FlaskViewResult:
     )
 
 
-def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
+def view(item_path: str, route: ViewRoute, render_doc: bool = True) -> FlaskViewResult:
     taketime("view begin", zero=True)
     m: DocViewParams = ViewModelSchema.load(request.args, unknown="EXCLUDE")
     vp: ViewParams = ViewParamsSchema.load(request.args, unknown="EXCLUDE")
@@ -523,15 +529,18 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
         route, hide_names_requested=should_hide_names or is_hide_names()
     )
 
-    cr = check_doc_cache(doc_info, current_user, view_ctx, m, vp.nocache)
+    if render_doc:
+        cr = check_doc_cache(doc_info, current_user, view_ctx, m, vp.nocache)
 
-    if not cr.doc:
-        result = render_doc_view(doc_info, m, view_ctx, current_user, vp.nocache)
-        if result.allowed_to_cache:
-            set_doc_cache(cr.key, result)
+        if not cr.doc:
+            result = render_doc_view(doc_info, m, view_ctx, current_user, vp.nocache)
+            if result.allowed_to_cache:
+                set_doc_cache(cr.key, result)
+        else:
+            refresh_doc_expire(cr.key)
+            result = cr.doc
     else:
-        refresh_doc_expire(cr.key)
-        result = cr.doc
+        result = None
 
     # This is only used for optimizing database access so that we can close the db session
     # as early as possible.
@@ -542,15 +551,13 @@ def view(item_path: str, route: ViewRoute) -> FlaskViewResult:
     # db.session.close()
 
     final_html = render_template(
-        "show_slide.jinja2"
-        if view_ctx.route == ViewRoute.ShowSlide
-        else "view_html.jinja2",
+        viewmode_templates.get(route, DEFAULT_VIEWMODE_TEMPLATE) + ".jinja2",
         access=access,
-        doc_content=result.content_html,
-        doc_head=result.head_html,
+        doc_content=result.content_html if result else "",
+        doc_head=result.head_html if result else "",
         item=doc_info,
         route=view_ctx.route.value,
-        override_theme=result.override_theme,
+        override_theme=result.override_theme if result else None,
     )
     r = make_response(final_html)
     add_no_cache_headers(r)

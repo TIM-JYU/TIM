@@ -35,6 +35,13 @@ viewmode_routes = {
     ViewRoute.View,
 }
 
+DEFAULT_VIEWMODE_TEMPLATE = "view_html"
+
+viewmode_templates = {
+    ViewRoute.ShowSlide: "show_slide",
+    ViewRoute.Slide: "slide",
+}
+
 
 @dataclass(frozen=True)
 class OriginInfo:
