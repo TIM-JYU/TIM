@@ -376,6 +376,7 @@ TIMJS.setData = function(P, data) {
         let keys = data.datakeys || Object.keys(data.datas);
         addData(datasets, data.datas, keys, dopros);
     }
+    if ( data.label && datasets.length > 1 ) coptions.legend.display = true;
 
     if ( data.options ) { mergeDeep(P.chart.options, data.options); }
     if ( data.dataopt ) { mergeDeep(datasets[0], data.dataopt); }
