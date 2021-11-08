@@ -1,0 +1,13 @@
+{% extends 'item.jinja2' %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block head %}
+    {{ super() }}
+    <script>
+        ANGULARMODULES = {{ (jsMods or [])|tojson }};
+        JSMODULES = {{ (js or [])|tojson }};
+        JSMODULES.push("slideView");
+    </script>
+{% endblock %}
+{% block content %}
+    <tim-slide-view></tim-slide-view>
+{% endblock %}

@@ -1,4 +1,3 @@
-{% set slide_mode = route == "slide" %}
 {% set dtm = doc_settings.get_doctexmacros() %}
 {% if dtm %}
 <p style="visibility: hidden;"><span class="math inline">\({{dtm}}\)</span></p>
@@ -28,12 +27,6 @@
     </div>
     <div class="taskSmallSummary"><p>{{ task_info.total_points }} p</p></div>
     {% endif %}
-    {% if slide_mode %}
-    <div class="paragraphs">
-        <iframe id="slideFrame" src="/show_slide/{{ item.path }}" allowfullscreen></iframe>
-        <a id="showSlidesLink" href="/show_slide/{{ item.path }}">Show slides only</a>
-    </div>
-    {% else %}
     <div id="pars">
         {% include 'partials/paragraphs.jinja2' %}
         <div ng-cloak class="addBottomContainer hidden-print" ng-show="$ctrl.item.rights.editable"
@@ -43,10 +36,8 @@
             <button class="addBottom timButton">{{ btntext }}</button>
             {% endif %}
         </div>
-
     </div>
     <velp-selection ng-if="$ctrl.showVelpSelection()">
     </velp-selection>
-    {% endif %}
     <tim-view-range-navigation></tim-view-range-navigation>
 </div>
