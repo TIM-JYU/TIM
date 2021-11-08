@@ -1,3 +1,5 @@
+from time import sleep
+
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
@@ -31,6 +33,7 @@ class VelpTest(BrowserTest):
         new_velp_element: WebElement = velp_selection_element.find_element(
             by=By.CSS_SELECTOR, value=new_velp_selector
         )
+        sleep(1)
         self.assert_same_screenshot(new_velp_element, "velps/create_new_velp_empty")
 
         velp_content_input: WebElement = new_velp_element.find_element(
