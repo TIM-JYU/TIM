@@ -70,7 +70,7 @@ class SearchResult(NamedTuple):
     """The number of paragraphs found so far."""
 
     def format_match(self, args: SearchArgumentsBase) -> str:
-        m = self.match
+        m = self.match_pattern
         gps = tuple((m.group(0), *m.groups()))
         r = self
         return args.format.format(
@@ -150,7 +150,7 @@ def search_and_print(d: DocInfo, args: SearchArgumentsCLI) -> int:
             f"""
 {header}
 {'-' * len(header)}
-{result.match.string}
+{result.match_pattern.string}
 """.strip()
             + "\n"
         )

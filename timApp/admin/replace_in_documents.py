@@ -57,14 +57,16 @@ class ReplacementResult:
 
         NOTE: This replaces ALL occurrences currently.
         """
-        old_md = self.search_result.match.string
-        new_md = self.search_result.match.re.sub(self.replacement, old_md, count=0)
+        old_md = self.search_result.match_pattern.string
+        new_md = self.search_result.match_pattern.re.sub(
+            self.replacement, old_md, count=0
+        )
         return new_md
 
     def get_replacement(self) -> tuple[str, str]:
-        return self.search_result.match.group(0), self.search_result.match.expand(
-            self.replacement
-        )
+        return self.search_result.match_pattern.group(
+            0
+        ), self.search_result.match_pattern.expand(self.replacement)
 
     def get_replacement_desc(self) -> str:
         f, t = self.get_replacement()
@@ -72,7 +74,7 @@ class ReplacementResult:
 
     def format_match(self, args: ReplaceArgumentsCLI) -> str:
         r = self.search_result
-        m = r.match
+        m = r.match_pattern
         gps = tuple((m.group(0), *m.groups()))
 
         return args.format.format(
