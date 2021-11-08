@@ -220,7 +220,15 @@ function addData(datasets, datas, keys, dopros) {
         let od = datas[v];
         if ( !od || od.length === 0) continue;
         d.data = dopros ? pros(od) : od;
-        datasets.push(d);
+        let wasIn = false;
+        for (const di in datasets ) {
+            if (datasets[di].label === d.label) {
+                datasets[di] = d;
+                wasIn = true;
+                break;
+            }
+        }
+        if (!wasIn) datasets.push(d);
     }
 }
 
