@@ -42,6 +42,7 @@
 
             {% if 'area' in t.attrs %}
                 <div class="{{ t.areainfo.area_class_str }} area_{{ t.attrs['area'] }}">
+                <div class="areaContent {{ t.class_str }}" data-area="{{area_name}}">
             {% endif %}
             <div class="{{ t.html_class }}"
                  id="{{ t.id }}"
@@ -50,6 +51,7 @@
                 {{ t.output|safe }}
             </div>
             {% if 'area_end' in t.attrs %}
+                </div>
                 </div>
             {% endif %}
             {% set ns.prev_is_empty = False %}
