@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from flask import Response, request, Blueprint
+from flask import Response
 from webargs.flaskparser import use_args
 
 from timApp.auth.accesshelper import (
@@ -15,41 +15,41 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docparagraph import DocParagraph
 from timApp.document.document import Document
 from timApp.document.documentversion import DocumentVersion
-from tim_common.marshmallow_dataclass import class_schema
 from timApp.timdb.exceptions import TimDbException
-from timApp.util.flask.requesthelper import get_option, NotExist
+from timApp.util.flask.requesthelper import NotExist
 from timApp.util.flask.responsehelper import json_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
+from tim_common.marshmallow_dataclass import class_schema
 
-doc_bp = Blueprint("document", __name__, url_prefix="")
+doc_bp = TypedBlueprint("document", __name__, url_prefix="")
 
 
 @doc_bp.get("/download/<int:doc_id>")
-def download_document(doc_id):
+def download_document(doc_id: int, format: str = "md", with_tl: bool = False):
     d = get_doc_or_abort(doc_id)
     verify_copy_access(d)
-    return return_doc_content(d.document)
+    return return_doc_content(d.document, format, with_tl)
 
 
-def return_doc_content(d: Document):
-    use_raw = get_option(request, "format", "md") == "json"
-    if use_raw:
+def return_doc_content(d: Document, format: str = "md", with_tl: bool = False):
+    if format == "json":
         return json_response(d.export_raw_data())
     else:
-        return Response(d.export_markdown(), mimetype="text/plain")
+        return Response(d.export_markdown(with_tl=with_tl), mimetype="text/plain")
 
 
 @doc_bp.get("/download/<int:doc_id>/<int:major>/<int:minor>")
-def download_document_version(doc_id, major, minor):
+def download_document_version(doc_id: int, major: int, minor: int, format: str = "md"):
     d = get_doc_or_abort(doc_id)
     verify_edit_access(d)
     doc = DocumentVersion(doc_id, (major, minor))
     if not doc.exists():
         raise NotExist("This document version does not exist.")
-    return return_doc_content(doc)
+    return return_doc_content(doc, format)
 
 
 @doc_bp.get("/diff/<int:doc_id>/<int:major1>/<int:minor1>/<int:major2>/<int:minor2>")
-def diff_document(doc_id, major1, minor1, major2, minor2):
+def diff_document(doc_id: int, major1: int, minor1: int, major2: int, minor2: int):
     d = get_doc_or_abort(doc_id)
     verify_edit_access(d)
     doc1 = DocumentVersion(doc_id, (major1, minor1))
@@ -75,18 +75,23 @@ GetBlockModelSchema = class_schema(GetBlockModel)
 
 
 @doc_bp.get("/getBlock/<int:doc_id>/<par_id>")
-def get_block(doc_id, par_id):
+def get_block(
+    doc_id: int,
+    par_id: str,
+    area_end: Optional[str] = None,
+    area_start: Optional[str] = None,
+):
     return get_block_2(
         GetBlockModel(
-            area_end=request.args.get("area_end"),
-            area_start=request.args.get("area_start"),
+            area_start=area_start,
+            area_end=area_end,
             doc_id=doc_id,
             par_id=par_id,
         )
     )
 
 
-@doc_bp.get("/getBlock")
+@doc_bp.get("/getBlock", own_model=True)
 @use_args(GetBlockModelSchema())
 def get_block_schema(args: GetBlockModel):
     return get_block_2(args)

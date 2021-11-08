@@ -372,6 +372,20 @@ test
             f"/download/{d.id}", query_string={"format": "json"}, expect_status=403
         )
 
+    def test_download_with_tls(self):
+        self.login_test1()
+        d1 = self.create_doc(initial_par="Original text")
+        d1_par = d1.document.get_last_par()
+        d2 = self.create_translation(d1)
+        d2_par = d2.document.get_last_par()
+        self.get(
+            f"/download/{d2.id}",
+            query_string={"with_tl": "true"},
+            expect_content=f"""#- {{r="tr" rp="{d1_par.id}" id="{d2_par.id}"}}
+Original text
+""",
+        )
+
     def test_no_unnecessary_update(self):
         self.login_test1()
         d = self.create_doc(initial_par="test")

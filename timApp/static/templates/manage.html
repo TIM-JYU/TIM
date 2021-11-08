@@ -277,6 +277,9 @@
         <div class="panel-body">
             <a ng-show="$ctrl.item.rights.copy" class="timButton"
                href="/download/{{ $ctrl.item.id }}">Download document markdown</a>
+            <a ng-show="$ctrl.item.rights.copy && $ctrl.item.src_docid" class="timButton"
+               href="/download/{{ $ctrl.item.id }}?with_tl=true"
+               title="Export document and all untranslated text as markdown">Export document with original text</a>
             <button class="timButton" ng-click="$ctrl.markAllAsRead()">Mark document as read</button>
             <button ng-show="$ctrl.item.rights.owner" class="btn btn-danger"
                     ng-click="$ctrl.deleteDocument()">Delete document

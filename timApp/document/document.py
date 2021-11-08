@@ -306,7 +306,16 @@ class Document:
             self.__exists = self.get_doc_dir().exists()
         return self.__exists
 
-    def export_markdown(self, export_hashes: bool = False, export_ids=True) -> str:
+    def export_markdown(
+        self,
+        export_hashes: bool = False,
+        export_ids: bool = True,
+        with_tl: bool = False,
+    ) -> str:
+        if with_tl:
+            return "\n".join(
+                [par.get_exported_markdown(export_ids=export_ids) for par in self]
+            )
         return DocumentWriter(
             [par.dict() for par in self],
             export_hashes=export_hashes,
