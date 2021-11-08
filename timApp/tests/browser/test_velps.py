@@ -33,6 +33,7 @@ class VelpTest(BrowserTest):
         new_velp_element: WebElement = velp_selection_element.find_element(
             by=By.CSS_SELECTOR, value=new_velp_selector
         )
+        # Wait a moment until all group info has been loaded
         sleep(1)
         self.assert_same_screenshot(new_velp_element, "velps/create_new_velp_empty")
 
