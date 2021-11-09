@@ -1,6 +1,7 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 from flask import Response
@@ -415,12 +416,20 @@ def cancel_read_receipt(message_id: int) -> Response:
     return ok_response()
 
 
+class ReadReceiptFormat(Enum):
+    CSV = "csv"
+    TableFormQuery = "tableform-query"
+
+
 @timMessage.get("/readReceipts")
 def get_read_receipts(
     message_doc: int,
     include_read: bool = False,
     include_unread: bool = False,
     separator: str = ";",
+    receipt_format: ReadReceiptFormat = field(
+        metadata={"by_value": True}, default=ReadReceiptFormat.CSV
+    ),
 ) -> Response:
     verify_logged_in()
     doc = DocEntry.find_by_id(message_doc)
@@ -467,6 +476,9 @@ def get_read_receipts(
             data.append(
                 [str(i), f"user_{i}@noreply", f"user{i}", f"User {i}", read_time]
             )
+
+    if receipt_format == ReadReceiptFormat.TableFormQuery:
+        return text_response("|".join([u[2] for u in data[1:]]))
 
     return text_response(csv_string(data, "excel", separator))
 
