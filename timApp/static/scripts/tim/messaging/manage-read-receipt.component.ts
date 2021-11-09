@@ -5,10 +5,12 @@ import {to2} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
+import moment from "moment";
 
 @Component({
     selector: "manage-read-receipt",
     template: `
+        <p class="small" *ngIf="expires">Note: this message expires on {{expires}}</p>
         <ng-container *ngIf="canMarkAsRead">
             <tim-alert *ngIf="errorMessage">
                 {{errorMessage}}
@@ -30,9 +32,10 @@ import {TimUtilityModule} from "tim/ui/tim-utility.module";
 })
 export class ManageReadReceiptComponent implements OnInit {
     markedAsRead: boolean = false;
-    receipt: TimMessageReadReceipt | undefined;
+    receipt?: TimMessageReadReceipt;
     canMarkAsRead: boolean = false;
     errorMessage?: string;
+    expires?: string;
 
     constructor(private http: HttpClient) {}
 
@@ -53,17 +56,20 @@ export class ManageReadReceiptComponent implements OnInit {
         this.errorMessage = undefined;
         const message = await to2(
             this.http
-                .get<TimMessageReadReceipt>(
+                .get<{expires: string | null; receipt?: TimMessageReadReceipt}>(
                     `/timMessage/get_read_receipt/${docId}`
                 )
                 .toPromise()
         );
 
         if (message.ok) {
-            this.receipt = message.result;
-            this.canMarkAsRead = message.result.can_mark_as_read;
-            if (message.result.marked_as_read_on != null) {
-                this.markedAsRead = true;
+            this.receipt = message.result.receipt;
+            this.canMarkAsRead = !!this.receipt?.can_mark_as_read;
+            this.markedAsRead = !!this.receipt?.marked_as_read_on;
+            if (message.result.expires) {
+                this.expires = moment(message.result.expires)
+                    .local()
+                    .format("dddd, MMMM Do YYYY, h:mm:ss a");
             }
         } else {
             this.errorMessage = $localize`Could not load read information: ${message.result.error.error}`;

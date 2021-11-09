@@ -201,7 +201,7 @@ def get_read_receipt(doc_id: int) -> Response:
         rcpt_id=get_current_user_object().get_personal_group().id, message_id=message.id
     ).first()
     if not receipt:
-        raise NotExist("Read receipt not found")
+        return json_response({"receipt": None, "expires": message.expires})
 
     receipt_data = TimMessageReadReceipt(
         rcpt_id=receipt.rcpt_id,
@@ -211,7 +211,7 @@ def get_read_receipt(doc_id: int) -> Response:
         can_mark_as_read=message.can_mark_as_read,
     )
 
-    return json_response(receipt_data)
+    return json_response({"receipt": receipt_data, "expires": message.expires})
 
 
 # Regex pattern for url verification.
