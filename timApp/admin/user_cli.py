@@ -99,6 +99,7 @@ class MergeResult:
     notes: int = 0
     accesses: int = 0
     groups: int = 0
+    contacts: int = 0
 
 
 @user_cli.command()
@@ -188,6 +189,7 @@ def do_merge_users(u_prim: User, u_sec: User, force=False) -> MergeResult:
                     verified=c.verified,
                 )
             )
+            moved_data.contacts += 1
         # Don't delete primary mail since it is still managed by the main email integration
         if not c.primary:
             db.session.delete(c)

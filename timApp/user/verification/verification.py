@@ -39,7 +39,7 @@ class VerificationType(Enum):
 
 VERIFICATION_TEMPLATES = {
     VerificationType.CONTACT_OWNERSHIP: "settings/verify-templates/contact",
-    VerificationType.LIST_JOIN: None,
+    VerificationType.LIST_JOIN: "settings/verify-templates/primary-contact",
     VerificationType.SET_PRIMARY_CONTACT: None,
 }
 
@@ -157,7 +157,10 @@ def send_verification_impl(
     )
     title = render_template_string(message_title, user=user, verification=verification)
     body = render_template_string(
-        message_body, user=user, verification=verification, verify_url=url
+        message_body,
+        user=user,
+        verification=verification,
+        verify_url=url,
     )
 
     send_email(user.email, title, body)

@@ -370,7 +370,7 @@ export class SettingsComponent implements DoCheck {
         this.saving = true;
         await to2(
             this.http
-                .post("/settings/contacts/add", {
+                .post("/contacts/add", {
                     contact_info_type: contact.channel,
                     contact_info: contact.contact,
                 })
@@ -385,7 +385,7 @@ export class SettingsComponent implements DoCheck {
         this.saving = true;
         const r = await to2(
             this.http
-                .post("/settings/contacts/remove", {
+                .post("/contacts/remove", {
                     contact_info_type: contact.channel,
                     contact_info: contact.contact,
                 })
@@ -427,7 +427,7 @@ export class SettingsComponent implements DoCheck {
         this.saving = true;
         const r = await to2(
             this.http
-                .post<{verify: boolean}>("/settings/contacts/primary", {
+                .post<{verify: boolean}>("/contacts/primary", {
                     contact: this.primaryEmail.contact,
                     channel: this.primaryEmail.channel,
                 })

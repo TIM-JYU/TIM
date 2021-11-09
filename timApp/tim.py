@@ -85,6 +85,7 @@ from timApp.sisu.sisu import sisu
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
+from timApp.user.contacts import contacts
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.usergroup import UserGroup
@@ -112,6 +113,7 @@ blueprints = [
     answers,
     backup,
     clipboard,
+    contacts,
     course_blueprint,
     dist_bp,
     doc_bp,

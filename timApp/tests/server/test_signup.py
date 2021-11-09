@@ -13,6 +13,7 @@ from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
 from timApp.user.user import User, UserOrigin, UserInfo
+from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import create_password_hash
 
@@ -278,6 +279,8 @@ class TestSignUp(TimRouteTest):
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [])
         self.assertEqual("Testing Signup", self.current_user.real_name)
         self.assertEqual(UserOrigin.Email, self.current_user.origin)
+        self.assertEqual(email, self.current_user.email)
+        self.assertEqual(email, self.current_user.primary_email_contact.contact)
 
         # TODO needs a better error message
         self.json_post(
@@ -623,6 +626,8 @@ class TestSignUp(TimRouteTest):
             )
             u = User.get_by_name("yliopisto.fi:teppo")
             self.assertEqual(teppo_email, u.email)
+            self.assertEqual(teppo_email, u.primary_email_contact.contact)
+            self.assertEqual(ContactOrigin.Haka, u.primary_email_contact.contact_origin)
             self.assertEqual("Teppo", u.given_name)
             self.assertEqual("Testaaja", u.last_name)
             self.assertEqual("Testaaja Teppo", u.real_name)
@@ -676,7 +681,10 @@ class TestSignUp(TimRouteTest):
             )
         )
         self.assertIsNone(User.get_by_name("xxxx"))
-        self.assertIsNotNone(User.get_by_name("xxxx2"))
+        u = User.get_by_name("xxxx2")
+        self.assertIsNotNone(u)
+        db.session.refresh(u)
+        self.assertEqual("xxxx2@example.com", u.primary_email_contact.contact)
 
     def test_haka_login_email_conflict(self):
         self.create_or_update_test_user(

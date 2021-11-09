@@ -1,7 +1,7 @@
 from timApp.auth.accesshelper import get_doc_or_abort
 from timApp.auth.accesstype import AccessType
 from timApp.folder.folder import Folder
-from timApp.messaging.messagelist.listinfo import ArchiveType
+from timApp.messaging.messagelist.listinfo import ArchiveType, Channel
 from timApp.messaging.messagelist.messagelist_utils import (
     MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX,
 )
@@ -10,11 +10,78 @@ from timApp.tests.server.timroutetest import TimMessageListTest
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import ANONYMOUS_GROUPNAME, LOGGED_IN_GROUPNAME
 from timApp.user.user import User, UserInfo
+from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup
+from timApp.user.verification.verification import SetPrimaryContactVerification
 
 
 class MessageListTest(TimMessageListTest):
     """Server test for message lists."""
+
+    def test_primary_email_sync(self):
+        """Test primary email sync with Mailman"""
+
+        self.login_test1()
+        self.make_admin(self.test_user_1)
+        list_name = "primary_mail_sync_test1"
+        manage_doc, message_list = self.create_list(list_name, ArchiveType.NONE)
+
+        list_member, _ = User.create_with_group(
+            UserInfo(
+                username="primary_mail_member",
+                email="mail1@example.com",
+            )
+        )
+        db.session.commit()
+        list_member = User.get_by_name(list_member.name)
+
+        mlist = self.mailman_client.get_list(message_list.email_address)
+
+        def check_message_list():
+            self.assertEqual(
+                {m.address.email for m in mlist.members},
+                {self.test_user_1.email, list_member.email},
+                "Message list must have same emails and users in TIM and Mailman",
+            )
+
+        self.add_list_member(list_name, [list_member.name])
+        check_message_list()
+        list_member = User.get_by_name(list_member.name)
+
+        emails_to_test = [
+            "secondary_mail1@example.com",
+            "secondary_mail2@example.com",
+            "secondary_mail3@example.com",
+        ]
+        list_member.set_emails(
+            emails_to_test,
+            ContactOrigin.Custom,
+            remove=False,
+            force_verify=True,
+        )
+        db.session.commit()
+
+        check_message_list()
+
+        for email in emails_to_test:
+            list_member = User.get_by_name(list_member.name)
+            db.session.refresh(list_member)
+            # Set primary email directly
+            list_member.email = email
+            db.session.commit()
+            check_message_list()
+
+        for email in emails_to_test:
+            list_member = User.get_by_name(list_member.name)
+            db.session.refresh(list_member)
+            # Simulate setting correct email via verification
+            SetPrimaryContactVerification(
+                contact=list_member.get_contact(Channel.EMAIL, email),
+                user=list_member,
+                user_id=list_member.id,
+            ).approve()
+            db.session.commit()
+            check_message_list()
 
     def test_scim_mail_sync(self):
         from timApp.tests.server.test_scim import add_name_parts, a

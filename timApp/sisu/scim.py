@@ -332,7 +332,7 @@ def put_user(user_id: str) -> Response:
         emails = [
             e.value for e in sorted(um.emails, key=lambda em: 0 if em.primary else 1)
         ]
-        u.set_emails(emails, ContactOrigin.Sisu)
+        u.set_emails(emails, ContactOrigin.Sisu, can_update_primary=True)
     db.session.commit()
     return json_response(u.get_scim_data())
 
@@ -423,7 +423,7 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                     sync_mailing_lists=False,
                 )
                 prev_email = user.email
-                user.set_emails(u.emails, ContactOrigin.Sisu, update_primary=True)
+                user.set_emails(u.emails, ContactOrigin.Sisu, can_update_primary=True)
                 email_updates.append((prev_email, u.email))
             else:
                 user = existing_accounts_by_email_dict.get(u.primary_email)
@@ -444,18 +444,22 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         sync_mailing_lists=False,
                     )
                     prev_email = user.email
-                    user.set_emails(u.emails, ContactOrigin.Sisu, update_primary=True)
+                    user.set_emails(
+                        u.emails, ContactOrigin.Sisu, can_update_primary=True
+                    )
                     email_updates.append((prev_email, u.email))
                 else:
                     user, _ = User.create_with_group(
                         UserInfo(
                             username=u.value,
                             full_name=name_to_use,
-                            email=u.primary_email,
                             origin=UserOrigin.Sisu,
                             last_name=u.name.familyName,
                             given_name=u.name.givenName,
                         )
+                    )
+                    user.set_emails(
+                        u.emails, ContactOrigin.Sisu, can_update_primary=True
                     )
             added = user.add_to_group(ug, added_by=scimuser, sync_mailing_lists=False)
             if added:

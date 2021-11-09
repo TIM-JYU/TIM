@@ -16,6 +16,7 @@ class ContactOrigin(Enum):
 
 
 NO_AUTO_VERIFY_ORIGINS = {ContactOrigin.Custom}
+"""Origins that must not be automatically verified when added to user"""
 
 
 class PrimaryContact(Enum):

@@ -160,6 +160,12 @@ def initialize_database(create_docs: bool = True) -> None:
                 admin_group,
                 title="Contact verify",
             )
+            verify_contact_message_template = import_document_from_file(
+                static_tim_doc("initial/primary_contact_verify_message.md"),
+                "settings/verify-templates/primary-contact",
+                admin_group,
+                title="New primary contact verify",
+            )
             verify_contact_message_template.document.set_settings(
                 {"subject": "Verify new contact", "textplain": True}
             )

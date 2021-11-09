@@ -10,6 +10,7 @@ from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
 from timApp.document.docentry import DocEntry
+from timApp.messaging.messagelist.listinfo import Channel
 from timApp.notification.send_email import sent_mails_in_testing
 from timApp.sisu.scim import SISU_GROUP_PREFIX
 from timApp.sisu.scimusergroup import ScimUserGroup
@@ -58,6 +59,15 @@ class ScimTest(TimRouteTest):
                 "The request was well-formed but was unable to be followed due to semantic errors."
             ),
         )
+
+        def check_emails(username: str, emails: list[str]):
+            u = User.get_by_name(username)
+            db.session.refresh(u)
+            self.assertEqual(
+                set(emails),
+                {uc.contact for uc in u.contacts if uc.channel == Channel.EMAIL},
+            )
+
         r = self.json_post(
             "/scim/Groups",
             json_data={
@@ -99,6 +109,9 @@ class ScimTest(TimRouteTest):
                 "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
             },
         )
+
+        check_emails("sisuuser", ["x@example.com"])
+        check_emails("sisuuser3", ["x3@example.com", "x3work@example.com"])
 
         self.json_post(
             "/scim/Groups",
@@ -202,10 +215,12 @@ class ScimTest(TimRouteTest):
             )
 
         ru2 = update_and_get()
+        check_emails("sisuuser", ["sisuuser@example.com"])
         self.assertEqual(create_stamp_user, ru2["meta"]["created"])
         new_modified = ru2["meta"]["lastModified"]
         self.assertNotEqual(create_stamp_user, new_modified)
         ru3 = update_and_get()
+        check_emails("sisuuser", ["sisuuser@example.com"])
         self.assertEqual(ru3["meta"]["lastModified"], new_modified)
 
         # self.assertIsNone(UserGroup.get_by_name(eid))
@@ -283,6 +298,9 @@ class ScimTest(TimRouteTest):
                 "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
             },
         )
+
+        check_emails("sisuuser", ["x@example.com"])
+        check_emails("sisuuser2", ["x2@example.com"])
 
         r = self.get(
             f"/scim/Groups",
@@ -389,6 +407,9 @@ class ScimTest(TimRouteTest):
                 "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
             },
         )
+        check_emails("sisuuser", ["x@example.com"])
+        check_emails("sisuuser3", ["x3@example.com"])
+
         self.assertNotEqual(create_stamp, r["meta"]["lastModified"])
         g = UserGroup.get_by_name(f"{DELETED_GROUP_PREFIX}{eid}")
         self.assertIsNone(g)

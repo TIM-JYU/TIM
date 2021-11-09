@@ -5,11 +5,13 @@ from timApp.admin.user_cli import (
     do_soft_delete,
 )
 from timApp.document.docentry import DocEntry
+from timApp.messaging.messagelist.listinfo import Channel
 from timApp.tests.db.timdbtest import TEST_USER_1_ID, TEST_USER_2_ID, TEST_USER_3_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
 from timApp.user.special_group_names import SPECIAL_USERNAMES
 from timApp.user.user import User, UserInfo
+from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException, NotExist
 
@@ -118,6 +120,22 @@ class MergeTest(TimRouteTest):
             )
             self.assertEqual({(secondary_personal.id, None)}, membership_set(secondary))
 
+        def check_contacts(
+            primary: User, secondary: User, extra_emails: list[str] = None
+        ):
+            db.session.refresh(primary)
+            db.session.refresh(secondary)
+            extra_emails = extra_emails or []
+            self.assertEqual(
+                {(primary.email, Channel.EMAIL), (secondary.email, Channel.EMAIL)}
+                | {(e, Channel.EMAIL) for e in extra_emails},
+                {(c.contact, c.channel) for c in primary.contacts},
+            )
+            self.assertEqual(
+                {(secondary.email, Channel.EMAIL)},
+                {(c.contact, c.channel) for c in secondary.contacts},
+            )
+
         r = find_and_merge_users("testuser2", "testuser1")
         self.assertEqual(1, r.accesses)
         self.assertEqual(0, r.annotations)
@@ -129,9 +147,11 @@ class MergeTest(TimRouteTest):
         self.assertEqual(0, r.readparagraphs)
         self.assertEqual(0, r.velps)
         self.assertEqual(2, r.groups)
+        self.assertEqual(1, r.contacts)
         db.session.commit()
         self.assertIsNone(DocEntry.find_by_path(path))
         check_memberships(self.test_user_2, self.test_user_1, t2pg, t1pg)
+        check_contacts(self.test_user_2, self.test_user_1)
 
         r = find_and_merge_users("testuser2", "testuser1")
         self.assertEqual(0, r.accesses)
@@ -144,8 +164,10 @@ class MergeTest(TimRouteTest):
         self.assertEqual(0, r.readparagraphs)
         self.assertEqual(0, r.velps)
         self.assertEqual(0, r.groups)
+        self.assertEqual(0, r.contacts)
         db.session.commit()
         check_memberships(self.test_user_2, self.test_user_1, t2pg, t1pg)
+        check_contacts(self.test_user_2, self.test_user_1)
 
         r = find_and_merge_users("testuser1", "testuser2")
         self.assertEqual(1, r.accesses)
@@ -158,8 +180,10 @@ class MergeTest(TimRouteTest):
         self.assertEqual(0, r.readparagraphs)
         self.assertEqual(0, r.velps)
         self.assertEqual(2, r.groups)
+        self.assertEqual(1, r.contacts)
         db.session.commit()
         check_memberships(self.test_user_1, self.test_user_2, t1pg, t2pg)
+        check_contacts(self.test_user_1, self.test_user_2)
         self.assertIsNotNone(DocEntry.find_by_path(path))
 
         r = find_and_merge_users("testuser1", "testuser2")
@@ -173,13 +197,42 @@ class MergeTest(TimRouteTest):
         self.assertEqual(0, r.readparagraphs)
         self.assertEqual(0, r.velps)
         self.assertEqual(0, r.groups)
+        self.assertEqual(0, r.contacts)
         db.session.commit()
         test_user_2 = self.test_user_2
         check_memberships(self.test_user_1, test_user_2, t1pg, t2pg)
+        check_contacts(self.test_user_1, self.test_user_2)
+
+        self.test_user_2.set_emails(
+            ["some_email@example.com"],
+            ContactOrigin.Custom,
+            remove=False,
+            force_verify=True,
+        )
+
+        r = find_and_merge_users("testuser1", "testuser2")
+        self.assertEqual(0, r.accesses)
+        self.assertEqual(0, r.annotations)
+        self.assertEqual(0, r.answers)
+        self.assertEqual(0, r.lectureanswers)
+        self.assertEqual(0, r.messages)
+        self.assertEqual(0, r.notes)
+        self.assertEqual(0, r.owned_lectures)
+        self.assertEqual(0, r.readparagraphs)
+        self.assertEqual(0, r.velps)
+        self.assertEqual(0, r.groups)
+        self.assertEqual(1, r.contacts)
+        db.session.commit()
+        test_user_2 = self.test_user_2
+        check_memberships(self.test_user_1, test_user_2, t1pg, t2pg)
+        check_contacts(self.test_user_1, self.test_user_2, ["some_email@example.com"])
 
         find_and_soft_delete("testuser2")
         self.assertIsNone(User.get_by_name("testuser2"))
-        self.assertIsNotNone(User.get_by_name(f"testuser2_deleted_{test_user_2.id}"))
+        u = User.get_by_name(f"testuser2_deleted_{test_user_2.id}")
+        db.session.refresh(u)
+        self.assertIsNotNone(u)
+        self.assertEqual(u.email, u.primary_email_contact.contact)
         with self.assertRaises(RouteException):
             find_and_soft_delete("testuser2")
         with self.assertRaises(RouteException):

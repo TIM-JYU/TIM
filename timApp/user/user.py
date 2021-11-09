@@ -288,13 +288,20 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         return self._email
 
     def _set_email(self, value: str) -> None:
+        self.update_email(value)
+
+    # Decorators don't work with mypy yet
+    # See https://github.com/dropbox/sqlalchemy-stubs/issues/98
+    email = hybrid_property(_get_email, _set_email)
+
+    def update_email(self, new_email: str, notify_message_lists: bool = True):
+        from timApp.messaging.messagelist.emaillist import update_mailing_list_address
+
         prev_email = self._email
-        self._email = value
-        if prev_email != value:
-            current_primary = self.primary_email_contact
-            current_primary.primary = None
+        self._email = new_email
+        if prev_email != new_email:
             new_primary = UserContact.query.filter_by(
-                user_id=self.id, channel=Channel.EMAIL, contact=value
+                user_id=self.id, channel=Channel.EMAIL, contact=new_email
             ).first()
             if not new_primary:
                 # If new primary contact does not exist for the email, create it
@@ -303,23 +310,15 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                     user=self,
                     verified=True,
                     channel=Channel.EMAIL,
-                    contact=value,
+                    contact=new_email,
                     contact_origin=ContactOrigin.Custom,
                 )
                 db.session.add(new_primary)
+            self.primary_email_contact.primary = None
             new_primary.primary = PrimaryContact.true
 
-    # Decorators don't work with mypy yet
-    # See https://github.com/dropbox/sqlalchemy-stubs/issues/98
-    email = hybrid_property(_get_email, _set_email)
-
-    def update_email(self, new_email: str, notify_message_lists: bool = False):
-        from timApp.messaging.messagelist.emaillist import update_mailing_list_address
-
-        old_email = self.email
-        self.email = new_email
-        if old_email != new_email and notify_message_lists:
-            update_mailing_list_address(old_email, new_email)
+            if notify_message_lists:
+                update_mailing_list_address(prev_email, new_email)
 
     @property
     def scim_display_name(self):
@@ -343,7 +342,10 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
     @property
     def scim_extra_data(self):
-        return {"emails": [{"value": self.email}] if self.email else []}
+        email_contacts = UserContact.query.filter_by(
+            user=self, channel=Channel.EMAIL, verified=True
+        )
+        return {"emails": [{"value": uc.contact} for uc in email_contacts]}
 
     consents = db.relationship("ConsentChange", back_populates="user", lazy="select")
     contacts: list[UserContact] = db.relationship(
@@ -756,7 +758,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 [info.email],
                 email_origin,
                 force_verify=True,
-                update_primary=True,
+                can_update_primary=True,
                 remove=False,
             )
             if sync_mailing_lists:
@@ -776,7 +778,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         emails: list[str],
         origin: ContactOrigin,
         force_verify: bool = False,
-        update_primary: bool = False,
+        can_update_primary: bool = False,
         add: bool = True,
         remove: bool = True,
     ) -> None:
@@ -790,7 +792,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         :param origin: Emails' origin
         :param force_verify: If True, emails all emails are marked as verified.
                              Otherwise origins in NO_AUTO_VERIFY_ORIGINS are not verified.
-        :param update_primary: If True, allows to "upgrade" the primary email address.
+        :param can_update_primary: If True, allows to "update" the primary email address.
                                 If the user's primary email is custom and a new email is added from the integration,
                                 set that email as primary.
                                 Also, if user's primary email is custom and a new email is added is also custom,
@@ -823,9 +825,13 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         }
 
         change_primary_email = (
-            self.primary_email_contact.contact_origin == origin
-            and self.primary_email_contact.contact in to_remove
-        ) or (origin == ContactOrigin.Custom and update_primary)
+            self.primary_email_contact is None
+            or (
+                self.primary_email_contact.contact_origin == origin
+                and self.primary_email_contact.contact in to_remove
+            )
+            or (origin == ContactOrigin.Custom and can_update_primary)
+        )
 
         if to_add:
             verified = force_verify or origin not in NO_AUTO_VERIFY_ORIGINS
@@ -844,7 +850,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
             # If new contacts are actually added and we use a custom contact, upgrade to the managed address
             change_primary_email = change_primary_email or (
-                update_primary
+                can_update_primary
                 and origin != ContactOrigin.Custom
                 and len(to_add - added_email_contacts_set) > 0
             )
@@ -871,7 +877,8 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
 
         if change_primary_email:
             # Ensure no email is primary
-            self.primary_email_contact.primary = None
+            if self.primary_email_contact:
+                self.primary_email_contact.primary = None
 
             if emails:
                 new_primary = new_email_contacts[emails[0]]
@@ -895,6 +902,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                     self.contacts.append(new_primary)
 
             new_primary.primary = PrimaryContact.true
+            # self.primary_email_contact = new_primary
             self._email = new_primary.contact
 
     def set_unique_codes(self, codes: list[SchacPersonalUniqueCode]):

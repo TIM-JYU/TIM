@@ -29,7 +29,7 @@ def get_verification_data(
     ).first()
 
     if not verification:
-        error = "No verification found for the given data"
+        error = "No verification found for the token and type"
 
     if verification and verification.user_id != get_current_user_id():
         error = "You are not authorized to verify this action"
@@ -58,8 +58,8 @@ def do_verify(verify_type: str, verify_token: str, verify: bool) -> Response:
     verification, error = get_verification_data(verify_type, verify_token)
     if error:
         raise RouteException(error)
-    if not verification:
-        raise RouteException("No valid verification found for the token")
+    # Handled by previous check
+    assert verification is not None
 
     if verify:
         verification.approve()

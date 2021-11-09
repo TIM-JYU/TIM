@@ -5,8 +5,6 @@ from typing import Any
 from flask import render_template, session, flash, Response
 from flask import request
 from jinja2 import TemplateNotFound
-from sqlalchemy import func
-from sqlalchemy.orm import load_only
 
 from timApp.admin.user_cli import do_soft_delete
 from timApp.answer.answer_models import AnswerUpload
@@ -16,28 +14,17 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.folder.folder import Folder
 from timApp.item.block import Block, BlockType
-from timApp.messaging.messagelist.listinfo import Channel
 from timApp.notification.notify import get_current_user_notifications
 from timApp.timdb.sqa import db
 from timApp.user.consentchange import ConsentChange
 from timApp.user.preferences import Preferences
 from timApp.user.settings.theme import get_available_themes
 from timApp.user.user import User, Consent, get_owned_objects_query
-from timApp.user.usercontact import UserContact, ContactOrigin, PrimaryContact
-from timApp.user.verification.verification import (
-    ContactAddVerification,
-    request_verification,
-    resend_verification,
-    SetPrimaryContactVerification,
-)
 from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import is_valid_email
 
 settings_page = TypedBlueprint("settings_page", __name__, url_prefix="/settings")
-contacts = TypedBlueprint("contacts", __name__, url_prefix="/contacts")
-settings_page.register_blueprint(contacts)
 
 
 @settings_page.before_request
@@ -200,157 +187,3 @@ def delete_account() -> Response:
     session.clear()
     flash("Your account has been deleted.")
     return ok_response()
-
-
-@contacts.post("/add")
-def add_contact(
-    contact_info: str, contact_info_type: Channel = field(metadata={"by_value": True})
-) -> Response:
-    """Add a new contact information for current user.
-
-    :param contact_info_type: The channel user wishes to add a new contact information.
-    :param contact_info: The contact information.
-    :return: OK response.
-    """
-    verify_logged_in()
-    user = get_current_user_object()
-    # Check for duplicate contact information.
-    existing_contact_info = user.get_contact(
-        contact_info_type,
-        contact_info,
-        [load_only(UserContact.id, UserContact.verified)],
-    )
-
-    if existing_contact_info:
-        # If the contact info already exists and is verified by the user, resend verification
-        if existing_contact_info.verified:
-            raise RouteException("The contact is already added")
-        resend_verification(
-            ContactAddVerification.query.filter_by(
-                contact=existing_contact_info, reacted_at=None
-            ).one()
-        )
-        return json_response({"requireVerification": False})
-
-    # Add appropriate contact info.
-    require_verification = False
-    if contact_info_type == Channel.EMAIL:
-        require_verification = True
-        if not is_valid_email(contact_info):
-            raise RouteException("Email format is invalid")
-
-        uc = UserContact(
-            user=user,
-            contact=contact_info,
-            channel=Channel.EMAIL,
-            verified=False,
-            contact_origin=ContactOrigin.Custom,
-        )
-        db.session.add(uc)
-        request_verification(ContactAddVerification(user=user, contact=uc))
-
-    db.session.commit()
-    return json_response({"requireVerification": require_verification})
-
-
-@contacts.post("/remove")
-def remove_contact(
-    contact_info: str, contact_info_type: Channel = field(metadata={"by_value": True})
-) -> Response:
-    """Remove a contact information from current user.
-
-    :param contact_info_type: The channel user wishes to add a new contact information.
-    :param contact_info: The contact information.
-    :return: OK response.
-    """
-    verify_logged_in()
-    user = get_current_user_object()
-
-    if contact_info_type == Channel.EMAIL and user.email == contact_info:
-        raise RouteException("Cannot remove primary email")
-
-    contact = user.get_contact(
-        contact_info_type,
-        contact_info,
-        [load_only(UserContact.id, UserContact.channel)],
-    )
-
-    if not contact:
-        raise RouteException("The contact does not exist for the user")
-
-    if contact.primary:
-        raise RouteException(
-            "Cannot remove a primary contact. Set a new primary contact before removing this one."
-        )
-
-    if contact.contact_origin != ContactOrigin.Custom:
-        raise RouteException("Cannot remove managed contacts")
-
-    verified_emails_count = (
-        db.session.query(func.count(UserContact.id))
-        .filter_by(
-            user_id=user.id,
-            channel=Channel.EMAIL,
-            verified=True,
-            contact_origin=ContactOrigin.Custom,
-        )
-        .scalar()
-    )
-
-    if contact.verified and verified_emails_count == 1:
-        raise RouteException(
-            "Removing the email will leave the user with no verified user-added emails. "
-            "Add at least one verified email before removing this one."
-        )
-
-    db.session.delete(contact)
-    db.session.commit()
-    return ok_response()
-
-
-@contacts.post("/primary")
-def set_primary(
-    contact: str, channel: Channel = field(metadata={"by_value": True})
-) -> Response:
-    """Set the primary contact.
-
-    :param contact: Primary contact value.
-    :param channel: Primary contact channel.
-    :return: OK response.
-    """
-    verify_logged_in()
-    user = get_current_user_object()
-
-    existing_contact = user.get_contact(
-        channel,
-        contact,
-        [load_only(UserContact.id, UserContact.contact, UserContact.primary)],
-    )
-
-    if not existing_contact:
-        raise RouteException("The contact does not exist for the user")
-
-    if existing_contact.primary:
-        json_response({"verify": False})
-
-    existing_verification = SetPrimaryContactVerification.query.filter_by(
-        contact=existing_contact,
-        reacted_at=None,
-    ).first()
-    if existing_verification:
-        resend_verification(existing_verification)
-        return json_response({"verify": True})
-
-    current_primary = user.primary_email_contact
-    need_verify = False
-
-    if not current_primary:
-        user.update_email(existing_contact.contact)
-    else:
-        request_verification(
-            SetPrimaryContactVerification(user=user, contact=existing_contact)
-        )
-        need_verify = True
-
-    db.session.commit()
-    return json_response({"verify": need_verify})

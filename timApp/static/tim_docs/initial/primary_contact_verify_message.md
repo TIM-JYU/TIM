@@ -1,7 +1,7 @@
 Hi!
 
-Someone tried to add this email as their new contact information to TIM ({{config['TIM_HOST']}}). If this is you, follow
-the link below to review the information and verify this address:
+Someone tried to change your primary email on TIM ({{config['TIM_HOST']}}) to {{verification.contact.contact}}. If this is you, follow
+the link below to review the information and verify the change:
 
 {{verify_url}}
 

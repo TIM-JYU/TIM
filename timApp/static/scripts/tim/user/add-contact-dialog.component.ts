@@ -87,13 +87,10 @@ export class AddContactDialogComponent extends AngularDialogComponent<
         // Call the server.
         const result = await to2(
             this.http
-                .post<{requireVerification: boolean}>(
-                    "/settings/contacts/add",
-                    {
-                        contact_info_type: this.chosenChannel,
-                        contact_info: this.contactInfo,
-                    }
-                )
+                .post<{requireVerification: boolean}>("/contacts/add", {
+                    contact_info_type: this.chosenChannel,
+                    contact_info: this.contactInfo,
+                })
                 .toPromise()
         );
         this.saving = false;
