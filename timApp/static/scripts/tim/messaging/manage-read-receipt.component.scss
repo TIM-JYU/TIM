@@ -6,3 +6,14 @@
         font-size: 80%;
     }
 }
+
+.copy-query-panel {
+    display: flex;
+    margin-bottom: 1em;
+    font-size: 0.8em;
+    align-items: center;
+
+    & > * {
+        margin-right: 0.5em;
+    }
+}

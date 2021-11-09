@@ -1,8 +1,8 @@
 import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {itemglobals} from "tim/util/globals";
-import {to2} from "tim/util/utils";
-import {HttpClient} from "@angular/common/http";
+import {timeout, to2} from "tim/util/utils";
+import {HttpClient, HttpParams} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import moment from "moment";
@@ -10,7 +10,15 @@ import moment from "moment";
 @Component({
     selector: "manage-read-receipt",
     template: `
+        <hr>
         <p class="small" *ngIf="expires">Note: this message expires on {{expires}}</p>
+        <div class="copy-query-panel" *ngIf="showQueryCopy">
+            <span>Copy TableForm user query to clipboard:</span>
+            <button class="timButton btn-sm" title="Copy read users as TableForm query" (click)="copyReceiptQuery(true, false)">Read users</button>
+            <button class="timButton btn-sm" title="Copy unread users as TableForm query" (click)="copyReceiptQuery(false, true)">Unread users</button>
+            <button class="timButton btn-sm" title="Copy all users as TableForm query" (click)="copyReceiptQuery(true, true)">All users</button>
+            <span [hidden]="!copied">Copied!</span>
+        </div>
         <ng-container *ngIf="canMarkAsRead">
             <tim-alert *ngIf="errorMessage">
                 {{errorMessage}}
@@ -31,18 +39,46 @@ import moment from "moment";
     styleUrls: ["manage-read-receipt.component.scss"],
 })
 export class ManageReadReceiptComponent implements OnInit {
+    showQueryCopy = false;
     markedAsRead: boolean = false;
     receipt?: TimMessageReadReceipt;
     canMarkAsRead: boolean = false;
     errorMessage?: string;
     expires?: string;
+    copied = false;
+    docId: number;
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {
+        const item = itemglobals().curr_item;
+        this.docId = item.id;
+        this.showQueryCopy = item.rights.manage;
+    }
 
     ngOnInit(): void {
-        const docId = itemglobals().curr_item.id;
+        void this.getReadReceipt();
+    }
 
-        void this.getReadReceipt(docId);
+    async copyReceiptQuery(read: boolean, unread: boolean) {
+        this.copied = false;
+        const r = await to2(
+            this.http
+                .get(`/timMessage/readReceipts`, {
+                    params: new HttpParams()
+                        .set("message_doc", this.docId.toString())
+                        .set("include_read", read.toString())
+                        .set("include_unread", unread.toString())
+                        .set("receipt_format", "tableform-query"),
+                    responseType: "text",
+                })
+                .toPromise()
+        );
+
+        if (r.ok) {
+            await navigator.clipboard.writeText(r.result);
+            this.copied = true;
+            await timeout(1000);
+            this.copied = false;
+        }
     }
 
     /**
@@ -52,12 +88,12 @@ export class ManageReadReceiptComponent implements OnInit {
      *
      * @param docId Identifier for the message's document
      */
-    async getReadReceipt(docId: number) {
+    async getReadReceipt() {
         this.errorMessage = undefined;
         const message = await to2(
             this.http
                 .get<{expires: string | null; receipt?: TimMessageReadReceipt}>(
-                    `/timMessage/get_read_receipt/${docId}`
+                    `/timMessage/get_read_receipt/${this.docId}`
                 )
                 .toPromise()
         );
