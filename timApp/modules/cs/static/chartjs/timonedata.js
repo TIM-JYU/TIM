@@ -173,6 +173,8 @@ TIMJS.basicoptions = {
 };
 
 TIMJS.COLORS = [
+    '#0000ff',
+    '#FF0000',
     '#4dc9f6',
     '#f67019',
     '#f53794',
@@ -198,7 +200,7 @@ function pros(od) {
 }
 
 /**
- * Add dtata to dastest from datas-object
+ * Add dtata to datasets from datas-object
  * @param datasets where to add
  * @param datas where from copy
  * @param keys keys to take from datas
@@ -211,12 +213,9 @@ function addData(datasets, datas, keys, dopros) {
             lineTension: 0,
             label: ''+v+  (dopros ? ' %' : ''),
             fill: false,
-            backgroundColor: TIMJS.color(TIMJS.COLORS[ci]).alpha(0.5).rgbString(),
-            borderColor: TIMJS.COLORS[ci++],
             // borderDash: [3,10],
             borderWidth: 1,
         };
-        if ( ci > TIMJS.COLORS.length ) ci = 0;
         let od = datas[v];
         if ( !od || od.length === 0) continue;
         d.data = dopros ? pros(od) : od;
@@ -224,11 +223,18 @@ function addData(datasets, datas, keys, dopros) {
         for (const di in datasets ) {
             if (datasets[di].label === d.label) {
                 datasets[di] = d;
+                ci = di;
                 wasIn = true;
                 break;
             }
         }
-        if (!wasIn) datasets.push(d);
+        if (!wasIn) {
+            datasets.push(d);
+            ci = datasets.length-1;
+        }
+        ci = ci % TIMJS.COLORS.length;
+        d.backgroundColor = TIMJS.color(TIMJS.COLORS[ci]).alpha(0.5).rgbString();
+        d.borderColor = TIMJS.COLORS[ci];
     }
 }
 
