@@ -2,7 +2,7 @@ import json
 import sys
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Sequence
+from typing import Sequence, Optional
 
 import click
 from flask.cli import AppGroup
@@ -89,20 +89,33 @@ def clear_all(doc: DocInfo, dry_run: bool) -> None:
 @click.argument("doc", type=TimDocumentType())
 @click.option("--dry-run/--no-dry-run", default=True)
 @click.option("--task", "-t", multiple=True)
-def clear(doc: DocInfo, dry_run: bool, task: list[str]) -> None:
+@click.option("--answer_from", "-af", type=click.DateTime(), default=None)
+@click.option("--answer_to", "-at", type=click.DateTime(), default=None)
+@click.option("--verbose/--no-verbose", "-v", default=False)
+def clear(
+    doc: DocInfo,
+    dry_run: bool,
+    task: list[str],
+    answer_from: Optional[datetime],
+    answer_to: Optional[datetime],
+    verbose: bool,
+) -> None:
     tasks_to_delete = [f"{doc.id}.{t}" for t in task]
-    ids = (
-        Answer.query.filter(Answer.task_id.in_(tasks_to_delete))
-        .with_entities(Answer.id)
-        .all()
-    )
+    q = Answer.query.filter(Answer.task_id.in_(tasks_to_delete))
+    if answer_from:
+        q = q.filter(Answer.answered_on >= answer_from)
+    if answer_to:
+        q = q.filter(Answer.answered_on <= answer_to)
+    ids = q.with_entities(Answer.id).all()
     cnt = len(ids)
-    delete_answers_with_ids(ids)
+    result = delete_answers_with_ids(ids, verbose)
     click.echo(f"Total {cnt}")
     commit_if_not_dry(dry_run)
 
 
-def delete_answers_with_ids(ids: list[int]) -> AnswerDeleteResult:
+def delete_answers_with_ids(
+    ids: list[int], verbose: bool = False
+) -> AnswerDeleteResult:
     if not isinstance(ids, list):
         raise TypeError("ids should be a list of answer ids")
     d_ua = UserAnswer.query.filter(UserAnswer.answer_id.in_(ids)).delete(
@@ -116,7 +129,17 @@ def delete_answers_with_ids(ids: list[int]) -> AnswerDeleteResult:
         AnnotationComment.annotation_id.in_(anns.with_entities(Annotation.id))
     ).delete(synchronize_session=False)
     d_anns = anns.delete(synchronize_session=False)
-    d_ans = Answer.query.filter(Answer.id.in_(ids)).delete(synchronize_session=False)
+    ans_items = Answer.query.filter(Answer.id.in_(ids))
+    if verbose:
+        click.echo(
+            "\n".join(
+                [
+                    f"taskid: {a.task_id}, points: {a.points}, answered_on: {a.answered_on}; saver: {a.saver}"
+                    for a in ans_items
+                ]
+            )
+        )
+    d_ans = ans_items.delete(synchronize_session=False)
     return AnswerDeleteResult(
         useranswer=d_ua,
         answersaver=d_as,
