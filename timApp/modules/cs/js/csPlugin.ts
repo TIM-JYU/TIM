@@ -2753,6 +2753,10 @@ ${fhtml}
         return this.taunoFrame != undefined;
     }
 
+    get canReset() {
+        return (this.editor?.modified ?? false) || this.isSage || this.simcir;
+    }
+
     async initCode() {
         this.muokattu = false;
         this.imgURL = "";
@@ -3504,7 +3508,7 @@ ${fhtml}
             </span>
             <a href="#" *ngIf="!nocode && (file || program)"
                     (click)="showCode(); $event.preventDefault()">{{showCodeLink}}</a>&nbsp;&nbsp;
-            <a href="#" *ngIf="editor && editor.modified"
+            <a href="#" *ngIf="canReset"
                     (click)="initCode(); $event.preventDefault()">{{resetText}} </a>
             <a href="#" *ngIf="toggleEditor"
                     (click)="hideShowEditor(); $event.preventDefault()">{{toggleEditorText[noeditor ? 0 : 1]}}</a>
