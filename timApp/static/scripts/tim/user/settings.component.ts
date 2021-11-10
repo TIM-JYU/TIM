@@ -273,7 +273,7 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                                     </ng-template>
                                 </button>
                                 <button class="btn btn-danger" type="button"
-                                        [disabled]="canRemoveContact(contact)"
+                                        [disabled]="!canRemoveContact(contact)"
                                         (click)="deleteContact(contact)">
                                     <i class="glyphicon glyphicon-trash"></i>
                                 </button>
@@ -355,11 +355,12 @@ export class SettingsComponent implements DoCheck {
 
     canRemoveContact(contact: IUserContact): boolean {
         if (contact.origin == ContactOrigin.Custom) {
-            return !this.canRemoveCustomContacts && contact.verified;
+            return (
+                this.canRemoveCustomContacts ||
+                (!contact.verified && !contact.primary)
+            );
         }
-        return (
-            contact.primary || this.contactOrigins[contact.origin] !== undefined
-        );
+        return false;
     }
 
     ngDoCheck() {
