@@ -148,7 +148,7 @@ export abstract class AngularDialogComponent<Params, Result>
             }
             this.fixPosSizeInbounds(null);
             this.frame.resizable.doResize();
-            if (this.frame.autoHeight) {
+            if (this.frame.autoHeight || this.frame.initialAutoHeight) {
                 await this.setHeightAutomatic();
             }
         })();

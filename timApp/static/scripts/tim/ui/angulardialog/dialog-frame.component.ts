@@ -104,6 +104,7 @@ export class DialogFrame {
 
     @Input() anchor: "absolute" | "fixed" = "fixed";
     @Input() autoHeight = true;
+    @Input() initialAutoHeight = false;
     closeFn?: () => void;
     index = 1;
     areaMinimized = false;
