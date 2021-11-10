@@ -55,7 +55,8 @@ class VerificationTest(TimRouteTest):
 
         mail, verify_route = add_email("test1alt@example.com")
 
-        self.assertEqual(mail["rcpt"], u.email)
+        # Send verification to new email since we need to check its existence
+        self.assertEqual(mail["rcpt"], "test1alt@example.com")
         self.assertEqual(mail["subject"], "Verify contact")
         self.assertEqual(mail["msg"], f"{app.config['TIM_HOST']}{verify_route}")
 

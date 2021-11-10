@@ -49,7 +49,8 @@ def add_contact(
         resend_verification(
             ContactAddVerification.query.filter_by(
                 contact=existing_contact_info, reacted_at=None
-            ).one()
+            ).one(),
+            existing_contact_info.contact,
         )
         return json_response({"requireVerification": False})
 
@@ -68,7 +69,7 @@ def add_contact(
             contact_origin=ContactOrigin.Custom,
         )
         db.session.add(uc)
-        request_verification(ContactAddVerification(user=user, contact=uc))
+        request_verification(ContactAddVerification(user=user, contact=uc), uc.contact)
 
     db.session.commit()
     return json_response({"requireVerification": require_verification})

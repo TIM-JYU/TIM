@@ -144,7 +144,10 @@ class SetPrimaryContactVerification(ContactAddVerification):
 
 
 def send_verification_impl(
-    verification: Verification, message_title: str, message_body: str
+    verification: Verification,
+    message_title: str,
+    message_body: str,
+    email: Optional[str] = None,
 ) -> None:
     from timApp.notification.send_email import send_email
     from timApp.tim_app import app
@@ -163,17 +166,20 @@ def send_verification_impl(
         verify_url=url,
     )
 
-    send_email(user.email, title, body)
+    send_email(email or user.email, title, body)
 
 
 def request_verification_impl(
-    verification: Verification, message_title: str, message_body: str
+    verification: Verification,
+    message_title: str,
+    message_body: str,
+    email: Optional[str] = None,
 ) -> None:
     verification.token = secrets.token_urlsafe(VERIFICATION_TOKEN_LEN)
     verification.requested_at = get_current_time()
     db.session.add(verification)
 
-    send_verification_impl(verification, message_title, message_body)
+    send_verification_impl(verification, message_title, message_body, email)
 
 
 def get_verify_message_template(verify_type: VerificationType) -> tuple[str, str]:
@@ -195,11 +201,15 @@ def get_verify_message_template(verify_type: VerificationType) -> tuple[str, str
     return subject, body
 
 
-def request_verification(verification: Verification) -> None:
+def request_verification(
+    verification: Verification, email: Optional[str] = None
+) -> None:
     subject, body = get_verify_message_template(verification.type)
-    return request_verification_impl(verification, subject, body)
+    return request_verification_impl(verification, subject, body, email)
 
 
-def resend_verification(verification: Verification) -> None:
+def resend_verification(
+    verification: Verification, email: Optional[str] = None
+) -> None:
     subject, body = get_verify_message_template(verification.type)
-    return send_verification_impl(verification, subject, body)
+    return send_verification_impl(verification, subject, body, email)
