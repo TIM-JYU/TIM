@@ -435,10 +435,16 @@ export class SettingsComponent implements DoCheck {
         );
         this.saving = false;
 
+        const currentPrimary = this.getContactsFor(Channel.EMAIL).find(
+            (p) => p.primary
+        )!;
         if (r.ok && r.result.verify) {
             this.user.email = this.primaryEmail.contact;
+            currentPrimary.primary = false;
+            this.primaryEmail.primary = true;
             this.primaryChangeVerificationSent = true;
         } else if (!r.ok) {
+            this.primaryEmail = currentPrimary;
             await showMessageDialog(
                 `Failed to change the primary email: ${r.result.error.error}`
             );
