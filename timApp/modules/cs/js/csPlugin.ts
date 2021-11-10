@@ -962,6 +962,7 @@ export class CsController extends CsBase implements ITimComponent {
     uploadByCodeFiles: {path: string; show: boolean | "loaded"}[] = [];
     @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
     private isSimcirUnsaved?: boolean;
+    private isSimcirNotInitial?: boolean;
     private clearSaved: boolean = false;
 
     @ViewChild("externalEditor")
@@ -2688,17 +2689,14 @@ ${fhtml}
         }
     }
 
-    async showSimcir() {
-        const v = this.getVid();
-        this.simcirElem = this.element.find(".simcirContainer")[0];
-        this.simcirElem.textContent = "";
-        const div = document.createElement("div");
-        div.id = v.vid;
-        this.simcirElem.appendChild(div);
-        const scr = $(this.simcirElem).children().first();
-        this.simcir = scr;
-        await this.setCircuitData();
-        scr.find(".simcir-workspace").on("mouseup", async () => {
+    private initSimcirCircuitListener() {
+        if (!this.simcir) {
+            return;
+        }
+        const scr = this.simcir;
+        const initial = JSON.parse(this.byCode) as ICsSimcirData;
+        initial.devices.forEach((d) => delete d.state);
+        this.simcir.find(".simcir-workspace").on("mouseup", async () => {
             // Simcir's own mouseup hasn't happened yet - timeout hack is for that.
             await timeout();
 
@@ -2710,8 +2708,22 @@ ${fhtml}
             saved.devices.forEach((d) => delete d.state);
 
             this.isSimcirUnsaved = !deepEqual(saved, current);
+            this.isSimcirNotInitial = !deepEqual(current, initial);
             this.anyChanged();
         });
+    }
+
+    async showSimcir() {
+        const v = this.getVid();
+        this.simcirElem = this.element.find(".simcirContainer")[0];
+        this.simcirElem.textContent = "";
+        const div = document.createElement("div");
+        div.id = v.vid;
+        this.simcirElem.appendChild(div);
+        const scr = $(this.simcirElem).children().first();
+        this.simcir = scr;
+        await this.setCircuitData();
+        this.initSimcirCircuitListener();
         return true;
     }
 
@@ -2754,7 +2766,11 @@ ${fhtml}
     }
 
     get canReset() {
-        return (this.editor?.modified ?? false) || this.isSage || this.simcir;
+        return (
+            (this.editor?.modified ?? false) ||
+            this.isSage ||
+            (this.simcir && this.isSimcirNotInitial)
+        );
     }
 
     async initCode() {
@@ -2775,6 +2791,8 @@ ${fhtml}
         }
         if (this.simcir) {
             await this.setCircuitData();
+            this.initSimcirCircuitListener();
+            this.isSimcirNotInitial = false;
         }
         this.initSaved();
     }
