@@ -59,7 +59,7 @@
             <label class="font-weight-normal margin-5-right" title="Change editor between Ace and normal textarea">
                 <input type="checkbox" ng-checked="$ctrl.isAce()" ng-click="$ctrl.changeEditor()"> Ace editor</label>
             <label class="font-weight-normal margin-5-right" ng-show="$ctrl.fullscreenSupported()" ><input type="checkbox" ng-click="$ctrl.goFullScreen()"> Fullscreen </label>
-            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.spellcheck" ng-change="$ctrl.editorChanged()"/> Check spelling</label>
+            <label class="font-weight-normal margin-5-right"><input type="checkbox" ng-model="$ctrl.spellcheck" ng-change="$ctrl.editorChanged()"/> Check spelling (in Finnish)</label>
         </span>
         <label class="font-weight-normal margin-5-right" ng-show="$ctrl.isAce()"><input type="checkbox" ng-model="$ctrl.autocomplete"/> Autocomplete </label>
         <label class="font-weight-normal margin-5-right" ng-repeat="tag in $ctrl.getOptions().tags">
