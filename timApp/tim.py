@@ -328,7 +328,8 @@ def getproxy(m: GetProxyModel):
         add_csp_header(resp, "sandbox allow-scripts")
         return resp
     if m.file and r.status_code == 200:
-        return send_file(BytesIO(r.content), as_attachment=True)
+        mimetype = r.headers.get("Content-Type", "application/octet-stream")
+        return send_file(BytesIO(r.content), as_attachment=True, mimetype=mimetype)
 
     return json_response({"data": r.text, "status_code": r.status_code})
 
