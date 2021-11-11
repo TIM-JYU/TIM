@@ -153,7 +153,7 @@ class ContactsTest(TimDbTest):
         )
 
         # Changing primary email to custom directly should work
-        u.email = "someuser1alt@example.com"
+        u.update_email("someuser1alt@example.com", False)
         db.session.commit()
         db.session.refresh(u)
         self.verify_primary_contact(
@@ -172,7 +172,7 @@ class ContactsTest(TimDbTest):
 
         # Changing back to managed email should resume automatic email management
         # One email changes its integration back to Sisu
-        u.email = "someuser1work@example.com"
+        u.update_email("someuser1work@example.com", False)
         db.session.commit()
         db.session.refresh(u)
         u.set_emails(
@@ -197,7 +197,7 @@ class ContactsTest(TimDbTest):
 
         # Changing email directly still works like before
         # In that case email becomes verified and primary
-        u.email = "someuser1differentemail@example.com"
+        u.update_email("someuser1differentemail@example.com", False)
         db.session.commit()
         db.session.refresh(u)
         self.verify_primary_contact(
