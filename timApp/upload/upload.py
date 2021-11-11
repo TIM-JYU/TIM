@@ -8,8 +8,8 @@ from pathlib import Path, PurePosixPath
 from typing import Optional, Union
 from urllib.parse import unquote, urlparse
 
-from flask import Blueprint, request, send_file, Response
-from werkzeug.utils import secure_filename
+from flask import Blueprint, request, send_file, Response, url_for
+from werkzeug.utils import secure_filename, redirect
 
 from timApp.auth.accesshelper import (
     verify_view_access,
@@ -44,7 +44,12 @@ from timApp.upload.uploadedfile import (
     get_mimetype,
 )
 from timApp.util.flask.requesthelper import use_model, RouteException, NotExist
-from timApp.util.flask.responsehelper import json_response, ok_response, add_csp_header
+from timApp.util.flask.responsehelper import (
+    json_response,
+    ok_response,
+    add_csp_header,
+    safe_redirect,
+)
 from timApp.util.pdftools import (
     StampDataInvalidError,
     default_stamp_format,
@@ -405,5 +410,10 @@ def get_image(image_id, image_filename):
         raise NotExist("Image not found")
     img_data = f.data
     imgtype = imghdr.what(None, h=img_data)
+    # Redirect if we can't deduce the image type
+    if not imgtype:
+        return safe_redirect(
+            url_for("upload.get_file", file_id=image_id, file_filename=image_filename)
+        )
     f = io.BytesIO(img_data)
     return send_file(f, mimetype="image/" + imgtype)
