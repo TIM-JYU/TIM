@@ -2689,23 +2689,34 @@ ${fhtml}
         }
     }
 
-    private initSimcirCircuitListener() {
+    private async initSimcirCircuitListener() {
         if (!this.simcir) {
             return;
         }
+
         const scr = this.simcir;
-        const initial = JSON.parse(this.byCode) as ICsSimcirData;
-        initial.devices.forEach((d) => delete d.state);
+        // Ignore state when saving
+        const cleanSimcirData = (data: ICsSimcirData) => {
+            data.devices.forEach((d) => delete d.state);
+            return data;
+        };
+        const getCurrentData = async () => {
+            const currentData = await this.getSimcirData(scr);
+            return cleanSimcirData(currentData);
+        };
+
+        const initial = cleanSimcirData(
+            JSON.parse(this.byCode) as ICsSimcirData
+        );
+        this.isSimcirNotInitial = !deepEqual(await getCurrentData(), initial);
         this.simcir.find(".simcir-workspace").on("mouseup", async () => {
             // Simcir's own mouseup hasn't happened yet - timeout hack is for that.
             await timeout();
 
-            const saved = JSON.parse(this.usercode) as ICsSimcirData;
-            const current = await this.getSimcirData(scr);
-
-            // Ignore device states when checking whether simcir is unsaved.
-            current.devices.forEach((d) => delete d.state);
-            saved.devices.forEach((d) => delete d.state);
+            const saved = cleanSimcirData(
+                JSON.parse(this.usercode) as ICsSimcirData
+            );
+            const current = await getCurrentData();
 
             this.isSimcirUnsaved = !deepEqual(saved, current);
             this.isSimcirNotInitial = !deepEqual(current, initial);
@@ -2723,7 +2734,7 @@ ${fhtml}
         const scr = $(this.simcirElem).children().first();
         this.simcir = scr;
         await this.setCircuitData();
-        this.initSimcirCircuitListener();
+        await this.initSimcirCircuitListener();
         return true;
     }
 
@@ -2791,8 +2802,7 @@ ${fhtml}
         }
         if (this.simcir) {
             await this.setCircuitData();
-            this.initSimcirCircuitListener();
-            this.isSimcirNotInitial = false;
+            await this.initSimcirCircuitListener();
         }
         this.initSaved();
     }
