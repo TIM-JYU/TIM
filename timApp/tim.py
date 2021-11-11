@@ -2,6 +2,7 @@ import time
 import traceback
 from dataclasses import dataclass
 from io import BytesIO
+from os.path import basename
 from typing import Optional, Any
 from urllib.parse import urlparse
 
@@ -328,8 +329,14 @@ def getproxy(m: GetProxyModel):
         add_csp_header(resp, "sandbox allow-scripts")
         return resp
     if m.file and r.status_code == 200:
+        filename = basename(parsed.path) or "download"
         mimetype = r.headers.get("Content-Type", "application/octet-stream")
-        return send_file(BytesIO(r.content), as_attachment=True, mimetype=mimetype)
+        return send_file(
+            BytesIO(r.content),
+            as_attachment=True,
+            attachment_filename=filename,
+            mimetype=mimetype,
+        )
 
     return json_response({"data": r.text, "status_code": r.status_code})
 
