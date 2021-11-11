@@ -962,7 +962,6 @@ export class CsController extends CsBase implements ITimComponent {
     uploadByCodeFiles: {path: string; show: boolean | "loaded"}[] = [];
     @ViewChild(CountBoardComponent) countBoard?: CountBoardComponent;
     private isSimcirUnsaved?: boolean;
-    private isSimcirNotInitial?: boolean;
     private clearSaved: boolean = false;
 
     @ViewChild("externalEditor")
@@ -2689,7 +2688,7 @@ ${fhtml}
         }
     }
 
-    private async initSimcirCircuitListener() {
+    private initSimcirCircuitListener() {
         if (!this.simcir) {
             return;
         }
@@ -2700,15 +2699,7 @@ ${fhtml}
             data.devices.forEach((d) => delete d.state);
             return data;
         };
-        const getCurrentData = async () => {
-            const currentData = await this.getSimcirData(scr);
-            return cleanSimcirData(currentData);
-        };
 
-        const initial = cleanSimcirData(
-            JSON.parse(this.byCode) as ICsSimcirData
-        );
-        this.isSimcirNotInitial = !deepEqual(await getCurrentData(), initial);
         this.simcir.find(".simcir-workspace").on("mouseup", async () => {
             // Simcir's own mouseup hasn't happened yet - timeout hack is for that.
             await timeout();
@@ -2716,10 +2707,9 @@ ${fhtml}
             const saved = cleanSimcirData(
                 JSON.parse(this.usercode) as ICsSimcirData
             );
-            const current = await getCurrentData();
+            const current = cleanSimcirData(await this.getSimcirData(scr));
 
             this.isSimcirUnsaved = !deepEqual(saved, current);
-            this.isSimcirNotInitial = !deepEqual(current, initial);
             this.anyChanged();
         });
     }
@@ -2777,11 +2767,7 @@ ${fhtml}
     }
 
     get canReset() {
-        return (
-            (this.editor?.modified ?? false) ||
-            this.isSage ||
-            (this.simcir && this.isSimcirNotInitial)
-        );
+        return (this.editor?.modified ?? false) || this.isSage || this.simcir;
     }
 
     async initCode() {
