@@ -1,6 +1,7 @@
 import time
 import traceback
 from dataclasses import dataclass
+from io import BytesIO
 from typing import Optional, Any
 from urllib.parse import urlparse
 
@@ -293,6 +294,7 @@ class GetProxyModel:
     auth_token: Optional[str] = None
     raw: bool = False
     mimetype: Optional[str] = None
+    file: bool = False
 
 
 @app.get("/getproxy")
@@ -315,7 +317,7 @@ def getproxy(m: GetProxyModel):
     except (MissingSchema, InvalidURL):
         raise RouteException("Invalid URL")
     if m.raw:
-        mimetype = r.headers["Content-Type"]
+        mimetype = r.headers.get("Content-Type", None)
         if m.mimetype:
             mimetype = m.mimetype
         resp = Response(
@@ -325,6 +327,8 @@ def getproxy(m: GetProxyModel):
         )
         add_csp_header(resp, "sandbox allow-scripts")
         return resp
+    if m.file and r.status_code == 200:
+        return send_file(BytesIO(r.content), as_attachment=True)
 
     return json_response({"data": r.text, "status_code": r.status_code})
 
