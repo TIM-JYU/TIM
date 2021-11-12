@@ -8,32 +8,6 @@ from timApp.user.usercontact import ContactOrigin
 class ContactsTest(TimDbTest):
     """Tests for adding and manipulating contacts"""
 
-    def verify_contacts(
-        self, user: User, channel: Channel, emails: list[tuple[ContactOrigin, str]]
-    ):
-        self.assertEqual(
-            {
-                (uc.contact_origin, uc.contact)
-                for uc in user.contacts
-                if uc.channel == channel
-            },
-            set(emails),
-            "User's contacts must match",
-        )
-
-    def verify_primary_contact(
-        self, user: User, channel: Channel, origin: ContactOrigin, contact: str
-    ):
-        primary = next(
-            (uc for uc in user.contacts if uc.channel == channel and uc.primary), None
-        )
-        self.assertIsNotNone(
-            primary, f"User must have a primary contact for channel {channel}"
-        )
-        self.assertEqual(primary.contact_origin, origin)
-        self.assertEqual(primary.contact, contact)
-        self.assertEqual(primary.contact, user.email)
-
     def test_new_user_emails(self):
         """Test that new users get contacts correctly created"""
 
@@ -52,8 +26,8 @@ class ContactsTest(TimDbTest):
             db.session.commit()
             db.session.refresh(u)
 
-            self.verify_contacts(u, Channel.EMAIL, [(contact_origin, email)])
-            self.verify_primary_contact(u, Channel.EMAIL, contact_origin, email)
+            self.assert_contacts(u, Channel.EMAIL, [(contact_origin, email)])
+            self.assert_primary_contact(u, Channel.EMAIL, contact_origin, email)
 
         test_contact("someemailuser", UserOrigin.Email, ContactOrigin.Custom)
         test_contact("somehakauser", UserOrigin.Haka, ContactOrigin.Haka)
@@ -88,7 +62,7 @@ class ContactsTest(TimDbTest):
         db.session.commit()
         db.session.refresh(u)
 
-        self.verify_contacts(
+        self.assert_contacts(
             u, Channel.EMAIL, [(ContactOrigin.Custom, "someuser1@example.com")]
         )
 
@@ -97,7 +71,7 @@ class ContactsTest(TimDbTest):
         u.set_emails(["someuser1alt@example.com"], ContactOrigin.Custom, remove=False)
         db.session.commit()
         db.session.refresh(u)
-        self.verify_contacts(
+        self.assert_contacts(
             u,
             Channel.EMAIL,
             [
@@ -105,7 +79,7 @@ class ContactsTest(TimDbTest):
                 (ContactOrigin.Custom, "someuser1alt@example.com"),
             ],
         )
-        self.verify_primary_contact(
+        self.assert_primary_contact(
             u, Channel.EMAIL, ContactOrigin.Custom, "someuser1@example.com"
         )
 
@@ -119,10 +93,10 @@ class ContactsTest(TimDbTest):
         )
         db.session.commit()
         db.session.refresh(u)
-        self.verify_primary_contact(
+        self.assert_primary_contact(
             u, Channel.EMAIL, ContactOrigin.Sisu, "someuser1work@example.com"
         )
-        self.verify_contacts(
+        self.assert_contacts(
             u,
             Channel.EMAIL,
             [
@@ -139,10 +113,10 @@ class ContactsTest(TimDbTest):
         )
         db.session.commit()
         db.session.refresh(u)
-        self.verify_primary_contact(
+        self.assert_primary_contact(
             u, Channel.EMAIL, ContactOrigin.Haka, "someuser1work@example.com"
         )
-        self.verify_contacts(
+        self.assert_contacts(
             u,
             Channel.EMAIL,
             [
@@ -156,7 +130,7 @@ class ContactsTest(TimDbTest):
         u.update_email("someuser1alt@example.com", False)
         db.session.commit()
         db.session.refresh(u)
-        self.verify_primary_contact(
+        self.assert_primary_contact(
             u, Channel.EMAIL, ContactOrigin.Custom, "someuser1alt@example.com"
         )
 
@@ -166,7 +140,7 @@ class ContactsTest(TimDbTest):
         )
         db.session.commit()
         db.session.refresh(u)
-        self.verify_primary_contact(
+        self.assert_primary_contact(
             u, Channel.EMAIL, ContactOrigin.Custom, "someuser1alt@example.com"
         )
 
@@ -182,10 +156,10 @@ class ContactsTest(TimDbTest):
         )
         db.session.commit()
         db.session.refresh(u)
-        self.verify_primary_contact(
+        self.assert_primary_contact(
             u, Channel.EMAIL, ContactOrigin.Sisu, "someuser1new@example.com"
         )
-        self.verify_contacts(
+        self.assert_contacts(
             u,
             Channel.EMAIL,
             [
@@ -200,13 +174,13 @@ class ContactsTest(TimDbTest):
         u.update_email("someuser1differentemail@example.com", False)
         db.session.commit()
         db.session.refresh(u)
-        self.verify_primary_contact(
+        self.assert_primary_contact(
             u,
             Channel.EMAIL,
             ContactOrigin.Custom,
             "someuser1differentemail@example.com",
         )
-        self.verify_contacts(
+        self.assert_contacts(
             u,
             Channel.EMAIL,
             [

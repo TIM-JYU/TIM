@@ -398,7 +398,7 @@ def acs():
         group_to_add=org_group,
     )
     # Remove any old inactive Haka emails
-    user.set_emails([user.email], ContactOrigin.Haka)
+    user.set_emails([timattrs.mail], ContactOrigin.Haka)
     haka = UserGroup.get_haka_group()
     if haka not in user.groups:
         user.groups.append(haka)
