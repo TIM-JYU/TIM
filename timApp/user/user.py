@@ -848,10 +848,12 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 uc.contact: uc for uc in added_email_contacts
             }
 
-            # If new contacts are actually added and we use a custom contact, upgrade to the managed address
+            # If this is a new integration and actual new emails are added (and not just updated),
+            # we can update the primary email
             change_primary_email = change_primary_email or (
                 can_update_primary
                 and origin != ContactOrigin.Custom
+                and not current_email_contacts
                 and len(to_add - added_email_contacts_set) > 0
             )
 

@@ -133,7 +133,7 @@ class TimDbTest(unittest.TestCase):
             self.assert_dict_subset(d, s)
 
     def assert_contacts(
-        self, user: User, channel: Channel, emails: list[tuple[ContactOrigin, str]]
+        self, user: User, channel: Channel, contacts: list[tuple[ContactOrigin, str]]
     ):
         self.assertEqual(
             {
@@ -141,7 +141,7 @@ class TimDbTest(unittest.TestCase):
                 for uc in user.contacts
                 if uc.channel == channel
             },
-            set(emails),
+            set(contacts),
             "User's contacts must match",
         )
 
