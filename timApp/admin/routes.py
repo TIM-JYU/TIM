@@ -61,4 +61,4 @@ def search_users(term: str) -> Response:
         .order_by(User.id)
         .all()
     )
-    return json_response(result)
+    return json_response([u.to_json(contacts=True) for u in result])

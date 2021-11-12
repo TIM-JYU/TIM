@@ -31,11 +31,11 @@ export interface ITaggedBookmarkedItem {
                     <ng-container *ngIf="editOn">
                         <a><i class="glyphicon glyphicon-pencil"
                               title="Edit bookmark"
-                              i18n-title="@@editBookmark"
+                              i18n-title
                               (click)="editFromList(d.bookmark)"></i></a>
                         <a><i class="glyphicon glyphicon-remove"
                               title="Remove bookmark"
-                              i18n-title="@@removeBookmark"
+                              i18n-title
                               (click)="removeFromList(d.bookmark)"></i>
                         </a>
                     </ng-container>
@@ -46,11 +46,11 @@ export interface ITaggedBookmarkedItem {
                     <ng-container *ngIf="editOn">
                         <a><i class="glyphicon glyphicon-pencil"
                               title="Edit bookmark"
-                              i18n-title="@@editBookmark"
+                              i18n-title
                               (click)="editFromList(b)"></i></a>
                         <a><i class="glyphicon glyphicon-remove"
                               title="Remove bookmark"
-                              i18n-title="@@removeBookmark"
+                              i18n-title
                               (click)="removeFromList(b)"></i>
                         </a>
                     </ng-container>

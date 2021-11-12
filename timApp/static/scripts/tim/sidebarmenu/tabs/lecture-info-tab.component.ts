@@ -11,7 +11,7 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
 @Component({
     selector: "lecture-info-tab",
     template: `
-        <ng-template i18n="@@lectureInfoTabTitle">Lecture</ng-template>
+        <ng-template i18n>Lecture</ng-template>
         <h5 i18n>Current Lectures</h5>
         <ul>
             <li *ngFor="let lecture of currentLecturesList">
@@ -41,8 +41,6 @@ import {showMessageDialog} from "tim/ui/showMessageDialog";
             </li>
             <li *ngIf="pastLecturesList.length == 0"><p i18n>No past lectures</p></li>
         </ul>
-
-        <ng-template i18n="@@notInDocViewError">Not currently in document view.</ng-template>
     `,
 })
 export class LectureInfoTabComponent implements OnTabSelect {
@@ -60,9 +58,7 @@ export class LectureInfoTabComponent implements OnTabSelect {
 
     private async toggleLectures() {
         if (!this.vctrl) {
-            await showMessageDialog(
-                $localize`:@@notInDocViewError:Not currently in document view.`
-            );
+            await showMessageDialog($localize`Not currently in document view.`);
             return;
         }
         const response = await to2(

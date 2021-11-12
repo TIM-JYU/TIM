@@ -23,6 +23,7 @@ from timApp.tim_app import app, csrf
 from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
 from timApp.user.user import UserInfo, UserOrigin
+from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import use_model, RouteException
@@ -384,6 +385,7 @@ def acs():
         log_warning(f"{timattrs.derived_username} did not receive unique codes")
     else:
         log_warning(f"{timattrs.derived_username} received empty unique code list")
+    # Don't update email here to prevent setting is as primary automatically
     user = create_or_update_user(
         UserInfo(
             username=timattrs.derived_username,
@@ -395,7 +397,9 @@ def acs():
             unique_codes=parsed_codes,
         ),
         group_to_add=org_group,
+        update_email=False,
     )
+    user.set_emails([timattrs.mail], ContactOrigin.Haka, can_update_primary=True)
     haka = UserGroup.get_haka_group()
     if haka not in user.groups:
         user.groups.append(haka)

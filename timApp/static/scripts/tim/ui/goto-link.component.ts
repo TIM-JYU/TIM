@@ -52,12 +52,6 @@ const VIEW_PATH = "/view/";
                 </span>
             </ng-container>
         </div>
-
-        <ng-template i18n="@@gotoErrorExpired">Your access expired {{0}} ago.</ng-template>
-        <ng-template i18n="@@gotoErrorUnauthorized">You don't have permission to view that document.</ng-template>
-        <ng-template i18n="@@gotoErrorUnsaved">You have unsaved changes. Save them or click the link again.</ng-template>
-        <ng-template i18n="@@gotoCanAccess">You can access the link now.</ng-template>
-        <ng-template i18n="@@gotoOpensIn">Opens in {{"{"}}0{{"}"}}.</ng-template>
     `,
     styleUrls: ["./goto-link.component.scss"],
 })
@@ -65,7 +59,7 @@ export class GotoLinkComponent implements OnInit {
     @Input() href = "";
     @Input() waitText?: string;
     @Input()
-    countdownText: string = $localize`:@@gotoOpensIn:Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
+    countdownText: string = $localize`Opens in ${"{"}:INTERPOLATION:0${"}"}:INTERPOLATION_1:.`;
     @Input() unauthorizedText?: string;
     @Input() pastDueText?: string;
     @Input() timeLang?: string;
@@ -165,7 +159,7 @@ export class GotoLinkComponent implements OnInit {
         if (unauthorized && !access) {
             this.showError({
                 userMessage: this.unauthorizedText,
-                defaultMessage: $localize`:@@gotoErrorUnauthorized:You don't have permission to view that document.`,
+                defaultMessage: $localize`You don't have permission to view that document.`,
             });
             return;
         }
@@ -200,7 +194,7 @@ export class GotoLinkComponent implements OnInit {
                 userMessage: this.pastDueText
                     ? formatString(this.pastDueText, pastDue)
                     : undefined,
-                defaultMessage: $localize`:@@gotoErrorExpired:Your access expired ${pastDue}:INTERPOLATION: ago.`,
+                defaultMessage: $localize`Your access expired ${pastDue} ago.`,
             });
             return;
         }
@@ -212,7 +206,7 @@ export class GotoLinkComponent implements OnInit {
         ) {
             this.showError({
                 userMessage: this.unsavedChangesText,
-                defaultMessage: $localize`:@@gotoErrorUnsaved:You have unsaved changes. Save them or click the link again.`,
+                defaultMessage: $localize`You have unsaved changes. Save them or click the link again.`,
             });
             this.unsavedChangesChecked = true;
             this.linkDisabled = false;
@@ -242,7 +236,7 @@ export class GotoLinkComponent implements OnInit {
     countdownDone() {
         if (this.stopAfterCountdown) {
             this.showError({
-                defaultMessage: $localize`:@@gotoCanAccess:You can access the link now.`,
+                defaultMessage: $localize`You can access the link now.`,
                 displayClass: "info",
             });
             this.linkDisabled = false;

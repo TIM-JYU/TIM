@@ -18,9 +18,9 @@ import {
     IGroup,
     IGroupWithSisuPath,
     IUser,
+    IUserContact,
     IUserListEntry,
 } from "../user/IUser";
-import {ICssFile, INotification, ISettings} from "../user/settings.component";
 
 interface ILayout {
     col_1_lg: number;
@@ -131,6 +131,33 @@ export interface IDocumentGlobals extends IItemGlobals {
     show_unpublished_bg: boolean;
 }
 
+export interface INotification {
+    email_comment_add: boolean;
+    email_comment_modify: boolean;
+    email_doc_modify: boolean;
+    item: DocumentOrFolder;
+}
+
+export interface ICssFile {
+    name: string;
+    desc: string;
+}
+
+export interface ISettings {
+    css_combined: string;
+    css_files: Record<string, boolean>;
+    custom_css: string;
+    disable_menu_hover: boolean;
+    remember_last_sidebar_menu_tab: boolean;
+    remember_last_sidebar_menu_state: boolean;
+    email_exclude: string;
+    language: string | null;
+    use_document_word_list: boolean;
+    word_list: string;
+    auto_mark_all_read: boolean;
+    max_uncollapsed_toc_items: number | null;
+}
+
 export interface ILectureInfoGlobals extends IDocumentGlobals {
     lecture: ILecture<string>;
     inLecture: boolean;
@@ -160,6 +187,20 @@ export interface ISettingsGlobals extends IGenericGlobals {
     css_files: Array<ICssFile>;
     notifications: INotification[];
     notificationLimit: number;
+    contacts: IUserContact[];
+}
+
+// See VerificationType on verification.py for details.
+export enum VerificationType {
+    LIST_JOIN = "list",
+    CONTACT_OWNERSHIP = "contact",
+    SET_PRIMARY_CONTACT = "set_primary_contact",
+}
+
+export interface IVerificationGlobals extends IGenericGlobals {
+    verifyType: VerificationType;
+    verifyInfo?: {type: string};
+    verifyError?: string;
 }
 
 export type SomeGlobals =
@@ -208,6 +249,10 @@ export function settingsglobals(): ISettingsGlobals {
 }
 
 export function lectureinfoglobals(): ILectureInfoGlobals {
+    return someGlobals();
+}
+
+export function verificationglobals(): IVerificationGlobals {
     return someGlobals();
 }
 

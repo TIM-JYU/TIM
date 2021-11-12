@@ -7,12 +7,14 @@ from timApp.auth.login import (
     create_or_update_user,
     set_single_user_to_session,
 )
+from timApp.messaging.messagelist.listinfo import Channel
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import get_home_organization_group, app
 from timApp.timdb.sqa import db
 from timApp.user.newuser import NewUser
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode
 from timApp.user.user import User, UserOrigin, UserInfo
+from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.user.userutils import create_password_hash
 
@@ -278,6 +280,8 @@ class TestSignUp(TimRouteTest):
         self.assertEqual(NewUser.query.with_entities(NewUser.email).all(), [])
         self.assertEqual("Testing Signup", self.current_user.real_name)
         self.assertEqual(UserOrigin.Email, self.current_user.origin)
+        self.assertEqual(email, self.current_user.email)
+        self.assertEqual(email, self.current_user.primary_email_contact.contact)
 
         # TODO needs a better error message
         self.json_post(
@@ -607,10 +611,11 @@ class TestSignUp(TimRouteTest):
 
     def test_haka_login(self):
         teppo_email = "teppo@mailinator.com"
-        for i in range(0, 2):
-            puc = SchacPersonalUniqueCode.parse(
-                "urn:schac:personalUniqueCode:int:studentID:jyu.fi:12345X"
-            )
+        puc = SchacPersonalUniqueCode.parse(
+            "urn:schac:personalUniqueCode:int:studentID:jyu.fi:12345X"
+        )
+
+        def mock_acs_teppo():
             self.do_acs_mock(
                 UserInfo(
                     email=teppo_email,
@@ -621,8 +626,13 @@ class TestSignUp(TimRouteTest):
                     unique_codes=[puc],
                 )
             )
+
+        for i in range(0, 2):
+            mock_acs_teppo()
             u = User.get_by_name("yliopisto.fi:teppo")
-            self.assertEqual(teppo_email, u.email)
+            self.assert_primary_contact(
+                u, Channel.EMAIL, ContactOrigin.Haka, teppo_email
+            )
             self.assertEqual("Teppo", u.given_name)
             self.assertEqual("Testaaja", u.last_name)
             self.assertEqual("Testaaja Teppo", u.real_name)
@@ -632,6 +642,50 @@ class TestSignUp(TimRouteTest):
             self.assertEqual("jyu.fi", uq.organization.name)
             self.assertIn(UserGroup.get_organization_group("yliopisto.fi"), u.groups)
             self.assertIn(UserGroup.get_haka_group(), u.groups)
+
+        # Test two additional cases for contacts
+        # Case 1: Teppo has a custom email set as primary and Haka email as secondary
+        #      => Nothing changes
+        u = User.get_by_name("yliopisto.fi:teppo")
+        teppo_second_email = "teppo2ndemail@example.com"
+        u.email = teppo_second_email
+        db.session.commit()
+        mock_acs_teppo()
+        u = User.get_by_name("yliopisto.fi:teppo")
+        self.assert_primary_contact(
+            u, Channel.EMAIL, ContactOrigin.Custom, teppo_second_email
+        )
+        self.assert_contacts(
+            u,
+            Channel.EMAIL,
+            [
+                (ContactOrigin.Custom, teppo_second_email),
+                (ContactOrigin.Haka, teppo_email),
+            ],
+        )
+
+        # Case 2: Teppo has only custom email and Haka email is custom
+        #     =>  Haka email becomes managed, primary email does not change
+        u.email = teppo_second_email
+        db.session.commit()
+        uc = next(uc for uc in u.contacts if uc.contact_origin == ContactOrigin.Haka)
+        uc.contact_origin = ContactOrigin.Custom
+        db.session.commit()
+
+        mock_acs_teppo()
+        u = User.get_by_name("yliopisto.fi:teppo")
+        self.assert_primary_contact(
+            u, Channel.EMAIL, ContactOrigin.Custom, teppo_second_email
+        )
+        self.assert_contacts(
+            u,
+            Channel.EMAIL,
+            [
+                (ContactOrigin.Custom, teppo_second_email),
+                (ContactOrigin.Haka, teppo_email),
+            ],
+        )
+
         self.do_acs_mock(
             UserInfo(
                 email=teppo_email,
@@ -641,6 +695,7 @@ class TestSignUp(TimRouteTest):
                 full_name="Matti Meikäläinen",
             )
         )
+
         u = User.get_by_name("matti")
         self.assertIsNotNone(u)
         self.assertIn(UserGroup.get_organization_group("jyu.fi"), u.groups)
@@ -676,7 +731,10 @@ class TestSignUp(TimRouteTest):
             )
         )
         self.assertIsNone(User.get_by_name("xxxx"))
-        self.assertIsNotNone(User.get_by_name("xxxx2"))
+        u = User.get_by_name("xxxx2")
+        self.assertIsNotNone(u)
+        db.session.refresh(u)
+        self.assertEqual("xxxx2@example.com", u.primary_email_contact.contact)
 
     def test_haka_login_email_conflict(self):
         self.create_or_update_test_user(

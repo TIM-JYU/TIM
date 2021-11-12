@@ -310,14 +310,16 @@ class Document:
         self,
         export_hashes: bool = False,
         export_ids: bool = True,
+        export_settings: bool = True,
         with_tl: bool = False,
     ) -> str:
+        pars = [par for par in self if not par.is_setting() or export_settings]
         if with_tl:
             return "\n".join(
-                [par.get_exported_markdown(export_ids=export_ids) for par in self]
+                [par.get_exported_markdown(export_ids=export_ids) for par in pars]
             )
         return DocumentWriter(
-            [par.dict() for par in self],
+            [par.dict() for par in pars],
             export_hashes=export_hashes,
             export_ids=export_ids,
         ).get_text()

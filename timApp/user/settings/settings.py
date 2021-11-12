@@ -1,8 +1,8 @@
 """Routes for settings view."""
-from dataclasses import dataclass
-from typing import Any, Optional
+from dataclasses import field
+from typing import Any
 
-from flask import Blueprint, render_template, session, flash, Response
+from flask import render_template, session, flash, Response
 from flask import request
 from jinja2 import TemplateNotFound
 
@@ -20,16 +20,11 @@ from timApp.user.consentchange import ConsentChange
 from timApp.user.preferences import Preferences
 from timApp.user.settings.theme import get_available_themes
 from timApp.user.user import User, Consent, get_owned_objects_query
-from timApp.util.flask.requesthelper import (
-    get_option,
-    verify_json_params,
-    RouteException,
-    use_model,
-    NotExist,
-)
+from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.typedblueprint import TypedBlueprint
 
-settings_page = Blueprint("settings_page", __name__, url_prefix="/settings")
+settings_page = TypedBlueprint("settings_page", __name__, url_prefix="/settings")
 
 
 @settings_page.before_request
@@ -51,6 +46,7 @@ def show() -> str:
             css_files=available_css_files,
             notification_limit=limit,
             notifications=get_current_user_notifications(limit=limit),
+            contacts=get_current_user_object().contacts,
         )
     except TemplateNotFound:
         raise NotExist()
@@ -85,21 +81,15 @@ def save_settings() -> Response:
     return json_response(user.get_prefs())
 
 
-@dataclass
-class LangModel:
-    lang: str
-
-
 @settings_page.put("/save/lang")
-@use_model(LangModel)
-def save_language_route(m: LangModel) -> Response:
+def save_language_route(lang: str) -> Response:
     u = get_current_user_object()
     prefs = u.get_prefs()
-    prefs.language = m.lang
+    prefs.language = lang
     u.set_prefs(prefs)
     db.session.commit()
     r = ok_response()
-    r.set_cookie("lang", m.lang)
+    r.set_cookie("lang", lang)
     return r
 
 
@@ -142,7 +132,7 @@ def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
         "uploaded_images": images,
         "uploaded_files": files,
         "user": {
-            **u.to_json(),
+            **u.to_json(contacts=True),
             "given_name": u.given_name,
             "last_name": u.last_name,
             "prefs": u.prefs,
@@ -155,28 +145,28 @@ def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
     }
 
 
-@settings_page.get("/info")
-@settings_page.get("/info/<username>")
-def get_info_route(username: Optional[str] = None) -> Response:
-    if username:
-        verify_admin()
-        u = User.get_by_name(username)
-        if not u:
-            raise NotExist("User not found")
-    else:
-        u = get_current_user_object()
+def get_info_for(u: User) -> Response:
     include_doc_content = get_option(request, "content", False)
     return json_response(get_user_info(u, include_doc_content))
 
 
+@settings_page.get("/info")
+def get_info_current() -> Response:
+    return get_info_for(get_current_user_object())
+
+
+@settings_page.get("/info/<username>")
+def get_info_any(username: str) -> Response:
+    verify_admin()
+    u = User.get_by_name(username)
+    if not u:
+        raise NotExist("User not found")
+    return get_info_for(u)
+
+
 @settings_page.post("/updateConsent")
-def update_consent() -> Response:
+def update_consent(consent: Consent = field(metadata={"by_value": True})) -> Response:
     u = get_current_user_object()
-    (v,) = verify_json_params("consent")
-    try:
-        consent = Consent(v)
-    except ValueError:
-        raise RouteException("Invalid consent value.")
     if u.consent != consent:
         u.consent = consent
         u.consents.append(ConsentChange(consent=consent))

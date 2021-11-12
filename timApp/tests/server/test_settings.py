@@ -76,6 +76,15 @@ class SettingsTest(TimRouteTest):
                 "uploaded_images": [],
                 "user": {
                     "consent": None,
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test1@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": True,
+                        }
+                    ],
                     "created": self.test_user_1.created.isoformat(),
                     "email": "test1@example.com",
                     "given_name": None,
@@ -122,6 +131,15 @@ class SettingsTest(TimRouteTest):
                 "uploaded_images": [],
                 "user": {
                     "consent": None,
+                    "contacts": [
+                        {
+                            "channel": "email",
+                            "contact": "test2@example.com",
+                            "origin": 1,
+                            "primary": True,
+                            "verified": True,
+                        }
+                    ],
                     "created": self.test_user_2.created.isoformat(),
                     "email": "test2@example.com",
                     "given_name": None,

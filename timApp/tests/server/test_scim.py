@@ -10,6 +10,7 @@ from timApp.answer.answer import Answer
 from timApp.auth.accesstype import AccessType
 from timApp.auth.login import create_or_update_user
 from timApp.document.docentry import DocEntry
+from timApp.messaging.messagelist.listinfo import Channel
 from timApp.notification.send_email import sent_mails_in_testing
 from timApp.sisu.scim import SISU_GROUP_PREFIX
 from timApp.sisu.scimusergroup import ScimUserGroup
@@ -18,6 +19,7 @@ from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.user.user import User, UserOrigin, UserInfo
+from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup, DELETED_GROUP_PREFIX
 from timApp.util.utils import seq_to_str, get_current_time
 
@@ -58,6 +60,14 @@ class ScimTest(TimRouteTest):
                 "The request was well-formed but was unable to be followed due to semantic errors."
             ),
         )
+
+        def check_emails(username: str, emails: list[tuple[ContactOrigin, str]]):
+            u = User.get_by_name(username)
+            db.session.refresh(u)
+            self.assert_contacts(u, Channel.EMAIL, emails)
+            primary_origin, primary_email = emails[0]
+            self.assert_primary_contact(u, Channel.EMAIL, primary_origin, primary_email)
+
         r = self.json_post(
             "/scim/Groups",
             json_data={
@@ -98,6 +108,15 @@ class ScimTest(TimRouteTest):
                 ],
                 "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
             },
+        )
+
+        check_emails("sisuuser", [(ContactOrigin.Sisu, "x@example.com")])
+        check_emails(
+            "sisuuser3",
+            [
+                (ContactOrigin.Sisu, "x3work@example.com"),
+                (ContactOrigin.Sisu, "x3@example.com"),
+            ],
         )
 
         self.json_post(
@@ -202,10 +221,12 @@ class ScimTest(TimRouteTest):
             )
 
         ru2 = update_and_get()
+        check_emails("sisuuser", [(ContactOrigin.Sisu, "sisuuser@example.com")])
         self.assertEqual(create_stamp_user, ru2["meta"]["created"])
         new_modified = ru2["meta"]["lastModified"]
         self.assertNotEqual(create_stamp_user, new_modified)
         ru3 = update_and_get()
+        check_emails("sisuuser", [(ContactOrigin.Sisu, "sisuuser@example.com")])
         self.assertEqual(ru3["meta"]["lastModified"], new_modified)
 
         # self.assertIsNone(UserGroup.get_by_name(eid))
@@ -283,6 +304,9 @@ class ScimTest(TimRouteTest):
                 "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
             },
         )
+
+        check_emails("sisuuser", [(ContactOrigin.Sisu, "x@example.com")])
+        check_emails("sisuuser2", [(ContactOrigin.Sisu, "x2@example.com")])
 
         r = self.get(
             f"/scim/Groups",
@@ -389,9 +413,68 @@ class ScimTest(TimRouteTest):
                 "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
             },
         )
+        check_emails("sisuuser", [(ContactOrigin.Sisu, "x@example.com")])
+        check_emails("sisuuser3", [(ContactOrigin.Sisu, "x3@example.com")])
+
         self.assertNotEqual(create_stamp, r["meta"]["lastModified"])
         g = UserGroup.get_by_name(f"{DELETED_GROUP_PREFIX}{eid}")
         self.assertIsNone(g)
+
+        last_modified = r["meta"]["lastModified"]
+
+        u3 = User.get_by_name("sisuuser3")
+        u3.email = "x3custom@example.com"
+        u3.set_emails(["x3work@example.com"], ContactOrigin.Haka)
+        db.session.commit()
+
+        self.json_put(
+            f"/scim/Groups/{group_id}",
+            json_data={
+                "externalId": eid,
+                "displayName": display_name,
+                "members": add_name_parts(
+                    [
+                        {
+                            "value": "sisuuser3",
+                            "display": "Sisu User 3",
+                            "email": "x3other@example.com",
+                            "workEmail": "x3work@example.com",
+                        },
+                    ]
+                ),
+            },
+            auth=a,
+            expect_content={
+                "displayName": display_name,
+                "id": group_id,
+                "externalId": eid,
+                "members": [
+                    {
+                        "$ref": "http://localhost/scim/Users/sisuuser3",
+                        "display": "Sisu User 3",
+                        "value": "sisuuser3",
+                    },
+                ],
+                "meta": {
+                    "created": create_stamp,
+                    "lastModified": last_modified,
+                    "location": f"http://localhost/scim/Groups/{eid}",
+                    "resourceType": "Group",
+                },
+                "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+            },
+        )
+
+        # Custom email was primary => still primary
+        # Haka email becomes Sisu email
+        check_emails(
+            "sisuuser3",
+            [
+                (ContactOrigin.Custom, "x3custom@example.com"),
+                (ContactOrigin.Sisu, "x3work@example.com"),
+                (ContactOrigin.Sisu, "x3other@example.com"),
+            ],
+        )
 
     def test_no_display_in_members(self):
         r = self.json_post(
