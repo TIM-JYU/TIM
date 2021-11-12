@@ -236,11 +236,10 @@ class MessageListMember(db.Model):
     """What message list a member belongs to."""
 
     send_right = db.Column(db.Boolean)
-    """If a member can send messages to a message list. Send right for a user group is meaningless at this point"""
+    """If a member can send messages to a message list."""
 
     delivery_right = db.Column(db.Boolean)
-    """If a member can get messages from a message list. Delivery right for a user group is meaningless at this 
-    point. """
+    """If a member can get messages from a message list."""
 
     membership_ended = db.Column(db.DateTime(timezone=True))
     """When member's membership on a list ended. This is set when member is removed from a list. A value of None means 
@@ -507,31 +506,3 @@ class UserEmails(db.Model):
 
     address_verified = db.Column(db.DateTime(timezone=True))
     """The user has to verify they are in the possession of the email address."""
-
-
-class VerificationType(Enum):
-    """Type of verification, used to direct the proper verification action afterwards."""
-
-    LIST_JOIN = 1
-    EMAIL_OWNERSHIP = 2
-
-
-class Verification(db.Model):
-    """For various pending verifications, such as message list joining and email ownership verification."""
-
-    __tablename__ = "verifications"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    verification_type = db.Column(db.Enum(VerificationType))
-    """The type of verification, see VerificationType class for details."""
-
-    verification_pending = db.Column(db.DateTime(timezone=True))
-    """When a verification has been added to db, pending sending to a user."""
-
-    verification_link = db.Column(db.Text)
-    """Generated verification link. This is given to the user and once they click on it, they are verified (in 
-    whatever it was that needed verification)."""
-
-    verified = db.Column(db.DateTime(timezone=True))
-    """When the user used the link to verify."""

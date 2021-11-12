@@ -20,6 +20,7 @@ from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.user import User, UserInfo, deleted_user_suffix
+from timApp.user.usercontact import UserContact
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
 from timApp.user.userutils import check_password_hash
@@ -35,7 +36,7 @@ def create_user_info_set(u: User) -> set[str]:
     return {
         u.name.lower(),
         *u.real_name.lower().split(" "),
-        u.email_name_part.lower(),
+        *u.verified_email_name_parts,
         real_name_ascii.replace(" ", ""),
         "".join(real_name_ascii.split(" ")[::-1]),
     }
@@ -98,6 +99,7 @@ class MergeResult:
     notes: int = 0
     accesses: int = 0
     groups: int = 0
+    contacts: int = 0
 
 
 @user_cli.command()
@@ -174,6 +176,23 @@ def do_merge_users(u_prim: User, u_sec: User, force=False) -> MergeResult:
             u_prim.memberships.append(ugm)
             moved_data.groups += 1
         db.session.delete(m)
+
+    # Move user contacts
+    cur_contacts = {(uc.channel, uc.contact): uc for uc in u_prim.contacts}
+    for c in u_sec.contacts:
+        if (c.channel, c.contact) not in cur_contacts:
+            u_prim.contacts.append(
+                UserContact(
+                    contact=c.contact,
+                    contact_origin=c.contact_origin,
+                    channel=c.channel,
+                    verified=c.verified,
+                )
+            )
+            moved_data.contacts += 1
+        # Don't delete primary mail since it is still managed by the main email integration
+        if not c.primary:
+            db.session.delete(c)
 
     for d in docs:
         move_document(d, u_prim_folder)

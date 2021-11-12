@@ -15,10 +15,12 @@ import timApp.timdb.init
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
 from timApp.document.document import Document
+from timApp.messaging.messagelist.listinfo import Channel
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.timdb.timdb import TimDb
 from timApp.user.user import User
+from timApp.user.usercontact import ContactOrigin
 from timApp.user.usergroup import UserGroup
 from timApp.util.filemodehelper import change_permission_and_retry
 from timApp.util.utils import del_content, remove_prefix, temp_folder_path
@@ -129,6 +131,32 @@ class TimDbTest(unittest.TestCase):
     def assert_list_of_dicts_subset(self, datalist, subsetlist):
         for d, s in zip(datalist, subsetlist):
             self.assert_dict_subset(d, s)
+
+    def assert_contacts(
+        self, user: User, channel: Channel, contacts: list[tuple[ContactOrigin, str]]
+    ):
+        self.assertEqual(
+            {
+                (uc.contact_origin, uc.contact)
+                for uc in user.contacts
+                if uc.channel == channel
+            },
+            set(contacts),
+            "User's contacts must match",
+        )
+
+    def assert_primary_contact(
+        self, user: User, channel: Channel, origin: ContactOrigin, contact: str
+    ):
+        primary = next(
+            (uc for uc in user.contacts if uc.channel == channel and uc.primary), None
+        )
+        self.assertIsNotNone(
+            primary, f"User must have a primary contact for channel {channel}"
+        )
+        self.assertEqual(primary.contact_origin, origin)
+        self.assertEqual(primary.contact, contact)
+        self.assertEqual(primary.contact, user.email)
 
     @contextmanager
     def suppress_stdout(self):

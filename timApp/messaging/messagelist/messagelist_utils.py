@@ -952,6 +952,7 @@ def sync_message_list_on_add(user: User, new_group: UserGroup) -> None:
         group_message_list: MessageListModel = group_tim_member.message_list
         # Propagate the adding on message list's message channels.
         if group_message_list.email_list_domain:
+            # TODO: Find user's contact info for emails and add them accordingly.
             email_list = get_email_list_by_name(
                 group_message_list.name, group_message_list.email_list_domain
             )
@@ -982,6 +983,7 @@ def sync_message_list_on_expire(user: User, old_group: UserGroup) -> None:
         group_message_list: MessageListModel = group_tim_member.message_list
         # Propagate the deletion on message list's message channels.
         if group_message_list.email_list_domain:
+            # TODO: Find user's contact info for emails and remove them accordingly.
             email_list = get_email_list_by_name(
                 group_message_list.name, group_message_list.email_list_domain
             )

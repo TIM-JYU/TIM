@@ -58,7 +58,7 @@ from timApp.util.utils import is_valid_email, get_current_time
 messagelist = TypedBlueprint("messagelist", __name__, url_prefix="/messagelist")
 
 
-@messagelist.route("/checkname", methods=["POST"])
+@messagelist.post("/checkname")
 def check_name(name: str) -> Response:
     verify_logged_in()
     verify_can_create_lists()

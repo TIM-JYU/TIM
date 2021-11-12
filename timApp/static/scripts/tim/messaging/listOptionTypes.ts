@@ -34,6 +34,7 @@ export interface Distribution {
 export enum Channel {
     TIM_MESSAGE = "tim_message",
     EMAIL_LIST = "email_list",
+    EMAIL = "email",
 }
 
 // See ReplyToListChanges Python class.

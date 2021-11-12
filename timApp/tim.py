@@ -85,9 +85,11 @@ from timApp.sisu.sisu import sisu
 from timApp.tim_app import app
 from timApp.timdb.sqa import db
 from timApp.upload.upload import upload
+from timApp.user.contacts import contacts
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
 from timApp.user.usergroup import UserGroup
+from timApp.user.verification.routes import verify
 from timApp.util.flask.cache import cache
 from timApp.util.flask.requesthelper import (
     get_request_message,
@@ -98,6 +100,7 @@ from timApp.util.flask.requesthelper import (
 from timApp.util.flask.responsehelper import json_response, ok_response, add_csp_header
 from timApp.util.flask.search import search_routes
 from timApp.util.logger import log_info, log_debug
+from timApp.util.testing import register_testing_routes
 from timApp.util.utils import get_current_time
 from timApp.velp.annotation import annotations
 from timApp.velp.velp import velps
@@ -110,6 +113,7 @@ blueprints = [
     answers,
     backup,
     clipboard,
+    contacts,
     course_blueprint,
     dist_bp,
     doc_bp,
@@ -150,6 +154,7 @@ blueprints = [
     user_select_plugin,
     messagelist,
     timMessage,
+    verify,
 ]
 
 if app.config["BOOKMARKS_ENABLED"]:
@@ -413,12 +418,7 @@ def install_sql_hook():
 
 
 if app.config["TESTING"]:
-
-    @app.post("/config")
-    def set_config() -> Response:
-        for k, v in request.get_json().items():
-            app.config[k] = v
-        return ok_response()
+    register_testing_routes(app)
 
 
 if app.config["DEBUG_SQL"]:

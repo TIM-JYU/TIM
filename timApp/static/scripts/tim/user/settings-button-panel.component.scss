@@ -1,0 +1,14 @@
+:host {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0.5em;
+
+  & ::ng-deep > *:not(:last-child) {
+    margin-right: 0.5em;
+  }
+}
+
+tim-loading {
+  margin-right: 0.5em;
+}

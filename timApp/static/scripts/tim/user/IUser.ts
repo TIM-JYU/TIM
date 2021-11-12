@@ -1,3 +1,4 @@
+import {Channel} from "tim/messaging/listOptionTypes";
 import {IDocument, IFolder} from "../item/IItem";
 import {ConsentType} from "../ui/consent";
 
@@ -18,6 +19,20 @@ export interface IUserListEntry {
     total_points: number;
     velp_points: number;
     user: IUser;
+}
+
+export enum ContactOrigin {
+    Custom = 1,
+    Sisu = 2,
+    Haka = 3,
+}
+
+export interface IUserContact {
+    channel: Channel;
+    contact: string;
+    verified: boolean;
+    origin: ContactOrigin;
+    primary: boolean;
 }
 
 export interface IFullUser extends IUser {
