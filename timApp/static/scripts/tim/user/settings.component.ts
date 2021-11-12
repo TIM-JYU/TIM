@@ -354,11 +354,11 @@ export class SettingsComponent implements DoCheck {
     }
 
     canRemoveContact(contact: IUserContact): boolean {
+        if (contact.primary) {
+            return false;
+        }
         if (contact.origin == ContactOrigin.Custom) {
-            return (
-                this.canRemoveCustomContacts ||
-                (!contact.verified && !contact.primary)
-            );
+            return this.canRemoveCustomContacts || !contact.verified;
         }
         return false;
     }
