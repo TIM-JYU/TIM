@@ -93,3 +93,7 @@ class UserContact(db.Model):
             "origin": self.contact_origin,
             "primary": self.primary == PrimaryContact.true,
         }
+
+    def __repr__(self) -> str:
+        values = ", ".join([f"{k}={v}" for k, v in self.to_json().items()])
+        return f"<UserContact(id={self.id}, {values}>"
