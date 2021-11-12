@@ -156,8 +156,9 @@ class ContactsTest(TimDbTest):
         )
         db.session.commit()
         db.session.refresh(u)
+        # The primary email does not change because the user chose to use this managed email
         self.assert_primary_contact(
-            u, Channel.EMAIL, ContactOrigin.Sisu, "someuser1new@example.com"
+            u, Channel.EMAIL, ContactOrigin.Sisu, "someuser1work@example.com"
         )
         self.assert_contacts(
             u,
