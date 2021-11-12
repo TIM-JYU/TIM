@@ -25,12 +25,15 @@ contacts = TypedBlueprint("contacts", __name__, url_prefix="/contacts")
 
 @contacts.post("/add")
 def add_contact(
-    contact_info: str, contact_info_type: Channel = field(metadata={"by_value": True})
+    contact_info: str,
+    contact_info_type: Channel = field(metadata={"by_value": True}),
+    resend_if_exists: bool = False,
 ) -> Response:
     """Add a new contact information for current user.
 
     :param contact_info_type: The channel user wishes to add a new contact information.
     :param contact_info: The contact information.
+    :param resend_if_exists: If True and verification already exists, resend the verification message.
     :return: OK response.
     """
     verify_logged_in()
@@ -46,6 +49,10 @@ def add_contact(
         # If the contact info already exists and is verified by the user, resend verification
         if existing_contact_info.verified:
             raise RouteException("The contact is already added")
+        if not resend_if_exists:
+            raise RouteException(
+                "The contact is already added but is pending verification"
+            )
         resend_verification(
             ContactAddVerification.query.filter_by(
                 contact=existing_contact_info, reacted_at=None

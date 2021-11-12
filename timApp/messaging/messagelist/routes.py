@@ -44,8 +44,8 @@ from timApp.messaging.messagelist.messagelist_utils import (
     set_member_send_delivery,
     set_message_list_description,
     set_message_list_info,
-    verify_can_create_lists,
     check_name_rules,
+    verify_can_create_lists,
 )
 from timApp.timdb.sqa import db
 from timApp.user.usergroup import UserGroup

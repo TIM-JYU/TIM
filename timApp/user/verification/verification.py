@@ -39,8 +39,8 @@ class VerificationType(Enum):
 
 VERIFICATION_TEMPLATES = {
     VerificationType.CONTACT_OWNERSHIP: "settings/verify-templates/contact",
-    VerificationType.LIST_JOIN: "settings/verify-templates/primary-contact",
-    VerificationType.SET_PRIMARY_CONTACT: None,
+    VerificationType.LIST_JOIN: None,
+    VerificationType.SET_PRIMARY_CONTACT: "settings/verify-templates/primary-contact",
 }
 
 
@@ -127,6 +127,7 @@ class SetPrimaryContactVerification(ContactAddVerification):
         with db.session.no_autoflush:
             if current_primary:
                 current_primary.primary = None
+                # Flush is needed to prevent uniqueness constraint from failing
                 db.session.flush()
             self.contact.primary = PrimaryContact.true
 

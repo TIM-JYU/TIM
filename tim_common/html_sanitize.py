@@ -105,10 +105,8 @@ TIM_SAFE_TAGS = [
     "tim-message-list-admin",
     "tim-message-view",
     "manage-read-receipt",
-    "tim-user-action-verify",
     "tim-archive-header",
     "tim-archive-footer",
-    "contact-info-verification",
 ]
 
 TIM_SAFE_ATTRS_MAP = {

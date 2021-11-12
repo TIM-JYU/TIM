@@ -382,11 +382,13 @@ export class SettingsComponent implements DoCheck {
                 .post("/contacts/add", {
                     contact_info_type: contact.channel,
                     contact_info: contact.contact,
+                    resend_if_exists: true,
                 })
                 .toPromise()
         );
         this.saving = false;
         this.verificationSentSet.add(contact);
+        // TODO: Figure out why this is needed for change detection
         this.cdr.detectChanges();
     }
 
@@ -408,6 +410,7 @@ export class SettingsComponent implements DoCheck {
         } else {
             await showMessageDialog(r.result.error.error);
         }
+        // TODO: Figure out why this is needed for change detection
         this.cdr.detectChanges();
     }
 

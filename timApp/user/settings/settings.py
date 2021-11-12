@@ -132,7 +132,7 @@ def get_user_info(u: User, include_doc_content: bool = False) -> dict[str, Any]:
         "uploaded_images": images,
         "uploaded_files": files,
         "user": {
-            **u.to_json(),
+            **u.to_json(contacts=True),
             "given_name": u.given_name,
             "last_name": u.last_name,
             "prefs": u.prefs,

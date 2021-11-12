@@ -54,7 +54,6 @@ from timApp.messaging.messagelist.messagelist_models import (
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_groupadmin
 from timApp.user.user import User
-from timApp.user.usercontact import UserContact
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import RouteException
 from timApp.util.logger import log_warning
@@ -1125,38 +1124,6 @@ def set_message_list_info(message_list: MessageListModel, info: Optional[str]) -
             message_list.name, message_list.email_list_domain
         )
         set_email_list_info(email_list, info)
-
-
-def sync_new_contact_info(user_contact: UserContact) -> None:
-    """Sync user's new contact information to message lists.
-
-    Syncs
-    - new emails to email lists.
-
-    :param user_contact: Contact information to be synced to message lists.
-    """
-    if not user_contact.channel != Channel.EMAIL:
-        return
-    user = User.get_by_id(user_contact.user_id)
-    assert user is not None
-    for group in user.groups:
-        for membership in group.messagelist_membership:
-            # Go through all message user's groups and the message lists those groups are a member.
-            message_list = membership.message_list
-            # Add new emails to email lists.
-            if message_list.email_list_domain:
-                email_list = get_email_list_by_name(
-                    message_list.name, message_list.email_list_domain
-                )
-                # TODO: add_email calls Mailman for every invocation. This might become a performance bottleneck?
-                add_email(
-                    email_list,
-                    user_contact.contact,
-                    True,
-                    user.real_name,
-                    membership.send_right,
-                    membership.delivery_right,
-                )
 
 
 @dataclass
