@@ -1,4 +1,5 @@
 import shutil
+from secrets import token_urlsafe
 
 import click
 from flask.cli import AppGroup
@@ -8,6 +9,7 @@ from timApp.admin.fix_orphan_documents import (
     move_docs_without_block,
 )
 from timApp.admin.util import commit_if_not_dry
+from timApp.document.docentry import DocEntry
 from timApp.document.translation.translation import Translation
 from timApp.item.block import Block, BlockType
 from timApp.notification.pending_notification import PendingNotification
@@ -93,3 +95,75 @@ def fix_orphans(dry_run: bool) -> None:
     fix_orphans_without_docentry()
     move_docs_without_block(dry_run)
     commit_if_not_dry(dry_run)
+
+
+@item_cli.command()
+def verify_io():
+    """Basic IO test to verify that documents can be created on the current TIM install"""
+
+    click.echo("Testing basic IO")
+    folder_name = token_urlsafe(10)
+    click.echo("Creating a document")
+    doc_path = f"users/{folder_name}/tmp"
+    DocEntry.create(doc_path, title="Test document")
+    db.session.commit()
+
+    d = DocEntry.find_by_path(doc_path)
+    if d:
+        click.echo("Document seems to exist")
+    else:
+        click.echo("No document found! An IO error or DB error?")
+        exit(1)
+
+    click.echo("Adding some paragraphs")
+    d.document.add_text(
+        """
+# Test
+
+This is a test
+
+#-
+Second paragraph
+"""
+    )
+
+    db.session.commit()
+
+    d = DocEntry.find_by_path(doc_path)
+    db.session.refresh(d)
+    click.echo("Reading added paragraphs back")
+
+    d.document.par_cache = None
+    d.document.load_pars()
+    res = d.document.export_markdown(export_ids=False)
+    expected = """# Test
+
+This is a test
+
+Second paragraph
+"""
+    if res == expected:
+        click.echo("Loaded markdown appears correct")
+    else:
+        click.echo("Loaded unexpected markdown!")
+        click.echo(res)
+        exit(1)
+
+    click.echo("Deleting document")
+    block = d.block
+    block.accesses = {}
+    db.session.delete(d)
+    db.session.delete(block)
+    db.session.commit()
+
+    fp = get_files_path()
+    deleted_docs = fp / "deleted" / "docs"
+    deleted_pars = fp / "deleted" / "pars"
+    deleted_pars.mkdir(parents=True, exist_ok=True)
+    deleted_docs.mkdir(parents=True, exist_ok=True)
+    doc_dir = fp / "docs" / str(d.id)
+    pars_dir = fp / "pars" / str(d.id)
+    shutil.move(doc_dir.as_posix(), deleted_docs)
+    shutil.move(pars_dir.as_posix(), deleted_pars)
+
+    click.echo("Done, basic IO seems to work!")
