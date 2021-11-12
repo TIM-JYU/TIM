@@ -46,7 +46,7 @@ const DEFAULT_PIECE_SIZE = 20;
 @Component({
     selector: "settings-tab",
     template: `
-        <ng-template i18n="@@settingsTabTitle">Document settings</ng-template>
+        <ng-template i18n>Document settings</ng-template>
         <ng-container>
             <h5 i18n>Help</h5>
             <a i18n-title title="Open TIM-guide" href="/view/tim/TIM-ohjeet" i18n>User guide</a>
@@ -235,19 +235,6 @@ const DEFAULT_PIECE_SIZE = 20;
             <h5 i18n>Scheduled functions</h5>
             <button (click)="openScheduleDialog()" class="timButton" i18n>Manage scheduled functions</button>
         </ng-container>
-
-        <ng-template i18n="@@markAllReadFail">Could not mark the document as read.</ng-template>
-        <ng-template i18n="@@markAllTranslatedConfirm">
-            This will mark all paragraphs in this document as translated. Continue?
-        </ng-template>
-        <ng-template i18n="@@markAllUnreadConfirm">
-            This document is in exam mode. Marking document unread will remove read marks from all users! Continue?
-        </ng-template>
-        <ng-template i18n="@@markAllUnreadAffectedCount">
-            This will affect {{0}} users in total.
-        </ng-template>
-        <ng-template i18n="@@notInDocumentError">Not in a document</ng-template>
-        <ng-template i18n="@@noKnroMacroError">The document has no 'knro' macro defined</ng-template>
     `,
 })
 export class SettingsTabComponent implements OnInit {
@@ -350,7 +337,7 @@ export class SettingsTabComponent implements OnInit {
         );
         if (!r.ok) {
             await showMessageDialog(
-                $localize`:@@markAllReadFail:Could not mark the document as read.`
+                $localize`Could not mark the document as read.`
             );
             return;
         }
@@ -368,18 +355,17 @@ export class SettingsTabComponent implements OnInit {
                 .get<number>(`/read/${this.item.id}/groupCount`)
                 .toPromise()
         );
-        let message = $localize`:@@markAllUnreadConfirm:This document is in exam mode. Marking document unread will remove read marks from all users! Continue?`;
+        let message = $localize`This document is in exam mode. Marking document unread will remove read marks from all users! Continue?`;
         if (r.ok) {
             message +=
-                "\n" +
-                $localize`:@@markAllUnreadAffectedCount:This will affect ${r.result}:INTERPOLATION: users in total.`;
+                "\n" + $localize`This will affect ${r.result} users in total.`;
         }
         await this.confirmPost(message, `/markAllUnread/${this.item.id}`);
     }
 
     async markTranslated() {
         await this.confirmPost(
-            $localize`:@@markAllTranslatedConfirm:This will mark all paragraphs in this document as translated. Continue?`,
+            $localize`This will mark all paragraphs in this document as translated. Continue?`,
             `/markTranslated/${this.item!.id}`
         );
     }
@@ -515,15 +501,13 @@ export class SettingsTabComponent implements OnInit {
      */
     async createMinutes() {
         if (!this.item) {
-            await showMessageDialog(
-                $localize`:@@notInDocumentError:Not in a document`
-            );
+            await showMessageDialog($localize`Not in a document`);
             return;
         }
 
         if (!this.docSettings?.macros?.knro) {
             await showMessageDialog(
-                $localize`:@@noKnroMacroError:The document has no 'knro' macro defined`
+                $localize`The document has no 'knro' macro defined`
             );
             return;
         }

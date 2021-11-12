@@ -34,21 +34,21 @@ export class TabEntryListService {
             {
                 id: "tab-bookmark",
                 icon: "bookmark",
-                title: $localize`:@@bookmarksTabTitle:Bookmarks`,
+                title: $localize`Bookmarks`,
                 visible: () => !hide.bookmarks && Users.isLoggedIn(),
                 component: BookmarksTabComponent,
             },
             {
                 id: "tab-settings",
                 icon: "cog",
-                title: $localize`:@@settingsTabTitle:Document settings`,
+                title: $localize`Document settings`,
                 visible: () => !hide.settings,
                 component: SettingsTabComponent,
             },
             {
                 id: "tab-index",
                 icon: "book",
-                title: $localize`:@@indexTabTitle:Document index`,
+                title: $localize`Document index`,
                 visible: () =>
                     !hide.index && this.headerIndexer.headers.length > 0,
                 component: IndexTabComponent,
@@ -56,14 +56,14 @@ export class TabEntryListService {
             {
                 id: "tab-score-info",
                 icon: "stats",
-                title: $localize`:@@scoreInfoTabTitle:Scoreboard`,
+                title: $localize`Scoreboard`,
                 visible: () => !hide.scoreBoard && this.scoreboard.valid,
                 component: ScoreInfoTabComponent,
             },
             {
                 id: "tab-lecture-info",
                 icon: "education",
-                title: $localize`:@@lectureInfoTabTitle:Lecture`,
+                title: $localize`Lecture`,
                 visible: () =>
                     !hide.lecturetab && lectureCtrl.lectureSettings.lectureMode,
                 component: LectureInfoTabComponent,
@@ -71,7 +71,7 @@ export class TabEntryListService {
             {
                 id: "tab-get-question",
                 icon: "question-sign",
-                title: $localize`:@@loadQuestionsTabTitle:Get question`,
+                title: $localize`Get question`,
                 visible: () =>
                     !hide.getquestion &&
                     lectureCtrl.lectureSettings.inLecture &&
@@ -81,7 +81,7 @@ export class TabEntryListService {
             {
                 id: "tab-logged-users",
                 icon: "user",
-                title: $localize`:@@loggedUsersTabTitle:Lecture participants`,
+                title: $localize`Lecture participants`,
                 visible: () =>
                     !hide.lecturer &&
                     lectureCtrl.lectureSettings.inLecture &&

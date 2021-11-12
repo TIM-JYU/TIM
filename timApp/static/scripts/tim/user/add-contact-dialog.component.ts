@@ -16,31 +16,29 @@ import {ContactOrigin, IUserContact} from "./IUser";
     selector: "add-contact-dialog",
     template: `
         <tim-dialog-frame [minimizable]="false">
-            <ng-container header>
-                {{dialogName}}
+            <ng-container header i18n>
+                Add new contact information
             </ng-container>
             <ng-container body>
                 <form>
                     <fieldset [disabled]="saving || saved">
                         <div class="form-group">
-                            <label class="control-label" for="name-select">
-                                Channel</label>
+                            <label class="control-label" for="name-select" i18n>Channel</label>
                             <select class="form-control" name="channel-select" [(ngModel)]="chosenChannel">
-                                <option value="email">Email</option>
+                                <option value="email" i18n>Email</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="control-label" for="contact-info-text">
-                                Contact info</label>
+                            <label class="control-label" for="contact-info-text" i18n>Contact info</label>
                             <input class="form-control" type="text" name="contact-info-text"
                                    [(ngModel)]="contactInfo">
                         </div>
                         <div>
-                            <tim-alert *ngIf="verificationSent" severity="success">
+                            <tim-alert *ngIf="verificationSent" severity="success" i18n>
                                 A verification link was sent to this contact.
                                 Please check possible spam filters.
                             </tim-alert>
-                            <tim-alert *ngIf="addError" severity="danger">
+                            <tim-alert *ngIf="addError" severity="danger" i18n>
                                 Could not add the new contact: {{addError}}
                             </tim-alert>
                         </div>
@@ -52,7 +50,7 @@ import {ContactOrigin, IUserContact} from "./IUser";
                 <tim-loading *ngIf="saving" style="margin-right: 1em;"></tim-loading>
                 <button class="timButton"
                         (click)="addNewContact()"
-                        [disabled]="!(chosenChannel && contactInfo) || saved">
+                        [disabled]="!(chosenChannel && contactInfo) || saved" i18n>
                     Add
                 </button>
                 <button class="timButton" (click)="dismiss()">Close</button>
@@ -64,7 +62,7 @@ export class AddContactDialogComponent extends AngularDialogComponent<
     {onAdd: (contact: IUserContact) => void},
     void
 > {
-    dialogName: string = "Add new contact information";
+    dialogName: string = "AddContact";
 
     // What type of contact info user is adding.
     chosenChannel?: Channel;

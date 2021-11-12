@@ -4,7 +4,7 @@ import {ScoreboardService} from "tim/sidebarmenu/services/scoreboard.service";
 @Component({
     selector: "score-info-tab",
     template: `
-        <ng-template i18n="@@scoreInfoTabTitle">Scoreboard</ng-template>
+        <ng-template i18n>Scoreboard</ng-template>
         <div class="points-list" *ngIf="scoreBoard.currentDocScoreInfo">
             <div class="collapse-header">
                 <a (click)="hidePagePoints = !hidePagePoints">

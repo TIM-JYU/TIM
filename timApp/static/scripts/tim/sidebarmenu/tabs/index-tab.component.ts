@@ -13,7 +13,7 @@ import {vctrlInstance} from "tim/document/viewctrlinstance";
 @Component({
     selector: "index-tab",
     template: `
-        <ng-template i18n="@@indexTabTitle">Document index</ng-template>
+        <ng-template i18n>Document index</ng-template>
         <h5 i18n>Index <a (click)="goToTop()" i18n-title title="Go to top" class="pull-right">Go to top</a></h5>
         <ul class="subexp">
             <li *ngFor="let header of displayIndex" [class.no-sub-headings]="!hasSubHeadings(header)">

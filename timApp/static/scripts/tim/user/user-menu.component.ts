@@ -23,10 +23,10 @@ import {Users} from "./userService";
                 aria-labelledby="single-button">
                 <ng-container *ngIf="!hideOptions.userMenuOptions">
                     <li role="menuitem"><a
-                            href="/view/{{ getCurrentUser().folder!.path }}" i18n="@@myDocuments">My documents</a></li>
+                            href="/view/{{ getCurrentUser().folder!.path }}" i18n>My documents</a></li>
                     <li role="menuitem"><a
                             (click)="addUser()" role="button">
-                        <ng-container i18n="@@addToSession">Add a user to this session</ng-container>
+                        <ng-container i18n>Add a user to this session</ng-container>
                         ...</a></li>
                     <li class="divider"></li>
                 </ng-container>

@@ -148,7 +148,7 @@ interface ISimpleRegistrationResponse {
                 Not a {{getHomeOrgDisplayName()}} student or staff member and don't have a TIM account?
             </p>
             <button *ngIf="!showSignup" class="center-block timButton" type="button"
-                (click)="beginSignup()" i18n="@@signUp">
+                (click)="beginSignup()" i18n>
                 Sign up
             </button>
         </ng-container>
@@ -375,12 +375,12 @@ export class LoginDialogComponent extends AngularDialogComponent<
 
     public getTitle() {
         if (this.addingToSession) {
-            return $localize`:@@addToSession:Add a user to this session`;
+            return $localize`Add a user to this session`;
         }
         if (this.showSignup) {
-            return $localize`:@@signUp:Sign up`;
+            return $localize`Sign up`;
         } else {
-            return $localize`:@@logIn:Log in`;
+            return $localize`Log in`;
         }
     }
 

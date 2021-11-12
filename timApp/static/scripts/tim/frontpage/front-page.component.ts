@@ -40,17 +40,17 @@ import {to} from "../util/utils";
             <div class="col-md-4">
                 <h2 i18n>Get started</h2>
                 <button *ngIf="!isLoggedIn()" (click)="openLoginDialog(false)" type="button"
-                        class="timButton margin-4" i18n="@@logIn">Log in
+                        class="timButton margin-4" i18n>Log in
                 </button>
                 <button *ngIf="!isLoggedIn()" (click)="openLoginDialog(true)" type="button"
                         class="timButton margin-4"
                         title="Create a TIM account"
                         i18n-title
-                        i18n="@@signUp">Sign up
+                        i18n>Sign up
                 </button>
                 <ul class="list-unstyled">
                     <li *ngIf="isLoggedIn()" class="h5">
-                        <a href="/view/{{getCurrentUserFolderPath()}}" i18n="@@myDocuments">My documents</a>
+                        <a href="/view/{{getCurrentUserFolderPath()}}" i18n>My documents</a>
                     </li>
                     <li class="h5"><a href="/view/" i18n>All documents</a></li>
                     <li class="h5">
