@@ -97,6 +97,7 @@ def create_or_update_user(
     info: UserInfo,
     group_to_add: Optional[UserGroup] = None,
     update_username: bool = True,
+    update_email: bool = True,
 ) -> User:
     assert info.username is not None
     user = User.get_by_name(info.username)
@@ -126,6 +127,8 @@ def create_or_update_user(
                 )
         if not update_username:
             info.username = None
+        if not update_email:
+            info.email = None
         user.update_info(info)
     else:
         user, _ = User.create_with_group(info)

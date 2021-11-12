@@ -385,6 +385,7 @@ def acs():
         log_warning(f"{timattrs.derived_username} did not receive unique codes")
     else:
         log_warning(f"{timattrs.derived_username} received empty unique code list")
+    # Don't update email here to prevent setting is as primary automatically
     user = create_or_update_user(
         UserInfo(
             username=timattrs.derived_username,
@@ -396,9 +397,9 @@ def acs():
             unique_codes=parsed_codes,
         ),
         group_to_add=org_group,
+        update_email=False,
     )
-    # Remove any old inactive Haka emails
-    user.set_emails([timattrs.mail], ContactOrigin.Haka)
+    user.set_emails([timattrs.mail], ContactOrigin.Haka, can_update_primary=True)
     haka = UserGroup.get_haka_group()
     if haka not in user.groups:
         user.groups.append(haka)

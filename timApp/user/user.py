@@ -758,7 +758,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
                 [info.email],
                 email_origin,
                 force_verify=True,
-                can_update_primary=True,
+                force_primary=True,
                 remove=False,
             )
             if sync_mailing_lists:
@@ -778,6 +778,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         emails: list[str],
         origin: ContactOrigin,
         force_verify: bool = False,
+        force_primary: bool = False,
         can_update_primary: bool = False,
         add: bool = True,
         remove: bool = True,
@@ -792,6 +793,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         :param origin: Emails' origin
         :param force_verify: If True, emails all emails are marked as verified.
                              Otherwise origins in NO_AUTO_VERIFY_ORIGINS are not verified.
+        :param force_primary: If True, forces to update the primary address
         :param can_update_primary: If True, allows to "update" the primary email address.
                                 If the user's primary email is custom and a new email is added from the integration,
                                 set that email as primary.
@@ -824,7 +826,7 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             for email in ((new_emails & current_emails) | not_removed)
         }
 
-        change_primary_email = (
+        change_primary_email = force_primary or (
             self.primary_email_contact is None
             or (
                 self.primary_email_contact.contact_origin == origin

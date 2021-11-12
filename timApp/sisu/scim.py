@@ -420,7 +420,6 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                         last_name=u.name.familyName,
                         given_name=u.name.givenName,
                     ),
-                    sync_mailing_lists=False,
                 )
                 prev_email = user.email
                 user.set_emails(u.emails, ContactOrigin.Sisu, can_update_primary=True)
@@ -441,7 +440,6 @@ def update_users(ug: UserGroup, args: SCIMGroupModel) -> None:
                             last_name=u.name.familyName,
                             given_name=u.name.givenName,
                         ),
-                        sync_mailing_lists=False,
                     )
                     prev_email = user.email
                     user.set_emails(
