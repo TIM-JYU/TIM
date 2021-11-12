@@ -98,7 +98,7 @@ def fix_orphans(dry_run: bool) -> None:
 
 
 @item_cli.command()
-def verify_io():
+def verify_io() -> None:
     """Basic IO test to verify that documents can be created on the current TIM install"""
 
     click.echo("Testing basic IO")
