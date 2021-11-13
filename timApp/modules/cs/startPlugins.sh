@@ -53,7 +53,7 @@ wget https://svn.cc.jyu.fi/srv/svn/ohj2/gui/gui.jar -O gui.jar.tmp -nv && mv gui
 
 mkdir -p cs
 cd cs
-wget https://svn.cc.jyu.fi/srv/svn/comtest/proto/tojukarp/trunk/dist/ComTest.jar -O ComTest.jar.tmp -nv && mv ComTest.jar.tmp ComTest.jar
+wget https://kurssit.it.jyu.fi/npo/ComTest/ComTest.jar -O ComTest.jar.tmp -nv && mv ComTest.jar.tmp ComTest.jar
 
 cd /cs/simcir/check
 wget https://gitlab.jyu.fi/arjuvi/logik-py/-/raw/master/simcirtest.py -O simcirtest.py.tmp -nv && mv simcirtest.py.tmp simcirtest.py

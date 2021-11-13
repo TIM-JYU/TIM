@@ -137,6 +137,7 @@ PROXY_WHITELIST = [
     "gitlab.com",
     "gitlab.jyu.fi",
     "tim.jyu.fi",
+    "www.foreca.com",
 ]
 
 # Whitelist of /getproxy domains that don't require login.
