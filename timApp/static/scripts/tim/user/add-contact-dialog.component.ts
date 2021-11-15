@@ -95,7 +95,7 @@ export class AddContactDialogComponent extends AngularDialogComponent<
             this.verificationSent = result.result.requireVerification;
             this.saved = true;
             this.data.onAdd({
-                channel: this.chosenChannel!,
+                channel: this.chosenChannel,
                 contact: this.contactInfo!,
                 verified: false,
                 origin: ContactOrigin.Custom,
