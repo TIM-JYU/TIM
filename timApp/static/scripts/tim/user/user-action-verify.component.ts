@@ -138,7 +138,7 @@ const INFO_MAP: Record<VerificationType, Type<unknown> | undefined> = {
                 <fieldset [disabled]="processing || verifyComplete">
                     <button class="btn btn-danger" (click)="verify($event, false)" i18n>Decline</button>
                     <tim-loading *ngIf="processing"></tim-loading>
-                    <button class="btn btn-default" (click)="verify($event, true)" i18n>Accept</button>
+                    <button class="timButton" (click)="verify($event, true)" i18n>Accept</button>
                 </fieldset>
             </form>
         </bootstrap-panel>
