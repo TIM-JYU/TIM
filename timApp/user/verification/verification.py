@@ -68,6 +68,10 @@ class Verification(db.Model):
     user: User = db.relationship("User", lazy="select")
     """User that can react to verification request."""
 
+    @property
+    def return_url(self) -> Optional[str]:
+        return None
+
     def approve(self) -> None:
         raise NotImplementedError
 
@@ -87,6 +91,10 @@ class ContactAddVerification(Verification):
         "UserContact", lazy="select", uselist=False
     )
     """Contact to verify."""
+
+    @property
+    def return_url(self) -> Optional[str]:
+        return url_for("settings_page.show")
 
     def deny(self) -> None:
         if not self.contact:

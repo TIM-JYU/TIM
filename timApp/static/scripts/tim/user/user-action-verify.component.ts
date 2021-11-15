@@ -117,16 +117,26 @@ const INFO_MAP: Record<VerificationType, Type<unknown> | undefined> = {
     [VerificationType.SET_PRIMARY_CONTACT]: SetPrimaryContactInfoComponent,
 };
 
+const VERIFY_RETRUN_URLS: Record<VerificationType, string | undefined> = {
+    [VerificationType.LIST_JOIN]: undefined,
+    [VerificationType.CONTACT_OWNERSHIP]: $localize`Return to TIM settings.`,
+    [VerificationType.SET_PRIMARY_CONTACT]: $localize`Return to TIM settings.`,
+};
+
 @Component({
     selector: "tim-user-action-verify",
     template: `
         <tim-alert *ngIf="verifyGlobals.verifyError" i18n>
             Cannot verify: {{verifyGlobals.verifyError}}
         </tim-alert>
-        <tim-alert *ngIf="verificationResult" [severity]="verificationResult.type">
+        <tim-alert *ngIf="verificationResult" [severity]="verificationResult.severity">
             {{verificationResult.message}}
+            <a *ngIf="verificationResult.returnUrl && verifyReturnUrl"
+               [href]="verificationResult.returnUrl">
+                {{verifyReturnUrl}}
+            </a>
         </tim-alert>
-        <bootstrap-panel [class.hidden]="verifyGlobals.verifyError" title="Verify action" i18n-title>
+        <bootstrap-panel [class.hidden]="verifyGlobals.verifyError || verificationResult" title="Verify action" i18n-title>
             <div>
                 <ng-container #infoContainer></ng-container>
             </div>
@@ -151,19 +161,36 @@ export class UserActionVerifyComponent implements AfterViewInit {
     infoContainer!: ViewContainerRef;
     processing: boolean = false;
     verifyComplete: boolean = false;
-    verificationResult?: {type: AlertSeverity; message: string};
+    verifyReturnUrls = VERIFY_RETRUN_URLS;
+    verificationResult?: {
+        severity: AlertSeverity;
+        message: string;
+        returnUrl?: string;
+    };
+    verifyType?: VerificationType;
 
     constructor(
         private http: HttpClient,
         private cfr: ComponentFactoryResolver
-    ) {}
+    ) {
+        if (this.verifyGlobals.verifyInfo) {
+            this.verifyType = this.verifyGlobals.verifyInfo
+                .type as VerificationType;
+        }
+    }
+
+    get verifyReturnUrl() {
+        if (!this.verifyType) {
+            return "";
+        }
+        return this.verifyReturnUrls[this.verifyType] ?? "";
+    }
 
     ngAfterViewInit(): void {
-        if (!this.verifyGlobals.verifyInfo) {
+        if (!this.verifyType) {
             return;
         }
-        const infoType =
-            INFO_MAP[this.verifyGlobals.verifyInfo.type as VerificationType];
+        const infoType = INFO_MAP[this.verifyType];
         if (!infoType) {
             this.verifyGlobals.verifyError = $localize`This verification type is not yet supported.`;
             return;
@@ -176,30 +203,37 @@ export class UserActionVerifyComponent implements AfterViewInit {
 
     async verify(e: Event, verify: boolean) {
         e.preventDefault();
+        if (!this.verifyType) {
+            return;
+        }
         this.processing = true;
         const res = await to2(
             // Use pathname to ensure relative URL so that CSRF token is passed along
-            this.http.post(window.location.pathname, {verify}).toPromise()
+            this.http
+                .post<{returnUrl?: string}>(window.location.pathname, {verify})
+                .toPromise()
         );
         this.processing = false;
         if (res.ok) {
             if (verify) {
                 this.verificationResult = {
-                    type: "success",
-                    message: $localize`Verification successful. You can now close the page.`,
+                    severity: "success",
+                    message: $localize`Verification successful.`,
+                    returnUrl: res.result.returnUrl,
                 };
             } else {
                 this.verificationResult = {
-                    type: "warning",
+                    severity: "warning",
                     message: $localize`Verification was successfully denied. If you believe you got this link by mistake, please report this to ${
                         genericglobals().config.helpEmail
                     }.`,
+                    returnUrl: res.result.returnUrl,
                 };
             }
             this.verifyComplete = true;
         } else {
             this.verificationResult = {
-                type: "danger",
+                severity: "danger",
                 message: $localize`Could not verify action because of an error: ${
                     res.result.error.error
                 }. Please report this to ${genericglobals().config.helpEmail}.`,

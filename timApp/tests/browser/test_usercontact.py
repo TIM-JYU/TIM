@@ -27,7 +27,7 @@ class UserContactTest(BrowserTest):
         self.drv.find_element(By.NAME, "channel-select").click()
         dropdown = self.drv.find_element(By.NAME, "channel-select")
         dropdown.find_element(By.XPATH, "//option[. = 'Email']").click()
-        self.drv.find_element(By.CSS_SELECTOR, ".ng-dirty > option").click()
+        self.drv.find_element(By.CSS_SELECTOR, ".ng-pristine > option").click()
         self.drv.find_element(By.NAME, "contact-info-text").click()
         self.drv.find_element(By.NAME, "contact-info-text").send_keys(
             "test1other@example.com"
@@ -44,7 +44,7 @@ class UserContactTest(BrowserTest):
         verify_link = last_email_msg["msg"].removeprefix("http://localhost")
 
         self.goto(verify_link)
-        self.drv.find_element(By.CSS_SELECTOR, ".btn-default").click()
+        self.drv.find_element(By.CSS_SELECTOR, ".timButton").click()
 
         self.goto("/settings")
         screenshot("usercontact/add_new_verified")

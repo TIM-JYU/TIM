@@ -8,7 +8,7 @@ from timApp.auth.sessioninfo import get_current_user_id
 from timApp.timdb.sqa import db
 from timApp.user.verification.verification import Verification, VerificationType
 from timApp.util.flask.requesthelper import RouteException
-from timApp.util.flask.responsehelper import ok_response
+from timApp.util.flask.responsehelper import json_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import get_current_time
 
@@ -68,4 +68,4 @@ def do_verify(verify_type: str, verify_token: str, verify: bool) -> Response:
 
     verification.reacted_at = get_current_time()
     db.session.commit()
-    return ok_response()
+    return json_response({"returnUrl": verification.return_url})
