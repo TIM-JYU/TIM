@@ -64,9 +64,8 @@ export class AddContactDialogComponent extends AngularDialogComponent<
 > {
     dialogName: string = "AddContact";
 
-    // What type of contact info user is adding.
-    chosenChannel?: Channel;
-    // The contact information.
+    // Email is the only channel for now
+    chosenChannel: Channel = Channel.EMAIL;
     contactInfo?: string;
 
     verificationSent = false;
