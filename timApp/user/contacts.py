@@ -53,12 +53,18 @@ def add_contact(
             raise RouteException(
                 "The contact is already added but is pending verification"
             )
-        resend_verification(
-            ContactAddVerification.query.filter_by(
-                contact=existing_contact_info, reacted_at=None
-            ).one(),
-            existing_contact_info.contact,
-        )
+        verification = ContactAddVerification.query.filter_by(
+            contact=existing_contact_info, reacted_at=None
+        ).first()
+        if verification:
+            resend_verification(verification, existing_contact_info.contact)
+        else:
+            # Verification was cleaned after it wasn't used for a while, create a new one
+            request_verification(
+                ContactAddVerification(user=user, contact=existing_contact_info),
+                existing_contact_info.contact,
+            )
+            db.session.commit()
         return json_response({"requireVerification": False})
 
     # Add appropriate contact info.
