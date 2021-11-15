@@ -14,6 +14,7 @@ the images location according to the set of following rules:
 TODO: BETTER DOCUMENTATION
 
 """
+import imghdr
 import os
 import re
 import tempfile
@@ -231,6 +232,14 @@ def handle_images(key, value, fmt, meta):
                 if not os.path.exists(img_dl_path):
                     # open("Output.txt", "a").write("retrieve: " + url + " -> " + img_dl_path + "\n")
                     urllib.request.urlretrieve(url, img_dl_path)
+                    if not ext:
+                        img_type = imghdr.what(img_dl_path)
+                        if img_type:
+                            img_dl_path_ext = f"{img_dl_path}.{img_type}"
+                            # open("Output.txt", "a").write("img_dl_path_ext = " + img_dl_path_ext + "\n")
+                            os.symlink(img_dl_path, img_dl_path_ext)
+                            img_dl_path = img_dl_path_ext
+
                     # urllib.URLopener().retrieve(url, img_dl_path)
 
                 img_dl_path = img_dl_path.replace(
