@@ -615,12 +615,12 @@ class CreateValueVariable extends CreateVariable {
     // see: https://regex101.com/r/uaLk9H/latest
     // syntax: V summa <- -3.5
     static isMy(s) {
-        let re = /^[Vv](al|alue)? +((?:[!@.+\-\w\d]+):?(?:(?:[^="\n]+)|"[^"\n]+")?) *(<-|=|:=|) *([^\n]+|)$/;
+        let re = /^[Vv](?:al|alue)? +((?:[!@.+\-\w\d]+):?(?:(?:[^="\n]+)|"[^"\n]+")?) *(<-|=|:=|) *([^\n]+|)$/;
         let r = re.exec(s);
         if (!r) return undefined;
-        let name = r[2].trim();
-        let value = r[4].trim();
-        if (!r[3] && value === "") value = undefined;
+        let name = r[1].trim();
+        let value = r[3].trim();
+        if (!r[2] && value === "") value = undefined;
         return [new CreateVariable(
             () => new ValueVariable(name, value, undefined, 0))];
     }
@@ -695,7 +695,7 @@ class CreateObjectVariable extends Variable {
     // see: https://regex101.com/r/uaQrJu/latest
     // syntax: New $2 Aku
     static isMy(s) {
-        let re = /^[Nn][ew]{0,2} +([!+\-*$]*[@+\-\S]+) +([^\n]*)$/;
+        let re = /^[Nn](?:ew)? +([!+\-*$]*[@+\-\S]+) +([^\n]*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
         let name = r[1];
@@ -964,8 +964,8 @@ class CreateInitializedStructVariable extends CreateVariable {
         let dir = ' ';
         let type = 'A';
 
-        let re1 = /^(?:[Ss](?:truct)?\.([\S]+))? +([^ ]+) *(.*)?$/;
-        let re2 = /^(?:[Ss](?:truct)?) +([^ ]+) +([@\S]+) *(.*)?$/;
+        let re1 = /^(?:[Nn](?:ew)? )?(?:[Ss](?:truct)?\.([\S]+))? +([^ ]+) *(.*)?$/;
+        let re2 = /^(?:[Nn](?:ew)? )?(?:[Ss](?:truct)?) +([^ ]+) +([@\S]+) *(.*)?$/;
         let r = re1.exec(s);
         if (r) { // is named class
             stclass = r[1];
@@ -1067,20 +1067,20 @@ class CreateInitializedArrayVariable extends CreateVariable {
     //    []$3 r $1,$2
     //    L $3 r [$1,$2,$[1]]
     static isMy(s) {
-        let re = /^([Nn][ew]{0,2} )?([Aa](rray)?|[Ll](ist)?|\[]) *([^ ]+) +([@\S]+) *(.*)?$/;
+        let re = /^(?:[Nn](?:ew)? )?([Aa](?:rray)?|[Ll](?:ist)?|\[]) +([^ ]+) +([@\S]+) *(.*)?$/;
         let r = re.exec(s);
         if (!r) { // try if format L $3 r [$1,$2,$[1]]
-            re = /^([Nn]ew[ew]{0,2} )?([Aa](rray)?|[Ll](ist)?|\[]) +([^ ]+) *([@\S]+) *[{]?([$[\]\d., \w]+)[}]?$/;
+            re = /^(?:[Nn](?:ew)? )?([Aa](?:rray)?|[Ll](?:ist)?|\[]) +([^ ]+) *([@\S]+) *[{]?([$[\]\d., \w]+)[}]?$/;
             r = re.exec(s);
             if (!r) return undefined;
         }
         let kind = "[";
-        if (r[2].toUpperCase().startsWith("L")) kind = "L";
-        let name = r[6];
-        let vals = r[7];
+        if (r[1].toUpperCase().startsWith("L")) kind = "L";
+        let name = r[2];
+        let vals = r[4];
         // Check type, dir and len, see https://regex101.com/r/QePOJe/latest
         re = /^(.)([VH])?([\d]+)?/gm;
-        let td = r[6].toUpperCase();
+        let td = r[3].toUpperCase();
         r = re.exec(td);
         if (!r) throw `${name} tyypin kohdalla vikaa. Oikeita esim V VH V10 VV9`;
         let type = r[1];
@@ -1122,7 +1122,7 @@ class CreateInitialized2DArrayVariable extends CreateVariable {
     //    [,] $2 r2x4 a
     //    [][] $2 r2x4 a
     static isMy(s) {
-        let re = /^([Jj]?(?:agged)?[Aa](?:rray)? |\[]\[]|\[,]) *([^ ]+) +([@\S]+[\d]+[xX][\d]+) *(.*)?$/;
+        let re = /^(?:[Nn](?:ew)? )?([Jj]?(?:agged)?[Aa](?:rray)? |\[]\[]|\[,]) *([^ ]+) +([@\S]+[\d]+[xX][\d]+) *(.*)?$/;
         let r = re.exec(s);
         if (!r) return undefined;
         let jagged = false;
@@ -1249,12 +1249,12 @@ class CreateFindVariable extends Command {
 
 
 const combinedRefCommands = [
-    CreateObjectVariable,
     // CreateArrayVariable,
     CreateInitialized2DArrayVariable,
     CreateInitializedArrayVariable,
     CreateInitializedStructVariable,
     CreateFindVariable,
+    CreateObjectVariable,
 ];
 
 class CreateReferenceAndObject extends CreateRefecenceVariable {
@@ -1264,14 +1264,14 @@ class CreateReferenceAndObject extends CreateRefecenceVariable {
     // syntax: ref aku -> a $1 v 3
     // syntax: ref aku -> a $1 v 1,2,34
     static isMy(s, variables) {
-        let re = /^[Rr](ef|eference)? +([!:\-+$.@\w\d]+) *-> *(.*)$/;
+        let re = /^[Rr](?:ef|eference)? +([!:\-+$.@\w\d]+) *-> *(.*)$/;
         let r = re.exec(s);
         if (!r) return undefined;
 
-        let name = r[2];
+        let name = r[1];
         let cmds = undefined;
         for (let cmdCls of combinedRefCommands) {
-            cmds = cmdCls.isMy(r[3], variables);
+            cmds = cmdCls.isMy(r[2], variables);
             if (cmds) break;
         }
         if (!cmds) return undefined;
@@ -1281,7 +1281,7 @@ class CreateReferenceAndObject extends CreateRefecenceVariable {
 
         let cmd = cmds[0];
         let rname = cmd.name;
-        cmd.line = r[3];
+        cmd.line = r[2];
 
         let refToCmd = new ReferenceTo(name, rname);
         refToCmd.line = name + " -> " + rname;
@@ -1566,10 +1566,10 @@ class AddSVG extends Command {
     // syntax:
     //  SVG <path>...</path>
     static isMy(s) {
-        let re = /^(SVG|svg) * ([^\n]*)$/gm;
+        let re = /^(?:SVG|svg|Svg) * ([^\n]*)$/gm;
         let r = re.exec(s);
         if (!r) return undefined;
-        return [new AddSVG(r[2])];
+        return [new AddSVG(r[1])];
     }
 
     constructor(svg) {
@@ -1590,10 +1590,10 @@ class SetGraphAttributes extends Command {
     // syntax:
     //  Graph {x: 10, y:20}
     static isMy(s) {
-        let re = /^[Gg](raph)? * ([^\n]*)$/gm;
+        let re = /^[Gg](?:raph)? * ([^\n]*)$/gm;
         let r = re.exec(s);
         if (!r) return undefined;
-        return [new SetGraphAttributes(r[2])];
+        return [new SetGraphAttributes(r[1])];
     }
 
     constructor(graphAttributes) {
@@ -1722,15 +1722,15 @@ class CodeCommand extends Command {
     // syntax:
     //  Code: int a = 5;
     static isMy(s, variables) {
-        let re = /^[Cc](ode|ODE)?[: ]+ *(.*)$/gm;
+        let re = /^[Cc](?:ode|ODE)?[: ]+ *(.*)$/gm;
         let re2 = /^(\/\/+) *(.*)$/gm;
         let r = re.exec(s);
         if (!r) {
             r = re2.exec(s);
             if (!r) return undefined;
-            r[2] = s;
+            r[1] = s;
         }
-        let code = "" + r[2];
+        let code = "" + r[1];
         if (variables.isAnimateCommands() &&
             code !== "" &&
             !code.startsWith("#") &&

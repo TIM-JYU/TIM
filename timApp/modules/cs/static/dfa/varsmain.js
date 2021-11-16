@@ -75,8 +75,7 @@ t -> $4
 */
 
 const code = `
-list $1 r4 
-n list $2 r8
+ref a -> new list $2 r5 
 `;
 setData({
     code: code, args: "1001", params: {
