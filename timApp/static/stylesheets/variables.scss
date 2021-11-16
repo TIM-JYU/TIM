@@ -49,6 +49,7 @@ $pre-left-border: 4px solid $basic-color;
 $pre-background: white;
 $container-xs-padding: 0.2em;
 $focus-bar-color: exportable(lightblue, focus-bar-color);
+$focus-bar-width: exportable(3px, focus-bar-width);
 $lightselect-color: exportable(#fcfcfc, lightselect-color);
 // $parselect-color: exportable(lightgray, parselect-color);
 $parselect-color: exportable(#fcfcfc, parselect-color);
