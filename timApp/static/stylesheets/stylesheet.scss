@@ -70,6 +70,13 @@ a .glyphicon {
     vertical-align: middle;
 }
 
+@media (max-width: $screen-sm) {
+    .row.main-content {
+        margin-left: -$focus-bar-width;
+        margin-right: 0;
+    }
+}
+
 
 // Bootstrap doesn't have built-in support for input-xs and input-group-xs classes,
 // so we borrow them from https://stackoverflow.com/a/22920590
@@ -574,8 +581,8 @@ a.timButton {
     }
 
     @media (max-width: $screen-xs-max) {
-        left: 0;
-        width: $editline-width / 2;
+        left: -$grid-gutter-width / 3 - $focus-bar-width;
+        width: $grid-gutter-width / 3;
     }
 
     &:hover, &.menuopen {
@@ -660,7 +667,7 @@ a.timButton {
 .areaexpand, .areacollapse {
     & > .glyphicon {
         position: absolute;
-        font-size: large;
+        font-size: 18px;
         left:  0em;     /* -$editline-width - 0.5em; */
         color: $areacollapse-color;
         z-index: 5; /* to be top of editline */
@@ -1271,7 +1278,7 @@ tim-user-list {
 }
 
 .parContent:focus {
-    box-shadow: -3px 0 $focus-bar-color;
+    box-shadow: -$focus-bar-width 0 $focus-bar-color;
     outline: none;
 }
 
