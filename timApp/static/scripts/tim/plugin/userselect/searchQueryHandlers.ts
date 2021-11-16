@@ -73,17 +73,13 @@ export class PrefetchedQueryHandler implements IQueryHandler {
     async initialize() {
         const params = new HttpParams({
             fromString: window.location.search.replace("?", "&"),
-        });
+        })
+            .append("doc_id", this.par.doc_id.toString())
+            .append("par_id", this.par.par_id);
         const result = await this.http
             .get<{users: UserResult[]; fieldNames: string[]}>(
                 "/userSelect/fetchUsers",
-                {
-                    params: {
-                        doc_id: this.par.doc_id.toString(),
-                        par_id: this.par.par_id,
-                        ...params,
-                    },
-                }
+                {params}
             )
             .toPromise();
 
