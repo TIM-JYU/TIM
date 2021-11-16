@@ -51,6 +51,7 @@ from tim_common.pluginserver_flask import (
     GenericHtmlModel,
     PluginReqs,
     register_html_routes,
+    EditorTab,
 )
 from tim_common.utils import DurationSchema
 
@@ -99,11 +100,19 @@ class DistributeRightAction:
 
 RIGHT_TO_OP: dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
     "confirm": lambda r, usr: ConfirmOp(
-        type="confirm", email=usr, timestamp=r.timestamp_or_now
+        type="confirm",
+        email=usr,
+        timestamp=r.timestamp_or_now,
     ),
-    "quit": lambda r, usr: QuitOp(type="quit", email=usr, timestamp=r.timestamp_or_now),
+    "quit": lambda r, usr: QuitOp(
+        type="quit",
+        email=usr,
+        timestamp=r.timestamp_or_now,
+    ),
     "unlock": lambda r, usr: UnlockOp(
-        type="unlock", email=usr, timestamp=r.timestamp_or_now
+        type="unlock",
+        email=usr,
+        timestamp=r.timestamp_or_now,
     ),
     "changetime": lambda r, usr: ChangeTimeOp(
         type="changetime",
@@ -120,6 +129,8 @@ class ActionCollection:
     removePermission: list[RemovePermission] = field(default_factory=list)
     distributeRight: list[DistributeRightAction] = field(default_factory=list)
     setValue: list[SetTaskValueAction] = field(default_factory=list)
+    addToGroups: list[str] = field(default_factory=list)
+    removeFromGroups: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -186,7 +197,80 @@ class UserSelectHtmlModel(
 
 
 def reqs_handler() -> PluginReqs:
-    return {"js": ["userSelect"], "multihtml": True}
+    template = """
+``` {#user_select plugin="userSelect" nocache="true"}
+groups:                  # Groups from which the users can be searched and selected
+    - groupname
+fields:                  # Fields to use when searching. Username, full name and email are always included.
+    - somefields
+displayFields:           # What fields to show in search results. Any fields defined in "fields" are allowed.
+  - realname              # Full name
+  - username              # Username
+  - useremail             # Email address
+autoSearchDelay: 0       # Wait this amount of seconds before searching for a user. 0 = OFF
+maxMatches: 10           # If more than one user is found, how many are shown at max.
+inputMinLength: 3        # How many characters must be given before searching.
+selectOnce: false        # If true, hide other users when selecting one.
+allowUndo: false         # Can the action be undone. Undoing is not supported by all actions.
+preFetch: false          # If true, all users are prefetched. This makes initial load longer but searches are faster.
+scanner:                 # Camera scanner options
+  enabled: false         # Show the scanner button
+  applyOnMatch: false    # If true and only one user is found from scanning, apply actions on them without verifying 
+  continuousMatch: false # If true, scanner is not disabled after a successful scan
+  waitBetweenScans: 0    # If continuousMatch is true, how many seconds to wait before restarting the scanner
+  beepOnSuccess: false   # Play a "beep" sound on successful scan.
+  beepOnFailure: true    # Play a "beep" sound if scan was successful but no matching users were found. 
+  scanInterval: 1.5      # Time interval between scan attempts in seconds. Lower value means faster scans but higher energy usage.
+actions:                 # Actions to apply for the selected user
+
+    #addPermission:               # Add permissions to documents
+    #  - doc_path: some/doc/path  # Target document path
+    #    type: view               # Permission type. Allowed values: view, edit, teacher, manage, see_answers, owner, copy
+    #    time:                    # Duration of the permission
+    #      type: always                            # Permission type. Allowed values: always, range, duration
+    #      #duration: P30M                         # Duration in ISO 8601 format (for "duration" type)
+    #      #to: 2021-04-23T18:00:00.000Z           # When the permission ends
+    #      #from: 2021-04-23T16:00:00.000Z         # When the permission starts
+    #      #durationTo: 2021-04-23T18:00:00.000Z   # When the duration permission can be asked for
+    #      #durationFrom: 2021-04-23T16:00:00.000Z # When the duration permission ends
+    #    confirm: false          # Does the permission require extra confirmation? 
+
+    #removePermission:          # Remove permissions from documents
+    #  - doc_path: users/admin-admin/kohde    # Document, from which to remove the permission
+    #    type: view                           # Type of permission to remove: view, edit, teacher, manage, see_answers, owner, copy
+
+    #setValue:                   # Set value to a field or task
+    #  - taskId: 1.sometask         # Task or field to which to set the value
+    #    value: somevalue           # Value to set. Can be a macro.
+#text:              # UI texts
+#  apply: Apply permissions
+#  cancel: Cancel
+#  success: Gave permission to {realname}.
+#  undone: Undone permissions from {realname} ({HETU}).
+```
+"""
+    editor_tabs: list[EditorTab] = [
+        {
+            "text": "Plugins",
+            "items": [
+                {
+                    "text": "UserSelect",
+                    "items": [
+                        {
+                            "data": template.strip(),
+                            "text": "User selector",
+                            "expl": "Search users from a group and apply actions to them",
+                        }
+                    ],
+                },
+            ],
+        },
+    ]
+    return {
+        "js": ["userSelect"],
+        "multihtml": True,
+        "editor_tabs": editor_tabs,
+    }
 
 
 def get_plugin_markup(
