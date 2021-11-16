@@ -33,6 +33,7 @@ from timApp.item.manage import (
 )
 from timApp.plugin.plugin import Plugin
 from timApp.timdb.sqa import db
+from timApp.user.groups import verify_group_edit_access
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.util.flask.requesthelper import (
@@ -242,6 +243,12 @@ actions:                 # Actions to apply for the selected user
     #setValue:                   # Set value to a field or task
     #  - taskId: 1.sometask         # Task or field to which to set the value
     #    value: somevalue           # Value to set. Can be a macro.
+
+    #addToGroups:               # Add the user to the groups
+    #  - somegroups
+
+    #removeFromGroups:          # Remove the user from the groups. This will do a soft delete (i.e. add removal date)
+    #  - somegroups
 #text:              # UI texts
 #  apply: Apply permissions
 #  cancel: Cancel
@@ -410,20 +417,12 @@ def get_plugin_info(
     return model, cur_user, user_group, user_acc
 
 
-@user_select_plugin.post("/undo")
-def undo(
-    username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None
-) -> Response:
-    model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
-    # No permissions to undo
-    if not model.actions:
-        return ok_response()
-
+def undo_dist_right_actions(
+    user_acc: User, dist_rights: list[DistributeRightAction]
+) -> list[str]:
     # TODO: Implement undoing for local permissions
     undoable_dists = [
-        dist
-        for dist in model.actions.distributeRight
-        if dist.operation in ("confirm", "quit")
+        dist for dist in dist_rights if dist.operation in ("confirm", "quit")
     ]
     errors = []
     for distribute in undoable_dists:
@@ -451,11 +450,13 @@ def undo(
 
         errors.extend(register_right_impl(undo_op, distribute.target))
 
-    # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
-    if errors:
-        return json_response({"distributionErrors": errors})
+    return errors
 
-    fields_to_save = {set_val.taskId: "" for set_val in model.actions.setValue}
+
+def undo_field_actions(
+    cur_user: UserGroup, user_acc: User, set_value: list[SetTaskValueAction]
+) -> None:
+    fields_to_save = {set_val.taskId: "" for set_val in set_value}
     if fields_to_save:
         # Reuse existing helper for answer route to save field values quickly
         save_fields(
@@ -466,26 +467,77 @@ def undo(
             allow_non_teacher=False,
         )
 
-        # For now there is only need to commit on field save
-        db.session.commit()
+
+def get_groups(
+    cur_user: User, add: list[str], remove: list[str]
+) -> tuple[list[UserGroup], list[UserGroup]]:
+    add_groups: list[UserGroup] = UserGroup.query.filter(UserGroup.name.in_(add)).all()
+    remove_groups: list[UserGroup] = UserGroup.query.filter(
+        UserGroup.name.in_(remove)
+    ).all()
+    all_groups: dict[str, UserGroup] = {
+        ug.name: ug for ug in (add_groups + remove_groups)
+    }
+
+    for ug in all_groups.values():
+        if ug.is_sisu:
+            raise RouteException(
+                "Modifying Sisu groups with user selector is not allowed to prevent mistakes"
+            )
+        verify_group_edit_access(ug, cur_user)
+
+    return add_groups, remove_groups
+
+
+def undo_group_actions(
+    user_acc: User, cur_user: User, add: list[str], remove: list[str]
+) -> None:
+    add_groups, remove_groups = get_groups(cur_user, add, remove)
+
+    for ug in remove_groups:
+        user_acc.add_to_group(ug, cur_user)
+
+    for ug in add_groups:
+        ug.memberships.filter_by(user=user_acc).delete()
+
+
+@user_select_plugin.post("/undo")
+def undo(
+    username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None
+) -> Response:
+    model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
+    # No permissions to undo
+    if not model.actions:
+        return ok_response()
+
+    errors = undo_dist_right_actions(user_acc, model.actions.distributeRight)
+
+    # If there are errors undoing, don't reset the fields because it may have been caused by a race condition
+    if errors:
+        return json_response({"distributionErrors": errors})
+
+    undo_field_actions(user_group, user_acc, model.actions.setValue)
+    undo_group_actions(
+        user_acc, cur_user, model.actions.addToGroups, model.actions.removeFromGroups
+    )
+
+    db.session.commit()
 
     return json_response({"distributionErrors": errors})
 
 
-@user_select_plugin.post("/apply")
-def apply(
-    username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None
-) -> Response:
-    model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
-    # No permissions to apply, simply return
-    if not model.actions:
-        return ok_response()
+def apply_permission_actions(
+    user_group: UserGroup,
+    add: list[AddPermission],
+    remove: list[RemovePermission],
+) -> list[str]:
+    doc_entries = {}
+    update_messages = []
 
     permission_actions: list[PermissionActionBase] = [
-        *model.actions.addPermission,
-        *model.actions.removePermission,
+        *add,
+        *remove,
     ]
-    doc_entries = {}
 
     # Verify first that all documents can be accessed and permissions edited + cache doc entries
     for perm in permission_actions:
@@ -499,30 +551,34 @@ def apply(
         verify_permission_edit_access(doc_entry, perm.type)
         doc_entries[perm.doc_path] = doc_entry
 
-    update_messages = []
-
-    for add in model.actions.addPermission:
-        doc_entry = doc_entries[add.doc_path]
+    for to_add in add:
+        doc_entry = doc_entries[to_add.doc_path]
         # Don't throw if we try to remove a permission from ourselves, just ignore it
         accs = add_perm(
-            PermissionEditModel(add.type, add.time, [username], add.confirm), doc_entry
+            PermissionEditModel(
+                to_add.type, to_add.time, [user_group.name], to_add.confirm
+            ),
+            doc_entry,
         )
         if accs:
             update_messages.append(
-                f"added {accs[0].info_str} for {username} in {doc_entry.path}"
+                f"added {accs[0].info_str} for {user_group.name} in {doc_entry.path}"
             )
 
-    for remove in model.actions.removePermission:
-        doc_entry = doc_entries[remove.doc_path]
-        a = remove_perm(user_group, doc_entry.block, remove.type)
+    for to_remove in remove:
+        doc_entry = doc_entries[to_remove.doc_path]
+        a = remove_perm(user_group, doc_entry.block, to_remove.type)
         if a:
             update_messages.append(
                 f"removed {a.info_str} for {user_group.name} in {doc_entry.path}"
             )
+    return update_messages
 
-    fields_to_save = {
-        set_val.taskId: set_val.value for set_val in model.actions.setValue
-    }
+
+def apply_field_actions(
+    user_acc: User, cur_user: User, set_values: list[SetTaskValueAction]
+) -> None:
+    fields_to_save = {set_val.taskId: set_val.value for set_val in set_values}
     if fields_to_save:
         # Reuse existing helper for answer route to save field values quickly
         save_fields(
@@ -533,8 +589,12 @@ def apply(
             allow_non_teacher=False,
         )
 
+
+def apply_dist_right_actions(
+    user_acc: User, dist_right: list[DistributeRightAction]
+) -> list[str]:
     errors = []
-    for distribute in model.actions.distributeRight:
+    for distribute in dist_right:
         convert = RIGHT_TO_OP[distribute.operation]
         right_op = convert(distribute, user_acc.email)
         apply_errors = register_right_impl(right_op, distribute.target)
@@ -549,12 +609,49 @@ def apply(
 
         errors.extend(apply_errors)
 
+    return errors
+
+
+def apply_group_actions(
+    user_acc: User, cur_user: User, add: list[str], remove: list[str]
+) -> None:
+    add_groups, remove_groups = get_groups(cur_user, add, remove)
+
+    for ug in add_groups:
+        user_acc.add_to_group(ug, cur_user)
+
+    for ug in remove_groups:
+        membership = ug.current_memberships.get(user_acc.id, None)
+        if membership:
+            membership.set_expired()
+
+
+@user_select_plugin.post("/apply")
+def apply(
+    username: str, task_id: Optional[str] = None, par: Optional[GlobalParId] = None
+) -> Response:
+    model, cur_user, user_group, user_acc = get_plugin_info(username, task_id, par)
+    # No permissions to apply, simply return
+    if not model.actions:
+        return ok_response()
+
+    update_messages = apply_permission_actions(
+        user_group, model.actions.addPermission, model.actions.removePermission
+    )
+    apply_field_actions(user_acc, cur_user, model.actions.setValue)
+    right_dist_errors = apply_dist_right_actions(
+        user_acc, model.actions.distributeRight
+    )
+    apply_group_actions(
+        user_acc, cur_user, model.actions.addToGroups, model.actions.removeFromGroups
+    )
+
     db.session.commit()
 
     for msg in update_messages:
         log_right(msg)
 
-    for error in errors:
+    for error in right_dist_errors:
         log_warning(
             f"RIGHT_DIST: problem distributing rights for user {user_acc.email}: {error}"
         )
@@ -562,8 +659,8 @@ def apply(
     # Better throw an error here. This should prompt the user to at least try again
     # Unlike with undoing, it's better to get the user to reapply the rights or properly fix them
     # Moreover, this should encourage the user to report the problem with distribution ASAP
-    if errors:
-        raise RouteException("\n".join([f"* {error}" for error in errors]))
+    if right_dist_errors:
+        raise RouteException("\n".join([f"* {error}" for error in right_dist_errors]))
 
     return ok_response()
 
