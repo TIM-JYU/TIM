@@ -1067,20 +1067,20 @@ class CreateInitializedArrayVariable extends CreateVariable {
     //    []$3 r $1,$2
     //    L $3 r [$1,$2,$[1]]
     static isMy(s) {
-        let re = /^([Aa](rray)?|[Ll](ist)?|\[]) *([^ ]+) +([@\S]+) *(.*)?$/;
+        let re = /^([Nn][ew]{0,2} )?([Aa](rray)?|[Ll](ist)?|\[]) *([^ ]+) +([@\S]+) *(.*)?$/;
         let r = re.exec(s);
         if (!r) { // try if format L $3 r [$1,$2,$[1]]
-            re = /^([Aa](rray)?|[Ll](ist)?|\[]) +([^ ]+) *([@\S]+) *[{]?([$[\]\d., \w]+)[}]?$/;
+            re = /^([Nn]ew[ew]{0,2} )?([Aa](rray)?|[Ll](ist)?|\[]) +([^ ]+) *([@\S]+) *[{]?([$[\]\d., \w]+)[}]?$/;
             r = re.exec(s);
             if (!r) return undefined;
         }
         let kind = "[";
-        if (r[1].toUpperCase().startsWith("L")) kind = "L";
-        let name = r[4];
-        let vals = r[6];
+        if (r[2].toUpperCase().startsWith("L")) kind = "L";
+        let name = r[6];
+        let vals = r[7];
         // Check type, dir and len, see https://regex101.com/r/QePOJe/latest
         re = /^(.)([VH])?([\d]+)?/gm;
-        let td = r[5].toUpperCase();
+        let td = r[6].toUpperCase();
         r = re.exec(td);
         if (!r) throw `${name} tyypin kohdalla vikaa. Oikeita esim V VH V10 VV9`;
         let type = r[1];
@@ -1798,7 +1798,6 @@ const knownCommands = [
     CreateValueVariable,
     CreateNullVariable,
     CreateRefecenceVariable,
-    CreateObjectVariable,
     CreateInitializedStructVariable,
     SetCount,
     AssignTo,
@@ -1815,6 +1814,7 @@ const knownCommands = [
     SetStyle,
     SetStyleAll,
     AddSVG,
+    CreateObjectVariable,
     Pass,
     UnknownCommand,
 ];

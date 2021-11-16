@@ -75,40 +75,15 @@ t -> $4
 */
 
 const code = `
-styleall: fill=yellow
-g dir: 1, r: 2
-class PhysicsObject X V, Y V, Width V, Height V, Color S
-g r: 0
-code: PhysicsObject[] u1;
-ref u1
-code: PhysicsObject[] u3;
-ref u3
-code: PiirraLumiukko(this, -100, Level.Bottom + 200.0);
-g dir: 0, r: 1
-array $1 R3
-s.PhysicsObject +$2 -100 -200, 200, 200, FFF
-$1[0] -> $2
-s.PhysicsObject $3 -100 -50, 100, 100, FFF
-$1[1] -> $3
-u1 -> $1
-#g gotoStep
-style $1[0],$1[1],$1[2] fill=lightgray
-$1[2] -> $3
-code: u1[0].Color = Color.Yellow;
-$2.Color = FF0
-style $2.Color fill=yellow
-code: u1[1].Color = Color.Red
-$3.Color = F00
-style $3.Color fill=red
-$3.X = 7
-pass
+list $1 r4 
+n list $2 r8
 `;
 setData({
     code: code, args: "1001", params: {
-         mode: "code",
+         mode: "step",
          errorlevel: 3,
-         xanimate: "commands",
-         animate: "code",
+         x1animate: "commands",
+         xanimate: "code",
          allowLazy: true,
          //justone: true,
          }
