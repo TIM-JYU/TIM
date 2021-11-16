@@ -724,7 +724,12 @@ function getBrowserKind() {
 }
 
 export function isIOS() {
-    return navigator.userAgent.match(/ipad|ipod|iphone/i);
+    // New iPads can report MacIntel as platform
+    // https://stackoverflow.com/a/58979271
+    return !!(
+        navigator.userAgent.match(/ipad|ipod|iphone/i) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 2)
+    );
 }
 
 export function isSafari() {

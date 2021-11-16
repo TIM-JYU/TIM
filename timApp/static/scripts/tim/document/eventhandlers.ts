@@ -1,10 +1,12 @@
 import $ from "jquery";
 import {KEY_ENTER} from "../util/keycodes";
 import {$document, $log} from "../util/ngimport";
-import {Coords, dist, isTouchEvent, isIOS} from "../util/utils";
+import {Coords, dist, isIOS, isTouchEvent} from "../util/utils";
 import {EDITOR_CLASS_DOT} from "./parhelpers";
 
-function fixPageCoords(e: JQuery.MouseEventBase) {
+function fixPageCoords(
+    e: JQuery.MouseEventBase | JQuery.TouchEventBase
+): JQuery.MouseEventBase {
     if (e.pageX === 0 && e.pageY === 0) {
         const originalEvent = e.originalEvent;
         if (originalEvent && isTouchEvent(originalEvent)) {
@@ -12,7 +14,7 @@ function fixPageCoords(e: JQuery.MouseEventBase) {
             e.pageY = originalEvent.touches[0].pageY;
         }
     }
-    return e;
+    return e as JQuery.MouseEventBase;
 }
 
 export interface OnClickArg {
@@ -26,14 +28,29 @@ export interface OnClickArg {
 export function onClick(
     className: string,
     func: (obj: JQuery, e: OnClickArg) => unknown,
-    overrideModalCheck = false
+    overrideModalCheck = false,
+    needsDoubleClick: ((obj: Element) => boolean) | undefined = undefined
 ) {
     let downEvent: JQuery.MouseEventBase | undefined;
     let downCoords: Coords | undefined;
     let lastDownEvent: JQuery.Event | undefined;
     let lastclicktime: number | undefined;
+    let lastClickElement: Element | undefined;
 
-    $(document).on("mousedown", className, (e) => {
+    // iOS will not trigger mousedown unless the element is actually clickable
+    // See https://stackoverflow.com/a/3303839
+    const startEvent = isIOS() ? "touchstart" : "mousedown";
+
+    // Reset last click if it wasn't on the same element
+    $(document).on(startEvent, (e) => {
+        // jQuery doesn't properly type the target
+        const target = (e.target as unknown) as Element;
+        if (lastClickElement !== target) {
+            lastClickElement = undefined;
+        }
+    });
+
+    $(document).on(startEvent, className, (e) => {
         // touchstart
         if (!overrideModalCheck && $(EDITOR_CLASS_DOT).length > 0) {
             // Disable while there are modal gui elements
@@ -48,6 +65,10 @@ export function onClick(
             // This is to prevent chaotic behavior from both mouseDown and touchStart
             // events happening at the same coordinates
             $log.info("Ignoring event:", e);
+            return;
+        }
+        if (lastClickElement !== e.target && needsDoubleClick?.(e.target)) {
+            lastClickElement = e.target;
             return;
         }
 
@@ -69,14 +90,16 @@ export function onClick(
         if (dist(downCoords, {left: e2.pageX, top: e2.pageY}) > 10) {
             // Moved too far away, cancel the event
             downEvent = undefined;
+            lastClickElement = undefined;
         }
     });
     $document.on("touchcancel", className, (e) => {
         downEvent = undefined;
+        lastClickElement = undefined;
     });
     // it is wrong to register both events at the same time; see https://stackoverflow.com/questions/8503453
-    const eventName = isIOS() ? "touchend" : "mouseup";
-    $document.on(eventName, className, (e) => {
+    const endEvent = isIOS() ? "touchend" : "mouseup";
+    $document.on(endEvent, className, (e) => {
         if (downEvent?.originalEvent) {
             func($(e.currentTarget), {
                 originalEvent: downEvent.originalEvent,
@@ -86,6 +109,7 @@ export function onClick(
                 type: downEvent.type,
             });
             downEvent = undefined;
+            lastClickElement = undefined;
         }
     });
     if (className != "html") {
