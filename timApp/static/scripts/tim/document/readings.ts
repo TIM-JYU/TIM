@@ -23,6 +23,7 @@ import {
     getViewName,
     IOkResponse,
     isInViewport,
+    isIOS,
     markPageDirty,
     posToRelative,
     to,
@@ -217,7 +218,12 @@ async function readlineHandler(elem: JQuery, e: OnClickArg) {
 
 export async function initReadings(item: IItem) {
     onClick(".readline > button", handleSeeChanges);
-    onClick(".readline", readlineHandler);
+    onClick(
+        ".readline",
+        readlineHandler,
+        false,
+        (e) => e.classList.contains("read-modified") && isIOS()
+    );
     onMouseOver(".readline.read-modified", (p, e) => {
         const ev = e.originalEvent as MouseEvent | TouchEvent;
         const pos = posToRelative(p[0], ev);
