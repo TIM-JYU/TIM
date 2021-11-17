@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from re import Pattern
 from typing import Generator, Optional, Union
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 
 from flask import redirect
 from flask import render_template, Response
@@ -63,6 +64,7 @@ from timApp.util.flask.responsehelper import (
     json_response,
     ok_response,
     get_grid_modules,
+    safe_redirect,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.logger import log_info
@@ -262,8 +264,18 @@ def get_group_and_doc(doc_id: int, username: str) -> tuple[UserGroup, DocInfo]:
     return g, i
 
 
-@manage_page.get("/permissions/expire/<int:doc_id>/<username>", own_model=True)
-def expire_permission_url(doc_id: int, username: str):
+def raise_or_redirect(message: str, redir: Optional[str] = None) -> Response:
+    if not redir:
+        raise RouteException(message)
+    url = list(urlparse(redir))
+    query = dict(parse_qsl(url[4]))
+    query |= {"error": message}
+    url[4] = urlencode(query)
+    return safe_redirect(urlunparse(url))
+
+
+@manage_page.get("/permissions/expire/<int:doc_id>/<username>")
+def expire_permission_url(doc_id: int, username: str, redir: Optional[str] = None):
     g, i = get_group_and_doc(doc_id, username)
     ba: Optional[BlockAccess] = BlockAccess.query.filter_by(
         type=AccessType.view.value,
@@ -271,23 +283,23 @@ def expire_permission_url(doc_id: int, username: str):
         usergroup_id=g.id,
     ).first()
     if not ba:
-        raise RouteException("Right not found.")
+        return raise_or_redirect("Right not found.", redir)
     if ba.expired:
-        raise RouteException("Right is already expired.")
+        return raise_or_redirect("Right is already expired.", redir)
     ba.accessible_to = get_current_time()
     if ba.duration:
         ba.duration = None
         ba.duration_from = None
         ba.duration_to = None
     db.session.commit()
-    return ok_response()
+    return ok_response() if not redir else safe_redirect(redir)
 
 
-@manage_page.get("/permissions/confirm/<int:doc_id>/<username>", own_model=True)
-def confirm_permission_url(doc_id: int, username: str):
+@manage_page.get("/permissions/confirm/<int:doc_id>/<username>")
+def confirm_permission_url(doc_id: int, username: str, redir: Optional[str] = None):
     g, i = get_group_and_doc(doc_id, username)
     m = PermissionRemoveModel(id=doc_id, type=AccessType.view, group=g.id)
-    return do_confirm_permission(m, i)
+    return do_confirm_permission(m, i, redir)
 
 
 @manage_page.put("/permissions/confirm", own_model=True)
@@ -298,23 +310,26 @@ def confirm_permission(m: PermissionRemoveModel) -> Response:
     return do_confirm_permission(m, i)
 
 
-def do_confirm_permission(m: PermissionRemoveModel, i: DocInfo):
+def do_confirm_permission(
+    m: PermissionRemoveModel, i: DocInfo, redir: Optional[str] = None
+):
     ba: Optional[BlockAccess] = BlockAccess.query.filter_by(
         type=m.type.value,
         block_id=m.id,
         usergroup_id=m.group,
     ).first()
     if not ba:
-        raise RouteException("Right not found.")
+        return raise_or_redirect("Right not found.", redir)
     if not ba.require_confirm:
-        raise RouteException(
-            f"{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed."
+        return raise_or_redirect(
+            f"{m.type.name} right for {ba.usergroup.name} does not require confirmation or it was already confirmed.",
+            redir,
         )
     ba.do_confirm()
     ug: UserGroup = UserGroup.query.get(m.group)
     log_right(f"confirmed {ba.info_str} for {ug.name} in {i.path}")
     db.session.commit()
-    return ok_response()
+    return ok_response() if not redir else safe_redirect(redir)
 
 
 @manage_page.put("/permissions/edit", own_model=True)
