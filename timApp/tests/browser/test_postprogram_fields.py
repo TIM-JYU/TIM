@@ -33,7 +33,7 @@ rows:
 - 'Yes'
 - 'No'
 postprogram_fields:
-  - qst1
+  - qst1=qst1
 postprogram: |!!
   println("<pre>");
   
