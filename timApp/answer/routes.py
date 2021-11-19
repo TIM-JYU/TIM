@@ -1024,7 +1024,7 @@ def post_answer_impl(
                         d,
                         curr_user,
                         default_view_ctx,
-                        GetFieldsAccess.from_bool(True),
+                        access_option=GetFieldsAccess.from_bool(True),
                     )
                     # We only obtain current user's fields
                     user_fields = field_data[0]["fields"]
