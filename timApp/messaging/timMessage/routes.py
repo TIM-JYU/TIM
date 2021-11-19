@@ -23,6 +23,10 @@ from timApp.folder.createopts import FolderCreationOptions
 from timApp.folder.folder import Folder
 from timApp.item.item import Item
 from timApp.item.manage import TRASH_FOLDER_PATH
+from timApp.messaging.messagelist.messagelist_models import (
+    MessageListModel,
+    MessageListTimMember,
+)
 from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessage,
     DisplayType,
@@ -33,7 +37,7 @@ from timApp.timdb.sqa import db
 from timApp.user.user import User
 from timApp.user.usergroup import UserGroup
 from timApp.user.usergroupmember import UserGroupMember
-from timApp.util.flask.requesthelper import RouteException, NotExist
+from timApp.util.flask.requesthelper import NotExist
 from timApp.util.flask.responsehelper import (
     ok_response,
     json_response,
@@ -41,7 +45,11 @@ from timApp.util.flask.responsehelper import (
     csv_string,
 )
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import remove_path_special_chars, static_tim_doc
+from timApp.util.utils import (
+    remove_path_special_chars,
+    static_tim_doc,
+    get_current_time,
+)
 
 timMessage = TypedBlueprint("timMessage", __name__, url_prefix="/timMessage")
 
@@ -93,7 +101,6 @@ class TimMessageData:
 
 @dataclass
 class TimMessageReadReceipt:
-    rcpt_id: int
     message_id: int
     user_id: int
     marked_as_read_on: datetime
@@ -131,43 +138,40 @@ def get_tim_messages_as_list(item_id: int) -> list[TimMessageData]:
         raise NotExist("No document or folder found")
 
     parent_paths = current_page_obj.parent_paths()  # parent folders
+    group_ids = get_current_user_object().group_ids
 
-    # get message displays shown on current page or in parent folders
-    displays = InternalMessageDisplay.query.outerjoin(
-        Folder, Folder.id == InternalMessageDisplay.display_doc_id
-    ).filter(
-        (
-            InternalMessageDisplay.usergroup
-            == get_current_user_object().get_personal_group()
+    now = get_current_time()
+    q = (
+        InternalMessage.query.join(InternalMessageDisplay)
+        .outerjoin(Folder, Folder.id == InternalMessageDisplay.display_doc_id)
+        .outerjoin(
+            InternalMessageReadReceipt,
+            (InternalMessageReadReceipt.message_id == InternalMessage.id)
+            # Do this in outer join because message can be seen if no receipt is found or receipt is not marked as read
+            # With outer join, both cases are covered (marked_as_read_on becomes NULL)
+            & (InternalMessageReadReceipt.user_id == get_current_user_object().id),
         )
-        & (
-            (InternalMessageDisplay.display_doc_id == current_page_obj.id)
-            | (tuple_(Folder.location, Folder.name).in_(parent_paths))
+        .filter(
+            (InternalMessageDisplay.usergroup_id.in_(group_ids))
+            & (
+                (InternalMessageDisplay.display_doc_id == current_page_obj.id)
+                | (tuple_(Folder.location, Folder.name).in_(parent_paths))
+            )
+            & (InternalMessageReadReceipt.marked_as_read_on == None)
+            & ((InternalMessage.expires == None) | (InternalMessage.expires > now))
         )
     )
 
-    messages: list[InternalMessage] = []
-    for display in displays:
-        receipt = InternalMessageReadReceipt.query.filter_by(
-            rcpt_id=display.usergroup_id, message_id=display.message_id
-        ).first()
-        expires = InternalMessage.query.filter_by(id=display.message_id).first()
-        # message is shown if it has not been marked as read or replied to, and has not expired
-        if receipt.marked_as_read_on is None and (
-            expires.expires is None or expires.expires > datetime.now()
-        ):
-            messages.append(
-                InternalMessage.query.filter_by(id=display.message_id).first()
-            )
+    messages: list[InternalMessage] = q.all()
 
     full_messages = []
     for message in messages:
-        document = DocEntry.query.filter_by(id=message.doc_id).first()
+        document = DocEntry.find_by_id(message.doc_id)
         if not document:
             raise NotExist(f"No document or folder found for the message {message.id}")
 
         sender = document.owners[0].name if document.owners else None
-        if document.name.startswith(TRASH_FOLDER_PATH):
+        if document.path.startswith(TRASH_FOLDER_PATH):
             continue
 
         body = document.document.get_paragraph(message.par_id).get_html(
@@ -176,7 +180,7 @@ def get_tim_messages_as_list(item_id: int) -> list[TimMessageData]:
         data = TimMessageData(
             id=message.id,
             sender=sender,
-            doc_path=document.name,
+            doc_path=document.path,
             can_mark_as_read=message.can_mark_as_read,
             can_reply=message.reply,
             display_type=message.display_type,
@@ -198,14 +202,15 @@ def get_read_receipt(doc_id: int) -> Response:
     :return:
     """
     message = InternalMessage.query.filter_by(doc_id=doc_id).first()
-    receipt = InternalMessageReadReceipt.query.filter_by(
-        rcpt_id=get_current_user_object().get_personal_group().id, message_id=message.id
-    ).first()
+    if not message:
+        raise NotExist("No active messages for the document found")
+    receipt = InternalMessageReadReceipt.get_for_user(
+        get_current_user_object(), message
+    )
     if not receipt:
         return json_response({"receipt": None, "expires": message.expires})
 
     receipt_data = TimMessageReadReceipt(
-        rcpt_id=receipt.rcpt_id,
         message_id=message.id,
         user_id=receipt.user_id,
         marked_as_read_on=receipt.marked_as_read_on,
@@ -289,14 +294,12 @@ def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Resp
         expires=options.expires,
         replies_to=options.repliesTo,
     )
-    message_doc = create_tim_message(tim_message, options, message)
+    recipients = get_recipient_users(message.recipients)
+    message_doc = create_tim_message(tim_message, options, message, recipients)
     db.session.add(tim_message)
 
     pages = get_display_pages(options.pageList.splitlines())
-    recipients = get_recipient_users(message.recipients)
     create_message_displays(tim_message, pages, recipients)
-    if recipients:
-        create_read_receipts(tim_message, recipients)
 
     db.session.commit()
 
@@ -304,7 +307,10 @@ def send_message_or_reply(options: MessageOptions, message: MessageBody) -> Resp
 
 
 def create_tim_message(
-    tim_message: InternalMessage, options: MessageOptions, message_body: MessageBody
+    tim_message: InternalMessage,
+    options: MessageOptions,
+    message_body: MessageBody,
+    message_viewers: Optional[list[UserGroup]] = None,
 ) -> DocInfo:
     """
     Creates a TIM document for the message to the TIM messages folder at TIM's root.
@@ -312,10 +318,15 @@ def create_tim_message(
     :param tim_message: InternalMessage object
     :param options: Options related to the message
     :param message_body: Message subject, contents and list of recipients
+    :param message_viewers: Groups that are allowed to view the message. If None, all recepients can.
     :return: The created Document object
     """
+    recipients = (
+        message_viewers
+        if message_viewers
+        else get_recipient_users(message_body.recipients)
+    )
     sender = get_current_user_object()
-    recipient_users = get_recipient_users(message_body.recipients)
     message_folder_path = "messages/tim-messages"
 
     message_subject = message_body.messageSubject
@@ -327,7 +338,7 @@ def create_tim_message(
         f"{message_folder_path}/{message_path}", message_subject
     )
     message_doc.block.add_rights([sender.get_personal_group()], AccessType.owner)
-    message_doc.block.add_rights(recipient_users, AccessType.view)
+    message_doc.block.add_rights(recipients, AccessType.view)
 
     update_tim_msg_doc_settings(message_doc, sender, message_body)
     message_par = message_doc.document.add_paragraph(message_body.messageBody)
@@ -381,16 +392,19 @@ def mark_as_read(message_id: int) -> Response:
     """
     verify_logged_in()
 
-    marker = get_current_user_object().get_personal_group().id
-
-    read_receipt = InternalMessageReadReceipt.query.filter_by(
-        rcpt_id=marker, message_id=message_id
-    ).first()
+    message = InternalMessage.query.filter_by(id=message_id).first()
+    if not message:
+        raise NotExist("Message not found by the ID")
+    read_receipt = InternalMessageReadReceipt.get_for_user(
+        get_current_user_object(), message
+    )
+    u = get_current_user_object()
     if read_receipt is None:
-        raise RouteException
-    read_receipt.user_id = get_current_user_object().id
-    read_receipt.marked_as_read_on = datetime.now()
-    db.session.add(read_receipt)
+        read_receipt = InternalMessageReadReceipt(user=u, message=message)
+        db.session.add(read_receipt)
+
+    read_receipt.user = u
+    read_receipt.marked_as_read_on = get_current_time()
     db.session.commit()
 
     return ok_response()
@@ -407,9 +421,10 @@ def cancel_read_receipt(message_id: int) -> Response:
     verify_logged_in()
 
     receipt = InternalMessageReadReceipt.query.filter_by(
-        rcpt_id=get_current_user_object().get_personal_group().id, message_id=message_id
-    ).one()
-    receipt.user_id = None
+        user_id=get_current_user_object().id, message_id=message_id
+    ).first()
+    if not receipt:
+        raise NotExist("No read receipt found for the message")
     receipt.marked_as_read_on = None
     db.session.commit()
 
@@ -490,13 +505,19 @@ def get_recipient_users(recipients: list[str]) -> list[UserGroup]:
     :param recipients: list of recipients' emails
     :return: list of recipient UserGroups
     """
-    users = []
+    users = set()
     for rcpt in recipients:
-        user = User.get_by_email(rcpt)
-        if user:
-            users.append(UserGroup.get_by_name(user.name))
+        if user := User.get_by_email(rcpt):
+            users.add(UserGroup.get_by_name(user.name))
+        if msg_list := MessageListModel.get_by_email(rcpt):
+            q = UserGroup.query.join(MessageListTimMember).filter(
+                (MessageListTimMember.message_list == msg_list)
+                & (MessageListTimMember.membership_ended == None)
+            )
+            ugs = q.all()
+            users.update(ugs)
 
-    return users
+    return list(users)
 
 
 def get_display_pages(pagelist: list[str]) -> list[Item]:
@@ -646,30 +667,14 @@ def create_message_displays(
                     message=msg, usergroup=rcpt, display_block=page.block
                 )
                 db.session.add(display)
-
-    if pages and not recipients:
+    elif pages and not recipients:
         for page in pages:
             display = InternalMessageDisplay(message=msg, display_block=page.block)
             db.session.add(display)
-
-    if not pages and recipients:
+    elif not pages and recipients:
         for rcpt in recipients:
             display = InternalMessageDisplay(message=msg, usergroup=rcpt)
             db.session.add(display)
-
-    if not pages and not recipients:
+    elif not pages and not recipients:
         display = InternalMessageDisplay(message=msg)
         db.session.add(display)
-
-
-def create_read_receipts(msg: InternalMessage, recipients: list[UserGroup]) -> None:
-    """
-    Create InternalMessageReadReceipt entries for all recipients.
-
-    :param msg: Message
-    :param recipients: Message recipients
-    :return:
-    """
-    for recipient in recipients:
-        readreceipt = InternalMessageReadReceipt(recipient=recipient, message=msg)
-        db.session.add(readreceipt)

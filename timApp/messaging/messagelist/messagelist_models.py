@@ -93,7 +93,7 @@ class MessageListModel(db.Model):
     )
     """Relationship to the document that is used to manage this message list."""
 
-    members = db.relationship(
+    members: list["MessageListTimMember"] = db.relationship(
         "MessageListMember", back_populates="message_list", lazy="select"
     )
     """All the members of the list."""
@@ -102,6 +102,13 @@ class MessageListModel(db.Model):
         "MessageListDistribution", back_populates="message_list", lazy="select"
     )
     """The message channels the list uses."""
+
+    @staticmethod
+    def get_by_email(email: str) -> Optional["MessageListModel"]:
+        name, domain = email.split("@", 1)
+        return MessageListModel.query.filter_by(
+            name=name, email_list_domain=domain
+        ).first()
 
     @staticmethod
     def from_manage_doc_id(doc_id: int) -> "MessageListModel":
@@ -488,21 +495,3 @@ class MessageListDistribution(db.Model):
     message_list = db.relationship(
         "MessageListModel", back_populates="distribution", lazy="select", uselist=False
     )
-
-
-class UserEmails(db.Model):
-    """TIM users' additional emails."""
-
-    __tablename__ = "user_emails"
-
-    id = db.Column(db.Integer, db.ForeignKey("useraccount.id"), primary_key=True)
-
-    additional_email = db.Column(db.Text, unique=True)
-    """The users another email."""
-
-    is_primary_email = db.Column(db.Boolean)
-    """Which one of the additional emails is user's primary email address. If none are, the email address in users 
-    own table is assumed to be primary email address. """
-
-    address_verified = db.Column(db.DateTime(timezone=True))
-    """The user has to verify they are in the possession of the email address."""

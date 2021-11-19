@@ -11,7 +11,6 @@ from timApp.auth.auth_models import BlockAccess
 from timApp.messaging.messagelist.messagelist_models import MessageListTimMember
 from timApp.messaging.timMessage.internalmessage_models import (
     InternalMessageDisplay,
-    InternalMessageReadReceipt,
 )
 from timApp.sisu.parse_display_name import parse_sisu_group_display_name
 from timApp.sisu.scimusergroup import ScimUserGroup
@@ -135,9 +134,6 @@ class UserGroup(db.Model, TimeStampMixin, SCIMEntity):
 
     internalmessage_display: InternalMessageDisplay | None = db.relationship(
         "InternalMessageDisplay", back_populates="usergroup"
-    )
-    internalmessage_readreceipt: InternalMessageReadReceipt | None = db.relationship(
-        "InternalMessageReadReceipt", back_populates="recipient"
     )
 
     def __repr__(self):

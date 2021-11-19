@@ -156,7 +156,6 @@ export class ManageReadReceiptComponent implements OnInit {
 
 interface TimMessageReadReceipt {
     // Information about the read receipt retrieved from server
-    rcpt_id: number;
     message_id: number;
     user_id: number;
     marked_as_read_on: Date;
