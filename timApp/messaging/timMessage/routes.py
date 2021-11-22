@@ -458,7 +458,11 @@ def get_read_receipts(
             InternalMessageReadReceipt.marked_as_read_on,
         )
         .join(InternalMessage)
-        .filter(InternalMessage.doc_id == doc.id)
+        .filter(
+            (InternalMessage.doc_id == doc.id)
+            # Old DB allowed marked_as_read_on to be NULL
+            & (InternalMessageReadReceipt.marked_as_read_on != None)
+        )
     )
 
     read_user_map: dict[int, datetime] = {
