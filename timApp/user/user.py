@@ -36,7 +36,6 @@ from timApp.user.hakaorganization import HakaOrganization, get_home_organization
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
 from timApp.user.preferences import Preferences
 from timApp.user.scimentity import SCIMEntity
-from timApp.user.settings.theme import Theme
 from timApp.user.special_group_names import (
     ANONYMOUS_GROUPNAME,
     ANONYMOUS_USERNAME,
@@ -652,13 +651,6 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
             return Preferences()
 
     def set_prefs(self, prefs: Preferences):
-        css_files = prefs.css_files
-        existing_css_files = {}
-        for k, v in css_files.items():
-            t = Theme(k)
-            if t.exists() and v:
-                existing_css_files[t.filename] = True
-        prefs.css_files = existing_css_files
         self.prefs = json.dumps(prefs, cls=TimJsonEncoder)
 
     def get_groups(self, include_special=True) -> Query:

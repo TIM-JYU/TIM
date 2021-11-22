@@ -93,8 +93,10 @@ from timApp.tim_app import app
 from timApp.timdb.exceptions import PreambleException
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
-from timApp.user.settings.theme import Theme, theme_exists
-from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
+from timApp.user.settings.theme import resolve_themes
+from timApp.user.settings.theme_css import (
+    generate_style,
+)
 from timApp.user.user import User, has_no_higher_right
 from timApp.user.usergroup import (
     UserGroup,
@@ -880,14 +882,15 @@ def render_doc_view(
             mark_all_read(group_id, doc)
         db.session.commit()
 
-    document_themes = [Theme(f) for f in doc_settings.themes() if theme_exists(f)]
+    document_themes = doc_settings.themes()
     override_theme = None
     if document_themes:
+        document_theme_docs = resolve_themes(document_themes)
         # If the user themes are not overridden, they are merged with document themes
-        user_themes = current_user.get_prefs().themes
+        user_themes = current_user.get_prefs().theme_docs()
         if user_themes and not doc_settings.override_user_themes():
-            document_themes = list(set().union(document_themes, user_themes))
-        override_theme = generate_theme(document_themes, get_default_scss_gen_dir())
+            document_theme_docs = list(set(user_themes) | set(document_theme_docs))
+        override_theme = generate_style(document_theme_docs)
 
     templates_to_render = (
         ["slide_head.jinja2", "slide_content.jinja2"]

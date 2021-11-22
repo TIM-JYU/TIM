@@ -155,8 +155,6 @@ export interface ICssFile {
 }
 
 export interface ISettings {
-    css_combined: string;
-    css_files: Record<string, boolean>;
     custom_css: string;
     disable_menu_hover: boolean;
     remember_last_sidebar_menu_tab: boolean;

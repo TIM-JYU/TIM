@@ -11,7 +11,7 @@
 {% block content %}
 
 {% if override_theme %}
-    {{ m.scss(config.SASS_GEN_PATH / override_theme) }}
+    {{ m.generated_style(override_theme) }}
 {% endif %}
 
 {% for cssFile in cssFiles %}

@@ -91,7 +91,7 @@
         </script>
         {{ angularscripts|safe }}
         {% if not override_theme %}
-            {{ m.scss(config.SASS_GEN_PATH / prefs.css_combined) }}
+            {{ m.generated_style(prefs.css_combined) }}
         {% endif %}
 
         <script type="text/x-mathjax-config">
@@ -154,7 +154,7 @@
                     {% if messages %}
                         {% for message in messages %}
                             <div class="alert alert-info">
-                                <i class="glyphicon glyphicon-info-sign"></i> {{ message }}
+                                <i class="glyphicon glyphicon-info-sign"></i> {{ message|safe }}
                             </div>
                         {% endfor %}
                     {% endif %}

@@ -1109,6 +1109,9 @@ class DocParagraph:
         """Returns whether this paragraph has inline plugins."""
         return bool(self.get_attr("defaultplugin"))
 
+    def is_theme_style(self) -> bool:
+        return self.get_attr("code_lang") in ("scss", "css")
+
     def is_yaml(self) -> bool:
         """Returns whether this paragraph is YAML markup."""
         return self.is_plugin() or self.is_setting()

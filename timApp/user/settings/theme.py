@@ -5,9 +5,11 @@ from pathlib import Path
 
 from werkzeug.utils import secure_filename
 
+from timApp.document.docentry import DocEntry, get_documents
 from timApp.util.utils import cached_property
 
 THEME_DIR = Path("static/stylesheets/themes")
+OFFICIAL_THEME_PATH = "styles/official"
 
 
 @dataclass(eq=True, frozen=True)
@@ -31,6 +33,16 @@ class Theme:
             return m.groups()[0]
         else:
             return "No description."
+
+
+def resolve_themes(short_names: list[str]) -> list[DocEntry]:
+    return get_documents(
+        filter_folder=OFFICIAL_THEME_PATH,
+        search_recursively=False,
+        custom_filter=DocEntry.name.in_(
+            [f"{OFFICIAL_THEME_PATH}/{n}" for n in short_names]
+        ),
+    )
 
 
 def get_theme_path(filename: str) -> Path:

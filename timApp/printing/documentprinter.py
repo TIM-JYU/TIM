@@ -146,6 +146,13 @@ class DocumentPrinter:
             return self._template_to_use.id
         return None
 
+    def _normalize_theme_style(self, md: str) -> str:
+        if md.startswith("```"):
+            style_start = md.find("\n")
+            md = md[style_start + 1 : -3]
+        md = md.replace("@mixin post-all", f"@mixin post-all-{self._doc_entry.id}")
+        return md
+
     def get_content(
         self,
         user_ctx: UserContext,
@@ -235,6 +242,10 @@ class DocumentPrinter:
             if par.is_setting():
                 continue
 
+            # do not print non-style pars
+            if target_format == PrintFormat.SCSS and not par.is_theme_style():
+                continue
+
             if par.id not in processed_par_ids:
                 continue
 
@@ -294,6 +305,8 @@ class DocumentPrinter:
         tformat = target_format
         if target_format in (PrintFormat.PDF, PrintFormat.JSON):
             tformat = PrintFormat.LATEX
+        if target_format == PrintFormat.SCSS:
+            tformat = PrintFormat.PLAIN
 
         # render markdown for plugins
         presult = pluginify(
@@ -322,7 +335,11 @@ class DocumentPrinter:
             pdoc_macros,
             pdoc_macro_delimiter,
         ) in zip(pars_to_print, par_infos):
-            md = p.prepare(view_ctx, use_md=True).output
+            md = (
+                p.prepare(view_ctx, use_md=True).output
+                if not p.is_theme_style()
+                else p.md
+            )
             if not p.is_plugin() and not p.is_question():
                 if not p.get_nomacros() and not self.texplain and not self.textplain:
                     md = expand_macros(
@@ -347,7 +364,7 @@ class DocumentPrinter:
                             if target_format == "html":
                                 beginraw += '<div class="' + cls + '">'
                                 endraw += "</div>"
-                            elif target_format == "plain":
+                            elif target_format == "plain" or target_format == "scss":
                                 beginraw = ""
                             else:
                                 is_env = cls in environment_classes
@@ -360,6 +377,9 @@ class DocumentPrinter:
                     if nonumber:
                         md = add_nonumber(md)
                     md = beginraw + md + endraw
+
+                if target_format == PrintFormat.SCSS and p.is_theme_style():
+                    md = self._normalize_theme_style(md)
 
                 if self.texplain or self.textplain:
                     if md.startswith("```"):
@@ -482,12 +502,16 @@ class DocumentPrinter:
                             + "?file_type=latex&template_doc_id=0"
                         )
 
+            to_format = target_format
+            if target_format == PrintFormat.SCSS:
+                to_format = PrintFormat.PLAIN
+
             # TODO: add also variables from texpandocvariables document setting, but this may lead to security hole?
             try:
                 tim_convert_text(
                     source=src,
                     from_format=from_format,
-                    to=target_format.value,
+                    to=to_format.value,
                     outputfile=path.absolute().as_posix(),  # output_file.name,
                     extra_args=[
                         "--template=" + template_file.name,

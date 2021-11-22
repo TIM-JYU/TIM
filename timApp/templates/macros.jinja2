@@ -9,3 +9,6 @@
         <link rel="stylesheet" href="{{ ASSET_URL }}">
     {% endassets %}
 {%- endmacro %}
+{% macro generated_style(name) -%}
+    <link rel="stylesheet" href="{{ url_for("static", filename=(config.SASS_GEN_PATH / '{}.css'.format(name))) }}">
+{%- endmacro -%}

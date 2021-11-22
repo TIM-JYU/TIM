@@ -1,18 +1,31 @@
 import re
 import sre_constants
+from functools import cached_property
 from typing import Optional
 
 import attr
 
+from timApp.document.docentry import DocEntry
+from timApp.item.block import Block
 from timApp.item.item import Item
-from timApp.user.settings.theme import Theme
-from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
-from timApp.util.utils import cached_property
+from timApp.user.settings.theme_css import (
+    generate_style,
+)
+
+
+def export_doc_to_style(block: Block):
+    from timApp.printing.print import print_doc_scss
+
+    doc: DocEntry = block.docentries[0]
+    pars = [p for p in doc.document]
+    print(pars)
+    doc_path = print_doc_scss(doc)
+    with open(doc_path, "r") as f:
+        return f.read()
 
 
 @attr.s(auto_attribs=True)
 class Preferences:
-    css_files: dict[str, bool] = attr.Factory(dict)
     custom_css: str = ""
     use_document_word_list: bool = False
     disable_menu_hover: bool = False
@@ -21,8 +34,8 @@ class Preferences:
     word_list: str = ""
     email_exclude: str = ""
     language: Optional[str] = None
+    theme_doc_ids: list[int] = attr.Factory(list)
     last_answer_fetch: dict[str, str] = attr.Factory(dict)
-    css_combined: str = attr.ib(init=False)
     auto_mark_all_read: bool = False
     bookmarks: Optional[list[dict[str, list[dict[str, str]]]]] = None
     max_uncollapsed_toc_items: Optional[int] = None
@@ -32,13 +45,12 @@ class Preferences:
         j.pop("css_combined", None)
         return Preferences(**j)
 
-    def __attrs_post_init__(self):
-        self.css_combined = generate_theme(self.themes, get_default_scss_gen_dir())
+    def theme_docs(self) -> list[DocEntry]:
+        return DocEntry.query.filter(DocEntry.id.in_(self.theme_doc_ids)).all()
 
-    @property
-    def themes(self) -> list[Theme]:
-        css_file_list = [css for css, v in self.css_files.items() if v]
-        return [Theme(f) for f in css_file_list]
+    @cached_property
+    def css_combined(self) -> str:
+        return generate_style(self.theme_docs())
 
     @cached_property
     def excluded_email_paths(self):

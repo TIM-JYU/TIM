@@ -17,11 +17,11 @@ from timApp.item.block import Block, BlockType
 from timApp.notification.notify import get_current_user_notifications
 from timApp.timdb.sqa import db
 from timApp.user.consentchange import ConsentChange
-from timApp.user.preferences import Preferences
+from timApp.user.preferences import Preferences, export_doc_to_style
 from timApp.user.settings.theme import get_available_themes
 from timApp.user.user import User, Consent, get_owned_objects_query
 from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
-from timApp.util.flask.responsehelper import json_response, ok_response
+from timApp.util.flask.responsehelper import json_response, ok_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 settings_page = TypedBlueprint("settings_page", __name__, url_prefix="/settings")
@@ -57,6 +57,16 @@ def get_settings() -> Response:
     return json_response(get_current_user_object().get_prefs())
 
 
+@settings_page.get("/getscss")
+def get_scss() -> Response:
+    from timApp.printing.print import print_doc_scss
+
+    pref = get_current_user_object().get_prefs()
+    res = print_doc_scss(DocEntry.query.filter_by(id=pref.theme_doc_ids[0]).first())
+    res_str = open(res, "r").read()
+    return text_response(res_str)
+
+
 @settings_page.post("/save")
 def save_settings() -> Response:
     user = get_current_user_object()
@@ -74,7 +84,8 @@ def save_settings() -> Response:
             val = getattr(curr_prefs, attr)
             j[attr] = val
         user.set_prefs(Preferences.from_json(j))
-    except TypeError:
+    except TypeError as e:
+        print(e)
         raise RouteException(f"Invalid settings: {j}")
     db.session.commit()
     show()  # Regenerate CSS

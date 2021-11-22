@@ -23,7 +23,21 @@ class AttributeParser:
     def has_chars(self):
         return self.current_pos < len(self.str)
 
+    def parse_code_type(self):
+        while self.has_chars() and self.current_char() == "`":
+            self.current_pos += 1
+        self.eat_whitespace()
+        start = self.current_pos
+        while self.has_chars() and self.current_char() not in (" ", "{"):
+            self.current_pos += 1
+        end = self.current_pos
+        self.current_pos = 0
+        if start != end:
+            return {"code_lang": self.str[start:end]}
+        return {}
+
     def get_attributes(self):
+        code_info = self.parse_code_type()
         potential_start_indices = [
             i
             for i, x in enumerate(self.str)
@@ -32,8 +46,8 @@ class AttributeParser:
         for i in potential_start_indices:
             tokens = self.try_get_attributes(i + 1)
             if tokens is not None:
-                return tokens, i
-        return {}, None
+                return tokens | code_info, i
+        return code_info, None
 
     def try_get_attributes(self, pos):
         self.current_pos = pos

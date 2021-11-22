@@ -8,5 +8,6 @@ class PrintFormat(Enum):
     JSON = "json"
     HTML = "html"
     PLAIN = "plain"
+    SCSS = "scss"
     RST = "rst"
     ICS = "ics"

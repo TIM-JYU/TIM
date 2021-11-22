@@ -94,8 +94,6 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                 <div *ngFor="let css_file of cssFiles"
                      class="checkbox"><label>
                     <input type="checkbox"
-                           name="settings.css_files[css_file.name]"
-                           [(ngModel)]="settings.css_files[css_file.name]"
                            (change)="submit()"
                            [disabled]="saving">
                     <a href="/static/stylesheets/themes/{{ css_file.name }}.scss">
@@ -465,16 +463,16 @@ export class SettingsComponent implements DoCheck {
     }
 
     updateCss() {
-        document
-            .querySelector(
-                // There are two stylesheets in production (the other is the Angular-generated /js/styles.<hash>.css),
-                // so we need the href match too.
-                'link[rel="stylesheet"][href*="/static/generated/"]'
-            )!
-            .setAttribute(
-                "href",
-                `/static/generated/${this.settings.css_combined}.css`
-            );
+        // document
+        //     .querySelector(
+        //         // There are two stylesheets in production (the other is the Angular-generated /js/styles.<hash>.css),
+        //         // so we need the href match too.
+        //         'link[rel="stylesheet"][href*="/static/generated/"]'
+        //     )!
+        //     .setAttribute(
+        //         "href",
+        //         `/static/generated/${this.settings.css_combined}.css`
+        //     );
     }
 
     async clearLocalStorage() {
