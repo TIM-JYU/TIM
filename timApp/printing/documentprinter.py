@@ -88,7 +88,9 @@ def add_nonumber(md: str) -> str:
     return result
 
 
-def get_tex_settings_and_macros(d: Document, user_ctx: UserContext):
+def get_tex_settings_and_macros(
+    d: Document, user_ctx: UserContext, template_doc: Optional[DocEntry] = None
+):
     settings = d.get_settings()
     pdoc_plugin_attrs = settings.global_plugin_attrs()
     pdoc_macroinfo = settings.get_macroinfo(default_view_ctx, user_ctx)
@@ -99,7 +101,15 @@ def get_tex_settings_and_macros(d: Document, user_ctx: UserContext):
         user_ctx,
         default_view_ctx,
     )
+
+    if template_doc:
+        template_settings = template_doc.document.get_settings()
+        pdoc_macros.update(
+            template_settings.get_texmacroinfo(default_view_ctx).get_macros()
+        )
+
     pdoc_macros.update(settings.get_texmacroinfo(default_view_ctx).get_macros())
+
     return (
         settings,
         pdoc_plugin_attrs,
@@ -164,7 +174,9 @@ class DocumentPrinter:
             pdoc_macro_env,
             pdoc_macros,
             pdoc_macro_delimiter,
-        ) = get_tex_settings_and_macros(self._doc_entry.document, user_ctx)
+        ) = get_tex_settings_and_macros(
+            self._doc_entry.document, user_ctx, self._template_to_use
+        )
 
         self._macros = pdoc_macros
 
@@ -226,7 +238,9 @@ class DocumentPrinter:
             if par.id not in processed_par_ids:
                 continue
 
-            p_info = par, *get_tex_settings_and_macros(par.doc, user_ctx)
+            p_info = par, *get_tex_settings_and_macros(
+                par.doc, user_ctx, self._template_to_use
+            )
             _, _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = p_info
 
             if self.texplain or self.textplain:
@@ -296,6 +310,9 @@ class DocumentPrinter:
 
         export_pars = []
 
+        # TODO: Instead, convert all paragraph classes into environments and always emit \begin-\end for them
+        environment_classes = set(pdoc_macros.get("texenvironment_classes", []))
+
         # Get the markdown for each par dict
         for p, (
             _,
@@ -316,6 +333,7 @@ class DocumentPrinter:
                         ignore_errors=False,
                     )
                 classes = p.classes
+
                 if classes:
                     endraw = ""
                     beginraw = ""
@@ -332,8 +350,13 @@ class DocumentPrinter:
                             elif target_format == "plain":
                                 beginraw = ""
                             else:
-                                beginraw += "RAWTEX" + cls + "\n\n"
-                                endraw += "\n\nENDRAWTEX"
+                                is_env = cls in environment_classes
+                                raw_type = "RAWTEXENV" if is_env else "RAWTEX"
+                                beginraw += raw_type + cls + "\n\n"
+                                endraw += f"\n\nEND" + raw_type
+                                if is_env:
+                                    endraw += cls
+
                     if nonumber:
                         md = add_nonumber(md)
                     md = beginraw + md + endraw

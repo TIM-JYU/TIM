@@ -11,10 +11,16 @@ from pandocfilters import toJSONFilter, Span, RawInline
 def classes_to_latex_cmds(key, value, fmt, meta):
     # open("Output.txt", "a").write("Key:"+key + " fmt:" + fmt + " value:" + str(value) + "\n")
     if key == "Str" and fmt == "latex":
+        if value.startswith("RAWTEXENV"):
+            cls = value[9:]
+            return RawInline("latex", "\\begin{" + cls + "}")
         if value.startswith("RAWTEX"):
             cls = value[6:]
             return RawInline("latex", "\\" + cls + "{")
             # return RawInline("tex", "\\begin(red)")
+        if value.startswith("ENDRAWTEXENV"):
+            cls = value[12:]
+            return RawInline("latex", "\\end{" + cls + "}")
         if value == "ENDRAWTEX":
             return RawInline("latex", "}")
             # return RawInline("tex", "\\end(red)")

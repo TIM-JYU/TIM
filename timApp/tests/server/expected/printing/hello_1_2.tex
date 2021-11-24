@@ -15,6 +15,13 @@
 \usepackage{pmboxdraw}
 \usepackage{titlesec, blindtext, color}
 
+% TimTable needs:
+\usepackage[table,usenames,dvipsnames]{xcolor} % Colors.
+\usepackage{multirow}
+\usepackage{hhline}
+\usepackage{graphics} % Scaling.
+\usepackage{colortbl} % Line colors.
+
 
 
 \usepackage{amssymb,amsmath}
@@ -127,7 +134,6 @@
 \newcommand{\listVideoRunDiv}[1]{{{#1}}}
 \newcommand{\stem}[1]{{{#1}}}
 \newcommand{\hFour}[1]{{#1}}
-\newcommand{\huomautus}[1]{\begin{tcolorbox}{#1} \end{tcolorbox}}
 \newcommand{\kaava}[1]{\begin{adjustwidth}{2em}{}{#1}\end{adjustwidth}}
 \newcommand{\red}[1]{{\leavevmode\color{red}{#1}}}
 \newcommand{\tim}[1]{{\leavevmode\color{tim}{#1}}}
@@ -154,6 +160,8 @@
 \newcommand{\runo}[1]{\begin{center}\it{#1}\end{center}}
 \newcommand{\kuvavasen}[1]{#1}
 \newcommand{\timButton}[1]{\bgtim{\white{{#1}}}}
+
+\newenvironment{huomautus}{\begin{tcolorbox}}{\end{tcolorbox}}
 
 \newcommand{\smallhref}[2]{\hfill{\tiny\href{#1}{#2}}}
 % \newcommand{\haskell}[1]{#1}
