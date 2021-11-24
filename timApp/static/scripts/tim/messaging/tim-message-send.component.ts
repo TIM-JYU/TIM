@@ -8,7 +8,7 @@ import {TimepickerModule} from "ngx-bootstrap/timepicker";
 import {DatetimePickerModule} from "tim/ui/datetime-picker/datetime-picker.component";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {Users} from "../user/userService";
-import {to2} from "../util/utils";
+import {toPromise} from "../util/utils";
 
 interface TimMessageOptions {
     archive: boolean;
@@ -262,12 +262,10 @@ export class TimMessageSendComponent {
     // Also shortens existing URLs
     async checkUrls() {
         this.urlError = "";
-        const result = await to2(
-            this.http
-                .post<{shortened_urls: string}>("/timMessage/url_check", {
-                    urls: this.timMessageOptions.pageList,
-                })
-                .toPromise()
+        const result = await toPromise(
+            this.http.post<{shortened_urls: string}>("/timMessage/url_check", {
+                urls: this.timMessageOptions.pageList,
+            })
         );
         if (!result.ok) {
             this.urlError = result.result.error.error;
@@ -343,16 +341,14 @@ export class TimMessageSendComponent {
         }
         this.messageSendError = ""; // JSON.stringify(response);
         const url = `/multiSendEmail/${this.docId}`;
-        const response = await to2(
-            this.http
-                .post<string[]>(url, {
-                    rcpt: this.recipients.replace(/\n/g, ";"),
-                    subject: this.messageSubject,
-                    msg: this.messageBody,
-                    bccme: this.emailbccme,
-                    replyall: this.replyAll,
-                })
-                .toPromise()
+        const response = await toPromise(
+            this.http.post<string[]>(url, {
+                rcpt: this.recipients.replace(/\n/g, ";"),
+                subject: this.messageSubject,
+                msg: this.messageBody,
+                bccme: this.emailbccme,
+                replyall: this.replyAll,
+            })
         );
         if (!response.ok) {
             this.messageSendError = response.result.error.error;
@@ -368,10 +364,11 @@ export class TimMessageSendComponent {
             messageSubject: this.messageSubject,
             recipients: this.recipients.split(/\n/g),
         };
-        return to2(
-            this.http
-                .post<{docPath: string}>("/timMessage/send", {options, message})
-                .toPromise()
+        return toPromise(
+            this.http.post<{docPath: string}>("/timMessage/send", {
+                options,
+                message,
+            })
         );
     }
 }

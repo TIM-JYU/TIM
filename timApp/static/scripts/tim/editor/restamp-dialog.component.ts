@@ -4,7 +4,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
-import {to2} from "../util/utils";
+import {toPromise} from "../util/utils";
 import {IStampingData} from "./pareditor";
 
 // The close states dialog can return.
@@ -84,8 +84,8 @@ export class RestampDialogComponent extends AngularDialogComponent<
                 meetingDate: this.data.meetingDate,
                 stampFormat: this.data.stampFormat,
             };
-            const r = await to2(
-                this.http.post(`/upload/restamp`, stampingParams).toPromise()
+            const r = await toPromise(
+                this.http.post(`/upload/restamp`, stampingParams)
             );
 
             if (!r.ok) {

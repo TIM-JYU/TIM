@@ -28,7 +28,7 @@ function compileProgram(code: string): string {
         // eslint-disable-next-line @typescript-eslint/no-base-to-string
         return ret.toString();
     } catch (e) {
-        const err: Error = e;
+        const err = e as Error;
         return err.message;
     }
 }
@@ -196,8 +196,8 @@ function runner(d: IRunnerData): RunnerResult {
         const prg = prgname + ":\n" + numberLines2(errorprg, 1);
         // const comp = ""; // d.compileProgram(errorprg);
         // prg = "\n" + comp + prg;
-        let stack = e.stack;
-        if (stack.indexOf("SyntaxError") >= 0) {
+        let stack = err.stack ?? "";
+        if (stack.includes("SyntaxError")) {
             stack = ""; // compile will show the errorplace
         } else {
             errorprg = "";
@@ -298,7 +298,7 @@ router.put("/", async (req, res, next) => {
             };
         }
     } catch (e) {
-        const err: Error = e;
+        const err = e as Error;
         // This happens at least if the script execution times out.
         r = {
             web: {

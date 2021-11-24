@@ -5,7 +5,7 @@ import {
 } from "tim/plugin/attributes";
 import {Type} from "io-ts";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
-import {to2} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 import {
     baseOnInit,
     getDefaults,
@@ -109,10 +109,8 @@ export abstract class AngularPluginBase<
         url: string,
         params?: Record<string, string | string[]>
     ) {
-        return to2(
-            this.http
-                .get<U>(url, {params})
-                .toPromise()
+        return toPromise(
+            this.http.get<U>(url, {params})
         );
     }
 
@@ -120,15 +118,13 @@ export abstract class AngularPluginBase<
         url: string,
         params?: Record<string, string | string[]>
     ) {
-        return to2(
-            this.http
-                .get(url, {params: params, responseType: "text"})
-                .toPromise()
+        return toPromise(
+            this.http.get(url, {params: params, responseType: "text"})
         );
     }
 
     protected httpPost<U>(url: string, body: JsonValue) {
-        return to2(this.http.post<U>(url, body).toPromise());
+        return toPromise(this.http.post<U>(url, body));
     }
 
     protected httpPut<U>(
@@ -136,10 +132,8 @@ export abstract class AngularPluginBase<
         body: JsonValue,
         headers: HttpHeaders = new HttpHeaders()
     ) {
-        return to2(
-            this.http
-                .put<U>(url, body, {headers: headers})
-                .toPromise()
+        return toPromise(
+            this.http.put<U>(url, body, {headers: headers})
         );
     }
 

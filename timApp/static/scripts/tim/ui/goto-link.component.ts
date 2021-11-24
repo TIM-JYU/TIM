@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from "@angular/core";
 import moment, {Moment} from "moment";
-import {formatString, to2} from "tim/util/utils";
+import {formatString, toPromise} from "tim/util/utils";
 import {IRight} from "tim/item/rightsEditor";
 import humanizeDuration from "humanize-duration";
 import {Users} from "tim/user/userService";
@@ -122,10 +122,8 @@ export class GotoLinkComponent implements OnInit {
             path.startsWith(VIEW_PATH)
         ) {
             const docPath = path.substring(VIEW_PATH.length);
-            const accessInfo = await to2(
-                this.http
-                    .get<IViewAccessStatus>(`/docViewInfo/${docPath}`)
-                    .toPromise()
+            const accessInfo = await toPromise(
+                this.http.get<IViewAccessStatus>(`/docViewInfo/${docPath}`)
             );
             if (accessInfo.ok) {
                 return {
@@ -175,8 +173,8 @@ export class GotoLinkComponent implements OnInit {
 
         let curTime = moment();
         if (closeTime || openTime) {
-            const serverTime = await to2(
-                this.http.get<{time: Moment}>("/time").toPromise()
+            const serverTime = await toPromise(
+                this.http.get<{time: Moment}>("/time")
             );
             // Fail silently here and hope the user clicks again so it can retry
             if (!serverTime.ok) {

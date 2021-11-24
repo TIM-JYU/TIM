@@ -5,7 +5,7 @@
  */
 import {HttpClient} from "@angular/common/http";
 import {Component, Input} from "@angular/core";
-import {TimStorage, to2} from "tim/util/utils";
+import {TimStorage, toPromise} from "tim/util/utils";
 import * as t from "io-ts";
 import {ITag, ITaggedItem, tagStyleClass} from "./IItem";
 
@@ -73,9 +73,7 @@ export class TaggedDocumentListComponent {
     }
 
     private async getAllTags() {
-        const r = await to2(
-            this.http.get<string[]>(`/tags/getAllTags`).toPromise()
-        );
+        const r = await toPromise(this.http.get<string[]>(`/tags/getAllTags`));
         if (r.ok) {
             this.allUniqueTags = r.result;
         }
@@ -92,17 +90,15 @@ export class TaggedDocumentListComponent {
         // Changes tag in input field to this in case the tagName is different.
         this.tagFilter = tagName;
 
-        const response = await to2(
-            this.http
-                .get<ITaggedItem[]>("/tags/getDocs", {
-                    params: {
-                        case_sensitive: this.caseSensitive.toString(),
-                        exact_search: this.exactMatch.toString(),
-                        list_doc_tags: this.listDocTags.toString(),
-                        name: tagName,
-                    },
-                })
-                .toPromise()
+        const response = await toPromise(
+            this.http.get<ITaggedItem[]>("/tags/getDocs", {
+                params: {
+                    case_sensitive: this.caseSensitive.toString(),
+                    exact_search: this.exactMatch.toString(),
+                    list_doc_tags: this.listDocTags.toString(),
+                    name: tagName,
+                },
+            })
         );
         if (!response.ok) {
             return;

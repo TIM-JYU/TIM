@@ -9,6 +9,7 @@ import {Pos} from "tim/ui/pos";
 import {either} from "fp-ts/Either";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
+import {lastValueFrom, Observable} from "rxjs";
 
 const blacklist = new Set([
     "name",
@@ -356,6 +357,16 @@ export function to2<T, U = {error: {error: string}}>(
     promise: Promise<T>
 ): Promise<Result<T, U>> {
     return promise
+        .then<Success<T>>((data: T) => ({ok: true, result: data}))
+        .catch<Failure<U>>((err) => {
+            return {ok: false, result: err as U};
+        });
+}
+
+export function toPromise<T, U = {error: {error: string}}>(
+    observable: Observable<T>
+): Promise<Result<T, U>> {
+    return lastValueFrom(observable)
         .then<Success<T>>((data: T) => ({ok: true, result: data}))
         .catch<Failure<U>>((err) => {
             return {ok: false, result: err as U};

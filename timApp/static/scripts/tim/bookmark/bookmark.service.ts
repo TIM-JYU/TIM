@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {clone, to2} from "tim/util/utils";
+import {clone, toPromise} from "tim/util/utils";
 import {genericglobals} from "tim/util/globals";
 
 export interface IBookmarkGroup {
@@ -27,17 +27,15 @@ export class BookmarkService {
     }
 
     fetchBookmarks(http: HttpClient) {
-        return to2(http.get<IBookmarkGroup[]>("/bookmarks/get").toPromise());
+        return toPromise(http.get<IBookmarkGroup[]>("/bookmarks/get"));
     }
 
     async addCourse(http: HttpClient, path: string) {
-        const resp = to2(
-            http
-                .post<{bookmarks: IBookmarkGroup[]; added_to_group: boolean}>(
-                    "/bookmarks/addCourse",
-                    {path: path}
-                )
-                .toPromise()
+        const resp = toPromise(
+            http.post<{bookmarks: IBookmarkGroup[]; added_to_group: boolean}>(
+                "/bookmarks/addCourse",
+                {path: path}
+            )
         );
         const r = await resp;
         if (r.ok) {

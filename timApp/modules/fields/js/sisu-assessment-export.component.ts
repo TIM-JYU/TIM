@@ -2,7 +2,7 @@ import * as t from "io-ts";
 import {Component, Input, NgModule, ViewChild} from "@angular/core";
 import {IncludeUsersOption} from "tim/plugin/attributes";
 import {IUser, sortLang} from "tim/user/IUser";
-import {copyToClipboard, StringOrNumber, timeout, to2} from "tim/util/utils";
+import {copyToClipboard, StringOrNumber, timeout, to2, toPromise} from "tim/util/utils";
 import moment from "moment";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -459,19 +459,17 @@ export class SisuAssessmentExportComponent {
             : this.group;
         const r = this.testOnly
             ? await to2(getFakeData(opts))
-            : await to2(
-                  this.http
-                      .post<IGradeResponse>("/sisu/sendGrades", {
-                          completionDate: opts.completionDate,
-                          destCourse: this.destCourse,
-                          docId: this.docId,
-                          dryRun: opts.dryRun,
-                          filterUsers: opts.filterUsers,
-                          groups: groups,
-                          partial: opts.partial,
-                          includeUsers: this.includeUsers,
-                      })
-                      .toPromise()
+            : await toPromise(
+                  this.http.post<IGradeResponse>("/sisu/sendGrades", {
+                      completionDate: opts.completionDate,
+                      destCourse: this.destCourse,
+                      docId: this.docId,
+                      dryRun: opts.dryRun,
+                      filterUsers: opts.filterUsers,
+                      groups: groups,
+                      partial: opts.partial,
+                      includeUsers: this.includeUsers,
+                  })
               );
         this.loading = false;
         if (!r.ok) {

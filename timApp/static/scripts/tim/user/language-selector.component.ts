@@ -32,12 +32,10 @@ export class LanguageSelectorComponent {
 
     async onChange() {
         if (this.saveOnChange) {
-            await this.http
-                .put("/settings/save/lang", {
-                    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-                    lang: this.settings.language || null,
-                })
-                .toPromise();
+            await this.http.put("/settings/save/lang", {
+                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+                lang: this.settings.language || null,
+            });
             location.reload();
         }
     }

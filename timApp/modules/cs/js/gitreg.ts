@@ -2,7 +2,7 @@
 import {Component, ChangeDetectorRef, ElementRef} from "@angular/core";
 import {HttpClient, HttpHeaders} from "@angular/common/http";
 import {DomSanitizer} from "@angular/platform-browser";
-import {defaultTimeout, to2} from "tim/util/utils";
+import {defaultTimeout, toPromise} from "tim/util/utils";
 import {CsController, IRunRequest, IRunResponse} from "./csPlugin";
 
 @Component({
@@ -103,14 +103,12 @@ export class GitRegComponent extends CsController {
         };
 
         const url = this.pluginMeta.getAnswerUrl();
-        const r = await to2(
-            this.http
-                .put<IRunResponse>(url, params, {
-                    headers: new HttpHeaders({
-                        timeout: `${this.timeout + defaultTimeout}`,
-                    }),
-                })
-                .toPromise()
+        const r = await toPromise(
+            this.http.put<IRunResponse>(url, params, {
+                headers: new HttpHeaders({
+                    timeout: `${this.timeout + defaultTimeout}`,
+                }),
+            })
         );
         if (r.ok) {
             this.error = r.result.web.error;

@@ -33,8 +33,7 @@ import {
     defaultTimeout,
     getClipboardHelper,
     timeout,
-    to,
-    to2,
+    to, toPromise,
     valueDefu,
     valueOr,
 } from "tim/util/utils";
@@ -1727,14 +1726,12 @@ ${fhtml}
         this.isRunning = true;
         this.fetchError = undefined;
 
-        const r = await to2(
-            this.http
-                .post<IFetchResponse>(
-                    `/plugin${this.pluginMeta.getTaskIdUrl()}/fetchExternal`,
-                    {},
-                    {headers: new HttpHeaders({timeout: `${defaultTimeout}`})}
-                )
-                .toPromise()
+        const r = await toPromise(
+            this.http.post<IFetchResponse>(
+                `/plugin${this.pluginMeta.getTaskIdUrl()}/fetchExternal`,
+                {},
+                {headers: new HttpHeaders({timeout: `${defaultTimeout}`})}
+            )
         );
         if (r.ok) {
             if (r.result.error) {

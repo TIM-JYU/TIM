@@ -11,7 +11,7 @@ import {
     makePreview,
     minimizeJson,
 } from "tim/document/question/answer-sheet.component";
-import {TimStorage, to, to2} from "tim/util/utils";
+import {TimStorage, to, toPromise} from "tim/util/utils";
 import {
     KEY_DOWN,
     KEY_ENTER,
@@ -1005,12 +1005,10 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
 
     private async updatePreview() {
         const mdStr = JSON.stringify(this.question, null, 4);
-        const response = await to2(
-            this.http
-                .post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", {
-                    text: mdStr,
-                })
-                .toPromise()
+        const response = await toPromise(
+            this.http.post<{md: IAskedJsonJson}>("/qst/getQuestionMD/", {
+                text: mdStr,
+            })
         );
         if (!response.ok) {
             throw Error("getQuestionMD failed");
@@ -1072,17 +1070,15 @@ export class QuestionEditDialogComponent extends AngularDialogComponent<
         this.pluginMarkup.answerLimit =
             this.pluginMarkup.answerLimit ?? undefined;
 
-        const r = await to2(
-            this.http
-                .post<IParResponse>(route, {
-                    docId,
-                    ...params,
-                    question: {
-                        ...this.pluginMarkup, // this also retains the other attributes that are not visible in edit dialog
-                        ...this.question,
-                    },
-                })
-                .toPromise()
+        const r = await toPromise(
+            this.http.post<IParResponse>(route, {
+                docId,
+                ...params,
+                question: {
+                    ...this.pluginMarkup, // this also retains the other attributes that are not visible in edit dialog
+                    ...this.question,
+                },
+            })
         );
         if (r.ok) {
             const data = r.result;

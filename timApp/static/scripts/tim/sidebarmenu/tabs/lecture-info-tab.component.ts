@@ -4,7 +4,7 @@ import {ILecture, ILectureListResponse2} from "tim/lecture/lecturetypes";
 import {ViewCtrl} from "tim/document/viewctrl";
 import {vctrlInstance} from "tim/document/viewctrlinstance";
 import {LectureController} from "tim/lecture/lectureController";
-import {to2} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 
@@ -61,14 +61,15 @@ export class LectureInfoTabComponent implements OnTabSelect {
             await showMessageDialog($localize`Not currently in document view.`);
             return;
         }
-        const response = await to2(
-            this.http
-                .get<ILectureListResponse2>("/getAllLecturesFromDocument", {
+        const response = await toPromise(
+            this.http.get<ILectureListResponse2>(
+                "/getAllLecturesFromDocument",
+                {
                     params: {
                         doc_id: this.vctrl.docId.toString(),
                     },
-                })
-                .toPromise()
+                }
+            )
         );
         if (!response.ok) {
             return;

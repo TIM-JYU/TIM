@@ -31,6 +31,7 @@ import {
     timeout,
     TimStorage,
     to2,
+    toPromise,
 } from "../../util/utils";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {CodeScannerComponent} from "./code-scanner.component";
@@ -443,17 +444,15 @@ export class UserSelectComponent extends AngularPluginBase<
         const params = new HttpParams({
             fromString: window.location.search.replace("?", "&"),
         });
-        const result = await to2(
-            this.http
-                .post<{distributionErrors: string[]}>(
-                    "/userSelect/undo",
-                    {
-                        username: this.lastAddedUser.user.name,
-                        par: this.getPar().par.getJsonForServer(),
-                    },
-                    {params}
-                )
-                .toPromise()
+        const result = await toPromise(
+            this.http.post<{distributionErrors: string[]}>(
+                "/userSelect/undo",
+                {
+                    username: this.lastAddedUser.user.name,
+                    par: this.getPar().par.getJsonForServer(),
+                },
+                {params}
+            )
         );
 
         if (result.ok) {
@@ -548,17 +547,15 @@ export class UserSelectComponent extends AngularPluginBase<
         const params = new HttpParams({
             fromString: window.location.search.replace("?", "&"),
         });
-        const result = await to2(
-            this.http
-                .post<{distributionErrors: string[]}>(
-                    "/userSelect/apply",
-                    {
-                        par: this.getPar().par.getJsonForServer(),
-                        username: this.selectedUser.user.name,
-                    },
-                    {params}
-                )
-                .toPromise()
+        const result = await toPromise(
+            this.http.post<{distributionErrors: string[]}>(
+                "/userSelect/apply",
+                {
+                    par: this.getPar().par.getJsonForServer(),
+                    username: this.selectedUser.user.name,
+                },
+                {params}
+            )
         );
 
         if (result.ok) {

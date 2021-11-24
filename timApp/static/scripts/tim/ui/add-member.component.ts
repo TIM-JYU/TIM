@@ -1,6 +1,6 @@
 import {Component, Input} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
-import {to2} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 
 interface IAddmemberResponse {
     added: string[];
@@ -63,15 +63,16 @@ export class AddMemberComponent {
     async add() {
         this.result = undefined;
         this.error = undefined;
-        const r = await to2(
-            this.http
-                .post<IAddmemberResponse>(`/groups/addmember/${this.group}`, {
+        const r = await toPromise(
+            this.http.post<IAddmemberResponse>(
+                `/groups/addmember/${this.group}`,
+                {
                     names: this.users
                         .split("\n")
                         .flatMap((n) => n.split(/,|;/))
                         .map((n) => n.replace(/^ *- */, "").trim()),
-                })
-                .toPromise()
+                }
+            )
         );
         if (r.ok) {
             this.result = r.result;

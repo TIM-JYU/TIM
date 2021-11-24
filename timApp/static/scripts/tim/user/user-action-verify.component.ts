@@ -25,7 +25,7 @@ import {isRight} from "fp-ts/Either";
 import {AlertSeverity} from "tim/ui/formErrorMessage";
 import {createDowngradedModule, doDowngrade} from "../downgrade";
 import {Channel} from "../messaging/listOptionTypes";
-import {to2} from "../util/utils";
+import {toPromise} from "../util/utils";
 
 const GeneralInfoMarkup = t.type({
     type: t.string,
@@ -207,11 +207,11 @@ export class UserActionVerifyComponent implements AfterViewInit {
             return;
         }
         this.processing = true;
-        const res = await to2(
+        const res = await toPromise(
             // Use pathname to ensure relative URL so that CSRF token is passed along
-            this.http
-                .post<{returnUrl?: string}>(window.location.pathname, {verify})
-                .toPromise()
+            this.http.post<{returnUrl?: string}>(window.location.pathname, {
+                verify,
+            })
         );
         this.processing = false;
         if (res.ok) {

@@ -7,7 +7,7 @@ import {FormsModule} from "@angular/forms";
 import moment from "moment";
 import humanizeDuration from "humanize-duration";
 import {IItem} from "../../item/IItem";
-import {to2} from "../../util/utils";
+import {to2, toPromise} from "../../util/utils";
 import {TimUtilityModule} from "../../ui/tim-utility.module";
 import {DatetimePickerModule} from "../../ui/datetime-picker/datetime-picker.component";
 import {DurationChoice} from "../../ui/duration-picker.component";
@@ -146,12 +146,10 @@ export class ScheduleDialogComponent extends AngularDialogComponent<
 
     async fetchFunctions() {
         this.error = undefined;
-        const r = await to2(
-            this.http
-                .get<IScheduledFunction[]>("/scheduling/functions", {
-                    params: {all_users: this.showAllUsers.toString()},
-                })
-                .toPromise()
+        const r = await toPromise(
+            this.http.get<IScheduledFunction[]>("/scheduling/functions", {
+                params: {all_users: this.showAllUsers.toString()},
+            })
         );
         if (!r.ok) {
             this.error = r.result.error.error;
@@ -178,28 +176,26 @@ export class ScheduleDialogComponent extends AngularDialogComponent<
                 return;
             }
         }
-        const yamlcheck = await to2(
-            this.http
-                .get("/scheduling/parseYaml", {params: {yaml: this.params}})
-                .toPromise()
+        const yamlcheck = await toPromise(
+            this.http.get("/scheduling/parseYaml", {
+                params: {yaml: this.params},
+            })
         );
         if (!yamlcheck.ok) {
             this.error = yamlcheck.result.error.error;
             return;
         }
-        const r = await to2(
-            this.http
-                .post("/scheduling/functions", {
-                    args: yamlcheck.result,
-                    doc_id: this.data.id,
-                    plugin_name: this.functionName,
-                    expires: this.expires,
-                    interval: moment.duration(
-                        this.functionDurAmount,
-                        this.functionDurType
-                    ),
-                })
-                .toPromise()
+        const r = await toPromise(
+            this.http.post("/scheduling/functions", {
+                args: yamlcheck.result,
+                doc_id: this.data.id,
+                plugin_name: this.functionName,
+                expires: this.expires,
+                interval: moment.duration(
+                    this.functionDurAmount,
+                    this.functionDurType
+                ),
+            })
         );
         if (!r.ok) {
             this.error = r.result.error.error;
@@ -221,8 +217,8 @@ export class ScheduleDialogComponent extends AngularDialogComponent<
         if (!ans.ok || !ans.result) {
             return;
         }
-        const r = await to2(
-            this.http.delete(`/scheduling/functions/${t.block_id}`).toPromise()
+        const r = await toPromise(
+            this.http.delete(`/scheduling/functions/${t.block_id}`)
         );
         if (!r.ok) {
             this.error = r.result.error.error;

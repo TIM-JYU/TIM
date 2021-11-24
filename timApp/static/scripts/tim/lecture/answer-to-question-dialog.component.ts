@@ -20,7 +20,7 @@ import {
     IPreviewParams,
     makePreview,
 } from "../document/question/answer-sheet.component";
-import {setStorage, to2} from "../util/utils";
+import {setStorage, toPromise} from "../util/utils";
 import {
     AnswerTable,
     IAskedQuestion,
@@ -161,14 +161,12 @@ export class AnswerToQuestionDialogComponent
     }
 
     async answerToQuestion() {
-        const response = await to2(
-            this.http
-                .put<{questionLate?: string}>("/answerToQuestion", {
-                    asked_id: this.question.asked_id,
-                    buster: new Date().getTime(),
-                    input: this.answer,
-                })
-                .toPromise()
+        const response = await toPromise(
+            this.http.put<{questionLate?: string}>("/answerToQuestion", {
+                asked_id: this.question.asked_id,
+                buster: new Date().getTime(),
+                input: this.answer,
+            })
         );
         if (!response.ok) {
             return;
@@ -210,12 +208,10 @@ export class AnswerToQuestionDialogComponent
     }
 
     async stopQuestion() {
-        const _ = await to2(
-            this.http
-                .post("/stopQuestion", {
-                    asked_id: this.question.asked_id,
-                })
-                .toPromise()
+        const _ = await toPromise(
+            this.http.post("/stopQuestion", {
+                asked_id: this.question.asked_id,
+            })
         );
         // Don't call endQuestion here; it will come from timerTick.
     }
@@ -238,14 +234,12 @@ export class AnswerToQuestionDialogComponent
         if (isAskedQuestion(this.data.qa)) {
             this.setData(await fetchAskedQuestion(this.question.asked_id));
         } else {
-            const resp = await to2(
-                this.http
-                    .get<IQuestionAnswer>("/getQuestionAnswer", {
-                        params: {
-                            id: this.data.qa.answer_id.toString(),
-                        },
-                    })
-                    .toPromise()
+            const resp = await toPromise(
+                this.http.get<IQuestionAnswer>("/getQuestionAnswer", {
+                    params: {
+                        id: this.data.qa.answer_id.toString(),
+                    },
+                })
             );
             if (!resp.ok) {
                 return;
@@ -255,13 +249,11 @@ export class AnswerToQuestionDialogComponent
     }
 
     async showPoints() {
-        const response = await to2(
-            this.http
-                .post<IGetNewQuestionResponse>("/showAnswerPoints", {
-                    asked_id: this.question.asked_id,
-                    current_question_id: this.question.asked_id, // TODO useless parameter
-                })
-                .toPromise()
+        const response = await toPromise(
+            this.http.post<IGetNewQuestionResponse>("/showAnswerPoints", {
+                asked_id: this.question.asked_id,
+                current_question_id: this.question.asked_id, // TODO useless parameter
+            })
         );
         if (!response.ok) {
             return;

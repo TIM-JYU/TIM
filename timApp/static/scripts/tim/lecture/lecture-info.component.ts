@@ -11,7 +11,7 @@ import {
     NgZone,
 } from "@angular/core";
 import moment from "moment";
-import {to2} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 import {BrowserModule} from "@angular/platform-browser";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {AnswerChartModule} from "tim/lecture/answer-chart.component";
@@ -177,18 +177,16 @@ export class LectureInfoComponent {
      * Sends http request to get info about the specific lecture.
      */
     private async getLectureInfo() {
-        const response = await to2(
-            this.http
-                .get<{
-                    messages: ILectureMessage[];
-                    answers: IQuestionAnswerPlain[];
-                    questions: IAskedQuestion[];
-                    isLecturer: boolean;
-                    answerers: IUser[];
-                }>("/getLectureInfo", {
-                    params: {lecture_id: this.lecture.lecture_id.toString()},
-                })
-                .toPromise()
+        const response = await toPromise(
+            this.http.get<{
+                messages: ILectureMessage[];
+                answers: IQuestionAnswerPlain[];
+                questions: IAskedQuestion[];
+                isLecturer: boolean;
+                answerers: IUser[];
+            }>("/getLectureInfo", {
+                params: {lecture_id: this.lecture.lecture_id.toString()},
+            })
         );
         if (!response.ok) {
             return;
@@ -221,12 +219,10 @@ export class LectureInfoComponent {
     }
 
     async editPoints(askedId: number) {
-        const response = await to2(
-            this.http
-                .get<IAskedQuestion>("/getAskedQuestionById", {
-                    params: {asked_id: askedId.toString()},
-                })
-                .toPromise()
+        const response = await toPromise(
+            this.http.get<IAskedQuestion>("/getAskedQuestionById", {
+                params: {asked_id: askedId.toString()},
+            })
         );
         if (!response.ok) {
             return;
@@ -252,12 +248,10 @@ export class LectureInfoComponent {
             "Do you really want to delete this lecture?"
         );
         if (confirmAnswer) {
-            const response = await to2(
-                this.http
-                    .post("/deleteLecture", {
-                        lecture_id: this.lecture.lecture_id,
-                    })
-                    .toPromise()
+            const response = await toPromise(
+                this.http.post("/deleteLecture", {
+                    lecture_id: this.lecture.lecture_id,
+                })
             );
             if (!response.ok) {
                 return;
@@ -267,12 +261,10 @@ export class LectureInfoComponent {
     }
 
     async editLecture() {
-        const response = await to2(
-            this.http
-                .get<ILecture>("/showLectureInfoGivenName", {
-                    params: {lecture_id: this.lecture.lecture_id.toString()},
-                })
-                .toPromise()
+        const response = await toPromise(
+            this.http.get<ILecture>("/showLectureInfoGivenName", {
+                params: {lecture_id: this.lecture.lecture_id.toString()},
+            })
         );
         if (!response.ok) {
             return;

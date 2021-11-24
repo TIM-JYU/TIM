@@ -4,7 +4,7 @@
 
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
-import {TimStorage, to2} from "tim/util/utils";
+import {TimStorage, toPromise} from "tim/util/utils";
 import {
     getCourseCode,
     ICourseSettings,
@@ -178,16 +178,14 @@ export class CourseListDialogComponent extends AngularDialogComponent<
         exactMatch: boolean,
         listDocTags: boolean
     ) {
-        const response = await to2(
-            this.http
-                .get<ITaggedItem[]>("/tags/getDocs", {
-                    params: {
-                        exact_search: exactMatch.toString(),
-                        list_doc_tags: listDocTags.toString(),
-                        name: tagName,
-                    },
-                })
-                .toPromise()
+        const response = await toPromise(
+            this.http.get<ITaggedItem[]>("/tags/getDocs", {
+                params: {
+                    exact_search: exactMatch.toString(),
+                    list_doc_tags: listDocTags.toString(),
+                    name: tagName,
+                },
+            })
         );
         if (!response.ok) {
             return;
