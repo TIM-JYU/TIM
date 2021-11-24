@@ -279,10 +279,7 @@ export class GotoLinkComponent implements OnInit {
         window.setTimeout(() => {
             // Special case: on empty href just reload the page to mimic the behaviour of <a>
             if (this.href == "") {
-                // Note: the force-reload is deprecated: https://github.com/Microsoft/TypeScript/issues/28898
-                // TODO: Do we need force reloading? There is no consensus on whether this is supported by all browsers
-                //  anymore.
-                window.location.reload(true);
+                window.location.reload();
             } else {
                 window.open(this.href, this.target);
             }

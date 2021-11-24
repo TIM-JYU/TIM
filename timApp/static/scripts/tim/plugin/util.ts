@@ -118,19 +118,19 @@ export function baseOnInit<
     MarkupType extends IGenericPluginMarkup,
     A extends IGenericPluginTopLevelFields<MarkupType>,
     T extends Type<A>
->(this: PluginInit<MarkupType, A, T>) {
-    const parsed = JSON.parse(atob(this.json)) as unknown;
-    const validated = this.getAttributeType().decode(parsed);
+>(self: PluginInit<MarkupType, A, T>) {
+    const parsed = JSON.parse(atob(self.json)) as unknown;
+    const validated = self.getAttributeType().decode(parsed);
     // These can be uncommented for debugging:
     // console.log(parsed);
     // console.log(this);
     // console.log(validated);
     if (isLeft(validated)) {
-        this.markupError = getErrors(validated);
+        self.markupError = getErrors(validated);
         return undefined;
     } else {
-        this.attrsall = validated.right;
-        return this.attrsall;
+        self.attrsall = validated.right;
+        return self.attrsall;
     }
 }
 
@@ -308,7 +308,7 @@ export abstract class PluginBase<
     $postLink() {}
 
     $onInit() {
-        const result = baseOnInit.call(this);
+        const result = baseOnInit(this);
         if (result) {
             this.pluginMeta = new PluginMeta(
                 this.element,

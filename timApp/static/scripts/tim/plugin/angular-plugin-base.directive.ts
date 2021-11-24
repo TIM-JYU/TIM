@@ -94,7 +94,7 @@ export abstract class AngularPluginBase<
     }
 
     ngOnInit() {
-        const result = baseOnInit.call(this);
+        const result = baseOnInit(this);
         if (result) {
             this.pluginMeta = new PluginMeta(
                 this.element,

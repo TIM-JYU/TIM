@@ -486,8 +486,7 @@ export function getViewPortSize() {
 
 export function isMobileDevice() {
     const touch =
-        typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !==
-        "undefined";
+        window.ontouchstart !== undefined || navigator.maxTouchPoints > 0;
     return touch && isScreenSizeOrLower("md");
 }
 

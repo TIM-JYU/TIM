@@ -391,16 +391,12 @@ export class UserListController implements IController {
         // from https://stackoverflow.com/a/33542499
 
         const blob = new Blob([dataKorppi], {type: "text/plain"});
-        if (window.navigator.msSaveBlob) {
-            window.navigator.msSaveBlob(blob, filename);
-        } else {
-            const elem = window.document.createElement("a");
-            elem.href = window.URL.createObjectURL(blob);
-            elem.download = filename;
-            document.body.appendChild(elem);
-            elem.click();
-            document.body.removeChild(elem);
-        }
+        const elem = window.document.createElement("a");
+        elem.href = window.URL.createObjectURL(blob);
+        elem.download = filename;
+        document.body.appendChild(elem);
+        elem.click();
+        document.body.removeChild(elem);
         /*
         const opened = window.open("text/plain", "replace");
         if ( !opened ) { return; }

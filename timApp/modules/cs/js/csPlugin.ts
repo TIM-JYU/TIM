@@ -2638,7 +2638,7 @@ ${fhtml}
                 data = JSON.parse(this.usercode);
             }
         } catch (err) {
-            this.error = err.message;
+            this.error = (err as Error).message;
             this.runError = true;
         }
         try {
@@ -2648,7 +2648,7 @@ ${fhtml}
                 data = {...data, ...initdata};
             }
         } catch (err) {
-            this.error = err.message;
+            this.error = (err as Error).message;
             this.runError = true;
         }
 

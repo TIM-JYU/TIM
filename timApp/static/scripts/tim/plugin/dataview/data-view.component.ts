@@ -1931,7 +1931,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private startCellPurifying(): void {
         if (typeof Worker !== "undefined") {
-            const worker = new Worker("./table-purify.worker", {
+            const worker = new Worker(new URL('./table-purify.worker', import.meta.url), {
                 type: "module",
             });
             worker.onmessage = ({data}: {data: PurifyData}) => {
