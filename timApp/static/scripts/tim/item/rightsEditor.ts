@@ -66,6 +66,7 @@ const accessOrder = {
 
 const tips = {
     teacher: "Teacher right does not give edit right by itself.",
+    "see answers": "Seeing answers does not give edit right by itself.",
 };
 
 class RightsEditorController implements IController {
