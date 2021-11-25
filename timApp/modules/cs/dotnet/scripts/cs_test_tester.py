@@ -77,7 +77,7 @@ def count_points(lines, test):
     p = 0
     for t in test:
         for tst in t.get("bycalls", []):
-            name = tst.get("name", "XXXX")
+            name = tst.get("call", "XXXX")
             result = tst.get("result", "XXXX")
             # NUnit 3 uses "Passed" instead of "Success" and "Failed" instead of "Failure"
             if result == "Success":
@@ -95,8 +95,8 @@ def count_points(lines, test):
                     line = line[i + len(rst) :]
                     i = line.find('"')
                     if i >= 0:
-                        line = line[:i]
-                        if line == result or line:
+                        xmlres = line[:i]
+                        if xmlres == result and xmlres: # Why should we have and???
                             p += pts
                         else:
                             pts = tst.get("wrong", 0)
@@ -106,7 +106,7 @@ def count_points(lines, test):
                             + ": pitäisi tulla "
                             + result
                             + ", tuli: "
-                            + line
+                            + xmlres
                             + ". Pisteitä:",
                             pts,
                         )
