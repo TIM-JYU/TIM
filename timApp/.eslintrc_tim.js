@@ -20,7 +20,8 @@ module.exports = {
         "modules/cs/simcir/",
         "modules/jsrunner/server/",
         "static/scripts/tim/environments/environment.prod.ts",
-        "**/*.worker.ts"
+        "**/*.worker.ts",
+        "i18n/"
     ],
     "rules": {
         "@typescript-eslint/adjacent-overload-signatures": "error",

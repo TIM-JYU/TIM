@@ -207,19 +207,6 @@
             }
           },
           "defaultConfiguration": "development"
-        },
-        "xliffmerge": {
-          "builder": "@ngx-i18nsupport/tooling:xliffmerge",
-          "options": {
-            "xliffmergeOptions": {
-              "defaultLanguage": "en-US",
-              "genDir": "i18n",
-              "languages": [
-                "fi"
-              ],
-              "beautifyOutput": true
-            }
-          }
         }
       }
     }
