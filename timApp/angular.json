@@ -54,6 +54,8 @@
               "fp-ts/lib/Either",
               "object-keys",
               "regexp.prototype.flags",
+              "sanitize-html",
+              "seedrandom",
               "is-regex",
               "which-boxed-primitive",
               "es-abstract/GetIntrinsic",
@@ -103,13 +105,7 @@
             ],
             "scripts": [
             ],
-            "webWorkerTsConfig": "tsconfig.worker.json",
-            "vendorChunk": true,
-            "extractLicenses": false,
-            "buildOptimizer": false,
-            "sourceMap": true,
-            "optimization": false,
-            "namedChunks": true
+            "webWorkerTsConfig": "tsconfig.worker.json"
           },
           "configurations": {
             "production": {
@@ -139,7 +135,24 @@
                 }
               ]
             },
-            "development": {}
+            "development": {
+              "optimization": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "extractLicenses": false,
+              "statsJson": false,
+              "vendorChunk": true,
+              "buildOptimizer": false
+            },
+            "development-fast": {
+              "optimization": false,
+              "sourceMap": false,
+              "namedChunks": true,
+              "extractLicenses": false,
+              "statsJson": false,
+              "vendorChunk": true,
+              "buildOptimizer": false
+            }
           },
           "defaultConfiguration": "production"
         },
