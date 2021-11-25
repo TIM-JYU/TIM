@@ -96,7 +96,7 @@ def count_points(lines, test):
                     i = line.find('"')
                     if i >= 0:
                         xmlres = line[:i]
-                        if xmlres == result and xmlres:  # Why should we have and???
+                        if xmlres == result:
                             p += pts
                         else:
                             pts = tst.get("wrong", 0)
