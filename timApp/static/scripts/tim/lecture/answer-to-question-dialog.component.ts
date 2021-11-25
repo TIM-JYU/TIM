@@ -118,7 +118,8 @@ export type IAnswerQuestionResult =
 })
 export class AnswerToQuestionDialogComponent
     extends AngularDialogComponent<IAnswerQuestionParams, IAnswerQuestionResult>
-    implements OnDestroy {
+    implements OnDestroy
+{
     protected dialogName = "AnswerQuestion";
     barFilled = 0;
     endTime?: ReadonlyMoment;

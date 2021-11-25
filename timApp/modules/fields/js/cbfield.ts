@@ -56,7 +56,8 @@ class CbfieldController
         t.TypeOf<typeof CbfieldAll>,
         typeof CbfieldAll
     >
-    implements ITimComponent {
+    implements ITimComponent
+{
     private result?: string;
     private isRunning = false;
     private userword: boolean = false;

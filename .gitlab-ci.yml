@@ -111,7 +111,7 @@ ts_format:
   script:
   - cd timApp
   - rm package-lock.json
-  - npm install --no-package-lock --no-save prettier@2.1.1
+  - npm install --no-package-lock --no-save prettier@2.4.1
   - npm run checkformat
 
 py_format:

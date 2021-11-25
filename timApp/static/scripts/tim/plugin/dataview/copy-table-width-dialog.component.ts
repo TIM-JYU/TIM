@@ -30,7 +30,8 @@ export interface ICopyTableWidthsParams {
 })
 export class CopyTableWidthDialogComponent
     extends AngularDialogComponent<ICopyTableWidthsParams, void>
-    implements OnInit {
+    implements OnInit
+{
     protected dialogName: string = "copy-table-width";
     settingYaml: string = "";
     showCopiedMessage = false;

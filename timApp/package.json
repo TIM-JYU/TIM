@@ -16,6 +16,7 @@
     "postinstall": "patch-package",
     "lint": "eslint --report-unused-disable-directives --format codeframe --ext ts static/scripts/tim modules",
     "checkformat": "prettier --check .",
+    "formatfix": "prettier --write .",
     "lintfix": "eslint --ext ts static/scripts/tim modules --fix",
     "extract-i18n": "env-cmd ng extract-i18n tim && ng run tim:xliffmerge"
   },
@@ -119,6 +120,7 @@
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-prefer-arrow": "^1.2.3",
+    "eslint-formatter-codeframe": "^7.32.1",
     "file-loader": "^6.2.0",
     "patch-package": "^6.4.7",
     "prettier": "2.4.1",

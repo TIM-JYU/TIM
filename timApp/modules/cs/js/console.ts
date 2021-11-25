@@ -133,9 +133,8 @@ export class CsConsoleComponent extends CsBase implements IController {
     }
 
     focusOnInput() {
-        const el: HTMLInputElement | null = this.getRootElement().querySelector(
-            ".console-input"
-        );
+        const el: HTMLInputElement | null =
+            this.getRootElement().querySelector(".console-input");
         if (el) {
             el.focus();
         }

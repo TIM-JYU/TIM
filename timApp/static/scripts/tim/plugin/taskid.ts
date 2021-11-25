@@ -3,7 +3,8 @@ import {Result} from "../util/utils";
 
 // Note: this regex allows empty task name because we want to detect that case when parsing.
 // It enables giving a more accurate error message.
-const taskIdRe = /^((\d+)\.)?([a-zåäöA-ZÅÄÖ0-9_-]*)(\.([a-zA-Z0-9_-]+))?(:([a-zA-Z]*)(:(readonly|readwrite))?)?$/;
+const taskIdRe =
+    /^((\d+)\.)?([a-zåäöA-ZÅÄÖ0-9_-]*)(\.([a-zA-Z0-9_-]+))?(:([a-zA-Z]*)(:(readonly|readwrite))?)?$/;
 
 export enum DocIdOption {
     Required,

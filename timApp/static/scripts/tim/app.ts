@@ -90,15 +90,15 @@ timApp.config([
         hdrs.Pragma = "no-cache";
 
         // convert ISO 8601 date strings to moment objects
-        ($httpProvider.defaults
-            .transformResponse as IHttpResponseTransformer[]).push(
-            (responseData, headers) => {
-                if (headers("No-Date-Conversion") !== "true") {
-                    return convertDateStringsToMoments(responseData);
-                }
-                return responseData;
+        (
+            $httpProvider.defaults
+                .transformResponse as IHttpResponseTransformer[]
+        ).push((responseData, headers) => {
+            if (headers("No-Date-Conversion") !== "true") {
+                return convertDateStringsToMoments(responseData);
             }
-        );
+            return responseData;
+        });
     },
 ]);
 

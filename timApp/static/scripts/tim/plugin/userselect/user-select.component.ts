@@ -340,9 +340,8 @@ export class UserSelectComponent extends AngularPluginBase<
 > {
     @ViewChild("searchForm") searchForm!: NgForm;
     @ViewChild("searchInput") searchInput!: ElementRef<HTMLInputElement>;
-    @ViewChild("codeScanner", {read: ElementRef}) codeScanner?: ElementRef<
-        HTMLElement
-    >;
+    @ViewChild("codeScanner", {read: ElementRef})
+    codeScanner?: ElementRef<HTMLElement>;
 
     showErrorMessage = false;
     errorMessage?: string;
@@ -730,9 +729,10 @@ export class UserSelectComponent extends AngularPluginBase<
             );
 
             if (this.markup.sortBy.length > 0) {
-                this.lastSearchResult.matches = this.lastSearchResult.matches.sort(
-                    (a, b) => this.compareUsers(a, b)
-                );
+                this.lastSearchResult.matches =
+                    this.lastSearchResult.matches.sort((a, b) =>
+                        this.compareUsers(a, b)
+                    );
             }
 
             if (this.lastSearchResult.matches.length == 1) {

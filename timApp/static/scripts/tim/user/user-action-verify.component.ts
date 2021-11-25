@@ -75,7 +75,8 @@ const TYPE_NAMES: Record<ContactChannels, string> = {
 })
 export class ContactOwnershipInfoComponent
     extends InfoComponentBase<t.TypeOf<typeof ContactInfoMarkup>>
-    implements OnInit {
+    implements OnInit
+{
     contactType!: string;
 
     get infoType() {
@@ -97,7 +98,8 @@ export class ContactOwnershipInfoComponent
 })
 export class SetPrimaryContactInfoComponent
     extends InfoComponentBase<t.TypeOf<typeof ContactInfoMarkup>>
-    implements OnInit {
+    implements OnInit
+{
     contactType!: string;
 
     get infoType() {

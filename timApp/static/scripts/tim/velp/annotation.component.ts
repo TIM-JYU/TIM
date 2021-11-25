@@ -196,7 +196,8 @@ export async function updateAnnotationServer(
     styleUrls: ["./annotation.component.scss"],
 })
 export class AnnotationComponent
-    implements OnDestroy, OnInit, AfterViewInit, IAnnotationBindings {
+    implements OnDestroy, OnInit, AfterViewInit, IAnnotationBindings
+{
     private ctrlDown = false;
     visibleOptions = {
         values: [

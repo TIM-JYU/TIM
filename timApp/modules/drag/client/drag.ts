@@ -123,7 +123,8 @@ export class DragComponent
         t.TypeOf<typeof DragAll>,
         typeof DragAll
     >
-    implements OnInit, ITimComponent {
+    implements OnInit, ITimComponent
+{
     error?: string;
     trash?: boolean;
     saveButton?: boolean;
@@ -157,7 +158,8 @@ export class DragComponent
 
         polyfill({
             // Use this to make use of the scroll behaviour.
-            dragImageTranslateOverride: scrollBehaviourDragImageTranslateOverride,
+            dragImageTranslateOverride:
+                scrollBehaviourDragImageTranslateOverride,
         });
 
         window.addEventListener(

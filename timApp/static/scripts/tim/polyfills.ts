@@ -67,4 +67,4 @@ import "@angular/localize/init";
  * APPLICATION IMPORTS
  */
 
-((window as unknown) as Record<string, unknown>).global = window;
+(window as unknown as Record<string, unknown>).global = window;

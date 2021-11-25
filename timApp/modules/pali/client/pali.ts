@@ -104,7 +104,8 @@ export class PaliComponent
         t.TypeOf<typeof PluginFields>,
         typeof PluginFields
     >
-    implements OnInit, OnDestroy {
+    implements OnInit, OnDestroy
+{
     result?: string;
     error?: string;
     isRunning = false;

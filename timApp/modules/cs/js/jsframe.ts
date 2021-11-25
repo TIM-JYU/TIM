@@ -228,7 +228,8 @@ export class JsframeComponent
         t.TypeOf<typeof JsframeAll>,
         typeof JsframeAll
     >
-    implements ITimComponent, IUserChanged, ICtrlWithMenuFunctionEntry {
+    implements ITimComponent, IUserChanged, ICtrlWithMenuFunctionEntry
+{
     iframesettings?: Iframesettings;
     private ab?: AnswerBrowserController;
 

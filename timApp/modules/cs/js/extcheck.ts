@@ -306,9 +306,8 @@ export class OutputContainerComponent implements IOutputContainer {
             imports: [CommonModule],
         })(class {});
 
-        const factories = await this.compiler.compileModuleAndAllComponentsAsync(
-            tmpModule
-        );
+        const factories =
+            await this.compiler.compileModuleAndAllComponentsAsync(tmpModule);
         const m = factories.ngModuleFactory.create(this.injector);
         const factory = factories.componentFactories.find(
             (e) => e.selector == module.entry
@@ -335,8 +334,9 @@ export class OutputContainerComponent implements IOutputContainer {
         this.hide_ = b;
         if (this.componentRef) {
             // ngIf destroys the component: use display
-            (this.componentRef.location
-                .nativeElement as HTMLElement).style.display = b ? "none" : "";
+            (
+                this.componentRef.location.nativeElement as HTMLElement
+            ).style.display = b ? "none" : "";
         }
     }
 

@@ -7,6 +7,8 @@ export async function showSearchResultDialog(r: SearchBoxComponent) {
         "./search-results-dialog.component"
     );
     await to2(
-        (await angularDialog.open(SearchResultsDialogComponent, r)).result
+        (
+            await angularDialog.open(SearchResultsDialogComponent, r)
+        ).result
     );
 }

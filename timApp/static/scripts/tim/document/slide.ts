@@ -171,9 +171,8 @@ export async function initSlideView(d: IDocument) {
         return;
     }
 
-    const isSpeakerWindow = window.parent.document.location.pathname.endsWith(
-        "/notes.html"
-    );
+    const isSpeakerWindow =
+        window.parent.document.location.pathname.endsWith("/notes.html");
     if (!isSpeakerWindow) {
         addControl(
             ctrls,

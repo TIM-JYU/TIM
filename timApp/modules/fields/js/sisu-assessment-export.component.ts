@@ -2,7 +2,13 @@ import * as t from "io-ts";
 import {Component, Input, NgModule, ViewChild} from "@angular/core";
 import {IncludeUsersOption} from "tim/plugin/attributes";
 import {IUser, sortLang} from "tim/user/IUser";
-import {copyToClipboard, StringOrNumber, timeout, to2, toPromise} from "tim/util/utils";
+import {
+    copyToClipboard,
+    StringOrNumber,
+    timeout,
+    to2,
+    toPromise,
+} from "tim/util/utils";
 import moment from "moment";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -236,9 +242,10 @@ class AssessmentTableModel implements DataModelProvider {
         return undefined;
     }
 
-    getSortSymbolInfo(
-        columnIndex: number
-    ): {symbol: string; style: Record<string, string>} {
+    getSortSymbolInfo(columnIndex: number): {
+        symbol: string;
+        style: Record<string, string>;
+    } {
         return {style: {}, symbol: ""};
     }
 

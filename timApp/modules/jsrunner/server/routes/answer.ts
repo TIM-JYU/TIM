@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {readFileSync} from "fs";
 import {parse} from "acorn";
 import express from "express";

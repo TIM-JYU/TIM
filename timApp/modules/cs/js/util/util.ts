@@ -37,8 +37,8 @@ export function sizeString(inBytes: number): string {
 
 export function timeString(): string {
     const date = new Date();
-    return `${date
-        .getHours()
+    return `${date.getHours().toString().padStart(2, "0")}:${date
+        .getMinutes()
         .toString()
-        .padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}`;
+        .padStart(2, "0")}`;
 }

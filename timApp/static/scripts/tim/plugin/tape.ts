@@ -442,8 +442,9 @@ export class TapeController implements IController {
             return;
         }
         if (this.textmode) {
-            const n = this.element.find(".textAreaRobotProgram").getSelection()
-                .start;
+            const n = this.element
+                .find(".textAreaRobotProgram")
+                .getSelection().start;
             let r = 0;
             const text = this.programAsText;
             for (let i = 0; i < n; i++) {

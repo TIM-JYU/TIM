@@ -163,8 +163,7 @@ export class NotesHandler {
                     {
                         desc: "Show note to:",
                         name: "access",
-                        title:
-                            "Who can see the note. With everyone only teachers can see the user name",
+                        title: "Who can see the note. With everyone only teachers can see the user name",
                         opts: [
                             {
                                 desc: "Everyone",

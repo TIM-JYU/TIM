@@ -231,7 +231,8 @@ export abstract class PluginBase<
         T extends Type<A>
     >
     extends PluginBaseCommon
-    implements IController {
+    implements IController
+{
     static $inject = ["$scope", "$element"];
 
     buttonText() {

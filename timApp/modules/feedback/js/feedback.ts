@@ -120,7 +120,8 @@ class FeedbackController
         t.TypeOf<typeof FeedbackAll>,
         typeof FeedbackAll
     >
-    implements ITimComponent {
+    implements ITimComponent
+{
     private error?: string;
     private vctrl!: ViewCtrl;
     private userAnswer: string[] = [];
@@ -600,9 +601,8 @@ class FeedbackController
                     this.hideComponent(instructionQuestion);
                 }
             } else {
-                const instruction = document.querySelectorAll(
-                    ".par.instruction"
-                );
+                const instruction =
+                    document.querySelectorAll(".par.instruction");
                 if (
                     instruction &&
                     (!this.teacherRight || this.editMode == null)
@@ -657,8 +657,8 @@ class FeedbackController
             );
 
             if (!this.teacherRight || this.editMode == null) {
-                const area = this.attrs.questionItems[this.questionItemIndex]
-                    .area;
+                const area =
+                    this.attrs.questionItems[this.questionItemIndex].area;
                 if (area) {
                     this.hideArea(area);
                 } else {
@@ -1003,8 +1003,8 @@ class FeedbackController
      * @returns(string[]) The user's selections to the question item.
      */
     getAnswerFromPlugins(): string[] {
-        const plugins = this.attrs.questionItems[this.questionItemIndex]
-            .pluginNames;
+        const plugins =
+            this.attrs.questionItems[this.questionItemIndex].pluginNames;
         const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
 
         if (timComponent) {
@@ -1058,12 +1058,12 @@ class FeedbackController
                             .getAttribute("task-id")!
                             .split(".")[1];
                         if (name && plugins.includes(name)) {
-                            const plugin = this.vctrl.getTimComponentByName(
-                                name
-                            );
+                            const plugin =
+                                this.vctrl.getTimComponentByName(name);
                             if (plugin) {
                                 if (plugin.getContentArray) {
-                                    const pluginNodeArrayContent = plugin.getContentArray();
+                                    const pluginNodeArrayContent =
+                                        plugin.getContentArray();
                                     if (pluginNodeArrayContent !== undefined) {
                                         let contentString = "";
                                         if (pluginNodeArrayContent.length > 0) {
@@ -1078,7 +1078,8 @@ class FeedbackController
                                         answer.push(name);
                                     }
                                 } else {
-                                    const pluginNodeContent = plugin.getContent();
+                                    const pluginNodeContent =
+                                        plugin.getContent();
                                     if (pluginNodeContent !== undefined) {
                                         values.set(
                                             name,
@@ -1112,8 +1113,8 @@ class FeedbackController
      */
     getSentence(sentence: string[], choices: Map<string, string>): string[] {
         const temp = [];
-        const wordlists = this.attrs.questionItems[this.questionItemIndex]
-            .words;
+        const wordlists =
+            this.attrs.questionItems[this.questionItemIndex].words;
         let i = 0;
         let j = 0;
         for (const [k, v] of choices) {

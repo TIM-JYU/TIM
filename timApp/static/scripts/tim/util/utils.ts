@@ -7,9 +7,9 @@ import humanizeDuration from "humanize-duration";
 import {isLeft} from "fp-ts/lib/Either";
 import {Pos} from "tim/ui/pos";
 import {either} from "fp-ts/Either";
+import {lastValueFrom, Observable} from "rxjs";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
-import {lastValueFrom, Observable} from "rxjs";
 
 const blacklist = new Set([
     "name",
@@ -808,7 +808,7 @@ export function getGroupDesc(group: IGroup) {
 }
 
 export function windowAsAny() {
-    return (window as unknown) as Record<string, unknown>;
+    return window as unknown as Record<string, unknown>;
 }
 
 export function createValidator(

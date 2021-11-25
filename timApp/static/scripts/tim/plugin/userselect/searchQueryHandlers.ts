@@ -86,19 +86,19 @@ export class PrefetchedQueryHandler implements IQueryHandler {
         if (r.ok) {
             const result = r.result;
             this.allUsers = result.users.map((userResult) => ({
-            userResult,
-            searchStrings: splitIntoWordSets(
-                [
-                    userResult.user.name,
-                    userResult.user.real_name,
-                    userResult.user.email,
-                    ...Object.values(userResult.fields).map((field) =>
-                        field?.toString()
-                    ),
-                ].filter(removeEmpty)
-            ),
-        }));
-        this.allFields = result.fieldNames;
+                userResult,
+                searchStrings: splitIntoWordSets(
+                    [
+                        userResult.user.name,
+                        userResult.user.real_name,
+                        userResult.user.email,
+                        ...Object.values(userResult.fields).map((field) =>
+                            field?.toString()
+                        ),
+                    ].filter(removeEmpty)
+                ),
+            }));
+            this.allFields = result.fieldNames;
         }
     }
 

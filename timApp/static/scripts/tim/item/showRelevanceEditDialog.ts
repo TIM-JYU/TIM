@@ -5,6 +5,7 @@ export async function showRelevanceEditDialog(d: IItem) {
     const {RelevanceEditDialogComponent} = await import(
         "./relevance-edit-dialog.component"
     );
-    return await (await angularDialog.open(RelevanceEditDialogComponent, d))
-        .result;
+    return await (
+        await angularDialog.open(RelevanceEditDialogComponent, d)
+    ).result;
 }

@@ -427,9 +427,9 @@ declare module "ace-builds/src-noconflict/ace" {
 
         export interface OptionsProvider {
             setOptions(optList: {[key: string]: any}): void;
-            getOptions(
-                optionNames?: string[] | {[key: string]: any}
-            ): {[key: string]: any};
+            getOptions(optionNames?: string[] | {[key: string]: any}): {
+                [key: string]: any;
+            };
             setOption(name: string, value: any): void;
             getOption(name: string): any;
         }

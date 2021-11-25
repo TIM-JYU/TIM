@@ -85,79 +85,78 @@ export class UserListController implements IController {
             }
         }
 
-        const columns: Array<uiGrid.IColumnDefOf<
-            IUserListEntry
-        >> = withComparatorFilters([
-            {
-                field: "user.real_name",
-                name: "Full name",
-                cellTooltip: true,
-                headerTooltip: true,
-                sortingAlgorithm: (a: string, b: string) =>
-                    a.localeCompare(b, sortLang),
-            },
-            {
-                field: "user.name",
-                name: "Username",
-                cellTooltip: true,
-                headerTooltip: true,
-                maxWidth: 100,
-            },
-            // only include Student # tab if server gave them
-            ...(includeStudentId
-                ? [
-                      {
-                          field: "user.student_id",
-                          name: "Student #",
-                          cellTooltip: true,
-                          headerTooltip: true,
-                          visible: false,
-                          maxWidth: 70,
-                      },
-                  ]
-                : []),
-            {
-                field: "task_count",
-                name: "Tasks",
-                cellTooltip: true,
-                headerTooltip: true,
-                maxWidth: smallFieldWidth,
-            },
-            {
-                field: "task_points",
-                name: "Task points",
-                cellTooltip: true,
-                headerTooltip: true,
-                maxWidth: smallFieldWidth,
-                visible: anyAnnotations,
-                sortingAlgorithm: numericSort,
-            },
-            {
-                field: "velped_task_count",
-                name: "Velped tasks",
-                cellTooltip: true,
-                headerTooltip: true,
-                maxWidth: smallFieldWidth,
-                visible: anyAnnotations,
-            },
-            {
-                field: "velp_points",
-                name: "Velp points",
-                cellTooltip: true,
-                headerTooltip: true,
-                maxWidth: smallFieldWidth,
-                visible: anyAnnotations,
-                sortingAlgorithm: numericSort,
-            },
-            {
-                field: "total_points",
-                name: "Points",
-                cellTooltip: true,
-                headerTooltip: true,
-                maxWidth: smallFieldWidth,
-                sortingAlgorithm: numericSort,
-            },
-        ]);
+        const columns: Array<uiGrid.IColumnDefOf<IUserListEntry>> =
+            withComparatorFilters([
+                {
+                    field: "user.real_name",
+                    name: "Full name",
+                    cellTooltip: true,
+                    headerTooltip: true,
+                    sortingAlgorithm: (a: string, b: string) =>
+                        a.localeCompare(b, sortLang),
+                },
+                {
+                    field: "user.name",
+                    name: "Username",
+                    cellTooltip: true,
+                    headerTooltip: true,
+                    maxWidth: 100,
+                },
+                // only include Student # tab if server gave them
+                ...(includeStudentId
+                    ? [
+                          {
+                              field: "user.student_id",
+                              name: "Student #",
+                              cellTooltip: true,
+                              headerTooltip: true,
+                              visible: false,
+                              maxWidth: 70,
+                          },
+                      ]
+                    : []),
+                {
+                    field: "task_count",
+                    name: "Tasks",
+                    cellTooltip: true,
+                    headerTooltip: true,
+                    maxWidth: smallFieldWidth,
+                },
+                {
+                    field: "task_points",
+                    name: "Task points",
+                    cellTooltip: true,
+                    headerTooltip: true,
+                    maxWidth: smallFieldWidth,
+                    visible: anyAnnotations,
+                    sortingAlgorithm: numericSort,
+                },
+                {
+                    field: "velped_task_count",
+                    name: "Velped tasks",
+                    cellTooltip: true,
+                    headerTooltip: true,
+                    maxWidth: smallFieldWidth,
+                    visible: anyAnnotations,
+                },
+                {
+                    field: "velp_points",
+                    name: "Velp points",
+                    cellTooltip: true,
+                    headerTooltip: true,
+                    maxWidth: smallFieldWidth,
+                    visible: anyAnnotations,
+                    sortingAlgorithm: numericSort,
+                },
+                {
+                    field: "total_points",
+                    name: "Points",
+                    cellTooltip: true,
+                    headerTooltip: true,
+                    maxWidth: smallFieldWidth,
+                    sortingAlgorithm: numericSort,
+                },
+            ]);
         const formMode = this.viewctrl.docSettings.form_mode ?? false;
         this.instantUpdate = formMode || getViewName() === "review";
 
@@ -215,9 +214,8 @@ export class UserListController implements IController {
                         if (oldRowCol && oldRowCol.row === newRowCol.row) {
                             return;
                         }
-                        const unsavedTimComponents = this.viewctrl.checkUnSavedTimComponents(
-                            true
-                        );
+                        const unsavedTimComponents =
+                            this.viewctrl.checkUnSavedTimComponents(true);
                         if (
                             unsavedTimComponents &&
                             !window.confirm(
@@ -300,10 +298,12 @@ export class UserListController implements IController {
                         let iusers: IUser[];
                         iusers = [];
                         if (this.gridApi) {
-                            const selectedUser = this.gridApi.selection.getSelectedRows()[0];
+                            const selectedUser =
+                                this.gridApi.selection.getSelectedRows()[0];
                             iusers.push(selectedUser.user);
 
-                            const visibleRows = this.gridApi.core.getVisibleRows();
+                            const visibleRows =
+                                this.gridApi.core.getVisibleRows();
 
                             for (const row of visibleRows) {
                                 // Create string array of visible item.

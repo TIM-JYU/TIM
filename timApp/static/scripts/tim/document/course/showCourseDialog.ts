@@ -4,13 +4,16 @@ import {ICourseListParams} from "tim/document/course/course-list-dialog.componen
 
 export async function showCourseDialog(d: IItem) {
     const {CourseDialogComponent} = await import("./course-dialog.component");
-    return await (await angularDialog.open(CourseDialogComponent, d)).result;
+    return await (
+        await angularDialog.open(CourseDialogComponent, d)
+    ).result;
 }
 
 export async function showCourseListDialog(d: ICourseListParams) {
     const {CourseListDialogComponent} = await import(
         "./course-list-dialog.component"
     );
-    return await (await angularDialog.open(CourseListDialogComponent, d))
-        .result;
+    return await (
+        await angularDialog.open(CourseListDialogComponent, d)
+    ).result;
 }

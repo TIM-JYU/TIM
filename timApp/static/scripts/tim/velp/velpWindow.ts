@@ -514,7 +514,8 @@ export class VelpWindowController implements IController {
     async handleDefaultVelpGroupIssue() {
         const oldDefaultGroup = this.velpSelection.getDefaultVelpGroup();
 
-        const newDefaultGroup = await this.velpSelection.generateDefaultVelpGroup();
+        const newDefaultGroup =
+            await this.velpSelection.generateDefaultVelpGroup();
         if (newDefaultGroup == null) {
             return;
         }

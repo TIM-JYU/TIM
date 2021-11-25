@@ -28,7 +28,8 @@ export abstract class AngularPluginBase<
         T extends Type<A>
     >
     extends PluginBaseCommon
-    implements OnInit {
+    implements OnInit
+{
     attrsall: Readonly<A>;
     @Input() readonly json!: string;
     @Input() readonly plugintype?: string;
@@ -109,9 +110,7 @@ export abstract class AngularPluginBase<
         url: string,
         params?: Record<string, string | string[]>
     ) {
-        return toPromise(
-            this.http.get<U>(url, {params})
-        );
+        return toPromise(this.http.get<U>(url, {params}));
     }
 
     protected httpGetText(
@@ -132,9 +131,7 @@ export abstract class AngularPluginBase<
         body: JsonValue,
         headers: HttpHeaders = new HttpHeaders()
     ) {
-        return toPromise(
-            this.http.put<U>(url, body, {headers: headers})
-        );
+        return toPromise(this.http.put<U>(url, body, {headers: headers}));
     }
 
     protected async postAnswer<U>(

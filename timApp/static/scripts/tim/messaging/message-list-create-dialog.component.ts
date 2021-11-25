@@ -169,9 +169,8 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
                 tap((n) => {
                     if (!n) {
                         this.nameExists = true;
-                        this.failedRequirements = new Set<
-                            AnnotatedNameRequirements
-                        >(this.rules);
+                        this.failedRequirements =
+                            new Set<AnnotatedNameRequirements>(this.rules);
                     }
                     this.canCreate = false;
                     this.nameValid = true;

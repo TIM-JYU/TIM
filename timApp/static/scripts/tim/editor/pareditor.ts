@@ -589,27 +589,23 @@ ${backTicks}
                         items: [
                             {
                                 name: "Slide break",
-                                title:
-                                    "Break text to start a new slide. In browser, slides scroll horizontally.",
+                                title: "Break text to start a new slide. In browser, slides scroll horizontally.",
                                 func: () => this.editor!.ruleClicked(false),
                             },
                             {
                                 name: "Subslide break",
-                                title:
-                                    "Break text to start a subslide within the same slide group. In browser, subslides scroll vertically.",
+                                title: "Break text to start a subslide within the same slide group. In browser, subslides scroll vertically.",
                                 func: () => this.editor!.ruleClicked(true),
                             },
                             {
                                 name: "Slide fragment",
-                                title:
-                                    "Content inside the fragment will be hidden and shown when next is clicked in slide view",
+                                title: "Content inside the fragment will be hidden and shown when next is clicked in slide view",
                                 func: () =>
                                     this.editor!.surroundClicked("§§", "§§"),
                             },
                             {
                                 name: "Fragment block",
-                                title:
-                                    "Content inside will show as a fragment and may contain inner slide fragments",
+                                title: "Content inside will show as a fragment and may contain inner slide fragments",
                                 func: () =>
                                     this.editor!.surroundClicked("<§", "§>"),
                             },
@@ -626,20 +622,17 @@ ${backTicks}
                         })),
                     },
                     {
-                        title:
-                            "Break text to start a new paragraph (Shift-Enter)",
+                        title: "Break text to start a new paragraph (Shift-Enter)",
                         func: () => this.editor!.paragraphClicked(),
                         name: "Paragraph break",
                     },
                     {
-                        title:
-                            "Forces line to end at cursor position (Ctrl-Enter)",
+                        title: "Forces line to end at cursor position (Ctrl-Enter)",
                         func: () => this.editor!.endLineClicked(),
                         name: "End line",
                     },
                     {
-                        title:
-                            "Creates a comment block or sets the line to a comment (Ctrl-Y)",
+                        title: "Creates a comment block or sets the line to a comment (Ctrl-Y)",
                         func: () => this.editor!.commentClicked(),
                         name: "Comment",
                     },
@@ -803,8 +796,7 @@ ${backTicks}
                         name: "Task summary",
                     },
                     {
-                        title:
-                            "Update document automatically at this interval (seconds)",
+                        title: "Update document automatically at this interval (seconds)",
                         func: () =>
                             this.editor!.insertTemplate("live_updates: 5\n"),
                         name: "Live update",

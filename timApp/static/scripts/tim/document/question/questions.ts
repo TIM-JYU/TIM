@@ -19,7 +19,8 @@ export class QuestionHandler {
         this.sc = sc;
         this.viewctrl = view;
         if (view.lectureCtrl.lectureSettings.lectureMode) {
-            this.noQuestionAutoNumbering = documentglobals().noQuestionAutoNumbering;
+            this.noQuestionAutoNumbering =
+                documentglobals().noQuestionAutoNumbering;
         }
     }
 

@@ -8,8 +8,6 @@ import {DocumentPart} from "tim/document/structure/documentPart";
  * its target {@link Paragraph}. Otherwise, returns the argument unchanged.
  * @param ctx The {@link DocPart} to transform.
  */
-export function maybeDeref(
-    ctx: DocumentPart
-): Paragraph | Area {
+export function maybeDeref(ctx: DocumentPart): Paragraph | Area {
     return ctx instanceof ReferenceParagraph ? ctx.target : ctx;
 }

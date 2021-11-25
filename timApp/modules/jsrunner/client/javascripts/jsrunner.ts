@@ -28,7 +28,8 @@ class JsrunnerController
         t.TypeOf<typeof JsrunnerAll>,
         typeof JsrunnerAll
     >
-    implements IJsRunner {
+    implements IJsRunner
+{
     private error?: IError;
     private isRunning = false;
     private output: string = "";

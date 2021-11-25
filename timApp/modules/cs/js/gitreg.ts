@@ -81,9 +81,11 @@ export class GitRegComponent extends CsController {
         const data: Record<string, string | undefined> = {};
 
         for (const field of this.askFields) {
-            data[field] = ((event.target as HTMLFormElement)[field] as
-                | HTMLInputElement
-                | undefined)?.value;
+            data[field] = (
+                (event.target as HTMLFormElement)[field] as
+                    | HTMLInputElement
+                    | undefined
+            )?.value;
         }
 
         const params: IRunRequest & {
