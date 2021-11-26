@@ -171,10 +171,12 @@ export abstract class AngularPluginBase<
                 error: result.result.error,
                 feedback: result.result.feedback,
                 topfeedback: result.result.topfeedback,
+                valid: result.result.valid,
             });
         } else {
             handleAnswerResponse(dt, {
                 savedNew: false,
+                valid: false,
                 error: result.result.error.error,
             });
         }

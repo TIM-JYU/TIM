@@ -983,6 +983,7 @@ def post_answer_impl(
 
         if (not is_teacher and should_save_answer) or ("savedata" in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
+            result["valid"] = is_valid
             if vr.is_expired:
                 fixed_time = (
                     receive_time

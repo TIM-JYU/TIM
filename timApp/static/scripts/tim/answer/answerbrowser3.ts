@@ -379,6 +379,7 @@ export interface IAnswerSaveEvent {
     error?: string;
     topfeedback?: string;
     feedback?: string;
+    valid: boolean;
 }
 
 type AnswerLoadCallback = (a: IAnswer) => void;
@@ -426,7 +427,10 @@ export class AnswerBrowserController
     private feedback?: string;
     private taskInfo: ITaskInfo | undefined;
     private points: number | undefined;
-    private loadedAnswer: {id: number | undefined} = {id: undefined};
+    private loadedAnswer: {
+        id: number | undefined;
+        valid: boolean | undefined;
+    } = {id: undefined, valid: undefined};
     private answerId?: Binding<number, "<?">;
     private loader!: PluginLoaderCtrl;
     private reviewHtml?: string;
@@ -452,6 +456,7 @@ export class AnswerBrowserController
         if (args.savedNew || this.saveTeacher) {
             if (args.savedNew) {
                 this.loadedAnswer.id = args.savedNew;
+                this.loadedAnswer.valid = args.valid;
             }
             this.review = false;
             this.oldreview = false;
@@ -507,6 +512,7 @@ export class AnswerBrowserController
             this.user = Users.getCurrent();
         }
         this.loadedAnswer.id = this.getPluginHtmlAnswerId();
+        this.loadedAnswer.valid = true;
 
         // TODO: This condition is inaccurate because we don't really know who the initially loaded user is.
         if (
@@ -801,11 +807,15 @@ export class AnswerBrowserController
             this.oldreview = this.review;
 
             if (!changeReviewOnly) {
-                if (this.loadedAnswer.id != this.selectedAnswer?.id) {
+                if (
+                    this.loadedAnswer.id != this.selectedAnswer?.id &&
+                    this.loadedAnswer.valid
+                ) {
                     this.showFeedback("");
                     this.loader.showFeedback("");
                 }
                 this.loadedAnswer.id = this.selectedAnswer?.id;
+                this.loadedAnswer.valid = this.selectedAnswer?.valid;
                 // Plugins with an iframe usually set their own callback for loading an answer so that the iframe doesn't
                 // have to be fully reloaded every time.
                 if (this.answerLoader && this.selectedAnswer) {
