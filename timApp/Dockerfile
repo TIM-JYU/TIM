@@ -167,7 +167,7 @@ python3-saml \
 pytz \
 recommonmark \
 responses \
-selenium==4.0.0b4 \
+selenium \
 sphinx \
 sqlalchemy\<1.4.0 \
 sqlalchemy-utils \
