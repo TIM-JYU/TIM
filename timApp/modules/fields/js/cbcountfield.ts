@@ -181,6 +181,7 @@ class CbcountfieldController
             }
         }
         this.initialValue = this.userword;
+        this.checkDisabled();
         return {ok: ok, message: message};
     }
 
@@ -219,6 +220,7 @@ class CbcountfieldController
         this.userword = CbcountfieldController.makeBoolean(
             this.attrs.initword ?? ""
         );
+        this.checkDisabled();
         this.initialValue = this.userword;
         this.result = undefined;
     }
