@@ -803,111 +803,115 @@ class User(db.Model, TimeStampMixin, SCIMEntity):
         :param remove: If True, removes emails not present in emails list.
         """
 
-        # Get emails for the current origin
-        # We use self.contacts for now because the only contacts we save are email contacts and because it allows
-        # to call this method multiple times within the same transaction
-        current_email_contacts = [
-            uc
-            for uc in self.contacts
-            if uc.channel == Channel.EMAIL and uc.contact_origin == origin
-        ]
-        current_email_dict: dict[str, UserContact] = {
-            uc.contact: uc for uc in current_email_contacts
-        }
-
-        new_emails = set(emails)
-        current_emails = {uc.contact for uc in current_email_contacts}
-
-        to_add = new_emails - current_emails if add else set()
-        to_remove = current_emails - new_emails if remove else set()
-        not_removed = set() if remove else current_emails - new_emails
-        new_email_contacts: dict[str, UserContact] = {
-            email: current_email_dict[email]
-            for email in ((new_emails & current_emails) | not_removed)
-        }
-
-        change_primary_email = force_primary or (
-            self.primary_email_contact is None
-            or (
-                self.primary_email_contact.contact_origin == origin
-                and self.primary_email_contact.contact in to_remove
-            )
-            or (origin == ContactOrigin.Custom and can_update_primary)
-        )
-
-        if to_add:
-            verified = force_verify or origin not in NO_AUTO_VERIFY_ORIGINS
-            # Resolve all emails to add that don't belong to the current origin
-            added_email_contacts = [
+        with db.session.no_autoflush:
+            # Get emails for the current origin
+            # We use self.contacts for now because the only contacts we save are email contacts and because it allows
+            # to call this method multiple times within the same transaction
+            current_email_contacts = [
                 uc
                 for uc in self.contacts
-                if uc.channel == Channel.EMAIL
-                and uc.contact_origin != origin
-                and uc.contact in to_add
+                if uc.channel == Channel.EMAIL and uc.contact_origin == origin
             ]
-            added_email_contacts_set = set(uc.contact for uc in added_email_contacts)
-            other_origin_email_contacts: dict[str, UserContact] = {
-                uc.contact: uc for uc in added_email_contacts
+            current_email_dict: dict[str, UserContact] = {
+                uc.contact: uc for uc in current_email_contacts
             }
 
-            # If this is a new integration and actual new emails are added (and not just updated),
-            # we can update the primary email
-            change_primary_email = change_primary_email or (
-                can_update_primary
-                and origin != ContactOrigin.Custom
-                and not current_email_contacts
-                and len(to_add - added_email_contacts_set) > 0
+            new_emails = set(emails)
+            current_emails = {uc.contact for uc in current_email_contacts}
+
+            to_add = new_emails - current_emails if add else set()
+            to_remove = current_emails - new_emails if remove else set()
+            not_removed = set() if remove else current_emails - new_emails
+            new_email_contacts: dict[str, UserContact] = {
+                email: current_email_dict[email]
+                for email in ((new_emails & current_emails) | not_removed)
+            }
+
+            change_primary_email = force_primary or (
+                self.primary_email_contact is None
+                or (
+                    self.primary_email_contact.contact_origin == origin
+                    and self.primary_email_contact.contact in to_remove
+                )
+                or (origin == ContactOrigin.Custom and can_update_primary)
             )
 
-            for email in to_add:
-                # If the email is already registered to the user, adjust its origin
-                if email in other_origin_email_contacts:
-                    uc = other_origin_email_contacts[email]
-                    uc.contact_origin = origin
-                else:
-                    uc = UserContact(
-                        channel=Channel.EMAIL,
-                        verified=verified,
-                        contact_origin=origin,
-                        contact=email,
-                    )
-                    self.contacts.append(uc)
-                new_email_contacts[email] = uc
+            if to_add:
+                verified = force_verify or origin not in NO_AUTO_VERIFY_ORIGINS
+                # Resolve all emails to add that don't belong to the current origin
+                added_email_contacts = [
+                    uc
+                    for uc in self.contacts
+                    if uc.channel == Channel.EMAIL
+                    and uc.contact_origin != origin
+                    and uc.contact in to_add
+                ]
+                added_email_contacts_set = set(
+                    uc.contact for uc in added_email_contacts
+                )
+                other_origin_email_contacts: dict[str, UserContact] = {
+                    uc.contact: uc for uc in added_email_contacts
+                }
 
-        for email in to_remove:
-            uc = current_email_dict[email]
-            db.session.delete(uc)
-            self.contacts.remove(uc)
-
-        if change_primary_email:
-            # Ensure no email is primary
-            if self.primary_email_contact:
-                self.primary_email_contact.primary = None
-
-            if emails:
-                new_primary = new_email_contacts[emails[0]]
-            elif new_email_contacts:
-                new_primary = next(uc for uc in new_email_contacts.values())
-            else:
-                new_primary = next(
-                    (uc for uc in self.contacts if uc.channel == Channel.EMAIL), None
+                # If this is a new integration and actual new emails are added (and not just updated),
+                # we can update the primary email
+                change_primary_email = change_primary_email or (
+                    can_update_primary
+                    and origin != ContactOrigin.Custom
+                    and not current_email_contacts
+                    and len(to_add - added_email_contacts_set) > 0
                 )
 
-                if not new_primary:
-                    # Special case: this update operation ends up deleting all emails of the user
-                    # This is not desired in most cases, so we will have to adjust by taking one of the deleted emails
-                    # and re-adding it as a Custom email
-                    new_primary = UserContact(
-                        user=self,
-                        contact_origin=ContactOrigin.Custom,
-                        verified=True,
-                        contact=next(current_email_contacts).contact,
-                    )
-                    self.contacts.append(new_primary)
+                for email in to_add:
+                    # If the email is already registered to the user, adjust its origin
+                    if email in other_origin_email_contacts:
+                        uc = other_origin_email_contacts[email]
+                        uc.contact_origin = origin
+                    else:
+                        uc = UserContact(
+                            channel=Channel.EMAIL,
+                            verified=verified,
+                            contact_origin=origin,
+                            contact=email,
+                        )
+                        self.contacts.append(uc)
+                    new_email_contacts[email] = uc
 
-            new_primary.primary = PrimaryContact.true
-            # self.primary_email_contact = new_primary
-            self._email = new_primary.contact
+            for email in to_remove:
+                uc = current_email_dict[email]
+                db.session.delete(uc)
+                self.contacts.remove(uc)
+
+            if change_primary_email:
+                # Ensure no email is primary
+                if self.primary_email_contact:
+                    self.primary_email_contact.primary = None
+
+                if emails:
+                    new_primary = new_email_contacts[emails[0]]
+                elif new_email_contacts:
+                    new_primary = next(uc for uc in new_email_contacts.values())
+                else:
+                    new_primary = next(
+                        (uc for uc in self.contacts if uc.channel == Channel.EMAIL),
+                        None,
+                    )
+
+                    if not new_primary:
+                        # Special case: this update operation ends up deleting all emails of the user
+                        # This is not desired in most cases, so we will have to adjust by taking one of the deleted emails
+                        # and re-adding it as a Custom email
+                        new_primary = UserContact(
+                            user=self,
+                            contact_origin=ContactOrigin.Custom,
+                            verified=True,
+                            contact=next(current_email_contacts).contact,
+                        )
+                        self.contacts.append(new_primary)
+
+                new_primary.primary = PrimaryContact.true
+                # self.primary_email_contact = new_primary
+                self._email = new_primary.contact
 
     def set_unique_codes(self, codes: list[SchacPersonalUniqueCode]):
         for c in codes:
