@@ -379,7 +379,7 @@ export interface IAnswerSaveEvent {
     error?: string;
     topfeedback?: string;
     feedback?: string;
-    valid: boolean;
+    valid?: boolean;
 }
 
 type AnswerLoadCallback = (a: IAnswer) => void;
