@@ -468,7 +468,15 @@ export class AnswerBrowserController
             ParCompiler.processAllMathDelayed(this.loader.getPluginElement());
         }
         if (args.error) {
-            this.alerts.push({msg: args.error, type: "warning"});
+            const markup = this.pluginMarkup();
+            let displayAlert = true;
+            if (markup?.warningFilter) {
+                const pattern = new RegExp(markup.warningFilter, "i");
+                displayAlert = !pattern.test(args.error);
+            }
+            if (displayAlert) {
+                this.alerts.push({msg: args.error, type: "warning"});
+            }
         }
         this.showFeedback(args.topfeedback);
         this.loader.showFeedback(args.feedback);

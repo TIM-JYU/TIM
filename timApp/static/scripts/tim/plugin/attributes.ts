@@ -40,6 +40,7 @@ export const GenericPluginMarkup = t.partial({
     useCurrentUser: t.boolean,
     connectionErrorMessage: nullable(t.string),
     answerBrowser: nullable(AnswerBrowserSettings),
+    warningFilter: nullable(t.string),
 });
 
 export const Info = nullable(
