@@ -1066,6 +1066,8 @@ def post_answer_impl(
             if noupdate:
                 result["savedNew"] = None
 
+            # Validity info can be different from error (e.g. answer can be valid but error is given by postprogram)
+            result["valid"] = is_valid
             if not is_valid:
                 result["error"] = explanation
         elif save_teacher:

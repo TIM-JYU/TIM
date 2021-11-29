@@ -118,6 +118,7 @@ timApp.config([
                             feedback: resp.data.feedback,
                             topfeedback: resp.data.topfeedback,
                             savedNew: resp.data.savedNew,
+                            valid: resp.data.valid,
                         });
                         return response;
                     },
@@ -134,6 +135,7 @@ timApp.config([
                         handleAnswerResponse(taskIdFull, {
                             error: resp.data.error,
                             savedNew: false,
+                            valid: false,
                         });
                         return $q.reject(response);
                     },

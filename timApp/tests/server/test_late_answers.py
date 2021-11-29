@@ -19,7 +19,9 @@ class LateAnswersTest(TimRouteTest):
         self.login_test2()
         a = self.post_answer("textfield", f"{d.id}.t", user_input={"c": "x"})
         err = "Your view access to this document has expired, so this answer was saved but marked as invalid."
-        self.assertEqual({"error": err, "savedNew": 1, "web": {"result": "saved"}}, a)
+        self.assertEqual(
+            {"error": err, "savedNew": 1, "valid": False, "web": {"result": "saved"}}, a
+        )
         self.test_user_2.grant_access(
             d, AccessType.view, accessible_to=get_current_time() - timedelta(minutes=5)
         )
@@ -31,7 +33,9 @@ class LateAnswersTest(TimRouteTest):
             {"answer_grace_period": 6, "answer_submit_time_tolerance": 0}
         )
         a = self.post_answer("textfield", f"{d.id}.t", user_input={"c": "z"})
-        self.assertEqual({"error": err, "savedNew": 2, "web": {"result": "saved"}}, a)
+        self.assertEqual(
+            {"error": err, "savedNew": 2, "valid": False, "web": {"result": "saved"}}, a
+        )
         d.document.set_settings({"answer_grace_period": "x"})
         self.post_answer(
             "textfield", f"{d.id}.t", user_input={"c": "x"}, expect_status=403
@@ -43,4 +47,4 @@ class LateAnswersTest(TimRouteTest):
         db.session.commit()
         d.document.set_settings({"answer_submit_time_tolerance": 5000})
         a = self.post_answer("textfield", f"{d.id}.t", user_input={"c": "x"})
-        self.assertEqual({"savedNew": 3, "web": {"result": "saved"}}, a)
+        self.assertEqual({"savedNew": 3, "valid": True, "web": {"result": "saved"}}, a)

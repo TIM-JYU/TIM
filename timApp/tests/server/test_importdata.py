@@ -151,28 +151,32 @@ joinProperty: studentID(jyu.fi)
         imp_200("testuser1;a;x\ntestuser1;b;y", field_result(unchanged=2))
         imp_200(
             "testuser1;x;x",
-            expect={"savedNew": 3, "web": field_result(unchanged=1)},
+            expect={"savedNew": 3, "valid": True, "web": field_result(unchanged=1)},
             fields=["a"],
         )
         imp_200(
             "testuser1;x;x",
-            expect={"savedNew": 5, "web": field_result(changed=1, unchanged=1)},
+            expect={
+                "savedNew": 5,
+                "valid": True,
+                "web": field_result(changed=1, unchanged=1),
+            },
             fields=["a", "b"],
         )
         imp_200(
             "testuser1;x",
-            expect={"savedNew": None, "web": field_result(unchanged=1)},
+            expect={"savedNew": None, "valid": True, "web": field_result(unchanged=1)},
             fields=["a", "b"],
         )
         imp_200(
             "testuser1",
-            expect={"savedNew": None, "web": field_result()},
+            expect={"savedNew": None, "valid": True, "web": field_result()},
             fields=["a", "b"],
         )
         imp_200("testuser1", field_result(missing_users=["x", "a"]), task="t2")
         imp_200(
             "testuser1;x;1;y;2\ntestuser1;z;3\ntestuser1",
-            expect={"savedNew": 8, "web": field_result(changed=2)},
+            expect={"savedNew": 8, "valid": True, "web": field_result(changed=2)},
             fields=["x=a", "y=b"],
         )
         imp_200("x;a;1", field_result(missing_users=["x", "u"]), task="t3")
