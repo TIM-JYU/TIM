@@ -511,6 +511,8 @@ def get_recipient_users(recipients: list[str]) -> list[UserGroup]:
     """
     users = set()
     for rcpt in recipients:
+        if not rcpt:
+            continue
         if user := User.get_by_email(rcpt):
             users.add(UserGroup.get_by_name(user.name))
         if msg_list := MessageListModel.get_by_email(rcpt):

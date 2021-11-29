@@ -215,6 +215,10 @@ export class TimMessageSendComponent {
     @Input()
     docId?: number;
 
+    get recipients() {
+        return this.recipientList.trim();
+    }
+
     constructor(private http: HttpClient) {}
 
     /**
@@ -303,7 +307,7 @@ export class TimMessageSendComponent {
         }
         // TODO: iPad do not like ;
         if (this.email && this.defaultEmail) {
-            let addrs = this.recipientList.replace(/\n/g, ",");
+            let addrs = this.recipients.replace(/\n/g, ",");
             let bcc = "";
             if (this.emailbcc) {
                 bcc = addrs;
@@ -342,7 +346,7 @@ export class TimMessageSendComponent {
         const response = await to2(
             this.http
                 .post<string[]>(url, {
-                    rcpt: this.recipientList.replace(/\n/g, ";"),
+                    rcpt: this.recipients.replace(/\n/g, ";"),
                     subject: this.messageSubject,
                     msg: this.messageBody,
                     bccme: this.emailbccme,
@@ -362,7 +366,7 @@ export class TimMessageSendComponent {
         const message = {
             messageBody: this.messageBody,
             messageSubject: this.messageSubject,
-            recipients: this.recipientList.split(/\n/g),
+            recipients: this.recipients.split(/\n/g),
         };
         return to2(
             this.http
