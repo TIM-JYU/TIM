@@ -983,7 +983,6 @@ def post_answer_impl(
 
         if (not is_teacher and should_save_answer) or ("savedata" in jsonresp):
             is_valid, explanation = plugin.is_answer_valid(answerinfo.count, tim_info)
-            result["valid"] = is_valid
             if vr.is_expired:
                 fixed_time = (
                     receive_time
@@ -1067,6 +1066,8 @@ def post_answer_impl(
             if noupdate:
                 result["savedNew"] = None
 
+            # Validity info can be different from error (e.g. answer can be valid but error is given by postprogram)
+            result["valid"] = is_valid
             if not is_valid:
                 result["error"] = explanation
         elif save_teacher:

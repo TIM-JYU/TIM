@@ -400,6 +400,7 @@ rows:
         self.assertEqual(
             {
                 "savedNew": ans_id,
+                "valid": True,
                 "web": {
                     "markup": {
                         "answerFieldType": "radio",

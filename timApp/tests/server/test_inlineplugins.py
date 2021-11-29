@@ -53,7 +53,9 @@ Hi {#t3#} $x$
             user_input={"userword": "aaaaaa"},
         )
         aid = a["savedNew"]
-        self.assertEqual({"savedNew": aid, "web": {"result": "saved"}}, a)
+        self.assertEqual(
+            {"savedNew": aid, "valid": True, "web": {"result": "saved"}}, a
+        )
         self.assertIsInstance(aid, int)
 
         r = self.get(d.url, as_tree=True)

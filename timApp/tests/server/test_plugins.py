@@ -2106,15 +2106,21 @@ a: b
         """
         )
         a = self.post_answer("rbfield", f"{d.id}.f", user_input={"c": "0"})
-        self.assertEqual({"web": {"result": "saved"}, "savedNew": None}, a)
+        self.assertEqual(
+            {"web": {"result": "saved"}, "valid": True, "savedNew": None}, a
+        )
         a = self.post_answer("rbfield", f"{d.id}.f", user_input={"c": "1"})
         self.assertIsInstance(a["savedNew"], int)
         a = self.post_answer("rbfield", f"{d.id}.f", user_input={"c": "1"})
-        self.assertEqual({"web": {"result": "saved"}, "savedNew": None}, a)
+        self.assertEqual(
+            {"web": {"result": "saved"}, "valid": True, "savedNew": None}, a
+        )
         a = self.post_answer("rbfield", f"{d.id}.f", user_input={"c": "0"})
         self.assertIsInstance(a["savedNew"], int)
         a = self.post_answer("rbfield", f"{d.id}.f", user_input={"c": "0"})
-        self.assertEqual({"web": {"result": "saved"}, "savedNew": None}, a)
+        self.assertEqual(
+            {"web": {"result": "saved"}, "valid": True, "savedNew": None}, a
+        )
 
     def test_pointsrule_plugin_specific(self):
         self.login_test1()
