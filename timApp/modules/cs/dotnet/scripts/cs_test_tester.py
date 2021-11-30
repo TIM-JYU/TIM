@@ -86,7 +86,7 @@ def count_points(lines, test):
                 result = "Failed"
             expl = tst.get("expl", "???")
             pts = tst.get("pts", 1)
-            line = [s for s in lines if s.find(name) >= 0]
+            line = [s for s in lines if s.find(name + "xxxx") >= 0]
             if line:
                 line = line[0]
                 rst = 'result="'
