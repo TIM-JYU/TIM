@@ -229,11 +229,11 @@ actions:                 # Actions to apply for the selected user
     #    type: view               # Permission type. Allowed values: view, edit, teacher, manage, see_answers, owner, copy
     #    time:                    # Duration of the permission
     #      type: always                            # Permission type. Allowed values: always, range, duration
-    #      #duration: P30M                         # Duration in ISO 8601 format (for "duration" type)
-    #      #to: 2021-04-23T18:00:00.000Z           # When the permission ends
-    #      #from: 2021-04-23T16:00:00.000Z         # When the permission starts
-    #      #durationTo: 2021-04-23T18:00:00.000Z   # When the duration permission can be asked for
-    #      #durationFrom: 2021-04-23T16:00:00.000Z # When the duration permission ends
+    #      duration: P30M                         # Duration in ISO 8601 format (for "duration" type)
+    #      to: 2021-04-23T18:00:00.000Z           # When the permission ends
+    #      from: 2021-04-23T16:00:00.000Z         # When the permission starts
+    #      durationTo: 2021-04-23T18:00:00.000Z   # When the duration permission can be asked for
+    #      durationFrom: 2021-04-23T16:00:00.000Z # When the duration permission ends
     #    confirm: false          # Does the permission require extra confirmation? 
 
     #removePermission:          # Remove permissions from documents
