@@ -63,6 +63,7 @@ class DocSettingTypes:
     smart_punct: bool
     slide_themes: list[str]
     slide_size: tuple[int, int]
+    allow_url_permission_edits: bool
 
 
 doc_setting_field_map: dict[str, Field] = {
@@ -483,6 +484,9 @@ class DocSettings:
 
     def slide_size(self) -> tuple[int, int]:
         return self.get_setting_or_default("slide_size", (960, 700))
+
+    def allow_url_permission_edits(self) -> bool:
+        return self.get_setting_or_default("allow_url_permission_edits", False)
 
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:

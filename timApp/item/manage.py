@@ -232,6 +232,40 @@ class PermissionMassEditModel(PermissionEditModel):
     action: EditOption = field(metadata={"by_value": True})
 
 
+@manage_page.get("/permissions/add/<int:doc_id>/<username>")
+def add_permission_basic(
+    doc_id: int, username: str, type: str, duration: int
+) -> Response:
+    if type != "view":
+        raise RouteException("Only 'view' is allowed to prevent misuse")
+
+    i = get_item_or_abort(doc_id)
+    settings = i.document.get_settings()
+    if not settings.allow_url_permission_edits():
+        raise AccessDenied(
+            "The document permissions cannot be edited via URLs. Add `allow_url_permission_edits: true` to document settings to allow this."
+        )
+
+    verify_permission_edit_access(i, AccessType.view)
+    accs = add_perm(
+        PermissionEditModel(
+            type=AccessType.view,
+            groups=[username],
+            time=TimeOpt(
+                type=TimeType.duration,
+                duration=Duration(hours=duration),
+            ),
+            confirm=False,
+        ),
+        i,
+    )
+    if accs:
+        a = accs[0]
+        log_right(f"added {a.info_str} for {username} in {i.path}")
+        db.session.commit()
+    return ok_response()
+
+
 @manage_page.put("/permissions/add", own_model=True)
 @use_model(PermissionSingleEditModel)
 def add_permission(m: PermissionSingleEditModel):
