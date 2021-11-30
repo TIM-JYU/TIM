@@ -601,28 +601,28 @@ def apply_permission_actions(
 
     for to_confirm in confirm:
         doc_entry = doc_entries[to_confirm.doc_path]
-        ba: Optional[BlockAccess] = BlockAccess.query.filter_by(
+        ba_confirm: Optional[BlockAccess] = BlockAccess.query.filter_by(
             type=to_confirm.type.value,
             block_id=doc_entry.block.id,
             usergroup_id=user_group.id,
         ).first()
-        if ba and ba.require_confirm:
-            ba.do_confirm()
+        if ba_confirm and ba_confirm.require_confirm:
+            ba_confirm.do_confirm()
             update_messages.append(
-                f"confirmed {ba.info_str} for {user_group.name} in {doc_entry.path}"
+                f"confirmed {ba_confirm.info_str} for {user_group.name} in {doc_entry.path}"
             )
 
     for to_change in change_time:
         doc_entry = doc_entries[to_change.doc_path]
-        ba: Optional[BlockAccess] = BlockAccess.query.filter_by(
+        ba_change: Optional[BlockAccess] = BlockAccess.query.filter_by(
             type=to_change.type.value,
             block_id=doc_entry.block.id,
             usergroup_id=user_group.id,
         ).first()
-        if ba and ba.accessible_to is not None:
-            ba.accessible_to += timedelta(minutes=to_change.minutes)
+        if ba_change and ba_change.accessible_to is not None:
+            ba_change.accessible_to += timedelta(minutes=to_change.minutes)
             update_messages.append(
-                f"adjusted {ba.info_str} for {user_group.name} in {doc_entry.path} by {to_change.minutes} minutes"
+                f"adjusted {ba_change.info_str} for {user_group.name} in {doc_entry.path} by {to_change.minutes} minutes"
             )
 
     return update_messages
