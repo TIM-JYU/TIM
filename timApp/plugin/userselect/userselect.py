@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, Union, Literal, Callable
 
 from flask import render_template_string, Response, current_app
@@ -88,6 +88,11 @@ class ConfirmPermission(PermissionActionBase):
 
 
 @dataclass
+class ChangePermissionTime(PermissionActionBase):
+    minutes: float
+
+
+@dataclass
 class SetTaskValueAction:
     taskId: str
     value: str
@@ -135,6 +140,7 @@ class ActionCollection:
     addPermission: list[AddPermission] = field(default_factory=list)
     confirmPermission: list[ConfirmPermission] = field(default_factory=list)
     removePermission: list[RemovePermission] = field(default_factory=list)
+    changePermissionTime: list[ChangePermissionTime] = field(default_factory=list)
     distributeRight: list[DistributeRightAction] = field(default_factory=list)
     setValue: list[SetTaskValueAction] = field(default_factory=list)
     addToGroups: list[str] = field(default_factory=list)
@@ -247,9 +253,14 @@ actions:                 # Actions to apply for the selected user
     #  - doc_path: some/doc/path  # Target document path
     #    type: view               # Permission type. Allowed values: view, edit, teacher, manage, see_answers, owner, copy
 
-    #removePermission:          # Remove permissions from documents
-    #  - doc_path: users/admin-admin/kohde    # Document, from which to remove the permission
-    #    type: view                           # Type of permission to remove: view, edit, teacher, manage, see_answers, owner, copy
+    #removePermission:              # Remove permissions from documents
+    #  - doc_path: some/doc/path    # Document from which to remove the permission
+    #    type: view                 # Type of permission to remove: view, edit, teacher, manage, see_answers, owner, copy
+
+    #changePermissionTime:          # Change duration of an active user permission
+    #  - doc_path: some/doc/path    # Document from which to edit the permission time
+    #    type: view                 # Type of permission to change: view, edit, teacher, manage, see_answers, owner, copy
+    #    minutes: 10                # By how many minutes to adjust the permission. Positive values add time, negative remove.
 
     #setValue:                   # Set value to a field or task
     #  - taskId: 1.sometask         # Task or field to which to set the value
@@ -542,6 +553,7 @@ def apply_permission_actions(
     add: list[AddPermission],
     remove: list[RemovePermission],
     confirm: list[ConfirmPermission],
+    change_time: list[ChangePermissionTime],
 ) -> list[str]:
     doc_entries = {}
     update_messages = []
@@ -550,6 +562,7 @@ def apply_permission_actions(
         *add,
         *remove,
         *confirm,
+        *change_time,
     ]
 
     # Verify first that all documents can be accessed and permissions edited + cache doc entries
@@ -597,6 +610,19 @@ def apply_permission_actions(
             ba.do_confirm()
             update_messages.append(
                 f"confirmed {ba.info_str} for {user_group.name} in {doc_entry.path}"
+            )
+
+    for to_change in change_time:
+        doc_entry = doc_entries[to_change.doc_path]
+        ba: Optional[BlockAccess] = BlockAccess.query.filter_by(
+            type=to_change.type.value,
+            block_id=doc_entry.block.id,
+            usergroup_id=user_group.id,
+        ).first()
+        if ba and ba.accessible_to is not None:
+            ba.accessible_to += timedelta(minutes=to_change.minutes)
+            update_messages.append(
+                f"adjusted {ba.info_str} for {user_group.name} in {doc_entry.path} by {to_change.minutes} minutes"
             )
 
     return update_messages
@@ -667,6 +693,7 @@ def apply(
         model.actions.addPermission,
         model.actions.removePermission,
         model.actions.confirmPermission,
+        model.actions.changePermissionTime,
     )
     apply_field_actions(user_acc, cur_user, model.actions.setValue)
     right_dist_errors = apply_dist_right_actions(
