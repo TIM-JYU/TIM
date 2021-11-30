@@ -3,11 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Iterable, Any
 
 from jinja2 import TemplateSyntaxError
 from jinja2.sandbox import SandboxedEnvironment
 from lxml import html, etree
+from sqlalchemy.orm import load_only, lazyload
 
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext, default_view_ctx
@@ -350,6 +351,33 @@ def fmt(x, f: str):
     return format(x, f)
 
 
+def get_document_id(doc_path: Any) -> int:
+    from timApp.document.docentry import DocEntry
+
+    if not isinstance(doc_path, str):
+        return 0
+    doc = DocEntry.find_by_path(
+        doc_path, docentry_load_opts=[load_only(DocEntry.id), lazyload(DocEntry._block)]
+    )
+    return doc.id if doc else 0
+
+
+def get_document_path(doc_id: Any) -> str:
+    from timApp.document.docentry import DocEntry
+
+    if isinstance(doc_id, int):
+        doc_id_num = int(doc_id)
+    elif isinstance(doc_id, str):
+        doc_id_num = int(doc_id)
+    else:
+        return ""
+    doc = DocEntry.find_by_id(
+        doc_id_num,
+        docentry_load_opts=[load_only(DocEntry.name), lazyload(DocEntry._block)],
+    )
+    return doc.path if doc else ""
+
+
 tim_filters = {
     "Pz": Pz,
     "gfields": genfields,
@@ -364,6 +392,8 @@ tim_filters = {
     "postinc": postinc,
     "belongs": belongs_placeholder,
     "fmt": fmt,
+    "tim_doc_id": get_document_id,
+    "tim_doc_path": get_document_path,
 }
 
 
