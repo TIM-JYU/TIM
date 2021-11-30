@@ -392,8 +392,8 @@ tim_filters = {
     "postinc": postinc,
     "belongs": belongs_placeholder,
     "fmt": fmt,
-    "tim_doc_id": get_document_id,
-    "tim_doc_path": get_document_path,
+    "docid": get_document_id,
+    "docpath": get_document_path,
 }
 
 
