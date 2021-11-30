@@ -130,7 +130,7 @@ class BlockAccess(db.Model):
         attrs = ",".join(r)
         return f"{self.access_type.name}({attrs})"
 
-    def do_confirm(self):
+    def do_confirm(self) -> None:
         do_confirm(self, get_current_time())
 
     def __hash__(self):
