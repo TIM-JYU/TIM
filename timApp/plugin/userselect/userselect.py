@@ -7,6 +7,7 @@ from flask import render_template_string, Response, current_app
 from timApp.answer.routes import save_fields, FieldSaveRequest, FieldSaveUserEntry
 from timApp.auth.accesshelper import verify_logged_in, verify_view_access
 from timApp.auth.accesstype import AccessType
+from timApp.auth.auth_models import BlockAccess
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import DocInfo
@@ -82,6 +83,11 @@ class RemovePermission(PermissionActionBase):
 
 
 @dataclass
+class ConfirmPermission(PermissionActionBase):
+    pass
+
+
+@dataclass
 class SetTaskValueAction:
     taskId: str
     value: str
@@ -127,6 +133,7 @@ RIGHT_TO_OP: dict[str, Callable[[DistributeRightAction, str], RightOp]] = {
 @dataclass
 class ActionCollection:
     addPermission: list[AddPermission] = field(default_factory=list)
+    confirmPermission: list[ConfirmPermission] = field(default_factory=list)
     removePermission: list[RemovePermission] = field(default_factory=list)
     distributeRight: list[DistributeRightAction] = field(default_factory=list)
     setValue: list[SetTaskValueAction] = field(default_factory=list)
@@ -235,6 +242,10 @@ actions:                 # Actions to apply for the selected user
     #      durationTo: 2021-04-23T18:00:00.000Z   # When the duration permission can be asked for
     #      durationFrom: 2021-04-23T16:00:00.000Z # When the duration permission ends
     #    confirm: false          # Does the permission require extra confirmation? 
+
+    #confirmPermission:           # Confirms user's permission to a document
+    #  - doc_path: some/doc/path  # Target document path
+    #    type: view               # Permission type. Allowed values: view, edit, teacher, manage, see_answers, owner, copy
 
     #removePermission:          # Remove permissions from documents
     #  - doc_path: users/admin-admin/kohde    # Document, from which to remove the permission
@@ -530,6 +541,7 @@ def apply_permission_actions(
     user_group: UserGroup,
     add: list[AddPermission],
     remove: list[RemovePermission],
+    confirm: list[ConfirmPermission],
 ) -> list[str]:
     doc_entries = {}
     update_messages = []
@@ -537,6 +549,7 @@ def apply_permission_actions(
     permission_actions: list[PermissionActionBase] = [
         *add,
         *remove,
+        *confirm,
     ]
 
     # Verify first that all documents can be accessed and permissions edited + cache doc entries
@@ -572,6 +585,20 @@ def apply_permission_actions(
             update_messages.append(
                 f"removed {a.info_str} for {user_group.name} in {doc_entry.path}"
             )
+
+    for to_confirm in confirm:
+        doc_entry = doc_entries[to_confirm.doc_path]
+        ba: Optional[BlockAccess] = BlockAccess.query.filter_by(
+            type=to_confirm.type.value,
+            block_id=doc_entry.block.id,
+            usergroup_id=user_group.id,
+        ).first()
+        if ba and ba.require_confirm:
+            ba.do_confirm()
+            update_messages.append(
+                f"confirmed {ba.info_str} for {user_group.name} in {doc_entry.path}"
+            )
+
     return update_messages
 
 
@@ -636,7 +663,10 @@ def apply(
         return ok_response()
 
     update_messages = apply_permission_actions(
-        user_group, model.actions.addPermission, model.actions.removePermission
+        user_group,
+        model.actions.addPermission,
+        model.actions.removePermission,
+        model.actions.confirmPermission,
     )
     apply_field_actions(user_acc, cur_user, model.actions.setValue)
     right_dist_errors = apply_dist_right_actions(
