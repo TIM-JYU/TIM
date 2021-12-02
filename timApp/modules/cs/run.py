@@ -153,6 +153,7 @@ def run2(
     dockercontainer=f"timimages/cs3{CS3_TARGET}:{CS3_TAG}",
     compile_commandline="",
     mounts=[],
+    escape_pipe=False,
 ):
     """Run that is done by opening a new docker instance to run the command.  A script rcmd.sh is needed to fullfill the
     run inside docker.
@@ -172,6 +173,7 @@ def run2(
     :param no_x11: do not use X11
     :param dockercontainer: what container to run, container needs user with name agent
     :param compile_commandline: command line to compile code
+    :param escape_pipe: If True, pipe charracter | is escaped into '|'
     :return: error code, stdout text, stderr text
 
     """
@@ -194,7 +196,8 @@ def run2(
     cmdf = cwd + "/" + urndname + ".sh"  # varsinaisen ajoskriptin nimi
     compf = cwd + "/run/compile.sh"
     cmnds = " ".join(tquote(arg) for arg in args)  # otetaan args listan jonot yhteen
-    cmnds = cmnds.replace("'|'", "|")
+    if not escape_pipe:
+        cmnds = cmnds.replace("'|'", "|")
     source = ""
     if savestate and cmnds.endswith(".sh"):  # source works only for shell scripts
         source = "source "

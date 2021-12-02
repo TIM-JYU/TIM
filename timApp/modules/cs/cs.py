@@ -1881,6 +1881,7 @@ class TIMServer(http.server.BaseHTTPRequestHandler):
                             no_x11=language.no_x11,
                             ulimit=language.ulimit,
                             compile_commandline=language.compile_commandline,
+                            escape_pipe=get_param(query, "escapePipe", False),
                         )
                     except Exception as e:
                         print(e)
