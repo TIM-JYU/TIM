@@ -11,8 +11,12 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1648564222394912726" datatype="html">
-        <source>Email or password is incorrect. Haka members (e.g. universities) can use Haka login.</source>
-        <target state="translated">Sähköposti tai salasana on virheellinen. Hakan jäsenet (esim. yliopistot) voivat käyttää Haka-sisäänkirjautumista.</target>
+        <source>
+                Email or password is incorrect. Haka members (e.g. universities) can use Haka login.
+            </source>
+        <target state="translated">
+                Sähköposti tai salasana on virheellinen. Hakan jäsenet (esim. yliopistot) voivat käyttää Haka-sisäänkirjautumista.
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">9</context>
@@ -51,8 +55,12 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5294935611457119224" datatype="html">
-        <source>Two different accounts for this email were found. Please contact TIM administrators to merge them.</source>
-        <target state="translated">Sähköpostiosoitteelle löytyi kaksi eri tiliä. Ota yhteyttä TIM-ylläpitäjiin niiden yhdistämiseksi.</target>
+        <source>
+                Two different accounts for this email were found. Please contact TIM administrators to merge them.
+            </source>
+        <target state="translated">
+                Sähköpostiosoitteelle löytyi kaksi eri tiliä. Ota yhteyttä TIM-ylläpitäjiin niiden yhdistämiseksi.
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">16</context>
@@ -75,12 +83,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7157889813294733336" datatype="html">
-        <source>Unknown error:
-          <x id="INTERPOLATION" equiv-text="{{error}}"/>
-        </source>
-        <target state="translated">Tuntematon virhe:
-          <x id="INTERPOLATION" equiv-text="{{error}}"/>
-        </target>
+        <source>Unknown error: <x id="INTERPOLATION" equiv-text="{{error}}"/></source>
+        <target state="translated">Tuntematon virhe: <x id="INTERPOLATION" equiv-text="{{error}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/error-description.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -95,14 +99,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6822439865982379707" datatype="html">
-        <source>Opens in
-          <x id="INTERPOLATION" equiv-text="&quot;{&quot;"/>0
-          <x id="INTERPOLATION_1" equiv-text="&quot;}&quot;"/>.
-        </source>
-        <target state="translated">Aikaa avautumiseen:
-          <x id="INTERPOLATION" equiv-text="&quot;{&quot;"/>0
-          <x id="INTERPOLATION_1" equiv-text="&quot;}&quot;"/>.
-        </target>
+        <source>Opens in <x id="INTERPOLATION" equiv-text="&quot;{&quot;"/>0<x id="INTERPOLATION_1" equiv-text="&quot;}&quot;"/>.</source>
+        <target state="translated">Aikaa avautumiseen: <x id="INTERPOLATION" equiv-text="&quot;{&quot;"/>0<x id="INTERPOLATION_1" equiv-text="&quot;}&quot;"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">62</context>
@@ -113,16 +111,12 @@
         <target state="translated">Sinulla ei ole lukuoikeutta tähän dokumenttiin.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
-          <context context-type="linenumber">162</context>
+          <context context-type="linenumber">160</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4213264030715523096" datatype="html">
-        <source>Your access expired
-          <x id="PH" equiv-text="pastDue"/>ago.
-        </source>
-        <target state="translated">Lukuoikeutesi dokumenttiin loppui
-          <x id="PH" equiv-text="pastDue"/>sitten.
-        </target>
+        <source>Your access expired <x id="PH" equiv-text="pastDue"/> ago.</source>
+        <target state="translated">Lukuoikeutesi dokumenttiin loppui <x id="PH" equiv-text="pastDue"/> sitten.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/goto-link.component.ts</context>
           <context context-type="linenumber">197</context>
@@ -169,8 +163,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6953733615016806387" datatype="html">
-        <source>Add new contact information</source>
-        <target state="translated">Lisää uusi yhteystieto</target>
+        <source> Add new contact information </source>
+        <target state="translated"> Lisää uusi yhteystieto </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-contact-dialog.component.ts</context>
           <context context-type="linenumber">20,21</context>
@@ -193,28 +187,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6002829667985638171" datatype="html">
-        <source>A verification link was sent to this contact. Please check possible spam filters.</source>
-        <target state="translated">Vahvistuslinkki lähetettiin tähän yhteystietoon. Tarkista tarvittaessa roskaposti.</target>
+        <source> A verification link was sent to this contact. Please check possible spam filters. </source>
+        <target state="translated"> Vahvistuslinkki lähetettiin tähän yhteystietoon. Tarkista tarvittaessa roskaposti. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-contact-dialog.component.ts</context>
           <context context-type="linenumber">38,40</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1747823725213733333" datatype="html">
-        <source>Could not add the new contact:
-          <x id="INTERPOLATION" equiv-text="{{addError}}"/>
-        </source>
-        <target state="translated">Uuden yhteystiedon lisääminen epäonnistui:
-          <x id="INTERPOLATION" equiv-text="{{addError}}"/>
-        </target>
+        <source> Could not add the new contact: <x id="INTERPOLATION" equiv-text="{{addError}}"/> </source>
+        <target state="translated"> Uuden yhteystiedon lisääminen epäonnistui: <x id="INTERPOLATION" equiv-text="{{addError}}"/> </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-contact-dialog.component.ts</context>
           <context context-type="linenumber">41,43</context>
         </context-group>
       </trans-unit>
       <trans-unit id="577038887888857351" datatype="html">
-        <source>Add</source>
-        <target state="translated">Lisää</target>
+        <source> Add </source>
+        <target state="translated"> Lisää </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/add-contact-dialog.component.ts</context>
           <context context-type="linenumber">54,55</context>
@@ -245,25 +235,11 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6922195937313529911" datatype="html">
-        <source>
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Loading times can be improved by setting static column widths.
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Copy the below settings under
-          <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>dataView
-          <x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>configuration:
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-        </source>
-        <target state="translated">
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Taulun latautumista voidaan nopeuttaa asettamalla kiinteät sarakeleveydet.
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Kopioi alla olevat asetukset
-          <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>dataView
-          <x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>-asetuksen alle:
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-        </target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Loading times can be improved by setting static column widths.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Copy the below settings under <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> configuration:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Taulun latautumista voidaan nopeuttaa asettamalla kiinteät sarakeleveydet.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Kopioi alla olevat asetukset<x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>dataView<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>-asetuksen alle:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/dataview/copy-table-width-dialog.component.ts</context>
-          <context context-type="linenumber">17</context>
+          <context context-type="linenumber">17,18</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5392341774767336507" datatype="html">
@@ -283,23 +259,11 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7466722129747967831" datatype="html">
-        <source>
-          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Column size computation took
-          <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/>seconds.
-          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>You can speed up loading by
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event)&quot;>"/>setting static column widths
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.
-        </source>
-        <target state="translated">
-          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Sarakeleveyksien määrittelyyn meni
-          <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/>sekuntia.
-          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>Latautumista voidaan nopeuttaa
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>asettamalla kiinteät sarakeleveydet
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.
-        </target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Column size computation took <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> seconds.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> You can speed up loading by <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event)&quot;>"/>setting static column widths<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Sarakeleveyksien määrittelyyn meni <x id="INTERPOLATION" equiv-text="{{sizeComputationTime}}"/> sekuntia.<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Latautumista voidaan nopeuttaa <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;#&quot; class=&quot;alert-link&quot; (click)=&quot;showTableWidthExportDialog($event)&quot;>"/>asettamalla kiinteät sarakeleveydet<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/dataview/data-view.component.ts</context>
-          <context context-type="linenumber">168</context>
+          <context context-type="linenumber">169,172</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6087003735770054211" datatype="html">
@@ -375,16 +339,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5206279409955392735" datatype="html">
-        <source>Enable flashlight</source>
-        <target state="translated">Käynnistä salamavalo</target>
+        <source> Enable flashlight </source>
+        <target state="translated"> Käynnistä salamavalo </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/code-scanner.component.ts</context>
           <context context-type="linenumber">37</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4354993063143363873" datatype="html">
-        <source>Disable flashlight</source>
-        <target state="translated">Sammuta salamavalo</target>
+        <source> Disable flashlight </source>
+        <target state="translated"> Sammuta salamavalo </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/code-scanner.component.ts</context>
           <context context-type="linenumber">40</context>
@@ -399,16 +363,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2212695292809375179" datatype="html">
-        <source>Search</source>
-        <target state="translated">Hae</target>
+        <source> Search </source>
+        <target state="translated"> Hae </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">158</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2023915191419303179" datatype="html">
-        <source>No matches for given keyword</source>
-        <target state="translated">Ei osumia annetulla hakusanalla</target>
+        <source> No matches for given keyword </source>
+        <target state="translated"> Ei osumia annetulla hakusanalla </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">189</context>
@@ -423,96 +387,32 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6437258484430887079" datatype="html">
-        <source>There are
-          <x id="INTERPOLATION" equiv-text="{{lastSearchResult.allMatchCount}}"/>matches. Only first
-          <x id="INTERPOLATION_1" equiv-text="{{lastSearchResult.matches.length}}"/>are shown. Please give more specific keywords to show all results.
-        </source>
-        <target state="translated">Löytyi
-          <x id="INTERPOLATION" equiv-text="{{lastSearchResult.allMatchCount}}"/>osumaa. Vain
-          <x id="INTERPOLATION_1" equiv-text="{{lastSearchResult.matches.length}}"/>ensimmäistä osumaa näytetään. Anna tarkempi hakusana nähdäksesi kaikki tulokset.
-        </target>
+        <source> There are <x id="INTERPOLATION" equiv-text="{{lastSearchResult.allMatchCount}}"/> matches. Only first <x id="INTERPOLATION_1" equiv-text="{{lastSearchResult.matches.length}}"/> are shown. Please give more specific keywords to show all results. </source>
+        <target state="translated"> Löytyi <x id="INTERPOLATION" equiv-text="{{lastSearchResult.allMatchCount}}"/> osumaa. Vain <x id="INTERPOLATION_1" equiv-text="{{lastSearchResult.matches.length}}"/> ensimmäistä osumaa näytetään. Anna tarkempi hakusana nähdäksesi kaikki tulokset. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">223</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5141645080814386241" datatype="html">
-        <source>
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>There were problems while undoing. Someone might have edited the permissions at the same time as you.
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>You can reapply permissions or fix them manually.
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Detailed error messages:
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-        </source>
-        <target state="translated">
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Peruuttamisen ei onnistunut täydellisesti. Joku toinen on saattanut muokata oikeuksia samanaikaisesti.
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Voit asettaa oikeudet uudelleen tai korjata ne manuaalisesti.
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Yksityiskohdat:
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-        </target>
+        <source><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> There were problems while undoing. Someone might have edited the permissions at the same time as you. <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>You can reapply permissions or fix them manually.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Detailed error messages:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></source>
+        <target state="translated"><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/> Peruuttamisen ei onnistunut täydellisesti. Joku toinen on saattanut muokata oikeuksia samanaikaisesti <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Voit asettaa oikeudet uudelleen tai korjata ne käsin.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Yksityiskohdat:<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">258</context>
+          <context context-type="linenumber">259,264</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4128190404321529743" datatype="html">
-        <source>
-          <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/>
-          <x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Show details
-        </source>
-        <target state="translated">
-          <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/>
-          <x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Näytä yksityiskohdat
-        </target>
+        <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Show details</source>
+        <target state="translated"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Näytä yksityiskohdat</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
-          <context context-type="linenumber">266</context>
+          <context context-type="linenumber">267,268</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7272675779595492580" datatype="html">
-        <source>
-          <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>
-          <x id="INTERPOLATION" equiv-text="{{errorMessage}}"/>
-          <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>
-          <x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;>"/>
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Please try refreshing the page and try again.
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-          <x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;>"/>
-          <x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div>"/>
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;>"/>
-          <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/>
-          <x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Show details
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
-          <x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/>
-          <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;>"/>
-          <x id="INTERPOLATION_1" equiv-text="{{detailedError}}"/>
-          <x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/>
-          <x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/>
-          <x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/>
-        </source>
-        <target state="translated">
-          <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>
-          <x id="INTERPOLATION" equiv-text="{{errorMessage}}"/>
-          <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>
-          <x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;>"/>
-          <x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Päivitä sivu ja kokeile uudelleen.
-          <x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/>
-          <x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;>"/>
-          <x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div>"/>
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;>"/>
-          <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/>
-          <x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Näytä yksityiskohdat
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
-          <x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/>
-          <x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;>"/>
-          <x id="INTERPOLATION_1" equiv-text="{{detailedError}}"/>
-          <x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/>
-          <x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/>
-          <x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/>
-        </target>
+        <source><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{errorMessage}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Please try refreshing the page and try again.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;>"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div>"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;>"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> Show details <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;>"/><x id="INTERPOLATION_1" equiv-text="{{detailedError}}"/><x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/></source>
+        <target state="translated"><x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{errorMessage}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/><x id="START_TAG_DIV_1" ctype="x-div_1" equiv-text="&lt;div class=&quot;alert-details&quot;>"/><x id="START_PARAGRAPH" ctype="x-p" equiv-text="&lt;p>"/>Päivitä sivu ja kokeile uudelleen.<x id="CLOSE_PARAGRAPH" ctype="x-p" equiv-text="&lt;/p>"/><x id="START_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;ng-container *ngIf=&quot;detailedError&quot;>"/><x id="START_TAG_DIV" ctype="x-div" equiv-text="&lt;div>"/><x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;showErrorMessage = !showErrorMessage&quot;>"/><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-chevron-down&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> Näytä yksityiskohdat <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/><x id="START_TAG_PRE" ctype="x-pre" equiv-text="&lt;pre *ngIf=&quot;showErrorMessage&quot;>"/><x id="INTERPOLATION_1" equiv-text="{{detailedError}}"/><x id="CLOSE_TAG_PRE" ctype="x-pre" equiv-text="&lt;/pre>"/><x id="CLOSE_TAG_NG_CONTAINER" ctype="x-ng_container" equiv-text="&lt;/ng-container>"/><x id="CLOSE_TAG_DIV" ctype="x-div" equiv-text="&lt;/div>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">277,289</context>
@@ -543,24 +443,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="9159869723463881627" datatype="html">
-        <source>Undone permissions for
-          <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.
-        </source>
-        <target state="translated">Oikeudet peruutettu käyttäjältä
-          <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.
-        </target>
+        <source>Undone permissions for <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</source>
+        <target state="translated">Oikeudet peruutettu käyttäjältä <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">403</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5703267131879050829" datatype="html">
-        <source>Permissions applied to
-          <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.
-        </source>
-        <target state="translated">Asetettu oikeudet käyttäjälle
-          <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.
-        </target>
+        <source>Permissions applied to <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</source>
+        <target state="translated">Asetettu oikeudet käyttäjälle <x id="INTERPOLATION" equiv-text="this.lastAddedUser?.user.real_name"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/plugin/userselect/user-select.component.ts</context>
           <context context-type="linenumber">404</context>
@@ -679,8 +571,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="9024197238502753926" datatype="html">
-        <source>Top level</source>
-        <target state="translated">Ylätaso</target>
+        <source>Top level </source>
+        <target state="translated">Ylätaso </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/bookmarks.component.ts</context>
           <context context-type="linenumber">24</context>
@@ -719,14 +611,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8327531442582201391" datatype="html">
-        <source>
-          <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;>"/>
-          <x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>New bookmark...
-        </source>
-        <target state="translated">
-          <x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;>"/>
-          <x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/>Uusi kirjanmerkki...
-        </target>
+        <source><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> New bookmark... </source>
+        <target state="translated"><x id="START_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;i class=&quot;glyphicon glyphicon-plus&quot;>"/><x id="CLOSE_ITALIC_TEXT" ctype="x-i" equiv-text="&lt;/i>"/> Uusi kirjanmerkki... </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/util/bookmarks.component.ts</context>
           <context context-type="linenumber">59,60</context>
@@ -765,8 +651,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2714492186629770050" datatype="html">
-        <source>Manage scheduled functions</source>
-        <target state="translated">Hallitse ajastettuja toimintoja</target>
+        <source> Manage scheduled functions </source>
+        <target state="translated"> Hallitse ajastettuja toimintoja </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/scheduling/schedule-dialog.component.ts</context>
           <context context-type="linenumber">57</context>
@@ -821,12 +707,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4577528096804984395" datatype="html">
-        <source>
-          <x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;>"/>Show functions from all users
-        </source>
-        <target state="translated">
-          <x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;>"/>Näytä kaikkien käyttäjien toiminnot
-        </target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;>"/> Show functions from all users </source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot;                                (change)=&quot;fetchFunctions()&quot;                                [(ngModel)]=&quot;showAllUsers&quot;>"/> Näytä kaikkien käyttäjien toiminnot </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/scheduling/schedule-dialog.component.ts</context>
           <context context-type="linenumber">84,87</context>
@@ -881,8 +763,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4646834153496382565" datatype="html">
-        <source>Add</source>
-        <target state="translated">Lisää</target>
+        <source>Add </source>
+        <target state="translated">Lisää </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/document/scheduling/schedule-dialog.component.ts</context>
           <context context-type="linenumber">111</context>
@@ -949,72 +831,48 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4817865548432760172" datatype="html">
-        <source>You will be able to access this
-          <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }"/>in
-          <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;>"/>
-          <x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>.
-        </source>
-        <target state="translated">Tämä
-          <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }"/>aukeaa ajassa:
-          <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;>"/>
-          <x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>.
-        </target>
+        <source> You will be able to access this <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }"/> in <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;>"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>. </source>
+        <target state="translated"> Tämä <x id="ICU" equiv-text="{ item.isFolder, select, true {folder} false {document} }"/> aukeaa ajassa: <x id="START_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;tim-countdown [seconds]=&quot;waitTime&quot;                               [displayUnits]=&quot;['y', 'mo', 'w', 'd', 'h', 'm', 's']&quot;                               (onFinish)=&quot;this.countDown = false&quot;>"/><x id="CLOSE_TAG_TIM_COUNTDOWN" ctype="x-tim_countdown" equiv-text="&lt;/tim-countdown>"/>. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
           <context context-type="linenumber">9,14</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2430415615241833222" datatype="html">
-        <source>{VAR_SELECT, select, true {folder} false {document}}</source>
-        <target state="translated">{VAR_SELECT, select, true {kansio} false {dokumentti}}</target>
+        <source>{VAR_SELECT, select, true {folder} false {document} }</source>
+        <target state="translated">{VAR_SELECT, select, true {kansio} false {dokumentti} }</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
           <context context-type="linenumber">10</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8367583638953157691" datatype="html">
-        <source>You can access the
-          <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }"/>now.
-          <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;>"/>Refresh the page
-          <x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link>"/>
-        </source>
-        <target state="translated">Pääset
-          <x id="ICU" equiv-text="{ item.isFolder, select, true {...} false {...}}"/>nyt.
-          <x id="START_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;tim-goto-link>"/>Virkistä sivu
-          <x id="CLOSE_TAG_TIM-GOTO-LINK" ctype="x-tim-goto-link" equiv-text="&lt;/tim-goto-link>"/>
-        </target>
+        <source> You can access the <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }"/> now. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;>"/>Refresh the page<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link>"/></source>
+        <target state="translated"> Pääset <x id="ICU" equiv-text="{ item.isFolder, select, true { folder } false { document } }"/> nyt. <x id="START_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;tim-goto-link href=&quot;&quot; [maxWait]=&quot;waitOffset&quot; [autoOpen]=&quot;true&quot;>"/>Virkistä sivu<x id="CLOSE_TAG_TIM_GOTO_LINK" ctype="x-tim_goto_link" equiv-text="&lt;/tim-goto-link>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
-          <context context-type="linenumber">16</context>
+          <context context-type="linenumber">15,17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="906293260225293784" datatype="html">
-        <source>{VAR_SELECT, select, true {folder } false {document }}</source>
-        <target state="translated">{VAR_SELECT, select, true {kansioon } false {dokumenttiin }}</target>
+        <source>{VAR_SELECT, select, true {folder } false {document } }</source>
+        <target state="translated">{VAR_SELECT, select, true {kansioon } false {dokumenttiin } }</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/item/access-countdown.component.ts</context>
           <context context-type="linenumber">16</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4138123927675775257" datatype="html">
-        <source>Previous:
-          <x id="INTERPOLATION" equiv-text="{{siblings.prev.title}}"/>
-        </source>
-        <target state="translated">Edellinen:
-          <x id="INTERPOLATION" equiv-text="{{siblings.prev.title}}"/>
-        </target>
+        <source> Previous: <x id="INTERPOLATION" equiv-text="{{siblings.prev.title}}"/> </source>
+        <target state="translated"> Edellinen: <x id="INTERPOLATION" equiv-text="{{siblings.prev.title}}"/> </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/archive/tim-archive-footer.component.ts</context>
           <context context-type="linenumber">12,14</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1251345198062367411" datatype="html">
-        <source>Next:
-          <x id="INTERPOLATION" equiv-text="{{siblings.next.title}}"/>
-        </source>
-        <target state="translated">Seuraava:
-          <x id="INTERPOLATION" equiv-text="{{siblings.next.title}}"/>
-        </target>
+        <source> Next: <x id="INTERPOLATION" equiv-text="{{siblings.next.title}}"/> </source>
+        <target state="translated"> Seuraava: <x id="INTERPOLATION" equiv-text="{{siblings.next.title}}"/> </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/archive/tim-archive-footer.component.ts</context>
           <context context-type="linenumber">15,17</context>
@@ -1061,16 +919,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8046941322231691604" datatype="html">
-        <source>Mark as Read</source>
-        <target state="translated">Merkitse luetuksi</target>
+        <source> Mark as Read </source>
+        <target state="translated"> Merkitse luetuksi </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage-read-receipt.component.ts</context>
           <context context-type="linenumber">28</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7257036810810939975" datatype="html">
-        <source>Cancel Read Receipt</source>
-        <target state="translated">Peruuta lukumerkintä</target>
+        <source> Cancel Read Receipt </source>
+        <target state="translated"> Peruuta lukumerkintä </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage-read-receipt.component.ts</context>
           <context context-type="linenumber">32</context>
@@ -1085,24 +943,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3060798069996780322" datatype="html">
-        <source>Could not load read information:
-          <x id="PH" equiv-text="message.result.error.error"/>
-        </source>
-        <target state="translated">Lukumerkintöjen lataaminen epäonnistui:
-          <x id="PH" equiv-text="message.result.error.error"/>
-        </target>
+        <source>Could not load read information: <x id="PH" equiv-text="message.result.error.error"/></source>
+        <target state="translated">Lukumerkintöjen lataaminen epäonnistui: <x id="PH" equiv-text="message.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage-read-receipt.component.ts</context>
           <context context-type="linenumber">111</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1672693006844160216" datatype="html">
-        <source>Could not mark as read:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </source>
-        <target state="translated">Viestin merkintä luetuksi epäonnistui:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </target>
+        <source>Could not mark as read: <x id="PH" equiv-text="result.result.error.error"/></source>
+        <target state="translated">Viestin merkintä luetuksi epäonnistui: <x id="PH" equiv-text="result.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage-read-receipt.component.ts</context>
           <context context-type="linenumber">128</context>
@@ -1113,12 +963,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3096629013025210376" datatype="html">
-        <source>Could not cancel read receipt:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </source>
-        <target state="translated">Lukumerkinnän peruuttaminen epäonnistui:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </target>
+        <source>Could not cancel read receipt: <x id="PH" equiv-text="result.result.error.error"/></source>
+        <target state="translated">Lukumerkinnän peruuttaminen epäonnistui: <x id="PH" equiv-text="result.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage-read-receipt.component.ts</context>
           <context context-type="linenumber">148</context>
@@ -1133,8 +979,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="421055325405203498" datatype="html">
-        <source>Send a message to the list</source>
-        <target state="translated">Lähetä viesti listalle</target>
+        <source> Send a message to the list </source>
+        <target state="translated"> Lähetä viesti listalle </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">28,29</context>
@@ -1265,56 +1111,56 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5280522151948167204" datatype="html">
-        <source>Notify owners on list changes (e.g. user subscribes)</source>
-        <target state="translated">Ilmoita listan omistajille listan muutoksista (esim. uudet jäsenet)</target>
+        <source>Notify owners on list changes (e.g. user subscribes) </source>
+        <target state="translated">Ilmoita listan omistajille listan muutoksista (esim. uudet jäsenet) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">93</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5521883452271200382" datatype="html">
-        <source>TIM users can freely join this list</source>
-        <target state="translated">TIM-käyttäjät voivat vapaasti liittyä listalle</target>
+        <source>TIM users can freely join this list </source>
+        <target state="translated">TIM-käyttäjät voivat vapaasti liittyä listalle </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">104</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7122098898427846897" datatype="html">
-        <source>Default send right for new members</source>
-        <target state="translated">Uudet jäsenet saavat lähettää viestejä listalle</target>
+        <source>Default send right for new members </source>
+        <target state="translated">Uudet jäsenet saavat lähettää viestejä listalle </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">114</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4150852629115124872" datatype="html">
-        <source>Default delivery right for new members</source>
-        <target state="translated">Uudet jäsenet saavat vastaanottaa viestejä listalta</target>
+        <source>Default delivery right for new members </source>
+        <target state="translated">Uudet jäsenet saavat vastaanottaa viestejä listalta </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">124</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4664955783952348345" datatype="html">
-        <source>Members can unsubscribe from the list on their own</source>
-        <target state="translated">Jäsenet saavat vapaasti poistua listalta</target>
+        <source>Members can unsubscribe from the list on their own </source>
+        <target state="translated">Jäsenet saavat vapaasti poistua listalta </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">134</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8133330502485943497" datatype="html">
-        <source>Non-members can send messages to list</source>
-        <target state="translated">Listaan kuulumattomat saavat lähettää viestejä listalle</target>
+        <source>Non-members can send messages to list </source>
+        <target state="translated">Listaan kuulumattomat saavat lähettää viestejä listalle </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">143</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5859710094628000865" datatype="html">
-        <source>No HTML messages allowed on the list</source>
-        <target state="translated">HTML-viestit ovat kielletty</target>
+        <source>No HTML messages allowed on the list </source>
+        <target state="translated">HTML-viestit ovat kielletty </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">150</context>
@@ -1513,12 +1359,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1751262057884657070" datatype="html">
-        <source>Loading list options failed:
-          <x id="PH" equiv-text="result1.result.error.error"/>
-        </source>
-        <target state="translated">Listan asetusten lataaminen epäonnistui:
-          <x id="PH" equiv-text="result1.result.error.error"/>
-        </target>
+        <source>Loading list options failed: <x id="PH" equiv-text="result1.result.error.error"/></source>
+        <target state="translated">Listan asetusten lataaminen epäonnistui: <x id="PH" equiv-text="result1.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">431</context>
@@ -1533,15 +1375,11 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2142462720777190527" datatype="html">
-        <source>Loading list's members failed:
-          <x id="PH" equiv-text="result2.result.error.error"/>
-        </source>
-        <target state="translated">Listan jäsenten lataaminen epäonnistui:
-          <x id="PH" equiv-text="result2.result.error.error"/>
-        </target>
+        <source>Loading list's members failed: <x id="PH" equiv-text="result2.result.error.error"/></source>
+        <target state="translated">Listan jäsenten lataaminen epäonnistui: <x id="PH" equiv-text="result2.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
-          <context context-type="linenumber">772</context>
+          <context context-type="linenumber">762</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3019099927046303872" datatype="html">
@@ -1553,36 +1391,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="655264950585895085" datatype="html">
-        <source>Adding new members failed:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </source>
-        <target state="translated">Uusien jäsenten lisääminen epäonnistui:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </target>
+        <source>Adding new members failed: <x id="PH" equiv-text="result.result.error.error"/></source>
+        <target state="translated">Uusien jäsenten lisääminen epäonnistui: <x id="PH" equiv-text="result.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">489</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4171354538993599001" datatype="html">
-        <source>Delete list
-          <x id="PH" equiv-text="this.listname"/>
-        </source>
-        <target state="translated">Poista lista
-          <x id="PH" equiv-text="this.listname"/>
-        </target>
+        <source>Delete list <x id="PH" equiv-text="this.listname"/></source>
+        <target state="translated">Poista lista <x id="PH" equiv-text="this.listname"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">512</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1876963562900096705" datatype="html">
-        <source>Do you really want to delete list
-          <x id="PH" equiv-text="this.listname"/>? Members will not be able to receive or send messages through the list anymore.
-        </source>
-        <target state="translated">Oletko varma, että haluat poistaa listan
-          <x id="PH" equiv-text="this.listname"/>? Jäsenet eivät tämän jälkeen saa lähettää viestejä listalle tai vastaanottaa viestejä sieltä.
-        </target>
+        <source>Do you really want to delete list <x id="PH" equiv-text="this.listname"/>? Members will not be able to receive or send messages through the list anymore.</source>
+        <target state="translated">Oletko varma, että haluat poistaa listan <x id="PH" equiv-text="this.listname"/>? Jäsenet eivät tämän jälkeen saa lähettää viestejä listalle tai vastaanottaa viestejä sieltä.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">513</context>
@@ -1621,12 +1447,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7087504753002598819" datatype="html">
-        <source>Saving failed with an error:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </source>
-        <target state="translated">Tallennus epäonnistui seuraavalla virheellä:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </target>
+        <source>Saving failed with an error: <x id="PH" equiv-text="result.result.error.error"/></source>
+        <target state="translated">Tallennus epäonnistui seuraavalla virheellä: <x id="PH" equiv-text="result.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/manage/message-list-admin.component.ts</context>
           <context context-type="linenumber">636</context>
@@ -1713,8 +1535,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="904878317972375868" datatype="html">
-        <source>Create message list</source>
-        <target state="translated">Luo viestilista</target>
+        <source> Create message list </source>
+        <target state="translated"> Luo viestilista </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/message-list-create-dialog.component.ts</context>
           <context context-type="linenumber">51</context>
@@ -1753,8 +1575,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7941428823403788384" datatype="html">
-        <source>Create</source>
-        <target state="translated">Luo lista</target>
+        <source> Create </source>
+        <target state="translated"> Luo lista </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/message-list-create-dialog.component.ts</context>
           <context context-type="linenumber">120</context>
@@ -1769,12 +1591,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2528131374418334340" datatype="html">
-        <source>Failed to load email domains. The following error provides details:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </source>
-        <target state="translated">Sähköpostien verkkotunnusten lataaminen epäonnistui. Lisätietoja:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </target>
+        <source>Failed to load email domains. The following error provides details: <x id="PH" equiv-text="result.result.error.error"/></source>
+        <target state="translated">Sähköpostien verkkotunnusten lataaminen epäonnistui. Lisätietoja: <x id="PH" equiv-text="result.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/message-list-create-dialog.component.ts</context>
           <context context-type="linenumber">253</context>
@@ -2013,16 +1831,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7563035552061651664" datatype="html">
-        <source>Send</source>
-        <target state="translated">Lähetä</target>
+        <source> Send </source>
+        <target state="translated"> Lähetä </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
           <context context-type="linenumber">157,158</context>
         </context-group>
       </trans-unit>
       <trans-unit id="9200507727056929028" datatype="html">
-        <source>Message sent!</source>
-        <target state="translated">Viesti lähetetty!</target>
+        <source> Message sent! </source>
+        <target state="translated"> Viesti lähetetty! </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
           <context context-type="linenumber">164,165</context>
@@ -2037,12 +1855,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7260640271050056649" datatype="html">
-        <source>Failed to send as TIM message:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </source>
-        <target state="translated">Viestin lähetys TIM-viestinä epäonnistui:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </target>
+        <source>Failed to send as TIM message: <x id="PH" equiv-text="result.result.error.error"/></source>
+        <target state="translated">Viestin lähetys TIM-viestinä epäonnistui: <x id="PH" equiv-text="result.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-send.component.ts</context>
           <context context-type="linenumber">289</context>
@@ -2057,15 +1871,19 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2035946621874220354" datatype="html">
-        <source>Could not load messages for the page:
-          <x id="INTERPOLATION" equiv-text="{{messageError}}"/>
-        </source>
-        <target state="translated">Viestejä ei voitu ladata sivulla:
-          <x id="INTERPOLATION" equiv-text="{{messageError}}"/>
-        </target>
+        <source> Could not load messages for the page: <x id="INTERPOLATION" equiv-text="{{messageError}}"/> </source>
+        <target state="translated"> Viestejä ei voitu ladata sivulla: <x id="INTERPOLATION" equiv-text="{{messageError}}"/> </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message-view.component.ts</context>
           <context context-type="linenumber">18,20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2239742692583764806" datatype="html">
+        <source>From: </source>
+        <target state="translated">Lähettäjä: </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
+          <context context-type="linenumber">31</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7216129782170445339" datatype="html">
@@ -2109,65 +1927,43 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1092513435408623514" datatype="html">
-        <source>Read receipt can be cancelled in
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;>"/>the message document
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
-        </source>
-        <target state="translated">Lukumerkinnän voi peruuttaa
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;>"/>viestidokumentissa
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
-        </target>
+        <source> Read receipt can be cancelled in <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;>"/>the message document<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
+        <target state="translated"> Lukumerkinnän voi peruuttaa <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{message.doc_path}}&quot;>"/>viestidokumentissa<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
-          <context context-type="linenumber">68</context>
+          <context context-type="linenumber">67,68</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5547981558491672240" datatype="html">
-        <source>Close</source>
-        <target state="translated">Sulje</target>
+        <source> Close </source>
+        <target state="translated"> Sulje </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
           <context context-type="linenumber">71</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2108140392962597724" datatype="html">
-        <source>Could not reply to message:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </source>
-        <target state="translated">Viestiin vastaaminen epäonnistui:
-          <x id="PH" equiv-text="result.result.error.error"/>
-        </target>
+        <source>Could not reply to message: <x id="PH" equiv-text="result.result.error.error"/></source>
+        <target state="translated">Viestiin vastaaminen epäonnistui: <x id="PH" equiv-text="result.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
           <context context-type="linenumber">164</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1282825972440368994" datatype="html">
-        <source>I allow
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/>the collected data
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>to be used for scientific research purposes after anonymization.
-        </source>
-        <target state="translated">Sallin käyttää
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>kerättyä tietoa
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>tieteelliseen tutkimustarkoitukseen anonymisoinnin jälkeen.
-        </target>
+        <source> I allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </source>
+        <target state="translated"> Sallin käyttää <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> kerättyä tietoa <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tieteelliseen tutkimustarkoitukseen anonymisoinnin jälkeen. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
-          <context context-type="linenumber">12</context>
+          <context context-type="linenumber">11,17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7549221046249449872" datatype="html">
-        <source>I do not allow
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/>the collected data
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>to be used for scientific research purposes after anonymization.
-        </source>
-        <target state="translated">En salli käyttää
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>kerättyä tietoa
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>tieteelliseen tutkimustarkoitukseen anonymisoinnin jälkeen.
-        </target>
+        <source> I do not allow <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> the collected data <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> to be used for scientific research purposes after anonymization. </source>
+        <target state="translated"> En salli käyttää <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/Rekisteriseloste#rekisterin-tietosis%C3%A4lt%C3%B6&quot;>"/> kerättyä tietoa <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tieteelliseen tutkimustarkoitukseen anonymisoinnin jälkeen. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/ui/consent-choice.component.ts</context>
-          <context context-type="linenumber">24</context>
+          <context context-type="linenumber">23,29</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1792806198663410166" datatype="html">
@@ -2231,16 +2027,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5372481859541149959" datatype="html">
-        <source>Edit relevance (
-          <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;>"/>
-          <x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/>
-          <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)
-        </source>
-        <target state="translated">Muokkaa relevanssia (
-          <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;>"/>
-          <x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/>
-          <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)
-        </target>
+        <source> Edit relevance (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;>"/><x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>) </source>
+        <target state="translated"> Muokkaa relevanssia (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span i18n-tooltip tooltip=&quot;Current relevance value&quot;>"/><x id="INTERPOLATION" equiv-text="{{currentRelevance}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">63,65</context>
@@ -2287,8 +2075,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8962767638526774137" datatype="html">
-        <source>Search with tags</source>
-        <target state="translateds">Hae tagien avulla</target>
+        <source>Search with tags
+            </source>
+        <target state="translated">Hae tagien avulla
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">72</context>
@@ -2355,16 +2145,20 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1918757823540045913" datatype="html">
-        <source>Edit settings</source>
-        <target state="translated">Muokkaa asetuksia</target>
+        <source>Edit settings
+            </source>
+        <target state="translated">Muokkaa asetuksia
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">89</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6957932615517356211" datatype="html">
-        <source>Mark all as read</source>
-        <target state="translated">Merkitse kaikki luetuksi</target>
+        <source>Mark all as read
+            </source>
+        <target state="translated">Merkitse kaikki luetuksi
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">101</context>
@@ -2379,8 +2173,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7349786524326779367" datatype="html">
-        <source>Mark all as translated</source>
-        <target state="translated">Merkitse kaikki käännetyksi</target>
+        <source>Mark all as translated
+            </source>
+        <target state="translated">Merkitse kaikki käännetyksi
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">107</context>
@@ -2395,8 +2191,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6820301256035752309" datatype="html">
-        <source>Delete all read marks</source>
-        <target state="translated">Poista kaikki lukumerkinnät</target>
+        <source>Delete all read marks
+            </source>
+        <target state="translated">Poista kaikki lukumerkinnät
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">113</context>
@@ -2419,36 +2217,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1304170677752702304" datatype="html">
-        <source>
-          <x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/>Show wall
-        </source>
-        <target state="translated">
-          <x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/>Näytä seinä
-        </target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/> Show wall</source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useWall&quot;                                    (ngModelChange)=&quot;lctrl.refreshWall()&quot;>"/> Näytä seinä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">119,120</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2865158227582611884" datatype="html">
-        <source>
-          <x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/>Show questions
-        </source>
-        <target state="translated">
-          <x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/>Näytä kysymykset
-        </target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/> Show questions </source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useQuestions&quot;>"/> Näytä kysymykset </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">124,125</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4058133633628035062" datatype="html">
-        <source>
-          <x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/>Show answers
-        </source>
-        <target state="translated">
-          <x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/>Näytä vastaukset
-        </target>
+        <source><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/> Show answers</source>
+        <target state="translated"><x id="TAG_INPUT" ctype="x-input" equiv-text="&lt;input type=&quot;checkbox&quot; [(ngModel)]=&quot;lctrl.lectureSettings.useAnswers&quot;>"/> Näytä vastaukset</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">128</context>
@@ -2471,8 +2257,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2867932944205413375" datatype="html">
-        <source>Print document</source>
-        <target state="translated">Tulosta dokumentti</target>
+        <source>Print document
+            </source>
+        <target state="translated">Tulosta dokumentti
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">142</context>
@@ -2487,8 +2275,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6673833826773813241" datatype="html">
-        <source>Browser print</source>
-        <target state="translated">Selaimen tulostusvalikko</target>
+        <source>Browser print
+            </source>
+        <target state="translated">Selaimen tulostusvalikko
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">147</context>
@@ -2519,8 +2309,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8419930286535843500" datatype="html">
-        <source>Edit tags</source>
-        <target state="translated">Muokkaa tageja</target>
+        <source>Edit tags
+            </source>
+        <target state="translated">Muokkaa tageja
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">161</context>
@@ -2535,8 +2327,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7186682572276045583" datatype="html">
-        <source>Set as course</source>
-        <target state="translated">Aseta kurssiksi</target>
+        <source>Set as course
+            </source>
+        <target state="translated">Aseta kurssiksi
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">172</context>
@@ -2559,8 +2353,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="9055027655819547507" datatype="html">
-        <source>Create extracts</source>
-        <target state="translated">Luo otteet</target>
+        <source>Create extracts
+            </source>
+        <target state="translated">Luo otteet
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">180</context>
@@ -2575,8 +2371,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6906618302973581092" datatype="html">
-        <source>Create minutes</source>
-        <target state="translated">Luo pöytäkirja</target>
+        <source>Create minutes
+            </source>
+        <target state="translated">Luo pöytäkirja
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">186</context>
@@ -2591,8 +2389,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2922112108601535475" datatype="html">
-        <source>Merge attachments</source>
-        <target state="translated">Yhdistä liitteet</target>
+        <source>Merge attachments
+            </source>
+        <target state="translated">Yhdistä liitteet
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">192</context>
@@ -2623,22 +2423,18 @@
         </context-group>
       </trans-unit>
       <trans-unit id="7359309035708185948" datatype="html">
-        <source>Linked
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;>"/>course groups
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
-        </source>
-        <target state="translated">Linkitetyt
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;>"/>kurssiryhmät
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
-        </target>
+        <source>Linked <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;>"/>course groups<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
+        <target state="translated">Linkitetyt <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/{{sisugroupPath}}&quot;>"/>kurssiryhmät<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">200</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3608133900881958958" datatype="html">
-        <source>Create a new group</source>
-        <target state="translated">Luo uusi ryhmä</target>
+        <source>Create a new group
+                </source>
+        <target state="translated">Luo uusi ryhmä
+                </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">210</context>
@@ -2677,8 +2473,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8721037582942680707" datatype="html">
-        <source>Create a new message list</source>
-        <target state="translated">Luo uusi viestilista</target>
+        <source>Create a new message list </source>
+        <target state="translated">Luo uusi viestilista </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">222,223</context>
@@ -2749,12 +2545,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8844824116862224576" datatype="html">
-        <source>This will affect
-          <x id="PH" equiv-text="r.result"/>users in total.
-        </source>
-        <target state="translated">Tämä vaikuttaa yhteensä
-          <x id="PH" equiv-text="r.result"/>käyttäjään.
-        </target>
+        <source>This will affect <x id="PH" equiv-text="r.result"/> users in total.</source>
+        <target state="translated">Tämä vaikuttaa yhteensä <x id="PH" equiv-text="r.result"/> käyttäjään.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
           <context context-type="linenumber">361</context>
@@ -2781,18 +2573,12 @@
         <target state="translated">Dokumenttiin ei ole määritelty 'knro'-makroa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/settings-tab.component.ts</context>
-          <context context-type="linenumber">510</context>
+          <context context-type="linenumber">502</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3880104539461951428" datatype="html">
-        <source>Index
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;>"/>Go to top
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
-        </source>
-        <target state="translated">Sisällys
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;>"/>Mene alkuun
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>
-        </target>
+        <source>Index <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;>"/>Go to top<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></source>
+        <target state="translated">Sisällys <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;goToTop()&quot; i18n-title title=&quot;Go to top&quot; class=&quot;pull-right&quot;>"/>Mene alkuun<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/index-tab.component.ts</context>
           <context context-type="linenumber">17</context>
@@ -2879,8 +2665,10 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3731008746896061926" datatype="html">
-        <source>Join</source>
-        <target state="translated">Liity</target>
+        <source>Join
+                </source>
+        <target state="translated">Liity
+                </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/lecture-info-tab.component.ts</context>
           <context context-type="linenumber">23</context>
@@ -2971,32 +2759,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2764567568324210100" datatype="html">
-        <source>People logged in:
-          <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>
-          <x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/>
-          <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>
-        </source>
-        <target state="translated">Kirjautuneita käyttäjiä:
-          <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>
-          <x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/>
-          <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>
-        </target>
+        <source>People logged in: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></source>
+        <target state="translated">Kirjautuneita käyttäjiä: <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length + lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">8</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3522945725389041013" datatype="html">
-        <source>Lecturers (
-          <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>
-          <x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/>
-          <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)
-        </source>
-        <target state="translated">Luennoitsijat (
-          <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>
-          <x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/>
-          <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)
-        </target>
+        <source>Lecturers (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</source>
+        <target state="translated">Luennoitsijat (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.lecturerTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">9</context>
@@ -3011,16 +2783,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="4851338224428351823" datatype="html">
-        <source>Students (
-          <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>
-          <x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/>
-          <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)
-        </source>
-        <target state="translated">Opiskelijat (
-          <x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/>
-          <x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/>
-          <x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)
-        </target>
+        <source>Students (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</source>
+        <target state="translated">Opiskelijat (<x id="START_TAG_SPAN" ctype="x-span" equiv-text="&lt;span>"/><x id="INTERPOLATION" equiv-text="{{lctrl.studentTable.length}}"/><x id="CLOSE_TAG_SPAN" ctype="x-span" equiv-text="&lt;/span>"/>)</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/sidebarmenu/tabs/logged-users-tab.component.ts</context>
           <context context-type="linenumber">20</context>
@@ -3083,24 +2847,36 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2715185765061607307" datatype="html">
-        <source>Log in</source>
-        <target state="translated">Kirjaudu sisään</target>
+        <source>
+                Log in
+            </source>
+        <target state="translated">
+                Kirjaudu sisään
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/haka-login.component.ts</context>
           <context context-type="linenumber">85</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4814606488888120626" datatype="html">
-        <source>Members from universities and other Haka organizations, please use Haka to log in.</source>
-        <target state="translated">Yliopistojen ja muiden Haka-organisaatioiden jäsenet, kirjautukaa Hakalla.</target>
+        <source>
+                Members from universities and other Haka organizations, please use Haka to log in.
+            </source>
+        <target state="translated">
+                Yliopistojen ja muiden Haka-organisaatioiden jäsenet, kirjautukaa Hakalla.
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">75</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2341982959296346504" datatype="html">
-        <source>Others, please log in with your TIM account.</source>
-        <target state="translated">Muut, kirjautukaa TIM-tilillä.</target>
+        <source>
+                Others, please log in with your TIM account.
+            </source>
+        <target state="translated">
+                Muut, kirjautukaa TIM-tilillä.
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">82</context>
@@ -3123,16 +2899,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5192694303323354537" datatype="html">
-        <source>If you have not logged in before, and your email corresponds to the one in Studyinfo.fi, TIM sent a password to your email now. Please read the email in a separate browser tab, and please wait for the email at least 5 minutes if you don't get the email right away. Check your spam folder too.</source>
-        <target state="translated">Jos et ole kirjautunut aiemmin ja sähköpostisi vastaa Opintopolku.fi-palvelussa olevaa, TIM lähetti salasanan sähköpostiisi nyt. Lue sähköposti selaimen eri välilehdessä, ja odota sähköpostia ainakin 5 minuuttia, jos et saa sitä heti. Tarkista myös roskapostikansiosi.</target>
+        <source> If you have not logged in before, and your email corresponds to the one in Studyinfo.fi, TIM sent a password to your email now. Please read the email in a separate browser tab, and please wait for the email at least 5 minutes if you don't get the email right away. Check your spam folder too. </source>
+        <target state="translated"> Jos et ole kirjautunut aiemmin ja sähköpostisi vastaa Opintopolku.fi-palvelussa olevaa, TIM lähetti salasanan sähköpostiisi nyt. Lue sähköposti selaimen eri välilehdessä, ja odota sähköpostia ainakin 5 minuuttia, jos et saa sitä heti. Tarkista myös roskapostikansiosi. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">101,108</context>
+          <context context-type="linenumber">100,108</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3890309214395153699" datatype="html">
-        <source>If you have not logged in to TIM before, TIM sent a password to your email now.</source>
-        <target state="translated">Jos et ole kirjautunut TIMiin aiemmin, TIM lähetti salasanan sähköpostiisi nyt.</target>
+        <source> If you have not logged in to TIM before, TIM sent a password to your email now. </source>
+        <target state="translated"> Jos et ole kirjautunut TIMiin aiemmin, TIM lähetti salasanan sähköpostiisi nyt. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">110</context>
@@ -3175,32 +2951,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3023906871690155199" datatype="html">
-        <source>Not a
-          <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>student or staff member and don't have a TIM account?
-        </source>
-        <target state="translated">Etkö ole
-          <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>-opiskelija tai henkilökuntaa eikä sinulla ole TIM-tiliä?
-        </target>
+        <source> Not a <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> student or staff member and don't have a TIM account? </source>
+        <target state="translated"> Etkö ole <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>-opiskelija tai henkilökuntaa eikä sinulla ole TIM-tiliä? </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">147</context>
+          <context context-type="linenumber">147,149</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7203320122205058413" datatype="html">
-        <source>Sign up</source>
-        <target state="translated">Rekisteröidy</target>
+        <source> Sign up </source>
+        <target state="translated"> Rekisteröidy </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">152,153</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3129992797183034647" datatype="html">
-        <source>If you don't have an existing TIM or
-          <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>account, you can create a TIM account here.
-        </source>
-        <target state="translated">Jos sinulla ei ole TIM-tiliä tai
-          <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>-tunnusta, voit luoda TIM-tilin tässä.
-        </target>
+        <source>If you don't have an existing TIM or <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/> account, you can create a TIM account here.</source>
+        <target state="translated">Jos sinulla ei ole TIM-tiliä tai <x id="INTERPOLATION" equiv-text="{{getHomeOrgDisplayName()}}"/>-tunnusta, voit luoda TIM-tilin tässä.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">159</context>
@@ -3215,8 +2983,12 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6534522401559597537" datatype="html">
-        <source>To reset password, enter your email or username first.</source>
-        <target state="translated">Salasanan vaihtamiseksi kirjoita sähköpostiosoitteesi tai käyttäjätunnuksesi.</target>
+        <source>
+            To reset password, enter your email or username first.
+        </source>
+        <target state="translated">
+            Salasanan vaihtamiseksi kirjoita sähköpostiosoitteesi tai käyttäjätunnuksesi.
+        </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">163</context>
@@ -3235,24 +3007,36 @@
         </context-group>
       </trans-unit>
       <trans-unit id="2917314929120683887" datatype="html">
-        <source>Continue</source>
-        <target state="translated">Jatka</target>
+        <source>
+            Continue
+        </source>
+        <target state="translated">
+            Jatka
+        </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">194</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2330577642930707695" datatype="html">
-        <source>Cancel</source>
-        <target state="translated">Peruuta</target>
+        <source>
+            Cancel
+        </source>
+        <target state="translated">
+            Peruuta
+        </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">199</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3935456657559916361" datatype="html">
-        <source>TIM sent you a temporary password. Please check your email and type the password below to continue.</source>
-        <target state="translated">TIM lähetti sinulle väliaikaisen salasanan. Kirjoita se alla olevaan kenttään.</target>
+        <source>
+                    TIM sent you a temporary password. Please check your email and type the password below to continue.
+                </source>
+        <target state="translated">
+                    TIM lähetti sinulle väliaikaisen salasanan. Kirjoita se alla olevaan kenttään.
+                </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">204</context>
@@ -3279,8 +3063,12 @@
         </context-group>
       </trans-unit>
       <trans-unit id="834072654360023442" datatype="html">
-        <source>Enter your name (Lastname Firstname)</source>
-        <target state="translated">Kirjoita nimesi (Sukunimi Etunimi)</target>
+        <source>
+                        Enter your name (Lastname Firstname)
+                    </source>
+        <target state="translated">
+                        Kirjoita nimesi (Sukunimi Etunimi)
+                    </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">224</context>
@@ -3295,20 +3083,20 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6047139372036217996" datatype="html">
-        <source>Create a new password (at least
-          <x id="INTERPOLATION" equiv-text="{{ minPasswordLength }}"/>characters)
-        </source>
-        <target state="translated">Luo uusi salasana (vähintään
-          <x id="INTERPOLATION" equiv-text="{{ minPasswordLength }}"/>merkkiä)
-        </target>
+        <source> Create a new password (at least <x id="INTERPOLATION" equiv-text="{{ minPasswordLength }}"/> characters) </source>
+        <target state="translated"> Luo uusi salasana (vähintään <x id="INTERPOLATION" equiv-text="{{ minPasswordLength }}"/> merkkiä) </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">239</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7688307851659303493" datatype="html">
-        <source>Retype the above password</source>
-        <target state="translated">Kirjoita yllä oleva salasana uudelleen</target>
+        <source>
+                        Retype the above password
+                    </source>
+        <target state="translated">
+                        Kirjoita yllä oleva salasana uudelleen
+                    </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">256</context>
@@ -3323,41 +3111,45 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1109115297424558158" datatype="html">
-        <source>Finish</source>
-        <target state="translated">Valmis</target>
+        <source>Finish
+                </source>
+        <target state="translated">Valmis
+                </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">273</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5708663882708336887" datatype="html">
-        <source>Thank you!</source>
-        <target state="translated">Kiitos!</target>
+        <source>
+                Thank you!
+            </source>
+        <target state="translated">
+                Kiitos!
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">277</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5441742507983908256" datatype="html">
-        <source>Your information was updated successfully.</source>
-        <target state="translated">Tietosi päivitettiin onnistuneesti.</target>
+        <source>
+                Your information was updated successfully.
+            </source>
+        <target state="translated">
+                Tietosi päivitettiin onnistuneesti.
+            </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
           <context context-type="linenumber">280</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1031561808357651002" datatype="html">
-        <source>Now you can
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;&quot; focusMe>"/>refresh
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>the page to log in.
-        </source>
-        <target state="translated">Nyt voit
-          <x id="START_LINK" ctype="x-a" equiv-text="&lt;a>"/>virkistää
-          <x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>sivun kirjautuaksesi sisään.
-        </target>
+        <source> Now you can <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;&quot; focusMe>"/>refresh<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> the page to log in. </source>
+        <target state="translated"> Nyt voit <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;&quot; focusMe>"/>virkistää<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> sivun kirjautuaksesi sisään. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/login-dialog.component.ts</context>
-          <context context-type="linenumber">283</context>
+          <context context-type="linenumber">282,286</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1346640911183618259" datatype="html">
@@ -3473,8 +3265,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3136060218695297500" datatype="html">
-        <source>Log in</source>
-        <target state="translated">Kirjaudu sisään</target>
+        <source>Log in </source>
+        <target state="translated">Kirjaudu sisään </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">43,44</context>
@@ -3493,8 +3285,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6800515273162166241" datatype="html">
-        <source>Sign up</source>
-        <target state="translated">Rekisteröidy</target>
+        <source>Sign up </source>
+        <target state="translated">Rekisteröidy </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">49,50</context>
@@ -3589,14 +3381,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5297511590172009633" datatype="html">
-        <source>Examples
-          <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;>"/>(F)
-          <x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/>
-        </source>
-        <target state="translated">Esimerkkejä
-          <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;>"/>(F)
-          <x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/>
-        </target>
+        <source>Examples <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/></source>
+        <target state="translated">Esimerkkejä <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup *ngIf=&quot;notFinnish()&quot;>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">91</context>
@@ -3611,54 +3397,44 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5973984108338028678" datatype="html">
-        <source>Various programming languages</source>
-        <target state="translated">Eri ohjelmointikieliä</target>
+        <source>
+                        Various programming languages</source>
+        <target state="translated">
+                        Eri ohjelmointikieliä</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">95</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2454131097695585453" datatype="html">
-        <source>Usage in different subjects</source>
-        <target state="translated">Käyttö eri oppiaineissa</target>
+        <source>
+                        Usage in different subjects</source>
+        <target state="translated">
+                        Käyttö eri oppiaineissa</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
           <context context-type="linenumber">97</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3673091046572661203" datatype="html">
-        <source>
-          <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup>"/>(F)
-          <x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/>in Finnish
-        </source>
-        <target state="translated">
-          <x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup>"/>(F)
-          <x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/>suomeksi
-        </target>
+        <source><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/> in Finnish </source>
+        <target state="translated"><x id="START_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;sup>"/>(F)<x id="CLOSE_SUPERSCRIPT" ctype="x-sup" equiv-text="&lt;/sup>"/> suomeksi </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/frontpage/front-page.component.ts</context>
-          <context context-type="linenumber">103</context>
+          <context context-type="linenumber">103,104</context>
         </context-group>
       </trans-unit>
       <trans-unit id="1825006444405211276" datatype="html">
-        <source>and
-          <x id="ICU" equiv-text="{numSession(), plural, =1 {one other} other {{{numSession()}} others}}"/>
-        </source>
-        <target state="translated">ja
-          <x id="ICU" equiv-text="{numSession(), plural, =1 {...} other {...}}"/>
-        </target>
+        <source>and <x id="ICU" equiv-text="{numSession(), plural, =1 {one other} other {{{numSession()}} others}}"/></source>
+        <target state="translated">ja <x id="ICU" equiv-text="{numSession(), plural, =1 {...} other {...}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">17</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6578095239916214296" datatype="html">
-        <source>{VAR_PLURAL, plural, =1 {one other} other {
-          <x id="INTERPOLATION"/>others}}
-        </source>
-        <target state="translated">{VAR_PLURAL, plural, =1 {yksi muu} other {
-          <x id="INTERPOLATION" equiv-text="{{numSession()}}"/>muuta} }
-        </target>
+        <source>{VAR_PLURAL, plural, =1 {one other} other {<x id="INTERPOLATION"/> others}}</source>
+        <target state="translated">{VAR_PLURAL, plural, =1 {yksi muu} other {<x id="INTERPOLATION" equiv-text="{{numSession()}}"/> muuta} }</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">17</context>
@@ -3689,44 +3465,24 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6136750245088897520" datatype="html">
-        <source>Authenticate to
-          <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/>with TIM
-        </source>
-        <target state="translated">Tunnistaudu palveluun
-          <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/>TIMin avulla
-        </target>
+        <source>Authenticate to <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/> with TIM</source>
+        <target state="translated">Tunnistaudu palveluun <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/> TIMin avulla</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">41</context>
         </context-group>
       </trans-unit>
       <trans-unit id="426514155240557396" datatype="html">
-        <source>You are attempting to authenticate to
-          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
-          <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/>
-          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>with TIM.
-        </source>
-        <target state="translated">Olet yrittämässä tunnistautua palveluun
-          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
-          <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/>
-          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>TIMin avulla.
-        </target>
+        <source>You are attempting to authenticate to <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> with TIM.</source>
+        <target state="translated">Olet yrittämässä tunnistautua palveluun <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> TIMin avulla.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">42</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3914978142342238712" datatype="html">
-        <source>
-          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
-          <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/>
-          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>will be able to
-        </source>
-        <target state="translated">
-          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
-          <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/>
-          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>voi
-        </target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be able to</source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> voi</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">43</context>
@@ -3753,12 +3509,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3456557310846343541" datatype="html">
-        <source>Authenticate to
-          <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/>
-        </source>
-        <target state="translated">Tunnistaudu palveluun
-          <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/>
-        </target>
+        <source>Authenticate to <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/></source>
+        <target state="translated">Tunnistaudu palveluun <x id="INTERPOLATION" equiv-text="{{data.oauthClientName}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/oauth-authorize.component.ts</context>
           <context context-type="linenumber">51</context>
@@ -3925,8 +3677,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6381140642359438701" datatype="html">
-        <source>Show all</source>
-        <target state="translated">Näytä kaikki</target>
+        <source> Show all </source>
+        <target state="translated"> Näytä kaikki </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">150,151</context>
@@ -3941,26 +3693,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8257562403982749238" datatype="html">
-        <source>Sometimes you may want to subscribe to emails from a folder but exclude some documents within it. Using the list below you can specify which folders and documents should be excluded from your email subscriptions.</source>
-        <target state="translated">Joskus saatat haluta saada päivitysilmoituksia kansiosta, mutta ei tietyistä kansiossa olevista dokumenteista. Alla olevan luettelon avulla voit määrittää, mistä kansioista ja dokumenteista et halua saada päivitysilmoituksia.</target>
+        <source> Sometimes you may want to subscribe to emails from a folder but exclude some documents within it. Using the list below you can specify which folders and documents should be excluded from your email subscriptions. </source>
+        <target state="translated"> Joskus saatat haluta saada päivitysilmoituksia kansiosta, mutta ei tietyistä kansiossa olevista dokumenteista. Alla olevan luettelon avulla voit määrittää, mistä kansioista ja dokumenteista et halua saada päivitysilmoituksia. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">154,157</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3568299798809723019" datatype="html">
-        <source>Type one regular expression per line that should match any part of the path of the folder or document, e.g.
-          <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/
-          <x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>would match any path with
-          <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/
-          <x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>in it.
-        </source>
-        <target state="translated">Kirjoita säännölliset lausekkeet kansio- ja dokumenttipoluille, joista estetään päivitysilmoituksien saanti. Kirjoita jokainen lauseke omalle rivilleen. Esimerkiksi
-          <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/
-          <x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>estää päivitysilmoitukset kaikista dokumenteista ja kansioista, joiden polussa on
-          <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/
-          <x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>.
-        </target>
+        <source>Type one regular expression per line that should match any part of the path of the folder or document, e.g. <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> would match any path with <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> in it.</source>
+        <target state="translated">Kirjoita säännölliset lausekkeet kansio- ja dokumenttipoluille, joista estetään päivitysilmoituksien saanti. Kirjoita jokainen lauseke omalle rivilleen. Esimerkiksi <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/> estää päivitysilmoitukset kaikista dokumenteista ja kansioista, joiden polussa on <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>/ht/<x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">158,160</context>
@@ -3975,8 +3717,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6969149839776519170" datatype="html">
-        <source>Collapse document index with more than</source>
-        <target state="translated">Pienennä sisällysluettelo, jos siinä on yli</target>
+        <source> Collapse document index with more than </source>
+        <target state="translated"> Pienennä sisällysluettelo, jos siinä on yli </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">170,171</context>
@@ -4103,35 +3845,27 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8894738602661871576" datatype="html">
-        <source>A verification email was sent to the current primary email.</source>
-        <target state="translated">Vahvistusviesti lähetettiin tämänhetkiseen ensisijaiseen sähköpostiosoitteeseen.</target>
+        <source> A verification email was sent to the current primary email. </source>
+        <target state="translated"> Vahvistusviesti lähetettiin tämänhetkiseen ensisijaiseen sähköpostiosoitteeseen. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">244</context>
         </context-group>
       </trans-unit>
       <trans-unit id="2749345556422798610" datatype="html">
-        <source>Primary email is used to send you notifications and message list messages.</source>
-        <target state="translated">Päivitysilmoitukset ja viestilistojen viestit lähetetään ensisijaiseen sähköpostiosoitteeseen</target>
+        <source> Primary email is used to send you notifications and message list messages. </source>
+        <target state="translated"> Päivitysilmoitukset ja viestilistojen viestit lähetetään ensisijaiseen sähköpostiosoitteeseen </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">247</context>
         </context-group>
       </trans-unit>
       <trans-unit id="582891413766289599" datatype="html">
-        <source>This email is managed by
-          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong [style.color]=&quot;originInfo.bgColor&quot;>"/>
-          <x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/>
-          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>. The address will be automatically updated by the system.
-        </source>
-        <target state="translated">Tätä sähköpostiosoitetta hallinnoi
-          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong [style.color]=&quot;originInfo.bgColor&quot;>"/>
-          <x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/>
-          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>-järjestelmä. Järjestelmä voi automaattisesti päivittää tämän osoitteen.
-        </target>
+        <source> This email is managed by <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>. The address will be automatically updated by the system. </source>
+        <target state="translated"> Tätä sähköpostiosoitetta hallinnoi <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong [style.color]=&quot;originInfo.bgColor&quot;>"/><x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>-järjestelmä. Järjestelmä voi automaattisesti päivittää tämän osoitteen. </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">250</context>
+          <context context-type="linenumber">249,252</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8066516358153551219" datatype="html">
@@ -4151,12 +3885,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="5082720704336620067" datatype="html">
-        <source>This email is managed by
-          <x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/>. You cannot delete managed contacts yourself.
-        </source>
-        <target state="translated">Tätä sähköpostiosoitetta hallitsee
-          <x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/>-järjestelmä. Et voi poistaa hallittuja osoitteita itse.
-        </target>
+        <source>This email is managed by <x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/>. You cannot delete managed contacts yourself.</source>
+        <target state="translated">Tätä sähköpostiosoitetta hallitsee <x id="INTERPOLATION" equiv-text="{{originInfo.name}}"/>-järjestelmä. Et voi poistaa hallittuja osoitteita itse.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">263</context>
@@ -4179,16 +3909,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6246339007657164183" datatype="html">
-        <source>Resend verification</source>
-        <target state="translated">Lähetä vahvistusviesti uudelleen</target>
+        <source> Resend verification </source>
+        <target state="translated"> Lähetä vahvistusviesti uudelleen </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">275</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6613022658286983426" datatype="html">
-        <source>Verification sent!</source>
-        <target state="translated">Vahvistusviesti lähetetty!</target>
+        <source> Verification sent! </source>
+        <target state="translated"> Vahvistusviesti lähetetty! </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">278</context>
@@ -4211,52 +3941,40 @@
         </context-group>
       </trans-unit>
       <trans-unit id="6339286474742811814" datatype="html">
-        <source>Delete account...</source>
-        <target state="translated">Poista tilisi...</target>
+        <source>Delete account... </source>
+        <target state="translated">Poista tilisi... </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">297</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5705192456342684849" datatype="html">
-        <source>To delete your account, please type your username (
-          <x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) in the field below and then click "Delete account now".
-        </source>
-        <target state="translated">Poistaaksesi tilisi, kirjoita käyttäjätunnuksesi  (
-          <x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) alla olevaan kenttään ja paina "Poista tunnus nyt".
-        </target>
+        <source> To delete your account, please type your username (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) in the field below and then click "Delete account now". </source>
+        <target state="translated"> Poistaaksesi tilisi, kirjoita käyttäjätunnuksesi (<x id="INTERPOLATION" equiv-text="{{ user.name }}"/>) alla olevaan kenttään ja paina "Poista tunnus nyt". </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">300</context>
+          <context context-type="linenumber">300,303</context>
         </context-group>
       </trans-unit>
       <trans-unit id="3989709900019074353" datatype="html">
-        <source>Delete account now</source>
-        <target state="translated">Poista tunnus nyt</target>
+        <source>Delete account now </source>
+        <target state="translated">Poista tunnus nyt </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">311</context>
         </context-group>
       </trans-unit>
       <trans-unit id="7699608300673344939" datatype="html">
-        <source>Failed to change the primary email:
-          <x id="PH" equiv-text="r.result.error.error"/>
-        </source>
-        <target state="translated">Ensisijaisen sähköpostiosoitteen vaihtaminen epäonnistui:
-          <x id="PH" equiv-text="r.result.error.error"/>
-        </target>
+        <source>Failed to change the primary email: <x id="PH" equiv-text="r.result.error.error"/></source>
+        <target state="translated">Ensisijaisen sähköpostiosoitteen vaihtaminen epäonnistui: <x id="PH" equiv-text="r.result.error.error"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">461</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4776877460869970640" datatype="html">
-        <source>Are you sure you want to delete your account (
-          <x id="PH" equiv-text="this.user.name"/>)?
-        </source>
-        <target state="translated">Oletko varma, että haluat poistaa tilisi (
-          <x id="PH" equiv-text="this.user.name"/>)?
-        </target>
+        <source>Are you sure you want to delete your account (<x id="PH" equiv-text="this.user.name"/>)?</source>
+        <target state="translated">Oletko varma, että haluat poistaa tilisi (<x id="PH" equiv-text="this.user.name"/>)?</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">536</context>
@@ -4279,53 +3997,27 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8518958070193835562" datatype="html">
-        <source>Type:
-          <x id="INTERPOLATION" equiv-text="{{contactType}}"/>
-        </source>
-        <target state="translated">Tyyppi:
-          <x id="INTERPOLATION" equiv-text="{{contactType}}"/>
-        </target>
+        <source>Type: <x id="INTERPOLATION" equiv-text="{{contactType}}"/></source>
+        <target state="translated">Tyyppi: <x id="INTERPOLATION" equiv-text="{{contactType}}"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">71</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6060837509033289235" datatype="html">
-        <source>Contact information:
-          <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>
-          <x id="INTERPOLATION" equiv-text="{{info.contact}}"/>
-          <x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>
-        </source>
-        <target state="translated">Yhteystieto:
-          <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>
-          <x id="INTERPOLATION" equiv-text="{{info.contact}}"/>
-          <x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>
-        </target>
+        <source>Contact information: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/></source>
+        <target state="translated">Yhteystieto: <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/></target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">72</context>
         </context-group>
       </trans-unit>
       <trans-unit id="5353556497172163824" datatype="html">
-        <source>
-          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
-          <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>
-          <x id="INTERPOLATION" equiv-text="{{info.contact}}"/>
-          <x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>
-          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>will be made your primary
-          <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.
-        </source>
-        <target state="translated">
-          <x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>
-          <x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/>
-          <x id="INTERPOLATION" equiv-text="{{info.contact}}"/>
-          <x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/>
-          <x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/>asetetaan sinun ensisijaiseksi
-          <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>-yhteystiedoksi.
-        </target>
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> will be made your primary <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>.</source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/><x id="START_TAG_CODE" ctype="x-code" equiv-text="&lt;code>"/><x id="INTERPOLATION" equiv-text="{{info.contact}}"/><x id="CLOSE_TAG_CODE" ctype="x-code" equiv-text="&lt;/code>"/><x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> asetetaan sinun ensisijaiseksi <x id="INTERPOLATION_1" equiv-text="{{contactType.toLowerCase()}}"/>-yhteystiedoksi..</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
-          <context context-type="linenumber">95</context>
+          <context context-type="linenumber">96</context>
         </context-group>
       </trans-unit>
       <trans-unit id="8097524220608794552" datatype="html">
@@ -4341,12 +4033,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="8418612238495526418" datatype="html">
-        <source>Cannot verify:
-          <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/>
-        </source>
-        <target state="translated">Vahvistaminen epäonnistui:
-          <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/>
-        </target>
+        <source> Cannot verify: <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/> </source>
+        <target state="translated"> Vahvistaminen epäonnistui: <x id="INTERPOLATION" equiv-text="{{verifyGlobals.verifyError}}"/> </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">129</context>
@@ -4361,8 +4049,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="3981277675019788437" datatype="html">
-        <source>Please verify or deny the action. You will not be able to access this page once you select either option.</source>
-        <target state="translated">Ole hyvä ja vahvista tai kiellä toimenpide</target>
+        <source> Please verify or deny the action. You will not be able to access this page once you select either option. </source>
+        <target state="translated"> Ole hyvä ja vahvista tai kiellä toimenpide </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">144</context>
@@ -4401,26 +4089,16 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1952397367456792334" datatype="html">
-        <source>Verification was successfully denied. If you believe you got this link by mistake, please report this to
-          <x id="PH" equiv-text="genericglobals().config.helpEmail"/>.
-        </source>
-        <target state="translated">Vahvistus kiellettiin onnistuneesti. Mikäli uskot saaneesi linkin vahingossa, ole hyvä ja ilmoita se osoitteeseen
-          <x id="PH" equiv-text="genericglobals().config.helpEmail"/>.
-        </target>
+        <source>Verification was successfully denied. If you believe you got this link by mistake, please report this to <x id="PH" equiv-text="genericglobals().config.helpEmail                     "/>.</source>
+        <target state="translated">Vahvistus kiellettiin onnistuneesti. Mikäli uskot saaneesi linkin vahingossa, ole hyvä ja ilmoita se osoitteeseen <x id="PH" equiv-text="genericglobals().config.helpEmail                     "/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">227</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4285864746501832121" datatype="html">
-        <source>Could not verify action because of an error:
-          <x id="PH" equiv-text="res.result.error.error"/>. Please report this to
-          <x id="PH_1" equiv-text="genericglobals().config.helpEmail"/>.
-        </source>
-        <target state="translated">Vahvistaminen epäonnistui virheen takia:
-          <x id="PH" equiv-text="res.result.error.error"/>. Ole hyvä ja ilmoita tästä osoitteeseen
-          <x id="PH_1" equiv-text="genericglobals().config.helpEmail"/>.
-        </target>
+        <source>Could not verify action because of an error: <x id="PH" equiv-text="res.result.error.error                 "/>. Please report this to <x id="PH_1" equiv-text="genericglobals().config.helpEmail"/>.</source>
+        <target state="translated">Vahvistaminen epäonnistui virheen takia: <x id="PH" equiv-text="res.result.error.error                 "/>. Ole hyvä ja ilmoita tästä osoitteeseen <x id="PH_1" equiv-text="genericglobals().config.helpEmail"/>.</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-action-verify.component.ts</context>
           <context context-type="linenumber">237</context>
@@ -4443,12 +4121,8 @@
         </context-group>
       </trans-unit>
       <trans-unit id="897844800644136099" datatype="html">
-        <source>Log
-          <x id="INTERPOLATION" equiv-text="{{ u.real_name }}"/>out
-        </source>
-        <target state="translated">Kirjaa
-          <x id="INTERPOLATION" equiv-text="{{ u.real_name }}"/>ulos
-        </target>
+        <source>Log <x id="INTERPOLATION" equiv-text="{{ u.real_name }}"/> out</source>
+        <target state="translated">Kirjaa <x id="INTERPOLATION" equiv-text="{{ u.real_name }}"/> ulos</target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/user-menu.component.ts</context>
           <context context-type="linenumber">40</context>
@@ -4483,27 +4157,23 @@
         </context-group>
       </trans-unit>
       <trans-unit id="1355999867876435949" datatype="html">
-        <source>Privacy notice</source>
-        <target state="translated">Tietosuojailmoitus</target>
+        <source> Privacy notice </source>
+        <target state="translated"> Tietosuojailmoitus </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
           <context context-type="linenumber">40,41</context>
         </context-group>
       </trans-unit>
       <trans-unit id="4098460571712444283" datatype="html">
-        <source>Accessibility statement</source>
-        <target state="translated">Saavutettavuusseloste</target>
+        <source>
+                                        Accessibility statement
+                                    </source>
+        <target state="translated">
+                                        Saavutettavuusseloste
+                                    </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
           <context context-type="linenumber">45</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2239742692583764806" datatype="html">
-        <source>From:</source>
-        <target state="translated">Lähettäjä:</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/messaging/tim-message.component.ts</context>
-          <context context-type="linenumber">31</context>
         </context-group>
       </trans-unit>
     </body>
