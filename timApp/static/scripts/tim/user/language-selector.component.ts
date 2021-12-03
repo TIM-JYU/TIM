@@ -1,6 +1,7 @@
 import {settingsglobals} from "tim/util/globals";
 import {Component, Input} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
+import {toPromise} from "tim/util/utils";
 
 const webBrowser = "UseWebBrowser";
 
@@ -32,10 +33,12 @@ export class LanguageSelectorComponent {
 
     async onChange() {
         if (this.saveOnChange) {
-            await this.http.put("/settings/save/lang", {
-                // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-                lang: this.settings.language || null,
-            });
+            await toPromise(
+                this.http.put("/settings/save/lang", {
+                    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+                    lang: this.settings.language || null,
+                })
+            );
             location.reload();
         }
     }
