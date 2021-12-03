@@ -24,8 +24,9 @@ export async function showQuestionAnswerDialog(p: IAnswerQuestionParams) {
     const {AnswerToQuestionDialogComponent} = await import(
         "./answer-to-question-dialog.component"
     );
-    return await (await angularDialog.open(AnswerToQuestionDialogComponent, p))
-        .result;
+    return await (
+        await angularDialog.open(AnswerToQuestionDialogComponent, p)
+    ).result;
 }
 
 export async function showLectureWall(messages: ILectureMessage[]) {
@@ -52,6 +53,7 @@ export async function showQuestionAskDialog(p: QuestionPreviewParams) {
     const {QuestionPreviewDialogComponent} = await import(
         "./question-preview-dialog.component"
     );
-    return await (await angularDialog.open(QuestionPreviewDialogComponent, p))
-        .result;
+    return await (
+        await angularDialog.open(QuestionPreviewDialogComponent, p)
+    ).result;
 }

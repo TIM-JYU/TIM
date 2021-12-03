@@ -44,7 +44,7 @@ export function onClick(
     // Reset last click if it wasn't on the same element
     $(document).on(startEvent, (e) => {
         // jQuery doesn't properly type the target
-        const target = (e.target as unknown) as Element;
+        const target = e.target as unknown as Element;
         if (lastClickElement !== target) {
             lastClickElement = undefined;
         }

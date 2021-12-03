@@ -31,9 +31,7 @@ function getDocumentForElement(el: Element) {
         return getActiveDocument();
     }
     // If the element wasn't in the main content area, this must be in preview.
-    const d = new TimDocument(
-        $(el).parents(".previewcontent")[0] as HTMLElement
-    );
+    const d = new TimDocument($(el).parents(".previewcontent")[0]);
     d.buildSections();
     return d;
 }

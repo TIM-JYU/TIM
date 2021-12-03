@@ -212,8 +212,9 @@ export class DrawToolbarComponent implements AfterViewInit {
     setInputBackgroundColor(color: string) {
         if (this.colorInput) {
             this.colorInput.nativeElement.style.backgroundColor = color;
-            const prev = window.getComputedStyle(this.colorInput.nativeElement)
-                .backgroundColor;
+            const prev = window.getComputedStyle(
+                this.colorInput.nativeElement
+            ).backgroundColor;
             if (prev.includes("rgb(")) {
                 this.colorInput.nativeElement.style.backgroundColor = prev
                     .replace("rgb", "rgba")

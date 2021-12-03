@@ -3,7 +3,7 @@ import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";
 import {FormsModule} from "@angular/forms";
-import {to2} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {TimMessageData} from "./tim-message-view.component";
 
@@ -148,17 +148,15 @@ export class TimMessageComponent implements OnInit {
         }
         this.replyOptions.recipient = this.message.sender;
         this.replyOptions.repliesTo = this.message.id;
-        const result = await to2(
-            this.http
-                .post("/timMessage/reply", {
-                    options: this.replyOptions,
-                    messageBody: {
-                        messageBody: this.replyMessage,
-                        messageSubject: `[Re] ${this.message.message_subject}`,
-                        recipients: [this.replyOptions.recipient],
-                    },
-                })
-                .toPromise()
+        const result = await toPromise(
+            this.http.post("/timMessage/reply", {
+                options: this.replyOptions,
+                messageBody: {
+                    messageBody: this.replyMessage,
+                    messageSubject: `[Re] ${this.message.message_subject}`,
+                    recipients: [this.replyOptions.recipient],
+                },
+            })
         );
         if (!result.ok) {
             this.errorMessage = $localize`Could not reply to message: ${result.result.error.error}`;

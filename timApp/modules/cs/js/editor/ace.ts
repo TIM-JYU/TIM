@@ -39,18 +39,22 @@ export class AceEditorComponent implements IEditor {
                     highlightActiveLine: false,
                     highlightGutterLine: false,
                 });
-                ((this.aceEditor.renderer.$cursorLayer as unknown) as {
-                    element: HTMLElement;
-                }).element.style.opacity = "0";
+                (
+                    this.aceEditor.renderer.$cursorLayer as unknown as {
+                        element: HTMLElement;
+                    }
+                ).element.style.opacity = "0";
             } else {
                 this.aceEditor.setOptions({
                     readOnly: false,
                     highlightActiveLine: true,
                     highlightGutterLine: true,
                 });
-                ((this.aceEditor.renderer.$cursorLayer as unknown) as {
-                    element: HTMLElement;
-                }).element.style.opacity = "1";
+                (
+                    this.aceEditor.renderer.$cursorLayer as unknown as {
+                        element: HTMLElement;
+                    }
+                ).element.style.opacity = "1";
             }
         }
         this.aceEditor?.setOption("readOnly", this.disabled);

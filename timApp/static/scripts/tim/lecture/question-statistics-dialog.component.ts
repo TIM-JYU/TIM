@@ -1,7 +1,7 @@
 import moment from "moment";
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
-import {timeout, to2} from "tim/util/utils";
+import {timeout, toPromise} from "tim/util/utils";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -68,16 +68,14 @@ export class QuestionStatisticsDialogComponent extends AngularDialogComponent<
     private async getLectureAnswers() {
         while (!this.closed) {
             const now = moment();
-            const r = await to2(
-                this.http
-                    .get<IQuestionAnswerPlain[]>("/getLectureAnswers", {
-                        params: {
-                            after: this.lastFetch.toISOString(),
-                            asked_id: this.data.asked_id.toString(),
-                            buster: new Date().getTime().toString(),
-                        },
-                    })
-                    .toPromise()
+            const r = await toPromise(
+                this.http.get<IQuestionAnswerPlain[]>("/getLectureAnswers", {
+                    params: {
+                        after: this.lastFetch.toISOString(),
+                        asked_id: this.data.asked_id.toString(),
+                        buster: new Date().getTime().toString(),
+                    },
+                })
             );
             if (r.ok) {
                 const data = r.result;

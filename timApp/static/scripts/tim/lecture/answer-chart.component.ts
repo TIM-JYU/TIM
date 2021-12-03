@@ -1,10 +1,16 @@
-import {Component, Input, NgModule, OnChanges} from "@angular/core";
-import {ChartData, ChartDataSets, ChartOptions, ChartType} from "chart.js";
+import {
+    ChangeDetectorRef,
+    Component,
+    Input,
+    NgModule,
+    OnChanges,
+} from "@angular/core";
+import {ChartData, ChartDataset, ChartOptions, ChartType} from "chart.js";
 import {fixQuestionJson} from "tim/document/question/answer-sheet.component";
 import {Overwrite} from "type-zoo";
 import {Changes} from "tim/util/angularchanges";
 import {BrowserModule} from "@angular/platform-browser";
-import {ChartsModule} from "ng2-charts";
+import {NgChartsModule} from "ng2-charts";
 import * as t from "io-ts";
 import {clone, TimStorage, truncate} from "../util/utils";
 import {
@@ -152,7 +158,7 @@ interface ChartConfig {
         ChartData,
         {datasets: IDataSet[]; labels: Array<string | string[]>}
     >;
-    options: ChartOptions;
+    options: ChartOptions<"bar">;
 }
 
 @Component({
@@ -163,9 +169,9 @@ interface ChartConfig {
             <canvas baseChart
                     [datasets]="chartData.datasets"
                     [labels]="chartData.config.data.labels"
-                    [options]="chartData.config.options"
-                    [legend]="chartData.config.options.legend?.display || false"
-                    [chartType]="chartTypes[chartIndex]">
+                    [options]="chartOptions"
+                    [legend]="chartData.config.options.plugins?.legend?.display || false"
+                    [type]="'bar'">
             </canvas>
         </div>
         <div *ngIf="isText">
@@ -173,7 +179,7 @@ interface ChartConfig {
         </div>
         <p *ngIf="answers">Total points: {{ getTotalPoints() }}</p>
         <div *ngIf="!isText">
-            <button class="timButton btn-xs" (click)="toggle()">Change chart orientation</button>
+            <button class="timButton btn-xs" (click)="toggleAxis()">Change chart orientation</button>
         </div>
     `,
     styleUrls: ["./answer-chart.component.scss"],
@@ -181,13 +187,13 @@ interface ChartConfig {
 export class AnswerChartComponent implements OnChanges {
     isText = false;
     private chartIndexStorage = new TimStorage("answerChart", t.number);
-    chartIndex = this.chartIndexStorage.get() ?? 0;
+    axisIndex = this.chartIndexStorage.get() ?? 0;
     @Input() question?: IAskedQuestion;
     @Input() answers?: AnswerList;
     private chartConfig?: ChartConfig;
-    chartData?: {config: ChartConfig; datasets: ChartDataSets[]};
+    chartData?: {config: ChartConfig; datasets: ChartDataset<"bar">[]};
     private lastAnswerCount = 0;
-    chartTypes: ChartType[] = ["bar", "horizontalBar"];
+    indexAxes: ("x" | "y")[] = ["x", "y"];
 
     // TODO: If more than 12 choices this will break. Refactor to better format.
     private basicSets: IDataSet[] = [
@@ -315,6 +321,15 @@ export class AnswerChartComponent implements OnChanges {
     ];
     textAnswers: string[] = [];
 
+    constructor(private cdr: ChangeDetectorRef) {}
+
+    get chartOptions(): ChartOptions<"bar"> {
+        return {
+            ...this.chartConfig?.options,
+            ...{indexAxis: this.indexAxes[this.axisIndex]},
+        };
+    }
+
     ngOnChanges(onChangesObj: Changes<this, "question" | "answers">) {
         const qdata = onChangesObj.question;
         const adata = onChangesObj.answers;
@@ -336,7 +351,7 @@ export class AnswerChartComponent implements OnChanges {
         value: number | string,
         axis: number
     ): string | number | undefined {
-        if (axis == this.chartIndex) {
+        if (axis == this.axisIndex) {
             return value;
         }
         if (typeof value === "number" && value % 1 === 0) {
@@ -349,8 +364,8 @@ export class AnswerChartComponent implements OnChanges {
         dataSets[index].data = emptyData.slice();
         const color = this.basicSets[index % this.basicSets.length].fill;
         dataSets[index].backgroundColor = timFillArray(emptyData.length, color);
-        const bordercolor = this.basicSets[index % this.basicSets.length]
-            .borderColor;
+        const bordercolor =
+            this.basicSets[index % this.basicSets.length].borderColor;
         dataSets[index].borderColor = timFillArray(
             emptyData.length,
             bordercolor as string
@@ -401,42 +416,41 @@ export class AnswerChartComponent implements OnChanges {
         }
 
         this.chartConfig = {
-            type: "horizontalBar",
+            type: "bar",
             data: {
                 labels: labels,
                 datasets: usedDataSets,
             },
             options: {
+                indexAxis: this.indexAxes[this.axisIndex],
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: {
                     duration: 0,
                 },
-                legend: {
-                    display: showLegend,
-                    labels: {},
+                plugins: {
+                    legend: {
+                        display: showLegend,
+                        labels: {},
+                    },
                 },
                 scales: {
-                    xAxes: [
-                        {
-                            ticks: {
-                                min: 0,
-                                callback: (value) => {
-                                    return this.intScale(value, 0);
-                                },
+                    x: {
+                        min: 0,
+                        ticks: {
+                            callback: (value) => {
+                                return this.intScale(value, 0);
                             },
                         },
-                    ],
-                    yAxes: [
-                        {
-                            ticks: {
-                                min: 0,
-                                callback: (value) => {
-                                    return this.intScale(value, 1);
-                                },
+                    },
+                    y: {
+                        min: 0,
+                        ticks: {
+                            callback: (value) => {
+                                return this.intScale(value, 1);
                             },
                         },
-                    ],
+                    },
                 },
             },
         };
@@ -444,14 +458,14 @@ export class AnswerChartComponent implements OnChanges {
         this.update();
     }
 
-    toggle() {
-        let qstChartIndex = this.chartIndexStorage.get() ?? 0;
-        if (qstChartIndex != this.chartIndex) {
-            qstChartIndex = this.chartIndex;
+    toggleAxis() {
+        let qstAxisIndex = this.chartIndexStorage.get() ?? 0;
+        if (qstAxisIndex != this.axisIndex) {
+            qstAxisIndex = this.axisIndex;
         }
-        qstChartIndex = (qstChartIndex + 1) % this.chartTypes.length;
-        this.chartIndex = qstChartIndex;
-        this.chartIndexStorage.set(qstChartIndex);
+        qstAxisIndex = (qstAxisIndex + 1) % this.indexAxes.length;
+        this.axisIndex = qstAxisIndex;
+        this.chartIndexStorage.set(qstAxisIndex);
     }
 
     update() {
@@ -515,7 +529,7 @@ export class AnswerChartComponent implements OnChanges {
 
 @NgModule({
     declarations: [AnswerChartComponent],
-    imports: [BrowserModule, ChartsModule],
+    imports: [BrowserModule, NgChartsModule],
     exports: [AnswerChartComponent],
 })
 export class AnswerChartModule {}

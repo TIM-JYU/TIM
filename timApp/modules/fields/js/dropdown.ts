@@ -59,7 +59,8 @@ class DropdownController
         t.TypeOf<typeof DropdownAll>,
         typeof DropdownAll
     >
-    implements ITimComponent {
+    implements ITimComponent
+{
     private error?: string;
     // noinspection JSMismatchedCollectionQueryUpdate
     private wordList?: string[];

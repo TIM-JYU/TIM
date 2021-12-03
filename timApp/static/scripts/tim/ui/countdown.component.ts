@@ -7,7 +7,7 @@ import {
     Output,
 } from "@angular/core";
 import humanizeDuration from "humanize-duration";
-import {formatString, secondsToShortTime, to2} from "tim/util/utils";
+import {formatString, secondsToShortTime, toPromise} from "tim/util/utils";
 import {Users} from "tim/user/userService";
 import moment from "moment";
 import {HttpClient} from "@angular/common/http";
@@ -80,8 +80,8 @@ export class CountdownComponent implements OnInit, OnChanges {
 
     private async getSyncedTime(time: ReadonlyMoment) {
         const start = window.performance.now();
-        const serverTime = await to2(
-            this.http.get<{time: moment.Moment}>("/time").toPromise()
+        const serverTime = await toPromise(
+            this.http.get<{time: moment.Moment}>("/time")
         );
         if (!serverTime.ok) {
             return undefined;

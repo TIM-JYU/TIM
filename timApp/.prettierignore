@@ -3,3 +3,4 @@ README
 /modules/cs/static/mindsim
 /modules/cs/MIRToolbox
 !*.ts
+!i18n/xlf-merge.js

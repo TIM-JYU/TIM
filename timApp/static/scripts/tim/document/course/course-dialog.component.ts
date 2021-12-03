@@ -11,7 +11,7 @@ import {
     ITag,
     TagType,
 } from "tim/item/IItem";
-import {to2} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 import {FormsModule, NgForm} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -137,8 +137,8 @@ export class CourseDialogComponent extends AngularDialogComponent<IItem, void> {
      */
     private async getCurrentSpecialTags() {
         const docPath = this.data.path;
-        const r = await to2(
-            this.http.get<ITag[]>(`/tags/getTags/${docPath}`).toPromise()
+        const r = await toPromise(
+            this.http.get<ITag[]>(`/tags/getTags/${docPath}`)
         );
         this.studentGroupName = "";
         let groupSep = "";
@@ -165,13 +165,11 @@ export class CourseDialogComponent extends AngularDialogComponent<IItem, void> {
      */
     private async removeCurrentSpecialTags() {
         const docPath = this.data.path;
-        const r = await to2(
-            this.http
-                .post(`/tags/setCourseTags/${docPath}`, {
-                    groups: [],
-                    tags: [],
-                })
-                .toPromise()
+        const r = await toPromise(
+            this.http.post(`/tags/setCourseTags/${docPath}`, {
+                groups: [],
+                tags: [],
+            })
         );
         if (!r.ok) {
             this.errorMessage = r.result.error.error;
@@ -239,16 +237,14 @@ export class CourseDialogComponent extends AngularDialogComponent<IItem, void> {
             type: TagType.Subject,
         };
 
-        const r = await to2(
-            this.http
-                .post(`/tags/setCourseTags/${docPath}`, {
-                    groups:
-                        this.studentGroupName.length > 0
-                            ? this.studentGroupName.split(";")
-                            : [],
-                    tags: [codeTag, subjectTag],
-                })
-                .toPromise()
+        const r = await toPromise(
+            this.http.post(`/tags/setCourseTags/${docPath}`, {
+                groups:
+                    this.studentGroupName.length > 0
+                        ? this.studentGroupName.split(";")
+                        : [],
+                tags: [codeTag, subjectTag],
+            })
         );
         if (!r.ok) {
             this.errorMessage = r.result.error.error;
@@ -264,8 +260,8 @@ export class CourseDialogComponent extends AngularDialogComponent<IItem, void> {
      * Gets the subjects list from the designated course settings document.
      */
     private async getSubjects() {
-        const r = await to2(
-            this.http.get<ICourseSettings>(`/courses/settings`).toPromise()
+        const r = await toPromise(
+            this.http.get<ICourseSettings>(`/courses/settings`)
         );
         if (r.ok) {
             // Add a placeholder subject for quicker testing in case course settings does not exist.

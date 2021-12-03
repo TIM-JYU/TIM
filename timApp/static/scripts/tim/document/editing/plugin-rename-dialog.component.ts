@@ -1,6 +1,5 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule} from "@angular/core";
-import {to2} from "tim/util/utils";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {KEY_S} from "tim/util/keycodes";
 import {DialogModule} from "tim/ui/angulardialog/dialog.module";
@@ -9,6 +8,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {FormsModule} from "@angular/forms";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
+import {toPromise} from "tim/util/utils";
 import {
     Duplicate,
     IExtraData,
@@ -115,15 +115,13 @@ export class PluginRenameDialogComponent extends AngularDialogComponent<
     async cancelPluginRenameClicked() {
         // Cancels recent changes to paragraph/document
         if (isFromPar(this.data)) {
-            await to2(
-                this.http
-                    .post("/cancelChanges/", {
-                        docId: this.data.extraData.docId,
-                        newPars: this.data.new_par_ids,
-                        originalPar: this.data.original_par,
-                        parId: this.data.extraData.par?.originalPar.id,
-                    })
-                    .toPromise()
+            await toPromise(
+                this.http.post("/cancelChanges/", {
+                    docId: this.data.extraData.docId,
+                    newPars: this.data.new_par_ids,
+                    originalPar: this.data.original_par,
+                    parId: this.data.extraData.par?.originalPar.id,
+                })
             );
         }
         this.dismiss();
@@ -155,13 +153,14 @@ export class PluginRenameDialogComponent extends AngularDialogComponent<
             }
         }
         // Save the new task names for duplicates
-        const response = await to2(
-            this.http
-                .post<IParResponse | IManageResponse>("/postNewTaskNames/", {
+        const response = await toPromise(
+            this.http.post<IParResponse | IManageResponse>(
+                "/postNewTaskNames/",
+                {
                     duplicates: duplicateData,
                     docId: this.data.extraData?.docId,
-                })
-                .toPromise()
+                }
+            )
         );
         if (!response.ok) {
             return;

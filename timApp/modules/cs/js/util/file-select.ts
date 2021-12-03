@@ -123,9 +123,8 @@ export class FileSelectComponent {
         true
     );
     @Output("upload") uploadEmitter: EventEmitter<unknown> = new EventEmitter();
-    @Output("uploadDone") uploadDoneEmitter: EventEmitter<
-        boolean
-    > = new EventEmitter(true);
+    @Output("uploadDone") uploadDoneEmitter: EventEmitter<boolean> =
+        new EventEmitter(true);
 
     @ViewChild("input") inputElement?: ElementRef;
     @ViewChild("error") error?: NotificationComponent;
@@ -386,9 +385,8 @@ export class FileSelectManagerComponent {
     @Output("file") fileEmitter: EventEmitter<IFile> = new EventEmitter();
     @Output("files") filesEmitter: EventEmitter<IFile[]> = new EventEmitter();
     @Output("upload") uploadEmitter: EventEmitter<unknown> = new EventEmitter();
-    @Output("uploadDone") uploadDoneEmitter: EventEmitter<
-        boolean
-    > = new EventEmitter();
+    @Output("uploadDone") uploadDoneEmitter: EventEmitter<boolean> =
+        new EventEmitter();
 
     private fileSelects: Record<string, FileSelectComponent> = {};
 
@@ -568,9 +566,9 @@ export class FileSelectManagerComponent {
             }
 
             const mappings: [number, string][] = [];
-            const notAssigned = (JSON.parse(
-                JSON.stringify(self.files)
-            ) as IFileSpecification[]).map((f) => {
+            const notAssigned = (
+                JSON.parse(JSON.stringify(self.files)) as IFileSpecification[]
+            ).map((f) => {
                 const k: IFileSpecificationBase & {
                     paths: Path[];
                 } = f as IFileSpecification & {paths: Path[]};

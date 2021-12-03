@@ -263,20 +263,19 @@ export async function initReadings(item: IItem) {
         pars.forEach((p) => p.getReadSectionMark()?.remove());
     });
 
-    onMouseOverOut("#pars .par:not('.preamble')", function mouseOverHandler(
-        $this,
-        e,
-        select
-    ) {
-        const el = $this[0];
+    onMouseOverOut(
+        "#pars .par:not('.preamble')",
+        function mouseOverHandler($this, e, select) {
+            const el = $this[0];
 
-        // Workaround: The document might have been edited just now, so creating context may fail
-        // if getActiveDocument().rebuildSections() has not yet been called.
-        const ctx = tryCreateParContextOrHelp(el);
-        if (select && ctx && !ctx.isHelp) {
-            markParRead(ctx, ReadingType.HoverPar);
+            // Workaround: The document might have been edited just now, so creating context may fail
+            // if getActiveDocument().rebuildSections() has not yet been called.
+            const ctx = tryCreateParContextOrHelp(el);
+            if (select && ctx && !ctx.isHelp) {
+                markParRead(ctx, ReadingType.HoverPar);
+            }
         }
-    });
+    );
 
     if (Users.isLoggedIn() && genericglobals().bookmarks != null) {
         await $timeout(10000);

@@ -1,6 +1,6 @@
 import {AngularDialogComponent} from "tim/ui/angulardialog/angular-dialog-component.directive";
 import {Component, NgModule, NgZone} from "@angular/core";
-import {to2} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 import {BrowserModule} from "@angular/platform-browser";
@@ -102,12 +102,10 @@ export class LectureWallDialogComponent extends AngularDialogComponent<
         if (message.trim() === "") {
             return;
         }
-        await to2(
-            this.http
-                .post("/sendMessage", {
-                    message,
-                })
-                .toPromise()
+        await toPromise(
+            this.http.post("/sendMessage", {
+                message,
+            })
         );
         this.newMsg = "";
     }

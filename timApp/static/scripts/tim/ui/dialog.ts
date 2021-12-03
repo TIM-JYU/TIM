@@ -40,7 +40,7 @@ export function registerDialogComponentForModule<
             modalInstance: "<",
             resolve: "<",
         },
-        controller: (controller as unknown) as new (
+        controller: controller as unknown as new (
             ...args: unknown[]
         ) => IController,
         controllerAs,

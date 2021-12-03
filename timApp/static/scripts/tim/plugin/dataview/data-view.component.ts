@@ -122,9 +122,10 @@ export interface DataModelProvider {
 
     handleClickClearFilters(): void;
 
-    getSortSymbolInfo(
-        columnIndex: number
-    ): {symbol: string; style: Record<string, string>};
+    getSortSymbolInfo(columnIndex: number): {
+        symbol: string;
+        style: Record<string, string>;
+    };
 
     handleClickHeader(columnIndex: number): void;
 
@@ -251,9 +252,8 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
 export class DataViewComponent implements AfterViewInit, OnInit {
     // region Fields
     @Input() modelProvider!: DataModelProvider;
-    @Input() virtualScrolling: Partial<
-        VirtualScrollingOptions
-    > = DEFAULT_VIRTUAL_SCROLL_SETTINGS;
+    @Input() virtualScrolling: Partial<VirtualScrollingOptions> =
+        DEFAULT_VIRTUAL_SCROLL_SETTINGS;
     @Input() tableClass: Record<string, unknown> = {};
     @Input() tableStyle: Record<string, string> = {};
     @Input() headerStyle: Record<string, string> | null = {};
@@ -275,58 +275,43 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() cbFilter = false;
     isVirtual: boolean = false;
     dataViewWidth = "100%";
-    @ViewChild("headerContainer") private headerContainer!: ElementRef<
-        HTMLDivElement
-    >;
-    @ViewChild("headerTable") private headerTable!: ElementRef<
-        HTMLTableElement
-    >;
-    @ViewChild("headerIdBody") private headerIdBody!: ElementRef<
-        HTMLTableSectionElement
-    >;
-    @ViewChild("filterBody") private filterBody!: ElementRef<
-        HTMLTableSectionElement
-    >;
+    @ViewChild("headerContainer")
+    private headerContainer!: ElementRef<HTMLDivElement>;
+    @ViewChild("headerTable")
+    private headerTable!: ElementRef<HTMLTableElement>;
+    @ViewChild("headerIdBody")
+    private headerIdBody!: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("filterBody")
+    private filterBody!: ElementRef<HTMLTableSectionElement>;
     @ViewChild("fixedColHeaderContainer")
     private fixedColHeaderContainer?: ElementRef<HTMLDivElement>;
-    @ViewChild("fixedColHeaderTable") private fixedColHeaderTable?: ElementRef<
-        HTMLTableElement
-    >;
+    @ViewChild("fixedColHeaderTable")
+    private fixedColHeaderTable?: ElementRef<HTMLTableElement>;
     @ViewChild("fixedColHeaderIdBody")
     private fixedColHeaderIdBody?: ElementRef<HTMLTableSectionElement>;
-    @ViewChild("fixedColFilterBody") private fixedColFilterBody?: ElementRef<
-        HTMLTableSectionElement
-    >;
+    @ViewChild("fixedColFilterBody")
+    private fixedColFilterBody?: ElementRef<HTMLTableSectionElement>;
     @ViewChild("idContainer") private idContainer!: ElementRef<HTMLDivElement>;
     @ViewChild("idTable") private idTable!: ElementRef<HTMLTableElement>;
     @ViewChild("idBody") private idBody!: ElementRef<HTMLTableSectionElement>;
-    @ViewChild("mainDataBody") private mainDataBody!: ElementRef<
-        HTMLTableSectionElement
-    >;
-    @ViewChild("mainDataTable") private mainDataTable!: ElementRef<
-        HTMLTableElement
-    >;
-    @ViewChild("mainDataContainer") private mainDataContainer!: ElementRef<
-        HTMLDivElement
-    >;
-    @ViewChild("fixedDataBody") private fixedDataBody?: ElementRef<
-        HTMLTableSectionElement
-    >;
-    @ViewChild("fixedDataTable") private fixedDataTable?: ElementRef<
-        HTMLTableElement
-    >;
-    @ViewChild("fixedDataContainer") private fixedDataContainer?: ElementRef<
-        HTMLDivElement
-    >;
-    @ViewChild("summaryTable") private summaryTable!: ElementRef<
-        HTMLTableElement
-    >;
-    @ViewChild("allVisibleCell") private allVisibleCell!: ElementRef<
-        HTMLTableDataCellElement
-    >;
-    @ViewChild("dataViewContainer") private dataViewContainer!: ElementRef<
-        HTMLDivElement
-    >;
+    @ViewChild("mainDataBody")
+    private mainDataBody!: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("mainDataTable")
+    private mainDataTable!: ElementRef<HTMLTableElement>;
+    @ViewChild("mainDataContainer")
+    private mainDataContainer!: ElementRef<HTMLDivElement>;
+    @ViewChild("fixedDataBody")
+    private fixedDataBody?: ElementRef<HTMLTableSectionElement>;
+    @ViewChild("fixedDataTable")
+    private fixedDataTable?: ElementRef<HTMLTableElement>;
+    @ViewChild("fixedDataContainer")
+    private fixedDataContainer?: ElementRef<HTMLDivElement>;
+    @ViewChild("summaryTable")
+    private summaryTable!: ElementRef<HTMLTableElement>;
+    @ViewChild("allVisibleCell")
+    private allVisibleCell!: ElementRef<HTMLTableDataCellElement>;
+    @ViewChild("dataViewContainer")
+    private dataViewContainer!: ElementRef<HTMLDivElement>;
     private scrollDiff: TableArea = {vertical: 0, horizontal: 0};
     private cellValueCache: Record<number, string[]> = {};
     private dataTableCache!: TableDOMCache;
@@ -461,9 +446,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 if (shouldHide != hidden) {
                     row.rowElement.hidden = shouldHide;
                     if (this.fixedTableCache) {
-                        this.fixedTableCache.getRow(
-                            rowIndex
-                        ).hidden = shouldHide;
+                        this.fixedTableCache.getRow(rowIndex).hidden =
+                            shouldHide;
                     }
                     if (this.idTableCache) {
                         this.idTableCache.getRow(rowIndex).hidden = shouldHide;
@@ -548,9 +532,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                     colAxis.indexToOrdinal[columnIndex]
                 );
                 const sortSymbolEl = cell.getElementsByTagName("span")[1];
-                const {symbol, style} = this.modelProvider.getSortSymbolInfo(
-                    columnIndex
-                );
+                const {symbol, style} =
+                    this.modelProvider.getSortSymbolInfo(columnIndex);
                 applyBasicStyle(sortSymbolEl, style);
                 sortSymbolEl.textContent = symbol;
             }
@@ -1043,17 +1026,18 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         const {vertical} = this.viewport;
         this.idTableCache.setSize(this.viewport.vertical.count, 2);
         // Get sizes in batch for speed
-        const sizes = Array.from(
-            new Array(vertical.count)
-        ).map((value, index) =>
-            this.getHeaderRowHeight(
-                this.rowAxis.visibleItems[index + vertical.startOrdinal]
-            )
+        const sizes = Array.from(new Array(vertical.count)).map(
+            (value, index) =>
+                this.getHeaderRowHeight(
+                    this.rowAxis.visibleItems[index + vertical.startOrdinal]
+                )
         );
         // Ensure the ID column is at least the size of the summary number column (needed for filtering)
-        const minWidth = (this.summaryTable.nativeElement.querySelector(
-            ".nrcolumn"
-        ) as HTMLElement).offsetWidth;
+        const minWidth = (
+            this.summaryTable.nativeElement.querySelector(
+                ".nrcolumn"
+            ) as HTMLElement
+        ).offsetWidth;
         for (let row = 0; row < vertical.count; row++) {
             const tr = this.idTableCache.getRow(row);
             tr.style.height = px(sizes[row]);
@@ -1134,15 +1118,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                     }
                 });
         }
-        const summaryTotalHeaderHeight = this.headerIdTableCache?.getRow(0)
-            .offsetHeight;
-        const filterHeaderHeight = this.filterTableCache?.getRow(0)
-            .offsetHeight;
+        const summaryTotalHeaderHeight =
+            this.headerIdTableCache?.getRow(0).offsetHeight;
+        const filterHeaderHeight =
+            this.filterTableCache?.getRow(0).offsetHeight;
         if (summaryTotalHeaderHeight && filterHeaderHeight) {
-            const [
-                summaryHeader,
-                filterHeader,
-            ] = this.summaryTable.nativeElement.getElementsByTagName("tr");
+            const [summaryHeader, filterHeader] =
+                this.summaryTable.nativeElement.getElementsByTagName("tr");
             summaryHeader.style.height = px(summaryTotalHeaderHeight);
             filterHeader.style.height = px(filterHeaderHeight);
         }
@@ -1259,9 +1241,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
             const tr = dataCache.getRow(rowNumber);
             tr.hidden = false;
-            const rowIndex = this.rowAxis.visibleItems[
-                vertical.startOrdinal + rowNumber
-            ];
+            const rowIndex =
+                this.rowAxis.visibleItems[vertical.startOrdinal + rowNumber];
             this.updateRow(tr, rowIndex);
             for (
                 let columnNumber = 0;
@@ -1430,7 +1411,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             this.fixedDataBody.nativeElement.style.transform = `translateY(${this.viewport.vertical.startPosition}px)`;
         }
         idTable.style.transform = `translateY(${this.viewport.vertical.startPosition}px)`;
-        headerIdTable.style.transform = filterIdTable.style.transform = `translateX(${this.viewport.horizontal.startPosition}px)`;
+        headerIdTable.style.transform =
+            filterIdTable.style.transform = `translateX(${this.viewport.horizontal.startPosition}px)`;
     }
 
     private setTableSizes(): void {
@@ -1605,10 +1587,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         const colWidth = this.getDataColumnWidth(column);
         this.sizeContentContainer.style.minWidth = px(colWidth);
-        this.sizeContentContainer.innerHTML = this.modelProvider.getCellContents(
-            row,
-            column
-        );
+        this.sizeContentContainer.innerHTML =
+            this.modelProvider.getCellContents(row, column);
         const size = this.sizeContentContainer.getBoundingClientRect();
         return {
             width: Math.ceil(size.width * 1.1),
@@ -1630,9 +1610,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             }
             cache.setSize(vertical.count, colCount);
             for (let rowNumber = 0; rowNumber < vertical.count; rowNumber++) {
-                const rowIndex = this.rowAxis.visibleItems[
-                    vertical.startOrdinal + rowNumber
-                ];
+                const rowIndex =
+                    this.rowAxis.visibleItems[
+                        vertical.startOrdinal + rowNumber
+                    ];
                 this.updateRow(cache.getRow(rowNumber), rowIndex);
                 for (
                     let columnNumber = 0;
@@ -1687,9 +1668,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.idTableCache.setSize(this.viewport.vertical.count, 2);
         const {vertical} = this.viewport;
         for (let row = 0; row < vertical.count; row++) {
-            const rowIndex = this.rowAxis.visibleItems[
-                row + vertical.startOrdinal
-            ];
+            const rowIndex =
+                this.rowAxis.visibleItems[row + vertical.startOrdinal];
             const idCell = this.idTableCache.getCell(row, 0);
             idCell.textContent = `${rowIndex + this.columnIdStart}`;
 
@@ -1724,9 +1704,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 headerCell.onclick = this.onHeaderColumnClick(columnIndex);
 
                 const sortSymbolEl = headerCell.getElementsByTagName("span")[1];
-                const {symbol, style} = this.modelProvider.getSortSymbolInfo(
-                    columnIndex
-                );
+                const {symbol, style} =
+                    this.modelProvider.getSortSymbolInfo(columnIndex);
                 applyBasicStyle(sortSymbolEl, style);
                 sortSymbolEl.textContent = symbol;
 
@@ -1912,9 +1891,8 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         );
         if (contents) {
             // If the web worker hasn't sanitized the contents yet, do it ourselves
-            return (this.cellValueCache[rowIndex][
-                columnIndex
-            ] = DOMPurify.sanitize(contents));
+            return (this.cellValueCache[rowIndex][columnIndex] =
+                DOMPurify.sanitize(contents));
         }
         return contents;
     }
@@ -1931,9 +1909,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private startCellPurifying(): void {
         if (typeof Worker !== "undefined") {
-            const worker = new Worker("./table-purify.worker", {
-                type: "module",
-            });
+            const worker = new Worker(
+                new URL("./table-purify.worker", import.meta.url),
+                {
+                    type: "module",
+                }
+            );
             worker.onmessage = ({data}: {data: PurifyData}) => {
                 this.cellValueCache[data.row] = data.data;
             };

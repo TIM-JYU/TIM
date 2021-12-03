@@ -54,6 +54,8 @@
               "fp-ts/lib/Either",
               "object-keys",
               "regexp.prototype.flags",
+              "sanitize-html",
+              "seedrandom",
               "is-regex",
               "which-boxed-primitive",
               "es-abstract/GetIntrinsic",
@@ -78,7 +80,6 @@
             "main": "static/scripts/tim/main.ts",
             "polyfills": "static/scripts/tim/polyfills.ts",
             "tsConfig": "tsconfig.app.json",
-            "aot": true,
             "assets": [
               {
                 "glob": "**/*",
@@ -133,19 +134,41 @@
                   "maximumError": "10kb"
                 }
               ]
+            },
+            "development": {
+              "optimization": false,
+              "sourceMap": true,
+              "namedChunks": true,
+              "extractLicenses": false,
+              "statsJson": false,
+              "vendorChunk": true,
+              "buildOptimizer": false
+            },
+            "development-fast": {
+              "optimization": false,
+              "sourceMap": false,
+              "namedChunks": true,
+              "extractLicenses": false,
+              "statsJson": false,
+              "vendorChunk": true,
+              "buildOptimizer": false
             }
-          }
+          },
+          "defaultConfiguration": "production"
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "tim:build"
           },
           "configurations": {
             "production": {
               "browserTarget": "tim:build:production"
+            },
+            "development": {
+              "browserTarget": "tim:build:development"
             }
-          }
+          },
+          "defaultConfiguration": "development"
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
@@ -173,27 +196,17 @@
         "e2e": {
           "builder": "@angular-devkit/build-angular:protractor",
           "options": {
-            "protractorConfig": "e2e/protractor.conf.js",
-            "devServerTarget": "tim:serve"
+            "protractorConfig": "e2e/protractor.conf.js"
           },
           "configurations": {
             "production": {
               "devServerTarget": "tim:serve:production"
+            },
+            "development": {
+              "devServerTarget": "tim:serve:development"
             }
-          }
-        },
-        "xliffmerge": {
-          "builder": "@ngx-i18nsupport/tooling:xliffmerge",
-          "options": {
-            "xliffmergeOptions": {
-              "defaultLanguage": "en-US",
-              "genDir": "i18n",
-              "languages": [
-                "fi"
-              ],
-              "beautifyOutput": true
-            }
-          }
+          },
+          "defaultConfiguration": "development"
         }
       }
     }

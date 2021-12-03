@@ -190,9 +190,8 @@ export class EditorComponent implements IMultiEditor {
     maxFiles: number = 1;
     mayAddFiles_: boolean = false;
 
-    @Output("content") private contentChange: EventEmitter<
-        string
-    > = new EventEmitter(true);
+    @Output("content") private contentChange: EventEmitter<string> =
+        new EventEmitter(true);
     @Output("close") private fileCloseEmitter: EventEmitter<{
         file: EditorFile;
         index: number;

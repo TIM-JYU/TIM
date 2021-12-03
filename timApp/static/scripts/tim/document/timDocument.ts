@@ -89,8 +89,9 @@ export class TimDocument {
             const modifiedCount = readlines
                 .filter(".read-modified")
                 .not(".read").length;
-            const unreadCount = readlines.not(".read-modified").not(".read")
-                .length;
+            const unreadCount = readlines
+                .not(".read-modified")
+                .not(".read").length;
 
             if (modifiedCount + unreadCount > 0) {
                 const info = {

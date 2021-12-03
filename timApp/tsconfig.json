@@ -46,7 +46,8 @@
     "fullTemplateTypeCheck": true,
     "strictTemplates": true,
     "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true
+    "strictInputAccessModifiers": true,
+    "enableI18nLegacyMessageIdFormat": false
   },
   "files": [
     "static/scripts/tim/main.ts",

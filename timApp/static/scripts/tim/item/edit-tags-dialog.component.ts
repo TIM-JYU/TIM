@@ -10,7 +10,7 @@ import {TypeaheadModule} from "ngx-bootstrap/typeahead";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TEACHERS_GROUPNAME} from "../user/IUser";
 import {userBelongsToGroupOrIsAdmin} from "../user/userService";
-import {to2} from "../util/utils";
+import {toPromise} from "../util/utils";
 import {DatetimePickerModule} from "../ui/datetime-picker/datetime-picker.component";
 import {IItem, ITag, tagStyleClass, TagType} from "./IItem";
 
@@ -137,9 +137,7 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
      * Gets all unique tags in the database as an ITag list.
      */
     private async getUniqueTags(): Promise<ITag[] | undefined> {
-        const r = await to2(
-            this.http.get<ITag[]>(`/tags/getAllTags`).toPromise()
-        );
+        const r = await toPromise(this.http.get<ITag[]>(`/tags/getAllTags`));
         if (!r.ok) {
             this.errorMessage = r.result.error.error;
             this.successMessage = undefined;
@@ -156,8 +154,8 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
      */
     private async updateTags() {
         const docPath = this.data.path;
-        const r = await to2(
-            this.http.get<ITag[]>(`/tags/getTags/${docPath}`).toPromise()
+        const r = await toPromise(
+            this.http.get<ITag[]>(`/tags/getTags/${docPath}`)
         );
 
         if (!r.ok) {
@@ -205,8 +203,8 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
                 type: this.selected.type,
             };
             const data = {oldTag: this.selected, newTag: newTag};
-            const r = await to2(
-                this.http.post(`/tags/edit/${docPath}`, data).toPromise()
+            const r = await toPromise(
+                this.http.post(`/tags/edit/${docPath}`, data)
             );
 
             if (!r.ok) {
@@ -246,8 +244,8 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
 
         const docPath = this.data.path;
         const data = {tagObject: t};
-        const r = await to2(
-            this.http.post(`/tags/remove/${docPath}`, data).toPromise()
+        const r = await toPromise(
+            this.http.post(`/tags/remove/${docPath}`, data)
         );
 
         if (!r.ok) {
@@ -283,9 +281,7 @@ export class EditTagsDialogComponent extends AngularDialogComponent<
             }
         });
         const data = {tags: tagObjects};
-        const r = await to2(
-            this.http.post(`/tags/add/${docPath}`, data).toPromise()
-        );
+        const r = await toPromise(this.http.post(`/tags/add/${docPath}`, data));
 
         if (!r.ok) {
             this.errorMessage = r.result.error.error;

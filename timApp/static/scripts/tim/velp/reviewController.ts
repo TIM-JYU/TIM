@@ -183,9 +183,8 @@ export class ReviewController {
                     const startElpath = placeInfo.start.el_path;
 
                     for (const p of startElpath) {
-                        const elementChildren = this.getElementChildren(
-                            elements
-                        );
+                        const elementChildren =
+                            this.getElementChildren(elements);
                         if (elementChildren[p] != null) {
                             elements = elementChildren[p];
                         }
@@ -311,9 +310,8 @@ export class ReviewController {
      * @param par Paragraph to inspect
      */
     clearAnswerAnnotationsFromParMargin(par: ParContext): void {
-        const oldAnnotations = par.par.htmlElement.querySelectorAll(
-            ".notes [aid]"
-        );
+        const oldAnnotations =
+            par.par.htmlElement.querySelectorAll(".notes [aid]");
         for (const ele of oldAnnotations) {
             // aid cannot be null here because the above selector has [aid]
             const aid = ele.getAttribute("aid")!;
@@ -385,8 +383,10 @@ export class ReviewController {
             } else {
                 // end if (a.draw_data)
 
-                const element = par.par.htmlElement.querySelector(".review pre")
-                    ?.firstChild;
+                const element =
+                    par.par.htmlElement.querySelector(
+                        ".review pre"
+                    )?.firstChild;
 
                 if (
                     !isFullCoord(placeInfo.start) ||
@@ -597,9 +597,8 @@ export class ReviewController {
      */
     async deleteAnnotation(id: number) {
         const annotationParents = document.querySelectorAll(`[aid="${id}"]`);
-        const annotationHighlights = annotationParents[0].getElementsByClassName(
-            "highlighted"
-        );
+        const annotationHighlights =
+            annotationParents[0].getElementsByClassName("highlighted");
         const annotation = this.annotations.find((a) => a.id == id);
         this.annotations = this.annotations.filter((a) => a.id !== id);
         if (
@@ -1065,9 +1064,8 @@ export class ReviewController {
      */
     getAnswerInfo(start: ParContext | Element): IAnswer | undefined {
         if (start instanceof ParContext) {
-            const answ = start.par.htmlElement.getElementsByTagName(
-                "tim-plugin-loader"
-            );
+            const answ =
+                start.par.htmlElement.getElementsByTagName("tim-plugin-loader");
             if (answ.length > 0) {
                 const first = answ[0];
                 const isInline = first.classList.contains("inlineplugin");
@@ -1127,9 +1125,8 @@ export class ReviewController {
             }
 
             if (this.checkIfAnnotation(c)) {
-                const innerElements = c.getElementsByClassName(
-                    "highlighted"
-                )[0];
+                const innerElements =
+                    c.getElementsByClassName("highlighted")[0];
                 const innerChildren = this.getElementChildren(innerElements);
                 if (innerChildren.length > 2) {
                     count += innerChildren.length - 2;
@@ -1158,12 +1155,10 @@ export class ReviewController {
         while (el.previousSibling != null) {
             el = el.previousSibling;
             if (this.checkIfAnnotation(el)) {
-                const innerElements = el.getElementsByClassName(
-                    "highlighted"
-                )[0];
-                const lastInnerLastChild = this.getLastChildUntilNull(
-                    innerElements
-                );
+                const innerElements =
+                    el.getElementsByClassName("highlighted")[0];
+                const lastInnerLastChild =
+                    this.getLastChildUntilNull(innerElements);
                 if (assertIsText(lastInnerLastChild)) {
                     storedOffset += lastInnerLastChild.length;
                 }
@@ -1242,9 +1237,8 @@ export class ReviewController {
                     }
                     return [startnum, num];
                 } else if (checkIfElement(child)) {
-                    const innerEl = child.getElementsByClassName(
-                        "highlighted"
-                    )[0];
+                    const innerEl =
+                        child.getElementsByClassName("highlighted")[0];
                     num += innerEl.childNodes.length;
 
                     if (lastInnerFirstChild.nodeName === prevNodeName) {

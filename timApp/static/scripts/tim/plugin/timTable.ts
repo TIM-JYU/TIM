@@ -713,7 +713,8 @@ export class TimTableComponent
         DoCheck,
         AfterViewChecked,
         AfterViewInit,
-        DataModelProvider {
+        DataModelProvider
+{
     error: string = "";
     public viewctrl?: ViewCtrl;
     public cellDataMatrix: ICell[][] = []; // this has all table data as original indecies (sort does not affect)
@@ -773,16 +774,13 @@ export class TimTableComponent
     edited = false;
     @ViewChild("editInput") private editInput?: ElementRef<HTMLInputElement>;
     @ViewChild("inlineEditor") private editorDiv!: ElementRef<HTMLDivElement>;
-    @ViewChild("inlineEditorButtons") private editorButtons!: ElementRef<
-        HTMLDivElement
-    >;
+    @ViewChild("inlineEditorButtons")
+    private editorButtons!: ElementRef<HTMLDivElement>;
     @ViewChild("tableElem") private tableElem!: ElementRef<HTMLTableElement>;
-    @ViewChild("timTableRunDiv") private timTableRunDiv!: ElementRef<
-        HTMLDivElement
-    >;
-    @ViewChild("buttonOpenBigEditor") private buttonOpenBigEditor!: ElementRef<
-        HTMLButtonElement
-    >;
+    @ViewChild("timTableRunDiv")
+    private timTableRunDiv!: ElementRef<HTMLDivElement>;
+    @ViewChild("buttonOpenBigEditor")
+    private buttonOpenBigEditor!: ElementRef<HTMLButtonElement>;
     @ViewChild("dataViewComponent") dataViewComponent?: DataViewComponent;
     @ViewChildren("editInput") private editInputs!: QueryList<
         ElementRef<HTMLInputElement>
@@ -2534,9 +2532,10 @@ export class TimTableComponent
     ): ICellCoord | null {
         let sourceCell = this.cellDataMatrix[y][x];
         while (sourceCell.underSpanOf) {
-            sourceCell = this.cellDataMatrix[sourceCell.underSpanOf.row][
-                sourceCell.underSpanOf.col
-            ];
+            sourceCell =
+                this.cellDataMatrix[sourceCell.underSpanOf.row][
+                    sourceCell.underSpanOf.col
+                ];
         }
 
         let nextRow;
@@ -4226,7 +4225,7 @@ export class TimTableComponent
         for (const key of Object.keys(styleToHtml)) {
             // TODO: For some reason, the index signature of style property is number, so we need a cast.
             // See https://github.com/microsoft/TypeScript/issues/17827
-            const k = (key as unknown) as number;
+            const k = key as unknown as number;
             if (stylesNotToClear.includes(key) || !editInputElement.style[k]) {
                 continue;
             }
@@ -4605,9 +4604,10 @@ export class TimTableComponent
         this.cbFilter = state;
     }
 
-    getSortSymbolInfo(
-        columnIndex: number
-    ): {symbol: string; style: Record<string, string>} {
+    getSortSymbolInfo(columnIndex: number): {
+        symbol: string;
+        style: Record<string, string>;
+    } {
         return {
             style: this.sortSymbolStyle[columnIndex],
             symbol: this.sortSymbol[columnIndex],

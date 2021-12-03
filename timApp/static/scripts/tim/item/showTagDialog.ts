@@ -5,5 +5,7 @@ export async function showTagDialog(d: IItem) {
     const {EditTagsDialogComponent} = await import(
         "./edit-tags-dialog.component"
     );
-    return await (await angularDialog.open(EditTagsDialogComponent, d)).result;
+    return await (
+        await angularDialog.open(EditTagsDialogComponent, d)
+    ).result;
 }

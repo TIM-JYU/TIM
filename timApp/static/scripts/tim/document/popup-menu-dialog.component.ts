@@ -10,7 +10,7 @@ import {PurifyModule} from "tim/util/purify.module";
 import {HelpPar} from "tim/document/structure/helpPar";
 import {ParContext} from "tim/document/structure/parContext";
 import {documentglobals} from "../util/globals";
-import {to2} from "../util/utils";
+import {toPromise} from "../util/utils";
 import {ViewCtrl} from "./viewctrl";
 import {IMenuFunctionEntry, MenuFunctionList} from "./viewutils";
 
@@ -184,12 +184,10 @@ export class PopupMenuDialogComponent extends AngularDialogComponent<
             return;
         }
 
-        const r = await to2(
-            this.http
-                .get<{texts: string}>(contentUrl, {
-                    params: {doc_id: this.vctrl.item.id.toString()},
-                })
-                .toPromise()
+        const r = await toPromise(
+            this.http.get<{texts: string}>(contentUrl, {
+                params: {doc_id: this.vctrl.item.id.toString()},
+            })
         );
         if (r.ok) {
             this.content = r.result.texts;

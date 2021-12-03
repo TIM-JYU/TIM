@@ -6,7 +6,7 @@ import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import * as t from "io-ts";
 import {FormsModule} from "@angular/forms";
-import {TimStorage, to2} from "../util/utils";
+import {TimStorage, toPromise} from "../util/utils";
 import {IItem} from "../item/IItem";
 
 export interface ITemplate extends IItem {}
@@ -244,21 +244,19 @@ export class PrintDialogComponent extends AngularDialogComponent<
             this.loading = true;
             this.notificationmsg = undefined;
 
-            const r = await to2(
-                this.http
-                    .post<{
-                        url: string;
-                        errormsg?: string;
-                        latex?: string;
-                        latexline?: string;
-                    }>("/print/" + this.data.document.path, {
-                        fileType,
-                        templateDocId: chosenTemplateId,
-                        printPluginsUserCode: pluginsUserCode,
-                        removeOldImages,
-                        force,
-                    })
-                    .toPromise()
+            const r = await toPromise(
+                this.http.post<{
+                    url: string;
+                    errormsg?: string;
+                    latex?: string;
+                    latexline?: string;
+                }>("/print/" + this.data.document.path, {
+                    fileType,
+                    templateDocId: chosenTemplateId,
+                    printPluginsUserCode: pluginsUserCode,
+                    removeOldImages,
+                    force,
+                })
             );
             if (r.ok) {
                 const response = r.result;

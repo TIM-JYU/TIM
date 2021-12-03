@@ -10,7 +10,8 @@ import {DerefOption} from "tim/document/structure/derefOption";
  * @property target The referred {@link DocumentPart}.
  */
 export class ReferenceParagraph<T extends Paragraph | Area>
-    implements IDocumentPart {
+    implements IDocumentPart
+{
     public parent?: Area | ReferenceParagraph<Paragraph | Area>;
     constructor(
         public readonly original: Paragraph,

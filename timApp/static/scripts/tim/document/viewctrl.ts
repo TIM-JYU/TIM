@@ -350,8 +350,7 @@ export class ViewCtrl implements IController {
         if (isPageDirty()) {
             showInputDialog({
                 isInput: InputDialogKind.NoValidator,
-                text:
-                    "The page has been modified since the last reload. Refresh now?",
+                text: "The page has been modified since the last reload. Refresh now?",
                 title: "Page was modified - reload?",
                 okValue: true,
             });
@@ -639,9 +638,8 @@ export class ViewCtrl implements IController {
                 if (!e.ctrlKey) {
                     return;
                 }
-                let abElem: Element | null = $(activeElement).parents(
-                    "tim-plugin-loader"
-                )[0];
+                let abElem: Element | null =
+                    $(activeElement).parents("tim-plugin-loader")[0];
                 if (!abElem) {
                     abElem = $(activeElement)
                         .parents(".par")[0]

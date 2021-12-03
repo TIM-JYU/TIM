@@ -4,7 +4,7 @@ import {isRight} from "fp-ts/Either";
 import {HttpClient} from "@angular/common/http";
 import {documentglobals} from "tim/util/globals";
 import {nullable, withDefault} from "../../plugin/attributes";
-import {MomentFromString, to2} from "../../util/utils";
+import {MomentFromString, toPromise} from "../../util/utils";
 
 const Address = t.type({
     name: withDefault(nullable(t.string), ""),
@@ -66,12 +66,10 @@ export class ArchivedMessageStateService {
 
     private async resolveRelatedMessageInfo(): Promise<SiblingMessages> {
         const doc = documentglobals().curr_item.id;
-        const result = await to2(
-            this.http
-                .get<{next?: DocLink; prev?: DocLink}>(
-                    `/messagelist/archive/siblings/${doc}`
-                )
-                .toPromise()
+        const result = await toPromise(
+            this.http.get<{next?: DocLink; prev?: DocLink}>(
+                `/messagelist/archive/siblings/${doc}`
+            )
         );
         if (result.ok) {
             return result.result;
