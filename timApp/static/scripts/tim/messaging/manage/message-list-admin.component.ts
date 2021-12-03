@@ -1,7 +1,7 @@
 import {HttpClient} from "@angular/common/http";
 import {Component, Input, OnInit} from "@angular/core";
 import moment, {Moment} from "moment";
-import {to, to2} from "../../util/utils";
+import {to, toPromise} from "../../util/utils";
 import {
     archivePolicyNames,
     ArchiveType,
@@ -462,15 +462,13 @@ export class MessageListAdminComponent implements OnInit {
         const addWarningTimeout = window.setTimeout(() => {
             this.memberAddWarning = $localize`Adding large groups might take longer than usual. Please wait.`;
         }, 2000);
-        const result = await to2(
-            this.http
-                .post(`${this.urlPrefix}/addmember`, {
-                    member_candidates: memberCandidates,
-                    msg_list: this.listname,
-                    send_right: this.newMemberSendRight,
-                    delivery_right: this.newMemberDeliveryRight,
-                })
-                .toPromise()
+        const result = await toPromise(
+            this.http.post(`${this.urlPrefix}/addmember`, {
+                member_candidates: memberCandidates,
+                msg_list: this.listname,
+                send_right: this.newMemberSendRight,
+                delivery_right: this.newMemberDeliveryRight,
+            })
         );
         this.addingNewMember = false;
         this.memberAddWarning = undefined;
@@ -494,12 +492,10 @@ export class MessageListAdminComponent implements OnInit {
      * Get all list members.
      */
     async getListMembers() {
-        return to2(
-            this.http
-                .get<MemberInfo[]>(
-                    `${this.urlPrefix}/getmembers/${this.listname}`
-                )
-                .toPromise()
+        return toPromise(
+            this.http.get<MemberInfo[]>(
+                `${this.urlPrefix}/getmembers/${this.listname}`
+            )
         );
     }
 
@@ -541,12 +537,10 @@ export class MessageListAdminComponent implements OnInit {
      * Get values for message list's options.
      */
     async loadValues() {
-        return to2(
-            this.http
-                .get<ListOptions>(
-                    `${this.urlPrefix}/getlist/${this.list ?? ""}`
-                )
-                .toPromise()
+        return toPromise(
+            this.http.get<ListOptions>(
+                `${this.urlPrefix}/getlist/${this.list ?? ""}`
+            )
         );
     }
 
@@ -671,13 +665,11 @@ export class MessageListAdminComponent implements OnInit {
      * @param memberList A list of message list members with their information.
      */
     saveMembersCall(memberList: MemberInfo[]) {
-        return to2(
-            this.http
-                .post(`${this.urlPrefix}/savemembers`, {
-                    members: memberList,
-                    listname: this.listname,
-                })
-                .toPromise()
+        return toPromise(
+            this.http.post(`${this.urlPrefix}/savemembers`, {
+                members: memberList,
+                listname: this.listname,
+            })
         );
     }
 
@@ -707,12 +699,10 @@ export class MessageListAdminComponent implements OnInit {
      * Call for members of a user group.
      */
     getGroupMembersCall() {
-        return to2(
-            this.http
-                .get<GroupAndMembers[]>(
-                    `${this.urlPrefix}/getgroupmembers/${this.listname}`
-                )
-                .toPromise()
+        return toPromise(
+            this.http.get<GroupAndMembers[]>(
+                `${this.urlPrefix}/getgroupmembers/${this.listname}`
+            )
         );
     }
 
@@ -779,8 +769,8 @@ export class MessageListAdminComponent implements OnInit {
      * Get domains ccondigured for email list use.
      */
     private async getDomains() {
-        const result = await to2(
-            this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
+        const result = await toPromise(
+            this.http.get<string[]>(`${this.urlPrefix}/domains`)
         );
         if (result.ok) {
             this.domains = result.result;
@@ -812,6 +802,6 @@ export class MessageListAdminComponent implements OnInit {
      * @param options All the list options the user saves.
      */
     private saveOptionsCall(options: ListOptions) {
-        return to2(this.http.post(`/messagelist/save`, {options}).toPromise());
+        return toPromise(this.http.post(`/messagelist/save`, {options}));
     }
 }

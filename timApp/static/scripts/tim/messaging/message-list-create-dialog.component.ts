@@ -13,7 +13,7 @@ import {
 } from "rxjs/operators";
 import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
 import {DialogModule} from "../ui/angulardialog/dialog.module";
-import {to2} from "../util/utils";
+import {toPromise} from "../util/utils";
 import {Users} from "../user/userService";
 import {IDocument, redirectToItem} from "../item/IItem";
 import {TimUtilityModule} from "../ui/tim-utility.module";
@@ -169,9 +169,8 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
                 tap((n) => {
                     if (!n) {
                         this.nameExists = true;
-                        this.failedRequirements = new Set<
-                            AnnotatedNameRequirements
-                        >(this.rules);
+                        this.failedRequirements =
+                            new Set<AnnotatedNameRequirements>(this.rules);
                     }
                     this.canCreate = false;
                     this.nameValid = true;
@@ -240,8 +239,8 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
      * @private
      */
     private async getDomains() {
-        const result = await to2(
-            this.http.get<string[]>(`${this.urlPrefix}/domains`).toPromise()
+        const result = await toPromise(
+            this.http.get<string[]>(`${this.urlPrefix}/domains`)
         );
         if (result.ok) {
             this.domains = result.result;
@@ -265,10 +264,8 @@ export class MessageListCreateDialogComponent extends AngularDialogComponent<
      * @private
      */
     private createList(options: ListOptions) {
-        return to2(
-            this.http
-                .post<IDocument>(`${this.urlPrefix}/createlist`, {options})
-                .toPromise()
+        return toPromise(
+            this.http.post<IDocument>(`${this.urlPrefix}/createlist`, {options})
         );
     }
 }

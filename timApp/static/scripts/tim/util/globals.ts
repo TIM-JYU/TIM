@@ -261,5 +261,5 @@ export function isDocumentGlobals(g: SomeGlobals): g is IDocumentGlobals {
 }
 
 function someGlobals<T extends IGenericGlobals>(): T {
-    return (window as unknown) as T;
+    return window as unknown as T;
 }

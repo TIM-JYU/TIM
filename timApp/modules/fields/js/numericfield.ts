@@ -67,7 +67,8 @@ class NumericfieldController
         t.TypeOf<typeof NumericfieldAll>,
         typeof NumericfieldAll
     >
-    implements ITimComponent {
+    implements ITimComponent
+{
     private changes = false;
     private result?: string;
     private isRunning = false;

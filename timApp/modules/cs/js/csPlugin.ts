@@ -34,7 +34,7 @@ import {
     getClipboardHelper,
     timeout,
     to,
-    to2,
+    toPromise,
     valueDefu,
     valueOr,
 } from "tim/util/utils";
@@ -1034,12 +1034,14 @@ export class CsController extends CsBase implements ITimComponent {
                     } else if (file.source == "uploadByCode") {
                         if (this.markup.files) {
                             if (
-                                (listify(this.markup.files).find(
-                                    (f) =>
-                                        f.source == "uploadByCode" &&
-                                        (f as IUploadByCodeMarkup).path ==
-                                            file.path
-                                ) as IUploadByCodeMarkup)?.show
+                                (
+                                    listify(this.markup.files).find(
+                                        (f) =>
+                                            f.source == "uploadByCode" &&
+                                            (f as IUploadByCodeMarkup).path ==
+                                                file.path
+                                    ) as IUploadByCodeMarkup
+                                )?.show
                             ) {
                                 if (this.editor.findFile(file.path)) {
                                     const f = this.createUploadByCodeEditorFile(
@@ -1727,14 +1729,12 @@ ${fhtml}
         this.isRunning = true;
         this.fetchError = undefined;
 
-        const r = await to2(
-            this.http
-                .post<IFetchResponse>(
-                    `/plugin${this.pluginMeta.getTaskIdUrl()}/fetchExternal`,
-                    {},
-                    {headers: new HttpHeaders({timeout: `${defaultTimeout}`})}
-                )
-                .toPromise()
+        const r = await toPromise(
+            this.http.post<IFetchResponse>(
+                `/plugin${this.pluginMeta.getTaskIdUrl()}/fetchExternal`,
+                {},
+                {headers: new HttpHeaders({timeout: `${defaultTimeout}`})}
+            )
         );
         if (r.ok) {
             if (r.result.error) {
@@ -2008,9 +2008,8 @@ ${fhtml}
         this.preview = this.element.find(".csrunPreview");
         const styleArgs = this.markup["style-args"];
         if (styleArgs) {
-            const argsEdit = this.getRootElement().getElementsByClassName(
-                "csArgsArea"
-            );
+            const argsEdit =
+                this.getRootElement().getElementsByClassName("csArgsArea");
             if (argsEdit.length > 0) {
                 argsEdit[0].setAttribute("style", styleArgs);
             }
@@ -2508,9 +2507,8 @@ ${fhtml}
 
             const err = data.web.console ?? "";
             if (docURL) {
-                this.docURL = this.domSanitizer.bypassSecurityTrustResourceUrl(
-                    docURL
-                );
+                this.docURL =
+                    this.domSanitizer.bypassSecurityTrustResourceUrl(docURL);
                 this.docLink = "Hide document";
                 this.error = err.trim();
             }
@@ -2638,7 +2636,7 @@ ${fhtml}
                 data = JSON.parse(this.usercode);
             }
         } catch (err) {
-            this.error = err.message;
+            this.error = (err as Error).message;
             this.runError = true;
         }
         try {
@@ -2648,7 +2646,7 @@ ${fhtml}
                 data = {...data, ...initdata};
             }
         } catch (err) {
-            this.error = err.message;
+            this.error = (err as Error).message;
             this.runError = true;
         }
 
@@ -2829,15 +2827,12 @@ ${fhtml}
             this.sageInput.value = this.getReplacedCode();
             return;
         }
-        this.sageArea = this.getRootElement().getElementsByClassName(
-            "computeSage"
-        )[0];
-        this.editArea = this.getRootElement().getElementsByClassName(
-            "csEditArea"
-        )[0];
-        this.sageOutput = this.getRootElement().getElementsByClassName(
-            "outputSage"
-        )[0];
+        this.sageArea =
+            this.getRootElement().getElementsByClassName("computeSage")[0];
+        this.editArea =
+            this.getRootElement().getElementsByClassName("csEditArea")[0];
+        this.sageOutput =
+            this.getRootElement().getElementsByClassName("outputSage")[0];
 
         this.sagecellInfo = sagecell.makeSagecell({
             inputLocation: this.sageArea,
@@ -2865,12 +2860,14 @@ ${fhtml}
                     this.sagecellInfo!.code = this.getReplacedCode();
                     // cs.sagecellInfo.session.code = cs.sagecellInfo.code;
                 };
-                const sagecellOptions = this.getRootElement().getElementsByClassName(
-                    "sagecell_options"
-                )[0] as HTMLElement;
-                const csRunMenuArea = this.getRootElement().getElementsByClassName(
-                    "csRunMenuArea"
-                )[0];
+                const sagecellOptions =
+                    this.getRootElement().getElementsByClassName(
+                        "sagecell_options"
+                    )[0] as HTMLElement;
+                const csRunMenuArea =
+                    this.getRootElement().getElementsByClassName(
+                        "csRunMenuArea"
+                    )[0];
                 if (csRunMenuArea && sagecellOptions) {
                     csRunMenuArea.appendChild(sagecellOptions);
                 }
@@ -3261,9 +3258,10 @@ ${fhtml}
                           }&html=${html}`
                 );
                 if (fullhtml?.startsWith("http")) {
-                    src = this.domSanitizer.bypassSecurityTrustResourceUrl(
-                        fullhtml
-                    );
+                    src =
+                        this.domSanitizer.bypassSecurityTrustResourceUrl(
+                            fullhtml
+                        );
                 }
                 this.iframesettings = {
                     id: v.vid,

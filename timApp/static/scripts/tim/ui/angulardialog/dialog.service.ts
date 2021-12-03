@@ -5,7 +5,7 @@ import {
     IDialogOptions,
 } from "tim/ui/angulardialog/angular-dialog-component.directive";
 
-export let angularDialog = (null as unknown) as DialogService;
+export let angularDialog = null as unknown as DialogService;
 
 @Injectable({
     providedIn: "platform",

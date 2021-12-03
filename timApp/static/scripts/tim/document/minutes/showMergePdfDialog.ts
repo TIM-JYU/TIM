@@ -5,5 +5,7 @@ export async function showMergePdfDialog(p: IMergeParams) {
     const {MergePdfDialogComponent} = await import(
         "./merge-pdf-dialog.component"
     );
-    return await (await angularDialog.open(MergePdfDialogComponent, p)).result;
+    return await (
+        await angularDialog.open(MergePdfDialogComponent, p)
+    ).result;
 }

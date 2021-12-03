@@ -730,9 +730,12 @@ export class DrawCanvasComponent implements OnInit, OnChanges, OnDestroy {
      * Returns dimensions (start coordinate, max width/height) on current drawing progress
      * @param minSize extra padding to add if width/height is below this
      */
-    getCurrentDrawingDimensions(
-        minSize = 0
-    ): {x: number; y: number; w: number; h: number} {
+    getCurrentDrawingDimensions(minSize = 0): {
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+    } {
         return getDrawingDimensions(this.getDrawing(), minSize);
     }
 

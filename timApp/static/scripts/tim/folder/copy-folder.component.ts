@@ -2,7 +2,7 @@ import {Component, Input, OnInit} from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {HttpClient} from "@angular/common/http";
 import {IFolder, IItem} from "../item/IItem";
-import {to2} from "../util/utils";
+import {toPromise} from "../util/utils";
 
 type PreviewList = {from: string; to: string}[];
 
@@ -109,16 +109,14 @@ export class CopyFolderComponent implements OnInit {
 
     async copyFolderPreview(path: string, exclude: string) {
         this.copyingFolder = "notcopying";
-        const r = await to2(
-            this.http
-                .post<{preview: PreviewList; dest_exists: boolean}>(
-                    `/copy/${this.item.id}/preview`,
-                    {
-                        destination: path,
-                        exclude: exclude,
-                    }
-                )
-                .toPromise()
+        const r = await toPromise(
+            this.http.post<{preview: PreviewList; dest_exists: boolean}>(
+                `/copy/${this.item.id}/preview`,
+                {
+                    destination: path,
+                    exclude: exclude,
+                }
+            )
         );
         if (r.ok) {
             this.copyPreviewList = r.result.preview;
@@ -130,17 +128,15 @@ export class CopyFolderComponent implements OnInit {
 
     async copyFolder(path: string, exclude: string) {
         this.copyingFolder = "copying";
-        const r = await to2(
-            this.http
-                .post<{new_folder?: IFolder; errors: string[]}>(
-                    `/copy/${this.item.id}`,
-                    {
-                        destination: path,
-                        exclude: exclude,
-                        copy_options: this.copyOptions,
-                    }
-                )
-                .toPromise()
+        const r = await toPromise(
+            this.http.post<{new_folder?: IFolder; errors: string[]}>(
+                `/copy/${this.item.id}`,
+                {
+                    destination: path,
+                    exclude: exclude,
+                    copy_options: this.copyOptions,
+                }
+            )
         );
         if (r.ok && r.result.errors.length == 0) {
             this.copyingFolder = "finished";

@@ -24,7 +24,7 @@ import {
     ISettings,
     settingsglobals,
 } from "../util/globals";
-import {IOkResponse, timeout, to2} from "../util/utils";
+import {IOkResponse, timeout, toPromise} from "../util/utils";
 import {ContactOrigin, IFullUser, IUserContact} from "./IUser";
 
 @Component({
@@ -377,14 +377,12 @@ export class SettingsComponent implements DoCheck {
 
     async resendVerification(contact: IUserContact) {
         this.saving = true;
-        await to2(
-            this.http
-                .post("/contacts/add", {
-                    contact_info_type: contact.channel,
-                    contact_info: contact.contact,
-                    resend_if_exists: true,
-                })
-                .toPromise()
+        await toPromise(
+            this.http.post("/contacts/add", {
+                contact_info_type: contact.channel,
+                contact_info: contact.contact,
+                resend_if_exists: true,
+            })
         );
         this.saving = false;
         this.verificationSentSet.add(contact);
@@ -394,13 +392,11 @@ export class SettingsComponent implements DoCheck {
 
     async deleteContact(contact: IUserContact) {
         this.saving = true;
-        const r = await to2(
-            this.http
-                .post("/contacts/remove", {
-                    contact_info_type: contact.channel,
-                    contact_info: contact.contact,
-                })
-                .toPromise()
+        const r = await toPromise(
+            this.http.post("/contacts/remove", {
+                contact_info_type: contact.channel,
+                contact_info: contact.contact,
+            })
         );
         this.saving = false;
         if (r.ok) {
@@ -416,10 +412,8 @@ export class SettingsComponent implements DoCheck {
 
     submit = async () => {
         this.saving = true;
-        const r = await to2(
-            this.http
-                .post<ISettings>("/settings/save", this.settings)
-                .toPromise()
+        const r = await toPromise(
+            this.http.post<ISettings>("/settings/save", this.settings)
         );
         this.saving = false;
         if (r.ok) {
@@ -437,13 +431,11 @@ export class SettingsComponent implements DoCheck {
         }
 
         this.saving = true;
-        const r = await to2(
-            this.http
-                .post<{verify: boolean}>("/contacts/primary", {
-                    contact: this.primaryEmail.contact,
-                    channel: this.primaryEmail.channel,
-                })
-                .toPromise()
+        const r = await toPromise(
+            this.http.post<{verify: boolean}>("/contacts/primary", {
+                contact: this.primaryEmail.contact,
+                channel: this.primaryEmail.channel,
+            })
         );
         this.saving = false;
 
@@ -493,12 +485,10 @@ export class SettingsComponent implements DoCheck {
     }
 
     async addPrintSettings() {
-        const resp = await to2(
-            this.http
-                .get("/static/stylesheets/userPrintSettings.css", {
-                    responseType: "text",
-                })
-                .toPromise()
+        const resp = await toPromise(
+            this.http.get("/static/stylesheets/userPrintSettings.css", {
+                responseType: "text",
+            })
         );
         if (!resp.ok) {
             return;
@@ -507,8 +497,8 @@ export class SettingsComponent implements DoCheck {
     }
 
     async getAllNotifications() {
-        const resp = await to2(
-            this.http.get<INotification[]>("/notify/all").toPromise()
+        const resp = await toPromise(
+            this.http.get<INotification[]>("/notify/all")
         );
         if (resp.ok) {
             this.notifications = resp.result;
@@ -536,8 +526,8 @@ export class SettingsComponent implements DoCheck {
                 $localize`Are you sure you want to delete your account (${this.user.name})?`
             )
         ) {
-            const r = await to2(
-                this.http.post("/settings/account/delete", {}).toPromise()
+            const r = await toPromise(
+                this.http.post("/settings/account/delete", {})
             );
             if (r.ok) {
                 location.href = "/";
@@ -604,10 +594,8 @@ export class SettingsComponent implements DoCheck {
     }
 
     private async setConsent(c: ConsentType) {
-        const r = await to2(
-            this.http
-                .post<IOkResponse>("/settings/updateConsent", {consent: c})
-                .toPromise()
+        const r = await toPromise(
+            this.http.post<IOkResponse>("/settings/updateConsent", {consent: c})
         );
         if (r.ok) {
             // Nothing to do.

@@ -69,11 +69,8 @@ export class SearchTagsDialogComponent extends AngularDialogComponent<
             this.header = "Input a tag name to search documents";
             const stored = this.storage.get();
             if (stored) {
-                [
-                    this.caseSensitive,
-                    this.exactMatch,
-                    this.listDocTags,
-                ] = stored;
+                [this.caseSensitive, this.exactMatch, this.listDocTags] =
+                    stored;
             }
         }
     }

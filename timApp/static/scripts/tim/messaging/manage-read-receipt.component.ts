@@ -1,7 +1,7 @@
 import {Component, NgModule, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {itemglobals} from "tim/util/globals";
-import {timeout, to2} from "tim/util/utils";
+import {timeout, toPromise} from "tim/util/utils";
 import {HttpClient, HttpParams} from "@angular/common/http";
 import {markAsRead} from "tim/messaging/messagingUtils";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
@@ -60,17 +60,15 @@ export class ManageReadReceiptComponent implements OnInit {
 
     async copyReceiptQuery(read: boolean, unread: boolean) {
         this.copied = false;
-        const r = await to2(
-            this.http
-                .get(`/timMessage/readReceipts`, {
-                    params: new HttpParams()
-                        .set("message_doc", this.docId.toString())
-                        .set("include_read", read.toString())
-                        .set("include_unread", unread.toString())
-                        .set("receipt_format", "tableform-query"),
-                    responseType: "text",
-                })
-                .toPromise()
+        const r = await toPromise(
+            this.http.get(`/timMessage/readReceipts`, {
+                params: new HttpParams()
+                    .set("message_doc", this.docId.toString())
+                    .set("include_read", read.toString())
+                    .set("include_unread", unread.toString())
+                    .set("receipt_format", "tableform-query"),
+                responseType: "text",
+            })
         );
 
         if (r.ok) {
@@ -90,12 +88,11 @@ export class ManageReadReceiptComponent implements OnInit {
      */
     async getReadReceipt() {
         this.errorMessage = undefined;
-        const message = await to2(
-            this.http
-                .get<{expires: string | null; receipt?: TimMessageReadReceipt}>(
-                    `/timMessage/get_read_receipt/${this.docId}`
-                )
-                .toPromise()
+        const message = await toPromise(
+            this.http.get<{
+                expires: string | null;
+                receipt?: TimMessageReadReceipt;
+            }>(`/timMessage/get_read_receipt/${this.docId}`)
         );
 
         if (message.ok) {
@@ -137,12 +134,10 @@ export class ManageReadReceiptComponent implements OnInit {
      */
     async cancelReadReceipt() {
         this.errorMessage = undefined;
-        const result = await to2(
-            this.http
-                .post("/timMessage/cancel_read_receipt", {
-                    message_id: this.receipt?.message_id,
-                })
-                .toPromise()
+        const result = await toPromise(
+            this.http.post("/timMessage/cancel_read_receipt", {
+                message_id: this.receipt?.message_id,
+            })
         );
         if (!result.ok) {
             this.errorMessage = $localize`Could not cancel read receipt: ${result.result.error.error}`;

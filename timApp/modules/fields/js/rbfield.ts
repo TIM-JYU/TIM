@@ -58,7 +58,8 @@ class RbfieldController
         t.TypeOf<typeof RbfieldAll>,
         typeof RbfieldAll
     >
-    implements ITimComponent {
+    implements ITimComponent
+{
     private result?: string;
     private isRunning = false;
     private userword: string = "0";

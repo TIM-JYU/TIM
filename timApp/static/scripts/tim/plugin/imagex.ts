@@ -1728,7 +1728,8 @@ export class ImageXComponent
         t.TypeOf<typeof ImageXAll>,
         typeof ImageXAll
     >
-    implements OnInit {
+    implements OnInit
+{
     public imageLoadError?: string | null;
 
     get emotion() {

@@ -73,7 +73,8 @@ class StackController
         t.TypeOf<typeof StackAll>,
         typeof StackAll
     >
-    implements ITimComponent {
+    implements ITimComponent
+{
     vctrl!: ViewCtrl;
 
     getContent(): string {

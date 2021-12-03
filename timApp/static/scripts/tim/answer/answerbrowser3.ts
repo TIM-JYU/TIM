@@ -403,7 +403,8 @@ const DEFAULT_MARKUP_CONFIG: IAnswerBrowserMarkupSettings = {
 
 export class AnswerBrowserController
     extends DestroyScope
-    implements IController {
+    implements IController
+{
     static $inject = ["$scope", "$element"];
     public taskId!: Binding<TaskId, "<">;
     private loading: number;
@@ -436,7 +437,8 @@ export class AnswerBrowserController
     private reviewHtml?: string;
     private answerLoader?: AnswerLoadCallback;
     private pointsStep: number = 0.01;
-    private markupSettings: IAnswerBrowserMarkupSettings = DEFAULT_MARKUP_CONFIG;
+    private markupSettings: IAnswerBrowserMarkupSettings =
+        DEFAULT_MARKUP_CONFIG;
     private isValidAnswer = false;
     private hidden: boolean = false;
     private showDelete = false;
@@ -838,9 +840,8 @@ export class AnswerBrowserController
                 }
             }
             if (this.review) {
-                this.imageReview = r.result.data.reviewHtml.startsWith(
-                    "data:image"
-                );
+                this.imageReview =
+                    r.result.data.reviewHtml.startsWith("data:image");
                 if (this.selectedAnswer) {
                     let newReviewHtml = r.result.data.reviewHtml;
                     if (newReviewHtml === this.reviewHtml) {

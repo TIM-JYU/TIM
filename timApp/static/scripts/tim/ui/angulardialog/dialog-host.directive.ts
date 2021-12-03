@@ -41,9 +41,10 @@ export class DialogHostDirective implements OnInit {
     ) {}
 
     ngOnInit() {
-        const componentFactory = this.componentFactoryResolver.resolveComponentFactory(
-            this.timDialogHost
-        );
+        const componentFactory =
+            this.componentFactoryResolver.resolveComponentFactory(
+                this.timDialogHost
+            );
         this.viewContainerRef.clear();
         const ref = this.viewContainerRef.createComponent(componentFactory);
         ref.instance.data = this.hostData;

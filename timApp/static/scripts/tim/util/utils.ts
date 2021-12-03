@@ -7,6 +7,7 @@ import humanizeDuration from "humanize-duration";
 import {isLeft} from "fp-ts/lib/Either";
 import {Pos} from "tim/ui/pos";
 import {either} from "fp-ts/Either";
+import {lastValueFrom, Observable} from "rxjs";
 import {IGroup} from "../user/IUser";
 import {$rootScope, $timeout} from "./ngimport";
 
@@ -362,6 +363,16 @@ export function to2<T, U = {error: {error: string}}>(
         });
 }
 
+export function toPromise<T, U = {error: {error: string}}>(
+    observable: Observable<T>
+): Promise<Result<T, U>> {
+    return lastValueFrom(observable)
+        .then<Success<T>>((data: T) => ({ok: true, result: data}))
+        .catch<Failure<U>>((err) => {
+            return {ok: false, result: err as U};
+        });
+}
+
 export function refreshAngularJS<T>(p: Promise<T> | IPromise<T>): Promise<T> {
     return (p as Promise<T>).finally(() => {
         $rootScope.$applyAsync();
@@ -486,8 +497,7 @@ export function getViewPortSize() {
 
 export function isMobileDevice() {
     const touch =
-        typeof ("ontouchstart" in window || navigator.msMaxTouchPoints) !==
-        "undefined";
+        window.ontouchstart !== undefined || navigator.maxTouchPoints > 0;
     return touch && isScreenSizeOrLower("md");
 }
 
@@ -798,7 +808,7 @@ export function getGroupDesc(group: IGroup) {
 }
 
 export function windowAsAny() {
-    return (window as unknown) as Record<string, unknown>;
+    return window as unknown as Record<string, unknown>;
 }
 
 export function createValidator(

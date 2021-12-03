@@ -106,8 +106,9 @@ export class TextAreaParEditor extends BaseParEditor {
         const text = this.getEditorText();
         const lineHeight = parseInt(this.editor.css("line-height"), 10);
         const height = this.editor.height();
-        const currentLine = text.substr(0, editor.selectionStart).split("\n")
-            .length;
+        const currentLine = text
+            .substr(0, editor.selectionStart)
+            .split("\n").length;
         const currentScroll = this.editor.scrollTop();
         if (!currentScroll || !height) {
             return;
@@ -337,7 +338,8 @@ export class TextAreaParEditor extends BaseParEditor {
     }
 
     selectWord() {
-        const nonASCIISingleCaseWordChar = /[\u00df\u0587\u0590-\u05f4\u0600-\u06ff\u3040-\u309f\u30a0-\u30ff\u3400-\u4db5\u4e00-\u9fcc\uac00-\ud7af]/;
+        const nonASCIISingleCaseWordChar =
+            /[\u00df\u0587\u0590-\u05f4\u0600-\u06ff\u3040-\u309f\u30a0-\u30ff\u3400-\u4db5\u4e00-\u9fcc\uac00-\ud7af]/;
         const isWordCharBasic = (ch: string) => {
             return (
                 /\w/.test(ch) ||

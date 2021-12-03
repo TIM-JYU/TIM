@@ -668,11 +668,8 @@ auto_number_headings: 0${CURSOR}
         const fns: MenuFunctionList = [];
         fns.push(this.getViewSourceEditorMenuEntry(par));
         const showSingleParFns = par.isDeletableOnItsOwn();
-        const {
-            areasBeforeRef,
-            areasAfterRef,
-            refAreaInclusion,
-        } = getContextualAreaInfo(par);
+        const {areasBeforeRef, areasAfterRef, refAreaInclusion} =
+            getContextualAreaInfo(par);
         let areaWithSel:
             | {sel: UserSelection<UnbrokenSelection>; area: Area}
             | undefined;

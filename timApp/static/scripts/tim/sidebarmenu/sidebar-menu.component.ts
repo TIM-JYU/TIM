@@ -183,7 +183,7 @@ export class SidebarMenuComponent implements OnInit, AfterViewInit, DoCheck {
 
     onTabSelect(tab: TabDirective, tabContainer: TabContainerComponent) {
         this.currentTab = tab.id;
-        this.lastUsedTab = this.currentTab;
+        this.lastUsedTab = this.currentTab ?? "";
         this.setVisibleState(MenuState.Open, {lastVisState: true});
         void tabContainer.onSelect();
     }

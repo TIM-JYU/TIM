@@ -73,7 +73,8 @@ class TextfieldController
         t.TypeOf<typeof TextfieldAll>,
         typeof TextfieldAll
     >
-    implements ITimComponent {
+    implements ITimComponent
+{
     private changes = false;
     private result?: string;
     private isRunning = false;

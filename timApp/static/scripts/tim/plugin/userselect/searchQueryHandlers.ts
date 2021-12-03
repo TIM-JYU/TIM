@@ -1,5 +1,5 @@
 import {HttpClient, HttpParams} from "@angular/common/http";
-import {Result, to2} from "../../util/utils";
+import {Result, toPromise} from "../../util/utils";
 import {IUser} from "../../user/IUser";
 
 export interface UserResult {
@@ -37,17 +37,15 @@ export class ServerQueryHandler implements IQueryHandler {
         const params = new HttpParams({
             fromString: window.location.search.replace("?", "&"),
         });
-        const result = await to2(
-            this.http
-                .post<SearchResult>(
-                    "/userSelect/search",
-                    {
-                        par: this.par,
-                        search_strings: queryStrings,
-                    },
-                    {params}
-                )
-                .toPromise()
+        const result = await toPromise(
+            this.http.post<SearchResult>(
+                "/userSelect/search",
+                {
+                    par: this.par,
+                    search_strings: queryStrings,
+                },
+                {params}
+            )
         );
         // seems like proper typing is needed here
         const res: Result<SearchResult, {errorMessage: string}> = result.ok
@@ -76,30 +74,32 @@ export class PrefetchedQueryHandler implements IQueryHandler {
         })
             .append("doc_id", this.par.doc_id.toString())
             .append("par_id", this.par.par_id);
-        const result = await this.http
-            .get<{users: UserResult[]; fieldNames: string[]}>(
-                "/userSelect/fetchUsers",
-                {params}
-            )
-            .toPromise();
-
+        const r = await toPromise(
+            this.http.get<{
+                users: UserResult[];
+                fieldNames: string[];
+            }>("/userSelect/fetchUsers", {params})
+        );
         const removeEmpty = (s?: string | null): s is string =>
             s !== undefined && s != null;
 
-        this.allUsers = result.users.map((userResult) => ({
-            userResult,
-            searchStrings: splitIntoWordSets(
-                [
-                    userResult.user.name,
-                    userResult.user.real_name,
-                    userResult.user.email,
-                    ...Object.values(userResult.fields).map((field) =>
-                        field?.toString()
-                    ),
-                ].filter(removeEmpty)
-            ),
-        }));
-        this.allFields = result.fieldNames;
+        if (r.ok) {
+            const result = r.result;
+            this.allUsers = result.users.map((userResult) => ({
+                userResult,
+                searchStrings: splitIntoWordSets(
+                    [
+                        userResult.user.name,
+                        userResult.user.real_name,
+                        userResult.user.email,
+                        ...Object.values(userResult.fields).map((field) =>
+                            field?.toString()
+                        ),
+                    ].filter(removeEmpty)
+                ),
+            }));
+            this.allFields = result.fieldNames;
+        }
     }
 
     searchUser(queryStrings: string[], maxMatches: number, t9Mode: boolean) {

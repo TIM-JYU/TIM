@@ -83,8 +83,7 @@ JSON.stringify(runScript())`,
             res.json({result: jresult.result, output: jresult.output});
         } else {
             res.json({
-                error:
-                    "Script failed to return anything (the return value must be JSON serializable).",
+                error: "Script failed to return anything (the return value must be JSON serializable).",
             });
         }
     } catch (e) {

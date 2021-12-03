@@ -167,7 +167,7 @@ python3-saml \
 pytz \
 recommonmark \
 responses \
-selenium==4.0.0b4 \
+selenium \
 sphinx \
 sqlalchemy\<1.4.0 \
 sqlalchemy-utils \
@@ -211,7 +211,7 @@ RUN bash -c "${APT_INSTALL} curl pdftk gpg-agent poppler-utils && ${APT_CLEANUP}
 #   output directory.
 #
 # It has not yet been investigated whether it's because of Node or NPM update.
-RUN (curl -sL https://deb.nodesource.com/setup_12.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
+RUN (curl -sL https://deb.nodesource.com/setup_16.x | bash -) && bash -c "${APT_INSTALL} nodejs && ${APT_CLEANUP}"
 RUN npm i npm@6.14.8 -g && bash -c "${APT_CLEANUP}"
 
 RUN mkdir /var/run/sshd

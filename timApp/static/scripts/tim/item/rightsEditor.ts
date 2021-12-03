@@ -214,9 +214,9 @@ class RightsEditorController implements IController {
                 enableGridMenu: true,
                 enableHorizontalScrollbar: false,
                 isRowSelectable: (row) => {
-                    const i = ((row as unknown) as uiGrid.IGridRowOf<
-                        IItemWithRights
-                    >).entity;
+                    const i = (
+                        row as unknown as uiGrid.IGridRowOf<IItemWithRights>
+                    ).entity;
                     return i.rights.manage;
                 },
                 columnDefs: [

@@ -11,7 +11,7 @@ import * as t from "io-ts";
 import {CommonDialogOptions} from "tim/answer/commondialogoptions";
 import {ReadonlyMoment} from "tim/util/readonlymoment";
 import {$httpParamSerializer} from "../util/ngimport";
-import {TimStorage, to2} from "../util/utils";
+import {TimStorage, toPromise} from "../util/utils";
 
 const AnswersDialogOptions = t.intersection([
     t.type({
@@ -285,12 +285,10 @@ export class AllAnswersDialogComponent extends AngularDialogComponent<
         this.options = this.storage.get() ?? defs;
 
         (async () => {
-            const r = await to2(
-                this.http
-                    .get<{last_answer_fetch: Record<string, string>}>(
-                        "/settings/get/last_answer_fetch"
-                    )
-                    .toPromise()
+            const r = await toPromise(
+                this.http.get<{last_answer_fetch: Record<string, string>}>(
+                    "/settings/get/last_answer_fetch"
+                )
             );
             if (r.ok && r.result.last_answer_fetch) {
                 this.lastFetch = moment(

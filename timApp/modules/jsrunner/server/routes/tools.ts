@@ -12,9 +12,10 @@ import {AliasDataT, UserFieldDataT} from "../servertypes";
  * From name=alias list returns two lists
  * @param fields list of name=alias pairs
  */
-function separateNamesAndAliases(
-    fields: string[]
-): {names: string[]; aliases: string[]} {
+function separateNamesAndAliases(fields: string[]): {
+    names: string[];
+    aliases: string[];
+} {
     const raliases: string[] = [];
     const rnames: string[] = [];
     for (const f of fields) {

@@ -1,15 +1,13 @@
 export const MediaDevicesSupported =
     typeof navigator !== "undefined" && !!navigator.mediaDevices;
 
-const supportedCameraConstraints: Record<
-    string,
-    boolean
-> = MediaDevicesSupported
-    ? (navigator.mediaDevices.getSupportedConstraints() as Record<
-          string,
-          boolean
-      >)
-    : {};
+const supportedCameraConstraints: Record<string, boolean> =
+    MediaDevicesSupported
+        ? (navigator.mediaDevices.getSupportedConstraints() as Record<
+              string,
+              boolean
+          >)
+        : {};
 
 export function cameraConstraintSupported(constraint: string): boolean {
     return MediaDevicesSupported && supportedCameraConstraints[constraint];

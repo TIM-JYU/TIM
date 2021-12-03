@@ -145,7 +145,8 @@ class TimMenuController extends PluginBase<
             this.onClick(e);
         });
         if (genericglobals().userPrefs.disable_menu_hover) {
-            this.userPrefersHoverDisabled = genericglobals().userPrefs.disable_menu_hover;
+            this.userPrefersHoverDisabled =
+                genericglobals().userPrefs.disable_menu_hover;
         }
         this.hoverOpen = this.attrs.hoverOpen && !this.userPrefersHoverDisabled;
         this.userRights = this.vctrl.item.rights;

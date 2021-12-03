@@ -15,7 +15,7 @@ import {
     IViewRange,
     toggleViewRange,
 } from "tim/document/viewRangeInfo";
-import {getTypedStorage, IOkResponse, to2} from "tim/util/utils";
+import {getTypedStorage, IOkResponse, toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {getActiveDocument} from "tim/document/activedocument";
 import {ITemplateParams} from "tim/printing/print-dialog.component";
@@ -332,9 +332,7 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        const r = await to2(
-            this.http.put(`/read/${this.item.id}`, {}).toPromise()
-        );
+        const r = await toPromise(this.http.put(`/read/${this.item.id}`, {}));
         if (!r.ok) {
             await showMessageDialog(
                 $localize`Could not mark the document as read.`
@@ -350,10 +348,8 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        const r = await to2(
-            this.http
-                .get<number>(`/read/${this.item.id}/groupCount`)
-                .toPromise()
+        const r = await toPromise(
+            this.http.get<number>(`/read/${this.item.id}/groupCount`)
         );
         let message = $localize`This document is in exam mode. Marking document unread will remove read marks from all users! Continue?`;
         if (r.ok) {
@@ -378,7 +374,7 @@ export class SettingsTabComponent implements OnInit {
         if (!shouldMark) {
             return;
         }
-        const r = await to2(this.http.post<IOkResponse>(url, {}).toPromise());
+        const r = await toPromise(this.http.post<IOkResponse>(url, {}));
         if (r.ok) {
             window.location.reload();
         } else {
@@ -393,10 +389,8 @@ export class SettingsTabComponent implements OnInit {
         if (!this.item) {
             return;
         }
-        const r = await to2(
-            this.http
-                .get<ITemplateParams>(`/print/templates/${this.item.path}`)
-                .toPromise()
+        const r = await toPromise(
+            this.http.get<ITemplateParams>(`/print/templates/${this.item.path}`)
         );
         if (r.ok) {
             await showPrintDialog({document: this.item, params: r.result});
@@ -425,12 +419,10 @@ export class SettingsTabComponent implements OnInit {
             return;
         }
         await showCourseDialog(this.item);
-        const r = await to2(
-            this.http
-                .get<IGroupWithSisuPath[]>(
-                    `/items/linkedGroups/${this.item.id}`
-                )
-                .toPromise()
+        const r = await toPromise(
+            this.http.get<IGroupWithSisuPath[]>(
+                `/items/linkedGroups/${this.item.id}`
+            )
         );
         if (r.ok) {
             this.updateLinkedGroups(r.result);
@@ -512,14 +504,12 @@ export class SettingsTabComponent implements OnInit {
             return;
         }
 
-        const r = await to2(
-            this.http
-                .post<{path: string}>("/minutes/createMinutes", {
-                    item_path: `${this.item.location}/pk/pk${this.docSettings.macros.knro}`,
-                    item_title: `pk${this.docSettings.macros.knro}`,
-                    copy: this.item.id,
-                })
-                .toPromise()
+        const r = await toPromise(
+            this.http.post<{path: string}>("/minutes/createMinutes", {
+                item_path: `${this.item.location}/pk/pk${this.docSettings.macros.knro}`,
+                item_title: `pk${this.docSettings.macros.knro}`,
+                copy: this.item.id,
+            })
         );
         if (r.ok) {
             window.location.href = `/view/${r.result.path}`;
@@ -555,8 +545,8 @@ export class SettingsTabComponent implements OnInit {
             text: "Enter name of the usergroup",
             title: "Create group",
             validator: async (s) => {
-                const r = await to2(
-                    this.http.get<IDocument>(`/groups/create/${s}`).toPromise()
+                const r = await toPromise(
+                    this.http.get<IDocument>(`/groups/create/${s}`)
                 );
                 if (r.ok) {
                     return {ok: true, result: r.result};
@@ -577,12 +567,10 @@ export class SettingsTabComponent implements OnInit {
      */
     private async getCurrentRelevance() {
         if (this.item && !isRootFolder(this.item)) {
-            const r = await to2(
-                this.http
-                    .get<IRelevanceResponse>(
-                        `/items/relevance/get/${this.item.id}`
-                    )
-                    .toPromise()
+            const r = await toPromise(
+                this.http.get<IRelevanceResponse>(
+                    `/items/relevance/get/${this.item.id}`
+                )
             );
             if (r.ok) {
                 this.currentRelevance = r.result.relevance.relevance;

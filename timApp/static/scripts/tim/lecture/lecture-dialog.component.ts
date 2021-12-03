@@ -10,7 +10,7 @@ import {DialogModule} from "tim/ui/angulardialog/dialog.module";
 import {AccordionModule} from "ngx-bootstrap/accordion";
 import {getItem, IItem} from "../item/IItem";
 import {DurationChoice} from "../ui/duration-picker.component";
-import {to2} from "../util/utils";
+import {toPromise} from "../util/utils";
 import {DatetimePickerModule} from "../ui/datetime-picker/datetime-picker.component";
 import {showMessageDialog} from "../ui/showMessageDialog";
 import {ILecture, ILectureFormParams, ILectureOptions} from "./lecturetypes";
@@ -358,10 +358,8 @@ export class LectureDialogComponent extends AngularDialogComponent<
             options: this.options,
         };
         this.submittingLecture = true;
-        const r = await to2(
-            this.http
-                .post<ILecture>("/createLecture", lectureParams)
-                .toPromise()
+        const r = await toPromise(
+            this.http.post<ILecture>("/createLecture", lectureParams)
         );
         this.submittingLecture = false;
         if (!r.ok) {

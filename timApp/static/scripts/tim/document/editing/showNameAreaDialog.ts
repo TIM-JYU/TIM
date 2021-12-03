@@ -4,6 +4,7 @@ export async function showNameAreaDialog() {
     const {NameAreaDialogComponent} = await import(
         "./name-area-dialog.component"
     );
-    return await (await angularDialog.open(NameAreaDialogComponent, undefined))
-        .result;
+    return await (
+        await angularDialog.open(NameAreaDialogComponent, undefined)
+    ).result;
 }

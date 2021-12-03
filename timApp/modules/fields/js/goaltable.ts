@@ -84,7 +84,8 @@ class GoalTableController
         t.TypeOf<typeof GoalTableAll>,
         typeof GoalTableAll
     >
-    implements ITimComponent {
+    implements ITimComponent
+{
     private vctrl!: ViewCtrl;
     private isRunning = false;
     private error: {message?: string; stacktrace?: string} = {};

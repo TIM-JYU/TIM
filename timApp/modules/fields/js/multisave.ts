@@ -128,7 +128,8 @@ export class MultisaveComponent
         t.TypeOf<typeof multisaveAll>,
         typeof multisaveAll
     >
-    implements IChangeListener {
+    implements IChangeListener
+{
     isSaved = false;
     vctrl!: ViewCtrl;
     savedFields: number = 0;

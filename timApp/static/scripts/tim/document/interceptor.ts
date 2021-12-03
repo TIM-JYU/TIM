@@ -110,9 +110,8 @@ timApp.config([
                         if (!taskIdFull) {
                             return response;
                         }
-                        const resp = response as IHttpResponse<
-                            IAnswerSaveEvent
-                        >;
+                        const resp =
+                            response as IHttpResponse<IAnswerSaveEvent>;
                         handleAnswerResponse(taskIdFull, {
                             error: resp.data.error,
                             feedback: resp.data.feedback,
@@ -129,9 +128,8 @@ timApp.config([
                         if (!taskIdFull) {
                             return $q.reject(response);
                         }
-                        const resp = response as IHttpResponse<
-                            IAnswerSaveEvent
-                        >;
+                        const resp =
+                            response as IHttpResponse<IAnswerSaveEvent>;
                         handleAnswerResponse(taskIdFull, {
                             error: resp.data.error,
                             savedNew: false,

@@ -9,7 +9,7 @@ import {FormsModule} from "@angular/forms";
 import {BrowserModule} from "@angular/platform-browser";
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {to2} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 import {IItem} from "tim/item/IItem";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 
@@ -124,7 +124,7 @@ export class MergePdfDialogComponent extends AngularDialogComponent<
     async listAttachments() {
         this.checking = true;
         const url = `/minutes/checkAttachments/${this.data.document.path}`;
-        const r = await to2(this.http.get<IAttachment[]>(url, {}).toPromise());
+        const r = await toPromise(this.http.get<IAttachment[]>(url, {}));
         if (!r.ok) {
             this.errorMessage = r.result.error.error;
             this.checking = false;
@@ -138,9 +138,7 @@ export class MergePdfDialogComponent extends AngularDialogComponent<
         this.loading = true;
         const url = `/minutes/mergeAttachments`;
         const data = this.getSelectedAttachmentData();
-        const r1 = await to2(
-            this.http.post<{url: string}>(url, data).toPromise()
-        );
+        const r1 = await toPromise(this.http.post<{url: string}>(url, data));
         this.loading = false;
         if (!r1.ok) {
             await showMessageDialog(r1.result.error.error);

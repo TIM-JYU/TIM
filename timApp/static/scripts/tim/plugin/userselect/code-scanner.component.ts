@@ -53,9 +53,8 @@ export class CodeScannerComponent implements OnInit, OnDestroy {
     @ViewChild("barcodeOutput") barcodeOutput!: ElementRef<HTMLVideoElement>;
     @Input() scanInterval = 1500;
     @Output() successfulRead: EventEmitter<Result> = new EventEmitter<Result>();
-    @Output() readError: EventEmitter<Exception> = new EventEmitter<
-        Exception
-    >();
+    @Output() readError: EventEmitter<Exception> =
+        new EventEmitter<Exception>();
 
     codeReader: BrowserMultiFormatReader;
     codeReaderStream?: MediaStream;

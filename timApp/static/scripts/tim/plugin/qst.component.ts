@@ -92,7 +92,8 @@ export class QstComponent
         t.TypeOf<typeof PluginFields>,
         typeof PluginFields
     >
-    implements ITimComponent {
+    implements ITimComponent
+{
     error?: string;
     log?: string;
     isRunning: boolean = false;

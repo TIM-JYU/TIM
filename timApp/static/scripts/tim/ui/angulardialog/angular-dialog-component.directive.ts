@@ -46,7 +46,8 @@ const TwoTuple = t.tuple([t.number, t.number]);
 
 @Directive()
 export abstract class AngularDialogComponent<Params, Result>
-    implements AfterViewInit {
+    implements AfterViewInit
+{
     @Input() data!: Params;
     @Output() closeWithResult = new EventEmitter<Result>();
     @ViewChild(DialogFrame) frame!: DialogFrame;

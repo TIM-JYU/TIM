@@ -290,7 +290,8 @@ export class TableFormComponent
         t.TypeOf<typeof TableFormAll>,
         typeof TableFormAll
     >
-    implements OnInit {
+    implements OnInit
+{
     public viewctrl?: ViewCtrl;
     result?: string;
     error?: string;
@@ -494,9 +495,8 @@ export class TableFormComponent
                             return;
                         }
                         rs.running = 1;
-                        const tt:
-                            | TimTableComponent
-                            | undefined = this.getTimTable();
+                        const tt: TimTableComponent | undefined =
+                            this.getTimTable();
                         if (!tt) {
                             return;
                         }
@@ -826,9 +826,8 @@ export class TableFormComponent
                         };
                     } else {
                         if (rows[this.rowKeys[y]]) {
-                            this.data.userdata.cells[
-                                taskColumns[f] + (y + 1)
-                            ] = {cell: rows[this.rowKeys[y]][f]};
+                            this.data.userdata.cells[taskColumns[f] + (y + 1)] =
+                                {cell: rows[this.rowKeys[y]][f]};
                         }
                     }
                 }
@@ -939,9 +938,8 @@ export class TableFormComponent
                     } else {
                         contentalias = colheader;
                     }
-                    this.taskLocations[
-                        colnumToLetters(x + xOffset)
-                    ] = contentalias;
+                    this.taskLocations[colnumToLetters(x + xOffset)] =
+                        contentalias;
                     // this.data.lockedCells.push(colnumToLetters(x + xOffset) + 1);
                     // y = 0;
                     // for (const [u, r] of Object.entries(this.rows)) {
@@ -1377,9 +1375,8 @@ export class TableFormComponent
                         this.markup.autoUpdateTables) &&
                     this.viewctrl
                 ) {
-                    const taskWithField = this.taskLocations[columnPlace].split(
-                        "."
-                    );
+                    const taskWithField =
+                        this.taskLocations[columnPlace].split(".");
                     const docTask = taskWithField[0] + "." + taskWithField[1];
                     if (
                         this.viewctrl.selectedUser.name ==
@@ -1392,22 +1389,19 @@ export class TableFormComponent
                 }
                 const userId = this.users[this.userLocations[numberPlace]].id;
                 try {
-                    replyRows[userId][
-                        this.taskLocations[columnPlace]
-                    ] = cellContent;
+                    replyRows[userId][this.taskLocations[columnPlace]] =
+                        cellContent;
                 } catch (e) {
                     replyRows[userId] = {};
-                    replyRows[userId][
-                        this.taskLocations[columnPlace]
-                    ] = cellContent;
+                    replyRows[userId][this.taskLocations[columnPlace]] =
+                        cellContent;
                 }
                 /* TODO: instead of iterating clearStylesCells could decide that absence of any styles
                     (e.g primitivecell) would mean result in null style value being sent
                 */
                 if (this.clearStylesCells.has(columnPlace + numberPlace)) {
-                    const taskWithField = this.taskLocations[columnPlace].split(
-                        "."
-                    );
+                    const taskWithField =
+                        this.taskLocations[columnPlace].split(".");
                     const docTaskStyles =
                         taskWithField[0] + "." + taskWithField[1] + ".styles";
                     replyRows[userId][docTaskStyles] = null;
@@ -1415,9 +1409,8 @@ export class TableFormComponent
                     cellStyle != null &&
                     Object.keys(cellStyle).length != 0
                 ) {
-                    const taskWithField = this.taskLocations[columnPlace].split(
-                        "."
-                    );
+                    const taskWithField =
+                        this.taskLocations[columnPlace].split(".");
                     const docTaskStyles =
                         taskWithField[0] + "." + taskWithField[1] + ".styles";
                     replyRows[userId][docTaskStyles] = cellStyle;

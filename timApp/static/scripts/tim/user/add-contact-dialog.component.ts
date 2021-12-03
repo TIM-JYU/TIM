@@ -4,7 +4,7 @@ import {FormsModule} from "@angular/forms";
 import {CommonModule} from "@angular/common";
 import {AngularDialogComponent} from "../ui/angulardialog/angular-dialog-component.directive";
 import {DialogModule} from "../ui/angulardialog/dialog.module";
-import {to2} from "../util/utils";
+import {toPromise} from "../util/utils";
 import {Channel} from "../messaging/listOptionTypes";
 import {TimUtilityModule} from "../ui/tim-utility.module";
 import {ContactOrigin, IUserContact} from "./IUser";
@@ -82,13 +82,11 @@ export class AddContactDialogComponent extends AngularDialogComponent<
     async addNewContact() {
         this.saving = true;
         // Call the server.
-        const result = await to2(
-            this.http
-                .post<{requireVerification: boolean}>("/contacts/add", {
-                    contact_info_type: this.chosenChannel,
-                    contact_info: this.contactInfo,
-                })
-                .toPromise()
+        const result = await toPromise(
+            this.http.post<{requireVerification: boolean}>("/contacts/add", {
+                contact_info_type: this.chosenChannel,
+                contact_info: this.contactInfo,
+            })
         );
         this.saving = false;
         if (result.ok) {

@@ -8,7 +8,7 @@ import {
 } from "@angular/core";
 import {CommonModule} from "@angular/common";
 import {itemglobals} from "tim/util/globals";
-import {to2} from "tim/util/utils";
+import {toPromise} from "tim/util/utils";
 import {HttpClient} from "@angular/common/http";
 import {TimUtilityModule} from "tim/ui/tim-utility.module";
 
@@ -53,11 +53,9 @@ export class TimMessageViewComponent implements OnInit {
 
     async loadMessages(itemId: number) {
         this.containerNormal.clear();
-        const messages = await to2(
+        const messages = await toPromise(
             // get messages shown on current page
-            this.http
-                .get<TimMessageData[]>(`/timMessage/get/${itemId}`)
-                .toPromise()
+            this.http.get<TimMessageData[]>(`/timMessage/get/${itemId}`)
         );
 
         if (messages.ok) {
