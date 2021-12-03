@@ -1,0 +1,90 @@
+diff --git a/node_modules/mathjax-full/js/input/asciimath/mathjax2/input/AsciiMath.js b/node_modules/mathjax-full/js/input/asciimath/mathjax2/input/AsciiMath.js
+index 41f6a1f..d57c460 100644
+--- a/node_modules/mathjax-full/js/input/asciimath/mathjax2/input/AsciiMath.js
++++ b/node_modules/mathjax-full/js/input/asciimath/mathjax2/input/AsciiMath.js
+@@ -1,4 +1,4 @@
+-MathJax = Object.assign(global.MathJax || {}, require("../legacy/MathJax.js").MathJax);
++global.MathJax = Object.assign({}, require("../legacy/MathJax.js").MathJax);
+ 
+ //
+ //  Load component-based configuration, if any
+diff --git a/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/MathJax.js b/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/MathJax.js
+index 903ede2..55c71cd 100644
+--- a/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/MathJax.js
++++ b/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/MathJax.js
+@@ -9,6 +9,7 @@ var document = null;
+ exports.MathJax = MathJax;
+ 
+ (function (BASENAME) {
++  var resolveCallee = new Function("e", "return e.callee");
+   var BASE = window[BASENAME];
+   if (!BASE) {BASE = window[BASENAME] = {}}
+ 
+@@ -18,9 +19,7 @@ exports.MathJax = MathJax;
+     for (var id in def) {if (id !== 'constructor' && def.hasOwnProperty(id)) {obj[id] = def[id]}}
+     return obj;
+   };
+-  var CONSTRUCTOR = function () {
+-    return function () {return arguments.callee.Init.call(this,arguments)};
+-  };
++  var CONSTRUCTOR = new Function("return function () {return arguments.callee.Init.call(this,arguments)};");
+ 
+   BASE.Object = OBJECT({
+     constructor: CONSTRUCTOR(),
+@@ -39,8 +38,9 @@ exports.MathJax = MathJax;
+   
+     Init: function (args) {
+       var obj = this;
++	  var callee = resolveCallee(args);
+       if (args.length === 1 && args[0] === PROTO) {return obj}
+-      if (!(obj instanceof args.callee)) {obj = new args.callee(PROTO)}
++      if (!(obj instanceof callee)) {obj = new callee(PROTO)}
+       return obj.Init.apply(obj,args) || obj;
+     },
+     
+@@ -65,7 +65,7 @@ exports.MathJax = MathJax;
+   
+     prototype: {
+       Init: function () {},
+-      SUPER: function (fn) {return fn.callee.SUPER},
++      SUPER: function (fn) {return resolveCallee(fn).SUPER},
+       can: function (method) {return typeof(this[method]) === "function"},
+       has: function (property) {return typeof(this[property]) !== "undefined"},
+       isa: function (obj) {return (obj instanceof Object) && (this instanceof obj)}
+@@ -177,7 +177,7 @@ exports.MathJax = MathJax;
+   //  Create a callback from an associative array
+   //
+   var CALLBACK = function (data) {
+-    var cb = function () {return arguments.callee.execute.apply(arguments.callee,arguments)};
++    function cb() {return cb.execute.apply(cb,arguments)};
+     for (var id in CALLBACK.prototype) {
+       if (CALLBACK.prototype.hasOwnProperty(id)) {
+         if (typeof(data[id]) !== 'undefined') {cb[id] = data[id]}
+diff --git a/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/element/MmlNode.js b/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/element/MmlNode.js
+index 8f3b4cb..cab6e13 100644
+--- a/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/element/MmlNode.js
++++ b/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/element/MmlNode.js
+@@ -56,7 +56,7 @@
+       }
+       for (var i = 0, m = names.length; i < m; i++) {
+         if (copy[names[i]] === 1 && !defaults.hasOwnProperty(names[i])) continue;
+-        value = (this.attr||{})[names[i]];
++        var value = (this.attr||{})[names[i]];
+         if (value == null) value = this[names[i]];
+         if (value === 'true' || value === 'false') value = (value === 'true');
+         if (value != null) node.attributes.set(names[i],value);
+diff --git a/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/input/AsciiMath/jax.js b/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/input/AsciiMath/jax.js
+index 7556ee1..193c49e 100644
+--- a/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/input/AsciiMath/jax.js
++++ b/node_modules/mathjax-full/js/input/asciimath/mathjax2/legacy/jax/input/AsciiMath/jax.js
+@@ -230,8 +230,8 @@ THE SOFTWARE.
+ 
+ //(function(){
+ var mathcolor = "blue";        // change it to "" (to inherit) or another color
+-//var mathfontsize = "1em";      // change to e.g. 1.2em for larger math
+-//var mathfontfamily = "serif";  // change to "" to inherit (works in IE) 
++var mathfontsize = "";      // change to e.g. 1.2em for larger math
++var mathfontfamily = "";  // change to "" to inherit (works in IE) 
+                                // or another family (e.g. "arial")
+ //var automathrecognize = false; // writing "amath" on page makes this true
+ //var checkForMathML = true;     // check if browser can display MathML
