@@ -71,7 +71,7 @@ Test user 1,testuser1,right,aaaaaa,aaaaaa,correct!,0.0,0.{d}
 """.replace(
                 "\n", "\r\n"
             )
-            for d in (0, 1, 2)
+            for d in range(10)
         ]
 
         r = self.get(f"/feedback/report/{d.path}")
