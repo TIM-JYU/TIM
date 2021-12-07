@@ -1,4 +1,5 @@
 """Server tests for document caching."""
+import re
 from unittest.mock import patch, Mock
 
 from timApp.auth.accesstype import AccessType
@@ -25,11 +26,16 @@ class CachingTest(TimRouteTest):
         self.check_not_cached(d)  # cache is disabled by default
         d.document.set_settings({"cache": True})
         self.check_not_cached(d)  # was not in cache, added to cache
-        last = self.last_get
+
+        def normalize(s: str) -> str:
+            # Remove modified date as it can be slightly different depending on CI speed
+            return re.sub(r'"modified": "[^"]+"', r'"modified": "X"', s)
+
+        last = normalize(self.last_get)
         self.check_is_cached(d)  # was in cache, fetched from cache
 
         # Cached result should be the same as not cached.
-        self.assertEqual(last, self.last_get)
+        self.assertEqual(last, normalize(self.last_get))
 
         self.check_is_cached(d)  # still in cache
         self.check_is_cached(
