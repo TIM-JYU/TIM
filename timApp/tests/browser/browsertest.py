@@ -55,11 +55,11 @@ class BrowserTest(TimLiveServer, TimRouteTest):
     def setUp(self):
         TimLiveServer.setUp(self)
         self.drv = webdriver.Chrome(options=options)
-        self.drv.implicitly_wait(20)
-        self.drv.set_page_load_timeout(30)
         # Some CI browser tests run slower and can cause render timeouts without a longer script timeout
+        self.drv.implicitly_wait(60)
+        self.drv.set_page_load_timeout(60)
         self.drv.set_script_timeout(60)
-        self.wait = WebDriverWait(self.drv, 15)
+        self.wait = WebDriverWait(self.drv, 30)
 
     def login_browser_as(self, email: str, password: str, name: str):
         self.client.__exit__(None, None, None)
