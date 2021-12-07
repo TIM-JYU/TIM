@@ -411,8 +411,6 @@ class Language:
         return code, out, err, pwddir
 
     def copy_image(self, result, code, out, err, points_rule):
-        if err:
-            return out, err
         if code == -9:
             out = "Runtime exceeded, maybe loop forever\n" + out
             return out, err
@@ -624,7 +622,6 @@ class Jypeli(CS, Modifier):
         if state is None:
             state = {}
         old_hash = state.get("save_hash", "")
-        time_tag = ""
         is_forced_run = False
         force_run = self.markup.get("force_run", "RandomGen")
         if force_run and re.search(force_run, sourcelines, re.MULTILINE):
@@ -1196,6 +1193,7 @@ class PY3(Language):
 
     def run(self, result, sourcelines, points_rule):
         code, out, err, pwddir = self.runself(["python3", self.pure_exename])
+        out, err = self.copy_image(result, code, out, err, points_rule)
         if err:
             err = re.sub(
                 "/usr/lib/python3/dist-packages/matplotlib/font_manager(.*\n)*.*This may take a moment.'\\)",
@@ -1203,10 +1201,6 @@ class PY3(Language):
                 err,
                 flags=re.M,
             )
-            err = err.strip()
-            if err:
-                return code, out, err, pwddir
-        out, err = self.copy_image(result, code, out, err, points_rule)
         err = err.strip()
         return code, out, err, pwddir
 
