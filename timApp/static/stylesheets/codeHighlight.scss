@@ -1,0 +1,34 @@
+// Basic highlighting using Pandoc's syntax parser
+
+.sourceCode .dv, .sourceCode .bn, .sourceCode .fl { color: #005cc5; }
+.sourceCode .ch { color: #DC322F; }
+.sourceCode .st, .sourceCode .vs { color: #032f62; }
+.sourceCode .co { color: #4C886B; }
+.sourceCode .ot { color: #A57800; }
+.sourceCode .al { color: #CB4B16; font-weight: bold; }
+.sourceCode .fu { color: #6f42c1; }
+.sourceCode .re { }
+.sourceCode .er { color: #D30102; font-weight: bold; }
+.sourceCode .im, .sourceCode .kw, .sourceCode .dt { color: #0201fb; }
+
+// Simple hack to show line numbers using pandoc-generated anchors
+.linenos .sourceCode {
+  counter-reset: linenos;
+
+  a[href^="#cb"] {
+    pointer-events: none;
+    &::before {
+      counter-increment: linenos;
+      content: counter(linenos);
+      width: 3em;
+      display: inline-block;
+    }
+  }
+}
+
+.sourceCode {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+    direction: ltr;
+    text-align: left;
+    font-size: 12px;
+}
