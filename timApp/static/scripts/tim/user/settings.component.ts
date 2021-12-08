@@ -1,5 +1,6 @@
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import {
+    AfterViewInit,
     ApplicationRef,
     ChangeDetectorRef,
     Component,
@@ -7,6 +8,7 @@ import {
     DoCheck,
     Input,
     NgModule,
+    ViewChild,
 } from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
@@ -25,6 +27,7 @@ import {
     settingsglobals,
 } from "../util/globals";
 import {IOkResponse, timeout, toPromise} from "../util/utils";
+import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
 import {ContactOrigin, IFullUser, IUserContact} from "./IUser";
 
 @Component({
@@ -89,21 +92,7 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                 </div>
             </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title>
-                <span *ngIf="cssFiles" i18n>Available themes:</span>
-                <span *ngIf="!cssFiles" i18n>There are no available themes.</span>
-                <div *ngFor="let css_file of cssFiles"
-                     class="checkbox"><label>
-                    <input type="checkbox"
-                           (change)="submit()"
-                           [disabled]="saving">
-                    <a href="/static/stylesheets/themes/{{ css_file.name }}.scss">
-                        {{ css_file.name }}</a> - {{ css_file.desc }}
-                </label></div>
-                <div class="form-group">
-                    <label for="customCssArea" i18n>Custom CSS:</label>
-                    <textarea rows="15" id="customCssArea" class="form-control" name="custom_css"
-                              [(ngModel)]="settings.custom_css"></textarea>
-                </div>
+                <tim-table [data]="tableData"></tim-table>
                 <settings-button-panel [saved]="submit">
                     <button class="btn btn-default" (click)="addPrintSettings()" i18n>Add Print Settings</button>
                 </settings-button-panel>
@@ -316,7 +305,7 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
     `,
     styleUrls: ["settings.component.scss"],
 })
-export class SettingsComponent implements DoCheck {
+export class SettingsComponent implements DoCheck, AfterViewInit {
     saving = false;
     settings: ISettings;
     cssFiles: Array<ICssFile>;
@@ -337,6 +326,18 @@ export class SettingsComponent implements DoCheck {
     private readonly style: HTMLStyleElement;
     private readonly consent: ConsentType | undefined;
     private allNotificationsFetched = false;
+    tableData: TimTable = {
+        hide: {edit: false, insertMenu: true, editMenu: true},
+        hideSaveButton: true,
+        isPreview: false,
+        table: {},
+        filterRow: true,
+        cbColumn: true,
+        maxRows: "800px",
+        headers: ["Style", "Description"],
+    };
+    @ViewChild(TimTableComponent)
+    timTable?: TimTableComponent;
 
     constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
         this.user = settingsglobals().current_user;
@@ -367,6 +368,37 @@ export class SettingsComponent implements DoCheck {
             return this.canRemoveCustomContacts || !contact.verified;
         }
         return false;
+    }
+
+    async getAvailableStyles() {
+        const r = await toPromise(
+            this.http.get<{name: string; path: string; description: string}[]>(
+                "/styles"
+            )
+        );
+        if (r.ok) {
+            this.tableData.table = {
+                rows: [
+                    ...r.result.map((s) => ({
+                        row: [
+                            `<a href="/view/${s.path}">${s.name}</a>`,
+                            s.description,
+                        ],
+                    })),
+                ],
+            };
+            const tab = this.timTable;
+            if (tab) {
+                console.log(tab);
+                tab.reInitialize();
+                tab.filterRow = true;
+                tab.c();
+            }
+        }
+    }
+
+    async ngAfterViewInit() {
+        await this.getAvailableStyles();
     }
 
     ngDoCheck() {
@@ -611,6 +643,7 @@ export class SettingsComponent implements DoCheck {
     ],
     exports: [SettingsComponent],
     imports: [
+        TimTableModule,
         BrowserModule,
         TimUtilityModule,
         HttpClientModule,

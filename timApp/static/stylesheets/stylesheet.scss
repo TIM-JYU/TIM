@@ -109,6 +109,18 @@ a .glyphicon {
     line-height: 1.3;
 }
 
+.paragraphs table, table.timTableTable {
+    @extend .table, .table-condensed, .table-bordered;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+    th {
+        background-color: #dedede;
+        border: 1px solid #ccc;
+    }
+    text-align: left;
+}
+
 // all document-related styles under .paragraphs selector!
 .paragraphs {
     @include center-block();
@@ -217,18 +229,6 @@ a .glyphicon {
         position: absolute;
         top: -0.8em;
         right: 0;
-    }
-
-    table {
-        @extend .table, .table-condensed, .table-bordered;
-        width: auto;
-        margin-left: auto;
-        margin-right: auto;
-        th {
-            background-color: #dedede;
-            border: 1px solid #ccc;
-        }
-        text-align: left;
     }
 
      .header th {
@@ -402,7 +402,7 @@ a .glyphicon {
     background-color: #990000
 }
 
-p.caption { 
+p.caption {
     text-align: center;
 }
 

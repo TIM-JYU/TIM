@@ -782,7 +782,7 @@ export class TimTableComponent
     @ViewChild("buttonOpenBigEditor")
     private buttonOpenBigEditor!: ElementRef<HTMLButtonElement>;
     @ViewChild("dataViewComponent") dataViewComponent?: DataViewComponent;
-    @ViewChildren("editInput") private editInputs!: QueryList<
+    @ViewChildren("editInput") private editInputs?: QueryList<
         ElementRef<HTMLInputElement>
     >;
     dataView?: DataViewSettings | null;
@@ -807,7 +807,7 @@ export class TimTableComponent
     addRowButtonText: string = "";
     editorPosition: string = "";
     private pluginMeta: PluginMeta;
-    private inputSub!: Subscription;
+    private inputSub?: Subscription;
     private customDomUpdateInProgress?: boolean;
     private rowStyleCache = new Map<number, Record<string, string>>();
     private shouldSelectInputText = false;
@@ -970,7 +970,10 @@ export class TimTableComponent
             }
 
             await $timeout(0);
-            this.viewctrl.addTable(this, this.getPar());
+            const par = this.getPar();
+            if (par) {
+                this.viewctrl.addTable(this, par);
+            }
         }
         this.currentHiddenRows = new Set(this.data.hiddenRows);
         onClick("body", ($this, e) => {
@@ -986,7 +989,7 @@ export class TimTableComponent
     }
 
     ngAfterViewInit() {
-        this.inputSub = this.editInputs.changes.subscribe(
+        this.inputSub = this.editInputs?.changes.subscribe(
             (val: QueryList<ElementRef<HTMLInputElement>>) => {
                 if (val.length > 0) {
                     this.updateSmallEditorPosition();
@@ -1040,7 +1043,7 @@ export class TimTableComponent
      * Removes listener and cleans up
      */
     ngOnDestroy() {
-        this.inputSub.unsubscribe();
+        this.inputSub?.unsubscribe();
         this.removeEventListeners();
         // document.removeEventListener("click", this.onClick);
     }
@@ -1905,6 +1908,7 @@ export class TimTableComponent
      * Initialize celldatamatrix with the values from yaml and yaml only
      */
     private initializeCellDataMatrix(clearSort: ClearSort = ClearSort.Yes) {
+        console.log(this.data.table);
         if (!this.data.table) {
             this.data.table = {};
         }
@@ -3594,7 +3598,7 @@ export class TimTableComponent
      * Returns the ID of the paragraph related to the current table instance.
      */
     private getOwnParId() {
-        return this.getPar().originalPar.id;
+        return this.getPar()?.originalPar.id;
     }
 
     /**
@@ -4443,7 +4447,11 @@ export class TimTableComponent
     }
 
     public getPar() {
-        return createParContext(this.element.parents(".par")[0]);
+        const res = this.element.parents(".par")[0];
+        if (!res) {
+            return undefined;
+        }
+        return createParContext(res);
     }
 
     resetField() {

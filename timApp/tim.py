@@ -88,6 +88,7 @@ from timApp.upload.upload import upload
 from timApp.user.contacts import contacts
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
+from timApp.user.settings.styles import styles
 from timApp.user.usergroup import UserGroup
 from timApp.user.verification.routes import verify
 from timApp.util.flask.cache import cache
@@ -137,6 +138,7 @@ blueprints = [
     settings_page,
     sisu,
     tags_blueprint,
+    styles,
     tr_bp,
     upload,
     velps,
