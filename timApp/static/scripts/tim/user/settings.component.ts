@@ -8,7 +8,8 @@ import {
     DoCheck,
     Input,
     NgModule,
-    ViewChild,
+    QueryList,
+    ViewChildren,
 } from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
 import {showAddContactDialog} from "tim/user/showAddContactDialog";
@@ -19,6 +20,7 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
+import {TabsModule} from "ngx-bootstrap/tabs";
 import {ConsentType} from "../ui/consent";
 import {
     ICssFile,
@@ -92,7 +94,21 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                 </div>
             </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title>
-                <tim-table [data]="tableData"></tim-table>
+                <tabset>
+                    <tab heading="Selected styles">
+                        List selected styles
+                    </tab>
+                    <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()" i18n-heading>
+                        <tim-table *ngIf="availableTab.active" [data]="tableData"></tim-table>
+                        <div>
+                        <input type="checkbox" id="style-show-user-made" name="style-show-user-made" [ngModel]="showUserStyles" (ngModelChange)="changeUserStyleVisibility($event)"> 
+                        <label for="style-show-user-made" i18n>Show user-made styles</label>
+                        </div>
+                    </tab>
+                    <tab heading="Custom CSS">
+                        asd
+                    </tab>
+                </tabset>
                 <settings-button-panel [saved]="submit">
                     <button class="btn btn-default" (click)="addPrintSettings()" i18n>Add Print Settings</button>
                 </settings-button-panel>
@@ -323,6 +339,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     verificationSentSet = new Set<IUserContact>();
     contactOrigins = CONTACT_ORIGINS;
     primaryChangeVerificationSent = false;
+    showUserStyles = false;
     private readonly style: HTMLStyleElement;
     private readonly consent: ConsentType | undefined;
     private allNotificationsFetched = false;
@@ -334,10 +351,24 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         filterRow: true,
         cbColumn: true,
         maxRows: "800px",
+        maxWidth: "100%",
         headers: ["Style", "Description"],
+        dataView: {
+            virtual: {
+                enabled: false,
+                horizontalOverflow: 0,
+                verticalOverflow: 0,
+            },
+            fixedColumns: 0,
+            columnWidths: {},
+            tableWidth: "max-content",
+            rowHeight: 31,
+            reportSlowLoad: false,
+        },
     };
-    @ViewChild(TimTableComponent)
-    timTable?: TimTableComponent;
+    @ViewChildren(TimTableComponent)
+    timTable!: QueryList<TimTableComponent>;
+    userStyles: number[] = [];
 
     constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
         this.user = settingsglobals().current_user;
@@ -370,6 +401,26 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         return false;
     }
 
+    changeUserStyleVisibility(newVal: boolean) {
+        this.showUserStyles = newVal;
+        this.tableData.hiddenRows = newVal ? [] : this.userStyles;
+        if (this.timTable.length != 0) {
+            void this.timTable.first.updateFilter();
+        }
+    }
+
+    async reloadStyleTable() {
+        // Ensure table is loaded
+        this.showUserStyles = false;
+        await timeout();
+        if (this.timTable.length != 0) {
+            const tab = this.timTable.first;
+            tab.reInitialize();
+            tab.filterRow = true;
+            tab.c();
+        }
+    }
+
     async getAvailableStyles() {
         const r = await toPromise(
             this.http.get<{name: string; path: string; description: string}[]>(
@@ -387,13 +438,16 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
                     })),
                 ],
             };
-            const tab = this.timTable;
-            if (tab) {
-                console.log(tab);
-                tab.reInitialize();
-                tab.filterRow = true;
-                tab.c();
-            }
+
+            this.userStyles = r.result
+                .map((s, i) => ({
+                    i,
+                    userStyle: s.path.startsWith("styles/user"),
+                }))
+                .filter((s) => s.userStyle)
+                .map((s) => s.i);
+
+            this.tableData.hiddenRows = this.userStyles;
         }
     }
 
@@ -649,6 +703,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         HttpClientModule,
         FormsModule,
         TooltipModule.forRoot(),
+        TabsModule.forRoot(),
     ],
 })
 export class SettingsModule implements DoBootstrap {

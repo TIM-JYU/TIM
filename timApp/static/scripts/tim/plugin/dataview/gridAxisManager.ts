@@ -27,7 +27,7 @@ export class GridAxisManager {
     indexToOrdinal: Record<number, number> = {};
 
     constructor(
-        size: number,
+        private size: number,
         private isDataViewVirtual: boolean,
         private borderSpacing: number,
         private getSize: (i: number) => number,
@@ -36,6 +36,13 @@ export class GridAxisManager {
     ) {
         this.itemOrder = Array.from(new Array(size)).map((e, i) => i);
         this.refresh();
+    }
+
+    /**
+     * Number of all items (visible and hidden).
+     */
+    get allCount() {
+        return this.size;
     }
 
     /**

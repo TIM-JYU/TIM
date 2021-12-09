@@ -300,6 +300,7 @@ export const DataViewSettingsType = t.type({
     // For example, max-content works for both Chrome and Firefox to do fullwidth
     tableWidth: withDefault(t.string, "max-content"),
     fixedColumns: withDefault(t.number, 0),
+    reportSlowLoad: withDefault(t.boolean, true),
 });
 
 export interface DataViewSettings
@@ -562,7 +563,9 @@ export enum ClearSort {
                                    [tableMaxHeight]="maxRows"
                                    [tableMaxWidth]="dataView.tableWidth"
                                    [fixedColumnCount]="dataView.fixedColumns"
-                                   [headerStyle]="headersStyle" #dataViewComponent>
+                                   [headerStyle]="headersStyle"
+                                   [reportSlowLoad]="dataView.reportSlowLoad"
+                                   #dataViewComponent>
                         <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
                     </tim-data-view>
                 </ng-container>
