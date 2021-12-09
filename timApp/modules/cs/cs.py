@@ -205,8 +205,9 @@ def save_extra_files(query, extra_files, prgpath):
         if "file" in extra_file:
             try:
                 if extra_file.get("type", "") != "bin":
+                    headers = extra_file.get("headers", {})
                     lines = get_url_lines_as_string(
-                        replace_random(query, extra_file["file"])
+                        replace_random(query, extra_file["file"]), headers
                     )
                     codecs.open(efilename, "w", "utf-8").write(lines)
                 else:

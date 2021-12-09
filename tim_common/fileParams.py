@@ -1,19 +1,18 @@
-import http.server
-import shutil
-from typing import List, Any, Dict, Callable
-from urllib.request import urlopen
-import re
-import html
-import json
-from urllib.parse import urlparse, parse_qs
-import urllib
-import codecs
-import os
-import shlex
-import hashlib
-import binascii
-
 import base64
+import binascii
+import codecs
+import hashlib
+import html
+import http.server
+import json
+import os
+import re
+import shlex
+import shutil
+import urllib
+from typing import Any, Callable, Optional
+from urllib.parse import urlparse, parse_qs
+from urllib.request import urlopen, Request
 
 from tim_common.cs_sanitizer import allow_minimal, tim_sanitize
 
@@ -351,9 +350,9 @@ def check_url_scheme(url: str):
 
 
 # noinspection PyBroadException
-def get_url_lines_as_string(url: str):
+def get_url_lines_as_string(url: str, headers: Optional[dict[str, str]] = None):
     global cache
-    cachename = "lines_" + url
+    cachename = "lines_" + url + secure_hash_dict(headers)
     diskcache = CACHE_DIR + cachename.replace("/", "_").replace(":", "_")
     # print("========= CACHE KEYS ==========\n", get_chache_keys())
     # print(cachename + "\n")
@@ -377,9 +376,10 @@ def get_url_lines_as_string(url: str):
 
     check_url_scheme(url)
     try:
-        req = urlopen(url)
+        req = Request(url, headers=headers or {})
+        res = urlopen(req)
         # ftype = req.headers['content-type']
-        lines = req.readlines()
+        lines = res.readlines()
     except:
         return "File not found: " + url
     # filecontent = nltk.clean_html(html)
@@ -926,6 +926,13 @@ def getint(s):
             return int(s[0:i])
         i += 1
     return int(s)
+
+
+def secure_hash_dict(d: Optional[dict[str, str]]) -> str:
+    if not d:
+        return ""
+    dk = hashlib.pbkdf2_hmac("sha256", str.encode(str(d)), b"timdict", 100)
+    return dk.hex()
 
 
 # see: https://docs.python.org/3/library/hashlib.html
