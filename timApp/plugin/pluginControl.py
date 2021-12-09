@@ -19,6 +19,7 @@ from timApp.document.docparagraph import DocParagraph
 from timApp.document.docsettings import DocSettings
 from timApp.document.document import Document
 from timApp.document.macroinfo import MacroInfo
+from timApp.document.randutils import hashfunc
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
 from timApp.document.yamlblock import YamlBlock
@@ -65,10 +66,11 @@ def get_error_plugin(
     :type message: str
     :type plugin_name: str
     """
+    error_message = "Plugin " + (f"{plugin_name} " if plugin_name else "") + "error:"
     if plugin_output_format == PluginOutputFormat.MD:
-        return get_error_tex(f"Plugin {plugin_name} error:", message)
+        return get_error_tex(error_message, message)
 
-    return get_error_html(f"Plugin {plugin_name} error: {message}", response)
+    return get_error_html(f"{error_message} {message}", response)
 
 
 PluginOrError = Union[Plugin, str]  # str represent HTML markup of error
@@ -116,7 +118,9 @@ class PluginPlacement:
     def set_output(self, r: Range, out: str):
         self.plugins[r].set_output(out)
 
-    def get_block_output(self):
+    def get_block_output(
+        self, extract_plugins: bool = False
+    ) -> tuple[str, dict[str, str]]:
         """TODO: this did not help very much
         if self.is_block_plugin:
             idx = next(iter(self.plugins))
@@ -128,6 +132,7 @@ class PluginPlacement:
             key=lambda r: r[0],
             reverse=True,
         )
+        block_codes: dict[str, str] = {}
         out_md = self.expanded_md
         for sr in sorted_ranges:
             p = self.plugins.get(sr)
@@ -138,9 +143,19 @@ class PluginPlacement:
                 h = (
                     p.get_final_output().strip()
                 )  # allow inlineplugins to come close each other
+            if extract_plugins:
+                # We can't pass plugin HTML directly into Dumbo
+                # because Pandoc does not know how to parse custom HTML elements
+                # Instead we temporarily encode the plugin HTML into
+                # a special code that is passed through Pandoc unchanged
+                # We pick a special prefix that is far enough from
+                # anything that Pandoc could process in a special manner
+                h_code = f"§§plugin_html_{hashfunc(h)}"
+                block_codes[h_code] = h
+                h = h_code
             start, end = sr
             out_md = out_md[:start] + h + out_md[end:]
-        return out_md
+        return out_md, block_codes
 
     @staticmethod
     def from_par(
@@ -693,7 +708,11 @@ def pluginify(
 
     for idx, place in placements.items():
         par = html_pars[idx]
-        par.output = place.get_block_output()
+        pass_to_dumbo = idx in dumbo_opts
+        output, plugin_htmls = place.get_block_output(extract_plugins=pass_to_dumbo)
+        par.output = output
+        if pass_to_dumbo:
+            par.plugin_htmls = plugin_htmls
 
     taketime("plc", "Placement done")
 
@@ -703,17 +722,18 @@ def pluginify(
         settings_to_dumbo = []
         taketime("dumbo", "start 1")
         for k, v in dumbo_opts.items():
-            # Need to wrap in div because otherwise dumbo might generate invalid HTML
-            htmls_to_dumbo.append(
-                {"content": "<div>" + html_pars[k].output + "</div>", **v.dict()}
-            )
+            htmls_to_dumbo.append({"content": html_pars[k].output, **v.dict()})
             settings_to_dumbo.append(v)
         taketime("dumbo", "start 2")
         for h, (idx, s) in zip(
             call_dumbo(htmls_to_dumbo, options=doc.get_settings().get_dumbo_options()),
             dumbo_opts.items(),
         ):
-            html_pars[idx].output = sanitize_html(h)
+            par = html_pars[idx]
+            for plugin_key, plugin_html in par.plugin_htmls.items():
+                h = h.replace(plugin_key, plugin_html)
+            par.plugin_htmls = None
+            par.output = sanitize_html(h)
     taketime("phtml done")
 
     return PluginifyResult(

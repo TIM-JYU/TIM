@@ -27,6 +27,7 @@ class PreparedPar:
     status: ReadMarkCollection | None = None
     notes: list[UserNoteAndUser] | None = None
     areainfo: AreaBoundary | None = None
+    plugin_htmls: dict[str, str] | None = None
 
     @property
     def target_data(self) -> ParBasicData:
