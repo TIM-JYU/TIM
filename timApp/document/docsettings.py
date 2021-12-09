@@ -163,6 +163,11 @@ class DocSettings:
     def get_dict(self) -> YamlBlock:
         return self.__dict
 
+    def get_safe_dict(self) -> dict:
+        result = dict(self.__dict.values)
+        result.pop("macros", None)
+        return result
+
     def global_plugin_attrs(self) -> dict:
         return self.__dict.get(self.global_plugin_attrs_key, {})
 
@@ -405,6 +410,17 @@ class DocSettings:
             input_format=self.input_format(),
             smart_punct=self.smart_punct(),
         )
+
+    def memo_minutes_settings(self) -> Optional[dict]:
+        macros = self.__dict.get("macros", {})
+        if not isinstance(macros, dict):
+            return None
+        dates = macros.get("dates", None)
+        knro = macros.get("knro", None)
+        stampformat = macros.get("stampformat", None)
+        if dates is None and knro is None and stampformat is None:
+            return None
+        return {"dates": dates, "knro": knro, "stampformat": stampformat}
 
     def memo_minutes(self) -> bool:
         return self.__dict.get(self.memo_minutes_key, "")

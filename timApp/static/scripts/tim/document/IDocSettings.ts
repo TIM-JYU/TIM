@@ -1,6 +1,6 @@
 export type MeetingDateEntry = [string, string, string];
 
-interface IMacros {
+interface IMeetingMemoSettings {
     dates?: Array<MeetingDateEntry>;
     knro?: number;
     stampformat?: string;
@@ -28,8 +28,8 @@ export interface ILoginSettings {
 }
 
 export interface IDocSettings {
+    memoMinutesSettings?: IMeetingMemoSettings;
     show_velps?: boolean;
-    macros?: IMacros;
     custom_stamp_model?: string;
     course_main?: string;
     form_mode?: boolean;

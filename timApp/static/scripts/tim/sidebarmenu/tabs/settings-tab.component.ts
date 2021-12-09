@@ -463,7 +463,7 @@ export class SettingsTabComponent implements OnInit {
      */
     get enableCreateExtractsButton() {
         return (
-            this.docSettings?.macros?.knro &&
+            this.docSettings?.memoMinutesSettings?.knro &&
             this.documentMemoMinutes == "minutes" &&
             this.item?.rights.manage
         );
@@ -482,7 +482,7 @@ export class SettingsTabComponent implements OnInit {
      */
     get enableCreateMinutesButton() {
         return (
-            this.docSettings?.macros?.knro &&
+            this.docSettings?.memoMinutesSettings?.knro &&
             this.documentMemoMinutes == "memo" &&
             this.item?.rights.manage
         );
@@ -497,7 +497,7 @@ export class SettingsTabComponent implements OnInit {
             return;
         }
 
-        if (!this.docSettings?.macros?.knro) {
+        if (!this.docSettings?.memoMinutesSettings?.knro) {
             await showMessageDialog(
                 $localize`The document has no 'knro' macro defined`
             );
@@ -506,8 +506,8 @@ export class SettingsTabComponent implements OnInit {
 
         const r = await toPromise(
             this.http.post<{path: string}>("/minutes/createMinutes", {
-                item_path: `${this.item.location}/pk/pk${this.docSettings.macros.knro}`,
-                item_title: `pk${this.docSettings.macros.knro}`,
+                item_path: `${this.item.location}/pk/pk${this.docSettings.memoMinutesSettings.knro}`,
+                item_title: `pk${this.docSettings.memoMinutesSettings.knro}`,
                 copy: this.item.id,
             })
         );
@@ -524,7 +524,7 @@ export class SettingsTabComponent implements OnInit {
      */
     get isMinutesOrInvitation() {
         return (
-            this.docSettings?.macros?.knro &&
+            this.docSettings?.memoMinutesSettings?.knro &&
             this.item?.rights.manage &&
             (this.documentMemoMinutes == "minutes" ||
                 this.documentMemoMinutes == "memo")

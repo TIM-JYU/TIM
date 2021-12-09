@@ -1351,10 +1351,11 @@ ${backTicks}
             if (
                 this.activeAttachments &&
                 this.docSettings &&
-                this.docSettings.macros &&
+                this.docSettings.memoMinutesSettings &&
                 !this.allAttachmentsUpToDate()
             ) {
-                let stampFormat = this.docSettings.macros.stampformat;
+                let stampFormat =
+                    this.docSettings.memoMinutesSettings.stampformat;
                 if (stampFormat === undefined) {
                     stampFormat = "";
                 }
@@ -1533,7 +1534,7 @@ ${backTicks}
         if (
             macroRange &&
             this.docSettings &&
-            this.docSettings.macros &&
+            this.docSettings.memoMinutesSettings &&
             kokousDate
         ) {
             autostamp = true;
@@ -1549,7 +1550,7 @@ ${backTicks}
                 this.file.error = errorMessage;
                 throw new Error(errorMessage);
             }
-            let stampFormat = this.docSettings.macros.stampformat;
+            let stampFormat = this.docSettings.memoMinutesSettings.stampformat;
             if (stampFormat === undefined) {
                 stampFormat = "";
             }
@@ -1945,10 +1946,10 @@ ${backTicks}
      * Returns the current meeting date from document settings, if it exists.
      */
     private getCurrentMeetingDate(): string | undefined {
-        if (this.docSettings?.macros) {
+        if (this.docSettings?.memoMinutesSettings) {
             // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
-            const knro = this.docSettings.macros.knro;
-            const dates = this.docSettings.macros.dates;
+            const knro = this.docSettings.memoMinutesSettings.knro;
+            const dates = this.docSettings.memoMinutesSettings.dates;
             if (dates != null && knro != null) {
                 const entry = dates[knro] as MeetingDateEntry | undefined;
                 return entry?.[0];
