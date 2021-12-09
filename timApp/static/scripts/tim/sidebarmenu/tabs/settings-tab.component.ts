@@ -9,7 +9,11 @@ import {
     isRootFolder,
     redirectToItem,
 } from "tim/item/IItem";
-import {isDocumentGlobals, someglobals} from "tim/util/globals";
+import {
+    IMeetingMemoSettings,
+    isDocumentGlobals,
+    someglobals,
+} from "tim/util/globals";
 import {
     getCurrentViewRange,
     IViewRange,
@@ -250,6 +254,7 @@ export class SettingsTabComponent implements OnInit {
     sisugroupPath?: string;
     item?: DocumentOrFolder;
     docSettings?: IDocSettings;
+    memoMinutesSettings?: IMeetingMemoSettings;
     private currentViewRange?: IViewRange;
     private documentMemoMinutes: string | undefined;
 
@@ -261,6 +266,9 @@ export class SettingsTabComponent implements OnInit {
             : undefined;
         this.documentMemoMinutes = isDocumentGlobals(globals)
             ? globals.memoMinutes
+            : undefined;
+        this.memoMinutesSettings = isDocumentGlobals(globals)
+            ? globals.memoMinutesSettings
             : undefined;
         if (isDocumentGlobals(globals) && globals.linked_groups) {
             this.updateLinkedGroups(globals.linked_groups);
@@ -463,7 +471,7 @@ export class SettingsTabComponent implements OnInit {
      */
     get enableCreateExtractsButton() {
         return (
-            this.docSettings?.memoMinutesSettings?.knro &&
+            this.memoMinutesSettings?.knro &&
             this.documentMemoMinutes == "minutes" &&
             this.item?.rights.manage
         );
@@ -482,7 +490,7 @@ export class SettingsTabComponent implements OnInit {
      */
     get enableCreateMinutesButton() {
         return (
-            this.docSettings?.memoMinutesSettings?.knro &&
+            this.memoMinutesSettings?.knro &&
             this.documentMemoMinutes == "memo" &&
             this.item?.rights.manage
         );
@@ -497,7 +505,7 @@ export class SettingsTabComponent implements OnInit {
             return;
         }
 
-        if (!this.docSettings?.memoMinutesSettings?.knro) {
+        if (!this.memoMinutesSettings?.knro) {
             await showMessageDialog(
                 $localize`The document has no 'knro' macro defined`
             );
@@ -506,8 +514,8 @@ export class SettingsTabComponent implements OnInit {
 
         const r = await toPromise(
             this.http.post<{path: string}>("/minutes/createMinutes", {
-                item_path: `${this.item.location}/pk/pk${this.docSettings.memoMinutesSettings.knro}`,
-                item_title: `pk${this.docSettings.memoMinutesSettings.knro}`,
+                item_path: `${this.item.location}/pk/pk${this.memoMinutesSettings.knro}`,
+                item_title: `pk${this.memoMinutesSettings.knro}`,
                 copy: this.item.id,
             })
         );
@@ -524,7 +532,7 @@ export class SettingsTabComponent implements OnInit {
      */
     get isMinutesOrInvitation() {
         return (
-            this.docSettings?.memoMinutesSettings?.knro &&
+            this.memoMinutesSettings?.knro &&
             this.item?.rights.manage &&
             (this.documentMemoMinutes == "minutes" ||
                 this.documentMemoMinutes == "memo")

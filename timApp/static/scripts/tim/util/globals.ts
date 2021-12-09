@@ -1,7 +1,11 @@
 import {IBookmarkGroup} from "tim/bookmark/bookmark.service";
 import {HeaderIndexItem} from "tim/sidebarmenu/services/header-indexer.service";
 import {IDocScoreInfo} from "tim/sidebarmenu/services/scoreboard.service";
-import {IDocSettings, ISlideDocSettings} from "../document/IDocSettings";
+import {
+    IDocSettings,
+    ISlideDocSettings,
+    MeetingDateEntry,
+} from "../document/IDocSettings";
 import {EditMode} from "../document/popup-menu-dialog.component";
 import {IViewRange, IViewRangeUnnamed} from "../document/viewRangeInfo";
 import {
@@ -94,6 +98,12 @@ export interface IFolderGlobals extends IItemGlobals {
     curr_item: IFolder;
 }
 
+export interface IMeetingMemoSettings {
+    dates?: Array<MeetingDateEntry>;
+    knro?: number;
+    stampformat?: string;
+}
+
 export interface IDocumentGlobals extends IItemGlobals {
     parsOnly: boolean;
     users: IUserListEntry[];
@@ -104,6 +114,7 @@ export interface IDocumentGlobals extends IItemGlobals {
     allowMove: boolean; // TODO this doesn't come from server and should be removed from globals
     group: IGroup;
     docSettings: IDocSettings;
+    memoMinutesSettings?: IMeetingMemoSettings;
     editMode: EditMode | null;
     hideLinks: boolean;
     hideTopButtons: boolean;

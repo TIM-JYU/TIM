@@ -17,7 +17,11 @@ import {IDocSettings, MeetingDateEntry} from "../document/IDocSettings";
 import {getCitePar} from "../document/parhelpers";
 import {ViewCtrl} from "../document/viewctrl";
 import {registerDialogComponentForModule} from "../ui/dialog";
-import {documentglobals, genericglobals} from "../util/globals";
+import {
+    documentglobals,
+    genericglobals,
+    IMeetingMemoSettings,
+} from "../util/globals";
 import {$compile, $http, $injector, $timeout, $upload} from "../util/ngimport";
 import {AceParEditor} from "./AceParEditor";
 import {EditorType, SelectionRange} from "./BaseParEditor";
@@ -208,6 +212,7 @@ export class PareditorController extends DialogController<
     private autocomplete!: boolean; // $onInit
     private citeText!: string; // $onInit
     private docSettings?: IDocSettings;
+    private memoMinutesSettings?: IMeetingMemoSettings;
     private uploadedFile?: string;
     private activeTab?: string;
     private lastTab?: string;
@@ -979,6 +984,7 @@ ${backTicks}
             }
         );
         this.docSettings = documentglobals().docSettings;
+        this.memoMinutesSettings = documentglobals().memoMinutesSettings;
 
         this.activeAttachments = this.updateAttachments(
             true,
@@ -1351,11 +1357,10 @@ ${backTicks}
             if (
                 this.activeAttachments &&
                 this.docSettings &&
-                this.docSettings.memoMinutesSettings &&
+                this.memoMinutesSettings &&
                 !this.allAttachmentsUpToDate()
             ) {
-                let stampFormat =
-                    this.docSettings.memoMinutesSettings.stampformat;
+                let stampFormat = this.memoMinutesSettings.stampformat;
                 if (stampFormat === undefined) {
                     stampFormat = "";
                 }
@@ -1534,7 +1539,7 @@ ${backTicks}
         if (
             macroRange &&
             this.docSettings &&
-            this.docSettings.memoMinutesSettings &&
+            this.memoMinutesSettings &&
             kokousDate
         ) {
             autostamp = true;
@@ -1550,7 +1555,7 @@ ${backTicks}
                 this.file.error = errorMessage;
                 throw new Error(errorMessage);
             }
-            let stampFormat = this.docSettings.memoMinutesSettings.stampformat;
+            let stampFormat = this.memoMinutesSettings.stampformat;
             if (stampFormat === undefined) {
                 stampFormat = "";
             }
@@ -1946,10 +1951,10 @@ ${backTicks}
      * Returns the current meeting date from document settings, if it exists.
      */
     private getCurrentMeetingDate(): string | undefined {
-        if (this.docSettings?.memoMinutesSettings) {
+        if (this.memoMinutesSettings) {
             // Knro usage starts from 1 but dates starts from 0 but there is dummy item first
-            const knro = this.docSettings.memoMinutesSettings.knro;
-            const dates = this.docSettings.memoMinutesSettings.dates;
+            const knro = this.memoMinutesSettings.knro;
+            const dates = this.memoMinutesSettings.dates;
             if (dates != null && knro != null) {
                 const entry = dates[knro] as MeetingDateEntry | undefined;
                 return entry?.[0];

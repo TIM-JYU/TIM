@@ -1,11 +1,5 @@
 export type MeetingDateEntry = [string, string, string];
 
-interface IMeetingMemoSettings {
-    dates?: Array<MeetingDateEntry>;
-    knro?: number;
-    stampformat?: string;
-}
-
 export interface ITimeLeftSettings {
     low_time_threshold: number;
     low_time_glow_period: number;
@@ -28,7 +22,6 @@ export interface ILoginSettings {
 }
 
 export interface IDocSettings {
-    memoMinutesSettings?: IMeetingMemoSettings;
     show_velps?: boolean;
     custom_stamp_model?: string;
     course_main?: string;
