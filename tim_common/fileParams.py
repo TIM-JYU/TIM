@@ -270,14 +270,18 @@ def clear_cache():
 def get_chache_keys():
     global cache
     s = ""
+    memory_cache_size = len(cache)
     for key in cache.keys():
         s += key + "\n"
+    disk_cache_size = 0
     # noinspection PyBroadException
     try:
-        s = s + "\n".join(os.listdir(CACHE_DIR))
+        cache_dir_files = os.listdir(CACHE_DIR)
+        disk_cache_size = len(cache_dir_files)
+        s = s + "\n".join(cache_dir_files)
     except:  # no CACHE_DIR yet
         pass
-    return s
+    return s, memory_cache_size, disk_cache_size
 
 
 # noinspection PyBroadException

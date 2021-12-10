@@ -554,8 +554,13 @@ class TIMShowFileServer(http.server.BaseHTTPRequestHandler):
         do_headers(self, content_type)
 
         if self.path.find("refresh") >= 0:
-            self.wout(get_chache_keys())
+            print(f"Cleaning cache")
+            keys, mem_cache_len, disk_cache_len = get_chache_keys()
             clear_cache()
+            print(keys)
+            self.wout(
+                f"Removed {mem_cache_len} in-memory cache items and {disk_cache_len} cached files"
+            )
             return
 
         tempdir = "svn"
