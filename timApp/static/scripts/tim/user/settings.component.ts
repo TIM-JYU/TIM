@@ -355,9 +355,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         headers: ["Style", "Description"],
         dataView: {
             virtual: {
-                enabled: false,
-                horizontalOverflow: 0,
-                verticalOverflow: 0,
+                enabled: true,
+                horizontalOverflow: 1,
+                verticalOverflow: 1,
             },
             fixedColumns: 0,
             columnWidths: {},
