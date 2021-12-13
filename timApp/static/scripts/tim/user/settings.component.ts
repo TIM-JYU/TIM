@@ -22,12 +22,7 @@ import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TabsModule} from "ngx-bootstrap/tabs";
 import {ConsentType} from "../ui/consent";
-import {
-    ICssFile,
-    INotification,
-    ISettings,
-    settingsglobals,
-} from "../util/globals";
+import {INotification, ISettings, settingsglobals} from "../util/globals";
 import {IOkResponse, timeout, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
 import {ContactOrigin, IFullUser, IUserContact} from "./IUser";
@@ -327,7 +322,6 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
 export class SettingsComponent implements DoCheck, AfterViewInit {
     saving = false;
     settings: ISettings;
-    cssFiles: Array<ICssFile>;
     notifications: INotification[];
     storageClear = false;
     user: IFullUser;
@@ -379,7 +373,6 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.user = settingsglobals().current_user;
         this.consent = this.user.consent;
         this.settings = settingsglobals().userPrefs;
-        this.cssFiles = settingsglobals().css_files;
         this.notifications = settingsglobals().notifications;
         this.contacts = settingsglobals().contacts;
         this.collectUserContacts();

@@ -17,8 +17,7 @@ from timApp.item.block import Block, BlockType
 from timApp.notification.notify import get_current_user_notifications
 from timApp.timdb.sqa import db
 from timApp.user.consentchange import ConsentChange
-from timApp.user.preferences import Preferences, export_doc_to_style
-from timApp.user.settings.theme import get_available_themes
+from timApp.user.preferences import Preferences
 from timApp.user.user import User, Consent, get_owned_objects_query
 from timApp.util.flask.requesthelper import get_option, RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, ok_response, text_response
@@ -34,16 +33,10 @@ def verify_login() -> None:
 
 @settings_page.get("")
 def show() -> str:
-    available_css_files = [
-        {"name": theme.filename, "desc": theme.description}
-        for theme in get_available_themes()
-    ]
-
     try:
         limit = 50
         return render_template(
             "settings.jinja2",
-            css_files=available_css_files,
             notification_limit=limit,
             notifications=get_current_user_notifications(limit=limit),
             contacts=get_current_user_object().contacts,

@@ -193,7 +193,6 @@ export interface IOAuthGlobals extends IGenericGlobals {
 
 export interface ISettingsGlobals extends IGenericGlobals {
     settings: ISettings;
-    css_files: Array<ICssFile>;
     notifications: INotification[];
     notificationLimit: number;
     contacts: IUserContact[];

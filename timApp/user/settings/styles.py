@@ -11,25 +11,17 @@ from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.caching import get_style_timestamp_hash, set_style_timestamp_hash
 from timApp.document.docentry import get_documents, DocEntry
 from timApp.document.randutils import hashfunc
+from timApp.user.settings.style_utils import (
+    stylesheets_folder,
+    get_default_scss_gen_dir,
+    OFFICIAL_STYLES_PATH,
+    USER_STYLES_PATH,
+)
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 
 styles = TypedBlueprint("styles", __name__, url_prefix="/styles")
-
-static_folder = Path("static")
-stylesheets_folder = static_folder / "stylesheets"
-
-OFFICIAL_STYLES_PATH = "styles/official"
-USER_STYLES_PATH = "styles/user"
-
-
-def get_default_scss_gen_dir() -> Path:
-    """Returns the default path into which generated SCSS files should be put into
-
-    :return: Default path for generated SCSS files
-    """
-    return static_folder / current_app.config["SASS_GEN_PATH"]
 
 
 def hash_theme_timestamps(theme_docs: Optional[list[DocEntry]] = None) -> str:

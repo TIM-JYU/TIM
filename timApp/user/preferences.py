@@ -8,9 +8,6 @@ import attr
 from timApp.document.docentry import DocEntry
 from timApp.item.block import Block
 from timApp.item.item import Item
-from timApp.user.settings.theme_css import (
-    generate_style,
-)
 
 
 def export_doc_to_style(block: Block):
@@ -50,7 +47,10 @@ class Preferences:
 
     @cached_property
     def css_combined(self) -> str:
-        return generate_style(self.theme_docs())
+        from timApp.user.settings.styles import generate_style
+
+        name, _ = generate_style(self.theme_docs())
+        return name
 
     @cached_property
     def excluded_email_paths(self):
