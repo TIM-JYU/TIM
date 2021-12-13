@@ -82,7 +82,6 @@ def generate_style(theme_docs: list[DocEntry], gen_dir: Optional[Path] = None) -
     :return: Name of the generated style CSS.
     """
     from timApp.printing.print import print_doc_scss
-    from timApp.tim_app import app
 
     if not gen_dir:
         gen_dir = get_default_scss_gen_dir()
@@ -126,8 +125,8 @@ def generate_style(theme_docs: list[DocEntry], gen_dir: Optional[Path] = None) -
     try:
         compiled_sass = sass.compile(
             string=scss_src,
-            output_style=app.config["LIBSASS_STYLE"],
-            include_paths=app.config["LIBSASS_INCLUDES"],
+            output_style=current_app.config["LIBSASS_STYLE"],
+            include_paths=current_app.config["LIBSASS_INCLUDES"],
         )
         with style_path.open(encoding="utf-8", mode="w") as f:
             f.write(compiled_sass)

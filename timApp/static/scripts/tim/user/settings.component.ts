@@ -99,10 +99,13 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                         List selected styles
                     </tab>
                     <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()" i18n-heading>
+                        <div>
+                            <input type="checkbox" id="style-show-user-made" name="style-show-user-made" [ngModel]="showUserStyles" (ngModelChange)="changeUserStyleVisibility($event)"> 
+                            <label for="style-show-user-made" i18n>Show user-made styles</label>
+                        </div>
                         <tim-table *ngIf="availableTab.active" [data]="tableData"></tim-table>
                         <div>
-                        <input type="checkbox" id="style-show-user-made" name="style-show-user-made" [ngModel]="showUserStyles" (ngModelChange)="changeUserStyleVisibility($event)"> 
-                        <label for="style-show-user-made" i18n>Show user-made styles</label>
+                            <button class="timButton" [disabled]="!cbCount" (click)="previewStyle()">Preview styles</button>
                         </div>
                     </tab>
                     <tab heading="Custom CSS">
@@ -343,6 +346,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     private readonly style: HTMLStyleElement;
     private readonly consent: ConsentType | undefined;
     private allNotificationsFetched = false;
+    cbCount = 0;
     tableData: TimTable = {
         hide: {edit: false, insertMenu: true, editMenu: true},
         hideSaveButton: true,
@@ -352,7 +356,8 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         cbColumn: true,
         maxRows: "800px",
         maxWidth: "100%",
-        headers: ["Style", "Description"],
+        headers: ["docId", $localize`Style`, $localize`Description`],
+        hiddenColumns: [0],
         dataView: {
             virtual: {
                 enabled: true,
@@ -381,7 +386,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.primaryEmail = this.getContactsFor(Channel.EMAIL).find(
             (c) => c.primary
         )!;
+        this.tableData.cbCallBack = this.cbChanged;
         this.updateCss();
+
         this.style = document.createElement("style");
         this.style.type = "text/css";
         document.getElementsByTagName("head")[0].appendChild(this.style);
@@ -389,6 +396,39 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     get userContactEntries() {
         return [...this.userContacts.entries()];
+    }
+
+    cbChanged = (cbs: boolean[], n: number, index: number) => {
+        this.cbCount = n;
+        this.cdr.detectChanges();
+    };
+
+    async previewStyle() {
+        const table = this.timTable.first;
+        const selStyles = table.getCheckedRows(0, true).map((s) => s[0]);
+
+        const r = await toPromise(
+            this.http.get(`/styles/path`, {
+                params: {
+                    docs: selStyles,
+                },
+                responseType: "text",
+            })
+        );
+
+        if (r.ok) {
+            const stylePath = r.result;
+            console.log(r.result);
+            document
+                .querySelector(
+                    // There are two stylesheets in production (the other is the Angular-generated /js/styles.<hash>.css),
+                    // so we need the href match too.
+                    'link[rel="stylesheet"][href*="/static/generated/"]'
+                )!
+                .setAttribute("href", `/${stylePath}`);
+        } else {
+            console.error(r.result.error.error);
+        }
     }
 
     canRemoveContact(contact: IUserContact): boolean {
@@ -423,15 +463,21 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     async getAvailableStyles() {
         const r = await toPromise(
-            this.http.get<{name: string; path: string; description: string}[]>(
-                "/styles"
-            )
+            this.http.get<
+                {
+                    docId: number;
+                    name: string;
+                    path: string;
+                    description: string;
+                }[]
+            >("/styles")
         );
         if (r.ok) {
             this.tableData.table = {
                 rows: [
                     ...r.result.map((s) => ({
                         row: [
+                            `${s.docId}`,
                             `<a href="/view/${s.path}">${s.name}</a>`,
                             s.description,
                         ],

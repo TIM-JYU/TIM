@@ -147,9 +147,6 @@ class DocumentPrinter:
         return None
 
     def _normalize_theme_style(self, md: str) -> str:
-        if md.startswith("```"):
-            style_start = md.find("\n")
-            md = md[style_start + 1 : -3]
         md = md.replace("@mixin post-all", f"@mixin post-all-{self._doc_entry.id}")
         return md
 
