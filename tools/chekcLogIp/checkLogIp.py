@@ -8,7 +8,9 @@ import sys
 
 # https://regex101.com/r/S6xh2p/latest
 #                        d     t    .sec  m   user     ip          prot res  time client processid
-ipmatcher = re.compile("^(.*) (.*),(.*) (.*) (.+) \[([0-9.]+)\]: (.*) (.*) (.*) (.*) (.+)")
+ipmatcher = re.compile(
+    "^(.*) (.*),(.*) (.*) (.+) \[([0-9.]+)\]: (.*) (.*) (.*) (.*) (.+)"
+)
 
 
 # 2021-12-02 00:08:20,484 INFO: aknakka [101.113.93.234]: PUT /read/113113/beEIXz36R3Uc/4 403 0.0307s android_linux_10/chrome/92.0.4515.115 4141
@@ -22,13 +24,17 @@ def getTimeIpAndUser(line):
 
 # https://regex101.com/r/Sjd9Kd/latest
 #                             d     t  .sec                who  op   right    user      doc
-rightsmatcher = re.compile("^(.*) (.*),(.*) INFO: RIGHTS: (.*) (.*) (.*) for ([^ ]*) in (.*)")
+rightsmatcher = re.compile(
+    "^(.*) (.*),(.*) INFO: RIGHTS: (.*) (.*) (.*) for ([^ ]*) in (.*)"
+)
 # 2021-12-02 05:54:12,348 INFO: RIGHTS: roankka added view(duration=4:00:00) for akankka in kurssit/tie/ohj1/2021s/tentti/20211202
 # 2021-12-02 14:05:56,112 INFO: RIGHTS: roankka removed view(duration=4:00:00,expired) for akankka in kurssit/tie/ohj1/2021s/tentti/20211202
 
 # https://regex101.com/r/hQ8zOI/latest
 #                             d     t    .sec  m   who     ip         prot              op    ip     user       what       res time client processid
-rightsmatcher2 = re.compile("^(.*) (.*),(.*) (.*) (.+) \[([0-9.]+)\]: GET /permissions/(.*)/([0-9]*)/([^ /?]*)([/?](.*))? (.*) (.*) (.*) (.+)")
+rightsmatcher2 = re.compile(
+    "^(.*) (.*),(.*) (.*) (.+) \[([0-9.]+)\]: GET /permissions/(.*)/([0-9]*)/([^ /?]*)([/?](.*))? (.*) (.*) (.*) (.+)"
+)
 # 2021-12-02 05:54:12,218 INFO: roankka [91.158.181.132]: GET /permissions/add/356445/akankka/?type=view&duration=4 302 0.00128s windows_10/chrome/96.0.4664.45 4132
 # 2021-12-02 14:04:41,358 INFO: roankka [84.251.211.181]: GET /permissions/expire/356445/akankka 200 0.048s windows_10/firefox/94.0 4131
 def getTimeUserOpRights(line):
@@ -69,7 +75,7 @@ def main():
             dt, user, op = getTimeUserOpRights(line)
             if dt:
                 if user in ignoreusers:
-                    continue;
+                    continue
                 usr = users.get(user)
                 if not usr:
                     usr = {"add": "", "rem": "", "ips": {}}
@@ -84,7 +90,7 @@ def main():
             if not dt:
                 continue
             if user in ignoreusers:
-                continue;
+                continue
 
             # print(ip, user)
             if not ips.get(ip):
@@ -124,7 +130,7 @@ def main():
         sep = ""
         for user in usrs:
             usr = usrs[user]
-            s += sep + usr["first"] +"-" + usr["last"]
+            s += sep + usr["first"] + "-" + usr["last"]
             sep = ","
         s += ")"
         print(s)
@@ -141,6 +147,7 @@ def main():
             s += " " + ip
         print(s)
     print(n)
+
 
 if __name__ == "__main__":
     main()
