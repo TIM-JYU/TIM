@@ -1,6 +1,8 @@
 # Read TIM-logfile and print  ip's that has many users
 # and users that has used many ip's
 # usage: python checkLogIp.py logname [ignoreusers]
+# ignoreusers is a file with one username/line who should
+# be forgot from analyses.
 # vesal 7.12.2021
 import re
 
