@@ -39,7 +39,7 @@ Hi {#t3#} $x$
             <p>
                 <em>Hello</em> <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1"><span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali">
                 <pali-runner json="{self.make_base64(
-        expected_json)}"></pali-runner></span></tim-plugin-loader>, <span class="error">Plugin nonexistent error: Plugin does not exist.</span> and <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t2"><span id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali"><pali-runner json="{self.make_base64(
+        expected_json)}"></pali-runner></span></tim-plugin-loader>, <span class="error" ng-non-bindable>Plugin nonexistent error: Plugin does not exist.</span> and <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t2"><span id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali"><pali-runner json="{self.make_base64(
         expected_json2)}"></pali-runner></span></tim-plugin-loader>
             <span class="math inline">\(x\)</span>
             </p>
@@ -86,7 +86,7 @@ Hi {#t3#} $x$
 <tim-plugin-loader type="full" answer-id="" class="pluginpali inlineplugin" task-id="{d.id}.t1">
 <span id="{d.id}.t1.Lm7y6R7n5XIb" data-plugin="/pali">
 <pali-runner json="{self.make_base64(expected_json)}"></pali-runner></span></tim-plugin-loader>,
-<span class="error">Plugin nonexistent error: Plugin does not exist.</span> and 
+<span class="error" ng-non-bindable>Plugin nonexistent error: Plugin does not exist.</span> and 
 <tim-plugin-loader type="full" answer-id="{aid}" class="pluginpali inlineplugin" task-id="{d.id}.t2">
 <span id="{d.id}.t2.Lm7y6R7n5XIb" data-plugin="/pali"><pali-runner json="{self.make_base64(
         expected_json2)}"></pali-runner></span></tim-plugin-loader>
