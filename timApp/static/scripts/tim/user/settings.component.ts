@@ -9,6 +9,7 @@ import {
     Input,
     NgModule,
     QueryList,
+    ViewChild,
     ViewChildren,
 } from "@angular/core";
 import {showMessageDialog} from "tim/ui/showMessageDialog";
@@ -20,7 +21,7 @@ import {platformBrowserDynamic} from "@angular/platform-browser-dynamic";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
-import {TabsModule} from "ngx-bootstrap/tabs";
+import {TabsetComponent, TabsModule} from "ngx-bootstrap/tabs";
 import {ConsentType} from "../ui/consent";
 import {INotification, ISettings, settingsglobals} from "../util/globals";
 import {IOkResponse, timeout, toPromise} from "../util/utils";
@@ -70,6 +71,16 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
     },
 };
 
+const STYLE_TABLE_HEADERS = [
+    "docId",
+    $localize`Style`,
+    $localize`Description`,
+    $localize`Type`,
+];
+
+const HIDDEN_COLUMNS_OFFICIAL_USERS = [0];
+const HIDDEN_COLUMNS_OFFICIAL_ONLY = [0, 3];
+
 @Component({
     selector: "tim-settings",
     template: `
@@ -82,31 +93,38 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                 </div>
             </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title>
-                <tabset>
+                <tabset #stylesTabs>
                     <tab heading="Selected styles">
                         List selected styles
                     </tab>
                     <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()" i18n-heading>
-                        <div>
+                        <div class="info-box">
                             <p i18n>
                                 The table below lists all styles available on TIM.
-                                You can preview and add new styles using the table below. 
+                                You can preview and add new styles using the table below.
                             </p>
                             <ul>
-                                <li i18n><strong>Official styles</strong> are maintained and supported by TIM maintainers.</li>
+                                <li i18n><strong>Official styles</strong> are maintained and supported by TIM
+                                    maintainers.
+                                </li>
                                 <li i18n><strong>User-made styles</strong> are made and maintained by TIM's users.</li>
                             </ul>
+                            <p i18n>To remove styles or edit their ordering, use the <a (click)="changeTab(0)">Selected
+                                styles</a> tab.</p>
                         </div>
                         <div class="checkbox">
                             <label>
                                 <input type="checkbox" id="style-show-user-made" name="style-show-user-made"
-                                    [ngModel]="showUserStyles" (ngModelChange)="changeUserStyleVisibility($event)">
+                                       [ngModel]="showUserStyles" (ngModelChange)="changeUserStyleVisibility($event)">
                                 <ng-container i18n>Show user-made styles</ng-container>
                             </label>
                         </div>
                         <tim-table class="style-listing" *ngIf="availableTab.active" [data]="tableData"></tim-table>
                         <div class="style-button-panel">
-                            <button class="timButton" [disabled]="!cbCount" (click)="clearAllPreviewStyles()" i18n>
+                            <button class="timButton" [disabled]="!cbCount" (click)="activateSelectedStyles()" i18n>
+                                Add to Selected styles
+                            </button>
+                            <button class="timButton" [disabled]="!cbCount" (click)="resetSelectedStyles()" i18n>
                                 Clear preview
                             </button>
                             <div class="style-loader" *ngIf="loadingUserStyle">
@@ -371,18 +389,14 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         maxRows: "800px",
         maxWidth: "100%",
         maxCols: "100%",
-        headers: [
-            "docId",
-            $localize`Style`,
-            $localize`Description`,
-            $localize`Type`,
-        ],
-        hiddenColumns: [0, 3],
+        headers: STYLE_TABLE_HEADERS,
+        hiddenColumns: HIDDEN_COLUMNS_OFFICIAL_ONLY,
     };
     @ViewChildren(TimTableComponent)
     timTable!: QueryList<TimTableComponent>;
     userStyles: number[] = [];
     loadingUserStyle = false;
+    @ViewChild("stylesTabs", {static: false}) stylesTabs!: TabsetComponent;
 
     constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
         this.user = settingsglobals().current_user;
@@ -395,11 +409,19 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
             (c) => c.primary
         )!;
         this.tableData.cbCallBack = this.cbChanged;
-        this.updateCss();
 
         this.style = document.createElement("style");
-        this.style.type = "text/css";
+        this.style.setAttribute("rel", "stylesheet");
         document.getElementsByTagName("head")[0].appendChild(this.style);
+    }
+
+    // region Styles tab
+
+    changeTab(index: number) {
+        const tab = this.stylesTabs.tabs[index];
+        if (tab) {
+            tab.active = true;
+        }
     }
 
     get styleTable() {
@@ -409,11 +431,25 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         return this.timTable.first;
     }
 
-    async clearAllPreviewStyles() {
+    activateSelectedStyles() {
+        const table = this.timTable.first;
+        const currentStyles = new Set(this.settings.theme_doc_ids);
+        const newStyles = table
+            .getCheckedRows(0, true)
+            .map((s) => +s[0])
+            .filter((d) => !currentStyles.has(d));
+        this.settings.theme_doc_ids = [
+            ...this.settings.theme_doc_ids,
+            ...newStyles,
+        ];
+        void this.submit();
+    }
+
+    resetSelectedStyles() {
+        this.currentStyle = this.settings.style_path;
         const tab = this.styleTable;
         if (tab) {
             tab.clearChecked();
-            await this.previewStyle();
         }
     }
 
@@ -423,18 +459,23 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     cbChanged = (cbs: boolean[], n: number, index: number) => {
         this.cbCount = n;
+        if (n == 0) {
+            this.resetSelectedStyles();
+            this.cdr.detectChanges();
+            return;
+        }
         this.saving = true;
         this.loadingUserStyle = true;
         this.cdr.detectChanges();
         (async () => {
-            await this.previewStyle();
+            await this.previewSelectedStyles();
             this.saving = false;
             this.loadingUserStyle = false;
             this.cdr.detectChanges();
         })();
     };
 
-    async previewStyle() {
+    async previewSelectedStyles() {
         const table = this.timTable.first;
         const selStyles = table.getCheckedRows(0, true).map((s) => s[0]);
 
@@ -448,17 +489,20 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         );
 
         if (r.ok) {
-            const stylePath = r.result;
-            document
-                .querySelector(
-                    // There are two stylesheets in production (the other is the Angular-generated /js/styles.<hash>.css),
-                    // so we need the href match too.
-                    'link[rel="stylesheet"][href*="/static/generated/"]'
-                )!
-                .setAttribute("href", `/${stylePath}`);
+            this.currentStyle = r.result;
         } else {
             console.error(r.result.error.error);
         }
+    }
+
+    set currentStyle(path: string) {
+        document
+            .querySelector(
+                // There are two stylesheets in production (the other is the Angular-generated /js/styles.<hash>.css),
+                // so we need the href match too.
+                'link[rel="stylesheet"][href*="/static/generated/"]'
+            )!
+            .setAttribute("href", `/${path}`);
     }
 
     canRemoveContact(contact: IUserContact): boolean {
@@ -472,10 +516,12 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     async changeUserStyleVisibility(newVal: boolean) {
-        await this.clearAllPreviewStyles();
+        this.resetSelectedStyles();
         this.showUserStyles = newVal;
         this.tableData.hiddenRows = newVal ? [] : this.userStyles;
-        this.tableData.hiddenColumns = newVal ? [0] : [0, 3];
+        this.tableData.hiddenColumns = newVal
+            ? HIDDEN_COLUMNS_OFFICIAL_USERS
+            : HIDDEN_COLUMNS_OFFICIAL_ONLY;
         const tab = this.styleTable;
         if (tab) {
             await tab.updateFilter();
@@ -542,115 +588,6 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.style.innerHTML = this.settings.custom_css;
     }
 
-    async resendVerification(contact: IUserContact) {
-        this.saving = true;
-        await toPromise(
-            this.http.post("/contacts/add", {
-                contact_info_type: contact.channel,
-                contact_info: contact.contact,
-                resend_if_exists: true,
-            })
-        );
-        this.saving = false;
-        this.verificationSentSet.add(contact);
-        // TODO: Figure out why this is needed for change detection
-        this.cdr.detectChanges();
-    }
-
-    async deleteContact(contact: IUserContact) {
-        this.saving = true;
-        const r = await toPromise(
-            this.http.post("/contacts/remove", {
-                contact_info_type: contact.channel,
-                contact_info: contact.contact,
-            })
-        );
-        this.saving = false;
-        if (r.ok) {
-            this.updateContacts(contact.channel, (contacts) =>
-                contacts.filter((c) => c != contact)
-            );
-        } else {
-            await showMessageDialog(r.result.error.error);
-        }
-        // TODO: Figure out why this is needed for change detection
-        this.cdr.detectChanges();
-    }
-
-    submit = async () => {
-        this.saving = true;
-        const r = await toPromise(
-            this.http.post<ISettings>("/settings/save", this.settings)
-        );
-        this.saving = false;
-        if (r.ok) {
-            this.settings = r.result;
-            this.updateCss();
-        } else {
-            await showMessageDialog(r.result.error.error);
-        }
-    };
-
-    saveUserAccountInfo = async () => {
-        this.primaryChangeVerificationSent = false;
-        if (this.user.email == this.primaryEmail.contact) {
-            return;
-        }
-
-        this.saving = true;
-        const r = await toPromise(
-            this.http.post<{verify: boolean}>("/contacts/primary", {
-                contact: this.primaryEmail.contact,
-                channel: this.primaryEmail.channel,
-            })
-        );
-        this.saving = false;
-
-        const currentPrimary = this.getContactsFor(Channel.EMAIL).find(
-            (p) => p.primary
-        )!;
-        if (r.ok && r.result.verify) {
-            this.user.email = this.primaryEmail.contact;
-            currentPrimary.primary = false;
-            this.primaryEmail.primary = true;
-            this.primaryChangeVerificationSent = true;
-        } else if (!r.ok) {
-            this.primaryEmail = currentPrimary;
-            await showMessageDialog(
-                $localize`Failed to change the primary email: ${r.result.error.error}`
-            );
-        }
-    };
-
-    async updateConsent() {
-        if (this.consent == null) {
-            return;
-        }
-        this.saving = true;
-        await this.setConsent(this.consent);
-        this.saving = false;
-    }
-
-    updateCss() {
-        // document
-        //     .querySelector(
-        //         // There are two stylesheets in production (the other is the Angular-generated /js/styles.<hash>.css),
-        //         // so we need the href match too.
-        //         'link[rel="stylesheet"][href*="/static/generated/"]'
-        //     )!
-        //     .setAttribute(
-        //         "href",
-        //         `/static/generated/${this.settings.css_combined}.css`
-        //     );
-    }
-
-    async clearLocalStorage() {
-        window.localStorage.clear();
-        this.storageClear = true;
-        await timeout(3000);
-        this.storageClear = false;
-    }
-
     async addPrintSettings() {
         const resp = await toPromise(
             this.http.get("/static/stylesheets/userPrintSettings.css", {
@@ -663,46 +600,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.settings.custom_css += resp.result;
     }
 
-    async getAllNotifications() {
-        const resp = await toPromise(
-            this.http.get<INotification[]>("/notify/all")
-        );
-        if (resp.ok) {
-            this.notifications = resp.result;
-            this.allNotificationsFetched = true;
-        } else {
-            await showMessageDialog(resp.result.error.error);
-        }
-    }
+    // endregion
 
-    showGetAllNotifications() {
-        return (
-            this.notifications.length === settingsglobals().notificationLimit &&
-            !this.allNotificationsFetched
-        );
-    }
-
-    beginDeleteAccount() {
-        this.deleteConfirmName = "";
-        this.deletingAccount = true;
-    }
-
-    async deleteAccount() {
-        if (
-            window.confirm(
-                $localize`Are you sure you want to delete your account (${this.user.name})?`
-            )
-        ) {
-            const r = await toPromise(
-                this.http.post("/settings/account/delete", {})
-            );
-            if (r.ok) {
-                location.href = "/";
-            } else {
-                await showMessageDialog(r.result.error.error);
-            }
-        }
-    }
+    // region Account and contacts
 
     /**
      * Open a dialog for user to add additional contact information.
@@ -758,6 +658,153 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         for (const ch of this.userContacts.keys()) {
             this.updateContacts(ch, (c) => c);
         }
+    }
+
+    async resendVerification(contact: IUserContact) {
+        this.saving = true;
+        await toPromise(
+            this.http.post("/contacts/add", {
+                contact_info_type: contact.channel,
+                contact_info: contact.contact,
+                resend_if_exists: true,
+            })
+        );
+        this.saving = false;
+        this.verificationSentSet.add(contact);
+        // TODO: Figure out why this is needed for change detection
+        this.cdr.detectChanges();
+    }
+
+    async deleteContact(contact: IUserContact) {
+        this.saving = true;
+        const r = await toPromise(
+            this.http.post("/contacts/remove", {
+                contact_info_type: contact.channel,
+                contact_info: contact.contact,
+            })
+        );
+        this.saving = false;
+        if (r.ok) {
+            this.updateContacts(contact.channel, (contacts) =>
+                contacts.filter((c) => c != contact)
+            );
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
+        // TODO: Figure out why this is needed for change detection
+        this.cdr.detectChanges();
+    }
+
+    saveUserAccountInfo = async () => {
+        this.primaryChangeVerificationSent = false;
+        if (this.user.email == this.primaryEmail.contact) {
+            return;
+        }
+
+        this.saving = true;
+        const r = await toPromise(
+            this.http.post<{verify: boolean}>("/contacts/primary", {
+                contact: this.primaryEmail.contact,
+                channel: this.primaryEmail.channel,
+            })
+        );
+        this.saving = false;
+
+        const currentPrimary = this.getContactsFor(Channel.EMAIL).find(
+            (p) => p.primary
+        )!;
+        if (r.ok && r.result.verify) {
+            this.user.email = this.primaryEmail.contact;
+            currentPrimary.primary = false;
+            this.primaryEmail.primary = true;
+            this.primaryChangeVerificationSent = true;
+        } else if (!r.ok) {
+            this.primaryEmail = currentPrimary;
+            await showMessageDialog(
+                $localize`Failed to change the primary email: ${r.result.error.error}`
+            );
+        }
+    };
+
+    // endregion
+
+    // region Notifications
+
+    async getAllNotifications() {
+        const resp = await toPromise(
+            this.http.get<INotification[]>("/notify/all")
+        );
+        if (resp.ok) {
+            this.notifications = resp.result;
+            this.allNotificationsFetched = true;
+        } else {
+            await showMessageDialog(resp.result.error.error);
+        }
+    }
+
+    showGetAllNotifications() {
+        return (
+            this.notifications.length === settingsglobals().notificationLimit &&
+            !this.allNotificationsFetched
+        );
+    }
+
+    // endregion
+
+    // region Account delete
+
+    beginDeleteAccount() {
+        this.deleteConfirmName = "";
+        this.deletingAccount = true;
+    }
+
+    async deleteAccount() {
+        if (
+            window.confirm(
+                $localize`Are you sure you want to delete your account (${this.user.name})?`
+            )
+        ) {
+            const r = await toPromise(
+                this.http.post("/settings/account/delete", {})
+            );
+            if (r.ok) {
+                location.href = "/";
+            } else {
+                await showMessageDialog(r.result.error.error);
+            }
+        }
+    }
+
+    // endregion
+
+    submit = async () => {
+        this.saving = true;
+        const r = await toPromise(
+            this.http.post<ISettings>("/settings/save", this.settings)
+        );
+        this.saving = false;
+        if (r.ok) {
+            this.settings = r.result;
+            this.resetSelectedStyles();
+        } else {
+            await showMessageDialog(r.result.error.error);
+        }
+    };
+
+    async updateConsent() {
+        if (this.consent == null) {
+            return;
+        }
+        this.saving = true;
+        await this.setConsent(this.consent);
+        this.saving = false;
+    }
+
+    async clearLocalStorage() {
+        window.localStorage.clear();
+        this.storageClear = true;
+        await timeout(3000);
+        this.storageClear = false;
     }
 
     private async setConsent(c: ConsentType) {

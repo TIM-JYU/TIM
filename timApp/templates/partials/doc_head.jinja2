@@ -11,7 +11,7 @@
 {% block content %}
 
 {% if override_theme %}
-    {{ m.generated_style(override_theme) }}
+    <link rel="stylesheet" href="/{{ override_theme }}">
 {% endif %}
 
 {% for cssFile in cssFiles %}

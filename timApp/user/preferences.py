@@ -27,18 +27,17 @@ class Preferences:
 
     @staticmethod
     def from_json(j: dict) -> "Preferences":
-        j.pop("css_combined", None)
+        j.pop("style_path", None)
         return Preferences(**j)
 
     def theme_docs(self) -> list[DocEntry]:
         return DocEntry.query.filter(DocEntry.id.in_(self.theme_doc_ids)).all()
 
     @cached_property
-    def css_combined(self) -> str:
+    def style_path(self) -> str:
         from timApp.user.settings.styles import generate_style
 
-        name, _ = generate_style(self.theme_docs())
-        return name
+        return generate_style(self.theme_docs())
 
     @cached_property
     def excluded_email_paths(self):
@@ -53,4 +52,4 @@ class Preferences:
         return any(pat.search(d.path) for pat in self.excluded_email_paths)
 
     def to_json(self):
-        return self.__dict__
+        return self.__dict__ | {"style_path": self.style_path}

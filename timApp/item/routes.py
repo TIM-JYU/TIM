@@ -888,7 +888,7 @@ def render_doc_view(
         user_themes = current_user.get_prefs().theme_docs()
         if user_themes and not doc_settings.override_user_themes():
             document_theme_docs = list(set(user_themes) | set(document_theme_docs))
-        override_theme, _ = generate_style(document_theme_docs)
+        override_theme = generate_style(document_theme_docs)
 
     templates_to_render = (
         ["slide_head.jinja2", "slide_content.jinja2"]

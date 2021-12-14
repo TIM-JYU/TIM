@@ -136,9 +136,7 @@ def get_style_name(theme_docs: list[DocEntry]) -> str:
     return f"compiled-style-{hashfunc(m)}"
 
 
-def generate_style(
-    theme_docs: list[DocEntry], gen_dir: Optional[Path] = None
-) -> tuple[str, Path]:
+def generate_style(theme_docs: list[DocEntry], gen_dir: Optional[Path] = None) -> str:
     """Generates a CSS style based on the given theme documents.
 
     .. note::
@@ -162,7 +160,7 @@ def generate_style(
 
     :param theme_docs: List of theme documents with SCSS to generate style from.
     :param gen_dir: Directory to put the generated theme in. If not specified, default SCSS cache dir is used.
-    :return: Tuple of (style_name, style_path)
+    :return: Path to the generated style file, relative to project root (timApp folder)
     """
     if not gen_dir:
         gen_dir = get_default_scss_gen_dir()
@@ -175,7 +173,7 @@ def generate_style(
     style_exits = style_path.exists()
 
     if style_exits and last_style_hash == current_style_hash:
-        return style_name, style_path
+        return style_path.as_posix()
     gen_dir.mkdir(exist_ok=True)
 
     theme_paths = []
@@ -225,7 +223,7 @@ def generate_style(
         return style_name if style_exits else "default", style_path
 
     set_style_timestamp_hash(style_name, current_style_hash)
-    return style_name, style_path
+    return style_path.as_posix()
 
 
 @styles.get("")
@@ -289,6 +287,4 @@ def generate(docs: list[int] = field(default_factory=list)) -> Response:
                 f"Document {doc.id} ({doc.path}) must be in {OFFICIAL_STYLES_PATH} or {USER_STYLES_PATH}"
             )
 
-    _, style_path = generate_style(doc_entries)
-
-    return text_response(str(style_path))
+    return text_response(generate_style(doc_entries))

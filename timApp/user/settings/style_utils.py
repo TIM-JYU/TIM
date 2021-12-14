@@ -3,6 +3,7 @@ from pathlib import Path
 from flask import current_app
 
 from timApp.document.docentry import DocEntry, get_documents
+from timApp.document.docinfo import DocInfo
 
 static_folder = Path("static")
 stylesheets_folder = static_folder / "stylesheets"
@@ -26,4 +27,12 @@ def resolve_themes(short_names: list[str]) -> list[DocEntry]:
         custom_filter=DocEntry.name.in_(
             [f"{OFFICIAL_STYLES_PATH}/{n}" for n in short_names]
         ),
+    )
+
+
+def is_style_doc(doc: DocInfo) -> bool:
+    return (
+        doc.path.startswith(OFFICIAL_STYLES_PATH)
+        or doc.path.startswith(USER_STYLES_PATH)
+        and doc.document.get_settings().get("description", None) is not None
     )
