@@ -50,7 +50,7 @@ from timApp.util.get_fields import (
 )
 from timApp.util.rndutils import SeedClass
 from timApp.util.timtiming import taketime
-from timApp.util.utils import get_error_html, get_error_tex, Range
+from timApp.util.utils import get_error_tex, Range, get_error_html_block
 from tim_common.html_sanitize import sanitize_html
 
 
@@ -70,7 +70,7 @@ def get_error_plugin(
     if plugin_output_format == PluginOutputFormat.MD:
         return get_error_tex(error_message, message)
 
-    return get_error_html(f"{error_message} {message}", response)
+    return get_error_html_block(error_message, message, response)
 
 
 PluginOrError = Union[Plugin, str]  # str represent HTML markup of error

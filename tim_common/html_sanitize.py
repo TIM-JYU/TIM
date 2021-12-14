@@ -246,6 +246,7 @@ TIM_SAFE_ATTRS = frozenset(
         # tim-archive-header
         # tim-archive-footer
         "message",
+        "ng-non-bindable",
     ]
 )
 

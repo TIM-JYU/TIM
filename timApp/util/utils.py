@@ -108,6 +108,28 @@ def get_error_html(
     )
 
 
+def get_error_html_block(
+    title: str, message: Union[str, Exception], response: Optional[str] = None
+) -> str:
+    """Wraps an error message in a block-level HTML element with class 'error'.
+
+    :param title: Title of the error.
+    :param response: The plugin response string.
+    :param message: The message to be displayed in the error.
+    :return: The sanitized error message HTML.
+    """
+
+    return sanitize_html(
+        '<div class="error" ng-non-bindable><strong>{}</strong>{}{}</div>'.format(
+            title,
+            f"<pre>{message}</pre>" if message else "",
+            f"<pre>---Full response string start---\n{response}\n---Full response string end---</pre>"
+            if response is not None
+            else "",
+        )
+    )
+
+
 def get_error_tex(title: str, message: Union[str, Exception]) -> str:
     """Wraps an error message in a TeX element 'timpluginerror'.
 

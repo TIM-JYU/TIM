@@ -419,6 +419,21 @@ p.caption {
     text-align: left;
 }
 
+div.error {
+    border: 1px solid #ff7777;
+    border-radius: 2px;
+    padding: 1em;
+    background-color: #ffd0d7;
+    color: #c51a00;
+
+    pre {
+        margin-top: 0.5em;
+        background-color: #ffe9e9;
+        border-left-width: 0;
+        overflow: auto;
+    }
+}
+
 .note {
     font-size: 0.7em;
     background: $material-bg;
