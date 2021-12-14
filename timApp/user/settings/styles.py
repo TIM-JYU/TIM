@@ -249,9 +249,13 @@ def get_styles() -> Response:
                 "name": doc.title,
                 "path": doc.name,
                 "description": style_description,
+                "type": "official"
+                if doc.path.startswith(OFFICIAL_STYLES_PATH)
+                else "user",
             }
         )
 
+    result = sorted(result, key=lambda r: r["type"])
     return json_response(result)
 
 

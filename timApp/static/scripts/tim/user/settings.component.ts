@@ -47,13 +47,6 @@ export class SettingsButtonPanelComponent {
     }
 }
 
-@Component({
-    selector: "user-settings",
-    template: `
-    `,
-})
-export class UserSettingsComponent {}
-
 const EDITABLE_CONTACT_CHANNELS: Partial<Record<Channel, string>> = {
     [Channel.EMAIL]: $localize`Emails`,
 };
@@ -95,12 +88,31 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                     </tab>
                     <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()" i18n-heading>
                         <div>
-                            <input type="checkbox" id="style-show-user-made" name="style-show-user-made" [ngModel]="showUserStyles" (ngModelChange)="changeUserStyleVisibility($event)"> 
-                            <label for="style-show-user-made" i18n>Show user-made styles</label>
+                            <p i18n>
+                                The table below lists all styles available on TIM.
+                                You can preview and add new styles using the table below. 
+                            </p>
+                            <ul>
+                                <li i18n><strong>Official styles</strong> are maintained and supported by TIM maintainers.</li>
+                                <li i18n><strong>User-made styles</strong> are made and maintained by TIM's users.</li>
+                            </ul>
                         </div>
-                        <tim-table *ngIf="availableTab.active" [data]="tableData"></tim-table>
-                        <div>
-                            <button class="timButton" [disabled]="!cbCount" (click)="previewStyle()">Preview styles</button>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" id="style-show-user-made" name="style-show-user-made"
+                                    [ngModel]="showUserStyles" (ngModelChange)="changeUserStyleVisibility($event)">
+                                <ng-container i18n>Show user-made styles</ng-container>
+                            </label>
+                        </div>
+                        <tim-table class="style-listing" *ngIf="availableTab.active" [data]="tableData"></tim-table>
+                        <div class="style-button-panel">
+                            <button class="timButton" [disabled]="!cbCount" (click)="clearAllPreviewStyles()" i18n>
+                                Clear preview
+                            </button>
+                            <div class="style-loader" *ngIf="loadingUserStyle">
+                                <tim-loading></tim-loading>
+                                <ng-container i18n>Compiling style, please wait</ng-container>
+                            </div>
                         </div>
                     </tab>
                     <tab heading="Custom CSS">
@@ -119,7 +131,8 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                         <ng-container i18n>Use words from the document in ACE editor autocomplete</ng-container>
                     </label>
                 </div>
-                <label><ng-container i18n>ACE editor additional word list for autocomplete (1 word per line)</ng-container>
+                <label>
+                    <ng-container i18n>ACE editor additional word list for autocomplete (1 word per line)</ng-container>
                     <textarea rows="15" class="form-control" name="word_list"
                               [(ngModel)]="settings.word_list"></textarea>
                 </label>
@@ -177,7 +190,9 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                                    [(ngModel)]="settings.max_uncollapsed_toc_items">
                             <span class="input-group-addon" i18n>items</span>
                         </div>
-                        <button class="timButton" (click)="settings.max_uncollapsed_toc_items = null" i18n>Clear</button>
+                        <button class="timButton" (click)="settings.max_uncollapsed_toc_items = null" i18n>
+                            Clear
+                        </button>
                     </div>
 
                     <span i18n>Opening settings</span>
@@ -213,11 +228,13 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
             <bootstrap-form-panel [disabled]="saving" title="Other settings" i18n-title>
                 <div class="checkbox" id="othersettings"><label>
                     <input type="checkbox" name="auto_mark_all_read" [(ngModel)]="settings.auto_mark_all_read"
-                           [disabled]="saving"> 
-                    <ng-container i18n>Automatically mark document as read when opening it for the first time</ng-container>
+                           [disabled]="saving">
+                    <ng-container i18n>Automatically mark document as read when opening it for the first time
+                    </ng-container>
                 </label></div>
                 <settings-button-panel [saved]="submit">
-                    <button class="btn btn-default" (click)="clearLocalStorage()" i18n>Clear local settings storage</button>
+                    <button class="btn btn-default" (click)="clearLocalStorage()" i18n>Clear local settings storage
+                    </button>
                     <span *ngIf="storageClear" i18n>Local storage cleared.</span>
                 </settings-button-panel>
             </bootstrap-form-panel>
@@ -248,7 +265,8 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                                 Primary email is used to send you notifications and message list messages.
                             </p>
                             <p *ngIf="contactOrigins[primaryEmail.origin]; let originInfo" i18n>
-                                This email is managed by <strong [style.color]="originInfo.bgColor">{{originInfo.name}}</strong>.
+                                This email is managed by <strong
+                                    [style.color]="originInfo.bgColor">{{originInfo.name}}</strong>.
                                 The address will be automatically updated by the system.
                             </p>
                         </div>
@@ -258,7 +276,8 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                         <div class="contact-collection">
                             <div class="contact-info" *ngFor="let contact of entry[1]">
                                 <input type="text" class="form-control" [value]="contact.contact" disabled>
-                                <span title="You will receive any TIM mail to this address." i18n-title *ngIf="contact.primary"
+                                <span title="You will receive any TIM mail to this address." i18n-title
+                                      *ngIf="contact.primary"
                                       class="primary-badge" i18n>Primary</span>
                                 <span *ngIf="contactOrigins[contact.origin]; let originInfo"
                                       title="This email is managed by {{originInfo.name}}. You cannot delete managed contacts yourself."
@@ -272,7 +291,8 @@ const CONTACT_ORIGINS: Partial<Record<ContactOrigin, ContactOriginInfo>> = {
                                         (click)="resendVerification(contact)"
                                         [disabled]="verificationSentSet.has(contact)">
                                     <ng-container
-                                            *ngIf="!verificationSentSet.has(contact); else verificationSentMessage" i18n>
+                                            *ngIf="!verificationSentSet.has(contact); else verificationSentMessage"
+                                            i18n>
                                         Resend verification
                                     </ng-container>
                                     <ng-template #verificationSentMessage i18n>
@@ -350,24 +370,19 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         cbColumn: true,
         maxRows: "800px",
         maxWidth: "100%",
-        headers: ["docId", $localize`Style`, $localize`Description`],
-        hiddenColumns: [0],
-        dataView: {
-            virtual: {
-                enabled: true,
-                horizontalOverflow: 1,
-                verticalOverflow: 1,
-            },
-            fixedColumns: 0,
-            columnWidths: {},
-            tableWidth: "max-content",
-            rowHeight: 31,
-            reportSlowLoad: false,
-        },
+        maxCols: "100%",
+        headers: [
+            "docId",
+            $localize`Style`,
+            $localize`Description`,
+            $localize`Type`,
+        ],
+        hiddenColumns: [0, 3],
     };
     @ViewChildren(TimTableComponent)
     timTable!: QueryList<TimTableComponent>;
     userStyles: number[] = [];
+    loadingUserStyle = false;
 
     constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
         this.user = settingsglobals().current_user;
@@ -387,13 +402,36 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         document.getElementsByTagName("head")[0].appendChild(this.style);
     }
 
+    get styleTable() {
+        if (this.timTable.length == 0) {
+            return undefined;
+        }
+        return this.timTable.first;
+    }
+
+    async clearAllPreviewStyles() {
+        const tab = this.styleTable;
+        if (tab) {
+            tab.clearChecked();
+            await this.previewStyle();
+        }
+    }
+
     get userContactEntries() {
         return [...this.userContacts.entries()];
     }
 
     cbChanged = (cbs: boolean[], n: number, index: number) => {
         this.cbCount = n;
+        this.saving = true;
+        this.loadingUserStyle = true;
         this.cdr.detectChanges();
+        (async () => {
+            await this.previewStyle();
+            this.saving = false;
+            this.loadingUserStyle = false;
+            this.cdr.detectChanges();
+        })();
     };
 
     async previewStyle() {
@@ -411,7 +449,6 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
         if (r.ok) {
             const stylePath = r.result;
-            console.log(r.result);
             document
                 .querySelector(
                     // There are two stylesheets in production (the other is the Angular-generated /js/styles.<hash>.css),
@@ -434,20 +471,24 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         return false;
     }
 
-    changeUserStyleVisibility(newVal: boolean) {
+    async changeUserStyleVisibility(newVal: boolean) {
+        await this.clearAllPreviewStyles();
         this.showUserStyles = newVal;
         this.tableData.hiddenRows = newVal ? [] : this.userStyles;
-        if (this.timTable.length != 0) {
-            void this.timTable.first.updateFilter();
+        this.tableData.hiddenColumns = newVal ? [0] : [0, 3];
+        const tab = this.styleTable;
+        if (tab) {
+            await tab.updateFilter();
+            tab.c();
         }
     }
 
     async reloadStyleTable() {
-        // Ensure table is loaded
         this.showUserStyles = false;
+        // Ensure table is loaded
         await timeout();
-        if (this.timTable.length != 0) {
-            const tab = this.timTable.first;
+        const tab = this.styleTable;
+        if (tab) {
             tab.reInitialize();
             tab.filterRow = true;
             tab.c();
@@ -462,17 +503,20 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
                     name: string;
                     path: string;
                     description: string;
+                    type: string;
                 }[]
             >("/styles")
         );
         if (r.ok) {
             this.tableData.table = {
+                columns: [{}, {whiteSpace: "nowrap", width: "100%"}, {}, {}],
                 rows: [
                     ...r.result.map((s) => ({
                         row: [
                             `${s.docId}`,
                             `<a href="/view/${s.path}">${s.name}</a>`,
                             s.description,
+                            s.type,
                         ],
                     })),
                 ],
@@ -729,11 +773,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 }
 
 @NgModule({
-    declarations: [
-        UserSettingsComponent,
-        SettingsComponent,
-        SettingsButtonPanelComponent,
-    ],
+    declarations: [SettingsComponent, SettingsButtonPanelComponent],
     exports: [SettingsComponent],
     imports: [
         TimTableModule,

@@ -141,6 +141,7 @@ const styleToHtml: Record<string, string> = {
     textAlign: "text-align",
     verticalAlign: "vertical-align",
     visibility: "visibility",
+    whiteSpace: "white-space",
     width: "width",
 };
 
@@ -460,6 +461,7 @@ const columnCellStyles: Set<string> = new Set<string>([
     "fontFamily",
     "color",
     "fontWeight",
+    "whiteSpace",
 ]);
 
 enum Direction {
@@ -576,7 +578,7 @@ export enum ClearSort {
                            class="timTableTable"
                            [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">
                         <col class="nrcolumn" *ngIf="data.nrColumn"/>
-                        <col *ngIf="data.cbColumn"/>
+                        <col class="cbColumn" *ngIf="data.cbColumn"/>
                         <col *ngFor="let c of columns; let i = index" [span]="c.span" [id]="c.id"
                              [ngStyle]="stylingForColumn(c, i)"/>
                         <thead>
@@ -1911,7 +1913,6 @@ export class TimTableComponent
      * Initialize celldatamatrix with the values from yaml and yaml only
      */
     private initializeCellDataMatrix(clearSort: ClearSort = ClearSort.Yes) {
-        console.log(this.data.table);
         if (!this.data.table) {
             this.data.table = {};
         }
@@ -4597,6 +4598,14 @@ export class TimTableComponent
 
     setRowFilter(columnIndex: number, value: string): void {
         this.filters[columnIndex] = value;
+    }
+
+    clearChecked() {
+        this.cbAllFilter = false;
+        for (let i = 0; i < this.cbs.length; i++) {
+            this.cbs[i] = false;
+        }
+        this.c();
     }
 
     setRowChecked(rowIndex: number, checked: boolean): void {

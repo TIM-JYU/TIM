@@ -131,3 +131,39 @@ div.small {
     margin-bottom: 0;
   }
 }
+
+tim-table.style-listing ::ng-deep {
+
+  .timTableRunDiv {
+    margin: initial;
+    padding: 0;
+  }
+
+  .timTableContentDiv, .timTableTable {
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+
+  .timTableTable {
+    width: 100%;
+
+    & > col.cbColumn {
+      width: 16px;
+    }
+  }
+}
+
+.style-button-panel {
+  @extend .button-panel;
+  margin-top: 0.5em;
+  margin-bottom: 1em;
+}
+
+.style-loader {
+  display: flex;
+
+  & > * {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+  }
+}
