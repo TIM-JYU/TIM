@@ -26,10 +26,11 @@ class AreaIssue(ValidationIssue):
         self.area_name = area_name
 
     def __str__(self):
+        area_message = f" for area '{self.area_name}'" if self.area_name else ""
         if self.par_id is not None:
-            return f"{self.issue_name} noticed for area {self.area_name} in paragraph {self.par_id}"
+            return f"{self.issue_name} noticed{area_message} in paragraph {self.par_id}"
         else:
-            return f"{self.issue_name} noticed for area {self.area_name}"
+            return f"{self.issue_name} noticed{area_message}"
 
     @property
     def issue_name(self):

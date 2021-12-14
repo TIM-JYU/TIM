@@ -132,7 +132,7 @@ class EditTest(TimRouteTest):
                 "original": orig_text,
             },
             expect_status=400,
-            expect_content=f"Multiple areas with same name noticed in paragraph {par_ids[2]}\nDuplicate area end noticed in paragraph {par_ids[3]}",
+            expect_content=f"Multiple areas with same name noticed for area 'a' in paragraph {par_ids[2]}\nDuplicate area end noticed in paragraph {par_ids[3]}",
         )
         self.json_post(
             f"/update/{d.id}",

@@ -98,7 +98,7 @@ class CopyCiteTest(TimRouteTest):
             expect_status=400,
             expect_content={
                 "error": f"The following errors must be fixed before copying:\n"
-                f"Multiple areas with same name noticed in paragraph {pars[2].get_id()}\n"
+                f"Multiple areas with same name noticed for area 'a' in paragraph {pars[2].get_id()}\n"
                 f"Duplicate area end noticed in paragraph {pars[3].get_id()}"
             },
         )

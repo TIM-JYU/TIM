@@ -1,5 +1,4 @@
 import io
-import io
 import json
 import re
 from collections import OrderedDict
@@ -1243,7 +1242,7 @@ a
         r = self.get(d.url, as_tree=True).cssselect(".parContent")
         self.assertTrue(r[0].cssselect("tim-video"))
         self.assertEqual(
-            "Plugin showVideo error: YAML is malformed: a", r[1].text_content().strip()
+            "Plugin showVideo error:YAML is malformed: a", r[1].text_content().strip()
         )
 
     def test_nonexistent_plugin(self):
@@ -1354,7 +1353,7 @@ choices:
         self.assert_content(
             r,
             [
-                "Plugin mmcq error: Invalid field access: 1",
+                "Plugin mmcq error:Invalid field access: 1",
                 "Plugin error: Task name cannot be only a number.",
             ],
         )
@@ -1721,16 +1720,14 @@ needed_len: 6
             expect_status=403,
         )
         r = self.get(d3.url, as_tree=True)
-        access_err = (
-            "Plugin pali error: Task id refers to another document, "
-            "but you do not have access to that document."
-        )
         self.assert_content(
             r,
             [
-                access_err,
-                access_err,
-                "Plugin pali error: Task id refers to a non-existent document.",
+                "Plugin pali error: Task id refers to another document, "
+                "but you do not have access to that document.",
+                "Plugin pali error:Task id refers to another document, "
+                "but you do not have access to that document.",
+                "Plugin pali error:Task id refers to a non-existent document.",
             ],
         )
 
