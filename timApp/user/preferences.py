@@ -6,19 +6,7 @@ from typing import Optional
 import attr
 
 from timApp.document.docentry import DocEntry
-from timApp.item.block import Block
 from timApp.item.item import Item
-
-
-def export_doc_to_style(block: Block):
-    from timApp.printing.print import print_doc_scss
-
-    doc: DocEntry = block.docentries[0]
-    pars = [p for p in doc.document]
-    print(pars)
-    doc_path = print_doc_scss(doc)
-    with open(doc_path, "r") as f:
-        return f.read()
 
 
 @attr.s(auto_attribs=True)

@@ -10,18 +10,93 @@ from timApp.auth.accesshelper import verify_logged_in, verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
 from timApp.document.caching import get_style_timestamp_hash, set_style_timestamp_hash
 from timApp.document.docentry import get_documents, DocEntry
+from timApp.document.docinfo import DocInfo
+from timApp.document.document import dereference_pars
+from timApp.document.post_process import process_areas
+from timApp.document.preloadoption import PreloadOption
 from timApp.document.randutils import hashfunc
+from timApp.document.usercontext import UserContext
+from timApp.document.viewcontext import default_view_ctx
+from timApp.item.partitioning import get_doc_version_hash
 from timApp.user.settings.style_utils import (
     stylesheets_folder,
     get_default_scss_gen_dir,
     OFFICIAL_STYLES_PATH,
     USER_STYLES_PATH,
 )
+from timApp.user.special_group_names import ANONYMOUS_USERNAME
+from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
+from timApp.util.utils import cache_folder_path
 
 styles = TypedBlueprint("styles", __name__, url_prefix="/styles")
+
+scss_cache_path = cache_folder_path / "generated_scss"
+
+
+def generate_scss(doc: DocInfo, force: bool = False) -> str:
+    doc_hash = get_doc_version_hash(doc)
+    cache_path = scss_cache_path / str(doc.id) / f"{doc_hash}.scss"
+
+    if cache_path.exists() and not force:
+        return cache_path.as_posix()
+
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+
+    view_ctx = default_view_ctx
+
+    pars = doc.document.get_paragraphs(include_preamble=True)
+    doc.document.preload_option = PreloadOption.all
+    pars = dereference_pars(pars, context_doc=doc.document, view_ctx=view_ctx)
+
+    user_ctx = UserContext.from_one_user(User.get_by_name(ANONYMOUS_USERNAME))
+    settings = doc.document.get_settings()
+    macro_info = settings.get_macroinfo(view_ctx, user_ctx)
+    macros = macro_info.get_macros()
+    delimiter = macro_info.get_macro_delimiter()
+    macro_env = macro_info.jinja_env
+
+    # Process to resolve invisible paragraphs
+    par_ids = set(
+        p.target_data.id
+        for p in process_areas(
+            settings,
+            pars,
+            macros,
+            delimiter,
+            macro_env,
+            view_ctx,
+            use_md=True,
+            cache=False,
+        )
+    )
+
+    with cache_path.open("w", encoding="utf-8") as f:
+        for par in pars:
+            if par.is_setting():
+                continue
+
+            if not par.is_theme_style():
+                continue
+
+            if par.id not in par_ids:
+                continue
+
+            # Style blocks are not plugins so we can skip pluginifying and just get raw markdown
+            md = par.md
+
+            # Remove the code marks
+            if md.startswith("```"):
+                style_start = md.find("\n")
+                md = md[style_start + 1 : -3]
+            # Replace post-all hook with unique ID for style generation
+            md = md.replace("@mixin post-all", f"@mixin post-all-{doc.id}")
+
+            f.write(f"{md}\n")
+
+    return cache_path.as_posix()
 
 
 def hash_theme_timestamps(theme_docs: Optional[list[DocEntry]] = None) -> str:
@@ -35,7 +110,10 @@ def hash_theme_timestamps(theme_docs: Optional[list[DocEntry]] = None) -> str:
     h = ""
     if theme_docs:
         for theme in theme_docs:
-            h += str(theme.last_modified.timestamp())
+            h += str(theme.id)
+            h += str(theme.document.get_version())
+            for preamble in theme.get_preamble_docs():
+                h += str(preamble.document.get_version())
     for p in stylesheets_folder.glob("*.scss"):
         h += str(getmtime(p))
     return hashfunc(h)
@@ -86,8 +164,6 @@ def generate_style(
     :param gen_dir: Directory to put the generated theme in. If not specified, default SCSS cache dir is used.
     :return: Tuple of (style_name, style_path)
     """
-    from timApp.printing.print import print_doc_scss
-
     if not gen_dir:
         gen_dir = get_default_scss_gen_dir()
 
@@ -105,7 +181,7 @@ def generate_style(
     theme_paths = []
     theme_doc_map = {}
     for theme_doc in theme_docs:
-        theme_path = print_doc_scss(theme_doc)
+        theme_path = generate_scss(theme_doc)
         theme_paths.append((theme_doc.id, theme_path))
         theme_doc_map[f"../..{theme_path}"] = theme_doc.path
 
@@ -181,18 +257,16 @@ def get_styles() -> Response:
 
 @styles.get("/<path:doc_path>.scss")
 def get_raw_scss(doc_path: str, force: bool = False) -> Response:
-    from timApp.printing.print import print_doc_scss
-
     verify_logged_in()
     doc = DocEntry.find_by_path(f"styles/{doc_path}")
     if not doc:
         raise NotExist()
 
     verify_view_access(doc)
-    scss_path = print_doc_scss(doc, force)
+    scss_path = generate_scss(doc, force)
 
     with open(scss_path, "r", encoding="utf-8") as f:
-        return Response(f.read(), content_type="text/plain")
+        return text_response(f.read())
 
 
 @styles.get("/path")

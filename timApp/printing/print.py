@@ -106,30 +106,6 @@ def get_template_doc(doc: DocInfo, template_doc_id):
     return template_doc, template_doc_id, None, isdef
 
 
-def print_doc_scss(doc: DocInfo, force: bool = False):
-    doc_path = check_print_cache(
-        doc_entry=doc,
-        template=None,
-        file_type=PrintFormat.SCSS,
-        plugins_user_print=False,
-    )
-
-    if doc_path and not force:
-        return doc_path
-
-    doc_path = create_printed_doc(
-        doc_entry=doc,
-        template_doc=None,
-        file_type=PrintFormat.SCSS,
-        temp=True,
-        user_ctx=UserContext.from_one_user(g.user),
-        plugins_user_print=False,
-        urlroot="http://localhost:5000/print/",
-    )
-    db.session.commit()
-    return doc_path
-
-
 @print_blueprint.post("/<path:doc_path>")
 def print_document(doc_path):
     file_type, template_doc_id, plugins_user_print = verify_json_params(
@@ -429,16 +405,13 @@ def get_mimetype_for_format(file_type: PrintFormat) -> str:
         return "text/html"
     elif file_type == PrintFormat.ICS:
         return "text/calendar"
-    elif file_type == PrintFormat.SCSS:
-        # Some SCSS is technically CSS so we might as well use that
-        return "text/css"
     else:
         return "text/plain"
 
 
 def check_print_cache(
     doc_entry: DocInfo,
-    template: Optional[DocInfo],
+    template: DocInfo,
     file_type: PrintFormat,
     plugins_user_print: bool = False,
 ) -> Optional[str]:
