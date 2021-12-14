@@ -25,6 +25,12 @@ class AreaIssue(ValidationIssue):
         super().__init__(par_id)
         self.area_name = area_name
 
+    def __str__(self):
+        if self.par_id is not None:
+            return f"{self.issue_name} noticed for area {self.area_name} in paragraph {self.par_id}"
+        else:
+            return f"{self.issue_name} noticed for area {self.area_name}"
+
     @property
     def issue_name(self):
         return "Area issue"
