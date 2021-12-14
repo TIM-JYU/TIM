@@ -165,7 +165,6 @@ export interface ISettings {
     word_list: string;
     auto_mark_all_read: boolean;
     max_uncollapsed_toc_items: number | null;
-    style_path: string;
     theme_doc_ids: number[];
 }
 

@@ -188,13 +188,6 @@ Undefined.__contains__ = classmethod(shim_jinja_undefined_contains)
 
 
 @app.context_processor
-def inject_custom_css() -> dict:
-    """Injects the user prefs variable to all templates."""
-    prefs = get_current_user_object().get_prefs()
-    return dict(prefs=prefs)
-
-
-@app.context_processor
 def inject_angular_scripts() -> dict:
     """Provides the JavaScript files compiled by Angular."""
     locale = get_locale()
@@ -266,6 +259,7 @@ def inject_user() -> dict:
         lecture_info=get_current_lecture_info(),
         other_users=get_other_users_as_list(),
         locale=get_locale(),
+        prefs=get_current_user_object().get_prefs(),
     )
     if logged_in() and app.config["BOOKMARKS_ENABLED"]:
         r["bookmarks"] = get_current_user_object().bookmarks.as_dict()

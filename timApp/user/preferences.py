@@ -1,6 +1,7 @@
 import re
 import sre_constants
 from functools import cached_property
+from re import Pattern
 from typing import Optional
 
 import attr
@@ -40,7 +41,7 @@ class Preferences:
         return generate_style(self.theme_docs())
 
     @cached_property
-    def excluded_email_paths(self):
+    def excluded_email_paths(self) -> list[Pattern[str]]:
         if not isinstance(self.email_exclude, str):
             return []
         try:
@@ -48,8 +49,11 @@ class Preferences:
         except sre_constants.error:
             return []
 
-    def is_item_excluded_from_emails(self, d: Item):
+    def is_item_excluded_from_emails(self, d: Item) -> bool:
         return any(pat.search(d.path) for pat in self.excluded_email_paths)
 
-    def to_json(self):
-        return self.__dict__ | {"style_path": self.style_path}
+    def to_json(self, with_style: bool = False) -> dict:
+        result = self.__dict__
+        if with_style:
+            result |= {"style_path": self.style_path}
+        return result

@@ -80,6 +80,7 @@ const STYLE_TABLE_HEADERS = [
 
 const HIDDEN_COLUMNS_OFFICIAL_USERS = [0];
 const HIDDEN_COLUMNS_OFFICIAL_ONLY = [0, 3];
+type SettingsWithStylePath = ISettings & {style_path?: string};
 
 @Component({
     selector: "tim-settings",
@@ -359,7 +360,7 @@ const HIDDEN_COLUMNS_OFFICIAL_ONLY = [0, 3];
 })
 export class SettingsComponent implements DoCheck, AfterViewInit {
     saving = false;
-    settings: ISettings;
+    settings: SettingsWithStylePath;
     notifications: INotification[];
     storageClear = false;
     user: IFullUser;
@@ -402,6 +403,8 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.user = settingsglobals().current_user;
         this.consent = this.user.consent;
         this.settings = settingsglobals().userPrefs;
+        this.settings.style_path = this.currentStyle;
+        console.log(this.settings);
         this.notifications = settingsglobals().notifications;
         this.contacts = settingsglobals().contacts;
         this.collectUserContacts();
@@ -446,7 +449,9 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     resetSelectedStyles() {
-        this.currentStyle = this.settings.style_path;
+        if (this.settings.style_path) {
+            this.currentStyle = this.settings.style_path;
+        }
         const tab = this.styleTable;
         if (tab) {
             tab.clearChecked();
@@ -498,11 +503,18 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     set currentStyle(path: string) {
         document
             .querySelector(
-                // There are two stylesheets in production (the other is the Angular-generated /js/styles.<hash>.css),
-                // so we need the href match too.
-                'link[rel="stylesheet"][href*="/static/generated/"]'
+                'link[rel="stylesheet"][data-theme-origin="user-prefs"]'
             )!
             .setAttribute("href", `/${path}`);
+    }
+
+    get currentStyle() {
+        return document
+            .querySelector(
+                'link[rel="stylesheet"][data-theme-origin="user-prefs"]'
+            )!
+            .getAttribute("href")!
+            .substring(1);
     }
 
     canRemoveContact(contact: IUserContact): boolean {
@@ -779,8 +791,13 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     submit = async () => {
         this.saving = true;
+        const cleanSettings = {...this.settings};
+        delete cleanSettings.style_path;
         const r = await toPromise(
-            this.http.post<ISettings>("/settings/save", this.settings)
+            this.http.post<SettingsWithStylePath>(
+                "/settings/save",
+                cleanSettings
+            )
         );
         this.saving = false;
         if (r.ok) {

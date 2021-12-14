@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 
 import sass
-from flask import Response, current_app, render_template_string, flash
+from flask import Response, current_app, flash
 
 from timApp.auth.accesshelper import verify_logged_in, verify_view_access
 from timApp.auth.sessioninfo import get_current_user_object
@@ -29,9 +29,10 @@ from timApp.user.user import User
 from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
-from timApp.util.utils import cache_folder_path
+from timApp.util.utils import cache_folder_path, render_raw_template_string
 
 styles = TypedBlueprint("styles", __name__, url_prefix="/styles")
+DEFAULT_STYLE_NAME = "default"
 
 scss_cache_path = cache_folder_path / "generated_scss"
 
@@ -129,7 +130,7 @@ def get_style_name(theme_docs: list[DocEntry]) -> str:
     """
     # Order matters as user can set style priority
     if not theme_docs:
-        return "default"
+        return DEFAULT_STYLE_NAME
     m = ""
     for theme in theme_docs:
         m += f"{theme.id}"
@@ -183,7 +184,7 @@ def generate_style(theme_docs: list[DocEntry], gen_dir: Optional[Path] = None) -
         theme_paths.append((theme_doc.id, theme_path))
         theme_doc_map[f"../..{theme_path}"] = theme_doc.path
 
-    scss_src = render_template_string(
+    scss_src = render_raw_template_string(
         """
 @charset "UTF-8";
 @import "stylesheets/varUtils";
@@ -220,7 +221,7 @@ def generate_style(theme_docs: list[DocEntry], gen_dir: Optional[Path] = None) -
 <p>Please change style or fix the issue</p>
 """
         )
-        return style_name if style_exits else "default", style_path
+        return (gen_dir / f"{DEFAULT_STYLE_NAME}.css").as_posix()
 
     set_style_timestamp_hash(style_name, current_style_hash)
     return style_path.as_posix()

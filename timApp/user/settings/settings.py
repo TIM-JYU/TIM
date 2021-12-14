@@ -78,7 +78,7 @@ def save_settings() -> Response:
 
     j = request.get_json()
     if not j or not isinstance(j, dict):
-        return json_response(user.get_prefs())
+        return json_response(user.get_prefs().to_json(with_style=True))
 
     try:
         curr_prefs = user.get_prefs()
@@ -91,7 +91,7 @@ def save_settings() -> Response:
     except TypeError as e:
         raise RouteException(f"Invalid settings: {e}")
     db.session.commit()
-    return json_response(user.get_prefs())
+    return json_response(user.get_prefs().to_json(with_style=True))
 
 
 @settings_page.put("/save/lang")

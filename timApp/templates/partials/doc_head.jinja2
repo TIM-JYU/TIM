@@ -11,7 +11,7 @@
 {% block content %}
 
 {% if override_theme %}
-    <link rel="stylesheet" href="/{{ override_theme }}">
+    <link rel="stylesheet" data-theme-origin="document" href="/{{ override_theme }}">
 {% endif %}
 
 {% for cssFile in cssFiles %}

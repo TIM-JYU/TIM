@@ -91,7 +91,7 @@
         </script>
         {{ angularscripts|safe }}
         {% if not override_theme %}
-            <link rel="stylesheet" href="/{{ prefs.style_path }}">
+            <link rel="stylesheet" data-theme-origin="user-prefs" href="/{{ prefs.style_path }}">
         {% endif %}
 
         <script type="text/x-mathjax-config">
