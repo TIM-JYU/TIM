@@ -99,7 +99,7 @@ def get_error_html(
     """
 
     return sanitize_html(
-        '<span class="error">{}{}</span>'.format(
+        '<span class="error" ng-non-bindable>{}{}</span>'.format(
             str(message),
             f"<pre>---Full response string start---\n{response}\n---Full response string end---</pre>"
             if response is not None
