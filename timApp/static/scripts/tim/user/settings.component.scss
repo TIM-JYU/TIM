@@ -172,3 +172,62 @@ tim-table.style-listing ::ng-deep {
   margin-top: 1em;
   margin-bottom: 1em;
 }
+
+.current-styles {
+  display: flex;
+  flex-direction: column;
+
+  overflow-y: auto;
+  max-height: 800px;
+
+  & .dndDraggingSource {
+    display: none;
+  }
+
+  & .dndDragging {
+    border: 1px solid green;
+  }
+
+  & > .drag-placeholder {
+    min-height: 50px;
+    background-color: #efefef;
+  }
+
+  & > div {
+    padding: 0.25em 0.5em;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid var(--basic-border-color);
+
+    .style-actions {
+      display: flex;
+    }
+
+    & .sort-handle {
+      font-size: 20px;
+      margin-right: 0.5em;
+    }
+
+    .style-info {
+      flex-grow: 1;
+      h4 {
+        font-size: 1em;
+        margin-bottom: 0.25em;
+        margin-top: 0.1em;
+
+        span {
+          margin-left: 0.5em;
+        }
+      }
+
+      .style-description {
+        font-size: 0.8em;
+        color: #666666;
+      }
+
+      p {
+        margin-bottom: 0.1em;
+      }
+    }
+  }
+}

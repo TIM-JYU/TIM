@@ -228,29 +228,47 @@ def generate_style(theme_docs: list[DocEntry], gen_dir: Optional[Path] = None) -
 
 
 @styles.get("")
-def get_styles() -> Response:
-    candidates = get_documents(
-        filter_user=get_current_user_object(),
-        custom_filter=(
-            DocEntry.name.like(f"{OFFICIAL_STYLES_PATH}%")
-            | DocEntry.name.like(f"{USER_STYLES_PATH}%")
-        ),
+def get_styles(
+    docs: Optional[list[int]] = field(
+        default=None,
+        metadata={"list_type": "delimited"},
+    ),
+    all: bool = False,
+) -> Response:
+    cur_user = get_current_user_object()
+    filter_user = cur_user
+    filter = DocEntry.name.like(f"{OFFICIAL_STYLES_PATH}%") | DocEntry.name.like(
+        f"{USER_STYLES_PATH}%"
     )
+
+    if docs:
+        filter = DocEntry.id.in_(docs)
+    if all:
+        filter_user = None
+
+    candidates = get_documents(filter_user=filter_user, custom_filter=filter)
 
     result = []
     for doc in candidates:
+        has_access = cur_user.has_view_access(doc)
         style_description = doc.document.get_settings().get("description", None)
-        if not style_description:
+        if not style_description and not all:
             continue
+        if not has_access:
+            style_type = None
+            style_description = None
+        elif doc.path.startswith(OFFICIAL_STYLES_PATH):
+            style_type = "official"
+        else:
+            style_type = "user"
+
         result.append(
             {
                 "docId": doc.id,
-                "name": doc.title,
+                "name": doc.title if has_access else None,
                 "path": doc.name,
-                "description": style_description,
-                "type": "official"
-                if doc.path.startswith(OFFICIAL_STYLES_PATH)
-                else "user",
+                "description": style_description if has_access else None,
+                "type": style_type,
             }
         )
 
@@ -273,7 +291,9 @@ def get_raw_scss(doc_path: str, force: bool = False) -> Response:
 
 
 @styles.get("/path")
-def generate(docs: list[int] = field(default_factory=list)) -> Response:
+def generate(
+    docs: list[int] = field(default_factory=list, metadata={"list_type": "delimited"})
+) -> Response:
     verify_logged_in()
 
     doc_entries: list[DocEntry] = DocEntry.query.filter(DocEntry.id.in_(docs)).all()

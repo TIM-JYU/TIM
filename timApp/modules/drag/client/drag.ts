@@ -33,6 +33,7 @@ import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.modul
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
 import {DocIdDotName} from "../../../static/scripts/tim/plugin/taskid";
+import {isIOS} from "../../../static/scripts/tim/util/utils";
 
 const DragMarkup = t.intersection([
     t.partial({
@@ -160,17 +161,10 @@ export class DragComponent
             // Use this to make use of the scroll behaviour.
             dragImageTranslateOverride:
                 scrollBehaviourDragImageTranslateOverride,
+            forceApply: isIOS(),
         });
 
-        window.addEventListener(
-            "touchmove",
-            () => {
-                // This is a fix for ios problems arising in safari 10+.
-                // This is also used for detecting touchscreen to change css layout.
-                this.element.addClass("touchdrag");
-            },
-            {passive: false}
-        );
+        window.addEventListener("touchmove", () => {}, {passive: false});
 
         if (!this.attrsall.preview) {
             this.vctrl?.addTimComponent(this);

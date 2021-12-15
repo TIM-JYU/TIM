@@ -22,9 +22,12 @@ import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule} from "@angular/forms";
 import {TooltipModule} from "ngx-bootstrap/tooltip";
 import {TabsetComponent, TabsModule} from "ngx-bootstrap/tabs";
+import {DndDropEvent, DndModule} from "ngx-drag-drop";
+import {polyfill} from "mobile-drag-drop";
+import {scrollBehaviourDragImageTranslateOverride} from "mobile-drag-drop/scroll-behaviour";
 import {ConsentType} from "../ui/consent";
 import {INotification, ISettings, settingsglobals} from "../util/globals";
-import {IOkResponse, timeout, toPromise} from "../util/utils";
+import {IOkResponse, isIOS, timeout, toPromise} from "../util/utils";
 import {TimTable, TimTableComponent, TimTableModule} from "../plugin/timTable";
 import {ContactOrigin, IFullUser, IUserContact} from "./IUser";
 
@@ -82,6 +85,16 @@ const HIDDEN_COLUMNS_OFFICIAL_USERS = [0];
 const HIDDEN_COLUMNS_OFFICIAL_ONLY = [0, 3];
 type SettingsWithStylePath = ISettings & {style_path?: string};
 
+interface StyleDocumentInfo {
+    docId: number;
+    name?: string;
+    path: string;
+    description?: string;
+    type?: string;
+}
+
+type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
+
 @Component({
     selector: "tim-settings",
     template: `
@@ -96,7 +109,52 @@ type SettingsWithStylePath = ISettings & {style_path?: string};
             <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title>
                 <tabset #stylesTabs>
                     <tab heading="Selected styles">
-                        List selected styles
+                        <div class="info-box">
+                            <p>
+                                Styles that you currently use are listed here.
+                                You can review and remove styles that you use.
+                            </p>
+                            <p>
+                                You can also reorder styles by dragging them in the list below.
+                                Reordering the styles will change their priority which might affect the final generated theme for TIM.
+                            </p>
+                        </div>
+                        <ng-container *ngIf="currentStyles === undefined">
+                            <tim-loading></tim-loading>
+                            <ng-container i18n>Loading active styles, please wait</ng-container>
+                        </ng-container>
+                        <ng-container *ngIf="currentStyles !== undefined">
+                            <div class="info-box" *ngIf="currentStyles.length == 0" >
+                                <small i18n>
+                                    You have no styles selected. You can add styles via the <a (click)="changeStyleTab(1)">Available styles</a> tab.
+                                </small>
+                            </div>
+                            <div *ngIf="currentStyles.length > 0" class="current-styles" [dndDropzone]="['userStyle']"
+                                 [dndEffectAllowed]="'move'"
+                                 (dndDrop)="onStyleDrop($event)">
+                                <div class="drag-placeholder" dndPlaceholderRef></div>
+                                <div *ngFor="let style of currentStyles"
+                                     [dndDraggable]="style.docId"
+                                     [dndEffectAllowed]="'move'"
+                                     [dndDisableDragIf]="saving"
+                                     dndType="userStyle">
+                                    <i class="glyphicon glyphicon-sort sort-handle" dndHandle></i>
+                                    <div class="style-info">
+                                        <h4>
+                                            <a class="style-header" href="/view/{{style.path}}">{{style.name}}</a>
+                                            <span *ngIf="style.type == 'official'" class="label label-primary" i18n>Official</span>
+                                            <span *ngIf="style.type == 'deleted'" class="label label-default" i18n>Deleted</span>
+                                        </h4>
+                                        <p class="style-description">{{style.description}}</p>
+                                    </div>
+                                    <div class="style-actions">
+                                        <button class="btn btn-danger" title="Delete style" (click)="deleteSelectedStyle(style)" i18n-title>
+                                            <i class="glyphicon glyphicon-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </ng-container>
                     </tab>
                     <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()" i18n-heading>
                         <div class="info-box">
@@ -110,7 +168,7 @@ type SettingsWithStylePath = ISettings & {style_path?: string};
                                 </li>
                                 <li i18n><strong>User-made styles</strong> are made and maintained by TIM's users.</li>
                             </ul>
-                            <p i18n>To remove styles or edit their ordering, use the <a (click)="changeTab(0)">Selected
+                            <p i18n>To remove styles or edit their ordering, use the <a (click)="changeStyleTab(0)">Selected
                                 styles</a> tab.</p>
                         </div>
                         <div class="checkbox">
@@ -138,9 +196,9 @@ type SettingsWithStylePath = ISettings & {style_path?: string};
                         asd
                     </tab>
                 </tabset>
-                <settings-button-panel [saved]="submit">
-                    <button class="btn btn-default" (click)="addPrintSettings()" i18n>Add Print Settings</button>
-                </settings-button-panel>
+                <!--                <settings-button-panel [saved]="submit">-->
+                <!--                    <button class="btn btn-default" (click)="addPrintSettings()" i18n>Add Print Settings</button>-->
+                <!--                </settings-button-panel>-->
             </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Editor" i18n-title>
                 <div class="checkbox">
@@ -374,6 +432,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     channelNames = EDITABLE_CONTACT_CHANNELS;
     verificationSentSet = new Set<IUserContact>();
     contactOrigins = CONTACT_ORIGINS;
+    currentStyles?: StyleDocumentInfo[] = undefined;
     primaryChangeVerificationSent = false;
     showUserStyles = false;
     private readonly style: HTMLStyleElement;
@@ -404,7 +463,6 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.consent = this.user.consent;
         this.settings = settingsglobals().userPrefs;
         this.settings.style_path = this.currentStyle;
-        console.log(this.settings);
         this.notifications = settingsglobals().notifications;
         this.contacts = settingsglobals().contacts;
         this.collectUserContacts();
@@ -420,10 +478,47 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     // region Styles tab
 
-    changeTab(index: number) {
+    async deleteSelectedStyle(style: StyleDocumentInfo) {
+        if (!this.currentStyles) {
+            return;
+        }
+
+        const styleIndex = this.currentStyles.indexOf(style);
+        this.currentStyles.splice(styleIndex, 1);
+        this.settings.style_doc_ids = this.currentStyles.map((s) => s.docId);
+        await this.submit(false);
+        this.cdr.detectChanges();
+    }
+
+    onStyleDrop(event: DndDropEvent) {
+        if (!this.currentStyles) {
+            return;
+        }
+
+        const docId = event.data as number;
+        const oldIndex = this.currentStyles.findIndex((d) => d.docId == docId);
+        let newIndex = event.index ?? 0;
+        // Don't move if we're inserting directly above or below current item (i.e. not actually moving)
+        if (newIndex == oldIndex || newIndex == oldIndex + 1) {
+            return;
+        }
+        // If we're moving down the list, first splice will move all items after oldIndex down by one index
+        if (newIndex > oldIndex) {
+            newIndex--;
+        }
+        const item = this.currentStyles[oldIndex];
+        this.currentStyles.splice(oldIndex, 1);
+        this.currentStyles.splice(newIndex, 0, item);
+        this.cdr.detectChanges();
+        this.settings.style_doc_ids = this.currentStyles.map((s) => s.docId);
+        void this.submit();
+    }
+
+    changeStyleTab(index: number) {
         const tab = this.stylesTabs.tabs[index];
         if (tab) {
             tab.active = true;
+            this.cdr.detectChanges();
         }
     }
 
@@ -436,13 +531,13 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     activateSelectedStyles() {
         const table = this.timTable.first;
-        const currentStyles = new Set(this.settings.theme_doc_ids);
+        const currentStyles = new Set(this.settings.style_doc_ids);
         const newStyles = table
             .getCheckedRows(0, true)
             .map((s) => +s[0])
             .filter((d) => !currentStyles.has(d));
-        this.settings.theme_doc_ids = [
-            ...this.settings.theme_doc_ids,
+        this.settings.style_doc_ids = [
+            ...this.settings.style_doc_ids,
             ...newStyles,
         ];
         void this.submit();
@@ -487,7 +582,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         const r = await toPromise(
             this.http.get(`/styles/path`, {
                 params: {
-                    docs: selStyles,
+                    docs: selStyles.join(","),
                 },
                 responseType: "text",
             })
@@ -553,17 +648,69 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         }
     }
 
+    private async updateSelectedStyles() {
+        if (this.settings.style_doc_ids.length == 0) {
+            this.currentStyles = [];
+            this.cdr.detectChanges();
+            return;
+        }
+        console.log(this.settings.style_doc_ids);
+        const r = await toPromise(
+            this.http.get<StyleDocumentInfo[]>("/styles", {
+                params: {
+                    all: true,
+                    docs: this.settings.style_doc_ids.join(","),
+                },
+            })
+        );
+
+        if (r.ok) {
+            const allStyleDocs = r.result;
+            const userStyles = new Set(this.settings.style_doc_ids);
+            const orderMap: Record<number, number> = this.settings.style_doc_ids
+                .map((s, i) => ({[s]: i}))
+                .reduce((prev, cur) => ({...prev, ...cur}), {});
+
+            for (const styleDoc of allStyleDocs) {
+                userStyles.delete(styleDoc.docId);
+            }
+
+            for (const missingStyleDoc of userStyles) {
+                allStyleDocs.push({
+                    docId: missingStyleDoc,
+                    description: $localize`This style document was deleted`,
+                    path: `${missingStyleDoc}`,
+                    name: $localize`Deleted style (id: ${missingStyleDoc})`,
+                    type: $localize`Deleted style`,
+                });
+            }
+
+            for (const styleDoc of allStyleDocs) {
+                if (styleDoc.type === undefined) {
+                    styleDoc.type = "private";
+                }
+                if (styleDoc.name === undefined) {
+                    styleDoc.name = $localize`Private style`;
+                }
+                if (styleDoc.description === undefined) {
+                    styleDoc.description = $localize`This style is private or has no description`;
+                }
+            }
+
+            // Reorder styles back in the correct order because ordering matters
+            const allStyleDocsOrdered = [];
+            for (const style of allStyleDocs) {
+                allStyleDocsOrdered[orderMap[style.docId]] = style;
+            }
+
+            this.currentStyles = allStyleDocsOrdered;
+            this.cdr.detectChanges();
+        }
+    }
+
     async getAvailableStyles() {
         const r = await toPromise(
-            this.http.get<
-                {
-                    docId: number;
-                    name: string;
-                    path: string;
-                    description: string;
-                    type: string;
-                }[]
-            >("/styles")
+            this.http.get<StyleDocumentInfoAll[]>("/styles")
         );
         if (r.ok) {
             this.tableData.table = {
@@ -590,6 +737,19 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
             this.tableData.hiddenRows = this.userStyles;
         }
+    }
+
+    async ngOnInit() {
+        polyfill({
+            // Use this to make use of the scroll behaviour.
+            dragImageTranslateOverride:
+                scrollBehaviourDragImageTranslateOverride,
+            forceApply: isIOS(),
+        });
+
+        window.addEventListener("touchmove", () => {}, {passive: false});
+
+        await this.updateSelectedStyles();
     }
 
     async ngAfterViewInit() {
@@ -789,7 +949,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     // endregion
 
-    submit = async () => {
+    submit = async (updateSelectedStylesList: boolean = true) => {
         this.saving = true;
         const cleanSettings = {...this.settings};
         delete cleanSettings.style_path;
@@ -803,6 +963,20 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         if (r.ok) {
             this.settings = r.result;
             this.resetSelectedStyles();
+
+            if (updateSelectedStylesList) {
+                const oldStyles = this.currentStyles?.map((s) => s.docId) ?? [];
+                const newStyles = this.settings.style_doc_ids;
+
+                if (
+                    oldStyles.length != newStyles.length ||
+                    oldStyles.some(
+                        (v, i) => v != this.settings.style_doc_ids[i]
+                    )
+                ) {
+                    await this.updateSelectedStyles();
+                }
+            }
         } else {
             await showMessageDialog(r.result.error.error);
         }
@@ -845,6 +1019,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         TimUtilityModule,
         HttpClientModule,
         FormsModule,
+        DndModule,
         TooltipModule.forRoot(),
         TabsModule.forRoot(),
     ],

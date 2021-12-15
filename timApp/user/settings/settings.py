@@ -52,7 +52,7 @@ def get_settings() -> Response:
 
 
 def verify_new_styles(curr_prefs: Preferences, new_prefs: Preferences) -> None:
-    new_style_doc_ids = set(new_prefs.theme_doc_ids) - set(curr_prefs.theme_doc_ids)
+    new_style_doc_ids = set(new_prefs.style_doc_ids) - set(curr_prefs.style_doc_ids)
     if not new_style_doc_ids:
         return
 

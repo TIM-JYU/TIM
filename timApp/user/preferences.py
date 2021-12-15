@@ -20,7 +20,7 @@ class Preferences:
     word_list: str = ""
     email_exclude: str = ""
     language: Optional[str] = None
-    theme_doc_ids: list[int] = attr.Factory(list)
+    style_doc_ids: list[int] = attr.Factory(list)
     last_answer_fetch: dict[str, str] = attr.Factory(dict)
     auto_mark_all_read: bool = False
     bookmarks: Optional[list[dict[str, list[dict[str, str]]]]] = None
@@ -32,7 +32,11 @@ class Preferences:
         return Preferences(**j)
 
     def theme_docs(self) -> list[DocEntry]:
-        return DocEntry.query.filter(DocEntry.id.in_(self.theme_doc_ids)).all()
+        ordering = {d: i for i, d in enumerate(self.style_doc_ids)}
+        return sorted(
+            DocEntry.query.filter(DocEntry.id.in_(self.style_doc_ids)).all(),
+            key=lambda d: ordering[d.id],
+        )
 
     @cached_property
     def style_path(self) -> str:

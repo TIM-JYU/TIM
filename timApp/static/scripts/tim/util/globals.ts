@@ -165,7 +165,7 @@ export interface ISettings {
     word_list: string;
     auto_mark_all_read: boolean;
     max_uncollapsed_toc_items: number | null;
-    theme_doc_ids: number[];
+    style_doc_ids: number[];
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {
