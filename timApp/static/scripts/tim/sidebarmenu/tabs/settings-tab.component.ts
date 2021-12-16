@@ -423,6 +423,7 @@ export class SettingsTabComponent implements OnInit {
             location.reload();
         }
     }
+
     /**
      * Opens tag editing dialog.
      */
