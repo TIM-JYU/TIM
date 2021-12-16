@@ -1,6 +1,8 @@
-@charset "UTF-8";
-/* Fontiksi Georgia, harvempi riviväli */
+``` {settings=""}
+description: "Use Georgia font and increase line spacing"
+```
 
+```scss
 $block-code-size: 100%;
 $font-family-base: exportable((Georgia, Times, serif, serif), font-family-base);
 $font-family-monospace: exportable(monospace, font-family-monospace);
@@ -14,3 +16,4 @@ $line-height-base: 1.75;
 $pre-overflow: auto;
 $pre-left-border: 0px;
 $pre-background: #eff0f1;
+```

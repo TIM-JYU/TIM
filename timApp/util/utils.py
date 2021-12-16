@@ -275,6 +275,10 @@ def get_boolean(s: Union[bool, int, str], default: bool) -> bool:
     return True
 
 
+def get_static_tim_doc_path() -> Path:
+    return Path("static/tim_docs")
+
+
 def static_tim_doc(path: str) -> str:
     return f"static/tim_docs/{path}"
 
