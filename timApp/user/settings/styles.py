@@ -1,4 +1,4 @@
-from dataclasses import field
+from dataclasses import field, dataclass
 from os.path import getmtime
 from pathlib import Path
 from typing import Optional
@@ -35,6 +35,11 @@ styles = TypedBlueprint("styles", __name__, url_prefix="/styles")
 DEFAULT_STYLE_NAME = "default"
 
 scss_cache_path = cache_folder_path / "generated_scss"
+
+
+@dataclass
+class StyleCompileException(Exception):
+    compile_error: str
 
 
 def generate_scss(doc: DocInfo, force: bool = False) -> str:
@@ -85,8 +90,8 @@ def generate_scss(doc: DocInfo, force: bool = False) -> str:
             if par.id not in par_ids:
                 continue
 
-            # Style blocks are not plugins so we can skip pluginifying and just get raw markdown
-            md = par.md
+            # Style blocks are not plugins so we can skip pluginifying and just get expanded markdown
+            md = par.get_expanded_markdown(macro_info, ignore_errors=True)
 
             # Remove the code marks
             if md.startswith("```"):
@@ -137,7 +142,11 @@ def get_style_name(theme_docs: list[DocEntry]) -> str:
     return f"compiled-style-{hashfunc(m)}"
 
 
-def generate_style(theme_docs: list[DocEntry], gen_dir: Optional[Path] = None) -> str:
+def generate_style(
+    theme_docs: list[DocEntry],
+    gen_dir: Optional[Path] = None,
+    throw_on_error: bool = False,
+) -> str:
     """Generates a CSS style based on the given theme documents.
 
     .. note::
@@ -214,6 +223,8 @@ def generate_style(theme_docs: list[DocEntry], gen_dir: Optional[Path] = None) -
         error_message = str(e)
         for rel_path, doc_path in theme_doc_map.items():
             error_message = error_message.replace(rel_path, doc_path)
+        if throw_on_error:
+            raise StyleCompileException(error_message)
         flash(
             f"""
 <p>Error in current style:</p>
@@ -308,4 +319,10 @@ def generate(
                 f"Document {doc.id} ({doc.path}) must be in {OFFICIAL_STYLES_PATH} or {USER_STYLES_PATH}"
             )
 
-    return text_response(generate_style(doc_entries))
+    try:
+        return text_response(generate_style(doc_entries, throw_on_error=True))
+    except StyleCompileException:
+        return text_response(
+            f"Could not compile selected styles, please report this to style authors",
+            400,
+        )
