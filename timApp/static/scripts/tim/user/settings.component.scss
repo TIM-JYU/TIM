@@ -132,6 +132,10 @@ div.small {
   }
 }
 
+tabset ::ng-deep .tab-content {
+  border-bottom-width: 0;
+}
+
 tim-table.style-listing ::ng-deep {
 
   .timTableRunDiv {
@@ -151,12 +155,6 @@ tim-table.style-listing ::ng-deep {
       width: 16px;
     }
   }
-}
-
-.style-button-panel {
-  @extend .button-panel;
-  margin-top: 0.5em;
-  margin-bottom: 1em;
 }
 
 .style-loader {
@@ -197,7 +195,12 @@ tim-table.style-listing ::ng-deep {
     padding: 0.25em 0.5em;
     display: flex;
     align-items: center;
-    border-top: 1px solid var(--basic-border-color);
+    border: 0 solid var(--basic-border-color);
+    border-top-width: 1px;
+
+    &:last-child {
+      border-bottom-width: 1px;
+    }
 
     .style-actions {
       display: flex;
@@ -206,6 +209,10 @@ tim-table.style-listing ::ng-deep {
     & .sort-handle {
       font-size: 20px;
       margin-right: 0.5em;
+
+      &.disabled {
+        color: #ddd;
+      }
     }
 
     .style-info {
@@ -230,4 +237,9 @@ tim-table.style-listing ::ng-deep {
       }
     }
   }
+}
+
+textarea#custom_css {
+  resize: vertical;
+  min-height: 300px;
 }

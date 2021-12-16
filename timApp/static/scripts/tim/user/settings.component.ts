@@ -123,10 +123,10 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                 Reordering the styles will change their priority which might affect the final generated theme for TIM.
                             </p>
                         </div>
-                        <ng-container *ngIf="currentStyles === undefined">
+                        <div class="style-loader" *ngIf="currentStyles === undefined">
                             <tim-loading></tim-loading>
                             <ng-container i18n>Loading active styles, please wait</ng-container>
-                        </ng-container>
+                        </div>
                         <ng-container *ngIf="currentStyles !== undefined">
                             <div class="info-box" *ngIf="currentStyles.length == 0" >
                                 <small i18n>
@@ -142,7 +142,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                      [dndEffectAllowed]="'move'"
                                      [dndDisableDragIf]="saving"
                                      dndType="userStyle">
-                                    <i class="glyphicon glyphicon-sort sort-handle" dndHandle></i>
+                                    <i class="glyphicon glyphicon-sort sort-handle" [class.disabled]="saving" dndHandle></i>
                                     <div class="style-info">
                                         <h4>
                                             <a class="style-header" href="/view/{{style.path}}">{{style.name}}</a>
@@ -170,14 +170,14 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                 <li i18n><strong>Official styles</strong> are maintained and supported by TIM
                                     maintainers.
                                 </li>
-                                <li i18n><strong>User-made styles</strong> are made and maintained by TIM's users.</li>
+                                <li i18n><strong>User-made styles</strong> are made and maintained by TIM's users. For more information, see <a href="/view/tim/ohjeita/styles">style authoring guide</a>.</li>
                             </ul>
                             <p i18n>To remove styles or edit their ordering, use the <a (click)="changeStyleTab(0)">Selected
                                 styles</a> tab.</p>
                         </div>
-                        <ng-container *ngIf="tableData.table.rows === undefined">
+                        <div class="style-loader" *ngIf="tableData.table.rows === undefined">
                             <tim-loading></tim-loading> <ng-container i18n>Loading available styles, please wait</ng-container>
-                        </ng-container>
+                        </div>
                         <ng-container *ngIf="tableData.table.rows !== undefined">
                             <div class="info-box" *ngIf="tableData.table.rows.length == 0" >
                                 <small i18n>
@@ -193,7 +193,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                                     </label>
                                 </div>
                                 <tim-table class="style-listing" *ngIf="availableTab.active" [data]="tableData"></tim-table>
-                                <div class="style-button-panel">
+                                <div class="button-panel">
                                     <button class="timButton" [disabled]="!cbCount" (click)="activateSelectedStyles()" i18n>
                                         Add to Selected styles
                                     </button>
@@ -205,16 +205,28 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                         </ng-container>
                     </tab>
                     <tab heading="Custom CSS" i18n-heading>
-                        asd
+                        <div class="info-box">
+                            <p i18n>
+                                You can define your personal custom styles using CSS.
+                                The styles are applied to all TIM pages and all devices you use.
+                            </p>
+                            <p i18n>
+                                For extended styling using SCSS, refer to <a href="/view/tim/ohjeita/styles">style authoring guide</a>.
+                            </p>
+                        </div>
+                        <div class="form-group">
+                            <label for="custom_css" i18n>Custom CSS</label>
+                            <textarea id="custom_css" name="custom_css" class="form-control" [(ngModel)]="settings.custom_css"></textarea>
+                        </div>
+                        <settings-button-panel [saved]="submit">
+                            <button class="btn btn-default" (click)="addPrintSettings()" i18n>Add Print Settings</button>
+                        </settings-button-panel>
                     </tab>
                 </tabset>
                 <div class="style-loader" *ngIf="loadingUserStyle">
                     <tim-loading></tim-loading>
                     <ng-container i18n>Compiling style, please wait</ng-container>
                 </div>
-                <!--                <settings-button-panel [saved]="submit">-->
-                <!--                    <button class="btn btn-default" (click)="addPrintSettings()" i18n>Add Print Settings</button>-->
-                <!--                </settings-button-panel>-->
             </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Editor" i18n-title>
                 <div class="checkbox">
@@ -482,15 +494,22 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         this.settings.style_path = this.currentStyle;
         this.notifications = settingsglobals().notifications;
         this.contacts = settingsglobals().contacts;
+
+        const currentCustom = document.querySelector<HTMLStyleElement>(
+            "style[data-style-origin='user-prefs-custom']"
+        );
+        if (currentCustom) {
+            this.style = currentCustom;
+        } else {
+            this.style = document.createElement("style");
+            document.getElementsByTagName("head")[0].appendChild(this.style);
+        }
+
         this.collectUserContacts();
         this.primaryEmail = this.getContactsFor(Channel.EMAIL).find(
             (c) => c.primary
         )!;
         this.tableData.cbCallBack = this.cbChanged;
-
-        this.style = document.createElement("style");
-        this.style.setAttribute("rel", "stylesheet");
-        document.getElementsByTagName("head")[0].appendChild(this.style);
     }
 
     // region Styles tab
@@ -603,7 +622,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         const table = this.timTable.first;
         const selStyles = table.getCheckedRows(0, true).map((s) => s[0]);
 
-        const r = await toPromise(
+        const r = await toPromise<string, {error: string}>(
             this.http.get(`/styles/path`, {
                 params: {
                     docs: selStyles.join(","),
@@ -617,14 +636,14 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         } else {
             this.styleError = {
                 title: $localize`Could not preview the style`,
-                message: r.result.error.error,
+                message: r.result.error,
             };
         }
     }
 
     set currentStyle(path: string) {
         const el = document.querySelector(
-            'link[rel="stylesheet"][data-theme-origin="user-prefs"]'
+            'link[rel="stylesheet"][data-style-origin="user-prefs-style"]'
         )!;
         const newPath = `/${path}`;
         if (el.getAttribute("href") == newPath) {
@@ -636,7 +655,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     get currentStyle() {
         return document
             .querySelector(
-                'link[rel="stylesheet"][data-theme-origin="user-prefs"]'
+                'link[rel="stylesheet"][data-style-origin="user-prefs-style"]'
             )!
             .getAttribute("href")!
             .substring(1);

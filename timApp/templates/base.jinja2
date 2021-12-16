@@ -91,7 +91,7 @@
         </script>
         {{ angularscripts|safe }}
         {% if not override_theme %}
-            <link rel="stylesheet" data-theme-origin="user-prefs" href="/{{ prefs.style_path }}">
+            <link rel="stylesheet" data-style-origin="user-prefs-style" href="/{{ prefs.style_path }}">
         {% endif %}
 
         <script type="text/x-mathjax-config">
@@ -101,7 +101,7 @@
         </script>
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
-    <style type="text/css">
+    <style data-style-origin="user-prefs-custom">
         {{ prefs.custom_css }}
     </style>
 </head>
