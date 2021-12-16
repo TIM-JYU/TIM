@@ -57,7 +57,9 @@ def generate_scss(doc: DocInfo, force: bool = False) -> str:
     doc.document.preload_option = PreloadOption.all
     pars = dereference_pars(pars, context_doc=doc.document, view_ctx=view_ctx)
 
-    user_ctx = UserContext.from_one_user(User.get_by_name(ANONYMOUS_USERNAME))
+    anon_user = User.get_by_name(ANONYMOUS_USERNAME)
+    assert anon_user is not None
+    user_ctx = UserContext.from_one_user(anon_user)
     settings = doc.document.get_settings()
     macro_info = settings.get_macroinfo(view_ctx, user_ctx)
     macros = macro_info.get_macros()
@@ -247,7 +249,7 @@ def get_styles(
     all: bool = False,
 ) -> Response:
     cur_user = get_current_user_object()
-    filter_user = cur_user
+    filter_user: Optional[User] = cur_user
     filter = DocEntry.name.like(f"{OFFICIAL_STYLES_PATH}%") | DocEntry.name.like(
         f"{USER_STYLES_PATH}%"
     )
