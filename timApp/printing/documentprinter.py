@@ -100,6 +100,7 @@ def get_tex_settings_and_macros(
         pdoc_macro_delimiter,
         user_ctx,
         default_view_ctx,
+        pdoc_macros,
     )
 
     if template_doc:

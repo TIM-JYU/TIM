@@ -161,14 +161,14 @@ class Belongs:
         return b
 
 
-def week_to_date(week_nr, daynr=1, year=None, fmt=None):
+def week_to_date(week_nr, daynr=1, year=None, frmt=None):
     """
     date object for week
     see: timApp/tests/unit/test_datefilters.py
     :param week_nr:  week number to get the date object
     :param daynr: day of week to get date
     :param year: year to get date
-    :param fmt: extended format string
+    :param frmt: extended format string
     :return: date object or formated string
     """
     if week_nr <= 0:
@@ -181,9 +181,9 @@ def week_to_date(week_nr, daynr=1, year=None, fmt=None):
     else:
         year = int(year)
     d = date.fromisocalendar(year, week_nr, daynr)
-    if fmt == None:
+    if frmt is None:
         return d
-    return fmt_date(d, fmt)
+    return fmt_date(d, frmt)
 
 
 def month_to_week(month, daynr=1, year=None):
@@ -208,43 +208,43 @@ def month_to_week(month, daynr=1, year=None):
     return d.isocalendar()[1]
 
 
-def now(fmt=0):
+def now(frmt=0):
     """
     Used in Jinja macros like tomorrow: %%1 | now%%
     Or this week %% "%w" | now %%
-    :param fmt: fromat for curent date or delta for current date
+    :param frmt: format for current date or delta for current date
     :return: current date + (fmt as int) if fmt is int, otherwise current timestamp formated
     """
-    if isinstance(fmt, int):
-        return datetime.now() + timedelta(days=fmt)
-    return fmt_date(datetime.now(), fmt)
+    if isinstance(frmt, int):
+        return datetime.now() + timedelta(days=frmt)
+    return fmt_date(datetime.now(), str(frmt))
 
 
-def fmt_date(d, fmt=""):
+def fmt_date(d, frmt=""):
     """
     Format date using extended %d1 and %m1 for one number values
     see: timApp/tests/unit/test_datefilters.py
     :param d: date to format
-    :param fmt: Python format
+    :param frmt: Python format
     :return: string from d an format
     """
     ds = "" + str(d.day)
     ms = "" + str(d.month)
-    if fmt == "":
+    if frmt == "":
         return str(ds) + "." + str(ms)
-    fmt = fmt.replace("%d1", ds).replace("%m1", ms)
-    return d.strftime(fmt)
+    frmt = frmt.replace("%d1", ds).replace("%m1", ms)
+    return d.strftime(frmt)
 
 
 def week_to_text(
-    week_nr, year=None, fmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", first_day=1
+    week_nr, year=None, frmt=" %d1.%m1|", days="ma|ti|ke|to|pe|", first_day=1
 ):
     """
     Convert week to clendar header format
     see: timApp/tests/unit/test_datefilters.py
     :param week_nr: what week to convert
     :param year: what year
-    :param fmt: extended Python  date format
+    :param frmt: extended Python  date format
     :param days: pipe separated list of day names
     :param first_day: from what weekday to start
     :return: string suitable for calandar header
@@ -268,7 +268,7 @@ def week_to_text(
         if end < 0:
             s += days[beg:]
             break
-        ds = fmt_date(week_to_date(week_nr, daynr, year), fmt)
+        ds = fmt_date(week_to_date(week_nr, daynr, year), frmt)
         s += days[beg:end] + ds
         beg = end + 1
         daynr += 1
@@ -343,7 +343,7 @@ def expand_macros(
         return text
 
 
-def belongs_placeholder(s):
+def belongs_placeholder(_s):
     return get_error_html("The belongs filter requires nocache=true attribute.")
 
 
@@ -378,6 +378,57 @@ def get_document_path(doc_id: Any) -> str:
     return doc.path if doc else ""
 
 
+@dataclass
+class Counters:
+    macros: dict
+
+    def __post_init__(self):
+        self.counters = {}
+        self.c = self.macros.get("c", {})
+
+    def show_counter_value(self, name):
+        value = self.c.get(name, name)
+        return value
+
+    def new_counter(self, name, ctype):
+        counter_type = self.counters.get(ctype)
+        if not counter_type:  # first of this type
+            counter_type = {"value": 0}
+            self.counters[ctype] = counter_type
+        counter = counter_type.get(name)
+        value = counter_type["value"] + 1
+        counter_type["value"] = value
+        if counter:  # shold not be
+            counter["value"] = "Dublicate " + name
+        else:
+            counter = {"value": value}
+            counter_type[name] = counter
+        return self.c.get(name, "?" + str(name) + "?")
+
+    def eq_counter(self, name):
+        return self.new_counter(name, "eq")
+
+    def fig_counter(self, name):
+        return self.new_counter(name, "fig")
+
+    def tbl_counter(self, name):
+        return self.new_counter(name, "tbl")
+
+    def ex_counter(self, name):
+        return self.new_counter(name, "ex")
+
+    def get_counters(self, _dummy=0):
+        result = "  c:\n"
+        for ctype in self.counters:
+            counter_type = self.counters[ctype]
+            for name in counter_type:
+                if name == "value":
+                    continue
+                counter = counter_type[name]
+                result += "    " + name + ": " + str(counter["value"]) + "\n"
+        return result
+
+
 tim_filters = {
     "Pz": Pz,
     "gfields": genfields,
@@ -394,6 +445,10 @@ tim_filters = {
     "fmt": fmt,
     "docid": get_document_id,
     "docpath": get_document_path,
+    "ref": belongs_placeholder,
+    "c_": belongs_placeholder,
+    "c_eq": belongs_placeholder,
+    "counters": belongs_placeholder,
 }
 
 
@@ -401,6 +456,7 @@ def create_environment(
     macro_delimiter: str,
     user_ctx: UserContext | None,
     view_ctx: ViewContext,
+    macros: dict | None,
 ) -> SandboxedEnvironment:
     env = SandboxedEnvironment(
         variable_start_string=macro_delimiter,
@@ -414,6 +470,17 @@ def create_environment(
     )
     env.filters.update(tim_filters)
     env.filters["isview"] = view_ctx.isview
+
+    if macros:
+        counters = Counters(macros)
+        env.filters["ref"] = counters.show_counter_value
+        env.filters["c_"] = counters.new_counter
+        env.filters["c_eq"] = counters.eq_counter
+        env.filters["c_fig"] = counters.fig_counter
+        env.filters["c_tbl"] = counters.tbl_counter
+        env.filters["c_ex"] = counters.ex_counter
+        env.filters["counters"] = counters.get_counters
+        env.filters["counters_object"] = counters  # used in print.py
 
     if user_ctx:
         env.filters["belongs"] = Belongs(user_ctx).belongs_to_group
@@ -436,7 +503,9 @@ def md_to_html(
         text,
         macros,
         settings=None,
-        env=create_environment("%%", user_ctx=None, view_ctx=default_view_ctx),
+        env=create_environment(
+            "%%", user_ctx=None, view_ctx=default_view_ctx, macros=macros
+        ),
     )
 
     raw = call_dumbo([text])

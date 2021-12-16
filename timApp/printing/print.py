@@ -384,6 +384,46 @@ def get_printed_document(doc_path):
     return response
 
 
+@print_blueprint.get("/numbering/<path:doc_path>")
+def get_numbering(doc_path):
+    doc = g.doc_entry
+    json = doc.document.export_raw_data()
+    settings = doc.document.get_settings()
+    macroinfo = settings.get_macroinfo(default_view_ctx)
+    env = macroinfo.jinja_env
+    settings_par = None
+    counters_par = None
+    for par in json:
+        s = par["attrs"].get("settings", None)
+        if s is not None:
+            if s == "":
+                settings_par = par
+                continue
+            if s == "counters":
+                counters_par = par
+                continue
+        nomacros = par["attrs"].get("nomacros", None)
+        if nomacros is not None:
+            continue
+        from timApp.markdown.markdownconverter import expand_macros
+
+        expand_macros(par["md"], macroinfo.macro_map, settings, env)
+
+    new_counter_macro_values = (
+        "macros:\n" + env.filters["counters_object"].get_counters()
+    )
+    if counters_par:
+        doc.document.modify_paragraph(counters_par["id"], new_counter_macro_values)
+    else:
+        doc.document.insert_paragraph(
+            new_counter_macro_values,
+            insert_after_id=settings_par["id"],
+            attrs={"settings": "counters"},
+        )
+
+    return json_response({"ok": "ok"})
+
+
 @print_blueprint.get("/templates/<path:doc_path>")
 def get_templates(doc_path):
     doc = g.doc_entry
