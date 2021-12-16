@@ -8,8 +8,9 @@ from timApp.document.docinfo import DocInfo
 static_folder = Path("static")
 stylesheets_folder = static_folder / "stylesheets"
 
-OFFICIAL_STYLES_PATH = "styles/official"
-USER_STYLES_PATH = "styles/user"
+STYLES_FOLDER_PREFIX = "styles"
+OFFICIAL_STYLES_PATH = f"{STYLES_FOLDER_PREFIX}/official"
+USER_STYLES_PATH = f"{STYLES_FOLDER_PREFIX}/user"
 
 
 def get_default_scss_gen_dir() -> Path:

@@ -93,7 +93,7 @@ from timApp.tim_app import app
 from timApp.timdb.exceptions import PreambleException
 from timApp.timdb.sqa import db
 from timApp.user.groups import verify_group_view_access
-from timApp.user.settings.style_utils import resolve_themes
+from timApp.user.settings.style_utils import resolve_themes, STYLES_FOLDER_PREFIX
 from timApp.user.settings.styles import generate_style
 from timApp.user.user import User, has_no_higher_right
 from timApp.user.usergroup import (
@@ -833,6 +833,8 @@ def render_doc_view(
         post_process_result.js_paths.append("timMessageListManagement")
     if doc_info.path.startswith(MESSAGE_LIST_ARCHIVE_FOLDER_PREFIX):
         post_process_result.js_paths.append("timArchive")
+    if doc_info.path.startswith(STYLES_FOLDER_PREFIX):
+        post_process_result.js_paths.append("stylePreview")
 
     taketime("before render")
     nav_ranges = []

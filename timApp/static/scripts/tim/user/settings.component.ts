@@ -623,7 +623,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         const selStyles = table.getCheckedRows(0, true).map((s) => s[0]);
 
         const r = await toPromise<string, {error: string}>(
-            this.http.get(`/styles/path`, {
+            this.http.get("/styles/path", {
                 params: {
                     docs: selStyles.join(","),
                 },
@@ -636,7 +636,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         } else {
             this.styleError = {
                 title: $localize`Could not preview the style`,
-                message: r.result.error,
+                message: $localize`There was an error loading the style. Please report this to the style's maintainer.`,
             };
         }
     }

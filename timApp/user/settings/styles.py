@@ -321,8 +321,8 @@ def generate(
 
     try:
         return text_response(generate_style(doc_entries, throw_on_error=True))
-    except StyleCompileException:
+    except StyleCompileException as se:
         return text_response(
-            f"Could not compile selected styles, please report this to style authors",
+            se.compile_error,
             400,
         )

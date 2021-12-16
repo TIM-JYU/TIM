@@ -5,7 +5,7 @@ import {AlertSeverity} from "tim/ui/formErrorMessage";
     selector: "tim-alert",
     template: `
         <div *ngIf="open" class="alert alert-{{ severity }}">
-            <span class="glyphicon glyphicon-{{getIcon()}}"></span>&nbsp;
+            <span class="glyphicon glyphicon-{{getIcon()}}"></span>
             <div class="content"><ng-content></ng-content></div>
             <i *ngIf="closeable" role="button" class="glyphicon glyphicon-remove" (click)="onClose()"></i>
         </div>
