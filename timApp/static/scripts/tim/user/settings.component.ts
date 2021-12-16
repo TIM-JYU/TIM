@@ -107,14 +107,18 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                 </div>
             </bootstrap-form-panel>
             <bootstrap-form-panel [disabled]="saving" title="Styles" i18n-title>
+                <tim-alert *ngIf="styleError">
+                    <strong>{{styleError.title}}</strong>
+                    <p>{{styleError.message}}</p>
+                </tim-alert>
                 <tabset #stylesTabs>
-                    <tab heading="Selected styles">
+                    <tab heading="Selected styles" i18n-heading>
                         <div class="info-box">
-                            <p>
+                            <p i18n>
                                 Styles that you currently use are listed here.
                                 You can review and remove styles that you use.
                             </p>
-                            <p>
+                            <p i18n>
                                 You can also reorder styles by dragging them in the list below.
                                 Reordering the styles will change their priority which might affect the final generated theme for TIM.
                             </p>
@@ -156,7 +160,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             </div>
                         </ng-container>
                     </tab>
-                    <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()" i18n-heading>
+                    <tab heading="Available styles" #availableTab="tab" (selectTab)="reloadStyleTable()" (deselect)="resetSelectedStyles()" i18n-heading>
                         <div class="info-box">
                             <p i18n>
                                 The table below lists all styles available on TIM.
@@ -171,31 +175,43 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             <p i18n>To remove styles or edit their ordering, use the <a (click)="changeStyleTab(0)">Selected
                                 styles</a> tab.</p>
                         </div>
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" id="style-show-user-made" name="style-show-user-made"
-                                       [ngModel]="showUserStyles" (ngModelChange)="changeUserStyleVisibility($event)">
-                                <ng-container i18n>Show user-made styles</ng-container>
-                            </label>
-                        </div>
-                        <tim-table class="style-listing" *ngIf="availableTab.active" [data]="tableData"></tim-table>
-                        <div class="style-button-panel">
-                            <button class="timButton" [disabled]="!cbCount" (click)="activateSelectedStyles()" i18n>
-                                Add to Selected styles
-                            </button>
-                            <button class="timButton" [disabled]="!cbCount" (click)="resetSelectedStyles()" i18n>
-                                Clear preview
-                            </button>
-                            <div class="style-loader" *ngIf="loadingUserStyle">
-                                <tim-loading></tim-loading>
-                                <ng-container i18n>Compiling style, please wait</ng-container>
+                        <ng-container *ngIf="tableData.table.rows === undefined">
+                            <tim-loading></tim-loading> <ng-container i18n>Loading available styles, please wait</ng-container>
+                        </ng-container>
+                        <ng-container *ngIf="tableData.table.rows !== undefined">
+                            <div class="info-box" *ngIf="tableData.table.rows.length == 0" >
+                                <small i18n>
+                                    No styles available.
+                                </small>
                             </div>
-                        </div>
+                            <ng-container *ngIf="tableData.table.rows.length > 0">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" id="style-show-user-made" name="style-show-user-made"
+                                               [ngModel]="showUserStyles" (ngModelChange)="changeUserStyleVisibility($event)">
+                                        <ng-container i18n>Show user-made styles</ng-container>
+                                    </label>
+                                </div>
+                                <tim-table class="style-listing" *ngIf="availableTab.active" [data]="tableData"></tim-table>
+                                <div class="style-button-panel">
+                                    <button class="timButton" [disabled]="!cbCount" (click)="activateSelectedStyles()" i18n>
+                                        Add to Selected styles
+                                    </button>
+                                    <button class="timButton" [disabled]="!cbCount" (click)="resetSelectedStyles()" i18n>
+                                        Clear preview
+                                    </button>
+                                </div>
+                            </ng-container>
+                        </ng-container>
                     </tab>
-                    <tab heading="Custom CSS">
+                    <tab heading="Custom CSS" i18n-heading>
                         asd
                     </tab>
                 </tabset>
+                <div class="style-loader" *ngIf="loadingUserStyle">
+                    <tim-loading></tim-loading>
+                    <ng-container i18n>Compiling style, please wait</ng-container>
+                </div>
                 <!--                <settings-button-panel [saved]="submit">-->
                 <!--                    <button class="btn btn-default" (click)="addPrintSettings()" i18n>Add Print Settings</button>-->
                 <!--                </settings-button-panel>-->
@@ -457,6 +473,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     userStyles: number[] = [];
     loadingUserStyle = false;
     @ViewChild("stylesTabs", {static: false}) stylesTabs!: TabsetComponent;
+    styleError?: {title: string; message: string};
 
     constructor(private http: HttpClient, private cdr: ChangeDetectorRef) {
         this.user = settingsglobals().current_user;
@@ -486,11 +503,14 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         const styleIndex = this.currentStyles.indexOf(style);
         this.currentStyles.splice(styleIndex, 1);
         this.settings.style_doc_ids = this.currentStyles.map((s) => s.docId);
+        this.loadingUserStyle = true;
+        this.cdr.detectChanges();
         await this.submit(false);
+        this.loadingUserStyle = false;
         this.cdr.detectChanges();
     }
 
-    onStyleDrop(event: DndDropEvent) {
+    async onStyleDrop(event: DndDropEvent) {
         if (!this.currentStyles) {
             return;
         }
@@ -509,9 +529,12 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         const item = this.currentStyles[oldIndex];
         this.currentStyles.splice(oldIndex, 1);
         this.currentStyles.splice(newIndex, 0, item);
-        this.cdr.detectChanges();
         this.settings.style_doc_ids = this.currentStyles.map((s) => s.docId);
-        void this.submit();
+        this.loadingUserStyle = true;
+        this.cdr.detectChanges();
+        await this.submit();
+        this.loadingUserStyle = false;
+        this.cdr.detectChanges();
     }
 
     changeStyleTab(index: number) {
@@ -576,6 +599,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     };
 
     async previewSelectedStyles() {
+        this.styleError = undefined;
         const table = this.timTable.first;
         const selStyles = table.getCheckedRows(0, true).map((s) => s[0]);
 
@@ -591,16 +615,22 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         if (r.ok) {
             this.currentStyle = r.result;
         } else {
-            console.error(r.result.error.error);
+            this.styleError = {
+                title: $localize`Could not preview the style`,
+                message: r.result.error.error,
+            };
         }
     }
 
     set currentStyle(path: string) {
-        document
-            .querySelector(
-                'link[rel="stylesheet"][data-theme-origin="user-prefs"]'
-            )!
-            .setAttribute("href", `/${path}`);
+        const el = document.querySelector(
+            'link[rel="stylesheet"][data-theme-origin="user-prefs"]'
+        )!;
+        const newPath = `/${path}`;
+        if (el.getAttribute("href") == newPath) {
+            return;
+        }
+        el.setAttribute("href", newPath);
     }
 
     get currentStyle() {
@@ -622,13 +652,17 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
         return false;
     }
 
+    private updateShowSelected() {
+        this.tableData.hiddenRows = this.showUserStyles ? [] : this.userStyles;
+        this.tableData.hiddenColumns = this.showUserStyles
+            ? HIDDEN_COLUMNS_OFFICIAL_USERS
+            : HIDDEN_COLUMNS_OFFICIAL_ONLY;
+    }
+
     async changeUserStyleVisibility(newVal: boolean) {
         this.resetSelectedStyles();
         this.showUserStyles = newVal;
-        this.tableData.hiddenRows = newVal ? [] : this.userStyles;
-        this.tableData.hiddenColumns = newVal
-            ? HIDDEN_COLUMNS_OFFICIAL_USERS
-            : HIDDEN_COLUMNS_OFFICIAL_ONLY;
+        this.updateShowSelected();
         const tab = this.styleTable;
         if (tab) {
             await tab.updateFilter();
@@ -638,6 +672,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
     async reloadStyleTable() {
         this.showUserStyles = false;
+        this.updateShowSelected();
         // Ensure table is loaded
         await timeout();
         const tab = this.styleTable;
@@ -649,12 +684,12 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     private async updateSelectedStyles() {
+        this.styleError = undefined;
         if (this.settings.style_doc_ids.length == 0) {
             this.currentStyles = [];
             this.cdr.detectChanges();
             return;
         }
-        console.log(this.settings.style_doc_ids);
         const r = await toPromise(
             this.http.get<StyleDocumentInfo[]>("/styles", {
                 params: {
@@ -705,10 +740,18 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
 
             this.currentStyles = allStyleDocsOrdered;
             this.cdr.detectChanges();
+        } else {
+            this.styleError = {
+                title: $localize`Could not load selected styles`,
+                message: r.result.error.error,
+            };
+            this.cdr.detectChanges();
         }
     }
 
-    async getAvailableStyles() {
+    async updateAvailableStyles() {
+        this.styleError = undefined;
+        this.tableData.table = {};
         const r = await toPromise(
             this.http.get<StyleDocumentInfoAll[]>("/styles")
         );
@@ -736,6 +779,11 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
                 .map((s) => s.i);
 
             this.tableData.hiddenRows = this.userStyles;
+        } else {
+            this.styleError = {
+                title: $localize`Could not load available styles`,
+                message: r.result.error.error,
+            };
         }
     }
 
@@ -753,7 +801,7 @@ export class SettingsComponent implements DoCheck, AfterViewInit {
     }
 
     async ngAfterViewInit() {
-        await this.getAvailableStyles();
+        await this.updateAvailableStyles();
     }
 
     ngDoCheck() {
