@@ -13,6 +13,8 @@ from sqlalchemy_utils import database_exists, create_database
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.documents import import_document_from_file
 from timApp.document.specialnames import (
     TEMPLATE_FOLDER_NAME,
@@ -188,36 +190,54 @@ def initialize_database(create_docs: bool = True) -> None:
     timdb.close()
 
 
-def create_style_docs():
+def create_style_docs() -> tuple[list[Folder], list[DocInfo]]:
     admin_group = UserGroup.get_by_name(ADMIN_GROUPNAME)
     logged_in_group = UserGroup.get_logged_in_group()
 
-    f1 = Folder.create(OFFICIAL_STYLES_PATH, owner_groups=[admin_group])
-    f2 = Folder.create(USER_STYLES_PATH, owner_groups=[admin_group])
-    f1.block.add_rights([logged_in_group], AccessType.view)
-    f2.block.add_rights([logged_in_group], AccessType.view)
+    folders = []
+    docs = []
 
-    import_document_from_file(
-        static_tim_doc("initial/style_preamble.md"),
-        f"{STYLES_FOLDER_PREFIX}/templates/preambles/preamble",
-        admin_group,
-        title="preamble",
-    )
+    f1 = Folder.find_by_path(OFFICIAL_STYLES_PATH)
+    if not f1:
+        f1 = Folder.create(OFFICIAL_STYLES_PATH, owner_groups=[admin_group])
+        f1.block.add_rights([logged_in_group], AccessType.view)
+    folders.append(f1)
+
+    f2 = Folder.find_by_path(USER_STYLES_PATH)
+    if not f2:
+        f2 = Folder.create(USER_STYLES_PATH, owner_groups=[admin_group])
+        f2.block.add_rights([logged_in_group], AccessType.view)
+    folders.append(f2)
+
+    pd = DocEntry.find_by_path(f"{STYLES_FOLDER_PREFIX}/templates/preambles/preamble")
+    if not pd:
+        pd = import_document_from_file(
+            static_tim_doc("initial/style_preamble.md"),
+            f"{STYLES_FOLDER_PREFIX}/templates/preambles/preamble",
+            admin_group,
+            title="preamble",
+        )
+    docs.append(pd)
 
     style_docs_path = get_static_tim_doc_path() / "style_docs"
 
     if not style_docs_path.exists():
-        return
+        return folders, docs
 
     for doc in style_docs_path.glob("*.md"):
         name = doc.name[:-3]
-        d = import_document_from_file(
-            doc.as_posix(),
-            f"{OFFICIAL_STYLES_PATH}/{name}",
-            admin_group,
-            title=name,
-        )
-        d.block.add_rights([logged_in_group], AccessType.view)
+        d = DocEntry.find_by_path(f"{OFFICIAL_STYLES_PATH}/{name}")
+        if not d:
+            d = import_document_from_file(
+                doc.as_posix(),
+                f"{OFFICIAL_STYLES_PATH}/{name}",
+                admin_group,
+                title=name,
+            )
+            d.block.add_rights([logged_in_group], AccessType.view)
+        docs.append(d)
+
+    return folders, docs
 
 
 def exit_if_not_db_up_to_date():
