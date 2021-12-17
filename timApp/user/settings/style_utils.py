@@ -22,16 +22,45 @@ def get_default_scss_gen_dir() -> Path:
 
 
 def resolve_themes(short_names: list[str]) -> list[DocEntry]:
-    return get_documents(
-        filter_folder=OFFICIAL_STYLES_PATH,
+    """Resolves theme documents from short names or document paths.
+
+    .. note:: Style documents are resolved even if the user has no permission to access it.
+    This is done because SCSS generation only preserves SCSS blocks and not other possibly sensitive content.
+
+    :param short_names: List of either official theme names or full paths to the style documents.
+    :return: List of valid style documents found based on short names.
+    """
+
+    official_names = [short_name for short_name in short_names if "/" not in short_name]
+    # NOTE: We also resolve full docs, but it is okay as style processing only preserves SCSS blocks
+    full_names = [
+        short_name[1:] if short_name.startswith("/") else short_name
+        for short_name in official_names
+        if "/" in short_name
+    ]
+
+    docs = get_documents(
         search_recursively=False,
-        custom_filter=DocEntry.name.in_(
-            [f"{OFFICIAL_STYLES_PATH}/{n}" for n in short_names]
+        custom_filter=(
+            DocEntry.name.in_([f"{OFFICIAL_STYLES_PATH}/{n}" for n in short_names])
+            | DocEntry.name.in_(full_names)
         ),
     )
 
+    # Only documents marked as styles
+    return [
+        d
+        for d in docs
+        if d.document.get_settings().get("description", None) is not None
+    ]
+
 
 def is_style_doc(doc: DocInfo) -> bool:
+    """Checks whether the given document is an official or user-made style.
+
+    :param doc: Document to check
+    :return: True if document is a valid official or user style. Otherwise, False.
+    """
     return (
         doc.path.startswith(OFFICIAL_STYLES_PATH)
         or doc.path.startswith(USER_STYLES_PATH)
