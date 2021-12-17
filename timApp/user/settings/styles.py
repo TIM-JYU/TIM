@@ -44,6 +44,15 @@ class StyleCompileException(Exception):
 
 
 def generate_scss(doc: DocInfo, force: bool = False) -> str:
+    """Generates SCSS from the given document.
+
+    .. note:: Only SCSS code blocks are included in the final result.
+
+    :param doc: Document to generate SCSS style from.
+    :param force: If True, SCSS is always generated from the document. Otherwise, the latest cached SCSS is used if
+                    the document hasn't changed.
+    :return: Generated SCSS file
+    """
     doc_hash = get_doc_version_hash(doc)
     cache_path = scss_cache_path / str(doc.id) / f"{doc_hash}.scss"
 
@@ -153,8 +162,6 @@ def generate_style(
     """Generates a CSS style based on the given theme documents.
 
     .. note::
-       This function sorts the given theme list.
-
     The structure of the generated SCSS file is as follows:
 
     1. Charset declaration (always UTF-8)
@@ -173,6 +180,7 @@ def generate_style(
 
     :param theme_docs: List of theme documents with SCSS to generate style from.
     :param gen_dir: Directory to put the generated theme in. If not specified, default SCSS cache dir is used.
+    :param throw_on_error: If True, an error is thrown on SCSS compile error. Otherwise, the error is sent to Flask.
     :return: Path to the generated style file, relative to project root (timApp folder)
     """
     if not gen_dir:
@@ -252,6 +260,13 @@ def get_styles(
     ),
     all: bool = False,
 ) -> Response:
+    """Gets description of the available styles.
+
+    :param docs: Style documents to get description from. If not given, all style documents are returned.
+    :param all: If True, documents the user doesn't have access to aren't skipped.
+                Otherwise, only documents user can viewed are returned.
+    :return: List of JSON objects describing the style's name, path and type
+    """
     cur_user = get_current_user_object()
     filter_user: Optional[User] = cur_user
     filter = DocEntry.name.like(f"{OFFICIAL_STYLES_PATH}%") | DocEntry.name.like(
@@ -295,6 +310,12 @@ def get_styles(
 
 @styles.get("/<path:doc_path>.scss")
 def get_raw_scss(doc_path: str, force: bool = False) -> Response:
+    """Gets raw SCSS of the style document
+
+    :param doc_path: Path to official or user document.
+    :param force: If True, style is regenerated even if it was cached.
+    :return: Generated SCSS or an error message.
+    """
     verify_logged_in()
     doc = DocEntry.find_by_path(f"styles/{doc_path}")
     if not doc:
@@ -311,6 +332,11 @@ def get_raw_scss(doc_path: str, force: bool = False) -> Response:
 def generate(
     docs: list[int] = field(default_factory=list, metadata={"list_type": "delimited"})
 ) -> Response:
+    """Gets path to the generated CSS style.
+
+    :param docs: Style documents to generate the style from.
+    :return: Path to the generated CSS file, or SCSS compile error.
+    """
     verify_logged_in()
 
     doc_entries: list[DocEntry] = DocEntry.query.filter(DocEntry.id.in_(docs)).all()
