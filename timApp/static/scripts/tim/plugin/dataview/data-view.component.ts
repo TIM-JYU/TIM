@@ -1099,7 +1099,7 @@ export class DataViewComponent implements AfterViewInit, OnInit {
                 ? px(
                       Math.ceil(
                           this.idTableCache
-                              ?.getCell(0, 0)
+                              ?.getCell(this.rowAxis.visibleItems[0], 0)
                               ?.getBoundingClientRect().width
                       )
                   )
@@ -1975,7 +1975,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         const [cache, colAxis] = this.getDataCacheForColumn(columnIndex);
         const firstCellWidth = cache
-            .getCell(0, colAxis.indexToOrdinal[columnIndex])
+            .getCell(
+                this.rowAxis.visibleItems[this.viewport.vertical.startOrdinal],
+                colAxis.indexToOrdinal[columnIndex]
+            )
             .getBoundingClientRect().width;
         return Math.max(idealHeaderWidth, firstCellWidth);
     }
