@@ -48,11 +48,7 @@ def resolve_themes(short_names: list[str]) -> list[DocEntry]:
     )
 
     # Only documents marked as styles
-    return [
-        d
-        for d in docs
-        if d.document.get_settings().get("description", None) is not None
-    ]
+    return [d for d in docs if d.document.get_settings().is_style_document()]
 
 
 def is_style_doc(doc: DocInfo) -> bool:
@@ -64,5 +60,5 @@ def is_style_doc(doc: DocInfo) -> bool:
     return (
         doc.path.startswith(OFFICIAL_STYLES_PATH)
         or doc.path.startswith(USER_STYLES_PATH)
-        and doc.document.get_settings().get("description", None) is not None
+        and doc.document.get_settings().is_style_document()
     )
