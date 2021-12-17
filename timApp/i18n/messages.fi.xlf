@@ -4406,7 +4406,7 @@
       </trans-unit>
       <trans-unit id="7935817138132972193" datatype="html">
         <source>Automatically mark document as read when opening it for the first time </source>
-        <target state="translated">Merkitse dokumentit luetuksi ensimmäisen avauksen yhteydessä</target>
+        <target state="translated">Merkitse dokumentit luetuksi ensimmäisen avauksen yhteydessä </target>
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">337,338</context>
@@ -4490,6 +4490,14 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">803</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2068094190303764265" datatype="html">
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Note:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Your current styles will be temporarily disabled while previewing.</source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Huom:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Nykyiset valitut tyylisi kytketään pois päältä tyylien esikatselun ajaksi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">177</context>
         </context-group>
       </trans-unit>
     </body>

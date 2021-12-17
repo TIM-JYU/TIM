@@ -174,6 +174,7 @@ type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
                             </ul>
                             <p i18n>To remove styles or edit their ordering, use the <a (click)="changeStyleTab(0)">Selected
                                 styles</a> tab.</p>
+                            <p i18n><strong>Note:</strong> Your current styles will be temporarily disabled while previewing.</p>
                         </div>
                         <div class="style-loader" *ngIf="tableData.table.rows === undefined">
                             <tim-loading></tim-loading> <ng-container i18n>Loading available styles, please wait</ng-container>
