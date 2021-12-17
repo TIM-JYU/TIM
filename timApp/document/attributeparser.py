@@ -24,6 +24,8 @@ class AttributeParser:
         return self.current_pos < len(self.str)
 
     def parse_code_type(self):
+        if not self.has_chars() or self.current_char() != "`":
+            return {}
         while self.has_chars() and self.current_char() == "`":
             self.current_pos += 1
         self.eat_whitespace()

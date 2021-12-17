@@ -73,6 +73,14 @@ test
 ````
 test
 ````
+
+```cs
+var a = 1 + 1;
+```
+
+```js {.someClass}
+var a = 1 + 1;
+```
 """.strip()
         dp = DocumentParser(doc_text)
         result = dp.get_blocks()
@@ -110,6 +118,16 @@ test
                 "attrs": {},
             },
             {"md": "````\ntest\n````", "type": "code", "attrs": {}},
+            {
+                "md": "```cs\nvar a = 1 + 1;\n```",
+                "type": "code",
+                "attrs": {"code_lang": "cs"},
+            },
+            {
+                "md": "```js\nvar a = 1 + 1;\n```",
+                "type": "code",
+                "attrs": {"classes": ["someClass"], "code_lang": "js"},
+            },
         ]
         self.assertListEqual(expected, result)
         exported = DocumentWriter(result).get_text()
@@ -131,6 +149,8 @@ test
                 {"id": "ziJ7zlQXydZE"},
                 {"id": "PCzBis5CPokx"},
                 {"id": "AfibcQb2DGgM"},
+                {"id": "u45HM8U9X2RQ"},
+                {"id": "5VIXRyHpRJx0"},
             ],
             [{"id": block["id"]} for block in dp.get_blocks()],
         )
@@ -149,6 +169,8 @@ test
                 {"t": "MHg3NjQzNzAyYg=="},
                 {"t": "LTB4MmJhMWVlZGI="},
                 {"t": "MHgyNjJlNzU5OQ=="},
+                {"t": "MHg3YzE0OGE4"},
+                {"t": "MHgxNmM0MjFjMA=="},
             ],
             [{"t": block["t"]} for block in dp.get_blocks()],
         )
@@ -195,6 +217,16 @@ test
                     "md": "````\n#- {rd=x rp=y}\n\n``` {rp=x rd=y}\n```\n\n````",
                 },
                 {"attrs": {}, "md": "````\ntest\n````", "type": "code"},
+                {
+                    "md": "```cs\nvar a = 1 + 1;\n```",
+                    "type": "code",
+                    "attrs": {"code_lang": "cs"},
+                },
+                {
+                    "md": "```js\nvar a = 1 + 1;\n```",
+                    "type": "code",
+                    "attrs": {"classes": ["someClass"], "code_lang": "js"},
+                },
             ],
             result,
         )
@@ -240,6 +272,16 @@ test
                 "test\n"
                 "````",
                 "type": "header",
+            },
+            {
+                "md": "```cs\nvar a = 1 + 1;\n```",
+                "type": "code",
+                "attrs": {"code_lang": "cs"},
+            },
+            {
+                "md": "```js\nvar a = 1 + 1;\n```",
+                "type": "code",
+                "attrs": {"classes": ["someClass"], "code_lang": "js"},
             },
         ]
         self.assertListEqual(expected, result)
