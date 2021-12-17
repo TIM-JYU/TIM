@@ -164,7 +164,15 @@ export class DragComponent
             forceApply: isIOS(),
         });
 
-        window.addEventListener("touchmove", () => {}, {passive: false});
+        window.addEventListener(
+            "touchmove",
+            () => {
+                // This is a fix for ios problems arising in safari 10+.
+                // This is also used for detecting touchscreen to change css layout.
+                this.element.addClass("touchdrag");
+            },
+            {passive: false}
+        );
 
         if (!this.attrsall.preview) {
             this.vctrl?.addTimComponent(this);
