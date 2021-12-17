@@ -109,8 +109,9 @@ def generate_scss(doc: DocInfo, force: bool = False) -> str:
             if md.startswith("```"):
                 style_start = md.find("\n")
                 md = md[style_start + 1 : -3]
-            # Replace post-all hook with unique ID for style generation
+            # Replace hooks with unique ID for style generation
             md = md.replace("@mixin post-all", f"@mixin post-all-{doc.id}")
+            md = md.replace("@mixin post-variables", f"@mixin post-variables-{doc.id}")
 
             f.write(f"{md}\n")
 
@@ -208,10 +209,14 @@ def generate_style(
         """
 @charset "UTF-8";
 @import "stylesheets/varUtils";
-@import "stylesheets/variables";
 {% for theme_id, theme in themes %}
 @mixin post-all-{{ theme_id }} {};
+@mixin post-variables-{{ theme_id }} {};
 @import "{{ theme }}";
+{% endfor %}
+@import "stylesheets/variables";
+{% for theme_id, _ in themes %}
+@include post-variables-{{ theme_id }};
 {% endfor %}
 @include export-variables;
 @import "stylesheets/all.scss";
