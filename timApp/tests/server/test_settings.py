@@ -1,9 +1,12 @@
 import json
 
+from timApp.document.documents import import_document_from_file
 from timApp.tests.db.timdbtest import TEST_USER_2_ID, TEST_USER_1_ID
 from timApp.tests.server.timroutetest import TimRouteTest
 from timApp.timdb.sqa import db
+from timApp.user.settings.style_utils import OFFICIAL_STYLES_PATH
 from timApp.user.usergroup import UserGroup
+from timApp.util.utils import static_tim_doc
 
 
 class SettingsTest(TimRouteTest):
@@ -93,16 +96,15 @@ class SettingsTest(TimRouteTest):
                     "modified": self.test_user_1.modified.isoformat(),
                     "name": "testuser1",
                     "origin": None,
-                    "prefs": '{"css_files": {}, "custom_css": "", '
-                    '"use_document_word_list": false, "disable_menu_hover": '
-                    'false, "remember_last_sidebar_menu_tab": false, '
+                    "prefs": '{"custom_css": "", "use_document_word_list": false, '
+                    '"disable_menu_hover": false, '
+                    '"remember_last_sidebar_menu_tab": false, '
                     '"remember_last_sidebar_menu_state": false, "word_list": '
                     '"", "email_exclude": "", "language": null, '
-                    '"last_answer_fetch": {}, "auto_mark_all_read": false, '
-                    '"bookmarks": [{"Last edited": [{"document 2": '
-                    '"/view/users/test-user-1/doc1"}]}], '
-                    '"max_uncollapsed_toc_items": null, "css_combined": '
-                    '"default"}',
+                    '"style_doc_ids": [], "last_answer_fetch": {}, '
+                    '"auto_mark_all_read": false, "bookmarks": [{"Last edited": '
+                    '[{"document 2": "/view/users/test-user-1/doc1"}]}], '
+                    '"max_uncollapsed_toc_items": null}',
                     "real_name": "Test user 1",
                 },
                 "velps": [],
@@ -171,32 +173,42 @@ type: python
         self.assertNotIn("points", json.loads(answs[0]["content"]))
 
     def test_settings_save(self):
+        # Create dummy doc for test
+        d = import_document_from_file(
+            static_tim_doc("style_docs/lighttheme.md"),
+            f"{OFFICIAL_STYLES_PATH}/lighttheme",
+            UserGroup.get_anonymous_group(),
+            title="lighttheme",
+        )
+        db.session.commit()
+
+        lighttheme_id = d.id
+
         self.login_test3()
+
         self.json_post(f"/settings/save", {"invalid": "yes"}, expect_status=400)
         self.get(
             f"/settings/get",
             expect_content={
-                "css_combined": "default",
-                "css_files": {},
-                "email_exclude": "",
-                "last_answer_fetch": {},
-                "use_document_word_list": False,
-                "word_list": "",
-                "language": None,
+                "auto_mark_all_read": False,
+                "bookmarks": None,
                 "custom_css": "",
                 "disable_menu_hover": False,
+                "email_exclude": "",
+                "language": None,
+                "last_answer_fetch": {},
+                "max_uncollapsed_toc_items": None,
+                "remember_last_sidebar_menu_state": False,
                 "remember_last_sidebar_menu_tab": False,
-                "max_uncollapsed_toc_items": None,
-                "remember_last_sidebar_menu_state": False,
-                "auto_mark_all_read": False,
-                "bookmarks": None,
+                "style_doc_ids": [],
+                "use_document_word_list": False,
+                "word_list": "",
             },
         )
         self.json_post(
             f"/settings/save",
             {
-                "css_combined": "xxx",  # doesn't matter
-                "css_files": {"lighttheme": True, "reunukset": False},
+                "style_doc_ids": [lighttheme_id],  # Technically allow any value
                 "email_exclude": "users/something\nusers/another",
                 "last_answer_fetch": {},
                 "use_document_word_list": True,
@@ -212,8 +224,7 @@ type: python
         self.get(
             f"/settings/get",
             expect_content={
-                "css_combined": "lighttheme",
-                "css_files": {"lighttheme": True},
+                "style_doc_ids": [lighttheme_id],
                 "email_exclude": "users/something\nusers/another",
                 "last_answer_fetch": {},
                 "use_document_word_list": True,
@@ -231,8 +242,7 @@ type: python
         self.json_post(
             f"/settings/save",
             {
-                "css_combined": "xxx",  # doesn't matter
-                "css_files": {"lighttheme": True, "nonexistent": True},
+                "style_doc_ids": [],
                 "email_exclude": "users/something\nusers/another",
                 "last_answer_fetch": {},
                 "use_document_word_list": True,
@@ -247,8 +257,7 @@ type: python
         self.get(
             f"/settings/get",
             expect_content={
-                "css_combined": "lighttheme",
-                "css_files": {"lighttheme": True},
+                "style_doc_ids": [],
                 "email_exclude": "users/something\nusers/another",
                 "last_answer_fetch": {},
                 "use_document_word_list": True,

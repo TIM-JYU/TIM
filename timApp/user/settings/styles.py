@@ -30,6 +30,7 @@ from timApp.util.flask.requesthelper import RouteException, NotExist
 from timApp.util.flask.responsehelper import json_response, text_response
 from timApp.util.flask.typedblueprint import TypedBlueprint
 from timApp.util.utils import cache_folder_path, render_raw_template_string
+from tim_common.html_sanitize import sanitize_html
 
 styles = TypedBlueprint("styles", __name__, url_prefix="/styles")
 DEFAULT_STYLE_NAME = "default"
@@ -228,11 +229,14 @@ def generate_style(
         if throw_on_error:
             raise StyleCompileException(error_message)
         flash(
-            f"""
+            sanitize_html(
+                f"""
 <p>Error in current style:</p>
 <pre>{error_message}</pre>
 <p>Please change style or fix the issue</p>
 """
+            ),
+            category="raw",
         )
         return (gen_dir / f"{DEFAULT_STYLE_NAME}.css").as_posix()
 

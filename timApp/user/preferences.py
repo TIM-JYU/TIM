@@ -32,6 +32,8 @@ class Preferences:
         return Preferences(**j)
 
     def theme_docs(self) -> list[DocEntry]:
+        if not self.style_doc_ids:
+            return []
         ordering = {d: i for i, d in enumerate(self.style_doc_ids)}
         return sorted(
             DocEntry.query.filter(DocEntry.id.in_(self.style_doc_ids)).all(),

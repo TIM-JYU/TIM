@@ -889,7 +889,12 @@ def render_doc_view(
         # If the user themes are not overridden, they are merged with document themes
         user_themes = current_user.get_prefs().theme_docs()
         if user_themes and not doc_settings.override_user_themes():
-            document_theme_docs = list(set(user_themes) | set(document_theme_docs))
+            document_theme_docs = list(
+                (
+                    {d.id: d for d in document_theme_docs}
+                    | {d.id: d for d in user_themes}
+                ).values()
+            )
         override_theme = generate_style(document_theme_docs)
 
     templates_to_render = (
