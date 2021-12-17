@@ -46,7 +46,9 @@ export class StylePreviewComponent {
             return;
         }
 
-        if (!doc.path.startsWith("styles")) {
+        const docSettings = documentglobals().docSettings;
+
+        if (!docSettings.description) {
             this.error = {
                 title: $localize`Only styles in styles folder can be previewed`,
                 message: $localize`Move the document under styles folder to see the preview`,
