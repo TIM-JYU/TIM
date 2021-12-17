@@ -1293,6 +1293,15 @@ def create_final_par(
     return final_par
 
 
+def get_heading_counts(ctx: DocParagraph):
+    d = ctx.doc
+    macro_cache_file = f"/tmp/tim_auto_macros_{d.doc_id}"
+    ps = commonmark.Parser()
+    with shelve.open(macro_cache_file) as cache:
+        vals = cache.get(str((ctx.get_id(), d.get_version())), {}).get("h")
+        return vals
+
+
 def add_heading_numbers(s: str, ctx: DocParagraph, heading_format):
     d = ctx.doc
     macro_cache_file = f"/tmp/tim_auto_macros_{ctx.doc.doc_id}"

@@ -130,7 +130,11 @@ def get_tex_macros(d: Document):
 
 class DocumentPrinter:
     def __init__(
-        self, doc_entry: DocInfo, template_to_use: Optional[DocInfo], urlroot: str
+        self,
+        doc_entry: DocInfo,
+        template_to_use: Optional[DocInfo],
+        urlroot: str,
+        just_run_macros: bool = False,
     ):
         self._doc_entry = doc_entry
         self._template_to_use = template_to_use
@@ -141,6 +145,8 @@ class DocumentPrinter:
         self.textplain = False
         self.texfiles = None
         self.urlroot = urlroot
+        self.counter_macros = ""
+        self.just_run_macros = just_run_macros
 
     def get_template_id(self) -> Optional[int]:
         if self._template_to_use:
@@ -230,6 +236,7 @@ class DocumentPrinter:
                 str,
             ]
         ] = []
+        glo_env = None
         for par in pars:
 
             # do not print document settings pars
@@ -243,6 +250,8 @@ class DocumentPrinter:
                 par.doc, user_ctx, self._template_to_use
             )
             _, _, pdoc_plugin_attrs, env, pdoc_macros, pdoc_macro_delimiter = p_info
+            if glo_env is None:
+                glo_env = env
 
             if self.texplain or self.textplain:
                 if par.get_markdown().find("#") == 0:
@@ -260,7 +269,7 @@ class DocumentPrinter:
                         par=par,
                         global_attrs=pdoc_plugin_attrs,
                         macros=pdoc_macros,
-                        env=env,
+                        env=glo_env,
                     )
                 except PluginException:
                     plugin_yaml = {}
@@ -323,6 +332,8 @@ class DocumentPrinter:
             pdoc_macros,
             pdoc_macro_delimiter,
         ) in zip(pars_to_print, par_infos):
+            if glo_env is None:
+                glo_env = pdoc_macro_env
             md = p.prepare(view_ctx, use_md=True).output
             if not p.is_plugin() and not p.is_question():
                 if not p.get_nomacros() and not self.texplain and not self.textplain:
@@ -330,7 +341,7 @@ class DocumentPrinter:
                         text=md,
                         macros=pdoc_macros,
                         settings=settings,
-                        env=pdoc_macro_env,
+                        env=glo_env,  # pdoc_macro_env,
                         ignore_errors=False,
                     )
                 classes = p.classes
@@ -394,6 +405,9 @@ class DocumentPrinter:
             content = settings.get_doctexmacros() + "\n" + "\n\n".join(export_pars)
 
         self._content = content
+        self.counter_macros = (
+            "macros:\n" + glo_env.filters["counters_object"].get_counters()
+        )
         return content
 
     def write_to_format(
@@ -439,6 +453,9 @@ class DocumentPrinter:
                 plugins_user_print=plugins_user_print,
                 target_format=target_format,
             )
+            if self.just_run_macros:
+                return
+
             # see: https://regex101.com/r/latest
             # src = re.sub(r'\{width=[^ }]* +([^}]*scale=[^%]*%[^}]*\})',                         r'{\1', src)
 

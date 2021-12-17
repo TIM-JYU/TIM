@@ -384,8 +384,25 @@ def get_printed_document(doc_path):
     return response
 
 
-@print_blueprint.get("/numbering/<path:doc_path>")
-def get_numbering(doc_path):
+def get_setting_and_counters_par(doc):
+    # TODO: Make this more efective!
+    json = doc.document.export_raw_data()
+    settings_par = None
+    counters_par = None
+    for par in json:
+        s = par["attrs"].get("settings", None)
+        if s is not None:
+            if s == "":
+                settings_par = par
+                continue
+            if s == "counters":
+                counters_par = par
+                continue
+    return settings_par, counters_par
+
+
+@print_blueprint.get("/numbering2/<path:doc_path>")
+def get_numbering2(doc_path):
     doc = g.doc_entry
     json = doc.document.export_raw_data()
     settings = doc.document.get_settings()
@@ -412,6 +429,40 @@ def get_numbering(doc_path):
     new_counter_macro_values = (
         "macros:\n" + env.filters["counters_object"].get_counters()
     )
+    if counters_par:
+        doc.document.modify_paragraph(counters_par["id"], new_counter_macro_values)
+    else:
+        doc.document.insert_paragraph(
+            new_counter_macro_values,
+            insert_after_id=settings_par["id"],
+            attrs={"settings": "counters"},
+        )
+
+    return json_response({"ok": "ok"})
+
+
+@print_blueprint.get("/numbering/<path:doc_path>")
+def get_numbering(doc_path):
+    doc = g.doc_entry
+
+    printer = DocumentPrinter(
+        doc, template_to_use=None, urlroot="", just_run_macros=True
+    )
+
+    try:
+        printer.write_to_format(
+            UserContext.from_one_user(g.user),
+            target_format=PrintFormat.PLAIN,
+            path=".",
+            plugins_user_print=False,
+        )
+    except PrintingError as err:
+        raise PrintingError(str(err))
+    # TODO: following does not work!
+    # new_counter_macro_values = "´´´\n" + printer.counter_macros + "´´´"
+    new_counter_macro_values = printer.counter_macros
+    settings_par, counters_par = get_setting_and_counters_par(doc)
+
     if counters_par:
         doc.document.modify_paragraph(counters_par["id"], new_counter_macro_values)
     else:

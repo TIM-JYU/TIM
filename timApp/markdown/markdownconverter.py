@@ -386,9 +386,17 @@ class Counters:
         self.counters = {}
         self.c = self.macros.get("c", {})
 
-    def show_counter_value(self, name):
+    def show_counter_value(self, name, text=""):
         value = self.c.get(name, name)
-        return value
+        if text:
+            text += " "
+        return "[" + text + "" + str(value) + "](#c:" + name + ")"
+
+    def show_eqref_value(self, name, text=""):
+        value = self.c.get(name, name)
+        if text:
+            text += " "
+        return "[" + text + "(" + str(value) + ")](#c:" + name + ")"
 
     def new_counter(self, name, ctype):
         counter_type = self.counters.get(ctype)
@@ -407,6 +415,14 @@ class Counters:
 
     def eq_counter(self, name):
         return self.new_counter(name, "eq")
+
+    def tag_counter(self, name):
+        return "\\tag{" + str(self.new_counter(name, "eq")) + "}"
+
+    def begin_counter(self, what, name):
+        return (
+            '<a id="c:' + name + '"></a>\\begin{' + what + "}" + self.tag_counter(name)
+        )
 
     def fig_counter(self, name):
         return self.new_counter(name, "fig")
@@ -474,8 +490,11 @@ def create_environment(
     if macros:
         counters = Counters(macros)
         env.filters["ref"] = counters.show_counter_value
+        env.filters["eqref"] = counters.show_eqref_value
         env.filters["c_"] = counters.new_counter
         env.filters["c_eq"] = counters.eq_counter
+        env.filters["c_tag"] = counters.tag_counter
+        env.filters["c_begin"] = counters.begin_counter
         env.filters["c_fig"] = counters.fig_counter
         env.filters["c_tbl"] = counters.tbl_counter
         env.filters["c_ex"] = counters.ex_counter
@@ -751,12 +770,12 @@ def format_heading(text, level, counts, heading_format):
     counts[level] += 1
     for i in range(level + 1, 7):
         counts[i] = 0
-    for i in range(6, 0, -1):
+    for i in range(6, 0, -1):  # TODO: What is the purpose of this?
         if counts[i] != 0:
             break
     values = {"text": text}
     # noinspection PyUnboundLocalVariable
-    for i in range(1, i + 1):
+    for i in range(1, i + 1):  # See usage of i here!
         values["h" + str(i)] = counts[i]
     try:
         formatted = heading_format[level].format(**values)
