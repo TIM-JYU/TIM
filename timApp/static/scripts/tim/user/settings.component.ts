@@ -95,6 +95,7 @@ interface StyleDocumentInfo {
 
 type StyleDocumentInfoAll = Required<StyleDocumentInfo>;
 
+// TODO: Figure out why this requires manual cdr.detectChanges() in many places
 @Component({
     selector: "tim-settings",
     template: `
