@@ -115,8 +115,6 @@ def migrate_themes_to_styles(dry_run: bool, skip_warnings: bool) -> None:
                     )
                     db.session.rollback()
                     return
-                ok = False
-                continue
 
             prefs_json["style_doc_ids"] = style_list
             u.prefs = json.dumps(prefs_json, cls=TimJsonEncoder)
