@@ -141,6 +141,7 @@ const styleToHtml: Record<string, string> = {
     textAlign: "text-align",
     verticalAlign: "vertical-align",
     visibility: "visibility",
+    whiteSpace: "white-space",
     width: "width",
 };
 
@@ -300,6 +301,7 @@ export const DataViewSettingsType = t.type({
     // For example, max-content works for both Chrome and Firefox to do fullwidth
     tableWidth: withDefault(t.string, "max-content"),
     fixedColumns: withDefault(t.number, 0),
+    reportSlowLoad: withDefault(t.boolean, true),
 });
 
 export interface DataViewSettings
@@ -459,6 +461,7 @@ const columnCellStyles: Set<string> = new Set<string>([
     "fontFamily",
     "color",
     "fontWeight",
+    "whiteSpace",
 ]);
 
 enum Direction {
@@ -562,7 +565,9 @@ export enum ClearSort {
                                    [tableMaxHeight]="maxRows"
                                    [tableMaxWidth]="dataView.tableWidth"
                                    [fixedColumnCount]="dataView.fixedColumns"
-                                   [headerStyle]="headersStyle" #dataViewComponent>
+                                   [headerStyle]="headersStyle"
+                                   [reportSlowLoad]="dataView.reportSlowLoad"
+                                   #dataViewComponent>
                         <ng-container *ngTemplateOutlet="inlineEditorTemplate"></ng-container>
                     </tim-data-view>
                 </ng-container>
@@ -573,7 +578,7 @@ export enum ClearSort {
                            class="timTableTable"
                            [ngStyle]="stylingForTable(data.table)" [id]="data.table.id">
                         <col class="nrcolumn" *ngIf="data.nrColumn"/>
-                        <col *ngIf="data.cbColumn"/>
+                        <col class="cbColumn" *ngIf="data.cbColumn"/>
                         <col *ngFor="let c of columns; let i = index" [span]="c.span" [id]="c.id"
                              [ngStyle]="stylingForColumn(c, i)"/>
                         <thead>
@@ -782,7 +787,7 @@ export class TimTableComponent
     @ViewChild("buttonOpenBigEditor")
     private buttonOpenBigEditor!: ElementRef<HTMLButtonElement>;
     @ViewChild("dataViewComponent") dataViewComponent?: DataViewComponent;
-    @ViewChildren("editInput") private editInputs!: QueryList<
+    @ViewChildren("editInput") private editInputs?: QueryList<
         ElementRef<HTMLInputElement>
     >;
     dataView?: DataViewSettings | null;
@@ -807,7 +812,7 @@ export class TimTableComponent
     addRowButtonText: string = "";
     editorPosition: string = "";
     private pluginMeta: PluginMeta;
-    private inputSub!: Subscription;
+    private inputSub?: Subscription;
     private customDomUpdateInProgress?: boolean;
     private rowStyleCache = new Map<number, Record<string, string>>();
     private shouldSelectInputText = false;
@@ -970,7 +975,10 @@ export class TimTableComponent
             }
 
             await $timeout(0);
-            this.viewctrl.addTable(this, this.getPar());
+            const par = this.getPar();
+            if (par) {
+                this.viewctrl.addTable(this, par);
+            }
         }
         this.currentHiddenRows = new Set(this.data.hiddenRows);
         onClick("body", ($this, e) => {
@@ -986,7 +994,7 @@ export class TimTableComponent
     }
 
     ngAfterViewInit() {
-        this.inputSub = this.editInputs.changes.subscribe(
+        this.inputSub = this.editInputs?.changes.subscribe(
             (val: QueryList<ElementRef<HTMLInputElement>>) => {
                 if (val.length > 0) {
                     this.updateSmallEditorPosition();
@@ -1040,7 +1048,7 @@ export class TimTableComponent
      * Removes listener and cleans up
      */
     ngOnDestroy() {
-        this.inputSub.unsubscribe();
+        this.inputSub?.unsubscribe();
         this.removeEventListeners();
         // document.removeEventListener("click", this.onClick);
     }
@@ -3594,7 +3602,7 @@ export class TimTableComponent
      * Returns the ID of the paragraph related to the current table instance.
      */
     private getOwnParId() {
-        return this.getPar().originalPar.id;
+        return this.getPar()?.originalPar.id;
     }
 
     /**
@@ -4443,7 +4451,11 @@ export class TimTableComponent
     }
 
     public getPar() {
-        return createParContext(this.element.parents(".par")[0]);
+        const res = this.element.parents(".par")[0];
+        if (!res) {
+            return undefined;
+        }
+        return createParContext(res);
     }
 
     resetField() {
@@ -4586,6 +4598,14 @@ export class TimTableComponent
 
     setRowFilter(columnIndex: number, value: string): void {
         this.filters[columnIndex] = value;
+    }
+
+    clearChecked() {
+        this.cbAllFilter = false;
+        for (let i = 0; i < this.cbs.length; i++) {
+            this.cbs[i] = false;
+        }
+        this.c();
     }
 
     setRowChecked(rowIndex: number, checked: boolean): void {

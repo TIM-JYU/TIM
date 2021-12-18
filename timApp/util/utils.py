@@ -16,6 +16,7 @@ from types import TracebackType, FrameType
 from typing import Optional, Union, Any, Sequence, Callable
 
 import dateutil.parser
+import jinja2
 import pytz
 import requests
 from lxml.html import HtmlElement
@@ -274,6 +275,10 @@ def get_boolean(s: Union[bool, int, str], default: bool) -> bool:
     return True
 
 
+def get_static_tim_doc_path() -> Path:
+    return Path("static/tim_docs")
+
+
 def static_tim_doc(path: str) -> str:
     return f"static/tim_docs/{path}"
 
@@ -461,3 +466,14 @@ def collect_errors_from_hosts(futures: list[Future], hosts: list[str]) -> list[s
     for f, h in zip(futures, hosts):
         wait_response_and_collect_error(f, h, errors)
     return errors
+
+
+def render_raw_template_string(template: str, **context: Any) -> str:
+    """
+    Renders a Jinja2 template outside Flask's context. Skips any injected variables.
+
+    :param template: Template to render.
+    :param context: Specific values to inject.
+    :return: Rendered template.
+    """
+    return jinja2.Template(template).render(**context)

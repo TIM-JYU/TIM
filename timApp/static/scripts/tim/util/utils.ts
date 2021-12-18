@@ -118,7 +118,7 @@ export function isInViewport(el: Element) {
  * Scroll window to the given element.
  * @param element - Element to scroll to.
  */
-export function scrollToElement(element: Element) {
+export function scrollToElement(element?: Element) {
     if (!!element && element.scrollIntoView) {
         element.scrollIntoView();
     }

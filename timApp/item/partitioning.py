@@ -10,6 +10,7 @@ from lxml import html
 
 from timApp.document.docinfo import DocInfo
 from timApp.document.prepared_par import PreparedPar
+from timApp.document.randutils import hashfunc
 from timApp.document.viewcontext import default_view_ctx
 from timApp.util.utils import Range
 
@@ -128,7 +129,7 @@ def get_doc_version_hash(doc_info: DocInfo) -> str:
     version = str(doc_info.document.get_version())
     for preamble in doc_info.get_preamble_docs():
         version += str(preamble.document.get_version())
-    return str(hash(version))
+    return hashfunc(version)
 
 
 def load_index(file_path: Path) -> Optional[dict]:

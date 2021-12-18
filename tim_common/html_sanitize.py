@@ -107,6 +107,7 @@ TIM_SAFE_TAGS = [
     "manage-read-receipt",
     "tim-archive-header",
     "tim-archive-footer",
+    "tim-style-preview",
 ]
 
 TIM_SAFE_ATTRS_MAP = {

@@ -1,18 +1,17 @@
 import re
 import sre_constants
+from functools import cached_property
+from re import Pattern
 from typing import Optional
 
 import attr
 
+from timApp.document.docentry import DocEntry
 from timApp.item.item import Item
-from timApp.user.settings.theme import Theme
-from timApp.user.settings.theme_css import generate_theme, get_default_scss_gen_dir
-from timApp.util.utils import cached_property
 
 
 @attr.s(auto_attribs=True)
 class Preferences:
-    css_files: dict[str, bool] = attr.Factory(dict)
     custom_css: str = ""
     use_document_word_list: bool = False
     disable_menu_hover: bool = False
@@ -21,27 +20,34 @@ class Preferences:
     word_list: str = ""
     email_exclude: str = ""
     language: Optional[str] = None
+    style_doc_ids: list[int] = attr.Factory(list)
     last_answer_fetch: dict[str, str] = attr.Factory(dict)
-    css_combined: str = attr.ib(init=False)
     auto_mark_all_read: bool = False
     bookmarks: Optional[list[dict[str, list[dict[str, str]]]]] = None
     max_uncollapsed_toc_items: Optional[int] = None
 
     @staticmethod
     def from_json(j: dict) -> "Preferences":
-        j.pop("css_combined", None)
+        j.pop("style_path", None)
         return Preferences(**j)
 
-    def __attrs_post_init__(self):
-        self.css_combined = generate_theme(self.themes, get_default_scss_gen_dir())
-
-    @property
-    def themes(self) -> list[Theme]:
-        css_file_list = [css for css, v in self.css_files.items() if v]
-        return [Theme(f) for f in css_file_list]
+    def theme_docs(self) -> list[DocEntry]:
+        if not self.style_doc_ids:
+            return []
+        ordering = {d: i for i, d in enumerate(self.style_doc_ids)}
+        return sorted(
+            DocEntry.query.filter(DocEntry.id.in_(self.style_doc_ids)).all(),
+            key=lambda d: ordering[d.id],
+        )
 
     @cached_property
-    def excluded_email_paths(self):
+    def style_path(self) -> str:
+        from timApp.user.settings.styles import generate_style
+
+        return generate_style(self.theme_docs())
+
+    @cached_property
+    def excluded_email_paths(self) -> list[Pattern[str]]:
         if not isinstance(self.email_exclude, str):
             return []
         try:
@@ -49,8 +55,11 @@ class Preferences:
         except sre_constants.error:
             return []
 
-    def is_item_excluded_from_emails(self, d: Item):
+    def is_item_excluded_from_emails(self, d: Item) -> bool:
         return any(pat.search(d.path) for pat in self.excluded_email_paths)
 
-    def to_json(self):
-        return self.__dict__
+    def to_json(self, with_style: bool = False) -> dict:
+        result = self.__dict__
+        if with_style:
+            result |= {"style_path": self.style_path}
+        return result

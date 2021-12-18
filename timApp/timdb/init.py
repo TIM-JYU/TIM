@@ -13,6 +13,8 @@ from sqlalchemy_utils import database_exists, create_database
 
 from timApp.auth.accesstype import AccessType
 from timApp.auth.auth_models import AccessTypeModel
+from timApp.document.docentry import DocEntry
+from timApp.document.docinfo import DocInfo
 from timApp.document.documents import import_document_from_file
 from timApp.document.specialnames import (
     TEMPLATE_FOLDER_NAME,
@@ -28,13 +30,18 @@ from timApp.tim_app import app
 from timApp.timdb.dbaccess import get_files_path
 from timApp.timdb.sqa import db, get_tim_main_engine
 from timApp.timdb.timdb import TimDb
+from timApp.user.settings.style_utils import (
+    OFFICIAL_STYLES_PATH,
+    USER_STYLES_PATH,
+    STYLES_FOLDER_PREFIX,
+)
 from timApp.user.special_group_names import ADMIN_GROUPNAME
 from timApp.user.user import User, UserInfo
 from timApp.user.usergroup import UserGroup, ORG_GROUP_SUFFIX
 from timApp.user.users import create_special_usergroups
 from timApp.user.userutils import grant_default_access
 from timApp.util.logger import log_info, enable_loggers, log_error
-from timApp.util.utils import static_tim_doc
+from timApp.util.utils import static_tim_doc, get_static_tim_doc_path
 
 
 def check_db_version(_, context: MigrationContext):
@@ -173,12 +180,64 @@ def initialize_database(create_docs: bool = True) -> None:
                 [UserGroup.get_logged_in_group()], AccessType.view
             )
 
+            create_style_docs()
+
         sess.commit()
         log_info("Database initialization done.")
 
     if not app.config["TESTING"]:
         exit_if_not_db_up_to_date()
     timdb.close()
+
+
+def create_style_docs() -> tuple[list[Folder], list[DocInfo]]:
+    admin_group = UserGroup.get_by_name(ADMIN_GROUPNAME)
+    logged_in_group = UserGroup.get_logged_in_group()
+
+    folders = []
+    docs = []
+
+    f1 = Folder.find_by_path(OFFICIAL_STYLES_PATH)
+    if not f1:
+        f1 = Folder.create(OFFICIAL_STYLES_PATH, owner_groups=[admin_group])
+        f1.block.add_rights([logged_in_group], AccessType.view)
+    folders.append(f1)
+
+    f2 = Folder.find_by_path(USER_STYLES_PATH)
+    if not f2:
+        f2 = Folder.create(USER_STYLES_PATH, owner_groups=[admin_group])
+        f2.block.add_rights([logged_in_group], AccessType.view)
+    folders.append(f2)
+
+    pd = DocEntry.find_by_path(f"{STYLES_FOLDER_PREFIX}/templates/preambles/preamble")
+    if not pd:
+        pd = import_document_from_file(
+            static_tim_doc("initial/style_preamble.md"),
+            f"{STYLES_FOLDER_PREFIX}/templates/preambles/preamble",
+            admin_group,
+            title="preamble",
+        )
+    docs.append(pd)
+
+    style_docs_path = get_static_tim_doc_path() / "style_docs"
+
+    if not style_docs_path.exists():
+        return folders, docs
+
+    for doc in style_docs_path.glob("*.md"):
+        name = doc.name[:-3]
+        d = DocEntry.find_by_path(f"{OFFICIAL_STYLES_PATH}/{name}")
+        if not d:
+            d = import_document_from_file(
+                doc.as_posix(),
+                f"{OFFICIAL_STYLES_PATH}/{name}",
+                admin_group,
+                title=name,
+            )
+            d.block.add_rights([logged_in_group], AccessType.view)
+        docs.append(d)
+
+    return folders, docs
 
 
 def exit_if_not_db_up_to_date():

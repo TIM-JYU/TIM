@@ -1,10 +1,9 @@
 div.alert {
-  display: flex;
+  display: grid;
+  grid-template-columns: min-content auto min-content;
+  grid-template-rows: auto;
   align-items: baseline;
-}
-
-div.content {
-  flex-grow: 1;
+  column-gap: 0.5em;
 }
 
 i.glyphicon-remove {

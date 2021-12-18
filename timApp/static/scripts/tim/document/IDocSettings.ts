@@ -35,6 +35,7 @@ export interface IDocSettings {
     cache?: boolean;
     peer_review?: boolean;
     max_uncollapsed_toc_items?: number;
+    description?: string;
 }
 
 export interface ISlideDocSettings extends IDocSettings {

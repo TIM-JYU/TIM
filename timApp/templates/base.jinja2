@@ -91,7 +91,7 @@
         </script>
         {{ angularscripts|safe }}
         {% if not override_theme %}
-            {{ m.scss(config.SASS_GEN_PATH / prefs.css_combined) }}
+            <link rel="stylesheet" data-style-origin="user-prefs-style" href="/{{ prefs.style_path }}">
         {% endif %}
 
         <script type="text/x-mathjax-config">
@@ -101,7 +101,7 @@
         </script>
         <title>{% block title %}{% endblock %} - TIM</title>
     {% endblock %}
-    <style type="text/css">
+    <style data-style-origin="user-prefs-custom">
         {{ prefs.custom_css }}
     </style>
 </head>
@@ -150,11 +150,16 @@
                     </div>
                 {% endfor %}
                 <tim-message-view></tim-message-view>
-                {% with messages = get_flashed_messages() %}
+                {% with messages = get_flashed_messages(with_categories=True) %}
                     {% if messages %}
-                        {% for message in messages %}
+                        {% for category, message in messages %}
                             <div class="alert alert-info">
-                                <i class="glyphicon glyphicon-info-sign"></i> {{ message }}
+                                <i class="glyphicon glyphicon-info-sign"></i>
+                                {% if category == 'raw' %}
+                                    {{ message|safe }}
+                                {% else %}
+                                    {{ message }}
+                                {% endif %}
                             </div>
                         {% endfor %}
                     {% endif %}

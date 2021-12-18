@@ -24,7 +24,7 @@ from timApp.plugin.pluginexception import PluginException
 from timApp.sisu.sisu import IncorrectSettings, SisuError
 from timApp.timdb.exceptions import ItemAlreadyExistsException
 from timApp.timdb.sqa import db
-from timApp.user.settings.theme_css import get_default_scss_gen_dir
+from timApp.user.settings.style_utils import get_default_scss_gen_dir
 from timApp.user.userutils import NoSuchUserException, DeletedUserException
 from timApp.util.flask.requesthelper import (
     JSONException,

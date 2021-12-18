@@ -88,7 +88,7 @@ export interface ITimComponent {
     formBehavior: () => FormModeOption;
     isUnSaved: (userChange?: boolean) => boolean;
     save: () => Promise<{saved: boolean; message: string | undefined}>;
-    getPar: () => ParContext;
+    getPar: () => ParContext | undefined;
     setPluginWords?: (words: string[]) => void;
     setForceAnswerSave?: (force: boolean) => void;
     resetField: () => string | undefined;

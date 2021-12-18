@@ -1,4 +1,6 @@
 import base64
+from typing import Optional
+
 import mmh3
 import random
 import string
@@ -8,7 +10,7 @@ n_alphanum = len(alphanum)
 empty_hash = mmh3.hash("{}")
 
 
-def hashfunc(text, attrs=None):
+def hashfunc(text: str, attrs: Optional[dict] = None) -> str:
     text_hash = mmh3.hash(text)
     attr_hash = empty_hash if not attrs else mmh3.hash(str(attrs))
     full_hash = text_hash ^ attr_hash

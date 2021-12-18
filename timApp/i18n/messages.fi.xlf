@@ -3564,30 +3564,6 @@
           <context context-type="linenumber">91</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="4981228547528444980" datatype="html">
-        <source>Available themes:</source>
-        <target state="translated">Käytettävissä olevat teemat:</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">92</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="2240974896382681686" datatype="html">
-        <source>There are no available themes.</source>
-        <target state="translated">Ei käytettävissä olevia teemoja.</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">93</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="8282713136446080646" datatype="html">
-        <source>Custom CSS:</source>
-        <target state="translated">Oma CSS:</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">105</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="870309451926918163" datatype="html">
         <source>Add Print Settings</source>
         <target state="translated">Lisää tulostusasetukset</target>
@@ -3740,14 +3716,6 @@
           <context context-type="linenumber">177</context>
         </context-group>
       </trans-unit>
-      <trans-unit id="8700121026680200191" datatype="html">
-        <source>Clear</source>
-        <target state="translated">Tyhjennä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">179</context>
-        </context-group>
-      </trans-unit>
       <trans-unit id="5779525952863625402" datatype="html">
         <source>Opening settings</source>
         <target state="translated">Avausasetukset</target>
@@ -3786,22 +3754,6 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
           <context context-type="linenumber">212</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="138410359068270968" datatype="html">
-        <source>Automatically mark document as read when opening it for the first time</source>
-        <target state="translated">Merkitse dokumentit luetuksi ensimmäisen avauksen yhteydessä</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">216</context>
-        </context-group>
-      </trans-unit>
-      <trans-unit id="4961269296602793257" datatype="html">
-        <source>Clear local settings storage</source>
-        <target state="translated">Tyhjennä paikallinen asetusvarasto</target>
-        <context-group purpose="location">
-          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
-          <context context-type="linenumber">219</context>
         </context-group>
       </trans-unit>
       <trans-unit id="6834921107917590608" datatype="html">
@@ -4174,6 +4126,378 @@
         <context-group purpose="location">
           <context context-type="sourcefile">static/scripts/tim/footer.component.ts</context>
           <context context-type="linenumber">45</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2481381240140660033" datatype="html">
+        <source>Preview style</source>
+        <target state="translated">Esikatsele tyyli</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
+          <context context-type="linenumber">23</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2310889859686019497" datatype="html">
+        <source>Refresh preview</source>
+        <target state="translated">Virkistä esikatselu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
+          <context context-type="linenumber">24</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5266971436861475365" datatype="html">
+        <source>Stop preview</source>
+        <target state="translated">Lopeta esikatselu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8326853458642984838" datatype="html">
+        <source>This component only works for documents</source>
+        <target state="translated">Tämä komponentti toimii vain dokumenteissa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
+          <context context-type="linenumber">44</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8818816501730146130" datatype="html">
+        <source>Only styles in styles folder can be previewed</source>
+        <target state="translated">Vain styles-kansiossa olevat tyylit ovat esikatseltavissa</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
+          <context context-type="linenumber">51</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3259167026260282906" datatype="html">
+        <source>Move the document under styles folder to see the preview</source>
+        <target state="translated">Siirrä dokumentti styles-kansion alle nähdäksesi esikatselun</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
+          <context context-type="linenumber">52</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1399830849016085959" datatype="html">
+        <source>The style could not be compiled</source>
+        <target state="translated">Tyyliä ei voitu kääntää</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
+          <context context-type="linenumber">84</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="85180954696096344" datatype="html">
+        <source>The following error occurred:</source>
+        <target state="translated">Tapahtui seuraava virhe:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/ui/style-preview.component.ts</context>
+          <context context-type="linenumber">85</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="657310079267053935" datatype="html">
+        <source>Style</source>
+        <target state="translated">Tyyli</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">79</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4902817035128594900" datatype="html">
+        <source>Description</source>
+        <target state="translated">Kuvaus</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">80</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8650499415827640724" datatype="html">
+        <source>Type</source>
+        <target state="translated">Tyyppi</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">81</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1680943533060739363" datatype="html">
+        <source>Selected styles</source>
+        <target state="translated">Valitut tyylit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">115</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7016510469271315963" datatype="html">
+        <source> Styles that you currently use are listed here. You can review and remove styles that you use. </source>
+        <target state="translated"> Käyttämäsi tyylit ovat lueteltu alla. Voit tarkastella ja poistaa käyttämiäsi tyylejä. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">117,120</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2124612323077640701" datatype="html">
+        <source> You can also reorder styles by dragging them in the list below. Reordering the styles will change their priority which might affect the final generated theme for TIM. </source>
+        <target state="translated"> Voit myös järjestää tyylejä raahaamalla ne alla olevassa luettelossa. Tyylien uudelleenjärjestäminen muuttaa niiden tärkeysjärjestystä, mikä vaikuttaa lopulliseen TIM:n ulkoasuun.  </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">121,124</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5869016768847683779" datatype="html">
+        <source>Loading active styles, please wait</source>
+        <target state="translated">Ladataan käytössä olevat tyylit, odota</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">128</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5380572116300325278" datatype="html">
+        <source> You have no styles selected. You can add styles via the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Available styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab. </source>
+        <target state="translated"> Et ole valinnut yhtään tyyliä. Voit lisätä tyylit <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(1)&quot;>"/>Saatavilla olevat tyylit<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>-välilehdessä. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">132,134</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8852490424970169127" datatype="html">
+        <source>Official</source>
+        <target state="translated">Virallinen</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">149</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6381490568322624964" datatype="html">
+        <source>Deleted</source>
+        <target state="translated">Poistettu</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">150</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="414678636665913931" datatype="html">
+        <source>Delete style</source>
+        <target state="translated">Poista tyyli</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">155</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="178441188618264876" datatype="html">
+        <source>Available styles</source>
+        <target state="translated">Saatavilla olevat tyylit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">163</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3945744289027552408" datatype="html">
+        <source> The table below lists all styles available on TIM. You can preview and add new styles using the table below. </source>
+        <target state="translated"> Kaikki TIM:ssa saatavilla olevat tyylit ovat lueteltu alla olevassa taulukossa. Voit esikatsella ja lisätä uusia tyylejä alla olevan taulukon avulla. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">165,168</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3197188819017309601" datatype="html">
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Official styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are maintained and supported by TIM maintainers. </source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Viralliset tyylit<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> ovat TIM-ylläpitäjien hallinnoimia </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">170,172</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4598159830582790095" datatype="html">
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>User-made styles<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> are made and maintained by TIM's users. For more information, see <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>.</source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Käyttäjätyylit<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> ovat TIM-käyttäjien luomat. Katso <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>tyylien laadintaopas<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> lisätietoja varten.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">173</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5633802735834461146" datatype="html">
+        <source>To remove styles or edit their ordering, use the <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;>"/>Selected styles<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> tab.</source>
+        <target state="translated">Käytä <x id="START_LINK" ctype="x-a" equiv-text="&lt;a (click)=&quot;changeStyleTab(0)&quot;>"/>Valitut tyylit<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>-välilehteä poistaaksesi tyylejä tai muuttaaksesi niiden järjestystä.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">175,176</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1623742637107569850" datatype="html">
+        <source>Loading available styles, please wait</source>
+        <target state="translated">Ladataan saatavilla olevia tyylejä, odota</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">179</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3022574657658302514" datatype="html">
+        <source> No styles available. </source>
+        <target state="translated"> Ei saatavilla olevia tyylejä. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">183,185</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8466254912507014180" datatype="html">
+        <source>Show user-made styles</source>
+        <target state="translated">Näytä käyttäjätyylit</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">192</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="525875498967023195" datatype="html">
+        <source> Add to Selected styles </source>
+        <target state="translated"> Lisää Valittuihin tyyleihin </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">197,199</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4230722003940734690" datatype="html">
+        <source> Clear preview </source>
+        <target state="translated"> Tyhjennä esikatselu </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">200,202</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6720823601286643090" datatype="html">
+        <source>Custom CSS</source>
+        <target state="translated">Mukautettu CSS</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">207</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">218</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9049192107970830125" datatype="html">
+        <source> You can define your personal custom styles using CSS. The styles are applied to all TIM pages and all devices you use. </source>
+        <target state="translated"> Voit määritellä omat mukautetut tyylisi CSS:n avulla. Tyylejä sovelletaan kaikkiin TIM-sivuihin ja kaikkiin käyttämiisi laitteisiin. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">209,212</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4387425307250994986" datatype="html">
+        <source> For extended styling using SCSS, refer to <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>style authoring guide<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/>. </source>
+        <target state="translated"> Katso <x id="START_LINK" ctype="x-a" equiv-text="&lt;a href=&quot;/view/tim/ohjeita/styles&quot;>"/>tyylien laadintaopas<x id="CLOSE_LINK" ctype="x-a" equiv-text="&lt;/a>"/> SCSS:n avulla tehtävää laajennettua muotoilua varten. </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">213,215</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7981859935878968709" datatype="html">
+        <source>Compiling style, please wait</source>
+        <target state="translated">Tyyli käännetään, odota</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">228</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1238583382012712938" datatype="html">
+        <source> Clear </source>
+        <target state="translated"> Tyhjennä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">298,300</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7935817138132972193" datatype="html">
+        <source>Automatically mark document as read when opening it for the first time </source>
+        <target state="translated">Merkitse dokumentit luetuksi ensimmäisen avauksen yhteydessä </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">337,338</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2789223311546332195" datatype="html">
+        <source>Clear local settings storage </source>
+        <target state="translated">Tyhjennä paikallinen asetusvarasto </target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">341,342</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1863815165411662122" datatype="html">
+        <source>Could not preview the style</source>
+        <target state="translated">Tyyliä ei voitu esikatsella</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">638</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8261911902538602763" datatype="html">
+        <source>There was an error loading the style. Please report this to the style's maintainer.</source>
+        <target state="translated">Tyylin lataamisessa tapahtui virhe. Ilmoita virheestä tyylin ylläpitäjälle.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">639</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="537234808337595283" datatype="html">
+        <source>This style document was deleted</source>
+        <target state="translated">Tyylidokumentti poistettiin</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">735</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6349061979723436398" datatype="html">
+        <source>Deleted style (id: <x id="PH" equiv-text="missingStyleDoc"/>)</source>
+        <target state="translated">Poistettu tyyli (id: <x id="PH" equiv-text="missingStyleDoc"/>)</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">737</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6951970569231900824" datatype="html">
+        <source>Deleted style</source>
+        <target state="translated">Poistettu tyyli</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">738</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2555678606396740558" datatype="html">
+        <source>Private style</source>
+        <target state="translated">Yksityinen tyyli</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">747</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8048992932975974823" datatype="html">
+        <source>This style is private or has no description</source>
+        <target state="translated">Tyyli on yksityinen tai sillä ei ole kuvausta</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">750</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7647637024834266730" datatype="html">
+        <source>Could not load selected styles</source>
+        <target state="translated">Valittuja tyylejä ei voitu ladata</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">764</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8810487195258066411" datatype="html">
+        <source>Could not load available styles</source>
+        <target state="translated">Saatavilla olevia tyylejä ei voitu ladata</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">803</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2068094190303764265" datatype="html">
+        <source><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Note:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Your current styles will be temporarily disabled while previewing.</source>
+        <target state="translated"><x id="START_TAG_STRONG" ctype="x-strong" equiv-text="&lt;strong>"/>Huom:<x id="CLOSE_TAG_STRONG" ctype="x-strong" equiv-text="&lt;/strong>"/> Nykyiset valitut tyylisi kytketään pois päältä tyylien esikatselun ajaksi.</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">static/scripts/tim/user/settings.component.ts</context>
+          <context context-type="linenumber">177</context>
         </context-group>
       </trans-unit>
     </body>

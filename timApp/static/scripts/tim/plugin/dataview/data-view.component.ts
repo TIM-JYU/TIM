@@ -200,7 +200,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
                 <table [ngStyle]="tableStyle" #summaryTable>
                     <thead>
                     <tr>
-                        <td [style.width]="idHeaderCellWidth"
+                        <td
                             class="nrcolumn totalnr"
                             title="Click to show all"
                             (click)="clearFilters()"
@@ -215,7 +215,7 @@ const SLOW_SIZE_MEASURE_THRESHOLD = 0;
                     </thead>
                     <tbody>
                     <tr>
-                        <td [style.width]="idHeaderCellWidth" class="nrcolumn totalnr">
+                        <td class="nrcolumn totalnr">
                             <ng-container *ngIf="totalRows != visibleRows">{{visibleRows}}</ng-container>
                         </td>
                         <td class="cbColumn" *ngIf="!this.modelProvider.isPreview()">
@@ -264,13 +264,13 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     @Input() columnFilters: string[] = [];
     @Input() selectedIndices = new Set<number>();
     @Input() noWrap = false;
+    @Input() reportSlowLoad = true;
     @Output() selectedIndicesChange = new EventEmitter<Set<number>>();
     showSlowLoadMessage = false;
     sizeComputationTime = 0;
     isLoading = true;
     totalRows: number = 0;
     visibleRows: number = 0;
-    idHeaderCellWidth: string = "";
     cbAllVisibleRows = false;
     @Input() cbFilter = false;
     isVirtual: boolean = false;
@@ -859,11 +859,6 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         await showCopyWidthsDialog({columnWidths: this.idealColWidths});
     }
 
-    hideSlowMessageDialog() {
-        this.showSlowLoadMessage = false;
-        this.cdr.detectChanges();
-    }
-
     private initTableCaches() {
         this.dataTableCache = new TableDOMCache(
             this.mainDataBody.nativeElement
@@ -1098,14 +1093,15 @@ export class DataViewComponent implements AfterViewInit, OnInit {
     // region Virtual scrolling
 
     private updateSummaryCellSizes(): void {
-        let width = "5em";
+        let width = "auto";
         if (this.rowAxis.visibleItems.length != 0) {
             width = !this.modelProvider.isPreview()
                 ? px(
-                      this.idTableCache?.getCell(
-                          this.rowAxis.visibleItems[0],
-                          0
-                      )?.offsetWidth
+                      Math.ceil(
+                          this.idTableCache
+                              ?.getCell(this.rowAxis.visibleItems[0], 0)
+                              ?.getBoundingClientRect().width
+                      )
                   )
                 : "";
         }
@@ -1486,7 +1482,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         }
         return {
             horizontal: empty(this.colAxis.visibleCount),
-            vertical: empty(this.rowAxis.visibleCount),
+            // In non-vscroll mode all items are always in viewport, but they can be hidden
+            vertical: empty(
+                this.vScroll.enabled
+                    ? this.rowAxis.visibleCount
+                    : this.rowAxis.allCount
+            ),
         };
     }
 
@@ -1536,7 +1537,10 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             yield;
             this.updateHeaderCellSizes();
         }
-        if (this.sizeComputationTime > SLOW_SIZE_MEASURE_THRESHOLD) {
+        if (
+            this.reportSlowLoad &&
+            this.sizeComputationTime > SLOW_SIZE_MEASURE_THRESHOLD
+        ) {
             this.showSlowMessageDialog();
         }
     }
@@ -1608,12 +1612,12 @@ export class DataViewComponent implements AfterViewInit, OnInit {
             if (!tbody || !cache) {
                 return;
             }
+            const itemMap = this.vScroll.enabled
+                ? this.rowAxis.visibleItems
+                : this.rowAxis.itemOrder;
             cache.setSize(vertical.count, colCount);
             for (let rowNumber = 0; rowNumber < vertical.count; rowNumber++) {
-                const rowIndex =
-                    this.rowAxis.visibleItems[
-                        vertical.startOrdinal + rowNumber
-                    ];
+                const rowIndex = itemMap[vertical.startOrdinal + rowNumber];
                 this.updateRow(cache.getRow(rowNumber), rowIndex);
                 for (
                     let columnNumber = 0;
@@ -1660,7 +1664,9 @@ export class DataViewComponent implements AfterViewInit, OnInit {
         this.fixedColFilterTableCache?.setSize(1, this.fixedColumnCount);
         const colIndices = this.updateColumnHeaders();
         for (const [cell, columnIndex] of colIndices) {
-            this.idealColHeaderWidth[columnIndex] = cell.offsetWidth;
+            this.idealColHeaderWidth[columnIndex] = Math.ceil(
+                cell.getBoundingClientRect().width
+            );
         }
     }
 
@@ -1840,6 +1846,11 @@ export class DataViewComponent implements AfterViewInit, OnInit {
 
     private showSlowMessageDialog() {
         this.showSlowLoadMessage = true;
+        this.cdr.detectChanges();
+    }
+
+    hideSlowMessageDialog() {
+        this.showSlowLoadMessage = false;
         this.cdr.detectChanges();
     }
 
