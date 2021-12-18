@@ -88,6 +88,7 @@ from timApp.upload.upload import upload
 from timApp.user.contacts import contacts
 from timApp.user.groups import groups
 from timApp.user.settings.settings import settings_page
+from timApp.user.settings.styles import styles
 from timApp.user.usergroup import UserGroup
 from timApp.user.verification.routes import verify
 from timApp.util.flask.cache import cache
@@ -137,6 +138,7 @@ blueprints = [
     settings_page,
     sisu,
     tags_blueprint,
+    styles,
     tr_bp,
     upload,
     velps,
@@ -183,13 +185,6 @@ def shim_jinja_undefined_contains(cls: Any, k: Any) -> bool:
 # https://github.com/pallets/jinja/pull/1455
 # TODO: Remove once Jinja is updated to 3.0.2
 Undefined.__contains__ = classmethod(shim_jinja_undefined_contains)
-
-
-@app.context_processor
-def inject_custom_css() -> dict:
-    """Injects the user prefs variable to all templates."""
-    prefs = get_current_user_object().get_prefs()
-    return dict(prefs=prefs)
 
 
 @app.context_processor
@@ -264,6 +259,7 @@ def inject_user() -> dict:
         lecture_info=get_current_lecture_info(),
         other_users=get_other_users_as_list(),
         locale=get_locale(),
+        prefs=get_current_user_object().get_prefs(),
     )
     if logged_in() and app.config["BOOKMARKS_ENABLED"]:
         r["bookmarks"] = get_current_user_object().bookmarks.as_dict()

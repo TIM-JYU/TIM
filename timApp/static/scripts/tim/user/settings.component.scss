@@ -131,3 +131,116 @@ div.small {
     margin-bottom: 0;
   }
 }
+
+tabset ::ng-deep .tab-content {
+  border-bottom-width: 0;
+}
+
+tim-table.style-listing ::ng-deep {
+
+  .timTableRunDiv {
+    margin: initial;
+    padding: 0;
+  }
+
+  .timTableContentDiv, .timTableTable {
+    margin-bottom: 0;
+    margin-top: 0;
+  }
+
+  .timTableTable {
+    width: 100%;
+
+    & > col.cbColumn {
+      width: 16px;
+    }
+  }
+}
+
+.style-loader {
+  display: flex;
+
+  & > * {
+    margin-left: 0.5em;
+    margin-right: 0.5em;
+  }
+}
+
+.info-box {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.current-styles {
+  display: flex;
+  flex-direction: column;
+
+  overflow-y: auto;
+  max-height: 800px;
+
+  & .dndDraggingSource {
+    display: none;
+  }
+
+  & .dndDragging {
+    border: 1px solid green;
+  }
+
+  & > .drag-placeholder {
+    min-height: 50px;
+    background-color: #efefef;
+  }
+
+  & > div {
+    padding: 0.25em 0.5em;
+    display: flex;
+    align-items: center;
+    border: 0 solid var(--basic-border-color);
+    border-top-width: 1px;
+
+    &:last-child {
+      border-bottom-width: 1px;
+    }
+
+    .style-actions {
+      display: flex;
+    }
+
+    & .sort-handle {
+      font-size: 20px;
+      margin-right: 0.5em;
+
+      &.disabled {
+        color: #ddd;
+      }
+    }
+
+    .style-info {
+      flex-grow: 1;
+
+      h4 {
+        font-size: 1em;
+        margin-bottom: 0.25em;
+        margin-top: 0.1em;
+
+        span {
+          margin-left: 0.5em;
+        }
+      }
+
+      .style-description {
+        font-size: 0.8em;
+        color: #666666;
+      }
+
+      p {
+        margin-bottom: 0.1em;
+      }
+    }
+  }
+}
+
+textarea#custom_css {
+  resize: vertical;
+  min-height: 300px;
+}

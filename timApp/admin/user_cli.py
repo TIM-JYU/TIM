@@ -1,5 +1,6 @@
 import csv
 import itertools
+import json
 import smtplib
 import time
 from dataclasses import dataclass
@@ -15,7 +16,9 @@ from sqlalchemy import func
 
 from timApp.admin.import_accounts import import_accounts_impl
 from timApp.auth.accesstype import AccessType
+from timApp.document.docentry import DocEntry
 from timApp.document.docinfo import move_document
+from timApp.document.timjsonencoder import TimJsonEncoder
 from timApp.tim_app import get_home_organization_group
 from timApp.timdb.sqa import db
 from timApp.user.personaluniquecode import SchacPersonalUniqueCode, PersonalUniqueCode
@@ -52,6 +55,73 @@ def has_anything_in_common(u1: User, u2: User) -> bool:
 
 
 user_cli = AppGroup("user")
+
+
+@user_cli.command()
+@click.option(
+    "--dry-run/--no-dry-run",
+    default=True,
+    help="Dry run",
+)
+@click.option(
+    "--skip-warnings/--no-skip-warnings",
+    default=False,
+    help="Skip warnings",
+)
+def migrate_themes_to_styles(dry_run: bool, skip_warnings: bool) -> None:
+    """Migrates old theme-based user preferences to new style-based one"""
+    from timApp.timdb.init import create_style_docs
+
+    if dry_run:
+        click.echo("Running dry mode, the changes to users will not be saved")
+
+    with db.session.no_autoflush:
+        click.echo("Creating style paths")
+        folders, docs = create_style_docs()
+
+        for folder in folders:
+            click.echo(f"Created folder '{folder.name}' to '{folder.path}'")
+        for doc in docs:
+            click.echo(f"Created document '{doc.title}' to '{doc.path}'")
+
+        if not dry_run:
+            db.session.flush()
+        else:
+            for i, d in enumerate(docs):  # type: int, DocEntry
+                d.id = -i
+
+        style_docs = {d.path.split("/")[-1]: d.id for d in docs}
+
+        click.echo("Updating user styles")
+
+        for u in User.query.filter(User.prefs != None):  # type: User
+            prefs_json: dict = json.loads(u.prefs)
+            css_combined = prefs_json.pop("css_combined", None)
+            css_files: dict[str, bool] = prefs_json.pop("css_files", {})
+            if not css_combined and not css_files:
+                continue
+            enabled_themes = [theme for theme, enabled in css_files.items() if enabled]
+            style_list = [
+                style_docs[theme] for theme in enabled_themes if theme in style_docs
+            ]
+
+            if len(enabled_themes) != len(style_list):
+                click.echo(
+                    f"User {u.name} ({u.id}) will loose themes: {enabled_themes} => {style_list}"
+                )
+                if not skip_warnings:
+                    click.echo(
+                        "Fix the problem manually or skip them with --skip-warnings"
+                    )
+                    db.session.rollback()
+                    return
+
+            prefs_json["style_doc_ids"] = style_list
+            u.prefs = json.dumps(prefs_json, cls=TimJsonEncoder)
+            click.echo(f"Updated settings for {u.name} ({u.id})")
+
+        if not dry_run:
+            db.session.commit()
 
 
 @user_cli.command()

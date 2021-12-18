@@ -33,6 +33,7 @@ import {TimUtilityModule} from "../../../static/scripts/tim/ui/tim-utility.modul
 import {vctrlInstance} from "../../../static/scripts/tim/document/viewctrlinstance";
 import {PurifyModule} from "../../../static/scripts/tim/util/purify.module";
 import {DocIdDotName} from "../../../static/scripts/tim/plugin/taskid";
+import {isIOS} from "../../../static/scripts/tim/util/utils";
 
 const DragMarkup = t.intersection([
     t.partial({
@@ -160,6 +161,7 @@ export class DragComponent
             // Use this to make use of the scroll behaviour.
             dragImageTranslateOverride:
                 scrollBehaviourDragImageTranslateOverride,
+            forceApply: isIOS(),
         });
 
         window.addEventListener(

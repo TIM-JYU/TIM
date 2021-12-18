@@ -18,7 +18,16 @@ class DocumentWriter:
 
         """
         self.pars = pars
-        self.ignored_attrs = ["md", "type", "html", "links", "doc_id", "props", "h"]
+        self.ignored_attrs = [
+            "md",
+            "type",
+            "html",
+            "links",
+            "doc_id",
+            "props",
+            "h",
+            "code_lang",
+        ]
         if not export_hashes:
             self.ignored_attrs.append("t")
         if not export_ids:

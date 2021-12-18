@@ -1,6 +1,8 @@
-@charset "UTF-8";
-/* Vaaleasävyinen teema */
+``` {settings=""}
+description: "Original cyan theme"
+```
 
+```scss
 $basic-color: exportable(#3CC, basic-color);
 $button-bg-color: exportable($basic-color, button-bg-color);
 $editline-bg-color: $basic-color;
@@ -17,3 +19,4 @@ $icon-hover-color: exportable(darken($basic-color, 10%), icon-hover-color);
 
 $brand-primary: $basic-color;
 $link-color: exportable(#5588FF, link-color);
+```

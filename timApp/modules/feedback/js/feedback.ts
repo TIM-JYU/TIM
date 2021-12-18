@@ -14,7 +14,7 @@ import {
 import {PluginBase, pluginBindings} from "tim/plugin/util";
 import {documentglobals} from "tim/util/globals";
 import {$http} from "tim/util/ngimport";
-import {injectStyle, to} from "tim/util/utils";
+import {injectStyle, log, to} from "tim/util/utils";
 import {EditMode} from "tim/document/popup-menu-dialog.component";
 
 const feedbackApp = angular.module("feedbackApp", ["ngSanitize"]);
@@ -358,7 +358,7 @@ class FeedbackController
             const name = this.attrs.questionItems[index].pluginNames[0];
             const plugin = this.vctrl.getTimComponentByName(name);
             if (plugin) {
-                const node = plugin.getPar().getContent();
+                const node = plugin.getPar()?.getContent();
                 this.changeVisibility(node, show);
             }
         }
@@ -388,7 +388,7 @@ class FeedbackController
      * @param component The component and paragraph around it to be hidden.
      */
     hideComponent(component: ITimComponent) {
-        const node = component.getPar().getContent();
+        const node = component.getPar()?.getContent();
         this.changeVisibility(node, false);
     }
 
@@ -397,7 +397,7 @@ class FeedbackController
      *
      * @param paragraph The paragraph to hide.
      */
-    hideParagraph(paragraph: Element) {
+    hideParagraph(paragraph?: Element) {
         this.changeVisibility(paragraph, false);
     }
 
@@ -406,7 +406,7 @@ class FeedbackController
      *
      * @param paragraph The paragraph to show.
      */
-    showParagraph(paragraph: Element) {
+    showParagraph(paragraph?: Element) {
         this.changeVisibility(paragraph, true);
     }
 
@@ -440,7 +440,10 @@ class FeedbackController
      * @param node Node to be hidden.
      * @param visible Whether the node should be visible or hidden.
      */
-    changeVisibility(node: Element, visible: boolean) {
+    changeVisibility(node: Element | undefined, visible: boolean) {
+        if (!node) {
+            return;
+        }
         if (visible) {
             node.classList.remove("hidden");
         } else {
@@ -1008,8 +1011,11 @@ class FeedbackController
         const timComponent = this.vctrl.getTimComponentByName(plugins[0]);
 
         if (timComponent) {
-            const par = timComponent.getPar();
-            const content = par.getContent();
+            const content = timComponent.getPar()?.getContent();
+            if (!content) {
+                log("Not in paragraph, skipping getting answers");
+                return [];
+            }
             // Add additional nodes to be accepted if the need arises.
             const treeWalker = document.createTreeWalker(
                 content,
@@ -1230,8 +1236,7 @@ class FeedbackController
                             item.pluginNames[0]
                         );
                         if (plugin) {
-                            const par = plugin.getPar();
-                            this.showParagraph(par.getContent());
+                            this.showParagraph(plugin.getPar()?.getContent());
                         }
                     }
                 }
@@ -1244,8 +1249,7 @@ class FeedbackController
                             item.pluginNames[0]
                         );
                         if (plugin) {
-                            const par = plugin.getPar();
-                            this.hideParagraph(par.getContent());
+                            this.hideParagraph(plugin.getPar()?.getContent());
                         }
                     }
                 }

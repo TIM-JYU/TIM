@@ -80,6 +80,8 @@ export function staticDynamicImport(s: string) {
             return import("tim/user/user-action-verify.component");
         case "userSettings":
             return import("tim/user/settings.component");
+        case "stylePreview":
+            return import("tim/ui/style-preview.component");
     }
     throw Error(`Module was not statically known: ${s}`);
 }

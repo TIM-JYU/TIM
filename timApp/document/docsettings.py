@@ -504,6 +504,9 @@ class DocSettings:
     def allow_url_permission_edits(self) -> bool:
         return self.get_setting_or_default("allow_url_permission_edits", False)
 
+    def is_style_document(self) -> bool:
+        return self.get("description", None) is not None
+
 
 def resolve_settings_for_pars(pars: Iterable[DocParagraph]) -> YamlBlock:
     result, _ = __resolve_final_settings_impl(pars)

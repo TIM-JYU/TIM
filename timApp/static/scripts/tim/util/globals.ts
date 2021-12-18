@@ -155,8 +155,6 @@ export interface ICssFile {
 }
 
 export interface ISettings {
-    css_combined: string;
-    css_files: Record<string, boolean>;
     custom_css: string;
     disable_menu_hover: boolean;
     remember_last_sidebar_menu_tab: boolean;
@@ -167,6 +165,7 @@ export interface ISettings {
     word_list: string;
     auto_mark_all_read: boolean;
     max_uncollapsed_toc_items: number | null;
+    style_doc_ids: number[];
 }
 
 export interface ILectureInfoGlobals extends IDocumentGlobals {
@@ -195,7 +194,6 @@ export interface IOAuthGlobals extends IGenericGlobals {
 
 export interface ISettingsGlobals extends IGenericGlobals {
     settings: ISettings;
-    css_files: Array<ICssFile>;
     notifications: INotification[];
     notificationLimit: number;
     contacts: IUserContact[];

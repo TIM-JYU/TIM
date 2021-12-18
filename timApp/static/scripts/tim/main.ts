@@ -131,26 +131,9 @@ if (document.location) {
     timLogInit(document.location.search.slice(1));
 }
 
-const themeNameMap: Record<string, string | undefined> = {
-    lighttheme: "theme-light",
-    reunukset: "theme-borders",
-};
-
-function applyThemeClasses() {
-    for (const [name, _] of Object.entries(
-        genericglobals().userPrefs.css_files
-    )) {
-        const classname = themeNameMap[name];
-        if (classname) {
-            document.body.classList.add(classname);
-        }
-    }
-}
-
 $(async () => {
     timLogTime("DOM ready", "main.ts");
     insertLogDivIfEnabled();
-    applyThemeClasses();
     const jsmodules = genericglobals().JSMODULES;
     const moduleLoads = [];
     for (const mname of jsmodules) {

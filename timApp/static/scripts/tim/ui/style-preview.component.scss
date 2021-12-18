@@ -1,0 +1,21 @@
+.preview-items {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  column-gap: 0.5em;
+  align-items: center;
+}
+
+.error-code {
+  // Hack to force code item to flow into the error box
+  display: grid;
+}
+
+tim-alert {
+  display: block;
+}
+
+pre {
+  overflow-x: auto;
+  border-left-color: #ff5f5f;
+}

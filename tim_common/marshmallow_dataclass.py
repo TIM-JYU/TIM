@@ -36,8 +36,8 @@ Full example::
 """
 import dataclasses
 import inspect
-from functools import lru_cache
 from enum import EnumMeta
+from functools import lru_cache
 from typing import (
     overload,
     Dict,
@@ -59,6 +59,8 @@ import marshmallow.validate
 import typing_inspect
 
 __all__ = ["dataclass", "add_schema", "class_schema", "field_for_schema", "NewType"]
+
+import webargs.fields
 
 from marshmallow.fields import Integer
 
@@ -308,7 +310,12 @@ def _proxied_class_schema(
         (
             field.name,
             field_for_schema(
-                field.type, _get_field_default(field), field.metadata, clazz, field.name, base_schema
+                field.type,
+                _get_field_default(field),
+                field.metadata,
+                clazz,
+                field.name,
+                base_schema,
             ),
         )
         for field in fields
@@ -323,7 +330,7 @@ def _field_by_type(
     typ: Union[type, Any], base_schema: Optional[Type[marshmallow.Schema]]
 ) -> Optional[Type[marshmallow.fields.Field]]:
     if typ is Any:
-        return lambda **x: marshmallow.fields.Raw(**{**x, 'allow_none': True})
+        return lambda **x: marshmallow.fields.Raw(**{**x, "allow_none": True})
     else:
         return (
             base_schema and base_schema.TYPE_MAPPING.get(typ)
@@ -332,13 +339,18 @@ def _field_by_type(
 
 class SemiStrictIntegerField(marshmallow.fields.Field):
     """A "semi-strict" integer field that accepts integers and strings convertible to integers
-     but not floats."""
+    but not floats."""
 
     def _serialize(self, value: Any, attr: str, obj: Any, **kwargs):
         raise NotImplementedError
 
-    def _deserialize(self, value: Any, attr: Optional[str],
-                     data: Optional[Mapping[str, Any]], **kwargs):
+    def _deserialize(
+        self,
+        value: Any,
+        attr: Optional[str],
+        data: Optional[Mapping[str, Any]],
+        **kwargs,
+    ):
         if isinstance(value, int):
             return value
         if isinstance(value, str):
@@ -346,7 +358,7 @@ class SemiStrictIntegerField(marshmallow.fields.Field):
                 return int(value)
             except ValueError:
                 pass
-        raise self.make_error('validator_failed')
+        raise self.make_error("validator_failed")
 
 
 def field_for_schema(
@@ -354,7 +366,7 @@ def field_for_schema(
     default=dataclasses.MISSING,
     metadata: Mapping[str, Any] = None,
     clazz: type = None,
-    name = None,
+    name=None,
     base_schema: Optional[Type[marshmallow.Schema]] = None,
 ) -> marshmallow.fields.Field:
     """
@@ -425,33 +437,48 @@ def field_for_schema(
         arguments = typing_inspect.get_args(typ, True)
         if origin in (list, List):
             check_default(clazz, default, list, name)
-            child_type = field_for_schema(arguments[0], clazz=clazz, base_schema=base_schema)
+            child_type = field_for_schema(
+                arguments[0], clazz=clazz, base_schema=base_schema
+            )
+            if metadata.get("list_type", None) == "delimited":
+                return webargs.fields.DelimitedList(child_type)
             return marshmallow.fields.List(child_type, **metadata)
         if origin in (tuple, Tuple):
             check_default(clazz, default, tuple, name)
             children = tuple(
-                field_for_schema(arg, clazz=clazz, base_schema=base_schema) for arg in arguments
+                field_for_schema(arg, clazz=clazz, base_schema=base_schema)
+                for arg in arguments
             )
             return marshmallow.fields.Tuple(children, **metadata)
         elif origin in (dict, Dict):
             check_default(clazz, default, dict, name)
             return marshmallow.fields.Dict(
-                keys=field_for_schema(arguments[0], clazz=clazz, base_schema=base_schema),
-                values=field_for_schema(arguments[1], clazz=clazz, base_schema=base_schema),
+                keys=field_for_schema(
+                    arguments[0], clazz=clazz, base_schema=base_schema
+                ),
+                values=field_for_schema(
+                    arguments[1], clazz=clazz, base_schema=base_schema
+                ),
                 **metadata,
             )
         elif typing_inspect.is_union_type(typ):
-            has_none = typing_inspect.is_optional_type(typ) or any(subtyp is Any for subtyp in arguments)
+            has_none = typing_inspect.is_optional_type(typ) or any(
+                subtyp is Any for subtyp in arguments
+            )
             if has_none:
-                metadata['allow_none'] = True
+                metadata["allow_none"] = True
             if default is not dataclasses.MISSING:
-                metadata['required'] = False
+                metadata["required"] = False
 
             subfields = [
-                field_for_schema(subtyp, metadata=metadata, clazz=clazz, base_schema=base_schema)
-                for subtyp in arguments if subtyp is not NoneType
+                field_for_schema(
+                    subtyp, metadata=metadata, clazz=clazz, base_schema=base_schema
+                )
+                for subtyp in arguments
+                if subtyp is not NoneType
             ]
             import marshmallow_union
+
             if default is not dataclasses.MISSING:
                 if not any(isinstance_noexcept(default, t) for t in arguments):
                     report_default_error(clazz, default, typ, name)
@@ -488,7 +515,9 @@ def field_for_schema(
     # generic types
     if type(typ) is TypeVar:
         b = typing_inspect.get_generic_bases(clazz)[0]
-        type_index = typing_inspect.get_args(typing_inspect.get_generic_bases(typing_inspect.get_origin(b))[0]).index(typ)
+        type_index = typing_inspect.get_args(
+            typing_inspect.get_generic_bases(typing_inspect.get_origin(b))[0]
+        ).index(typ)
         instantiated_type = typing_inspect.get_args(b)[type_index]
         return field_for_schema(
             instantiated_type,
@@ -525,10 +554,13 @@ def check_default(clazz: Type, default: Any, typ: Type, name: Optional[str]):
 
 def report_default_error(clazz: Type, default: Any, typ: Type, name: Optional[str]):
     if not name:
-        raise TypeError(f"Invalid default value {default} supplied in class {clazz.__name__} for {typ}")
+        raise TypeError(
+            f"Invalid default value {default} supplied in class {clazz.__name__} for {typ}"
+        )
     else:
-        raise TypeError(f"Invalid default value {default} supplied for field {name} in class {clazz.__name__} for {typ}")
-
+        raise TypeError(
+            f"Invalid default value {default} supplied for field {name} in class {clazz.__name__} for {typ}"
+        )
 
 
 def _base_schema(

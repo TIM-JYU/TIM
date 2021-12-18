@@ -1,6 +1,6 @@
 import hashlib
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional, Union, TYPE_CHECKING
 
 import redis
 from redis import ResponseError
@@ -10,8 +10,10 @@ from timApp.document.docrenderresult import DocRenderResult
 from timApp.document.document import Document
 from timApp.document.docviewparams import DocViewParams
 from timApp.document.viewcontext import ViewRoute, ViewContext
-from timApp.user.user import User
 from timApp.util.utils import dataclass_to_bytearray
+
+if TYPE_CHECKING:
+    from timApp.user.user import User
 
 rclient = redis.Redis(host="redis")
 
@@ -33,7 +35,7 @@ class CacheResult:
 
 def check_doc_cache(
     doc_info: DocInfo,
-    current_user: User,
+    current_user: "User",
     view_ctx: ViewContext,
     m: DocViewParams,
     nocache: bool,
@@ -74,7 +76,7 @@ def check_doc_cache(
 
 
 def get_doc_cache_key(
-    doc: DocInfo, user: User, view_ctx: ViewContext, m: DocViewParams
+    doc: DocInfo, user: "User", view_ctx: ViewContext, m: DocViewParams
 ) -> str:
     # We can't use builtin hash(...) here because the hash value changes between restarts.
     h = hashlib.shake_256()
@@ -85,7 +87,7 @@ def get_doc_cache_key(
     return f"timdoc-{doc.id}-{user.id}-{h.hexdigest(10)}"
 
 
-def clear_doc_cache(doc: DocInfoOrDocument, user: Optional[User]) -> None:
+def clear_doc_cache(doc: DocInfoOrDocument, user: Optional["User"]) -> None:
     prefix = f"timdoc-{doc.id}-"
     if user:
         prefix += f"{user.id}-"
@@ -110,3 +112,12 @@ def set_doc_cache(
 
 def refresh_doc_expire(key: str, ex: int = DEFAULT_EXPIRE_SECS) -> None:
     rclient.expire(key, ex)
+
+
+def set_style_timestamp_hash(style_name: str, hash_val: str) -> None:
+    rclient.set(f"tim-style-hash-{style_name}", hash_val)
+
+
+def get_style_timestamp_hash(style_name: str) -> Optional[str]:
+    res = rclient.get(f"tim-style-hash-{style_name}")
+    return res.decode(encoding="utf-8") if res else None
