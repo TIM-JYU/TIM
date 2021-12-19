@@ -526,7 +526,7 @@ div.error {
     @extend .border;
     clear: both;
     overflow-y: auto;
-    background-color: #f8f8f8;
+    background-color: $material-bg;
     min-height: 1px;
     padding-left: 2em;
     padding-right: 2em;
