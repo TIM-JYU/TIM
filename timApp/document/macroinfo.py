@@ -10,7 +10,10 @@ from jinja2.sandbox import SandboxedEnvironment
 
 from timApp.document.usercontext import UserContext
 from timApp.document.viewcontext import ViewContext
-from timApp.markdown.markdownconverter import create_environment
+from timApp.markdown.markdownconverter import (
+    create_environment,
+    TimSandboxedEnvironment,
+)
 from timApp.util.rndutils import get_rands_as_dict
 from timApp.util.utils import cached_property
 
@@ -83,7 +86,7 @@ class MacroInfo:
         return self.macro_delimiter
 
     @cached_property
-    def jinja_env(self) -> SandboxedEnvironment:
+    def jinja_env(self) -> TimSandboxedEnvironment:
         return create_environment(
             self.macro_delimiter, self.user_ctx, self.view_ctx, self.macro_map
         )

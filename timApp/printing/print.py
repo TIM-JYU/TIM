@@ -397,7 +397,7 @@ def get_setting_and_counters_par(doc):
                 continue
             if s == "counters":
                 counters_par = par
-                continue
+                break
     return settings_par, counters_par
 
 
@@ -445,22 +445,17 @@ def get_numbering2(doc_path):
 def get_numbering(doc_path):
     doc = g.doc_entry
 
-    printer = DocumentPrinter(
-        doc, template_to_use=None, urlroot="", just_run_macros=True
-    )
+    printer = DocumentPrinter(doc, template_to_use=None, urlroot="")
 
     try:
-        printer.write_to_format(
-            UserContext.from_one_user(g.user),
-            target_format=PrintFormat.PLAIN,
-            path=".",
-            plugins_user_print=False,
-        )
+        counters = printer.get_autocounters(UserContext.from_one_user(g.user))
     except PrintingError as err:
         raise PrintingError(str(err))
+
     # TODO: following does not work!
-    # new_counter_macro_values = "´´´\n" + printer.counter_macros + "´´´"
-    new_counter_macro_values = printer.counter_macros
+    # new_counter_macro_values = "´´´\n" + counters.get_counters() + "´´´"
+    new_counter_macro_values = "macros:\n" + counters.get_counters()
+
     settings_par, counters_par = get_setting_and_counters_par(doc)
 
     if counters_par:

@@ -26,6 +26,7 @@ from timApp.markdown.markdownconverter import (
     par_list_to_html_list,
     expand_macros,
     format_heading,
+    Counters,
 )
 from timApp.timdb.exceptions import TimDbException, InvalidReferenceException
 from timApp.timtypes import DocumentType
@@ -1302,7 +1303,14 @@ def get_heading_counts(ctx: DocParagraph):
         return vals
 
 
-def add_heading_numbers(s: str, ctx: DocParagraph, heading_format):
+def add_heading_numbers(
+    s: str,
+    ctx: DocParagraph,
+    heading_format: dict,
+    heading_ref_format: dict = None,
+    jump_name: str = None,
+    counters: Counters = None,
+):
     d = ctx.doc
     macro_cache_file = f"/tmp/tim_auto_macros_{ctx.doc.doc_id}"
     ps = commonmark.Parser()
@@ -1325,10 +1333,21 @@ def add_heading_numbers(s: str, ctx: DocParagraph, heading_format):
             if heading_line.startswith(heading_start + " "):
                 line = heading_line[level + 1 :]
                 if not line.endswith("{.unnumbered}"):
+                    # TODO: add heading counters to counter macros
                     lines[line_idx] = (
                         heading_start
                         + " "
-                        + format_heading(line, level, vals, heading_format)
+                        + format_heading(
+                            line,
+                            level,
+                            vals,
+                            heading_format,
+                            heading_ref_format,
+                            jump_name,
+                            counters,
+                        )
                     )
+                    if counters:
+                        counters.set_heading_vals(vals)
         curr = curr.nxt
     return "\n".join(lines)

@@ -84,6 +84,7 @@ class DocSettings:
     auto_number_headings_key = "auto_number_headings"
     auto_number_start_key = "auto_number_start"
     heading_format_key = "heading_format"
+    heading_ref_format_key = "heading_ref_format"
     show_task_summary_key = "show_task_summary"
     no_question_auto_numbering_key = "no_question_auto_numbering"
     slide_background_url_key = "slide_background_url"
@@ -302,6 +303,55 @@ class DocSettings:
                 6: "{h4}.{h5}.{h6} {text}",
             }
         hformat = self.__dict.get(self.heading_format_key)
+        if hformat is None:
+            return defaults
+        return {
+            1: hformat.get(1, defaults[1]),
+            2: hformat.get(2, defaults[2]),
+            3: hformat.get(3, defaults[3]),
+            4: hformat.get(4, defaults[4]),
+            5: hformat.get(5, defaults[5]),
+            6: hformat.get(6, defaults[6]),
+        }
+
+    def heading_ref_format(self) -> dict:
+        level = self.auto_number_headings()
+        defaults = {
+            1: "{h1}",
+            2: "{h1}.{h2}",
+            3: "{h1}.{h2}.{h3}",
+            4: "{h1}.{h2}.{h3}.{h4}",
+            5: "{h1}.{h2}.{h3}.{h4}.{h5}",
+            6: "{h1}.{h2}.{h3}.{h4}.{h5}.{h6}",
+        }
+        if level == 2:
+            defaults = {
+                1: "",
+                2: "{h2}",
+                3: "{h2}.{h3}",
+                4: "{h2}.{h3}.{h4}",
+                5: "{h2}.{h3}.{h4}.{h5}",
+                6: "{h2}.{h3}.{h4}.{h5}.{h6}",
+            }
+        if level == 3:
+            defaults = {
+                1: "",
+                2: "",
+                3: "{h3}",
+                4: "{h3}.{h4}",
+                5: "{h3}.{h4}.{h5}",
+                6: "{h3}.{h4}.{h5}.{h6}",
+            }
+        if level == 4:
+            defaults = {
+                1: "",
+                2: "",
+                3: "",
+                4: "{h4}",
+                5: "{h4}.{h5}",
+                6: "{h4}.{h5}.{h6}",
+            }
+        hformat = self.__dict.get(self.heading_ref_format_key)
         if hformat is None:
             return defaults
         return {
