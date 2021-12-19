@@ -152,7 +152,7 @@ a .glyphicon {
         @media (max-width: $screen-xs-max) {
             text-align: $body-text-align-xs;
         }
-        font-size: 16px;
+        font-size: $font-size-base;
 
         * code {
             font-size: $inline-code-size;
