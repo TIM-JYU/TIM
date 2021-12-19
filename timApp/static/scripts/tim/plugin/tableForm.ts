@@ -122,7 +122,7 @@ const TableFormMarkup = t.intersection([
         autoUpdateFields: withDefault(t.boolean, true),
         autoUpdateTables: withDefault(t.boolean, true),
         fontSize: withDefault(t.string, "smaller"),
-        fixedColor: withDefault(t.string, "#f0f0f0"),
+        fixedColor: withDefault(t.string, "fixedColor"),
         includeUsers: withDefault(IncludeUsersOption, "current"),
         saveStyles: withDefault(t.boolean, true),
         removeDocIds: withDefault(t.boolean, true),
@@ -337,7 +337,7 @@ export class TableFormComponent
     listName: boolean = false;
     listUsername: boolean = true;
     listEmail: boolean = false;
-    private fixedColor: string = "#f0f0f0";
+    private fixedColor: string = "fixedColor"; // "#f0f0f0";
     cbCount: number = 0;
     @ViewChild(TimTableComponent)
     timTable?: TimTableComponent;
@@ -878,8 +878,8 @@ export class TableFormComponent
                 ];
             }
             this.data.headersStyle = {
-                backgroundColor: this.fixedColor,
-                "font-weight": "bold",
+                // backgroundColor: this.fixedColor,
+                // "font-weight": "bold",
             };
 
             if (this.fields) {
@@ -890,17 +890,20 @@ export class TableFormComponent
             for (const r of this.rowKeys) {
                 this.data.userdata.cells[userNameColumn + y] = {
                     cell: r,
-                    backgroundColor: this.fixedColor,
+                    // backgroundColor: this.fixedColor,
+                    class: this.fixedColor,
                 };
                 this.userLocations[y] = r;
                 const userInfo = this.users[r];
                 this.data.userdata.cells[realNameColumn + y] = {
                     cell: userInfo.real_name,
-                    backgroundColor: this.fixedColor,
+                    // backgroundColor: this.fixedColor,
+                    class: this.fixedColor,
                 };
                 this.data.userdata.cells[emailColumn + y] = {
                     cell: userInfo.email,
-                    backgroundColor: this.fixedColor,
+                    // backgroundColor: this.fixedColor,
+                    class: this.fixedColor,
                 };
                 for (const [map, col] of [
                     [this.membershipmap, membershipColumn],
@@ -908,7 +911,8 @@ export class TableFormComponent
                     if (map) {
                         this.data.userdata.cells[col + y] = {
                             cell: map[r],
-                            backgroundColor: this.fixedColor,
+                            // backgroundColor: this.fixedColor,
+                            class: this.fixedColor,
                         };
                     }
                 }

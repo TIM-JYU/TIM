@@ -859,7 +859,7 @@ export class TapeController implements IController {
             return "red";
         }
 
-        return "black";
+        return "unset";
     }
 
     /**

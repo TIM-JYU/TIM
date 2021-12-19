@@ -325,7 +325,7 @@ table:
       - row:
         - cell: 'Otsikko 1'
         - cell: 'Otsikko 2'
-        backgroundColor: lightgray
+        class: headers
         fontWeight: bold
       - row:
         - cell: 'Solu 1'

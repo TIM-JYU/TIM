@@ -20,6 +20,8 @@ $basic-border-color: exportable(#B7B7B7, basic-border-color) !default;
 $bg-color: exportable(white, bg-color) !default;
 $material-shadow: none !default;
 $material-bg:  exportable(white, material-bg) !default;
+$table-header-bg: exportable(lightgray, table-header-bg) !default;
+$table-header-color: exportable(black, table-header-bg) !default;
 $note-bg:  exportable($material-bg, note-bg) !default;
 $body-margin-left: 250px !default;
 $material-border: none !default;

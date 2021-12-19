@@ -628,6 +628,7 @@ export enum ClearSort {
                         </tr> <!-- Now the matrix -->
                         <tr *ngFor="let rowi of permTable; let i = index"
                             [style]="stylingForRow(rowi)"
+                            [class]="classForRow(rowi)"
                             [hidden]="!showRow(rowi)"
                         >
                             <td class="nrcolumn" *ngIf="data.nrColumn">{{i + nrColStart}}</td>
@@ -815,6 +816,7 @@ export class TimTableComponent
     private inputSub?: Subscription;
     private customDomUpdateInProgress?: boolean;
     private rowStyleCache = new Map<number, Record<string, string>>();
+    private rowClassCache = new Map<number, string>();
     private shouldSelectInputText = false;
 
     constructor(
@@ -909,8 +911,8 @@ export class TimTableComponent
 
         if (!this.headersStyle) {
             this.headersStyle = {
-                backgroundColor: "lightgray",
-                "font-weight": "bold",
+                // backgroundColor: "lightgray",
+                // "font-weight": "bold",
             };
         }
         if (this.data.singleLine) {
@@ -3261,6 +3263,10 @@ export class TimTableComponent
         return styles;
     }
 
+    classForRow(rowi: number) {
+        return this.rowClassCache.get(rowi);
+    }
+
     /**
      * Sets style attributes for rows
      * @param {IRow} rowi The row to be styled
@@ -3297,8 +3303,9 @@ export class TimTableComponent
         }
 
         const row = this.data.table.rows[rowi];
-        this.applyStyle(styles, row, rowStyles);
+        const cls = this.applyStyle(styles, row, rowStyles);
         this.rowStyleCache.set(rowi, styles);
+        this.rowClassCache.set(rowi, cls);
         return styles;
     }
 

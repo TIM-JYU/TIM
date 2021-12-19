@@ -205,3 +205,14 @@ tim-alert {
         max-height: 50vh;
     }
 }
+
+/* Todo move to timTable.scss when it can read variables.scss */
+.timTableTable .headers {
+   background-color: $table-header-bg;
+   font-weight: bold;
+   color: $table-header-color;
+}
+
+.timTableTable .fixedColor {
+   background-color: $table-header-bg;
+}
