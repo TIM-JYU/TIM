@@ -1023,7 +1023,7 @@ tim-tape .tapeItem {
 }
 
 </style>
-    <div class="no-highlight robotMainDiv">
+    <div class="no-highlight robotMainDiv fullinv">
         <div class="tapeAndRobotDiv">
             <div class="outputbelt" >
                 <div class="outputvalues">
