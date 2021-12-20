@@ -153,9 +153,9 @@ a .glyphicon {
         @media (max-width: $screen-xs-max) {
             text-align: $body-text-align-xs;
         }
-        font-size: $font-size-base;
+        font-size: $normal_font_size;
 
-        * code {
+        p code {
             font-size: $inline-code-size;
         }
 
@@ -177,6 +177,7 @@ a .glyphicon {
             @media (max-width: $screen-xs-max) {
                 margin-left: 0;
             }
+            color: $primary-color;
         }
 
         & > h2 {
@@ -1134,7 +1135,7 @@ p.docsettings {
     position: absolute;
     top: 0;
     left: -1.2em;
-    font-size: 15px;
+    font-size: 93.75%;
     padding: 0px;
     padding-left: 2px;
     padding-right: 3px;

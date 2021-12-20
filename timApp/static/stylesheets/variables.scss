@@ -1,6 +1,7 @@
 @charset "UTF-8";
 
 $basic-color: exportable(#004494, basic-color) !default;
+$primary-color:  exportable(black, primary-color) !default;
 $basic-color-inverse: exportable(invert($basic-color), basic-color-inverse) !default;
 $button-bg-color: exportable($basic-color, button-bg-color) !default;
 $button-toggle-color: black !default;
@@ -46,9 +47,10 @@ $icon-color: exportable($basic-color, icon-color) !default;
 $icon-hover-color: exportable(darken($basic-color, 10%), icon-hover-color) !default;
 $link-visited-color: exportable(#5242CE, link-visited-color) !default;
 // Width was 57.4 before (about 800 pxl) but when basic font is 16 it should be smaller
-$paragraph-preferred-width: exportable(50.225em, paragraph-preferred-width) !default;
+// $paragraph-preferred-width: exportable(57.4em, paragraph-preferred-width) !default;
+$paragraph-preferred-width: exportable(801px, paragraph-preferred-width) !default;
 $inline-code-size: 110% !default;
-$block-code-size: 115% !default;
+$block-code-size: 110% !default;
 $pre-overflow: visible !default; // TODO: Default is supposed to be "auto", but it breaks velp annotations in pre blocks.
 $pre-left-border: 4px solid $basic-color !default;
 $pre-background: white !default;
@@ -75,10 +77,11 @@ $link-color: exportable($basic-color, link-color) !default; // likely of interes
 $link-hover-color: exportable(darken($link-color, 15%), link-hover-color) !default; // likely of interest
 $input-color-placeholder: $gray !default;
 $headings-font-weight: 700 !default;
-$font-size-base: exportable(16px, font-size-base) !default; // this should probably not be changed from default 14px
-$font-size-h1: exportable(floor(($font-size-base * 2.00)), font-size-h1) !default; // default factor is 2.6
-$font-size-h2: exportable(floor(($font-size-base * 1.5)), font-size-h2) !default; // default factor is 2.15
-$font-size-h3: exportable(floor(($font-size-base * 1.3125)), font-size-h3) !default; // default factor is 1.7
+$font-size-base: exportable(14px, font-size-base) !default; // this should probably not be changed from default 14px
+$normal_font_size: exportable(floor(($font_size_base * 16.00/14.00)), normal-font-size) !default; // this should probably not be changed from default 14px
+$font-size-h1: exportable(floor(($normal_font_size * 2.00)), font-size-h1) !default; // default factor is 2.6
+$font-size-h2: exportable(floor(($normal_font_size * 1.5)), font-size-h2) !default; // default factor is 2.15
+$font-size-h3: exportable(floor(($normal_font_size * 1.3125)), font-size-h3) !default; // default factor is 1.7
 $font-family-base: exportable((Verdana, Arial, sans-serif), font-family-base) !default;              // likely of interest for custom CSS
 $font-family-monospace: exportable(("Courier New", Courier, serif), font-family-monospace) !default; // likely of interest for custom CSS
 $code-color: inherit !default;
