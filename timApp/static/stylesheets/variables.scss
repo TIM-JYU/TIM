@@ -74,7 +74,7 @@ $link-color: exportable($basic-color, link-color) !default; // likely of interes
 $link-hover-color: exportable(darken($link-color, 15%), link-hover-color) !default; // likely of interest
 $input-color-placeholder: $gray !default;
 $headings-font-weight: 700 !default;
-$font-size-base: exportable(14px, font-size-base) !default; // this should probably not be changed from default 14px
+$font-size-base: exportable(16px, font-size-base) !default; // this should probably not be changed from default 14px
 $font-size-h1: exportable(floor(($font-size-base * 2.29)), font-size-h1) !default; // default factor is 2.6
 $font-size-h2: exportable(floor(($font-size-base * 1.72)), font-size-h2) !default; // default factor is 2.15
 $font-size-h3: exportable(floor(($font-size-base * 1.5)), font-size-h3) !default; // default factor is 1.7
