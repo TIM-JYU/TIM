@@ -1,7 +1,9 @@
 @charset "UTF-8";
 
 $basic-color: exportable(#004494, basic-color) !default;
+// primary-color is basically for h2-h6 font colors
 $primary-color:  exportable(black, primary-color) !default;
+$h1-color:  exportable(navy, primary-color) !default;
 $basic-color-inverse: exportable(invert($basic-color), basic-color-inverse) !default;
 $button-bg-color: exportable($basic-color, button-bg-color) !default;
 $button-toggle-color: black !default;
@@ -22,7 +24,7 @@ $bg-color: exportable(white, bg-color) !default;
 $material-shadow: none !default;
 $material-bg:  exportable(white, material-bg) !default;
 $table-header-bg: exportable(lightgray, table-header-bg) !default;
-$table-header-color: exportable(black, table-header-bg) !default;
+$table-header-color: exportable(black, table-header-color) !default;
 $note-bg:  exportable($material-bg, note-bg) !default;
 $body-margin-left: 250px !default;
 $material-border: none !default;
@@ -78,10 +80,10 @@ $link-hover-color: exportable(darken($link-color, 15%), link-hover-color) !defau
 $input-color-placeholder: $gray !default;
 $headings-font-weight: 700 !default;
 $font-size-base: exportable(14px, font-size-base) !default; // this should probably not be changed from default 14px
-$normal_font_size: exportable(floor(($font_size_base * 16.00/14.00)), normal-font-size) !default; // this should probably not be changed from default 14px
-$font-size-h1: exportable(floor(($normal_font_size * 2.00)), font-size-h1) !default; // default factor is 2.6
-$font-size-h2: exportable(floor(($normal_font_size * 1.5)), font-size-h2) !default; // default factor is 2.15
-$font-size-h3: exportable(floor(($normal_font_size * 1.3125)), font-size-h3) !default; // default factor is 1.7
+$font_size-normal: exportable(floor(($font-size-base * 16.00/14.00)), font_size-normal) !default; // this should probably not be changed from default 14px
+$font-size-h1: exportable(floor(($font_size-normal * 2.00)), font-size-h1) !default; // default factor is 2.6
+$font-size-h2: exportable(floor(($font_size-normal * 1.5)), font-size-h2) !default; // default factor is 2.15
+$font-size-h3: exportable(floor(($font_size-normal * 1.3125)), font-size-h3) !default; // default factor is 1.7
 $font-family-base: exportable((Verdana, Arial, sans-serif), font-family-base) !default;              // likely of interest for custom CSS
 $font-family-monospace: exportable(("Courier New", Courier, serif), font-family-monospace) !default; // likely of interest for custom CSS
 $code-color: inherit !default;
