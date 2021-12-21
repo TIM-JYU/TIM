@@ -1,6 +1,7 @@
 """Provides functions for converting markdown-formatted text to HTML."""
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Iterable, Any
@@ -35,7 +36,7 @@ class TimSandboxedEnvironment(SandboxedEnvironment):
             lstrip_blocks=True,
             trim_blocks=True,
         )
-        self.counters: Counters = None
+        self.counters: Counters or None = None
 
     def set_counters(self, counters: Counters):
         self.counters = counters
@@ -400,7 +401,7 @@ def get_document_path(doc_id: Any) -> str:
     return doc.path if doc else ""
 
 
-LABEL_PRFIX = "eq:"
+LABEL_PRFIX = "c:"
 
 
 @dataclass
@@ -408,6 +409,7 @@ class Counters:
     macros: dict
 
     def __post_init__(self):
+        self.renumbering = False
         self.counters = {}
         self.c = self.macros.get("c", {})
         self.heading_vals_def = {
@@ -419,25 +421,42 @@ class Counters:
             6: 0,
         }
         self.heading_vals = None
+        self.autocounters_fmt_def = {
+            "eq": {
+                "show": "{n}",
+                "pure": "{n}",
+                "ref": "({n})",
+                "long": "({n})",
+            },
+            "chap": {
+                "reset": -1,
+            },
+            "all": {
+                "reset": -1,
+                "show": "{n}",
+                "ref": "{n}",
+                "long": "{n}",
+                "pure": "{n}",
+            },
+        }
 
-    def show_href_value(self, name, text=""):
-        jump_name = name.replace("_long", "")
-        value = self.c.get(name, name)
+    def show_ref_value(self, name, text="", showtype=""):
+        from_macros = self.c.get(
+            name, {"v": name, "s": name, "r": name, "p": name, "l": name}
+        )
+        p = showtype or "p"
+        r = showtype or "r"
         if text:
-            text += " "
-        return "[" + text + "" + str(value) + "](#" + str(jump_name) + ")"
+            s = str(text) + " " + str(from_macros.get(p, ""))
+        else:
+            s = str(from_macros.get(r, ""))
+        return "[" + s + "](#" + from_macros.get("h", name) + ")"
 
-    def show_counter_value(self, name, text=""):
-        value = self.c.get(name, name)
-        if text:
-            text += " "
-        return "[" + text + "" + str(value) + "](#" + LABEL_PRFIX + str(name) + ")"
+    def show_lref_value(self, name, text="", showtype="l"):
+        return self.show_ref_value(name, text, showtype)
 
     def show_eqref_value(self, name, text=""):
-        value = self.c.get(str(name), name)
-        if text:
-            text += " "
-        return "[" + text + "(" + str(value) + ")](#" + LABEL_PRFIX + str(name) + ")"
+        return self.show_ref_value(name, text)
 
     def get_counter_type(self, ctype: str):
         counter_type = self.counters.get(ctype)
@@ -447,26 +466,45 @@ class Counters:
         return counter_type
 
     def add_counter(self, ctype: str, name: str, show_val: str, long_val: str = None):
-        counter_type = self.get_counter_type(ctype)
-        show = self.get_type_show(ctype, show_val)
-        counter = {"value": show_val, "show": show}
-        counter_type[name] = counter
-        if long_val:
-            counter = {"value": show_val, "show": long_val}
-            counter_type[name + "_long"] = counter
+        if self.renumbering:
+            counter_type = self.get_counter_type(ctype)
+            show = self.get_type_text(ctype, name, show_val, "chap")
+            counter = {
+                "v": show_val,
+                "s": show,
+                "r": show_val,
+                "l": long_val,
+                "p": show_val,
+                "h": str(name),
+                "n": str(name),
+            }
+            counter_type[name] = counter
 
     def new_counter(self, name, ctype):
-        counter_type = self.get_counter_type(ctype)
-        counter = counter_type.get(name)
-        value = counter_type["value"] + 1
-        counter_type["value"] = value
-        if counter:  # shold not be
-            counter["show"] = "Dublicate " + name
-        else:
-            show = self.get_type_show(ctype, value)
-            counter = {"value": value, "show": show}
-            counter_type[name] = counter
-        return self.c.get(name, "?" + str(name) + "?")
+        if self.renumbering:
+            counter_type: dict = self.get_counter_type(ctype)
+            counter: dict = counter_type.get(name)
+            value = counter_type["value"] + 1
+            counter_type["value"] = value
+            if counter:  # shold not be
+                counter["s"] = "Dublicate " + name
+            else:
+                show = self.get_type_text(ctype, name, value, "show")
+                pure = self.get_type_text(ctype, name, value, "pure")
+                ref = self.get_type_text(ctype, name, value, "ref")
+                long = self.get_type_text(ctype, name, value, "long")
+                counter = {
+                    "v": value,  # just value, most numeric
+                    "s": show,  # show in place of counter
+                    "r": ref,  # normal refence format
+                    "l": long,  # long format, mostly for section header
+                    "p": pure,  # formated value
+                    "h": LABEL_PRFIX + str(name),  # Jump address
+                    "n": str(name),  # name of counter
+                }
+                counter_type[name] = counter
+        from_macros = self.c.get(name, {"s": "?" + str(name) + "?"})
+        return from_macros["s"]
 
     def new_label_counter(self, name, ctype):
         s = str(self.new_counter(name, ctype))
@@ -511,6 +549,9 @@ class Counters:
     def ex_counter(self, name):
         return self.new_label_counter(name, "ex")
 
+    def task_counter(self, name):
+        return self.new_label_counter(name, "task")
+
     def get_counters(self, _dummy=0):
         result = "  c:\n"
         for ctype in self.counters:
@@ -519,7 +560,8 @@ class Counters:
                 if name == "value":
                     continue
                 counter = counter_type[name]
-                result += "    " + name + ": " + "'" + str(counter["show"]) + "'\n"
+                jso = json.dumps(counter)
+                result += "    " + name + ": " + jso + "\n"
         return result
 
     def set_counter(self, ctype: str, value: int):
@@ -529,30 +571,38 @@ class Counters:
         counter_type["value"] = value
         return ""
 
-    def get_type_show(self, ctype: str, value) -> str:
+    def get_type_text(
+        self,
+        ctype: str,
+        name: str,
+        value: str,
+        showtype: str,
+    ) -> str:
         """
         Get how to show counter with type name ctype
         :param ctype: countres type name
         :param value: value of counter to show
+        :param showtype: for what purpose value is formated
         :return: formated show value
         """
         vals = self.heading_vals
         if vals is None:
-            return value
-        autocounters = self.macros.get("autocounters", None)
-        if not autocounters:
+            vals = self.heading_vals_def
+        autocounters = self.macros.get("autocounters", {})
+        fmt_all = self.autocounters_fmt_def["all"]
+        fmt_def = self.autocounters_fmt_def.get(ctype, fmt_all)
+
+        counter_fmt = autocounters.get(ctype, fmt_def)
+        if not counter_fmt:  # should not occur!
             return str(value)
-        counter = autocounters.get(ctype, None)
-        if not counter:
-            return str(value)
-        showformat = counter.get("show", None)
+        showformat = counter_fmt.get(showtype, fmt_all.get(showtype, None))
         s = showformat
         if s is None or not isinstance(s, str):
             return str(value)
-        values = {"n": value}
+        values = {"v": value, "n": name}
         add_h_values(vals, values)
-        s = s.format(**values)
-        return s
+        text = s.format(**values)
+        return text
 
     def reset_counters(self, n: int):
         """
@@ -587,8 +637,8 @@ class Counters:
                 self.reset_counters(n)
 
     def set_env_filters(self, env: TimSandboxedEnvironment):
-        env.filters["href"] = self.show_href_value
-        env.filters["ref"] = self.show_counter_value
+        env.filters["lref"] = self.show_lref_value
+        env.filters["ref"] = self.show_ref_value
         env.filters["eqref"] = self.show_eqref_value
         env.filters["c_"] = self.new_counter
         env.filters["c_label"] = self.new_label_counter
@@ -598,6 +648,7 @@ class Counters:
         env.filters["c_fig"] = self.fig_counter
         env.filters["c_tbl"] = self.tbl_counter
         env.filters["c_ex"] = self.ex_counter
+        env.filters["c_task"] = self.task_counter
         env.filters["c_set"] = self.set_counter
 
 
@@ -667,7 +718,7 @@ def md_to_html(
     raw = call_dumbo([text])
 
     if sanitize:
-        return sanitize_html(raw[0])
+        return sanitize_html(str(raw[0]))
     else:
         return raw[0]
 
@@ -725,7 +776,7 @@ def par_list_to_html_list(
                 final_html = insert_heading_numbers(
                     pre_html,
                     m,
-                    settings.auto_number_headings(),
+                    settings.auto_number_headings() > 0,
                     settings.heading_format(),
                 )
             processed.append(final_html)
@@ -869,8 +920,8 @@ def change_class(
 def insert_heading_numbers(
     html_str: str,
     heading_info,
-    auto_number_headings: bool = True,
-    heading_format: str = "",
+    auto_number_headings: int or bool = True,
+    heading_format: dict = None,
 ):
     """Applies the given heading_format to the HTML if it is a heading, based on the given heading_info. Additionally
     corrects the id attribute of the heading in case it has been used earlier.
